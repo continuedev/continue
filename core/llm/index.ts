@@ -24,17 +24,26 @@ import {
   openchatTemplateMessages,
   phindTemplateMessages,
   templateAlpacaMessages,
+  xWinCoderTemplateMessages,
   zephyrTemplateMessages,
 } from "./templates/chat";
 import {
   alpacaEditPrompt,
   codellamaEditPrompt,
   deepseekEditPrompt,
+  mistralEditPrompt,
   openchatEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,
+  xWinCoderEditPrompt,
   zephyrEditPrompt,
 } from "./templates/edit";
+
+const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
+  "lmstudio",
+  "openai",
+  "ollama",
+];
 
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
@@ -46,6 +55,14 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("gemini")
   ) {
     return undefined;
+  }
+
+  if (lower.includes("xwin")) {
+    return "xwin-coder";
+  }
+
+  if (lower.includes("dolphin")) {
+    return "chatml";
   }
 
   if (lower.includes("phind")) {
@@ -84,8 +101,16 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 
 function autodetectTemplateFunction(
   model: string,
+  provider: ModelProvider,
   explicitTemplate: TemplateType | undefined = undefined
 ) {
+  if (
+    explicitTemplate === undefined &&
+    PROVIDER_HANDLES_TEMPLATING.includes(provider)
+  ) {
+    return null;
+  }
+
   const templateType = explicitTemplate || autodetectTemplateType(model);
 
   if (templateType) {
@@ -98,6 +123,7 @@ function autodetectTemplateFunction(
       chatml: chatmlTemplateMessages,
       deepseek: deepseekTemplateMessages,
       openchat: openchatTemplateMessages,
+      "xwin-coder": xWinCoderTemplateMessages,
       none: null,
     };
 
@@ -121,13 +147,19 @@ function autodetectPromptTemplates(
   } else if (templateType === "zephyr") {
     editTemplate = zephyrEditPrompt;
   } else if (templateType === "llama2") {
-    editTemplate = codellamaEditPrompt;
+    if (model.includes("mistral")) {
+      editTemplate = mistralEditPrompt;
+    } else {
+      editTemplate = codellamaEditPrompt;
+    }
   } else if (templateType === "alpaca") {
     editTemplate = alpacaEditPrompt;
   } else if (templateType === "deepseek") {
     editTemplate = deepseekEditPrompt;
   } else if (templateType === "openchat") {
     editTemplate = openchatEditPrompt;
+  } else if (templateType === "xwin-coder") {
+    editTemplate = xWinCoderEditPrompt;
   } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }
@@ -202,12 +234,16 @@ export abstract class BaseLLM implements ILLM {
     };
     this.requestOptions = options.requestOptions;
     this.promptTemplates = {
-      ...options.promptTemplates,
       ...autodetectPromptTemplates(options.model, templateType),
+      ...options.promptTemplates,
     };
     this.templateMessages =
       options.templateMessages ||
-      autodetectTemplateFunction(options.model, templateType);
+      autodetectTemplateFunction(
+        options.model,
+        this.providerName,
+        options.template
+      );
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;

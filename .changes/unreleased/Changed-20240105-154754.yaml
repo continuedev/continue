@@ -1,0 +1,5 @@
+project: extensions/vscode
+kind: Changed
+body: Use Ollama /chat endpoint instead of raw completions by default, and /show endpoint
+  to gather model parameters like context length and stop tokens
+time: 2024-01-05T15:47:54.05791-08:00

@@ -3,7 +3,7 @@ import { getConfigJsonPath } from "core/util/paths";
 import { readFileSync } from "fs";
 import * as vscode from "vscode";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
-import { diffManager } from "./diffs";
+import { diffManager } from "./diff/horizontal";
 import { configHandler } from "./loadConfig";
 import {
   SuggestionRanges,

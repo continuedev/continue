@@ -46,8 +46,9 @@ const DraftIssueCommand: SlashCommand = {
       yield chunk.content;
     }
 
-    // const url = f"{self.repository_url}/issues/new?title={quote(title)}&body={quote(body)}"
-    const url = `${params.repositoryUrl}/issues/new?title={encodeURIComponent(title)}&body={encodeURIComponent(body)}`;
+    const url = `${params.repositoryUrl}/issues/new?title=${encodeURIComponent(
+      title
+    )}&body=${encodeURIComponent(body)}`;
     yield `\n\n[Link to draft of issue](${url})`;
   },
 };

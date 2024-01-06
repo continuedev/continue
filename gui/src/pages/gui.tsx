@@ -29,15 +29,10 @@ import ErrorStepContainer from "../components/gui/ErrorStepContainer";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
-import resolveEditorContent from "../components/mainInput/resolveInput";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import {
-  newSession,
-  resubmitAtIndex,
-  setInactive,
-} from "../redux/slices/stateSlice";
+import { newSession, setInactive } from "../redux/slices/stateSlice";
 import {
   setDialogEntryOn,
   setDialogMessage,
@@ -401,13 +396,6 @@ function GUI(props: GUIProps) {
                     {item.message.role === "user" ? (
                       <ContinueInputBox
                         onEnter={async (editorState) => {
-                          const content = await resolveEditorContent(
-                            editorState,
-                            contextProviders
-                          );
-                          dispatch(
-                            resubmitAtIndex({ index, content, editorState })
-                          );
                           streamResponse(editorState, index);
                         }}
                         isLastUserInput={isLastUserInput(index)}

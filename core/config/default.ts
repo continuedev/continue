@@ -13,30 +13,22 @@ const defaultConfig: SerializedContinueConfig = {
       model: "gpt-3.5-turbo",
     },
   ],
-  modelRoles: {
-    default: "GPT-4",
-    summarize: "GPT-3.5-Turbo",
-  },
   slashCommands: [
     {
       name: "edit",
       description: "Edit highlighted code",
-      step: "EditHighlightedCodeStep",
     },
     {
       name: "comment",
       description: "Write comments for the highlighted code",
-      step: "CommentCodeStep",
     },
     {
       name: "share",
       description: "Download and share this session",
-      step: "ShareSessionStep",
     },
     {
       name: "cmd",
       description: "Generate a shell command",
-      step: "GenerateShellCommandStep",
     },
   ],
   customCommands: [

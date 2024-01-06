@@ -5,11 +5,12 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
+import { getMarkdownLanguageTagForFile } from "core/util";
 import React from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
-import { getFontSize, getMarkdownLanguageTagForFile } from "../../util";
+import { getFontSize } from "../../util";
 import { postToIde } from "../../util/ide";
 import FileIcon from "../FileIcon";
 import HeaderButtonWithText from "../HeaderButtonWithText";

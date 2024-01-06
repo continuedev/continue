@@ -240,6 +240,11 @@ export type CustomLLM = RequireAtLeastOne<
 
 // IDE
 
+export interface DiffLine {
+  type: "new" | "old" | "same";
+  line: string;
+}
+
 export interface IDE {
   getSerializedConfig(): Promise<SerializedContinueConfig>;
   getConfigJsUrl(): Promise<string | undefined>;
@@ -259,7 +264,14 @@ export interface IDE {
     newContents: string,
     stepIndex: number
   ): Promise<void>;
+  verticalDiffUpdate(
+    filepath: string,
+    startLine: number,
+    endLine: number,
+    diffLine: DiffLine
+  ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
+  getSearchResults(query: string): Promise<string>;
 }
 
 // Slash Commands
@@ -319,7 +331,8 @@ type TemplateType =
   | "chatml"
   | "none"
   | "openchat"
-  | "deepseek";
+  | "deepseek"
+  | "xwin-coder";
 
 type ModelProvider =
   | "openai"
@@ -338,7 +351,11 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
+<<<<<<< HEAD
   | "sap-gen-ai-hub";
+=======
+  | "deepinfra";
+>>>>>>> upstream/preview
 
 export type ModelName =
   // OpenAI
@@ -397,7 +414,6 @@ export interface ContextProviderWithParams {
 export interface SlashCommandDescription {
   name: string;
   description: string;
-  step: StepName | string;
   params?: { [key: string]: any };
 }
 
@@ -441,6 +457,7 @@ export interface ModelDescription {
   completionOptions?: BaseCompletionOptions;
   systemMessage?: string;
   requestOptions?: RequestOptions;
+  promptTemplates?: { [key: string]: string };
 }
 
 export interface ModelRoles {
@@ -454,7 +471,6 @@ export interface SerializedContinueConfig {
   disallowedSteps?: string[];
   allowAnonymousTelemetry?: boolean;
   models: ModelDescription[];
-  modelRoles: ModelRoles;
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   slashCommands?: SlashCommandDescription[];

@@ -1,14 +1,9 @@
 import { ContextItemWithId, ILLM, SlashCommand } from "../..";
 import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";
-
-interface RangeInFileWithContents {
-  filepath: string;
-  range: {
-    start: { line: number; character: number };
-    end: { line: number; character: number };
-  };
-  contents: string;
-}
+import {
+  RangeInFileWithContents,
+  contextItemToRangeInFileWithContents,
+} from "../util";
 
 const PROMPT = `Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section. Do not ever use nested tags.
 
@@ -205,40 +200,17 @@ function lineToBeIgnored(line: string, isFirstLine: boolean = false): boolean {
   );
 }
 
-export function contextItemToRangeInFileWithContents(
-  item: ContextItemWithId
-): RangeInFileWithContents {
-  const lines = item.name.split("(")[1].split(")")[0].split("-");
-
-  const rif: RangeInFileWithContents = {
-    filepath: item.description,
-    range: {
-      start: {
-        line: parseInt(lines[0]) - 1,
-        character: 0,
-      },
-      end: {
-        line: parseInt(lines[1]),
-        character: 0,
-      },
-    },
-    contents: item.content,
-  };
-
-  return rif;
-}
-
 const EditSlashCommand: SlashCommand = {
   name: "edit",
   description: "Edit highlighted code",
-  run: async function* ({ ide, llm, input, history, contextItems }) {
+  run: async function* ({ ide, llm, input, history, contextItems, params }) {
     const contextItemToEdit = contextItems.find(
       (item: ContextItemWithId) =>
         item.editing && item.id.providerTitle === "code"
     );
 
     if (!contextItemToEdit) {
-      yield "Highlight the code that you want to edit first";
+      yield "Highlight (select and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) the code that you want to edit first";
       return;
     }
 
@@ -442,7 +414,7 @@ const EditSlashCommand: SlashCommand = {
     let lineBelowHighlightedRange = fileSuffix.trim().split("\n")[0];
 
     // Use custom templates defined by the model
-    const template = llm.promptTemplates?.["edit"];
+    const template = llm.promptTemplates?.edit;
     let generator: AsyncGenerator<string>;
     if (template) {
       let rendered = renderPromptTemplate(

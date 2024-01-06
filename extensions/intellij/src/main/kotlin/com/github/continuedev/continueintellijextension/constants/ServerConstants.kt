@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.constants
 
+import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -132,4 +133,22 @@ fun getDevDataFilepath(filename: String): String {
         Files.createFile(path)
     }
     return path.toString()
+}
+
+fun getMigrationsFolderPath(): String {
+    val path = Paths.get(getContinueGlobalPath(), ".migrations")
+    if (Files.notExists(path)) {
+        Files.createDirectories(path)
+    }
+    return path.toString()
+}
+
+fun migrate(id: String, callback: () -> Unit) {
+    val migrationsPath = getMigrationsFolderPath()
+    val migrationPath = Paths.get(migrationsPath, id).toString()
+    val migrationFile = File(migrationPath)
+    if (!migrationFile.exists()) {
+        migrationFile.writeText("")
+        callback()
+    }
 }

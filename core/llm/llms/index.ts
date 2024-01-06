@@ -7,6 +7,7 @@ import {
 } from "../..";
 import Anthropic from "./Anthropic";
 import Bedrock from "./Bedrock";
+import DeepInfra from "./DeepInfra";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
 import GooglePalm from "./GooglePalm";
@@ -40,7 +41,11 @@ const LLMs = [
   Gemini,
   Mistral,
   Bedrock,
+<<<<<<< HEAD
   SAPGenAIHub,
+=======
+  DeepInfra,
+>>>>>>> upstream/preview
 ];
 
 export function llmFromDescription(

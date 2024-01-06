@@ -41,10 +41,12 @@ select the code and toggle the Continue input box"""
 
 # endregion
 
-# region ————————————————————————————————— Part 2: Edit code [⌘ ⇧ M] —————————————————————————————————
+# region ————————————————————————————————— Part 2: Edit code [⌘ ⇧ L] —————————————————————————————————
 
 
-# Step 1: Highlight this code
+"""Step 1: Highlight this code"""
+
+
 def mysterious_function(x):
     n = len(x)
     for i in range(n):
@@ -58,10 +60,9 @@ def mysterious_function(x):
     return x
 
 
-"""Step 2: Use the keyboard shortcut [⌘ M] to
-select the code"""
+"""Step 2: Use the keyboard shortcut [⌘ ⇧ L] to edit"""
 
-"""Step 3: Type "/edit <your edit request>" and press Enter"""
+"""Step 3: Type "<your edit request>" and press Enter"""
 
 """Step 4: Use keyboard shortcuts to
 accept [⌘ ⇧ ⏎] or reject [⌘ ⇧ ⌫] the edit"""

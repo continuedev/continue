@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Changed
+body: Allow LLM servers to handle templating
+time: 2024-01-03T11:33:51.458728-05:00

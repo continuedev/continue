@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { IDE, SerializedContinueConfig } from "..";
+import { DiffLine, IDE, SerializedContinueConfig } from "..";
 import {
   getConfigJsonPath,
   getConfigTsPath,
@@ -90,8 +90,21 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
+  async verticalDiffUpdate(
+    filepath: string,
+    startLine: number,
+    endLine: number,
+    diffLine: DiffLine
+  ) {
+    return Promise.resolve();
+  }
+
   getOpenFiles(): Promise<string[]> {
     return Promise.resolve([]);
+  }
+
+  async getSearchResults(query: string): Promise<string> {
+    return "";
   }
 }
 

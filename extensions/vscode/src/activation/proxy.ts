@@ -1,7 +1,6 @@
 import cors from "cors";
 import express from "express";
-import http from "http";
-import https from "https";
+import { http, https } from "follow-redirects";
 
 const PROXY_PORT = 65433;
 const app = express();
@@ -23,6 +22,10 @@ app.use((req, res, next) => {
   });
 
   proxy.on("response", (response) => {
+    res.status(response.statusCode || 500);
+    for (let i = 1; i < response.rawHeaders.length; i += 2) {
+      res.setHeader(response.rawHeaders[i - 1], response.rawHeaders[i]);
+    }
     response.pipe(res);
   });
 

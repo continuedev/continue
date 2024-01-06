@@ -233,7 +233,10 @@ function TipTapEditor(props: TipTapEditorProps) {
           continue;
         }
         for (const node of p.content) {
-          if (node.type === "slashcommand" && node.attrs.label === "/edit") {
+          if (
+            node.type === "slashcommand" &&
+            ["/edit", "/comment"].includes(node.attrs.label)
+          ) {
             // Update context items
             dispatch(
               setEditingContextItemAtIndex({ item: codeBlock.attrs.item })
@@ -276,7 +279,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       return;
     }
     if (editor && document.hasFocus()) {
-      editor.commands.focus()
+      editor.commands.focus();
     }
     const handler = async (event: any) => {
       if (!editor) return;
@@ -328,10 +331,10 @@ function TipTapEditor(props: TipTapEditorProps) {
                 item,
               },
             })
-            .focus("end")
             .run();
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          editor.commands.focus("end");
+          setTimeout(() => {
+            editor.commands.focus("end");
+          }, 100);
         }
         setIgnoreHighlightedCode(false);
       }

@@ -1,7 +1,11 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
+<<<<<<< HEAD
   "version": "0.7.70",
+=======
+  "version": "0.9.2",
+>>>>>>> upstream/preview
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -81,9 +85,9 @@
         "title": "Reject Diff"
       },
       {
-        "command": "continue.quickTextEntry",
+        "command": "continue.quickEdit",
         "category": "Continue",
-        "title": "Quick Text Entry"
+        "title": "Quick Edit"
       },
       {
         "command": "continue.toggleAuxiliaryBar",
@@ -132,6 +136,26 @@
         "category": "Continue",
         "title": "View History",
         "icon": "$(history)"
+      },
+      {
+        "command": "continue.writeCommentsForCode",
+        "category": "Continue",
+        "title": "Write Comments for this Code"
+      },
+      {
+        "command": "continue.writeDocstringForCode",
+        "category": "Continue",
+        "title": "Write a Docstring for this Code"
+      },
+      {
+        "command": "continue.fixCode",
+        "category": "Continue",
+        "title": "Fix this Code"
+      },
+      {
+        "command": "continue.optimizeCode",
+        "category": "Continue",
+        "title": "Optimize this Code"
       }
     ],
     "keybindings": [
@@ -156,7 +180,7 @@
         "key": "shift+ctrl+backspace"
       },
       {
-        "command": "continue.quickTextEntry",
+        "command": "continue.quickEdit",
         "mac": "cmd+shift+l",
         "key": "ctrl+shift+l"
       },
@@ -198,12 +222,27 @@
       ],
       "continue.continueSubMenu": [
         {
-          "command": "continue.focusContinueInput",
-          "when": "editorHasSelection",
-          "group": "Continue"
+          "command": "continue.focusContinueInputWithoutClear",
+          "group": "Continue",
+          "when": "editorHasSelection"
         },
         {
-          "command": "continue.focusContinueInputWithoutClear",
+          "command": "continue.writeCommentsForCode",
+          "group": "Continue",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "continue.writeDocstringForCode",
+          "group": "Continue",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "continue.fixCode",
+          "group": "Continue",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "continue.optimizeCode",
           "group": "Continue",
           "when": "editorHasSelection"
         }
@@ -328,6 +367,7 @@
     "@openapitools/openapi-generator-cli": "^2.5.2",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
+    "@types/follow-redirects": "^1.14.4",
     "@types/glob": "^8.0.0",
     "@types/node": "16.x",
     "@types/node-fetch": "^2.6.2",
@@ -352,12 +392,14 @@
     "@electron/rebuild": "^3.2.10",
     "@reduxjs/toolkit": "^1.9.3",
     "@types/jest": "^29.5.11",
+    "@vscode/ripgrep": "^1.15.9",
     "axios": "^1.2.5",
     "core": "file:../../core",
     "cors": "^2.8.5",
     "downshift": "^7.6.0",
     "express": "^4.18.2",
     "fkill": "^8.1.0",
+    "follow-redirects": "^1.15.4",
     "highlight.js": "^11.7.0",
     "highlightable": "^1.3.0-beta.0",
     "http-proxy": "^1.18.1",

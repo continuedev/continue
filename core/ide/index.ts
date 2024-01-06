@@ -1,3 +1,4 @@
+import { DiffLine } from "..";
 import { IDE, SerializedContinueConfig } from "../index";
 import { ideRequest } from "./messaging";
 async function r(messageType: string, options: any = {}) {
@@ -69,7 +70,20 @@ export class ExtensionIde implements IDE {
     await r("showDiff", { filepath, newContents, stepIndex });
   }
 
+  async verticalDiffUpdate(
+    filepath: string,
+    startLine: number,
+    endLine: number,
+    diffLine: DiffLine
+  ) {
+    await r("diffLine", { filepath, startLine, endLine, diffLine });
+  }
+
   getOpenFiles(): Promise<string[]> {
     return r("getOpenFiles");
+  }
+
+  getSearchResults(query: string): Promise<string> {
+    return r("getSearchResults", { query });
   }
 }

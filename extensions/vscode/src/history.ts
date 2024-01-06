@@ -76,7 +76,18 @@ class HistoryManager {
     const sessionsListFilePath = getSessionsListPath();
     try {
       const rawSessionsList = fs.readFileSync(sessionsListFilePath, "utf-8");
-      const sessionsList: SessionInfo[] = JSON.parse(rawSessionsList);
+
+      let sessionsList: SessionInfo[];
+      try {
+        sessionsList = JSON.parse(rawSessionsList);
+      } catch (e) {
+        if (rawSessionsList.trim() === "") {
+          fs.writeFileSync(sessionsListFilePath, JSON.stringify([]));
+          sessionsList = [];
+        } else {
+          throw e;
+        }
+      }
 
       let found = false;
       for (const sessionInfo of sessionsList) {

@@ -1,4 +1,4 @@
-import { FileEdit, ModelDescription } from "core";
+import { DiffLine, FileEdit, ModelDescription } from "core";
 import {
   editConfigJson,
   getConfigJsonPath,
@@ -17,6 +17,32 @@ import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 let sockets: { [url: string]: io.Socket | undefined } = {};
 
 export let debugPanelWebview: vscode.Webview | undefined;
+
+export async function webviewRequest(
+  messageType: string,
+  data: any = {}
+): Promise<any> {
+  return new Promise((resolve, reject) => {
+    if (!debugPanelWebview) {
+      resolve(undefined);
+    }
+
+    const listener = debugPanelWebview?.onDidReceiveMessage((data) => {
+      if (data.type === messageType) {
+        resolve(data);
+        listener?.dispose();
+      }
+    });
+
+    debugPanelWebview?.postMessage({ type: messageType, data });
+
+    setTimeout(() => {
+      reject("Error communciating with Continue side panel: timed out");
+      listener?.dispose();
+    }, 500);
+  });
+}
+
 export function getSidebarContent(
   panel: vscode.WebviewPanel | vscode.WebviewView,
   page: string | undefined = undefined,
@@ -302,6 +328,10 @@ export function getSidebarContent(
           respond(await ide.runCommand(data.message.command));
           break;
         }
+        case "getSearchResults": {
+          respond(await ide.getSearchResults(data.message.query));
+          break;
+        }
         // History
         case "history": {
           respond(historyManager.list());
@@ -336,6 +366,24 @@ export function getSidebarContent(
               data.message.newContents,
               data.message.stepIndex
             )
+          );
+          break;
+        }
+        case "diffLine": {
+          const {
+            diffLine,
+            filepath,
+            startLine,
+            endLine,
+          }: {
+            diffLine: DiffLine;
+            filepath: string;
+            startLine: number;
+            endLine: number;
+          } = data.message;
+
+          respond(
+            await ide.verticalDiffUpdate(filepath, startLine, endLine, diffLine)
           );
           break;
         }
@@ -471,9 +519,16 @@ export function getSidebarContent(
         }
       }
     } catch (e) {
-      vscode.window.showErrorMessage(
-        `Error handling message from Continue side panel: ${e}`
-      );
+      vscode.window
+        .showErrorMessage(
+          `Error handling message from Continue side panel: ${e}`,
+          "Show Logs"
+        )
+        .then((selection) => {
+          if (selection === "Show Logs") {
+            vscode.commands.executeCommand("workbench.action.toggleDevTools");
+          }
+        });
       respond({ done: true });
     }
   });

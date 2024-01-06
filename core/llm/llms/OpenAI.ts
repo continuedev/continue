@@ -8,6 +8,19 @@ import {
 } from "../..";
 import { streamSse } from "../stream";
 
+const NON_CHAT_MODELS = [
+  "text-davinci-002",
+  "text-davinci-003",
+  "code-davinci-002",
+  "text-ada-001",
+  "text-babbage-001",
+  "text-curie-001",
+  "davinci",
+  "curie",
+  "babbage",
+  "ada",
+];
+
 class OpenAI extends BaseLLM {
   static providerName: ModelProvider = "openai";
   static defaultOptions: Partial<LLMOptions> = {
@@ -132,7 +145,8 @@ class OpenAI extends BaseLLM {
         url = url.slice(0, -1);
       }
 
-      if (!url.endsWith("/v1")) {
+      if (!url.includes("/v1")) {
+        // includes instead of endsWith becuase DeepInfra uses /v1/openai/chat/completions
         url += "/v1";
       }
       return url + "/chat/completions";
@@ -143,6 +157,19 @@ class OpenAI extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
+    if (NON_CHAT_MODELS.includes(options.model)) {
+      for await (const content of this._legacystreamComplete(
+        messages[messages.length - 1]?.content || "",
+        options
+      )) {
+        yield {
+          role: "assistant",
+          content,
+        };
+      }
+      return;
+    }
+
     const header = await this._getRequestHeaders();
     const url = this._getChatUrl();
     const response = await this.fetch(url, {
@@ -153,6 +180,7 @@ class OpenAI extends BaseLLM {
         stream: true,
       }),
     });
+
     for await (const value of streamSse(response)) {
       if (value.choices?.[0]?.delta?.content) {
         yield value.choices[0].delta;
