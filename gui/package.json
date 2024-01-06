@@ -21,6 +21,7 @@
     "@tiptap/suggestion": "^2.1.13",
     "@types/vscode-webview": "^1.57.1",
     "@uiw/react-markdown-preview": "^4.1.13",
+    "@xenova/transformers": "^2.13.3",
     "core": "file:../core",
     "dompurify": "^3.0.6",
     "downshift": "^7.6.0",
