@@ -1,9 +1,10 @@
 import { env, pipeline } from "@xenova/transformers";
+import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
 env.allowLocalModels = false;
 env.useBrowserCache = false;
 
-export async function calculateEmbeddings(chunks: string[]) {
+async function calculateEmbeddings(chunks: string[]) {
   const extractor = await pipeline(
     "feature-extraction",
     "Xenova/all-MiniLM-L6-v2"
@@ -16,5 +17,13 @@ export async function calculateEmbeddings(chunks: string[]) {
     normalize: true,
   });
   console.log(results);
-  return results;
+  return results.tolist();
 }
+
+class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
+  embed(chunks: string[]) {
+    return calculateEmbeddings(chunks);
+  }
+}
+
+export default TransformersJsEmbeddingsProvider;

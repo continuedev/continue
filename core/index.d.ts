@@ -443,11 +443,20 @@ export interface ModelDescription {
   promptTemplates?: { [key: string]: string };
 }
 
-export interface ModelRoles {
-  default: string;
-  chat?: string;
-  edit?: string;
-  summarize?: string;
+export type EmbeddingsProviderName = "transformers.js" | "ollama" | "openai";
+
+export interface EmbedOptions {
+  apiBase?: string;
+  apiKey?: string;
+  model: string;
+}
+
+export interface EmbeddingsProviderDescription extends EmbedOptions {
+  provider: EmbeddingsProviderName;
+}
+
+export interface EmbeddingsProvider {
+  embed(chunks: string[]): Promise<number[]>;
 }
 
 export interface SerializedContinueConfig {
@@ -462,6 +471,7 @@ export interface SerializedContinueConfig {
   retrievalSettings?: RetrievalSettings;
   disableIndexing?: boolean;
   userToken?: string;
+  embeddingsProvider?: EmbeddingsProviderDescription;
 }
 
 export interface Config {
@@ -488,6 +498,8 @@ export interface Config {
   disableIndexing?: boolean;
   /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
   userToken?: string;
+  /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
+  embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
 }
 
 export interface ContinueConfig {
@@ -500,4 +512,5 @@ export interface ContinueConfig {
   retrievalSettings?: RetrievalSettings;
   disableIndexing?: boolean;
   userToken?: string;
+  embeddingsProvider: EmbeddingsProvider;
 }

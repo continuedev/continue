@@ -4,6 +4,8 @@ import {
   ContinueConfig,
   CustomContextProvider,
   CustomLLM,
+  EmbeddingsProvider,
+  EmbeddingsProviderDescription,
   IContextProvider,
   ModelDescription,
   SerializedContinueConfig,
@@ -16,6 +18,8 @@ import {
 import { contextProviderClassFromName } from "../context/providers";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
+import { AllEmbeddingsProviders } from "../index/embeddings";
+import OllamaEmbeddingsProvider from "../index/embeddings/OllamaEmbeddingsProvider";
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
@@ -83,10 +87,19 @@ function intermediateToFinalConfig(config: Config): ContinueConfig {
     }
   }
 
+  if ((config.embeddingsProvider as EmbeddingsProviderDescription).model) {
+    const { provider, ...options } =
+      config.embeddingsProvider as EmbeddingsProviderDescription;
+    config.embeddingsProvider = AllEmbeddingsProviders[provider](options);
+  }
+
   return {
     ...config,
     contextProviders,
     models,
+    embeddingsProvider:
+      (config.embeddingsProvider as EmbeddingsProvider) ||
+      OllamaEmbeddingsProvider,
   };
 }
 
