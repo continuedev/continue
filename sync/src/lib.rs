@@ -1,6 +1,7 @@
 use std::path::Path;
 mod db;
 mod gitignore;
+mod similarity;
 mod sync;
 mod utils;
 
