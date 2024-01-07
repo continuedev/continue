@@ -1,11 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-<<<<<<< HEAD
-  "version": "0.7.70",
-=======
   "version": "0.9.2",
->>>>>>> upstream/preview
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
