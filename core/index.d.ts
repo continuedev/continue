@@ -388,7 +388,7 @@ export type ModelName =
   // Mistral
   | "mistral-tiny"
   | "mistral-small"
-  | "mistral-medium"
+  | "mistral-medium";
 
 export interface RequestOptions {
   timeout?: number;
