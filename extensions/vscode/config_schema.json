@@ -111,9 +111,7 @@
             "lmstudio",
             "llamafile",
             "mistral",
-<<<<<<< HEAD
-            "sap-gen-ai-hub"
-=======
+            "sap-gen-ai-hub",
             "deepinfra"
           ],
           "markdownEnumDescriptions": [
@@ -131,7 +129,6 @@
             "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamafile)",
             "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
             "### DeepInfra\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/deepinfra)"
->>>>>>> upstream/preview
           ],
           "type": "string"
         },
