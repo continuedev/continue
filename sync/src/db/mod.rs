@@ -42,7 +42,6 @@ pub fn text_to_embedding(text: String) -> Vec<f32> {
         .collect::<Vec<f32>>();
 }
 
-// Database interactions
 fn get_conn() -> Connection {
     let path = dirs::home_dir()
         .unwrap()
