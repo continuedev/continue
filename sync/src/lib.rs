@@ -48,10 +48,17 @@ fn sync_results(mut cx: FunctionContext) -> JsResult<JsObject> {
 }
 
 fn db_add_chunk(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let hash = cx.argument::<JsString>(0)?.value(&mut cx);
-    let content = cx.argument::<JsString>(1)?.value(&mut cx);
+    let chunk_obj = cx.argument::<JsObject>(0)?;
 
-    let tags_vec = cx.argument::<JsArray>(2)?.to_vec(&mut cx).unwrap();
+    let hash = chunk_obj
+        .get::<JsString, _, _>(&mut cx, "digest")?
+        .value(&mut cx);
+
+    let content = chunk_obj
+        .get::<JsString, _, _>(&mut cx, "content")?
+        .value(&mut cx);
+
+    let tags_vec = cx.argument::<JsArray>(1)?.to_vec(&mut cx).unwrap();
     let mut tags: Vec<String> = Vec::new();
     for item in tags_vec {
         let tag = item
@@ -61,7 +68,7 @@ fn db_add_chunk(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         tags.push(tag);
     }
 
-    let embedding_vec = cx.argument::<JsArray>(3)?.to_vec(&mut cx).unwrap();
+    let embedding_vec = cx.argument::<JsArray>(2)?.to_vec(&mut cx).unwrap();
     let mut embedding: Vec<f32> = Vec::new();
     for item in embedding_vec {
         let float = item

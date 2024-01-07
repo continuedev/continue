@@ -17,6 +17,7 @@ import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
+import { Chunk } from "core/index/chunk";
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import mergeJson from "./util/merge";
 import { getExtensionUri } from "./util/vscode";
@@ -273,17 +274,24 @@ class VsCodeIde implements IDE {
     return results.join("\n\n");
   }
 
-  async getFilesToEmbed(): Promise<[string, string][]> {
+  async getFilesToEmbed(): Promise<[string, string, string][]> {
     let results = [];
     let branch = await ideProtocolClient.getBranch();
     for (let dir of await this.getWorkspaceDirs()) {
-      results.push(...sync.sync_results(dir, branch));
+      let tag = `${dir}::${branch}`;
+      results.push(
+        ...sync.sync_results(dir, branch).map((r: any) => [tag, ...r])
+      );
     }
     return results;
   }
 
-  async sendChunkForFile(hash: string, embedding: number[], index: number) {
-    sync.sync_results(hash, embedding, index);
+  async sendEmbeddingForChunk(
+    chunk: Chunk,
+    embedding: number[],
+    tags: string[]
+  ) {
+    sync.add_chunk(chunk, tags, embedding);
   }
 }
 

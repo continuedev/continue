@@ -338,10 +338,10 @@ export function getSidebarContent(
         }
         case "sendChunkForFile": {
           respond(
-            await ide.sendChunkForFile(
-              data.message.hash,
+            await ide.sendEmbeddingForChunk(
+              data.message.chunk,
               data.message.embedding,
-              data.message.index
+              data.message.tags
             )
           );
           break;

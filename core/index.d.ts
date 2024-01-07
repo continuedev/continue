@@ -1,3 +1,5 @@
+import { Chunk } from "./index/chunk";
+
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
 
@@ -264,10 +266,10 @@ export interface IDE {
 
   // Embeddings
   /**
-   * Returns list of [filepath, hash of contents] that need to be embedded
+   * Returns list of [tag, filepath, hash of contents] that need to be embedded
    */
-  getFilesToEmbed(): Promise<[string, string][]>;
-  sendChunkForFile(hash: string, embedding: number[], index: number);
+  getFilesToEmbed(): Promise<[string, string, string][]>;
+  sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]);
 }
 
 // Slash Commands

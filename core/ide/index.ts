@@ -1,5 +1,6 @@
 import { DiffLine } from "..";
 import { IDE, SerializedContinueConfig } from "../index";
+import { Chunk } from "../index/chunk";
 import { ideRequest } from "./messaging";
 async function r(messageType: string, options: any = {}) {
   return await ideRequest(messageType, options);
@@ -87,11 +88,11 @@ export class ExtensionIde implements IDE {
     return r("getSearchResults", { query });
   }
 
-  getFilesToEmbed(): Promise<[string, string][]> {
+  getFilesToEmbed(): Promise<[string, string, string][]> {
     return r("getFilesToEmbed");
   }
 
-  sendChunkForFile(hash: string, embedding: number[], index: number) {
-    return r("sendChunkForFile", { hash, embedding });
+  sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {
+    return r("sendChunkForFile", { chunk, embedding, tags });
   }
 }
