@@ -351,11 +351,8 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
-<<<<<<< HEAD
-  | "sap-gen-ai-hub";
-=======
+  | "sap-gen-ai-hub"
   | "deepinfra";
->>>>>>> upstream/preview
 
 export type ModelName =
   // OpenAI
