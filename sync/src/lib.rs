@@ -4,6 +4,7 @@ mod gitignore;
 mod sync;
 mod utils;
 
+use db::{add_tag, remove_chunk, remove_tag};
 use neon::prelude::*;
 
 fn build_js_array<'a>(
@@ -25,26 +26,32 @@ fn build_js_array<'a>(
     return js_array;
 }
 
-fn sync_results(mut cx: FunctionContext) -> JsResult<JsObject> {
+fn sync_results(mut cx: FunctionContext) -> JsResult<JsArray> {
     let dir = cx.argument::<JsString>(0)?.value(&mut cx);
     let branch = cx.argument::<JsString>(1)?.value(&mut cx);
+    let tag = format!("{}::{}", dir, branch);
 
     let results = sync::sync(Path::new(&dir), Some(&branch)).unwrap();
 
-    let final_object = JsObject::new(&mut cx);
+    // Send to IDE Extension to compute embeddings
     let compute = build_js_array(results.0, &mut cx);
-    final_object.set(&mut cx, "compute", compute)?;
 
-    let delete = build_js_array(results.1, &mut cx);
-    final_object.set(&mut cx, "delete", delete)?;
+    // Delete chunks
+    for (_, hash) in results.1 {
+        remove_chunk(hash);
+    }
 
-    let add_label = build_js_array(results.2, &mut cx);
-    final_object.set(&mut cx, "add_label", add_label)?;
+    // Add tag from chunks
+    for (_, hash) in results.2 {
+        add_tag(hash, tag.clone());
+    }
 
-    let remove_label = build_js_array(results.3, &mut cx);
-    final_object.set(&mut cx, "remove_label", remove_label)?;
+    // Remove tag from chunk_rows
+    for (_, hash) in results.3 {
+        remove_tag(hash, tag.clone());
+    }
 
-    Ok(final_object)
+    Ok(compute)
 }
 
 fn db_add_chunk(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -82,26 +89,6 @@ fn db_add_chunk(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     return Ok(JsUndefined::new(&mut cx));
 }
 
-fn db_remove_chunk(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let hash = cx.argument::<JsString>(0)?.value(&mut cx);
-    db::remove_chunk(hash);
-
-    return Ok(JsUndefined::new(&mut cx));
-}
-fn db_add_tag(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let hash = cx.argument::<JsString>(0)?.value(&mut cx);
-    let tag = cx.argument::<JsString>(1)?.value(&mut cx);
-    db::add_tag(hash, tag);
-
-    return Ok(JsUndefined::new(&mut cx));
-}
-fn db_remove_tag(mut cx: FunctionContext) -> JsResult<JsUndefined> {
-    let hash = cx.argument::<JsString>(0)?.value(&mut cx);
-    let tag = cx.argument::<JsString>(1)?.value(&mut cx);
-    db::remove_tag(hash, tag);
-
-    return Ok(JsUndefined::new(&mut cx));
-}
 fn db_retrieve(mut cx: FunctionContext) -> JsResult<JsUndefined> {
     let n = cx.argument::<JsNumber>(0)?.value(&mut cx) as usize;
 
@@ -134,9 +121,6 @@ fn db_retrieve(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
     cx.export_function("sync_results", sync_results)?;
     cx.export_function("add_chunk", db_add_chunk);
-    cx.export_function("remove_chunk", db_remove_chunk);
-    cx.export_function("add_tag", db_add_tag);
-    cx.export_function("remove_tag", db_remove_tag);
     cx.export_function("retrieve", db_retrieve);
     Ok(())
 }
