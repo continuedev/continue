@@ -106,6 +106,12 @@ class FileSystemIde implements IDE {
   async getSearchResults(query: string): Promise<string> {
     return "";
   }
+
+  getFilesToEmbed(): Promise<[string, string][]> {
+    return Promise.resolve([]);
+  }
+
+  sendChunkForFile(hash: string, embedding: number[], index: number) {}
 }
 
 export default FileSystemIde;

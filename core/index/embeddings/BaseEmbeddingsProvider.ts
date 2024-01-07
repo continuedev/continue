@@ -11,7 +11,7 @@ class BaseEmbeddingsProvider implements EmbeddingsProvider {
     };
   }
 
-  embed(chunks: string[]): Promise<number[]> {
+  embed(chunks: string[]): Promise<number[][]> {
     throw new Error("Method not implemented.");
   }
 }

@@ -332,6 +332,20 @@ export function getSidebarContent(
           respond(await ide.getSearchResults(data.message.query));
           break;
         }
+        case "getFilesToEmbed": {
+          respond(await ide.getFilesToEmbed());
+          break;
+        }
+        case "sendChunkForFile": {
+          respond(
+            await ide.sendChunkForFile(
+              data.message.hash,
+              data.message.embedding,
+              data.message.index
+            )
+          );
+          break;
+        }
         // History
         case "history": {
           respond(historyManager.list());

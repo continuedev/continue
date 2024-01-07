@@ -14,6 +14,7 @@ import {
   vscBackground,
   vscForeground,
 } from ".";
+import useLoadEmbeddings from "../hooks/useLoadEmbeddings";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
@@ -112,9 +113,6 @@ const Layout = () => {
   const showDialog = useSelector(
     (state: RootStore) => state.uiState.showDialog
   );
-  const indexingProgress = useSelector(
-    (state: RootStore) => state.serverState.indexingProgress
-  );
 
   const defaultModel = useSelector(defaultModelSelector);
   // #region Selectors
@@ -171,6 +169,8 @@ const Layout = () => {
       window.removeEventListener("message", handler);
     };
   }, [location, navigate]);
+
+  const { progress: indexingProgress } = useLoadEmbeddings();
 
   return (
     <LayoutTopDiv>

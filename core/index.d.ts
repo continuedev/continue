@@ -261,6 +261,13 @@ export interface IDE {
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
+
+  // Embeddings
+  /**
+   * Returns list of [filepath, hash of contents] that need to be embedded
+   */
+  getFilesToEmbed(): Promise<[string, string][]>;
+  sendChunkForFile(hash: string, embedding: number[], index: number);
 }
 
 // Slash Commands
@@ -456,7 +463,7 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 }
 
 export interface EmbeddingsProvider {
-  embed(chunks: string[]): Promise<number[]>;
+  embed(chunks: string[]): Promise<number[][]>;
 }
 
 export interface SerializedContinueConfig {

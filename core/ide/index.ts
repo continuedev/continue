@@ -86,4 +86,12 @@ export class ExtensionIde implements IDE {
   getSearchResults(query: string): Promise<string> {
     return r("getSearchResults", { query });
   }
+
+  getFilesToEmbed(): Promise<[string, string][]> {
+    return r("getFilesToEmbed");
+  }
+
+  sendChunkForFile(hash: string, embedding: number[], index: number) {
+    return r("sendChunkForFile", { hash, embedding });
+  }
 }

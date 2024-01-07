@@ -20,6 +20,7 @@ import {
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import mergeJson from "./util/merge";
 import { getExtensionUri } from "./util/vscode";
+const sync = require("../sync.node");
 
 async function buildConfigTs(browser: boolean) {
   if (!fs.existsSync(getConfigTsPath())) {
@@ -270,6 +271,19 @@ class VsCodeIde implements IDE {
     }
 
     return results.join("\n\n");
+  }
+
+  async getFilesToEmbed(): Promise<[string, string][]> {
+    let results = [];
+    let branch = await ideProtocolClient.getBranch();
+    for (let dir of await this.getWorkspaceDirs()) {
+      results.push(...sync.sync_results(dir, branch));
+    }
+    return results;
+  }
+
+  async sendChunkForFile(hash: string, embedding: number[], index: number) {
+    sync.sync_results(hash, embedding, index);
   }
 }
 

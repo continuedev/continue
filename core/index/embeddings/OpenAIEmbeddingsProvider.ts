@@ -14,7 +14,7 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
         Authorization: `Bearer: ${this.options.apiKey}`,
       },
     });
-    return [] as number[];
+    return [] as number[][];
   }
 }
 
