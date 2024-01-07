@@ -41,11 +41,8 @@ const LLMs = [
   Gemini,
   Mistral,
   Bedrock,
-<<<<<<< HEAD
   SAPGenAIHub,
-=======
   DeepInfra,
->>>>>>> upstream/preview
 ];
 
 export function llmFromDescription(
