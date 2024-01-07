@@ -23,7 +23,9 @@ async function getParserForFile(filepath: string) {
   const parser = new Parser();
   const segs = filepath.split(".");
   const Language = await Parser.Language.load(
-    fileExtensionToLanguage[segs[segs.length - 1]]
+    `/tree-sitter/tree-sitter${
+      fileExtensionToLanguage[segs[segs.length - 1]]
+    }.wasm`
   );
   parser.setLanguage(Language);
   return parser;
