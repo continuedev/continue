@@ -1034,6 +1034,12 @@
           "default": false,
           "type": "boolean"
         },
+        "disableSessionTitles": {
+          "title": "Disable Session Titles",
+          "description": "If set to `True`, Continue will not make extra requests to the LLM to generate a summary title of each session.",
+          "default": false,
+          "type": "boolean"
+        },
         "retrievalSettings": {
           "title": "Retrieval Settings",
           "description": "Settings for the retrieval system. Read more about the retrieval system in the documentation.",
