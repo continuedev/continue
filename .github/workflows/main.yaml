@@ -209,7 +209,7 @@ jobs:
 
       # 5 Send to Discord Webhook
       - name: Discord Commits
-        uses: Sniddl/discord-commits@v1.6
+        uses: Sniddl/discord-commits@1.7
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
           template: "avatar-with-link"
