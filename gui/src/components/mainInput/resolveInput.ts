@@ -1,5 +1,5 @@
 import { JSONContent } from "@tiptap/react";
-import { IContextProvider } from "core";
+import { EmbeddingsProvider, IContextProvider } from "core";
 import { ExtensionIde } from "core/ide";
 import { getBasename } from "core/util";
 import { getContextItems } from "../../hooks/useContextProviders";
@@ -19,7 +19,8 @@ interface MentionAttrs {
 
 async function resolveEditorContent(
   editorState: JSONContent,
-  contextProviders: IContextProvider[]
+  contextProviders: IContextProvider[],
+  embeddingsProvider?: EmbeddingsProvider
 ): Promise<string> {
   let paragraphs = [];
   let contextItems: MentionAttrs[] = [];
@@ -59,7 +60,10 @@ async function resolveEditorContent(
         contextProviders,
         item.id,
         item.query,
-        paragraphs.join("\n")
+        {
+          fullInput: paragraphs.join("\n"),
+          embeddingsProvider,
+        }
       );
       for (const resolvedItem of resolvedItems) {
         contextItemsText += `\`\`\`title="${item.label}"\n${resolvedItem.content}\n\`\`\`\n`;

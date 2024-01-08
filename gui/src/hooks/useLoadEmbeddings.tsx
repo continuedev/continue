@@ -11,10 +11,13 @@ function useLoadEmbeddings() {
   const embeddingsProvider = useSelector(
     (store: RootStore) => store.state.config.embeddingsProvider
   );
+  const disableIndexing = useSelector(
+    (store: RootStore) => store.state.config.disableIndexing
+  );
 
   useEffect(() => {
     (async () => {
-      if (!embeddingsProvider) {
+      if (!embeddingsProvider || disableIndexing) {
         return;
       }
 
@@ -50,7 +53,7 @@ function useLoadEmbeddings() {
         setProgress(done / total);
       }
     })();
-  }, [embeddingsProvider]);
+  }, [embeddingsProvider, disableIndexing]);
 
   return { progress };
 }

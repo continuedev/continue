@@ -292,6 +292,20 @@ class VsCodeIde implements IDE {
   ) {
     sync.add_chunk(chunk, tags, embedding);
   }
+
+  async retrieveChunks(
+    v: number[],
+    n: number,
+    tags: string[]
+  ): Promise<Chunk[]> {
+    // TODO: OR clause with tags
+    let branch = await ideProtocolClient.getBranch();
+    let dirs = await this.getWorkspaceDirs();
+    let tag = [`${dirs[0] || "NONE"}::${branch}`];
+    let sync_results = sync.retrieve(n, tags, v);
+    let results = sync_results.map((r: any) => [tag, r.name, r.hash]);
+    return results;
+  }
 }
 
 async function loadFullConfigNode(ide: IDE): Promise<ContinueConfig> {

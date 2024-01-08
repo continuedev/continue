@@ -54,17 +54,28 @@ export interface ContextProviderDescription {
   requiresQuery: boolean;
 }
 
+interface ContextProviderExtras {
+  fullInput: string;
+  embeddingsProvider?: EmbeddingsProvider;
+}
+
 export interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
-  getContextItems(query: string, fullInput: string): Promise<ContextItem[]>;
+  getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]>;
 }
 
 export interface IContextProvider {
   get description(): ContextProviderDescription;
 
-  getContextItems(query: string, fullInput: string): Promise<ContextItem[]>;
+  getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]>;
 }
 
 export interface PersistedSessionInfo {
@@ -274,6 +285,7 @@ export interface IDE {
     embedding: number[],
     tags: string[]
   ): void;
+  retrieveChunks(v: number[], n: number, tags: string[]): Promise<Chunk[]>;
 }
 
 // Slash Commands

@@ -113,6 +113,10 @@ class FileSystemIde implements IDE {
   }
 
   sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {}
+
+  retrieveChunks(v: number[], n: number, tags: string[]): Promise<Chunk[]> {
+    return Promise.resolve([]);
+  }
 }
 
 export default FileSystemIde;

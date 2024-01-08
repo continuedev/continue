@@ -1,5 +1,9 @@
 import { BaseContextProvider } from "..";
-import { ContextItem, ContextProviderDescription } from "../..";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+} from "../..";
 
 class GitHubIssuesContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -12,7 +16,7 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    fullInput: string
+    extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
     return [];
   }

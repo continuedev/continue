@@ -1,4 +1,9 @@
-import { ContextItem, ContextProviderDescription, IContextProvider } from "..";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+  IContextProvider,
+} from "..";
 
 export abstract class BaseContextProvider implements IContextProvider {
   options: { [key: string]: any };
@@ -16,7 +21,7 @@ export abstract class BaseContextProvider implements IContextProvider {
   // Maybe just include the chat message in here. Should never have to go back to the context provider once you have the information.
   abstract getContextItems(
     query: string,
-    fullInput: string
+    extras: ContextProviderExtras
   ): Promise<ContextItem[]>;
 
   abstract load(): Promise<void>;

@@ -95,4 +95,8 @@ export class ExtensionIde implements IDE {
   sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {
     return r("sendChunkForFile", { chunk, embedding, tags });
   }
+
+  retrieveChunks(v: number[], n: number, tags: string[]): Promise<Chunk[]> {
+    return r("retrieveChunks", { v, n, tags });
+  }
 }

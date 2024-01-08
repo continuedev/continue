@@ -34,6 +34,9 @@ function useChatHandler(dispatch: Dispatch) {
   const contextItems = useSelector(
     (state: RootStore) => state.state.contextItems
   );
+  const embeddingsProvider = useSelector(
+    (state: RootStore) => state.state.config.embeddingsProvider
+  );
   const history = useSelector((store: RootStore) => store.state.history);
   const contextProviders = useSelector(
     (store: RootStore) => store.state.config.contextProviders || []
@@ -135,7 +138,11 @@ function useChatHandler(dispatch: Dispatch) {
       }
 
       // Resolve context providers and construct new history
-      const content = await resolveEditorContent(editorState, contextProviders);
+      const content = await resolveEditorContent(
+        editorState,
+        contextProviders,
+        embeddingsProvider
+      );
       const message: ChatMessage = {
         role: "user",
         content,
