@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.actions
 
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.google.gson.Gson
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext
@@ -129,7 +130,7 @@ class QuickTextEntryAction : AnAction() {
              }
 
              continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-             continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInput"))
+             continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInput")))
 
          }
     }
@@ -162,7 +163,7 @@ class ToggleAuxiliaryBarAction : AnAction() {
     }
 }
 
-class FocusContinueInputWithEditAction : AnAction() {
+class FocusContinueInputWithoutClearAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project
         if (project != null) {
@@ -178,7 +179,7 @@ class FocusContinueInputWithEditAction : AnAction() {
 
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInputWithEdit"))
+        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInputWithoutClear")))
 
         continuePluginService.ideProtocolClient?.sendHighlightedCode()
     }
@@ -201,7 +202,7 @@ class FocusContinueInputAction : AnAction() {
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
 
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInput"))
+        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInput")))
 
         continuePluginService.ideProtocolClient?.sendHighlightedCode()
     }
@@ -224,7 +225,7 @@ class NewContinueSessionAction : AnAction() {
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
 
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "focusContinueInputWithNewSession"))
+        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInputWithNewSession")))
     }
 }
 
@@ -238,6 +239,6 @@ class ViewHistoryAction : AnAction() {
 
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
 
-        continuePluginService.dispatchCustomEvent("message", mutableMapOf("type" to "viewHistory"))
+        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "viewHistory")))
     }
 }

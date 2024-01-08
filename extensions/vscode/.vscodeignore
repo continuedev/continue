@@ -13,7 +13,7 @@ scripts/env/**
 scripts/.env
 **/.env
 **/env
-**/node_modules
+node_modules/**
 
 **/.pytest_cache
 **/__pycache__
@@ -23,3 +23,5 @@ scripts/env
 scripts/.continue_env_installed
 
 server/exe/**
+!out/node_modules/**
+!node_modules/@vscode/ripgrep/bin/rg

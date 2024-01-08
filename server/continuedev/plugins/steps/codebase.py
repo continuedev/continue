@@ -2,7 +2,7 @@ import asyncio
 import os
 from typing import List, Optional, Union
 
-from ...core.config import RetrievalSettings
+from ...core.config import ModelDescription, RetrievalSettings
 from ...core.main import (
     ContextItem,
     ContextItemDescription,

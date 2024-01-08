@@ -56,8 +56,82 @@ pytest = "^7.4.1"
 pytest-asyncio = "^0.21.1"
 ipykernel = "^6.26.0"
 
-[tool.poetry.group.lint.dependencies]
+[tool.poetry.group.lint-ruff]
+optional = true
+[tool.poetry.group.lint-ruff.dependencies]
 ruff = "==0.1.8"
+
+[tool.poetry.group.lint-typing]
+optional = true
+[tool.poetry.group.lint-typing.dependencies]
+mypy = "==1.7.1"
+types-tqdm = "^4.66.0.5"
+types-beautifulsoup4 = "^4.12.0.7"
+types-chevron = "^0.14.2.5"
+types-tree-sitter-languages = "^1.8.0.0"
+types-aiofiles = "^23.2.0.0"
+types-psutil = "^5.9.5.17"
+
+[tool.mypy]
+strict = true
+show_error_codes = true
+files = "continuedev,tests"
+no_implicit_reexport = true
+
+# Mypy 'whitelist'
+
+[[tool.mypy.overrides]]
+module = [
+    "continuedev.*",
+    "tests.*",
+]
+strict = false
+disallow_untyped_calls = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_any_generics = false
+disallow_subclassing_any = false
+warn_return_any = false
+strict_optional = false
+disable_error_code = [
+    "abstract",
+    "arg-type",
+    "assignment",
+    "attr-defined",
+    "call-arg",
+    "import-not-found",
+    "index",
+    "list-item",
+    "misc",
+    "name-defined",
+    "no-redef",
+    "operator",
+    "override",
+    "return-value",
+    "return",
+    "syntax",
+    "unused-coroutine",
+    "union-attr",
+    "var-annotated",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "boltons.*",
+    "directory_tree.*",
+    "huggingface_hub.*",
+    "nest_asyncio.*",
+    "litellm.*",
+    "pygit2.*",
+    "redbaron.*",
+    "replicate.*",
+    "requests.*",
+    "ripgrepy.*",
+    "socketio.*",
+    "tiktoken_ext.*",
+]
+ignore_missing_imports = true
+
 
 [build-system]
 requires = ["poetry-core", "maturin>=1,<2"]

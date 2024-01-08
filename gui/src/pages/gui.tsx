@@ -1,62 +1,47 @@
+import {
+  ChatBubbleOvalLeftIcon,
+  CodeBracketSquareIcon,
+  ExclamationTriangleIcon,
+} from "@heroicons/react/24/outline";
+import { JSONContent } from "@tiptap/react";
+import { usePostHog } from "posthog-js/react";
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
+import { ErrorBoundary } from "react-error-boundary";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   Button,
-  Input,
   defaultBorderRadius,
   lightGray,
   vscBackground,
+  vscForeground,
 } from "../components";
-import { ErrorBoundary } from "react-error-boundary";
-import {
-  useEffect,
-  useRef,
-  useState,
-  useContext,
-  useLayoutEffect,
-  useCallback,
-  Fragment,
-} from "react";
+import FTCDialog from "../components/dialogs/FTCDialog";
+import ErrorStepContainer from "../components/gui/ErrorStepContainer";
 import StepContainer from "../components/gui/StepContainer";
-import { GUIClientContext } from "../App";
-import ComboBox from "../components/mainInput/ComboBox";
-import { usePostHog } from "posthog-js/react";
-import { useDispatch, useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
-import { postToIde } from "../util/ide";
-import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
+import TimelineItem from "../components/gui/TimelineItem";
+import ContinueInputBox from "../components/mainInput/ContinueInputBox";
+import useChatHandler from "../hooks/useChatHandler";
+import useHistory from "../hooks/useHistory";
+import { defaultModelSelector } from "../redux/selectors/modelSelectors";
+import { newSession, setInactive } from "../redux/slices/stateSlice";
 import {
-  setBottomMessage,
   setDialogEntryOn,
   setDialogMessage,
   setDisplayBottomMessageOnBottom,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import RingLoader from "../components/loaders/RingLoader";
-import TimelineItem from "../components/gui/TimelineItem";
-import ErrorStepContainer from "../components/gui/ErrorStepContainer";
-import {
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
-  ChatBubbleOvalLeftIcon,
-  CodeBracketSquareIcon,
-  ExclamationTriangleIcon,
-  FolderIcon,
-  PlusIcon,
-} from "@heroicons/react/24/outline";
-import FTCDialog from "../components/dialogs/FTCDialog";
-import HeaderButtonWithText from "../components/HeaderButtonWithText";
-import { useNavigate } from "react-router-dom";
-import { setTakenActionTrue } from "../redux/slices/miscSlice";
-import {
-  addContextItemAtIndex,
-  clearContextItems,
-  deleteAtIndex,
-  newSession,
-  setActive,
-  setHistory,
-  setTitle,
-} from "../redux/slices/sessionStateReducer";
-import { StepDescription } from "../schema/SessionState";
+import { RootStore } from "../redux/store";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
+import { isJetBrains } from "../util/ide";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -67,23 +52,23 @@ const TopGuiDiv = styled.div`
   &::-webkit-scrollbar {
     display: none;
   }
+
+  height: 100%;
 `;
 
-const TitleTextInput = styled(Input)`
-  border: none;
-  outline: none;
+const StopButton = styled.div`
+  width: fit-content;
+  margin-right: auto;
+  margin-left: auto;
 
-  font-size: 16px;
-  font-weight: bold;
-  margin: 0;
-  margin-right: 8px;
-  padding-top: 6px;
-  padding-bottom: 6px;
-  background-color: transparent;
+  font-size: 12px;
 
-  &:focus {
-    outline: none;
-  }
+  border: 0.5px solid ${lightGray};
+  border-radius: ${defaultBorderRadius};
+  padding: 4px 8px;
+  color: ${lightGray};
+
+  cursor: pointer;
 `;
 
 const StepsDiv = styled.div`
@@ -105,27 +90,24 @@ const StepsDiv = styled.div`
   }
 `;
 
-const UserInputQueueItem = styled.div`
-  border-radius: ${defaultBorderRadius};
-  color: gray;
-  padding: 8px;
-  margin: 8px;
-  text-align: center;
-`;
+const NewSessionButton = styled.div`
+  width: fit-content;
+  margin-right: auto;
+  margin-left: 8px;
+  margin-top: 4px;
 
-const GUIHeaderDiv = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
-  border-bottom: 0.5px solid ${lightGray};
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  background-color: transparent;
-  backdrop-filter: blur(12px);
+  font-size: 12px;
+
+  border-radius: ${defaultBorderRadius};
+  padding: 2px 8px;
+  color: ${lightGray};
+
+  &:hover {
+    background-color: ${lightGray}33;
+    color: ${vscForeground};
+  }
+
+  cursor: pointer;
 `;
 
 function fallbackRender({ error, resetErrorBoundary }) {
@@ -153,7 +135,6 @@ interface GUIProps {
 
 function GUI(props: GUIProps) {
   // #region Hooks
-  const client = useContext(GUIClientContext);
   const posthog = usePostHog();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -161,27 +142,19 @@ function GUI(props: GUIProps) {
   // #endregion
 
   // #region Selectors
-  const sessionState = useSelector((state: RootStore) => state.sessionState);
-  const workspacePaths = (window as any).workspacePaths || [];
+  const sessionState = useSelector((state: RootStore) => state.state);
 
-  const defaultModel = useSelector(
-    (state: RootStore) => (state.serverState.config as any).models?.default
-  );
-  const serverStatusMessage = useSelector(
-    (state: RootStore) => state.misc.serverStatusMessage
-  );
+  const defaultModel = useSelector(defaultModelSelector);
 
-  const sessionTitle = useSelector(
-    (state: RootStore) => state.sessionState.title
+  const active = useSelector((state: RootStore) => state.state.active);
+  const contextProviders = useSelector(
+    (state: RootStore) => state.state.config.contextProviders || []
   );
-  const active = useSelector((state: RootStore) => state.sessionState.active);
 
   // #endregion
 
   // #region State
-  const [waitingForSteps, setWaitingForSteps] = useState(false);
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
-  const [waitingForClient, setWaitingForClient] = useState(true);
   const [showLoading, setShowLoading] = useState(false);
 
   useEffect(() => {
@@ -192,10 +165,8 @@ function GUI(props: GUIProps) {
 
   // #endregion
 
-  // #region Refs
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const topGuiDivRef = useRef<HTMLDivElement>(null);
-  // #endregion
 
   // #region Effects
 
@@ -204,7 +175,6 @@ function GUI(props: GUIProps) {
   const bottomMessage = useSelector(
     (state: RootStore) => state.uiState.bottomMessage
   );
-  const takenAction = useSelector((state: RootStore) => state.misc.takenAction);
   useEffect(() => {
     if (!aboveComboBoxDivRef.current) return;
     dispatch(
@@ -217,6 +187,8 @@ function GUI(props: GUIProps) {
 
   const [userScrolledAwayFromBottom, setUserScrolledAwayFromBottom] =
     useState<boolean>(false);
+
+  const state = useSelector((state: RootStore) => state.state);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -257,10 +229,7 @@ function GUI(props: GUIProps) {
         isMetaEquivalentKeyPressed(e) &&
         !e.shiftKey
       ) {
-        client?.stopSession();
-        dispatch(setActive(false));
-      } else if (e.key === "Escape") {
-        dispatch(setBottomMessage(undefined));
+        dispatch(setInactive());
       }
     };
     window.addEventListener("keydown", listener);
@@ -268,16 +237,17 @@ function GUI(props: GUIProps) {
     return () => {
       window.removeEventListener("keydown", listener);
     };
-  }, [client, active]);
+  }, [active]);
 
   // #endregion
 
+  const { streamResponse } = useChatHandler(dispatch);
+
   const sendInput = useCallback(
-    (input: string) => {
+    (editorState: JSONContent) => {
       if (
-        defaultModel?.class_name === "OpenAIFreeTrial" &&
-        defaultModel?.api_key === "" &&
-        (!input.startsWith("/") || input.startsWith("/edit"))
+        defaultModel.providerName === "openai-free-trial" &&
+        defaultModel?.apiKey === ""
       ) {
         const ftc = localStorage.getItem("ftc");
         if (ftc) {
@@ -295,51 +265,7 @@ function GUI(props: GUIProps) {
         }
       }
 
-      setWaitingForSteps(true);
-
-      // TODO: Sagas or something might be better?
-      const newHistory = [
-        ...sessionState.history,
-        {
-          name: "User Input",
-          description: input,
-          observations: [],
-          logs: [],
-          step_type: "UserInputStep",
-          params: {
-            user_input: input,
-            context_items: sessionState.context_items,
-          },
-          hide: false,
-          depth: 0,
-        },
-      ];
-      const state = {
-        history: newHistory,
-        context_items: sessionState.context_items,
-      };
-      client.runFromState(state);
-      newHistory.push({
-        name: "Generating Response...",
-        description: " ",
-        observations: [],
-        logs: [],
-        step_type: "SimpleChatStep",
-        params: {},
-        hide: false,
-        depth: 0,
-      });
-      dispatch(setHistory(newHistory));
-      dispatch(setActive(true));
-      for (let contextItem of sessionState.context_items) {
-        dispatch(
-          addContextItemAtIndex({
-            item: contextItem,
-            index: newHistory.length - 1,
-          })
-        );
-      }
-      dispatch(clearContextItems());
+      streamResponse(editorState);
 
       // Increment localstorage counter for popup
       const counter = localStorage.getItem("mainTextEntryCounter");
@@ -415,36 +341,21 @@ function GUI(props: GUIProps) {
         localStorage.setItem("mainTextEntryCounter", "1");
       }
     },
-    [client, sessionState.history, sessionState.context_items, defaultModel]
+    [
+      sessionState.history,
+      sessionState.contextItems,
+      defaultModel,
+      state,
+      streamResponse,
+    ]
   );
 
-  const persistSession = useCallback(() => {
-    client?.persistSession(sessionState, workspacePaths[0] || "");
-  }, [client, sessionState, workspacePaths]);
-
-  useEffect(() => {
-    const handleKeyDown = (event: any) => {
-      if (event.metaKey && event.altKey && event.code === "KeyN") {
-        client?.stopSession();
-        persistSession();
-        dispatch(newSession());
-        mainTextInputRef.current?.focus?.();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [client, persistSession, mainTextInputRef]);
+  const { saveSession } = useHistory(dispatch);
 
   useEffect(() => {
     const handler = (event: any) => {
       if (event.data.type === "newSession") {
-        client?.stopSession();
-        persistSession();
-        dispatch(newSession());
+        saveSession();
         mainTextInputRef.current?.focus?.();
       }
     };
@@ -452,308 +363,53 @@ function GUI(props: GUIProps) {
     return () => {
       window.removeEventListener("message", handler);
     };
-  }, []);
-
-  useEffect(() => {
-    const eventListener = (event: any) => {
-      if (event.data.type === "userInput") {
-        sendInput(event.data.input);
-      }
-    };
-    window.addEventListener("message", eventListener);
-    return () => window.removeEventListener("message", eventListener);
-  }, [sendInput]);
-
-  const onMainTextInput = (event?: any) => {
-    dispatch(setTakenActionTrue(null));
-    if (mainTextInputRef.current && client) {
-      let input = (mainTextInputRef.current as any).inputValue;
-
-      if (input.trim() === "") return;
-
-      if (input.startsWith("#") && (input.length === 7 || input.length === 4)) {
-        localStorage.setItem("continueButtonColor", input);
-        (mainTextInputRef.current as any).setInputValue("");
-        return;
-      }
-
-      // cmd+enter to /codebase
-      if (event && isMetaEquivalentKeyPressed(event)) {
-        input = `/codebase ${input}`;
-      }
-      (mainTextInputRef.current as any).setInputValue("");
-
-      sendInput(input);
-    }
-  };
-
-  const onStepUserInput = (input: string, index: number) => {
-    if (!client) return;
-    client.sendStepUserInput(input, index);
-  };
+  }, [saveSession]);
 
   const isLastUserInput = useCallback(
     (index: number): boolean => {
       let foundLaterUserInput = false;
-      for (let i = index + 1; i < sessionState.history.length; i++) {
-        if (
-          sessionState.history[i].name === "User Input" &&
-          sessionState.history[i].hide === false
-        ) {
+      for (let i = index + 1; i < state.history.length; i++) {
+        if (state.history[i].message.role === "user") {
           foundLaterUserInput = true;
           break;
         }
       }
       return !foundLaterUserInput;
     },
-    [sessionState.history]
-  );
-
-  const getStepsInUserInputGroup = useCallback(
-    (index: number): number[] => {
-      // index is the index in the entire timeline, hidden steps included
-      const stepsInUserInputGroup: number[] = [];
-
-      // First find the closest above UserInputStep
-      let userInputIndex = -1;
-      for (let i = index; i >= 0; i--) {
-        if (
-          typeof sessionState.history[i] !== "undefined" &&
-          sessionState.history[i].name === "User Input" &&
-          sessionState.history[i].hide === false
-        ) {
-          stepsInUserInputGroup.push(i);
-          userInputIndex = i;
-          break;
-        }
-      }
-      if (stepsInUserInputGroup.length === 0) return [];
-
-      for (let i = userInputIndex + 1; i < sessionState.history.length; i++) {
-        if (
-          typeof sessionState.history[i] !== "undefined" &&
-          sessionState.history[i].name === "User Input" &&
-          sessionState.history[i].hide === false
-        ) {
-          break;
-        }
-        stepsInUserInputGroup.push(i);
-      }
-      return stepsInUserInputGroup;
-    },
-    [sessionState.history]
-  );
-
-  const onToggleAtIndex = useCallback(
-    (index: number) => {
-      // Check if all steps after the User Input are closed
-      const groupIndices = getStepsInUserInputGroup(index);
-      const userInputIndex = groupIndices[0];
-      setStepsOpen((prev) => {
-        const nextStepsOpen = [...prev];
-        nextStepsOpen[index] = !nextStepsOpen[index];
-        const allStepsAfterUserInputAreClosed = !groupIndices.some(
-          (i, j) => j > 0 && nextStepsOpen[i]
-        );
-        if (allStepsAfterUserInputAreClosed) {
-          nextStepsOpen[userInputIndex] = false;
-        } else {
-          const allStepsAfterUserInputAreOpen = !groupIndices.some(
-            (i, j) => j > 0 && !nextStepsOpen[i]
-          );
-          if (allStepsAfterUserInputAreOpen) {
-            nextStepsOpen[userInputIndex] = true;
-          }
-        }
-
-        return nextStepsOpen;
-      });
-    },
-    [getStepsInUserInputGroup]
-  );
-
-  useEffect(() => {
-    if (sessionTitle) {
-      setSessionTitleInput(sessionTitle);
-    }
-  }, [sessionTitle]);
-
-  const [sessionTitleInput, setSessionTitleInput] = useState<string>(
-    sessionTitle || "New Session"
+    [state.history]
   );
 
   return (
-    <TopGuiDiv
-      ref={topGuiDivRef}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && e.ctrlKey) {
-          onMainTextInput();
-        }
-      }}
-    >
-      {takenAction && showLoading && typeof client === "undefined" && (
-        <>
-          <RingLoader size={32} />
-          <p
-            style={{
-              textAlign: "center",
-              margin: "0px",
-              fontSize: "14px",
-            }}
-          >
-            {serverStatusMessage}
-          </p>
-          <div className="flex mx-8 my-2">
-            <p
-              style={{
-                margin: "auto",
-                textAlign: "center",
-                marginTop: "4px",
-                fontSize: "12px",
-                cursor: "pointer",
-                opacity: 0.7,
-              }}
-            >
-              <u>
-                <a
-                  style={{ color: "inherit" }}
-                  href="https://continue.dev/docs/troubleshooting"
-                  target="_blank"
-                >
-                  Troubleshooting help
-                </a>
-              </u>
-            </p>
-            <p
-              style={{
-                margin: "auto",
-                textAlign: "center",
-                marginTop: "4px",
-                fontSize: "12px",
-                cursor: "pointer",
-                opacity: 0.7,
-              }}
-              onClick={() => {
-                postToIde("toggleDevTools", {});
-              }}
-            >
-              <u>View logs</u>
-            </p>
-            <p
-              style={{
-                margin: "auto",
-                textAlign: "center",
-                marginTop: "4px",
-                fontSize: "12px",
-                cursor: "pointer",
-                opacity: 0.7,
-              }}
-            >
-              <u>
-                <a
-                  style={{ color: "inherit" }}
-                  href="https://continue.dev/docs/walkthroughs/manually-run-continue#recommended-use-the-continuedev-pypi-package"
-                  target="_blank"
-                >
-                  Manually start server
-                </a>
-              </u>
-            </p>
-          </div>
-        </>
-      )}
-
-      <div className="max-w-3xl m-auto">
-        <StepsDiv>
-          {sessionState?.history?.map(
-            (step: StepDescription, index: number) => {
-              if (step.hide) return null;
-
+    <>
+      <TopGuiDiv ref={topGuiDivRef}>
+        <div className="max-w-3xl m-auto">
+          <StepsDiv>
+            {state.history.map((item, index: number) => {
               return (
                 <Fragment key={index}>
                   <ErrorBoundary
                     FallbackComponent={fallbackRender}
                     onReset={() => {
-                      client?.stopSession();
                       dispatch(newSession());
                     }}
                   >
-                    {step.name === "User Input" ? (
-                      step.hide || (
-                        <ComboBox
-                          isMainInput={false}
-                          value={step.description as string}
-                          active={active && isLastUserInput(index)}
-                          onEnter={(e, value) => {
-                            if (value && client) {
-                              client?.stopSession();
-                              const newHistory = [
-                                ...sessionState.history.slice(0, index),
-                                {
-                                  name: "User Input",
-                                  description: value,
-                                  observations: [],
-                                  logs: [],
-                                  step_type: "UserInputStep",
-                                  params: {
-                                    user_input: value,
-                                    context_items: sessionState.context_items,
-                                  },
-                                  hide: false,
-                                  depth: 0,
-                                },
-                              ];
-                              dispatch(setHistory(newHistory));
-                              dispatch(setActive(true));
-                              const state = {
-                                history: newHistory,
-                                context_items: sessionState.context_items,
-                              };
-                              dispatch(clearContextItems());
-
-                              client.runFromState(state);
-                            }
-                            e?.stopPropagation();
-                            e?.preventDefault();
-                          }}
-                          groupIndices={getStepsInUserInputGroup(index)}
-                          onToggle={(isOpen: boolean) => {
-                            // Collapse all steps in the section
-                            setStepsOpen((prev) => {
-                              const nextStepsOpen = [...prev];
-                              getStepsInUserInputGroup(index).forEach((i) => {
-                                nextStepsOpen[i] = isOpen;
-                              });
-                              return nextStepsOpen;
-                            });
-                          }}
-                          onToggleAll={(isOpen: boolean) => {
-                            // Collapse _all_ steps
-                            setStepsOpen((prev) => {
-                              return prev.map((_) => isOpen);
-                            });
-                          }}
-                          isToggleOpen={
-                            typeof stepsOpen[index] === "undefined"
-                              ? true
-                              : stepsOpen[index]!
-                          }
-                          index={index}
-                          onDelete={() => {
-                            // Delete the input and all steps until the next user input
-                            getStepsInUserInputGroup(index).forEach((i) => {
-                              dispatch(deleteAtIndex(i));
-                            });
-                          }}
-                        />
-                      )
+                    {item.message.role === "user" ? (
+                      <ContinueInputBox
+                        onEnter={async (editorState) => {
+                          streamResponse(editorState, index);
+                        }}
+                        isLastUserInput={isLastUserInput(index)}
+                        isMainInput={false}
+                        editorState={item.editorState}
+                        content={item.message.content}
+                      ></ContinueInputBox>
                     ) : (
                       <TimelineItem
-                        step={step}
+                        item={item}
                         iconElement={
-                          step.step_type === "DefaultModelEditCodeStep" ? (
+                          false ? (
                             <CodeBracketSquareIcon width="16px" height="16px" />
-                          ) : step.error ? (
+                          ) : false ? (
                             <ExclamationTriangleIcon
                               width="16px"
                               height="16px"
@@ -768,20 +424,18 @@ function GUI(props: GUIProps) {
                         }
                         open={
                           typeof stepsOpen[index] === "undefined"
-                            ? step.error
+                            ? false
                               ? false
                               : true
                             : stepsOpen[index]!
                         }
-                        onToggle={() => onToggleAtIndex(index)}
+                        onToggle={() => {}}
                       >
-                        {step.error ? (
+                        {false ? ( // Most of these falses were previously (step.error)
                           <ErrorStepContainer
-                            onClose={() => onToggleAtIndex(index)}
-                            error={step.error}
-                            onDelete={() => {
-                              dispatch(deleteAtIndex(index));
-                            }}
+                            onClose={() => {}}
+                            error={undefined}
+                            onDelete={() => {}}
                           />
                         ) : (
                           <StepContainer
@@ -794,51 +448,57 @@ function GUI(props: GUIProps) {
                                 : stepsOpen[index]!
                             }
                             key={index}
-                            onUserInput={(input: string) => {
-                              onStepUserInput(input, index);
-                            }}
-                            step={step}
-                            onReverse={() => {
-                              client?.reverseToIndex(index);
-                            }}
-                            onRetry={() => {
-                              client?.retryAtIndex(index);
-                              setWaitingForSteps(true);
-                            }}
-                            onDelete={() => {
-                              dispatch(deleteAtIndex(index));
-                            }}
-                            noUserInputParent={
-                              getStepsInUserInputGroup(index).length === 0
-                            }
+                            onUserInput={(input: string) => {}}
+                            item={item}
+                            onReverse={() => {}}
+                            onRetry={() => {}}
+                            onDelete={() => {}}
                           />
                         )}
                       </TimelineItem>
                     )}
-                    {/* <div className="h-2"></div> */}
                   </ErrorBoundary>
                 </Fragment>
               );
-            }
-          )}
-        </StepsDiv>
+            })}
+          </StepsDiv>
 
-        <div ref={aboveComboBoxDivRef} />
-        <ComboBox
-          isMainInput={true}
-          ref={mainTextInputRef}
-          onEnter={(e, _) => {
-            onMainTextInput(e);
-            e?.stopPropagation();
-            e?.preventDefault();
+          <div ref={aboveComboBoxDivRef} />
+          {active || (
+            <ContinueInputBox
+              onEnter={sendInput}
+              isLastUserInput={false}
+              isMainInput={true}
+            ></ContinueInputBox>
+          )}
+          {active ? (
+            <>
+              <br />
+              <br />
+            </>
+          ) : state.history.length > 0 ? (
+            <NewSessionButton
+              onClick={() => {
+                saveSession();
+              }}
+              className="mr-auto"
+            >
+              New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "M"})
+            </NewSessionButton>
+          ) : null}
+        </div>
+      </TopGuiDiv>
+      {active && (
+        <StopButton
+          className="mt-auto"
+          onClick={() => {
+            dispatch(setInactive());
           }}
-          onInputValueChange={() => {}}
-          onToggleAddContext={() => {
-            client?.toggleAddingHighlightedCode();
-          }}
-        />
-      </div>
-    </TopGuiDiv>
+        >
+          {getMetaKeyLabel()} ⌫ Cancel
+        </StopButton>
+      )}
+    </>
   );
 }
 

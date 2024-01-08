@@ -1,96 +1,72 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import ContinueGUIClientProtocol from "../client/ContinueGUIClientProtocol";
-import { useEffect, useState } from "react";
-import {
-  addContextItemAtIndex,
-  addHighlightedCode,
-  processSessionUpdate,
-  setActive,
-  setTitle,
-} from "../redux/slices/sessionStateReducer";
+import { useEffect } from "react";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
-import { postToIde } from "../util/ide";
-import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
+import { errorPopup, postToIde } from "../util/ide";
+
 import {
-  setConfig,
-  setContextProviders,
-  setIndexingProgress,
-  setSlashCommands,
-} from "../redux/slices/serverStateReducer";
+  intermediateToFinalConfig,
+  serializedToIntermediateConfig,
+} from "core/config/load";
+import { ExtensionIde } from "core/ide/index";
+import { useSelector } from "react-redux";
+import { VSC_THEME_COLOR_VARS } from "../components";
 import { setVscMachineId } from "../redux/slices/configSlice";
+import { setConfig, setInactive } from "../redux/slices/stateSlice";
+import { RootStore } from "../redux/store";
+import useChatHandler from "./useChatHandler";
 
-function useSetup(
-  client: ContinueGUIClientProtocol | undefined,
-  dispatch: Dispatch<any>
-) {
-  const serverUrl = (window as any).serverUrl;
-  const active = useSelector((store: RootStore) => store.sessionState.active);
-  const title = useSelector((store: RootStore) => store.sessionState.title);
-  const history = useSelector((store: RootStore) => store.sessionState.history);
+function useSetup(dispatch: Dispatch<any>) {
+  const loadConfig = async () => {
+    try {
+      const ide = new ExtensionIde();
+      let serialized = await ide.getSerializedConfig();
+      console.log("serialized: ", serialized);
+      let intermediate = serializedToIntermediateConfig(serialized);
+      console.log("i1", intermediate);
 
-  const [requestedTitle, setRequestedTitle] = useState(false);
+      const configJsUrl = await ide.getConfigJsUrl();
+      if (configJsUrl) {
+        try {
+          // Try config.ts first
+          const module = await import(configJsUrl);
+          if (!module.modifyConfig) {
+            throw new Error(
+              "config.ts does not export a modifyConfig function."
+            );
+          }
+          intermediate = module.modifyConfig(intermediate);
+        } catch (e) {
+          console.log("Error loading config.ts: ", e);
+          errorPopup(e.message);
+        }
+      }
+      const finalConfig = intermediateToFinalConfig(intermediate);
+      // Fall back to config.json
+      dispatch(setConfig(finalConfig));
+    } catch (e) {
+      console.log("Error loading config.json: ", e);
+      errorPopup(e.message);
+    }
+  };
+
+  // Load config from the IDE
+  useEffect(() => {
+    loadConfig();
+  }, []);
 
   useEffect(() => {
     // Override persisted state
-    dispatch(setActive(false));
+    dispatch(setInactive());
 
     // Tell JetBrains the webview is ready
     postToIde("onLoad", {});
   }, []);
 
-  useEffect(() => {
-    (async () => {
-      if (
-        client &&
-        !requestedTitle &&
-        !active &&
-        title === "New Session" &&
-        history &&
-        history.filter((step) => !step?.hide).length >= 2
-      ) {
-        setRequestedTitle(true);
-        const title = await client.getSessionTitle(history);
-        dispatch(setTitle(title));
-      }
-    })();
-  }, [active, history, title, client, requestedTitle]);
+  const { streamResponse } = useChatHandler(dispatch);
 
-  // Setup requiring client
-  useEffect(() => {
-    if (!client) return;
-
-    // Listen for updates to the session state
-    client.onSessionUpdate((update) => {
-      dispatch(processSessionUpdate(update));
-    });
-
-    client.onIndexingProgress((progress) => {
-      dispatch(setIndexingProgress(progress));
-    });
-
-    client.onAddContextItem((item, index) => {
-      dispatch(addContextItemAtIndex({ item, index }));
-    });
-
-    client.onConfigUpdate((config) => {
-      dispatch(setConfig(config));
-    });
-
-    fetch(`${serverUrl}/slash_commands`).then(async (resp) => {
-      if (resp.status !== 200) return;
-      const sc = await resp.json();
-      dispatch(setSlashCommands(sc));
-    });
-    fetch(`${serverUrl}/context_providers`).then(async (resp) => {
-      if (resp.status !== 200) return;
-      const cp = await resp.json();
-      dispatch(setContextProviders(cp));
-    });
-    client.getConfig().then((config) => {
-      dispatch(setConfig(config));
-    });
-  }, [client]);
+  const defaultModelTitle = useSelector(
+    (store: RootStore) => store.state.defaultModelTitle
+  );
 
   // IDE event listeners
   useEffect(() => {
@@ -106,45 +82,36 @@ function useSetup(
           // dispatch(setVscMediaUrl(event.data.vscMediaUrl));
 
           break;
-        case "highlightedCode":
-          dispatch(
-            addHighlightedCode({
-              rangeInFileWithContents: event.data.rangeInFileWithContents,
-              edit: event.data.edit,
-            })
-          );
-          break;
         case "serverStatus":
           dispatch(setServerStatusMessage(event.data.message));
           break;
-        case "stopSession":
-          client?.stopSession();
+        case "setInactive":
+          dispatch(setInactive());
+          break;
+        case "configUpdate":
+          loadConfig();
+          break;
+        case "submitMessage":
+          streamResponse(event.data.message);
+          break;
+        case "getDefaultModelTitle":
+          postToIde("getDefaultModelTitle", { defaultModelTitle });
           break;
       }
     };
     window.addEventListener("message", eventListener);
     return () => window.removeEventListener("message", eventListener);
-  }, [client]);
+  }, [defaultModelTitle]);
 
   // Save theme colors to local storage
   useEffect(() => {
-    if (document.body.style.getPropertyValue("--vscode-editor-foreground")) {
-      localStorage.setItem(
-        "--vscode-editor-foreground",
-        document.body.style.getPropertyValue("--vscode-editor-foreground")
-      );
-    }
-    if (document.body.style.getPropertyValue("--vscode-editor-background")) {
-      localStorage.setItem(
-        "--vscode-editor-background",
-        document.body.style.getPropertyValue("--vscode-editor-background")
-      );
-    }
-    if (document.body.style.getPropertyValue("--vscode-list-hoverBackground")) {
-      localStorage.setItem(
-        "--vscode-list-hoverBackground",
-        document.body.style.getPropertyValue("--vscode-list-hoverBackground")
-      );
+    for (const colorVar of VSC_THEME_COLOR_VARS) {
+      if (document.body.style.getPropertyValue(colorVar)) {
+        localStorage.setItem(
+          colorVar,
+          document.body.style.getPropertyValue(colorVar)
+        );
+      }
     }
   }, []);
 }

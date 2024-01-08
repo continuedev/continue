@@ -28,9 +28,9 @@ The `~/.continue` directory contains a `config.json` file that looks like this:
 
 ```json title="~/.continue/config.json"
 {
-    "allow_anonymous_telemetry": true,
+    "allowAnonymousTelemetry": true,
     ...
 }
 ```
 
-You can turn off anonymous telemetry by changing the value of `allow_anonymous_telemetry` to `false`.
+You can turn off anonymous telemetry by changing the value of `allowAnonymousTelemetry` to `false`.

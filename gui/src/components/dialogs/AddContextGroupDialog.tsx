@@ -1,20 +1,17 @@
-import { useContext } from "react";
-import { Button, Input } from "..";
-import { GUIClientContext } from "../../App";
+import { ContextItemWithId } from "core";
 import { useDispatch } from "react-redux";
+import { Button, Input } from "..";
 import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
-import { ContextItem } from "../../schema/ContextItem";
 
 function AddContextGroupDialog({
   selectedContextItems,
 }: {
-  selectedContextItems: ContextItem[];
+  selectedContextItems: ContextItemWithId[];
 }) {
   const dispatch = useDispatch();
-  const client = useContext(GUIClientContext);
 
   let inputElement: HTMLInputElement | null = null;
 
@@ -22,7 +19,7 @@ function AddContextGroupDialog({
     dispatch(setDialogMessage(undefined));
     dispatch(setShowDialog(false));
     const title = inputElement ? inputElement.value : "My Context Group";
-    client?.saveContextGroup(title, selectedContextItems);
+    // TODO
   };
 
   return (

@@ -64,9 +64,9 @@
             <keyboard-shortcut keymap="$default" first-keystroke="alt ctrl J"/>
             <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt meta J"/>
         </action>
-        <action id="continue.focusContinueInputWithEdit"
-                class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithEditAction"
-                text="Edit selected code"
+        <action id="continue.focusContinueInputWithoutClear"
+                class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithoutClearAction"
+                text="Add selected code to context"
                 description="Focus Continue Input With Edit">
             <keyboard-shortcut keymap="$default"
                                first-keystroke="ctrl shift J"/>

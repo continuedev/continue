@@ -53,10 +53,10 @@ class ContextProvider(BaseModel):
     )
     ide: Any = None
 
-    delete_documents: Callable[[List[str]], Awaitable] = Field(
+    delete_documents: Callable[[List[str]], Awaitable] | None = Field(
         None, description="Function to delete documents"
     )
-    update_documents: Callable[[List[ContextItem], str], Awaitable] = Field(
+    update_documents: Callable[[List[ContextItem], str], Awaitable] | None = Field(
         None, description="Function to update documents"
     )
 

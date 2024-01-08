@@ -4,7 +4,7 @@ declare const vscode: any;
 
 function _postToIde(type: string, data: any) {
   if (typeof vscode === "undefined") {
-    if (localStorage.getItem("ide") === "jetbrains" || true) {
+    if (localStorage.getItem("ide") === "jetbrains") {
       if ((window as any).postIntellijMessage === undefined) {
         console.log(
           "Unable to send message: postIntellijMessage is undefined. ",
@@ -60,4 +60,34 @@ export async function withProgress(title: string, fn: () => Promise<any>) {
   return fn().finally(() => {
     postToIde("withProgress", { title, done: true });
   });
+}
+
+export function errorPopup(message: string) {
+  postToIde("errorPopup", { message });
+}
+
+export function logDevData(tableName: string, data: any) {
+  postToIde("logDevData", { tableName, data });
+}
+
+export function addModel(model: any) {
+  postToIde("addModel", { model });
+}
+
+export function deleteModel(title: any) {
+  postToIde("deleteModel", { title });
+}
+
+export function addOpenAIKey(key: string) {
+  postToIde("addOpenAIKey", { key });
+}
+
+export function appendText(text: string) {
+  const div = document.createElement("div");
+  div.innerText = text;
+  document.body.appendChild(div);
+}
+
+export function isJetBrains() {
+  return localStorage.getItem("ide") === "jetbrains";
 }

@@ -34,12 +34,9 @@ class ContinuePluginService(project: Project) : Disposable, DumbAware {
     }
 
     fun dispatchCustomEvent(
-        type: String,
-        data: Map<String, Any>
+        data: String
     ) {
-        val gson = Gson()
-        val jsonData = gson.toJson(data)
-        val jsCode = buildJavaScript(type, jsonData)
+        val jsCode = buildJavaScript(data)
 
         try {
             continuePluginWindow?.webView?.executeJavaScriptAsync(jsCode)
@@ -48,7 +45,7 @@ class ContinuePluginService(project: Project) : Disposable, DumbAware {
         }
     }
 
-    private fun buildJavaScript(type: String, jsonData: String): String {
+    private fun buildJavaScript(jsonData: String): String {
         return """window.postMessage($jsonData, "*");"""
     }
 

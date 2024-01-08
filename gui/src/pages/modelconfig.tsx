@@ -1,26 +1,26 @@
-import React, { useCallback, useContext, useEffect, useState } from "react";
-import ModelCard from "../components/modelSelection/ModelCard";
-import styled from "styled-components";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import _ from "lodash";
+import { useCallback, useEffect, useState } from "react";
+import { FormProvider, useForm } from "react-hook-form";
+import { useDispatch } from "react-redux";
+import { useNavigate, useParams } from "react-router-dom";
+import styled from "styled-components";
 import {
   Input,
   defaultBorderRadius,
   lightGray,
   vscBackground,
 } from "../components";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { GUIClientContext } from "../App";
-import { useParams } from "react-router-dom";
+import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
+import ModelCard from "../components/modelSelection/ModelCard";
+import { setDefaultModel } from "../redux/slices/stateSlice";
+import { addModel } from "../util/ide";
 import {
-  PROVIDER_INFO,
   MODEL_PROVIDER_TAG_COLORS,
   ModelInfo,
+  PROVIDER_INFO,
   updatedObj,
 } from "../util/modelData";
-import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
-import { FormProvider, useForm } from "react-hook-form";
-import _ from "lodash";
 
 const GridDiv = styled.div`
   display: grid;
@@ -67,7 +67,6 @@ function ModelConfig() {
     }
   }, [modelName]);
 
-  const client = useContext(GUIClientContext);
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const vscMediaUrl = (window as any).vscMediaUrl;
@@ -229,7 +228,7 @@ function ModelConfig() {
                     });
                   }
 
-                  client?.addModelForRole("default", {
+                  const model = {
                     ...pkg.params,
                     ...modelInfo.params,
                     ..._.merge(
@@ -243,35 +242,14 @@ function ModelConfig() {
                     ),
                     ...formParams,
                     provider: modelInfo.provider,
-                  });
+                  };
+                  addModel(model);
+                  dispatch(setDefaultModel(model.title));
                   navigate("/");
                 }}
               />
             );
           })}
-
-          <CustomModelButton
-            disabled={disableModelCards()}
-            onClick={(e) => {
-              if (!modelInfo || disableModelCards()) return;
-              const formParams: any = {};
-              for (const d of modelInfo.collectInputFor || []) {
-                formParams[d.key] =
-                  d.inputType === "text"
-                    ? formMethods.watch(d.key)
-                    : parseFloat(formMethods.watch(d.key));
-              }
-
-              client?.addModelForRole("default", {
-                ...modelInfo.packages[0]?.params,
-                ...modelInfo.params,
-                ...formParams,
-              });
-              navigate("/");
-            }}
-          >
-            <h3 className="text-center my-2">Configure Model in config.json</h3>
-          </CustomModelButton>
         </GridDiv>
       </div>
     </FormProvider>
