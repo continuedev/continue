@@ -545,6 +545,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
