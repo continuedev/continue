@@ -693,8 +693,9 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     
 1. Clone the repository with \`git clone https://github.com/ggerganov/llama.cpp\`.
 2. \`cd llama.cpp\`
-3. Download the model you'd like to use and place it in the \`llama.cpp/models\` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))
-4. Run the llama.cpp server with the command below (replacing with the model you downloaded):
+3. Run \`make\` to build the server.
+4. Download the model you'd like to use and place it in the \`llama.cpp/models\` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))
+5. Run the llama.cpp server with the command below (replacing with the model you downloaded):
 
 \`\`\`shell
 .\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf

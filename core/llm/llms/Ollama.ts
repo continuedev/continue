@@ -13,6 +13,7 @@ class Ollama extends BaseLLM {
     return (
       {
         "mistral-7b": "mistral:7b",
+        "mixtral-8x7b": "mixtral:8x7b",
         "llama2-7b": "llama2:7b",
         "llama2-13b": "llama2:13b",
         "codellama-7b": "codellama:7b",

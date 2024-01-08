@@ -21,7 +21,10 @@ class CustomContextProviderClass implements IContextProvider {
     };
   }
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    fullInput: string
+  ): Promise<ContextItem[]> {
     return await this.custom.getContextItems(query);
   }
   async load(): Promise<void> {}

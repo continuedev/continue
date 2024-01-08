@@ -58,13 +58,13 @@ export interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
-  getContextItems(query: string): Promise<ContextItem[]>;
+  getContextItems(query: string, fullInput: string): Promise<ContextItem[]>;
 }
 
 export interface IContextProvider {
   get description(): ContextProviderDescription;
 
-  getContextItems(query: string): Promise<ContextItem[]>;
+  getContextItems(query: string, fullInput: string): Promise<ContextItem[]>;
 }
 
 export interface PersistedSessionInfo {

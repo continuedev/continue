@@ -11,7 +11,10 @@ class OpenFilesContextProvider extends BaseContextProvider {
     requiresQuery: false,
   };
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    fullInput: string
+  ): Promise<ContextItem[]> {
     const ide = new ExtensionIde();
     const openFiles = await ide.getOpenFiles();
     return await Promise.all(

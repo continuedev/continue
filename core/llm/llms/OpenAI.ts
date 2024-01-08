@@ -8,6 +8,19 @@ import {
 } from "../..";
 import { streamSse } from "../stream";
 
+const NON_CHAT_MODELS = [
+  "text-davinci-002",
+  "text-davinci-003",
+  "code-davinci-002",
+  "text-ada-001",
+  "text-babbage-001",
+  "text-curie-001",
+  "davinci",
+  "curie",
+  "babbage",
+  "ada",
+];
+
 class OpenAI extends BaseLLM {
   static providerName: ModelProvider = "openai";
   static defaultOptions: Partial<LLMOptions> = {
@@ -136,6 +149,19 @@ class OpenAI extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
+    if (NON_CHAT_MODELS.includes(options.model)) {
+      for await (const content of this._legacystreamComplete(
+        messages[messages.length - 1]?.content || "",
+        options
+      )) {
+        yield {
+          role: "assistant",
+          content,
+        };
+      }
+      return;
+    }
+
     const response = await this.fetch(this._getChatUrl(), {
       method: "POST",
       headers: {

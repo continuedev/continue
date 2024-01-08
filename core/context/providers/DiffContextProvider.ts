@@ -11,7 +11,10 @@ class DiffContextProvider extends BaseContextProvider {
     requiresQuery: false,
   };
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    fullInput: string
+  ): Promise<ContextItem[]> {
     const diff = await new ExtensionIde().getDiff();
     return [
       {

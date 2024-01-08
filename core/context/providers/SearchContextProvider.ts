@@ -11,7 +11,10 @@ class SearchContextProvider extends BaseContextProvider {
     requiresQuery: true,
   };
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    fullInput: string
+  ): Promise<ContextItem[]> {
     const results = await new ExtensionIde().getSearchResults(query);
     return [
       {
