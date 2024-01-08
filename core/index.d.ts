@@ -339,7 +339,8 @@ type ModelProvider =
   | "llamafile"
   | "gemini"
   | "mistral"
-  | "bedrock";
+  | "bedrock"
+  | "deepinfra";
 
 export type ModelName =
   // OpenAI
@@ -463,6 +464,7 @@ export interface SerializedContinueConfig {
   contextProviders?: ContextProviderWithParams[];
   retrievalSettings?: RetrievalSettings;
   disableIndexing?: boolean;
+  disableSessionTitles?: boolean;
   userToken?: string;
 }
 
@@ -488,6 +490,8 @@ export interface Config {
   retrievalSettings?: RetrievalSettings;
   /** If set to true, Continue will not index your codebase for retrieval */
   disableIndexing?: boolean;
+  /** If set to true, Continue will not make extra requests to the LLM to generate a summary title of each session. */
+  disableSessionTitles?: boolean;
   /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
   userToken?: string;
 }
@@ -500,6 +504,7 @@ export interface ContinueConfig {
   slashCommands?: SlashCommand[];
   contextProviders?: IContextProvider[];
   retrievalSettings?: RetrievalSettings;
+  disableSessionTitles?: boolean;
   disableIndexing?: boolean;
   userToken?: string;
 }

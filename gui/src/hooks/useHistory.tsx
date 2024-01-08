@@ -16,6 +16,9 @@ function truncateText(text: string, maxLength: number) {
 function useHistory(dispatch: Dispatch) {
   const state = useSelector((state: RootStore) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
+  const disableSessionTitles = useSelector(
+    (store: RootStore) => store.state.config.disableSessionTitles
+  );
 
   async function getHistory(): Promise<SessionInfo[]> {
     return await ideRequest("history", {});
@@ -28,21 +31,25 @@ function useHistory(dispatch: Dispatch) {
     dispatch(newSession());
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    const { content: title } = await defaultModel.chat(
-      [
-        ...stateCopy.history.map((item) => item.message),
-        {
-          role: "user",
-          content:
-            "Give a maximum 40 character title to describe this conversation so far. The title should help me recall the conversation if I look for it later. DO NOT PUT QUOTES AROUND THE TITLE",
-        },
-      ],
-      { maxTokens: 20 }
-    );
+    let title = truncateText(stateCopy.history[0].message.content, 50);
+    if (!disableSessionTitles) {
+      let { content } = await defaultModel.chat(
+        [
+          ...stateCopy.history.map((item) => item.message),
+          {
+            role: "user",
+            content:
+              "Give a maximum 40 character title to describe this conversation so far. The title should help me recall the conversation if I look for it later. DO NOT PUT QUOTES AROUND THE TITLE",
+          },
+        ],
+        { maxTokens: 20 }
+      );
+      title = content;
+    }
 
     const sessionInfo: PersistedSessionInfo = {
       history: stateCopy.history,
-      title: title || truncateText(stateCopy.history[0].message.content, 50),
+      title: title,
       sessionId: stateCopy.sessionId,
       workspaceDirectory: (window as any).workspacePaths?.[0] || "",
     };

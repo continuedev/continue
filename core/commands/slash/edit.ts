@@ -210,7 +210,7 @@ const EditSlashCommand: SlashCommand = {
     );
 
     if (!contextItemToEdit) {
-      yield "Highlight the code that you want to edit first";
+      yield "Highlight (select and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) the code that you want to edit first";
       return;
     }
 
@@ -552,6 +552,25 @@ const EditSlashCommand: SlashCommand = {
     }
 
     await sendDiffUpdate(lines, true);
+
+    if (params?.recap) {
+      const prompt = `This is the code before editing:
+\`\`\`
+${contents}
+\`\`\`
+
+This is the code after editing:
+
+\`\`\`
+${lines.join("\n")}
+\`\`\`
+
+Please briefly explain the changes made to the code above. Give no more than 2-3 sentences, and use markdown bullet points:`;
+
+      for await (const update of llm.streamComplete(prompt)) {
+        yield update;
+      }
+    }
   },
 };
 

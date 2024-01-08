@@ -39,16 +39,13 @@ import {
   zephyrEditPrompt,
 } from "./templates/edit";
 
-const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = ["lmstudio", "openai"];
+const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
+  "lmstudio",
+  "openai",
+  "ollama",
+];
 
-function autodetectTemplateType(
-  model: string,
-  provider: ModelProvider
-): TemplateType | undefined {
-  if (PROVIDER_HANDLES_TEMPLATING.includes(provider)) {
-    return "none";
-  }
-
+function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
 
   if (
@@ -108,8 +105,14 @@ function autodetectTemplateFunction(
   provider: ModelProvider,
   explicitTemplate: TemplateType | undefined = undefined
 ) {
-  const templateType =
-    explicitTemplate || autodetectTemplateType(model, provider);
+  if (
+    explicitTemplate === undefined &&
+    PROVIDER_HANDLES_TEMPLATING.includes(provider)
+  ) {
+    return null;
+  }
+
+  const templateType = explicitTemplate || autodetectTemplateType(model);
 
   if (templateType) {
     const mapping: Record<TemplateType, any> = {
@@ -133,11 +136,9 @@ function autodetectTemplateFunction(
 
 function autodetectPromptTemplates(
   model: string,
-  provider: ModelProvider,
   explicitTemplate: TemplateType | undefined = undefined
 ) {
-  const templateType =
-    explicitTemplate || autodetectTemplateType(model, provider);
+  const templateType = explicitTemplate || autodetectTemplateType(model);
   const templates: Record<string, any> = {};
 
   let editTemplate = null;
@@ -214,8 +215,7 @@ export abstract class BaseLLM implements ILLM {
     };
 
     const templateType =
-      options.template ||
-      autodetectTemplateType(options.model, this.providerName);
+      options.template || autodetectTemplateType(options.model);
 
     this.title = options.title;
     this.uniqueId = options.uniqueId || "None";
@@ -229,11 +229,7 @@ export abstract class BaseLLM implements ILLM {
     };
     this.requestOptions = options.requestOptions;
     this.promptTemplates = {
-      ...autodetectPromptTemplates(
-        options.model,
-        this.providerName,
-        templateType
-      ),
+      ...autodetectPromptTemplates(options.model, templateType),
       ...options.promptTemplates,
     };
     this.templateMessages =
@@ -241,7 +237,7 @@ export abstract class BaseLLM implements ILLM {
       autodetectTemplateFunction(
         options.model,
         this.providerName,
-        templateType
+        options.template
       );
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;

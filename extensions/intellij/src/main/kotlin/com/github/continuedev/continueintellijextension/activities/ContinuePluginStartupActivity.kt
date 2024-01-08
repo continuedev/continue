@@ -127,6 +127,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             val settings =
                     ServiceManager.getService(ContinueExtensionSettings::class.java)
             if (!settings.continueState.shownWelcomeDialog) {
+                settings.continueState.shownWelcomeDialog = true
                 // Open continue_tutorial.py
                 ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("continue_tutorial.py").use { `is` ->
                     if (`is` == null) {

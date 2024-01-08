@@ -712,8 +712,7 @@ After it's up and running, you can start using Continue.`,
     provider: "google-palm",
     description:
       "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite. Includes the Gemini Pro model",
-    longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.
-> Note: Google's PaLM language models do not support streaming, so the response will appear all at once after a few seconds.`,
+    longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.`,
     icon: "google-palm.png",
     tags: [ModelProviderTag["Requires API Key"]],
     collectInputFor: [

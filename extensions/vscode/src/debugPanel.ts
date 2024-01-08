@@ -519,9 +519,16 @@ export function getSidebarContent(
         }
       }
     } catch (e) {
-      vscode.window.showErrorMessage(
-        `Error handling message from Continue side panel: ${e}`
-      );
+      vscode.window
+        .showErrorMessage(
+          `Error handling message from Continue side panel: ${e}`,
+          "Show Logs"
+        )
+        .then((selection) => {
+          if (selection === "Show Logs") {
+            vscode.commands.executeCommand("workbench.action.toggleDevTools");
+          }
+        });
       respond({ done: true });
     }
   });
