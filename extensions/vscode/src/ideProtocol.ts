@@ -279,9 +279,8 @@ class VsCodeIde implements IDE {
     let branch = await ideProtocolClient.getBranch();
     for (let dir of await this.getWorkspaceDirs()) {
       let tag = `${dir}::${branch}`;
-      results.push(
-        ...sync.sync_results(dir, branch).map((r: any) => [tag, ...r])
-      );
+      let sync_results = sync.sync_results(dir, branch);
+      results.push(...sync_results.map((r: any) => [tag, r.name, r.hash]));
     }
     return results;
   }

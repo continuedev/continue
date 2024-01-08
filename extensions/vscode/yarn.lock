@@ -2147,6 +2147,7 @@ core-util-is@~1.0.0, core-util-is@1.0.2:
     openai "^4.20.1"
     replicate "^0.23.0"
     uuid "^9.0.1"
+    web-tree-sitter "^0.20.8"
 
 cors@^2.8.5:
   version "2.8.5"

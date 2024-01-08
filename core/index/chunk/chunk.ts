@@ -14,10 +14,15 @@ async function* chunkDocumentWithoutId(
   const segs = filepath.split(".");
   const ext = segs[segs.length - 1];
   if (ext in fileExtensionToLanguage) {
-    for await (const chunk of codeChunker(filepath, contents, maxChunkSize)) {
-      yield chunk;
+    try {
+      for await (const chunk of codeChunker(filepath, contents, maxChunkSize)) {
+        yield chunk;
+      }
+      return;
+    } catch (e) {
+      console.error(`Failed to parse ${filepath}: `, e);
+      // falls back to basicChunker
     }
-    return;
   }
 
   yield* basicChunker(contents, maxChunkSize);

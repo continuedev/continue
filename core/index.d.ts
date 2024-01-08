@@ -269,7 +269,11 @@ export interface IDE {
    * Returns list of [tag, filepath, hash of contents] that need to be embedded
    */
   getFilesToEmbed(): Promise<[string, string, string][]>;
-  sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]);
+  sendEmbeddingForChunk(
+    chunk: Chunk,
+    embedding: number[],
+    tags: string[]
+  ): void;
 }
 
 // Slash Commands
@@ -521,5 +525,5 @@ export interface ContinueConfig {
   retrievalSettings?: RetrievalSettings;
   disableIndexing?: boolean;
   userToken?: string;
-  embeddingsProvider: EmbeddingsProvider;
+  embeddingsProvider?: EmbeddingsProvider;
 }

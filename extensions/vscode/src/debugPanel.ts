@@ -333,7 +333,8 @@ export function getSidebarContent(
           break;
         }
         case "getFilesToEmbed": {
-          respond(await ide.getFilesToEmbed());
+          let filesToEmbed = await ide.getFilesToEmbed();
+          respond(filesToEmbed);
           break;
         }
         case "sendChunkForFile": {

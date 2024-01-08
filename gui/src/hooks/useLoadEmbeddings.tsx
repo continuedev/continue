@@ -14,27 +14,40 @@ function useLoadEmbeddings() {
 
   useEffect(() => {
     (async () => {
+      if (!embeddingsProvider) {
+        return;
+      }
+
       const ide = new ExtensionIde();
 
       const filesToEmbed = await ide.getFilesToEmbed();
-      const total = filesToEmbed.length;
+      console.log("Files to embed", filesToEmbed);
+
+      const total = filesToEmbed.length + 1;
       let done = 1;
+      setProgress(done / total);
 
       for (let [tag, filepath, hash] of filesToEmbed) {
-        const contents = await ide.readFile(filepath);
-        const chunks = await chunkDocument(
-          filepath,
-          contents,
-          MAX_CHUNK_SIZE,
-          hash
-        );
-        for await (let chunk of chunks) {
-          const [embedding] = await embeddingsProvider.embed([chunk.content]);
-          await ide.sendEmbeddingForChunk(chunk, embedding, [tag]);
+        try {
+          console.log(`Embedding ${filepath}`);
+          const contents = await ide.readFile(filepath);
+          const chunks = await chunkDocument(
+            filepath,
+            contents,
+            MAX_CHUNK_SIZE,
+            hash
+          );
+          for await (let chunk of chunks) {
+            const [embedding] = await embeddingsProvider.embed([chunk.content]);
+            console.log("Embedding: ", embedding);
+            await ide.sendEmbeddingForChunk(chunk, embedding, [tag]);
+          }
+        } catch (e) {
+          console.warn(`Failed to embed ${filepath}`, e);
         }
 
         done++;
-        setProgress(done / (total + 1));
+        setProgress(done / total);
       }
     })();
   }, [embeddingsProvider]);

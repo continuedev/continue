@@ -5,7 +5,7 @@ import { countTokens } from "../../llm/countTokens";
 export const fileExtensionToLanguage: { [key: string]: string } = {
   py: "python",
   js: "javascript",
-  ts: "typescript",
+  html: "html",
   java: "java",
   go: "go",
   rb: "ruby",
@@ -14,19 +14,22 @@ export const fileExtensionToLanguage: { [key: string]: string } = {
   cpp: "cpp",
   cs: "c_sharp",
   php: "php",
-  scala: "scala",
-  swift: "swift",
-  kt: "kotlin",
+  css: "css",
+  bash: "bash",
+  // ts: "typescript",
+  // scala: "scala",
+  // swift: "swift",
+  // kt: "kotlin",
 };
 
 async function getParserForFile(filepath: string) {
+  await Parser.init();
   const parser = new Parser();
   const segs = filepath.split(".");
-  const Language = await Parser.Language.load(
-    `/tree-sitter/tree-sitter${
-      fileExtensionToLanguage[segs[segs.length - 1]]
-    }.wasm`
-  );
+  const wasmPath = `/tree-sitter/tree-sitter-${
+    fileExtensionToLanguage[segs[segs.length - 1]]
+  }.wasm`;
+  const Language = await Parser.Language.load(wasmPath);
   parser.setLanguage(Language);
   return parser;
 }

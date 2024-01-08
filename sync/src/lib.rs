@@ -2,9 +2,9 @@ use std::path::Path;
 mod db;
 mod gitignore;
 mod sync;
+mod sync_db;
 mod utils;
 
-use db::{add_tag, remove_chunk, remove_tag};
 use neon::prelude::*;
 
 fn build_js_array<'a>(
@@ -31,27 +31,10 @@ fn sync_results(mut cx: FunctionContext) -> JsResult<JsArray> {
     let branch = cx.argument::<JsString>(1)?.value(&mut cx);
     let tag = format!("{}::{}", dir, branch);
 
-    let results = sync::sync(Path::new(&dir), Some(&branch)).unwrap();
+    let compute = sync_db::sync_db(Path::new(&dir), branch, tag);
+    let compute_js_array = build_js_array(compute, &mut cx);
 
-    // Send to IDE Extension to compute embeddings
-    let compute = build_js_array(results.0, &mut cx);
-
-    // Delete chunks
-    for (_, hash) in results.1 {
-        remove_chunk(hash);
-    }
-
-    // Add tag from chunks
-    for (_, hash) in results.2 {
-        add_tag(hash, tag.clone());
-    }
-
-    // Remove tag from chunk_rows
-    for (_, hash) in results.3 {
-        remove_tag(hash, tag.clone());
-    }
-
-    Ok(compute)
+    return Ok(compute_js_array);
 }
 
 fn db_add_chunk(mut cx: FunctionContext) -> JsResult<JsUndefined> {
@@ -119,8 +102,8 @@ fn db_retrieve(mut cx: FunctionContext) -> JsResult<JsUndefined> {
 
 #[neon::main]
 fn main(mut cx: ModuleContext) -> NeonResult<()> {
-    cx.export_function("sync_results", sync_results)?;
-    cx.export_function("add_chunk", db_add_chunk);
-    cx.export_function("retrieve", db_retrieve);
+    let _ = cx.export_function("sync_results", sync_results)?;
+    let _ = cx.export_function("add_chunk", db_add_chunk);
+    let _ = cx.export_function("retrieve", db_retrieve);
     Ok(())
 }

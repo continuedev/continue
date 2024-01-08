@@ -57,7 +57,8 @@ pub fn create_database() {
 
     conn.execute(
         "CREATE TABLE IF NOT EXISTS chunks (
-            id    TEXT PRIMARY KEY,
+            id    INTEGER PRIMARY KEY,
+            hash TEXT NOT NULL,
             content  TEXT NOT NULL,
             embedding TEXT NOT NULL
         )",
@@ -68,7 +69,7 @@ pub fn create_database() {
     conn.execute(
         "CREATE TABLE IF NOT EXISTS tags (
             id    INTEGER PRIMARY KEY,
-            chunk_id TEXT NOT NULL,
+            chunk_hash TEXT NOT NULL,
             tag  TEXT NOT NULL
         )",
         (),
@@ -80,27 +81,27 @@ pub fn add_chunk(hash: String, content: String, tags: Vec<String>, embedding: Ve
     let conn = get_conn();
 
     conn.execute(
-        "INSERT INTO chunks (id, content, embedding) VALUES (?1, ?2, ?3)",
+        "INSERT INTO chunks (hash, content, embedding) VALUES (?1, ?2, ?3)",
         (&hash, &content, &embedding_to_text(embedding)),
     )
     .unwrap();
 
     for tag in tags {
         conn.execute(
-            "INSERT INTO tags (chunk_id, tag) VALUES (?1, ?2)",
+            "INSERT INTO tags (chunk_hash, tag) VALUES (?1, ?2)",
             (&hash, &tag),
         )
         .unwrap();
     }
 }
 
-pub fn remove_chunk(hash: String) {
+pub fn remove_chunks_for_hash(hash: String) {
     let conn = get_conn();
 
-    conn.execute("DELETE FROM chunks WHERE id=?1", (&hash,))
+    conn.execute("DELETE FROM chunks WHERE hash=?1", (&hash,))
         .unwrap();
 
-    conn.execute("DELETE FROM tags WHERE chunk_id=?1", (&hash,))
+    conn.execute("DELETE FROM tags WHERE chunk_hash=?1", (&hash,))
         .unwrap();
 }
 
@@ -108,7 +109,7 @@ pub fn add_tag(hash: String, tag: String) {
     let conn = get_conn();
 
     conn.execute(
-        "INSERT INTO tags (chunk_id, tag) VALUES (?1, ?2)",
+        "INSERT INTO tags (chunk_hash, tag) VALUES (?1, ?2)",
         (&hash, &tag),
     )
     .unwrap();
@@ -118,7 +119,7 @@ pub fn remove_tag(hash: String, tag: String) {
     let conn = get_conn();
 
     conn.execute(
-        "DELETE FROM tags WHERE chunk_id=?1 AND tag=?2",
+        "DELETE FROM tags WHERE chunk_hash=?1 AND tag=?2",
         (&hash, &tag),
     )
     .unwrap();
@@ -131,8 +132,8 @@ pub fn retrieve(n: usize, tags: Vec<String>, v: Vec<f32>) -> Vec<Chunk> {
         .prepare(&format!(
             "
         SELECT * FROM chunks
-        WHERE id IN (
-            SELECT chunk_id
+        WHERE hash IN (
+            SELECT chunk_hash
             FROM tags
             WHERE tag IN (?1)
         )",
