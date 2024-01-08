@@ -10,7 +10,7 @@ import { getBasename } from "../../util";
 class CodebaseContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "codebase",
-    displayTitle: "Codebase Embeddings",
+    displayTitle: "Codebase",
     description: "Use embeddings to automatically find relevant files",
     dynamic: false,
     requiresQuery: false,
