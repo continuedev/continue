@@ -16,8 +16,10 @@ export const fileExtensionToLanguage: { [key: string]: string } = {
   php: "php",
   css: "css",
   bash: "bash",
+  json: "json",
+  jl: "julia",
+  scala: "scala",
   // ts: "typescript",
-  // scala: "scala",
   // swift: "swift",
   // kt: "kotlin",
 };
