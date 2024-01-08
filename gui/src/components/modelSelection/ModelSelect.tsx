@@ -1,3 +1,13 @@
+import { Listbox, Transition } from "@headlessui/react";
+import {
+  ChevronUpDownIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { Fragment, useEffect, useState } from "react";
+import ReactDOM from "react-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   buttonColor,
@@ -7,21 +17,12 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
-import React, { Fragment, useContext, useEffect, useState } from "react";
-import { GUIClientContext } from "../../App";
+import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
-import { useSelector } from "react-redux";
-import {
-  ChevronUpDownIcon,
-  PlusIcon,
-  TrashIcon,
-} from "@heroicons/react/24/outline";
-import { useNavigate } from "react-router-dom";
-import { Listbox, Transition } from "@headlessui/react";
-import ReactDOM from "react-dom";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import { deleteModel } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
-import { defaultModelSelector } from "../../redux/selectors/configSelectors";
-import { getMetaKeyLabel } from "../../util";
 
 const GridDiv = styled.div`
   display: grid;
@@ -135,8 +136,15 @@ const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
   }
 `;
 
-function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
-  const client = useContext(GUIClientContext);
+function ListBoxOption({
+  option,
+  idx,
+  showDelete,
+}: {
+  option: Option;
+  idx: number;
+  showDelete?: boolean;
+}) {
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -159,11 +167,11 @@ function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
     >
       <div className="flex items-center justify-between gap-3 h-5 relative">
         <span>{option.title}</span>
-        {hovered && (
+        {hovered && showDelete && (
           <HeaderButtonWithText
             text="Delete"
             onClick={(e) => {
-              client?.deleteModelAtIndex(idx - 1); // -1 because 0 is default, not in saved array
+              deleteModel(option.title);
               e.stopPropagation();
               e.preventDefault();
             }}
@@ -173,7 +181,6 @@ function ListBoxOption({ option, idx }: { option: Option; idx: number }) {
             <TrashIcon width="1.2em" height="1.2em" />
           </HeaderButtonWithText>
         )}
-        {idx === 0 && <TrashIcon width="1.6em" height="1.6em" opacity={0.0} />}
       </div>
     </StyledListboxOption>
   );
@@ -196,25 +203,17 @@ interface Option {
 }
 
 function ModelSelect(props: {}) {
-  const client = useContext(GUIClientContext);
+  const dispatch = useDispatch();
   const defaultModel = useSelector(defaultModelSelector);
   const allModels = useSelector(
-    (state: RootStore) => state.serverState.config.models
+    (state: RootStore) => state.state.config.models
   );
 
   const navigate = useNavigate();
 
-  const DEFAULT_OPTION = {
-    value: "GPT-4",
-    title: "GPT-4",
-  };
-  const [options, setOptions] = useState<Option[]>([DEFAULT_OPTION]);
+  const [options, setOptions] = useState<Option[]>([]);
 
   useEffect(() => {
-    if (!allModels) {
-      setOptions([DEFAULT_OPTION]);
-      return;
-    }
     setOptions(
       allModels.map((model) => {
         return {
@@ -229,12 +228,14 @@ function ModelSelect(props: {}) {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "'" && event.metaKey) {
+      if (event.key === "'" && isMetaEquivalentKeyPressed(event)) {
+        const direction = event.shiftKey ? -1 : 1;
         const currentIndex = options.findIndex(
           (option) => option.value === defaultModel?.title
         );
-        const nextIndex = (currentIndex + 1) % options.length;
-        client?.setModelForRoleFromTitle("default", options[nextIndex].value);
+        let nextIndex = (currentIndex + 1 * direction) % options.length;
+        if (nextIndex < 0) nextIndex = options.length - 1;
+        dispatch(setDefaultModel(options[nextIndex].value));
       }
     };
 
@@ -251,13 +252,15 @@ function ModelSelect(props: {}) {
           value={"GPT-4"}
           onChange={(val: string) => {
             if (val === defaultModel?.title) return;
-            client?.setModelForRoleFromTitle("default", val);
+            dispatch(setDefaultModel(val));
+            // TODO
+            // client?.setModelForRoleFromTitle("default", val);
           }}
           defaultValue={"GPT-4"}
         >
           <div className="relative">
             <StyledListboxButton>
-              <div>{modelSelectTitle(defaultModel) || "GPT-4"}</div>
+              <div>{modelSelectTitle(defaultModel)}</div>
               <div className="pointer-events-none flex items-center">
                 <ChevronUpDownIcon
                   className="h-5 w-5 text-gray-400"
@@ -275,7 +278,12 @@ function ModelSelect(props: {}) {
                 >
                   <StyledListboxOptions>
                     {options.map((option, idx) => (
-                      <ListBoxOption option={option} idx={idx} />
+                      <ListBoxOption
+                        option={option}
+                        idx={idx}
+                        key={idx}
+                        showDelete={options.length > 1}
+                      />
                     ))}
                     <i className="text-xs ml-2" style={{ color: lightGray }}>
                       {getMetaKeyLabel()}' to toggle

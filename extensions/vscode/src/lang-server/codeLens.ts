@@ -1,10 +1,57 @@
-import * as vscode from "vscode";
-import { editorToSuggestions, editorSuggestionsLocked } from "../suggestions";
-import * as path from "path";
 import * as os from "os";
-import { DIFF_DIRECTORY, diffManager } from "../diffs";
+import * as path from "path";
+import * as vscode from "vscode";
+import { DIFF_DIRECTORY, diffManager } from "../diff/horizontal";
+import { editorToVerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
+import { editorSuggestionsLocked, editorToSuggestions } from "../suggestions";
 import { getMetaKeyLabel } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
+
+class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
+  public provideCodeLenses(
+    document: vscode.TextDocument,
+    _: vscode.CancellationToken
+  ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
+    const filepath = document.uri.fsPath;
+    const blocks = editorToVerticalDiffCodeLens.get(filepath);
+    if (!blocks) {
+      return [];
+    }
+
+    const codeLenses: vscode.CodeLens[] = [];
+    for (let i = 0; i < blocks.length; i++) {
+      const block = blocks[i];
+      const start = new vscode.Position(block.start, 0);
+      const range = new vscode.Range(
+        start,
+        start.translate(block.numGreen + block.numRed)
+      );
+      codeLenses.push(
+        new vscode.CodeLens(range, {
+          title: "Accept ✅",
+          command: "continue.acceptVerticalDiffBlock",
+          arguments: [filepath, i],
+        }),
+        new vscode.CodeLens(range, {
+          title: "Reject ❌",
+          command: "continue.rejectVerticalDiffBlock",
+          arguments: [filepath, i],
+        })
+      );
+      if (codeLenses.length === 2) {
+        codeLenses.push(
+          new vscode.CodeLens(range, {
+            title: `(${getMetaKeyLabel()}⇧↩/${getMetaKeyLabel()}⇧⌫ to accept/reject all)`,
+            command: "",
+          })
+        );
+      }
+    }
+
+    return codeLenses;
+  }
+}
+
 class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
@@ -70,11 +117,11 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
           title: `Reject All ❌ (${getMetaKeyLabel()}⇧⌫)`,
           command: "continue.rejectDiff",
           arguments: [document.uri.fsPath],
-        }),
-        new vscode.CodeLens(range, {
-          title: `Further Edit ✏️ (${getMetaKeyLabel()}⇧M)`,
-          command: "continue.focusContinueInputWithEdit",
         })
+        // new vscode.CodeLens(range, {
+        //   title: `Further Edit ✏️ (${getMetaKeyLabel()}⇧M)`,
+        //   command: "continue.focusContinueInputWithEdit",
+        // })
       );
       return codeLenses;
     } else {
@@ -91,8 +138,6 @@ class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
     const codeLenses: vscode.CodeLens[] = [];
 
     if (
-      !document.uri.fsPath.endsWith(".continue/config.py") &&
-      !document.uri.fsPath.endsWith(".continue\\config.py") &&
       !document.uri.fsPath.endsWith(".continue/config.json") &&
       !document.uri.fsPath.endsWith(".continue\\config.json")
     ) {
@@ -165,16 +210,7 @@ const actions: TutorialCodeLensItems[] = [
     ],
   },
   {
-    lineIncludes: "Step 2: Use the keyboard shortcut cmd/ctrl + shift + M",
-    commands: [
-      {
-        title: `Do it for me`,
-        command: "continue.focusContinueInputWithEdit",
-      },
-    ],
-  },
-  {
-    lineIncludes: "Step 3: Request an edit",
+    lineIncludes: 'Step 3: Type "<your edit request>" and press Enter',
     commands: [
       {
         title: `"/edit make this more efficient"`,
@@ -261,7 +297,7 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
         new vscode.CodeLens(range, {
           title: "Highlight the function",
           command: "continue.selectRange",
-          arguments: [lineOf21 + 1, lineOf21 + 12],
+          arguments: [lineOf21 + 3, lineOf21 + 14],
         })
       );
     }
@@ -292,12 +328,16 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
   }
 }
 
+let verticalPerLineCodeLensProvider: vscode.Disposable | undefined = undefined;
 let diffsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let suggestionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let configPyCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let tutorialCodeLensDisposable: vscode.Disposable | undefined = undefined;
 
 export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
+  if (verticalPerLineCodeLensProvider) {
+    verticalPerLineCodeLensProvider.dispose();
+  }
   if (suggestionsCodeLensDisposable) {
     suggestionsCodeLensDisposable.dispose();
   }
@@ -310,6 +350,11 @@ export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
   if (tutorialCodeLensDisposable) {
     tutorialCodeLensDisposable.dispose();
   }
+
+  verticalPerLineCodeLensProvider = vscode.languages.registerCodeLensProvider(
+    "*",
+    new VerticalPerLineCodeLensProvider()
+  );
   suggestionsCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",
     new SuggestionsCodeLensProvider()
@@ -326,6 +371,7 @@ export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
     "*",
     new TutorialCodeLensProvider()
   );
+  context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);
   context.subscriptions.push(diffsCodeLensDisposable);
   context.subscriptions.push(configPyCodeLensDisposable);

@@ -1,4 +1,10 @@
-import { useContext, useEffect, useRef, useState } from "react";
+import {
+  HandThumbDownIcon,
+  HandThumbUpIcon,
+} from "@heroicons/react/24/outline";
+import { ChatHistoryItem } from "core";
+import { useState } from "react";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -6,22 +12,14 @@ import {
   secondaryDark,
   vscBackground,
 } from "..";
-import {
-  ArrowPathIcon,
-  HandThumbDownIcon,
-  HandThumbUpIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { RootStore } from "../../redux/store";
+import { getFontSize } from "../../util";
+import { logDevData } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
-import { getFontSize } from "../../util";
-import { StepDescription } from "../../schema/SessionState";
-import { useSelector } from "react-redux";
-import { RootStore } from "../../redux/store";
-import { GUIClientContext } from "../../App";
 
 interface StepContainerProps {
-  step: StepDescription;
+  item: ChatHistoryItem;
   onReverse: () => void;
   onUserInput: (input: string) => void;
   onRetry: () => void;
@@ -30,14 +28,9 @@ interface StepContainerProps {
   isFirst: boolean;
   isLast: boolean;
   index: number;
-  noUserInputParent: boolean;
 }
 
 // #region styled components
-
-const MainDiv = styled.div<{
-  stepDepth: number;
-}>``;
 
 const ButtonsDiv = styled.div`
   display: flex;
@@ -67,132 +60,82 @@ const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
 
 function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
-  const naturalLanguageInputRef = useRef<HTMLTextAreaElement>(null);
-  const userInputRef = useRef<HTMLInputElement>(null);
-  const isUserInput = props.step.name === "UserInputStep";
-  const sessionHistory = useSelector(
-    (store: RootStore) => store.sessionState.history
-  );
-  const active = useSelector((store: RootStore) => store.sessionState.active);
-  const client = useContext(GUIClientContext);
-
-  useEffect(() => {
-    if (userInputRef?.current) {
-      userInputRef.current.focus();
-    }
-  }, [userInputRef]);
-
-  useEffect(() => {
-    if (isHovered) {
-      naturalLanguageInputRef.current?.focus();
-    }
-  }, [isHovered]);
+  const isUserInput = props.item.message.role === "user";
+  const sessionHistory = useSelector((store: RootStore) => store.state.history);
+  const active = useSelector((store: RootStore) => store.state.active);
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 
   const sendFeedback = (feedback: boolean) => {
     setFeedback(feedback);
-    console.log(sessionHistory, props.index);
-    const logs = sessionHistory[props.index].logs;
-    if (!logs || logs.length < 1) return;
-    const prompt = logs[0].split("#########\n")[1];
-    const completion = props.step.description;
-
-    console.log(prompt, completion, client);
-
-    client?.sendPromptCompletionFeedback("chat", prompt, completion, feedback);
+    if (props.item.promptLogs?.length) {
+      for (const [prompt, completion] of props.item.promptLogs) {
+        logDevData("chat", { prompt, completion, feedback });
+      }
+    }
   };
 
   return (
-    <MainDiv
-      stepDepth={(props.step.depth as any) || 0}
+    <div
       onMouseEnter={() => {
         setIsHovered(true);
       }}
       onMouseLeave={() => {
         setIsHovered(false);
       }}
-      hidden={props.step.hide as any}
     >
       <div className="relative">
-        {isHovered && (props.step.error || props.noUserInputParent) && (
-          <ButtonsDiv>
-            {props.step.error &&
-              ((
-                <HeaderButtonWithText
-                  text="Retry"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    props.onRetry();
-                  }}
-                >
-                  <ArrowPathIcon
-                    width="1.4em"
-                    height="1.4em"
-                    onClick={props.onRetry}
-                  />
-                </HeaderButtonWithText>
-              ) as any)}
-
-            {props.noUserInputParent && (
-              <HeaderButtonWithText
-                text="Delete"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  props.onDelete();
-                }}
-              >
-                <XMarkIcon
-                  width="1.4em"
-                  height="1.4em"
-                  onClick={props.onRetry}
-                />
-              </HeaderButtonWithText>
-            )}
-          </ButtonsDiv>
-        )}
-
         <ContentDiv
           hidden={!props.open}
           isUserInput={isUserInput}
           fontSize={getFontSize()}
         >
-          <StyledMarkdownPreview source={props.step.description} />
+          <StyledMarkdownPreview
+            source={props.item.message.content}
+            showCodeBorder={true}
+          />
         </ContentDiv>
         {(isHovered || typeof feedback !== "undefined") && !active && (
-          <div className="flex items-center gap-2 bottom-0 right-2 absolute">
+          <div
+            className="flex items-center gap-2 right-2 absolute -bottom-3"
+            style={{ zIndex: 200 }}
+          >
             {feedback === false || (
-              <HandThumbUpIcon
-                className={
-                  "cursor-pointer hover:text-green-500" +
-                  (feedback === true ? " text-green-500" : "")
-                }
-                width="1.2em"
-                height="1.2em"
-                color={lightGray}
-                onClick={() => {
-                  sendFeedback(true);
-                }}
-              />
+              <HeaderButtonWithText text="Helpful">
+                <HandThumbUpIcon
+                  className={
+                    "cursor-pointer hover:text-green-500" +
+                    (feedback === true ? " text-green-500" : "")
+                  }
+                  width="1.2em"
+                  height="1.2em"
+                  color={lightGray}
+                  onClick={() => {
+                    sendFeedback(true);
+                  }}
+                />
+              </HeaderButtonWithText>
             )}
             {feedback === true || (
-              <HandThumbDownIcon
-                className={
-                  "cursor-pointer hover:text-red-500" +
-                  (feedback === false ? " text-red-500" : "")
-                }
-                width="1.2em"
-                height="1.2em"
-                color={lightGray}
-                onClick={() => {
-                  sendFeedback(false);
-                }}
-              />
+              <HeaderButtonWithText text="Unhelpful">
+                <HandThumbDownIcon
+                  className={
+                    "cursor-pointer hover:text-red-500" +
+                    (feedback === false ? " text-red-500" : "")
+                  }
+                  width="1.2em"
+                  height="1.2em"
+                  color={lightGray}
+                  onClick={() => {
+                    sendFeedback(false);
+                  }}
+                />
+              </HeaderButtonWithText>
             )}
           </div>
         )}
       </div>
-    </MainDiv>
+    </div>
   );
 }
 

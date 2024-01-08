@@ -1,18 +1,21 @@
 import { combineReducers, configureStore } from "@reduxjs/toolkit";
 import configReducer from "./slices/configSlice";
 import miscReducer from "./slices/miscSlice";
-import uiStateReducer from "./slices/uiStateSlice";
 import serverStateReducer from "./slices/serverStateReducer";
-import sessionStateReducer, {
-  SessionFullState,
-} from "./slices/sessionStateReducer";
-import { ContinueConfig } from "../schema/ContinueConfig";
-import { ContextItem } from "../schema/ContextItem";
-import { ContextProviderDescription } from "../schema/ContextProviderDescription";
-import { SlashCommandDescription } from "../schema/SlashCommandDescription";
+import stateReducer from "./slices/stateSlice";
+import uiStateReducer from "./slices/uiStateSlice";
 
+import {
+  ChatHistory,
+  ContextItemWithId,
+  ContextProviderDescription,
+  ContinueConfig,
+  SlashCommandDescription,
+} from "core";
+import { createTransform, persistReducer, persistStore } from "redux-persist";
+import { createFilter } from "redux-persist-transform-filter";
+import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
 import storage from "redux-persist/lib/storage";
-import { persistReducer, persistStore, createTransform } from "redux-persist";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
@@ -20,6 +23,16 @@ export interface ChatMessage {
 }
 
 export interface RootStore {
+  state: {
+    history: ChatHistory;
+    contextItems: ContextItemWithId[];
+    active: boolean;
+    config: ContinueConfig;
+    title: string;
+    sessionId: string;
+    defaultModelTitle: string;
+  };
+
   config: {
     vscMachineId: string | undefined;
   };
@@ -35,11 +48,10 @@ export interface RootStore {
     dialogMessage: string | JSX.Element;
     dialogEntryOn: boolean;
   };
-  sessionState: SessionFullState;
   serverState: {
     meilisearchUrl: string | undefined;
     slashCommands: SlashCommandDescription[];
-    selectedContextItems: ContextItem[];
+    selectedContextItems: any[];
     config: ContinueConfig;
     contextProviders: ContextProviderDescription[];
     savedContextGroups: any[]; // TODO: Context groups
@@ -48,10 +60,10 @@ export interface RootStore {
 }
 
 const rootReducer = combineReducers({
+  state: stateReducer,
   config: configReducer,
   misc: miscReducer,
   uiState: uiStateReducer,
-  sessionState: sessionStateReducer,
   serverState: serverStateReducer,
 });
 
@@ -67,18 +79,30 @@ const windowIDTransform = (windowID) =>
     }
   );
 
+const saveSubsetFilters = [
+  createFilter("state", [
+    "history",
+    "contextItems",
+    "sessionId",
+    "defaultModelTitle",
+  ]),
+];
+
 const persistConfig = {
   key: "root",
   storage,
-  // transforms: [
-  //   windowIDTransform((window as any).windowId || "undefinedWindowId"),
-  // ],
+  transforms: [
+    ...saveSubsetFilters,
+    // windowIDTransform((window as any).windowId || "undefinedWindowId"),
+  ],
+  stateReconciler: autoMergeLevel2,
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
   reducer: persistedReducer,
+  // reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: false,

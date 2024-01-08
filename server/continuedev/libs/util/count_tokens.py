@@ -45,7 +45,7 @@ def encoding_for_model(model_name: str):
 
     try:
         if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
-            tiktoken_cache = os.path.join(sys._MEIPASS, "tiktoken_cache")  # type: ignore
+            tiktoken_cache = os.path.join(sys._MEIPASS, "tiktoken_cache")
             if os.path.exists(tiktoken_cache):
                 os.environ["TIKTOKEN_CACHE_DIR"] = tiktoken_cache
 

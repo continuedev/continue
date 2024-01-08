@@ -1,13 +1,13 @@
+import { BookOpenIcon } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { buttonColor, defaultBorderRadius, lightGray } from "..";
-import { BookOpenIcon } from "@heroicons/react/24/outline";
-import HeaderButtonWithText from "../HeaderButtonWithText";
 import {
   MODEL_PROVIDER_TAG_COLORS,
   PROVIDER_INFO,
   PackageDimension,
 } from "../../util/modelData";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 import InfoHover from "../InfoHover";
 
 const Div = styled.div<{ color: string; disabled: boolean; hovered: boolean }>`
@@ -211,6 +211,9 @@ function ModelCard(props: ModelCardProps) {
               <div className="flex items-center flex-wrap justify-end rtl">
                 {props.providerOptions?.map((option, i) => {
                   const info = PROVIDER_INFO[option];
+                  if (!info) {
+                    return null;
+                  }
                   return (
                     <HeaderButtonWithText
                       text={info.title}

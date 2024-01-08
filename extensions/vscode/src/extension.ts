@@ -3,7 +3,7 @@
  */
 
 import * as vscode from "vscode";
-import { getExtensionVersion } from "./activation/environmentSetup";
+import { getExtensionVersion } from "./util/util";
 import { getUniqueId } from "./util/vscode";
 
 let client: any = undefined;

@@ -3,8 +3,6 @@ import shutil
 from pathlib import Path
 from typing import Iterable, List, Union
 
-from continuedev.libs.util.calculate_diff import calculate_diff
-
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 

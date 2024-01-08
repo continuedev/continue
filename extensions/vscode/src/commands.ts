@@ -1,11 +1,16 @@
-import * as vscode from "vscode";
-import * as path from "path";
-import * as os from "os";
 import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import * as vscode from "vscode";
 
-import { acceptDiffCommand, rejectDiffCommand } from "./diffs";
-import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { ideProtocolClient } from "./activation/activate";
+import { debugPanelWebview, getSidebarContent } from "./debugPanel";
+import { acceptDiffCommand, rejectDiffCommand } from "./diff/horizontal";
+import {
+  editorToVerticalDiffCodeLens,
+  streamEdit,
+  verticalPerLineDiffManager,
+} from "./diff/verticalPerLine/manager";
 
 function addHighlightedCodeToContext(edit: boolean) {
   const editor = vscode.window.activeTextEditor;
@@ -74,10 +79,48 @@ async function addEntireFileToContext(filepath: vscode.Uri, edit: boolean) {
   });
 }
 
+function acceptRejectVerticalDiffBlock(
+  accept: boolean,
+  filepath?: string,
+  index?: number
+) {
+  if (!filepath) {
+    const activeEditor = vscode.window.activeTextEditor;
+    if (!activeEditor) {
+      return;
+    }
+    filepath = activeEditor.document.uri.fsPath;
+  }
+
+  if (typeof index === "undefined") {
+    index = 0;
+  }
+
+  let blocks = editorToVerticalDiffCodeLens.get(filepath);
+  const block = blocks?.[index];
+  if (!blocks || !block) {
+    return;
+  }
+
+  const handler = verticalPerLineDiffManager.getHandlerForFile(filepath);
+  if (!handler) {
+    return;
+  }
+
+  // CodeLens object removed from editorToVerticalDiffCodeLens here
+  handler.acceptRejectBlock(accept, block.start, block.numGreen, block.numRed);
+}
+
 // Copy everything over from extension.ts
 const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.acceptDiff": acceptDiffCommand,
   "continue.rejectDiff": rejectDiffCommand,
+  "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
+    acceptRejectVerticalDiffBlock(true, filepath, index);
+  },
+  "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number) => {
+    acceptRejectVerticalDiffBlock(false, filepath, index);
+  },
   "continue.quickFix": async (message: string, code: string, edit: boolean) => {
     ideProtocolClient.sendMainUserInput(
       `${
@@ -95,31 +138,36 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     });
     addHighlightedCodeToContext(false);
   },
-  "continue.focusContinueInputWithEdit": async () => {
+  "continue.focusContinueInputWithoutClear": async () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    addHighlightedCodeToContext(true);
     debugPanelWebview?.postMessage({
-      type: "focusContinueInputWithEdit",
+      type: "focusContinueInputWithoutClear",
     });
+    addHighlightedCodeToContext(true);
   },
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   },
-  "continue.quickTextEntry": async () => {
-    addHighlightedCodeToContext(true);
+  "continue.quickEdit": async () => {
     const text = await vscode.window.showInputBox({
-      placeHolder: "Ask a question or enter a slash command",
-      title: "Continue Quick Input",
+      placeHolder: "Describe how to edit the highlighted code",
+      title: "Continue Quick Edit",
     });
     if (text) {
-      debugPanelWebview?.postMessage({
-        type: "userInput",
-        input: text,
-      });
-      if (!text.startsWith("/edit")) {
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      }
+      await streamEdit(text);
     }
+  },
+  "continue.writeCommentsForCode": async () => {
+    await streamEdit("Write comments for this code");
+  },
+  "continue.writeDocstringForCode": async () => {
+    await streamEdit("Write a docstring for this code");
+  },
+  "continue.fixCode": async () => {
+    await streamEdit("Fix this code");
+  },
+  "continue.optimizeCode": async () => {
+    await streamEdit("Optimize this code");
   },
   "continue.viewLogs": async () => {
     // Open ~/.continue/continue.log
@@ -134,8 +182,12 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     await vscode.window.showTextDocument(uri);
   },
   "continue.debugTerminal": async () => {
+    const terminalContents = await ideProtocolClient.getTerminalContents(2);
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    await ideProtocolClient.debugTerminal();
+    debugPanelWebview?.postMessage({
+      type: "userInput",
+      input: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents}`,
+    });
   },
   "continue.hideInlineTip": () => {
     vscode.workspace

@@ -22,6 +22,7 @@ cd server
 env\Scripts\maturin develop
 
 REM 4.5. Make .tiktoken_cache directory, used to package with tiktoken vocab file
+cd ..
 mkdir .tiktoken_cache
 
 REM 4.75. Call PyInstaller from within the virtual environment

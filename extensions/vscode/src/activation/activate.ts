@@ -1,21 +1,15 @@
-import * as vscode from "vscode";
-import IdeProtocolClient from "../continueIdeClient";
-import { getContinueServerUrl } from "../bridge";
-import {
-  ContinueGUIWebviewViewProvider,
-  getSidebarContent,
-} from "../debugPanel";
-import {
-  getExtensionVersion,
-  startContinuePythonServer,
-} from "./environmentSetup";
-import { registerAllCodeLensProviders } from "../lang-server/codeLens";
-import { registerAllCommands } from "../commands";
-import registerQuickFixProvider from "../lang-server/codeActions";
-import { getExtensionUri } from "../util/vscode";
+import { getTsConfigPath } from "core/util/paths";
 import path from "path";
-import { setupInlineTips } from "./inlineTips";
 import { v4 } from "uuid";
+import * as vscode from "vscode";
+import { registerAllCommands } from "../commands";
+import IdeProtocolClient from "../continueIdeClient";
+import { ContinueGUIWebviewViewProvider } from "../debugPanel";
+import registerQuickFixProvider from "../lang-server/codeActions";
+import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { getExtensionUri } from "../util/vscode";
+import { setupInlineTips } from "./inlineTips";
+import { startProxy } from "./proxy";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
@@ -105,18 +99,10 @@ function showRefactorMigrationMessage() {
 }
 
 export async function activateExtension(context: vscode.ExtensionContext) {
-  extensionContext = context;
+  // Add necessary files
+  getTsConfigPath();
 
-  console.log("Using Continue version: ", getExtensionVersion());
-  try {
-    console.log(
-      "In workspace: ",
-      vscode.workspace.workspaceFolders?.[0].uri.fsPath
-    );
-  } catch (e) {
-    console.log("Error getting workspace folder: ", e);
-  }
-  console.log("Window ID: ", windowId);
+  extensionContext = context;
 
   // Register commands and providers
   registerAllCodeLensProviders(context);
@@ -127,15 +113,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   setupInlineTips(context);
   showRefactorMigrationMessage();
 
-  (async () => {
-    // Start the server
-    await startContinuePythonServer();
-    console.log("Continue server started");
-
-    // Initialize IDE Protocol Client
-    const serverUrl = getContinueServerUrl();
-    ideProtocolClient = new IdeProtocolClient(serverUrl, context);
-  })();
+  ideProtocolClient = new IdeProtocolClient(context);
 
   // Register Continue GUI as sidebar webview, and beginning a new session
   const provider = new ContinueGUIWebviewViewProvider();
@@ -149,4 +127,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       }
     )
   );
+
+  startProxy();
 }

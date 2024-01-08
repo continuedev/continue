@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import FreeTrial from "core/llm/llms/FreeTrial";
 import { RootStore } from "../store";
 
 const TEST_SLASH_COMMANDS = [
@@ -21,8 +22,10 @@ const initialState: RootStore["serverState"] = {
   slashCommands: [],
   selectedContextItems: [],
   config: {
-    system_message: "",
-    temperature: 0.5,
+    models: [
+      new FreeTrial({ model: "gpt-4" }),
+      new FreeTrial({ model: "gpt-3.5-turbo" }),
+    ],
   },
   contextProviders: [],
   savedContextGroups: [],
@@ -49,12 +52,6 @@ export const serverStateSlice = createSlice({
         contextProviders: action.payload,
       };
     },
-    setConfig: (state, action) => {
-      return {
-        ...state,
-        config: action.payload,
-      };
-    },
     setIndexingProgress: (state, { payload }: { payload: number }) => {
       return {
         ...state,
@@ -64,10 +61,6 @@ export const serverStateSlice = createSlice({
   },
 });
 
-export const {
-  setContextProviders,
-  setSlashCommands,
-  setConfig,
-  setIndexingProgress,
-} = serverStateSlice.actions;
+export const { setContextProviders, setSlashCommands, setIndexingProgress } =
+  serverStateSlice.actions;
 export default serverStateSlice.reducer;
