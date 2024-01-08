@@ -23,7 +23,7 @@ class SearchContextProvider extends BaseContextProvider {
     return [
       {
         description: "Search results",
-        content: results,
+        content: `Results of searching codebase for "${query}":\n\n${results}`,
         name: "Search results",
       },
     ];

@@ -23,7 +23,7 @@ class TerminalContextProvider extends BaseContextProvider {
     return [
       {
         description: "The contents of the terminal",
-        content,
+        content: `Current terminal contents:\n\n${content}`,
         name: "Terminal",
       },
     ];

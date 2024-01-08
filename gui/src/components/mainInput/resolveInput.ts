@@ -66,7 +66,7 @@ async function resolveEditorContent(
         }
       );
       for (const resolvedItem of resolvedItems) {
-        contextItemsText += resolvedItem.content;
+        contextItemsText += resolvedItem.content + "\n\n";
       }
     }
   }

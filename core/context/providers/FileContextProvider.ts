@@ -26,7 +26,7 @@ class FileContextProvider extends BaseContextProvider {
       {
         name: query.split(/[\\/]/).pop() || query,
         description: query,
-        content,
+        content: `\`\`\`${query}\n${content}\n\`\`\``,
       },
     ];
   }

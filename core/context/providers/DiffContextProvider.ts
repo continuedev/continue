@@ -23,7 +23,7 @@ class DiffContextProvider extends BaseContextProvider {
     return [
       {
         description: "The current git diff",
-        content: diff,
+        content: `\`\`\`git diff\n${diff}\n\`\`\``,
         name: "Git Diff",
       },
     ];
