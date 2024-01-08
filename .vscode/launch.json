@@ -36,7 +36,7 @@
       "cwd": "${workspaceFolder}/extensions/vscode",
       "args": [
         // Pass a directory to manually test in
-        "${workspaceFolder}/extensions/vscode/manual-testing-sandbox",
+        "${workspaceFolder}/extensions/vscode",
         "${workspaceFolder}/extensions/vscode/manual-testing-sandbox/example.ts",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],

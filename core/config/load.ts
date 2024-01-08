@@ -87,7 +87,7 @@ function intermediateToFinalConfig(config: Config): ContinueConfig {
 
   if (
     (config.embeddingsProvider as EmbeddingsProviderDescription | undefined)
-      ?.model
+      ?.provider
   ) {
     const { provider, ...options } =
       config.embeddingsProvider as EmbeddingsProviderDescription;
