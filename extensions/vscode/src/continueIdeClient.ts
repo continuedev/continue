@@ -1,6 +1,7 @@
 import { FileEdit, RangeInFile } from "core";
 import { getConfigJsonPath } from "core/util/paths";
 import { readFileSync } from "fs";
+import * as path from "path";
 import * as vscode from "vscode";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { diffManager } from "./diff/horizontal";
@@ -17,8 +18,6 @@ import {
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./util/vscode";
-const os = require("os");
-const path = require("path");
 
 const continueVirtualDocumentScheme = "continue";
 
@@ -353,8 +352,19 @@ class IdeProtocolClient {
     return absolutePaths;
   }
 
+  getAbsolutePath(filepath: string): string {
+    const workspaceDirectories = this.getWorkspaceDirectories();
+    if (!path.isAbsolute(filepath) && workspaceDirectories.length === 1) {
+      return path.join(workspaceDirectories[0], filepath);
+    } else {
+      return filepath;
+    }
+  }
+
   async readFile(filepath: string): Promise<string> {
-    const MAX_BYTES = 100000; // 0.1MB - socket.io has a 1MB limit, but seems to die a around 0.5MB
+    filepath = this.getAbsolutePath(filepath);
+
+    const MAX_BYTES = 100000;
     let contents: string | undefined;
     if (typeof contents === "undefined") {
       try {

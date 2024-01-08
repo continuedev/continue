@@ -8,11 +8,14 @@ import {
   ContinueConfig,
   PersistedSessionInfo,
 } from "core";
-import defaultConfig from "core/config/default";
-import {
-  intermediateToFinalConfig,
-  serializedToIntermediateConfig,
-} from "core/config/load";
+import GenerateTerminalCommand from "core/commands/slash/cmd";
+import CommentSlashCommand from "core/commands/slash/comment";
+import EditSlashCommand from "core/commands/slash/edit";
+import ShareSlashCommand from "core/commands/slash/share";
+import DiffContextProvider from "core/context/providers/DiffContextProvider";
+import OpenFilesContextProvider from "core/context/providers/OpenFilesContextProvider";
+import TerminalContextProvider from "core/context/providers/TerminalContextProvider";
+import FreeTrial from "core/llm/llms/FreeTrial";
 import { v4 } from "uuid";
 import { RootStore } from "../store";
 
@@ -90,9 +93,23 @@ const initialState: RootStore["state"] = {
   history: [],
   contextItems: [],
   active: false,
-  config: intermediateToFinalConfig(
-    serializedToIntermediateConfig(defaultConfig)
-  ),
+  config: {
+    models: [
+      new FreeTrial({ model: "gpt-4", title: "GPT-4" }),
+      new FreeTrial({ model: "gpt-3.5-turbo", title: "GPT-3.5-Turbo" }),
+    ],
+    slashCommands: [
+      EditSlashCommand,
+      CommentSlashCommand,
+      ShareSlashCommand,
+      GenerateTerminalCommand,
+    ],
+    contextProviders: [
+      new DiffContextProvider({}),
+      new OpenFilesContextProvider({}),
+      new TerminalContextProvider({}),
+    ],
+  },
   title: "New Session",
   sessionId: v4(),
   defaultModelTitle: "GPT-4",

@@ -6,11 +6,6 @@ import {
 import { ChatMessage } from "..";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
 
-function renderTemplatedString(template: string): string {
-  // TODO
-  return template;
-}
-
 function encodingForModel(modelName: string): Tiktoken {
   let encoding: Tiktoken;
   try {
@@ -216,10 +211,9 @@ function compileChatMessages(
   }
 
   if (systemMessage && systemMessage.trim() !== "") {
-    const renderedSystemMessage = renderTemplatedString(systemMessage);
     const systemChatMsg: ChatMessage = {
       role: "system",
-      content: renderedSystemMessage,
+      content: systemMessage,
     };
     // Insert as second to last
     // Later moved to top, but want second-priority to last user message

@@ -293,7 +293,12 @@ async function loadFullConfigNode(ide: IDE): Promise<ContinueConfig> {
       console.log("Error loading config.ts: ", e);
     }
   }
-  const finalConfig = intermediateToFinalConfig(intermediate);
+  const finalConfig = await intermediateToFinalConfig(
+    intermediate,
+    async (filepath) => {
+      return ideProtocolClient.readFile(filepath);
+    }
+  );
   return finalConfig;
 }
 
