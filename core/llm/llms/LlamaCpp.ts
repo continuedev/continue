@@ -25,6 +25,7 @@ class LlamaCpp extends BaseLLM {
   ): AsyncGenerator<string> {
     const headers = {
       "Content-Type": "application/json",
+      "Authorization": `Bearer ${this.apiKey}`,
       ...this.requestOptions?.headers,
     };
 
