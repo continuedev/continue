@@ -149,8 +149,11 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   },
   "continue.quickEdit": async () => {
+    const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
     const text = await vscode.window.showInputBox({
-      placeHolder: "Describe how to edit the highlighted code",
+      placeHolder: selectionEmpty
+        ? "Describe the code you want to generate"
+        : "Describe how to edit the highlighted code",
       title: "Continue Quick Edit",
     });
     if (text) {
