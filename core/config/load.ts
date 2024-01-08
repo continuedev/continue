@@ -56,12 +56,20 @@ function isContextProviderWithParams(
 }
 
 /** Only difference between intermediate and final configs is the `models` array */
-function intermediateToFinalConfig(config: Config): ContinueConfig {
+async function intermediateToFinalConfig(
+  config: Config,
+  readFile: (filepath: string) => Promise<string>
+): Promise<ContinueConfig> {
   const models: BaseLLM[] = [];
   for (const desc of config.models) {
     let llm: BaseLLM | undefined;
     if (isModelDescription(desc)) {
-      llm = llmFromDescription(desc, config.completionOptions);
+      llm = await llmFromDescription(
+        desc,
+        readFile,
+        config.completionOptions,
+        config.systemMessage
+      );
     } else {
       llm = new CustomLLMClass(desc);
     }

@@ -1,3 +1,4 @@
+import Handlebars from "handlebars";
 import { BaseLLM } from "..";
 import {
   BaseCompletionOptions,
@@ -7,6 +8,7 @@ import {
 } from "../..";
 import Anthropic from "./Anthropic";
 import Bedrock from "./Bedrock";
+import DeepInfra from "./DeepInfra";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
 import GooglePalm from "./GooglePalm";
@@ -21,6 +23,53 @@ import OpenAI from "./OpenAI";
 import Replicate from "./Replicate";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
+
+function convertToLetter(num: number): string {
+  let result = "";
+  while (num > 0) {
+    const remainder = (num - 1) % 26;
+    result = String.fromCharCode(97 + remainder) + result;
+    num = Math.floor((num - 1) / 26);
+  }
+  return result;
+}
+
+const getHandlebarsVars = (
+  value: string
+): [string, { [key: string]: string }] => {
+  const ast = Handlebars.parse(value);
+
+  let keysToFilepath: { [key: string]: string } = {};
+  let keyIndex = 1;
+  for (let i in ast.body) {
+    if (ast.body[i].type === "MustacheStatement") {
+      const letter = convertToLetter(keyIndex);
+      keysToFilepath[letter] = (ast.body[i] as any).path.original;
+      value = value.replace(
+        new RegExp("{{\\s*" + (ast.body[i] as any).path.original + "\\s*}}"),
+        `{{${letter}}}`
+      );
+      keyIndex++;
+    }
+  }
+  return [value, keysToFilepath];
+};
+
+async function renderTemplatedString(
+  template: string,
+  readFile: (filepath: string) => Promise<string>
+): Promise<string> {
+  const [newTemplate, vars] = getHandlebarsVars(template);
+  template = newTemplate;
+  let data: any = {};
+  for (let key in vars) {
+    let fileContents = await readFile(vars[key]);
+    data[key] = fileContents || vars[key];
+  }
+  const templateFn = Handlebars.compile(template);
+  let final = templateFn(data);
+  return final;
+}
 
 const LLMs = [
   Anthropic,
@@ -39,12 +88,15 @@ const LLMs = [
   Gemini,
   Mistral,
   Bedrock,
+  DeepInfra,
 ];
 
-export function llmFromDescription(
+export async function llmFromDescription(
   desc: ModelDescription,
-  completionOptions?: BaseCompletionOptions
-): BaseLLM | undefined {
+  readFile: (filepath: string) => Promise<string>,
+  completionOptions?: BaseCompletionOptions,
+  systemMessage?: string
+): Promise<BaseLLM | undefined> {
   const cls = LLMs.find((llm) => llm.providerName === desc.provider);
 
   if (!cls) {
@@ -56,6 +108,11 @@ export function llmFromDescription(
     ...desc.completionOptions,
   };
 
+  systemMessage = desc.systemMessage || systemMessage;
+  if (systemMessage !== undefined) {
+    systemMessage = await renderTemplatedString(systemMessage, readFile);
+  }
+
   const options: LLMOptions = {
     ...desc,
     completionOptions: {
@@ -66,6 +123,7 @@ export function llmFromDescription(
         cls.defaultOptions?.completionOptions?.maxTokens ||
         1024,
     },
+    systemMessage,
   };
 
   return new cls(options);

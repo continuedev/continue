@@ -20,9 +20,7 @@ function useSetup(dispatch: Dispatch<any>) {
     try {
       const ide = new ExtensionIde();
       let serialized = await ide.getSerializedConfig();
-      console.log("serialized: ", serialized);
       let intermediate = serializedToIntermediateConfig(serialized);
-      console.log("i1", intermediate);
 
       const configJsUrl = await ide.getConfigJsUrl();
       if (configJsUrl) {
@@ -40,7 +38,12 @@ function useSetup(dispatch: Dispatch<any>) {
           errorPopup(e.message);
         }
       }
-      const finalConfig = intermediateToFinalConfig(intermediate);
+      const finalConfig = await intermediateToFinalConfig(
+        intermediate,
+        async (filepath) => {
+          return new ExtensionIde().readFile(filepath);
+        }
+      );
       // Fall back to config.json
       dispatch(setConfig(finalConfig));
     } catch (e) {

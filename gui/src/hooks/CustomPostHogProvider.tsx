@@ -6,21 +6,19 @@ import { RootStore } from "../redux/store";
 
 const CustomPostHogProvider = ({ children }: PropsWithChildren) => {
   const allowAnonymousTelemetry = useSelector(
-    (store: RootStore) => store?.serverState?.config.allowAnonymousTelemetry
+    (store: RootStore) => store?.state?.config.allowAnonymousTelemetry
   );
 
   const [client, setClient] = React.useState<any>(undefined);
 
   useEffect(() => {
-    if (
-      allowAnonymousTelemetry === true ||
-      allowAnonymousTelemetry === undefined
-    ) {
+    if (allowAnonymousTelemetry === true) {
       posthog.init("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
         api_host: "https://app.posthog.com",
         disable_session_recording: true,
       });
       posthog.identify((window as any).vscMachineId);
+      posthog.opt_in_capturing();
       setClient(client);
     } else {
       setClient(undefined);

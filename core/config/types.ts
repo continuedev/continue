@@ -2,10 +2,10 @@ const Types = `
 declare global {
   export interface ILLM extends LLMOptions {
     get providerName(): ModelProvider;
-  
+
     uniqueId: string;
     model: string;
-  
+
     title?: string;
     systemMessage?: string;
     contextLength: number;
@@ -17,35 +17,35 @@ declare global {
     llmRequestHook?: (model: string, prompt: string) => any;
     apiKey?: string;
     apiBase?: string;
-  
+
     engine?: string;
     apiVersion?: string;
     apiType?: string;
     region?: string;
     projectId?: string;
-  
+
     _fetch?: (input: any, init?: any) => Promise<any>;
-  
+
     complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
-  
+
     streamComplete(
       prompt: string,
       options?: LLMFullCompletionOptions
     ): AsyncGenerator<string>;
-  
+
     streamChat(
       messages: ChatMessage[],
       options?: LLMFullCompletionOptions
     ): AsyncGenerator<ChatMessage>;
-  
+
     chat(
       messages: ChatMessage[],
       options?: LLMFullCompletionOptions
     ): Promise<ChatMessage>;
-  
+
     countTokens(text: string): number;
   }
-  
+
   export interface ContextProviderDescription {
     title: string;
     displayTitle: string;
@@ -53,39 +53,39 @@ declare global {
     dynamic: boolean;
     requiresQuery: boolean;
   }
-  
+
   export interface CustomContextProvider {
     title: string;
     displayTitle?: string;
     description?: string;
     getContextItems(query: string): Promise<ContextItem[]>;
   }
-  
+
   export interface IContextProvider {
     get description(): ContextProviderDescription;
-  
+
     getContextItems(query: string): Promise<ContextItem[]>;
   }
-  
+
   export interface PersistedSessionInfo {
     history: ChatHistory;
     title: string;
     workspaceDirectory: string;
     sessionId: string;
   }
-  
+
   export interface SessionInfo {
     sessionId: string;
     title: string;
     dateCreated: string;
     workspaceDirectory: string;
   }
-  
+
   export interface RangeInFile {
     filepath: string;
     range: Range;
   }
-  
+
   export interface Range {
     start: Position;
     end: Position;
@@ -99,15 +99,15 @@ declare global {
     range: Range;
     replacement: string;
   }
-  
+
   export interface ContinueError {
     title: string;
     message: string;
   }
-  
+
   export interface CompletionOptions {
     model: string;
-  
+
     maxTokens: number;
     temperature?: number;
     topP?: number;
@@ -117,19 +117,19 @@ declare global {
     frequencyPenalty?: number;
     stop?: string[];
   }
-  
+
   export type ChatMessageRole = "user" | "assistant" | "system";
-  
+
   export interface ChatMessage {
     role: ChatMessageRole;
     content: string;
   }
-  
+
   export interface ContextItemId {
     providerTitle: string;
     itemId: string;
   }
-  
+
   export interface ContextItem {
     content: string;
     name: string;
@@ -137,7 +137,7 @@ declare global {
     editing?: boolean;
     editable?: boolean;
   }
-  
+
   export interface ContextItemWithId {
     content: string;
     name: string;
@@ -146,24 +146,24 @@ declare global {
     editing?: boolean;
     editable?: boolean;
   }
-  
+
   export interface ChatHistoryItem {
     message: ChatMessage;
     editorState?: any;
     contextItems: ContextItemWithId[];
     promptLogs?: [string, string][]; // [prompt, completion]
   }
-  
+
   export type ChatHistory = ChatHistoryItem[];
-  
+
   // LLM
-  
+
   export interface LLMFullCompletionOptions {
     raw?: boolean;
     log?: boolean;
-  
+
     model?: string;
-  
+
     temperature?: number;
     topP?: number;
     topK?: number;
@@ -175,7 +175,7 @@ declare global {
   }
   export interface LLMOptions {
     model: string;
-  
+
     title?: string;
     uniqueId?: string;
     systemMessage?: string;
@@ -189,12 +189,12 @@ declare global {
     llmRequestHook?: (model: string, prompt: string) => any;
     apiKey?: string;
     apiBase?: string;
-  
+
     // Azure options
     engine?: string;
     apiVersion?: string;
     apiType?: string;
-  
+
     // GCP Options
     region?: string;
     projectId?: string;
@@ -206,7 +206,7 @@ declare global {
     {
       [K in Keys]-?: Required<Pick<T, K>> & Partial<Pick<T, Exclude<Keys, K>>>;
     }[Keys];
-  
+
   export interface CustomLLMWithOptionals {
     options?: LLMOptions;
     streamCompletion?: (
@@ -220,7 +220,7 @@ declare global {
       fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
     ) => AsyncGenerator<string>;
   }
-  
+
   /**
    * The LLM interface requires you to specify either \`streamCompletion\` or \`streamChat\` (or both).
    */
@@ -228,14 +228,14 @@ declare global {
     CustomLLMWithOptionals,
     "streamCompletion" | "streamChat"
   >;
-  
+
   // IDE
-  
+
   export interface DiffLine {
     type: "new" | "old" | "same";
     line: string;
   }
-  
+
   export interface IDE {
     getSerializedConfig(): Promise<SerializedContinueConfig>;
     getConfigJsUrl(): Promise<string | undefined>;
@@ -262,10 +262,11 @@ declare global {
       diffLine: DiffLine
     ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
+    getSearchResults(query: string): Promise<string>;
   }
-  
+
   // Slash Commands
-  
+
   export interface ContinueSDK {
     ide: IDE;
     llm: ILLM;
@@ -275,20 +276,20 @@ declare global {
     params?: any;
     contextItems: ContextItemWithId[];
   }
-  
+
   export interface SlashCommand {
     name: string;
     description: string;
     params?: { [key: string]: any };
     run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
-  
+
     // If true, this command will be run in NodeJs and have access to the filesystem and other Node-only APIs
     // You must make sure to dynamically import any Node-only dependencies in your command so that it doesn't break in the browser
     runInNodeJs?: boolean;
   }
-  
+
   // Config
-  
+
   type StepName =
     | "AnswerQuestionChroma"
     | "GenerateShellCommandStep"
@@ -300,7 +301,7 @@ declare global {
     | "OpenConfigStep"
     | "GenerateShellCommandStep"
     | "DraftIssueStep";
-  
+
   type ContextProviderName =
     | "diff"
     | "github"
@@ -311,7 +312,7 @@ declare global {
     | "url"
     | "tree"
     | "http";
-  
+
   type TemplateType =
     | "llama2"
     | "alpaca"
@@ -321,8 +322,9 @@ declare global {
     | "chatml"
     | "none"
     | "openchat"
-    | "deepseek";
-  
+    | "deepseek"
+    | "xwin-coder";
+
   type ModelProvider =
     | "openai"
     | "openai-free-trial"
@@ -339,8 +341,9 @@ declare global {
     | "llamafile"
     | "gemini"
     | "mistral"
-    | "bedrock";
-  
+    | "bedrock"
+    | "deepinfra";
+
   export type ModelName =
     // OpenAI
     | "gpt-3.5-turbo"
@@ -376,7 +379,7 @@ declare global {
     | "mistral-tiny"
     | "mistral-small"
     | "mistral-medium";
-  
+
   export interface RequestOptions {
     timeout?: number;
     verifySsl?: boolean;
@@ -384,24 +387,23 @@ declare global {
     proxy?: string;
     headers?: { [key: string]: string };
   }
-  
+
   export interface StepWithParams {
     name: StepName;
     params: { [key: string]: any };
   }
-  
+
   export interface ContextProviderWithParams {
     name: ContextProviderName;
     params: { [key: string]: any };
   }
-  
+
   export interface SlashCommandDescription {
     name: string;
     description: string;
-    step: StepName | string;
     params?: { [key: string]: any };
   }
-  
+
   export interface CustomCommand {
     name: string;
     prompt: string;
@@ -419,7 +421,7 @@ declare global {
     apiVersion?: string;
     organizationId?: string;
   }
-  
+
   interface BaseCompletionOptions {
     temperature?: number;
     topP?: number;
@@ -430,7 +432,7 @@ declare global {
     stop?: string[];
     maxTokens: number;
   }
-  
+
   export interface ModelDescription {
     title: string;
     provider: ModelProvider;
@@ -444,14 +446,14 @@ declare global {
     requestOptions?: RequestOptions;
     promptTemplates?: { [key: string]: string };
   }
-  
+
   export interface ModelRoles {
     default: string;
     chat?: string;
     edit?: string;
     summarize?: string;
   }
-  
+
   export interface SerializedContinueConfig {
     disallowedSteps?: string[];
     allowAnonymousTelemetry?: boolean;
@@ -463,9 +465,10 @@ declare global {
     contextProviders?: ContextProviderWithParams[];
     retrievalSettings?: RetrievalSettings;
     disableIndexing?: boolean;
+    disableSessionTitles?: boolean;
     userToken?: string;
   }
-  
+
   export interface Config {
     /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://continue.dev/docs/telemetry */
     allowAnonymousTelemetry?: boolean;
@@ -488,10 +491,12 @@ declare global {
     retrievalSettings?: RetrievalSettings;
     /** If set to true, Continue will not index your codebase for retrieval */
     disableIndexing?: boolean;
+    /** If set to true, Continue will not make extra requests to the LLM to generate a summary title of each session. */
+    disableSessionTitles?: boolean;
     /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
     userToken?: string;
   }
-  
+
   export interface ContinueConfig {
     allowAnonymousTelemetry?: boolean;
     models: ILLM[];
@@ -500,6 +505,7 @@ declare global {
     slashCommands?: SlashCommand[];
     contextProviders?: IContextProvider[];
     retrievalSettings?: RetrievalSettings;
+    disableSessionTitles?: boolean;
     disableIndexing?: boolean;
     userToken?: string;
   }

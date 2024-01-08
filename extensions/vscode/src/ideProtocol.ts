@@ -58,6 +58,9 @@ class VsCodeIde implements IDE {
       const configPath = getConfigJsonPath();
       let contents = fs.readFileSync(configPath, "utf8");
       let config = JSON.parse(contents) as SerializedContinueConfig;
+      if (config.allowAnonymousTelemetry === undefined) {
+        config.allowAnonymousTelemetry = true;
+      }
       config.allowAnonymousTelemetry =
         config.allowAnonymousTelemetry &&
         vscode.workspace.getConfiguration("continue").get("telemetryEnabled");
@@ -290,7 +293,12 @@ async function loadFullConfigNode(ide: IDE): Promise<ContinueConfig> {
       console.log("Error loading config.ts: ", e);
     }
   }
-  const finalConfig = intermediateToFinalConfig(intermediate);
+  const finalConfig = await intermediateToFinalConfig(
+    intermediate,
+    async (filepath) => {
+      return ideProtocolClient.readFile(filepath);
+    }
+  );
   return finalConfig;
 }
 
