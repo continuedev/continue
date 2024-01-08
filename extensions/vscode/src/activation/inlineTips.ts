@@ -4,8 +4,9 @@ import { getMetaKeyLabel } from "../util/util";
 const inlineTipDecoration = vscode.window.createTextEditorDecorationType({
   after: {
     contentText: `${getMetaKeyLabel()} M to select code, ${getMetaKeyLabel()} ⇧ L to edit`,
-    color: "#c0c0c060",
+    color: "#888",
     margin: "0 0 0 6em",
+    fontWeight: "bold",
   },
 });
 
@@ -22,9 +23,7 @@ function handleSelectionChange(e: vscode.TextEditorSelectionChangeEvent) {
     return;
   }
 
-  const startLine = selection.start.line;
-
-  let lineToShow = startLine > 0 ? startLine - 1 : startLine + 1;
+  const anchorLine = selection.anchor.line;
 
   const hoverMarkdown = new vscode.MarkdownString(
     `Use ${getMetaKeyLabel()} M to select code, or ${getMetaKeyLabel()} ⇧ L to edit highlighted code. Click [here](command:continue.hideInlineTip) if you don't want to see these inline suggestions.`
@@ -34,8 +33,8 @@ function handleSelectionChange(e: vscode.TextEditorSelectionChangeEvent) {
   editor.setDecorations(inlineTipDecoration, [
     {
       range: new vscode.Range(
-        new vscode.Position(lineToShow, Number.MAX_VALUE),
-        new vscode.Position(lineToShow, Number.MAX_VALUE)
+        new vscode.Position(anchorLine, Number.MAX_VALUE),
+        new vscode.Position(anchorLine, Number.MAX_VALUE)
       ),
       hoverMessage: [hoverMarkdown],
     },
