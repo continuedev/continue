@@ -66,7 +66,7 @@ async function resolveEditorContent(
         }
       );
       for (const resolvedItem of resolvedItems) {
-        contextItemsText += `\`\`\`title="${item.label}"\n${resolvedItem.content}\n\`\`\`\n`;
+        contextItemsText += resolvedItem.content;
       }
     }
   }

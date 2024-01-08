@@ -301,10 +301,9 @@ class VsCodeIde implements IDE {
     // TODO: OR clause with tags
     let branch = await ideProtocolClient.getBranch();
     let dirs = await this.getWorkspaceDirs();
-    let tag = [`${dirs[0] || "NONE"}::${branch}`];
-    let sync_results = sync.retrieve(n, tags, v);
-    let results = sync_results.map((r: any) => [tag, r.name, r.hash]);
-    return results;
+    let branchTag = `${dirs[0] || "NONE"}::${branch}`;
+    let sync_results = sync.retrieve(n, [...tags, branchTag], v);
+    return sync_results;
   }
 }
 

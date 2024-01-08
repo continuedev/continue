@@ -22,9 +22,13 @@ fn get_top_n(v: Vec<f32>, vectors: Vec<Vec<f32>>, d: usize, top_n: usize) -> Vec
 
 #[derive(Debug, Clone)]
 pub struct Chunk {
-    id: i32,
-    content: String,
-    embedding: String,
+    pub hash: String,
+    pub content: String,
+    pub embedding: Vec<f32>,
+    pub start_line: usize,
+    pub end_line: usize,
+    pub file_path: String,
+    pub index: usize,
 }
 
 pub fn embedding_to_text(embedding: Vec<f32>) -> String {
@@ -35,11 +39,19 @@ pub fn embedding_to_text(embedding: Vec<f32>) -> String {
         .join(",");
 }
 
-pub fn text_to_embedding(text: String) -> Vec<f32> {
-    return text
-        .split(',')
-        .map(|s| s.parse::<f32>().unwrap())
-        .collect::<Vec<f32>>();
+pub fn text_to_embedding(text: String) -> Result<Vec<f32>, &'static str> {
+    let mut embedding = Vec::new();
+    for s in text.split(',') {
+        match s.parse::<f32>() {
+            Ok(value) => embedding.push(value),
+            Err(_) => {
+                println!("Failed to parse embedding from text: {}", text);
+                return Err("Failed to parse embedding from text");
+            }
+        }
+    }
+
+    Ok(embedding)
 }
 
 fn get_conn() -> Connection {
@@ -60,7 +72,11 @@ pub fn create_database() {
             id    INTEGER PRIMARY KEY,
             hash TEXT NOT NULL,
             content  TEXT NOT NULL,
-            embedding TEXT NOT NULL
+            embedding TEXT NOT NULL,
+            start_line INTEGER NOT NULL,
+            end_line INTEGER NOT NULL,
+            file_path TEXT NOT NULL,
+            idx INTEGER NOT NULL
         )",
         (),
     )
@@ -77,19 +93,19 @@ pub fn create_database() {
     .unwrap();
 }
 
-pub fn add_chunk(hash: String, content: String, tags: Vec<String>, embedding: Vec<f32>) {
+pub fn add_chunk(chunk: Chunk, tags: Vec<String>) {
     let conn = get_conn();
 
     conn.execute(
-        "INSERT INTO chunks (hash, content, embedding) VALUES (?1, ?2, ?3)",
-        (&hash, &content, &embedding_to_text(embedding)),
+        "INSERT INTO chunks (hash, content, embedding, start_line, end_line, file_path, idx) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        (&chunk.hash, &chunk.content, &embedding_to_text(chunk.embedding), chunk.start_line, chunk.end_line, &chunk.file_path, chunk.index),
     )
     .unwrap();
 
     for tag in tags {
         conn.execute(
             "INSERT INTO tags (chunk_hash, tag) VALUES (?1, ?2)",
-            (&hash, &tag),
+            (&chunk.hash, &tag),
         )
         .unwrap();
     }
@@ -142,9 +158,13 @@ pub fn retrieve(n: usize, tags: Vec<String>, v: Vec<f32>) -> Vec<Chunk> {
     let chunk_rows = stmt
         .query_map((tags.join(", "),), |row| {
             Ok(Chunk {
-                id: row.get(0)?,
-                content: row.get(1)?,
-                embedding: row.get(2)?,
+                hash: row.get(1)?,
+                content: row.get(2)?,
+                embedding: text_to_embedding(row.get(3)?).unwrap(),
+                start_line: row.get(4)?,
+                end_line: row.get(5)?,
+                file_path: row.get(6)?,
+                index: row.get(7)?,
             })
         })
         .unwrap();
@@ -154,7 +174,7 @@ pub fn retrieve(n: usize, tags: Vec<String>, v: Vec<f32>) -> Vec<Chunk> {
     for chunk in chunk_rows {
         let chunk = chunk.unwrap();
         chunks.push(chunk.clone());
-        let vector = text_to_embedding(chunk.embedding);
+        let vector = chunk.embedding;
         vectors.push(vector);
     }
 
@@ -215,13 +235,17 @@ mod tests {
 
         for _ in 0..10_000 {
             let chunk = Chunk {
-                id: 0,
+                hash: "test".to_string(),
                 content: "Test content".to_string(),
-                embedding: embedding_to_text(rand_embedding(384)),
+                embedding: rand_embedding(384),
+                start_line: 0,
+                end_line: 0,
+                file_path: "test".to_string(),
+                index: 0,
             };
             conn.execute(
                 "INSERT INTO chunks (content, embedding) VALUES (?1, ?2)",
-                (&chunk.content, &chunk.embedding),
+                (&chunk.content, &embedding_to_text(chunk.embedding)),
             )
             .unwrap();
         }
@@ -235,9 +259,13 @@ mod tests {
         let chunk_iter = stmt
             .query_map([], |row| {
                 Ok(Chunk {
-                    id: row.get(0)?,
-                    content: row.get(1)?,
-                    embedding: row.get(2)?,
+                    hash: row.get(1)?,
+                    content: row.get(2)?,
+                    embedding: text_to_embedding(row.get(3)?).unwrap(),
+                    start_line: row.get(4)?,
+                    end_line: row.get(5)?,
+                    file_path: row.get(6)?,
+                    index: row.get(7)?,
                 })
             })
             .unwrap();
@@ -247,7 +275,7 @@ mod tests {
         let mut i = 0;
         for chunk in chunk_iter {
             i += 1;
-            let _ = text_to_embedding(chunk.unwrap().embedding);
+            let _ = chunk.unwrap().embedding;
         }
 
         println!("Found {} chunks", i);

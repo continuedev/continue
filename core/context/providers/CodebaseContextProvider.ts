@@ -5,6 +5,7 @@ import {
   ContextProviderExtras,
 } from "../..";
 import { ExtensionIde } from "../../ide";
+import { getBasename } from "../../util";
 
 class CodebaseContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -24,8 +25,16 @@ class CodebaseContextProvider extends BaseContextProvider {
     }
     const [v] = await extras.embeddingsProvider.embed([extras.fullInput]);
     const results = await new ExtensionIde().retrieveChunks(v, 10, []);
-    console.log(results, "RESULTS");
-    return [];
+
+    return results.map((r) => {
+      const name = `${getBasename(r.filepath)} (${r.startLine}-${r.endLine})`;
+      const description = `${r.filepath} (${r.startLine}-${r.endLine})`;
+      return {
+        name,
+        description,
+        content: `\`\`\`${name}\n${r.content}\n\`\`\``,
+      };
+    });
   }
   async load(): Promise<void> {}
 }

@@ -18,7 +18,6 @@ hex-literal = "0.4.1"
 homedir = "0.2.1"
 ignore = "0.4.20"
 ndarray = "0.15.6"
-pyo3 = { version = "0.20.0", features = ["extension-module"] }
 rand = "0.8.5"
 rusqlite = "0.30.0"
 serde = { version = "1.0.192", features = ["derive"] }

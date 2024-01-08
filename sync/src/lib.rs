@@ -48,6 +48,22 @@ fn db_add_chunk(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         .get::<JsString, _, _>(&mut cx, "content")?
         .value(&mut cx);
 
+    let start_line = chunk_obj
+        .get::<JsNumber, _, _>(&mut cx, "startLine")?
+        .value(&mut cx) as usize;
+
+    let end_line = chunk_obj
+        .get::<JsNumber, _, _>(&mut cx, "endLine")?
+        .value(&mut cx) as usize;
+
+    let file_path = chunk_obj
+        .get::<JsString, _, _>(&mut cx, "filepath")?
+        .value(&mut cx);
+
+    let index = chunk_obj
+        .get::<JsNumber, _, _>(&mut cx, "index")?
+        .value(&mut cx) as usize;
+
     let tags_vec = cx.argument::<JsArray>(1)?.to_vec(&mut cx).unwrap();
     let mut tags: Vec<String> = Vec::new();
     for item in tags_vec {
@@ -67,12 +83,23 @@ fn db_add_chunk(mut cx: FunctionContext) -> JsResult<JsUndefined> {
             .value(&mut cx) as f32;
         embedding.push(float);
     }
-    db::add_chunk(hash, content, tags, embedding);
+
+    let chunk = db::Chunk {
+        hash,
+        content,
+        start_line,
+        end_line,
+        file_path,
+        index,
+        embedding,
+    };
+
+    db::add_chunk(chunk, tags);
 
     return Ok(JsUndefined::new(&mut cx));
 }
 
-fn db_retrieve(mut cx: FunctionContext) -> JsResult<JsUndefined> {
+fn db_retrieve(mut cx: FunctionContext) -> JsResult<JsArray> {
     let n = cx.argument::<JsNumber>(0)?.value(&mut cx) as usize;
 
     let tags_vec = cx.argument::<JsArray>(1)?.to_vec(&mut cx).unwrap();
@@ -95,9 +122,34 @@ fn db_retrieve(mut cx: FunctionContext) -> JsResult<JsUndefined> {
         v.push(float);
     }
 
-    db::retrieve(n, tags, v);
+    let results = db::retrieve(n, tags, v);
 
-    return Ok(JsUndefined::new(&mut cx));
+    let js_array = JsArray::new(&mut cx, results.len() as u32);
+    for (i, chunk) in results.iter().enumerate() {
+        let js_object = JsObject::new(&mut cx);
+
+        let hash = JsString::new(&mut cx, &chunk.hash);
+        let _ = js_object.set(&mut cx, "hash", hash);
+
+        let content = JsString::new(&mut cx, &chunk.content);
+        let _ = js_object.set(&mut cx, "content", content);
+
+        let start_line = JsNumber::new(&mut cx, chunk.start_line as f64);
+        let _ = js_object.set(&mut cx, "startLine", start_line);
+
+        let end_line = JsNumber::new(&mut cx, chunk.end_line as f64);
+        let _ = js_object.set(&mut cx, "endLine", end_line);
+
+        let file_path = JsString::new(&mut cx, &chunk.file_path);
+        let _ = js_object.set(&mut cx, "filepath", file_path);
+
+        let index = JsNumber::new(&mut cx, chunk.index as f64);
+        let _ = js_object.set(&mut cx, "index", index);
+
+        let _ = js_array.set(&mut cx, i as u32, js_object);
+    }
+
+    return Ok(js_array);
 }
 
 #[neon::main]

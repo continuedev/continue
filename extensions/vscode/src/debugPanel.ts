@@ -347,6 +347,16 @@ export function getSidebarContent(
           );
           break;
         }
+        case "retrieveChunks": {
+          respond(
+            await ide.retrieveChunks(
+              data.message.v,
+              data.message.n,
+              data.message.tags
+            )
+          );
+          break;
+        }
         // History
         case "history": {
           respond(historyManager.list());
