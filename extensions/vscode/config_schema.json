@@ -780,6 +780,27 @@
             },
             "required": ["params"]
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["edit"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "recap": {
+                    "type": "boolean",
+                    "description": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit."
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "required": ["name", "description"]

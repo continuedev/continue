@@ -58,6 +58,9 @@ class VsCodeIde implements IDE {
       const configPath = getConfigJsonPath();
       let contents = fs.readFileSync(configPath, "utf8");
       let config = JSON.parse(contents) as SerializedContinueConfig;
+      if (config.allowAnonymousTelemetry === undefined) {
+        config.allowAnonymousTelemetry = true;
+      }
       config.allowAnonymousTelemetry =
         config.allowAnonymousTelemetry &&
         vscode.workspace.getConfiguration("continue").get("telemetryEnabled");
