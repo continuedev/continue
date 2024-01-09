@@ -59,7 +59,7 @@ class OpenAI extends BaseLLM {
 
     return completion;
   }
-  private _getCompletionUrl() {
+  protected _getCompletionUrl() {
     if (this.apiType === "azure") {
       return `${this.apiBase}/openai/deployments/${this.engine}/completions?api-version=${this.apiVersion}`;
     } else {
@@ -79,6 +79,15 @@ class OpenAI extends BaseLLM {
     }
   }
 
+  protected async _getRequestHeaders(): Promise<Record<string, string>>  {
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${this.apiKey}`,
+      "api-key": this.apiKey || "", // For Azure
+    };
+  }
+
+
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions
@@ -95,13 +104,11 @@ class OpenAI extends BaseLLM {
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const response = await this.fetch(this._getCompletionUrl(), {
+    const header = await this._getRequestHeaders();
+    const url = this._getCompletionUrl();
+    const response = await this.fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey || "", // For Azure
-      },
+      headers: header,
       body: JSON.stringify({
         ...{
           prompt,
@@ -124,7 +131,7 @@ class OpenAI extends BaseLLM {
     }
   }
 
-  private _getChatUrl() {
+  protected _getChatUrl() {
     if (this.apiType === "azure") {
       return `${this.apiBase}/openai/deployments/${this.engine}/chat/completions?api-version=${this.apiVersion}`;
     } else {
@@ -163,13 +170,11 @@ class OpenAI extends BaseLLM {
       return;
     }
 
-    const response = await this.fetch(this._getChatUrl(), {
+    const header = await this._getRequestHeaders();
+    const url = this._getChatUrl();
+    const response = await this.fetch(url, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey || "", // For Azure
-      },
+      headers: header,
       body: JSON.stringify({
         ...this._convertArgs(options, messages),
         stream: true,
