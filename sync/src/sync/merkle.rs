@@ -388,6 +388,7 @@ const GLOBAL_IGNORE_PATTERNS: &[&str] = &[
     "*.mkv",
     "*.webm",
     "*.jar",
+    "*.onnx",
 ];
 
 fn global_ignore_path() -> PathBuf {

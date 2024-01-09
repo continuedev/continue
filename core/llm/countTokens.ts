@@ -1,8 +1,4 @@
-import {
-  encodingForModel as _encodingForModel,
-  Tiktoken,
-  TiktokenModel,
-} from "js-tiktoken";
+import { encodingForModel as _encodingForModel, Tiktoken } from "js-tiktoken";
 import { ChatMessage } from "..";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
 
@@ -11,13 +7,14 @@ function renderTemplatedString(template: string): string {
   return template;
 }
 
+let encoding: Tiktoken | null = null;
+
 function encodingForModel(modelName: string): Tiktoken {
-  let encoding: Tiktoken;
-  try {
-    encoding = _encodingForModel(modelName as TiktokenModel);
-  } catch (e) {
-    encoding = _encodingForModel("gpt-4");
+  if (encoding) {
+    return encoding;
   }
+
+  encoding = _encodingForModel("gpt-4");
   return encoding;
 }
 
