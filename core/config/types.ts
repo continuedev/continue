@@ -241,10 +241,7 @@ declare global {
 
   // IDE
 
-<<<<<<< HEAD
 
-=======
->>>>>>> origin/preview
   export interface DiffLine {
     type: "new" | "old" | "same";
     line: string;
@@ -336,12 +333,8 @@ declare global {
     | "chatml"
     | "none"
     | "openchat"
-<<<<<<< HEAD
-    | "deepseek";
-=======
     | "deepseek"
     | "xwin-coder";
->>>>>>> origin/preview
 
   type ModelProvider =
     | "openai"
@@ -360,11 +353,8 @@ declare global {
     | "gemini"
     | "mistral"
     | "bedrock"
-<<<<<<< HEAD
-    | "sap-gen-ai-hub";
-=======
+    | "sap-gen-ai-hub"
     | "deepinfra";
->>>>>>> origin/preview
 
   export type ModelName =
     // OpenAI
