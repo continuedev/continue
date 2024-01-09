@@ -45,9 +45,8 @@ function useSetup(dispatch: Dispatch<any>) {
 
       // Swap in web-version of TransformersJsEmbeddingsProvider
       if (
-        finalConfig.embeddingsProvider?.constructor.name.startsWith(
-          "TransformersJsEmbeddingsProvider"
-        )
+        (finalConfig.embeddingsProvider as any)?.providerName ===
+        "transformers.js"
       ) {
         finalConfig.embeddingsProvider = new TransformersJsEmbeddingsProvider();
       }

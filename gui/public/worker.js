@@ -29014,7 +29014,7 @@ ${t2}`);
   self.addEventListener("message", handleInit);
   env.allowLocalModels = true;
   env.allowRemoteModels = false;
-  env.useBrowserCache = true;
+  env.useBrowserCache = false;
   env.backends.onnx.wasm.wasmPaths = "ort-wasm/";
   var EmbeddingsPipeline = class {
     static task = "feature-extraction";
