@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import { Chunk, ChunkWithoutID } from ".";
 import { basicChunker } from "./basic";
 import { codeChunker, fileExtensionToLanguage } from "./code";
@@ -34,6 +35,16 @@ export async function* chunkDocument(
   maxChunkSize: number,
   digest: string
 ): AsyncGenerator<Chunk> {
+  yield {
+    filepath,
+    content: contents,
+    index: 0,
+    digest: uuidv4(),
+    startLine: 0,
+    endLine: 1,
+  };
+  return;
+
   let index = 0;
   for await (let chunkWithoutId of chunkDocumentWithoutId(
     filepath,

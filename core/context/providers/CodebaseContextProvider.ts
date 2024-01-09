@@ -24,7 +24,7 @@ class CodebaseContextProvider extends BaseContextProvider {
       return [];
     }
     const [v] = await extras.embeddingsProvider.embed([extras.fullInput]);
-    const results = await new ExtensionIde().retrieveChunks(v, 10, []);
+    const results = await new ExtensionIde().retrieveChunks(v, 5, []);
 
     return results.map((r) => {
       const name = `${getBasename(r.filepath)} (${r.startLine}-${r.endLine})`;

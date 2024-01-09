@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 
-const MAX_CHUNK_SIZE = 512;
+const MAX_CHUNK_SIZE = 256;
 
 function useLoadEmbeddings() {
   const [progress, setProgress] = useState(0);
@@ -42,7 +42,6 @@ function useLoadEmbeddings() {
           );
           for await (let chunk of chunks) {
             const [embedding] = await embeddingsProvider.embed([chunk.content]);
-            console.log("Embedding: ", embedding);
             await ide.sendEmbeddingForChunk(chunk, embedding, [tag]);
           }
         } catch (e) {

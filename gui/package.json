@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "cd ../webworker && npm run build && cd ../gui && tsc && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
