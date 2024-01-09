@@ -23,6 +23,7 @@ import OpenAI from "./OpenAI";
 import Replicate from "./Replicate";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
+import SAPGenAIHub from "./SAPGenAIHub";
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -88,6 +89,7 @@ const LLMs = [
   Gemini,
   Mistral,
   Bedrock,
+  SAPGenAIHub,
   DeepInfra,
 ];
 

@@ -21,6 +21,11 @@ export interface ILLM extends LLMOptions {
   apiType?: string;
   region?: string;
   projectId?: string;
+  // SAP Gen AI Core options
+  resourceGroup?: string;
+  authURL?: string;
+  clientID?: string;
+  clientSecret?: string;
 
   _fetch?: (input: any, init?: any) => Promise<any>;
 
@@ -196,6 +201,12 @@ export interface LLMOptions {
   // GCP Options
   region?: string;
   projectId?: string;
+
+    // SAP Gen AI Core options
+    resourceGroup?: string;
+    authURL?: string;
+    clientID?: string;
+    clientSecret?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -340,6 +351,7 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
+  | "sap-gen-ai-hub"
   | "deepinfra";
 
 export type ModelName =

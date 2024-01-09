@@ -23,6 +23,10 @@ declare global {
     apiType?: string;
     region?: string;
     projectId?: string;
+    resourceGroup?: string;
+    authURL?: string;
+    clientID?: string;
+    clientSecret?: string;
 
     _fetch?: (input: any, init?: any) => Promise<any>;
 
@@ -198,6 +202,12 @@ declare global {
     // GCP Options
     region?: string;
     projectId?: string;
+
+    // SAP Gen AI Core options
+    resourceGroup?: string;
+    authURL?: string;
+    clientID?: string;
+    clientSecret?: string;
   }
   type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
     T,
@@ -230,6 +240,7 @@ declare global {
   >;
 
   // IDE
+
 
   export interface DiffLine {
     type: "new" | "old" | "same";
@@ -342,6 +353,7 @@ declare global {
     | "gemini"
     | "mistral"
     | "bedrock"
+    | "sap-gen-ai-hub"
     | "deepinfra";
 
   export type ModelName =
@@ -509,8 +521,8 @@ declare global {
     disableIndexing?: boolean;
     userToken?: string;
   }
-  
-  
+
+
 }
 
 export {};

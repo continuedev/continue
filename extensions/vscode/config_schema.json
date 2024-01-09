@@ -111,6 +111,7 @@
             "lmstudio",
             "llamafile",
             "mistral",
+            "sap-gen-ai-hub",
             "deepinfra"
           ],
           "markdownEnumDescriptions": [
@@ -219,7 +220,7 @@
         "apiType": {
           "title": "Api Type",
           "description": "OpenAI API type, either `openai` or `azure`",
-          "enum": ["openai", "azure"]
+          "enum": ["openai", "azure", "vllm"]
         },
         "apiVersion": {
           "title": "Api Version",
@@ -229,6 +230,26 @@
         "engine": {
           "title": "Engine",
           "description": "Azure OpenAI engine",
+          "type": "string"
+        },
+        "authURL": {
+          "title": "OAuth URL",
+          "description": "URL to fetch OAuth token from",
+          "type": "string"
+        },
+        "clientID": {
+          "title": "OAuth Client ID",
+          "description": "OAuth client ID",
+          "type": "string"
+        },
+        "clientSecret": {
+          "title": "OAuth Client Secret",
+          "description": "OAuth client secret",
+          "type": "string"
+        },
+        "resourceGroup": {
+          "title": "SAP Gen AI Core Resource Group",
+          "description": "SAP Gen AI Core resource group",
           "type": "string"
         }
       },
@@ -305,6 +326,26 @@
               },
               "apiVersion": {
                 "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["openai"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "apiType": {
+                "enum": [
+                  "openai",
+                  "azure"
+                ]
               }
             }
           }
@@ -678,6 +719,54 @@
                 "type": "string"
               }
             }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "sap-gen-ai-hub"
+                ]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "required": ["clientID", "clientSecret", "authURL", "resourceGroup", "apiBase"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["sap-gen-ai-hub"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "apiType": {
+                "enum": [
+                  "azure",
+                  "vllm"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "apiType": {
+                "const": "azure"
+              }
+            },
+            "required": ["apiType"]
+          },
+          "then": {
+            "required": ["apiVersion", "apiBase"]
           }
         }
       ]
