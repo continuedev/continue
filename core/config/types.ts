@@ -23,6 +23,10 @@ declare global {
     apiType?: string;
     region?: string;
     projectId?: string;
+    resourceGroup?: string;
+    authURL?: string;
+    clientID?: string;
+    clientSecret?: string;
 
     _fetch?: (input: any, init?: any) => Promise<any>;
 
@@ -198,6 +202,12 @@ declare global {
     // GCP Options
     region?: string;
     projectId?: string;
+
+    // SAP Gen AI Core options
+    resourceGroup?: string;
+    authURL?: string;
+    clientID?: string;
+    clientSecret?: string;
   }
   type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
     T,
@@ -231,6 +241,10 @@ declare global {
 
   // IDE
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> origin/preview
   export interface DiffLine {
     type: "new" | "old" | "same";
     line: string;
@@ -322,8 +336,12 @@ declare global {
     | "chatml"
     | "none"
     | "openchat"
+<<<<<<< HEAD
+    | "deepseek";
+=======
     | "deepseek"
     | "xwin-coder";
+>>>>>>> origin/preview
 
   type ModelProvider =
     | "openai"
@@ -342,7 +360,11 @@ declare global {
     | "gemini"
     | "mistral"
     | "bedrock"
+<<<<<<< HEAD
+    | "sap-gen-ai-hub";
+=======
     | "deepinfra";
+>>>>>>> origin/preview
 
   export type ModelName =
     // OpenAI
@@ -509,8 +531,8 @@ declare global {
     disableIndexing?: boolean;
     userToken?: string;
   }
-  
-  
+
+
 }
 
 export {};

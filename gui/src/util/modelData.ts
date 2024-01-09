@@ -22,6 +22,7 @@ export enum ModelProviderTag {
   "Local" = "Local",
   "Free" = "Free",
   "Open-Source" = "Open-Source",
+  "SAP" = "SAP"
 }
 
 export const MODEL_PROVIDER_TAG_COLORS: any = {};
@@ -29,6 +30,7 @@ MODEL_PROVIDER_TAG_COLORS[ModelProviderTag["Requires API Key"]] = "#FF0000";
 MODEL_PROVIDER_TAG_COLORS[ModelProviderTag["Local"]] = "#00bb00";
 MODEL_PROVIDER_TAG_COLORS[ModelProviderTag["Open-Source"]] = "#0033FF";
 MODEL_PROVIDER_TAG_COLORS[ModelProviderTag["Free"]] = "#ffff00";
+MODEL_PROVIDER_TAG_COLORS[ModelProviderTag["SAP"]] = "#006BB8";
 
 export enum CollectInputType {
   "text" = "text",
@@ -107,6 +109,16 @@ const FrequencyPenaltyInput: InputDescriptor = {
   max: 1,
   step: 0.01,
 };
+const Stop: InputDescriptor = {
+  inputType: CollectInputType.number,
+  key: "completionOptions.frequencyPenalty",
+  label: "Frequency Penalty",
+  defaultValue: undefined,
+  required: false,
+  min: 0,
+  max: 1,
+  step: 0.01,
+};
 const completionParamsInputs = [
   contextLengthInput,
   temperatureInput,
@@ -123,6 +135,49 @@ const apiBaseInput: InputDescriptor = {
   placeholder: "e.g. http://localhost:8080",
   required: false,
 };
+const clientIDInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "clientID",
+  label: "Client ID",
+  placeholder: "???",
+  required: true,
+};
+const clientSecretInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "clientSecret",
+  label: "Client secret",
+  placeholder: "???",
+  required: true,
+};
+const resourceGroupInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "resourceGroup",
+  label: "Resource Group",
+  placeholder: "default",
+  required: false,
+};
+const authURLInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "authURL",
+  label: "Authentication URL",
+  placeholder: "https://mltooling-39tr6fbb.authentication.sap.hana.ondemand.com",
+  required: true,
+};
+const modelInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "model",
+  label: "Model name",
+  placeholder: "coe-abap-llama/v1",
+  required: true,
+};
+const apiTypeInput: InputDescriptor = {
+  inputType: CollectInputType.text,
+  key: "apiType",
+  label: "API Type (vllm/azure)",
+  placeholder: "vllm",
+  required: true,
+};
+
 
 export interface ModelInfo {
   title: string;
@@ -488,6 +543,41 @@ const chatBison: ModelPackage = {
   icon: "google-palm.png",
 };
 
+
+const sapCustomDeployment: ModelPackage = {
+  title: "Custom Deployment",
+  description:
+    "Custom deployment based on vllm, hosted on SAP Gen AI Hub",
+  params: {
+    model: "codellama-7b",
+    contextLength: 2048,
+    title: "SAP Gen AI Hub - Deployment",
+    provider: "sap-gen-ai-hub",
+    apiType: "vllm",
+    stopTokens: ["</s>"]
+  },
+  providerOptions: ["sap-gen-ai-hub"],
+  icon: "SAP.png",
+};
+
+
+const sapModelProxy: ModelPackage = {
+  title: "SAP Gen AI Hub Model Access",
+  description:
+    "Consuming a central model via SAP Gen AI Hub",
+  params: {
+    model: "gpt-4",
+    contextLength: 2048,
+    title: "SAP Gen AI Hub - Proxy",
+    provider: "sap-gen-ai-hub",
+    apiType: "azure",
+    engine: "",
+
+  },
+  providerOptions: ["sap-gen-ai-hub"],
+  icon: "SAP.png",
+};
+
 export const MODEL_INFO: ModelPackage[] = [
   gpt4,
   gpt35turbo,
@@ -503,6 +593,8 @@ export const MODEL_INFO: ModelPackage[] = [
   chatBison,
   zephyr,
   deepseek,
+  sapModelProxy,
+  sapCustomDeployment
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -690,7 +782,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     provider: "llama.cpp",
     description: "If you are running the llama.cpp server from source",
     longDescription: `llama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:
-    
+
 1. Clone the repository with \`git clone https://github.com/ggerganov/llama.cpp\`.
 2. \`cd llama.cpp\`
 3. Run \`make\` to build the server.
@@ -777,4 +869,25 @@ After it's up and running, you can start using Continue.`,
     ],
     collectInputFor: [...completionParamsInputs],
   },
+  SAPGenAIHub: {
+    title: "SAP Genrative AI Hub",
+    provider: "sap-gen-ai-hub",
+    description: "...",
+    longDescription: '...',
+    icon: "SAP.png",
+    tags: [ModelProviderTag.SAP],
+    packages: [
+      {...sapCustomDeployment},
+      {...sapModelProxy}
+    ],
+    collectInputFor: [
+      {...modelInput, required: true},
+      {...apiBaseInput, required: true},
+      {...authURLInput, required: true},
+      {...clientIDInput, required: true},
+      {...clientSecretInput, required: true},
+      {...resourceGroupInput, defaultValue: "default", required: true},
+      ...completionParamsInputs],
+
+  }
 };
