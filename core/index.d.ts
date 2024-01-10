@@ -430,18 +430,6 @@ export interface CustomCommand {
   prompt: string;
   description: string;
 }
-export interface RetrievalSettings {
-  nRetrieve?: number;
-  nFinal?: number;
-  useReranking: boolean;
-  rerankGroupSize: number;
-  ignoreFiles: string[];
-  openaiApiKey?: string;
-  apiBase?: string;
-  apiType?: string;
-  apiVersion?: string;
-  organizationId?: string;
-}
 
 interface BaseCompletionOptions {
   temperature?: number;
@@ -493,7 +481,6 @@ export interface SerializedContinueConfig {
   slashCommands?: SlashCommandDescription[];
   customCommands?: CustomCommand[];
   contextProviders?: ContextProviderWithParams[];
-  retrievalSettings?: RetrievalSettings;
   disableIndexing?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
@@ -517,8 +504,6 @@ export interface Config {
    * A CustomContextProvider requires you only to define a title and getContextItems function. When you type '@title <query>', Continue will call `getContextItems(query)`.
    */
   contextProviders?: (CustomContextProvider | ContextProviderWithParams)[];
-  /** Settings related to the /codebase retrieval feature */
-  retrievalSettings?: RetrievalSettings;
   /** If set to true, Continue will not index your codebase for retrieval */
   disableIndexing?: boolean;
   /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
@@ -534,7 +519,6 @@ export interface ContinueConfig {
   completionOptions?: BaseCompletionOptions;
   slashCommands?: SlashCommand[];
   contextProviders?: IContextProvider[];
-  retrievalSettings?: RetrievalSettings;
   disableIndexing?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProvider;

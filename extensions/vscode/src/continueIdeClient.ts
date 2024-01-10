@@ -43,6 +43,13 @@ class IdeProtocolClient {
         const configJson = JSON.parse(config);
         this.configUpdate(configJson);
         configHandler.reloadConfig();
+      } else if (
+        filepath.endsWith(".continueignore") ||
+        filepath.endsWith(".gitignore")
+      ) {
+        debugPanelWebview?.postMessage({
+          type: "updateEmbeddings",
+        });
       }
     });
 

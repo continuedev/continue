@@ -771,7 +771,8 @@
                 "google",
                 "search",
                 "url",
-                "http"
+                "http",
+                "codebase"
               ],
               "type": "string"
             },
@@ -807,73 +808,44 @@
             },
             "required": ["params"]
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["codebase"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "nRetrieve": {
+                    "title": "N Retrieve",
+                    "description": "Number of results to initially retrieve from vector database",
+                    "default": 50,
+                    "type": "integer"
+                  },
+                  "nFinal": {
+                    "title": "N Final",
+                    "description": "Final number of results to use after re-ranking",
+                    "default": 10,
+                    "type": "integer"
+                  },
+                  "useReranking": {
+                    "title": "Use Reranking",
+                    "description": "Whether to use re-ranking, which will allow initial selection of nRetrieve results, then will use an LLM to select the top nFinal results. Disabling re-ranking will give faster, but less accurate, results.",
+                    "default": true,
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "required": ["name"]
-    },
-    "RetrievalSettings": {
-      "title": "RetrievalSettings",
-      "type": "object",
-      "properties": {
-        "nRetrieve": {
-          "title": "N Retrieve",
-          "description": "Number of results to initially retrieve from vector database",
-          "default": 50,
-          "type": "integer"
-        },
-        "nFinal": {
-          "title": "N Final",
-          "description": "Final number of results to use after re-ranking",
-          "default": 10,
-          "type": "integer"
-        },
-        "useReranking": {
-          "title": "Use Reranking",
-          "description": "Whether to use re-ranking, which will allow initial selection of nRetrieve results, then will use an LLM to select the top nFinal results",
-          "default": true,
-          "type": "boolean"
-        },
-        "rerankGroupSize": {
-          "title": "Rerank Group Size",
-          "description": "Number of results to group together when re-ranking. Each group will be processed in parallel.",
-          "default": 5,
-          "type": "integer"
-        },
-        "ignoreFiles": {
-          "title": "Ignore Files",
-          "description": "Files to ignore when indexing the codebase. You can use glob patterns, such as **/*.py. This is useful for directories that contain generated code, or other directories that are not relevant to the codebase.",
-          "default": [],
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "openaiApiKey": {
-          "title": "Openai Api Key",
-          "description": "OpenAI API key",
-          "type": "string"
-        },
-        "apiBase": {
-          "title": "Api Base",
-          "description": "OpenAI API base URL",
-          "type": "string"
-        },
-        "apiType": {
-          "title": "Api Type",
-          "description": "OpenAI API type",
-          "type": "string"
-        },
-        "apiVersion": {
-          "title": "Api Version",
-          "description": "OpenAI API version",
-          "type": "string"
-        },
-        "organizationId": {
-          "title": "Organization Id",
-          "description": "OpenAI organization ID",
-          "type": "string"
-        }
-      }
     },
     "continuedev__core__config__serialized_config__SerializedContinueConfig": {
       "title": "SerializedContinueConfig",
@@ -988,24 +960,38 @@
           "default": false,
           "type": "boolean"
         },
-        "retrievalSettings": {
-          "title": "Retrieval Settings",
-          "description": "Settings for the retrieval system. Read more about the retrieval system in the documentation.",
-          "default": {
-            "nRetrieve": 50,
-            "nFinal": 10,
-            "useReranking": true,
-            "rerankGroupSize": 5,
-            "ignoreFiles": [],
-            "openaiApiKey": null,
-            "apiBase": null,
-            "apiType": null,
-            "apiVersion": null,
-            "organizationId": null
+        "embeddingsProvider": {
+          "title": "Embeddings Provider",
+          "description": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser.",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "enum": ["transformers.js", "ollama"]
+            },
+            "model": {
+              "type": "string"
+            },
+            "apiKey": {
+              "type": "string"
+            },
+            "apiBase": {
+              "type": "string"
+            }
           },
+          "required": ["provider"],
           "allOf": [
             {
-              "$ref": "#/definitions/RetrievalSettings"
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["ollama"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "required": ["model"]
+              }
             }
           ]
         }

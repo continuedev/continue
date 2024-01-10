@@ -16,53 +16,66 @@ function useLoadEmbeddings() {
     (store: RootStore) => store.state.config.disableIndexing
   );
 
-  useEffect(() => {
-    (async () => {
-      if (!embeddingsProvider || disableIndexing) {
-        return;
-      }
+  async function loadEmbeddings() {
+    if (!embeddingsProvider || disableIndexing) {
+      return;
+    }
 
-      const ide = new ExtensionIde();
+    const ide = new ExtensionIde();
 
-      const filesToEmbed = await ide.getFilesToEmbed();
-      console.log("Files to embed", filesToEmbed);
+    const filesToEmbed = await ide.getFilesToEmbed();
 
-      const total = filesToEmbed.length + 1;
-      let done = 1;
+    const total = filesToEmbed.length + 1;
+    let done = 1;
 
-      for (let [tag, filepath, hash] of filesToEmbed) {
-        try {
-          const contents = await ide.readFile(filepath);
-          const chunkGenerator = await chunkDocument(
-            filepath,
-            contents,
-            MAX_CHUNK_SIZE,
-            hash
-          );
-          let chunks: Chunk[] = [];
-          for await (let chunk of chunkGenerator) {
-            chunks.push(chunk);
-          }
-
-          if (chunks.length === 0) {
-            continue;
-          }
-
-          const embeddings = await embeddingsProvider.embed(
-            chunks.map((c) => c.content)
-          );
-
-          for (let i = 0; i < chunks.length; i++) {
-            await ide.sendEmbeddingForChunk(chunks[i], embeddings[i], [tag]);
-          }
-        } catch (e) {
-          console.warn(`Failed to embed ${filepath}`, e);
+    for (let [tag, filepath, hash] of filesToEmbed) {
+      try {
+        const contents = await ide.readFile(filepath);
+        const chunkGenerator = await chunkDocument(
+          filepath,
+          contents,
+          MAX_CHUNK_SIZE,
+          hash
+        );
+        let chunks: Chunk[] = [];
+        for await (let chunk of chunkGenerator) {
+          chunks.push(chunk);
         }
 
-        done++;
-        setProgress(done / total);
+        if (chunks.length === 0) {
+          done++;
+          setProgress(done / total);
+          continue;
+        }
+
+        const embeddings = await embeddingsProvider.embed(
+          chunks.map((c) => c.content)
+        );
+
+        for (let i = 0; i < chunks.length; i++) {
+          await ide.sendEmbeddingForChunk(chunks[i], embeddings[i], [tag]);
+        }
+      } catch (e) {
+        console.warn(`Failed to embed ${filepath}`, e);
       }
-    })();
+
+      done++;
+      setProgress(done / total);
+    }
+  }
+
+  useEffect(() => {
+    const eventListener = (event: any) => {
+      if (event.data.type === "updateEmbeddings") {
+        loadEmbeddings();
+      }
+    };
+    window.addEventListener("message", eventListener);
+    return () => window.removeEventListener("message", eventListener);
+  }, [embeddingsProvider, disableIndexing]);
+
+  useEffect(() => {
+    loadEmbeddings();
   }, [embeddingsProvider, disableIndexing]);
 
   return { progress };

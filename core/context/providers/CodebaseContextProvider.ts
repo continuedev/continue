@@ -23,8 +23,26 @@ class CodebaseContextProvider extends BaseContextProvider {
     if (!extras.embeddingsProvider) {
       return [];
     }
+
+    const nRetrieve = this.options.nRetrieve || 20;
+    const nFinal = this.options.nFinal || 5;
+    const useReranking = false;
+    // this.options.useReranking === undefined
+    //   ? true
+    // : this.options.useReranking;
+
+    // Similarity search
     const [v] = await extras.embeddingsProvider.embed([extras.fullInput]);
-    const results = await new ExtensionIde().retrieveChunks(v, 5, []);
+    const results = await new ExtensionIde().retrieveChunks(
+      v,
+      this.options.useReranking === false ? nFinal : nRetrieve,
+      []
+    );
+
+    // Re-ranking
+    if (useReranking) {
+      // TODO
+    }
 
     return results.map((r) => {
       const name = `${getBasename(r.filepath)} (${r.startLine}-${r.endLine})`;
