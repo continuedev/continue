@@ -11,7 +11,7 @@ class CodebaseContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "codebase",
     displayTitle: "Codebase",
-    description: "Use embeddings to automatically find relevant files",
+    description: "Automatically find relevant files",
     dynamic: false,
     requiresQuery: false,
   };

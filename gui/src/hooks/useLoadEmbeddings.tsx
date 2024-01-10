@@ -1,4 +1,5 @@
 import { ExtensionIde } from "core/ide";
+import { Chunk } from "core/index/chunk";
 import { chunkDocument } from "core/index/chunk/chunk";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -7,7 +8,7 @@ import { RootStore } from "../redux/store";
 const MAX_CHUNK_SIZE = 256;
 
 function useLoadEmbeddings() {
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState(1);
   const embeddingsProvider = useSelector(
     (store: RootStore) => store.state.config.embeddingsProvider
   );
@@ -28,21 +29,31 @@ function useLoadEmbeddings() {
 
       const total = filesToEmbed.length + 1;
       let done = 1;
-      setProgress(done / total);
 
       for (let [tag, filepath, hash] of filesToEmbed) {
         try {
-          console.log(`Embedding ${filepath}`);
           const contents = await ide.readFile(filepath);
-          const chunks = await chunkDocument(
+          const chunkGenerator = await chunkDocument(
             filepath,
             contents,
             MAX_CHUNK_SIZE,
             hash
           );
-          for await (let chunk of chunks) {
-            const [embedding] = await embeddingsProvider.embed([chunk.content]);
-            await ide.sendEmbeddingForChunk(chunk, embedding, [tag]);
+          let chunks: Chunk[] = [];
+          for await (let chunk of chunkGenerator) {
+            chunks.push(chunk);
+          }
+
+          if (chunks.length === 0) {
+            continue;
+          }
+
+          const embeddings = await embeddingsProvider.embed(
+            chunks.map((c) => c.content)
+          );
+
+          for (let i = 0; i < chunks.length; i++) {
+            await ide.sendEmbeddingForChunk(chunks[i], embeddings[i], [tag]);
           }
         } catch (e) {
           console.warn(`Failed to embed ${filepath}`, e);
