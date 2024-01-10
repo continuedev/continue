@@ -91,7 +91,9 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
     if (child.type === "text") {
       text += child.text;
     } else if (child.type === "mention") {
-      text += `@${child.attrs.label}`;
+      if (!["codebase"].includes(child.attrs.id)) {
+        text += child.attrs.label;
+      }
       contextItems.push(child.attrs);
     } else if (child.type === "slashcommand") {
       if (typeof slashCommand === "undefined") {
