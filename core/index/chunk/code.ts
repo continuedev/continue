@@ -19,7 +19,8 @@ export const fileExtensionToLanguage: { [key: string]: string } = {
   json: "json",
   jl: "julia",
   scala: "scala",
-  // ts: "typescript",
+  ts: "typescript",
+  tsx: "tsx",
   // swift: "swift",
   // kt: "kotlin",
 };
