@@ -301,13 +301,15 @@ class VsCodeIde implements IDE {
     return results.join("\n\n");
   }
 
-  async getFilesToEmbed(): Promise<[string, string, string][]> {
+  async getFilesToEmbed(
+    providerId: string
+  ): Promise<[string, string, string][]> {
     let results = [];
     let branch = await ideProtocolClient.getBranch();
     for (let dir of await this.getWorkspaceDirs()) {
-      let tag = `${dir}::${branch}`;
-      let sync_results = sync.sync_results(dir, branch);
-      results.push(...sync_results.map((r: any) => [tag, r.name, r.hash]));
+      let tag = `${dir}::${branch}::${providerId}`; // TODO (don't build the string here ideally)
+      let filesToEmbed = sync.sync_results(dir, branch, providerId);
+      results.push(...filesToEmbed.map((r: any) => [tag, r.name, r.hash]));
     }
     return results;
   }
@@ -323,14 +325,15 @@ class VsCodeIde implements IDE {
   async retrieveChunks(
     v: number[],
     n: number,
-    tags: string[]
+    tags: string[],
+    providerId: string
   ): Promise<Chunk[]> {
     // TODO: OR clause with tags
     let branch = await ideProtocolClient.getBranch();
     let dirs = await this.getWorkspaceDirs();
-    let branchTag = `${dirs[0] || "NONE"}::${branch}`;
-    let sync_results = sync.retrieve(n, [...tags, branchTag], v);
-    return sync_results;
+    let mainTag = `${dirs[0] || "NONE"}::${branch}::${providerId}`;
+    let chunks = sync.retrieve(n, [...tags, mainTag], v);
+    return chunks;
   }
 }
 

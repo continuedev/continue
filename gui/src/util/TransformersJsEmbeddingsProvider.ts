@@ -8,6 +8,10 @@ class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
     super({ model: "all-MiniLM-L2-v6" });
   }
 
+  get id(): string {
+    return "transformers-js";
+  }
+
   embed(chunks: string[]) {
     return new Promise<number[][]>(async (resolve) => {
       if (!worker) {

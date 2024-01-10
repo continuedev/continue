@@ -36,7 +36,8 @@ class CodebaseContextProvider extends BaseContextProvider {
     const results = await new ExtensionIde().retrieveChunks(
       v,
       this.options.useReranking === false ? nFinal : nRetrieve,
-      []
+      [],
+      extras.embeddingsProvider.id
     );
 
     // Re-ranking

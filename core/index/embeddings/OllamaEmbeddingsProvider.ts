@@ -10,6 +10,10 @@ async function embedOne(chunk: string, options: EmbedOptions) {
     }),
   });
 
+  if (!resp.ok) {
+    throw new Error("Failed to embed chunk: " + (await resp.text()));
+  }
+
   return (await resp.json()).embedding;
 }
 
@@ -17,6 +21,10 @@ class OllamaEmbeddingsProvider extends BaseEmbeddingsProvider {
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     apiBase: "http://localhost:11434",
   };
+
+  get id(): string {
+    return "ollama::" + this.options.model;
+  }
 
   embed(chunks: string[]) {
     return Promise.all(chunks.map((chunk) => embedOne(chunk, this.options)));

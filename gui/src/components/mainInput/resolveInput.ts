@@ -79,7 +79,7 @@ async function resolveEditorContent(
   if (slashCommand) {
     finalText = `${slashCommand} ${finalText}`;
   }
-  console.log(finalText, editorState?.content);
+
   return finalText;
 }
 

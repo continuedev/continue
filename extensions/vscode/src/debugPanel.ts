@@ -333,7 +333,7 @@ export function getSidebarContent(
           break;
         }
         case "getFilesToEmbed": {
-          let filesToEmbed = await ide.getFilesToEmbed();
+          let filesToEmbed = await ide.getFilesToEmbed(data.message.providerId);
           respond(filesToEmbed);
           break;
         }
@@ -352,7 +352,8 @@ export function getSidebarContent(
             await ide.retrieveChunks(
               data.message.v,
               data.message.n,
-              data.message.tags
+              data.message.tags,
+              data.message.providerId
             )
           );
           break;

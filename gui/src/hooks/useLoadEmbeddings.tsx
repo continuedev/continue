@@ -23,7 +23,7 @@ function useLoadEmbeddings() {
 
     const ide = new ExtensionIde();
 
-    const filesToEmbed = await ide.getFilesToEmbed();
+    const filesToEmbed = await ide.getFilesToEmbed(embeddingsProvider.id);
 
     const total = filesToEmbed.length + 1;
     let done = 1;

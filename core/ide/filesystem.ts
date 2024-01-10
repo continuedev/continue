@@ -108,13 +108,18 @@ class FileSystemIde implements IDE {
     return "";
   }
 
-  getFilesToEmbed(): Promise<[string, string, string][]> {
+  getFilesToEmbed(providerId: string): Promise<[string, string, string][]> {
     return Promise.resolve([]);
   }
 
   sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {}
 
-  retrieveChunks(v: number[], n: number, tags: string[]): Promise<Chunk[]> {
+  retrieveChunks(
+    v: number[],
+    n: number,
+    tags: string[],
+    providerId: string
+  ): Promise<Chunk[]> {
     return Promise.resolve([]);
   }
 }

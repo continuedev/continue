@@ -7,6 +7,10 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
     model: "text-embedding-ada-002",
   };
 
+  get id(): string {
+    return "openai::" + this.options.model;
+  }
+
   async embed(chunks: string[]) {
     let apiBase = this.options.apiBase;
     if (apiBase?.endsWith("/")) {

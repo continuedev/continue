@@ -88,15 +88,20 @@ export class ExtensionIde implements IDE {
     return r("getSearchResults", { query });
   }
 
-  getFilesToEmbed(): Promise<[string, string, string][]> {
-    return r("getFilesToEmbed");
+  getFilesToEmbed(providerId: string): Promise<[string, string, string][]> {
+    return r("getFilesToEmbed", { providerId });
   }
 
   sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {
     return r("sendChunkForFile", { chunk, embedding, tags });
   }
 
-  retrieveChunks(v: number[], n: number, tags: string[]): Promise<Chunk[]> {
-    return r("retrieveChunks", { v, n, tags });
+  retrieveChunks(
+    v: number[],
+    n: number,
+    tags: string[],
+    providerId: string
+  ): Promise<Chunk[]> {
+    return r("retrieveChunks", { v, n, tags, providerId });
   }
 }

@@ -279,13 +279,18 @@ export interface IDE {
   /**
    * Returns list of [tag, filepath, hash of contents] that need to be embedded
    */
-  getFilesToEmbed(): Promise<[string, string, string][]>;
+  getFilesToEmbed(providerId: string): Promise<[string, string, string][]>;
   sendEmbeddingForChunk(
     chunk: Chunk,
     embedding: number[],
     tags: string[]
   ): void;
-  retrieveChunks(v: number[], n: number, tags: string[]): Promise<Chunk[]>;
+  retrieveChunks(
+    v: number[],
+    n: number,
+    tags: string[],
+    providerId: string
+  ): Promise<Chunk[]>;
 }
 
 // Slash Commands
@@ -470,6 +475,7 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 }
 
 export interface EmbeddingsProvider {
+  id: string;
   embed(chunks: string[]): Promise<number[][]>;
 }
 

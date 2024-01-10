@@ -29,9 +29,15 @@ fn build_js_array<'a>(
 fn sync_results(mut cx: FunctionContext) -> JsResult<JsArray> {
     let dir = cx.argument::<JsString>(0)?.value(&mut cx);
     let branch = cx.argument::<JsString>(1)?.value(&mut cx);
-    let tag = format!("{}::{}", dir, branch);
+    let provider_id = cx.argument::<JsString>(2)?.value(&mut cx);
 
-    let compute = sync_db::sync_db(Path::new(&dir), branch, tag);
+    let tag = sync::Tag {
+        dir: Path::new(&dir),
+        branch: &branch,
+        provider_id: &provider_id.to_string(),
+    };
+
+    let compute = sync_db::sync_db(&tag);
     let compute_js_array = build_js_array(compute, &mut cx);
 
     return Ok(compute_js_array);

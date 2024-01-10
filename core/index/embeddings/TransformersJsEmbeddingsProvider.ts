@@ -3,6 +3,10 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   providerName: string = "transformers.js";
 
+  get id(): string {
+    return "transformers.js";
+  }
+
   constructor() {
     super({ model: "all-MiniLM-L2-v6" });
   }

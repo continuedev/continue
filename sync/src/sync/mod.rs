@@ -11,6 +11,24 @@ use std::{
 
 use self::merkle::{ObjDescription, Tree};
 
+#[derive(Clone)]
+pub struct Tag<'a> {
+    pub dir: &'a Path,
+    pub branch: &'a str,
+    pub provider_id: &'a str,
+}
+
+impl<'a> Tag<'a> {
+    pub fn to_string(&self) -> String {
+        return format!(
+            "{}::{}::{}",
+            self.dir.to_str().unwrap(),
+            self.branch,
+            self.provider_id
+        );
+    }
+}
+
 fn remove_seps_from_path(dir: &Path) -> String {
     let mut path = String::new();
     for component in dir.components() {
@@ -24,22 +42,19 @@ fn remove_seps_from_path(dir: &Path) -> String {
     return path;
 }
 
-fn path_for_tag(dir: &Path, branch: Option<&str>) -> PathBuf {
+fn path_for_tag(tag: &Tag) -> PathBuf {
     let mut path = get_my_home().unwrap().unwrap();
     path.push(".continue/index/tags");
-    path.push(remove_seps_from_path(dir));
-    if let Some(branch) = branch {
-        path.push(branch);
-    } else {
-        path.push("main");
-    }
+    path.push(remove_seps_from_path(tag.dir));
+    path.push(tag.branch);
+    path.push(tag.provider_id);
     return path;
 }
 
 /// Stored in ~/.continue/index/.last_sync
-fn get_last_sync_time(dir: &Path, branch: Option<&str>) -> u64 {
+fn get_last_sync_time(tag: &Tag) -> u64 {
     // TODO: Error handle here
-    let path = path_for_tag(dir, branch).join(".last_sync");
+    let path = path_for_tag(tag).join(".last_sync");
 
     let mut file = File::open(path).unwrap();
     let mut contents = String::new();
@@ -49,8 +64,8 @@ fn get_last_sync_time(dir: &Path, branch: Option<&str>) -> u64 {
     return last_sync_time;
 }
 
-fn write_sync_time(dir: &Path, branch: Option<&str>) {
-    let path = path_for_tag(dir, branch).join(".last_sync");
+fn write_sync_time(tag: &Tag) {
+    let path = path_for_tag(tag).join(".last_sync");
 
     let mut file = File::create(path).unwrap();
     let now = SystemTime::now()
@@ -61,10 +76,10 @@ fn write_sync_time(dir: &Path, branch: Option<&str>) {
 }
 
 /// Use stat to find files since last sync time
-pub fn get_modified_files(dir: &Path, branch: Option<&str>) -> Vec<PathBuf> {
-    let last_sync_time = get_last_sync_time(dir, branch);
+pub fn get_modified_files(tag: &Tag) -> Vec<PathBuf> {
+    let last_sync_time = get_last_sync_time(tag);
     let mut modified_files = Vec::new();
-    for entry in build_walk(dir) {
+    for entry in build_walk(tag.dir) {
         let entry = entry.unwrap();
         let path = entry.path();
         let metadata = path.metadata().unwrap();
@@ -154,53 +169,54 @@ impl DiskSet {
     }
 }
 
-struct IndexCache {
-    dir: Box<Path>,
-    branch: Box<str>,
+struct IndexCache<'a> {
+    tag: Box<Tag<'a>>,
     global_cache: DiskSet,
     tag_cache: DiskSet,
 }
 
-impl IndexCache {
-    fn index_cache_path_for_tag(dir: &Path, branch: &str) -> PathBuf {
-        let mut path = path_for_tag(dir, Some(branch));
+impl<'a> IndexCache<'a> {
+    fn index_cache_path_for_tag(tag: &Tag) -> PathBuf {
+        let mut path = path_for_tag(tag);
         path.push(".index_cache");
         return path;
     }
 
-    fn rev_tags_path(hash: [u8; ITEM_SIZE]) -> PathBuf {
+    fn rev_tags_dir(provider_id: &str) -> PathBuf {
+        let mut path = IndexCache::provider_dir(provider_id);
+        path.push("rev_tags");
+        return path;
+    }
+
+    fn rev_tags_path(hash: [u8; ITEM_SIZE], provider_id: &str) -> PathBuf {
         let hash_str = hash_string(hash);
-        let mut path = get_my_home().unwrap().unwrap();
-        path.push(".continue/index/rev_tags");
+        let mut path = IndexCache::rev_tags_dir(provider_id);
         // Branch by 1) first two chars of hash
         path.push(&hash_str[0..2]);
         return path;
     }
 
     fn tag_str(&self) -> String {
-        return format!("{}::{}", self.dir.to_str().unwrap(), self.branch);
+        return self.tag.to_string();
     }
 
-    fn new(dir: &Path, branch: Option<&str>) -> IndexCache {
+    fn provider_dir(provider_id: &str) -> PathBuf {
+        let mut path = get_my_home().unwrap().unwrap();
+        path.push(".continue/index/providers");
+        path.push(provider_id);
+        return path;
+    }
+
+    fn new(tag: &'a Tag) -> IndexCache<'a> {
         return IndexCache {
-            dir: Box::from(dir),
-            branch: match branch {
-                Some(branch) => Box::from(branch),
-                None => Box::from("main"),
-            },
+            tag: Box::new(tag.clone()),
             global_cache: DiskSet::new(
-                get_my_home()
-                    .unwrap()
-                    .unwrap()
-                    .join(".continue/index/.index_cache")
+                IndexCache::provider_dir(tag.provider_id)
+                    .join(".index_cache")
                     .to_str()
                     .unwrap(),
             ),
-            tag_cache: DiskSet::new(
-                IndexCache::index_cache_path_for_tag(dir, branch.unwrap_or("main"))
-                    .to_str()
-                    .unwrap(),
-            ),
+            tag_cache: DiskSet::new(IndexCache::index_cache_path_for_tag(tag).to_str().unwrap()),
         };
     }
 
@@ -210,7 +226,7 @@ impl IndexCache {
     // TODO: You could add_bulk, remove_bulk if this gets slow
 
     fn read_rev_tags(&self, hash: [u8; ITEM_SIZE]) -> HashMap<String, Vec<String>> {
-        let rev_tags_path = IndexCache::rev_tags_path(hash);
+        let rev_tags_path = IndexCache::rev_tags_path(hash, self.tag.provider_id);
         let mut rev_tags_file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -226,7 +242,7 @@ impl IndexCache {
     }
 
     fn write_rev_tags(&self, hash: [u8; ITEM_SIZE], rev_tags: HashMap<String, Vec<String>>) {
-        let rev_tags_path = IndexCache::rev_tags_path(hash);
+        let rev_tags_path = IndexCache::rev_tags_path(hash, self.tag.provider_id);
         let mut rev_tags_file = OpenOptions::new()
             .read(true)
             .write(true)
@@ -309,8 +325,7 @@ impl IndexCache {
 }
 
 pub fn sync(
-    dir: &Path,
-    branch: Option<&str>,
+    tag: &Tag,
 ) -> Result<
     (
         Vec<(String, String)>,
@@ -322,12 +337,12 @@ pub fn sync(
 > {
     // Make sure that the tag directory exists
     // Create the directory and all its parent directories if they don't exist
-    fs::create_dir_all(path_for_tag(dir, branch)).unwrap();
-    if let Some(parent) = IndexCache::rev_tags_path([0; ITEM_SIZE]).parent() {
+    fs::create_dir_all(path_for_tag(tag)).unwrap();
+    if let Some(parent) = IndexCache::rev_tags_path([0; ITEM_SIZE], tag.provider_id).parent() {
         fs::create_dir_all(parent).unwrap();
     }
 
-    let mut tree_path = path_for_tag(dir, branch);
+    let mut tree_path = path_for_tag(tag);
     tree_path.push("merkle_tree");
     let old_tree: Tree = match Tree::load(&tree_path) {
         Ok(tree) => tree,
@@ -337,10 +352,10 @@ pub fn sync(
     // Calculate and save new tree
     // TODO: Use modified files to speed up calculation
     // let modified_files = get_modified_files(dir, branch);
-    let new_tree = compute_tree_for_dir(dir, None)?;
+    let new_tree = compute_tree_for_dir(tag.dir, None)?;
 
     // Update last sync time
-    write_sync_time(dir, branch);
+    write_sync_time(tag);
 
     // Save new tree
     new_tree.persist(&tree_path);
@@ -351,7 +366,7 @@ pub fn sync(
     // Compute the four action types: compute, remove, add tag, remove tag,
     // transform into desired format: [(path, hash), ...],
     // and update .index_cache
-    let mut index_cache = IndexCache::new(dir, branch);
+    let mut index_cache = IndexCache::new(tag);
 
     let mut compute: Vec<(String, String)> = Vec::new();
     let mut delete: Vec<(String, String)> = Vec::new();
@@ -459,26 +474,45 @@ mod tests {
     #[test]
     fn test_sync() {
         let ti = std::time::Instant::now();
-        let results = sync(Path::new("../"), Some("nate/pyO3"));
+        let tag = Tag {
+            dir: Path::new("../"),
+            branch: "nate/pyO3",
+            provider_id: "default",
+        };
+        let results = sync(&tag);
         println!("Sync took {:?}", ti.elapsed());
         // Vast majority (90+%) of this time is spent in compute_tree_for_dir
     }
 
     #[test]
     fn test_on_vscode_extension() {
-        let results = sync(Path::new("../extensions/vscode"), Some("nate/pyO3"));
+        let results = sync(&Tag {
+            dir: Path::new("../extensions/vscode"),
+            branch: "nate/pyO3",
+            provider_id: "default",
+        });
     }
 
     #[test]
     fn test_double_sync() {
         let ti = std::time::Instant::now();
-        let results = sync(Path::new("../"), Some("nate/pyO3")).expect("Sync failed.");
+        let results = sync(&Tag {
+            dir: Path::new("../"),
+            branch: "nate/pyO3",
+            provider_id: "default",
+        })
+        .expect("Sync failed.");
         println!("First sync took {:?}", ti.elapsed());
         assert!(results.0.len() > 0);
         assert!(results.1.len() > 0);
 
         let ti = std::time::Instant::now();
-        let results = sync(Path::new("../"), Some("nate/pyO3")).expect("Sync failed");
+        let results = sync(&Tag {
+            dir: Path::new("../"),
+            branch: "nate/pyO3",
+            provider_id: "default",
+        })
+        .expect("Sync failed");
         println!("Second sync took {:?}", ti.elapsed());
         assert_eq!(results.0.len(), 0);
         assert_eq!(results.1.len(), 0);
@@ -495,8 +529,13 @@ mod tests {
             .add("__init__.py", "a = 5")
             .create();
 
+        let tag = &Tag {
+            dir: temp_dir.path(),
+            branch: "BRANCH",
+            provider_id: "default",
+        };
         // Sync once
-        sync(temp_dir.path(), Some("BRANCH")).expect("Sync failed.");
+        sync(&tag).expect("Sync failed.");
 
         // Make changes
         let mut file = File::create(temp_dir.path().join("dir1/file1.txt")).unwrap();
@@ -505,7 +544,7 @@ mod tests {
         file.write_all("File 3 changed".as_bytes()).unwrap();
 
         // Sync again
-        let results = sync(temp_dir.path(), Some("BRANCH")).expect("Sync failed.");
+        let results = sync(tag).expect("Sync failed.");
 
         // Check results
         assert_eq!(results.0.len(), 2);
@@ -515,8 +554,13 @@ mod tests {
 
         // Start a new branch
 
+        let tag2 = &Tag {
+            dir: temp_dir.path(),
+            branch: "BRANCH2",
+            provider_id: "default",
+        };
         // Sync again
-        let results = sync(temp_dir.path(), Some("BRANCH2")).expect("Sync failed.");
+        let results = sync(tag2).expect("Sync failed.");
 
         // Check results
         assert_eq!(results.0.len(), 0);
@@ -528,7 +572,7 @@ mod tests {
         remove_file(temp_dir.path().join("dir1/file2.txt")).unwrap();
 
         // Sync again
-        let results = sync(temp_dir.path(), Some("BRANCH2")).expect("Sync failed.");
+        let results = sync(tag2).expect("Sync failed.");
 
         // Check results
         assert_eq!(results.0.len(), 0);

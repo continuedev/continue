@@ -4,7 +4,7 @@ This is a small Rust library for efficiently keeping a codebase index up to date
 
 ### How it works
 
-> Important definition: a _tag_ is a (workspace, branch) pair that uniquely identifies an index. Since we use content-based addressing within the index, much of the data is shared for efficiency.
+> Important definition: a _tag_ is a (workspace, branch, provider_id) pair that uniquely identifies an index. Since we use content-based addressing within the index, much of the data is shared for efficiency.
 
 The output of the sync_results function is a list of 4 lists of tuples. Each tuple contains a file path and a hash of the file contents. The 4 lists are:
 
@@ -37,11 +37,11 @@ Thereafter, the following steps are performed:
 
 Several files are stored and updated on disk in the ~/.continue/index folder to keep track of indexed files:
 
-- `~/.continue/index/tags/<dir>/<branch>/merkle_tree` - the last computed Merkle tree of the codebase for a given tag
-- `~/.continue/index/tags/<dir>/<branch>/.last_sync` - the last time the tag was synced
+- `~/.continue/index/tags/<dir>/<branch>/<provider_id>/merkle_tree` - the last computed Merkle tree of the codebase for a given tag
+- `~/.continue/index/tags/<dir>/<branch>/<provider_id>/.last_sync` - the last time the tag was synced
 - The index cache contains a list of hashes that have already been computed both in general and per tag. These are always kept in sync.
   - `~/.continue/index/.index_cache` - contains the global cache (flat file of hashes)
-  - `~/.continue/index/tags/<dir>/<branch>/.index_cache` - contains the tag-specific cache (flat file of hashes)
+  - `~/.continue/index/tags/<dir>/<branch>/<provider_id>/.index_cache` - contains the tag-specific cache (flat file of hashes)
   - `~/.continue/index/rev_tags` - contains a mapping from hash to tags that the hash is currently indexed for. This is a directory of files, where each file is prefixed with the first 2 characters of the hash. The file is a JSON mapping from hash to list of tags.
 
 ### Files
