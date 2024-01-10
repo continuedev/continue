@@ -75,6 +75,33 @@ class VsCodeIde implements IDE {
         fs.writeFileSync(configPath, contents, "utf8");
       });
 
+      migrate("codebaseContextProvider", () => {
+        if (
+          !config.contextProviders?.filter((cp) => cp.name === "codebase")
+            ?.length
+        ) {
+          config.contextProviders = [
+            ...(config.contextProviders || []),
+            {
+              name: "codebase",
+              params: {},
+            },
+          ];
+        }
+
+        if (!config.embeddingsProvider) {
+          config.embeddingsProvider = {
+            provider: "transformers.js",
+          };
+        }
+
+        fs.writeFileSync(
+          configPath,
+          JSON.stringify(config, undefined, 2),
+          "utf8"
+        );
+      });
+
       for (const workspacePath of await this.getWorkspaceDirs()) {
         const continueRcPath = path.join(workspacePath, ".continuerc.json");
         if (fs.existsSync(continueRcPath)) {

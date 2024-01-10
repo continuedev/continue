@@ -334,7 +334,8 @@ type ContextProviderName =
   | "search"
   | "url"
   | "tree"
-  | "http";
+  | "http"
+  | "codebase";
 
 type TemplateType =
   | "llama2"
@@ -461,7 +462,7 @@ export type EmbeddingsProviderName = "transformers.js" | "ollama" | "openai";
 export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
-  model: string;
+  model?: string;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
