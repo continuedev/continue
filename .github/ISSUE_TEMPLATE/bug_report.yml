@@ -58,6 +58,5 @@ body:
     attributes:
       label: Log output
       description: |
-        Please refer to the [troubleshooting guide](https://continue.dev/docs/troubleshooting) on
-        the Continue Docs to obtain the logs. Copy the relevant lines or the last 100 lines or so.
+        Please refer to the [troubleshooting guide](https://continue.dev/docs/troubleshooting) in the Continue Docs for instructions on obtaining the logs. Copy either the relevant lines or the last 100 lines or so.
       render: Shell
