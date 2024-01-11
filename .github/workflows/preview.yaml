@@ -105,21 +105,24 @@ jobs:
           mkdir out
           cd out
           mkdir node_modules
+          cd node_modules
+          mkdir @esbuild
 
       - name: Download esbuild on ARM
         if: matrix.arch == 'arm64'
-        run: curl -o extensions/vscode/out/node_modules/@esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${{ matrix.os }}/esbuild.zip
+        run: curl -o extensions/vscode/out/node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${{ matrix.os }}/esbuild.zip
 
       - name: Unzip esbuild on ARM
         if: matrix.arch == 'arm64'
         run: |
-          cd extensions/vscode/out/node_modules
+          cd extensions/vscode/out/node_modules/@esbuild
           ls
-          unzip @esbuild.zip
+          unzip esbuild.zip
+          ls
 
       - name: Remove esbuild.zip on ARM
         if: matrix.arch == 'arm64'
-        run: rm extensions/vscode/out/node_modules/@esbuild.zip
+        run: rm extensions/vscode/out/node_modules/@esbuild/esbuild.zip
 
       # 2.875. download anything that needs to be built on ARM (Windows)
       # - name: Make the out directory
