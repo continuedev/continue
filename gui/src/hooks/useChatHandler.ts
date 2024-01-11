@@ -34,6 +34,9 @@ function useChatHandler(dispatch: Dispatch) {
   const contextItems = useSelector(
     (state: RootStore) => state.state.contextItems
   );
+  const embeddingsProvider = useSelector(
+    (state: RootStore) => state.state.config.embeddingsProvider
+  );
   const history = useSelector((store: RootStore) => store.state.history);
   const contextProviders = useSelector(
     (store: RootStore) => store.state.config.contextProviders || []
@@ -135,7 +138,11 @@ function useChatHandler(dispatch: Dispatch) {
       }
 
       // Resolve context providers and construct new history
-      const content = await resolveEditorContent(editorState, contextProviders);
+      const [contextItems, content] = await resolveEditorContent(
+        editorState,
+        contextProviders,
+        embeddingsProvider
+      );
       const message: ChatMessage = {
         role: "user",
         content,
@@ -151,7 +158,11 @@ function useChatHandler(dispatch: Dispatch) {
 
       let newHistory: ChatHistory = [...history.slice(0, index), historyItem];
       dispatch(
-        setMessageAtIndex({ message, index: index || newHistory.length - 1 })
+        setMessageAtIndex({
+          message,
+          index: index || newHistory.length - 1,
+          contextItems,
+        })
       );
 
       // TODO: hacky way to allow rerender

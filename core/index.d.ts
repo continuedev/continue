@@ -1,3 +1,5 @@
+import { Chunk } from "./index/chunk";
+
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
 
@@ -52,17 +54,28 @@ export interface ContextProviderDescription {
   requiresQuery: boolean;
 }
 
+interface ContextProviderExtras {
+  fullInput: string;
+  embeddingsProvider?: EmbeddingsProvider;
+}
+
 export interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
-  getContextItems(query: string): Promise<ContextItem[]>;
+  getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]>;
 }
 
 export interface IContextProvider {
   get description(): ContextProviderDescription;
 
-  getContextItems(query: string): Promise<ContextItem[]>;
+  getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]>;
 }
 
 export interface PersistedSessionInfo {
@@ -261,6 +274,23 @@ export interface IDE {
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
+
+  // Embeddings
+  /**
+   * Returns list of [tag, filepath, hash of contents] that need to be embedded
+   */
+  getFilesToEmbed(providerId: string): Promise<[string, string, string][]>;
+  sendEmbeddingForChunk(
+    chunk: Chunk,
+    embedding: number[],
+    tags: string[]
+  ): void;
+  retrieveChunks(
+    v: number[],
+    n: number,
+    tags: string[],
+    providerId: string
+  ): Promise<Chunk[]>;
 }
 
 // Slash Commands
@@ -309,7 +339,8 @@ type ContextProviderName =
   | "search"
   | "url"
   | "tree"
-  | "http";
+  | "http"
+  | "codebase";
 
 type TemplateType =
   | "llama2"
@@ -407,18 +438,6 @@ export interface CustomCommand {
   prompt: string;
   description: string;
 }
-export interface RetrievalSettings {
-  nRetrieve?: number;
-  nFinal?: number;
-  useReranking: boolean;
-  rerankGroupSize: number;
-  ignoreFiles: string[];
-  openaiApiKey?: string;
-  apiBase?: string;
-  apiType?: string;
-  apiVersion?: string;
-  organizationId?: string;
-}
 
 interface BaseCompletionOptions {
   temperature?: number;
@@ -445,11 +464,21 @@ export interface ModelDescription {
   promptTemplates?: { [key: string]: string };
 }
 
-export interface ModelRoles {
-  default: string;
-  chat?: string;
-  edit?: string;
-  summarize?: string;
+export type EmbeddingsProviderName = "transformers.js" | "ollama" | "openai";
+
+export interface EmbedOptions {
+  apiBase?: string;
+  apiKey?: string;
+  model?: string;
+}
+
+export interface EmbeddingsProviderDescription extends EmbedOptions {
+  provider: EmbeddingsProviderName;
+}
+
+export interface EmbeddingsProvider {
+  id: string;
+  embed(chunks: string[]): Promise<number[][]>;
 }
 
 export interface SerializedContinueConfig {
@@ -461,10 +490,10 @@ export interface SerializedContinueConfig {
   slashCommands?: SlashCommandDescription[];
   customCommands?: CustomCommand[];
   contextProviders?: ContextProviderWithParams[];
-  retrievalSettings?: RetrievalSettings;
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;
   userToken?: string;
+  embeddingsProvider?: EmbeddingsProviderDescription;
 }
 
 export interface Config {
@@ -485,14 +514,14 @@ export interface Config {
    * A CustomContextProvider requires you only to define a title and getContextItems function. When you type '@title <query>', Continue will call `getContextItems(query)`.
    */
   contextProviders?: (CustomContextProvider | ContextProviderWithParams)[];
-  /** Settings related to the /codebase retrieval feature */
-  retrievalSettings?: RetrievalSettings;
   /** If set to true, Continue will not index your codebase for retrieval */
   disableIndexing?: boolean;
   /** If set to true, Continue will not make extra requests to the LLM to generate a summary title of each session. */
   disableSessionTitles?: boolean;
   /** An optional token to identify a user. Not used by Continue unless you write custom coniguration that requires such a token */
   userToken?: string;
+  /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
+  embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
 }
 
 export interface ContinueConfig {
@@ -502,8 +531,8 @@ export interface ContinueConfig {
   completionOptions?: BaseCompletionOptions;
   slashCommands?: SlashCommand[];
   contextProviders?: IContextProvider[];
-  retrievalSettings?: RetrievalSettings;
   disableSessionTitles?: boolean;
   disableIndexing?: boolean;
   userToken?: string;
+  embeddingsProvider?: EmbeddingsProvider;
 }

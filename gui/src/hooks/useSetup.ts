@@ -13,6 +13,7 @@ import { VSC_THEME_COLOR_VARS } from "../components";
 import { setVscMachineId } from "../redux/slices/configSlice";
 import { setConfig, setInactive } from "../redux/slices/stateSlice";
 import { RootStore } from "../redux/store";
+import TransformersJsEmbeddingsProvider from "../util/TransformersJsEmbeddingsProvider";
 import useChatHandler from "./useChatHandler";
 
 function useSetup(dispatch: Dispatch<any>) {
@@ -44,6 +45,15 @@ function useSetup(dispatch: Dispatch<any>) {
           return new ExtensionIde().readFile(filepath);
         }
       );
+
+      // Swap in web-version of TransformersJsEmbeddingsProvider
+      if (
+        (finalConfig.embeddingsProvider as any)?.providerName ===
+        "transformers.js"
+      ) {
+        finalConfig.embeddingsProvider = new TransformersJsEmbeddingsProvider();
+      }
+
       // Fall back to config.json
       dispatch(setConfig(finalConfig));
     } catch (e) {

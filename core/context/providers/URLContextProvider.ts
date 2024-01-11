@@ -1,5 +1,9 @@
 import { BaseContextProvider } from "..";
-import { ContextItem, ContextProviderDescription } from "../..";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+} from "../..";
 
 class URLContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -10,7 +14,10 @@ class URLContextProvider extends BaseContextProvider {
     requiresQuery: true,
   };
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
     let url = query.trim();
     if (!url.startsWith("http")) {
       url = "https://" + url;

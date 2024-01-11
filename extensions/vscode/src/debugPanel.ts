@@ -313,7 +313,9 @@ export function getSidebarContent(
           break;
         }
         case "showVirtualFile": {
-          respond(await ide.showVirtualFile(data.name, data.content));
+          respond(
+            await ide.showVirtualFile(data.message.name, data.message.content)
+          );
           break;
         }
         case "getContinueDir": {
@@ -330,6 +332,32 @@ export function getSidebarContent(
         }
         case "getSearchResults": {
           respond(await ide.getSearchResults(data.message.query));
+          break;
+        }
+        case "getFilesToEmbed": {
+          let filesToEmbed = await ide.getFilesToEmbed(data.message.providerId);
+          respond(filesToEmbed);
+          break;
+        }
+        case "sendChunkForFile": {
+          respond(
+            await ide.sendEmbeddingForChunk(
+              data.message.chunk,
+              data.message.embedding,
+              data.message.tags
+            )
+          );
+          break;
+        }
+        case "retrieveChunks": {
+          respond(
+            await ide.retrieveChunks(
+              data.message.v,
+              data.message.n,
+              data.message.tags,
+              data.message.providerId
+            )
+          );
           break;
         }
         // History

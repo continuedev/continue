@@ -31,6 +31,12 @@ export function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
     throw new Error("Proxy fetch not initialized");
   }
 
+  if (!(url.startsWith("http://") || url.startsWith("https://"))) {
+    // Relative URL
+    const fullUrl = `${(window as any).vscMediaUrl}/${url}`;
+    return (window as any)._fetch(fullUrl, init);
+  }
+
   const proxyServerUrl =
     (window as any).proxyServerUrl || "http://localhost:65433";
 

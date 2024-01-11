@@ -356,7 +356,10 @@
     "test": "npm run build-test && node ./out/test-runner/runTestOnVSCodeHost.js",
     "prepackage": "node scripts/prepackage.js",
     "package": "node scripts/package.js",
-    "package:pre-release": "node scripts/package.js --pre-release"
+    "package:pre-release": "node scripts/package.js --pre-release",
+    "build:rust": "cargo-cp-artifact -ac sync sync.node -- cargo build --manifest-path ../../sync/Cargo.toml --message-format=json-render-diagnostics",
+    "build-debug:rust": "npm run build:rust --",
+    "build-release:rust": "npm run build:rust -- --release"
   },
   "devDependencies": {
     "@nestjs/common": "^8.4.7",
@@ -382,7 +385,8 @@
     "ovsx": "^0.8.3",
     "typescript": "^5.3.3",
     "vite": "^4.3.9",
-    "vsce": "^2.15.0"
+    "vsce": "^2.15.0",
+    "cargo-cp-artifact": "^0.1"
   },
   "dependencies": {
     "@electron/rebuild": "^3.2.10",

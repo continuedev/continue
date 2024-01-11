@@ -10,6 +10,7 @@ import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
 import { startProxy } from "./proxy";
+// const sync = require("../sync.node");
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;

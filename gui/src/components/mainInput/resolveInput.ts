@@ -1,5 +1,5 @@
 import { JSONContent } from "@tiptap/react";
-import { IContextProvider } from "core";
+import { ContextItemWithId, EmbeddingsProvider, IContextProvider } from "core";
 import { ExtensionIde } from "core/ide";
 import { getBasename } from "core/util";
 import { getContextItems } from "../../hooks/useContextProviders";
@@ -19,10 +19,11 @@ interface MentionAttrs {
 
 async function resolveEditorContent(
   editorState: JSONContent,
-  contextProviders: IContextProvider[]
-): Promise<string> {
+  contextProviders: IContextProvider[],
+  embeddingsProvider?: EmbeddingsProvider
+): Promise<[ContextItemWithId[], string]> {
   let paragraphs = [];
-  let contextItems: MentionAttrs[] = [];
+  let contextItemAttrs: MentionAttrs[] = [];
   let slashCommand = undefined;
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
@@ -34,7 +35,7 @@ async function resolveEditorContent(
         continue;
       }
       paragraphs.push(text);
-      contextItems.push(...ctxItems);
+      contextItemAttrs.push(...ctxItems);
     } else if (p.type === "codeBlock") {
       if (!p.attrs.item.editing) {
         paragraphs.push(
@@ -47,21 +48,36 @@ async function resolveEditorContent(
   }
 
   let contextItemsText = "";
+  let contextItems: ContextItemWithId[] = [];
   const ide = new ExtensionIde();
-  for (const item of contextItems) {
+  for (const item of contextItemAttrs) {
     if (item.id.startsWith("/") || item.id.startsWith("\\")) {
       // This is a quick way to resolve @file references
       const basename = getBasename(item.id);
-      const contents = await ide.readFile(item.id);
-      contextItemsText += `\`\`\`title="${basename}"\n${contents}\n\`\`\`\n`;
+      const content = await ide.readFile(item.id);
+      contextItemsText += `\`\`\`title="${basename}"\n${content}\n\`\`\`\n`;
+      contextItems.push({
+        name: basename,
+        description: item.id,
+        content,
+        id: {
+          providerTitle: "file",
+          itemId: item.id,
+        },
+      });
     } else {
       const resolvedItems = await getContextItems(
         contextProviders,
         item.id,
-        item.query
+        item.query,
+        {
+          fullInput: paragraphs.join("\n"),
+          embeddingsProvider,
+        }
       );
+      contextItems.push(...resolvedItems);
       for (const resolvedItem of resolvedItems) {
-        contextItemsText += `\`\`\`title="${item.label}"\n${resolvedItem.content}\n\`\`\`\n`;
+        contextItemsText += resolvedItem.content + "\n\n";
       }
     }
   }
@@ -74,8 +90,8 @@ async function resolveEditorContent(
   if (slashCommand) {
     finalText = `${slashCommand} ${finalText}`;
   }
-  console.log(finalText, editorState?.content);
-  return finalText;
+
+  return [contextItems, finalText];
 }
 
 function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
@@ -86,7 +102,9 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
     if (child.type === "text") {
       text += child.text;
     } else if (child.type === "mention") {
-      text += `@${child.attrs.label}`;
+      if (!["codebase"].includes(child.attrs.id)) {
+        text += child.attrs.label;
+      }
       contextItems.push(child.attrs);
     } else if (child.type === "slashcommand") {
       if (typeof slashCommand === "undefined") {

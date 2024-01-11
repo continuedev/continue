@@ -1,5 +1,9 @@
 import { BaseContextProvider } from "..";
-import { ContextItem, ContextProviderDescription } from "../..";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+} from "../..";
 import { ExtensionIde } from "../../ide";
 
 class TerminalContextProvider extends BaseContextProvider {
@@ -11,12 +15,15 @@ class TerminalContextProvider extends BaseContextProvider {
     requiresQuery: false,
   };
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
     const content = await new ExtensionIde().getTerminalContents();
     return [
       {
         description: "The contents of the terminal",
-        content,
+        content: `Current terminal contents:\n\n${content}`,
         name: "Terminal",
       },
     ];

@@ -43,6 +43,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   search: MagnifyingGlassIcon,
   url: GlobeAltIcon,
   open: FolderOpenIcon,
+  codebase: SparklesIcon,
   "/edit": PaintBrushIcon,
   "/clear": TrashIcon,
   "/test": BeakerIcon,

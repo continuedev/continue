@@ -1,5 +1,7 @@
 import { Editor, ReactRenderer } from "@tiptap/react";
 import { IContextProvider } from "core";
+import { ExtensionIde } from "core/ide";
+import { getBasename } from "core/util";
 import MiniSearch from "minisearch";
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
@@ -76,6 +78,27 @@ function getSuggestion(
   };
 }
 
+let openFiles: ComboBoxItem[] = [];
+
+function refreshOpenFiles() {
+  new ExtensionIde().getOpenFiles().then(
+    (files) =>
+      (openFiles = files.map((file) => {
+        const baseName = getBasename(file);
+        const lastTwoParts = file.split(/[\\/]/).slice(-2).join("/");
+        return {
+          title: baseName,
+          description: lastTwoParts,
+          id: file,
+          content: file,
+          label: baseName,
+          type: "file" as ComboBoxItemType,
+        };
+      }))
+  );
+}
+refreshOpenFiles();
+
 function getFileItems(
   query: string,
   miniSearch: MiniSearch,
@@ -86,7 +109,7 @@ function getFileItems(
     fuzzy: 5,
   });
   if (res.length === 0) {
-    res = firstResults;
+    return openFiles;
   }
   return (
     res?.slice(0, 10).map((hit) => {
@@ -153,6 +176,8 @@ export function getMentionSuggestion(
     }
     return mainResults;
   };
+
+  refreshOpenFiles();
   return getSuggestion(items, enterSubmenu, onClose, onOpen);
 }
 

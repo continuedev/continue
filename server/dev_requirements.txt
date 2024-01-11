@@ -1,2 +1,0 @@
-pytest==7.4.1
-pytest-asyncio==0.21.1

@@ -17,9 +17,11 @@ import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
+import { Chunk } from "core/index/chunk";
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import mergeJson from "./util/merge";
 import { getExtensionUri } from "./util/vscode";
+const sync = require("../sync.node");
 
 async function buildConfigTs(browser: boolean) {
   if (!fs.existsSync(getConfigTsPath())) {
@@ -74,6 +76,33 @@ class VsCodeIde implements IDE {
           .replace("openai-aiohttp", "openai");
 
         fs.writeFileSync(configPath, contents, "utf8");
+      });
+
+      migrate("codebaseContextProvider", () => {
+        if (
+          !config.contextProviders?.filter((cp) => cp.name === "codebase")
+            ?.length
+        ) {
+          config.contextProviders = [
+            ...(config.contextProviders || []),
+            {
+              name: "codebase",
+              params: {},
+            },
+          ];
+        }
+
+        if (!config.embeddingsProvider) {
+          config.embeddingsProvider = {
+            provider: "transformers.js",
+          };
+        }
+
+        fs.writeFileSync(
+          configPath,
+          JSON.stringify(config, undefined, 2),
+          "utf8"
+        );
       });
 
       for (const workspacePath of await this.getWorkspaceDirs()) {
@@ -273,6 +302,41 @@ class VsCodeIde implements IDE {
     }
 
     return results.join("\n\n");
+  }
+
+  async getFilesToEmbed(
+    providerId: string
+  ): Promise<[string, string, string][]> {
+    let results = [];
+    let branch = await ideProtocolClient.getBranch();
+    for (let dir of await this.getWorkspaceDirs()) {
+      let tag = `${dir}::${branch}::${providerId}`; // TODO (don't build the string here ideally)
+      let filesToEmbed = sync.sync_results(dir, branch, providerId);
+      results.push(...filesToEmbed.map((r: any) => [tag, r.name, r.hash]));
+    }
+    return results;
+  }
+
+  async sendEmbeddingForChunk(
+    chunk: Chunk,
+    embedding: number[],
+    tags: string[]
+  ) {
+    sync.add_chunk(chunk, tags, embedding);
+  }
+
+  async retrieveChunks(
+    v: number[],
+    n: number,
+    tags: string[],
+    providerId: string
+  ): Promise<Chunk[]> {
+    // TODO: OR clause with tags
+    let branch = await ideProtocolClient.getBranch();
+    let dirs = await this.getWorkspaceDirs();
+    let mainTag = `${dirs[0] || "NONE"}::${branch}::${providerId}`;
+    let chunks = sync.retrieve(n, [...tags, mainTag], v);
+    return chunks;
   }
 }
 

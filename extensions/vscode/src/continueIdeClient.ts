@@ -42,6 +42,13 @@ class IdeProtocolClient {
         const configJson = JSON.parse(config);
         this.configUpdate(configJson);
         configHandler.reloadConfig();
+      } else if (
+        filepath.endsWith(".continueignore") ||
+        filepath.endsWith(".gitignore")
+      ) {
+        debugPanelWebview?.postMessage({
+          type: "updateEmbeddings",
+        });
       }
     });
 
@@ -326,6 +333,8 @@ class IdeProtocolClient {
         ".vscode-test",
         ".continue",
         "__pycache__",
+        // Files
+        ".DS_Store",
       ];
       if (
         !DEFAULT_IGNORE_DIRS.some((dir) => name.split(path.sep).includes(dir))

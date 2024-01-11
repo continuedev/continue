@@ -1,5 +1,9 @@
 import { BaseContextProvider } from "..";
-import { ContextItem, ContextProviderDescription } from "../..";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+} from "../..";
 import { ExtensionIde } from "../../ide";
 
 class SearchContextProvider extends BaseContextProvider {
@@ -11,12 +15,15 @@ class SearchContextProvider extends BaseContextProvider {
     requiresQuery: true,
   };
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
     const results = await new ExtensionIde().getSearchResults(query);
     return [
       {
         description: "Search results",
-        content: results,
+        content: `Results of searching codebase for "${query}":\n\n${results}`,
         name: "Search results",
       },
     ];

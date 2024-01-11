@@ -1,5 +1,6 @@
 import * as fs from "fs";
 import { DiffLine, IDE, SerializedContinueConfig } from "..";
+import { Chunk } from "../index/chunk";
 import {
   getConfigJsonPath,
   getConfigTsPath,
@@ -105,6 +106,21 @@ class FileSystemIde implements IDE {
 
   async getSearchResults(query: string): Promise<string> {
     return "";
+  }
+
+  getFilesToEmbed(providerId: string): Promise<[string, string, string][]> {
+    return Promise.resolve([]);
+  }
+
+  sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {}
+
+  retrieveChunks(
+    v: number[],
+    n: number,
+    tags: string[],
+    providerId: string
+  ): Promise<Chunk[]> {
+    return Promise.resolve([]);
   }
 }
 
