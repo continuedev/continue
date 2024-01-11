@@ -279,6 +279,7 @@ export interface IDE {
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
+  subprocess(command: string): Promise<[string, string]>;
 
   // Embeddings
   /**

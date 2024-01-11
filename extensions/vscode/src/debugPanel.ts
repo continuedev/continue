@@ -330,6 +330,10 @@ export function getSidebarContent(
           respond(await ide.getSearchResults(data.message.query));
           break;
         }
+        case "subprocess": {
+          respond(await ide.subprocess(data.message.command));
+          break;
+        }
         case "getFilesToEmbed": {
           let filesToEmbed = await ide.getFilesToEmbed(data.message.providerId);
           respond(filesToEmbed);

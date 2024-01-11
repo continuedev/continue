@@ -1,3 +1,4 @@
+import { exec } from "child_process";
 import defaultConfig from "core/config/default";
 import {
   getConfigJsPath,
@@ -302,6 +303,18 @@ class VsCodeIde implements IDE {
     }
 
     return results.join("\n\n");
+  }
+
+  async subprocess(command: string): Promise<[string, string]> {
+    return new Promise((resolve, reject) => {
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          console.warn(error);
+          reject(stderr);
+        }
+        resolve([stdout, stderr]);
+      });
+    });
   }
 
   async getFilesToEmbed(

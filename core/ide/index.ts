@@ -88,6 +88,10 @@ export class ExtensionIde implements IDE {
     return r("getSearchResults", { query });
   }
 
+  subprocess(command: string): Promise<[string, string]> {
+    return r("subprocess", { command });
+  }
+
   getFilesToEmbed(providerId: string): Promise<[string, string, string][]> {
     return r("getFilesToEmbed", { providerId });
   }

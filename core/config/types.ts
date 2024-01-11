@@ -1,7 +1,9 @@
 const Types = `
 declare global {
-  import { Chunk } from "./index/chunk";
-
+  export interface LLMReturnValue {
+    prompt: string;
+    completion: string;
+  }
   export interface ILLM extends LLMOptions {
     get providerName(): ModelProvider;
 
@@ -33,12 +35,12 @@ declare global {
     streamComplete(
       prompt: string,
       options?: LLMFullCompletionOptions
-    ): AsyncGenerator<string>;
+    ): AsyncGenerator<string, LLMReturnValue>;
 
     streamChat(
       messages: ChatMessage[],
       options?: LLMFullCompletionOptions
-    ): AsyncGenerator<ChatMessage>;
+    ): AsyncGenerator<ChatMessage, LLMReturnValue>;
 
     chat(
       messages: ChatMessage[],
@@ -277,6 +279,7 @@ declare global {
     ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
     getSearchResults(query: string): Promise<string>;
+    subprocess(command: string): Promise<[string, string]>;
 
     // Embeddings
     /**
@@ -538,8 +541,7 @@ declare global {
     disableIndexing?: boolean;
     userToken?: string;
     embeddingsProvider?: EmbeddingsProvider;
-  }
-  
+  }  
 }
 
 export {};

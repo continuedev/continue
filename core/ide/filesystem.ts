@@ -108,6 +108,10 @@ class FileSystemIde implements IDE {
     return "";
   }
 
+  async subprocess(command: string): Promise<[string, string]> {
+    return ["", ""];
+  }
+
   getFilesToEmbed(providerId: string): Promise<[string, string, string][]> {
     return Promise.resolve([]);
   }
