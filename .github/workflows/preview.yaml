@@ -119,7 +119,7 @@ jobs:
 
       - name: Remove esbuild.zip on ARM
         if: matrix.arch == 'arm64'
-        run: rm extensions/vscode/out/node_modules/esbuild.zip
+        run: rm extensions/vscode/out/node_modules/@esbuild.zip
 
       # 2.875. download anything that needs to be built on ARM (Windows)
       # - name: Make the out directory
