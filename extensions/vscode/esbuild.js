@@ -28,9 +28,19 @@ const { exec } = require("child_process");
     }
 
     if (process.env.target === "darwin-arm64") {
+      // Remove the old binary
+      exec("rm -rf sync.node", (error, stdout, stderr) => {
+        if (error) {
+          console.log("Error removing sync.node");
+          console.log("stdout: ", stdout);
+          console.log("stderr: ", stderr);
+          throw error;
+        }
+      });
+
       // Download the prebuilt binary
       exec(
-        "curl -L https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/sync.node -o out/sync.node",
+        "curl -L https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/sync.node -o sync.node",
         (error, stdout, stderr) => {
           if (error) {
             console.log("Error downloading sync.node");
