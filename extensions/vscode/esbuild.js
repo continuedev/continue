@@ -26,11 +26,27 @@ const { exec } = require("child_process");
       console.log("stderr: ", stderr);
       throw error;
     }
-    ncp.ncp("sync.node", "out/sync.node", (err) => {
-      if (err) {
-        return console.error(err);
-      }
-    });
+
+    if (process.env.target === "darwin-arm64") {
+      // Download the prebuilt binary
+      exec(
+        "curl -L https://continue-server-binaries.s3.us-west-1.amazonaws.com/apple-silicon/sync.node -o out/sync.node",
+        (error, stdout, stderr) => {
+          if (error) {
+            console.log("Error downloading sync.node");
+            console.log("stdout: ", stdout);
+            console.log("stderr: ", stderr);
+            throw error;
+          }
+        }
+      );
+    } else {
+      ncp.ncp("sync.node", "out/sync.node", (err) => {
+        if (err) {
+          return console.error(err);
+        }
+      });
+    }
 
     fs.mkdirSync("out/node_modules", { recursive: true });
 
