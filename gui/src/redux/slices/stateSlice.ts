@@ -132,7 +132,7 @@ export const stateSlice = createSlice({
         active: true,
       };
     },
-    addContextItemsAtIndex: (state, action) => {
+    setContextItemsAtIndex: (state, action) => {
       if (action.payload.index < state.history.length) {
         return {
           ...state,
@@ -140,10 +140,7 @@ export const stateSlice = createSlice({
             if (i === action.payload.index) {
               return {
                 ...historyItem,
-                contextItems: [
-                  ...historyItem.contextItems,
-                  ...action.payload.contextItems,
-                ],
+                contextItems: action.payload.contextItems,
               };
             }
             return historyItem;
@@ -239,9 +236,18 @@ export const stateSlice = createSlice({
     },
     setMessageAtIndex: (
       state,
-      { payload }: { payload: { message: ChatMessage; index: number } }
+      {
+        payload,
+      }: {
+        payload: {
+          message: ChatMessage;
+          index: number;
+          contextItems?: ContextItemWithId[];
+        };
+      }
     ) => {
       state.history[payload.index].message = payload.message;
+      state.history[payload.index].contextItems = payload.contextItems || [];
     },
     setInactive: (state) => {
       return {
@@ -427,7 +433,7 @@ export const stateSlice = createSlice({
 });
 
 export const {
-  addContextItemsAtIndex,
+  setContextItemsAtIndex,
   addContextItems,
   setInactive,
   streamUpdate,

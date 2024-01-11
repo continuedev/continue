@@ -402,6 +402,7 @@ function GUI(props: GUIProps) {
                         isMainInput={false}
                         editorState={item.editorState}
                         content={item.message.content}
+                        contextItems={item.contextItems}
                       ></ContinueInputBox>
                     ) : (
                       <TimelineItem

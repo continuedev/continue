@@ -152,13 +152,13 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           text={scrollLocked ? "Scroll" : "Lock Scroll"}
         >
           {scrollLocked ? (
-            <ChevronUpIcon
+            <ChevronDownIcon
               width="1.2em"
               height="1.2em"
               onClick={() => setScrollLocked(false)}
             />
           ) : (
-            <ChevronDownIcon
+            <ChevronUpIcon
               width="1.2em"
               height="1.2em"
               onClick={() => setScrollLocked(true)}

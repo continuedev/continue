@@ -313,7 +313,9 @@ export function getSidebarContent(
           break;
         }
         case "showVirtualFile": {
-          respond(await ide.showVirtualFile(data.name, data.content));
+          respond(
+            await ide.showVirtualFile(data.message.name, data.message.content)
+          );
           break;
         }
         case "getContinueDir": {

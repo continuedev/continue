@@ -35,7 +35,7 @@ class CodebaseContextProvider extends BaseContextProvider {
     const [v] = await extras.embeddingsProvider.embed([extras.fullInput]);
     const results = await new ExtensionIde().retrieveChunks(
       v,
-      this.options.useReranking === false ? nFinal : nRetrieve,
+      useReranking === false ? nFinal : nRetrieve,
       [],
       extras.embeddingsProvider.id
     );

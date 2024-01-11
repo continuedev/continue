@@ -334,6 +334,8 @@ class IdeProtocolClient {
         ".vscode-test",
         ".continue",
         "__pycache__",
+        // Files
+        ".DS_Store",
       ];
       if (
         !DEFAULT_IGNORE_DIRS.some((dir) => name.split(path.sep).includes(dir))

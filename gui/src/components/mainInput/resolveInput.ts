@@ -1,5 +1,5 @@
 import { JSONContent } from "@tiptap/react";
-import { EmbeddingsProvider, IContextProvider } from "core";
+import { ContextItemWithId, EmbeddingsProvider, IContextProvider } from "core";
 import { ExtensionIde } from "core/ide";
 import { getBasename } from "core/util";
 import { getContextItems } from "../../hooks/useContextProviders";
@@ -21,9 +21,9 @@ async function resolveEditorContent(
   editorState: JSONContent,
   contextProviders: IContextProvider[],
   embeddingsProvider?: EmbeddingsProvider
-): Promise<string> {
+): Promise<[ContextItemWithId[], string]> {
   let paragraphs = [];
-  let contextItems: MentionAttrs[] = [];
+  let contextItemAttrs: MentionAttrs[] = [];
   let slashCommand = undefined;
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
@@ -35,7 +35,7 @@ async function resolveEditorContent(
         continue;
       }
       paragraphs.push(text);
-      contextItems.push(...ctxItems);
+      contextItemAttrs.push(...ctxItems);
     } else if (p.type === "codeBlock") {
       if (!p.attrs.item.editing) {
         paragraphs.push(
@@ -48,13 +48,23 @@ async function resolveEditorContent(
   }
 
   let contextItemsText = "";
+  let contextItems: ContextItemWithId[] = [];
   const ide = new ExtensionIde();
-  for (const item of contextItems) {
+  for (const item of contextItemAttrs) {
     if (item.id.startsWith("/") || item.id.startsWith("\\")) {
       // This is a quick way to resolve @file references
       const basename = getBasename(item.id);
-      const contents = await ide.readFile(item.id);
-      contextItemsText += `\`\`\`title="${basename}"\n${contents}\n\`\`\`\n`;
+      const content = await ide.readFile(item.id);
+      contextItemsText += `\`\`\`title="${basename}"\n${content}\n\`\`\`\n`;
+      contextItems.push({
+        name: basename,
+        description: item.id,
+        content,
+        id: {
+          providerTitle: "file",
+          itemId: item.id,
+        },
+      });
     } else {
       const resolvedItems = await getContextItems(
         contextProviders,
@@ -65,6 +75,7 @@ async function resolveEditorContent(
           embeddingsProvider,
         }
       );
+      contextItems.push(...resolvedItems);
       for (const resolvedItem of resolvedItems) {
         contextItemsText += resolvedItem.content + "\n\n";
       }
@@ -80,7 +91,7 @@ async function resolveEditorContent(
     finalText = `${slashCommand} ${finalText}`;
   }
 
-  return finalText;
+  return [contextItems, finalText];
 }
 
 function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
