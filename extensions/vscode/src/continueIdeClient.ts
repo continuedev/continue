@@ -314,6 +314,52 @@ class IdeProtocolClient {
     const nameAndType = (
       await vscode.workspace.fs.readDirectory(uriFromFilePath(directory))
     ).filter(([name, type]) => {
+      const DEFAULT_IGNORE_FILETYPES = [
+        "DS_Store",
+        "-lock.json",
+        "lock",
+        "log",
+        "ttf",
+        "png",
+        "jpg",
+        "jpeg",
+        "gif",
+        "mp4",
+        "svg",
+        "ico",
+        "pdf",
+        "zip",
+        "gz",
+        "tar",
+        "dmg",
+        "tgz",
+        "rar",
+        "7z",
+        "exe",
+        "dll",
+        "obj",
+        "o",
+        "a",
+        "lib",
+        "so",
+        "dylib",
+        "ncb",
+        "sdf",
+        "woff",
+        "woff2",
+        "eot",
+        "cur",
+        "avi",
+        "mpg",
+        "mpeg",
+        "mov",
+        "mp3",
+        "mp4",
+        "mkv",
+        "mkv",
+        "webm",
+        "jar",
+      ];
       const DEFAULT_IGNORE_DIRS = [
         ".git",
         ".vscode",
@@ -333,11 +379,12 @@ class IdeProtocolClient {
         ".vscode-test",
         ".continue",
         "__pycache__",
-        // Files
-        ".DS_Store",
       ];
       if (
-        !DEFAULT_IGNORE_DIRS.some((dir) => name.split(path.sep).includes(dir))
+        !DEFAULT_IGNORE_DIRS.some((dir) =>
+          name.split(path.sep).includes(dir)
+        ) &&
+        !DEFAULT_IGNORE_FILETYPES.some((filetype) => name.endsWith(filetype))
       ) {
         return name;
       }

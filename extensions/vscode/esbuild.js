@@ -50,12 +50,6 @@ const { exec } = require("child_process");
           }
         }
       );
-    } else {
-      ncp.ncp("sync.node", "out/sync.node", (err) => {
-        if (err) {
-          return console.error(err);
-        }
-      });
     }
 
     fs.mkdirSync("out/node_modules", { recursive: true });

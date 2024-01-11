@@ -354,6 +354,7 @@ const GLOBAL_IGNORE_PATTERNS: &[&str] = &[
     "*.jpg",
     "*.jpeg",
     "*.gif",
+    "*.dmg",
     "*.mp4",
     "*.svg",
     "*.ico",
