@@ -1,7 +1,13 @@
 import { Dispatch } from "@reduxjs/toolkit";
 
 import { JSONContent } from "@tiptap/react";
-import { ChatHistory, ChatHistoryItem, ChatMessage, SlashCommand } from "core";
+import {
+  ChatHistory,
+  ChatHistoryItem,
+  ChatMessage,
+  LLMReturnValue,
+  SlashCommand,
+} from "core";
 import { ExtensionIde } from "core/ide";
 import { ideStreamRequest } from "core/ide/messaging";
 import { constructMessages } from "core/llm/constructMessages";
@@ -48,11 +54,20 @@ function useChatHandler(dispatch: Dispatch) {
   }, [active]);
 
   async function _streamNormalInput(messages: ChatMessage[]) {
-    for await (const update of defaultModel.streamChat(messages)) {
+    const gen = defaultModel.streamChat(messages);
+    let next = await gen.next();
+
+    while (!next.done) {
       if (!activeRef.current) {
         break;
       }
-      dispatch(streamUpdate(update.content));
+      dispatch(streamUpdate((next.value as ChatMessage).content));
+      next = await gen.next();
+    }
+
+    let returnVal = next.value as LLMReturnValue;
+    if (returnVal) {
+      dispatch(addLogs([[returnVal?.prompt, returnVal?.completion]]));
     }
   }
 
@@ -184,30 +199,17 @@ function useChatHandler(dispatch: Dispatch) {
       // Determine if the input is a slash command
       let commandAndInput = getSlashCommandForInput(content);
 
-      const logs = [];
-      const writeLog = async (log: string) => {
-        logs.push(log);
-      };
-      defaultModel.writeLog = writeLog;
-
       if (!commandAndInput) {
         await _streamNormalInput(messages);
       } else {
         const [slashCommand, commandInput] = commandAndInput;
         await _streamSlashCommand(messages, slashCommand, commandInput);
       }
-
-      const pairedLogs = [];
-      for (let i = 0; i < logs.length; i += 2) {
-        pairedLogs.push([logs[i], logs[i + 1]]);
-      }
-      dispatch(addLogs(pairedLogs));
     } catch (e) {
       console.log("Continue: error streaming response: ", e);
       errorPopup(`Error streaming response: ${e.message}`);
     } finally {
       dispatch(setInactive());
-      defaultModel.writeLog = undefined;
     }
   }
 

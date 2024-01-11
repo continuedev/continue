@@ -1,5 +1,9 @@
 import { Chunk } from "./index/chunk";
 
+export interface LLMReturnValue {
+  prompt: string;
+  completion: string;
+}
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
 
@@ -31,12 +35,12 @@ export interface ILLM extends LLMOptions {
   streamComplete(
     prompt: string,
     options?: LLMFullCompletionOptions
-  ): AsyncGenerator<string>;
+  ): AsyncGenerator<string, LLMReturnValue>;
 
   streamChat(
     messages: ChatMessage[],
     options?: LLMFullCompletionOptions
-  ): AsyncGenerator<ChatMessage>;
+  ): AsyncGenerator<ChatMessage, LLMReturnValue>;
 
   chat(
     messages: ChatMessage[],

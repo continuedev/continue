@@ -1,6 +1,6 @@
 import { FileEdit, RangeInFile } from "core";
-import { getConfigJsonPath } from "core/util/paths";
-import { readFileSync } from "fs";
+import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import { readFileSync, writeFileSync } from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
@@ -563,6 +563,12 @@ class IdeProtocolClient {
       type: "userInput",
       input,
     });
+  }
+
+  logDevData(tableName: string, data: any) {
+    const filepath: string = getDevDataFilePath(tableName);
+    const jsonLine = JSON.stringify(data);
+    writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
   }
 }
 

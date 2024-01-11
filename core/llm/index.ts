@@ -5,6 +5,7 @@ import {
   ILLM,
   LLMFullCompletionOptions,
   LLMOptions,
+  LLMReturnValue,
   ModelProvider,
   RequestOptions,
   TemplateType,
@@ -377,14 +378,22 @@ export abstract class BaseLLM implements ILLM {
     options: LLMFullCompletionOptions = {}
   ) {
     if (!this._shouldRequestDirectly()) {
-      for await (const content of ideStreamRequest("llmStreamComplete", {
+      const gen = ideStreamRequest("llmStreamComplete", {
         prompt,
         title: this.title,
         completionOptions: options,
-      })) {
-        yield content;
+      });
+
+      let next = await gen.next();
+      while (!next.done) {
+        yield next.value;
+        next = await gen.next();
       }
-      return;
+
+      return {
+        prompt: next.value?.prompt,
+        completion: next.value?.completion,
+      };
     }
 
     const { completionOptions, log, raw } =
@@ -417,6 +426,8 @@ export abstract class BaseLLM implements ILLM {
     }
 
     this._logTokensGenerated(completionOptions.model, completion);
+
+    return { prompt, completion };
   }
 
   async complete(prompt: string, options: LLMFullCompletionOptions = {}) {
@@ -470,16 +481,19 @@ export abstract class BaseLLM implements ILLM {
   async *streamChat(
     messages: ChatMessage[],
     options: LLMFullCompletionOptions = {}
-  ): AsyncGenerator<ChatMessage> {
+  ): AsyncGenerator<ChatMessage, LLMReturnValue> {
     if (!this._shouldRequestDirectly()) {
-      for await (const content of ideStreamRequest("llmStreamChat", {
+      const gen = ideStreamRequest("llmStreamChat", {
         messages,
         title: this.title,
         completionOptions: options,
-      })) {
-        yield { role: "user", content };
+      });
+      let next = await gen.next();
+      while (!next.done) {
+        yield { role: "user", content: next.value };
+        next = await gen.next();
       }
-      return;
+      return { prompt: next.value?.prompt, completion: next.value?.completion };
     }
 
     const { completionOptions, log, raw } =
@@ -525,6 +539,7 @@ export abstract class BaseLLM implements ILLM {
     }
 
     this._logTokensGenerated(completionOptions.model, completion);
+    return { prompt, completion };
   }
 
   protected async *_streamComplete(

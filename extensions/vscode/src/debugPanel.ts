@@ -1,9 +1,5 @@
 import { DiffLine, FileEdit, ModelDescription } from "core";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  getDevDataFilePath,
-} from "core/util/paths";
+import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import { readFileSync, writeFileSync } from "fs";
 import * as io from "socket.io-client";
 import * as vscode from "vscode";
@@ -433,9 +429,7 @@ export function getSidebarContent(
           break;
         }
         case "logDevData": {
-          const filepath: string = getDevDataFilePath(data.tableName);
-          const jsonLine = JSON.stringify(data.data);
-          writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
+          ideProtocolClient.logDevData(data.tableName, data.data);
           break;
         }
         case "addModel": {
@@ -483,24 +477,32 @@ export function getSidebarContent(
         }
         case "llmStreamComplete": {
           const model = await llmFromTitle(data.message.title);
-          for await (const update of model.streamComplete(
+          const gen = model.streamComplete(
             data.message.prompt,
             data.message.completionOptions
-          )) {
-            respond({ content: update });
+          );
+          let next = await gen.next();
+          while (!next.done) {
+            respond({ content: next.value });
+            next = await gen.next();
           }
-          respond({ done: true });
+
+          respond({ done: true, data: next.value });
           break;
         }
         case "llmStreamChat": {
           const model = await llmFromTitle(data.message.title);
-          for await (const update of model.streamChat(
+          const gen = model.streamChat(
             data.message.messages,
             data.message.completionOptions
-          )) {
-            respond({ content: update.content });
+          );
+          let next = await gen.next();
+          while (!next.done) {
+            respond({ content: next.value.content });
+            next = await gen.next();
           }
-          respond({ done: true });
+
+          respond({ done: true, data: next.value });
           break;
         }
         case "llmComplete": {
@@ -557,7 +559,7 @@ export function getSidebarContent(
             vscode.commands.executeCommand("workbench.action.toggleDevTools");
           }
         });
-      respond({ done: true });
+      respond({ done: true, data: {} });
     }
   });
 

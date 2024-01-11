@@ -66,7 +66,7 @@ export async function ideRequest(type: string, message: any): Promise<any> {
 export async function* ideStreamRequest(
   type: string,
   message: any
-): AsyncGenerator<any> {
+): AsyncGenerator<any, any> {
   const messageId = uuidv4();
 
   postToIde(type, { message, messageId });
@@ -74,12 +74,14 @@ export async function* ideStreamRequest(
   let buffer = "";
   let index = 0;
   let done = false;
+  let returnVal = undefined;
 
   const handler = (event: any) => {
     if (event.data.messageId === messageId) {
       if (event.data.message.done) {
         window.removeEventListener("message", handler);
         done = true;
+        returnVal = event.data.message.data;
       } else {
         buffer += event.data.message.content;
       }
@@ -101,4 +103,6 @@ export async function* ideStreamRequest(
     index = buffer.length;
     yield chunk;
   }
+
+  return returnVal;
 }
