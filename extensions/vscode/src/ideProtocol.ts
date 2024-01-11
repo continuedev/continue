@@ -41,7 +41,7 @@ async function buildConfigTs(browser: boolean) {
   } catch (e) {
     console.log(e);
     vscode.window.showErrorMessage(
-      "Build error. Please check your config.ts file: " + e
+      "Build error. Please check your ~/.continue/config.ts file: " + e
     );
     return undefined;
   }
