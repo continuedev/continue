@@ -170,7 +170,7 @@ const Layout = () => {
     };
   }, [location, navigate]);
 
-  const { progress: indexingProgress } = useLoadEmbeddings();
+  const { progress: indexingProgress, currentlyIndexing } = useLoadEmbeddings();
 
   return (
     <LayoutTopDiv>
@@ -240,6 +240,7 @@ const Layout = () => {
 
               {indexingProgress < 1 && (
                 <IndexingProgressBar
+                  currentlyIndexing={currentlyIndexing}
                   completed={indexingProgress * 100}
                   total={100}
                 />

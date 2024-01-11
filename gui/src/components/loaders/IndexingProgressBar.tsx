@@ -1,4 +1,4 @@
-import React from "react";
+import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
 
@@ -40,10 +40,17 @@ const P = styled.p`
 interface ProgressBarProps {
   completed: number;
   total: number;
+  currentlyIndexing?: string;
 }
 
-const IndexingProgressBar = ({ completed, total }: ProgressBarProps) => {
+const IndexingProgressBar = ({
+  completed,
+  total,
+  currentlyIndexing,
+}: ProgressBarProps) => {
   const fillPercentage = Math.min(100, Math.max(0, (completed / total) * 100));
+
+  const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
   return (
     <>
@@ -53,11 +60,13 @@ const IndexingProgressBar = ({ completed, total }: ProgressBarProps) => {
         </ProgressBarWrapper>
         <P>Indexing ({Math.trunc((completed / total) * 100)}%)</P>
       </GridDiv>
-      <StyledTooltip id="usage_progress_bar" place="bottom">
-        {
-          "Continue is indexing your codebase locally. You can find the index in ~/.continue/embeddings."
-        }
-      </StyledTooltip>
+      {tooltipPortalDiv &&
+        ReactDOM.createPortal(
+          <StyledTooltip id="usage_progress_bar" place="top">
+            Indexing {currentlyIndexing}
+          </StyledTooltip>,
+          tooltipPortalDiv
+        )}
     </>
   );
 };

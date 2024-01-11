@@ -1,14 +1,19 @@
 import { ExtensionIde } from "core/ide";
 import { Chunk } from "core/index/chunk";
 import { chunkDocument } from "core/index/chunk/chunk";
+import { getBasename } from "core/util";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { RootStore } from "../redux/store";
 
-const MAX_CHUNK_SIZE = 256;
+const MAX_CHUNK_SIZE = 512;
 
 function useLoadEmbeddings() {
   const [progress, setProgress] = useState(1);
+  const [currentlyIndexing, setCurrentlyIndexing] = useState<string | null>(
+    null
+  );
+
   const embeddingsProvider = useSelector(
     (store: RootStore) => store.state.config.embeddingsProvider
   );
@@ -29,6 +34,8 @@ function useLoadEmbeddings() {
     let done = 1;
 
     for (let [tag, filepath, hash] of filesToEmbed) {
+      setCurrentlyIndexing(getBasename(filepath));
+
       try {
         const contents = await ide.readFile(filepath);
         const chunkGenerator = await chunkDocument(
@@ -78,7 +85,7 @@ function useLoadEmbeddings() {
     loadEmbeddings();
   }, [embeddingsProvider, disableIndexing]);
 
-  return { progress };
+  return { progress, currentlyIndexing };
 }
 
 export default useLoadEmbeddings;

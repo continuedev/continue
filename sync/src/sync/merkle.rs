@@ -347,7 +347,7 @@ impl Tree {
 const GLOBAL_IGNORE_PATTERNS: &[&str] = &[
     "**/.DS_Store",
     "**/package-lock.json",
-    "**/yarn.lock",
+    "*.lock",
     "*.log",
     "*.ttf",
     "*.png",
