@@ -91,31 +91,56 @@ jobs:
           cd core
           npm ci --legacy-peer-deps
 
-      # 2.5. Pre package and download anything that needs to be built on Apple Silicon
+      # 2.5. Pre package
       - name: Prepare the extension
         run: |
           cd extensions/vscode
           npm run prepackage
 
+      # 2.75. download anything that needs to be built on ARM (non-Windows)
       - name: Make the out directory
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+        if: matrix.arch == 'arm64'
         run: |
           cd extensions/vscode
           mkdir out
+          cd out
+          mkdir node_modules
 
-      - name: Download node_modules for esbuild on Apple Silicon
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: curl -o extensions/vscode/out/node_modules.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/node_modules.zip
+      - name: Download esbuild on ARM
+        if: matrix.arch == 'arm64'
+        run: curl -o extensions/vscode/out/node_modules/@esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${{ matrix.os }}/esbuild.zip
 
-      - name: Unzip node_modules for esbuild on Apple Silicon
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+      - name: Unzip esbuild on ARM
+        if: matrix.arch == 'arm64'
         run: |
-          cd extensions/vscode/out
-          unzip node_modules.zip
+          cd extensions/vscode/out/node_modules
+          ls
+          unzip @esbuild.zip
 
-      - name: Remove node_modules.zip for esbuild on Apple Silicon
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: rm extensions/vscode/out/node_modules.zip
+      - name: Remove esbuild.zip on ARM
+        if: matrix.arch == 'arm64'
+        run: rm extensions/vscode/out/node_modules/esbuild.zip
+
+      # 2.875. download anything that needs to be built on ARM (Windows)
+      # - name: Make the out directory
+      #   if: matrix.arch == 'arm64'
+      #   run: |
+      #     cd extensions\vscode
+      #     mkdir out
+
+      # - name: Download node_modules for esbuild on ARM
+      #   if: matrix.arch == 'arm64'
+      #   run: Invoke-WebRequest -Uri https://continue-server-binaries.s3.us-west-1.amazonaws.com/${{ matrix.os }}/node_modules.zip -OutFile extensions\vscode\out\node_modules.zip
+
+      # - name: Unzip node_modules for esbuild on ARM
+      #   if: matrix.arch == 'arm64'
+      #   run: |
+      #     cd extensions\vscode\out
+      #     Expand-Archive -Path node_modules.zip -DestinationPath .
+
+      # - name: Remove node_modules.zip for esbuild on ARM
+      #   if: matrix.arch == 'arm64'
+      #   run: Remove-Item extensions\vscode\out\node_modules.zip
 
       # 3. Run tests for the extension
 

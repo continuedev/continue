@@ -18,12 +18,6 @@ const fs = require("fs");
     },
   });
 
-  // Return instead of copying if on ARM Mac
-  // This is an env var created in the GH Action
-  if (process.env.target === "darwin-arm64") {
-    return;
-  }
-
   fs.mkdirSync("out/node_modules", { recursive: true });
 
   ncp.ncp("node_modules/esbuild", "out/node_modules/esbuild", function (err) {
@@ -31,6 +25,17 @@ const fs = require("fs");
       return console.error(err);
     }
   });
+
+  // Return instead of copying if on ARM
+  // This is an env var created in the GH Action
+  // We will instead download the prebuilt binaries
+  if (
+    process.env.target === "darwin-arm64" ||
+    process.env.target === "linux-arm64" ||
+    process.env.target === "win-arm64"
+  ) {
+    return;
+  }
 
   ncp.ncp("node_modules/@esbuild", "out/node_modules/@esbuild", function (err) {
     if (err) {
