@@ -331,10 +331,10 @@ function TipTapEditor(props: TipTapEditorProps) {
                 item,
               },
             })
-            .focus("end")
             .run();
-          await new Promise((resolve) => setTimeout(resolve, 100));
-          editor.commands.focus("end");
+          setTimeout(() => {
+            editor.commands.focus("end");
+          }, 100);
         }
         setIgnoreHighlightedCode(false);
       }

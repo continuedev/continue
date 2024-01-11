@@ -4,7 +4,7 @@ import { getMetaKeyLabel } from "../util/util";
 const inlineTipDecoration = vscode.window.createTextEditorDecorationType({
   after: {
     contentText: `${getMetaKeyLabel()} M to select code, ${getMetaKeyLabel()} ⇧ L to edit`,
-    color: "#d3d3d340",
+    color: "#c0c0c060",
     margin: "0 0 0 6em",
   },
 });

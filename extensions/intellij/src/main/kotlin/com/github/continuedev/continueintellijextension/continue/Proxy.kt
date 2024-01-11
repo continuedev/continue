@@ -8,8 +8,9 @@ import io.ktor.server.response.*
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
 import io.ktor.server.plugins.cors.routing.*
-import io.ktor.util.Identity.decode
+import io.ktor.util.*
 import io.ktor.utils.io.jvm.javaio.*
+import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.apache.commons.io.IOUtils.byteArray
@@ -17,7 +18,9 @@ import java.io.ByteArrayOutputStream
 import java.net.URL
 
 fun startProxyServer() {
-    embeddedServer(Netty, port = 65433, module = Application::proxyServer).start(wait = true)
+    embeddedServer(Netty, port = 65433, module = Application::proxyServer, configure = {
+        responseWriteTimeoutSeconds = 7200
+    }).start(wait = true)
 }
 
 fun Application.proxyServer() {
@@ -70,7 +73,11 @@ fun Application.proxyServer() {
         }
 
         // Create OkHttpClient instance
-        val client = OkHttpClient()
+        val client = OkHttpClient.Builder()
+                .callTimeout(7200, java.util.concurrent.TimeUnit.SECONDS)
+                .connectTimeout(7200, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(7200, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
 
         val requestBody = body?.let { okhttp3.RequestBody.create(null, it) }
         val okhttpHeaders = okhttp3.Headers.Builder()

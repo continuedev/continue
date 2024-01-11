@@ -75,8 +75,6 @@ export async function* ideStreamRequest(
   let index = 0;
   let done = false;
 
-  let staleTimeout: any;
-
   const handler = (event: any) => {
     if (event.data.messageId === messageId) {
       if (event.data.message.done) {
@@ -85,11 +83,6 @@ export async function* ideStreamRequest(
       } else {
         buffer += event.data.message.content;
       }
-      clearTimeout(staleTimeout);
-      staleTimeout = setTimeout(() => {
-        console.warn("Stream request timed out.");
-        done = true;
-      }, 20_000);
     }
   };
   window.addEventListener("message", handler);
@@ -108,6 +101,4 @@ export async function* ideStreamRequest(
     index = buffer.length;
     yield chunk;
   }
-
-  clearTimeout(staleTimeout);
 }

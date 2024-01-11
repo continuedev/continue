@@ -138,7 +138,8 @@ class OpenAI extends BaseLLM {
         url = url.slice(0, -1);
       }
 
-      if (!url.endsWith("/v1")) {
+      if (!url.includes("/v1")) {
+        // includes instead of endsWith becuase DeepInfra uses /v1/openai/chat/completions
         url += "/v1";
       }
       return url + "/chat/completions";
