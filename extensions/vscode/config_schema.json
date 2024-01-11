@@ -1039,7 +1039,7 @@
           "type": "object",
           "properties": {
             "provider": {
-              "enum": ["transformers.js", "ollama"]
+              "enum": ["transformers.js", "ollama", "openai"]
             },
             "model": {
               "type": "string"

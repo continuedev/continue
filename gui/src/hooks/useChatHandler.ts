@@ -141,6 +141,7 @@ function useChatHandler(dispatch: Dispatch) {
       const [contextItems, content] = await resolveEditorContent(
         editorState,
         contextProviders,
+        defaultModel,
         embeddingsProvider
       );
       const message: ChatMessage = {

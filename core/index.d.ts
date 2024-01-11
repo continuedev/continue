@@ -57,6 +57,7 @@ export interface ContextProviderDescription {
 interface ContextProviderExtras {
   fullInput: string;
   embeddingsProvider?: EmbeddingsProvider;
+  llm: ILLM;
 }
 
 export interface CustomContextProvider {

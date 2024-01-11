@@ -59,6 +59,7 @@ declare global {
   interface ContextProviderExtras {
     fullInput: string;
     embeddingsProvider?: EmbeddingsProvider;
+    llm: ILLM;
   }
 
   export interface CustomContextProvider {
@@ -281,13 +282,18 @@ declare global {
     /**
      * Returns list of [tag, filepath, hash of contents] that need to be embedded
      */
-    getFilesToEmbed(): Promise<[string, string, string][]>;
+    getFilesToEmbed(providerId: string): Promise<[string, string, string][]>;
     sendEmbeddingForChunk(
       chunk: Chunk,
       embedding: number[],
       tags: string[]
     ): void;
-    retrieveChunks(v: number[], n: number, tags: string[]): Promise<Chunk[]>;
+    retrieveChunks(
+      v: number[],
+      n: number,
+      tags: string[],
+      providerId: string
+    ): Promise<Chunk[]>;
   }
 
   // Slash Commands
@@ -336,7 +342,8 @@ declare global {
     | "search"
     | "url"
     | "tree"
-    | "http";
+    | "http"
+    | "codebase";
 
   type TemplateType =
     | "llama2"
@@ -465,7 +472,7 @@ declare global {
   export interface EmbedOptions {
     apiBase?: string;
     apiKey?: string;
-    model: string;
+    model?: string;
   }
 
   export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -473,6 +480,7 @@ declare global {
   }
 
   export interface EmbeddingsProvider {
+    id: string;
     embed(chunks: string[]): Promise<number[][]>;
   }
 
