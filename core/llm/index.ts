@@ -22,6 +22,7 @@ import {
   deepseekTemplateMessages,
   llama2TemplateMessages,
   openchatTemplateMessages,
+  phi2TemplateMessages,
   phindTemplateMessages,
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
@@ -35,6 +36,7 @@ import {
   openchatEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,
+  simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
 } from "./templates/edit";
@@ -66,6 +68,10 @@ function autodetectTemplateType(
 
   if (lower.includes("dolphin")) {
     return "chatml";
+  }
+
+  if (lower.includes("phi2")) {
+    return "phi2";
   }
 
   if (lower.includes("phind")) {
@@ -115,6 +121,7 @@ function autodetectTemplateFunction(
     const mapping: Record<TemplateType, any> = {
       llama2: llama2TemplateMessages,
       alpaca: templateAlpacaMessages,
+      phi2: phi2TemplateMessages,
       phind: phindTemplateMessages,
       zephyr: zephyrTemplateMessages,
       anthropic: anthropicTemplateMessages,
@@ -144,6 +151,8 @@ function autodetectPromptTemplates(
 
   if (templateType === "phind") {
     editTemplate = phindEditPrompt;
+  } else if (templateType === "phi2") {
+    editTemplate = simplifiedEditPrompt;
   } else if (templateType === "zephyr") {
     editTemplate = zephyrEditPrompt;
   } else if (templateType === "llama2") {
