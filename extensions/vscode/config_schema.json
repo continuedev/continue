@@ -171,7 +171,7 @@
         },
         "promptTemplates": {
           "title": "Prompt Templates",
-          "description": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://continue.dev/docs/model-setup/configuration#customizing-the-edit-prompt) for an example.",
+          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://continue.dev/docs/model-setup/configuration#customizing-the-edit-prompt) for an example.",
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -218,7 +218,7 @@
         },
         "apiType": {
           "title": "Api Type",
-          "description": "OpenAI API type, either `openai` or `azure`",
+          "markdownDescription": "OpenAI API type, either `openai` or `azure`",
           "enum": ["openai", "azure"]
         },
         "apiVersion": {
@@ -358,7 +358,7 @@
                   { "type": "string" }
                 ]
               },
-              "description": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models)."
+              "markdownDescription": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models)."
             }
           }
         },
@@ -493,7 +493,7 @@
                   },
                   { "type": "string" }
                 ],
-                "description": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
+                "markdownDescription": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
               }
             }
           }
@@ -510,7 +510,7 @@
           "then": {
             "properties": {
               "model": {
-                "description": "Find the model name you want to use from DeepInfra [here](https://deepinfra.com/models?type=text-generation)."
+                "markdownDescription": "Find the model name you want to use from DeepInfra [here](https://deepinfra.com/models?type=text-generation)."
               }
             }
           }
@@ -594,7 +594,7 @@
                   },
                   { "type": "string" }
                 ],
-                "description": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
+                "markdownDescription": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
               }
             }
           }
@@ -795,7 +795,7 @@
                 "properties": {
                   "recap": {
                     "type": "boolean",
-                    "description": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit."
+                    "markdownDescription": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit."
                   }
                 }
               }
@@ -929,7 +929,7 @@
       "properties": {
         "allowAnonymousTelemetry": {
           "title": "Allow Anonymous Telemetry",
-          "description": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to False, we will not collect any data.",
+          "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data.",
           "default": true,
           "type": "boolean"
         },
@@ -1017,19 +1017,19 @@
         },
         "disableSummaries": {
           "title": "Disable Summaries",
-          "description": "If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
+          "markdownDescription": "If set to `true`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
           "default": false,
           "type": "boolean"
         },
         "disableIndexing": {
           "title": "Disable Indexing",
-          "description": "If set to `True`, Continue will not index the codebase. This is mainly used for debugging purposes.",
+          "markdownDescription": "If set to `true`, Continue will not index the codebase. This is mainly used for debugging purposes.",
           "default": false,
           "type": "boolean"
         },
         "disableSessionTitles": {
           "title": "Disable Session Titles",
-          "description": "If set to `True`, Continue will not make extra requests to the LLM to generate a summary title of each session.",
+          "markdownDescription": "If set to `true`, Continue will not make extra requests to the LLM to generate a summary title of each session.",
           "default": false,
           "type": "boolean"
         },
