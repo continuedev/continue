@@ -6,8 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Thanks for taking the time to report this bug! This will help us find the cause of the problem quickly with less back-and-forth required
-        ---
+        Thanks for taking the time to report this bug! This will help us find the cause of the problem quickly with less back-and-forth required.
   - type: checkboxes
     attributes:
       label: Before submitting your bug report
@@ -22,15 +21,15 @@ body:
     attributes:
       label: Relevant environment info
       description: |
-        - **OS**: e.g. macOS 13.5.2
-        - **Continue**: e.g. 0.0.398
-        - **Python**: e.g. 3.8.5
-        - **IDE**: e.g. VSCode 1.82.2
-        - **Ollama**: e.g. v0.0.21
-        - …
+        - **OS**: e.g. macOS 14.2.1
+        - **Continue**: e.g. v0.9.4
+        - **IDE**: e.g. VSCode 1.85.1
+        - Include also your LLM Model if it is relevant to your issue
+          - **Model**: e.g. Ollama v0.1.19
       value: |
         - OS:
         - Continue:
+        - IDE:
       render: Markdown
     validations:
       required: false
@@ -59,19 +58,5 @@ body:
     attributes:
       label: Log output
       description: |
-        To get the Continue server logs:
-          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (macOS) / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (Windows)
-          2. Search for and then select "Continue: View Continue Server Logs"
-          3. Scroll to the bottom of `continue.log` and copy the last 100 lines or so
-
-        To get the VS Code console logs:
-          1. <kbd>⌘ Command</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (macOS) / <kbd>⌃ Control</kbd> + <kbd>⇧ Shift</kbd> + <kbd>P</kbd> (Windows)
-          2. Search for and then select "Developer: Toggle Developer Tools"
-          3. Select Console
-          4. Read the console logs
-
-        If the problem is related to LLM prompting:
-          1. Hover the problematic response in the Continue UI
-          2. Click the "magnifying glass" icon
-          3. Copy the contents of the `continue_logs.txt` file that opens
+        Please refer to the [troubleshooting guide](https://continue.dev/docs/troubleshooting) in the Continue Docs for instructions on obtaining the logs. Copy either the relevant lines or the last 100 lines or so.
       render: Shell
