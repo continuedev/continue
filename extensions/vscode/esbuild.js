@@ -34,6 +34,7 @@ const fs = require("fs");
     process.env.target === "linux-arm64" ||
     process.env.target === "win-arm64"
   ) {
+    console.log("Skipping copying binaries");
     return;
   }
 
