@@ -796,6 +796,10 @@
                   "recap": {
                     "type": "boolean",
                     "markdownDescription": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit."
+                  },
+                  "tokenLimit": {
+                    "type": "integer",
+                    "markdownDescription": "By default, Continue doesn't let you edit extremely large ranges (beyond 1,200 tokens), because the LLM is unlikely to succeed. But if you would like to override this limit with the understanding of possible failure you may do so here."
                   }
                 }
               }
