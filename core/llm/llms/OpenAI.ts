@@ -72,7 +72,7 @@ class OpenAI extends BaseLLM {
       if (url.endsWith("/")) {
         url = url.slice(0, -1);
       }
-      if (!url.endsWith("/v1")) {
+      if (!url.endsWith("/v1") && !url.includes("api.perplexity.ai")) {
         url += "/v1";
       }
       return url + "/completions";
@@ -138,7 +138,7 @@ class OpenAI extends BaseLLM {
         url = url.slice(0, -1);
       }
 
-      if (!url.includes("/v1")) {
+      if (!url.includes("/v1") && !url.includes("api.perplexity.ai")) {
         // includes instead of endsWith becuase DeepInfra uses /v1/openai/chat/completions
         url += "/v1";
       }
