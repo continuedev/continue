@@ -108,7 +108,7 @@ export function getTsConfigPath(): string {
             moduleResolution: "Node",
             noEmit: false,
             noEmitOnError: false,
-            outFile: "./config.js",
+            outFile: "./out/config.js",
             typeRoots: ["./node_modules/@types", "./types"],
           },
           include: ["./config.ts"],
