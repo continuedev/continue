@@ -362,7 +362,7 @@ type TemplateType =
 
 type ModelProvider =
   | "openai"
-  | "openai-free-trial"
+  | "free-trial"
   | "anthropic"
   | "together"
   | "ollama"

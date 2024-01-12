@@ -468,7 +468,7 @@ export function getSidebarContent(
         case "addOpenAIKey": {
           const configJson = editConfigJson((config) => {
             config.models = config.models.map((m: ModelDescription) => {
-              if (m.provider === "openai-free-trial") {
+              if (m.provider === "free-trial") {
                 m.apiKey = data.key;
                 m.provider = "openai";
               }

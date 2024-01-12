@@ -309,6 +309,11 @@ class IdeProtocolClient (
                             }
                         }
 
+                        migrate("renameFreeTrialProvider") {
+                            config = config.replace("openai-free-trial", "free-trial");
+                            File(configPath).writeText(config)
+                        }
+
                         val mapType = object : TypeToken<Map<String, Any>>() {}.type
                         val parsed: Map<String, Any> = Gson().fromJson(config, mapType)
                         respond(parsed)
@@ -400,7 +405,7 @@ class IdeProtocolClient (
                             val key = data["key"] as String
                             var models = config["models"] as MutableList<MutableMap<String, Any>>
                             models = models.map {
-                                if (it["provider"] == "openai-free-trial") {
+                                if (it["provider"] == "free-trial") {
                                     it["apiKey"] = key
                                     it["provider"] = "openai"
                                     it

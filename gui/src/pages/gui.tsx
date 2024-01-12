@@ -246,7 +246,7 @@ function GUI(props: GUIProps) {
   const sendInput = useCallback(
     (editorState: JSONContent) => {
       if (
-        defaultModel.providerName === "openai-free-trial" &&
+        defaultModel.providerName === "free-trial" &&
         defaultModel?.apiKey === ""
       ) {
         const ftc = localStorage.getItem("ftc");

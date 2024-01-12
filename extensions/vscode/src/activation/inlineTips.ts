@@ -47,7 +47,7 @@ const emptyFileTooltipDecoration = vscode.window.createTextEditorDecorationType(
       contentText: `Use ${getMetaKeyLabel()} ⇧ L to generate code`,
       color: "#888",
       margin: "2em 0 0 0",
-      fontWeight: "bold",
+      fontStyle: "italic",
     },
   }
 );

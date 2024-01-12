@@ -268,12 +268,13 @@ const wizardCoder: ModelPackage = {
 const phindCodeLlama: ModelPackage = {
   title: "Phind CodeLlama (34b)",
   description: "A finetune of CodeLlama by Phind",
+  icon: "meta.png",
   params: {
     title: "Phind CodeLlama",
     model: "phind-codellama-34b",
     contextLength: 2048,
   },
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate", "freetrial"],
 };
 
 const mistral: ModelPackage = {
@@ -371,7 +372,7 @@ const gemini: ModelPackage = {
     apiKey: "<API_KEY>",
   },
   icon: "gemini.png",
-  providerOptions: ["palm"],
+  providerOptions: ["palm", "freetrial"],
 };
 
 const zephyr: ModelPackage = {
@@ -763,17 +764,19 @@ After it's up and running, you can start using Continue.`,
     packages: osModels,
   },
   freetrial: {
-    title: "OpenAI limited free trial",
-    provider: "openai-free-trial",
+    title: "Continue limited free trial",
+    provider: "free-trial",
     description:
-      "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key",
+      "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Google, or Together using our API key",
     longDescription:
-      'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=""` or select another model provider.',
+      'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Google, or Together using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=""` or select another model provider.',
     icon: "openai.png",
     tags: [ModelProviderTag.Free],
     packages: [
       { ...gpt4, title: "GPT-4 (trial)" },
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
+      { ...phindCodeLlama, title: "Phind CodeLlama (trial)" },
+      { ...gemini, title: "Gemini Pro (trial)" },
     ],
     collectInputFor: [...completionParamsInputs],
   },

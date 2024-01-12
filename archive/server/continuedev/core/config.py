@@ -198,7 +198,7 @@ class SerializedContinueConfig(BaseModel):
         default=[
             ModelDescription(
                 title="GPT-4 (trial)",
-                provider="openai-free-trial",
+                provider="free-trial",
                 model="gpt-4",
                 api_key="",
             )

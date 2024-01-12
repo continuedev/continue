@@ -96,7 +96,7 @@
           "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
           "enum": [
             "openai",
-            "openai-free-trial",
+            "free-trial",
             "openai-aiohttp",
             "anthropic",
             "together",
@@ -187,11 +187,7 @@
           ]
         }
       },
-      "required": [
-        "title",
-        "provider",
-        "model"
-      ]
+      "required": ["title", "provider", "model"]
     }
   }
 }
