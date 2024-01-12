@@ -1,5 +1,5 @@
+import { Chunk } from "core";
 import { ExtensionIde } from "core/ide";
-import { Chunk } from "core/index/chunk";
 import { chunkDocument } from "core/index/chunk/chunk";
 import { getBasename } from "core/util";
 import { useEffect, useState } from "react";

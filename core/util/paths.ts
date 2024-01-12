@@ -61,13 +61,30 @@ export function getConfigTsPath(): string {
   if (!fs.existsSync(corePath)) {
     fs.mkdirSync(corePath);
   }
+  const packageJsonPath = path.join(getContinueGlobalPath(), "package.json");
+  if (!fs.existsSync(packageJsonPath)) {
+    fs.writeFileSync(
+      packageJsonPath,
+      JSON.stringify({
+        name: "continue-config",
+        version: "1.0.0",
+        description: "My Continue Configuration",
+        main: "config.js",
+      })
+    );
+  }
+
   fs.writeFileSync(path.join(corePath, "index.d.ts"), Types);
   return p;
 }
 
 export function getConfigJsPath(node: boolean): string {
   // Do not create automatically
-  return path.join(getContinueGlobalPath(), `config${node ? ".node" : ""}.js`);
+  return path.join(
+    getContinueGlobalPath(),
+    "out",
+    `config${node ? ".node" : ""}.js`
+  );
 }
 
 export function getTsConfigPath(): string {

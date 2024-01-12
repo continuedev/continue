@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import { DiffLine, IDE, SerializedContinueConfig } from "..";
-import { Chunk } from "../index/chunk";
+import { Chunk } from "../index";
 import {
   getConfigJsonPath,
   getConfigTsPath,

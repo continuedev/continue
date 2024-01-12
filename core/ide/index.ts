@@ -1,6 +1,6 @@
-import { DiffLine } from "..";
+import { Chunk, DiffLine } from "..";
 import { IDE, SerializedContinueConfig } from "../index";
-import { Chunk } from "../index/chunk";
+
 import { ideRequest } from "./messaging";
 async function r(messageType: string, options: any = {}) {
   return await ideRequest(messageType, options);

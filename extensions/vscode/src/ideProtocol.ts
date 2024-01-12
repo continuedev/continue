@@ -13,12 +13,17 @@ import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 
 import * as child_process from "child_process";
-import { ContinueConfig, DiffLine, IDE, SerializedContinueConfig } from "core";
+import {
+  Chunk,
+  ContinueConfig,
+  DiffLine,
+  IDE,
+  SerializedContinueConfig,
+} from "core";
 import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
-import { Chunk } from "core/index/chunk";
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import mergeJson from "./util/merge";
 import { getExtensionUri } from "./util/vscode";

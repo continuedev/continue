@@ -1,5 +1,5 @@
 import Parser, { SyntaxNode } from "web-tree-sitter";
-import { ChunkWithoutID } from ".";
+import { ChunkWithoutID } from "../..";
 import { countTokens } from "../../llm/countTokens";
 
 export const fileExtensionToLanguage: { [key: string]: string } = {

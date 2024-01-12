@@ -1,5 +1,6 @@
 import { BaseContextProvider } from "..";
 import {
+  Chunk,
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
@@ -7,7 +8,6 @@ import {
   ModelProvider,
 } from "../..";
 import { ExtensionIde } from "../../ide";
-import { Chunk } from "../../index/chunk";
 import { getBasename } from "../../util";
 
 const RERANK_PROMPT = (
