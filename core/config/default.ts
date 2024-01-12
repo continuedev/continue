@@ -4,13 +4,23 @@ const defaultConfig: SerializedContinueConfig = {
   models: [
     {
       title: "GPT-4",
-      provider: "openai-free-trial",
+      provider: "free-trial",
       model: "gpt-4",
     },
     {
       title: "GPT-3.5-Turbo",
-      provider: "openai-free-trial",
+      provider: "free-trial",
       model: "gpt-3.5-turbo",
+    },
+    {
+      title: "Phind CodeLlama",
+      provider: "free-trial",
+      model: "phind-codellama-34b",
+    },
+    {
+      title: "Gemini Pro",
+      provider: "free-trial",
+      model: "gemini-pro",
     },
   ],
   slashCommands: [

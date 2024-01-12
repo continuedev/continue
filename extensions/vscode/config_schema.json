@@ -99,7 +99,7 @@
           "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
           "enum": [
             "openai",
-            "openai-free-trial",
+            "free-trial",
             "anthropic",
             "together",
             "ollama",
@@ -366,7 +366,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai-free-trial"]
+                "enum": ["free-trial"]
               }
             },
             "required": ["provider"]
@@ -374,7 +374,13 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["gpt-3.5-turbo", "gpt-4"]
+                "enum": [
+                  "gpt-3.5-turbo",
+                  "gpt-4",
+                  "phind-codellama-34b",
+                  "gemini-pro",
+                  "mistral-medium"
+                ]
               }
             }
           }
@@ -942,7 +948,7 @@
           "default": [
             {
               "title": "GPT-4 (trial)",
-              "provider": "openai-free-trial",
+              "provider": "free-trial",
               "model": "gpt-4",
               "apiKey": ""
             }

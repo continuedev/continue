@@ -19,12 +19,12 @@ default_config_json = """\
   "models": [
     {
       "title": "GPT-4",
-      "provider": "openai-free-trial",
+      "provider": "free-trial",
       "model": "gpt-4"
     },
     {
       "title": "GPT-3.5-Turbo",
-      "provider": "openai-free-trial",
+      "provider": "free-trial",
       "model": "gpt-3.5-turbo"
     }
   ],

@@ -122,7 +122,7 @@ def autodetect_prompt_templates(
 
 ModelProvider = Literal[
     "openai",
-    "openai-free-trial",
+    "free-trial",
     "openai-aiohttp",
     "anthropic",
     "together",
@@ -139,7 +139,7 @@ ModelProvider = Literal[
 
 MODEL_PROVIDER_TO_MODEL_CLASS = {
     "openai": "OpenAI",
-    "openai-free-trial": "OpenAIFreeTrial",
+    "free-trial": "OpenAIFreeTrial",
     "openai-aiohttp": "GGML",
     "anthropic": "AnthropicLLM",
     "together": "TogetherLLM",
@@ -156,7 +156,7 @@ MODEL_PROVIDER_TO_MODEL_CLASS = {
 
 MODEL_CLASS_TO_MODEL_PROVIDER: Dict[str, ModelProvider] = {
     "OpenAI": "openai",
-    "OpenAIFreeTrial": "openai-free-trial",
+    "OpenAIFreeTrial": "free-trial",
     "AnthropicLLM": "anthropic",
     "TogetherLLM": "together",
     "Ollama": "ollama",

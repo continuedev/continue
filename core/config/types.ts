@@ -362,7 +362,7 @@ declare global {
 
   type ModelProvider =
     | "openai"
-    | "openai-free-trial"
+    | "free-trial"
     | "anthropic"
     | "together"
     | "ollama"

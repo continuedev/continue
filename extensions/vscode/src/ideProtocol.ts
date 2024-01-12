@@ -106,6 +106,11 @@ class VsCodeIde implements IDE {
         );
       });
 
+      migrate("renameFreeTrialProvider", () => {
+        contents = contents.replace(/openai-free-trial/g, "free-trial");
+        fs.writeFileSync(configPath, contents, "utf8");
+      });
+
       for (const workspacePath of await this.getWorkspaceDirs()) {
         const continueRcPath = path.join(workspacePath, ".continuerc.json");
         if (fs.existsSync(continueRcPath)) {

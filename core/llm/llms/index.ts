@@ -20,6 +20,7 @@ import Llamafile from "./Llamafile";
 import Mistral from "./Mistral";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
+import OpenAIFreeTrial from "./OpenAIFreeTrial";
 import Replicate from "./Replicate";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
@@ -89,6 +90,7 @@ const LLMs = [
   Mistral,
   Bedrock,
   DeepInfra,
+  OpenAIFreeTrial,
 ];
 
 export async function llmFromDescription(

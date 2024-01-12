@@ -2,7 +2,7 @@
   "title": "ModelProvider",
   "enum": [
     "openai",
-    "openai-free-trial",
+    "free-trial",
     "openai-aiohttp",
     "anthropic",
     "together",
