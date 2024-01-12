@@ -53,16 +53,15 @@ export function getConfigTsPath(): string {
     );
   }
 
-  const node_modules_path = path.join(getContinueGlobalPath(), "node_modules");
-  if (!fs.existsSync(node_modules_path)) {
-    fs.mkdirSync(node_modules_path);
-    fs.mkdirSync(path.join(node_modules_path, "@types"));
-    fs.mkdirSync(path.join(node_modules_path, "@types/core"));
+  const typesPath = path.join(getContinueGlobalPath(), "types");
+  if (!fs.existsSync(typesPath)) {
+    fs.mkdirSync(typesPath);
   }
-  fs.writeFileSync(
-    path.join(node_modules_path, "@types/core", "index.d.ts"),
-    Types
-  );
+  const corePath = path.join(typesPath, "core");
+  if (!fs.existsSync(corePath)) {
+    fs.mkdirSync(corePath);
+  }
+  fs.writeFileSync(path.join(corePath, "index.d.ts"), Types);
   return p;
 }
 
@@ -93,6 +92,7 @@ export function getTsConfigPath(): string {
             noEmit: false,
             noEmitOnError: false,
             outFile: "./config.js",
+            typeRoots: ["./node_modules/@types", "./types"],
           },
           include: ["./config.ts"],
         },

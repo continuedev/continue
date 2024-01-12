@@ -1,4 +1,4 @@
-import { Chunk, ChunkWithoutID } from ".";
+import { Chunk, ChunkWithoutID } from "../..";
 import { basicChunker } from "./basic";
 import { codeChunker, fileExtensionToLanguage } from "./code";
 
