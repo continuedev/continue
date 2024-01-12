@@ -59,7 +59,7 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "huggingface-inference-api",
   "huggingface-tgi",
   "mistral",
-  "openai-free-trial",
+  "free-trial",
   "replicate",
   "together",
 ];

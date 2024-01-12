@@ -96,7 +96,7 @@
           "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
           "enum": [
             "openai",
-            "openai-free-trial",
+            "free-trial",
             "openai-aiohttp",
             "anthropic",
             "together",
@@ -187,11 +187,7 @@
           ]
         }
       },
-      "required": [
-        "title",
-        "provider",
-        "model"
-      ]
+      "required": ["title", "provider", "model"]
     },
     "ModelRoles": {
       "title": "ModelRoles",
@@ -218,9 +214,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "default"
-      ]
+      "required": ["default"]
     },
     "SlashCommand": {
       "title": "SlashCommand",
@@ -262,11 +256,7 @@
           "type": "object"
         }
       },
-      "required": [
-        "name",
-        "description",
-        "step"
-      ]
+      "required": ["name", "description", "step"]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -285,11 +275,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name",
-        "prompt",
-        "description"
-      ]
+      "required": ["name", "prompt", "description"]
     },
     "ContextProviderWithParams": {
       "title": "ContextProviderWithParams",
@@ -315,9 +301,7 @@
           "type": "object"
         }
       },
-      "required": [
-        "name"
-      ]
+      "required": ["name"]
     },
     "RetrievalSettings": {
       "title": "RetrievalSettings",
@@ -407,7 +391,7 @@
           "default": [
             {
               "title": "GPT-4 (trial)",
-              "provider": "openai-free-trial",
+              "provider": "free-trial",
               "model": "gpt-4",
               "api_key": "",
               "api_base": null,

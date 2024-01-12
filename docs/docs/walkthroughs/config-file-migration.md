@@ -90,19 +90,19 @@ If you were previously using the `PromptTemplate` class in your `config.py` to w
 
 After the "Full example" these examples will only show the relevant portion of the config file.
 
-### Full example, with OpenAI Free Trial
+### Full example, with Free Trial Models
 
 ```json
 {
   "models": [
     {
       "title": "GPT-4",
-      "provider": "openai-free-trial",
+      "provider": "free-trial",
       "model": "gpt-4"
     },
     {
       "title": "GPT-3.5-Turbo",
-      "provider": "openai-free-trial",
+      "provider": "free-trial",
       "model": "gpt-3.5-turbo"
     }
   ],
@@ -256,7 +256,7 @@ The `completions_options` for each model will override the top-level `completion
   "models": [
     {
       "title": "GPT-4",
-      "provider": "openai-free-trial",
+      "provider": "free-trial",
       "model": "gpt-4",
       "completion_options": {
         "top_p": 0.9,
@@ -266,7 +266,7 @@ The `completions_options` for each model will override the top-level `completion
     },
     {
       "title": "GPT-3.5-Turbo",
-      "provider": "openai-free-trial",
+      "provider": "free-trial",
       "model": "gpt-3.5-turbo"
     }
   ],

@@ -764,7 +764,7 @@ After it's up and running, you can start using Continue.`,
   },
   freetrial: {
     title: "OpenAI limited free trial",
-    provider: "openai-free-trial",
+    provider: "free-trial",
     description:
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key",
     longDescription:

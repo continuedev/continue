@@ -400,7 +400,7 @@ class IdeProtocolClient (
                             val key = data["key"] as String
                             var models = config["models"] as MutableList<MutableMap<String, Any>>
                             models = models.map {
-                                if (it["provider"] == "openai-free-trial") {
+                                if (it["provider"] == "free-trial") {
                                     it["apiKey"] = key
                                     it["provider"] = "openai"
                                     it

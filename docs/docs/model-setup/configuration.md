@@ -14,12 +14,12 @@ In `config.json`, you'll find the `models` property, a list of the models that y
 "models": [
     {
         "title": "Smart Model",
-        "provider": "openai-free-trial",
+        "provider": "free-trial",
         "model": "gpt-4"
     },
     {
         "title": "Fast Model",
-        "provider": "openai-free-trial",
+        "provider": "free-trial",
         "model": "gpt-3.5-turbo"
     }
 ]
