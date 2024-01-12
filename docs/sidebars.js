@@ -48,7 +48,6 @@ const sidebars = {
       collapsed: true,
       items: [
         "walkthroughs/codellama",
-        "walkthroughs/manually-run-continue",
         "walkthroughs/running-continue-without-internet",
         "walkthroughs/codebase-embeddings",
         "walkthroughs/config-file-migration",
