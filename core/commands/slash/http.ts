@@ -5,7 +5,10 @@ const HttpSlashCommand: SlashCommand = {
   name: "http",
   description: "Call an HTTP endpoint to serve response",
   run: async function* ({ ide, llm, input, params }) {
-    const url = params.url;
+    const url = params?.url;
+    if (!url) {
+      throw new Error("URL is not defined in params");
+    }
     const response = await fetch(url, {
       method: "POST",
       headers: {
