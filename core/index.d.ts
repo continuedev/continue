@@ -318,7 +318,7 @@ export interface ContinueSDK {
   addContextItem: (item: ContextItemWithId) => void;
   history: ChatMessage[];
   input: string;
-  params?: any;
+  params?: { [key: string]: any } | undefined;
   contextItems: ContextItemWithId[];
 }
 

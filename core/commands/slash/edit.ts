@@ -13,7 +13,7 @@ Example:
 class Database:
     def __init__(self):
         self._data = {{}}
-    
+
     def get(self, key):
         return self._data[key]
 
