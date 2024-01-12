@@ -226,7 +226,7 @@ const EditSlashCommand: SlashCommand = {
       fullFileContents,
       llm,
       input,
-      params.tokenLimit
+      params?.tokenLimit
     );
     const [dedentedContents, commonWhitespace] =
       dedentAndGetCommonWhitespace(contents);
