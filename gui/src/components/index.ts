@@ -1,6 +1,7 @@
 import { Tooltip } from "react-tooltip";
 import styled, { keyframes } from "styled-components";
 import { getFontSize } from "../util";
+import { isJetBrains } from "../util/ide";
 
 export const VSC_SECONDARY_DARK_VAR = "--vscode-input-background";
 export const VSC_BACKGROUND_VAR = "--vscode-sideBar-background";
@@ -30,9 +31,19 @@ export const vscEditorBackground = `var(${VSC_EDITOR_BACKGROUND_VAR}, ${VSC_BACK
 
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {
-    const cached = localStorage.getItem(colorVar);
-    if (cached) {
-      document.body.style.setProperty(colorVar, cached);
+    if (isJetBrains()) {
+      const cached = localStorage.getItem(colorVar);
+      if (cached) {
+        document.body.style.setProperty(colorVar, cached);
+      }
+    }
+
+    // Remove alpha channel from colors
+    const value = getComputedStyle(document.documentElement).getPropertyValue(
+      colorVar
+    );
+    if (colorVar.startsWith("#") && value.length > 7) {
+      document.body.style.setProperty(colorVar, value.slice(0, 7));
     }
   }
 }
