@@ -2,8 +2,8 @@ import { BaseLLM } from "..";
 import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
 import { streamResponse } from "../stream";
 
-const SERVER_URL = "http://localhost:3000";
-// const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
+// const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = "https://node-proxy-server-l6vsfbzhba-uw.a.run.app";
 
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
