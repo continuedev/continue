@@ -52,7 +52,7 @@ We also support other methods of generating embeddings, which can be configured 
 ```json title="~/.continue/config.json"
 {
   "embeddingsProvider": {
-    "name": "transformers.js"
+    "provider": "transformers.js"
   }
 }
 ```
@@ -64,7 +64,7 @@ We also support other methods of generating embeddings, which can be configured 
 ```json title="~/.continue/config.json"
 {
   "embeddingsProvider": {
-    "name": "ollama",
+    "provider": "ollama",
     "model": "codellama:7b",
     "apiBase": "http://localhost:11434" // optional, defaults to http://localhost:11434
   }
@@ -76,7 +76,7 @@ We also support other methods of generating embeddings, which can be configured 
 ```json title="~/.continue/config.json"
 {
   "embeddingsProvider": {
-    "name": "openai",
+    "provider": "openai",
     "model": "text-embedding-ada-002", // optional, defaults to "text-embedding-ada-002"
     "apiBase": "<your custom OpenAI-compatible endpoint>" // optional, defaults to OpenAI's API
   }
