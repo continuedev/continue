@@ -8,6 +8,7 @@ from ...libs.llm.prompts.chat import (
     phind_template_messages,
     template_alpaca_messages,
     zephyr_template_messages,
+    neuralchat_template_messages,
 )
 from ...libs.llm.prompts.edit import (
     alpaca_edit_prompt,
@@ -16,6 +17,7 @@ from ...libs.llm.prompts.edit import (
     phind_edit_prompt,
     simplest_edit_prompt,
     zephyr_edit_prompt,
+    neuralchat_edit_prompt,
 )
 
 STEP_NAMES = [
@@ -43,7 +45,7 @@ StepName = Literal[
 ]
 
 TemplateType = Literal[
-    "llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "deepseek"
+    "llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "deepseek", "neural-chat"
 ]
 
 
@@ -73,6 +75,9 @@ def autodetect_template_type(model: str) -> Optional[TemplateType]:
     if "deepseek" in lower:
         return "deepseek"
 
+    if "neural-chat" in lower:
+        return "neural-chat"
+
     return "chatml"
 
 
@@ -88,6 +93,7 @@ def autodetect_template_function(
             "anthropic": anthropic_template_messages,
             "chatml": chatml_template_messages,
             "deepseek": deepseek_template_messages,
+            "neural-chat": neuralchat_template_messages
         }
         return mapping[template_type]
     return None
@@ -111,6 +117,8 @@ def autodetect_prompt_templates(
         edit_template = alpaca_edit_prompt
     elif template_type == "deepseek":
         edit_template = deepseek_edit_prompt
+    elif template_type == "neural-chat":
+        edit_template = neuralchat_edit_prompt
     elif template_type is not None:
         edit_template = simplest_edit_prompt
 
@@ -194,6 +202,7 @@ MODELS = [
     "deepseek-1b",
     "deepseek-7b",
     "deepseek-33b",
+    "neural-chat-7b"
     # Anthropic
     "claude-2",
     # Google PaLM
@@ -224,6 +233,7 @@ ModelName = Literal[
     "deepseek-1b",
     "deepseek-7b",
     "deepseek-33b",
+    "neural-chat-7b",
     # Anthropic
     "claude-2",
     # Google PaLM

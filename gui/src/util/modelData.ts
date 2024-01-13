@@ -411,6 +411,18 @@ const codeup: ModelPackage = {
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
+const neuralChat: ModelPackage = {
+  title: "Neural-Chat-v3-3 (7b)",
+  description:
+    "A fine-tuned 7B parameter LLM on the Intel Gaudi 2 processor from the Intel/neural-chat-7b-v3-1 on the meta-math/MetaMathQA dataset.",
+  params: {
+    title: "NeuralChat",
+    model: "neural-chat-7b",
+    contextLength: 2048,
+  },
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
+};
+
 const osModels = [
   codeLlamaInstruct,
   llama2Chat,
@@ -419,6 +431,7 @@ const osModels = [
   mistral,
   codeup,
   zephyr,
+  neuralChat,
 ];
 
 const gpt4turbo: ModelPackage = {

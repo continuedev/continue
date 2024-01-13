@@ -22,6 +22,7 @@ import {
   chatmlTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
+  neuralChatTemplateMessages,
   openchatTemplateMessages,
   phindTemplateMessages,
   templateAlpacaMessages,
@@ -38,6 +39,7 @@ import {
   simplestEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
+  neuralChatEditPrompt,
 } from "./templates/edit";
 
 const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
@@ -98,6 +100,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "openchat";
   }
 
+  if (lower.includes("neural-chat")) {
+    return "neural-chat";
+  }
+
   return "chatml";
 }
 
@@ -126,6 +132,7 @@ function autodetectTemplateFunction(
       deepseek: deepseekTemplateMessages,
       openchat: openchatTemplateMessages,
       "xwin-coder": xWinCoderTemplateMessages,
+      "neural-chat": neuralChatTemplateMessages,
       none: null,
     };
 
@@ -162,6 +169,8 @@ function autodetectPromptTemplates(
     editTemplate = openchatEditPrompt;
   } else if (templateType === "xwin-coder") {
     editTemplate = xWinCoderEditPrompt;
+  } else if (templateType === "neural-chat") {
+    editTemplate = neuralChatEditPrompt;
   } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }

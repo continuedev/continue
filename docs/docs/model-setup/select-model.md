@@ -30,6 +30,7 @@ Models available for configuration in the GUI:
 - [Llama2-Chat-70B](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#7-llama2)
 - [CodeUp-13B](https://huggingface.co/deepse/CodeUp-Llama-2-13b-chat-hf)
 - [Zephyr-7B](https://huggingface.co/huggingfaceh4/zephyr-7b-beta)
+- [Neural-Chat-7B](https://huggingface.co/Intel/neural-chat-7b-v3-3)
 
 **You can also use other open-source models**, but you will need to manually add them to your `config.json`.
 

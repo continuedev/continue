@@ -109,6 +109,20 @@ def phind_template_messages(msgs: List[ChatMessage]) -> str:
 
     return prompt
 
+def neuralchat_template_messages(msgs: List[ChatMessage]) -> str:
+    prompt = ""
+
+    if msgs[0].role == "system":
+        prompt += f"### System:\n{msgs[0].content}\n"
+        msgs.pop(0)
+
+    for msg in msgs:
+        prompt += "### User:\n" if msg.role == "user" else "### Assistant:\n"
+        prompt += f"{msg.content}\n"
+
+    prompt += "### Assistant:\n"
+
+    return prompt
 
 def raw_input_template(msgs: List[ChatMessage]) -> str:
     return msgs[-1].content

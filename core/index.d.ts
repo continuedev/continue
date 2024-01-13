@@ -377,7 +377,8 @@ type TemplateType =
   | "none"
   | "openchat"
   | "deepseek"
-  | "xwin-coder";
+  | "xwin-coder"
+  | "neural-chat";
 
 type ModelProvider =
   | "openai"
@@ -423,6 +424,7 @@ export type ModelName =
   | "deepseek-1b"
   | "deepseek-7b"
   | "deepseek-33b"
+  | "neural-chat-7b"
   // Anthropic
   | "claude-2"
   // Google PaLM
