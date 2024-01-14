@@ -1,22 +1,46 @@
+import { PipelineType, env, pipeline } from "@xenova/transformers";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
-class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
-  providerName: string = "transformers.js";
+env.allowLocalModels = true;
+env.allowRemoteModels = false;
+env.localModelPath = `${__dirname}../../models`;
 
-  get id(): string {
-    return "transformers.js";
+class EmbeddingsPipeline {
+  static task: PipelineType = "feature-extraction";
+  static model = "all-MiniLM-L6-v2";
+  static instance: any | null = null;
+
+  static async getInstance() {
+    if (this.instance === null) {
+      this.instance = await pipeline(this.task, this.model);
+    }
+
+    return this.instance;
   }
+}
 
+class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   constructor() {
     super({ model: "all-MiniLM-L2-v6" });
   }
 
-  embed(chunks: string[]) {
-    throw new Error(
-      "TransformersJsEmbeddingsProvider is only available in the browser"
-    );
+  get id(): string {
+    return "transformers-js";
+  }
 
-    return Promise.resolve([]);
+  async embed(chunks: string[]) {
+    let extractor = await EmbeddingsPipeline.getInstance();
+
+    if (!extractor) {
+      throw new Error("TransformerJS embeddings pipeline is not initialized");
+    }
+
+    let output = await extractor(chunks, {
+      pooling: "mean",
+      normalize: true,
+    });
+
+    return output.tolist();
   }
 }
 
