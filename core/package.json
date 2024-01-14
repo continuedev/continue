@@ -22,7 +22,10 @@
     "js-tiktoken": "^1.0.8",
     "openai": "^4.20.1",
     "replicate": "^0.23.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
     "uuid": "^9.0.1",
+    "vectordb": "^0.4.3",
     "web-tree-sitter": "^0.20.8"
   }
 }
