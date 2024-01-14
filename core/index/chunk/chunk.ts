@@ -1,6 +1,6 @@
 import { Chunk, ChunkWithoutID } from "../..";
 import { basicChunker } from "./basic";
-import { codeChunker, fileExtensionToLanguage } from "./code";
+import { codeChunker, supportedLanguages } from "./code";
 
 async function* chunkDocumentWithoutId(
   filepath: string,
@@ -13,7 +13,7 @@ async function* chunkDocumentWithoutId(
 
   const segs = filepath.split(".");
   const ext = segs[segs.length - 1];
-  if (ext in fileExtensionToLanguage) {
+  if (ext in supportedLanguages) {
     try {
       for await (const chunk of codeChunker(filepath, contents, maxChunkSize)) {
         yield chunk;

@@ -14,10 +14,6 @@ export interface IndexTag {
   artifactId: string;
 }
 
-export function tagToString(tag: IndexTag): string {
-  return `${tag.directory}::${tag.branch}::${tag.artifactId}`;
-}
-
 export type RefreshIndexResults = {
   compute: PathAndCacheKey[];
   del: PathAndCacheKey[];

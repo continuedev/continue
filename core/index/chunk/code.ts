@@ -59,6 +59,28 @@ import { countTokens } from "../../llm/countTokens";
 //   // scala: treeSitterScala,
 // };
 
+export const supportedLanguages = {
+  cpp: "cpp",
+  cs: "csharp",
+  php: "php",
+  css: "css",
+  bash: "bash",
+  json: "json",
+  ts: "typescript",
+  tsx: "tsx",
+  vue: "vue",
+  yaml: "yaml",
+  toml: "toml",
+  ocaml: "ocaml",
+  elm: "elm",
+  rb: "ruby",
+  js: "javascript",
+  // jl: "julia",
+  // swift: "swift",
+  // kt: "kotlin",
+  // scala: "scala",
+};
+
 async function getParserForFile(filepath: string) {
   await Parser.init();
   const parser = new Parser();

@@ -5,12 +5,15 @@ import {
   IndexTag,
   PathAndCacheKey,
   RefreshIndexResults,
-  tagToString,
 } from ".";
 import { Chunk, EmbeddingsProvider } from "..";
 import { getLanceDbPath } from "../util/paths";
 import { chunkDocument } from "./chunk/chunk";
 import { DatabaseConnection, SqliteDb } from "./refreshIndex";
+
+export function tagToString(tag: IndexTag): string {
+  return `${tag.directory}::${tag.branch}::${tag.artifactId}`;
+}
 
 interface LanceDbRow {
   uuid: string;
