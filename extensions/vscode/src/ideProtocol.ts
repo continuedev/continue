@@ -18,6 +18,7 @@ import {
   ContinueConfig,
   DiffLine,
   IDE,
+  Problem,
   SerializedContinueConfig,
 } from "core";
 import {
@@ -313,6 +314,28 @@ class VsCodeIde implements IDE {
     }
 
     return results.join("\n\n");
+  }
+
+  async getProblems(filepath?: string | undefined): Promise<Problem[]> {
+    const uri = filepath
+      ? vscode.Uri.file(filepath)
+      : vscode.window.activeTextEditor?.document.uri;
+    if (!uri) {
+      return [];
+    }
+    return vscode.languages.getDiagnostics(uri).map((d) => {
+      return {
+        filepath: uri.fsPath,
+        range: {
+          start: {
+            line: d.range.start.line,
+            character: d.range.start.character,
+          },
+          end: { line: d.range.end.line, character: d.range.end.character },
+        },
+        message: d.message,
+      };
+    });
   }
 
   async subprocess(command: string): Promise<[string, string]> {

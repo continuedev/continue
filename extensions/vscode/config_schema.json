@@ -850,7 +850,8 @@
                 "search",
                 "url",
                 "http",
-                "codebase"
+                "codebase",
+                "problems"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -858,7 +859,9 @@
                 "Reference the contents of all open files.",
                 "Enter a search phrase and include the Google search results as context",
                 "Enter a URL and use the contents of the webpage as context",
-                "Write a custom context provider at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup."
+                "Write a custom context provider at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
+                "Use embeddings to automatically find relevant files from throughout the codebase",
+                "Reference all linting errors and warnings in the currently open file"
               ],
               "type": "string"
             },

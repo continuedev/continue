@@ -263,6 +263,12 @@ export interface DiffLine {
   line: string;
 }
 
+export class Problem {
+  filepath: string;
+  range: Range;
+  message: string;
+}
+
 export interface IDE {
   getSerializedConfig(): Promise<SerializedContinueConfig>;
   getConfigJsUrl(): Promise<string | undefined>;
@@ -291,6 +297,7 @@ export interface IDE {
   getOpenFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string): Promise<[string, string]>;
+  getProblems(filepath?: string | undefined): Promise<Problem[]>;
 
   // Embeddings
   /**
@@ -357,7 +364,8 @@ type ContextProviderName =
   | "url"
   | "tree"
   | "http"
-  | "codebase";
+  | "codebase"
+  | "problems";
 
 type TemplateType =
   | "llama2"

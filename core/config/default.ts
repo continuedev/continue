@@ -56,6 +56,7 @@ const defaultConfig: SerializedContinueConfig = {
       params: {},
     },
     { name: "terminal", params: {} },
+    { name: "problems", params: {} },
   ],
 };
 
