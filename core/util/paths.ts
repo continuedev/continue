@@ -172,6 +172,6 @@ export function getIndexSqlitePath(): string {
   return path.join(getIndexFolderPath(), "index.sqlite");
 }
 
-export function getLanceDbPathForProviderId(providerId: string): string {
-  return path.join(getIndexFolderPath(), "lancedb", providerId);
+export function getLanceDbPath(): string {
+  return path.join(getIndexFolderPath(), "lancedb");
 }

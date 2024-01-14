@@ -10,9 +10,9 @@ import {
 } from ".";
 import { getIndexSqlitePath } from "../util/paths";
 
-type DatabaseConnection = Database<sqlite3.Database>;
+export type DatabaseConnection = Database<sqlite3.Database>;
 
-class SqliteDb {
+export class SqliteDb {
   static db: DatabaseConnection | null = null;
 
   private static async createTables(db: DatabaseConnection) {

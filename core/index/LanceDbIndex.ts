@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from "uuid";
 import * as lancedb from "vectordb";
 import {
   CodebaseIndex,
@@ -7,22 +8,18 @@ import {
   tagToString,
 } from ".";
 import { EmbeddingsProvider } from "..";
-import { getLanceDbPathForProviderId } from "../util/paths";
+import { getLanceDbPath } from "../util/paths";
+import { DatabaseConnection, SqliteDb } from "./refreshIndex";
 
 interface LanceDbRow {
-  vector: number[];
-  contents: string;
+  uuid: string;
   path: string;
   cacheKey: string;
-  tags: string;
-  startLine: number;
-  endLine: number;
+  vector: number[];
   [key: string]: any;
 }
 
 export class LanceDbIndex implements CodebaseIndex {
-  static tableName: string = "main";
-
   get artifactId(): string {
     return "vectordb::" + this.embeddingsProvider.id;
   }
@@ -38,38 +35,55 @@ export class LanceDbIndex implements CodebaseIndex {
     this.readFile = readFile;
   }
 
-  private tagToString(tag: IndexTag): string {
+  private tableNameForTag(tag: IndexTag) {
     return tagToString(tag);
   }
 
-  private async computeChunks(
+  private async createSqliteCacheTable(db: DatabaseConnection) {
+    await db.exec(`CREATE TABLE IF NOT EXISTS lance_db_cache (
+        uuid TEXT PRIMARY KEY,
+        cacheKey TEXT NOT NULL,
+        path TEXT NOT NULL,
+        vector TEXT NOT NULL,
+        startLine INTEGER NOT NULL,
+        endLine INTEGER NOT NULL,
+        contents TEXT NOT NULL
+    )`);
+  }
+
+  private async *computeChunks(
     items: PathAndCacheKey[],
     tagString: string
-  ): Promise<LanceDbRow[]> {
+  ): AsyncGenerator<
+    [
+      number,
+      LanceDbRow,
+      { startLine: number; endLine: number; contents: string },
+    ]
+  > {
     const contents = await Promise.all(
       items.map(({ path }) => this.readFile(path))
     );
-    const partialRows: LanceDbRow[] = [];
 
     for (let i = 0; i < items.length; i++) {
+      // Break into chunks
+      const content = contents[i];
       const chunks: string[] = []; // TODO;
-      const embeddings = await this.embeddingsProvider.embed(chunks);
-      partialRows.push(
-        ...chunks.map((chunk, j) => {
-          return {
-            vector: embeddings[j],
-            contents: chunk,
-            path: items[i].path,
-            cacheKey: items[i].cacheKey,
-            tags: `,${tagString},`,
-            startLine: 0,
-            endLine: 0, // TODO
-          };
-        })
-      );
-    }
 
-    return partialRows;
+      // Calculate embeddings
+      const embeddings = await this.embeddingsProvider.embed(chunks);
+
+      // Create row format
+      for (let j = 0; j < chunks.length; j++) {
+        const progress = (i + j / chunks.length) / items.length;
+        const row = { vector: embeddings[j], ...items[i], uuid: uuidv4() };
+        yield [
+          progress,
+          row,
+          { contents: chunks[j], startLine: 0, endLine: 0 },
+        ];
+      }
+    }
   }
 
   async *update(
@@ -77,44 +91,79 @@ export class LanceDbIndex implements CodebaseIndex {
     results: RefreshIndexResults
   ): AsyncGenerator<number> {
     const tagString = tagToString(tag);
-    const db = await lancedb.connect(
-      getLanceDbPathForProviderId(this.embeddingsProvider.id)
-    );
+    const tableName = this.tableNameForTag(tag);
+    const db = await lancedb.connect(getLanceDbPath());
     const existingTables = await db.tableNames();
-    if (existingTables.includes(LanceDbIndex.tableName)) {
-      const table = await db.openTable(LanceDbIndex.tableName);
 
-      // Compute
-      const computedRows = await this.computeChunks(results.compute, tagString);
+    const sqlite = await SqliteDb.get();
+    await this.createSqliteCacheTable(sqlite);
+
+    // Compute
+    const computedRows: LanceDbRow[] = [];
+    for await (const [progress, row, data] of this.computeChunks(
+      results.compute,
+      tagString
+    )) {
+      computedRows.push(row);
+
+      // Add the computed rows to the cache
+      await sqlite.run(
+        "INSERT INTO lance_db_cache (uuid, cacheKey, path, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        row.uuid,
+        row.cacheKey,
+        row.path,
+        JSON.stringify(row.vector),
+        data.startLine,
+        data.endLine,
+        data.contents
+      );
+
+      yield progress;
+    }
+
+    // Create table if needed, add computed rows
+    let table: lancedb.Table;
+    if (existingTables.includes(tableName)) {
+      table = await db.openTable(tableName);
       await table.add(computedRows);
+    } else {
+      table = await db.createTable(tableName, computedRows);
+    }
 
-      // Delete
-      await table.delete(
-        `cacheKey IN (${results.del.map((r) => r.cacheKey).join(", ")})`
-      ); // TODO: Is this the new or the old cacheKey though? I think that you are mixing : (
+    // Add tag - retrieve the computed info from lance sqlite cache
+    for (let { path, cacheKey } of results.addTag) {
+      const cachedItems = await sqlite.all(
+        "SELECT * FROM lance_db_cache WHERE cacheKey = '?' AND path = '?'",
+        cacheKey,
+        path
+      );
 
-      // Add tag
-      await table.update({
-        where: results.addTag
-          .map((r) => `(cacheKey = '${r.cacheKey}' AND path = '${r.path}')`)
-          .join(" OR "),
-        valuesSql: {
-          tags: `tags || '${tagString},'`,
-        },
+      const lanceRows: LanceDbRow[] = cachedItems.map((item) => {
+        return {
+          path,
+          cacheKey,
+          uuid: item.uuid,
+          vector: JSON.parse(item.vector),
+        };
       });
 
-      // Remove tag
-      for (let { path, cacheKey } of results.removeTag) {
-        // They should all have the same tags column
-        const rows = await table.where(
-          `path = '${path}' AND cacheKey = '${cacheKey}'`
-        );
-      }
-    } else {
-      // If the table hasn't been created yet, then only the compute array should have elements
-      const computedRows = await this.computeChunks(results.compute, tagString);
-      await db.createTable(LanceDbIndex.tableName, computedRows);
+      await table.add(lanceRows);
     }
+
+    // Delete or remove tag - remove from lance table
+    for (let { path, cacheKey } of [...results.removeTag, ...results.del]) {
+      await table.delete(`cacheKey = '${cacheKey}' AND path = '${path}'`);
+    }
+
+    // Delete - also remove from sqlite cache
+    for (let { path, cacheKey } of results.del) {
+      await sqlite.run(
+        "DELETE FROM lance_db_cache WHERE cacheKey = '?' AND path = '?'",
+        cacheKey,
+        path
+      );
+    }
+
     yield 1;
   }
 }
