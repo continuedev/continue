@@ -22,6 +22,8 @@ function useLoadEmbeddings() {
   );
 
   async function loadEmbeddings() {
+    return;
+
     if (!embeddingsProvider || disableIndexing) {
       return;
     }

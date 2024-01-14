@@ -7,8 +7,9 @@ import {
   RefreshIndexResults,
   tagToString,
 } from ".";
-import { EmbeddingsProvider } from "..";
+import { Chunk, EmbeddingsProvider } from "..";
 import { getLanceDbPath } from "../util/paths";
+import { chunkDocument } from "./chunk/chunk";
 import { DatabaseConnection, SqliteDb } from "./refreshIndex";
 
 interface LanceDbRow {
@@ -23,6 +24,8 @@ export class LanceDbIndex implements CodebaseIndex {
   get artifactId(): string {
     return "vectordb::" + this.embeddingsProvider.id;
   }
+
+  static MAX_CHUNK_SIZE = 512;
 
   embeddingsProvider: EmbeddingsProvider;
   readFile: (filepath: string) => Promise<string>;
@@ -68,19 +71,35 @@ export class LanceDbIndex implements CodebaseIndex {
     for (let i = 0; i < items.length; i++) {
       // Break into chunks
       const content = contents[i];
-      const chunks: string[] = []; // TODO;
+      const chunks: Chunk[] = [];
+
+      for await (let chunk of chunkDocument(
+        items[i].path,
+        content,
+        LanceDbIndex.MAX_CHUNK_SIZE,
+        items[i].cacheKey
+      )) {
+        chunks.push(chunk);
+      }
 
       // Calculate embeddings
-      const embeddings = await this.embeddingsProvider.embed(chunks);
+      const embeddings = await this.embeddingsProvider.embed(
+        chunks.map((c) => c.content)
+      );
 
       // Create row format
       for (let j = 0; j < chunks.length; j++) {
         const progress = (i + j / chunks.length) / items.length;
         const row = { vector: embeddings[j], ...items[i], uuid: uuidv4() };
+        const chunk = chunks[j];
         yield [
           progress,
           row,
-          { contents: chunks[j], startLine: 0, endLine: 0 },
+          {
+            contents: chunk.content,
+            startLine: chunk.startLine,
+            endLine: chunk.endLine,
+          },
         ];
       }
     }
