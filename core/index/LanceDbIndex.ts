@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
+// NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import * as lancedb from "vectordb";
 import {
   CodebaseIndex,

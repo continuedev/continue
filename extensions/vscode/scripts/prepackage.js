@@ -24,6 +24,14 @@ exec("npm install", (error) => {
         console.log("stderr: ", stderr);
         throw error;
       }
+
+      // Copy over some files required for native modules
+      ncp(
+        path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
+        path.join(__dirname, "../out/build"),
+        (error) => console.warn(error)
+      );
+
       // Then copy over the dist folder to the Intellij extension
       const intellijExtensionWebviewPath = path.join(
         "..",
