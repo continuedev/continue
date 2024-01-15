@@ -93,7 +93,7 @@ async function resolveEditorContent(
     contextItemsText += "\n";
   }
 
-  let finalText = contextItemsText + paragraphs.join("\n");
+  let finalText = paragraphs.join("\n").trim();
   if (slashCommand) {
     finalText = `${slashCommand} ${finalText}`;
   }
