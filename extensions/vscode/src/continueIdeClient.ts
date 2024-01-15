@@ -13,6 +13,7 @@ import {
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
 } from "./suggestions";
+import { defaultIgnoreFile, traverseDirectory } from "./util/traverseDirectory";
 import {
   getUniqueId,
   openEditorAndRevealRange,
@@ -313,101 +314,21 @@ class IdeProtocolClient {
     directory: string,
     recursive: boolean
   ): Promise<string[]> {
-    const nameAndType = (
-      await vscode.workspace.fs.readDirectory(uriFromFilePath(directory))
-    ).filter(([name, type]) => {
-      const DEFAULT_IGNORE_FILETYPES = [
-        "DS_Store",
-        "-lock.json",
-        "lock",
-        "log",
-        "ttf",
-        "png",
-        "jpg",
-        "jpeg",
-        "gif",
-        "mp4",
-        "svg",
-        "ico",
-        "pdf",
-        "zip",
-        "gz",
-        "tar",
-        "dmg",
-        "tgz",
-        "rar",
-        "7z",
-        "exe",
-        "dll",
-        "obj",
-        "o",
-        "a",
-        "lib",
-        "so",
-        "dylib",
-        "ncb",
-        "sdf",
-        "woff",
-        "woff2",
-        "eot",
-        "cur",
-        "avi",
-        "mpg",
-        "mpeg",
-        "mov",
-        "mp3",
-        "mp4",
-        "mkv",
-        "mkv",
-        "webm",
-        "jar",
-      ];
-      const DEFAULT_IGNORE_DIRS = [
-        ".git",
-        ".vscode",
-        ".idea",
-        ".vs",
-        "venv",
-        ".venv",
-        "env",
-        ".env",
-        "node_modules",
-        "dist",
-        "build",
-        "target",
-        "out",
-        "bin",
-        ".pytest_cache",
-        ".vscode-test",
-        ".continue",
-        "__pycache__",
-      ];
-      if (
-        !DEFAULT_IGNORE_DIRS.some((dir) =>
-          name.split(path.sep).includes(dir)
-        ) &&
-        !DEFAULT_IGNORE_FILETYPES.some((filetype) => name.endsWith(filetype))
-      ) {
-        return name;
-      }
-    });
-
-    let absolutePaths = nameAndType
-      .filter(([name, type]) => type === vscode.FileType.File)
-      .map(([name, type]) => path.join(directory, name));
-    if (recursive) {
-      for (const [name, type] of nameAndType) {
-        if (type === vscode.FileType.Directory) {
-          const subdirectory = path.join(directory, name);
-          const subdirectoryContents = await this.getDirectoryContents(
-            subdirectory,
-            recursive
-          );
-          absolutePaths = absolutePaths.concat(subdirectoryContents);
-        }
-      }
+    if (!recursive) {
+      return (
+        await vscode.workspace.fs.readDirectory(uriFromFilePath(directory))
+      )
+        .filter(([name, type]) => {
+          type === vscode.FileType.File && !defaultIgnoreFile.ignores(name);
+        })
+        .map(([name, type]) => path.join(directory, name));
     }
-    return absolutePaths;
+
+    const allFiles: string[] = [];
+    for await (const file of traverseDirectory(directory, [])) {
+      allFiles.push(file);
+    }
+    return allFiles;
   }
 
   getAbsolutePath(filepath: string): string {
