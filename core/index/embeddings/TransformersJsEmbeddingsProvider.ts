@@ -1,4 +1,9 @@
-import { PipelineType, env, pipeline } from "@xenova/transformers";
+import {
+  PipelineType,
+  env,
+  pipeline,
+} from "../../vendor/node_modules/@xenova/transformers";
+
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
 env.allowLocalModels = true;
