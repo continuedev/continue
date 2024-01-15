@@ -146,11 +146,15 @@ export class LanceDbIndex implements CodebaseIndex {
 
     // Create table if needed, add computed rows
     let table: lancedb.Table;
+    let needToCreateTable = false;
+
     if (existingTables.includes(tableName)) {
       table = await db.openTable(tableName);
       await table.add(computedRows);
-    } else {
+    } else if (computedRows.length > 0) {
       table = await db.createTable(tableName, computedRows);
+    } else {
+      needToCreateTable = true;
     }
 
     // Add tag - retrieve the computed info from lance sqlite cache
@@ -170,12 +174,17 @@ export class LanceDbIndex implements CodebaseIndex {
         };
       });
 
-      await table.add(lanceRows);
+      if (needToCreateTable) {
+        table = await db.createTable(tableName, lanceRows);
+        needToCreateTable = false;
+      } else {
+        await table!.add(lanceRows);
+      }
     }
 
-    // Delete or remove tag - remove from lance table
+    // Delete or remove tag - remove from lance table)
     for (let { path, cacheKey } of [...results.removeTag, ...results.del]) {
-      await table.delete(`cacheKey = '${cacheKey}' AND path = '${path}'`);
+      await table!.delete(`cacheKey = '${cacheKey}' AND path = '${path}'`);
     }
 
     // Delete - also remove from sqlite cache

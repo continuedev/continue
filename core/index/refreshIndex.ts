@@ -77,14 +77,15 @@ interface PathAndOptionalCacheKey {
 
 async function getAddRemoveForTag(
   tag: IndexTag,
-  currentFiles: LastModifiedMap
-): Promise<[PathAndOptionalCacheKey[], PathAndOptionalCacheKey[]]> {
+  currentFiles: LastModifiedMap,
+  readFile: (path: string) => Promise<string>
+): Promise<[PathAndCacheKey[], PathAndCacheKey[]]> {
   const newLastUpdatedTimestamp = Date.now();
 
   const saved = await getSavedItemsForTag(tag);
 
-  const add: PathAndOptionalCacheKey[] = [];
-  const remove: PathAndOptionalCacheKey[] = [];
+  const add: PathAndCacheKey[] = [];
+  const remove: PathAndCacheKey[] = [];
 
   for (let item of saved) {
     const { lastUpdated, ...pathAndHash } = item;
@@ -108,25 +109,30 @@ async function getAddRemoveForTag(
 
   // Any leftover in current files need to be added
   add.push(
-    ...Object.keys(currentFiles).map((path) => {
-      return { path };
-    })
+    ...(await Promise.all(
+      Object.keys(currentFiles).map(async (path) => {
+        const fileContents = await readFile(path);
+        return { path, cacheKey: calculateHash(fileContents) };
+      })
+    ))
   );
 
   // Remove all removed from the tag_catalog table
   const db = await SqliteDb.get();
-  await db.run(
-    `DELETE FROM tag_catalog WHERE
-        path IN (?) AND
-        dir = ? AND
-        branch = ? AND
-        artifactId = ? AND
-    `,
-    remove.join(", "),
-    tag.directory,
-    tag.branch,
-    tag.artifactId
-  );
+  if (remove.length > 0) {
+    await db.run(
+      `DELETE FROM tag_catalog WHERE
+          path IN (?) AND
+          dir = ? AND
+          branch = ? AND
+          artifactId = ?
+      `,
+      remove.map((r) => `'${r.path}'`).join(", "),
+      tag.directory,
+      tag.branch,
+      tag.artifactId
+    );
+  }
 
   // Add all added to the tag_catalog table
   for (let { path, cacheKey } of add) {
@@ -156,7 +162,7 @@ async function getTagsFromGlobalCache(
   const stmt = await db.prepare(
     `SELECT dir, branch, artifactId FROM global_cache WHERE cacheKey = ? AND artifactId = ?`
   );
-  const rows = await stmt.all();
+  const rows = await stmt.all(cacheKey, artifactId);
   return rows;
 }
 
@@ -171,7 +177,7 @@ export async function getComputeDeleteAddRemove(
   currentFiles: LastModifiedMap,
   readFile: (path: string) => Promise<string>
 ): Promise<RefreshIndexResults> {
-  const [add, remove] = await getAddRemoveForTag(tag, currentFiles);
+  const [add, remove] = await getAddRemoveForTag(tag, currentFiles, readFile);
 
   const compute: PathAndCacheKey[] = [];
   const del: PathAndCacheKey[] = [];
@@ -179,11 +185,6 @@ export async function getComputeDeleteAddRemove(
   const removeTag: PathAndCacheKey[] = [];
 
   for (let { path, cacheKey } of add) {
-    if (cacheKey === undefined) {
-      const fileContents = await readFile(path);
-      cacheKey = calculateHash(fileContents);
-    }
-
     const existingTags = await getTagsFromGlobalCache(cacheKey, tag.artifactId);
     if (existingTags.length > 0) {
       addTag.push({ path, cacheKey });
@@ -222,7 +223,8 @@ export async function getComputeDeleteAddRemove(
 
   // Update the global cache
   const globalCacheIndex = await GlobalCacheCodeBaseIndex.create();
-  await globalCacheIndex.update(tag, results);
+  for await (let _ of globalCacheIndex.update(tag, results)) {
+  }
 
   return results;
 }

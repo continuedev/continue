@@ -55,10 +55,8 @@ export async function vsCodeIndexCodebase() {
         branch,
         artifactId: codebaseIndex.artifactId,
       };
-      const results = await getComputeDeleteAddRemove(
-        tag,
-        stats,
-        ideProtocolClient.readFile
+      const results = await getComputeDeleteAddRemove(tag, stats, (filepath) =>
+        ideProtocolClient.readFile(filepath)
       );
 
       for await (let progress of codebaseIndex.update(tag, results)) {

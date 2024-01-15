@@ -31,6 +31,26 @@ exec("npm install", (error) => {
         path.join(__dirname, "../out/build"),
         (error) => console.warn(error)
       );
+      ncp(
+        path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
+        path.join(__dirname, "../bin"),
+        (error) => console.warn(error)
+      );
+      ncp(
+        path.join(
+          __dirname,
+          "../../../core/node_modules/tree-sitter-wasms/out"
+        ),
+        path.join(__dirname, "../out/tree-sitter-wasms"),
+        (error) => console.warn(error)
+      );
+      fs.copyFileSync(
+        path.join(
+          __dirname,
+          "../../../core/node_modules/web-tree-sitter/tree-sitter.wasm"
+        ),
+        path.join(__dirname, "../out/tree-sitter.wasm")
+      );
 
       // Then copy over the dist folder to the Intellij extension
       const intellijExtensionWebviewPath = path.join(

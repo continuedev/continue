@@ -85,7 +85,7 @@ async function getParserForFile(filepath: string) {
   await Parser.init();
   const parser = new Parser();
   const segs = filepath.split(".");
-  const wasmPath = `${__dirname}/../../node_modules/tree-sitter-wasms/out/tree-sitter-${
+  const wasmPath = `${__dirname}/tree-sitter-wasms/tree-sitter-${
     segs[segs.length - 1]
   }.wasm`;
   const Language = await Parser.Language.load(wasmPath);
