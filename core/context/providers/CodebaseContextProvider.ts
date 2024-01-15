@@ -144,21 +144,19 @@ class CodebaseContextProvider extends BaseContextProvider {
       return [];
     }
 
-    const nRetrieve = this.options.nRetrieve || 20;
-    const nFinal = this.options.nFinal || 10;
+    const nRetrieve = this.options?.nRetrieve || 20;
+    const nFinal = this.options?.nFinal || 10;
     const useReranking =
       llmCanGenerateInParallel(extras.llm) &&
-      (this.options.useReranking === undefined
+      (this.options?.useReranking === undefined
         ? false
-        : this.options.useReranking);
+        : this.options?.useReranking);
 
     // Similarity search
-    const [v] = await extras.embeddingsProvider.embed([extras.fullInput]);
     let results = await new ExtensionIde().retrieveChunks(
-      v,
+      extras.fullInput,
       useReranking === false ? nFinal : nRetrieve,
-      [],
-      extras.embeddingsProvider.id
+      undefined
     );
 
     // Re-ranking

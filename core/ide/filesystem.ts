@@ -119,10 +119,9 @@ class FileSystemIde implements IDE {
   sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {}
 
   retrieveChunks(
-    v: number[],
+    text: string,
     n: number,
-    tags: string[],
-    providerId: string
+    directory: string | undefined
   ): Promise<Chunk[]> {
     return Promise.resolve([]);
   }

@@ -49,28 +49,34 @@ export async function vsCodeIndexCodebase() {
     const stats = await vscodeGetStats(directory);
     let completedIndexes = 0;
 
-    for (let codebaseIndex of indexesToBuild) {
-      const tag: IndexTag = {
-        directory,
-        branch,
-        artifactId: codebaseIndex.artifactId,
-      };
-      const results = await getComputeDeleteAddRemove(tag, stats, (filepath) =>
-        ideProtocolClient.readFile(filepath)
-      );
+    try {
+      for (let codebaseIndex of indexesToBuild) {
+        const tag: IndexTag = {
+          directory,
+          branch,
+          artifactId: codebaseIndex.artifactId,
+        };
+        const results = await getComputeDeleteAddRemove(
+          tag,
+          stats,
+          (filepath) => ideProtocolClient.readFile(filepath)
+        );
 
-      for await (let progress of codebaseIndex.update(tag, results)) {
+        for await (let progress of codebaseIndex.update(tag, results)) {
+          update(
+            (completedDirs +
+              (completedIndexes + progress) / indexesToBuild.length) /
+              workspaceDirs.length
+          );
+        }
+        completedIndexes++;
         update(
-          (completedDirs +
-            (completedIndexes + progress) / indexesToBuild.length) /
+          (completedDirs + completedIndexes / indexesToBuild.length) /
             workspaceDirs.length
         );
       }
-      completedIndexes++;
-      update(
-        (completedDirs + completedIndexes / indexesToBuild.length) /
-          workspaceDirs.length
-      );
+    } catch (e) {
+      console.warn("Error refreshing index: ", e);
     }
 
     completedDirs++;

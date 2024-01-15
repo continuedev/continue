@@ -24,7 +24,10 @@ import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
+import { LanceDbIndex } from "core/index/LanceDbIndex";
+import { IndexTag } from "core/index/index";
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { configHandler } from "./loadConfig";
 import mergeJson from "./util/merge";
 import { getExtensionUri } from "./util/vscode";
 const sync = require("../sync.node");
@@ -349,17 +352,28 @@ class VsCodeIde implements IDE {
   }
 
   async retrieveChunks(
-    v: number[],
+    text: string,
     n: number,
-    tags: string[],
-    providerId: string
+    directory: string | undefined
   ): Promise<Chunk[]> {
     // TODO: OR clause with tags
     let branch = await ideProtocolClient.getBranch();
     let dirs = await this.getWorkspaceDirs();
-    let mainTag = `${dirs[0] || "NONE"}::${branch}::${providerId}`;
-    let chunks = sync.retrieve(n, [...tags, mainTag], v);
-    return chunks;
+    const embeddingsProvider = (await configHandler.loadConfig(new VsCodeIde()))
+      .embeddingsProvider;
+    if (!embeddingsProvider) {
+      return [];
+    }
+    const lanceDbIndex = new LanceDbIndex(embeddingsProvider, (path) =>
+      ideProtocolClient.readFile(path)
+    );
+    let tag: IndexTag = {
+      directory: dirs[0] || "NONE",
+      branch,
+      artifactId: lanceDbIndex.artifactId,
+    };
+    let chunks = await lanceDbIndex.retrieve(tag, text, n, directory);
+    return chunks as any[];
   }
 }
 

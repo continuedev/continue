@@ -18,6 +18,8 @@ import {
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./util/vscode";
+const util = require("util");
+const exec = util.promisify(require("child_process").exec);
 
 const continueVirtualDocumentScheme = "continue";
 
@@ -504,10 +506,16 @@ class IdeProtocolClient {
     return repo;
   }
 
-  async getBranch(): Promise<string> {
-    const repo = await this.getRepo();
-
-    return repo?.state?.HEAD?.name || "NONE";
+  async getBranch() {
+    // const repo = await this.getRepo();
+    // return repo?.state?.HEAD?.name || "NONE";
+    // TODO: Should depend a workspaceDirectory parameter
+    // TODO: This won't work for remote
+    const workspaceDir = this.getWorkspaceDirectories()[0];
+    const { stdout } = await exec("git rev-parse --abbrev-ref HEAD", {
+      cwd: workspaceDir,
+    });
+    return stdout.trim();
   }
 
   async getDiff(): Promise<string> {

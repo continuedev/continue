@@ -352,10 +352,9 @@ export function getSidebarContent(
         case "retrieveChunks": {
           respond(
             await ide.retrieveChunks(
-              data.message.v,
+              data.message.text,
               data.message.n,
-              data.message.tags,
-              data.message.providerId
+              data.message.directory
             )
           );
           break;

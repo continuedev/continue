@@ -155,7 +155,9 @@ export class LanceDbIndex implements CodebaseIndex {
     const existingTables = await db.tableNames();
     if (existingTables.includes(tableName)) {
       table = await db.openTable(tableName);
-      await table.add(computedRows);
+      if (computedRows.length > 0) {
+        await table.add(computedRows);
+      }
     } else if (computedRows.length > 0) {
       table = await db.createTable(tableName, computedRows);
     } else {
@@ -180,17 +182,19 @@ export class LanceDbIndex implements CodebaseIndex {
         };
       });
 
-      if (needToCreateTable) {
+      if (needToCreateTable && lanceRows.length > 0) {
         table = await db.createTable(tableName, lanceRows);
         needToCreateTable = false;
-      } else {
+      } else if (lanceRows.length > 0) {
         await table!.add(lanceRows);
       }
     }
 
     // Delete or remove tag - remove from lance table)
-    for (let { path, cacheKey } of [...results.removeTag, ...results.del]) {
-      await table!.delete(`cacheKey = '${cacheKey}' AND path = '${path}'`);
+    if (!needToCreateTable) {
+      for (let { path, cacheKey } of [...results.removeTag, ...results.del]) {
+        await table!.delete(`cacheKey = '${cacheKey}' AND path = '${path}'`);
+      }
     }
 
     // Delete - also remove from sqlite cache
@@ -203,5 +207,43 @@ export class LanceDbIndex implements CodebaseIndex {
     }
 
     yield 1;
+  }
+
+  async retrieve(
+    tag: IndexTag,
+    text: string,
+    n: number,
+    directory: string | undefined
+  ): Promise<Chunk[]> {
+    const db = await lancedb.connect(getLanceDbPath());
+    const tableName = this.tableNameForTag(tag);
+    const tableNames = await db.tableNames();
+    if (!tableNames.includes(tableName)) {
+      return [];
+    }
+    const [vector] = await this.embeddingsProvider.embed([text]);
+    const table = await db.openTable(tableName);
+    let query = table.search(vector);
+    if (directory) {
+      query = query.where(`path LIKE '${directory}%'`);
+    }
+    const results = await query.limit(n).execute();
+    const sqliteDb = await SqliteDb.get();
+    const data = await sqliteDb.all(
+      `SELECT * FROM lance_db_cache WHERE uuid in (${results
+        .map((r) => `'${r.uuid}'`)
+        .join(",")})`
+    );
+
+    return data.map((d) => {
+      return {
+        digest: d.cacheKey,
+        filepath: d.path,
+        startLine: d.startLine,
+        endLine: d.endLine,
+        index: 0,
+        content: d.contents,
+      };
+    });
   }
 }

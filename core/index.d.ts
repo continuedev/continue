@@ -303,10 +303,9 @@ export interface IDE {
     tags: string[]
   ): void;
   retrieveChunks(
-    v: number[],
+    text: string,
     n: number,
-    tags: string[],
-    providerId: string
+    directory: string | undefined
   ): Promise<Chunk[]>;
 }
 

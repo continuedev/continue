@@ -101,11 +101,10 @@ export class ExtensionIde implements IDE {
   }
 
   retrieveChunks(
-    v: number[],
+    text: string,
     n: number,
-    tags: string[],
-    providerId: string
+    directory: string | undefined
   ): Promise<Chunk[]> {
-    return r("retrieveChunks", { v, n, tags, providerId });
+    return r("retrieveChunks", { text, n, directory });
   }
 }
