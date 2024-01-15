@@ -59,7 +59,7 @@ import { countTokens } from "../../llm/countTokens";
 //   // scala: treeSitterScala,
 // };
 
-export const supportedLanguages = {
+export const supportedLanguages: { [key: string]: string } = {
   cpp: "cpp",
   cs: "csharp",
   php: "php",
@@ -86,7 +86,7 @@ async function getParserForFile(filepath: string) {
   const parser = new Parser();
   const segs = filepath.split(".");
   const wasmPath = `${__dirname}/tree-sitter-wasms/tree-sitter-${
-    segs[segs.length - 1]
+    supportedLanguages[segs[segs.length - 1]]
   }.wasm`;
   const Language = await Parser.Language.load(wasmPath);
   parser.setLanguage(Language);

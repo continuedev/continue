@@ -9,7 +9,7 @@ const { exec } = require("child_process");
     entryPoints: ["src/extension.ts"],
     bundle: true,
     outfile: "out/extension.js",
-    external: ["vscode", "esbuild", "../sync.node"],
+    external: ["vscode", "esbuild", "../sync.node", "sharp"],
     format: "cjs",
     platform: "node",
     sourcemap: true,
