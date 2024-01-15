@@ -5,7 +5,7 @@ env.allowLocalModels = true;
 env.allowRemoteModels = false;
 if (typeof window === "undefined") {
   // The embeddings provider should just never be called in the browser
-  env.localModelPath = `${__dirname}../../models`;
+  env.localModelPath = `${__dirname}/../models`;
 }
 
 class EmbeddingsPipeline {
@@ -38,12 +38,20 @@ class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
       throw new Error("TransformerJS embeddings pipeline is not initialized");
     }
 
-    let output = await extractor(chunks, {
-      pooling: "mean",
-      normalize: true,
-    });
+    if (chunks.length === 0) {
+      return [];
+    }
 
-    return output.tolist();
+    let outputs = [];
+    for (let i = 0; i < chunks.length; i += 8) {
+      let chunkGroup = chunks.slice(i, i + 8);
+      let output = await extractor(chunkGroup, {
+        pooling: "mean",
+        normalize: true,
+      });
+      outputs.push(...output.tolist());
+    }
+    return outputs;
   }
 }
 

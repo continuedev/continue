@@ -1,5 +1,5 @@
-import { v4 as uuidv4 } from "uuid";
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
+import { v4 as uuidv4 } from "uuid";
 import * as lancedb from "vectordb";
 import {
   CodebaseIndex,
@@ -43,7 +43,7 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private tableNameForTag(tag: IndexTag) {
-    return tagToString(tag);
+    return tagToString(tag).replace(/\//g, "").replace(/\\/g, "");
   }
 
   private async createSqliteCacheTable(db: DatabaseConnection) {
@@ -86,6 +86,11 @@ export class LanceDbIndex implements CodebaseIndex {
         chunks.push(chunk);
       }
 
+      if (chunks.length > 20) {
+        // Too many chunks to index, probably a larger file than we want to include
+        continue;
+      }
+
       // Calculate embeddings
       const embeddings = await this.embeddingsProvider.embed(
         chunks.map((c) => c.content)
@@ -116,7 +121,6 @@ export class LanceDbIndex implements CodebaseIndex {
     const tagString = tagToString(tag);
     const tableName = this.tableNameForTag(tag);
     const db = await lancedb.connect(getLanceDbPath());
-    const existingTables = await db.tableNames();
 
     const sqlite = await SqliteDb.get();
     await this.createSqliteCacheTable(sqlite);
@@ -148,6 +152,7 @@ export class LanceDbIndex implements CodebaseIndex {
     let table: lancedb.Table;
     let needToCreateTable = false;
 
+    const existingTables = await db.tableNames();
     if (existingTables.includes(tableName)) {
       table = await db.openTable(tableName);
       await table.add(computedRows);
@@ -159,11 +164,12 @@ export class LanceDbIndex implements CodebaseIndex {
 
     // Add tag - retrieve the computed info from lance sqlite cache
     for (let { path, cacheKey } of results.addTag) {
-      const cachedItems = await sqlite.all(
-        "SELECT * FROM lance_db_cache WHERE cacheKey = '?' AND path = '?'",
+      const stmt = await sqlite.prepare(
+        "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
         cacheKey,
         path
       );
+      const cachedItems = await stmt.all();
 
       const lanceRows: LanceDbRow[] = cachedItems.map((item) => {
         return {
@@ -190,7 +196,7 @@ export class LanceDbIndex implements CodebaseIndex {
     // Delete - also remove from sqlite cache
     for (let { path, cacheKey } of results.del) {
       await sqlite.run(
-        "DELETE FROM lance_db_cache WHERE cacheKey = '?' AND path = '?'",
+        "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
         cacheKey,
         path
       );
