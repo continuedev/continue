@@ -17,6 +17,11 @@ const { exec } = require("child_process");
       // eslint-disable-next-line @typescript-eslint/naming-convention
       ".node": "file",
     },
+
+    // To allow import.meta.path for transformers.js
+    // https://github.com/evanw/esbuild/issues/1492#issuecomment-893144483
+    inject: ["./importMetaUrl.js"],
+    define: { "import.meta.url": "importMetaUrl" },
   });
 
   exec("npm run build-release:rust", (error, stdout, stderr) => {
