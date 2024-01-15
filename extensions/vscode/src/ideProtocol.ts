@@ -30,7 +30,6 @@ import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { configHandler } from "./loadConfig";
 import mergeJson from "./util/merge";
 import { getExtensionUri } from "./util/vscode";
-const sync = require("../sync.node");
 
 async function buildConfigTs(browser: boolean) {
   if (!fs.existsSync(getConfigTsPath())) {
@@ -333,23 +332,14 @@ class VsCodeIde implements IDE {
   async getFilesToEmbed(
     providerId: string
   ): Promise<[string, string, string][]> {
-    let results = [];
-    let branch = await ideProtocolClient.getBranch();
-    for (let dir of await this.getWorkspaceDirs()) {
-      let tag = `${dir}::${branch}::${providerId}`; // TODO (don't build the string here ideally)
-      let filesToEmbed = sync.sync_results(dir, branch, providerId);
-      results.push(...filesToEmbed.map((r: any) => [tag, r.name, r.hash]));
-    }
-    return results;
+    return [];
   }
 
   async sendEmbeddingForChunk(
     chunk: Chunk,
     embedding: number[],
     tags: string[]
-  ) {
-    sync.add_chunk(chunk, tags, embedding);
-  }
+  ) {}
 
   async retrieveChunks(
     text: string,
