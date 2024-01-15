@@ -23,6 +23,8 @@ class EmbeddingsPipeline {
 }
 
 class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
+  static MaxGroupSize: number = 4;
+
   constructor() {
     super({ model: "all-MiniLM-L2-v6" });
   }
@@ -43,8 +45,15 @@ class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
     }
 
     let outputs = [];
-    for (let i = 0; i < chunks.length; i += 8) {
-      let chunkGroup = chunks.slice(i, i + 8);
+    for (
+      let i = 0;
+      i < chunks.length;
+      i += TransformersJsEmbeddingsProvider.MaxGroupSize
+    ) {
+      let chunkGroup = chunks.slice(
+        i,
+        i + TransformersJsEmbeddingsProvider.MaxGroupSize
+      );
       let output = await extractor(chunkGroup, {
         pooling: "mean",
         normalize: true,

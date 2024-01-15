@@ -16,10 +16,11 @@ export function tagToString(tag: IndexTag): string {
   return `${tag.directory}::${tag.branch}::${tag.artifactId}`;
 }
 
+// LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
   uuid: string;
   path: string;
-  cacheKey: string;
+  cachekey: string;
   vector: number[];
   [key: string]: any;
 }
@@ -59,8 +60,7 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private async *computeChunks(
-    items: PathAndCacheKey[],
-    tagString: string
+    items: PathAndCacheKey[]
   ): AsyncGenerator<
     [
       number,
@@ -99,7 +99,12 @@ export class LanceDbIndex implements CodebaseIndex {
       // Create row format
       for (let j = 0; j < chunks.length; j++) {
         const progress = (i + j / chunks.length) / items.length;
-        const row = { vector: embeddings[j], ...items[i], uuid: uuidv4() };
+        const row = {
+          vector: embeddings[j],
+          path: items[i].path,
+          cachekey: items[i].cacheKey,
+          uuid: uuidv4(),
+        };
         const chunk = chunks[j];
         yield [
           progress,
@@ -128,8 +133,7 @@ export class LanceDbIndex implements CodebaseIndex {
     // Compute
     const computedRows: LanceDbRow[] = [];
     for await (const [progress, row, data] of this.computeChunks(
-      results.compute,
-      tagString
+      results.compute
     )) {
       computedRows.push(row);
 
@@ -137,7 +141,7 @@ export class LanceDbIndex implements CodebaseIndex {
       await sqlite.run(
         "INSERT INTO lance_db_cache (uuid, cacheKey, path, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?)",
         row.uuid,
-        row.cacheKey,
+        row.cachekey,
         row.path,
         JSON.stringify(row.vector),
         data.startLine,
@@ -176,7 +180,7 @@ export class LanceDbIndex implements CodebaseIndex {
       const lanceRows: LanceDbRow[] = cachedItems.map((item) => {
         return {
           path,
-          cacheKey,
+          cachekey: cacheKey,
           uuid: item.uuid,
           vector: JSON.parse(item.vector),
         };
@@ -193,7 +197,8 @@ export class LanceDbIndex implements CodebaseIndex {
     // Delete or remove tag - remove from lance table)
     if (!needToCreateTable) {
       for (let { path, cacheKey } of [...results.removeTag, ...results.del]) {
-        await table!.delete(`cacheKey = '${cacheKey}' AND path = '${path}'`);
+        // This is where the aforementioned lowercase conversion problem shows
+        await table!.delete(`cachekey = '${cacheKey}' AND path = '${path}'`);
       }
     }
 

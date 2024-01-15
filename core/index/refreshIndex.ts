@@ -85,19 +85,25 @@ async function getAddRemoveForTag(
   const saved = await getSavedItemsForTag(tag);
 
   const add: PathAndCacheKey[] = [];
+  const updateNewVersion: PathAndCacheKey[] = [];
+  const updateOldVersion: PathAndCacheKey[] = [];
   const remove: PathAndCacheKey[] = [];
 
   for (let item of saved) {
-    const { lastUpdated, ...pathAndHash } = item;
+    const { lastUpdated, ...pathAndCacheKey } = item;
 
     if (currentFiles[item.path] === undefined) {
       // Was indexed, but no longer exists. Remove
-      remove.push(pathAndHash);
+      remove.push(pathAndCacheKey);
     } else {
       // Exists in old and new, so determine whether it was updated
       if (lastUpdated < currentFiles[item.path]) {
         // Change was made after last update
-        add.push(pathAndHash);
+        updateNewVersion.push({
+          path: pathAndCacheKey.path,
+          cacheKey: calculateHash(await readFile(pathAndCacheKey.path)),
+        });
+        updateOldVersion.push(pathAndCacheKey);
       } else {
         // Already updated, do nothing
       }
@@ -117,8 +123,30 @@ async function getAddRemoveForTag(
     ))
   );
 
-  // Remove all removed from the tag_catalog table
   const db = await SqliteDb.get();
+
+  // Update rows of files that have been modified
+  for (let { path, cacheKey } of updateNewVersion) {
+    await db.run(
+      `UPDATE tag_catalog SET
+          cacheKey = ?,
+          lastUpdated = ?
+       WHERE
+          path = ? AND
+          dir = ? AND
+          branch = ? AND
+          artifactId = ?
+      `,
+      cacheKey,
+      newLastUpdatedTimestamp,
+      path,
+      tag.directory,
+      tag.branch,
+      tag.artifactId
+    );
+  }
+
+  // Remove all removed from the tag_catalog table
   if (remove.length > 0) {
     await db.run(
       `DELETE FROM tag_catalog WHERE
@@ -147,7 +175,10 @@ async function getAddRemoveForTag(
     );
   }
 
-  return [add, remove];
+  return [
+    [...add, ...updateNewVersion],
+    [...remove, ...updateOldVersion],
+  ];
 }
 
 /**
@@ -194,12 +225,6 @@ export async function getComputeDeleteAddRemove(
   }
 
   for (let { path, cacheKey } of remove) {
-    if (cacheKey === undefined) {
-      throw new Error(
-        "Hash for removed item is undefined. This shouldn't happen"
-      );
-    }
-
     const existingTags = await getTagsFromGlobalCache(cacheKey, tag.artifactId);
     if (existingTags.length > 1) {
       removeTag.push({ path, cacheKey });

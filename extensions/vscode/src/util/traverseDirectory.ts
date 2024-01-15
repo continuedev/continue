@@ -1,7 +1,7 @@
 import ignore from "ignore";
 import * as path from "path";
 import * as vscode from "vscode";
-import { getPathSep, uriFromFilePath } from "./vscode";
+import { uriFromFilePath } from "./vscode";
 
 const DEFAULT_IGNORE_FILETYPES = [
   "*.DS_Store",
@@ -78,8 +78,6 @@ function isIgnoreFilepath(filepath: string): boolean {
     filepath.endsWith(".gitignore") || filepath.endsWith(".continueignore")
   );
 }
-
-const pathSep = getPathSep();
 
 /**
  * Given glob pattern, returns first non-wildcard path, rest of glob, and whether there was a leading wildcard

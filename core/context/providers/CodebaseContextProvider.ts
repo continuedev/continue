@@ -145,7 +145,7 @@ class CodebaseContextProvider extends BaseContextProvider {
     }
 
     const nRetrieve = this.options?.nRetrieve || 20;
-    const nFinal = this.options?.nFinal || 10;
+    const nFinal = this.options?.nFinal || 8;
     const useReranking =
       llmCanGenerateInParallel(extras.llm) &&
       (this.options?.useReranking === undefined
