@@ -411,6 +411,18 @@ const codeup: ModelPackage = {
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
+const flowise: ModelPackage = {
+  title: "Flowise",
+  description: "Open source UI visual tool to build your customized LLM ochestration flow & AI agents",
+  params: {
+    title: "Flowise",
+    model: "flowise",
+    contextLength: 2048,
+  },
+  icon: "flowiseai.png",
+  providerOptions: ["flowise"],
+};
+
 const osModels = [
   codeLlamaInstruct,
   llama2Chat,
@@ -419,6 +431,7 @@ const osModels = [
   mistral,
   codeup,
   zephyr,
+  flowise
 ];
 
 const gpt4turbo: ModelPackage = {
@@ -504,6 +517,7 @@ export const MODEL_INFO: ModelPackage[] = [
   chatBison,
   zephyr,
   deepseek,
+  flowise
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -779,5 +793,29 @@ After it's up and running, you can start using Continue.`,
       { ...gemini, title: "Gemini Pro (trial)" },
     ],
     collectInputFor: [...completionParamsInputs],
+  },
+  flowise: {
+    title: "Flowise",
+    provider: "flowise",
+    description:
+      "Open source UI visual tool to build your customized LLM ochestration flow & AI agents",
+    longDescription:
+      'Flowise is a low-code/no-code drag & drop tool with the aim to make it easy for people to visualize and build LLM apps.',
+    icon: "flowiseai.png",
+    tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
+    packages: [
+      { ...flowise, title: "Flowise" }
+    ],
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Flowise API key",
+        required: false,
+      },
+      { ...apiBaseInput, defaultValue: 'http://localhost:3000' },
+      ...completionParamsInputs,
+    ],
   },
 };

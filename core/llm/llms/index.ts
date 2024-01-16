@@ -9,6 +9,7 @@ import {
 import Anthropic from "./Anthropic";
 import Bedrock from "./Bedrock";
 import DeepInfra from "./DeepInfra";
+import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
 import GooglePalm from "./GooglePalm";
@@ -91,6 +92,7 @@ const LLMs = [
   Bedrock,
   DeepInfra,
   OpenAIFreeTrial,
+  Flowise,
 ];
 
 export async function llmFromDescription(

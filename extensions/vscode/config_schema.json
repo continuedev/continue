@@ -111,7 +111,8 @@
             "lmstudio",
             "llamafile",
             "mistral",
-            "deepinfra"
+            "deepinfra",
+            "flowise"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/openai)",
@@ -165,7 +166,8 @@
             "none",
             "deepseek",
             "openchat",
-            "xwin-coder"
+            "xwin-coder",
+            "flowise"
           ],
           "type": "string"
         },
@@ -426,7 +428,8 @@
                       "codeup-13b",
                       "deepseek-1b",
                       "deepseek-7b",
-                      "deepseek-33b"
+                      "deepseek-33b",
+                      "flowise"
                     ]
                   },
                   { "type": "string" }
@@ -557,7 +560,8 @@
                       "codeup-13b",
                       "deepseek-1b",
                       "deepseek-7b",
-                      "deepseek-33b"
+                      "deepseek-33b",
+                      "flowise"
                     ]
                   },
                   { "type": "string" }
@@ -595,7 +599,8 @@
                       "codeup-13b",
                       "deepseek-1b",
                       "deepseek-7b",
-                      "deepseek-33b"
+                      "deepseek-33b",
+                      "flowise"
                     ]
                   },
                   { "type": "string" }
@@ -682,6 +687,70 @@
             "properties": {
               "streamingUrl": {
                 "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["flowise"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "timeout": {
+                "title": "Timeout",
+                "description": "Set the timeout for each request to Flowise. If you are running a local version of Flowise it might takes a while to respond, you might want to set this to avoid timeouts.",
+                "default": 5000,
+                "type": "integer"
+              },
+              "requestMode": {
+                "description": "Whether or not Flowise should run as a http request, instead of using socket.io to stream the response",
+                "type": "boolean",
+                "default": false
+              },
+              "additionalHeaders": {
+                "description": "A list of additional headers",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "title": "Key",
+                      "description": "Header key",
+                      "type": "string"
+                    },
+                    "value": {
+                      "title": "Value",
+                      "description": "Header value",
+                      "type": "string"
+                    }
+                  },
+                  "required": ["key", "value"]
+                }
+              },
+              "additionalFlowiseConfiguration": {
+                "description": "A list of additional properties to be sent along `overrideConfig`",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "title": "Key",
+                      "description": "Configuration Property key",
+                      "type": "string"
+                    },
+                    "value": {
+                      "title": "Value",
+                      "description": "Configuration Property value"
+                    }
+                  },
+                  "required": ["key", "value"]
+                }
               }
             }
           }

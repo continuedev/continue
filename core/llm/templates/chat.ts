@@ -205,6 +205,19 @@ function xWinCoderTemplateMessages(msgs: ChatMessage[]): string {
   return prompt;
 }
 
+function flowiseTemplateMessages(messages: ChatMessage[]): string {
+  const HUMAN_PROMPT = "\n\nHuman:";
+  const AI_PROMPT = "\n\nAssistant:";
+  let prompt = "";
+
+  for (const message of messages) {
+    const role = message.role === "user" || message.role === "system" ? HUMAN_PROMPT : AI_PROMPT;
+    prompt += `${role} ${message.content} `;
+  }
+
+  return prompt;
+}
+
 export {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
@@ -215,4 +228,5 @@ export {
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
   zephyrTemplateMessages,
+  flowiseTemplateMessages
 };

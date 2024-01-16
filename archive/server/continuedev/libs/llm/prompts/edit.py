@@ -113,6 +113,23 @@ _zephyr_edit_prompt = dedent(
             """
 )
 
+_flowise_edit_prompt = dedent(
+    """\
+            System:
+            You are an expert programmer and write code on the first attempt without any errors or fillers.
+            User:
+            Rewrite the code to satisfy this request: "{{{user_input}}}"
+
+            ```
+            {{{code_to_edit}}}
+            ```
+            Assistant:
+            Sure! Here's the code you requested:
+            
+            ```
+            """
+)
+
 
 codellama_edit_prompt = PromptTemplate(
     prompt=_codellama_edit_prompt, raw=True, stop=["[/CODE]"]
@@ -123,3 +140,4 @@ zephyr_edit_prompt = PromptTemplate(prompt=_zephyr_edit_prompt, raw=True, stop=[
 deepseek_edit_prompt = PromptTemplate(
     prompt=_deepseek_edit_prompt, raw=True, stop=["```"]
 )
+flowise_edit_prompt = PromptTemplate(prompt=_flowise_edit_prompt, raw=True, stop=["```"])

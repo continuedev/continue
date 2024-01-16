@@ -378,7 +378,8 @@ type TemplateType =
   | "none"
   | "openchat"
   | "deepseek"
-  | "xwin-coder";
+  | "xwin-coder"
+  | "flowise";
 
 type ModelProvider =
   | "openai"
@@ -397,7 +398,8 @@ type ModelProvider =
   | "gemini"
   | "mistral"
   | "bedrock"
-  | "deepinfra";
+  | "deepinfra"
+  | "flowise";
 
 export type ModelName =
   // OpenAI
@@ -433,7 +435,9 @@ export type ModelName =
   // Mistral
   | "mistral-tiny"
   | "mistral-small"
-  | "mistral-medium";
+  | "mistral-medium"
+  // Flowise
+  | "flowise";
 
 export interface RequestOptions {
   timeout?: number;
