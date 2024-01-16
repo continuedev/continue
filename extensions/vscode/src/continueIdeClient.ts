@@ -445,10 +445,10 @@ class IdeProtocolClient {
   async getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
     let repo = await this._getRepo(forDirectory);
     let i = 0;
-    while (!repo) {
+    while (!repo?.state?.HEAD?.name) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       i++;
-      if (i >= 20) {
+      if (i >= 30) {
         return undefined;
       }
       repo = await this._getRepo(forDirectory);
@@ -458,7 +458,7 @@ class IdeProtocolClient {
 
   async getBranch(forDirectory: vscode.Uri) {
     let repo = await this.getRepo(forDirectory);
-    if (repo === undefined) {
+    if (repo?.state?.HEAD?.name === undefined) {
       const { stdout } = await exec("git rev-parse --abbrev-ref HEAD", {
         cwd: forDirectory.fsPath,
       });

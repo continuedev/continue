@@ -9,7 +9,7 @@ import { retrieveContextItemsFromEmbeddings } from "../retrieval";
 class FolderContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "folder",
-    displayTitle: "Folder",
+    displayTitle: "Folders",
     description: "Type to search",
     dynamic: false,
     requiresQuery: false,

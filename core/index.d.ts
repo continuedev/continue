@@ -366,7 +366,7 @@ type ContextProviderName =
   | "http"
   | "codebase"
   | "problems"
-  | "folders";
+  | "folder";
 
 type TemplateType =
   | "llama2"
