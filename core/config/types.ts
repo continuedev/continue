@@ -371,8 +371,9 @@ declare global {
     | "none"
     | "openchat"
     | "deepseek"
-    | "xwin-coder";
-  
+    | "xwin-coder"
+    | "neural-chat";
+
   type ModelProvider =
     | "openai"
     | "free-trial"
@@ -417,6 +418,7 @@ declare global {
     | "deepseek-1b"
     | "deepseek-7b"
     | "deepseek-33b"
+    | "neural-chat-7b"
     // Anthropic
     | "claude-2"
     // Google PaLM

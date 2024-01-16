@@ -165,7 +165,8 @@
             "none",
             "deepseek",
             "openchat",
-            "xwin-coder"
+            "xwin-coder",
+            "neural-chat"
           ],
           "type": "string"
         },
@@ -426,7 +427,8 @@
                       "codeup-13b",
                       "deepseek-1b",
                       "deepseek-7b",
-                      "deepseek-33b"
+                      "deepseek-33b",
+                      "neural-chat-7b"
                     ]
                   },
                   { "type": "string" }
@@ -557,7 +559,8 @@
                       "codeup-13b",
                       "deepseek-1b",
                       "deepseek-7b",
-                      "deepseek-33b"
+                      "deepseek-33b",
+                      "neural-chat-7b"
                     ]
                   },
                   { "type": "string" }
@@ -595,7 +598,8 @@
                       "codeup-13b",
                       "deepseek-1b",
                       "deepseek-7b",
-                      "deepseek-33b"
+                      "deepseek-33b",
+                      "neural-chat-7b"
                     ]
                   },
                   { "type": "string" }
