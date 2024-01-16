@@ -11,19 +11,7 @@ exec("npm install", async (error) => {
   if (error) throw error;
   console.log("npm install completed");
 
-  await new Promise((resolve, reject) => {
-    process.chdir("../../core");
-    exec("npm install", (error) => {
-      if (error) {
-        reject(error);
-      } else {
-        console.log("npm install completed in core");
-        resolve();
-      }
-    });
-  });
-
-  process.chdir("../gui");
+  process.chdir("../../gui");
 
   exec("npm install", (error) => {
     if (error) throw error;
@@ -88,11 +76,24 @@ exec("npm install", async (error) => {
             console.warn("Error copying tree-sitter-wasms files", error);
         }
       );
+
+      // Listing contents of the web-tree-sitter directory
+      fs.readdir(
+        path.join(__dirname, "../../../core/node_modules/web-tree-sitter"),
+        (err, files) => {
+          if (err) {
+            console.error("Error: " + err);
+            return;
+          }
+          files.forEach((file) => {
+            console.log(file);
+          });
+        }
+      );
+
+      // Your original code
       fs.copyFileSync(
-        path.join(
-          __dirname,
-          "../../../core/node_modules/web-tree-sitter/tree-sitter.wasm"
-        ),
+        path.join(__dirname, "../../../core/vendor/tree-sitter.wasm"),
         path.join(__dirname, "../out/tree-sitter.wasm")
       );
 
