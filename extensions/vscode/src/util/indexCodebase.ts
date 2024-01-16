@@ -41,12 +41,14 @@ export async function vsCodeIndexCodebase() {
 
   const workspaceDirs = ideProtocolClient.getWorkspaceDirectories();
   const indexesToBuild = await getIndexesToBuild();
-  const branch = await ideProtocolClient.getBranch();
 
   let completedDirs = 0;
 
   for (let directory of workspaceDirs) {
     const stats = await vscodeGetStats(directory);
+    const branch = await ideProtocolClient.getBranch(
+      vscode.Uri.file(directory)
+    );
     let completedIndexes = 0;
 
     try {

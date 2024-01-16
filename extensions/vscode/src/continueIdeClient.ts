@@ -397,7 +397,7 @@ class IdeProtocolClient {
     return terminalContents;
   }
 
-  async getRepo(): Promise<any> {
+  async getRepo(forDirectory: vscode.Uri): Promise<any> {
     // Use the native git extension to get the branch name
     const extension = vscode.extensions.getExtension("vscode.git");
     if (
@@ -405,48 +405,47 @@ class IdeProtocolClient {
       !extension.isActive ||
       typeof vscode.workspace.workspaceFolders === "undefined"
     ) {
-      return "NONE";
+      return undefined;
     }
 
     const git = extension.exports.getAPI(1);
-    let repo = git.getRepository(vscode.workspace.workspaceFolders[0].uri);
-    if (!repo) {
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          resolve(null);
-        }, 5000);
-        extension.exports.b.onDidChangeState((s: any) => {
-          clearTimeout(timeout);
-          resolve(null);
-        });
-      });
-
-      let repo = git.getRepository(vscode.workspace.workspaceFolders[0].uri);
-      return repo;
-    }
-    return repo;
+    return git.getRepository(forDirectory);
   }
 
-  async getBranch() {
-    // const repo = await this.getRepo();
-    // return repo?.state?.HEAD?.name || "NONE";
-    // TODO: Should depend a workspaceDirectory parameter
-    // TODO: This won't work for remote
-    const workspaceDir = this.getWorkspaceDirectories()[0];
-    const { stdout } = await exec("git rev-parse --abbrev-ref HEAD", {
-      cwd: workspaceDir,
-    });
-    return stdout.trim();
+  async getBranch(forDirectory: vscode.Uri) {
+    let repo = await this.getRepo(forDirectory);
+    let i = 0;
+    while (repo === undefined) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      i++;
+      console.log(`${i} seconds`);
+      if (i >= 20) {
+        // Wait a max of 20 seconds before trying git rev-parse
+        const workspaceDir = this.getWorkspaceDirectories()[0];
+        const { stdout } = await exec("git rev-parse --abbrev-ref HEAD", {
+          cwd: workspaceDir,
+        });
+        return stdout?.trim() || "NONE";
+      }
+      repo = await this.getRepo(forDirectory);
+    }
+
+    return repo?.state?.HEAD?.name || "NONE";
   }
 
   async getDiff(): Promise<string> {
-    const repo = await this.getRepo();
+    let diffs = [];
 
-    if (!repo) {
-      return "";
+    for (const dir of this.getWorkspaceDirectories()) {
+      const repo = await this.getRepo(vscode.Uri.file(dir));
+      if (!repo) {
+        continue;
+      }
+
+      diffs.push((await repo.getDiff()).join("\n"));
     }
 
-    return (await repo.getDiff()).join("\n");
+    return diffs.join("\n\n");
   }
 
   getHighlightedCode(): RangeInFile[] {

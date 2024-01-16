@@ -390,9 +390,6 @@ class VsCodeIde implements IDE {
     n: number,
     directory: string | undefined
   ): Promise<Chunk[]> {
-    // TODO: OR clause with tags
-    let branch = await ideProtocolClient.getBranch();
-    let dirs = await this.getWorkspaceDirs();
     const embeddingsProvider = (await configHandler.loadConfig(new VsCodeIde()))
       .embeddingsProvider;
     if (!embeddingsProvider) {
@@ -401,12 +398,19 @@ class VsCodeIde implements IDE {
     const lanceDbIndex = new LanceDbIndex(embeddingsProvider, (path) =>
       ideProtocolClient.readFile(path)
     );
-    let tag: IndexTag = {
-      directory: dirs[0] || "NONE",
-      branch,
-      artifactId: lanceDbIndex.artifactId,
-    };
-    let chunks = await lanceDbIndex.retrieve(tag, text, n, directory);
+
+    const tags = await Promise.all(
+      (await this.getWorkspaceDirs()).map(async (dir) => {
+        let branch = await ideProtocolClient.getBranch(vscode.Uri.file(dir));
+        let tag: IndexTag = {
+          directory: dir,
+          branch,
+          artifactId: lanceDbIndex.artifactId,
+        };
+        return tag;
+      })
+    );
+    let chunks = await lanceDbIndex.retrieve(tags, text, n, directory);
     return chunks as any[];
   }
 }

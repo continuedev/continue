@@ -214,28 +214,49 @@ export class LanceDbIndex implements CodebaseIndex {
     yield 1;
   }
 
-  async retrieve(
+  private async _retrieveForTag(
     tag: IndexTag,
-    text: string,
     n: number,
-    directory: string | undefined
-  ): Promise<Chunk[]> {
-    const db = await lancedb.connect(getLanceDbPath());
+    directory: string | undefined,
+    vector: number[],
+    db: lancedb.Connection
+  ): Promise<LanceDbRow[]> {
     const tableName = this.tableNameForTag(tag);
     const tableNames = await db.tableNames();
     if (!tableNames.includes(tableName)) {
       return [];
     }
-    const [vector] = await this.embeddingsProvider.embed([text]);
+
     const table = await db.openTable(tableName);
     let query = table.search(vector);
     if (directory) {
       query = query.where(`path LIKE '${directory}%'`);
     }
-    const results = await query.limit(n).execute();
+    return await query.limit(n).execute();
+  }
+
+  async retrieve(
+    tags: IndexTag[],
+    text: string,
+    n: number,
+    directory: string | undefined
+  ): Promise<Chunk[]> {
+    const [vector] = await this.embeddingsProvider.embed([text]);
+    const db = await lancedb.connect(getLanceDbPath());
+
+    let allResults = [];
+    for (const tag of tags) {
+      const results = await this._retrieveForTag(tag, n, directory, vector, db);
+      allResults.push(...results);
+    }
+
+    allResults = allResults
+      .sort((a, b) => b._distance - a._distance)
+      .slice(0, n);
+
     const sqliteDb = await SqliteDb.get();
     const data = await sqliteDb.all(
-      `SELECT * FROM lance_db_cache WHERE uuid in (${results
+      `SELECT * FROM lance_db_cache WHERE uuid in (${allResults
         .map((r) => `'${r.uuid}'`)
         .join(",")})`
     );
