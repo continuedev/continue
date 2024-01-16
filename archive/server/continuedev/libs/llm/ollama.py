@@ -63,7 +63,8 @@ class Ollama(LLM):
             "deepseek-1b": "deepseek-coder:1.3b",
             "deepseek-7b": "deepseek-coder:6.7b",
             "deepseek-33b": "deepseek-coder:33b",
-            "neural-chat-7b": "neural-chat:7b-v3.3"
+            "neural-chat-7b": "neural-chat:7b-v3.3",
+            "phi-2.7b": "phi:2.7b"
         }.get(self.model, self.model)
 
     def start(self, *args, **kwargs):
