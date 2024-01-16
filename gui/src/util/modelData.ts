@@ -423,7 +423,7 @@ const neuralChat: ModelPackage = {
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
-const flowise: ModelPackage = {
+const flowiseGpt35Turbo: ModelPackage = {
   title: "Flowise (GPT 3.5 Turbo)",
   description:
     "Open source UI visual tool to build your customized LLM ochestration flow & AI agents, using GPT 3.5 Turbo",
@@ -445,7 +445,6 @@ const osModels = [
   codeup,
   zephyr,
   neuralChat,
-  flowise,
 ];
 
 const gpt4turbo: ModelPackage = {
@@ -531,7 +530,6 @@ export const MODEL_INFO: ModelPackage[] = [
   chatBison,
   zephyr,
   deepseek,
-  flowise,
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -817,7 +815,7 @@ After it's up and running, you can start using Continue.`,
       "Flowise is a low-code/no-code drag & drop tool with the aim to make it easy for people to visualize and build LLM apps.",
     icon: "flowiseai.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: [{ ...flowise, title: "Flowise" }],
+    packages: [{ ...flowiseGpt35Turbo, title: "Flowise" }],
     collectInputFor: [
       {
         inputType: CollectInputType.text,
