@@ -96,14 +96,9 @@ jobs:
 
       # 2.5. Pre package
       - name: Make the out directory
-        if: matrix.arch == 'arm64'
         run: |
           cd extensions/vscode
           mkdir out
-          cd out
-          mkdir node_modules
-          cd node_modules
-          mkdir "@esbuild"
 
       - name: Prepare the extension
         run: |
@@ -111,6 +106,13 @@ jobs:
           npm run prepackage
 
       # 2.75. download anything that needs to be built on ARM (non-Windows)
+      - name: Make the out/node_modules directory
+        if: matrix.arch == 'arm64'
+        run: |
+          cd extensions/vscode/out
+          mkdir node_modules
+          cd node_modules
+          mkdir "@esbuild"
 
       - name: Download esbuild on ARM
         if: matrix.arch == 'arm64'
