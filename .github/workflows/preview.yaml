@@ -95,12 +95,6 @@ jobs:
           npm ci --legacy-peer-deps
 
       # 2.5. Pre package
-      - name: Prepare the extension
-        run: |
-          cd extensions/vscode
-          npm run prepackage
-
-      # 2.75. download anything that needs to be built on ARM (non-Windows)
       - name: Make the out directory
         if: matrix.arch == 'arm64'
         run: |
@@ -110,6 +104,13 @@ jobs:
           mkdir node_modules
           cd node_modules
           mkdir "@esbuild"
+
+      - name: Prepare the extension
+        run: |
+          cd extensions/vscode
+          npm run prepackage
+
+      # 2.75. download anything that needs to be built on ARM (non-Windows)
 
       - name: Download esbuild on ARM
         if: matrix.arch == 'arm64'
