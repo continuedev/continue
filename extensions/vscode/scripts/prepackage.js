@@ -7,11 +7,23 @@ if (!process.cwd().endsWith("vscode")) {
   // This is sometimes run from root dir instead (e.g. in VS Code tasks)
   process.chdir("extensions/vscode");
 }
-exec("npm install", (error) => {
+exec("npm install", async (error) => {
   if (error) throw error;
   console.log("npm install completed");
 
-  process.chdir("../../gui");
+  await new Promise((resolve, reject) => {
+    process.chdir("../../core");
+    exec("npm install", (error) => {
+      if (error) {
+        reject(error);
+      } else {
+        console.log("npm install completed in core");
+        resolve();
+      }
+    });
+  });
+
+  process.chdir("../gui");
 
   exec("npm install", (error) => {
     if (error) throw error;
