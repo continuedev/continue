@@ -45,7 +45,7 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private tableNameForTag(tag: IndexTag) {
-    return tagToString(tag).replace(/\//g, "").replace(/\\/g, "");
+    return tagToString(tag).replace(/\//g, "").replace(/\\/g, "").replace(/\:/g, "");
   }
 
   private async createSqliteCacheTable(db: DatabaseConnection) {

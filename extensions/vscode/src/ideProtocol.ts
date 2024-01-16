@@ -138,13 +138,13 @@ class VsCodeIde implements IDE {
 
       migrate("foldersContextProvider", () => {
         if (
-          !config.contextProviders?.filter((cp) => cp.name === "folders")
+          !config.contextProviders?.filter((cp) => cp.name === "folder")
             ?.length
         ) {
           config.contextProviders = [
             ...(config.contextProviders || []),
             {
-              name: "folders",
+              name: "folder",
               params: {},
             },
           ];
