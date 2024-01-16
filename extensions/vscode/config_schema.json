@@ -704,11 +704,6 @@
                 "default": 5000,
                 "type": "integer"
               },
-              "requestMode": {
-                "description": "Whether or not Flowise should run as a http request, instead of using socket.io to stream the response",
-                "type": "boolean",
-                "default": false
-              },
               "additionalHeaders": {
                 "description": "A list of additional headers",
                 "type": "array",

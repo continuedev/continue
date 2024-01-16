@@ -50,7 +50,6 @@ interface IFlowiseKeyValueProperty {
 }
 
 interface IFlowiseProviderLLMOptions extends LLMOptions {
-  requestMode?: boolean;
   timeout?: number;
   additionalHeaders?: IFlowiseKeyValueProperty[];
   additionalFlowiseConfiguration?: IFlowiseKeyValueProperty[];
@@ -66,14 +65,12 @@ class Flowise extends BaseLLM {
     Assistant: 'apiMessage'
   };
 
-  protected requestMode: boolean = false;
   protected additionalFlowiseConfiguration: IFlowiseKeyValueProperty[] = [];
   protected timeout: number = 5000;
   protected additionalHeaders: IFlowiseKeyValueProperty[] = [];
 
   constructor(options: IFlowiseProviderLLMOptions) {
     super(options);
-    this.requestMode = Boolean(options.requestMode);
     this.timeout = options.timeout ?? 5000;
     this.additionalHeaders = options.additionalHeaders ?? [];
     this.additionalFlowiseConfiguration = options.additionalFlowiseConfiguration ?? [];
@@ -126,19 +123,6 @@ class Flowise extends BaseLLM {
 
   protected async *_streamChat(messages: ChatMessage[], options: CompletionOptions): AsyncGenerator<ChatMessage> {
     const requestBody = this._getRequestBody(messages, options);
-    if (this.requestMode) {
-      const request = this.fetch(this._getChatUrl(), {
-        method: "POST",
-        headers: this._getHeaders(),
-        body: JSON.stringify(requestBody)
-      }).then(res => res.json());
-      try {
-        yield { role: 'assistant', content: (await request).text };
-      } catch (error: any) {
-        yield { role: 'assistant', content: (error as Error).message ?? error };
-      }
-      return;
-    }
     const { socket, socketInfo } = await this._initializeSocket();
     const request = this.fetch(this._getChatUrl(), {
       method: "POST",
