@@ -79,18 +79,12 @@ exec("npm install", async (error) => {
 
       // Listing contents of the web-tree-sitter directory
       console.log("DIRNAME: ", __dirname);
-      fs.readdir(
-        path.join(__dirname, "../../../core/node_modules"),
-        (err, files) => {
-          if (err) {
-            console.error("Error: " + err);
-            return;
-          }
-          files.forEach((file) => {
-            console.log("FILE: ", file);
-          });
-        }
+      const files = fs.readdirSync(
+        path.join(__dirname, "../../../core/node_modules")
       );
+      files.forEach((file) => {
+        console.log("FILE: ", file);
+      });
 
       // Your original code
       fs.copyFileSync(
