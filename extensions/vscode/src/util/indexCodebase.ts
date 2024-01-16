@@ -34,12 +34,11 @@ async function getIndexesToBuild(): Promise<CodebaseIndex[]> {
   return indexes;
 }
 
-export async function vsCodeIndexCodebase() {
+export async function vsCodeIndexCodebase(workspaceDirs: string[]) {
   const update = (progress: number) => {
     debugPanelWebview?.postMessage({ type: "indexProgress", progress });
   };
 
-  const workspaceDirs = ideProtocolClient.getWorkspaceDirectories();
   const indexesToBuild = await getIndexesToBuild();
 
   let completedDirs = 0;

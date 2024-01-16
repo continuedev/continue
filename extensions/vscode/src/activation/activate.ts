@@ -88,5 +88,5 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   );
 
   startProxy();
-  vsCodeIndexCodebase();
+  vsCodeIndexCodebase(ideProtocolClient.getWorkspaceDirectories());
 }

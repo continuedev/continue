@@ -13,6 +13,7 @@ import {
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
 } from "./suggestions";
+import { vsCodeIndexCodebase } from "./util/indexCodebase";
 import { defaultIgnoreFile, traverseDirectory } from "./util/traverseDirectory";
 import {
   getUniqueId,
@@ -25,6 +26,9 @@ const exec = util.promisify(require("child_process").exec);
 const continueVirtualDocumentScheme = "continue";
 
 class IdeProtocolClient {
+  private static PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } =
+    {};
+
   private readonly context: vscode.ExtensionContext;
 
   constructor(context: vscode.ExtensionContext) {
@@ -51,6 +55,32 @@ class IdeProtocolClient {
       ) {
         debugPanelWebview?.postMessage({
           type: "updateEmbeddings",
+        });
+      }
+    });
+
+    // Refresh index when branch is changed
+    this.getWorkspaceDirectories().forEach(async (dir) => {
+      const repo = await this.getRepo(vscode.Uri.file(dir));
+      if (repo) {
+        repo.state.onDidChange(() => {
+          console.log("didUpdate");
+          // args passed to this callback are always undefined, so keep track of previous branch
+          const currentBranch = repo?.state?.HEAD?.name;
+          if (currentBranch) {
+            if (IdeProtocolClient.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]) {
+              if (
+                currentBranch !==
+                IdeProtocolClient.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]
+              ) {
+                // Trigger refresh of index only in this directory
+                vsCodeIndexCodebase([dir]);
+              }
+            }
+
+            IdeProtocolClient.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir] =
+              currentBranch;
+          }
         });
       }
     });
@@ -397,7 +427,7 @@ class IdeProtocolClient {
     return terminalContents;
   }
 
-  async getRepo(forDirectory: vscode.Uri): Promise<any> {
+  private async _getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
     // Use the native git extension to get the branch name
     const extension = vscode.extensions.getExtension("vscode.git");
     if (
@@ -412,22 +442,27 @@ class IdeProtocolClient {
     return git.getRepository(forDirectory);
   }
 
-  async getBranch(forDirectory: vscode.Uri) {
-    let repo = await this.getRepo(forDirectory);
+  async getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
+    let repo = await this._getRepo(forDirectory);
     let i = 0;
-    while (repo === undefined) {
+    while (!repo) {
       await new Promise((resolve) => setTimeout(resolve, 1000));
       i++;
-      console.log(`${i} seconds`);
       if (i >= 20) {
-        // Wait a max of 20 seconds before trying git rev-parse
-        const workspaceDir = this.getWorkspaceDirectories()[0];
-        const { stdout } = await exec("git rev-parse --abbrev-ref HEAD", {
-          cwd: workspaceDir,
-        });
-        return stdout?.trim() || "NONE";
+        return undefined;
       }
-      repo = await this.getRepo(forDirectory);
+      repo = await this._getRepo(forDirectory);
+    }
+    return repo;
+  }
+
+  async getBranch(forDirectory: vscode.Uri) {
+    let repo = await this.getRepo(forDirectory);
+    if (repo === undefined) {
+      const { stdout } = await exec("git rev-parse --abbrev-ref HEAD", {
+        cwd: forDirectory.fsPath,
+      });
+      return stdout?.trim() || "NONE";
     }
 
     return repo?.state?.HEAD?.name || "NONE";
