@@ -213,7 +213,7 @@ export async function* streamDiffLines(
 
 const VerticalEditSlashCommand: SlashCommand = {
   name: "verticalEdit",
-  description: "Edit highlighted code with vertical diff",
+  description: "Edit selected code with vertical diff",
   run: async function* ({ ide, llm, input, contextItems }) {
     const contextItemToEdit = contextItems.find(
       (item: ContextItemWithId) =>

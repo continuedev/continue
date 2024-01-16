@@ -25,10 +25,13 @@ import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
+import { LanceDbIndex } from "core/indexing/LanceDbIndex";
+import { IndexTag } from "core/indexing/types";
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { configHandler } from "./loadConfig";
 import mergeJson from "./util/merge";
+import { traverseDirectory } from "./util/traverseDirectory";
 import { getExtensionUri } from "./util/vscode";
-const sync = require("../sync.node");
 
 async function buildConfigTs(browser: boolean) {
   if (!fs.existsSync(getConfigTsPath())) {
@@ -121,6 +124,27 @@ class VsCodeIde implements IDE {
             ...(config.contextProviders || []),
             {
               name: "problems",
+              params: {},
+            },
+          ];
+        }
+
+        fs.writeFileSync(
+          configPath,
+          JSON.stringify(config, undefined, 2),
+          "utf8"
+        );
+      });
+
+      migrate("foldersContextProvider", () => {
+        if (
+          !config.contextProviders?.filter((cp) => cp.name === "folders")
+            ?.length
+        ) {
+          config.contextProviders = [
+            ...(config.contextProviders || []),
+            {
+              name: "folders",
               params: {},
             },
           ];
@@ -233,6 +257,19 @@ class VsCodeIde implements IDE {
       );
       return contents.flat();
     }
+  }
+
+  async listFolders(): Promise<string[]> {
+    const allDirs: string[] = [];
+
+    const workspaceDirs = await this.getWorkspaceDirs();
+    for (const directory of workspaceDirs) {
+      for await (const dir of traverseDirectory(directory, [], false)) {
+        allDirs.push(dir);
+      }
+    }
+
+    return allDirs;
   }
 
   async getWorkspaceDirs(): Promise<string[]> {
@@ -374,36 +411,42 @@ class VsCodeIde implements IDE {
   async getFilesToEmbed(
     providerId: string
   ): Promise<[string, string, string][]> {
-    let results = [];
-    let branch = await ideProtocolClient.getBranch();
-    for (let dir of await this.getWorkspaceDirs()) {
-      let tag = `${dir}::${branch}::${providerId}`; // TODO (don't build the string here ideally)
-      let filesToEmbed = sync.sync_results(dir, branch, providerId);
-      results.push(...filesToEmbed.map((r: any) => [tag, r.name, r.hash]));
-    }
-    return results;
+    return [];
   }
 
   async sendEmbeddingForChunk(
     chunk: Chunk,
     embedding: number[],
     tags: string[]
-  ) {
-    sync.add_chunk(chunk, tags, embedding);
-  }
+  ) {}
 
   async retrieveChunks(
-    v: number[],
+    text: string,
     n: number,
-    tags: string[],
-    providerId: string
+    directory: string | undefined
   ): Promise<Chunk[]> {
-    // TODO: OR clause with tags
-    let branch = await ideProtocolClient.getBranch();
-    let dirs = await this.getWorkspaceDirs();
-    let mainTag = `${dirs[0] || "NONE"}::${branch}::${providerId}`;
-    let chunks = sync.retrieve(n, [...tags, mainTag], v);
-    return chunks;
+    const embeddingsProvider = (await configHandler.loadConfig(new VsCodeIde()))
+      .embeddingsProvider;
+    if (!embeddingsProvider) {
+      return [];
+    }
+    const lanceDbIndex = new LanceDbIndex(embeddingsProvider, (path) =>
+      ideProtocolClient.readFile(path)
+    );
+
+    const tags = await Promise.all(
+      (await this.getWorkspaceDirs()).map(async (dir) => {
+        let branch = await ideProtocolClient.getBranch(vscode.Uri.file(dir));
+        let tag: IndexTag = {
+          directory: dir,
+          branch,
+          artifactId: lanceDbIndex.artifactId,
+        };
+        return tag;
+      })
+    );
+    let chunks = await lanceDbIndex.retrieve(tags, text, n, directory);
+    return chunks as any[];
   }
 }
 

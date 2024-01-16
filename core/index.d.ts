@@ -275,6 +275,7 @@ export interface IDE {
   getDiff(): Promise<string>;
   getTerminalContents(): Promise<string>;
   listWorkspaceContents(directory?: string): Promise<string[]>;
+  listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
   writeFile(path: string, contents: string): Promise<void>;
   showVirtualFile(title: string, contents: string): Promise<void>;
@@ -310,10 +311,9 @@ export interface IDE {
     tags: string[]
   ): void;
   retrieveChunks(
-    v: number[],
+    text: string,
     n: number,
-    tags: string[],
-    providerId: string
+    directory: string | undefined
   ): Promise<Chunk[]>;
 }
 
@@ -365,7 +365,8 @@ type ContextProviderName =
   | "tree"
   | "http"
   | "codebase"
-  | "problems";
+  | "problems"
+  | "folders";
 
 type TemplateType =
   | "llama2"

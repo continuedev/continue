@@ -22,6 +22,14 @@ export function getSessionsFolderPath(): string {
   return sessionsPath;
 }
 
+export function getIndexFolderPath(): string {
+  const indexPath = path.join(getContinueGlobalPath(), "index");
+  if (!fs.existsSync(indexPath)) {
+    fs.mkdirSync(indexPath);
+  }
+  return indexPath;
+}
+
 export function getSessionFilePath(sessionId: string): string {
   return path.join(getSessionsFolderPath(), `${sessionId}.json`);
 }
@@ -158,4 +166,12 @@ export function migrate(id: string, callback: () => void) {
     fs.writeFileSync(migrationPath, "");
     callback();
   }
+}
+
+export function getIndexSqlitePath(): string {
+  return path.join(getIndexFolderPath(), "index.sqlite");
+}
+
+export function getLanceDbPath(): string {
+  return path.join(getIndexFolderPath(), "lancedb");
 }

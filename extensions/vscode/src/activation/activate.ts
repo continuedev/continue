@@ -7,10 +7,10 @@ import IdeProtocolClient from "../continueIdeClient";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { vsCodeIndexCodebase } from "../util/indexCodebase";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
 import { startProxy } from "./proxy";
-// const sync = require("../sync.node");
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
@@ -88,4 +88,5 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   );
 
   startProxy();
+  vsCodeIndexCodebase(ideProtocolClient.getWorkspaceDirectories());
 }

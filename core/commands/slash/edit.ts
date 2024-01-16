@@ -203,7 +203,7 @@ function lineToBeIgnored(line: string, isFirstLine: boolean = false): boolean {
 
 const EditSlashCommand: SlashCommand = {
   name: "edit",
-  description: "Edit highlighted code",
+  description: "Edit selected code",
   run: async function* ({ ide, llm, input, history, contextItems, params }) {
     const contextItemToEdit = contextItems.find(
       (item: ContextItemWithId) =>
@@ -211,7 +211,7 @@ const EditSlashCommand: SlashCommand = {
     );
 
     if (!contextItemToEdit) {
-      yield "Highlight (select and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) the code that you want to edit first";
+      yield "Select (highlight and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) the code that you want to edit first";
       return;
     }
 

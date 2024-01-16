@@ -13,15 +13,22 @@ import {
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
 } from "./suggestions";
+import { vsCodeIndexCodebase } from "./util/indexCodebase";
+import { defaultIgnoreFile, traverseDirectory } from "./util/traverseDirectory";
 import {
   getUniqueId,
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./util/vscode";
+const util = require("util");
+const exec = util.promisify(require("child_process").exec);
 
 const continueVirtualDocumentScheme = "continue";
 
 class IdeProtocolClient {
+  private static PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } =
+    {};
+
   private readonly context: vscode.ExtensionContext;
 
   constructor(context: vscode.ExtensionContext) {
@@ -48,6 +55,32 @@ class IdeProtocolClient {
       ) {
         debugPanelWebview?.postMessage({
           type: "updateEmbeddings",
+        });
+      }
+    });
+
+    // Refresh index when branch is changed
+    this.getWorkspaceDirectories().forEach(async (dir) => {
+      const repo = await this.getRepo(vscode.Uri.file(dir));
+      if (repo) {
+        repo.state.onDidChange(() => {
+          console.log("didUpdate");
+          // args passed to this callback are always undefined, so keep track of previous branch
+          const currentBranch = repo?.state?.HEAD?.name;
+          if (currentBranch) {
+            if (IdeProtocolClient.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]) {
+              if (
+                currentBranch !==
+                IdeProtocolClient.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]
+              ) {
+                // Trigger refresh of index only in this directory
+                vsCodeIndexCodebase([dir]);
+              }
+            }
+
+            IdeProtocolClient.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir] =
+              currentBranch;
+          }
         });
       }
     });
@@ -311,101 +344,21 @@ class IdeProtocolClient {
     directory: string,
     recursive: boolean
   ): Promise<string[]> {
-    const nameAndType = (
-      await vscode.workspace.fs.readDirectory(uriFromFilePath(directory))
-    ).filter(([name, type]) => {
-      const DEFAULT_IGNORE_FILETYPES = [
-        "DS_Store",
-        "-lock.json",
-        "lock",
-        "log",
-        "ttf",
-        "png",
-        "jpg",
-        "jpeg",
-        "gif",
-        "mp4",
-        "svg",
-        "ico",
-        "pdf",
-        "zip",
-        "gz",
-        "tar",
-        "dmg",
-        "tgz",
-        "rar",
-        "7z",
-        "exe",
-        "dll",
-        "obj",
-        "o",
-        "a",
-        "lib",
-        "so",
-        "dylib",
-        "ncb",
-        "sdf",
-        "woff",
-        "woff2",
-        "eot",
-        "cur",
-        "avi",
-        "mpg",
-        "mpeg",
-        "mov",
-        "mp3",
-        "mp4",
-        "mkv",
-        "mkv",
-        "webm",
-        "jar",
-      ];
-      const DEFAULT_IGNORE_DIRS = [
-        ".git",
-        ".vscode",
-        ".idea",
-        ".vs",
-        "venv",
-        ".venv",
-        "env",
-        ".env",
-        "node_modules",
-        "dist",
-        "build",
-        "target",
-        "out",
-        "bin",
-        ".pytest_cache",
-        ".vscode-test",
-        ".continue",
-        "__pycache__",
-      ];
-      if (
-        !DEFAULT_IGNORE_DIRS.some((dir) =>
-          name.split(path.sep).includes(dir)
-        ) &&
-        !DEFAULT_IGNORE_FILETYPES.some((filetype) => name.endsWith(filetype))
-      ) {
-        return name;
-      }
-    });
-
-    let absolutePaths = nameAndType
-      .filter(([name, type]) => type === vscode.FileType.File)
-      .map(([name, type]) => path.join(directory, name));
-    if (recursive) {
-      for (const [name, type] of nameAndType) {
-        if (type === vscode.FileType.Directory) {
-          const subdirectory = path.join(directory, name);
-          const subdirectoryContents = await this.getDirectoryContents(
-            subdirectory,
-            recursive
-          );
-          absolutePaths = absolutePaths.concat(subdirectoryContents);
-        }
-      }
+    if (!recursive) {
+      return (
+        await vscode.workspace.fs.readDirectory(uriFromFilePath(directory))
+      )
+        .filter(([name, type]) => {
+          type === vscode.FileType.File && !defaultIgnoreFile.ignores(name);
+        })
+        .map(([name, type]) => path.join(directory, name));
     }
-    return absolutePaths;
+
+    const allFiles: string[] = [];
+    for await (const file of traverseDirectory(directory, [])) {
+      allFiles.push(file);
+    }
+    return allFiles;
   }
 
   getAbsolutePath(filepath: string): string {
@@ -474,7 +427,7 @@ class IdeProtocolClient {
     return terminalContents;
   }
 
-  async getRepo(): Promise<any> {
+  private async _getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
     // Use the native git extension to get the branch name
     const extension = vscode.extensions.getExtension("vscode.git");
     if (
@@ -482,42 +435,52 @@ class IdeProtocolClient {
       !extension.isActive ||
       typeof vscode.workspace.workspaceFolders === "undefined"
     ) {
-      return "NONE";
+      return undefined;
     }
 
     const git = extension.exports.getAPI(1);
-    let repo = git.getRepository(vscode.workspace.workspaceFolders[0].uri);
-    if (!repo) {
-      await new Promise((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          resolve(null);
-        }, 5000);
-        extension.exports.b.onDidChangeState((s: any) => {
-          clearTimeout(timeout);
-          resolve(null);
-        });
-      });
+    return git.getRepository(forDirectory);
+  }
 
-      let repo = git.getRepository(vscode.workspace.workspaceFolders[0].uri);
-      return repo;
+  async getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
+    let repo = await this._getRepo(forDirectory);
+    let i = 0;
+    while (!repo) {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      i++;
+      if (i >= 20) {
+        return undefined;
+      }
+      repo = await this._getRepo(forDirectory);
     }
     return repo;
   }
 
-  async getBranch(): Promise<string> {
-    const repo = await this.getRepo();
+  async getBranch(forDirectory: vscode.Uri) {
+    let repo = await this.getRepo(forDirectory);
+    if (repo === undefined) {
+      const { stdout } = await exec("git rev-parse --abbrev-ref HEAD", {
+        cwd: forDirectory.fsPath,
+      });
+      return stdout?.trim() || "NONE";
+    }
 
     return repo?.state?.HEAD?.name || "NONE";
   }
 
   async getDiff(): Promise<string> {
-    const repo = await this.getRepo();
+    let diffs = [];
 
-    if (!repo) {
-      return "";
+    for (const dir of this.getWorkspaceDirectories()) {
+      const repo = await this.getRepo(vscode.Uri.file(dir));
+      if (!repo) {
+        continue;
+      }
+
+      diffs.push((await repo.getDiff()).join("\n"));
     }
 
-    return (await repo.getDiff()).join("\n");
+    return diffs.join("\n\n");
   }
 
   getHighlightedCode(): RangeInFile[] {

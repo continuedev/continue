@@ -302,6 +302,10 @@ export function getSidebarContent(
           respond(await ide.getWorkspaceDirs());
           break;
         }
+        case "listFolders": {
+          respond(await ide.listFolders());
+          break;
+        }
         case "writeFile": {
           respond(
             await ide.writeFile(data.message.path, data.message.contents)
@@ -352,10 +356,9 @@ export function getSidebarContent(
         case "retrieveChunks": {
           respond(
             await ide.retrieveChunks(
-              data.message.v,
+              data.message.text,
               data.message.n,
-              data.message.tags,
-              data.message.providerId
+              data.message.directory
             )
           );
           break;
