@@ -6,11 +6,11 @@ import {
 } from "../..";
 import { retrieveContextItemsFromEmbeddings } from "../retrieval";
 
-class CodebaseContextProvider extends BaseContextProvider {
+class FolderContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
-    title: "codebase",
-    displayTitle: "Codebase",
-    description: "Automatically find relevant files",
+    title: "folder",
+    displayTitle: "Folder",
+    description: "Type to search",
     dynamic: false,
     requiresQuery: false,
   };
@@ -19,9 +19,9 @@ class CodebaseContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
-    return retrieveContextItemsFromEmbeddings(extras, this.options, undefined);
+    return retrieveContextItemsFromEmbeddings(extras, this.options, query);
   }
   async load(): Promise<void> {}
 }
 
-export default CodebaseContextProvider;
+export default FolderContextProvider;

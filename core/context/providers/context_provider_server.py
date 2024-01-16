@@ -1,3 +1,8 @@
+"""
+This is an example of a server that can be used with the "http" context provider.
+This can be useful if you want to write custom logic in another language, or on a server.
+"""
+
 import asyncio
 
 from fastapi import FastAPI

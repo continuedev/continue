@@ -46,6 +46,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   open: FolderOpenIcon,
   codebase: SparklesIcon,
   problems: ExclamationTriangleIcon,
+  folder: FolderIcon,
   "/edit": PaintBrushIcon,
   "/clear": TrashIcon,
   "/test": BeakerIcon,
