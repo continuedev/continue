@@ -126,6 +126,20 @@ export const Mention = Node.create<MentionOptions>({
           };
         },
       },
+
+      itemType: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-itemType"),
+        renderHTML: (attributes) => {
+          if (!attributes.itemType) {
+            return {};
+          }
+
+          return {
+            "data-itemType": attributes.itemType,
+          };
+        },
+      },
     };
   },
 

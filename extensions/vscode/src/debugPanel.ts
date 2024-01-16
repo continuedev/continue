@@ -302,6 +302,10 @@ export function getSidebarContent(
           respond(await ide.getWorkspaceDirs());
           break;
         }
+        case "listFolders": {
+          respond(await ide.listFolders());
+          break;
+        }
         case "writeFile": {
           respond(
             await ide.writeFile(data.message.path, data.message.contents)

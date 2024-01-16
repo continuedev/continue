@@ -851,7 +851,8 @@
                 "url",
                 "http",
                 "codebase",
-                "problems"
+                "problems",
+                "folder"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -861,7 +862,8 @@
                 "Enter a URL and use the contents of the webpage as context",
                 "Write a custom context provider at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
                 "Use embeddings to automatically find relevant files from throughout the codebase",
-                "Reference all linting errors and warnings in the currently open file"
+                "Reference all linting errors and warnings in the currently open file",
+                "Include important files from a folder in the prompt, as determined by similarity search"
               ],
               "type": "string"
             },
@@ -902,7 +904,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["codebase"]
+                "enum": ["codebase", "folder"]
               }
             }
           },

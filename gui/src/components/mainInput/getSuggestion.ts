@@ -10,7 +10,7 @@ import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 function getSuggestion(
   items: (props: { query: string }) => ComboBoxItem[],
-  enterSubmenu: (editor: Editor) => void = (editor) => {},
+  enterSubmenu: (editor: Editor, providerId: string) => void = (editor) => {},
   onClose: () => void = () => {},
   onOpen: () => void = () => {}
 ) {
@@ -109,7 +109,7 @@ function getFileItems(
     fuzzy: 5,
   });
   if (res.length === 0) {
-    return openFiles;
+    return openFiles.length > 0 ? openFiles : firstResults;
   }
   return (
     res?.slice(0, 10).map((hit) => {
@@ -127,21 +127,60 @@ function getFileItems(
   );
 }
 
+function getFolderItems(
+  query: string,
+  miniSearch: MiniSearch,
+  firstResults: any[]
+): ComboBoxItem[] {
+  let res: any[] = miniSearch.search(query.trim() === "" ? "/" : query, {
+    prefix: true,
+    fuzzy: 5,
+  });
+
+  if (res.length === 0) {
+    return firstResults;
+  }
+  return (
+    res?.slice(0, 10).map((hit) => {
+      const lastTwoParts = hit.id.split(/[\\/]/).slice(-2).join("/");
+      const item = {
+        title: hit.basename,
+        description: lastTwoParts,
+        id: "folder",
+        // id: hit.id,
+        content: hit.id,
+        label: hit.basename,
+        query: hit.id,
+        type: "folder" as ComboBoxItemType,
+      };
+      return item;
+    }) || []
+  );
+}
+
 export function getMentionSuggestion(
   availableContextProvidersRef: MutableRefObject<IContextProvider[]>,
-  miniSearchRef: MutableRefObject<MiniSearch>,
-  firstResultsRef: MutableRefObject<any[]>,
-  enterSubmenu: (editor: Editor) => void,
+  filesMiniSearchRef: MutableRefObject<MiniSearch>,
+  filesFirstResultsRef: MutableRefObject<any[]>,
+  foldersMiniSearchRef: MutableRefObject<MiniSearch>,
+  foldersFirstResultsRef: MutableRefObject<any[]>,
+  enterSubmenu: (editor: Editor, providerId: string) => void,
   onClose: () => void,
   onOpen: () => void,
-  inSubmenu: MutableRefObject<boolean>
+  inSubmenu: MutableRefObject<string>
 ) {
   const items = ({ query }) => {
-    if (inSubmenu.current) {
+    if (inSubmenu.current === "file") {
       return getFileItems(
         query,
-        miniSearchRef.current,
-        firstResultsRef.current
+        filesMiniSearchRef.current,
+        filesFirstResultsRef.current
+      );
+    } else if (inSubmenu.current === "folder") {
+      return getFolderItems(
+        query,
+        foldersMiniSearchRef.current,
+        foldersFirstResultsRef.current
       );
     }
 
@@ -170,8 +209,8 @@ export function getMentionSuggestion(
     if (mainResults.length === 0) {
       return getFileItems(
         query,
-        miniSearchRef.current,
-        firstResultsRef.current
+        filesMiniSearchRef.current,
+        filesFirstResultsRef.current
       );
     }
     return mainResults;

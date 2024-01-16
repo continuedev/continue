@@ -94,7 +94,8 @@ function splitGlob(glob: string): [string | undefined, string, boolean] {
 
 export async function* traverseDirectory(
   directory: string,
-  gitIgnorePatterns: string[]
+  gitIgnorePatterns: string[],
+  returnFiles: boolean = true
 ): AsyncGenerator<string> {
   const nodes = await vscode.workspace.fs.readDirectory(
     uriFromFilePath(directory)
@@ -135,9 +136,9 @@ export async function* traverseDirectory(
   const allIgnorePatterns = [...gitIgnorePatterns, ...ignorePatterns];
   const ig = ignore().add(allIgnorePatterns);
 
-  for (const file of files) {
-    if (!ig.ignores(file)) {
-      yield path.join(directory, file);
+  for (const node of returnFiles ? files : dirs) {
+    if (!ig.ignores(node)) {
+      yield path.join(directory, node);
     }
   }
 
@@ -169,7 +170,8 @@ export async function* traverseDirectory(
       }
       for await (const file of traverseDirectory(
         path.join(directory, dir),
-        keepPatterns
+        keepPatterns,
+        returnFiles
       )) {
         yield file;
       }

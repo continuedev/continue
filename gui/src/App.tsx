@@ -14,6 +14,7 @@ import MonacoPage from "./pages/monaco";
 import SettingsPage from "./pages/settings";
 
 import { ExtensionIde } from "core/ide";
+import { getBasename } from "core/util";
 import MiniSearch from "minisearch";
 
 const router = createMemoryRouter([
@@ -66,14 +67,21 @@ const router = createMemoryRouter([
   },
 ]);
 
-const miniSearch = new MiniSearch({
+const filesMiniSearch = new MiniSearch({
   fields: ["id", "basename"],
   storeFields: ["id", "basename"],
 });
-export const SearchContext = createContext<[MiniSearch, MiniSearchResult[]]>([
-  miniSearch,
-  [],
-]);
+export const FilesSearchContext = createContext<
+  [MiniSearch, MiniSearchResult[]]
+>([filesMiniSearch, []]);
+
+const foldersMiniSearch = new MiniSearch({
+  fields: ["id", "basename"],
+  storeFields: ["id", "basename"],
+});
+export const FoldersSearchContext = createContext<
+  [MiniSearch, MiniSearchResult[]]
+>([foldersMiniSearch, []]);
 
 export interface MiniSearchResult {
   id: string;
@@ -85,23 +93,43 @@ function App() {
 
   useSetup(dispatch);
 
-  const [firstResults, setFirstResults] = useState<MiniSearchResult[]>([]);
+  const [filesFirstResults, setFilesFirstResults] = useState<
+    MiniSearchResult[]
+  >([]);
+  const [foldersFirstResults, setFoldersFirstResults] = useState<
+    MiniSearchResult[]
+  >([]);
 
   useEffect(() => {
     (async () => {
       const files = await new ExtensionIde().listWorkspaceContents();
       const results = files.map((filepath) => {
-        return { id: filepath, basename: filepath.split(/[\\/]/).pop() };
+        return { id: filepath, basename: getBasename(filepath) };
       });
-      miniSearch.addAll(results);
-      setFirstResults(results);
+      filesMiniSearch.addAll(results);
+      setFilesFirstResults(results);
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      const folders = await new ExtensionIde().listFolders();
+      const results = folders.map((path) => {
+        return { id: path, basename: getBasename(path) };
+      });
+      foldersMiniSearch.addAll(results);
+      setFoldersFirstResults(results);
     })();
   }, []);
 
   return (
-    <SearchContext.Provider value={[miniSearch, firstResults]}>
-      <RouterProvider router={router} />
-    </SearchContext.Provider>
+    <FilesSearchContext.Provider value={[filesMiniSearch, filesFirstResults]}>
+      <FoldersSearchContext.Provider
+        value={[foldersMiniSearch, foldersFirstResults]}
+      >
+        <RouterProvider router={router} />
+      </FoldersSearchContext.Provider>
+    </FilesSearchContext.Provider>
   );
 }
 

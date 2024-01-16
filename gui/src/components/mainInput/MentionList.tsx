@@ -130,10 +130,10 @@ const QueryInput = styled.textarea`
 
 interface MentionListProps {
   items: ComboBoxItem[];
-  command: (item: ComboBoxItem) => void;
+  command: (item: any) => void;
 
   editor: Editor;
-  enterSubmenu?: (editor: Editor) => void;
+  enterSubmenu?: (editor: Editor, providerId: string) => void;
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
@@ -157,9 +157,13 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   const selectItem = (index) => {
     const item = props.items[index];
 
-    if (item.id === "file") {
+    if (item.type === "contextProvider" && item.id === "file") {
       setSubMenuTitle("Files - Type to search");
-      props.enterSubmenu(props.editor);
+      props.enterSubmenu(props.editor, "file");
+      return;
+    } else if (item.type === "contextProvider" && item.id === "folder") {
+      setSubMenuTitle("Folder - Type to search");
+      props.enterSubmenu(props.editor, "folder");
       return;
     }
 
@@ -170,7 +174,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
 
     if (item) {
-      props.command(item);
+      props.command({ ...item, itemType: item.type });
     }
   };
 
@@ -273,7 +277,10 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         filename={item.title}
                       ></FileIcon>
                     )}
-                    {item.type !== "file" && (
+                    {item.type === "folder" && (
+                      <FolderIcon height="20px" width="20px"></FolderIcon>
+                    )}
+                    {item.type !== "file" && item.type !== "folder" && (
                       <DropdownIcon
                         provider={item.id}
                         type={item.type}
@@ -293,7 +300,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                     className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2 flex items-center"
                   >
                     {item.description}
-                    {item.id === "file" && (
+                    {(item.type === "file" || item.type === "folder") && (
                       <ArrowRightIcon
                         className="ml-2"
                         width="1.2em"

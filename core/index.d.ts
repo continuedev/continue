@@ -275,6 +275,7 @@ export interface IDE {
   getDiff(): Promise<string>;
   getTerminalContents(): Promise<string>;
   listWorkspaceContents(directory?: string): Promise<string[]>;
+  listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
   writeFile(path: string, contents: string): Promise<void>;
   showVirtualFile(title: string, contents: string): Promise<void>;

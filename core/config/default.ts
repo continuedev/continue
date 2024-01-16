@@ -26,11 +26,11 @@ const defaultConfig: SerializedContinueConfig = {
   slashCommands: [
     {
       name: "edit",
-      description: "Edit highlighted code",
+      description: "Edit selected code",
     },
     {
       name: "comment",
-      description: "Write comments for the highlighted code",
+      description: "Write comments for the selected code",
     },
     {
       name: "share",

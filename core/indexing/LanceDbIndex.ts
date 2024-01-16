@@ -139,7 +139,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
     // Compute
     let table: lancedb.Table | undefined = undefined;
-    let needToCreateTable = false;
+    let needToCreateTable = true;
     const existingTables = await db.tableNames();
     let computedRows: LanceDbRow[] = [];
 
@@ -169,13 +169,13 @@ export class LanceDbIndex implements CodebaseIndex {
           }
         } else if (existingTables.includes(tableName)) {
           table = await db.openTable(tableName);
+          needToCreateTable = false;
           if (computedRows.length > 0) {
             await table.add(computedRows);
           }
         } else if (computedRows.length > 0) {
           table = await db.createTable(tableName, computedRows);
-        } else {
-          needToCreateTable = true;
+          needToCreateTable = false;
         }
 
         computedRows = [];

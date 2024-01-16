@@ -30,6 +30,7 @@ import { IndexTag } from "core/indexing/types";
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { configHandler } from "./loadConfig";
 import mergeJson from "./util/merge";
+import { traverseDirectory } from "./util/traverseDirectory";
 import { getExtensionUri } from "./util/vscode";
 
 async function buildConfigTs(browser: boolean) {
@@ -235,6 +236,19 @@ class VsCodeIde implements IDE {
       );
       return contents.flat();
     }
+  }
+
+  async listFolders(): Promise<string[]> {
+    const allDirs: string[] = [];
+
+    const workspaceDirs = await this.getWorkspaceDirs();
+    for (const directory of workspaceDirs) {
+      for await (const dir of traverseDirectory(directory, [], false)) {
+        allDirs.push(dir);
+      }
+    }
+
+    return allDirs;
   }
 
   async getWorkspaceDirs(): Promise<string[]> {

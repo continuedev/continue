@@ -48,6 +48,9 @@ class FileSystemIde implements IDE {
       });
     });
   }
+  listFolders(): Promise<string[]> {
+    return Promise.resolve([]);
+  }
   writeFile(path: string, contents: string): Promise<void> {
     return new Promise((resolve, reject) => {
       fs.writeFile(path, contents, (err) => {
