@@ -141,6 +141,22 @@ function deepseekTemplateMessages(msgs: ChatMessage[]): string {
   return prompt + "### Response:\n";
 }
 
+// See https://huggingface.co/microsoft/phi-2#qa-format
+function phi2TemplateMessages(msgs: ChatMessage[]): string {
+  const HUMAN_PROMPT = "\n\nInstruct:";
+  const AI_PROMPT = "\n\nOutput:";
+  let prompt = "";
+
+  for (const msg of msgs) {
+    prompt += `${
+      msg.role === "user" || msg.role === "system" ? HUMAN_PROMPT : AI_PROMPT
+    } ${msg.content} `;
+  }
+
+  prompt += AI_PROMPT;
+  return prompt;
+}
+
 function phindTemplateMessages(msgs: ChatMessage[]): string {
   let prompt = "";
 
@@ -234,6 +250,7 @@ export {
   llama2TemplateMessages,
   neuralChatTemplateMessages,
   openchatTemplateMessages,
+  phi2TemplateMessages,
   phindTemplateMessages,
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
