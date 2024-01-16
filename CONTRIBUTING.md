@@ -50,6 +50,8 @@ Continue is continuously improving, but a feature isn't complete until it is ref
 
 ## 🧑‍💻 Contributing Code
 
+> Please make PRs to the `preview` branch. We use this to first test changes in a pre-release version of the extension.
+
 ### Environment Setup
 
 VS Code is assumed for development as Continue is primarily a VS Code tool at the moment. Most of the setup and running is automated through VS Code tasks and launch configurations.
