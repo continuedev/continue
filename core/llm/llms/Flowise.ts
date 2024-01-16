@@ -102,7 +102,12 @@ class Flowise extends BaseLLM {
 
   protected _convertArgs(options: CompletionOptions): IFlowiseApiOptions {
     const finalOptions: IFlowiseApiOptions = {
-      ...options
+      temperature: options.temperature,
+      maxTokens: options.maxTokens,
+      topP: options.topP,
+      topK: options.topK,
+      presencePenalty: options.presencePenalty,
+      frequencyPenalty: options.frequencyPenalty,
     };
 
     for (const additionalConfig of this.additionalFlowiseConfiguration) {
