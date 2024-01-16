@@ -111,7 +111,8 @@
             "lmstudio",
             "llamafile",
             "mistral",
-            "deepinfra"
+            "deepinfra",
+            "flowise"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/openai)",
@@ -686,6 +687,102 @@
             "properties": {
               "streamingUrl": {
                 "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["flowise"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "timeout": {
+                "title": "Timeout",
+                "description": "Set the timeout for each request to Flowise. If you are running a local version of Flowise it might takes a while to respond, you might want to set this to avoid timeouts.",
+                "default": 5000,
+                "type": "integer"
+              },
+              "additionalHeaders": {
+                "description": "A list of additional headers",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "title": "Key",
+                      "description": "Header key",
+                      "type": "string"
+                    },
+                    "value": {
+                      "title": "Value",
+                      "description": "Header value",
+                      "type": "string"
+                    }
+                  },
+                  "required": ["key", "value"]
+                }
+              },
+              "additionalFlowiseConfiguration": {
+                "description": "A list of additional properties to be sent along `overrideConfig`",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "title": "Key",
+                      "description": "Configuration Property key",
+                      "type": "string"
+                    },
+                    "value": {
+                      "title": "Value",
+                      "description": "Configuration Property value"
+                    }
+                  },
+                  "required": ["key", "value"]
+                }
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gpt-3.5-turbo",
+                      "gpt-3.5-turbo-16k",
+                      "gpt-4",
+                      "gpt-3.5-turbo-0613",
+                      "gpt-4-32k",
+                      "gpt-4-1106-preview",
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-1b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "claude-2",
+                      "chat-bison-001",
+                      "gemini-pro",
+                      "mistral-tiny",
+                      "mistral-small",
+                      "mistral-medium"
+                    ]
+                  },
+                  { "type": "string" }
+                ]
               }
             }
           }
