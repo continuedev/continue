@@ -26,6 +26,8 @@ exec("npm install", (error) => {
       }
 
       // Copy over some files required for native modules
+
+      // sqlite3
       ncp(
         path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
         path.join(__dirname, "../out/build"),
@@ -33,6 +35,8 @@ exec("npm install", (error) => {
           if (error) console.warn("Error copying sqlite3 files", error);
         }
       );
+
+      // onnxruntime-node
       ncp(
         path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
         path.join(__dirname, "../bin"),
@@ -41,6 +45,26 @@ exec("npm install", (error) => {
             console.warn("Error copying onnxruntime-node files", error);
         }
       );
+      if (process.env.target) {
+        // If building for production, only need the binaries for current platform
+        if (!process.env.target.startsWith("darwin")) {
+          fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/darwin"), {
+            recursive: true,
+          });
+        }
+        if (!process.env.target.startsWith("linux")) {
+          fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/linux"), {
+            recursive: true,
+          });
+        }
+        if (!process.env.target.startsWith("win")) {
+          fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/win32"), {
+            recursive: true,
+          });
+        }
+      }
+
+      // tree-sitter-wasms
       ncp(
         path.join(
           __dirname,
