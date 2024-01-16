@@ -16,13 +16,18 @@
     "ts-jest": "^29.1.1"
   },
   "dependencies": {
+    "@xenova/transformers": "^2.14.0",
     "dotenv": "^16.3.1",
     "fastest-levenshtein": "^1.0.16",
     "handlebars": "^4.7.8",
     "js-tiktoken": "^1.0.8",
     "openai": "^4.20.1",
     "replicate": "^0.23.0",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7",
+    "tree-sitter-wasms": "^0.1.6",
     "uuid": "^9.0.1",
+    "vectordb": "^0.4.3",
     "web-tree-sitter": "^0.20.8"
   }
 }

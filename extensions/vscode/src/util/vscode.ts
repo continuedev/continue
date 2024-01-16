@@ -120,14 +120,23 @@ function windowsToPosix(windowsPath: string): string {
   return posixPath;
 }
 
+function isWindowsLocalButNotRemote(): boolean {
+  return (
+    vscode.env.remoteName !== undefined &&
+    ["wsl", "ssh-remote", "dev-container", "attached-container"].includes(
+      vscode.env.remoteName
+    ) &&
+    process.platform === "win32"
+  );
+}
+
+export function getPathSep(): string {
+  return isWindowsLocalButNotRemote() ? "/" : path.sep;
+}
+
 export function uriFromFilePath(filepath: string): vscode.Uri {
   if (vscode.env.remoteName) {
-    if (
-      ["wsl", "ssh-remote", "dev-container", "attached-container"].includes(
-        vscode.env.remoteName
-      ) &&
-      process.platform === "win32"
-    ) {
+    if (isWindowsLocalButNotRemote()) {
       filepath = windowsToPosix(filepath);
     }
     return vscode.Uri.parse(

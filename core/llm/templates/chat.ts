@@ -205,11 +205,34 @@ function xWinCoderTemplateMessages(msgs: ChatMessage[]): string {
   return prompt;
 }
 
+/**
+ * NeuralChat Template
+ * ### System:\n{system_input}\n### User:\n{user_input}\n### Assistant:\n
+ */
+function neuralChatTemplateMessages(msgs: ChatMessage[]): string {
+  let prompt = "";
+
+  if (msgs[0].role === "system") {
+    prompt += `### System:\n${msgs[0].content}\n`;
+    msgs.shift();
+  }
+
+  for (const msg of msgs) {
+    prompt += msg.role === "user" ? "### User:\n" : "### Assistant:\n";
+    prompt += `${msg.content}\n`;
+  }
+
+  prompt += "### Assistant:\n";
+
+  return prompt;
+}
+
 export {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
+  neuralChatTemplateMessages,
   openchatTemplateMessages,
   phindTemplateMessages,
   templateAlpacaMessages,

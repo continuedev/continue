@@ -48,6 +48,9 @@ class FileSystemIde implements IDE {
       });
     });
   }
+  listFolders(): Promise<string[]> {
+    return Promise.resolve([]);
+  }
   writeFile(path: string, contents: string): Promise<void> {
     return new Promise((resolve, reject) => {
       fs.writeFile(path, contents, (err) => {
@@ -123,10 +126,9 @@ class FileSystemIde implements IDE {
   sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {}
 
   retrieveChunks(
-    v: number[],
+    text: string,
     n: number,
-    tags: string[],
-    providerId: string
+    directory: string | undefined
   ): Promise<Chunk[]> {
     return Promise.resolve([]);
   }

@@ -70,6 +70,7 @@ Instead of writing something like `Ollama(model="phind-codellama:34b", ...)`, wh
     "deepseek-1b",
     "deepseek-7b",
     "deepseek-33b",
+    "neural-chat-7b"
     # Anthropic
     "claude-2",
     # Google PaLM
@@ -80,7 +81,7 @@ If you want to use a model not listed here, you can still do that by specifying 
 
 ### Prompt template auto-detection
 
-Based on the `model` property, we now attempt to [autodetect](https://github.com/continuedev/continue/blob/108e00c7db9cad110c5df53bdd0436b286b92466/server/continuedev/core/config_utils/shared.py#L38) the prompt template. If you want to be explicit, you can select one of our prompt template types (`"llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "deepseek"`) or write a custom prompt template in `config.py`.
+Based on the `model` property, we now attempt to [autodetect](https://github.com/continuedev/continue/blob/108e00c7db9cad110c5df53bdd0436b286b92466/server/continuedev/core/config_utils/shared.py#L38) the prompt template. If you want to be explicit, you can select one of our prompt template types (`"llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "deepseek", "neural-chat"`) or write a custom prompt template in `config.py`.
 
 ### `PromptTemplate`
 

@@ -17,7 +17,7 @@ import {
 import { contextProviderClassFromName } from "../context/providers";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
-import { AllEmbeddingsProviders } from "../index/embeddings";
+import { AllEmbeddingsProviders } from "../indexing/embeddings";
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";

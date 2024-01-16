@@ -8,6 +8,7 @@ from continuedev.libs.llm.prompts.chat import (
     phind_template_messages,
     template_alpaca_messages,
     zephyr_template_messages,
+    neuralchat_template_messages
 )
 
 
@@ -73,6 +74,15 @@ Hello! [/INST]""",
             code_llama_template_messages,
             """[INST] Hello!
 [/INST]""",
+        ),
+        (
+            phind_template_messages,
+            """### System:
+Always be kind
+### User:
+Hello!
+### Assistant:
+""",
         ),
     ],
 )

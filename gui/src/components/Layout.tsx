@@ -4,7 +4,7 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { postToIde } from "core/ide/messaging";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -14,7 +14,6 @@ import {
   vscBackground,
   vscForeground,
 } from ".";
-import useLoadEmbeddings from "../hooks/useLoadEmbeddings";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
@@ -162,6 +161,8 @@ const Layout = () => {
         } else {
           navigate("/history");
         }
+      } else if (event.data.type === "indexProgress") {
+        setIndexingProgress(event.data.progress);
       }
     };
     window.addEventListener("message", handler);
@@ -170,7 +171,7 @@ const Layout = () => {
     };
   }, [location, navigate]);
 
-  const { progress: indexingProgress, currentlyIndexing } = useLoadEmbeddings();
+  const [indexingProgress, setIndexingProgress] = useState(1);
 
   return (
     <LayoutTopDiv>
@@ -240,7 +241,7 @@ const Layout = () => {
 
               {indexingProgress < 1 && (
                 <IndexingProgressBar
-                  currentlyIndexing={currentlyIndexing}
+                  currentlyIndexing={"codebase"}
                   completed={indexingProgress * 100}
                   total={100}
                 />
