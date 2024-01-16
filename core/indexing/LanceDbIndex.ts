@@ -251,9 +251,13 @@ export class LanceDbIndex implements CodebaseIndex {
     const table = await db.openTable(tableName);
     let query = table.search(vector);
     if (directory) {
-      query = query.where(`path LIKE '${directory}%'`);
+      // seems like lancedb is only post-filtering, so have to return a bunch of results and slice after
+      query = query.where(`path LIKE '${directory}%'`).limit(300);
+    } else {
+      query = query.limit(n);
     }
-    return await query.limit(n).execute();
+    const results = await query.execute();
+    return results.slice(0, n) as any;
   }
 
   async retrieve(

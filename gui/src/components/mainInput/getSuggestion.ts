@@ -99,6 +99,26 @@ function refreshOpenFiles() {
 }
 refreshOpenFiles();
 
+let folders: ComboBoxItem[] = [];
+function refreshFolders() {
+  new ExtensionIde().listFolders().then((f) => {
+    folders = f.map((folder) => {
+      const baseName = getBasename(folder);
+      const lastTwoParts = folder.split(/[\\/]/).slice(-2).join("/");
+      return {
+        title: baseName,
+        description: lastTwoParts,
+        id: "folder",
+        content: folder,
+        label: baseName,
+        type: "folder" as ComboBoxItemType,
+        query: folder,
+      };
+    });
+  });
+}
+refreshFolders();
+
 function getFileItems(
   query: string,
   miniSearch: MiniSearch,
@@ -138,7 +158,7 @@ function getFolderItems(
   });
 
   if (res.length === 0) {
-    return firstResults;
+    return folders.slice(0, 10);
   }
   return (
     res?.slice(0, 10).map((hit) => {
@@ -147,7 +167,6 @@ function getFolderItems(
         title: hit.basename,
         description: lastTwoParts,
         id: "folder",
-        // id: hit.id,
         content: hit.id,
         label: hit.basename,
         query: hit.id,
@@ -180,7 +199,7 @@ export function getMentionSuggestion(
       return getFolderItems(
         query,
         foldersMiniSearchRef.current,
-        foldersFirstResultsRef.current
+        filesFirstResultsRef.current
       );
     }
 

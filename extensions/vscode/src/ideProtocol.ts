@@ -136,6 +136,27 @@ class VsCodeIde implements IDE {
         );
       });
 
+      migrate("foldersContextProvider", () => {
+        if (
+          !config.contextProviders?.filter((cp) => cp.name === "folders")
+            ?.length
+        ) {
+          config.contextProviders = [
+            ...(config.contextProviders || []),
+            {
+              name: "folders",
+              params: {},
+            },
+          ];
+        }
+
+        fs.writeFileSync(
+          configPath,
+          JSON.stringify(config, undefined, 2),
+          "utf8"
+        );
+      });
+
       migrate("renameFreeTrialProvider", () => {
         contents = contents.replace(/openai-free-trial/g, "free-trial");
         fs.writeFileSync(configPath, contents, "utf8");

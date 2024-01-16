@@ -300,13 +300,14 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                     className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2 flex items-center"
                   >
                     {item.description}
-                    {(item.type === "file" || item.type === "folder") && (
-                      <ArrowRightIcon
-                        className="ml-2"
-                        width="1.2em"
-                        height="1.2em"
-                      />
-                    )}
+                    {item.type === "contextProvider" &&
+                      (item.id === "file" || item.id === "folder") && (
+                        <ArrowRightIcon
+                          className="ml-2"
+                          width="1.2em"
+                          height="1.2em"
+                        />
+                      )}
                   </span>
                 </span>
               </ItemDiv>
