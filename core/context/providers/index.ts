@@ -7,6 +7,7 @@ import GitHubIssuesContextProvider from "./GitHubIssuesContextProvider";
 import GoogleContextProvider from "./GoogleContextProvider";
 import HttpContextProvider from "./HttpContextProvider";
 import OpenFilesContextProvider from "./OpenFilesContextProvider";
+import ProblemsContextProvider from "./ProblemsContextProvider";
 import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
@@ -22,6 +23,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   HttpContextProvider,
   SearchContextProvider,
   CodebaseContextProvider,
+  ProblemsContextProvider,
 ];
 
 export function contextProviderClassFromName(

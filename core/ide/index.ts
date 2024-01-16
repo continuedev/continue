@@ -1,4 +1,4 @@
-import { Chunk, DiffLine } from "..";
+import { Chunk, DiffLine, Problem } from "..";
 import { IDE, SerializedContinueConfig } from "../index";
 
 import { ideRequest } from "./messaging";
@@ -86,6 +86,10 @@ export class ExtensionIde implements IDE {
 
   getSearchResults(query: string): Promise<string> {
     return r("getSearchResults", { query });
+  }
+
+  getProblems(filepath?: string | undefined): Promise<Problem[]> {
+    return r("getProblems", { filepath });
   }
 
   subprocess(command: string): Promise<[string, string]> {

@@ -414,6 +414,10 @@ export function getSidebarContent(
           );
           break;
         }
+        case "getProblems": {
+          respond(await ide.getProblems(data.message.filepath));
+          break;
+        }
         case "getOpenFiles": {
           respond(await ide.getOpenFiles());
           break;

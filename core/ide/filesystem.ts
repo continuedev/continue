@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { DiffLine, IDE, SerializedContinueConfig } from "..";
+import { DiffLine, IDE, Problem, SerializedContinueConfig } from "..";
 import { Chunk } from "../index";
 import {
   getConfigJsonPath,
@@ -106,6 +106,10 @@ class FileSystemIde implements IDE {
 
   async getSearchResults(query: string): Promise<string> {
     return "";
+  }
+
+  async getProblems(filepath?: string | undefined): Promise<Problem[]> {
+    return Promise.resolve([]);
   }
 
   async subprocess(command: string): Promise<[string, string]> {

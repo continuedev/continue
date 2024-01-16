@@ -57,7 +57,11 @@ async function resolveEditorContent(
   let contextItems: ContextItemWithId[] = [];
   const ide = new ExtensionIde();
   for (const item of contextItemAttrs) {
-    if (item.id.startsWith("/") || item.id.startsWith("\\")) {
+    if (
+      item.id.startsWith("/") ||
+      item.id.startsWith("\\") ||
+      (item.id.length > 2 && item.id[1] === ":" && item.id[2] === "\\")
+    ) {
       // This is a quick way to resolve @file references
       const basename = getBasename(item.id);
       const content = await ide.readFile(item.id);
