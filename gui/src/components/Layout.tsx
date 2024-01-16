@@ -260,7 +260,7 @@ const Layout = () => {
                 // navigate("/settings");
                 postToIde("openConfigJson", {});
               }}
-              text="Settings"
+              text="Config"
             >
               <Cog6ToothIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>

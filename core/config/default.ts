@@ -3,22 +3,22 @@ import { SerializedContinueConfig } from "..";
 const defaultConfig: SerializedContinueConfig = {
   models: [
     {
-      title: "GPT-4",
+      title: "GPT-4 (Free Trial)",
       provider: "free-trial",
       model: "gpt-4",
     },
     {
-      title: "GPT-3.5-Turbo",
+      title: "GPT-3.5-Turbo (Free Trial)",
       provider: "free-trial",
       model: "gpt-3.5-turbo",
     },
     {
-      title: "Phind CodeLlama",
+      title: "Phind CodeLlama (Free Trial)",
       provider: "free-trial",
       model: "phind-codellama-34b",
     },
     {
-      title: "Gemini Pro",
+      title: "Gemini Pro (Free Trial)",
       provider: "free-trial",
       model: "gemini-pro",
     },
