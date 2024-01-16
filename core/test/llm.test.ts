@@ -107,6 +107,6 @@ describe("LLM", () => {
   //   new Mistral({ apiKey: process.env.MISTRAL_API_KEY, model: "mistral-small" })
   // );
   // testLLM(
-  //   new Flowise({ apiKey: process.env.FLOWISE_API_KEY, model: "flowise" })
+  //   new Flowise({ apiKey: process.env.FLOWISE_API_KEY, model: "gpt-3.5-turbo" })
   // );
 });

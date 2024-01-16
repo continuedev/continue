@@ -143,8 +143,7 @@
             "phind",
             "anthropic",
             "chatml",
-            "deepseek",
-            "flowise"
+            "deepseek"
           ],
           "type": "string"
         },

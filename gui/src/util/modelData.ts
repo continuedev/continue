@@ -412,11 +412,11 @@ const codeup: ModelPackage = {
 };
 
 const flowise: ModelPackage = {
-  title: "Flowise",
-  description: "Open source UI visual tool to build your customized LLM ochestration flow & AI agents",
+  title: "Flowise (GPT 3.5 Turbo)",
+  description: "Open source UI visual tool to build your customized LLM ochestration flow & AI agents, using GPT 3.5 Turbo",
   params: {
     title: "Flowise",
-    model: "flowise",
+    model: "gpt-3.5-turbo",
     contextLength: 2048,
   },
   icon: "flowiseai.png",

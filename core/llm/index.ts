@@ -21,7 +21,6 @@ import {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   deepseekTemplateMessages,
-  flowiseTemplateMessages,
   llama2TemplateMessages,
   openchatTemplateMessages,
   phindTemplateMessages,
@@ -33,7 +32,6 @@ import {
   alpacaEditPrompt,
   codellamaEditPrompt,
   deepseekEditPrompt,
-  flowiseEditPrompt,
   mistralEditPrompt,
   openchatEditPrompt,
   phindEditPrompt,
@@ -100,10 +98,6 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "openchat";
   }
 
-  if (lower.includes("flowise")) {
-    return "flowise";
-  }
-
   return "chatml";
 }
 
@@ -132,7 +126,6 @@ function autodetectTemplateFunction(
       deepseek: deepseekTemplateMessages,
       openchat: openchatTemplateMessages,
       "xwin-coder": xWinCoderTemplateMessages,
-      flowise: flowiseTemplateMessages,
       none: null,
     };
 
@@ -169,8 +162,6 @@ function autodetectPromptTemplates(
     editTemplate = openchatEditPrompt;
   } else if (templateType === "xwin-coder") {
     editTemplate = xWinCoderEditPrompt;
-  } else if (templateType === "flowise") {
-    editTemplate = flowiseEditPrompt;
   } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }

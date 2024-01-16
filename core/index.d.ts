@@ -378,8 +378,7 @@ type TemplateType =
   | "none"
   | "openchat"
   | "deepseek"
-  | "xwin-coder"
-  | "flowise";
+  | "xwin-coder";
 
 type ModelProvider =
   | "openai"
@@ -435,9 +434,7 @@ export type ModelName =
   // Mistral
   | "mistral-tiny"
   | "mistral-small"
-  | "mistral-medium"
-  // Flowise
-  | "flowise";
+  | "mistral-medium";
 
 export interface RequestOptions {
   timeout?: number;

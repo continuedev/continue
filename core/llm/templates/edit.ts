@@ -124,20 +124,6 @@ Just rewrite the code without explanations:
 <AI>:
 \`\`\`{{{language}}}`;
 
-const flowiseEditPrompt = `System:
-You are an expert programmer and write code on the first attempt without any errors or fillers.
-User:
-Rewrite the code to satisfy this request: "{{{userInput}}}"
-
-\`\`\`
-{{{codeToEdit}}}
-\`\`\`
-Assistant:
-Sure! Here's the code you requested:
-
-\`\`\`
-`;
-
 export {
   alpacaEditPrompt,
   codellamaEditPrompt,
@@ -151,5 +137,4 @@ export {
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
-  flowiseEditPrompt,
 };

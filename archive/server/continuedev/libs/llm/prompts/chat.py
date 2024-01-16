@@ -110,15 +110,6 @@ def phind_template_messages(msgs: List[ChatMessage]) -> str:
     return prompt
 
 
-def flowise_template_messages(msgs: List[ChatMessage]) -> str:
-    prompt = ""
-
-    for msg in messages:
-        prompt += f"{"Human:" if (msg.role == 'user' or msg.role == 'system') else "Assistant:"} {msg.content} "
-
-    return prompt
-
-
 def raw_input_template(msgs: List[ChatMessage]) -> str:
     return msgs[-1].content
 
