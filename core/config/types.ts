@@ -371,8 +371,7 @@ declare global {
     | "none"
     | "openchat"
     | "deepseek"
-    | "xwin-coder"
-    | "flowise";
+    | "xwin-coder";
   
   type ModelProvider =
     | "openai"
@@ -428,9 +427,7 @@ declare global {
     // Mistral
     | "mistral-tiny"
     | "mistral-small"
-    | "mistral-medium"
-    // Flowise
-    | "flowise";
+    | "mistral-medium";
   
   export interface RequestOptions {
     timeout?: number;
