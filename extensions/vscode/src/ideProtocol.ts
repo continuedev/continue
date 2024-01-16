@@ -25,8 +25,8 @@ import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
-import { LanceDbIndex } from "core/index/LanceDbIndex";
-import { IndexTag } from "core/index/index";
+import { LanceDbIndex } from "core/indexing/LanceDbIndex";
+import { IndexTag } from "core/indexing/types";
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { configHandler } from "./loadConfig";
 import mergeJson from "./util/merge";

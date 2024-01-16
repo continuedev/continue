@@ -1,6 +1,6 @@
-import { LanceDbIndex } from "core/index/LanceDbIndex";
-import { CodebaseIndex, IndexTag, LastModifiedMap } from "core/index/index";
-import { getComputeDeleteAddRemove } from "core/index/refreshIndex";
+import { LanceDbIndex } from "core/indexing/LanceDbIndex";
+import { getComputeDeleteAddRemove } from "core/indexing/refreshIndex";
+import { CodebaseIndex, IndexTag, LastModifiedMap } from "core/indexing/types";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "../activation/activate";
 import { debugPanelWebview } from "../debugPanel";
@@ -57,13 +57,19 @@ export async function vsCodeIndexCodebase(workspaceDirs: string[]) {
           branch,
           artifactId: codebaseIndex.artifactId,
         };
-        const results = await getComputeDeleteAddRemove(
+        const [results, markComplete] = await getComputeDeleteAddRemove(
           tag,
           stats,
           (filepath) => ideProtocolClient.readFile(filepath)
         );
 
-        for await (let progress of codebaseIndex.update(tag, results)) {
+        console.log("RESULTS: ", results);
+
+        for await (let progress of codebaseIndex.update(
+          tag,
+          results,
+          markComplete
+        )) {
           update(
             (completedDirs +
               (completedIndexes + progress) / indexesToBuild.length) /

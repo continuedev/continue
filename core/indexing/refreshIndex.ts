@@ -1,14 +1,16 @@
 import crypto from "crypto";
 import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
+import { getIndexSqlitePath } from "../util/paths";
 import {
   CodebaseIndex,
+  IndexResultType,
   IndexTag,
   LastModifiedMap,
+  MarkCompleteCallback,
   PathAndCacheKey,
   RefreshIndexResults,
-} from ".";
-import { getIndexSqlitePath } from "../util/paths";
+} from "./types";
 
 export type DatabaseConnection = Database<sqlite3.Database>;
 
@@ -75,11 +77,18 @@ interface PathAndOptionalCacheKey {
   cacheKey?: string;
 }
 
+enum AddRemoveResultType {
+  Add = "add",
+  Remove = "remove",
+  UpdateNewVersion = "updateNewVersion",
+  UpdateOldVersion = "updateOldVersion",
+}
+
 async function getAddRemoveForTag(
   tag: IndexTag,
   currentFiles: LastModifiedMap,
   readFile: (path: string) => Promise<string>
-): Promise<[PathAndCacheKey[], PathAndCacheKey[]]> {
+): Promise<[PathAndCacheKey[], PathAndCacheKey[], MarkCompleteCallback]> {
   const newLastUpdatedTimestamp = Date.now();
 
   const saved = await getSavedItemsForTag(tag);
@@ -123,61 +132,89 @@ async function getAddRemoveForTag(
     ))
   );
 
+  // Create the markComplete callback function
   const db = await SqliteDb.get();
+  const itemToAction: {
+    [key: string]: [PathAndCacheKey, AddRemoveResultType];
+  } = {};
 
-  // Update rows of files that have been modified
-  for (let { path, cacheKey } of updateNewVersion) {
-    await db.run(
-      `UPDATE tag_catalog SET
-          cacheKey = ?,
-          lastUpdated = ?
-       WHERE
-          path = ? AND
-          dir = ? AND
-          branch = ? AND
-          artifactId = ?
-      `,
-      cacheKey,
-      newLastUpdatedTimestamp,
-      path,
-      tag.directory,
-      tag.branch,
-      tag.artifactId
-    );
+  async function markComplete(items: PathAndCacheKey[], _: IndexResultType) {
+    const actions = items.map((item) => itemToAction[JSON.stringify(item)]);
+    for (const [{ path, cacheKey }, resultType] of actions) {
+      switch (resultType) {
+        case AddRemoveResultType.Add:
+          await db.run(
+            `INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)`,
+            path,
+            cacheKey,
+            newLastUpdatedTimestamp,
+            tag.directory,
+            tag.branch,
+            tag.artifactId
+          );
+          break;
+        case AddRemoveResultType.Remove:
+          await db.run(
+            `DELETE FROM tag_catalog WHERE
+              path IN (?) AND
+              dir = ? AND
+              branch = ? AND
+              artifactId = ?
+          `,
+            remove.map((r) => `'${r.path}'`).join(", "),
+            tag.directory,
+            tag.branch,
+            tag.artifactId
+          );
+          break;
+        case AddRemoveResultType.UpdateNewVersion:
+          await db.run(
+            `UPDATE tag_catalog SET
+                cacheKey = ?,
+                lastUpdated = ?
+             WHERE
+                path = ? AND
+                dir = ? AND
+                branch = ? AND
+                artifactId = ?
+            `,
+            cacheKey,
+            newLastUpdatedTimestamp,
+            path,
+            tag.directory,
+            tag.branch,
+            tag.artifactId
+          );
+          break;
+        case AddRemoveResultType.UpdateOldVersion:
+          break;
+      }
+    }
   }
 
-  // Remove all removed from the tag_catalog table
-  if (remove.length > 0) {
-    await db.run(
-      `DELETE FROM tag_catalog WHERE
-          path IN (?) AND
-          dir = ? AND
-          branch = ? AND
-          artifactId = ?
-      `,
-      remove.map((r) => `'${r.path}'`).join(", "),
-      tag.directory,
-      tag.branch,
-      tag.artifactId
-    );
+  for (let item of updateNewVersion) {
+    itemToAction[JSON.stringify(item)] = [
+      item,
+      AddRemoveResultType.UpdateNewVersion,
+    ];
   }
-
-  // Add all added to the tag_catalog table
-  for (let { path, cacheKey } of add) {
-    await db.run(
-      `INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)`,
-      path,
-      cacheKey,
-      newLastUpdatedTimestamp,
-      tag.directory,
-      tag.branch,
-      tag.artifactId
-    );
+  for (let item of add) {
+    itemToAction[JSON.stringify(item)] = [item, AddRemoveResultType.Add];
+  }
+  for (let item of updateOldVersion) {
+    itemToAction[JSON.stringify(item)] = [
+      item,
+      AddRemoveResultType.UpdateOldVersion,
+    ];
+  }
+  for (let item of remove) {
+    itemToAction[JSON.stringify(item)] = [item, AddRemoveResultType.Remove];
   }
 
   return [
     [...add, ...updateNewVersion],
     [...remove, ...updateOldVersion],
+    markComplete,
   ];
 }
 
@@ -207,8 +244,12 @@ export async function getComputeDeleteAddRemove(
   tag: IndexTag,
   currentFiles: LastModifiedMap,
   readFile: (path: string) => Promise<string>
-): Promise<RefreshIndexResults> {
-  const [add, remove] = await getAddRemoveForTag(tag, currentFiles, readFile);
+): Promise<[RefreshIndexResults, MarkCompleteCallback]> {
+  const [add, remove, markComplete] = await getAddRemoveForTag(
+    tag,
+    currentFiles,
+    readFile
+  );
 
   const compute: PathAndCacheKey[] = [];
   const del: PathAndCacheKey[] = [];
@@ -244,15 +285,29 @@ export async function getComputeDeleteAddRemove(
     removeTag,
   };
 
-  // Update the global cache
   const globalCacheIndex = await GlobalCacheCodeBaseIndex.create();
-  for await (let _ of globalCacheIndex.update(tag, results)) {
-  }
 
-  return results;
+  return [
+    results,
+    async (items, resultType) => {
+      // Update tag catalog
+      markComplete(items, resultType);
+
+      // Update the global cache
+      let results: any = {
+        compute: [],
+        del: [],
+        addTag: [],
+        removeTag: [],
+      };
+      results[resultType] = items;
+      for await (let _ of globalCacheIndex.update(tag, results, () => {})) {
+      }
+    },
+  ];
 }
 
-class GlobalCacheCodeBaseIndex implements CodebaseIndex {
+export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
   private db: DatabaseConnection;
 
   constructor(db: DatabaseConnection) {
@@ -266,7 +321,8 @@ class GlobalCacheCodeBaseIndex implements CodebaseIndex {
 
   async *update(
     tag: IndexTag,
-    results: RefreshIndexResults
+    results: RefreshIndexResults,
+    _: MarkCompleteCallback
   ): AsyncGenerator<number> {
     const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];

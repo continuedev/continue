@@ -1,6 +1,6 @@
 import { Chunk } from "core";
 import { ExtensionIde } from "core/ide";
-import { chunkDocument } from "core/index/chunk/chunk";
+import { chunkDocument } from "core/indexing/chunk/chunk";
 import { getBasename } from "core/util";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";

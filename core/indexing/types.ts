@@ -1,6 +1,22 @@
+export enum IndexResultType {
+  Compute = "compute",
+  Delete = "del",
+  AddTag = "addTag",
+  RemoveTag = "removeTag",
+}
+
+export type MarkCompleteCallback = (
+  items: PathAndCacheKey[],
+  resultType: IndexResultType
+) => void;
+
 export interface CodebaseIndex {
   artifactId: string;
-  update(tag: IndexTag, results: RefreshIndexResults): AsyncGenerator<number>;
+  update(
+    tag: IndexTag,
+    results: RefreshIndexResults,
+    markComplete: MarkCompleteCallback
+  ): AsyncGenerator<number>;
 }
 
 export type PathAndCacheKey = {

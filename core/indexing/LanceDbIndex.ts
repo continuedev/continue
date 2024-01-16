@@ -1,16 +1,17 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { v4 as uuidv4 } from "uuid";
 import * as lancedb from "vectordb";
-import {
-  CodebaseIndex,
-  IndexTag,
-  PathAndCacheKey,
-  RefreshIndexResults,
-} from ".";
 import { Chunk, EmbeddingsProvider } from "..";
 import { getLanceDbPath } from "../util/paths";
 import { chunkDocument } from "./chunk/chunk";
 import { DatabaseConnection, SqliteDb } from "./refreshIndex";
+import {
+  CodebaseIndex,
+  IndexResultType,
+  IndexTag,
+  PathAndCacheKey,
+  RefreshIndexResults,
+} from "./types";
 
 export function tagToString(tag: IndexTag): string {
   return `${tag.directory}::${tag.branch}::${tag.artifactId}`;
@@ -62,11 +63,12 @@ export class LanceDbIndex implements CodebaseIndex {
   private async *computeChunks(
     items: PathAndCacheKey[]
   ): AsyncGenerator<
-    [
-      number,
-      LanceDbRow,
-      { startLine: number; endLine: number; contents: string },
-    ]
+    | [
+        number,
+        LanceDbRow,
+        { startLine: number; endLine: number; contents: string },
+      ]
+    | PathAndCacheKey
   > {
     const contents = await Promise.all(
       items.map(({ path }) => this.readFile(path))
@@ -116,14 +118,19 @@ export class LanceDbIndex implements CodebaseIndex {
           },
         ];
       }
+
+      yield items[i];
     }
   }
 
   async *update(
     tag: IndexTag,
-    results: RefreshIndexResults
+    results: RefreshIndexResults,
+    markComplete: (
+      items: PathAndCacheKey[],
+      resultType: IndexResultType
+    ) => void
   ): AsyncGenerator<number> {
-    const tagString = tagToString(tag);
     const tableName = this.tableNameForTag(tag);
     const db = await lancedb.connect(getLanceDbPath());
 
@@ -131,41 +138,51 @@ export class LanceDbIndex implements CodebaseIndex {
     await this.createSqliteCacheTable(sqlite);
 
     // Compute
-    const computedRows: LanceDbRow[] = [];
-    for await (const [progress, row, data] of this.computeChunks(
-      results.compute
-    )) {
-      computedRows.push(row);
-
-      // Add the computed rows to the cache
-      await sqlite.run(
-        "INSERT INTO lance_db_cache (uuid, cacheKey, path, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        row.uuid,
-        row.cachekey,
-        row.path,
-        JSON.stringify(row.vector),
-        data.startLine,
-        data.endLine,
-        data.contents
-      );
-
-      yield progress;
-    }
-
-    // Create table if needed, add computed rows
-    let table: lancedb.Table;
+    let table: lancedb.Table | undefined = undefined;
     let needToCreateTable = false;
-
     const existingTables = await db.tableNames();
-    if (existingTables.includes(tableName)) {
-      table = await db.openTable(tableName);
-      if (computedRows.length > 0) {
-        await table.add(computedRows);
+    let computedRows: LanceDbRow[] = [];
+
+    for await (const update of this.computeChunks(results.compute)) {
+      if (Array.isArray(update)) {
+        const [progress, row, data] = update;
+        computedRows.push(row);
+
+        // Add the computed row to the cache
+        await sqlite.run(
+          "INSERT INTO lance_db_cache (uuid, cacheKey, path, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          row.uuid,
+          row.cachekey,
+          row.path,
+          JSON.stringify(row.vector),
+          data.startLine,
+          data.endLine,
+          data.contents
+        );
+
+        yield progress;
+      } else {
+        // Create table if needed, add computed rows
+        if (table) {
+          if (computedRows.length > 0) {
+            await table.add(computedRows);
+          }
+        } else if (existingTables.includes(tableName)) {
+          table = await db.openTable(tableName);
+          if (computedRows.length > 0) {
+            await table.add(computedRows);
+          }
+        } else if (computedRows.length > 0) {
+          table = await db.createTable(tableName, computedRows);
+        } else {
+          needToCreateTable = true;
+        }
+
+        computedRows = [];
+
+        // Mark item complete
+        markComplete([update], IndexResultType.Compute);
       }
-    } else if (computedRows.length > 0) {
-      table = await db.createTable(tableName, computedRows);
-    } else {
-      needToCreateTable = true;
     }
 
     // Add tag - retrieve the computed info from lance sqlite cache
@@ -192,6 +209,8 @@ export class LanceDbIndex implements CodebaseIndex {
       } else if (lanceRows.length > 0) {
         await table!.add(lanceRows);
       }
+
+      markComplete([{ path, cacheKey }], IndexResultType.AddTag);
     }
 
     // Delete or remove tag - remove from lance table)
@@ -201,6 +220,7 @@ export class LanceDbIndex implements CodebaseIndex {
         await table!.delete(`cachekey = '${cacheKey}' AND path = '${path}'`);
       }
     }
+    markComplete(results.removeTag, IndexResultType.RemoveTag);
 
     // Delete - also remove from sqlite cache
     for (let { path, cacheKey } of results.del) {
@@ -211,6 +231,7 @@ export class LanceDbIndex implements CodebaseIndex {
       );
     }
 
+    markComplete(results.del, IndexResultType.Delete);
     yield 1;
   }
 
