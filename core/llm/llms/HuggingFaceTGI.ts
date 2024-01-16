@@ -23,7 +23,7 @@ class HuggingFaceTGI extends BaseLLM {
       }
       const json = await response.json();
       this.model = json.model_id;
-      this.contextLength = json.max_input_length;
+      this.contextLength = parseInt(json.max_input_length);
     });
   }
 
