@@ -737,6 +737,27 @@ After it's up and running, you can start using Continue.`,
       },
     ],
   },
+  "huggingface-tgi": {
+    title: "Hugging Face Text Generation Inference",
+    provider: "huggingface-tgi",
+    description:
+      "A Rust, Python and gRPC server for text generation inference. Used in production at HuggingFace to power Hugging Chat, the Inference API and Inference Endpoint.",
+    longDescription: `Text Generation Inference (TGI) is an open-source toolkit for deploying and serving LLMs. It is designed for fast inference and high throughput, enabling you to provide a highly concurrent, low latency experience. As of October 2023, TGI has been optimized for Code Llama, Mistral, StarCoder, and Llama 2 on NVIDIA A100, A10G and T4 GPUs. It's possible to use other models and different hardware, it just might be a more difficult setup and the models might not perform as well. The easiest way of getting started is using the [official Docker container](https://huggingface.co/docs/text-generation-inference/quicktour).`,
+    params: {
+      apiBase: "",
+    },
+    collectInputFor: [
+      {
+        ...apiBaseInput,
+        defaultValue: "http://localhost:8000",
+      },
+      ...completionParamsInputs,
+    ],
+    icon: "hf.png",
+    tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
+    packages: [...osModels, deepseek],
+  },
+
   "openai-aiohttp": {
     title: "Other OpenAI-compatible API",
     provider: "openai",

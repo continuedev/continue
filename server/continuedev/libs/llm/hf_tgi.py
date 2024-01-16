@@ -8,6 +8,23 @@ from .base import LLM, CompletionOptions
 
 
 class HuggingFaceTGI(LLM):
+    """
+    Text Generation Inference (TGI) is an open-source toolkit for deploying and serving LLMs. It is designed for fast inference and high throughput, enabling you to provide a highly concurrent, low latency experience. As of October 2023, TGI has been optimized for Code Llama, Mistral, StarCoder, and Llama 2 on NVIDIA A100, A10G and T4 GPUs. It's possible to use other models and different hardware, it just might be a more difficult setup and the models might not perform as well. The easiest way of getting started is using the [official Docker container](https://huggingface.co/docs/text-generation-inference/quicktour).
+
+    Once the model is running on e.g. localhost:8000, change `~/.continue/config.json` to look like this:
+
+    ```json title="~/.continue/config.json"
+    {
+        "models": [{
+            "title": "Hugging Face TGI",
+            "provider": "huggingface-tgi",
+            "model": "MODEL_NAME",
+            "api_base": "http://localhost:8000"
+        }]
+    }
+    ```
+    """
+
     model: str = "huggingface-tgi"
     api_base: Optional[str] = Field(
         "http://127.0.0.1:8080", description="URL of your TGI server"
