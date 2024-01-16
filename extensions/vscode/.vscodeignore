@@ -18,7 +18,7 @@ node_modules/**
 
 manual-testing-sandbox
 esbuild.js
-esbuild.test.js
+esbuild.test.mjs
 importMetaUrl.js
 scripts
 

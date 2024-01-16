@@ -29,12 +29,17 @@ exec("npm install", (error) => {
       ncp(
         path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
         path.join(__dirname, "../out/build"),
-        (error) => console.warn(error)
+        (error) => {
+          if (error) console.warn("Error copying sqlite3 files", error);
+        }
       );
       ncp(
         path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
         path.join(__dirname, "../bin"),
-        (error) => console.warn(error)
+        (error) => {
+          if (error)
+            console.warn("Error copying onnxruntime-node files", error);
+        }
       );
       ncp(
         path.join(
@@ -42,7 +47,10 @@ exec("npm install", (error) => {
           "../../../core/node_modules/tree-sitter-wasms/out"
         ),
         path.join(__dirname, "../out/tree-sitter-wasms"),
-        (error) => console.warn(error)
+        (error) => {
+          if (error)
+            console.warn("Error copying tree-sitter-wasms files", error);
+        }
       );
       fs.copyFileSync(
         path.join(
@@ -69,7 +77,7 @@ exec("npm install", (error) => {
       fs.copyFileSync(indexHtmlPath, path.join("tmp_index.html"));
       fs.rmSync(intellijExtensionWebviewPath, { recursive: true });
       fs.mkdirSync(intellijExtensionWebviewPath, { recursive: true });
-      console.log(process.cwd());
+
       ncp("dist", intellijExtensionWebviewPath, (error) => {
         if (error) {
           console.log(
