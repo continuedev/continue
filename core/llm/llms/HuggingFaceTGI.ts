@@ -8,6 +8,26 @@ class HuggingFaceTGI extends BaseLLM {
     apiBase: "http://localhost:8080",
   };
 
+  constructor(options: LLMOptions) {
+    super(options);
+
+    this.fetch(`${this.apiBase}/info`, {
+      method: "GET",
+      // body: JSON.stringify({ name: this._getModel() }),
+    }).then(async (response) => {
+      if (response.status !== 200) {
+        console.warn(
+          "Error calling Hugging Face TGI /info endpoint: ",
+          await response.text()
+        );
+        return;
+      }
+      const json = await response.json();
+      this.model = json.model_id;
+      this.contextLength = json.max_input_length;
+    });
+  }
+
   private _convertArgs(options: CompletionOptions, prompt: string) {
     const finalOptions = {
       max_new_tokens: options.maxTokens,
