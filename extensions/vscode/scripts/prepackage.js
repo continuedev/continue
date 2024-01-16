@@ -78,6 +78,7 @@ exec("npm install", async (error) => {
       );
 
       // Listing contents of the web-tree-sitter directory
+      console.log("DIRNAME: ", __dirname);
       fs.readdir(
         path.join(__dirname, "../../../core/node_modules/web-tree-sitter"),
         (err, files) => {
@@ -86,7 +87,7 @@ exec("npm install", async (error) => {
             return;
           }
           files.forEach((file) => {
-            console.log(file);
+            console.log("FILE: ", file);
           });
         }
       );
