@@ -525,6 +525,7 @@ export interface SerializedContinueConfig {
   disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
+  tabAutocompleteModel?: ModelDescription;
 }
 
 export interface Config {
@@ -553,6 +554,8 @@ export interface Config {
   userToken?: string;
   /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
+  /** The model that Continue will use for tab autocompletions. */
+  tabAutocompleteModel?: CustomLLM | ModelDescription;
 }
 
 export interface ContinueConfig {
@@ -566,4 +569,5 @@ export interface ContinueConfig {
   disableIndexing?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProvider;
+  tabAutocompleteModel?: ILLM;
 }

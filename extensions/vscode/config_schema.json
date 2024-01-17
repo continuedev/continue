@@ -1184,6 +1184,21 @@
               }
             }
           ]
+        },
+        "tabAutocompleteModel": {
+          "title": "Tab Autocomplete Model",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will not do tab autocompletion.",
+          "default": [
+            {
+              "title": "Tab Autocomplete Model",
+              "provider": "ollama",
+              "model": "deepseek-coder:1.3b-base"
+            }
+          ],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ModelDescription"
+          }
         }
       }
     }

@@ -25,29 +25,7 @@ export const configHandler = new VsCodeConfigHandler();
 
 const TIMEOUT = 7200; // 7200 seconds = 2 hours
 
-export async function llmFromTitle(title?: string): Promise<ILLM> {
-  let config = await configHandler.loadConfig(new VsCodeIde());
-
-  if (title === undefined) {
-    const resp = await webviewRequest("getDefaultModelTitle");
-    if (resp?.defaultModelTitle) {
-      title = resp.defaultModelTitle;
-    }
-  }
-
-  let llm = title
-    ? config.models.find((llm) => llm.title === title)
-    : config.models[0];
-  if (!llm) {
-    // Try to reload config
-    configHandler.reloadConfig();
-    config = await configHandler.loadConfig(new VsCodeIde());
-    llm = config.models.find((llm) => llm.title === title);
-    if (!llm) {
-      throw new Error(`Unknown model ${title}`);
-    }
-  }
-
+function setupLlm(llm: ILLM): ILLM {
   // Since we know this is happening in Node.js, we can add requestOptions through a custom agent
   const ca = [...tls.rootCertificates];
   const customCerts =
@@ -86,6 +64,46 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
       headers,
     });
   };
-
   return llm;
+}
+
+export async function llmFromTitle(title?: string): Promise<ILLM> {
+  let config = await configHandler.loadConfig(new VsCodeIde());
+
+  if (title === undefined) {
+    const resp = await webviewRequest("getDefaultModelTitle");
+    if (resp?.defaultModelTitle) {
+      title = resp.defaultModelTitle;
+    }
+  }
+
+  let llm = title
+    ? config.models.find((llm) => llm.title === title)
+    : config.models[0];
+  if (!llm) {
+    // Try to reload config
+    configHandler.reloadConfig();
+    config = await configHandler.loadConfig(new VsCodeIde());
+    llm = config.models.find((llm) => llm.title === title);
+    if (!llm) {
+      throw new Error(`Unknown model ${title}`);
+    }
+  }
+
+  return setupLlm(llm);
+}
+
+export class TabAutocompleteModel {
+  private static _llm: ILLM | undefined;
+
+  static async get() {
+    if (!TabAutocompleteModel._llm) {
+      const config = await configHandler.loadConfig(new VsCodeIde());
+      if (config.tabAutocompleteModel) {
+        TabAutocompleteModel._llm = setupLlm(config.tabAutocompleteModel);
+      }
+    }
+
+    return TabAutocompleteModel._llm;
+  }
 }

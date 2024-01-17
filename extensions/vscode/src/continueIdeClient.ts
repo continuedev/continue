@@ -64,7 +64,6 @@ class IdeProtocolClient {
       const repo = await this.getRepo(vscode.Uri.file(dir));
       if (repo) {
         repo.state.onDidChange(() => {
-          console.log("didUpdate");
           // args passed to this callback are always undefined, so keep track of previous branch
           const currentBranch = repo?.state?.HEAD?.name;
           if (currentBranch) {

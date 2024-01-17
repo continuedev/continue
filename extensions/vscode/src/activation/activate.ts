@@ -7,6 +7,7 @@ import IdeProtocolClient from "../continueIdeClient";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { ContinueCompletionProvider } from "../lang-server/completionProvider";
 import { vsCodeIndexCodebase } from "../util/indexCodebase";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
@@ -71,6 +72,14 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   await openTutorial(context);
   setupInlineTips(context);
   showRefactorMigrationMessage();
+
+  // Register inline completion provider
+  context.subscriptions.push(
+    vscode.languages.registerInlineCompletionItemProvider(
+      [{ pattern: "**" }],
+      new ContinueCompletionProvider()
+    )
+  );
 
   ideProtocolClient = new IdeProtocolClient(context);
 

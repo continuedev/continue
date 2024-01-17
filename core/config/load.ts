@@ -79,6 +79,20 @@ async function intermediateToFinalConfig(
     models.push(llm);
   }
 
+  let autocompleteLlm: BaseLLM | undefined = undefined;
+  if (config.tabAutocompleteModel) {
+    if (isModelDescription(config.tabAutocompleteModel)) {
+      autocompleteLlm = await llmFromDescription(
+        config.tabAutocompleteModel,
+        readFile,
+        config.completionOptions,
+        config.systemMessage
+      );
+    } else {
+      autocompleteLlm = new CustomLLMClass(config.tabAutocompleteModel);
+    }
+  }
+
   const contextProviders: IContextProvider[] = [new FileContextProvider({})];
   for (const provider of config.contextProviders || []) {
     if (isContextProviderWithParams(provider)) {
@@ -107,6 +121,7 @@ async function intermediateToFinalConfig(
     contextProviders,
     models,
     embeddingsProvider: config.embeddingsProvider as any,
+    tabAutocompleteModel: autocompleteLlm,
   };
 }
 
