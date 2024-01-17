@@ -48,9 +48,8 @@ function isWin() {
   if (ghAction() && isArm()) {
     // Download and unzip esbuild
     console.log("Downloading pre-built esbuild binary");
-    rimrafSync("node_modules/@esbuild", {
-      preserveRoot: true,
-    });
+    rimrafSync("node_modules/@esbuild");
+    fs.mkdirSync("node_modules/@esbuild", { recursive: true });
     execSync(
       `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${process.env.target}/esbuild.zip`
     );
