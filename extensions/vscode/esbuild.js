@@ -65,7 +65,7 @@ function isWin() {
         "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
         "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
       }[process.env.target];
-      execSync(`npm install ${packageToInstall}`);
+      execSync(`npm install -f ${packageToInstall}`);
     }
   }
 
