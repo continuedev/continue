@@ -85,7 +85,7 @@ function isWin() {
         `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`
       );
       execSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
-      fs.unlinkSync("../../core/node_modules/sqlite3/build.tag.gz");
+      fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
     }
 
     ncp(
