@@ -45,6 +45,7 @@ You can deploy open-source LLMs on a service using:
 - [HuggingFace Inference Endpoints](../reference/Model%20Providers/huggingfaceinferenceapi.md)
 - [Anyscale Endpoints](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
 - [Replicate](../reference/Model%20Providers/replicatellm.md)
+- [Deepinfra](../reference/Model%20Providers/deepinfra.md)
 
 ### Commercial LLMs
 
@@ -55,3 +56,4 @@ You can use commercial LLMs via APIs using:
 - [Anthrophic API](../reference/Model%20Providers/anthropicllm.md)
 - [Google PaLM API](../reference/Model%20Providers/googlepalmapi.md)
 - [OpenAI free trial](../reference/Model%20Providers/freetrial.md)
+- [Mistral API](../reference/Model%20Providers/mistral.md)
