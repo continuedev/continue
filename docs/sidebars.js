@@ -17,13 +17,13 @@ const sidebars = {
     "intro",
     "quickstart",
     "how-to-use-continue",
-    "how-continue-works",
     {
       type: "category",
       label: "🌉 Model setup",
       collapsible: true,
       collapsed: true,
       items: [
+        "model-setup/overview",
         "model-setup/select-provider",
         "model-setup/select-model",
         "model-setup/configuration",
