@@ -22,7 +22,55 @@ console.log("npm install in gui completed");
 
 execSync("npm run build");
 
+// Then copy over the dist folder to the Intellij extension //
+const intellijExtensionWebviewPath = path.join(
+  "..",
+  "extensions",
+  "intellij",
+  "src",
+  "main",
+  "resources",
+  "webview"
+);
+const indexHtmlPath = path.join(intellijExtensionWebviewPath, "index.html");
+fs.copyFileSync(indexHtmlPath, path.join("tmp_index.html"));
+fs.rmSync(intellijExtensionWebviewPath, { recursive: true });
+fs.mkdirSync(intellijExtensionWebviewPath, { recursive: true });
+
+ncp("dist", intellijExtensionWebviewPath, (error) => {
+  if (error) {
+    console.log("Error copying React app build to Intellij extension: ", error);
+    throw error;
+  }
+
+  if (fs.existsSync(indexHtmlPath)) {
+    fs.rmSync(indexHtmlPath, {});
+  }
+  fs.copyFileSync("tmp_index.html", indexHtmlPath);
+  fs.unlinkSync("tmp_index.html");
+  console.log("Copied gui build to Intellij extension");
+});
+
+// Then copy over the dist folder to the VSCode extension //
+const vscodeGuiPath = path.join("../extensions/vscode/gui");
+fs.mkdirSync(vscodeGuiPath, { recursive: true });
+ncp("dist", vscodeGuiPath, (error) => {
+  if (error) {
+    console.log("Error copying React app build to VSCode extension: ", error);
+    throw error;
+  }
+  console.log("Copied gui build to VSCode extension");
+});
+
+if (!fs.existsSync(path.join("dist", "assets", "index.js"))) {
+  throw new Error("gui build did not produce index.js");
+}
+if (!fs.existsSync(path.join("dist", "assets", "index.css"))) {
+  throw new Error("gui build did not produce index.css");
+}
+
 // Copy over native / wasm modules //
+process.chdir("../extensions/vscode");
 
 // onnxruntime-node
 ncp(
@@ -144,51 +192,3 @@ NODE_MODULES_TO_COPY.forEach((mod) => {
     }
   });
 });
-
-// Then copy over the dist folder to the Intellij extension //
-const intellijExtensionWebviewPath = path.join(
-  "..",
-  "extensions",
-  "intellij",
-  "src",
-  "main",
-  "resources",
-  "webview"
-);
-const indexHtmlPath = path.join(intellijExtensionWebviewPath, "index.html");
-fs.copyFileSync(indexHtmlPath, path.join("tmp_index.html"));
-fs.rmSync(intellijExtensionWebviewPath, { recursive: true });
-fs.mkdirSync(intellijExtensionWebviewPath, { recursive: true });
-
-ncp("dist", intellijExtensionWebviewPath, (error) => {
-  if (error) {
-    console.log("Error copying React app build to Intellij extension: ", error);
-    throw error;
-  }
-
-  if (fs.existsSync(indexHtmlPath)) {
-    fs.rmSync(indexHtmlPath, {});
-  }
-  fs.copyFileSync("tmp_index.html", indexHtmlPath);
-  fs.unlinkSync("tmp_index.html");
-  console.log("Copied gui build to Intellij extension");
-});
-
-// Then copy over the dist folder to the VSCode extension //
-const vscodeGuiPath = path.join("../extensions/vscode/gui");
-fs.mkdirSync(vscodeGuiPath, { recursive: true });
-ncp("dist", vscodeGuiPath, (error) => {
-  if (error) {
-    console.log("Error copying React app build to VSCode extension: ", error);
-    throw error;
-  }
-  console.log("Copied gui build to VSCode extension");
-});
-
-if (!fs.existsSync(path.join("dist", "assets", "index.js"))) {
-  throw new Error("gui build did not produce index.js");
-}
-if (!fs.existsSync(path.join("dist", "assets", "index.css"))) {
-  throw new Error("gui build did not produce index.css");
-}
-console.log("npm run build in gui completed");
