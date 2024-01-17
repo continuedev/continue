@@ -32,7 +32,7 @@
 
 ### Get possible explanations
 
-Ask Continue about a part of your code to get another perspective
+Highlight + select code sections and ask a question to get another perspective
 
 - “how can I set up a Prisma schema that cascades deletes?”
 - “where in the page should I be making this request to the backend?”
@@ -40,7 +40,7 @@ Ask Continue about a part of your code to get another perspective
 
 ### Edit in natural language
 
-Highlight a section of code and instruct Continue to refactor it
+Highlight + select a section of code and instruct Continue to refactor it
 
 - “/edit migrate this digital ocean terraform file into one that works for GCP”
 - “/edit change this plot into a bar chart in this dashboard component”
@@ -56,21 +56,9 @@ Open a blank file and let Continue start new Python scripts, React components, e
 
 ## Getting Started
 
-By default, Continue uses GPT-4 and GPT-3.5-turbo via the OpenAI API.
+You can try out Continue for free using a proxy server that securely makes calls with our API key to models like GPT-4, Gemini Pro, and Phind CodeLlama via OpenAI, Google, and Together respectively.
 
-You can adjust the config to use different LLMs, including local, private models. Read more [here](https://continue.dev/docs/customization#change-the-default-llm).
-
-To see the keyboard shortcuts offered by Continue, see the "Feature Contributions" tab above.
-
-# Troubleshooting
-
-The Continue VS Code extension is currently in beta. It will attempt to start the Continue Python server locally for you, but sometimes this will fail, causing the "Starting Continue server..." not to disappear, or other hangups. While we are working on fixes to all of these problems, read here for common solutions:
-
-> [Troubleshooting Continue](https://continue.dev/docs/troubleshooting)
-
-## Continue Server
-
-The Continue server is a Python server that runs locally on your computer allowing complete privacy. It handles indexing the codebase, constructing prompts, storing and loading configuration, and more. To allow quick startup times, the server will run on your computer in the background, even while not using Continue. If you'd like to stop the server yourself, the process runs on port 65432, and also depends on an instance of Meilisearch running on port 7700.
+Once you're ready to use your own API key or a different model / provider, press the `+` button in the bottom left to add a new model to your `config.json`. Learn more about the models and providers [here](https://continue.dev/docs/model-setup/overview).
 
 ## License
 
