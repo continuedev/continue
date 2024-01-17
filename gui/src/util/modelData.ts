@@ -134,6 +134,7 @@ export interface ModelInfo {
   packages: ModelPackage[];
   params?: any;
   collectInputFor?: InputDescriptor[];
+  refPage?: string;
 }
 
 // A dimension is like parameter count - 7b, 13b, 34b, etc.
@@ -423,19 +424,6 @@ const neuralChat: ModelPackage = {
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
-const flowiseGpt35Turbo: ModelPackage = {
-  title: "Flowise (GPT 3.5 Turbo)",
-  description:
-    "Open source UI visual tool to build your customized LLM ochestration flow & AI agents, using GPT 3.5 Turbo",
-  params: {
-    title: "Flowise",
-    model: "gpt-3.5-turbo",
-    contextLength: 2048,
-  },
-  icon: "flowiseai.png",
-  providerOptions: ["flowise"],
-};
-
 const osModels = [
   codeLlamaInstruct,
   llama2Chat,
@@ -556,6 +544,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
   anthropic: {
     title: "Anthropic",
     provider: "anthropic",
+    refPage: "anthropicllm",
     description:
       "Claude-2 is a highly capable model with a 100k context length",
     icon: "anthropic.png",
@@ -646,6 +635,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
   together: {
     title: "TogetherAI",
     provider: "together",
+    refPage: "togetherllm",
     description:
       "Use the TogetherAI API for extremely fast streaming of open-source models",
     icon: "together.png",
@@ -690,6 +680,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
   replicate: {
     title: "Replicate",
     provider: "replicate",
+    refPage: "replicatellm",
     description: "Use the Replicate API to run open-source models",
     longDescription: `Replicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset`,
     params: {
@@ -715,6 +706,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
   llamacpp: {
     title: "llama.cpp",
     provider: "llama.cpp",
+    refPage: "llamacpp",
     description: "If you are running the llama.cpp server from source",
     longDescription: `llama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:
     
@@ -737,6 +729,7 @@ After it's up and running, you can start using Continue.`,
   palm: {
     title: "Google PaLM API",
     provider: "google-palm",
+    refPage: "googlepalmapi",
     description:
       "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite. Includes the Gemini Pro model",
     longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.`,
@@ -792,6 +785,7 @@ After it's up and running, you can start using Continue.`,
   freetrial: {
     title: "Continue limited free trial",
     provider: "free-trial",
+    refPage: "freetrial",
     description:
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Google, or Together using our API key",
     longDescription:
@@ -805,27 +799,5 @@ After it's up and running, you can start using Continue.`,
       { ...gemini, title: "Gemini Pro (trial)" },
     ],
     collectInputFor: [...completionParamsInputs],
-  },
-  flowise: {
-    title: "Flowise",
-    provider: "flowise",
-    description:
-      "Open source UI visual tool to build your customized LLM ochestration flow & AI agents",
-    longDescription:
-      "Flowise is a low-code/no-code drag & drop tool with the aim to make it easy for people to visualize and build LLM apps.",
-    icon: "flowiseai.png",
-    tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: [{ ...flowiseGpt35Turbo, title: "Flowise" }],
-    collectInputFor: [
-      {
-        inputType: CollectInputType.text,
-        key: "apiKey",
-        label: "API Key",
-        placeholder: "Enter your Flowise API key",
-        required: false,
-      },
-      { ...apiBaseInput, defaultValue: "http://localhost:3000" },
-      ...completionParamsInputs,
-    ],
   },
 };

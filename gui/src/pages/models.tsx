@@ -3,14 +3,23 @@ import _ from "lodash";
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { lightGray, vscBackground } from "../components";
+import { defaultBorderRadius, lightGray, vscBackground } from "../components";
 import ModelCard from "../components/modelSelection/ModelCard";
 
+import { postToIde } from "core/ide/messaging";
 import { useDispatch } from "react-redux";
 import Toggle from "../components/modelSelection/Toggle";
 import { setDefaultModel } from "../redux/slices/stateSlice";
 import { addModel } from "../util/ide";
 import { MODEL_INFO, PROVIDER_INFO } from "../util/modelData";
+import { CustomModelButton } from "./modelconfig";
+
+const IntroDiv = styled.div`
+  padding: 8px 12px;
+  border-radius: ${defaultBorderRadius};
+  border: 1px solid ${lightGray};
+  margin: 1rem;
+`;
 
 const GridDiv = styled.div`
   display: grid;
@@ -54,6 +63,21 @@ function Models() {
           setProvidersSelected((prev) => !prev);
         }}
       ></Toggle>
+      <IntroDiv>
+        To set up an LLM you will choose
+        <ul>
+          <li>
+            a provider (the service used to run the LLM, e.g. Ollama,
+            TogetherAI) and
+          </li>
+          <li>a model (the LLM being run, e.g. GPT-4, CodeLlama).</li>
+        </ul>
+        To read more about the options, check out our{" "}
+        <a href="https://continue.dev/docs/model-setup/select-provider">
+          overview
+        </a>{" "}
+        in the docs.
+      </IntroDiv>
       {providersSelected ? (
         <GridDiv>
           {Object.entries(PROVIDER_INFO).map(([name, modelInfo]) => (
@@ -62,7 +86,9 @@ function Models() {
               description={modelInfo.description}
               tags={modelInfo.tags}
               icon={modelInfo.icon}
-              refUrl={`https://continue.dev/docs/reference/Models/${modelInfo.provider.toLowerCase()}`}
+              refUrl={`https://continue.dev/docs/reference/Model%20Providers/${
+                modelInfo.refPage || modelInfo.provider.toLowerCase()
+              }`}
               onClick={(e) => {
                 navigate(`/modelconfig/${name}`);
               }}
@@ -101,6 +127,21 @@ function Models() {
           ))}
         </GridDiv>
       )}
+
+      <div style={{ padding: "8px" }}>
+        <hr style={{ color: lightGray, border: `1px solid ${lightGray}` }} />
+        <p style={{ color: lightGray }}>
+          OR choose from other providers / models by editing config.json.
+        </p>
+        <CustomModelButton
+          disabled={false}
+          onClick={(e) => {
+            postToIde("openConfigJson", {});
+          }}
+        >
+          <h3 className="text-center my-2">Open config.json</h3>
+        </CustomModelButton>
+      </div>
     </div>
   );
 }
