@@ -13,7 +13,11 @@ import {
 } from "../util";
 
 function shouldRemoveLineBeforeStart(line: string): boolean {
-  return line.trimStart().startsWith("```") || line.trim() === "[CODE]";
+  return (
+    line.trimStart().startsWith("```") ||
+    line.trim() === "[CODE]" ||
+    line.trim() === ""
+  );
 }
 
 function shouldChangeLineAndStop(line: string): string | undefined {
