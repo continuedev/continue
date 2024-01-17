@@ -384,6 +384,7 @@
     "glob": "^8.0.3",
     "json-schema-to-typescript": "^12.0.0",
     "ovsx": "^0.8.3",
+    "rimraf": "^5.0.5",
     "typescript": "^5.3.3",
     "vite": "^4.3.9",
     "vsce": "^2.15.0"

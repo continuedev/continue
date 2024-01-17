@@ -25,16 +25,7 @@ exec("npm install", async (error) => {
         throw error;
       }
 
-      // Copy over some files required for native modules
-
-      // sqlite3
-      ncp(
-        path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
-        path.join(__dirname, "../out/build"),
-        (error) => {
-          if (error) console.warn("Error copying sqlite3 files", error);
-        }
-      );
+      // Copy over native / wasm modules
 
       // onnxruntime-node
       ncp(

@@ -95,61 +95,17 @@ jobs:
           npm ci --legacy-peer-deps
 
       # 2.5. Pre package
-      - name: Make the out directory
+      - name: Make the out/node_modules directory
         run: |
           cd extensions/vscode
           mkdir out
+          cd out
+          mkdir node_modules
 
       - name: Prepare the extension
         run: |
           cd extensions/vscode
           npm run prepackage
-
-      # 2.75. download anything that needs to be built on ARM (non-Windows)
-      - name: Make the out/node_modules directory
-        if: matrix.arch == 'arm64'
-        run: |
-          cd extensions/vscode/out
-          mkdir node_modules
-          cd node_modules
-          mkdir "@esbuild"
-
-      - name: Download esbuild on ARM
-        if: matrix.arch == 'arm64'
-        run: curl -o extensions/vscode/out/node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${{ matrix.os }}/esbuild.zip
-
-      - name: Unzip esbuild on ARM
-        if: matrix.arch == 'arm64'
-        run: |
-          cd extensions/vscode/out/node_modules/@esbuild
-          ls
-          unzip esbuild.zip
-          ls
-
-      - name: Remove esbuild.zip on ARM
-        if: matrix.arch == 'arm64'
-        run: rm extensions/vscode/out/node_modules/@esbuild/esbuild.zip
-
-      # 2.875. download anything that needs to be built on ARM (Windows)
-      # - name: Make the out directory
-      #   if: matrix.arch == 'arm64'
-      #   run: |
-      #     cd extensions\vscode
-      #     mkdir out
-
-      # - name: Download node_modules for esbuild on ARM
-      #   if: matrix.arch == 'arm64'
-      #   run: Invoke-WebRequest -Uri https://continue-server-binaries.s3.us-west-1.amazonaws.com/${{ matrix.os }}/node_modules.zip -OutFile extensions\vscode\out\node_modules.zip
-
-      # - name: Unzip node_modules for esbuild on ARM
-      #   if: matrix.arch == 'arm64'
-      #   run: |
-      #     cd extensions\vscode\out
-      #     Expand-Archive -Path node_modules.zip -DestinationPath .
-
-      # - name: Remove node_modules.zip for esbuild on ARM
-      #   if: matrix.arch == 'arm64'
-      #   run: Remove-Item extensions\vscode\out\node_modules.zip
 
       # 3. Run tests for the extension
 
@@ -169,9 +125,12 @@ jobs:
       #   if: matrix.os != 'ubuntu-latest'
 
       # 4. Package the extension
-      - shell: pwsh
+      - name: Set var for environment info
+        shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
-      - run: cd extensions/vscode && npx vsce package --pre-release --target ${{ env.target }}
+
+      - name: Package the extension
+        run: cd extensions/vscode && npx vsce package --pre-release --target ${{ env.target }}
 
       # 5. Upload the .vsix as an artifact
       - uses: actions/upload-artifact@v2
