@@ -82,9 +82,9 @@ function isWin() {
           "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
       }[process.env.target];
       execSync(
-        `curl -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`
+        `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`
       );
-      execSync("cd ../../core/node_modules/sqlite3 && tar -xzf build.tar.gz");
+      execSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
       fs.unlinkSync("../../core/node_modules/sqlite3/build.tag.gz");
     }
 
