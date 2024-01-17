@@ -13,7 +13,7 @@ function isArm() {
   return (
     process.env.target === "darwin-arm64" ||
     process.env.target === "linux-arm64" ||
-    process.env.target === "win-arm64"
+    process.env.target === "win32-arm64"
   );
 }
 
@@ -46,16 +46,6 @@ function isWin() {
 
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
   if (ghAction() && isArm()) {
-    // Download and unzip esbuild
-    console.log("Downloading pre-built esbuild binary");
-    rimrafSync("node_modules/@esbuild");
-    fs.mkdirSync("node_modules/@esbuild", { recursive: true });
-    execSync(
-      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${process.env.target}/esbuild.zip`
-    );
-    execSync(`cd node_modules/@esbuild && ls && unzip esbuild.zip && ls`);
-    fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
-
     // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
     if (!isWin()) {
       // lancedb binary
@@ -67,6 +57,16 @@ function isWin() {
       }[process.env.target];
       execSync(`npm install -f ${packageToInstall}`);
     }
+
+    // Download and unzip esbuild
+    console.log("Downloading pre-built esbuild binary");
+    rimrafSync("node_modules/@esbuild");
+    fs.mkdirSync("node_modules/@esbuild", { recursive: true });
+    execSync(
+      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${process.env.target}/esbuild.zip`
+    );
+    execSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
+    fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
   }
 
   if (ghAction()) {
