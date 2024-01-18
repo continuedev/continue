@@ -1,4 +1,5 @@
 import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions";
+import { InteractiveBrowserCredential } from "@azure/identity";
 import { BaseLLM } from "..";
 import {
   ChatMessage,
@@ -59,8 +60,18 @@ class OpenAI extends BaseLLM {
 
     return completion;
   }
+
+  protected async _aad_interactivelogin(): Promise<string> {
+    const credential = new InteractiveBrowserCredential({});
+  
+    const accessToken = await credential.getToken("https://cognitiveservices.azure.com/.default");
+    return accessToken.token;
+  }
+  
+  
+  
   private _getCompletionUrl() {
-    if (this.apiType === "azure") {
+    if (this.apiType === "azure" || this.apiType === "azuread") {
       return `${this.apiBase}/openai/deployments/${this.engine}/completions?api-version=${this.apiVersion}`;
     } else {
       let url = this.apiBase;
@@ -99,7 +110,7 @@ class OpenAI extends BaseLLM {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
+        Authorization: `Bearer ${this.apiType === 'azuread' ? await this._aad_interactivelogin() : ""}`,
         "api-key": this.apiKey || "", // For Azure
       },
       body: JSON.stringify({
@@ -125,7 +136,7 @@ class OpenAI extends BaseLLM {
   }
 
   private _getChatUrl() {
-    if (this.apiType === "azure") {
+    if (this.apiType === "azure" || this.apiType === "azuread") {
       return `${this.apiBase}/openai/deployments/${this.engine}/chat/completions?api-version=${this.apiVersion}`;
     } else {
       let url = this.apiBase;
@@ -137,7 +148,7 @@ class OpenAI extends BaseLLM {
       if (url.endsWith("/")) {
         url = url.slice(0, -1);
       }
-
+  
       if (!url.includes("/v1")) {
         // includes instead of endsWith becuase DeepInfra uses /v1/openai/chat/completions
         url += "/v1";
@@ -145,6 +156,7 @@ class OpenAI extends BaseLLM {
       return url + "/chat/completions";
     }
   }
+  
 
   protected async *_streamChat(
     messages: ChatMessage[],
@@ -162,26 +174,27 @@ class OpenAI extends BaseLLM {
       }
       return;
     }
+    
 
     const response = await this.fetch(this._getChatUrl(), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey || "", // For Azure
+        Authorization: `Bearer ${this.apiType === 'azuread' ? await this._aad_interactivelogin() : ""}`,
+        "api-key": this.apiKey || "",
       },
       body: JSON.stringify({
         ...this._convertArgs(options, messages),
         stream: true,
       }),
     });
-
+    
     for await (const value of streamSse(response)) {
       if (value.choices?.[0]?.delta?.content) {
         yield value.choices[0].delta;
       }
     }
-  }
-}
+  }}
+      
 
 export default OpenAI;
