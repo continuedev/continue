@@ -106,6 +106,7 @@ const { rimrafSync } = require("rimraf");
       });
     }
   }
+  console.log("Copied onnxruntime-node");
 
   // tree-sitter-wasms
   ncp(
@@ -120,6 +121,7 @@ const { rimrafSync } = require("rimraf");
     path.join(__dirname, "../../../core/vendor/tree-sitter.wasm"),
     path.join(__dirname, "../out/tree-sitter.wasm")
   );
+  console.log("Copied tree-sitter wasms");
 
   function ghAction() {
     return process.env.target !== undefined;
