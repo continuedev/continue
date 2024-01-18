@@ -1193,12 +1193,7 @@
             "provider": "ollama",
             "model": "deepseek-coder:1.3b-base"
           },
-          "$ref": "#/definitions/ModelDescription",
-          "properties": {
-            "model": {
-              "enum": ["a", "b"]
-            }
-          }
+          "$ref": "#/definitions/ModelDescription"
         }
       }
     }
