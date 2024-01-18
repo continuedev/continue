@@ -132,7 +132,7 @@ jobs:
       - name: Re-install esbuild
         run: |
           cd extensions/vscode
-          npm install esbuild
+          npm install -f esbuild
 
       - name: Package the extension
         run: cd extensions/vscode && npx vsce package --pre-release --target ${{ env.target }}
