@@ -28,7 +28,8 @@ class OpenAI extends BaseLLM {
     apiBase: "https://api.openai.com",
   };
 
-  private _accessToken: string = "";
+  private _accessToken: string | undefined;
+  private _tokenExpiry: number | undefined
 
 
   protected _convertArgs(
@@ -65,24 +66,33 @@ class OpenAI extends BaseLLM {
   }
 
   protected async _aad_interactivelogin(): Promise<string> {
-    if (this._accessToken) {
+    if (this._accessToken && !this._isTokenExpired()) {
       return this._accessToken;
     }
   
     const credential = new InteractiveBrowserCredential({});
   
-    const accessToken = await credential.getToken(
+    const token = await credential.getToken(
       "https://cognitiveservices.azure.com/.default"
     );
   
-    // Save the token for later use
-    this._accessToken = accessToken.token;
+    // Save the token and its expiry time for later use
+    this._accessToken = token.token;
+    this._tokenExpiry = token.expiresOnTimestamp!;
     return this._accessToken;
   }
   
+  private _isTokenExpired(): boolean {
+    const currentTime = Date.now() / 1000;
+    return currentTime >= this._tokenExpiry!;
+  }
+  
+  
   protected async getAuthorizationHeader(): Promise<string> {
     if (this.apiType === 'azuread') {
-      return `Bearer ${await this._aad_interactivelogin()}`;
+      const accessToken = await this._aad_interactivelogin();
+  
+      return `Bearer ${accessToken}`;
     } else {
       return `Bearer ${this.apiKey}`;
     }
