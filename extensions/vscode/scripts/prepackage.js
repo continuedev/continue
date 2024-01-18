@@ -4,8 +4,14 @@ const ncp = require("ncp").ncp;
 const path = require("path");
 const { rimrafSync } = require("rimraf");
 
+let target = undefined;
+const args = process.argv;
+if (args[2] === "--target") {
+  target = args[3];
+}
+
 (async () => {
-  console.log("Packaging extension for target ", process.env.target);
+  console.log("Packaging extension for target ", target);
 
   if (!process.cwd().endsWith("vscode")) {
     // This is sometimes run from root dir instead (e.g. in VS Code tasks)
@@ -92,19 +98,19 @@ const { rimrafSync } = require("rimraf");
       if (error) console.warn("Error copying onnxruntime-node files", error);
     }
   );
-  if (process.env.target) {
+  if (target) {
     // If building for production, only need the binaries for current platform
-    if (!process.env.target.startsWith("darwin")) {
+    if (!target.startsWith("darwin")) {
       fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/darwin"), {
         recursive: true,
       });
     }
-    if (!process.env.target.startsWith("linux")) {
+    if (!target.startsWith("linux")) {
       fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/linux"), {
         recursive: true,
       });
     }
-    if (!process.env.target.startsWith("win")) {
+    if (!target.startsWith("win")) {
       fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/win32"), {
         recursive: true,
       });
@@ -128,19 +134,19 @@ const { rimrafSync } = require("rimraf");
   console.log("Copied tree-sitter wasms");
 
   function ghAction() {
-    return process.env.target !== undefined;
+    return target !== undefined;
   }
 
   function isArm() {
     return (
-      process.env.target === "darwin-arm64" ||
-      process.env.target === "linux-arm64" ||
-      process.env.target === "win32-arm64"
+      target === "darwin-arm64" ||
+      target === "linux-arm64" ||
+      target === "win32-arm64"
     );
   }
 
   function isWin() {
-    return process.env.target?.startsWith("win");
+    return target?.startsWith("win");
   }
 
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
@@ -153,7 +159,7 @@ const { rimrafSync } = require("rimraf");
       const packageToInstall = {
         "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
         "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
-      }[process.env.target];
+      }[target];
       execSync(`npm install -f ${packageToInstall}`);
     }
 
@@ -162,7 +168,7 @@ const { rimrafSync } = require("rimraf");
     rimrafSync("node_modules/@esbuild");
     fs.mkdirSync("node_modules/@esbuild", { recursive: true });
     execSync(
-      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${process.env.target}/esbuild.zip`
+      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`
     );
     execSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
@@ -179,7 +185,7 @@ const { rimrafSync } = require("rimraf");
           "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-darwin-arm64.tar.gz",
         "linux-arm64":
           "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
-      }[process.env.target];
+      }[target];
       execSync(
         `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`
       );

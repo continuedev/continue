@@ -105,9 +105,7 @@ jobs:
       - name: Prepare the extension
         run: |
           cd extensions/vscode
-          npm run prepackage
-        env:
-          target: ${{ env.target }}
+          npm run prepackage --target ${{ env.target }}
 
       # 3. Run tests for the extension
 

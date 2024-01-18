@@ -691,6 +691,11 @@
   resolved "https://registry.npmjs.org/@lancedb/vectordb-darwin-arm64/-/vectordb-darwin-arm64-0.4.3.tgz"
   integrity sha512-47CvvSaV1EdUsFEpXUJApTk+hMzAhCxVizipCFUlXCgcmzpCDL86wNgJij/X9a+j6zADhIX//Lsu0qd/an/Bpw==
 
+"@lancedb/vectordb-linux-x64-gnu@0.4.3":
+  version "0.4.3"
+  resolved "https://registry.npmjs.org/@lancedb/vectordb-linux-x64-gnu/-/vectordb-linux-x64-gnu-0.4.3.tgz"
+  integrity sha512-OBx3WF3pK0xNfFJeErmuD9R2QWLa3XdeZspyTsIrQmBDeKj3HKh8y7Scpx4NH5Y09+9JNqRRKRZN7OqWTYhITg==
+
 "@lukeed/csprng@^1.0.0":
   version "1.0.1"
   resolved "https://registry.npmjs.org/@lukeed/csprng/-/csprng-1.0.1.tgz"
