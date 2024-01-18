@@ -18,6 +18,7 @@ class Together extends BaseLLM {
     "mistral-7b": "mistralai/Mistral-7B-Instruct-v0.1",
     "mistral-8x7b": "mistralai/Mixtral-8x7B-Instruct-v0.1",
     "phind-codellama-34b": "Phind/Phind-CodeLlama-34B-v2",
+    "wizardcoder-34b": "WizardLM/WizardCoder-Python-34B-V1.0",
   };
 
   private _getModelName(model: string) {

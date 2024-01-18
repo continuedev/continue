@@ -1,4 +1,4 @@
-import { stableCodeFimTemplate } from "core/llm/templates/fim";
+import { getTemplateForModel } from "core/autocomplete/templates";
 import Handlebars from "handlebars";
 import {
   CancellationToken,
@@ -10,6 +10,7 @@ import {
   ProviderResult,
   Range,
   TextDocument,
+  workspace,
 } from "vscode";
 import { ideProtocolClient } from "../activation/activate";
 import { TabAutocompleteModel } from "../loadConfig";
@@ -31,7 +32,7 @@ async function getTabCompletion(
       new Range(pos, new Position(document.lineCount, Number.MAX_SAFE_INTEGER))
     );
 
-    const { template, completionOptions } = stableCodeFimTemplate;
+    const { template, completionOptions } = getTemplateForModel(llm.model);
 
     const compiledTemplate = Handlebars.compile(template);
     const prompt = compiledTemplate({ prefix, suffix });
@@ -49,6 +50,7 @@ async function getTabCompletion(
         "class",
         "module",
         "export ",
+        "```",
       ],
     })) {
       completion += update;
@@ -92,7 +94,11 @@ export class ContinueCompletionProvider
     token: CancellationToken
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
-    if (token.isCancellationRequested) {
+    const enableTabAutocomplete =
+      workspace
+        .getConfiguration("continue")
+        .get<boolean>("enableTabAutocomplete") || false;
+    if (token.isCancellationRequested || !enableTabAutocomplete) {
       return [];
     }
 

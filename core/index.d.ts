@@ -425,7 +425,6 @@ export type ModelName =
   | "wizardcoder-34b"
   | "zephyr-7b"
   | "codeup-13b"
-  | "deepseek-1b"
   | "deepseek-7b"
   | "deepseek-33b"
   | "neural-chat-7b"
@@ -438,7 +437,12 @@ export type ModelName =
   // Mistral
   | "mistral-tiny"
   | "mistral-small"
-  | "mistral-medium";
+  | "mistral-medium"
+  // Tab autocomplete
+  | "deepseek-1b"
+  | "starcoder-1b"
+  | "starcoder-3b"
+  | "stable-code-3b";
 
 export interface RequestOptions {
   timeout?: number;

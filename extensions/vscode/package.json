@@ -66,6 +66,11 @@
           "type": "string",
           "default": "http://localhost:65433",
           "description": "An optional proxy server URL through which you can route all Continue requests. Do not change this unless you have set up your own server to proxy requests."
+        },
+        "continue.enableTabAutocomplete": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Continue's experimental tab autocomplete feature"
         }
       }
     },
