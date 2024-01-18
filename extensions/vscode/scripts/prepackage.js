@@ -92,8 +92,8 @@ if (args[2] === "--target") {
 
   // onnxruntime-node
   ncp(
-    path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
-    path.join(__dirname, "../bin"),
+    path.join(__dirname, "../../core/node_modules/onnxruntime-node/bin"),
+    path.join(__dirname, "bin"),
     (error) => {
       if (error) console.warn("Error copying onnxruntime-node files", error);
     }
@@ -101,17 +101,17 @@ if (args[2] === "--target") {
   if (target) {
     // If building for production, only need the binaries for current platform
     if (!target.startsWith("darwin")) {
-      fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/darwin"), {
+      fs.rmdirSync(path.join(__dirname, "bin/napi-v3/darwin"), {
         recursive: true,
       });
     }
     if (!target.startsWith("linux")) {
-      fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/linux"), {
+      fs.rmdirSync(path.join(__dirname, "bin/napi-v3/linux"), {
         recursive: true,
       });
     }
     if (!target.startsWith("win")) {
-      fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/win32"), {
+      fs.rmdirSync(path.join(__dirname, "bin/napi-v3/win32"), {
         recursive: true,
       });
     }
@@ -120,16 +120,16 @@ if (args[2] === "--target") {
 
   // tree-sitter-wasms
   ncp(
-    path.join(__dirname, "../../../core/node_modules/tree-sitter-wasms/out"),
-    path.join(__dirname, "../out/tree-sitter-wasms"),
+    path.join(__dirname, "../../core/node_modules/tree-sitter-wasms/out"),
+    path.join(__dirname, "out/tree-sitter-wasms"),
     (error) => {
       if (error) console.warn("Error copying tree-sitter-wasms files", error);
     }
   );
 
   fs.copyFileSync(
-    path.join(__dirname, "../../../core/vendor/tree-sitter.wasm"),
-    path.join(__dirname, "../out/tree-sitter.wasm")
+    path.join(__dirname, "../../core/vendor/tree-sitter.wasm"),
+    path.join(__dirname, "out/tree-sitter.wasm")
   );
   console.log("Copied tree-sitter wasms");
 

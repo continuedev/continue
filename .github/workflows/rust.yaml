@@ -1,7 +1,4 @@
 on:
-  push:
-    branches: []
-  pull_request:
 
 name: Rust Continuous integration
 
