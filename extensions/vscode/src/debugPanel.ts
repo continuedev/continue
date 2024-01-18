@@ -448,18 +448,52 @@ export function getSidebarContent(
           const config = readFileSync(getConfigJsonPath(), "utf8");
           const configJson = JSON.parse(config);
           configJson.models.push(model);
-          writeFileSync(
-            getConfigJsonPath(),
-            JSON.stringify(
-              configJson,
-              (key, value) => {
-                return value === null ? undefined : value;
-              },
-              2
-            )
+          const newConfigString = JSON.stringify(
+            configJson,
+            (key, value) => {
+              return value === null ? undefined : value;
+            },
+            2
           );
+          writeFileSync(getConfigJsonPath(), newConfigString);
           ideProtocolClient.configUpdate(configJson);
+
           ideProtocolClient.openFile(getConfigJsonPath());
+
+          // Find the range where it was added and highlight
+          let lines = newConfigString.split("\n");
+          let startLine;
+          let endLine;
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+
+            if (!startLine) {
+              if (line.trim() === `"title": "${data.model.title}",`) {
+                startLine = i - 1;
+              }
+            } else {
+              if (line.startsWith("    }")) {
+                endLine = i;
+                break;
+              }
+            }
+          }
+
+          if (startLine && endLine) {
+            ideProtocolClient.highlightCode(
+              {
+                filepath: getConfigJsonPath(),
+                range: {
+                  start: { character: 0, line: startLine },
+                  end: { character: 0, line: endLine },
+                },
+              },
+              "#fff1"
+            );
+          }
+          vscode.window.showInformationMessage(
+            "🎉 Your model has been successfully added to config.json. You can use this file to further edit its configuration."
+          );
           break;
         }
         case "deleteModel": {

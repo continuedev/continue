@@ -2,7 +2,7 @@ import { mergeAttributes, Node } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { ContextItemWithId } from "core";
 import { useDispatch, useSelector } from "react-redux";
-import { buttonColor } from "..";
+import { vscFocusBorder } from "..";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
@@ -27,7 +27,7 @@ const CodeBlockComponent = ({
           item.id === contextItems[0]?.id
             ? "#d0d"
             : selected
-            ? buttonColor
+            ? vscFocusBorder
             : undefined
         }
         item={item}

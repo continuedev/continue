@@ -10,9 +10,9 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  secondaryDark,
   vscBackground,
   vscForeground,
+  vscInputBackground,
 } from ".";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -61,7 +61,7 @@ const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
   right: 0;
   margin: 8px;
   margin-top: 0;
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   color: ${vscForeground};
   border-radius: ${defaultBorderRadius};
   padding: 12px;
@@ -93,7 +93,7 @@ const GridDiv = styled.div`
 `;
 
 const DropdownPortalDiv = styled.div`
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   position: relative;
   margin-left: 8px;
   z-index: 200;

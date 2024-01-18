@@ -3,31 +3,49 @@ import styled, { keyframes } from "styled-components";
 import { getFontSize } from "../util";
 import { isJetBrains } from "../util/ide";
 
-export const VSC_SECONDARY_DARK_VAR = "--vscode-input-background";
+export const VSC_INPUT_BACKGROUND_VAR = "--vscode-input-background";
 export const VSC_BACKGROUND_VAR = "--vscode-sideBar-background";
 export const VSC_FOREGROUND_VAR = "--vscode-editor-foreground";
 export const VSC_BUTTON_BACKGROUND_VAR = "--vscode-button-background";
 export const VSC_EDITOR_BACKGROUND_VAR = "--vscode-editor-background";
+export const VSC_LIST_SELECTION_BACKGROUND_VAR =
+  "--vscode-list-activeSelectionBackground";
+export const VSC_FOCUS_BORDER = "--vscode-focus-border";
+export const VSC_LIST_ACTIVE_FOREGROUND_VAR =
+  "--vscode-quickInputList-focusForeground";
+export const VSC_QUICK_INPUT_BACKGROUND_VAR = "--vscode-quickInput-background";
+export const VSC_INPUT_BORDER_VAR = "--vscode-input-border";
+export const VSC_INPUT_BORDER_FOCUS_VAR = "--vscode-focusBorder";
 
 export const VSC_THEME_COLOR_VARS = [
-  VSC_SECONDARY_DARK_VAR,
+  VSC_INPUT_BACKGROUND_VAR,
   VSC_BACKGROUND_VAR,
   VSC_FOREGROUND_VAR,
   VSC_BUTTON_BACKGROUND_VAR,
   VSC_EDITOR_BACKGROUND_VAR,
+  VSC_LIST_SELECTION_BACKGROUND_VAR,
+  VSC_FOCUS_BORDER,
+  VSC_LIST_ACTIVE_FOREGROUND_VAR,
+  VSC_QUICK_INPUT_BACKGROUND_VAR,
+  VSC_INPUT_BORDER_VAR,
+  VSC_INPUT_BORDER_FOCUS_VAR,
 ];
 
 export const defaultBorderRadius = "5px";
 export const lightGray = "#646464";
-export const buttonColor = "#1bbe84";
-export const buttonColorHover = "#1bbe84a8";
+export const greenButtonColor = "#1bbe84";
 
-export const secondaryDark = `var(${VSC_SECONDARY_DARK_VAR}, rgb(45 45 45))`;
-// export const vscBackground = "var(--vscode-editor-background, rgb(30 30 30))";
+export const vscInputBackground = `var(${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
+export const vscQuickInputBackground = `var(${VSC_QUICK_INPUT_BACKGROUND_VAR}, ${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
 export const vscBackground = `var(${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
 export const vscForeground = `var(${VSC_FOREGROUND_VAR}, #fff)`;
 export const vscButtonBackground = `var(${VSC_BUTTON_BACKGROUND_VAR}, #1bbe84)`;
 export const vscEditorBackground = `var(${VSC_EDITOR_BACKGROUND_VAR}, ${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
+export const vscListActiveBackground = `var(${VSC_LIST_SELECTION_BACKGROUND_VAR}, #1bbe84)`;
+export const vscFocusBorder = `var(${VSC_FOCUS_BORDER}, #1bbe84)`;
+export const vscListActiveForeground = `var(${VSC_LIST_ACTIVE_FOREGROUND_VAR}, ${VSC_FOREGROUND_VAR})`;
+export const vscInputBorder = `var(${VSC_INPUT_BORDER_VAR}, ${lightGray})`;
+export const vscInputBorderFocus = `var(${VSC_INPUT_BORDER_FOCUS_VAR}, ${lightGray})`;
 
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {
@@ -55,7 +73,7 @@ export const Button = styled.button`
 
   border: none;
   color: white;
-  background-color: ${buttonColor};
+  background-color: ${vscListActiveBackground};
 
   &:disabled {
     color: gray;
@@ -85,7 +103,7 @@ export const TextArea = styled.textarea`
   margin: 16px auto;
   height: auto;
   width: calc(100% - 32px);
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   color: ${vscForeground};
   z-index: 1;
   border: 1px solid transparent;
@@ -120,7 +138,7 @@ export const Pre = styled.pre`
 `;
 
 export const H3 = styled.h3`
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   border-radius: ${defaultBorderRadius};
   padding: 4px 8px;
   width: fit-content;
@@ -138,7 +156,7 @@ export const Input = styled.input`
   color: ${vscForeground};
 
   &:focus {
-    background: ${secondaryDark};
+    background: ${vscInputBackground};
   }
 
   &:invalid {
@@ -157,7 +175,7 @@ export const NumberInput = styled.input.attrs({ type: "number" })`
   color: ${vscForeground};
 
   &:focus {
-    background: ${secondaryDark};
+    background: ${vscInputBackground};
   }
 `;
 
@@ -242,7 +260,7 @@ export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
   &:hover {
     background-color: ${({ inverted }) =>
       typeof inverted === "undefined" || inverted
-        ? secondaryDark
+        ? vscInputBackground
         : "transparent"};
   }
   display: flex;

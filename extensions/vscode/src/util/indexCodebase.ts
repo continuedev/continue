@@ -27,9 +27,7 @@ async function getIndexesToBuild(): Promise<CodebaseIndex[]> {
 
   const ide = new VsCodeIde();
   const config = await configHandler.loadConfig(ide);
-  if (config.embeddingsProvider) {
-    indexes.push(new LanceDbIndex(config.embeddingsProvider, ide.readFile));
-  }
+  indexes.push(new LanceDbIndex(config.embeddingsProvider, ide.readFile));
 
   return indexes;
 }

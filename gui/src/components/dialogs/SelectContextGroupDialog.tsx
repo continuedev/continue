@@ -4,9 +4,9 @@ import styled from "styled-components";
 import {
   Button,
   defaultBorderRadius,
-  secondaryDark,
   vscBackground,
   vscForeground,
+  vscInputBackground,
 } from "..";
 import {
   setDialogMessage,
@@ -36,7 +36,7 @@ const ContextGroupSelectDiv = styled.div`
   gap: 8px;
   padding: 8px;
   border-radius: ${defaultBorderRadius};
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   color: ${vscForeground};
   margin-top: 8px;
   cursor: pointer;

@@ -48,6 +48,11 @@ jobs:
       - name: Check-out repository
         uses: actions/checkout@v4
 
+      - name: Make sure version isn't odd
+        run: |
+          cd extensions/vscode
+          node versionCheck.js
+
       # 2. Install npm dependencies
       - name: Use Node.js 19.0.0
         uses: actions/setup-node@v4

@@ -12,7 +12,7 @@ Continue makes it easy to swap out different LLMs. You can either click the "+" 
 
 ## Open-source LLMs
 
-Models available for configuration in the GUI:
+The default models available in the GUI:
 - [Code Llama-Instruct-7B](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#1-code-llama)
 - [Code Llama-Instruct-13B](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#1-code-llama)
 - [Code Llama-Instruct-34B](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#1-code-llama)
@@ -41,6 +41,6 @@ Models available for configuration in the GUI:
 - [GPT-4-Turbo](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#2-gpt-4-turbo)
 - [GPT-3.5-Turbo](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#3-gpt-35-turbo)
 - [Claude-2](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#4-claude-2)
-- [PaLM-2](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#5-palm-2)
+- [Gemini Pro](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#5-palm-2)
 
 **You can also use other commercial models**, but you will need to manually add them to your `config.json`.

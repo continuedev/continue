@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, secondaryDark } from "..";
+import { defaultBorderRadius, vscInputBackground } from "..";
 import { postToIde } from "../../util/ide";
 
 const StyledCode = styled.code<{ link: boolean }>`
   color: ${(props) => (props.link ? "#ff4343" : "#f78383")};
   word-wrap: break-word;
   border-radius: ${defaultBorderRadius};
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
 
   ${(props) => props.link && "cursor: pointer;"}
   &:hover {

@@ -28,11 +28,12 @@ import {
 } from "react";
 import styled from "styled-components";
 import {
-  buttonColor,
   defaultBorderRadius,
   lightGray,
-  secondaryDark,
   vscForeground,
+  vscListActiveBackground,
+  vscListActiveForeground,
+  vscQuickInputBackground,
 } from "..";
 import FileIcon from "../FileIcon";
 import { ComboBoxItem, ComboBoxItemType } from "./types";
@@ -89,7 +90,7 @@ const ItemsDiv = styled.div`
   padding: 0.2rem;
   position: relative;
 
-  background-color: ${secondaryDark};
+  background-color: ${vscQuickInputBackground};
   /* backdrop-filter: blur(12px); */
 `;
 
@@ -106,7 +107,8 @@ const ItemDiv = styled.div`
   cursor: pointer;
 
   &.is-selected {
-    background-color: ${buttonColor}33;
+    background-color: ${vscListActiveBackground};
+    color: ${vscListActiveForeground};
   }
 `;
 
@@ -292,7 +294,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                   </div>
                   <span
                     style={{
-                      color: vscForeground,
+                      color: vscListActiveForeground,
                       float: "right",
                       textAlign: "right",
                       opacity: index !== selectedIndex ? 0 : 1,

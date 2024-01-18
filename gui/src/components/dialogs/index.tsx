@@ -1,7 +1,7 @@
 import React, { isValidElement, useEffect } from "react";
-import styled from "styled-components";
-import { secondaryDark, vscBackground, vscForeground } from "..";
 import { ReactMarkdown } from "react-markdown/lib/react-markdown";
+import styled from "styled-components";
+import { vscBackground, vscForeground, vscInputBackground } from "..";
 
 const ScreenCover = styled.div`
   position: fixed;
@@ -37,7 +37,7 @@ const TextArea = styled.textarea`
   padding: 8px;
   outline: 1px solid black;
   resize: none;
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   color: ${vscForeground};
 
   &:focus {

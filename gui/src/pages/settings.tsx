@@ -10,9 +10,9 @@ import {
   NumberInput,
   TextArea,
   lightGray,
-  secondaryDark,
   vscBackground,
   vscForeground,
+  vscInputBackground,
 } from "../components";
 import InfoHover from "../components/InfoHover";
 import Loader from "../components/loaders/Loader";
@@ -43,7 +43,7 @@ const SaveButton = styled(Button)`
 const Slider = styled.input.attrs({ type: "range" })`
   --webkit-appearance: none;
   width: 100%;
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   outline: none;
   border: none;
   opacity: 0.7;

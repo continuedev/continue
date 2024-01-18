@@ -568,6 +568,6 @@ export interface ContinueConfig {
   disableSessionTitles?: boolean;
   disableIndexing?: boolean;
   userToken?: string;
-  embeddingsProvider?: EmbeddingsProvider;
+  embeddingsProvider: EmbeddingsProvider;
   tabAutocompleteModel?: ILLM;
 }

@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.17",
+  "version": "0.9.19",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -384,6 +384,7 @@
     "glob": "^8.0.3",
     "json-schema-to-typescript": "^12.0.0",
     "ovsx": "^0.8.3",
+    "rimraf": "^5.0.5",
     "typescript": "^5.3.3",
     "vite": "^4.3.9",
     "vsce": "^2.15.0"
@@ -421,8 +422,5 @@
     "vectordb": "^0.4.3",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0"
-  },
-  "optionalDependencies": {
-    "@esbuild/android-arm": "^0.18.17"
   }
 }

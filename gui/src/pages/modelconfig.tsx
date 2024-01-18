@@ -1,4 +1,5 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { postToIde } from "core/ide/messaging";
 import _ from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -31,7 +32,7 @@ const GridDiv = styled.div`
   align-items: center;
 `;
 
-const CustomModelButton = styled.div<{ disabled: boolean }>`
+export const CustomModelButton = styled.div<{ disabled: boolean }>`
   border: 1px solid ${lightGray};
   border-radius: ${defaultBorderRadius};
   padding: 4px 8px;
@@ -250,6 +251,23 @@ function ModelConfig() {
               />
             );
           })}
+
+          <div style={{ padding: "8px" }}>
+            <hr
+              style={{ color: lightGray, border: `1px solid ${lightGray}` }}
+            />
+            <p style={{ color: lightGray }}>
+              OR choose from other providers / models by editing config.json.
+            </p>
+            <CustomModelButton
+              disabled={false}
+              onClick={(e) => {
+                postToIde("openConfigJson", {});
+              }}
+            >
+              <h3 className="text-center my-2">Open config.json</h3>
+            </CustomModelButton>
+          </div>
         </GridDiv>
       </div>
     </FormProvider>
