@@ -78,6 +78,10 @@ const { rimrafSync } = require("rimraf");
   }
 
   // Copy over native / wasm modules //
+  if (!ghAction()) {
+    return;
+  }
+
   process.chdir("../extensions/vscode");
 
   // onnxruntime-node

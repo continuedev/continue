@@ -1,6 +1,6 @@
 on:
   push:
-    branches: [main]
+    branches: []
   pull_request:
 
 defaults:
@@ -8,7 +8,6 @@ defaults:
     working-directory: ./server
 
 jobs:
-
   lint:
     runs-on: ubuntu-latest
     name: ${{ matrix.name }}
@@ -16,12 +15,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-         - name: ruff
-           command: ruff check --output-format=github .
-           deps: --only lint-ruff
-         - name: mypy
-           command: mypy
-           deps: --with lint-typing
+          - name: ruff
+            command: ruff check --output-format=github .
+            deps: --only lint-ruff
+          - name: mypy
+            command: mypy
+            deps: --with lint-typing
     steps:
       - uses: actions/checkout@v4
       - name: Install Python

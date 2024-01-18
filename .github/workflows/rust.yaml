@@ -1,6 +1,6 @@
 on:
   push:
-    branches: [main]
+    branches: []
   pull_request:
 
 name: Rust Continuous integration
@@ -10,7 +10,6 @@ defaults:
     working-directory: ./server
 
 jobs:
-
   # test:
   #   name: test
   #   runs-on: ${{ matrix.os }}
