@@ -91,13 +91,19 @@ if (args[2] === "--target") {
   process.chdir("../extensions/vscode");
 
   // onnxruntime-node
-  ncp(
-    path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
-    path.join(__dirname, "../bin"),
-    (error) => {
-      if (error) console.warn("Error copying onnxruntime-node files", error);
-    }
-  );
+  await new Promise((resolve, reject) => {
+    ncp(
+      path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
+      path.join(__dirname, "../bin"),
+      (error) => {
+        if (error) {
+          console.warn("Error copying onnxruntime-node files", error);
+          reject(error);
+        }
+        resolve();
+      }
+    );
+  });
   if (target) {
     // If building for production, only need the binaries for current platform
     if (!target.startsWith("darwin")) {
