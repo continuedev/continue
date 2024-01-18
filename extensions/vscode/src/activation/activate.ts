@@ -1,4 +1,5 @@
 import { getTsConfigPath } from "core/util/paths";
+import * as fs from "fs";
 import path from "path";
 import { v4 } from "uuid";
 import * as vscode from "vscode";
@@ -89,4 +90,37 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   startProxy();
   vsCodeIndexCodebase(ideProtocolClient.getWorkspaceDirectories());
+
+  try {
+    // Add icon theme for .continueignore
+    const iconTheme = vscode.workspace
+      .getConfiguration("workbench")
+      .get("iconTheme");
+
+    let found = false;
+    for (let i = vscode.extensions.all.length - 1; i >= 0; i--) {
+      if (found) {
+        break;
+      }
+      const extension = vscode.extensions.all[i];
+      if (extension.packageJSON?.contributes?.iconThemes?.length > 0) {
+        for (const theme of extension.packageJSON.contributes.iconThemes) {
+          if (theme.id === iconTheme) {
+            const themePath = path.join(extension.extensionPath, theme.path);
+            const themeJson = JSON.parse(fs.readFileSync(themePath).toString());
+            themeJson.iconDefinitions["_f_continue"] = {
+              fontCharacter: "⚙️",
+              fontColor: "#fff",
+            };
+            themeJson.fileNames[".continueignore"] = "_f_continue";
+            fs.writeFileSync(themePath, JSON.stringify(themeJson));
+            found = true;
+            break;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.log("Error adding .continueignore file icon: ", e);
+  }
 }
