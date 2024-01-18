@@ -1,4 +1,4 @@
-import { deepseekFimTemplate } from "core/llm/templates/fim";
+import { stableCodeFimTemplate } from "core/llm/templates/fim";
 import Handlebars from "handlebars";
 import {
   CancellationToken,
@@ -31,7 +31,7 @@ async function getTabCompletion(
       new Range(pos, new Position(document.lineCount, Number.MAX_SAFE_INTEGER))
     );
 
-    const { template, completionOptions } = deepseekFimTemplate;
+    const { template, completionOptions } = stableCodeFimTemplate;
 
     const compiledTemplate = Handlebars.compile(template);
     const prompt = compiledTemplate({ prefix, suffix });
@@ -42,7 +42,14 @@ async function getTabCompletion(
       ...completionOptions,
       maxTokens: 100,
       temperature: 0,
-      stop: [...(completionOptions?.stop || []), "\n"],
+      stop: [
+        ...(completionOptions?.stop || []),
+        "\n\n",
+        "function",
+        "class",
+        "module",
+        "export ",
+      ],
     })) {
       completion += update;
     }
@@ -90,10 +97,10 @@ export class ContinueCompletionProvider
     }
 
     // Only complete in empty lines
-    const line = document.lineAt(position.line);
-    if (!line.isEmptyOrWhitespace) {
-      return [];
-    }
+    // const line = document.lineAt(position.line);
+    // if (!line.isEmptyOrWhitespace) {
+    //   return [];
+    // }
 
     try {
       const completion = await getTabCompletion(document, position);

@@ -1188,16 +1188,16 @@
         "tabAutocompleteModel": {
           "title": "Tab Autocomplete Model",
           "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will not do tab autocompletion.",
-          "default": [
-            {
-              "title": "Tab Autocomplete Model",
-              "provider": "ollama",
-              "model": "deepseek-coder:1.3b-base"
+          "default": {
+            "title": "Tab Autocomplete Model",
+            "provider": "ollama",
+            "model": "deepseek-coder:1.3b-base"
+          },
+          "$ref": "#/definitions/ModelDescription",
+          "properties": {
+            "model": {
+              "enum": ["a", "b"]
             }
-          ],
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/ModelDescription"
           }
         }
       }
