@@ -323,7 +323,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     tag: IndexTag,
     results: RefreshIndexResults,
     _: MarkCompleteCallback
-  ): AsyncGenerator<number> {
+  ): AsyncGenerator<{ progress: number; desc: string }> {
     const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];
     await Promise.all([
@@ -334,7 +334,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
         return this.deleteOrRemoveTag(cacheKey, tag);
       }),
     ]);
-    yield 1;
+    yield { progress: 1, desc: "Done updating global cache" };
   }
 
   private async computeOrAddTag(

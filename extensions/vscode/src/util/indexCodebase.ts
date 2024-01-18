@@ -33,8 +33,8 @@ async function getIndexesToBuild(): Promise<CodebaseIndex[]> {
 }
 
 export async function vsCodeIndexCodebase(workspaceDirs: string[]) {
-  const update = (progress: number) => {
-    debugPanelWebview?.postMessage({ type: "indexProgress", progress });
+  const update = (progress: number, desc: string) => {
+    debugPanelWebview?.postMessage({ type: "indexProgress", progress, desc });
   };
 
   const indexesToBuild = await getIndexesToBuild();
@@ -63,7 +63,7 @@ export async function vsCodeIndexCodebase(workspaceDirs: string[]) {
 
         // console.log("RESULTS: ", results);
 
-        for await (let progress of codebaseIndex.update(
+        for await (let { progress, desc } of codebaseIndex.update(
           tag,
           results,
           markComplete
@@ -71,13 +71,15 @@ export async function vsCodeIndexCodebase(workspaceDirs: string[]) {
           update(
             (completedDirs +
               (completedIndexes + progress) / indexesToBuild.length) /
-              workspaceDirs.length
+              workspaceDirs.length,
+            desc
           );
         }
         completedIndexes++;
         update(
           (completedDirs + completedIndexes / indexesToBuild.length) /
-            workspaceDirs.length
+            workspaceDirs.length,
+          "Completed indexing " + codebaseIndex.artifactId
         );
       }
     } catch (e) {
@@ -85,6 +87,6 @@ export async function vsCodeIndexCodebase(workspaceDirs: string[]) {
     }
 
     completedDirs++;
-    update(completedDirs / workspaceDirs.length);
+    update(completedDirs / workspaceDirs.length, "Indexing Complete");
   }
 }
