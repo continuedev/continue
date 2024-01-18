@@ -15,6 +15,7 @@ import ShareSlashCommand from "core/commands/slash/share";
 import DiffContextProvider from "core/context/providers/DiffContextProvider";
 import OpenFilesContextProvider from "core/context/providers/OpenFilesContextProvider";
 import TerminalContextProvider from "core/context/providers/TerminalContextProvider";
+import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import FreeTrial from "core/llm/llms/FreeTrial";
 import { v4 } from "uuid";
 import { RootStore } from "../store";
@@ -109,6 +110,7 @@ const initialState: RootStore["state"] = {
       new OpenFilesContextProvider({}),
       new TerminalContextProvider({}),
     ],
+    embeddingsProvider: new TransformersJsEmbeddingsProvider(),
   },
   title: "New Session",
   sessionId: v4(),
