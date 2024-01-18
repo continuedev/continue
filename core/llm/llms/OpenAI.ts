@@ -28,6 +28,9 @@ class OpenAI extends BaseLLM {
     apiBase: "https://api.openai.com",
   };
 
+  private _accessToken: string = "";
+
+
   protected _convertArgs(
     options: any,
     messages: ChatMessage[]
@@ -62,10 +65,27 @@ class OpenAI extends BaseLLM {
   }
 
   protected async _aad_interactivelogin(): Promise<string> {
+    if (this._accessToken) {
+      return this._accessToken;
+    }
+  
     const credential = new InteractiveBrowserCredential({});
   
-    const accessToken = await credential.getToken("https://cognitiveservices.azure.com/.default");
-    return accessToken.token;
+    const accessToken = await credential.getToken(
+      "https://cognitiveservices.azure.com/.default"
+    );
+  
+    // Save the token for later use
+    this._accessToken = accessToken.token;
+    return this._accessToken;
+  }
+  
+  protected async getAuthorizationHeader(): Promise<string> {
+    if (this.apiType === 'azuread') {
+      return `Bearer ${await this._aad_interactivelogin()}`;
+    } else {
+      return `Bearer ${this.apiKey}`;
+    }
   }
   
   
@@ -110,7 +130,7 @@ class OpenAI extends BaseLLM {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiType === 'azuread' ? await this._aad_interactivelogin() : ""}`,
+        Authorization: `Bearer ${this.getAuthorizationHeader()}`,
         "api-key": this.apiKey || "", // For Azure
       },
       body: JSON.stringify({
@@ -180,7 +200,7 @@ class OpenAI extends BaseLLM {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiType === 'azuread' ? await this._aad_interactivelogin() : ""}`,
+        Authorization: `Bearer ${this.getAuthorizationHeader()}`,
         "api-key": this.apiKey || "",
       },
       body: JSON.stringify({

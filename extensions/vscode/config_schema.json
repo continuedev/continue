@@ -138,7 +138,7 @@
         },
         "apiKey": {
           "title": "Api Key",
-          "description": "OpenAI, Anthropic, Together, or other API key",
+          "description": "OpenAI, Anthropic, Together, or other API key. Leave empty if you're using azuread interactive login",
           "type": "string"
         },
         "apiBase": {
@@ -218,8 +218,8 @@
         },
         "apiType": {
           "title": "Api Type",
-          "description": "OpenAI API type, either `openai` or `azure`",
-          "enum": ["openai", "azure"]
+          "description": "OpenAI API type, either `openai`, `azure`, or `azuread` (Same as azure but with interactivelogin via AAD/Entra)",
+          "enum": ["openai", "azure", "azuread"]
         },
         "apiVersion": {
           "title": "Api Version",
