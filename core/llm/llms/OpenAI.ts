@@ -27,9 +27,8 @@ class OpenAI extends BaseLLM {
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.openai.com",
   };
-
   private _accessToken: string | undefined;
-  private _tokenExpiry: number | undefined
+  private _tokenExpiry: number | undefined;
 
 
   protected _convertArgs(
@@ -70,16 +69,22 @@ class OpenAI extends BaseLLM {
       return this._accessToken;
     }
   
-    const credential = new InteractiveBrowserCredential({});
+    return new Promise(async (resolve, reject) => {
+      try {
+        const credential = new InteractiveBrowserCredential({});
   
-    const token = await credential.getToken(
-      "https://cognitiveservices.azure.com/.default"
-    );
+        const token = await credential.getToken(
+          "https://cognitiveservices.azure.com/.default"
+        );
   
-    // Save the token and its expiry time for later use
-    this._accessToken = token.token;
-    this._tokenExpiry = token.expiresOnTimestamp!;
-    return this._accessToken;
+        // Save the token and its expiry time for later use
+        this._accessToken = token.token;
+        this._tokenExpiry = token.expiresOnTimestamp!;
+        resolve(this._accessToken);
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
   
   private _isTokenExpired(): boolean {
@@ -140,7 +145,7 @@ class OpenAI extends BaseLLM {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.getAuthorizationHeader()}`,
+        Authorization: await this.getAuthorizationHeader(),
         "api-key": this.apiKey || "", // For Azure
       },
       body: JSON.stringify({
@@ -210,7 +215,7 @@ class OpenAI extends BaseLLM {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${this.getAuthorizationHeader()}`,
+        Authorization: await this.getAuthorizationHeader(),
         "api-key": this.apiKey || "",
       },
       body: JSON.stringify({
