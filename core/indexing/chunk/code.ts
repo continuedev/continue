@@ -119,10 +119,13 @@ function collapseChildren(
   code: string,
   blockTypes: string[],
   collapseTypes: string[],
-  collapseBlockTypes: string[]
+  collapseBlockTypes: string[],
+  maxChunkSize: number
 ): string {
   code = code.slice(0, node.endIndex);
   const block = firstChild(node, blockTypes);
+  const collapsedChildren = [];
+
   if (block) {
     const childrenToCollapse = block.children.filter((child) =>
       collapseTypes.includes(child.type)
@@ -132,31 +135,85 @@ function collapseChildren(
       if (grandChild) {
         const start = grandChild.startIndex;
         const end = grandChild.endIndex;
+        const collapsedChild =
+          code.slice(child.startIndex, start) +
+          collapsedReplacement(grandChild);
         code =
           code.slice(0, start) +
           collapsedReplacement(grandChild) +
           code.slice(end);
+
+        collapsedChildren.unshift(collapsedChild);
       }
     }
   }
-  return code.slice(node.startIndex);
+  code = code.slice(node.startIndex);
+  let removedChild = false;
+  while (
+    countTokens(code, "gpt-4") > maxChunkSize &&
+    collapsedChildren.length > 0
+  ) {
+    removedChild = true;
+    // Remove children starting at the end - TODO: Add multiple chunks so no children are missing
+    const childCode = collapsedChildren.pop()!;
+    const index = code.lastIndexOf(childCode);
+    if (index > 0) {
+      code = code.slice(0, index) + code.slice(index + childCode.length);
+    }
+  }
+
+  if (removedChild) {
+    // Remove the extra blank lines
+    let lines = code.split("\n");
+    let firstWhiteSpaceInGroup = -1;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      if (lines[i].trim() === "") {
+        if (firstWhiteSpaceInGroup < 0) {
+          firstWhiteSpaceInGroup = i;
+        }
+      } else {
+        if (firstWhiteSpaceInGroup - i > 1) {
+          // Remove the lines
+          lines = [
+            ...lines.slice(0, i + 1),
+            ...lines.slice(firstWhiteSpaceInGroup + 1),
+          ];
+        }
+        firstWhiteSpaceInGroup = -1;
+      }
+    }
+
+    code = lines.join("\n");
+  }
+
+  return code;
 }
 
-function constructClassDefinitionChunk(node: SyntaxNode, code: string): string {
+function constructClassDefinitionChunk(
+  node: SyntaxNode,
+  code: string,
+  maxChunkSize: number
+): string {
   return collapseChildren(
     node,
     code,
     ["block", "class_body", "declaration_list"],
     ["method_definition", "function_definition", "function_item"],
-    ["block", "statement_block"]
+    ["block", "statement_block"],
+    maxChunkSize
   );
 }
 
 function constructFunctionDefinitionChunk(
   node: SyntaxNode,
-  code: string
+  code: string,
+  maxChunkSize: number
 ): string {
-  const funcText = node.text;
+  const bodyNode = node.children[node.children.length - 1];
+  const funcText =
+    code.slice(node.startIndex, bodyNode.startIndex) +
+    collapsedReplacement(bodyNode);
+
   if (
     node.parent &&
     ["block", "declaration_list"].includes(node.parent.type) &&
@@ -177,7 +234,11 @@ function constructFunctionDefinitionChunk(
 }
 
 const collapsedNodeConstructors: {
-  [key: string]: (node: SyntaxNode, code: string) => string;
+  [key: string]: (
+    node: SyntaxNode,
+    code: string,
+    maxChunkSize: number
+  ) => string;
 } = {
   // Classes, structs, etc
   class_definition: constructClassDefinitionChunk,
@@ -211,7 +272,7 @@ function* getSmartCollapsedChunks(
   // If a collapsed form is defined, use that
   if (node.type in collapsedNodeConstructors) {
     yield {
-      content: collapsedNodeConstructors[node.type](node, code),
+      content: collapsedNodeConstructors[node.type](node, code, maxChunkSize),
       startLine: node.startPosition.row,
       endLine: node.endPosition.row,
     };
