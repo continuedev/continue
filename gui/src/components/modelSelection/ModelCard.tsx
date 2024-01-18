@@ -1,7 +1,12 @@
 import { BookOpenIcon } from "@heroicons/react/24/outline";
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
-import { buttonColor, defaultBorderRadius, lightGray } from "..";
+import {
+  defaultBorderRadius,
+  greenButtonColor,
+  lightGray,
+  vscFocusBorder,
+} from "..";
 import {
   MODEL_PROVIDER_TAG_COLORS,
   PROVIDER_INFO,
@@ -56,13 +61,13 @@ const DimensionOptionDiv = styled.div<{ selected: boolean }>`
   ${(props) =>
     props.selected &&
     `
-    background-color: ${buttonColor};
+    background-color: ${greenButtonColor};
     color: white;
   `}
 
   &:hover {
     cursor: pointer;
-    outline: 1px solid ${buttonColor};
+    outline: 1px solid ${vscFocusBorder};
   }
 `;
 
@@ -104,7 +109,7 @@ function ModelCard(props: ModelCardProps) {
   return (
     <Div
       disabled={props.disabled || false}
-      color={buttonColor}
+      color={greenButtonColor}
       hovered={hovered}
     >
       <div
@@ -223,7 +228,7 @@ function ModelCard(props: ModelCardProps) {
                           (i === 0 &&
                             typeof selectedProvider === "undefined") ||
                           selectedProvider === option
-                            ? buttonColor + "aa"
+                            ? greenButtonColor + "aa"
                             : undefined,
                       }}
                       onClick={() => {

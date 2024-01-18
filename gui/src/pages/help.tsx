@@ -1,13 +1,8 @@
-import { useNavigate } from "react-router-dom";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
-import {
-  buttonColor,
-  lightGray,
-  vscBackground,
-  vscForeground,
-} from "../components";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { lightGray, vscBackground, vscForeground } from "../components";
+import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
 
 const IconDiv = styled.div<{ backgroundColor?: string }>`
   display: flex;
@@ -60,7 +55,7 @@ function HelpPage() {
             </svg>
           </a>
         </IconDiv>
-        <IconDiv backgroundColor={buttonColor}>
+        <IconDiv backgroundColor={"#1bbe84a8"}>
           <a
             href="https://continue.dev/docs/how-to-use-continue"
             target="_blank"

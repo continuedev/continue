@@ -12,8 +12,10 @@ import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
-  secondaryDark,
   vscForeground,
+  vscInputBackground,
+  vscInputBorder,
+  vscInputBorderFocus,
 } from "..";
 import { FilesSearchContext, FoldersSearchContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
@@ -40,15 +42,16 @@ const InputBoxDiv = styled.div`
   margin: 0;
   height: auto;
   width: calc(100% - 18px);
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   color: ${vscForeground};
   z-index: 1;
-  border: 0.5px solid ${lightGray};
+  border: 0.5px solid ${vscInputBorder};
   outline: none;
   font-size: 14px;
 
   &:focus {
     outline: none;
+    border: 0.5px solid ${vscInputBorderFocus};
   }
 
   &::placeholder {

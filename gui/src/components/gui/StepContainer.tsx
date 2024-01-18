@@ -9,8 +9,8 @@ import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
-  secondaryDark,
   vscBackground,
+  vscInputBackground,
 } from "..";
 import { RootStore } from "../../redux/store";
 import { getFontSize } from "../../util";
@@ -50,7 +50,7 @@ const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
   padding: 2px;
   padding-right: 0px;
   background-color: ${(props) =>
-    props.isUserInput ? secondaryDark : vscBackground};
+    props.isUserInput ? vscInputBackground : vscBackground};
   font-size: ${(props) => props.fontSize || getFontSize()}px;
   border-radius: ${defaultBorderRadius};
   overflow: hidden;

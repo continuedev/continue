@@ -10,12 +10,13 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
-  buttonColor,
   defaultBorderRadius,
   lightGray,
-  secondaryDark,
   vscBackground,
   vscForeground,
+  vscInputBackground,
+  vscListActiveBackground,
+  vscListActiveForeground,
 } from "..";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
@@ -47,7 +48,7 @@ const Select = styled.select`
     outline: none;
   }
   &:hover {
-    background-color: ${secondaryDark};
+    background-color: ${vscInputBackground};
   }
 `;
 
@@ -60,7 +61,7 @@ const StyledPlusIcon = styled(PlusIcon)`
   height: 100%;
 
   &:hover {
-    background-color: ${secondaryDark};
+    background-color: ${vscInputBackground};
   }
   border-left: 0.5px solid ${lightGray};
 `;
@@ -73,7 +74,7 @@ const NewProviderDiv = styled.div`
   border-top: 0.5px solid ${lightGray};
 
   &:hover {
-    background-color: ${secondaryDark};
+    background-color: ${vscInputBackground};
   }
 `;
 
@@ -109,12 +110,12 @@ const StyledListboxButton = styled(Listbox.Button)`
   }
 
   &:hover {
-    background-color: ${secondaryDark};
+    background-color: ${vscInputBackground};
   }
 `;
 
 const StyledListboxOptions = styled(Listbox.Options)`
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   padding: 0;
 
   position: absolute;
@@ -127,12 +128,13 @@ const StyledListboxOptions = styled(Listbox.Options)`
 
 const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
   background-color: ${({ selected }) =>
-    selected ? `${buttonColor}88` : secondaryDark};
+    selected ? vscListActiveBackground : vscInputBackground};
   cursor: pointer;
   padding: 6px 8px;
 
   &:hover {
-    background-color: ${buttonColor}44;
+    background-color: ${vscListActiveBackground};
+    color: ${vscListActiveForeground};
   }
 `;
 
@@ -175,7 +177,7 @@ function ListBoxOption({
               e.stopPropagation();
               e.preventDefault();
             }}
-            style={{ backgroundColor: secondaryDark }}
+            style={{ backgroundColor: vscInputBackground }}
             className="absolute right-0 p-1"
           >
             <TrashIcon width="1.2em" height="1.2em" />

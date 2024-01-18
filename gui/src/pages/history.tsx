@@ -4,7 +4,7 @@ import React, { Fragment, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { lightGray, secondaryDark, vscBackground } from "../components";
+import { lightGray, vscBackground, vscInputBackground } from "../components";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import useHistory from "../hooks/useHistory";
 import { newSession } from "../redux/slices/stateSlice";
@@ -12,13 +12,13 @@ import { getFontSize } from "../util";
 
 const Tr = styled.tr`
   &:hover {
-    background-color: ${secondaryDark};
+    background-color: ${vscInputBackground};
   }
 
   overflow-wrap: anywhere;
 
-  border-bottom: 1px solid ${secondaryDark};
-  border-top: 1px solid ${secondaryDark};
+  border-bottom: 1px solid ${vscInputBackground};
+  border-top: 1px solid ${vscInputBackground};
 `;
 
 const parseDate = (date: string): Date => {
@@ -33,7 +33,7 @@ const SectionHeader = styled.tr`
   padding: 4px;
   padding-left: 16px;
   padding-right: 16px;
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   width: 100%;
   font-weight: bold;
   text-align: center;

@@ -1,6 +1,11 @@
-import React from "react";
 import styled from "styled-components";
-import { buttonColor, defaultBorderRadius, lightGray, secondaryDark } from "..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscInputBackground,
+  vscListActiveBackground,
+  vscListActiveForeground,
+} from "..";
 
 const TopDiv = styled.div`
   display: flex;
@@ -12,7 +17,7 @@ const TopDiv = styled.div`
 
   border: 1px solid ${lightGray};
 
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   border-radius: ${defaultBorderRadius};
 
   &:hover {
@@ -30,8 +35,9 @@ const SubDiv = styled.div<{ selected: boolean }>`
   ${(props) =>
     props.selected &&
     `
-    background-color: ${buttonColor}77;
+    background-color: ${vscListActiveBackground};
     box-shadow: 0px 0px 8px 0px ${lightGray}88;
+    color: ${vscListActiveForeground};
   
   `}
 `;
