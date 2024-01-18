@@ -102,7 +102,11 @@ jobs:
           cd out
           mkdir node_modules
 
-      - name: Prepare the extension
+      - name: Set var for environment info
+        shell: pwsh
+        run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
+
+      - name: Prepackage the extension
         run: |
           cd extensions/vscode
           npm run prepackage --target ${{ env.target }}
@@ -125,10 +129,6 @@ jobs:
       #   if: matrix.os != 'ubuntu-latest'
 
       # 4. Package the extension
-      - name: Set var for environment info
-        shell: pwsh
-        run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
-
       - name: Package the extension
         run: cd extensions/vscode && npx vsce package --pre-release --target ${{ env.target }}
 
