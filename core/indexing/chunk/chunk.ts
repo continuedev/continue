@@ -1,4 +1,5 @@
 import { Chunk, ChunkWithoutID } from "../..";
+import { countTokens } from "../../llm/countTokens";
 import { supportedLanguages } from "../../util/treeSitter";
 import { basicChunker } from "./basic";
 import { codeChunker } from "./code";
@@ -41,6 +42,14 @@ export async function* chunkDocument(
     contents,
     maxChunkSize
   )) {
+    if (countTokens(chunkWithoutId.content, "gpt-4") > 512) {
+      console.warn(
+        `Chunk with more than ${maxChunkSize} tokens constructed: `,
+        filepath,
+        countTokens(chunkWithoutId.content, "gpt-4")
+      );
+      continue;
+    }
     yield {
       ...chunkWithoutId,
       digest,

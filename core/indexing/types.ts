@@ -16,7 +16,7 @@ export interface CodebaseIndex {
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback
-  ): AsyncGenerator<number>;
+  ): AsyncGenerator<{ progress: number; desc: string }>;
 }
 
 export type PathAndCacheKey = {

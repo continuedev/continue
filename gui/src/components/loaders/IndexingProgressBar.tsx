@@ -63,7 +63,7 @@ const IndexingProgressBar = ({
       {tooltipPortalDiv &&
         ReactDOM.createPortal(
           <StyledTooltip id="usage_progress_bar" place="top">
-            Indexing {currentlyIndexing}
+            {currentlyIndexing}
           </StyledTooltip>,
           tooltipPortalDiv
         )}

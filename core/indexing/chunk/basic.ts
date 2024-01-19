@@ -12,15 +12,18 @@ export function* basicChunker(
 
   for (const line of contents.split("\n")) {
     const lineTokens = countTokens(line, "gpt-4");
-    if (chunkTokens + lineTokens > maxChunkSize) {
+    if (chunkTokens + lineTokens > maxChunkSize - 5) {
       yield { content: chunkContent, startLine, endLine: currLine - 1 };
       chunkContent = "";
       chunkTokens = 0;
       startLine = currLine;
     }
 
-    chunkContent += line + "\n";
-    chunkTokens += lineTokens;
+    if (lineTokens < maxChunkSize) {
+      chunkContent += line + "\n";
+      chunkTokens += lineTokens + 1;
+    }
+
     currLine++;
   }
 

@@ -163,6 +163,7 @@ const Layout = () => {
         }
       } else if (event.data.type === "indexProgress") {
         setIndexingProgress(event.data.progress);
+        setIndexingTask(event.data.desc);
       }
     };
     window.addEventListener("message", handler);
@@ -172,6 +173,7 @@ const Layout = () => {
   }, [location, navigate]);
 
   const [indexingProgress, setIndexingProgress] = useState(1);
+  const [indexingTask, setIndexingTask] = useState("Indexing Codebase");
 
   return (
     <LayoutTopDiv>
@@ -241,7 +243,7 @@ const Layout = () => {
 
               {indexingProgress < 1 && (
                 <IndexingProgressBar
-                  currentlyIndexing={"codebase"}
+                  currentlyIndexing={indexingTask}
                   completed={indexingProgress * 100}
                   total={100}
                 />

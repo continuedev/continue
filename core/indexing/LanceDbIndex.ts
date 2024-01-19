@@ -2,6 +2,7 @@
 import { v4 as uuidv4 } from "uuid";
 import * as lancedb from "vectordb";
 import { Chunk, EmbeddingsProvider } from "..";
+import { getBasename } from "../util";
 import { getLanceDbPath } from "../util/paths";
 import { chunkDocument } from "./chunk/chunk";
 import { DatabaseConnection, SqliteDb } from "./refreshIndex";
@@ -45,7 +46,10 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private tableNameForTag(tag: IndexTag) {
-    return tagToString(tag).replace(/\//g, "").replace(/\\/g, "").replace(/\:/g, "");
+    return tagToString(tag)
+      .replace(/\//g, "")
+      .replace(/\\/g, "")
+      .replace(/\:/g, "");
   }
 
   private async createSqliteCacheTable(db: DatabaseConnection) {
@@ -67,6 +71,7 @@ export class LanceDbIndex implements CodebaseIndex {
         number,
         LanceDbRow,
         { startLine: number; endLine: number; contents: string },
+        string,
       ]
     | PathAndCacheKey
   > {
@@ -116,6 +121,7 @@ export class LanceDbIndex implements CodebaseIndex {
             startLine: chunk.startLine,
             endLine: chunk.endLine,
           },
+          `Indexing ${getBasename(chunks[j].filepath)}`,
         ];
       }
 
@@ -130,7 +136,7 @@ export class LanceDbIndex implements CodebaseIndex {
       items: PathAndCacheKey[],
       resultType: IndexResultType
     ) => void
-  ): AsyncGenerator<number> {
+  ): AsyncGenerator<{ progress: number; desc: string }> {
     const tableName = this.tableNameForTag(tag);
     const db = await lancedb.connect(getLanceDbPath());
 
@@ -145,7 +151,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
     for await (const update of this.computeChunks(results.compute)) {
       if (Array.isArray(update)) {
-        const [progress, row, data] = update;
+        const [progress, row, data, desc] = update;
         computedRows.push(row);
 
         // Add the computed row to the cache
@@ -160,7 +166,7 @@ export class LanceDbIndex implements CodebaseIndex {
           data.contents
         );
 
-        yield progress;
+        yield { progress, desc };
       } else {
         // Create table if needed, add computed rows
         if (table) {
@@ -232,7 +238,7 @@ export class LanceDbIndex implements CodebaseIndex {
     }
 
     markComplete(results.del, IndexResultType.Delete);
-    yield 1;
+    yield { progress: 1, desc: "Completed Calculating Embeddings" };
   }
 
   private async _retrieveForTag(
