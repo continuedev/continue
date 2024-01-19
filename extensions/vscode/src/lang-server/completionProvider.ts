@@ -52,7 +52,7 @@ async function getTabCompletion(
       new Range(pos, new Position(document.lineCount, Number.MAX_SAFE_INTEGER))
     );
     const clipboardText = await env.clipboard.readText();
-    const [prefix, suffix] = await constructAutocompletePrompt(
+    const { prefix, suffix } = await constructAutocompletePrompt(
       document.fileName,
       fullPrefix,
       fullSuffix,
