@@ -1011,6 +1011,29 @@
           "if": {
             "properties": {
               "name": {
+                "enum": ["http"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "The HTTP endpoint of your context provider server."
+                  }
+                },
+                "required": ["url"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
                 "enum": ["codebase", "folder"]
               }
             }
