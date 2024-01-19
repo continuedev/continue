@@ -11,6 +11,7 @@ from pydantic import BaseModel
 
 class Item(BaseModel):
     query: str
+    fullInput: str
 
 
 app = FastAPI()

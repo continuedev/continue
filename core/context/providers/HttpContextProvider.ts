@@ -37,6 +37,7 @@ class HttpContextProvider extends BaseContextProvider {
       },
       body: JSON.stringify({
         query,
+        fullInput: extras.fullInput,
       }),
     });
 
