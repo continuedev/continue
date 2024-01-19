@@ -1,6 +1,7 @@
 import { ContinueConfig, IDE, ILLM } from "core";
+import { https } from "follow-redirects";
 import * as fs from "fs";
-import { Agent, fetch } from "undici";
+import fetch from "node-fetch";
 import { webviewRequest } from "./debugPanel";
 import { VsCodeIde, loadFullConfigNode } from "./ideProtocol";
 const tls = require("tls");
@@ -62,15 +63,13 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
 
   let timeout = (llm.requestOptions?.timeout || TIMEOUT) * 1000; // measured in ms
 
-  const agent = new Agent({
-    connect: {
-      ca,
-      rejectUnauthorized: llm.requestOptions?.verifySsl,
-      timeout,
-    },
-    bodyTimeout: timeout,
-    connectTimeout: timeout,
-    headersTimeout: timeout,
+  const agent = new https.Agent({
+    ca,
+    rejectUnauthorized: llm.requestOptions?.verifySsl,
+    timeout,
+    sessionTimeout: timeout,
+    keepAlive: true,
+    keepAliveMsecs: timeout,
   });
 
   llm._fetch = (input, init) => {
@@ -82,8 +81,8 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
 
     return fetch(input, {
       ...init,
-      dispatcher: agent,
       headers,
+      agent,
     });
   };
 
