@@ -3,8 +3,10 @@ import {
   constructAutocompletePrompt,
   languageForFilepath,
 } from "core/autocomplete/constructPrefix";
+import { DEBOUNCE_DELAY } from "core/autocomplete/parameters";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import Handlebars from "handlebars";
+import { v4 as uuidv4 } from "uuid";
 import {
   CancellationToken,
   InlineCompletionContext,
@@ -40,13 +42,21 @@ async function getTabCompletion(
 ): Promise<AutocompleOutcome | undefined> {
   const startTime = Date.now();
 
+  // Filter
+  const lang = languageForFilepath(document.fileName);
+  const line = document.lineAt(pos).text;
+  for (const endOfLine of lang.endOfLine) {
+    if (line.endsWith(endOfLine) && pos.character >= endOfLine.length) {
+      return undefined;
+    }
+  }
+
   try {
     // Model
     const llm = await TabAutocompleteModel.get();
     if (!llm) return;
 
     // Prompt
-    const lang = languageForFilepath(document.fileName);
     const fullPrefix = document.getText(new Range(new Position(0, 0), pos));
     const fullSuffix = document.getText(
       new Range(pos, new Position(document.lineCount, Number.MAX_SAFE_INTEGER))
@@ -79,6 +89,7 @@ async function getTabCompletion(
         ...completionOptions,
         maxTokens: 100,
         temperature: 0,
+        raw: true,
         stop: [
           ...(completionOptions?.stop || []),
           "\n\n",
@@ -119,6 +130,10 @@ async function getTabCompletion(
 export class ContinueCompletionProvider
   implements InlineCompletionItemProvider
 {
+  private static debounceTimeout: NodeJS.Timeout | undefined = undefined;
+  private static debouncing: boolean = false;
+  private static lastUUID: string | undefined = undefined;
+
   public async provideInlineCompletionItems(
     document: TextDocument,
     position: Position,
@@ -126,6 +141,27 @@ export class ContinueCompletionProvider
     token: CancellationToken
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
+    // Debounce
+    const uuid = uuidv4();
+    ContinueCompletionProvider.lastUUID = uuid;
+
+    if (ContinueCompletionProvider.debouncing) {
+      ContinueCompletionProvider.debounceTimeout?.refresh();
+      const lastUUID = await new Promise((resolve) =>
+        setTimeout(() => {
+          resolve(ContinueCompletionProvider.lastUUID);
+        }, DEBOUNCE_DELAY)
+      );
+      if (uuid !== lastUUID) {
+        return [];
+      }
+    } else {
+      ContinueCompletionProvider.debouncing = true;
+      ContinueCompletionProvider.debounceTimeout = setTimeout(async () => {
+        ContinueCompletionProvider.debouncing = false;
+      }, DEBOUNCE_DELAY);
+    }
+
     const enableTabAutocomplete =
       workspace
         .getConfiguration("continue")

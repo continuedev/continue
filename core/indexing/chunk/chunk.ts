@@ -1,6 +1,7 @@
 import { Chunk, ChunkWithoutID } from "../..";
+import { supportedLanguages } from "../../util/treeSitter";
 import { basicChunker } from "./basic";
-import { codeChunker, supportedLanguages } from "./code";
+import { codeChunker } from "./code";
 
 async function* chunkDocumentWithoutId(
   filepath: string,
