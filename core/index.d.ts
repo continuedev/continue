@@ -132,17 +132,8 @@ export interface ContinueError {
   message: string;
 }
 
-export interface CompletionOptions {
+export interface CompletionOptions extends BaseCompletionOptions {
   model: string;
-
-  maxTokens: number;
-  temperature?: number;
-  topP?: number;
-  topK?: number;
-  minP?: number;
-  presencePenalty?: number;
-  frequencyPenalty?: number;
-  stop?: string[];
 }
 
 export type ChatMessageRole = "user" | "assistant" | "system";
@@ -185,20 +176,11 @@ export type ChatHistory = ChatHistoryItem[];
 
 // LLM
 
-export interface LLMFullCompletionOptions {
+export interface LLMFullCompletionOptions extends BaseCompletionOptions {
   raw?: boolean;
   log?: boolean;
 
   model?: string;
-
-  temperature?: number;
-  topP?: number;
-  topK?: number;
-  minP?: number;
-  presencePenalty?: number;
-  frequencyPenalty?: number;
-  stop?: string[];
-  maxTokens?: number;
 }
 export interface LLMOptions {
   model: string;
@@ -477,8 +459,9 @@ interface BaseCompletionOptions {
   minP?: number;
   presencePenalty?: number;
   frequencyPenalty?: number;
+  mirostat?: number;
   stop?: string[];
-  maxTokens: number;
+  maxTokens?: number;
 }
 
 export interface ModelDescription {

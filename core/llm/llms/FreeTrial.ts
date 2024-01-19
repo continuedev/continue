@@ -15,11 +15,23 @@ class FreeTrial extends BaseLLM {
     };
   }
 
+  private _convertArgs(options: CompletionOptions): any {
+    return {
+      model: options.model,
+      frequency_penalty: options.frequencyPenalty,
+      presence_penalty: options.presencePenalty,
+      max_tokens: options.maxTokens,
+      stop: options.stop,
+      temperature: options.temperature,
+      top_p: options.topP,
+    };
+  }
+
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const args = this.collectArgs(options);
+    const args = this._convertArgs(this.collectArgs(options));
 
     const response = await this.fetch(`${SERVER_URL}/stream_complete`, {
       method: "POST",
@@ -39,7 +51,7 @@ class FreeTrial extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
-    const args = this.collectArgs(options);
+    const args = this._convertArgs(this.collectArgs(options));
 
     const response = await this.fetch(`${SERVER_URL}/stream_chat`, {
       method: "POST",

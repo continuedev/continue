@@ -1,7 +1,10 @@
-const DEFAULT_MAX_TOKENS = 1000;
+const DEFAULT_MAX_TOKENS = 1024;
+const DEFAULT_CONTEXT_LENGTH = 4096;
+const DEFAULT_TEMPERATURE = 0.5;
+
 const DEFAULT_ARGS = {
-  max_tokens: DEFAULT_MAX_TOKENS,
-  temperature: 0.5,
+  maxTokens: DEFAULT_MAX_TOKENS,
+  temperature: DEFAULT_TEMPERATURE,
 };
 
 const CONTEXT_LENGTH_FOR_MODEL: { [name: string]: number } = {
@@ -22,6 +25,7 @@ const PROXY_URL = "http://localhost:65433";
 export {
   CONTEXT_LENGTH_FOR_MODEL,
   DEFAULT_ARGS,
+  DEFAULT_CONTEXT_LENGTH,
   DEFAULT_MAX_TOKENS,
   PROXY_URL,
   TOKEN_BUFFER_FOR_SAFETY,

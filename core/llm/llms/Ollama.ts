@@ -95,6 +95,7 @@ class Ollama extends BaseLLM {
         num_predict: options.maxTokens,
         stop: options.stop,
         num_ctx: this.contextLength,
+        mirostat: options.mirostat,
       },
     };
 

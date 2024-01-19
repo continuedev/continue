@@ -31,6 +31,11 @@
           "description": "The frequency penalty of the completion.",
           "type": "number"
         },
+        "mirostat": {
+          "title": "Mirostat",
+          "description": "Enable Mirostat sampling, controlling perplexity during text generation (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0). Only available for Ollama, LM Studio, and llama.cpp providers",
+          "type": "number"
+        },
         "stop": {
           "title": "Stop",
           "description": "The stop tokens of the completion.",
