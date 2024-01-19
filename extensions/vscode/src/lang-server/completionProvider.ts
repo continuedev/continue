@@ -1,4 +1,8 @@
 import { AutocompleteLruCache } from "core/autocomplete/cache";
+import {
+  constructAutocompletePrompt,
+  languageForFilepath,
+} from "core/autocomplete/constructPrefix";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import Handlebars from "handlebars";
 import {
@@ -11,6 +15,7 @@ import {
   ProviderResult,
   Range,
   TextDocument,
+  env,
   workspace,
 } from "vscode";
 import { ideProtocolClient } from "../activation/activate";
@@ -41,9 +46,18 @@ async function getTabCompletion(
     if (!llm) return;
 
     // Prompt
-    const prefix = document.getText(new Range(new Position(0, 0), pos));
-    const suffix = document.getText(
+    const lang = languageForFilepath(document.fileName);
+    const fullPrefix = document.getText(new Range(new Position(0, 0), pos));
+    const fullSuffix = document.getText(
       new Range(pos, new Position(document.lineCount, Number.MAX_SAFE_INTEGER))
+    );
+    const clipboardText = await env.clipboard.readText();
+    const [prefix, suffix] = await constructAutocompletePrompt(
+      document.fileName,
+      fullPrefix,
+      fullSuffix,
+      clipboardText,
+      lang
     );
 
     const { template, completionOptions } = getTemplateForModel(llm.model);
@@ -68,11 +82,8 @@ async function getTabCompletion(
         stop: [
           ...(completionOptions?.stop || []),
           "\n\n",
-          "function",
-          "class",
-          "module",
-          "export ",
           "```",
+          ...lang.stopWords,
         ],
       })) {
         completion += update;

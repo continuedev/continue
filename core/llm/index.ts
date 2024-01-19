@@ -35,13 +35,13 @@ import {
   codellamaEditPrompt,
   deepseekEditPrompt,
   mistralEditPrompt,
+  neuralChatEditPrompt,
   openchatEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
-  neuralChatEditPrompt,
 } from "./templates/edit";
 
 const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [

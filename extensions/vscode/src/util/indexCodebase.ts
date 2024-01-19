@@ -61,7 +61,7 @@ export async function vsCodeIndexCodebase(workspaceDirs: string[]) {
           (filepath) => ideProtocolClient.readFile(filepath)
         );
 
-        console.log("RESULTS: ", results);
+        // console.log("RESULTS: ", results);
 
         for await (let progress of codebaseIndex.update(
           tag,
