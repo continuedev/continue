@@ -5,7 +5,6 @@ import {
   ILLM,
   ModelProvider,
 } from "..";
-import { ExtensionIde } from "../ide";
 import { getBasename } from "../util";
 
 const RERANK_PROMPT = (
@@ -141,7 +140,7 @@ export async function retrieveContextItemsFromEmbeddings(
     (options?.useReranking === undefined ? false : options?.useReranking);
 
   // Similarity search
-  let results = await new ExtensionIde().retrieveChunks(
+  let results = await extras.ide.retrieveChunks(
     extras.fullInput,
     useReranking === false ? nFinal : nRetrieve,
     filterDirectory

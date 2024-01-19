@@ -4,7 +4,6 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import { ExtensionIde } from "../../ide";
 
 class SearchContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -19,7 +18,7 @@ class SearchContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
-    const results = await new ExtensionIde().getSearchResults(query);
+    const results = await extras.ide.getSearchResults(query);
     return [
       {
         description: "Search results",

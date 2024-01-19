@@ -6,8 +6,8 @@ import {
   ILLM,
 } from "core";
 import { ExtensionIde } from "core/ide";
+import { ideRequest } from "core/ide/messaging";
 import { getBasename } from "core/util";
-import { getContextItems } from "../../hooks/useContextProviders";
 
 interface MentionAttrs {
   label: string;
@@ -73,15 +73,14 @@ async function resolveEditorContent(
         },
       });
     } else {
-      const resolvedItems = await getContextItems(
-        contextProviders,
-        item.id,
-        item.query,
-        {
-          fullInput: paragraphs.join("\n"),
-          embeddingsProvider,
-          llm,
-        }
+      const data = {
+        name: item.id,
+        query: item.query,
+        fullInput: paragraphs.join("\n"),
+      };
+      const { items: resolvedItems } = await ideRequest(
+        "getContextItems",
+        data
       );
       contextItems.push(...resolvedItems);
       for (const resolvedItem of resolvedItems) {

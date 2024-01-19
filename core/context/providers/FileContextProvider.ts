@@ -4,7 +4,6 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import { ExtensionIde } from "../../ide";
 
 class FileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -21,7 +20,7 @@ class FileContextProvider extends BaseContextProvider {
   ): Promise<ContextItem[]> {
     // Assume the query is a filepath
     query = query.trim();
-    const content = await new ExtensionIde().readFile(query);
+    const content = await extras.ide.readFile(query);
     return [
       {
         name: query.split(/[\\/]/).pop() || query,

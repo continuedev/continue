@@ -4,7 +4,6 @@ import {
   ContextProviderExtras,
   IContextProvider,
 } from "..";
-
 export abstract class BaseContextProvider implements IContextProvider {
   options: { [key: string]: any };
 

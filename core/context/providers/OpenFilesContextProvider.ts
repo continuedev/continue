@@ -4,7 +4,6 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import { ExtensionIde } from "../../ide";
 import { getBasename } from "../../util";
 
 class OpenFilesContextProvider extends BaseContextProvider {
@@ -20,7 +19,7 @@ class OpenFilesContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
-    const ide = new ExtensionIde();
+    const ide = extras.ide;
     const openFiles = await ide.getOpenFiles();
     return await Promise.all(
       openFiles.map(async (filepath: string) => {

@@ -73,6 +73,7 @@ interface ContextProviderExtras {
   fullInput: string;
   embeddingsProvider?: EmbeddingsProvider;
   llm: ILLM;
+  ide: IDE;
 }
 
 export interface CustomContextProvider {

@@ -4,7 +4,6 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import { ExtensionIde } from "../../ide";
 
 interface Directory {
   name: string;
@@ -48,13 +47,11 @@ class FileTreeContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
-    const workspaceDirs = await new ExtensionIde().getWorkspaceDirs();
+    const workspaceDirs = await extras.ide.getWorkspaceDirs();
     let trees = [];
 
     for (let workspaceDir of workspaceDirs) {
-      const contents = await new ExtensionIde().listWorkspaceContents(
-        workspaceDir
-      );
+      const contents = await extras.ide.listWorkspaceContents(workspaceDir);
 
       const subDirTree: Directory = {
         name: splitPath(workspaceDir).pop() || "",

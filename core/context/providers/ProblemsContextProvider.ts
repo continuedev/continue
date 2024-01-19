@@ -4,7 +4,6 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import { ExtensionIde } from "../../ide";
 import { getBasename } from "../../util";
 
 class ProblemsContextProvider extends BaseContextProvider {
@@ -20,7 +19,7 @@ class ProblemsContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
-    const ide = new ExtensionIde();
+    const ide = extras.ide;
     const problems = await ide.getProblems();
 
     const items = await Promise.all(

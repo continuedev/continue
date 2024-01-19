@@ -1,7 +1,8 @@
-import { DiffLine, FileEdit, ModelDescription } from "core";
+import { ContextItemId, DiffLine, FileEdit, ModelDescription } from "core";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import { readFileSync, writeFileSync } from "fs";
 import * as io from "socket.io-client";
+import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
@@ -590,6 +591,43 @@ export function getSidebarContent(
             respond({ content: update });
           }
           respond({ done: true });
+          break;
+        }
+        case "getContextItems": {
+          const { name, query, fullInput } = data.message;
+          const config = await configHandler.loadConfig(ide);
+          const llm = await llmFromTitle();
+          const provider = config.contextProviders?.find(
+            (p) => p.description.title === name
+          );
+          if (!provider) {
+            vscode.window.showErrorMessage(
+              `Unknown provider ${name}. Existing providers: ${config.contextProviders
+                ?.map((p) => p.description.title)
+                .join(", ")}`
+            );
+            respond({ items: [] });
+            break;
+          }
+
+          try {
+            const id: ContextItemId = {
+              providerTitle: provider.description.title,
+              itemId: uuidv4(),
+            };
+            const items = await provider.getContextItems(query, {
+              llm,
+              embeddingsProvider: config.embeddingsProvider,
+              fullInput,
+              ide,
+            });
+            respond({ items: items.map((item) => ({ ...item, id })) });
+          } catch (e) {
+            vscode.window.showErrorMessage(
+              `Error getting context items from ${name}: ${e}`
+            );
+            respond({ items: [] });
+          }
           break;
         }
       }
