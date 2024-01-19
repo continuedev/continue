@@ -32,7 +32,7 @@ export class LanceDbIndex implements CodebaseIndex {
     return "vectordb::" + this.embeddingsProvider.id;
   }
 
-  static MAX_CHUNK_SIZE = 512;
+  static MAX_CHUNK_SIZE = 500; // 512 - buffer for safety (in case of differing tokenizers)
 
   embeddingsProvider: EmbeddingsProvider;
   readFile: (filepath: string) => Promise<string>;
