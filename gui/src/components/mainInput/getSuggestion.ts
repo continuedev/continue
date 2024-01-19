@@ -126,7 +126,7 @@ function getFileItems(
 ): ComboBoxItem[] {
   let res: any[] = miniSearch.search(query.trim() === "" ? "/" : query, {
     prefix: true,
-    fuzzy: 5,
+    fuzzy: 4,
   });
   if (res.length === 0) {
     return openFiles.length > 0 ? openFiles : firstResults;

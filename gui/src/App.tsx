@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -83,6 +83,22 @@ export const FoldersSearchContext = createContext<
   [MiniSearch, MiniSearchResult[]]
 >([foldersMiniSearch, []]);
 
+(async () => {
+  const files = await new ExtensionIde().listWorkspaceContents();
+  const results = files.map((filepath) => {
+    return { id: filepath, basename: getBasename(filepath) };
+  });
+  filesMiniSearch.addAll(results);
+})();
+
+(async () => {
+  const folders = await new ExtensionIde().listFolders();
+  const results = folders.map((path) => {
+    return { id: path, basename: getBasename(path) };
+  });
+  foldersMiniSearch.addAll(results);
+})();
+
 export interface MiniSearchResult {
   id: string;
   basename: string;
@@ -93,39 +109,19 @@ function App() {
 
   useSetup(dispatch);
 
-  const [filesFirstResults, setFilesFirstResults] = useState<
+  const [filesFirstResultsState, setFilesFirstResults] = useState<
     MiniSearchResult[]
   >([]);
-  const [foldersFirstResults, setFoldersFirstResults] = useState<
+  const [foldersFirstResultsState, setFoldersFirstResults] = useState<
     MiniSearchResult[]
   >([]);
-
-  useEffect(() => {
-    (async () => {
-      const files = await new ExtensionIde().listWorkspaceContents();
-      const results = files.map((filepath) => {
-        return { id: filepath, basename: getBasename(filepath) };
-      });
-      filesMiniSearch.addAll(results);
-      setFilesFirstResults(results);
-    })();
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      const folders = await new ExtensionIde().listFolders();
-      const results = folders.map((path) => {
-        return { id: path, basename: getBasename(path) };
-      });
-      foldersMiniSearch.addAll(results);
-      setFoldersFirstResults(results);
-    })();
-  }, []);
 
   return (
-    <FilesSearchContext.Provider value={[filesMiniSearch, filesFirstResults]}>
+    <FilesSearchContext.Provider
+      value={[filesMiniSearch, filesFirstResultsState]}
+    >
       <FoldersSearchContext.Provider
-        value={[foldersMiniSearch, foldersFirstResults]}
+        value={[foldersMiniSearch, foldersFirstResultsState]}
       >
         <RouterProvider router={router} />
       </FoldersSearchContext.Provider>

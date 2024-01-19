@@ -271,7 +271,7 @@ export async function getComputeDeleteAddRemove(
       removeTag.push({ path, cacheKey });
     } else {
       if (existingTags.length === 0) {
-        console.warn("Existing tags should not be empty when trying to remove");
+        // console.warn("Existing tags should not be empty when trying to remove");
       }
 
       del.push({ path, cacheKey });
