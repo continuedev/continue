@@ -1,8 +1,9 @@
 import { AutocompleteLruCache } from "core/autocomplete/cache";
 import {
+  AutocompleteSnippet,
   constructAutocompletePrompt,
   languageForFilepath,
-} from "core/autocomplete/constructPrefix";
+} from "core/autocomplete/constructPrompt";
 import { DEBOUNCE_DELAY } from "core/autocomplete/parameters";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import Handlebars from "handlebars";
@@ -17,11 +18,37 @@ import {
   ProviderResult,
   Range,
   TextDocument,
+  Uri,
+  commands,
   env,
   workspace,
 } from "vscode";
 import { ideProtocolClient } from "../activation/activate";
 import { TabAutocompleteModel } from "../loadConfig";
+
+async function getDefinition(
+  filepath: string,
+  line: number,
+  character: number
+): Promise<AutocompleteSnippet | undefined> {
+  const definitions = (await commands.executeCommand(
+    "vscode.executeDefinitionProvider",
+    Uri.file(filepath),
+    new Position(line, character)
+  )) as any;
+
+  if (definitions[0]?.targetRange) {
+    return {
+      filepath,
+      content: await ideProtocolClient.readRangeInFile(
+        definitions[0].targetUri.fsPath,
+        definitions[0].targetRange
+      ),
+    };
+  }
+
+  return undefined;
+}
 
 export interface AutocompleOutcome {
   accepted?: boolean;
@@ -67,7 +94,8 @@ async function getTabCompletion(
       fullPrefix,
       fullSuffix,
       clipboardText,
-      lang
+      lang,
+      getDefinition
     );
 
     const { template, completionOptions } = getTemplateForModel(llm.model);
@@ -87,7 +115,6 @@ async function getTabCompletion(
       // LLM
       for await (const update of llm.streamComplete(prompt, {
         ...completionOptions,
-        maxTokens: 100,
         temperature: 0,
         raw: true,
         stop: [
@@ -100,6 +127,19 @@ async function getTabCompletion(
         completion += update;
         if (token.isCancellationRequested) {
           return undefined;
+        }
+
+        let foundEndLine = false;
+        for (const end of lang.endOfLine) {
+          if (completion.includes(end + "\n")) {
+            completion =
+              completion.slice(0, completion.indexOf(end + "\n")) + end;
+            foundEndLine = true;
+            break;
+          }
+        }
+        if (foundEndLine) {
+          break;
         }
       }
 

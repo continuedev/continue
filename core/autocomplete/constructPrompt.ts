@@ -59,19 +59,64 @@ async function getTreePathAtCursor(
   return path;
 }
 
+export interface AutocompleteSnippet {
+  filepath: string;
+  content: string;
+}
+
 export async function constructAutocompletePrompt(
   filepath: string,
   fullPrefix: string,
   fullSuffix: string,
   clipboardText: string,
-  language: AutocompleteLanguageInfo
+  language: AutocompleteLanguageInfo,
+  getDefinition: (
+    filepath: string,
+    line: number,
+    character: number
+  ) => Promise<AutocompleteSnippet | undefined>
 ): Promise<{ prefix: string; suffix: string; useFim: boolean }> {
   // Find external snippets
-  // const path =
+  const snippets: AutocompleteSnippet[] = [];
+
+  const treePath = await getTreePathAtCursor(
+    filepath,
+    fullPrefix + fullSuffix,
+    fullPrefix.length
+  );
+
+  // Get function def when inside call expression
+  let callExpression = undefined;
+  for (let node of treePath.reverse()) {
+    if (node.type === "call_expression") {
+      callExpression = node;
+      break;
+    }
+  }
+  if (callExpression) {
+    const definition = await getDefinition(
+      filepath,
+      callExpression.startPosition.row,
+      callExpression.startPosition.column
+    );
+    if (definition) {
+      snippets.push(definition);
+    }
+  }
 
   // Construct basic prefix / suffix
-  const maxPrefixTokens = MAX_PROMPT_TOKENS * PREFIX_PERCENTAGE;
-  const prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens);
+  const formattedSnippets = snippets
+    .map((snippet) =>
+      formatExternalSnippet(snippet.filepath, snippet.content, language)
+    )
+    .join("\n");
+  const maxPrefixTokens =
+    MAX_PROMPT_TOKENS * PREFIX_PERCENTAGE -
+    countTokens(formattedSnippets, "gpt-4");
+  let prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens);
+  if (formattedSnippets.length > 0) {
+    prefix = formattedSnippets + "\n" + prefix;
+  }
 
   const maxSuffixTokens = Math.min(
     MAX_PROMPT_TOKENS - countTokens(prefix, "gpt-4"),
