@@ -107,7 +107,7 @@ export function renderPromptTemplate(
   }
 }
 
-export function getBasename(filepath: string): string {
+export function getBasename(filepath: string, n: number = 1): string {
   return filepath.split(/[\\/]/).pop() || "";
 }
 
