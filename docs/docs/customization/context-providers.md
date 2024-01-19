@@ -8,15 +8,13 @@ keywords: [context, "@", provider, LLM]
 
 Context Providers allow you to type '@' and see a dropdown of content that can all be fed to the LLM as context. Every context provider is a plugin, which means if you want to reference some source of information that you don't see here, you can request (or build!) a new context provider.
 
-As an example, say you are working on solving a new GitHub Issue. You type '@issue' and select the one you are working on. Continue can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed above the input.
+As an example, say you are working on solving a new GitHub Issue. You type '@issue' and select the one you are working on. Continue can now see the issue title and contents. You also know that the issue is related to the files 'readme.md' and 'helloNested.py', so you type '@readme' and '@hello' to find and select them. Now these 3 "Context Items" are displayed inline with the rest of your input.
 
 ![Context Items](/img/context-provider-example.png)
 
-When you enter your next input, Continue will see the full contents of each of these items, and can use them to better answer your questions throughout the conversation.
-
 ## Built-in Context Providers
 
-To use any of the built-in context providers, open `~/.continue/config.json` (can do this with the '/config' slash command) and add it to the `contextProviders` list.
+To use any of the built-in context providers, open `~/.continue/config.json` and add it to the `contextProviders` list.
 
 ### Git Diff
 
@@ -42,9 +40,9 @@ Type '@open' to reference the contents of all of your open files.
 { "name": "open" }
 ```
 
-### Codebase Search
+### Exact Search
 
-Type '@search' to reference the results of codebase search, just like the results you would get from VS Code search.
+Type '@search' to reference the results of codebase search, just like the results you would get from VS Code search. This context provider is powered by [ripgrep](https://github.com/BurntSushi/ripgrep).
 
 ```json
 { "name": "search" }
@@ -52,7 +50,7 @@ Type '@search' to reference the results of codebase search, just like the result
 
 ### URLs
 
-Type '@url' to reference the contents of a URL. You can either reference preset URLs, or reference one dynamically by typing '@url https://example.com'. The text contents of the page will be fetched and used as context.
+Type '@url' and then enter the URL you want to include in the input prompt that appears. The text contents of the page will be fetched and used as context.
 
 ```json
 {
@@ -63,7 +61,7 @@ Type '@url' to reference the contents of a URL. You can either reference preset 
 
 ### File Tree
 
-Type '@tree' to reference the contents of your current workspace. The LLM will be able to see the nested directory structure of your project.
+Type '@tree' to reference the structure of your current workspace. The LLM will be able to see the nested directory structure of your project.
 
 ```json
 { "name": "tree" }
@@ -82,6 +80,7 @@ Type '@google' to reference the results of a Google search. For example, type "@
 
 Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
+<!--
 ### GitHub
 
 Type '@issue' to reference the title and contents of a GitHub issue.
@@ -95,13 +94,15 @@ Type '@issue' to reference the title and contents of a GitHub issue.
     "authToken": "<my_github_auth_token>"
   }
 }
-```
+``` -->
 
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new ContextProvider.
 
 ## Building Your Own Context Provider
+
+> Currently custom context providers are only supported in VS Code, but are coming soon to JetBrains IDEs.
 
 ### Introductory Example
 
@@ -113,7 +114,10 @@ interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
-  getContextItems(query: string): Promise<ContextItem[]>;
+  getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]>;
 }
 ```
 
@@ -126,7 +130,7 @@ const RagContextProvider = {
   description:
     "Retrieve snippets from our vector database of internal documents",
 
-  getContextItems: async (query: string) => {
+  getContextItems: async (query: string, extras: ContextProviderExtras) => {
     const response = await fetch("https://internal_rag_server.com/retrieve", {
       method: "POST",
       body: JSON.stringify({ query }),
@@ -151,3 +155,13 @@ export function modifyConfig(config: Config): Config {
   return config;
 }
 ```
+
+No modification in `config.json` is necessary.
+
+### Importing outside modules
+
+> Context providers run in a NodeJS environment, but for the time being the `modifyConfig` function will be called both from NodeJS _and_ the browser. This means that if you are importing packages requiring NodeJS, you should dynamically import them inside of the context provider.
+
+To include outside Node modules in your config.ts, run `npm install <module_name>` from the `~/.continue` directory, and then import them in config.ts.
+
+Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.ts` and any dependencies into a single Javascript file. The exact configuration used can be found [here](https://github.com/continuedev/continue/blob/5c9874400e223bbc9786a8823614a2e501fbdaf7/extensions/vscode/src/ideProtocol.ts#L45-L52).
