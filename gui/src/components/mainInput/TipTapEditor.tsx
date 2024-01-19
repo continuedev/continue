@@ -193,7 +193,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           onOpen,
           inSubmenuRef
         ),
-        renderText: (props) => {
+        renderHTML: (props) => {
           return `@${props.node.attrs.label || props.node.attrs.id}`;
         },
       }),
