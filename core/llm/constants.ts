@@ -22,11 +22,14 @@ const CONTEXT_LENGTH_FOR_MODEL: { [name: string]: number } = {
 const TOKEN_BUFFER_FOR_SAFETY = 350;
 const PROXY_URL = "http://localhost:65433";
 
+const MAX_CHUNK_SIZE = 500; // 512 - buffer for safety (in case of differing tokenizers)
+
 export {
   CONTEXT_LENGTH_FOR_MODEL,
   DEFAULT_ARGS,
   DEFAULT_CONTEXT_LENGTH,
   DEFAULT_MAX_TOKENS,
+  MAX_CHUNK_SIZE,
   PROXY_URL,
   TOKEN_BUFFER_FOR_SAFETY,
 };

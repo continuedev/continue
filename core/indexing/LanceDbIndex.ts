@@ -2,6 +2,7 @@
 import { v4 as uuidv4 } from "uuid";
 import * as lancedb from "vectordb";
 import { Chunk, EmbeddingsProvider } from "..";
+import { MAX_CHUNK_SIZE } from "../llm/constants";
 import { getBasename } from "../util";
 import { getLanceDbPath } from "../util/paths";
 import { chunkDocument } from "./chunk/chunk";
@@ -32,7 +33,7 @@ export class LanceDbIndex implements CodebaseIndex {
     return "vectordb::" + this.embeddingsProvider.id;
   }
 
-  static MAX_CHUNK_SIZE = 500; // 512 - buffer for safety (in case of differing tokenizers)
+  static MAX_CHUNK_SIZE = MAX_CHUNK_SIZE;
 
   embeddingsProvider: EmbeddingsProvider;
   readFile: (filepath: string) => Promise<string>;
