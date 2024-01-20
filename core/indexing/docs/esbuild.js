@@ -6,11 +6,10 @@ const esbuild = require("esbuild");
     entryPoints: ["crawl.ts"],
     bundle: true,
     outfile: "crawl.js",
-    external: [],
+    external: ["jquery"],
     format: "cjs",
     platform: "node",
     sourcemap: true,
-    target: "es2015",
     loader: {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       ".node": "file",

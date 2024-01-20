@@ -1,6 +1,8 @@
 import cheerio from "cheerio";
+import $ from "jquery";
 import fetch from "node-fetch";
 import { NodeHtmlMarkdown } from "node-html-markdown";
+const HCCrawler = require("headless-chrome-crawler");
 
 const IGNORE_PATHS_ENDING_IN = ["favicon.ico", "robots.txt", ".rst.txt"];
 
@@ -85,8 +87,29 @@ async function convertURLToMarkdown(url: string): Promise<string> {
 // );
 
 let visited = new Set<string>();
-const url1 = new URL("https://python-socketio.readthedocs.io/en/stable");
-const url = new URL("https://platform.openai.com/docs/api-reference");
-crawlLinks(url.pathname, url, visited).then(() => {
-  console.log(visited);
-});
+const url = new URL("https://python-socketio.readthedocs.io/en/stable");
+const url2 = new URL("https://platform.openai.com/docs/api-reference");
+// crawlLinks(url.pathname, url, visited).then(() => {
+//   console.log(visited);
+// });
+
+async function hcCrawlLinks() {
+  const results: any[] = [];
+  const crawler = await HCCrawler.launch({
+    // Function to be evaluated in browsers
+    evaluatePage: () => ({
+      title: $("title").text(),
+    }),
+    // Function to be called with evaluated results from browsers
+    onSuccess: (result: any) => {
+      console.log(result);
+      results.push(result.url);
+    },
+  });
+  // Queue a request
+  await crawler.queue(url.toString());
+  await crawler.onIdle(); // Resolved when no queue is left
+  await crawler.close(); // Close the crawler
+
+  return results;
+}
