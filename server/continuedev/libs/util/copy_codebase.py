@@ -6,6 +6,7 @@ from typing import Iterable, List, Union
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
+from ...libs.util import calculate_diff
 from ...core.autopilot import Autopilot
 from ...models.filesystem import FileSystem
 from ...models.main import (
