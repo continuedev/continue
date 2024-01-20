@@ -55,7 +55,7 @@ export function stripImages(content: MessageContent): string {
     return content
       .filter((part) => part.type === "text")
       .map((part) => part.text)
-      .join("");
+      .join("\n");
   } else {
     return content;
   }
