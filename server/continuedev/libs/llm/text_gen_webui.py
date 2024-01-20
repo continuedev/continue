@@ -4,13 +4,13 @@ from typing import Any, AsyncGenerator, List, Optional
 import websockets
 from pydantic import Field
 
-from ...core.main import ChatMessage
+from continuedev.core.main import ChatMessage
+
 from .base import LLM
 
 
 class TextGenWebUI(LLM):
-    """
-    TextGenWebUI is a comprehensive, open-source language model UI and local server. You can set it up with an OpenAI-compatible server plugin, but if for some reason that doesn't work, you can use this class like so:
+    """TextGenWebUI is a comprehensive, open-source language model UI and local server. You can set it up with an OpenAI-compatible server plugin, but if for some reason that doesn't work, you can use this class like so:
 
     ```json title="~/.continue/config.json"
     {
@@ -25,7 +25,7 @@ class TextGenWebUI(LLM):
 
     model: str = "text-gen-webui"
     api_base: Optional[str] = Field(
-        "http://127.0.0.1:5000", description="URL of your TextGenWebUI server"
+        "http://127.0.0.1:5000", description="URL of your TextGenWebUI server",
     )
     streaming_url: Optional[str] = Field(
         "http://127.0.0.1:5005",
@@ -45,12 +45,13 @@ class TextGenWebUI(LLM):
         args = self.collect_args(options)
 
         if self.streaming_url is None:
-            raise Exception("TextGenWebUI streaming server URL was set to None.")
+            msg = "TextGenWebUI streaming server URL was set to None."
+            raise Exception(msg)
 
         ws_url = f"{self.streaming_url.replace('http://', 'ws://').replace('https://', 'wss://')}"
         payload = json.dumps({"prompt": prompt, "stream": True, **args})
         async with websockets.connect(
-            f"{ws_url}/api/v1/stream", ping_interval=None
+            f"{ws_url}/api/v1/stream", ping_interval=None,
         ) as websocket:
             await websocket.send(payload)
 
@@ -66,26 +67,27 @@ class TextGenWebUI(LLM):
                     break
 
     async def _stream_chat(
-        self, messages: List[ChatMessage], options
+        self, messages: List[ChatMessage], options,
     ) -> AsyncGenerator[ChatMessage, None]:
         args = self.collect_args(options)
 
         async def generator():
             if self.streaming_url is None:
-                raise Exception("TextGenWebUI streaming server URL was set to None.")
+                msg = "TextGenWebUI streaming server URL was set to None."
+                raise Exception(msg)
 
             ws_url = f"{self.streaming_url.replace('http://', 'ws://').replace('https://', 'wss://')}"
-            history = list(map(lambda x: x.content, messages))
+            history = [x.content for x in messages]
             payload = json.dumps(
                 {
                     "user_input": messages[-1].content,
                     "history": {"internal": [history], "visible": [history]},
                     "stream": True,
                     **args,
-                }
+                },
             )
             async with websockets.connect(
-                f"{ws_url}/api/v1/chat-stream", ping_interval=None
+                f"{ws_url}/api/v1/chat-stream", ping_interval=None,
             ) as websocket:
                 await websocket.send(payload)
 
@@ -100,7 +102,7 @@ class TextGenWebUI(LLM):
                         visible = incoming_data["history"]["visible"][-1]
                         if len(visible) > 0:
                             yield ChatMessage(
-                                role="assistant", content=visible[-1].replace(prev, "")
+                                role="assistant", content=visible[-1].replace(prev, ""),
                             )
 
                             prev = visible[-1]

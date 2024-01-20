@@ -42,8 +42,9 @@ class OpenTabsContextProvider(ContextProvider):
         return contents
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.provider_title == self.title:
-            raise Exception("Invalid provider title for item")
+        if id.provider_title != self.title:
+            msg = "Invalid provider title for item"
+            raise Exception(msg)
 
         contents = await self.get_contents()
         return self._open_tabs_context_item(contents)

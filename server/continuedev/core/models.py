@@ -70,7 +70,7 @@ MODEL_MODULE_NAMES = {
 
 
 class Models(BaseModel):
-    """Main class that holds the current model configuration"""
+    """Main class that holds the current model configuration."""
 
     default: Union[Any, LLM]
     summarize: Union[Any, LLM]
@@ -95,8 +95,7 @@ class Models(BaseModel):
         return v
 
     def dict(self, **kwargs):
-        original_dict = super().dict(**kwargs)
-        return original_dict
+        return super().dict(**kwargs)
 
     @property
     def all_models(self) -> List[LLM]:
@@ -104,8 +103,8 @@ class Models(BaseModel):
         return [model for model in models if model is not None]
 
     def set_main_config_params(
-        self, system_msg: Optional[str], temperature: Optional[float]
-    ):
+        self, system_msg: Optional[str], temperature: Optional[float],
+    ) -> None:
         self.system_message = system_msg
         self.temperature = temperature
         for model in self.all_models:
@@ -117,8 +116,8 @@ class Models(BaseModel):
         system_message: Optional[str],
         temperature: Optional[float],
         llm_request_hook: Optional[Callable[[str, str], Any]] = None,
-    ):
-        """Start each of the LLMs, or fall back to default"""
+    ) -> None:
+        """Start each of the LLMs, or fall back to default."""
         for model in self.saved + self.all_models:
             model.start(unique_id)
             model.write_log = self.write_log
@@ -126,14 +125,14 @@ class Models(BaseModel):
 
         self.set_main_config_params(system_message, temperature)
 
-    async def stop(self):
-        """Stop each LLM (if it's not the default, which is shared)"""
+    async def stop(self) -> None:
+        """Stop each LLM (if it's not the default, which is shared)."""
         for model in self.all_models:
             await model.stop()
 
     _loggers = {}
 
-    async def write_log(self, msg):
+    async def write_log(self, msg) -> None:
         for logger in self._loggers.values():
             await logger(msg)
 
@@ -142,6 +141,6 @@ class Models(BaseModel):
         self._loggers[logger_id] = logger
         return logger_id
 
-    def remove_logger(self, logger_id: str):
+    def remove_logger(self, logger_id: str) -> None:
         if logger_id in self._loggers:
             del self._loggers[logger_id]

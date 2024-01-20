@@ -1,4 +1,5 @@
 import pytest
+
 from continuedev.core.main import ChatMessage
 from continuedev.libs.util.count_tokens import (
     count_chat_message_tokens,
@@ -11,7 +12,7 @@ from continuedev.libs.util.count_tokens import (
 
 
 @pytest.mark.parametrize(
-    "model_name, prompt, expected",
+    ("model_name", "prompt", "expected"),
     [
         ("gpt-3.5-turbo", "Hello, world!", 4),
         ("gpt-4", "Hello, world!", 4),
@@ -29,7 +30,7 @@ from continuedev.libs.util.count_tokens import (
         ),
     ],
 )
-def test_count_tokens(model_name, prompt, expected):
+def test_count_tokens(model_name, prompt, expected) -> None:
     assert count_tokens(prompt, model_name) == expected
     assert (
         count_chat_message_tokens(model_name, ChatMessage(role="user", content=prompt))
@@ -37,7 +38,7 @@ def test_count_tokens(model_name, prompt, expected):
     )
 
 
-def test_flatten_message():
+def test_flatten_message() -> None:
     messages = [
         ChatMessage(role="system", content="Hello"),
         ChatMessage(role="system", content="World"),
@@ -348,7 +349,7 @@ def format_chat_messages(messages: List[ChatMessage]) -> str:
     return formatted"""
 
 
-def test_prune_string():
+def test_prune_string() -> None:
     assert count_tokens(LONG_FILE_SAMPLE, "gpt-4") == 2245
 
     from_top = prune_string_from_top("gpt-4", 1000, LONG_FILE_SAMPLE).splitlines()
@@ -359,7 +360,7 @@ def test_prune_string():
     assert from_bottom[-2] == "    chat_history: List[ChatMessage],"
 
 
-def test_prune_chat_history():
+def test_prune_chat_history() -> None:
     history = [
         ChatMessage(role="system", content="Hello"),
         ChatMessage(role="user", content=LONG_FILE_SAMPLE * 5),

@@ -39,13 +39,13 @@ Snippet:
 ```{document_id}
 {document}
 ```
-Relevant: 
+Relevant:
 """
 
 
 async def single_token_reranker(chunk: Chunk, user_input: str, model: LLM) -> float:
     compiled_prompt = PROMPT.format(
-        query=user_input, document=chunk.content, document_id=chunk.digest
+        query=user_input, document=chunk.content, document_id=chunk.digest,
     )
 
     if False:
@@ -65,7 +65,7 @@ async def single_token_reranker(chunk: Chunk, user_input: str, model: LLM) -> fl
     else:
         try:
             completion = await model.complete(
-                compiled_prompt, log=False, max_tokens=1, temperature=0.0
+                compiled_prompt, log=False, max_tokens=1, temperature=0.0,
             )
         except Exception:
             return 0.5
@@ -81,7 +81,7 @@ async def single_token_reranker(chunk: Chunk, user_input: str, model: LLM) -> fl
 
 
 async def single_token_reranker_parallel(
-    chunks: List[Chunk], user_input: str, n: int, model: LLM
+    chunks: List[Chunk], user_input: str, n: int, model: LLM,
 ) -> List[Chunk]:
     tasks = [single_token_reranker(chunk, user_input, model) for chunk in chunks]
     results = await asyncio.gather(*tasks)

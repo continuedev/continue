@@ -27,7 +27,7 @@ class Chunk(ChunkWithoutID):
     filepath: str
 
     @property
-    def id(self):
+    def id(self) -> str:
         return f"{self.digest}::{self.index}"
 
     @property

@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import asyncio
 import time
 from abc import abstractmethod
-from typing import Any, Awaitable, Callable, List, Optional
+from typing import Any, Awaitable, Callable
 
 from meilisearch_python_async import Client
 from pydantic import BaseModel, Field
@@ -31,17 +33,15 @@ from .main import (
 
 
 class ContinueSDK(BaseModel):
-    """To avoid circular imports"""
+    """To avoid circular imports."""
 
-    ...
 
 
 SEARCH_INDEX_NAME = "continue_context_items"
 
 
 class ContextProvider(BaseModel):
-    """
-    The ContextProvider class is a plugin that lets you provide new information to the LLM by typing '@'.
+    """The ContextProvider class is a plugin that lets you provide new information to the LLM by typing '@'.
     When you type '@', the context provider will be asked to populate a list of options.
     These options will be updated on each keystroke.
     When you hit enter on an option, the context provider will add that item to the autopilot's list of context (which is all stored in the ContextManager object).
@@ -53,11 +53,11 @@ class ContextProvider(BaseModel):
     )
     ide: Any = None
 
-    delete_documents: Callable[[List[str]], Awaitable] | None = Field(
-        None, description="Function to delete documents"
+    delete_documents: Callable[[list[str]], Awaitable] | None = Field(
+        None, description="Function to delete documents",
     )
-    update_documents: Callable[[List[ContextItem], str], Awaitable] | None = Field(
-        None, description="Function to update documents"
+    update_documents: Callable[[list[ContextItem], str], Awaitable] | None = Field(
+        None, description="Function to update documents",
     )
 
     display_title: str = Field(
@@ -69,15 +69,15 @@ class ContextProvider(BaseModel):
         description="A description of the ContextProvider displayed in the dropdown menu",
     )
     dynamic: bool = Field(
-        ..., description="Indicates whether the ContextProvider is dynamic"
+        ..., description="Indicates whether the ContextProvider is dynamic",
     )
     requires_query: bool = Field(
         False,
         description="Indicates whether the ContextProvider requires a query. For example, the SearchContextProvider requires you to type '@search <STRING_TO_SEARCH>'. This will change the behavior of the UI so that it can indicate the expectation for a query.",
     )
 
-    selected_items: List[ContextItem] = Field(
-        [], description="List of selected items in the ContextProvider"
+    selected_items: list[ContextItem] = Field(
+        [], description="List of selected items in the ContextProvider",
     )
 
     class Config:
@@ -101,10 +101,9 @@ class ContextProvider(BaseModel):
         return original_dict
 
     async def start(
-        self, ide: AbstractIdeProtocolServer, delete_documents, update_documents
-    ):
-        """
-        Starts the context provider.
+        self, ide: AbstractIdeProtocolServer, delete_documents, update_documents,
+    ) -> None:
+        """Starts the context provider.
 
         Default implementation sets the sdk.
         """
@@ -112,9 +111,8 @@ class ContextProvider(BaseModel):
         self.delete_documents = delete_documents
         self.update_documents = update_documents
 
-    async def get_selected_items(self) -> List[ContextItem]:
-        """
-        Returns all of the selected ContextItems.
+    async def get_selected_items(self) -> list[ContextItem]:
+        """Returns all of the selected ContextItems.
 
         Default implementation simply returns self.selected_items.
 
@@ -123,9 +121,8 @@ class ContextProvider(BaseModel):
         return self.selected_items
 
     @abstractmethod
-    async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
-        """
-        Provide documents for search index. This is run on startup.
+    async def provide_context_items(self, workspace_dir: str) -> list[ContextItem]:
+        """Provide documents for search index. This is run on startup.
 
         This is the only method that must be implemented.
         """
@@ -138,20 +135,19 @@ class ContextProvider(BaseModel):
             summary=item.description.description,
         )
 
-    async def get_item(self, id: ContextItemId, query: str) -> Optional[ContextItem]:
-        """
-        Returns the ContextItem with the given id.
+    async def get_item(self, id: ContextItemId, query: str) -> ContextItem | None:
+        """Returns the ContextItem with the given id.
 
         Default implementation uses the search index to get the item.
         """
         async with Client(get_meilisearch_url()) as search_client:
             try:
                 result = await search_client.index(SEARCH_INDEX_NAME).get_document(
-                    id.to_string()
+                    id.to_string(),
                 )
                 return ContextItem(
                     description=ContextItemDescription(
-                        name=result["name"], description=result["description"], id=id
+                        name=result["name"], description=result["description"], id=id,
                     ),
                     content=result["content"],
                 )
@@ -160,23 +156,20 @@ class ContextProvider(BaseModel):
 
             return None
 
-    async def clear_context(self):
-        """
-        Clears all context.
+    async def clear_context(self) -> None:
+        """Clears all context.
 
         Default implementation simply clears the selected items.
         """
         self.selected_items = []
 
-    async def add_context_item(self, id: ContextItemId, query: str):
-        """
-        Adds the given ContextItem to the list of ContextItems.
+    async def add_context_item(self, id: ContextItemId, query: str) -> None:
+        """Adds the given ContextItem to the list of ContextItems.
 
         Default implementation simply appends the item, not allowing duplicates.
 
         This method also allows you not to have to load all of the information until an item is selected.
         """
-
         # Don't add duplicate context
         for item in self.selected_items:
             if item.description.id.item_id == id.item_id:
@@ -185,31 +178,26 @@ class ContextProvider(BaseModel):
         if new_item := await self.get_item(id, query):
             self.selected_items.append(new_item)
 
-    async def preview_contents(self, id: ContextItemId):
-        """
-        Open a virtual file or otherwise preview the contents of the context provider in the IDE
-        """
+    async def preview_contents(self, id: ContextItemId) -> None:
+        """Open a virtual file or otherwise preview the contents of the context provider in the IDE."""
         if item := next(
-            filter(lambda x: x.description.id == id, self.selected_items), None
+            filter(lambda x: x.description.id == id, self.selected_items), None,
         ):
             await self.ide.showVirtualFile(item.description.name, item.content)
 
 
 class ContextManager:
-    """
-    The context manager is responsible for storing the context to be passed to the LLM, including
+    """The context manager is responsible for storing the context to be passed to the LLM, including
     - ContextItems (highlighted code, GitHub Issues, etc.)
     - ChatMessages in the history
     - System Message
-    - Functions
+    - Functions.
 
     It is responsible for compiling all of this information into a single prompt without exceeding the token limit.
     """
 
-    async def get_chat_messages(self, items: List[ContextItem]) -> List[ChatMessage]:
-        """
-        Returns chat messages from each provider.
-        """
+    async def get_chat_messages(self, items: list[ContextItem]) -> list[ChatMessage]:
+        """Returns chat messages from each provider."""
         tasks = []
         msgs = []
         for item in items:
@@ -217,7 +205,7 @@ class ContextManager:
                 tasks.append(
                     self.context_providers[
                         item.description.id.provider_title
-                    ].get_chat_message(item)
+                    ].get_chat_message(item),
                 )
             else:
                 msgs.append(
@@ -225,25 +213,23 @@ class ContextManager:
                         role="user",
                         content=item.content,
                         summary=item.description.description,
-                    )
+                    ),
                 )
 
         return (await asyncio.gather(*tasks)) + msgs
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.context_providers = {}
         self.provider_titles = set()
 
     async def start(
         self,
-        context_providers: List[ContextProvider],
+        context_providers: list[ContextProvider],
         ide: AbstractIdeProtocolServer,
         only_reloading: bool = False,
         disable_indexing: bool = False,
-    ):
-        """
-        Starts the context manager.
-        """
+    ) -> None:
+        """Starts the context manager."""
         new_context_providers = {
             provider.title: provider
             for provider in context_providers
@@ -262,11 +248,11 @@ class ContextManager:
                 ContextManager.update_documents,
             )
 
-        async def on_err(e):
+        async def on_err(e) -> None:
             logger.warning(f"Error loading meilisearch index: {e}")
 
         # Start MeiliSearch in the background without blocking
-        async def load_index(providers_to_load: List[ContextProvider]):
+        async def load_index(providers_to_load: list[ContextProvider]) -> None:
             running = await check_meilisearch_running()
             if not running:
                 await start_meilisearch(global_config.meilisearch_url)
@@ -274,13 +260,13 @@ class ContextManager:
                     await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
                 except asyncio.TimeoutError:
                     logger.warning(
-                        "Meilisearch did not start in less than 20 seconds. Stopping polling."
+                        "Meilisearch did not start in less than 20 seconds. Stopping polling.",
                     )
                     return
 
             ti = time.time()
             await self.load_index(
-                ide.workspace_directory, providers_to_load=providers_to_load
+                ide.workspace_directory, providers_to_load=providers_to_load,
             )
             logger.info(f"Loaded Meilisearch index in {time.time() - ti:.3f} seconds")
 
@@ -294,10 +280,8 @@ class ContextManager:
             create_async_task(load_index(providers_to_load), on_err)
 
     @staticmethod
-    async def update_documents(context_items: List[ContextItem], workspace_dir: str):
-        """
-        Updates the documents in the search index.
-        """
+    async def update_documents(context_items: list[ContextItem], workspace_dir: str) -> None:
+        """Updates the documents in the search index."""
         documents = [
             {
                 "id": item.description.id.to_string(),
@@ -311,7 +295,7 @@ class ContextManager:
         ]
         async with Client(get_meilisearch_url()) as search_client:
 
-            async def add_docs():
+            async def add_docs() -> None:
                 index = await search_client.get_index(SEARCH_INDEX_NAME)
                 await index.add_documents(documents or [])
 
@@ -323,10 +307,8 @@ class ContextManager:
                 logger.warning(f"Error adding document to meilisearch: {e}")
 
     @staticmethod
-    async def delete_documents(ids):
-        """
-        Deletes the documents in the search index.
-        """
+    async def delete_documents(ids) -> None:
+        """Deletes the documents in the search index."""
         async with Client(get_meilisearch_url()) as search_client:
             try:
                 await asyncio.wait_for(
@@ -335,7 +317,7 @@ class ContextManager:
                 )
             except asyncio.TimeoutError:
                 logger.warning(
-                    "Failed to delete document from meilisearch in 20 seconds"
+                    "Failed to delete document from meilisearch in 20 seconds",
                 )
             except Exception as e:
                 logger.warning(f"Error deleting document from meilisearch: {e}")
@@ -344,8 +326,8 @@ class ContextManager:
         self,
         workspace_dir: str,
         should_retry: bool = True,
-        providers_to_load: Optional[List[ContextProvider]] = None,
-    ):
+        providers_to_load: list[ContextProvider] | None = None,
+    ) -> None:
         try:
             async with Client(get_meilisearch_url()) as search_client:
                 # First, create the index if it doesn't exist
@@ -353,7 +335,7 @@ class ContextManager:
 
                 # Check if need to migrate to new id format
                 # If so, delete the index before recreating
-                async def migrate_fn():
+                async def migrate_fn() -> None:
                     await search_client.delete_index_if_exists(SEARCH_INDEX_NAME)
 
                 await migrate(
@@ -364,13 +346,13 @@ class ContextManager:
                 await search_client.create_index(SEARCH_INDEX_NAME)
                 globalSearchIndex = await search_client.get_index(SEARCH_INDEX_NAME)
                 await globalSearchIndex.update_ranking_rules(
-                    ["attribute", "words", "typo", "proximity", "sort", "exactness"]
+                    ["attribute", "words", "typo", "proximity", "sort", "exactness"],
                 )
                 await globalSearchIndex.update_searchable_attributes(
-                    ["name", "description"]
+                    ["name", "description"],
                 )
                 await globalSearchIndex.update_filterable_attributes(
-                    ["workspace_dir", "provider_name"]
+                    ["workspace_dir", "provider_name"],
                 )
 
                 async def load_context_provider(provider: ContextProvider):
@@ -392,19 +374,19 @@ class ContextManager:
 
                     return len(documents)
 
-                async def safe_load(provider: ContextProvider):
+                async def safe_load(provider: ContextProvider) -> None:
                     try:
                         await asyncio.wait_for(
-                            load_context_provider(provider), timeout=20
+                            load_context_provider(provider), timeout=20,
                         )
                     except asyncio.TimeoutError:
                         logger.warning(
-                            f"Failed to add documents to meilisearch for context provider {provider.__class__.__name__} in 20 seconds"
+                            f"Failed to add documents to meilisearch for context provider {provider.__class__.__name__} in 20 seconds",
                         )
                         return
                     except Exception as e:
                         logger.warning(
-                            f"Error adding documents to meilisearch for context provider {provider.__class__.__name__}: {e}"
+                            f"Error adding documents to meilisearch for context provider {provider.__class__.__name__}: {e}",
                         )
                         return
 
@@ -430,21 +412,20 @@ class ContextManager:
                     await asyncio.wait_for(poll_meilisearch_running(), timeout=20)
                 except asyncio.TimeoutError:
                     logger.warning(
-                        "Meilisearch did not restart in less than 20 seconds. Stopping polling."
+                        "Meilisearch did not restart in less than 20 seconds. Stopping polling.",
                     )
                 except Exception as e:
                     logger.warning(f"Error restarting meilisearch: {e}")
 
                 await self.load_index(workspace_dir, False)
 
-    async def get_context_item(self, id: str, query: str) -> Optional[ContextItem]:
-        """
-        Returns the ContextItem with the given id.
-        """
+    async def get_context_item(self, id: str, query: str) -> ContextItem | None:
+        """Returns the ContextItem with the given id."""
         item_id: ContextItemId = ContextItemId.from_string(id)
         if item_id.provider_title not in self.provider_titles:
+            msg = f"Context provider with title {item_id.provider_title} not found"
             raise ValueError(
-                f"Context provider with title {item_id.provider_title} not found"
+                msg,
             )
 
         posthog_logger.capture_event(
@@ -465,17 +446,16 @@ class ContextManager:
         )
 
         return await self.context_providers[item_id.provider_title].get_item(
-            item_id, query
+            item_id, query,
         )
 
-    async def preview_context_item(self, id: str):
-        """
-        Opens a virtual file or otherwise previews the contents of the context provider in the IDE.
-        """
+    async def preview_context_item(self, id: str) -> None:
+        """Opens a virtual file or otherwise previews the contents of the context provider in the IDE."""
         item_id: ContextItemId = ContextItemId.from_string(id)
         if item_id.provider_title not in self.provider_titles:
+            msg = f"Context provider with title {item_id.provider_title} not found"
             raise ValueError(
-                f"Context provider with title {item_id.provider_title} not found"
+                msg,
             )
 
         await self.context_providers[item_id.provider_title].preview_contents(item_id)

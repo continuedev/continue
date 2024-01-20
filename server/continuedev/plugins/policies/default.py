@@ -18,9 +18,7 @@ from ..steps.steps_on_startup import StepsOnStartupStep
 
 
 def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
-    """
-    Parses a slash command, returning the command name and the rest of the input.
-    """
+    """Parses a slash command, returning the command name and the rest of the input."""
     if inp.startswith("/"):
         command_name = inp.split(" ")[0].strip()
         after_command = " ".join(inp.split(" ")[1:])
@@ -47,8 +45,9 @@ def parse_slash_command(inp: str, config: ContinueConfig) -> Union[None, Step]:
                         ](**params)
 
                 except TypeError as e:
+                    msg = f"Incorrect params used for slash command '{command_name}': {e}"
                     raise Exception(
-                        f"Incorrect params used for slash command '{command_name}': {e}"
+                        msg,
                     )
     return None
 
@@ -76,7 +75,7 @@ class DefaultPolicy(Policy):
     default_params: dict = {}
 
     def next(
-        self, config: ContinueConfig, session_state: SessionState
+        self, config: ContinueConfig, session_state: SessionState,
     ) -> Optional[Step]:
         # At the very start, run initial Steps specified in the config
         if len(session_state.history) == 0:
@@ -121,3 +120,4 @@ class DefaultPolicy(Policy):
                 )
 
             return self.default_step(**self.default_params)
+        return None

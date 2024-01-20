@@ -10,7 +10,7 @@ simplified_edit_prompt = dedent(
             ```
             Edit the code to perfectly satisfy the following user request:
             {{{user_input}}}
-            Output nothing except for the code. No code block, no English explanation, no start/end tags."""
+            Output nothing except for the code. No code block, no English explanation, no start/end tags.""",
 )
 
 simplest_edit_prompt = dedent(
@@ -22,8 +22,8 @@ simplest_edit_prompt = dedent(
 
             Here is the edit requested:
             "{{{user_input}}}"
-            
-            Here is the code after editing:"""
+
+            Here is the code after editing:""",
 )
 
 codellama_infill_edit_prompt = "{{file_prefix}}<FILL>{{file_suffix}}"
@@ -38,7 +38,7 @@ _codellama_edit_prompt = dedent(
 
             Your answer should start with a [CODE] tag and end with a [/CODE] tag.
             [/INST] Sure! Here's the code you requested:
-            [CODE]"""
+            [CODE]""",
 )
 
 _alpaca_edit_prompt = dedent(
@@ -54,10 +54,10 @@ _alpaca_edit_prompt = dedent(
             ```
 
             ### Response:
-            
+
             Sure! Here's the code you requested:
             ```
-            """
+            """,
 )
 
 _phind_edit_prompt = dedent(
@@ -76,7 +76,7 @@ _phind_edit_prompt = dedent(
             Sure! Here's the code you requested:
 
             ```
-            """
+            """,
 )
 
 _deepseek_edit_prompt = dedent(
@@ -93,7 +93,7 @@ _deepseek_edit_prompt = dedent(
             Sure! Here's the code you requested:
 
             ```
-            """
+            """,
 )
 
 _zephyr_edit_prompt = dedent(
@@ -108,18 +108,18 @@ _zephyr_edit_prompt = dedent(
             ```</s>
             <|assistant|>
             Sure! Here's the code you requested:
-            
+
             ```
-            """
+            """,
 )
 
 
 codellama_edit_prompt = PromptTemplate(
-    prompt=_codellama_edit_prompt, raw=True, stop=["[/CODE]"]
+    prompt=_codellama_edit_prompt, raw=True, stop=["[/CODE]"],
 )
 alpaca_edit_prompt = PromptTemplate(prompt=_alpaca_edit_prompt, raw=True, stop=["```"])
 phind_edit_prompt = PromptTemplate(prompt=_phind_edit_prompt, raw=True, stop=["```"])
 zephyr_edit_prompt = PromptTemplate(prompt=_zephyr_edit_prompt, raw=True, stop=["```"])
 deepseek_edit_prompt = PromptTemplate(
-    prompt=_deepseek_edit_prompt, raw=True, stop=["```"]
+    prompt=_deepseek_edit_prompt, raw=True, stop=["```"],
 )

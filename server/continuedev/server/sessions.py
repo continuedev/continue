@@ -21,12 +21,11 @@ class PersistedSessionInfo(BaseModel):
 
 @router.get("/list")
 async def list_sessions():
-    """List all sessions"""
+    """List all sessions."""
     sessions_list_file = getSessionsListFilePath()
     if not os.path.exists(sessions_list_file):
         return []
-    sessions = json.load(open(sessions_list_file, "r"))
-    return sessions
+    return json.load(open(sessions_list_file))
 
 
 class DeleteSessionBody(BaseModel):
@@ -34,25 +33,28 @@ class DeleteSessionBody(BaseModel):
 
 
 @router.post("/delete")
-async def delete_session(body: DeleteSessionBody):
-    """Delete a session"""
+async def delete_session(body: DeleteSessionBody) -> None:
+    """Delete a session."""
     session_file = getSessionFilePath(body.session_id)
     if not os.path.exists(session_file):
-        raise Exception(f"Session file {session_file} does not exist")
+        msg = f"Session file {session_file} does not exist"
+        raise Exception(msg)
     os.remove(session_file)
 
     # Read and update the sessions list
-    with open(getSessionsListFilePath(), "r") as f:
+    with open(getSessionsListFilePath()) as f:
         try:
             raw_sessions_list = json.load(f)
             sessions_list = [SessionInfo(**session) for session in raw_sessions_list]
         except json.JSONDecodeError:
+            msg = f"It looks like there is a JSON formatting error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session."
             raise Exception(
-                f"It looks like there is a JSON formatting error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session."
+                msg,
             )
         except ValidationError as e:
+            msg = f"It looks like there is a validation error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session. Error: {e}"
             raise Exception(
-                f"It looks like there is a validation error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session. Error: {e}"
+                msg,
             )
 
     sessions_list = [
@@ -63,16 +65,16 @@ async def delete_session(body: DeleteSessionBody):
         raw_sessions_list = [session.dict() for session in sessions_list]
         json.dump(raw_sessions_list, f)
 
-    return
 
 
 @router.get("/{session_id}")
 async def load_session(session_id: str) -> PersistedSessionInfo:
-    """Load a session"""
+    """Load a session."""
     session_file = getSessionFilePath(session_id)
     if not os.path.exists(session_file):
-        raise Exception(f"Session file {session_file} does not exist")
-    session_state = json.load(open(session_file, "r"))
+        msg = f"Session file {session_file} does not exist"
+        raise Exception(msg)
+    session_state = json.load(open(session_file))
     try:
         if "active" in session_state:
             # Indicator of old version. Try to migrate
@@ -117,23 +119,25 @@ async def load_session(session_id: str) -> PersistedSessionInfo:
 
 
 @router.post("/save")
-async def save_session(body: PersistedSessionInfo):
+async def save_session(body: PersistedSessionInfo) -> None:
     # Save the main session json file
     with open(getSessionFilePath(body.session_id), "w") as f:
         json.dump(body.dict(), f)
 
     # Read and update the sessions list
-    with open(getSessionsListFilePath(), "r") as f:
+    with open(getSessionsListFilePath()) as f:
         try:
             raw_sessions_list = json.load(f)
             sessions_list = [SessionInfo(**session) for session in raw_sessions_list]
         except json.JSONDecodeError:
+            msg = f"It looks like there is a JSON formatting error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session."
             raise Exception(
-                f"It looks like there is a JSON formatting error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session."
+                msg,
             )
         except ValidationError as e:
+            msg = f"It looks like there is a validation error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session. Error: {e}"
             raise Exception(
-                f"It looks like there is a validation error in your sessions.json file ({getSessionsListFilePath()}). Please fix this before creating a new session. Error: {e}"
+                msg,
             )
 
     found = False

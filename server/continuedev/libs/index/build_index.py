@@ -12,7 +12,7 @@ from .chunkers.chunk_directory import (
 
 
 async def build_index(
-    ide: AbstractIdeProtocolServer, config: ContinueConfig
+    ide: AbstractIdeProtocolServer, config: ContinueConfig,
 ) -> AsyncGenerator[float, None]:
     tag = await ide.getTag()
     branch = await ide.getBranch()
@@ -49,7 +49,7 @@ async def build_index(
 
     chroma_task = asyncio.create_task(chroma_index.build(generator_for_chroma()))
     meilisearch_task = asyncio.create_task(
-        meilisearch_index.build(generator_for_meilisearch())
+        meilisearch_index.build(generator_for_meilisearch()),
     )
 
     server_url = ide.window_info.ide_info.get("server_url", "http://localhost:65432")
@@ -66,7 +66,7 @@ async def build_index(
     else:
         # If on same machine, can access files directly
         for action, chunk, progress in local_stream_chunk_directory(
-            ide.workspace_directory, MAX_CHUNK_SIZE, branch
+            ide.workspace_directory, MAX_CHUNK_SIZE, branch,
         ):
             buffers[0].append((action, chunk))
             buffers[1].append((action, chunk))

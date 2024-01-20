@@ -11,10 +11,10 @@ class WritePytestsRecipe(Step):
     for_filepath: Union[str, None] = None
     user_input: str = "Write unit tests for this file."
 
-    async def describe(self, models):
+    async def describe(self, models) -> str:
         return f"Writing unit tests for {self.for_filepath}"
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         if self.for_filepath is None:
             self.for_filepath = (await sdk.ide.getVisibleFiles())[0]
 
@@ -27,7 +27,7 @@ class WritePytestsRecipe(Step):
 
         path = os.path.join(path_dir, f"test_{filename}")
         if os.path.exists(path):
-            return None
+            return
 
         for_file_contents = await sdk.ide.readFile(self.for_filepath)
 
@@ -43,10 +43,10 @@ class WritePytestsRecipe(Step):
 
             "{self.user_input}"
 
-            Here is a complete set of pytest unit tests:"""
+            Here is a complete set of pytest unit tests:""",
         )
         tests = await sdk.models.summarize.complete(prompt)
 
         await sdk.apply_filesystem_edit(AddFile(filepath=path, content=tests))
 
-        return None
+        return

@@ -155,7 +155,7 @@ class StepDescription(BaseModel):
     observations: List[Observation] = []
     logs: List[str] = []
 
-    def update(self, update: "UpdateStep"):
+    def update(self, update: "UpdateStep") -> None:
         if isinstance(update, DeltaStep):
             for key, value in update.dict(exclude_none=True).items():
                 setattr(self, key, getattr(self, key) + value)
@@ -208,9 +208,7 @@ class SlashCommandDescription(ContinueBaseModel):
 
 
 class ContextItemId(BaseModel):
-    """
-    A ContextItemId is a unique identifier for a ContextItem.
-    """
+    """A ContextItemId is a unique identifier for a ContextItem."""
 
     provider_title: str
     item_id: str
@@ -220,8 +218,9 @@ class ContextItemId(BaseModel):
         import re
 
         if not re.match(r"^[0-9a-zA-Z_-]*$", v):
+            msg = "Both provider_title and item_id can only include characters 0-9, a-z, A-Z, -, and _"
             raise ValueError(
-                "Both provider_title and item_id can only include characters 0-9, a-z, A-Z, -, and _"
+                msg,
             )
         return v
 
@@ -242,8 +241,7 @@ class ContextItemId(BaseModel):
 
 
 class ContextItemDescription(BaseModel):
-    """
-    A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.
+    """A ContextItemDescription is a description of a ContextItem that is displayed to the user when they type '@'.
 
     The id can be used to retrieve the ContextItem from the ContextManager.
     """
@@ -254,9 +252,7 @@ class ContextItemDescription(BaseModel):
 
 
 class ContextItem(BaseModel):
-    """
-    A ContextItem is a single item that is stored in the ContextManager.
-    """
+    """A ContextItem is a single item that is stored in the ContextManager."""
 
     description: ContextItemDescription
     content: str
@@ -300,7 +296,7 @@ class ContextProviderDescription(BaseModel):
 
 
 class SessionState(ContinueBaseModel):
-    """Full session history and important state needed for autopilot to Continue"""
+    """Full session history and important state needed for autopilot to Continue."""
 
     history: List[StepDescription]
     context_items: List[ContextItem]
@@ -327,7 +323,7 @@ class SessionState(ContinueBaseModel):
 
 
 class ContinueSDK:
-    async def run_step(self, step: "Step"):
+    async def run_step(self, step: "Step") -> None:
         ...
 
 
@@ -336,11 +332,11 @@ class Models:
 
 
 class Policy(ContinueBaseModel):
-    """A rule that determines which step to take next"""
+    """A rule that determines which step to take next."""
 
     # Note that history is mutable, kinda sus
     def next(
-        self, config: ContinueConfig, session_state: SessionState
+        self, config: ContinueConfig, session_state: SessionState,
     ) -> Optional["Step"]:
         raise NotImplementedError
 
@@ -406,7 +402,7 @@ class SequentialStep(Step):
     steps: List[Step]
     hide: bool = True
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         for step in self.steps:
             await sdk.run_step(step)
 
@@ -424,7 +420,7 @@ class Validator(Step):
 class Context:
     key_value: Dict[str, Any] = {}
 
-    def set(self, key: str, value: Any):
+    def set(self, key: str, value: Any) -> None:
         self.key_value[key] = value
 
     def get(self, key: str) -> Any:
@@ -441,7 +437,7 @@ class ContinueCustomException(Exception):
         message: str,
         title: str = "Error while running step:",
         with_step: Union[Step, None] = None,
-    ):
+    ) -> None:
         self.message = message
         self.title = title
         self.with_step = with_step

@@ -31,7 +31,7 @@ class SearchContextProvider(ContextProvider):
                 name="Search",
                 description="Search the workspace for all matches of an exact string (e.g. '@search console.log')",
                 id=ContextItemId(
-                    provider_title=self.title, item_id=self._SEARCH_CONTEXT_ITEM_ID
+                    provider_title=self.title, item_id=self._SEARCH_CONTEXT_ITEM_ID,
                 ),
             ),
         )
@@ -77,8 +77,9 @@ class SearchContextProvider(ContextProvider):
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.provider_title == self.title:
-            raise Exception("Invalid provider title for item")
+        if id.provider_title != self.title:
+            msg = "Invalid provider title for item"
+            raise Exception(msg)
 
         query = remove_prefix(text=query, prefix="search").strip()
         results = await self._search(query)

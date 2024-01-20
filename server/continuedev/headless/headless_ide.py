@@ -1,28 +1,27 @@
 import os
 import subprocess
 import uuid
-from typing import Any, Callable, List, Optional
+from typing import Any, Callable, List, NoReturn, Optional
 
 from dotenv import load_dotenv
 from fastapi import WebSocket
 
-from ..models.filesystem import (
+from continuedev.models.filesystem import (
     FileSystem,
     RangeInFile,
     RangeInFileWithContents,
     RealFileSystem,
 )
-from ..models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
-from ..models.main import Position
-from ..server.protocols.ide_protocol import AbstractIdeProtocolServer
+from continuedev.models.filesystem_edit import EditDiff, FileEdit, FileSystemEdit
+from continuedev.models.main import Position
+from continuedev.server.protocols.ide_protocol import AbstractIdeProtocolServer
 
 load_dotenv()
 
 
 def get_mac_address():
     mac_num = hex(uuid.getnode()).replace("0x", "").upper()
-    mac = "-".join(mac_num[i : i + 2] for i in range(0, 11, 2))
-    return mac
+    return "-".join(mac_num[i : i + 2] for i in range(0, 11, 2))
 
 
 class LocalIdeProtocol(AbstractIdeProtocolServer):
@@ -33,170 +32,146 @@ class LocalIdeProtocol(AbstractIdeProtocolServer):
 
     filesystem: FileSystem = RealFileSystem()
 
-    def __init__(self, workspace_directory: Optional[str] = None):
+    def __init__(self, workspace_directory: Optional[str] = None) -> None:
         if workspace_directory:
             self.workspace_directory = workspace_directory
 
-    async def handle_json(self, data: Any):
-        """Handle a json message"""
-        pass
+    async def handle_json(self, data: Any) -> None:
+        """Handle a json message."""
 
-    def showSuggestion(self, file_edit: FileEdit):
-        """Show a suggestion to the user"""
-        pass
+    def showSuggestion(self, file_edit: FileEdit) -> None:
+        """Show a suggestion to the user."""
 
-    async def setFileOpen(self, filepath: str, open: bool = True):
-        """Set whether a file is open"""
-        pass
+    async def setFileOpen(self, filepath: str, open: bool = True) -> None:
+        """Set whether a file is open."""
 
-    async def showMessage(self, message: str):
-        """Show a message to the user"""
-        print(message)
+    async def showMessage(self, message: str) -> None:
+        """Show a message to the user."""
 
-    async def showVirtualFile(self, name: str, contents: str):
-        """Show a virtual file"""
-        pass
+    async def showVirtualFile(self, name: str, contents: str) -> None:
+        """Show a virtual file."""
 
-    async def setSuggestionsLocked(self, filepath: str, locked: bool = True):
-        """Set whether suggestions are locked"""
-        pass
+    async def setSuggestionsLocked(self, filepath: str, locked: bool = True) -> None:
+        """Set whether suggestions are locked."""
 
-    async def getSessionId(self):
-        """Get a new session ID"""
-        pass
+    async def getSessionId(self) -> None:
+        """Get a new session ID."""
 
-    def onAcceptRejectSuggestion(self, accepted: bool):
-        """Called when the user accepts or rejects a suggestion"""
-        pass
+    def onAcceptRejectSuggestion(self, accepted: bool) -> None:
+        """Called when the user accepts or rejects a suggestion."""
 
-    def onFileSystemUpdate(self, update: FileSystemEdit):
-        """Called when a file system update is received"""
-        pass
+    def onFileSystemUpdate(self, update: FileSystemEdit) -> None:
+        """Called when a file system update is received."""
 
-    def onCloseGUI(self, session_id: str):
-        """Called when a GUI is closed"""
-        pass
+    def onCloseGUI(self, session_id: str) -> None:
+        """Called when a GUI is closed."""
 
-    def onOpenGUIRequest(self):
-        """Called when a GUI is requested to be opened"""
-        pass
+    def onOpenGUIRequest(self) -> None:
+        """Called when a GUI is requested to be opened."""
 
     async def getOpenFiles(self) -> List[str]:
-        """Get a list of open files"""
+        """Get a list of open files."""
         return []
 
     async def getVisibleFiles(self) -> List[str]:
-        """Get a list of visible files"""
+        """Get a list of visible files."""
         return []
 
     async def getHighlightedCode(self) -> List[RangeInFile]:
-        """Get a list of highlighted code"""
+        """Get a list of highlighted code."""
         return []
 
     async def readFile(self, filepath: str) -> str:
-        """Read a file"""
+        """Read a file."""
         try:
             return self.filesystem.read(filepath)
         except UnicodeDecodeError:
             return ""
 
     async def readRangeInFile(self, range_in_file: RangeInFile) -> str:
-        """Read a range in a file"""
+        """Read a range in a file."""
         return self.filesystem.read_range_in_file(range_in_file)
 
-    async def editFile(self, edit: FileEdit):
-        """Edit a file"""
+    async def editFile(self, edit: FileEdit) -> None:
+        """Edit a file."""
         self.filesystem.apply_file_edit(edit)
 
     async def applyFileSystemEdit(self, edit: FileSystemEdit) -> EditDiff:
-        """Apply a file edit"""
+        """Apply a file edit."""
         return self.filesystem.apply_edit(edit)
 
-    async def saveFile(self, filepath: str):
-        """Save a file"""
-        pass
+    async def saveFile(self, filepath: str) -> None:
+        """Save a file."""
 
     async def getUserSecret(self, key: str):
-        """Get a user secret"""
+        """Get a user secret."""
         return os.environ.get(key)
 
-    async def highlightCode(self, range_in_file: RangeInFile, color: str):
-        """Highlight code"""
-        pass
+    async def highlightCode(self, range_in_file: RangeInFile, color: str) -> None:
+        """Highlight code."""
 
     async def runCommand(self, command: str) -> str:
-        """Run a command using subprocess (don't pass, actually implement)"""
+        """Run a command using subprocess (don't pass, actually implement)."""
         return subprocess.check_output(command, shell=True).decode("utf-8")
 
-    def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]):
-        """Called when highlighted code is updated"""
-        pass
+    def onHighlightedCodeUpdate(self, range_in_files: List[RangeInFileWithContents]) -> None:
+        """Called when highlighted code is updated."""
 
-    def onDeleteAtIndex(self, index: int):
-        """Called when a step is deleted at a given index"""
-        pass
+    def onDeleteAtIndex(self, index: int) -> None:
+        """Called when a step is deleted at a given index."""
 
-    async def showDiff(self, filepath: str, replacement: str, step_index: int):
-        """Show a diff"""
-        pass
+    async def showDiff(self, filepath: str, replacement: str, step_index: int) -> None:
+        """Show a diff."""
 
-    def subscribeToFilesCreated(self, callback: Callable[[List[str]], None]):
-        """Subscribe to files created event"""
-        pass
+    def subscribeToFilesCreated(self, callback: Callable[[List[str]], None]) -> None:
+        """Subscribe to files created event."""
 
-    def subscribeToFilesDeleted(self, callback: Callable[[List[str]], None]):
-        """Subscribe to files deleted event"""
-        pass
+    def subscribeToFilesDeleted(self, callback: Callable[[List[str]], None]) -> None:
+        """Subscribe to files deleted event."""
 
-    def subscribeToFilesRenamed(self, callback: Callable[[List[str], List[str]], None]):
-        """Subscribe to files renamed event"""
-        pass
+    def subscribeToFilesRenamed(self, callback: Callable[[List[str], List[str]], None]) -> None:
+        """Subscribe to files renamed event."""
 
-    def subscribeToFileSaved(self, callback: Callable[[str, str], None]):
-        """Subscribe to file saved event"""
-        pass
+    def subscribeToFileSaved(self, callback: Callable[[str, str], None]) -> None:
+        """Subscribe to file saved event."""
 
-    def onFilesCreated(self, filepaths: List[str]):
-        """Called when files are created"""
-        pass
+    def onFilesCreated(self, filepaths: List[str]) -> None:
+        """Called when files are created."""
 
-    def onFilesDeleted(self, filepaths: List[str]):
-        """Called when files are deleted"""
-        pass
+    def onFilesDeleted(self, filepaths: List[str]) -> None:
+        """Called when files are deleted."""
 
-    def onFilesRenamed(self, old_filepaths: List[str], new_filepaths: List[str]):
-        """Called when files are renamed"""
-        pass
+    def onFilesRenamed(self, old_filepaths: List[str], new_filepaths: List[str]) -> None:
+        """Called when files are renamed."""
 
-    def onFileSaved(self, filepath: str, contents: str):
-        """Called when a file is saved"""
-        pass
+    def onFileSaved(self, filepath: str, contents: str) -> None:
+        """Called when a file is saved."""
 
     async def fileExists(self, filepath: str) -> bool:
-        """Check if a file exists"""
+        """Check if a file exists."""
         return self.filesystem.exists(filepath)
 
     async def getTerminalContents(self) -> str:
         return ""
 
     async def listDirectoryContents(
-        self, directory: str, recursive: bool = False
+        self, directory: str, recursive: bool = False,
     ) -> List[str]:
         return self.filesystem.list_directory_contents(directory, recursive=recursive)
 
-    async def goto_definition(self, filepath: str, position: Position):
-        raise NotImplementedError()
+    async def goto_definition(self, filepath: str, position: Position) -> NoReturn:
+        raise NotImplementedError
 
-    async def document_symbol(self, filepath: str):
-        raise NotImplementedError()
+    async def document_symbol(self, filepath: str) -> NoReturn:
+        raise NotImplementedError
 
     async def find_references(
-        self, filepath: str, position: Position, include_declaration: bool = False
-    ):
-        raise NotImplementedError()
+        self, filepath: str, position: Position, include_declaration: bool = False,
+    ) -> NoReturn:
+        raise NotImplementedError
 
-    async def folding_range(self, filepath: str):
-        raise NotImplementedError()
+    async def folding_range(self, filepath: str) -> NoReturn:
+        raise NotImplementedError
 
-    async def get_enclosing_folding_range(self, position: Position, filepath: str):
-        raise NotImplementedError()
+    async def get_enclosing_folding_range(self, position: Position, filepath: str) -> NoReturn:
+        raise NotImplementedError

@@ -56,8 +56,7 @@ def encoding_for_model(model_name: str):
             return tiktoken.encoding_for_model(aliases.get(model_name, model_name))
         except Exception as _:
             return tiktoken.encoding_for_model("gpt-3.5-turbo")
-    except Exception as e:
-        print("Error importing tiktoken", e)
+    except Exception:
         already_saw_import_err = True
         return None
 
@@ -109,7 +108,7 @@ def prune_string_from_bottom(model_name: str, max_tokens: int, prompt: str):
 
 
 def prune_raw_prompt_from_top(
-    model_name: str, context_length: int, prompt: str, tokens_for_completion: int
+    model_name: str, context_length: int, prompt: str, tokens_for_completion: int,
 ):
     max_tokens = context_length - tokens_for_completion - TOKEN_BUFFER_FOR_SAFETY
     return prune_string_from_top(model_name, max_tokens, prompt)
@@ -127,7 +126,7 @@ def prune_chat_history(
 
     # 0. Prune any messages that take up more than 1/3 of the context length
     longest_messages = sorted(
-        chat_history, key=lambda message: len(message.content), reverse=True
+        chat_history, key=lambda message: len(message.content), reverse=True,
     )
     longer_than_one_third = [
         message
@@ -195,7 +194,7 @@ def prune_chat_history(
     if total_tokens > context_length and len(chat_history) > 0:
         message = chat_history[0]
         message.content = prune_raw_prompt_from_top(
-            model_name, context_length, message.content, tokens_for_completion
+            model_name, context_length, message.content, tokens_for_completion,
         )
         total_tokens = context_length
 
@@ -207,7 +206,7 @@ TOKEN_BUFFER_FOR_SAFETY = 350
 
 
 def flatten_messages(msgs: List[ChatMessage]) -> List[ChatMessage]:
-    """If there are multiple adjacent messages with same "role", combine them"""
+    """If there are multiple adjacent messages with same "role", combine them."""
     flattened = []
     for msg in msgs:
         if len(flattened) > 0 and flattened[-1].role == msg.role:
@@ -227,10 +226,7 @@ def compile_chat_messages(
     functions: Union[List, None] = None,
     system_message: Union[str, None] = None,
 ) -> List[ChatMessage]:
-    """
-    The total number of tokens is system_message + sum(msgs) + functions + prompt after it is converted to a message
-    """
-
+    """The total number of tokens is system_message + sum(msgs) + functions + prompt after it is converted to a message."""
     msgs_copy = [msg.copy(deep=True) for msg in msgs] if msgs is not None else []
 
     if prompt is not None:
@@ -256,8 +252,9 @@ def compile_chat_messages(
             function_tokens += count_tokens(json.dumps(function), model_name)
 
     if max_tokens + function_tokens + TOKEN_BUFFER_FOR_SAFETY >= context_length:
+        msg = f"max_tokens ({max_tokens}) is too close to context_length ({context_length}), which doesn't leave room for chat history. This would cause incoherent responses. Try increasing the context_length parameter of the model in your config file."
         raise ValueError(
-            f"max_tokens ({max_tokens}) is too close to context_length ({context_length}), which doesn't leave room for chat history. This would cause incoherent responses. Try increasing the context_length parameter of the model in your config file."
+            msg,
         )
 
     history = prune_chat_history(
@@ -276,9 +273,8 @@ def compile_chat_messages(
         moved_system_message = history.pop(-2)
         history.insert(0, moved_system_message)
 
-    history = flatten_messages(history)
+    return flatten_messages(history)
 
-    return history
 
 
 def format_chat_messages(messages: List[ChatMessage]) -> str:

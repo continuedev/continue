@@ -14,9 +14,7 @@ def filter_ignored_files(files: List[str], root_dir: str):
     """Further filter files before indexing."""
     for file in files:
         if (
-            file.endswith(tuple(FILE_TYPES_TO_IGNORE))
-            or file.startswith(".git")
-            or file.startswith("archive")
+            file.endswith(tuple(FILE_TYPES_TO_IGNORE)) or file.startswith((".git", "archive"))
         ):
             continue  # nice
         yield root_dir + "/" + file

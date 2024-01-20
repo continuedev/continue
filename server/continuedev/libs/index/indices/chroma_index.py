@@ -56,7 +56,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
         api_version: Optional[str] = None,
         api_type: Optional[str] = None,
         organization_id: Optional[str] = None,
-    ):
+    ) -> None:
         self.tag = tag
         self.openai_api_key = openai_api_key
         self.api_base = api_base
@@ -93,7 +93,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
         return self.embeddings_type
 
     def exists(self):
-        """Check whether the codebase index has already been built and saved on disk"""
+        """Check whether the codebase index has already been built and saved on disk."""
         return os.path.exists(self.chroma_dir)
 
     def convert_to_valid_chroma_collection(self, name: str) -> str:
@@ -115,9 +115,8 @@ class ChromaCodebaseIndex(CodebaseIndex):
         name = re.sub("[^a-z0-9._-]", "a", name)
 
         # Replace consecutive dots with a single dot
-        name = re.sub("\\.\\.+", ".", name)
+        return re.sub("\\.\\.+", ".", name)
 
-        return name
 
     @property
     def collection(self):
@@ -128,7 +127,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
 
         kwargs: Dict[str, Any] = {
             "name": self.convert_to_valid_chroma_collection(
-                f"chroma-{self.embeddings_type}"
+                f"chroma-{self.embeddings_type}",
             ),
         }
         if self.openai_api_key is not None:
@@ -144,7 +143,7 @@ class ChromaCodebaseIndex(CodebaseIndex):
         collection = self.client.get_or_create_collection(**kwargs)
         return collection
 
-    async def add_chunks(self, chunks: List[Chunk]):
+    async def add_chunks(self, chunks: List[Chunk]) -> None:
         global collection
 
         # Flatten chunks, metadata, and ids for insertion to Chroma
@@ -178,18 +177,18 @@ class ChromaCodebaseIndex(CodebaseIndex):
                 )
                 i += GROUP_SIZE
 
-            except RateLimitError as e:
+            except RateLimitError:
                 logger.debug(f"Rate limit exceeded, waiting {wait_time} seconds")
                 await asyncio.sleep(wait_time)
                 wait_time *= 2
                 if wait_time > 2**10:
-                    raise e
+                    raise
 
             except sqlite3.OperationalError as e:
                 logger.debug(f"SQL error: {e}")
                 collection = None
 
-    def delete_chunks(self, digest: str):
+    def delete_chunks(self, digest: str) -> None:
         # Delete the chunks from the vector database
         result = self.collection.get(where={"document_id": digest})
         ids = result["ids"]
@@ -197,20 +196,19 @@ class ChromaCodebaseIndex(CodebaseIndex):
         if len(ids) > 0:
             self.collection.delete(ids=ids)
 
-    def add_label(self, digest: str):
+    def add_label(self, digest: str) -> None:
         ids = self.collection.get(where={"document_id": digest})["ids"]
         self.collection.update(ids=ids, metadatas=[{self.tag: 1}] * len(ids))
 
-    def remove_label(self, digest: str):
+    def remove_label(self, digest: str) -> None:
         ids = self.collection.get(where={"document_id": digest})["ids"]
         self.collection.update(ids=ids, metadatas=[{self.tag: 0}] * len(ids))
 
     async def build(
         self,
         chunks: AsyncGenerator[Tuple[IndexAction, Union[str, Chunk]], None],
-    ):
+    ) -> None:
         """Create a new index for the current branch."""
-
         group = []
         async for action, chunk in chunks:
             if action == "compute":
@@ -234,13 +232,13 @@ class ChromaCodebaseIndex(CodebaseIndex):
             await self.add_chunks(group)
 
     async def query(self, query: str, n: int = 4) -> List[Chunk]:
-        """Query the codebase index for top n results"""
+        """Query the codebase index for top n results."""
         if not self.exists():
             logger.warning(f"No index found for the codebase at {self.index_dir}")
             return []
 
         results = self.collection.query(
-            query_texts=[query], n_results=n, where={self.tag: {"$ne": 0}}
+            query_texts=[query], n_results=n, where={self.tag: {"$ne": 0}},
         )
 
         chunks = []
@@ -264,10 +262,10 @@ class ChromaCodebaseIndex(CodebaseIndex):
                     digest=document_id,
                     index=index,
                     filepath=filepath,
-                )
+                ),
             )
         return chunks
 
-    async def delete_branch(self):
+    async def delete_branch(self) -> None:
         self.collection.copy
         self.collection.delete()

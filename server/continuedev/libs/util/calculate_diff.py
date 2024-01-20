@@ -16,14 +16,14 @@ def calculate_diff(filepath: str, original: str, updated: str) -> List[FileEdit]
             pass
         elif tag == "delete":
             edits.append(
-                FileEdit.from_deletion(filepath, Range.from_indices(original, i1, i2))
+                FileEdit.from_deletion(filepath, Range.from_indices(original, i1, i2)),
             )
             offset -= i2 - i1
         elif tag == "insert":
             edits.append(
                 FileEdit.from_insertion(
-                    filepath, Position.from_index(original, i1), replacement
-                )
+                    filepath, Position.from_index(original, i1), replacement,
+                ),
             )
             offset += j2 - j1
         elif tag == "replace":
@@ -32,7 +32,7 @@ def calculate_diff(filepath: str, original: str, updated: str) -> List[FileEdit]
                     filepath=filepath,
                     range=Range.from_indices(original, i1, i2),
                     replacement=replacement,
-                )
+                ),
             )
             offset += (j2 - j1) - (i2 - i1)
         else:
@@ -59,7 +59,7 @@ def calculate_diff2(filepath: str, original: str, updated: str) -> List[FileEdit
     edits = []
     max_iterations = 1000
     i = 0
-    while not original == updated:
+    while original != updated:
         # TODO - For some reason it can't handle a single newline at the end of the file?
         s = difflib.SequenceMatcher(None, original, updated)
         opcodes = s.get_opcodes()
@@ -71,14 +71,14 @@ def calculate_diff2(filepath: str, original: str, updated: str) -> List[FileEdit
             elif tag == "delete":
                 edits.append(
                     FileEdit.from_deletion(
-                        filepath, Range.from_indices(original, i1, i2)
-                    )
+                        filepath, Range.from_indices(original, i1, i2),
+                    ),
                 )
             elif tag == "insert":
                 edits.append(
                     FileEdit.from_insertion(
-                        filepath, Position.from_index(original, i1), replacement
-                    )
+                        filepath, Position.from_index(original, i1), replacement,
+                    ),
                 )
             elif tag == "replace":
                 edits.append(
@@ -86,7 +86,7 @@ def calculate_diff2(filepath: str, original: str, updated: str) -> List[FileEdit
                         filepath=filepath,
                         range=Range.from_indices(original, i1, i2),
                         replacement=replacement,
-                    )
+                    ),
                 )
             else:
                 raise Exception("Unexpected difflib.SequenceMatcher tag: " + tag)
@@ -96,7 +96,8 @@ def calculate_diff2(filepath: str, original: str, updated: str) -> List[FileEdit
 
         i += 1
         if i > max_iterations:
-            raise Exception("Max iterations reached")
+            msg = "Max iterations reached"
+            raise Exception(msg)
 
     return edits
 

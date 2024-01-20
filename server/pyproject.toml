@@ -59,7 +59,7 @@ ipykernel = "^6.26.0"
 [tool.poetry.group.lint-ruff]
 optional = true
 [tool.poetry.group.lint-ruff.dependencies]
-ruff = "==0.1.8"
+ruff = "==0.1.14"
 
 [tool.poetry.group.lint-typing]
 optional = true
@@ -131,6 +131,57 @@ module = [
     "tiktoken_ext.*",
 ]
 ignore_missing_imports = true
+
+[tool.ruff]
+target-version = "py38"
+select = [
+    "A",      # flake8-builtins
+    "ANN",    # flake8-annotations
+    "ARG",    # flake8-unused-arguments
+    "ASYNC",  # flake8-async
+    "B",      # flake8-bugbear
+    "BLE",    # flake8-blind-except
+    "C4",     # flake8-comprehensions
+    "C90",    # cognitive complexity
+    "COM",    # flake8-commas
+    "D",      # pydocstyle
+    "DTZ",    # flake8-datetimez
+    "E",      # flake8 built-ins
+    "EM",     # flake8-errmsg
+    "ERA",    # flake8-eradicate
+    "F",      # flake8 built-ins
+    "FA",     # flake8-future-annotations
+    "FBT",    # boolean trap
+    "FURB",   # refurb
+    "G",      # flake8-logging-format
+    "I",      # isort
+    "ICN",    # flake8-import-conventions
+    "ISC",    # implicit-str-concat
+    "N",      # pep8-naming
+    "PERF",    # perflint
+    "PGH",    # pygrep-hooks
+    "PIE",    # flake8-pie
+    "PLC",    # pylint
+    "PLE",    # pylint
+    "PLR",    # pylint
+    "PLW",    # pylint
+    "PT",     # flake8-pytest-style
+    "PTH",    # flake8-use-pathlib
+    "PYI",    # flake8-pyi
+    "Q",      # flake8-quotes
+    "RET",    # flake8-return
+    "RSE",    # flake8-raise
+    "RUF",    # Ruff-specific lints
+    "S",      # flake8-bandit
+    "SIM",    # flake8-simplify
+    "SLF",    # flake8-self
+    "T20",    # flake8-print
+    "TID252", # ban relative imports
+    "UP",     # pyupgrade
+    "W",      # flake8 built-ins
+    "TRY",    # tryceratops
+    "YTT",    # flake8-2020
+]
 
 
 [build-system]

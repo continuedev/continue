@@ -52,7 +52,7 @@ def parse_python_traceback(tb_string: str) -> Traceback:
         filter(
             lambda x: x.strip().replace("~", "").replace("^", "") != "",
             tb_string.splitlines(),
-        )
+        ),
     )
     exc = tbutils.ParsedException.from_string(tb_string)
     return Traceback.from_tbutil_parsed_exc(exc)

@@ -13,7 +13,7 @@ from .models import Models
 
 
 class AbstractContinueSDK:
-    """The SDK provided as parameters to a step"""
+    """The SDK provided as parameters to a step."""
 
     ide: AbstractIdeProtocolServer
     gui: AbstractGUIProtocolServer
@@ -92,7 +92,7 @@ class AbstractContinueSDK:
 
     @abstractmethod
     async def get_code_context(
-        self, only_editing: bool = False
+        self, only_editing: bool = False,
     ) -> List[RangeInFileWithContents]:
         ...
 
@@ -106,7 +106,7 @@ class AbstractContinueSDK:
 
     @abstractmethod
     def raise_exception(
-        self, message: str, title: str, with_step: Union[Step, None] = None
+        self, message: str, title: str, with_step: Union[Step, None] = None,
     ):
         ...
 
@@ -115,6 +115,6 @@ class AbstractContinueSDK:
 
     @abstractmethod
     async def get_context_item_chat_messages(
-        self, exclude: Optional[str] = None
+        self, exclude: Optional[str] = None,
     ) -> List[ChatMessage]:
         ...

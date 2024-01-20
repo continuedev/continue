@@ -1,11 +1,12 @@
 import os
 from abc import abstractmethod
-from typing import Dict, Generator, List, Tuple
+from typing import Dict, Generator, List, NoReturn, Tuple
 
 from pydantic import BaseModel
 
-from ..libs.util.filter_files import should_filter_path
-from ..models.main import AbstractModel, Position, Range
+from continuedev.libs.util.filter_files import should_filter_path
+from continuedev.models.main import AbstractModel, Position, Range
+
 from .filesystem_edit import (
     AddDirectory,
     AddFile,
@@ -79,7 +80,7 @@ class RangeInFileWithContents(RangeInFile):
         lines = content.splitlines()
         if not lines:
             return RangeInFileWithContents(
-                filepath=filepath, range=Range.from_shorthand(0, 0, 0, 0), contents=""
+                filepath=filepath, range=Range.from_shorthand(0, 0, 0, 0), contents="",
             )
         return RangeInFileWithContents(
             filepath=filepath,
@@ -90,7 +91,7 @@ class RangeInFileWithContents(RangeInFile):
     @staticmethod
     def from_range_in_file(rif: RangeInFile, content: str) -> "RangeInFileWithContents":
         return RangeInFileWithContents(
-            filepath=rif.filepath, range=rif.range, contents=content
+            filepath=rif.filepath, range=rif.range, contents=content,
         )
 
 
@@ -106,7 +107,7 @@ class FileSystem(AbstractModel):
         raise NotImplementedError
 
     @abstractmethod
-    def write(self, path, content):
+    def write(self, path, content) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
@@ -118,23 +119,23 @@ class FileSystem(AbstractModel):
         raise NotImplementedError
 
     @abstractmethod
-    def rename_file(self, filepath: str, new_filepath: str):
+    def rename_file(self, filepath: str, new_filepath: str) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def rename_directory(self, path: str, new_path: str):
+    def rename_directory(self, path: str, new_path: str) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def delete_file(self, filepath: str):
+    def delete_file(self, filepath: str) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def delete_directory(self, path: str):
+    def delete_directory(self, path: str) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
-    def add_directory(self, path: str):
+    def add_directory(self, path: str) -> NoReturn:
         raise NotImplementedError
 
     @abstractmethod
@@ -143,7 +144,7 @@ class FileSystem(AbstractModel):
 
     @abstractmethod
     def list_directory_contents(self, path: str, recursive: bool = False) -> List[str]:
-        """List the contents of a directory"""
+        """List the contents of a directory."""
         raise NotImplementedError
 
     @classmethod
@@ -202,7 +203,7 @@ class FileSystem(AbstractModel):
         return "\n".join(lines), EditDiff(
             forward=edit,
             backward=FileEdit(
-                filepath=edit.filepath, range=new_range, replacement=original
+                filepath=edit.filepath, range=new_range, replacement=original,
             ),
         )
 
@@ -246,7 +247,7 @@ class FileSystem(AbstractModel):
         elif isinstance(edit, RenameFile):
             self.rename_file(edit.filepath, edit.new_filepath)
             backward = RenameFile(
-                filepath=edit.new_filepath, new_filepath=edit.filepath
+                filepath=edit.new_filepath, new_filepath=edit.filepath,
             )
         elif isinstance(edit, AddDirectory):
             self.add_directory(edit.path)
@@ -284,14 +285,14 @@ class RealFileSystem(FileSystem):
     """A filesystem that reads/writes from the actual filesystem."""
 
     def read(self, path) -> str:
-        with open(path, "r") as f:
+        with open(path) as f:
             return f.read()
 
     def readlines(self, path) -> List[str]:
-        with open(path, "r") as f:
+        with open(path) as f:
             return f.readlines()
 
-    def write(self, path, content):
+    def write(self, path, content) -> None:
         with open(path, "w") as f:
             f.write(content)
 
@@ -301,19 +302,19 @@ class RealFileSystem(FileSystem):
     def read_range_in_file(self, r: RangeInFile) -> str:
         return FileSystem.read_range_in_str(self.read(r.filepath), r.range)
 
-    def rename_file(self, filepath: str, new_filepath: str):
+    def rename_file(self, filepath: str, new_filepath: str) -> None:
         os.rename(filepath, new_filepath)
 
-    def rename_directory(self, path: str, new_path: str):
+    def rename_directory(self, path: str, new_path: str) -> None:
         os.rename(path, new_path)
 
-    def delete_file(self, filepath: str):
+    def delete_file(self, filepath: str) -> None:
         os.remove(filepath)
 
-    def delete_directory(self, path: str):
+    def delete_directory(self, path: str) -> NoReturn:
         raise NotImplementedError
 
-    def add_directory(self, path: str):
+    def add_directory(self, path: str) -> None:
         os.makedirs(path)
 
     def apply_file_edit(self, edit: FileEdit) -> EditDiff:
@@ -323,7 +324,7 @@ class RealFileSystem(FileSystem):
         return diff
 
     def list_directory_contents(self, path: str, recursive: bool = False) -> List[str]:
-        """List the contents of a directory"""
+        """List the contents of a directory."""
         if recursive:
             # Walk
             paths = []
@@ -333,7 +334,7 @@ class RealFileSystem(FileSystem):
                     paths.append(os.path.join(root, f))
 
             return paths
-        return list(map(lambda x: os.path.join(path, x), os.listdir(path)))
+        return [os.path.join(path, x) for x in os.listdir(path)]
 
 
 class VirtualFileSystem(FileSystem):
@@ -341,7 +342,7 @@ class VirtualFileSystem(FileSystem):
 
     files: Dict[str, str]
 
-    def __init__(self, files: Dict[str, str]):
+    def __init__(self, files: Dict[str, str]) -> None:
         self.files = files
 
     def read(self, path) -> str:
@@ -350,7 +351,7 @@ class VirtualFileSystem(FileSystem):
     def readlines(self, path) -> List[str]:
         return self.files[path].splitlines()
 
-    def write(self, path, content):
+    def write(self, path, content) -> None:
         self.files[path] = content
 
     def exists(self, path) -> bool:
@@ -359,24 +360,24 @@ class VirtualFileSystem(FileSystem):
     def read_range_in_file(self, r: RangeInFile) -> str:
         return FileSystem.read_range_in_str(self.read(r.filepath), r.range)
 
-    def rename_file(self, filepath: str, new_filepath: str):
+    def rename_file(self, filepath: str, new_filepath: str) -> None:
         self.files[new_filepath] = self.files[filepath]
         del self.files[filepath]
 
-    def rename_directory(self, path: str, new_path: str):
+    def rename_directory(self, path: str, new_path: str) -> None:
         for filepath in self.files:
             if filepath.startswith(path):
                 new_filepath = new_path + filepath[len(path) :]
                 self.files[new_filepath] = self.files[filepath]
                 del self.files[filepath]
 
-    def delete_file(self, filepath: str):
+    def delete_file(self, filepath: str) -> None:
         del self.files[filepath]
 
-    def delete_directory(self, path: str):
+    def delete_directory(self, path: str) -> NoReturn:
         raise NotImplementedError
 
-    def add_directory(self, path: str):
+    def add_directory(self, path: str) -> None:
         # For reasons as seen here and in delete_directory, a Dict[str, str] might not be the best representation. Could just preprocess to something better upon __init__
         pass
 
@@ -387,9 +388,9 @@ class VirtualFileSystem(FileSystem):
         return EditDiff(edit=edit, original=original)
 
     def list_directory_contents(
-        self, path: str, recursive: bool = False
+        self, path: str, recursive: bool = False,
     ) -> Generator[str, None, None]:
-        """List the contents of a directory"""
+        """List the contents of a directory."""
         if recursive:
             for filepath in self.files:
                 if filepath.startswith(path):

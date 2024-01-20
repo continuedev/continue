@@ -9,10 +9,10 @@ class FindAndReplaceStep(Step):
     pattern: str
     replacement: str
 
-    async def describe(self, models: Models):
+    async def describe(self, models: Models) -> str:
         return f"Replaced all instances of `{self.pattern}` with `{self.replacement}` in `{self.filepath}`"
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         file_content = await sdk.ide.readFile(self.filepath)
         while self.pattern in file_content:
             start_index = file_content.index(self.pattern)
@@ -22,7 +22,7 @@ class FindAndReplaceStep(Step):
                     filepath=self.filepath,
                     range=Range.from_indices(file_content, start_index, end_index - 1),
                     replacement=self.replacement,
-                )
+                ),
             )
             file_content = (
                 file_content[:start_index] + self.replacement + file_content[end_index:]

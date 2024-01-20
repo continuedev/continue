@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, NoReturn
 
 from ...core.context import ContextProvider
 from ...core.main import ContextItem, ContextItemDescription, ContextItemId
@@ -8,9 +8,7 @@ from .util import remove_meilisearch_disallowed_chars, remove_prefix
 
 
 class DynamicProvider(ContextProvider, ABC):
-    """
-    A title representing the provider
-    """
+    """A title representing the provider."""
 
     title: str
     """A name representing the provider. Probably use capitalized version of title"""
@@ -35,8 +33,9 @@ class DynamicProvider(ContextProvider, ABC):
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.provider_title == self.title:
-            raise Exception("Invalid provider title for item")
+        if id.provider_title != self.title:
+            msg = "Invalid provider title for item"
+            raise Exception(msg)
 
         query = remove_prefix(text=query, prefix=self.title).strip()
         results = await self.get_content(query)
@@ -50,12 +49,13 @@ class DynamicProvider(ContextProvider, ABC):
     @abstractmethod
     async def get_content(self, query: str) -> str:
         """Retrieve the content given the query
-        (e.g. search the codebase, return search results)"""
+        (e.g. search the codebase, return search results).
+        """
         raise NotImplementedError
 
     @abstractmethod
-    async def setup(self):
-        """Run any setup needed (e.g. indexing the codebase)"""
+    async def setup(self) -> NoReturn:
+        """Run any setup needed (e.g. indexing the codebase)."""
         raise NotImplementedError
 
 

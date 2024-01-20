@@ -3,12 +3,13 @@ import os
 from contextlib import contextmanager
 
 import pytest
+
 from continuedev.core.config import ContinueConfig, SerializedContinueConfig
 from continuedev.libs.constants.default_config import default_config_json
-from continuedev.libs.util.paths import getConfigFilePath
+from continuedev.libs.util.paths import get_config_file_path
 
 
-def test_continue_config_from_serialized_config():
+def test_continue_config_from_serialized_config() -> None:
     serialized_config = SerializedContinueConfig()
     config = ContinueConfig.from_serialized_config(serialized_config)
     assert isinstance(config, ContinueConfig)
@@ -20,8 +21,8 @@ def test_continue_config_from_serialized_config():
 @contextmanager
 def temp_clear_config():
     # make sure it is created, loaded in both cases
-    json_path = getConfigFilePath(json=True)
-    py_path = getConfigFilePath(json=False)
+    json_path = get_config_file_path(json=True)
+    py_path = get_config_file_path(json=False)
 
     # Move them somewhere temporary
     if os.path.exists(json_path + ".bak"):
@@ -54,20 +55,20 @@ def temp_clear_config():
         # "config_2.py",
     ],
 )
-def test_load_old_config(config_filename):
+def test_load_old_config(config_filename) -> None:
     with temp_clear_config():
-        py_path = getConfigFilePath(json=False)
+        py_path = get_config_file_path(json=False)
 
         test_filepath = os.path.join(
-            os.path.dirname(__file__), "examples", config_filename
+            os.path.dirname(__file__), "examples", config_filename,
         )
-        open(py_path, "w").write(open(test_filepath, "r").read())
+        open(py_path, "w").write(open(test_filepath).read())
 
         config = ContinueConfig.load_default()
         validate_continue_config(config)
 
 
-def validate_continue_config(config: ContinueConfig):
+def validate_continue_config(config: ContinueConfig) -> None:
     ctx_provs = config.get_context_provider_descriptions()
     assert isinstance(ctx_provs, list)
 
@@ -75,9 +76,9 @@ def validate_continue_config(config: ContinueConfig):
     assert isinstance(slash_commands, list)
 
     # Check config.json
-    json_path = getConfigFilePath(json=True)
+    json_path = get_config_file_path(json=True)
     assert os.path.exists(json_path)
-    raw = json.load(open(json_path, "r"))
+    raw = json.load(open(json_path))
     assert "temperature" not in raw
 
     for model in raw["models"]:
@@ -95,17 +96,17 @@ def validate_continue_config(config: ContinueConfig):
     )  # File should be automatically added
 
 
-def test_create_default_json_config():
+def test_create_default_json_config() -> None:
     with temp_clear_config():
-        json_path = getConfigFilePath(json=True)
+        json_path = get_config_file_path(json=True)
 
         # Create and validate the default config
         config = ContinueConfig.load_default()
         validate_continue_config(config)
 
         # Ensure config.json was created
-        assert open(json_path, "r").read() == default_config_json
+        assert open(json_path).read() == default_config_json
 
 
-def test_to_serialized_continue_config():
+def test_to_serialized_continue_config() -> None:
     pass

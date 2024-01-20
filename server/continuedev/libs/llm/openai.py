@@ -7,8 +7,9 @@ import litellm
 from litellm import acompletion
 from pydantic import Field, validator
 
-from ...core.main import ChatMessage
-from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
+from continuedev.core.main import ChatMessage
+from continuedev.libs.util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
+
 from .base import LLM
 
 CHAT_MODELS = {
@@ -37,8 +38,7 @@ NON_CHAT_MODELS = {
 
 
 class OpenAI(LLM):
-    """
-    The OpenAI class can be used to access OpenAI models like GPT-4, GPT-4 Turbo, and GPT-3.5 Turbo.
+    """The OpenAI class can be used to access OpenAI models like GPT-4, GPT-4 Turbo, and GPT-3.5 Turbo.
 
     ### Azure OpenAI Service
 
@@ -94,7 +94,7 @@ class OpenAI(LLM):
     api_base: Optional[str] = Field(default=None, description="OpenAI API base URL.")
 
     api_type: Optional[Literal["azure", "openai"]] = Field(
-        default=None, description="OpenAI API type."
+        default=None, description="OpenAI API type.",
     )
 
     api_version: Optional[str] = Field(
@@ -103,7 +103,7 @@ class OpenAI(LLM):
     )
 
     engine: Optional[str] = Field(
-        default=None, description="OpenAI engine. For use with Azure OpenAI Service."
+        default=None, description="OpenAI engine. For use with Azure OpenAI Service.",
     )
 
     use_legacy_completions_endpoint: bool = Field(
@@ -115,7 +115,7 @@ class OpenAI(LLM):
     def context_length_for_model(cls, v, values):
         return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
 
-    def start(self, unique_id: Optional[str] = None):
+    def start(self, unique_id: Optional[str] = None) -> None:
         super().start(unique_id=unique_id)
 
         if self.context_length is None:
@@ -180,7 +180,7 @@ class OpenAI(LLM):
                 yield chunk.choices[0].delta.content
 
     async def _stream_chat(
-        self, messages: List[ChatMessage], options
+        self, messages: List[ChatMessage], options,
     ) -> AsyncGenerator[ChatMessage, None]:
         args = self.collect_args(options)
         # and not self.use_legacy_completions_endpoint
@@ -212,7 +212,7 @@ class OpenAI(LLM):
                         await asyncio.sleep(0.01)
 
                 yield ChatMessage(
-                    role="assistant", content=chunk.choices[0].delta.content or ""
+                    role="assistant", content=chunk.choices[0].delta.content or "",
                 )
 
     async def _complete(self, prompt: str, options):

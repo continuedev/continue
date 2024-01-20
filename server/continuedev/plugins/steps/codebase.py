@@ -2,7 +2,7 @@ import asyncio
 import os
 from typing import List, Optional, Union
 
-from ...core.config import ModelDescription, RetrievalSettings
+from ...core.config import RetrievalSettings
 from ...core.main import (
     ContextItem,
     ContextItemDescription,
@@ -31,7 +31,7 @@ async def get_faster_model(sdk: ContinueSDK) -> Optional[LLM]:
 
     # Then, check for OpenAIFreeTrial
     if openai_free_trial_model := next(
-        filter(lambda m: m.__class__.__name__ == "OpenAIFreeTrial", models), None
+        filter(lambda m: m.__class__.__name__ == "OpenAIFreeTrial", models), None,
     ):
         new_model = openai_free_trial_model.copy()
         new_model.model = "gpt-3.5-turbo"
@@ -92,7 +92,7 @@ class AnswerQuestionChroma(Step):
                 *[
                     code_hyde(self.user_input, "", faster_model),
                     generate_keywords(self.user_input, faster_model),
-                ]
+                ],
             )
             query = resps[0]
             keywords = resps[1]
@@ -100,14 +100,14 @@ class AnswerQuestionChroma(Step):
         # Get meilisearch chunks first, fill in the rest with chroma
         if keywords is None:
             meilisearch_chunks = await meilisearch_index.query(
-                self.user_input, n=to_retrieve_from_each
+                self.user_input, n=to_retrieve_from_each,
             )
         else:
             meilisearch_chunks = await meilisearch_index.query_keywords(
-                keywords, n=to_retrieve_from_each
+                keywords, n=to_retrieve_from_each,
             )
         chroma_chunks = await chroma_index.query(
-            query, n=2 * to_retrieve_from_each - len(meilisearch_chunks)
+            query, n=2 * to_retrieve_from_each - len(meilisearch_chunks),
         )
 
         chunk_ids = set()
@@ -161,7 +161,7 @@ class AnswerQuestionChroma(Step):
         #     model = "gpt-4-32k"  # Not publicly available yet?
         if (
             model == "gpt-3.5-turbo"
-            and not sdk.models.chat.__class__.__name__ == "OpenAIFreeTrial"
+            and sdk.models.chat.__class__.__name__ != "OpenAIFreeTrial"
         ):
             model = "gpt-3.5-turbo-16k"
 
@@ -171,7 +171,7 @@ class AnswerQuestionChroma(Step):
                 description=f"Reading from {len(context_items)} files...",
                 completion_options=CompletionOptions(model=model),
                 prompt=PROMPT.format(user_input=self.user_input),
-            )
+            ),
         )
 
         # for ctx_item in context_items:
@@ -182,16 +182,16 @@ class EditFileChroma(Step):
     user_input: str
     hide: bool = True
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         index = ChromaCodebaseIndex(await sdk.ide.getTag())
         results = index.query_codebase_index(self.user_input)
 
-        resource_name = list(results.source_nodes[0].node.relationships.values())[0]
+        resource_name = next(iter(results.source_nodes[0].node.relationships.values()))
         filepath = resource_name[: resource_name.index("::")]
 
         await sdk.run_step(
             EditFileStep(
                 filepath=filepath,
                 prompt=f"Here is the code:\n\n{{code}}\n\nHere is the user request:\n\n{self.user_input}\n\nHere is the code after making the requested changes:\n",
-            )
+            ),
         )

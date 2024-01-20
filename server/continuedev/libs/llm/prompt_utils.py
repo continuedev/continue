@@ -1,14 +1,14 @@
 from typing import Dict, List, Union
 
-from ...models.filesystem import RangeInFileWithContents
-from ...models.filesystem_edit import FileEdit
+from continuedev.models.filesystem import RangeInFileWithContents
+from continuedev.models.filesystem_edit import FileEdit
 
 
 class MarkdownStyleEncoderDecoder:
     # Filename -> the part of the file you care about
     range_in_files: List[RangeInFileWithContents]
 
-    def __init__(self, range_in_files: List[RangeInFileWithContents]):
+    def __init__(self, range_in_files: List[RangeInFileWithContents]) -> None:
         self.range_in_files = range_in_files
 
     def encode(self) -> str:
@@ -16,14 +16,14 @@ class MarkdownStyleEncoderDecoder:
             [
                 f"File ({rif.filepath})\n```\n{rif.contents}\n```"
                 for rif in self.range_in_files
-            ]
+            ],
         )
 
     def _suggestions_to_file_edits(self, suggestions: Dict[str, str]) -> List[FileEdit]:
         file_edits: List[FileEdit] = []
         for suggestion_filepath, suggestion in suggestions.items():
             matching_rifs = list(
-                filter(lambda r: r.filepath == suggestion_filepath, self.range_in_files)
+                filter(lambda r: r.filepath == suggestion_filepath, self.range_in_files),
             )
             if len(matching_rifs) > 0:
                 range_in_file = matching_rifs[0]
@@ -32,7 +32,7 @@ class MarkdownStyleEncoderDecoder:
                         range=range_in_file.range,
                         filepath=range_in_file.filepath,
                         replacement=suggestion,
-                    )
+                    ),
                 )
 
         return file_edits
@@ -72,5 +72,4 @@ class MarkdownStyleEncoderDecoder:
 
     def decode(self, completion: str) -> List[FileEdit]:
         suggestions = self._decode_to_suggestions(completion)
-        file_edits = self._suggestions_to_file_edits(suggestions)
-        return file_edits
+        return self._suggestions_to_file_edits(suggestions)

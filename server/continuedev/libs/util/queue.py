@@ -7,7 +7,7 @@ from ...models.websockets import WebsocketsMessage
 class WebsocketsSubscriptionQueue:
     queues: Dict[str, asyncio.Queue] = {}
 
-    def post(self, msg: WebsocketsMessage):
+    def post(self, msg: WebsocketsMessage) -> None:
         if msg.message_id not in self.queues:
             self.queues.update({msg.message_id: asyncio.Queue()})
 
@@ -18,6 +18,6 @@ class WebsocketsSubscriptionQueue:
             self.queues.update({message_id: asyncio.Queue()})
         return await self.queues[message_id].get()
 
-    async def delete(self, message_id: str):
+    async def delete(self, message_id: str) -> None:
         if message_id in self.queues:
             del self.queues[message_id]

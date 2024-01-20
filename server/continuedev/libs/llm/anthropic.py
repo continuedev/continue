@@ -7,8 +7,7 @@ from .prompts.chat import anthropic_template_messages
 
 
 class AnthropicLLM(LLM):
-    """
-    To setup Anthropic, add the following to your `config.json` file:
+    """To setup Anthropic, add the following to your `config.json` file:
 
     ```json title="~/.continue/config.json"
     {
@@ -35,7 +34,7 @@ class AnthropicLLM(LLM):
     class Config:
         arbitrary_types_allowed = True
 
-    def start(self, *args, **kwargs):
+    def start(self, *args, **kwargs) -> None:
         super().start(*args, **kwargs)
 
         if self.model == "claude-2":
@@ -59,7 +58,7 @@ class AnthropicLLM(LLM):
         prompt = f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}"
 
         async for chunk in await AsyncAnthropic(
-            api_key=self.api_key
+            api_key=self.api_key,
         ).completions.create(prompt=prompt, stream=True, **args):
             yield chunk.completion
 
@@ -68,6 +67,6 @@ class AnthropicLLM(LLM):
         prompt = f"{HUMAN_PROMPT} {prompt} {AI_PROMPT}"
         return (
             await AsyncAnthropic(api_key=self.api_key).completions.create(
-                prompt=prompt, **args
+                prompt=prompt, **args,
             )
         ).completion

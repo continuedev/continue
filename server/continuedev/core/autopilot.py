@@ -84,7 +84,7 @@ class Autopilot:
         config: ContinueConfig,
         context_manager: ContextManager,
         models: Models,
-    ):
+    ) -> None:
         self.session_state = session_state
         self.ide = ide
         self.gui = gui
@@ -134,18 +134,13 @@ class Autopilot:
         else:
             return ContinueCustomException(title=error_title, message=error_string)
 
-    def log_step(self, step: Step, context_used: List[ContextItem]):
+    def log_step(self, step: Step, context_used: List[ContextItem]) -> None:
         posthog_logger.capture_event(
             "step run",
             {
                 "step_name": step.name,
                 "params": step.dict(),
-                "context": list(
-                    map(
-                        lambda item: item.dict(),
-                        context_used,
-                    )
-                ),
+                "context": [item.dict() for item in context_used],
             },
         )
         step_id = uuid.uuid4().hex
@@ -156,12 +151,7 @@ class Autopilot:
         dev_data_logger.capture(
             "context_used",
             {
-                "context": list(
-                    map(
-                        lambda item: item.dict(),
-                        context_used,
-                    )
-                ),
+                "context": [item.dict() for item in context_used],
                 "step_id": step_id,
             },
         )
@@ -206,14 +196,14 @@ class Autopilot:
                     update=DeltaStep(observations=[cast(Observation, update)]),
                 )
             elif (
-                update.__class__.__name__ == "DeltaStep"
-                or update.__class__.__name__ == "SetStep"
+                update.__class__.__name__ in ("DeltaStep", "SetStep")
             ):
                 return SessionUpdate(index=index, update=update)
             elif update is None:
                 return None
             else:
                 logger.warning(f"Unknown type yielded from Step: {update}")
+                return None
 
         # Try to run step and handle errors
         try:
@@ -232,7 +222,7 @@ class Autopilot:
                         yield handled
             else:
                 logger.warning(
-                    f"{step.__class__.__name__}.run is not a coroutine function or async generator"
+                    f"{step.__class__.__name__}.run is not a coroutine function or async generator",
                 )
 
         except Exception as e:
@@ -285,11 +275,11 @@ class Autopilot:
         #     ),
         # )
 
-    async def run_step(self, step: Step):
+    async def run_step(self, step: Step) -> None:
         async for update in self._run_singular_step(step):
             await self.handle_session_update(update)
 
-    async def handle_session_update(self, update: AutopilotGeneratorOutput):
+    async def handle_session_update(self, update: AutopilotGeneratorOutput) -> None:
         if update is None:
             return
 
@@ -298,29 +288,31 @@ class Autopilot:
             self.session_state.history.append(update)
             set_step = SetStep(**update.dict())
             await self.sdk.gui.send_session_update(
-                SessionUpdate(index=index, update=set_step)
+                SessionUpdate(index=index, update=set_step),
             )
             return
 
         if update.index > len(self.session_state.history):
+            msg = f"History update index {update.index} is greater than history length {len(self.session_state.history)}"
             raise Exception(
-                f"History update index {update.index} is greater than history length {len(self.session_state.history)}"
+                msg,
             )
         elif update.index == len(self.session_state.history):
+            msg = f"History update index {update.index} is equal to history length {len(self.session_state.history)}. Must yield a StepDescription to add a new step."
             raise Exception(
-                f"History update index {update.index} is equal to history length {len(self.session_state.history)}. Must yield a StepDescription to add a new step."
+                msg,
             )
 
         self.session_state.history[update.index].update(update.update)
         await self.sdk.gui.send_session_update(update)
 
-    async def run(self, step: Optional[Step] = None):
-        async def add_log(log: str):
+    async def run(self, step: Optional[Step] = None) -> None:
+        async def add_log(log: str) -> None:
             await self.handle_session_update(
                 SessionUpdate(
                     index=len(self.session_state.history) - 1,
                     update=DeltaStep(logs=[log]),
-                )
+                ),
             )
 
         logger_id = self.sdk.models.add_logger(add_log)

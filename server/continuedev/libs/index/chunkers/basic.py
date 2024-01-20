@@ -1,7 +1,7 @@
 from typing import List
 
-from .chunk import ChunkWithoutID
 from ...util.count_tokens import count_tokens
+from .chunk import ChunkWithoutID
 
 
 def basic_chunker(contents: str, max_chunk_size: int) -> List[ChunkWithoutID]:
@@ -21,7 +21,7 @@ def basic_chunker(contents: str, max_chunk_size: int) -> List[ChunkWithoutID]:
                     content=chunk_content,
                     start_line=start_line,
                     end_line=curr_line - 1,
-                )
+                ),
             )
             chunk_content = ""
             chunk_tokens = 0
@@ -37,6 +37,6 @@ def basic_chunker(contents: str, max_chunk_size: int) -> List[ChunkWithoutID]:
             start_line=start_line,
             end_line=curr_line - 1,
             index=len(chunks),
-        )
+        ),
     )
     return chunks

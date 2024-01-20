@@ -3,7 +3,7 @@ import difflib
 import subprocess
 import time
 from textwrap import dedent
-from typing import Any, AsyncGenerator, Dict, List, Optional, Union
+from typing import Any, AsyncGenerator, Dict, List, NoReturn, Optional, Union
 
 from pydantic import Field
 
@@ -13,7 +13,6 @@ from ..libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.strings import (
     dedent_and_get_common_whitespace,
-    remove_quotes_and_escapes,
 )
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.templating import render_prompt_template
@@ -24,8 +23,6 @@ from .main import (
     ChatMessage,
     ContextItem,
     ContinueCustomException,
-    DeltaStep,
-    SessionUpdate,
     SetStep,
     Step,
 )
@@ -40,7 +37,7 @@ class Models:
 
 
 class ReversibleStep(Step):
-    async def reverse(self, sdk: AbstractContinueSDK):
+    async def reverse(self, sdk: AbstractContinueSDK) -> NoReturn:
         raise NotImplementedError
 
 
@@ -74,7 +71,7 @@ class DisplayErrorStep(Step):
     async def describe(self, models: Models):
         return self.message
 
-    async def run(self, sdk: AbstractContinueSDK):
+    async def run(self, sdk: AbstractContinueSDK) -> NoReturn:
         raise ContinueCustomException(message=self.message, title=self.title)
 
 
@@ -84,10 +81,10 @@ class FileSystemEditStep(ReversibleStep):
 
     hide: bool = True
 
-    async def run(self, sdk: "AbstractContinueSDK"):
+    async def run(self, sdk: "AbstractContinueSDK") -> None:
         self._diff = await sdk.ide.applyFileSystemEdit(self.edit)
 
-    async def reverse(self, sdk: "AbstractContinueSDK"):
+    async def reverse(self, sdk: "AbstractContinueSDK") -> None:
         if self._diff:
             await sdk.ide.applyFileSystemEdit(self._diff.backward)
 
@@ -113,7 +110,7 @@ class ShellCommandsStep(Step):
 
         cmds_str = "\n".join(self.cmds)
         return await models.summarize.complete(
-            f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:"
+            f"{cmds_str}\n\nSummarize what was done in these shell commands, using markdown bullet points:",
         )
 
     async def run(self, sdk: AbstractContinueSDK):
@@ -132,6 +129,7 @@ class ShellCommandsStep(Step):
         if err is not None and err != "":
             self._err_text = err
             return TextObservation(text=err)
+        return None
 
 
 class DefaultModelEditCodeStep(Step):
@@ -151,7 +149,7 @@ class DefaultModelEditCodeStep(Step):
         class Database:
             def __init__(self):
                 self._data = {{}}
-            
+
             def get(self, key):
                 return self._data[key]
 
@@ -176,7 +174,7 @@ class DefaultModelEditCodeStep(Step):
         </modified_code_to_edit>
 
         Main task:
-        """
+        """,
     )
     _previous_contents: str = ""
     _new_contents: str = ""
@@ -208,13 +206,13 @@ class DefaultModelEditCodeStep(Step):
             # Increase max_tokens to be double the size of the range
             # But don't exceed twice default max tokens
             max_tokens = int(
-                min(model_to_use.count_tokens(rif.contents), DEFAULT_MAX_TOKENS) * 2.5
+                min(model_to_use.count_tokens(rif.contents), DEFAULT_MAX_TOKENS) * 2.5,
             )
 
         BUFFER_FOR_FUNCTIONS = 400
         total_tokens = (
             model_to_use.count_tokens(
-                full_file_contents + self._prompt + self.user_input
+                full_file_contents + self._prompt + self.user_input,
             )
             + BUFFER_FOR_FUNCTIONS
             + max_tokens
@@ -224,9 +222,8 @@ class DefaultModelEditCodeStep(Step):
         if (
             model_to_use.model == "gpt-3.5-turbo"
             and model_to_use.__class__.__name__ == "OpenAI"
-        ):
-            if total_tokens > model_to_use.context_length:
-                model_to_use = OpenAIFreeTrial(model="gpt-3.5-turbo-0613")
+        ) and total_tokens > model_to_use.context_length:
+            model_to_use = OpenAIFreeTrial(model="gpt-3.5-turbo-0613")
 
         # Remove tokens from the end first, and then the start to clear space
         # This part finds the start and end lines
@@ -239,7 +236,7 @@ class DefaultModelEditCodeStep(Step):
         if total_tokens > model_to_use.context_length:
             while cur_end_line > min_end_line:
                 total_tokens -= model_to_use.count_tokens(
-                    full_file_contents_lst[cur_end_line]
+                    full_file_contents_lst[cur_end_line],
                 )
                 cur_end_line -= 1
                 if total_tokens < model_to_use.context_length:
@@ -249,7 +246,7 @@ class DefaultModelEditCodeStep(Step):
             while cur_start_line < max_start_line:
                 cur_start_line += 1
                 total_tokens -= model_to_use.count_tokens(
-                    full_file_contents_lst[cur_start_line]
+                    full_file_contents_lst[cur_start_line],
                 )
                 if total_tokens < model_to_use.context_length:
                     break
@@ -294,7 +291,7 @@ class DefaultModelEditCodeStep(Step):
     ) -> str:
         if contents.strip() == "":
             # Separate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
-            prompt = dedent(
+            return dedent(
                 f"""\
 <file_prefix>
 {file_prefix}
@@ -307,9 +304,8 @@ class DefaultModelEditCodeStep(Step):
 {self.user_input}
 </user_request>
 
-Please output the code to be inserted at the cursor in order to fulfill the user_request. Do NOT preface your answer or write anything other than code. You should not write any tags, just the code. Make sure to correctly indent the code:"""
+Please output the code to be inserted at the cursor in order to fulfill the user_request. Do NOT preface your answer or write anything other than code. You should not write any tags, just the code. Make sure to correctly indent the code:""",
             )
-            return prompt
 
         prompt = self._prompt
         if file_prefix.strip() != "":
@@ -317,20 +313,20 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 f"""
 <file_prefix>
 {file_prefix}
-</file_prefix>"""
+</file_prefix>""",
             )
         prompt += dedent(
             f"""
 <code_to_edit>
 {contents}
-</code_to_edit>"""
+</code_to_edit>""",
         )
         if file_suffix.strip() != "":
             prompt += dedent(
                 f"""
 <file_suffix>
 {file_suffix}
-</file_suffix>"""
+</file_suffix>""",
             )
         prompt += dedent(
             f"""
@@ -338,7 +334,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 {self.user_input}
 </user_request>
 <modified_code_to_edit>
-"""
+""",
         )
 
         return prompt
@@ -364,7 +360,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         )
 
     async def stream_rif(
-        self, rif: RangeInFileWithContents, sdk: AbstractContinueSDK
+        self, rif: RangeInFileWithContents, sdk: AbstractContinueSDK,
     ) -> AsyncGenerator[SetStep, None]:
         await sdk.ide.saveFile(rif.filepath)
         full_file_contents = await sdk.ide.readFile(rif.filepath)
@@ -383,8 +379,8 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         lines_to_display = []
 
         async def sendDiffUpdate(
-            lines: List[str], sdk: AbstractContinueSDK, final: bool = False
-        ):
+            lines: List[str], sdk: AbstractContinueSDK, final: bool = False,
+        ) -> None:
             nonlocal full_file_contents_lines, rif, lines_to_display
 
             completion = "\n".join(lines)
@@ -404,7 +400,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     for i in range(rewritten_lines, len(contents_lines)):
                         if (
                             difflib.SequenceMatcher(
-                                None, line, contents_lines[i]
+                                None, line, contents_lines[i],
                             ).ratio()
                             > 0.7
                             and contents_lines[i].strip() != ""
@@ -450,7 +446,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         # This is a tuple of (index_of_last_matched_line, number_of_lines_matched)
         indices_of_last_matched_lines = []
 
-        async def handle_generated_line(line: str):
+        async def handle_generated_line(line: str) -> None:
             nonlocal current_block_start, current_line_in_file, original_lines, original_lines_below_previous_blocks, current_block_lines, indices_of_last_matched_lines, LINES_TO_MATCH_BEFORE_ENDING_BLOCK, offset_from_blocks
 
             if len(current_block_lines) == 0:
@@ -488,7 +484,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     ]
                 ):
                     matches_found.append(
-                        (index_of_last_matched_line + 1, num_lines_matched + 1)
+                        (index_of_last_matched_line + 1, num_lines_matched + 1),
                     )
                     if (
                         first_valid_match is None
@@ -543,7 +539,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
             # Make sure they are sorted by index
             indices_of_last_matched_lines = sorted(
-                indices_of_last_matched_lines, key=lambda x: x[0]
+                indices_of_last_matched_lines, key=lambda x: x[0],
             )
 
             current_block_lines.append(line)
@@ -553,12 +549,12 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         i = len(messages) - 1
         deleted = 0
         while i >= 0 and deleted < 2:
-            if messages[i].role == "user" or messages[i].role == "assistant":
+            if messages[i].role in ("user", "assistant"):
                 messages.pop(i)
                 deleted += 1
             i -= 1
         messages.append(
-            ChatMessage(role="user", content=prompt, summary=self.user_input)
+            ChatMessage(role="user", content=prompt, summary=self.user_input),
         )
 
         lines_of_prefix_copied = 0
@@ -582,12 +578,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                     or sdk.config.system_message
                     or "",
                     "context_items": "\n\n".join(
-                        list(
-                            map(
-                                lambda x: x.content or "",
-                                await sdk.get_context_item_chat_messages(),
-                            )
-                        )
+                        [x.content or "" for x in await sdk.get_context_item_chat_messages()],
                     ),
                 },
             )
@@ -597,7 +588,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                         role="user",
                         content=rendered,
                         summary=self.user_input,
-                    )
+                    ),
                 ]
             else:
                 messages = rendered
@@ -607,7 +598,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 params.update(template.dict(exclude={"prompt"}))
 
             params.update(
-                {"max_tokens": min(max_tokens, model_to_use.context_length // 2, 4096)}
+                {"max_tokens": min(max_tokens, model_to_use.context_length // 2, 4096)},
             )
             generator = model_to_use.stream_complete(**params)
 
@@ -636,7 +627,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             last_task_time = time.time()
             async for chunk in generator:
                 yield SetStep(
-                    hide=False
+                    hide=False,
                 )  # Doing this so that there are breakpoints for cancellation
 
                 # Stop early if it is repeating the file_suffix or the step was deleted
@@ -663,7 +654,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                         break
                     # Lines that should be ignored, like the <> tags
                     elif self.line_to_be_ignored(
-                        chunk_lines[i], completion_lines_covered == 0
+                        chunk_lines[i], completion_lines_covered == 0,
                     ):
                         continue  # noice
                     # Check if we are currently just copying the prefix
@@ -698,12 +689,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
                 if last_task_time is None or time.time() - last_task_time > 0.15:
                     last_task_time = time.time()
                     await sendDiffUpdate(
-                        lines
-                        + [
-                            common_whitespace
-                            if unfinished_line.startswith("<")
-                            else (common_whitespace + unfinished_line)
-                        ],
+                        [*lines, common_whitespace if unfinished_line.startswith("<") else common_whitespace + unfinished_line],
                         sdk,
                     )
 
@@ -714,7 +700,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
         if (
             unfinished_line != ""
             and not self.line_to_be_ignored(
-                unfinished_line, completion_lines_covered == 0
+                unfinished_line, completion_lines_covered == 0,
             )
             and not self.is_end_line(unfinished_line)
         ):
@@ -734,17 +720,14 @@ Please output the code to be inserted at the cursor in order to fulfill the user
 
     async def run(self, sdk: AbstractContinueSDK):
         rif_with_contents = []
-        for range_in_file in map(
-            lambda x: RangeInFile(
+        for range_in_file in (RangeInFile(
                 filepath=x.filepath,
                 # Only consider the range line-by-line. Maybe later don't if it's only a single line.
                 range=x.range.to_full_lines(),
-            ),
-            self.range_in_files,
-        ):
+            ) for x in self.range_in_files):
             file_contents = await sdk.ide.readRangeInFile(range_in_file)
             rif_with_contents.append(
-                RangeInFileWithContents.from_range_in_file(range_in_file, file_contents)
+                RangeInFileWithContents.from_range_in_file(range_in_file, file_contents),
             )
 
         rif_dict = {}
@@ -761,7 +744,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             difflib.ndiff(
                 self._previous_contents.splitlines(),
                 self._new_contents.splitlines(),
-            )
+            ),
         )
 
         if sdk.config.disable_summaries:
@@ -783,8 +766,8 @@ Please output the code to be inserted at the cursor in order to fulfill the user
             {changes}
             ```
 
-            {self.summary_prompt}"""
-                )
+            {self.summary_prompt}""",
+                ),
             ):
                 yield chunk
 
@@ -803,16 +786,16 @@ class EditFileStep(Step):
     async def describe(self, models: Models):
         return "Editing file: " + self.filepath
 
-    async def run(self, sdk: AbstractContinueSDK):
+    async def run(self, sdk: AbstractContinueSDK) -> None:
         file_contents = await sdk.ide.readFile(self.filepath)
         await sdk.run_step(
             DefaultModelEditCodeStep(
                 range_in_files=[
-                    RangeInFile.from_entire_file(self.filepath, file_contents)
+                    RangeInFile.from_entire_file(self.filepath, file_contents),
                 ],
                 user_input=self.prompt,
                 model=self.model,
-            )
+            ),
         )
 
 
@@ -820,9 +803,8 @@ class ManualEditStep(ReversibleStep):
     edit_diff: EditDiff
     hide: bool = True
 
-    hide: bool = True
 
-    async def describe(self, models: Models):
+    async def describe(self, models: Models) -> str:
         return "Manual edit step"
         # TODO - only handling FileEdit here, but need all other types of FileSystemEdits
         # Also requires the merge_file_edit function
@@ -845,10 +827,10 @@ class ManualEditStep(ReversibleStep):
             diffs.append(diff)
         return cls(edit_diff=EditDiff.from_sequence(diffs))
 
-    async def run(self, sdk: AbstractContinueSDK):
+    async def run(self, sdk: AbstractContinueSDK) -> None:
         ...
 
-    async def reverse(self, sdk: AbstractContinueSDK):
+    async def reverse(self, sdk: AbstractContinueSDK) -> None:
         await sdk.ide.applyFileSystemEdit(self.edit_diff.backward)
 
 
@@ -867,7 +849,7 @@ class UserInputStep(Step):
 
     async def run(self, sdk: AbstractContinueSDK):
         self.chat_context.append(
-            ChatMessage(role="user", content=self.user_input, summary=self.user_input)
+            ChatMessage(role="user", content=self.user_input, summary=self.user_input),
         )
         self.description = self.user_input
         yield UserInputObservation(user_input=self.user_input)

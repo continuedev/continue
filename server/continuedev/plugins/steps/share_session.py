@@ -6,7 +6,7 @@ from ...libs.util.paths import getGlobalFolderPath
 
 
 class ShareSessionStep(Step):
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         # Format SessionState as a .md file
         import datetime
 
@@ -22,7 +22,7 @@ class ShareSessionStep(Step):
 
         # Save to a markdown file
         save_filepath = os.path.join(
-            getGlobalFolderPath(), f"continue ({date_created}).md"
+            getGlobalFolderPath(), f"continue ({date_created}).md",
         )
 
         with open(save_filepath, "w") as f:

@@ -13,20 +13,20 @@ class NLDecisionStep(Step):
     hide: bool = False
     name: str = "Deciding what to do next"
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         step_descriptions = "\n".join(
-            [f"- {step[0].name}: {step[1]}" for step in self.steps]
+            [f"- {step[0].name}: {step[1]}" for step in self.steps],
         )
         prompt = dedent(
             f"""\
             The following steps are available, in the format "- [step name]: [step description]":
             {step_descriptions}
-            
+
             The user gave the following input:
-            
+
             {self.user_input}
-            
-            Select the step which should be taken next to satisfy the user input. Say only the name of the selected step. You must choose one:"""
+
+            Select the step which should be taken next to satisfy the user input. Say only the name of the selected step. You must choose one:""",
         )
 
         resp = (await sdk.models.summarize.complete(prompt)).lower()

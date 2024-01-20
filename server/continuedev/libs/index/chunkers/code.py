@@ -1,8 +1,10 @@
 from typing import List, Union
-from .chunk import ChunkWithoutID
-from tree_sitter_languages import get_parser
+
 from tree_sitter import Node
+from tree_sitter_languages import get_parser
+
 from ...util.count_tokens import count_tokens
+from .chunk import ChunkWithoutID
 
 file_extension_to_language = {
     "py": "python",
@@ -27,7 +29,8 @@ def get_parser_for_file(filepath: str):
     if lang := file_extension_to_language.get(ext):
         return get_parser(lang)
 
-    raise Exception(f"Could not find language for file {filepath}")
+    msg = f"Could not find language for file {filepath}"
+    raise Exception(msg)
 
 
 def get_all_nodes(node: Node):
@@ -39,13 +42,13 @@ def get_all_nodes(node: Node):
 def first_child(node: Node, grammar_name: Union[str, List[str]]):
     if isinstance(grammar_name, list):
         return next(
-            filter(lambda x: x.grammar_name in grammar_name, node.children), None
+            filter(lambda x: x.grammar_name in grammar_name, node.children), None,
         )
     return next(filter(lambda x: x.grammar_name == grammar_name, node.children), None)
 
 
 # TODO: This should actually happen a level up. Given the whole function, return `def f():\n\t...` for example
-def collapsed_replacement(node: Node):
+def collapsed_replacement(node: Node) -> str:
     if node.grammar_name == "statement_block":
         return "{ ... }"
     else:
@@ -66,8 +69,8 @@ def collapse_children(
                 filter(
                     lambda x: x.grammar_name in collapse_types,
                     block.children,
-                )
-            )
+                ),
+            ),
         ):
             if grand_child := first_child(child, collapse_block_types):
                 start = grand_child.start_byte
@@ -122,11 +125,11 @@ collapsed_node_constructors = {
 
 
 def get_smart_collapsed_chunks(
-    node: Node, code: str, max_chunk_size: int, root: bool = True
+    node: Node, code: str, max_chunk_size: int, root: bool = True,
 ) -> List[ChunkWithoutID]:
     # Keep entire text if not over size
     if (root or node.grammar_name in collapsed_node_constructors) and count_tokens(
-        node.text.decode("utf8")
+        node.text.decode("utf8"),
     ) < max_chunk_size:
         yield ChunkWithoutID(
             content=node.text.decode("utf8"),
@@ -154,7 +157,7 @@ def get_smart_collapsed_chunks(
 
 
 def code_chunker(
-    filepath: str, contents: str, max_chunk_size: int
+    filepath: str, contents: str, max_chunk_size: int,
 ) -> List[ChunkWithoutID]:
     if contents is None or len(contents.strip()) == 0:
         return []

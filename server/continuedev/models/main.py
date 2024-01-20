@@ -31,12 +31,9 @@ class Position(BaseModel):
 
     @staticmethod
     def from_index(string: str, index: int) -> "Position":
-        """Convert index in string to line and character"""
+        """Convert index in string to line and character."""
         line = string.count("\n", 0, index)
-        if line == 0:
-            character = index
-        else:
-            character = index - string.rindex("\n", 0, index) - 1
+        character = index if line == 0 else index - string.rindex("\n", 0, index) - 1
 
         return Position(line=line, character=character)
 
@@ -45,7 +42,7 @@ class Position(BaseModel):
         return Position.from_index(contents, len(contents))
 
     def to_index(self, string: str) -> int:
-        """Convert line and character to index in string"""
+        """Convert line and character to index in string."""
         lines = string.splitlines()
         return sum(map(len, lines[: self.line])) + self.character
 
@@ -82,7 +79,7 @@ class Range(BaseModel):
         return self.start == self.end
 
     def indices_in_string(self, string: str) -> Tuple[int, int]:
-        """Get the start and end indices of this range in the string"""
+        """Get the start and end indices of this range in the string."""
         lines = string.splitlines()
         if len(lines) == 0:
             return (0, 0)
@@ -108,7 +105,7 @@ class Range(BaseModel):
     def translated(self, lines: int):
         return Range(
             start=Position(
-                line=self.start.line + lines, character=self.start.character
+                line=self.start.line + lines, character=self.start.character,
             ),
             end=Position(line=self.end.line + lines, character=self.end.character),
         )
@@ -131,7 +128,7 @@ class Range(BaseModel):
 
     @staticmethod
     def from_shorthand(
-        start_line: int, start_char: int, end_line: int, end_char: int
+        start_line: int, start_char: int, end_line: int, end_char: int,
     ) -> "Range":
         return Range(
             start=Position(line=start_line, character=start_char),
@@ -171,10 +168,11 @@ class Range(BaseModel):
                 looking_for_line = 0
 
         if start_line == -1 or end_line == -1:
-            raise ValueError("Snippet not found in content")
+            msg = "Snippet not found in content"
+            raise ValueError(msg)
 
         return Range.from_shorthand(
-            start_line, 0, end_line, len(content_lines[end_line]) - 1
+            start_line, 0, end_line, len(content_lines[end_line]) - 1,
         )
 
     @staticmethod
@@ -184,10 +182,11 @@ class Range(BaseModel):
 
 class AbstractModel(ABC, BaseModel):
     @root_validator(pre=True)
-    def check_is_subclass(cls, values):
+    def check_is_subclass(cls, values) -> None:
         if not issubclass(cls, AbstractModel):
+            msg = "AbstractModel subclasses must be subclasses of AbstractModel"
             raise TypeError(
-                "AbstractModel subclasses must be subclasses of AbstractModel"
+                msg,
             )
 
 

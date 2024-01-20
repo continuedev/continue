@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
-from typing import List
+from typing import List, NoReturn
+
 from .chunkers.chunk import Chunk
 
 
@@ -9,13 +10,13 @@ class VectorDB(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def insert(chunks: List[Chunk]):
+    def insert(chunks: List[Chunk]) -> NoReturn:
         raise NotImplementedError
 
 
 class ChromaVectorDB(VectorDB):
-    def query(self, query: str, n: int = 4):
+    def query(self, query: str, n: int = 4) -> NoReturn:
         raise NotImplementedError
 
-    def insert(self, chunks: List[Chunk]):
+    def insert(self, chunks: List[Chunk]) -> NoReturn:
         raise NotImplementedError

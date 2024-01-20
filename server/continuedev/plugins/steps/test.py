@@ -31,13 +31,12 @@ async def get_link_contents(url: str):
     # return soup.prettify()
 
 
-async def main():
+async def main() -> None:
     results = await get_results(
-        "socket.io not connecting to python server from kotlin client site:stackoverflow.com"
+        "socket.io not connecting to python server from kotlin client site:stackoverflow.com",
     )
     for result in results:
-        contents = await get_link_contents(result["link"])
-        print(f"{result['title']}\n\n{contents}\n\n---\n\n")
+        await get_link_contents(result["link"])
 
 
 if __name__ == "__main__":

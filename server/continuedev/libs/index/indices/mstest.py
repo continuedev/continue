@@ -1,7 +1,7 @@
 from meilisearch_python_async import Client
 
 
-async def add_docs():
+async def add_docs() -> None:
     async with Client("http://localhost:7700") as search_client:
         index = await search_client.create_index("UsersnatesestiDesktopcontinueguisrc")
         await index.delete_all_documents()
@@ -32,22 +32,20 @@ async def add_docs():
                     "document_id": "/Users/natesesti/Desktop/continue/gui/src/main.tsx",
                     # "metadata": {...},
                 },
-            ]
+            ],
         )
 
 
 async def query(query: str):
     async with Client("http://localhost:7700") as search_client:
-        results = await search_client.index(
-            "UsersnatesestiDesktopcontinueguisrc"
+        return await search_client.index(
+            "UsersnatesestiDesktopcontinueguisrc",
         ).search(query, limit=4)
-        return results
 
 
-async def main():
+async def main() -> None:
     await add_docs()
-    results = await query("import")
-    print(results)
+    await query("import")
 
 
 if __name__ == "__main__":

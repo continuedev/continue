@@ -11,7 +11,7 @@ class RequestOptions(BaseModel):
         description="Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
     )
     verify_ssl: Optional[bool] = Field(
-        default=None, description="Whether to verify SSL certificates for requests."
+        default=None, description="Whether to verify SSL certificates for requests.",
     )
     ca_bundle_path: str = Field(
         default=None,
@@ -37,22 +37,22 @@ class BaseCompletionOptions(ContinueBaseModel):
         return value if value is not None else field.default
 
     temperature: Optional[float] = Field(
-        default=None, description="The temperature of the completion."
+        default=None, description="The temperature of the completion.",
     )
     top_p: Optional[float] = Field(
-        default=None, description="The top_p of the completion."
+        default=None, description="The top_p of the completion.",
     )
     top_k: Optional[int] = Field(
-        default=None, description="The top_k of the completion."
+        default=None, description="The top_k of the completion.",
     )
     presence_penalty: Optional[float] = Field(
-        default=None, description="The presence penalty Aof the completion."
+        default=None, description="The presence penalty Aof the completion.",
     )
     frequency_penalty: Optional[float] = Field(
-        default=None, description="The frequency penalty of the completion."
+        default=None, description="The frequency penalty of the completion.",
     )
     stop: Optional[List[str]] = Field(
-        default=None, description="The stop tokens of the completion."
+        default=None, description="The stop tokens of the completion.",
     )
     max_tokens: int = Field(
         default=1023,
@@ -73,14 +73,14 @@ class CompletionOptions(BaseCompletionOptions):
 
     model: str = Field(default=None, description="The model name")
     functions: Optional[List[Any]] = Field(
-        default=None, description="The functions/tools to make available to the model."
+        default=None, description="The functions/tools to make available to the model.",
     )
 
 
 class PromptTemplate(CompletionOptions):
     prompt: str = Field(
-        default=..., description="The prompt to be used for the completion."
+        default=..., description="The prompt to be used for the completion.",
     )
     raw: bool = Field(
-        default=False, description="Whether to use the raw prompt or not."
+        default=False, description="Whether to use the raw prompt or not.",
     )

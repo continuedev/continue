@@ -7,19 +7,15 @@ from ..chunkers.chunk import Chunk
 
 
 async def decide_include_remove(
-    chunks: List[Chunk], user_input: str, n: int, model: LLM
+    chunks: List[Chunk], user_input: str, n: int, model: LLM,
 ) -> Dict[str, str]:
-    """
-    Reranks the results from the codebase index based on the user input.
+    """Reranks the results from the codebase index based on the user input.
 
     Returns a tuple of (include, remove) where both are lists of chunk ids
     """
     # TODO: Go back to using disambiguated names instead of just basename
     results_prompt = "\n\n".join(
-        map(
-            lambda chunk: f"{os.path.basename(chunk.id)}\n```\n{chunk.content[:500]}\n```",
-            chunks,
-        )
+        (f"{os.path.basename(chunk.id)}\n```\n{chunk.content[:500]}\n```" for chunk in chunks),
     )
     include_prompt = f"""\
 You will be asked to select the most relevant results from a list. You should choose the results that will be most useful in answering the user's request. For each result that you think is important, you should simply say its title on a new line. Here is an example input:
@@ -29,7 +25,7 @@ add.py::0
 def add(a, b):
     return a + b
 ```
-            
+
 multiply.py::0
 ```
 def multiply(a, b):
@@ -47,7 +43,7 @@ And here is the output you would give if you thought that add.py and subtract.py
 add.py::0
 subtract.py::0
 \"\"\"
-            
+
 Now for the real task, here are the top {len(chunks)} results from the codebase for the user request, "{user_input}":
 
 {results_prompt}
@@ -62,7 +58,7 @@ add.py::0
 def add(a, b):
     return a + b
 ```
-            
+
 multiply.py::0
 ```
 def multiply(a, b):
@@ -80,7 +76,7 @@ And here is the output you would give if you thought that add.py and subtract.py
 add.py::0
 subtract.py::0
 \"\"\"
-            
+
 Now for the real task, here are the top {len(chunks)} results from the codebase for the user request, "{user_input}":
 
 {results_prompt}
@@ -95,11 +91,9 @@ List the results that are not useful in answering the request, using in the same
 
 
 async def default_reranker_parallel(
-    chunks: List[Chunk], user_input: str, n: int, model: LLM, group_size: int = 10
+    chunks: List[Chunk], user_input: str, n: int, model: LLM, group_size: int = 10,
 ) -> List[Chunk]:
-    """
-    A reranker, given a mapping from id to contents, returns the subset of the mapping that is most relevant to the user_input
-    """
+    """A reranker, given a mapping from id to contents, returns the subset of the mapping that is most relevant to the user_input."""
     # Split the results into groups of max size 10
     groups = []
     group = []
@@ -113,8 +107,8 @@ async def default_reranker_parallel(
         groups.append(group)
 
     # Gather the ids of chunks that should be removed and included
-    include = set([])
-    remove = set([])
+    include = set()
+    remove = set()
 
     tasks = []
     for group in groups:
@@ -133,21 +127,18 @@ async def default_reranker_parallel(
         counts_per_document[chunk.digest] += 1
 
     repeated_documents = set(
-        filter(lambda x: counts_per_document[x] > 1, counts_per_document)
+        filter(lambda x: counts_per_document[x] > 1, counts_per_document),
     )
 
-    not_disqualified = set(
-        [
-            chunk.id
+    not_disqualified = {
+        chunk.id
             for chunk in chunks
-            if chunk.id not in remove or chunk.digest in repeated_documents
-        ]
-    )
+            if chunk.id not in remove or chunk.digest in repeated_documents}
 
-    included = set([id for id in not_disqualified if chunk.id in include])
+    included = {id for id in not_disqualified if chunk.id in include}
 
     additional = n - len(included)
-    for i in range(additional):
+    for _i in range(additional):
         if len(not_disqualified) == 0:
             break
 
@@ -157,7 +148,7 @@ async def default_reranker_parallel(
     if additional < 0:
         # We need to remove some items
         additional = -additional
-        for i in range(additional):
+        for _i in range(additional):
             if len(included) == 0:
                 break
 

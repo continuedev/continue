@@ -20,15 +20,15 @@ class RefactorReferencesStep(Step):
     user_input: str
     symbol_location: PositionInFile
 
-    async def describe(self, models: Models):
+    async def describe(self, models: Models) -> str:
         return f"Renamed all instances of `{self.function_name}` to `{self.new_function_name}` in `{self.filepath}`"
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         references = await sdk.ide.find_references(
-            self.symbol_location.filepath, self.symbol_location.position, False
+            self.symbol_location.filepath, self.symbol_location.position, False,
         )
         await sdk.run_step(
-            ParallelEditStep(user_input=self.user_input, range_in_files=references)
+            ParallelEditStep(user_input=self.user_input, range_in_files=references),
         )
 
 
@@ -44,7 +44,7 @@ class RefactorBySearchStep(Step):
     def get_range_for_result(self, result) -> RangeInFile:
         pass
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         rg = Ripgrepy(
             self.pattern,
             sdk.ide.workspace_directory,
@@ -55,7 +55,7 @@ class RefactorBySearchStep(Step):
         range_in_files = [self.get_range_for_result(result) for result in results]
 
         await sdk.run_step(
-            ParallelEditStep(user_input=self.user_input, range_in_files=range_in_files)
+            ParallelEditStep(user_input=self.user_input, range_in_files=range_in_files),
         )
 
 
@@ -67,7 +67,7 @@ class ParallelEditStep(Step):
     hide: bool = True
 
     async def single_edit(
-        self, sdk: ContinueSDK, range_in_file: RangeInFile
+        self, sdk: ContinueSDK, range_in_file: RangeInFile,
     ) -> FileEdit:
         # TODO: Can use folding info to get a more intuitively shaped range
         expanded_range = await sdk.ide.get_enclosing_folding_range(range_in_file)
@@ -76,7 +76,7 @@ class ParallelEditStep(Step):
             or expanded_range.range.start.line != range_in_file.range.start.line
         ):
             expanded_range = Range.from_shorthand(
-                range_in_file.range.start.line, 0, range_in_file.range.end.line + 1, 0
+                range_in_file.range.start.line, 0, range_in_file.range.end.line + 1, 0,
             )
         else:
             expanded_range = expanded_range.range
@@ -97,7 +97,6 @@ class ParallelEditStep(Step):
                 "user_input": self.user_input,
             },
         )
-        print(prompt + "\n\n-------------------\n\n")
 
         new_code = await sdk.models.edit.complete(prompt=prompt)
         new_code = strip_code_block(remove_quotes_and_escapes(new_code)) + "\n"
@@ -106,7 +105,6 @@ class ParallelEditStep(Step):
         #     + "\n"
         # )
 
-        print(new_code + "\n\n-------------------\n\n")
 
         return FileEdit(
             filepath=range_in_file.filepath,
@@ -129,12 +127,12 @@ class ParallelEditStep(Step):
                     range_in_file=ranges_in_file[i],
                 )
                 for i in range(len(ranges_in_file))
-            ]
+            ],
         )
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         tasks = []
-        for filepath in set([rif.filepath for rif in self.range_in_files]):
+        for filepath in {rif.filepath for rif in self.range_in_files}:
             tasks.append(self.edit_file(sdk=sdk, filepath=filepath))
 
         edits_per_file = await asyncio.gather(*tasks)

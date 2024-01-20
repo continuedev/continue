@@ -23,7 +23,7 @@ sio_ide_app = socketio.ASGIApp(socketio_server=sio)
 
 
 @sio.event
-async def connect(sid, environ):
+async def connect(sid, environ) -> None:
     query = parse_qs(environ.get("QUERY_STRING", ""))
     window_info_str = query.get("window_info", [None])[0]
     window_info = WindowInfo.parse_raw(window_info_str)
@@ -32,12 +32,12 @@ async def connect(sid, environ):
 
 
 @sio.event
-async def disconnect(sid):
+async def disconnect(sid) -> None:
     window_manager.remove_ide(sid)
 
 
 @sio.event
-async def message(sid, data):
+async def message(sid, data) -> None:
     try:
         if isinstance(data, str):
             data = json.loads(data)
@@ -59,4 +59,4 @@ async def message(sid, data):
     except Exception as e:
         tb = format_exc(e)
         logger.critical(f"Error handling message: {tb}")
-        raise e
+        raise

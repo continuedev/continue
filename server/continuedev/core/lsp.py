@@ -27,20 +27,18 @@ class LSPClient:
     ready: bool = False
     lock: asyncio.Lock = asyncio.Lock()
 
-    def __init__(self, host: str, port: int, workspace_paths: List[str]):
+    def __init__(self, host: str, port: int, workspace_paths: List[str]) -> None:
         self.host = host
         self.port = port
         self.session = aiohttp.ClientSession()
         self.next_id = 0
         self.workspace_paths = workspace_paths
 
-    async def connect(self):
-        print("Connecting")
+    async def connect(self) -> None:
         self.ws = await self.session.ws_connect(f"ws://{self.host}:{self.port}/")
-        print("Connected")
         self.ready = True
 
-    async def send(self, data):
+    async def send(self, data) -> None:
         await self.ws.send_json(data)
 
     async def recv(self):
@@ -51,7 +49,7 @@ class LSPClient:
         finally:
             self.lock.release()
 
-    async def close(self):
+    async def close(self) -> None:
         await self.ws.close()
         await self.session.close()
 
@@ -64,8 +62,7 @@ class LSPClient:
         }
         self.next_id += 1
         await self.send(body)
-        response = await self.recv()
-        return response
+        return await self.recv()
 
     async def initialize(self):
         initialization_args = {
@@ -107,7 +104,7 @@ class LSPClient:
                                 23,
                                 24,
                                 25,
-                            ]
+                            ],
                         },
                         "contextSupport": True,
                         "dynamicRegistration": True,
@@ -145,7 +142,7 @@ class LSPClient:
                                 24,
                                 25,
                                 26,
-                            ]
+                            ],
                         },
                     },
                     "formatting": {"dynamicRegistration": True},
@@ -162,7 +159,7 @@ class LSPClient:
                     "signatureHelp": {
                         "dynamicRegistration": True,
                         "signatureInformation": {
-                            "documentationFormat": ["markdown", "plaintext"]
+                            "documentationFormat": ["markdown", "plaintext"],
                         },
                     },
                     "synchronization": {
@@ -209,7 +206,7 @@ class LSPClient:
                                 24,
                                 25,
                                 26,
-                            ]
+                            ],
                         },
                     },
                     "workspaceEdit": {"documentChanges": True},
@@ -245,7 +242,7 @@ class LSPClient:
         )
 
     async def find_references(
-        self, filepath: str, position: Position, include_declaration: bool = False
+        self, filepath: str, position: Position, include_declaration: bool = False,
     ):
         return await self.call_method(
             "textDocument/references",
@@ -264,7 +261,7 @@ class LSPClient:
 
 async def start_language_server() -> threading.Thread:
     """Manually start the python language server. Not used currently."""
-    raise NotImplementedError()
+    raise NotImplementedError
     # try:
     #     kill_proc(PORT)
     #     thread = threading.Thread(
@@ -314,13 +311,13 @@ class ContinueLSPClient(BaseModel):
         original_dict.pop("lsp_client", None)
         return original_dict
 
-    async def start(self):
+    async def start(self) -> None:
         self.lsp_thread = await start_language_server()
         self.lsp_client = LSPClient("localhost", PORT, [self.workspace_dir])
         await self.lsp_client.connect()
         await self.lsp_client.initialize()
 
-    async def stop(self):
+    async def stop(self) -> None:
         await self.lsp_client.close()
         if self.lsp_thread:
             self.lsp_thread.join()
@@ -337,7 +334,7 @@ class ContinueLSPClient(BaseModel):
         )
 
     async def goto_definition(
-        self, position: Position, filename: str
+        self, position: Position, filename: str,
     ) -> List[RangeInFile]:
         response = await self.lsp_client.goto_definition(
             filename,
@@ -346,7 +343,7 @@ class ContinueLSPClient(BaseModel):
         return [self.location_to_range_in_file(x) for x in response]
 
     async def find_references(
-        self, position: Position, filename: str, include_declaration: bool = False
+        self, position: Position, filename: str, include_declaration: bool = False,
     ) -> List[RangeInFile]:
         response = await self.lsp_client.find_references(
             filename,
@@ -384,7 +381,7 @@ class ContinueLSPClient(BaseModel):
         ]
 
     async def get_enclosing_folding_range_of_position(
-        self, position: Position, filepath: str
+        self, position: Position, filepath: str,
     ) -> Optional[FoldingRange]:
         ranges = await self.folding_range(filepath)
 
@@ -399,7 +396,7 @@ class ContinueLSPClient(BaseModel):
         return max_range
 
     async def get_enclosing_folding_range(
-        self, range_in_file: RangeInFile
+        self, range_in_file: RangeInFile,
     ) -> Optional[FoldingRange]:
         ranges = await self.folding_range(range_in_file.filepath)
 
@@ -407,7 +404,7 @@ class ContinueLSPClient(BaseModel):
         max_range = None
         for r in ranges:
             if r.range.contains(range_in_file.range.start) and r.range.contains(
-                range_in_file.range.end
+                range_in_file.range.end,
             ):
                 if r.range.start > max_start_position:
                     max_start_position = r.range.start

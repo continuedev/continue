@@ -1,6 +1,4 @@
-"""
-This file contains mechanisms for logging development data to files, SQL databases, and other formats.
-"""
+"""This file contains mechanisms for logging development data to files, SQL databases, and other formats."""
 
 
 import json
@@ -19,13 +17,13 @@ class DevDataLogger:
     data_server_url: Optional[str] = None
 
     def setup(
-        self, user_token: Optional[str] = None, data_server_url: Optional[str] = None
-    ):
+        self, user_token: Optional[str] = None, data_server_url: Optional[str] = None,
+    ) -> None:
         self.user_token = user_token
         self.data_server_url = data_server_url
 
-    def _to_data_server(self, table_name: str, data: Dict[str, Any]):
-        async def _async_helper(self, table_name: str, data: Dict[str, Any]):
+    def _to_data_server(self, table_name: str, data: Dict[str, Any]) -> None:
+        async def _async_helper(self, table_name: str, data: Dict[str, Any]) -> None:
             if self.user_token is None or self.data_server_url is None:
                 return
 
@@ -40,7 +38,7 @@ class DevDataLogger:
                     },
                 )
 
-        async def on_error(e: Exception):
+        async def on_error(e: Exception) -> None:
             logger.warning(f"Failed to send dev data: {e}")
 
         create_async_task(
@@ -54,13 +52,13 @@ class DevDataLogger:
             "timestamp": datetime.now().isoformat(),
         }
 
-    def _to_local(self, table_name: str, data: Dict[str, Any]):
+    def _to_local(self, table_name: str, data: Dict[str, Any]) -> None:
         filepath = getDevDataFilePath(table_name)
         with open(filepath, "a") as f:
             json_line = json.dumps(data)
             f.write(f"{json_line}\n")
 
-    def capture(self, table_name: str, data: Dict[str, Any]):
+    def capture(self, table_name: str, data: Dict[str, Any]) -> None:
         try:
             data = {**self._static_columns(), **data}
             self._to_local(table_name, data)

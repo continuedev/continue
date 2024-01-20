@@ -21,8 +21,7 @@ class HighlightedRangeContextItem(BaseModel):
 
 
 class HighlightedCodeContextProvider(ContextProvider):
-    """
-    The ContextProvider class is a plugin that lets you provide new information to the LLM by typing '@'.
+    """The ContextProvider class is a plugin that lets you provide new information to the LLM by typing '@'.
     When you type '@', the context provider will be asked to populate a list of options.
     These options will be updated on each keystroke.
     When you hit enter on an option, the context provider will add that item to the autopilot's list of context (which is all stored in the ContextManager object).
@@ -77,7 +76,7 @@ class HighlightedCodeContextProvider(ContextProvider):
 
     @staticmethod
     async def get_range_in_file_with_contents(
-        ide, item: ContextItem
+        ide, item: ContextItem,
     ) -> RangeInFileWithContents:
         lines = item.description.name.split("(")[1].split(")")[0].split("-")
         rif = RangeInFile(
@@ -95,7 +94,7 @@ class HighlightedCodeContextProvider(ContextProvider):
 
     async def get_chat_message(self, item: ContextItem) -> ChatMessage:
         rif = await HighlightedCodeContextProvider.get_range_in_file_with_contents(
-            self.ide, item
+            self.ide, item,
         )
         return ChatMessage(
             role="user",
@@ -103,17 +102,17 @@ class HighlightedCodeContextProvider(ContextProvider):
             summary=f"Code in this file is highlighted: {item.description.name}",
         )
 
-    def _make_sure_is_editing_range(self):
-        """If none of the highlighted ranges are currently being edited, the first should be selected"""
+    def _make_sure_is_editing_range(self) -> None:
+        """If none of the highlighted ranges are currently being edited, the first should be selected."""
         if len(self.highlighted_ranges) == 0:
             return
-        if not any(map(lambda x: x.item.editing, self.highlighted_ranges)):
+        if not any(x.item.editing for x in self.highlighted_ranges):
             self.highlighted_ranges[0].item.editing = True
 
-    def _disambiguate_highlighted_ranges(self):
-        """If any files have the same name, also display their folder name"""
+    def _disambiguate_highlighted_ranges(self) -> None:
+        """If any files have the same name, also display their folder name."""
         name_status: Dict[
-            str, set
+            str, set,
         ] = {}  # basename -> set of full paths with that basename
         for hr in self.highlighted_ranges:
             basename = os.path.basename(hr.rif.filepath)
@@ -128,21 +127,21 @@ class HighlightedCodeContextProvider(ContextProvider):
                 hr.item.description.name = self.rif_to_name(
                     hr.rif,
                     display_filename=os.path.join(
-                        os.path.basename(os.path.dirname(hr.rif.filepath)), basename
+                        os.path.basename(os.path.dirname(hr.rif.filepath)), basename,
                     ),
                 )
             else:
                 hr.item.description.name = self.rif_to_name(
-                    hr.rif, display_filename=basename
+                    hr.rif, display_filename=basename,
                 )
 
     async def provide_context_items(self, workspace_dir: str) -> List[ContextItem]:
         return []
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        raise NotImplementedError()
+        raise NotImplementedError
 
-    async def clear_context(self):
+    async def clear_context(self) -> None:
         self.highlighted_ranges = []
         self.adding_highlighted_code = False
         self.should_get_fallback_context_item = True
@@ -163,7 +162,7 @@ class HighlightedCodeContextProvider(ContextProvider):
 
     @staticmethod
     def rif_to_context_item(
-        rif: RangeInFileWithContents, idx: int, editing: bool
+        rif: RangeInFileWithContents, idx: int, editing: bool,
     ) -> ContextItem:
         return ContextItem(
             description=ContextItemDescription(
@@ -180,7 +179,7 @@ class HighlightedCodeContextProvider(ContextProvider):
         self,
         range_in_files: List[RangeInFileWithContents],
         edit: Optional[bool] = False,
-    ):
+    ) -> None:
         self.should_get_fallback_context_item = True
         self.last_added_fallback = False
 
@@ -188,8 +187,7 @@ class HighlightedCodeContextProvider(ContextProvider):
         range_in_files = [
             rif
             for rif in range_in_files
-            if not os.path.dirname(rif.filepath)
-            == os.path.expanduser("~/.continue/diffs")
+            if os.path.dirname(rif.filepath) != os.path.expanduser("~/.continue/diffs")
         ]
 
         # If not adding highlighted code
@@ -211,9 +209,9 @@ class HighlightedCodeContextProvider(ContextProvider):
                     HighlightedRangeContextItem(
                         rif=range_in_files[0],
                         item=self.rif_to_context_item(
-                            range_in_files[0], 0, edit or False
+                            range_in_files[0], 0, edit or False,
                         ),
-                    )
+                    ),
                 ]
 
             return
@@ -233,7 +231,7 @@ class HighlightedCodeContextProvider(ContextProvider):
                     and new_hr.range.overlaps_with(existing_rif.rif.range)
                 ):
                     existing_rif.rif.range = existing_rif.rif.range.merge_with(
-                        new_hr.range
+                        new_hr.range,
                     )
                     found_overlap_with = existing_rif
                     break
@@ -243,9 +241,9 @@ class HighlightedCodeContextProvider(ContextProvider):
                     HighlightedRangeContextItem(
                         rif=new_hr,
                         item=self.rif_to_context_item(
-                            new_hr, len(self.highlighted_ranges) + i, edit
+                            new_hr, len(self.highlighted_ranges) + i, edit,
                         ),
-                    )
+                    ),
                 )
             elif edit:
                 # Want to update the range so it's only the newly selected portion
@@ -257,7 +255,7 @@ class HighlightedCodeContextProvider(ContextProvider):
         self._make_sure_is_editing_range()
         self._disambiguate_highlighted_ranges()
 
-    async def set_editing_at_ids(self, ids: List[str]):
+    async def set_editing_at_ids(self, ids: List[str]) -> None:
         # Don't do anything if there are no valid ids here
         count = 0
         for hr in self.highlighted_ranges:
@@ -270,12 +268,12 @@ class HighlightedCodeContextProvider(ContextProvider):
         for hr in self.highlighted_ranges:
             hr.item.editing = hr.item.description.id.item_id in ids
 
-    async def preview_contents(self, id: ContextItemId):
+    async def preview_contents(self, id: ContextItemId) -> None:
         if item := next(
-            filter(lambda x: x.item.description.id == id, self.highlighted_ranges), None
+            filter(lambda x: x.item.description.id == id, self.highlighted_ranges), None,
         ):
             filepath = os.path.join(
-                self.ide.workspace_directory, item.item.description.description
+                self.ide.workspace_directory, item.item.description.description,
             )
             await self.ide.setFileOpen(
                 filepath,
@@ -287,7 +285,7 @@ class HighlightedCodeContextProvider(ContextProvider):
                 RangeInFile(
                     filepath=filepath,
                     range=Range.from_shorthand(
-                        int(line_nums[0]) - 1, 0, int(line_nums[1]), 0
+                        int(line_nums[0]) - 1, 0, int(line_nums[1]), 0,
                     ),
-                )
+                ),
             )

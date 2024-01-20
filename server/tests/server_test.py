@@ -1,8 +1,9 @@
 import pytest
+from fastapi.testclient import TestClient
+
 from continuedev.core.main import SessionState
 from continuedev.server.main import app
 from continuedev.server.sessions import PersistedSessionInfo
-from fastapi.testclient import TestClient
 
 client: TestClient
 
@@ -24,7 +25,7 @@ def server():
 #     client.close()
 
 
-def test_persisted_sessions():
+def test_persisted_sessions() -> None:
     session = PersistedSessionInfo(
         session_state=SessionState.from_empty(),
         title="test",
@@ -40,9 +41,15 @@ def test_persisted_sessions():
     data = response.json()
     assert (
         len(data) >= 1
-        and data[-1]["session_id"] == "test"
-        and data[-1]["title"] == "test"
-        and data[-1]["workspace_directory"] == "test"
+    )
+    assert (
+        data[-1]["session_id"] == "test"
+    )
+    assert (
+        data[-1]["title"] == "test"
+    )
+    assert (
+        data[-1]["workspace_directory"] == "test"
     )
 
     response = client.get("/sessions/test")

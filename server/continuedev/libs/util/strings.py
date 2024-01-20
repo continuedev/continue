@@ -15,7 +15,7 @@ def dedent_and_get_common_whitespace(s: str) -> Tuple[str, str]:
         if lines[i].strip() == "":
             continue  # hey that's us!
         # Iterate through the leading whitespace characters of the current line
-        for j in range(0, len(lcp)):
+        for j in range(len(lcp)):
             # If it doesn't have the same whitespace as lcp, then update lcp
             if j >= len(lines[i]) or lcp[j] != lines[i][j]:
                 lcp = lcp[:j]
@@ -23,13 +23,11 @@ def dedent_and_get_common_whitespace(s: str) -> Tuple[str, str]:
                     return s, ""
                 break
 
-    return "\n".join(map(lambda x: x.lstrip(lcp), lines)), lcp
+    return "\n".join(x.lstrip(lcp) for x in lines), lcp
 
 
 def strip_code_block(s: str) -> str:
-    """
-    Strips the code block from a string, if it has one.
-    """
+    """Strips the code block from a string, if it has one."""
     if s.startswith("```\n") and s.endswith("\n```"):
         return s[4:-4]
     elif s.startswith("```") and s.endswith("```"):
@@ -40,9 +38,7 @@ def strip_code_block(s: str) -> str:
 
 
 def remove_quotes_and_escapes(output: str) -> str:
-    """
-    Clean up the output of the completion API, removing unnecessary escapes and quotes
-    """
+    """Clean up the output of the completion API, removing unnecessary escapes and quotes."""
     output = output.strip()
 
     # Replace smart quotes
@@ -66,9 +62,8 @@ def remove_quotes_and_escapes(output: str) -> str:
 
 
 def shorten_filepaths(filepaths: List[str]) -> List[str]:
-    """
-    Shortens the filepaths to just the filename,
-    unless directory names are needed for uniqueness
+    """Shortens the filepaths to just the filename,
+    unless directory names are needed for uniqueness.
     """
     basenames = list(map(os.path.basename, filepaths))
     if len(basenames) == len(filepaths):
@@ -81,13 +76,13 @@ def shorten_filepaths(filepaths: List[str]) -> List[str]:
             basename_counts[basename] = 0
         basename_counts[basename] += 1
 
-    for i in range(0, len(filepaths)):
+    for i in range(len(filepaths)):
         basename = os.path.basename(filepaths[i])
         if basename_counts[basename] <= 1:
             filepaths[i] = basename
         else:
             filepaths[i] = os.path.join(
-                os.path.basename(os.path.dirname(filepaths[i])), basename
+                os.path.basename(os.path.dirname(filepaths[i])), basename,
             )
 
     return filepaths

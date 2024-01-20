@@ -7,8 +7,7 @@ from .base import LLM
 
 
 class LlamaCpp(LLM):
-    """
-    Run the llama.cpp server binary to start the API server. If running on a remote server, be sure to set host to 0.0.0.0:
+    r"""Run the llama.cpp server binary to start the API server. If running on a remote server, be sure to set host to 0.0.0.0:
 
     ```shell
     .\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models\\meta\\llama\\codellama-7b-instruct.Q8_0.gguf
@@ -30,7 +29,7 @@ class LlamaCpp(LLM):
 
     model: str = "llamacpp"
     api_base: Optional[str] = Field(
-        "http://127.0.0.1:8080", description="URL of the server"
+        "http://127.0.0.1:8080", description="URL of the server",
     )
 
     @validator("api_base", pre=True, always=True)

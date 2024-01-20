@@ -16,14 +16,14 @@ sio_gui_app = socketio.ASGIApp(socketio_server=sio)
 
 
 @sio.event
-async def connect(sid, environ):
+async def connect(sid, environ) -> None:
     query = parse_qs(environ.get("QUERY_STRING", ""))
     window_id = query.get("window_id", [None])[0]
     await window_manager.register_gui(window_id, sio, sid)
 
 
 @sio.event
-async def disconnect(sid):
+async def disconnect(sid) -> None:
     window_manager.remove_gui(sid)
 
 
@@ -36,19 +36,18 @@ async def message(sid, data):
         message = WebsocketsMessage.parse_obj(data)
     except json.JSONDecodeError:
         logger.critical(f"Error decoding json: {data}")
-        return
+        return None
     except ValidationError as e:
         tb = format_exc(e)
         logger.critical(f"Error validating json: {tb}")
-        return
+        return None
 
     try:
         if gui := window_manager.get_gui(sid):
-            resp = await gui.handle_json(message)
-            return resp
+            return await gui.handle_json(message)
         else:
             logger.critical(f"GUI websocket not found for sid {sid}")
     except Exception as e:
         tb = format_exc(e)
         logger.critical(f"Error handling message: {tb}")
-        raise e
+        raise

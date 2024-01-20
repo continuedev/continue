@@ -1,7 +1,7 @@
 import os
 import shutil
 from pathlib import Path
-from typing import Iterable, List, Union
+from typing import Iterable, List, Optional, Union
 
 from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
@@ -21,7 +21,7 @@ from ...models.main import (
 from .map_path import map_path
 
 
-def create_copy(orig_root: str, copy_root: str = None, ignore: Iterable[str] = []):
+def create_copy(orig_root: str, copy_root: Optional[str] = None, ignore: Iterable[str] = []) -> None:
     # TODO: Make ignore a spec, like .gitignore
     if copy_root is None:
         copy_root = Path(orig_root) / ".continue-copy"
@@ -54,9 +54,9 @@ class CopyCodebaseEventHandler(PatternMatchingEventHandler):
         orig_root: str,
         copy_root: str,
         filesystem: FileSystem,
-    ):
+    ) -> None:
         super().__init__(
-            ignore_directories=ignore_directories, ignore_patterns=ignore_patterns
+            ignore_directories=ignore_directories, ignore_patterns=ignore_patterns,
         )
         self.autopilot = autopilot
         self.orig_root = orig_root
@@ -95,7 +95,7 @@ class CopyCodebaseEventHandler(PatternMatchingEventHandler):
                 return SequentialFileSystemEdit(edits)
         return None
 
-    def on_any_event(self, event):
+    def on_any_event(self, event) -> None:
         edit = self._event_to_edit(event)
         if edit is None:
             return
@@ -105,11 +105,11 @@ class CopyCodebaseEventHandler(PatternMatchingEventHandler):
 
 
 def maintain_copy_workspace(
-    autopilot: Autopilot, filesystem: FileSystem, orig_root: str, copy_root: str
-):
+    autopilot: Autopilot, filesystem: FileSystem, orig_root: str, copy_root: str,
+) -> None:
     observer = Observer()
     event_handler = CopyCodebaseEventHandler(
-        [".git"], [], autopilot, orig_root, copy_root, filesystem
+        [".git"], [], autopilot, orig_root, copy_root, filesystem,
     )
     observer.schedule(event_handler, orig_root, recursive=True)
     observer.start()

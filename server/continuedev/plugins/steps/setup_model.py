@@ -1,6 +1,6 @@
 from ...core.main import SetStep, Step
 from ...core.sdk import ContinueSDK
-from ...libs.util.paths import getConfigFilePath
+from ...libs.util.paths import get_config_file_path
 
 MODEL_CLASS_TO_MESSAGE = {
     "OpenAI": "Obtain your OpenAI API key from [here](https://platform.openai.com/account/api-keys) and paste it into the `api_key` field at config.models.default.api_key in `config.py`. Then reload the VS Code window for changes to take effect.",
@@ -22,9 +22,9 @@ class SetupModelStep(Step):
     hide: bool = True
 
     async def run(self, sdk: ContinueSDK):
-        await sdk.ide.setFileOpen(getConfigFilePath(json=True))
+        await sdk.ide.setFileOpen(get_config_file_path(json=True))
         yield SetStep(
             description=MODEL_CLASS_TO_MESSAGE.get(
-                self.model_class, "Please finish setting up this model in `config.py`"
-            )
+                self.model_class, "Please finish setting up this model in `config.py`",
+            ),
         )

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import AsyncGenerator, List, Tuple, Union
+from typing import AsyncGenerator, List, NoReturn, Tuple, Union
 
 from ..chunkers import Chunk
 from ..chunkers.chunk_directory import IndexAction
@@ -8,12 +8,12 @@ from ..chunkers.chunk_directory import IndexAction
 class CodebaseIndex(ABC):
     @abstractmethod
     async def build(
-        self, chunks: AsyncGenerator[Tuple[IndexAction, Union[str, Chunk]], None]
-    ):
+        self, chunks: AsyncGenerator[Tuple[IndexAction, Union[str, Chunk]], None],
+    ) -> NoReturn:
         """Builds the index, yielding progress as a float between 0 and 1. Chunks are yielded from the given generator."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @abstractmethod
     async def query(self, query: str, n: int = 4) -> List[Chunk]:
-        """Queries the index, returning the top n results"""
-        raise NotImplementedError()
+        """Queries the index, returning the top n results."""
+        raise NotImplementedError

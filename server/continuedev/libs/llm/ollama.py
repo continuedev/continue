@@ -4,14 +4,14 @@ from typing import Any, Dict, Optional
 import requests
 from pydantic import Field, validator
 
-from ...core.main import ContinueCustomException
-from ..util.logging import logger
+from continuedev.core.main import ContinueCustomException
+from continuedev.libs.util.logging import logger
+
 from .base import LLM, CompletionOptions
 
 
 class Ollama(LLM):
-    """
-    [Ollama](https://ollama.ai/) is an application for Mac and Linux that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
+    """[Ollama](https://ollama.ai/) is an application for Mac and Linux that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
 
     ```json title="~/.continue/config.json"
     {
@@ -26,7 +26,7 @@ class Ollama(LLM):
 
     model: str = "llama2"
     api_base: Optional[str] = Field(
-        "http://127.0.0.1:11434", description="URL of the Ollama server"
+        "http://127.0.0.1:11434", description="URL of the Ollama server",
     )
 
     @validator("api_base", pre=True, always=True)
@@ -65,7 +65,7 @@ class Ollama(LLM):
             "deepseek-33b": "deepseek-coder:33b",
         }.get(self.model, self.model)
 
-    def start(self, *args, **kwargs):
+    def start(self, *args, **kwargs) -> None:
         super().start(*args, **kwargs)
         try:
             requests.post(
@@ -79,13 +79,12 @@ class Ollama(LLM):
             logger.warning(f"Error pre-loading Ollama model: {e}")
 
     async def get_downloaded_models(self):
-        async with self.create_client_session() as session:
-            async with session.get(
-                f"{self.api_base}/api/tags",
-                proxy=self.request_options.proxy,
-            ) as resp:
-                js_data = await resp.json()
-                return list(map(lambda x: x["name"], js_data["models"]))
+        async with self.create_client_session() as session, session.get(
+            f"{self.api_base}/api/tags",
+            proxy=self.request_options.proxy,
+        ) as resp:
+            js_data = await resp.json()
+            return [x["name"] for x in js_data["models"]]
 
     async def _stream_complete(self, prompt, options):
         async with self.create_client_session() as session:
@@ -104,19 +103,22 @@ class Ollama(LLM):
                     extra_msg = ""
                     if "no such file" in txt:
                         extra_msg = f"\n\nThis means that the model '{self.get_model_name()}' is not downloaded.\n\nYou have the following models downloaded: {', '.join(await self.get_downloaded_models())}.\n\nTo download this model, run `ollama run {self.get_model_name()}` in your terminal."
+                    msg = f"Ollama returned an error: {txt}{extra_msg}"
                     raise ContinueCustomException(
-                        f"Ollama returned an error: {txt}{extra_msg}",
+                        msg,
                         "Invalid request to Ollama",
                     )
                 elif resp.status == 404:
                     model_name = self.get_model_name()
+                    msg = f"Ollama returned 404. Make sure the server is running and '{model_name}' is downloaded with `ollama run {model_name}`.\n\n{await resp.text()}"
                     raise ContinueCustomException(
-                        f"Ollama returned 404. Make sure the server is running and '{model_name}' is downloaded with `ollama run {model_name}`.\n\n{await resp.text()}",
+                        msg,
                         f"Ollama returned 404. Make sure the server is running and '{model_name}' is downloaded with `ollama run {model_name}`.",
                     )
                 elif resp.status != 200:
+                    msg = f"Ollama returned an error: {await resp.text()}"
                     raise ContinueCustomException(
-                        f"Ollama returned an error: {await resp.text()}",
+                        msg,
                         f"Ollama returned an error: {await resp.text()}",
                     )
                 async for line in resp.content.iter_any():
@@ -129,7 +131,7 @@ class Ollama(LLM):
                                     j = json.loads(chunk)
                                 except Exception as e:
                                     logger.warning(
-                                        f"Error parsing Ollama response: {e} {chunk}"
+                                        f"Error parsing Ollama response: {e} {chunk}",
                                     )
                                     continue
                                 if "response" in j:

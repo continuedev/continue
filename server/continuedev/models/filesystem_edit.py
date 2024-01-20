@@ -4,7 +4,8 @@ from typing import Generator, List
 
 from pydantic import BaseModel
 
-from ..libs.util.map_path import map_path
+from continuedev.libs.util.map_path import map_path
+
 from .main import Position, Range
 
 
@@ -44,14 +45,14 @@ class FileEdit(AtomicFileSystemEdit):
         return FileEdit(
             filepath=filepath,
             range=Range.from_shorthand(
-                position.line, position.character, position.line, position.character
+                position.line, position.character, position.line, position.character,
             ),
             replacement=content,
         )
 
     @staticmethod
     def from_append(
-        filepath: str, previous_content: str, appended_content: str
+        filepath: str, previous_content: str, appended_content: str,
     ) -> "FileEdit":
         return FileEdit(
             filepath=filepath,
@@ -71,7 +72,7 @@ class AddFile(AtomicFileSystemEdit):
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
         return AddFile(
-            filepath=map_path(self.filepath, orig_root, copy_root), content=self.content
+            filepath=map_path(self.filepath, orig_root, copy_root), content=self.content,
         )
 
 
@@ -139,7 +140,7 @@ class SequentialFileSystemEdit(FileSystemEdit):
 
     def with_mapped_paths(self, orig_root: str, copy_root: str) -> "FileSystemEdit":
         return SequentialFileSystemEdit(
-            edits=[edit.with_mapped_paths(orig_root, copy_root) for edit in self.edits]
+            edits=[edit.with_mapped_paths(orig_root, copy_root) for edit in self.edits],
         )
 
     def next_edit(self) -> Generator["FileSystemEdit", None, None]:

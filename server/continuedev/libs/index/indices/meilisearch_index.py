@@ -16,18 +16,17 @@ from .base import CodebaseIndex
 
 
 class MeilisearchCodebaseIndex(CodebaseIndex):
-    """
-    The documents have the following structure:
+    """The documents have the following structure:
     - document_id field is the hash of the document
     - actual id is document_id + :: + chunk index
-    - tags is a list of each (directory + branch) the chunk is indexed for, then we can query for all chunks with a given label
+    - tags is a list of each (directory + branch) the chunk is indexed for, then we can query for all chunks with a given label.
 
     There is only a single index because it allows us to share between sub-directories
     """
 
     tag: str
 
-    def __init__(self, tag: str):
+    def __init__(self, tag: str) -> None:
         self.tag = tag
 
     @cached_property
@@ -35,7 +34,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         return remove_meilisearch_disallowed_chars("continue_codebase_index")
 
     def chunk_to_meilisearch_document(
-        self, chunk: Chunk, index: int, tags: List[str]
+        self, chunk: Chunk, index: int, tags: List[str],
     ) -> Dict[str, Any]:
         return {
             "id": str(index),
@@ -69,21 +68,21 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
             other_metadata=other_metadata,
         )
 
-    async def add_chunks(self, chunks: List[Chunk], index: Index, offset: int):
+    async def add_chunks(self, chunks: List[Chunk], index: Index, offset: int) -> None:
         await index.add_documents(
             [
                 self.chunk_to_meilisearch_document(
-                    chunk, int(chunk.digest, 16), [self.tag]
+                    chunk, int(chunk.digest, 16), [self.tag],
                 )
                 for chunk in chunks
             ],
             primary_key="id",
         )
 
-    async def delete_chunks(self, document_ids: List[str], index: Index):
+    async def delete_chunks(self, document_ids: List[str], index: Index) -> None:
         documents = (
             await index.get_documents(
-                filter=f'document_id IN [{",".join(document_ids)}]'
+                filter=f'document_id IN [{",".join(document_ids)}]',
             )
         ).results
 
@@ -91,17 +90,17 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         await index.delete_documents(ids)
 
     async def get_docs_for_digest(self, digest: str, index: Index):
-        """Given the hash of a document, give all of the ids of the chunks stored in the index"""
+        """Given the hash of a document, give all of the ids of the chunks stored in the index."""
         return await index.get_documents(filter=f'document_id="{digest}"')
 
-    async def remove_label(self, digest: str, label: str, index: Index):
+    async def remove_label(self, digest: str, label: str, index: Index) -> None:
         documents = (await self.get_docs_for_digest(digest, index)).results
         for document in documents:
             document["tags"].remove(label)
 
         await index.update_documents(documents, primary_key="id")
 
-    async def add_label(self, digest: str, label: str, index: Index):
+    async def add_label(self, digest: str, label: str, index: Index) -> None:
         documents = (await self.get_docs_for_digest(digest, index)).results
         for document in documents:
             document["tags"].append(label)
@@ -109,9 +108,9 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         await index.update_documents(documents, primary_key="id")
 
     async def build(
-        self, chunks: AsyncGenerator[Tuple[IndexAction, Union[str, Chunk]], None]
-    ):
-        """Builds the index, yielding progress as a float between 0 and 1"""
+        self, chunks: AsyncGenerator[Tuple[IndexAction, Union[str, Chunk]], None],
+    ) -> None:
+        """Builds the index, yielding progress as a float between 0 and 1."""
         async with Client(get_meilisearch_url()) as search_client:
             try:
                 await search_client.create_index(self.index_name, primary_key="id")
@@ -157,7 +156,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
         async with Client(get_meilisearch_url()) as search_client:
             try:
                 results = await search_client.index(self.index_name).search(
-                    query, limit=n, filter=f'tags IN ["{self.tag}"]'
+                    query, limit=n, filter=f'tags IN ["{self.tag}"]',
                 )
 
                 return [
@@ -171,7 +170,7 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
             return []
 
     async def query(self, query: str, n: int = 4) -> List[Chunk]:
-        """Queries the index, returning the top n results"""
+        """Queries the index, returning the top n results."""
         return await self._query(query, n=n)
 
     async def query_keywords(self, keywords: List[str], n: int = 4) -> List[Chunk]:
@@ -187,12 +186,12 @@ class MeilisearchCodebaseIndex(CodebaseIndex):
 
         # Sort by count
         sorted_chunks = sorted(
-            count_per_chunk.items(), key=lambda item: item[1], reverse=True
+            count_per_chunk.items(), key=lambda item: item[1], reverse=True,
         )
 
         # Get top n
         chunks = []
-        for chunk_id, count in sorted_chunks[:n]:
+        for chunk_id, _count in sorted_chunks[:n]:
             chunks.append(id_to_chunk[chunk_id])
 
         return chunks

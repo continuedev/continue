@@ -10,10 +10,10 @@ class WelcomeStep(Step):
     name: str = "Welcome to Continue!"
     hide: bool = True
 
-    async def describe(self, models: Models):
+    async def describe(self, models: Models) -> str:
         return "Welcome to Continue!"
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         continue_dir = os.path.expanduser("~/.continue")
         filepath = os.path.join(continue_dir, "calculator.py")
         if os.path.exists(filepath):
@@ -32,9 +32,9 @@ class WelcomeStep(Step):
             - Ask for a new method (e.g. "exp", "mod", "sqrt")
             - Type /comment to write comments for the entire class
             - Ask about how the class works, how to write it in another language, etc.
-            \"\"\""""
+            \"\"\"""",
                 ),
-            )
+            ),
         )
 
         # await sdk.ide.setFileOpen(filepath=filepath)

@@ -1,4 +1,5 @@
 import asyncio
+import contextlib
 import os
 import re
 import shutil
@@ -16,7 +17,7 @@ from ..libs.util.paths import getMeilisearchExePath, getServerFolderPath
 from .global_config import global_config
 
 
-async def download_file(url: str, filename: str):
+async def download_file(url: str, filename: str) -> None:
     async with aiohttp.ClientSession(trust_env=True) as session:
         async with session.get(url) as resp:
             if resp.status == 200:
@@ -25,11 +26,8 @@ async def download_file(url: str, filename: str):
                 await f.close()
 
 
-async def download_meilisearch():
-    """
-    Downloads MeiliSearch.
-    """
-
+async def download_meilisearch() -> None:
+    """Downloads MeiliSearch."""
     serverPath = getServerFolderPath()
 
     if os.name == "nt":
@@ -55,8 +53,7 @@ async def download_meilisearch():
 
 
 async def ensure_meilisearch_installed() -> bool:
-    """
-    Checks if MeiliSearch is installed.
+    """Checks if MeiliSearch is installed.
 
     Returns a bool indicating whether it was installed to begin with.
     """
@@ -78,10 +75,8 @@ async def ensure_meilisearch_installed() -> bool:
     if len(non_existing_paths) > 0:
         # Clear the meilisearch binary
         if meilisearchPath in existing_paths:
-            try:
+            with contextlib.suppress(Exception):
                 os.remove(meilisearchPath)
-            except Exception:
-                pass
             existing_paths.remove(meilisearchPath)
 
         try:
@@ -108,10 +103,7 @@ def get_meilisearch_url():
 
 
 async def check_meilisearch_running() -> bool:
-    """
-    Checks if MeiliSearch is running.
-    """
-
+    """Checks if MeiliSearch is running."""
     try:
         async with Client(meilisearch_url) as client:
             try:
@@ -126,19 +118,15 @@ async def check_meilisearch_running() -> bool:
 
 
 async def poll_meilisearch_running(frequency: float = 0.1) -> bool:
-    """
-    Polls MeiliSearch to see if it is running.
-    """
+    """Polls MeiliSearch to see if it is running."""
     while True:
         if await check_meilisearch_running():
             return True
         await asyncio.sleep(frequency)
 
 
-async def start_meilisearch(url: Optional[str] = None):
-    """
-    Starts the MeiliSearch server, wait for it.
-    """
+async def start_meilisearch(url: Optional[str] = None) -> None:
+    """Starts the MeiliSearch server, wait for it."""
     global meilisearch_process, meilisearch_url
 
     if url is not None:
@@ -174,9 +162,7 @@ async def start_meilisearch(url: Optional[str] = None):
 
 
 def stop_meilisearch() -> bool:
-    """
-    If we have the meilisearch process in memory, stop it. Return whether we had it.
-    """
+    """If we have the meilisearch process in memory, stop it. Return whether we had it."""
     global meilisearch_process
     if meilisearch_process is not None:
         meilisearch_process.terminate()
@@ -186,7 +172,7 @@ def stop_meilisearch() -> bool:
     return False
 
 
-def kill_proc(port):
+def kill_proc(port) -> None:
     for proc in psutil.process_iter():
         try:
             for conns in proc.connections(kind="inet"):
@@ -203,11 +189,11 @@ def kill_proc(port):
             return
 
 
-async def restart_meilisearch():
+async def restart_meilisearch() -> None:
     if not stop_meilisearch():
         # This actually shouldn't happen because Meilisearch gets stopped when the server is stopped
         logger.warning(
-            "Meilisearch was started by previous Continue server, but not stopped"
+            "Meilisearch was started by previous Continue server, but not stopped",
         )
         kill_proc(7700)
     await start_meilisearch(url=global_config.meilisearch_url)

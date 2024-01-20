@@ -1,6 +1,6 @@
-from functools import cached_property
 import os
 import subprocess
+from functools import cached_property
 from typing import List, Tuple
 
 from .update import filter_ignored_files
@@ -9,7 +9,7 @@ from .update import filter_ignored_files
 class GitProject:
     directory: str
 
-    def __init__(self, directory: str):
+    def __init__(self, directory: str) -> None:
         self.directory = directory
 
     @cached_property
@@ -18,7 +18,7 @@ class GitProject:
         try:
             return (
                 subprocess.check_output(
-                    ["git", "rev-parse", "HEAD"], cwd=self.directory
+                    ["git", "rev-parse", "HEAD"], cwd=self.directory,
                 )
                 .decode("utf-8")
                 .strip()
@@ -32,7 +32,7 @@ class GitProject:
         try:
             return (
                 subprocess.check_output(
-                    ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=self.directory
+                    ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=self.directory,
                 )
                 .decode("utf-8")
                 .strip()
@@ -46,7 +46,7 @@ class GitProject:
         try:
             return (
                 subprocess.check_output(
-                    ["git", "rev-parse", "--show-toplevel"], cwd=self.directory
+                    ["git", "rev-parse", "--show-toplevel"], cwd=self.directory,
                 )
                 .strip()
                 .decode()
@@ -55,14 +55,13 @@ class GitProject:
             return None
 
     def get_modified_deleted_files(
-        self, since_commit: str
+        self, since_commit: str,
     ) -> Tuple[List[str], List[str]]:
         """Get a list of all files that have been modified since the last commit."""
-
         try:
             modified_deleted_files = (
                 subprocess.check_output(
-                    ["git", "diff", "--name-only", since_commit, self.current_commit]
+                    ["git", "diff", "--name-only", since_commit, self.current_commit],
                 )
                 .decode("utf-8")
                 .strip()
@@ -85,5 +84,5 @@ class GitProject:
         ]
 
         return filter_ignored_files(
-            modified_files, self.index_dir
+            modified_files, self.index_dir,
         ), filter_ignored_files(deleted_files, self.index_dir)

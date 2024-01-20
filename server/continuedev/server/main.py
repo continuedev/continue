@@ -25,7 +25,7 @@ from .sessions import router as sessions_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    async def on_err(e):
+    async def on_err(e) -> None:
         logger.warning(f"Error starting MeiliSearch: {e}")
 
     try:
@@ -89,18 +89,18 @@ class FeedbackBody(BaseModel):
 
 
 @app.post("/feedback")
-def feedback(body: FeedbackBody):
+def feedback(body: FeedbackBody) -> None:
     dev_data_logger.capture("feedback", body.dict())
 
 
 # endregion
 
 
-async def cleanup_coroutine():
+async def cleanup_coroutine() -> None:
     logger.debug("------ End logs ------")
 
 
-def cleanup():
+def cleanup() -> None:
     loop = asyncio.new_event_loop()
     loop.run_until_complete(cleanup_coroutine())
     loop.close()
@@ -111,7 +111,7 @@ def run_server(
     host: str = "127.0.0.1",
     meilisearch_url: Optional[str] = None,
     disable_meilisearch: bool = False,
-):
+) -> None:
     try:
         global global_config
         global_config.meilisearch_url = meilisearch_url
@@ -126,15 +126,15 @@ def run_server(
     except PermissionError as e:
         logger.critical(
             f"Error starting Continue server: {e}. "
-            f"This means that port {port} is already in use, and is usually caused by another instance of the Continue server already running."
+            f"This means that port {port} is already in use, and is usually caused by another instance of the Continue server already running.",
         )
         cleanup()
-        raise e
+        raise
 
     except Exception as e:
         logger.critical(f"Error starting Continue server: {e}")
         cleanup()
-        raise e
+        raise
 
 
 if __name__ == "__main__":
@@ -146,6 +146,6 @@ if __name__ == "__main__":
         args = parser.parse_args()
     except Exception as e:
         logger.critical(f"Error parsing command line arguments: {e}")
-        raise e
+        raise
 
     run_server(args.port, args.host)

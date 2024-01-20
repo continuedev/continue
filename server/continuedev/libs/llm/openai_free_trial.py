@@ -2,17 +2,17 @@ from typing import List, Optional
 
 from pydantic import Field, validator
 
-from ...core.main import ChatMessage
-from ...models.llm import RequestOptions
-from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
+from continuedev.core.main import ChatMessage
+from continuedev.libs.util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
+from continuedev.models.llm import RequestOptions
+
 from .base import LLM
 from .openai import OpenAI
 from .proxy_server import ProxyServer
 
 
 class OpenAIFreeTrial(LLM):
-    """
-    With the `OpenAIFreeTrial` `LLM`, new users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key. Continue should just work the first time you install the extension in VS Code.
+    """With the `OpenAIFreeTrial` `LLM`, new users can try out Continue with GPT-4 using a proxy server that securely makes calls to OpenAI using our API key. Continue should just work the first time you install the extension in VS Code.
 
     Once you are using Continue regularly though, you will need to add an OpenAI API key that has access to GPT-4 by following these steps:
 
@@ -71,14 +71,14 @@ class OpenAIFreeTrial(LLM):
     def context_length_for_model(cls, v, values):
         return CONTEXT_LENGTH_FOR_MODEL.get(values["model"], 4096)
 
-    def update_llm_properties(self):
+    def update_llm_properties(self) -> None:
         self.llm.system_message = self.system_message
 
-    def start(self, unique_id: Optional[str] = None):
+    def start(self, unique_id: Optional[str] = None) -> None:
         super().start(unique_id=unique_id)
         self.llm.start(unique_id=unique_id)
 
-    async def stop(self):
+    async def stop(self) -> None:
         await self.llm.stop()
 
     async def _complete(self, prompt: str, options):

@@ -4,13 +4,13 @@ from typing import List
 import replicate
 from pydantic import Field
 
-from ...core.main import ChatMessage
+from continuedev.core.main import ChatMessage
+
 from .base import LLM
 
 
 class ReplicateLLM(LLM):
-    """
-    Replicate is a great option for newly released language models or models that you've deployed through their platform. Sign up for an account [here](https://replicate.ai/), copy your API key, and then select any model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models). Change `~/.continue/config.json` to look like this:
+    """Replicate is a great option for newly released language models or models that you've deployed through their platform. Sign up for an account [here](https://replicate.ai/), copy your API key, and then select any model from the [Replicate Streaming List](https://replicate.com/collections/streaming-language-models). Change `~/.continue/config.json` to look like this:
 
     ```json title="~/.continue/config.json"
     {
@@ -49,7 +49,7 @@ class ReplicateLLM(LLM):
     async def _complete(self, prompt: str, options):
         def helper():
             output = self._client.run(
-                self.get_model_name(), input={"message": prompt, "prompt": prompt}
+                self.get_model_name(), input={"message": prompt, "prompt": prompt},
             )
             completion = ""
             for item in output:
@@ -59,13 +59,12 @@ class ReplicateLLM(LLM):
 
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(helper)
-            completion = future.result()
+            return future.result()
 
-        return completion
 
     async def _stream_complete(self, prompt, options):
         for item in self._client.run(
-            self.get_model_name(), input={"message": prompt, "prompt": prompt}
+            self.get_model_name(), input={"message": prompt, "prompt": prompt},
         ):
             yield item
 

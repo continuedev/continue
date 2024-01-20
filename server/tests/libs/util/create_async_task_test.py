@@ -1,46 +1,49 @@
 import asyncio
+from typing import NoReturn
 from unittest.mock import Mock, patch
 
 import pytest
+
 from continuedev.libs.util.create_async_task import create_async_task
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_coro():
-    async def coro():
+    async def coro() -> str:
         await asyncio.sleep(0.1)
         return "result"
 
     return coro
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_failed_coro():
-    async def coro():
+    async def coro() -> NoReturn:
         await asyncio.sleep(0.1)
-        raise ValueError("error")
+        msg = "error"
+        raise ValueError(msg)
 
     return coro
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_on_error():
     return Mock()
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_logger():
     with patch("continuedev.libs.util.logging.logger") as mock:
         yield mock
 
 
-@pytest.fixture
+@pytest.fixture()
 def mock_posthog_logger():
     with patch("continuedev.libs.util.telemetry.posthog_logger") as mock:
         yield mock
 
 
-@pytest.fixture(scope="function")
+@pytest.fixture()
 def event_loop(request):
     loop = asyncio.get_event_loop_policy().new_event_loop()
     asyncio.set_event_loop(loop)
@@ -49,9 +52,9 @@ def event_loop(request):
 
 
 def test_create_async_task_success(
-    mock_coro, mock_on_error, mock_logger, mock_posthog_logger, event_loop
-):
-    async def stuff():
+    mock_coro, mock_on_error, mock_logger, mock_posthog_logger, event_loop,
+) -> None:
+    async def stuff() -> None:
         task = create_async_task(mock_coro(), mock_on_error)
         await asyncio.sleep(0.2)
         assert task.result() == "result"
@@ -63,9 +66,9 @@ def test_create_async_task_success(
 
 
 def test_create_async_task_failure(
-    mock_failed_coro, mock_on_error, mock_logger, mock_posthog_logger, event_loop
-):
-    async def stuff():
+    mock_failed_coro, mock_on_error, mock_logger, mock_posthog_logger, event_loop,
+) -> None:
+    async def stuff() -> None:
         task = create_async_task(mock_failed_coro(), mock_on_error)
         await asyncio.sleep(0.2)
         with pytest.raises(ValueError):

@@ -7,7 +7,7 @@ class ImplementAbstractMethodStep(Step):
     method_name: str
     class_name: str
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         if sdk.lsp is None:
             self.description = "Language Server Protocol is not enabled"
             return

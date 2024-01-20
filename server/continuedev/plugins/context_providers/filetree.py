@@ -47,7 +47,7 @@ class FileTreeContextProvider(ContextProvider):
         contents = await self.ide.listDirectoryContents(directory, recursive=True)
 
         tree = Directory(
-            name=split_path(self.workspace_dir)[-1], files=[], directories=[]
+            name=split_path(self.workspace_dir)[-1], files=[], directories=[],
         )
 
         for file in contents:
@@ -57,12 +57,10 @@ class FileTreeContextProvider(ContextProvider):
             for part in parts[:-1]:
                 if part not in [d.name for d in current_tree.directories]:
                     current_tree.directories.append(
-                        Directory(name=part, files=[], directories=[])
+                        Directory(name=part, files=[], directories=[]),
                     )
 
-                current_tree = [d for d in current_tree.directories if d.name == part][
-                    0
-                ]
+                current_tree = next(d for d in current_tree.directories if d.name == part)
 
             current_tree.files.append(parts[-1])
 
@@ -83,7 +81,8 @@ class FileTreeContextProvider(ContextProvider):
         return [await self._filetree_context_item()]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.provider_title == self.title:
-            raise Exception("Invalid provider title for item")
+        if id.provider_title != self.title:
+            msg = "Invalid provider title for item"
+            raise Exception(msg)
 
         return await self._filetree_context_item()

@@ -10,7 +10,7 @@ from ..libs.constants.default_config import default_config_json
 from ..libs.llm.base import LLM
 from ..libs.llm.openai_free_trial import OpenAIFreeTrial
 from ..libs.util.logging import logger
-from ..libs.util.paths import getConfigFilePath, getGlobalFolderPath, sync_migrate
+from ..libs.util.paths import get_config_file_path, getGlobalFolderPath, sync_migrate
 from ..libs.util.telemetry import posthog_logger
 from ..models.llm import BaseCompletionOptions, RequestOptions
 from .config_utils.context import CONTEXT_PROVIDER_NAME_TO_CLASS, ContextProviderName
@@ -93,7 +93,7 @@ class RetrievalSettings(BaseModel):
         description="Number of results to initially retrieve from vector database",
     )
     n_final: Optional[int] = Field(
-        default=10, description="Final number of results to use after re-ranking"
+        default=10, description="Final number of results to use after re-ranking",
     )
     use_reranking: bool = Field(
         default=True,
@@ -112,7 +112,7 @@ class RetrievalSettings(BaseModel):
     api_type: Optional[str] = Field(default=None, description="OpenAI API type")
     api_version: Optional[str] = Field(default=None, description="OpenAI API version")
     organization_id: Optional[str] = Field(
-        default=None, description="OpenAI organization ID"
+        default=None, description="OpenAI organization ID",
     )
 
 
@@ -134,10 +134,10 @@ class ModelDescription(BaseModel):
         description="The name of the model. Used to autodetect prompt template.",
     )
     api_key: Optional[str] = Field(
-        default=None, description="OpenAI, Anthropic, Together, or other API key"
+        default=None, description="OpenAI, Anthropic, Together, or other API key",
     )
     api_base: Optional[str] = Field(
-        default=None, description="The base URL of the LLM API."
+        default=None, description="The base URL of the LLM API.",
     )
 
     context_length: int = Field(
@@ -182,7 +182,7 @@ class ModelRoles(BaseModel):
     )
 
 
-CONFIG_JSON_PATH = getConfigFilePath(json=True)
+CONFIG_JSON_PATH = get_config_file_path(json=True)
 
 
 class SerializedContinueConfig(BaseModel):
@@ -201,8 +201,8 @@ class SerializedContinueConfig(BaseModel):
                 provider="openai-free-trial",
                 model="gpt-4",
                 api_key="",
-            )
-        ]
+            ),
+        ],
     )
     model_roles: ModelRoles = Field(
         default=ModelRoles(default="GPT-4 (trial)"),
@@ -226,7 +226,7 @@ class SerializedContinueConfig(BaseModel):
                 name="test",
                 description="This is an example custom command. Use /config to edit it and create more",
                 prompt="Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
-            )
+            ),
         ],
         description="An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt.",
     )
@@ -235,7 +235,7 @@ class SerializedContinueConfig(BaseModel):
         description="A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in the documentation.",
     )
     user_token: Optional[str] = Field(
-        default=None, description="An optional token to identify the user."
+        default=None, description="An optional token to identify the user.",
     )
     data_server_url: Optional[str] = Field(
         default="https://us-west1-autodebug.cloudfunctions.net",
@@ -263,23 +263,23 @@ class SerializedContinueConfig(BaseModel):
             f.write(config.json(exclude_none=True, exclude_defaults=True, indent=2))
 
     @staticmethod
-    def set_temperature(temperature: float):
+    def set_temperature(temperature: float) -> None:
         with SerializedContinueConfig.edit_config() as config:
             config.completion_options.temperature = temperature
 
             posthog_logger.capture_event(
-                "set_temperature", {"temperature": temperature}
+                "set_temperature", {"temperature": temperature},
             )
 
     @staticmethod
-    def set_system_message(message: str):
+    def set_system_message(message: str) -> None:
         with SerializedContinueConfig.edit_config() as config:
             config.system_message = message
 
         posthog_logger.capture_event("set_system_message", {"message": message})
 
     @staticmethod
-    def set_model_for_role(title: str, role: str):
+    def set_model_for_role(title: str, role: str) -> None:
         with SerializedContinueConfig.edit_config() as config:
             if role == "*":
                 config.model_roles.default = title
@@ -289,24 +289,24 @@ class SerializedContinueConfig(BaseModel):
             else:
                 config.model_roles.__setattr__(role, title)
 
-                def migrate_func():
+                def migrate_func() -> None:
                     if role == "default" and config.model_roles.chat is not None:
                         config.model_roles.chat = None
 
                 sync_migrate("select_default_model_001", migrate_func)
 
     @staticmethod
-    def add_model(model: ModelDescription):
+    def add_model(model: ModelDescription) -> None:
         with SerializedContinueConfig.edit_config() as config:
             config.models.append(model)
 
     @staticmethod
-    def set_telemetry_enabled(enabled: bool):
+    def set_telemetry_enabled(enabled: bool) -> None:
         with SerializedContinueConfig.edit_config() as config:
             config.allow_anonymous_telemetry = enabled
 
     @staticmethod
-    def delete_model(title: str):
+    def delete_model(title: str) -> None:
         with SerializedContinueConfig.edit_config() as config:
             config.models = [model for model in config.models if model.title != title]
             if config.model_roles.default == title:
@@ -320,9 +320,7 @@ class SerializedContinueConfig(BaseModel):
 
 
 class ContinueConfig(BaseModel):
-    """
-    Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\\.continue\\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session.
-    """
+    r"""Continue can be deeply customized by editing the `ContinueConfig` object in `~/.continue/config.py` (`%userprofile%\\.continue\\config.py` for Windows) on your machine. This class is instantiated from the config file for every new session."""
 
     steps_on_startup: List[Step] = Field(
         default=[],
@@ -342,8 +340,8 @@ class ContinueConfig(BaseModel):
                 title="GPT-4 (trial)",
                 model="gpt-4",
                 api_key="",
-            )
-        ]
+            ),
+        ],
     )
     model_roles: ModelRoles = Field(
         default=ModelRoles(default="GPT-4 (trial)"),
@@ -363,7 +361,7 @@ class ContinueConfig(BaseModel):
                 name="test",
                 description="This is an example custom command. Use /config to edit it and create more",
                 prompt="Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
-            )
+            ),
         ],
         description="An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt.",
     )
@@ -384,7 +382,7 @@ class ContinueConfig(BaseModel):
         description="A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in the documentation.",
     )
     user_token: Optional[str] = Field(
-        default=None, description="An optional token to identify the user."
+        default=None, description="An optional token to identify the user.",
     )
     data_server_url: Optional[str] = Field(
         default="https://us-west1-autodebug.cloudfunctions.net",
@@ -478,12 +476,13 @@ class ContinueConfig(BaseModel):
             try:
                 contents = open(filepath).read()
                 if contents.strip() == "":
-                    raise ValueError("Empty config file")
+                    msg = "Empty config file"
+                    raise ValueError(msg)
 
                 serialized_config = json.loads(contents)
 
-            except json.JSONDecodeError as e:
-                raise e
+            except json.JSONDecodeError:
+                raise
 
             except ValueError as e:
                 logger.warning(f"Found empty config.json at {filepath}: {e}")
@@ -495,7 +494,7 @@ class ContinueConfig(BaseModel):
             serialized = SerializedContinueConfig(**serialized_config)
 
             modify_config, modify_json = ContinueConfig.modifiers_from_filepath(
-                filepath[: -len(".json")] + ".py"
+                filepath[: -len(".json")] + ".py",
             )
 
             if modify_json:
@@ -521,20 +520,21 @@ class ContinueConfig(BaseModel):
 
                 return config.config
 
-        raise Exception(f"Failed to load config from {filepath}")
+        msg = f"Failed to load config from {filepath}"
+        raise Exception(msg)
 
     @staticmethod
     def load_default() -> "ContinueConfig":
         json_path = os.path.join(getGlobalFolderPath(), "config.json")
         if not os.path.exists(json_path):
             # MIGRATE FROM OLD CONFIG FORMAT TO JSON
-            def move_config_to_old():
+            def move_config_to_old() -> None:
                 old_path = py_path.replace(".py", ".py.old")
                 if os.path.exists(old_path):
                     os.remove(old_path)
                 os.rename(py_path, old_path)
 
-            py_path = getConfigFilePath()
+            py_path = get_config_file_path()
             try:
                 # If they have pre-existing old config.py this will work
                 config = ContinueConfig.from_filepath(py_path)
@@ -544,7 +544,7 @@ class ContinueConfig(BaseModel):
                 with open(json_path, "w") as f:
                     json.dump(
                         config.to_serialized_continue_config().dict(
-                            exclude_none=True, exclude_defaults=True
+                            exclude_none=True, exclude_defaults=True,
                         ),
                         f,
                         indent=2,
@@ -565,26 +565,15 @@ class ContinueConfig(BaseModel):
                 return ContinueConfig.load_default()
 
         # The second time and thereafter, load from the json file
-        config = ContinueConfig.from_filepath(json_path)
-        return config
+        return ContinueConfig.from_filepath(json_path)
 
     def get_slash_command_descriptions(self) -> List[SlashCommandDescription]:
         custom_commands = (
-            list(
-                map(
-                    lambda x: x.slash_command_description(),
-                    self.custom_commands or [],
-                )
-            )
+            [x.slash_command_description() for x in self.custom_commands or []]
             or []
         )
         slash_commands = (
-            list(
-                map(
-                    lambda x: x.slash_command_description(),
-                    self.slash_commands or [],
-                )
-            )
+            [x.slash_command_description() for x in self.slash_commands or []]
             or []
         )
         cmds = custom_commands + slash_commands
@@ -592,9 +581,7 @@ class ContinueConfig(BaseModel):
         return cmds
 
     def get_context_provider_descriptions(self) -> List[ContextProviderDescription]:
-        """
-        Returns a list of ContextProviderDescriptions
-        """
+        """Returns a list of ContextProviderDescriptions."""
         return [
             provider.get_description()
             for provider in self.context_providers
@@ -606,7 +593,7 @@ class ContinueConfig(BaseModel):
                 description="Type to search the workspace",
                 dynamic=False,
                 requires_query=False,
-            )
+            ),
         ]
 
     def to_serialized_continue_config(self) -> SerializedContinueConfig:
@@ -646,12 +633,12 @@ class ContinueConfig(BaseModel):
 
     @staticmethod
     def create_llm(
-        completion_options: BaseCompletionOptions, model: ModelDescription
+        completion_options: BaseCompletionOptions, model: ModelDescription,
     ) -> LLM:
         model_class = MODEL_CLASSES[MODEL_PROVIDER_TO_MODEL_CLASS[model.provider]]
         options = completion_options.dict(exclude_none=True, exclude_defaults=True)
         options.update(
-            model.completion_options.dict(exclude_none=True, exclude_defaults=True)
+            model.completion_options.dict(exclude_none=True, exclude_defaults=True),
         )
 
         if "max_tokens" not in options:
@@ -661,10 +648,10 @@ class ContinueConfig(BaseModel):
         kwargs = {**model.dict(exclude_none=True)}
         kwargs["completion_options"] = options
         kwargs["template_messages"] = autodetect_template_function(
-            model.model, model.template
+            model.model, model.template,
         )
         kwargs["prompt_templates"] = autodetect_prompt_templates(
-            model.model, model.template
+            model.model, model.template,
         )
 
         return model_class(**kwargs)
@@ -674,7 +661,7 @@ class ContinueConfig(BaseModel):
         return ModelDescription(
             title=llm.title or "LLM",
             provider=MODEL_CLASS_TO_MODEL_PROVIDER.get(
-                llm.__class__.__name__, "custom"  # type: ignore
+                llm.__class__.__name__, "custom",  # type: ignore
             ),
             model=llm.model,
             api_key=llm.api_key,

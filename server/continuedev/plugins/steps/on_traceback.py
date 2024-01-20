@@ -31,7 +31,7 @@ class DefaultOnTracebackStep(Step):
     name: str = "Help With Traceback"
     hide: bool = True
 
-    async def find_relevant_files(self, sdk: ContinueSDK):
+    async def find_relevant_files(self, sdk: ContinueSDK) -> None:
         # Add context for any files in the traceback that are in the workspace
         for line in self.output.split("\n"):
             segs = line.split(" ")
@@ -48,12 +48,12 @@ class DefaultOnTracebackStep(Step):
                             role="user",
                             content=f"The contents of {seg}:\n```\n{file_contents}\n```",
                             summary="",
-                        )
+                        ),
                     )
         # TODO: The ideal is that these are added as context items, so then the user can see them
         # And this function is where you can get arbitrarily fancy about adding context
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         if self.output.strip() == "":
             raise ContinueCustomException(
                 title="No terminal open",
@@ -90,6 +90,7 @@ def find_external_call(
     for i in range(len(frames) - 2, -1, -1):
         if not should_filter_path(frames[i].filepath):
             return frames[i], frames[i + 1]
+    return None
 
 
 def get_func_source_for_frame(frame: Dict) -> str:
@@ -108,17 +109,17 @@ class SolvePythonTracebackStep(Step):
     hide: bool = True
 
     async def external_call_prompt(
-        self, sdk: ContinueSDK, external_call: Tuple[Dict, Dict], tb_string: str
+        self, sdk: ContinueSDK, external_call: Tuple[Dict, Dict], tb_string: str,
     ) -> str:
         external_call_dict, next_frame = external_call
         source_line = external_call_dict["source_line"]
         external_func_source = get_func_source_for_frame(next_frame)
         docs = await fetch_docs_for_external_call(external_call_dict, next_frame)
 
-        prompt = dedent(
+        return dedent(
             f"""\
                     I got the following error:
-                
+
                     {tb_string}
 
                     I tried to call an external library like this:
@@ -132,19 +133,18 @@ class SolvePythonTracebackStep(Step):
                     ```python
                     {external_func_source}
                     ```
-                
+
                     Here's the documentation for the external library I tried to call:
-                
+
                     {docs}
 
                     Explain how to fix the error.
-                    """
+                    """,
         )
 
-        return prompt
 
     async def normal_traceback_prompt(
-        self, sdk: ContinueSDK, tb: Traceback, tb_string: str
+        self, sdk: ContinueSDK, tb: Traceback, tb_string: str,
     ) -> str:
         function_bodies = await get_functions_from_traceback(tb, sdk)
 
@@ -162,7 +162,7 @@ class SolvePythonTracebackStep(Step):
 
         return prompt
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         tb_string = get_python_traceback(self.output)
         tb = parse_python_traceback(tb_string or "")
 
@@ -174,7 +174,7 @@ class SolvePythonTracebackStep(Step):
         await sdk.run_step(
             UserInputStep(
                 user_input=prompt,
-            )
+            ),
         )
         await sdk.run_step(SimpleChatStep(name="Help With Traceback"))
 
@@ -192,9 +192,9 @@ async def get_function_body(frame: TracebackFrame, sdk: ContinueSDK) -> Optional
                 RangeInFile(
                     filepath=frame.filepath,
                     range=Range.from_shorthand(
-                        r.start.line, r.start.character, r.end.line, r.end.character
+                        r.start.line, r.start.character, r.end.line, r.end.character,
                     ),
-                )
+                ),
             )
     return None
 

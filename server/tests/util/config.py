@@ -5,7 +5,7 @@ config = ContinueConfig(
     models=[
         ModelDescription(model="gpt-4", title="GPT-4", provider="openai-free-trial"),
         ModelDescription(
-            model="gpt-3.5-turbo", title="GPT-3.5 Turbo", provider="openai-free-trial"
+            model="gpt-3.5-turbo", title="GPT-3.5 Turbo", provider="openai-free-trial",
         ),
     ],
     system_message=None,

@@ -8,7 +8,7 @@ class CreateTableStep(Step):
     sql_str: str
     name: str = "Create a table in TypeORM"
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         # Write TypeORM entity
         entity_name = self.sql_str.split(" ")[2].capitalize()
         await sdk.edit_file(
@@ -16,19 +16,19 @@ class CreateTableStep(Step):
             dedent(
                 f"""\
             {self.sql_str}
-            
-            Write a TypeORM entity called {entity_name} for this table, importing as necessary:"""
+
+            Write a TypeORM entity called {entity_name} for this table, importing as necessary:""",
             ),
         )
 
         # Add entity to data-source.ts
         await sdk.edit_file(
-            filepath="src/data-source.ts", prompt=f"Add the {entity_name} entity:"
+            filepath="src/data-source.ts", prompt=f"Add the {entity_name} entity:",
         )
 
         # Generate blank migration for the entity
         out = await sdk.run(
-            f"npx typeorm migration:create ./src/migration/Create{entity_name}Table"
+            f"npx typeorm migration:create ./src/migration/Create{entity_name}Table",
         )
         migration_filepath = out.text.split(" ")[1]
 
@@ -41,14 +41,14 @@ class CreateTableStep(Step):
             dedent(
                 f"""\
                 This is the table that was created:
-                
+
                 {self.sql_str}
-                
-                Fill in the migration for the table:"""
+
+                Fill in the migration for the table:""",
             ),
         )
 
         # Run the migration
         await sdk.run(
-            "npx typeorm-ts-node-commonjs migration:run -d ./src/data-source.ts"
+            "npx typeorm-ts-node-commonjs migration:run -d ./src/data-source.ts",
         )

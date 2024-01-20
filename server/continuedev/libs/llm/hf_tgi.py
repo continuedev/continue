@@ -3,14 +3,15 @@ from typing import Any, Optional
 
 from pydantic import Field, validator
 
-from ..util.count_tokens import DEFAULT_MAX_TOKENS
+from continuedev.libs.util.count_tokens import DEFAULT_MAX_TOKENS
+
 from .base import LLM, CompletionOptions
 
 
 class HuggingFaceTGI(LLM):
     model: str = "huggingface-tgi"
     api_base: Optional[str] = Field(
-        "http://127.0.0.1:8080", description="URL of your TGI server"
+        "http://127.0.0.1:8080", description="URL of your TGI server",
     )
 
     @validator("api_base", pre=True, always=True)
@@ -58,8 +59,7 @@ class HuggingFaceTGI(LLM):
 
                             try:
                                 json_chunk = json.loads(chunk)
-                            except Exception as e:
-                                print(f"Error parsing JSON: {e}")
+                            except Exception:
                                 continue
 
                             yield json_chunk["token"]["text"]

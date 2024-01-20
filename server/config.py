@@ -1,5 +1,4 @@
-"""
-config.py allows you to modify Continue programmatically instead of just using config.json.
+"""config.py allows you to modify Continue programmatically instead of just using config.json.
 
 First, config.json is loaded. Then, if you have defined modify_config here, the function will be given the result of
 loading config.json, and will return the final ContinueConfig to be used.

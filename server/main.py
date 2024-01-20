@@ -1,5 +1,5 @@
 from .continuedev.server.main import run_server
 
 
-def main():
+def main() -> None:
     run_server()

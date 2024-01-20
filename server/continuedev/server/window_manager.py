@@ -1,5 +1,6 @@
+from __future__ import annotations
+
 import os
-from typing import Dict, Optional
 
 from socketio import AsyncServer
 
@@ -14,7 +15,7 @@ from ..libs.util.create_async_task import create_async_task
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.errors import format_exc
 from ..libs.util.logging import logger
-from ..libs.util.paths import getConfigFilePath, getDiffsFolderPath, migrate
+from ..libs.util.paths import get_config_file_path, getDiffsFolderPath, migrate
 from ..libs.util.telemetry import posthog_logger
 from ..plugins.context_providers.file import FileContextProvider
 from ..plugins.context_providers.highlighted_code import HighlightedCodeContextProvider
@@ -24,14 +25,14 @@ from .protocols.ide import IdeProtocolServer, WindowInfo
 
 
 class Window:
-    ide: Optional[IdeProtocolServer] = None
-    gui: Optional[GUIProtocolServer] = None
+    ide: IdeProtocolServer | None = None
+    gui: GUIProtocolServer | None = None
     config: ContinueConfig
     context_manager: ContextManager = ContextManager()
     models: Models
 
-    _error_loading_config: Optional[str] = None
-    _last_valid_config: Optional[ContinueConfig] = None
+    _error_loading_config: str | None = None
+    _last_valid_config: ContinueConfig | None = None
 
     def load_config(self) -> ContinueConfig:
         # Create necessary directories
@@ -49,12 +50,12 @@ class Window:
                 else self._last_valid_config
             )
 
-    def __init__(self, config: Optional[ContinueConfig] = None) -> None:
+    def __init__(self, config: ContinueConfig | None = None) -> None:
         self.reload_config()
 
     def get_autopilot(
-        self, session_state: SessionState, gui: GUIProtocolServer
-    ) -> Optional[Autopilot]:
+        self, session_state: SessionState, gui: GUIProtocolServer,
+    ) -> Autopilot | None:
         if self.gui is None:
             self.gui = gui
 
@@ -70,13 +71,13 @@ class Window:
             models=self.models,
         )
 
-    def get_config(self) -> Optional[ContinueConfig]:
+    def get_config(self) -> ContinueConfig | None:
         return self.config
 
     def is_closed(self) -> bool:
         return self.ide is None and self.gui is None
 
-    def reload_config(self):
+    def reload_config(self) -> None:
         self.config = self.load_config()
         self.models = self.config.construct_models()
         self.models.start(
@@ -86,33 +87,33 @@ class Window:
             self.config.llm_request_hook,
         )
 
-    async def display_config_error(self):
+    async def display_config_error(self) -> None:
         if self._error_loading_config is not None:
-            if not os.path.exists(getConfigFilePath(json=True)):
-                with open(getConfigFilePath(json=True), "w") as f:
+            if not os.path.exists(get_config_file_path(json=True)):
+                with open(get_config_file_path(json=True), "w") as f:
                     f.write(default_config_json)
 
             if self.ide is not None:
-                await self.ide.setFileOpen(getConfigFilePath(json=True))
+                await self.ide.setFileOpen(get_config_file_path(json=True))
                 await self.ide.showMessage(
-                    f"""We found an error while loading your config.py. For now, Continue is falling back to the default configuration. If you need help solving this error, please reach out to us on Discord by clicking the question mark button in the bottom right.\n\n{self._error_loading_config}"""
+                    f"""We found an error while loading your config.py. For now, Continue is falling back to the default configuration. If you need help solving this error, please reach out to us on Discord by clicking the question mark button in the bottom right.\n\n{self._error_loading_config}""",
                 )
 
                 self._error_loading_config = None
 
-    async def on_error(self, e: Exception):
+    async def on_error(self, e: Exception) -> None:
         if self.ide is not None:
             await self.ide.on_error(e)
 
     async def load(
-        self, config: Optional[ContinueConfig] = None, only_reloading: bool = False
-    ):
+        self, config: ContinueConfig | None = None, only_reloading: bool = False,
+    ) -> None:
         if self.ide is None:
             return
 
-        async def migrate_fn():
+        async def migrate_fn() -> None:
             if self.ide is not None:
-                await self.ide.setFileOpen(getConfigFilePath(json=True))
+                await self.ide.setFileOpen(get_config_file_path(json=True))
 
         await migrate(
             "config_json_001",
@@ -132,7 +133,7 @@ class Window:
 
         await self.display_config_error()
 
-        async def index():
+        async def index() -> None:
             if (
                 self.ide is not None
                 and self.gui is not None
@@ -155,22 +156,15 @@ class Window:
 
         # Load documents into the search index
         await self.context_manager.start(
-            self.config.context_providers
-            + [
-                HighlightedCodeContextProvider(ide=self.ide),
-                FileContextProvider(workspace_dir=self.ide.workspace_directory),
-            ],
+            [*self.config.context_providers, HighlightedCodeContextProvider(ide=self.ide), FileContextProvider(workspace_dir=self.ide.workspace_directory)],
             self.ide,
             only_reloading=only_reloading,
             disable_indexing=self.config.disable_indexing,
         )
 
-        async def onFileSavedCallback(filepath: str, contents: str):
+        async def onFileSavedCallback(filepath: str, contents: str) -> None:
             if (
-                filepath.endswith(".continue/config.py")
-                or filepath.endswith(".continue\\config.py")
-                or filepath.endswith(".continue/config.json")
-                or filepath.endswith(".continue\\config.json")
+                filepath.endswith((".continue/config.py", ".continue\\config.py", ".continue/config.json", ".continue\\config.json"))
             ):
                 self.reload_config()
                 if self.gui is not None:
@@ -178,26 +172,23 @@ class Window:
 
                 await self.display_config_error()
 
-            elif filepath.endswith(".gitignore") or filepath.endswith(
-                ".continueignore"
-            ):
+            elif filepath.endswith((".gitignore", ".continueignore")):
                 # Update the index
                 await index()
 
         self.ide.subscribeToFileSaved(onFileSavedCallback)
 
-        async def onDebugCallback(terminal_contents: str):
+        async def onDebugCallback(terminal_contents: str) -> None:
             if self.gui is not None:
                 # Does this really work though? Because you need to give the correct index
-                print("Debugging terminal")
                 session_state = await self.gui.get_session_state()
                 await self.gui.run_from_state(
-                    session_state, DefaultOnTracebackStep(output=terminal_contents)
+                    session_state, DefaultOnTracebackStep(output=terminal_contents),
                 )
 
         self.ide.subscribeToDebugTerminal(onDebugCallback)
 
-        def onTelemetryChangeCallback(enabled: bool):
+        def onTelemetryChangeCallback(enabled: bool) -> None:
             self.config.allow_anonymous_telemetry = enabled
             SerializedContinueConfig.set_telemetry_enabled(enabled)
 
@@ -235,19 +226,19 @@ class Window:
 
 class WindowManager:
     # window_id to Window
-    windows: Dict[str, Window] = {}
+    windows: dict[str, Window] = {}
 
     # sid to ide/gui
-    guis: Dict[str, GUIProtocolServer] = {}
-    ides: Dict[str, IdeProtocolServer] = {}
+    guis: dict[str, GUIProtocolServer] = {}
+    ides: dict[str, IdeProtocolServer] = {}
 
     def get_window(self, sid: str) -> Window:
         return self.windows[sid]
 
-    def get_ide(self, sid: str) -> Optional[IdeProtocolServer]:
+    def get_ide(self, sid: str) -> IdeProtocolServer | None:
         return self.ides.get(sid)
 
-    async def register_ide(self, window_info: WindowInfo, sio: AsyncServer, sid: str):
+    async def register_ide(self, window_info: WindowInfo, sio: AsyncServer, sid: str) -> None:
         if window_info.window_id not in self.windows:
             self.windows[window_info.window_id] = Window()
 
@@ -259,7 +250,7 @@ class WindowManager:
             await self.windows[window_info.window_id].load()
             logger.info(f"There are {len(self.windows)} sessions currently open")
 
-    def remove_ide(self, sid: str):
+    def remove_ide(self, sid: str) -> None:
         ide = self.ides.pop(sid, None)
         if ide is None:
             return
@@ -269,17 +260,17 @@ class WindowManager:
             if window.is_closed():
                 del self.windows[ide.window_info.window_id]
 
-    def get_gui(self, sid: str) -> Optional[GUIProtocolServer]:
+    def get_gui(self, sid: str) -> GUIProtocolServer | None:
         return self.guis.get(sid)
 
-    async def register_gui(self, window_id: str, sio, sid: str):
+    async def register_gui(self, window_id: str, sio, sid: str) -> None:
         if window_id not in self.windows:
             self.windows[window_id] = Window()
 
-        async def open_config():
+        async def open_config() -> None:
             ide = self.windows[window_id].ide
             if ide is not None:
-                await ide.setFileOpen(getConfigFilePath(json=True))
+                await ide.setFileOpen(get_config_file_path(json=True))
 
         gui = GUIProtocolServer(
             window_id=window_id,
@@ -298,7 +289,7 @@ class WindowManager:
             await self.windows[window_id].load()
             logger.info(f"There are {len(self.windows)} sessions currently open")
 
-    def remove_gui(self, sid: str):
+    def remove_gui(self, sid: str) -> None:
         gui = self.guis.pop(sid, None)
         if gui is None:
             return

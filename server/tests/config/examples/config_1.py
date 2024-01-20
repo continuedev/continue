@@ -1,5 +1,4 @@
-"""
-This is the Continue configuration file.
+"""This is the Continue configuration file.
 
 See https://continue.dev/docs/customization to for documentation of the available options.
 """
@@ -33,7 +32,7 @@ config = ContinueConfig(
             name="test",
             description="Write unit tests for highlighted code",
             prompt="Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
-        )
+        ),
     ],
     slash_commands=[
         SlashCommand(
@@ -71,7 +70,7 @@ config = ContinueConfig(
         URLContextProvider(
             preset_urls=[
                 # Add any common urls you reference here so they appear in autocomplete
-            ]
+            ],
         ),
         TerminalContextProvider(),
     ],

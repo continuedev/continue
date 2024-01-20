@@ -13,7 +13,7 @@ MAX_SIZE_IN_CHARS = 50_000
 
 
 async def get_file_contents(
-    filepath: str, ide: AbstractIdeProtocolServer
+    filepath: str, ide: AbstractIdeProtocolServer,
 ) -> Optional[str]:
     try:
         return (await ide.readFile(filepath))[:MAX_SIZE_IN_CHARS]
@@ -22,9 +22,7 @@ async def get_file_contents(
 
 
 class FileContextProvider(ContextProvider):
-    """
-    The FileContextProvider is a ContextProvider that allows you to search files in the open workspace.
-    """
+    """The FileContextProvider is a ContextProvider that allows you to search files in the open workspace."""
 
     title = "file"
     ignore_patterns: List[str] = DEFAULT_IGNORE_PATTERNS
@@ -33,31 +31,31 @@ class FileContextProvider(ContextProvider):
     description = "Type to search the workspace"
     dynamic = False
 
-    async def start(self, *args):
+    async def start(self, *args) -> None:
         await super().start(*args)
 
-        async def on_file_saved(filepath: str, contents: str):
+        async def on_file_saved(filepath: str, contents: str) -> None:
             item = await self.get_context_item_for_filepath(filepath)
             if item is None:
                 return
             await self.update_documents([item], self.ide.workspace_directory)
 
-        async def on_files_created(filepaths: List[str]):
+        async def on_files_created(filepaths: List[str]) -> None:
             items = await asyncio.gather(
                 *[
                     self.get_context_item_for_filepath(filepath)
                     for filepath in filepaths
-                ]
+                ],
             )
             items = [item for item in items if item is not None]
             await self.update_documents(items, self.ide.workspace_directory)
 
-        async def on_files_deleted(filepaths: List[str]):
+        async def on_files_deleted(filepaths: List[str]) -> None:
             ids = [self.get_id_for_filepath(filepath) for filepath in filepaths]
 
             await self.delete_documents(ids)
 
-        async def on_files_renamed(old_filepaths: List[str], new_filepaths: List[str]):
+        async def on_files_renamed(old_filepaths: List[str], new_filepaths: List[str]) -> None:
             if self.ide.workspace_directory is None:
                 return
 
@@ -66,7 +64,7 @@ class FileContextProvider(ContextProvider):
                 *[
                     self.get_context_item_for_filepath(filepath)
                     for filepath in new_filepaths
-                ]
+                ],
             )
             new_docs = [doc for doc in new_docs if doc is not None]
 
@@ -81,7 +79,7 @@ class FileContextProvider(ContextProvider):
     async def get_item(self, id: ContextItemId, query: str) -> Optional[ContextItem]:
         if item := await super().get_item(id, query):
             item.description.description = os.path.join(
-                self.ide.workspace_directory, item.description.description
+                self.ide.workspace_directory, item.description.description,
             )
         return item
 
@@ -97,7 +95,7 @@ class FileContextProvider(ContextProvider):
         )
 
     async def get_context_item_for_filepath(
-        self, absolute_filepath: str, content: Optional[str] = None
+        self, absolute_filepath: str, content: Optional[str] = None,
     ) -> Optional[ContextItem]:
         if content is None:
             content = await get_file_contents(absolute_filepath, self.ide)
@@ -153,23 +151,22 @@ class FileContextProvider(ContextProvider):
                 *[
                     self.get_context_item_for_filepath(filepath)
                     for filepath in absolute_filepaths[i : i + delta]
-                ]
+                ],
             )
 
             i += delta
             await asyncio.sleep(timeout)
 
-        items = list(filter(lambda item: item is not None, items))
+        return list(filter(lambda item: item is not None, items))
 
-        return items
 
-    async def preview_contents(self, id: ContextItemId):
+    async def preview_contents(self, id: ContextItemId) -> None:
         if item := next(
-            filter(lambda x: x.description.id == id, self.selected_items), None
+            filter(lambda x: x.description.id == id, self.selected_items), None,
         ):
             await self.ide.setFileOpen(
                 os.path.join(
-                    self.ide.workspace_directory, item.description.description
+                    self.ide.workspace_directory, item.description.description,
                 ),
                 True,
             )

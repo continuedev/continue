@@ -9,7 +9,7 @@ class ContinueStepStep(Step):
     name: str = "Write your own Continue Step."
     prompt: str
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         await sdk.run_step(
             EditHighlightedCodeStep(
                 user_input=dedent(
@@ -37,7 +37,7 @@ class ContinueStepStep(Step):
 
         It should be a subclass of Step as above, implementing the `run` method, and using pydantic attributes to define the parameters.
 
-        """
-                )
-            )
+        """,
+                ),
+            ),
         )

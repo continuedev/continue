@@ -3,13 +3,13 @@ from typing import List
 import requests
 from pydantic import Field
 
-from ...core.main import ChatMessage
+from continuedev.core.main import ChatMessage
+
 from .base import LLM
 
 
 class GooglePaLMAPI(LLM):
-    """
-    The Google PaLM API is currently in public preview, so production applications are not supported yet. However, you can [create an API key in Google MakerSuite](https://makersuite.google.com/u/2/app/apikey) and begin trying out the `chat-bison-001` model. Change `~/.continue/config.json` to look like this:
+    """The Google PaLM API is currently in public preview, so production applications are not supported yet. However, you can [create an API key in Google MakerSuite](https://makersuite.google.com/u/2/app/apikey) and begin trying out the `chat-bison-001` model. Change `~/.continue/config.json` to look like this:
 
     ```json title="~/.continue/config.json"
     {
@@ -46,5 +46,5 @@ class GooglePaLMAPI(LLM):
         data = response.json()
         if "candidates" in data:
             yield ChatMessage(
-                role="assistant", content=data["candidates"][0]["content"]
+                role="assistant", content=data["candidates"][0]["content"],
             )

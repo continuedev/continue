@@ -7,9 +7,7 @@ from ...core.main import ChatMessage
 
 
 def get_vars_in_template(template):
-    """
-    Get the variables in a template
-    """
+    """Get the variables in a template."""
     return [
         token[1]
         for token in chevron.tokenizer.tokenize(template)
@@ -18,15 +16,12 @@ def get_vars_in_template(template):
 
 
 def escape_var(var: str) -> str:
-    """
-    Escape a variable so it can be used in a template
-    """
+    """Escape a variable so it can be used in a template."""
     return var.replace(os.path.sep, "").replace(".", "")
 
 
 def render_templated_string(template: str) -> str:
-    """
-    Render system message or other templated string with mustache syntax.
+    """Render system message or other templated string with mustache syntax.
     Right now it only supports rendering absolute file paths as their contents.
     """
     vars = get_vars_in_template(template)
@@ -39,7 +34,7 @@ def render_templated_string(template: str) -> str:
             template = template.replace(var, escaped_var)
 
             if os.path.exists(var) and os.path.isfile(var):
-                args[escaped_var] = open(var, "r").read()
+                args[escaped_var] = open(var).read()
             else:
                 args[escaped_var] = ""
 
@@ -53,16 +48,14 @@ either a string or a list of ChatMessages.
 If a string is returned, it will be assumed that the chat history should be ignored
 """
 PromptTemplate = Union[
-    str, Callable[[List[ChatMessage], Dict[str, str]], Union[str, List[ChatMessage]]]
+    str, Callable[[List[ChatMessage], Dict[str, str]], Union[str, List[ChatMessage]]],
 ]
 
 
 def render_prompt_template(
-    template: PromptTemplate, history: List[ChatMessage], other_data: Dict[str, str]
+    template: PromptTemplate, history: List[ChatMessage], other_data: Dict[str, str],
 ) -> Union[str, List[ChatMessage]]:
-    """
-    Render a prompt template.
-    """
+    """Render a prompt template."""
     if isinstance(template, str):
         data = {
             "history": history,

@@ -127,7 +127,7 @@ class GetDiffResponse(BaseModel):
 
 
 class cached_property_no_none:
-    def __init__(self, func):
+    def __init__(self, func) -> None:
         self.func = func
 
     def __get__(self, instance, owner):
@@ -138,7 +138,7 @@ class cached_property_no_none:
             setattr(instance, self.func.__name__, value)
         return value
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<cached_property_no_none '{self.func.__name__}'>"
 
 
@@ -150,20 +150,18 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     def workspace_directory(self) -> str:
         return self.window_info.workspace_directory
 
-    def __init__(self, window_info: WindowInfo, sio: socketio.AsyncServer, sid: str):
+    def __init__(self, window_info: WindowInfo, sio: socketio.AsyncServer, sid: str) -> None:
         self.messenger = SocketIOMessenger(sio, sid)
         self.window_info = window_info
 
-    async def handle_json(self, msg: WebsocketsMessage):
+    async def handle_json(self, msg: WebsocketsMessage) -> None:
         data = msg.data
         if msg.message_type == "setFileOpen":
             await self.setFileOpen(data["filepath"], data["open"])
         elif msg.message_type == "setSuggestionsLocked":
             await self.setSuggestionsLocked(data["filepath"], data["locked"])
         elif msg.message_type == "fileEdits":
-            fileEdits = list(
-                map(lambda d: FileEditWithFullContents.parse_obj(d), data["fileEdits"])
-            )
+            fileEdits = [FileEditWithFullContents.parse_obj(d) for d in data["fileEdits"]]
             self.onFileEdits(fileEdits)
         elif msg.message_type == "highlightedCodePush":
             self.onHighlightedCodeUpdate(
@@ -210,12 +208,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         elif msg.message_type == "setTelemetryEnabled":
             self.onTelemetryEnabledChanged(data["enabled"])
         else:
-            raise ValueError("Unknown message type", msg.message_type)
+            msg = "Unknown message type"
+            raise ValueError(msg, msg.message_type)
 
-    async def showSuggestion(self, file_edit: FileEdit):
+    async def showSuggestion(self, file_edit: FileEdit) -> None:
         await self.messenger.send("showSuggestion", {"edit": file_edit.dict()})
 
-    async def showDiff(self, filepath: str, replacement: str, step_index: int):
+    async def showDiff(self, filepath: str, replacement: str, step_index: int) -> None:
         await self.messenger.send(
             "showDiff",
             {
@@ -225,38 +224,38 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             },
         )
 
-    async def showMultiFileEdit(self, edits: List[FileEdit]):
+    async def showMultiFileEdit(self, edits: List[FileEdit]) -> None:
         await self.messenger.send(
-            "showMultiFileEdit", {"edits": [edit.dict() for edit in edits]}
+            "showMultiFileEdit", {"edits": [edit.dict() for edit in edits]},
         )
 
-    async def setFileOpen(self, filepath: str, open: bool = True):
+    async def setFileOpen(self, filepath: str, open: bool = True) -> None:
         # Autopilot needs access to this.
         await self.messenger.send("setFileOpen", {"filepath": filepath, "open": open})
 
-    async def showMessage(self, message: str):
+    async def showMessage(self, message: str) -> None:
         await self.messenger.send("showMessage", {"message": message})
 
-    async def showVirtualFile(self, name: str, contents: str):
+    async def showVirtualFile(self, name: str, contents: str) -> None:
         await self.messenger.send(
-            "showVirtualFile", {"name": name, "contents": contents}
+            "showVirtualFile", {"name": name, "contents": contents},
         )
 
-    async def setSuggestionsLocked(self, filepath: str, locked: bool = True):
+    async def setSuggestionsLocked(self, filepath: str, locked: bool = True) -> None:
         # Lock suggestions in the file so they don't ruin the offset before others are inserted
         await self.messenger.send(
-            "setSuggestionsLocked", {"filepath": filepath, "locked": locked}
+            "setSuggestionsLocked", {"filepath": filepath, "locked": locked},
         )
 
-    async def highlightCode(self, range_in_file: RangeInFile, color: str = "#00ff0022"):
+    async def highlightCode(self, range_in_file: RangeInFile, color: str = "#00ff0022") -> None:
         await self.messenger.send(
-            "highlightCode", {"rangeInFile": range_in_file.dict(), "color": color}
+            "highlightCode", {"rangeInFile": range_in_file.dict(), "color": color},
         )
 
     async def runCommand(self, command: str) -> str:
         return (
             await self.messenger.send_and_receive(
-                {"command": command}, RunCommandResponse, "runCommand"
+                {"command": command}, RunCommandResponse, "runCommand",
             )
         ).output
 
@@ -265,26 +264,26 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         e_title = e.__str__() or e.__repr__()
         return self.showMessage(f"Error in Continue server: {e_title}\n {err_msg}")
 
-    def onAcceptRejectSuggestion(self, accepted: bool):
+    def onAcceptRejectSuggestion(self, accepted: bool) -> None:
         posthog_logger.capture_event("accept_reject_suggestion", {"accepted": accepted})
         dev_data_logger.capture("accept_reject_suggestion", {"accepted": accepted})
 
-    def onAcceptRejectDiff(self, accepted: bool, step_index: int):
+    def onAcceptRejectDiff(self, accepted: bool, step_index: int) -> None:
         posthog_logger.capture_event("accept_reject_diff", {"accepted": accepted})
         dev_data_logger.capture("accept_reject_diff", {"accepted": accepted})
 
-    def onFileSystemUpdate(self, update: FileSystemEdit):
+    def onFileSystemUpdate(self, update: FileSystemEdit) -> None:
         # Access to Autopilot (so SessionManager)
         pass
 
-    def onFileEdits(self, edits: List[FileEditWithFullContents]):
+    def onFileEdits(self, edits: List[FileEditWithFullContents]) -> None:
         pass
 
     def onHighlightedCodeUpdate(
         self,
         range_in_files: List[RangeInFileWithContents],
         edit: Optional[bool] = False,
-    ):
+    ) -> None:
         for callback in self._highlighted_code_callbacks:
             self.call_callback(callback, range_in_files, edit)
 
@@ -298,56 +297,56 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
     _debug_terminal_callbacks = []
     _telemetry_enabled_callbacks = []
 
-    def call_callback(self, callback, *args, **kwargs):
+    def call_callback(self, callback, *args, **kwargs) -> None:
         if asyncio.iscoroutinefunction(callback):
             create_async_task(callback(*args, **kwargs), self.on_error)
         else:
             callback(*args, **kwargs)
 
-    def subscribeToTelemetryEnabled(self, callback: Callable[[bool], Any]):
+    def subscribeToTelemetryEnabled(self, callback: Callable[[bool], Any]) -> None:
         self._telemetry_enabled_callbacks.append(callback)
 
-    def subscribeToDebugTerminal(self, callback: Callable[[str], Any]):
+    def subscribeToDebugTerminal(self, callback: Callable[[str], Any]) -> None:
         self._debug_terminal_callbacks.append(callback)
 
     def subscribeToHighlightedCode(
-        self, callback: Callable[[List[RangeInFileWithContents], bool], Any]
-    ):
+        self, callback: Callable[[List[RangeInFileWithContents], bool], Any],
+    ) -> None:
         self._highlighted_code_callbacks.append(callback)
 
-    def subscribeToFilesCreated(self, callback: Callable[[List[str]], Any]):
+    def subscribeToFilesCreated(self, callback: Callable[[List[str]], Any]) -> None:
         self._files_created_callbacks.append(callback)
 
-    def subscribeToFilesDeleted(self, callback: Callable[[List[str]], Any]):
+    def subscribeToFilesDeleted(self, callback: Callable[[List[str]], Any]) -> None:
         self._files_deleted_callbacks.append(callback)
 
-    def subscribeToFilesRenamed(self, callback: Callable[[List[str], List[str]], Any]):
+    def subscribeToFilesRenamed(self, callback: Callable[[List[str], List[str]], Any]) -> None:
         self._files_renamed_callbacks.append(callback)
 
-    def subscribeToFileSaved(self, callback: Callable[[str, str], Any]):
+    def subscribeToFileSaved(self, callback: Callable[[str, str], Any]) -> None:
         self._file_saved_callbacks.append(callback)
 
-    def onTelemetryEnabledChanged(self, enabled: bool):
+    def onTelemetryEnabledChanged(self, enabled: bool) -> None:
         for callback in self._telemetry_enabled_callbacks:
             self.call_callback(callback, enabled)
 
-    def onDebugTerminal(self, content: str):
+    def onDebugTerminal(self, content: str) -> None:
         for callback in self._debug_terminal_callbacks:
             self.call_callback(callback, content)
 
-    def onFilesCreated(self, filepaths: List[str]):
+    def onFilesCreated(self, filepaths: List[str]) -> None:
         for callback in self._files_created_callbacks:
             self.call_callback(callback, filepaths)
 
-    def onFilesDeleted(self, filepaths: List[str]):
+    def onFilesDeleted(self, filepaths: List[str]) -> None:
         for callback in self._files_deleted_callbacks:
             self.call_callback(callback, filepaths)
 
-    def onFilesRenamed(self, old_filepaths: List[str], new_filepaths: List[str]):
+    def onFilesRenamed(self, old_filepaths: List[str], new_filepaths: List[str]) -> None:
         for callback in self._files_renamed_callbacks:
             self.call_callback(callback, old_filepaths, new_filepaths)
 
-    def onFileSaved(self, filepath: str, contents: str):
+    def onFileSaved(self, filepath: str, contents: str) -> None:
         for callback in self._file_saved_callbacks:
             self.call_callback(callback, filepath, contents)
 
@@ -360,42 +359,42 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
 
     async def getVisibleFiles(self) -> List[str]:
         resp = await self.messenger.send_and_receive(
-            {}, VisibleFilesResponse, "visibleFiles"
+            {}, VisibleFilesResponse, "visibleFiles",
         )
         return resp.visibleFiles
 
     async def getTerminalContents(self, commands: int = -1) -> str:
-        """Get the contents of the terminal, up to the last 'commands' commands, or all if commands is -1"""
+        """Get the contents of the terminal, up to the last 'commands' commands, or all if commands is -1."""
         resp = await self.messenger.send_and_receive(
-            {"commands": commands}, TerminalContentsResponse, "getTerminalContents"
+            {"commands": commands}, TerminalContentsResponse, "getTerminalContents",
         )
         return resp.contents.strip()
 
     async def getHighlightedCode(self) -> List[RangeInFile]:
         resp = await self.messenger.send_and_receive(
-            {}, HighlightedCodeResponse, "highlightedCode"
+            {}, HighlightedCodeResponse, "highlightedCode",
         )
         return resp.highlightedCode
 
     async def readFile(self, filepath: str) -> str:
-        """Read a file"""
+        """Read a file."""
         resp = await self.messenger.send_and_receive(
-            {"filepath": filepath}, ReadFileResponse, "readFile"
+            {"filepath": filepath}, ReadFileResponse, "readFile",
         )
         return resp.contents
 
     async def fileExists(self, filepath: str) -> bool:
-        """Check whether file exists"""
+        """Check whether file exists."""
         resp = await self.messenger.send_and_receive(
-            {"filepath": filepath}, FileExistsResponse, "fileExists"
+            {"filepath": filepath}, FileExistsResponse, "fileExists",
         )
         return resp.exists
 
     async def getUserSecret(self, key: str) -> str:
-        """Get a user secret"""
+        """Get a user secret."""
         try:
             resp = await self.messenger.send_and_receive(
-                {"key": key}, GetUserSecretResponse, "getUserSecret"
+                {"key": key}, GetUserSecretResponse, "getUserSecret",
             )
             return resp.value
         except Exception as e:
@@ -403,39 +402,39 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
             return ""
 
     async def getTag(self) -> str:
-        """The 'tag' is the directory and the current branch"""
+        """The 'tag' is the directory and the current branch."""
         return self.workspace_directory + "::" + (await self.getBranch())
 
     async def getBranch(self) -> str:
-        """Get the current branch"""
+        """Get the current branch."""
         resp = await self.messenger.send_and_receive({}, GetBranchResponse, "getBranch")
         return resp.branch
 
     async def getDiff(self) -> str:
-        """Get the current git diff"""
+        """Get the current git diff."""
         resp = await self.messenger.send_and_receive({}, GetDiffResponse, "getDiff")
         return resp.diff
 
-    async def saveFile(self, filepath: str):
-        """Save a file"""
+    async def saveFile(self, filepath: str) -> None:
+        """Save a file."""
         await self.messenger.send("saveFile", {"filepath": filepath})
 
     async def readRangeInFile(self, range_in_file: RangeInFile) -> str:
-        """Read a range in a file"""
+        """Read a range in a file."""
         full_contents = await self.readFile(range_in_file.filepath)
         return FileSystem.read_range_in_str(full_contents, range_in_file.range)
 
     async def editFile(self, edit: FileEdit) -> FileEditWithFullContents:
-        """Edit a file"""
+        """Edit a file."""
         resp = await self.messenger.send_and_receive(
-            {"edit": edit.dict()}, EditFileResponse, "editFile"
+            {"edit": edit.dict()}, EditFileResponse, "editFile",
         )
         return resp.fileEdit
 
     async def listDirectoryContents(
-        self, directory: str, recursive: bool = False
+        self, directory: str, recursive: bool = False,
     ) -> List[str]:
-        """List the contents of a directory"""
+        """List the contents of a directory."""
         resp = await self.messenger.send_and_receive(
             {"directory": directory, "recursive": recursive},
             ListDirectoryContentsResponse,
@@ -444,13 +443,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         return resp.contents
 
     async def applyFileSystemEdit(self, edit: FileSystemEdit) -> EditDiff:
-        """Apply a file edit"""
+        """Apply a file edit."""
         backward = None
         fs = RealFileSystem()
         if isinstance(edit, FileEdit):
             file_edit = await self.editFile(edit)
             _, diff = FileSystem.apply_edit_to_str(
-                file_edit.fileContents, file_edit.fileEdit
+                file_edit.fileContents, file_edit.fileEdit,
             )
             backward = diff.backward
         elif isinstance(edit, AddFile):
@@ -463,7 +462,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         elif isinstance(edit, RenameFile):
             fs.rename_file(edit.filepath, edit.new_filepath)
             backward = RenameFile(
-                filepath=edit.new_filepath, new_filepath=edit.filepath
+                filepath=edit.new_filepath, new_filepath=edit.filepath,
             )
         elif isinstance(edit, AddDirectory):
             fs.add_directory(edit.path)
@@ -475,13 +474,13 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
                 for f in files:
                     path = os.path.join(root, f)
                     edit_diff = await self.applyFileSystemEdit(
-                        DeleteFile(filepath=path)
+                        DeleteFile(filepath=path),
                     )
                     backward_edits.append(edit_diff)
                 for d in dirs:
                     path = os.path.join(root, d)
                     edit_diff = await self.applyFileSystemEdit(
-                        DeleteDirectory(path=path)
+                        DeleteDirectory(path=path),
                     )
                     backward_edits.append(edit_diff)
 
@@ -519,7 +518,7 @@ class IdeProtocolServer(AbstractIdeProtocolServer):
         )
 
     async def find_references(
-        self, filepath: str, position: Position, include_declaration: bool = False
+        self, filepath: str, position: Position, include_declaration: bool = False,
     ):
         return await self.messenger.send_and_receive(
             {

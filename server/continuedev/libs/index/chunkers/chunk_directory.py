@@ -30,29 +30,30 @@ async def get_file_contents(filepath: str, ide: AbstractIdeProtocolServer) -> st
 
 
 async def get_contents_of_files(
-    files: List[str], ide: AbstractIdeProtocolServer, ignore_files: List[str] = []
+    files: List[str], ide: AbstractIdeProtocolServer, ignore_files: Optional[List[str]] = None,
 ) -> List[str]:
     # Get file contents for all at once
+    if ignore_files is None:
+        ignore_files = []
     return await asyncio.gather(*[ide.readFile(file) for file in files])
 
 
 async def get_all_filepaths(
-    ide: AbstractIdeProtocolServer, ignore_files: List[str] = []
+    ide: AbstractIdeProtocolServer, ignore_files: Optional[List[str]] = None,
 ) -> Tuple[List[str], Callable[[str], bool]]:
+    if ignore_files is None:
+        ignore_files = []
     files = await ide.listDirectoryContents(ide.workspace_directory, True)
 
     # Get all .gitignores first
     gitignore_paths = list(
         filter(
-            lambda file: file.endswith(".gitignore")
-            or file.endswith(".continueignore"),
+            lambda file: file.endswith((".gitignore", ".continueignore")),
             files,
-        )
+        ),
     )
     gitignore_contents = await get_contents_of_files(gitignore_paths, ide)
-    gitignores = {
-        path: content for path, content in zip(gitignore_paths, gitignore_contents)
-    }
+    gitignores = dict(zip(gitignore_paths, gitignore_contents))
 
     should_ignore_file = should_ignore_file_factory(ignore_files, gitignores)
 
@@ -60,10 +61,12 @@ async def get_all_filepaths(
 
 
 async def stream_file_contents(
-    ide: AbstractIdeProtocolServer, ignore_files: List[str] = [], group_size: int = 100
+    ide: AbstractIdeProtocolServer, ignore_files: Optional[List[str]] = None, group_size: int = 100,
 ) -> AsyncGenerator[Tuple[str, Optional[str], float], None]:
     # Get list of filenames to index
     # TODO: Don't get all at once, walk the tree, or break up
+    if ignore_files is None:
+        ignore_files = []
     files, should_ignore = await get_all_filepaths(ide, ignore_files)
 
     # Don't want to flood with too many requests
@@ -81,17 +84,19 @@ async def stream_file_contents(
 
 
 async def stream_chunk_directory(
-    ide: AbstractIdeProtocolServer, max_chunk_size: int, ignore_files: List[str] = []
+    ide: AbstractIdeProtocolServer, max_chunk_size: int, ignore_files: Optional[List[str]] = None,
 ) -> AsyncGenerator[Tuple[Optional[Chunk], float], None]:
+    if ignore_files is None:
+        ignore_files = []
     async for file, contents, progress in stream_file_contents(
-        ide, ignore_files=ignore_files
+        ide, ignore_files=ignore_files,
     ):
         if contents is None:
             yield (None, progress)
             continue
 
         for chunk in chunk_document(
-            file, contents, max_chunk_size, hashlib.sha1(contents.encode()).hexdigest()
+            file, contents, max_chunk_size, hashlib.sha1(contents.encode()).hexdigest(),
         ):
             yield (chunk, progress)
 
@@ -100,7 +105,7 @@ IndexAction = Literal["compute", "delete", "add_label", "remove_label"]
 
 
 def local_stream_chunk_directory(
-    workspace_dir: str, max_chunk_size: int, branch: str
+    workspace_dir: str, max_chunk_size: int, branch: str,
 ) -> Generator[Tuple[IndexAction, Union[str, Chunk], float], None, None]:
     """Stream Tuples of (action, chunk, progress). the chunk is a Chunk if 'compute' action, otherwise it is the digest string. the assumption in this case is to delete/update all chunks for the document id (digest)."""
     (compute, delete, add_label, remove_label) = sync_results(workspace_dir, branch)
@@ -114,9 +119,8 @@ def local_stream_chunk_directory(
             continue
 
         try:
-            contents = open(filepath, "r").read()
-        except Exception as e:
-            print(e, filepath)
+            contents = open(filepath).read()
+        except Exception:
             continue
 
         if contents.strip() == "":

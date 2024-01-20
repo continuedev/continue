@@ -30,7 +30,7 @@ async def mock_completion(item: CompletionBody):
     if item.stream:
 
         async def stream_text():
-            for i in range(len(text)):
+            for _ in range(len(text)):
                 word = random.choice(prompt.split())
                 yield {
                     "choices": [
@@ -38,7 +38,7 @@ async def mock_completion(item: CompletionBody):
                             "delta": {"role": "assistant", "content": word},
                             "finish_reason": None,
                             "index": 0,
-                        }
+                        },
                     ],
                     "created": 1677825464,
                     "id": "chatcmpl-6ptKyqKOGXZT6iQnqiXAH8adNLUzD",
@@ -60,7 +60,7 @@ async def mock_completion(item: CompletionBody):
                 "index": 0,
                 "logprobs": None,
                 "finish_reason": "length",
-            }
+            },
         ],
         "usage": {"prompt_tokens": 5, "completion_tokens": 7, "total_tokens": 12},
     }
@@ -90,7 +90,7 @@ async def mock_chat_completion(item: ChatBody):
                             "delta": {"role": "assistant", "content": word},
                             "finish_reason": None,
                             "index": 0,
-                        }
+                        },
                     ],
                     "created": 1677825464,
                     "id": "chatcmpl-6ptKyqKOGXZT6iQnqiXAH8adNLUzD",
@@ -114,14 +114,14 @@ async def mock_chat_completion(item: ChatBody):
                     "content": text,
                 },
                 "finish_reason": "stop",
-            }
+            },
         ],
         "usage": {"prompt_tokens": 9, "completion_tokens": 12, "total_tokens": 21},
     }
 
 
 def start_openai(port: int = 8000):
-    server = subprocess.Popen(
+    return subprocess.Popen(
         [
             "uvicorn",
             "openai_mock:openai",
@@ -132,7 +132,6 @@ def start_openai(port: int = 8000):
         ],
         cwd=os.path.dirname(__file__),
     )
-    return server
 
 
 if __name__ == "__main__":

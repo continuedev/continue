@@ -43,7 +43,7 @@ StepName = Literal[
 ]
 
 TemplateType = Literal[
-    "llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "deepseek"
+    "llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "deepseek",
 ]
 
 
@@ -77,7 +77,7 @@ def autodetect_template_type(model: str) -> Optional[TemplateType]:
 
 
 def autodetect_template_function(
-    model: str, explicit_template: Optional[TemplateType] = None
+    model: str, explicit_template: Optional[TemplateType] = None,
 ):
     if template_type := explicit_template or autodetect_template_type(model):
         mapping: Dict[TemplateType, Any] = {
@@ -94,7 +94,7 @@ def autodetect_template_function(
 
 
 def autodetect_prompt_templates(
-    model: str, explicit_template: Optional[TemplateType] = None
+    model: str, explicit_template: Optional[TemplateType] = None,
 ):
     template_type = explicit_template or autodetect_template_type(model)
 

@@ -1,13 +1,17 @@
 import asyncio
+
 #import threading
 from contextlib import asynccontextmanager
+
 #from multiprocessing import Process
 from typing import Any
 from uuid import uuid4
 
 import pytest
 import socketio
+
 from continuedev.core.main import StepDescription
+
 #from continuedev.server.main import run_server
 #from continuedev.server.meilisearch_server import kill_proc
 
@@ -61,7 +65,7 @@ async def get_client():
 
 
 async def request(
-    sio: socketio.AsyncClient, message_type: str, data: Any, use_ack: bool = False
+    sio: socketio.AsyncClient, message_type: str, data: Any, use_ack: bool = False,
 ) -> Any:
     future = asyncio.Future()
     await sio.emit(
@@ -104,8 +108,8 @@ async def sio_client():
     await sio.disconnect()
 
 
-@pytest.mark.asyncio
-async def test_empty_input():
+@pytest.mark.asyncio()
+async def test_empty_input() -> None:
     async with sio_client() as sio:
         resp = await request(
             sio,
@@ -150,8 +154,8 @@ def assistant_step(content):
     ).dict()
 
 
-@pytest.mark.asyncio
-async def test_get_session_title():
+@pytest.mark.asyncio()
+async def test_get_session_title() -> None:
     async with sio_client() as sio:
         resp = await request(
             sio,
@@ -160,9 +164,9 @@ async def test_get_session_title():
                 "history": [
                     user_input_step("Please explain bubble sort in python"),
                     assistant_step(
-                        "Sure! Bubble sort is an algorithm that sorts a list of items in O(n^2) time."
+                        "Sure! Bubble sort is an algorithm that sorts a list of items in O(n^2) time.",
                     ),
-                ]
+                ],
             },
             use_ack=True,
         )
@@ -171,8 +175,8 @@ async def test_get_session_title():
         assert resp == "New Session"
 
 
-@pytest.mark.asyncio
-async def test_get_config():
+@pytest.mark.asyncio()
+async def test_get_config() -> None:
     async with sio_client() as sio:
         resp = await request(
             sio,
@@ -192,14 +196,14 @@ async def test_get_config():
             assert isinstance(resp[key], pair)
 
 
-@pytest.mark.asyncio
-async def test_set_settings():
+@pytest.mark.asyncio()
+async def test_set_settings() -> None:
     async with sio_client() as sio:
         TEMP = 0.449
 
         future = asyncio.Future()
 
-        def cb(data):
+        def cb(data) -> None:
             future.set_result(True)
             assert data["data"]["completion_options"]["temperature"] == TEMP
 
@@ -214,14 +218,14 @@ async def test_set_settings():
         await asyncio.wait_for(future, timeout=5)
 
 
-@pytest.mark.asyncio
-async def test_set_system_message():
+@pytest.mark.asyncio()
+async def test_set_system_message() -> None:
     async with sio_client() as sio:
         SM = "SystemMessage"
 
         future = asyncio.Future()
 
-        def cb(data):
+        def cb(data) -> None:
             future.set_result(True)
             assert data["data"]["system_message"] == SM
 
@@ -236,16 +240,16 @@ async def test_set_system_message():
         await asyncio.wait_for(future, timeout=5)
 
 
-@pytest.mark.asyncio
-async def test_set_model_for_role():
+@pytest.mark.asyncio()
+async def test_set_model_for_role() -> None:
     pass
 
 
-@pytest.mark.asyncio
-async def test_add_model_for_role():
+@pytest.mark.asyncio()
+async def test_add_model_for_role() -> None:
     pass
 
 
-@pytest.mark.asyncio
-async def test_delete_model_at_index():
+@pytest.mark.asyncio()
+async def test_delete_model_at_index() -> None:
     pass

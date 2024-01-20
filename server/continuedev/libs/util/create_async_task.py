@@ -7,12 +7,12 @@ from .telemetry import posthog_logger
 
 
 def create_async_task(
-    coro: Coroutine, on_error: Optional[Callable[[Exception], Coroutine]] = None
+    coro: Coroutine, on_error: Optional[Callable[[Exception], Coroutine]] = None,
 ):
-    """asyncio.create_task and log errors by adding a callback"""
+    """asyncio.create_task and log errors by adding a callback."""
     task = asyncio.create_task(coro)
 
-    def callback(future: asyncio.Future):
+    def callback(future: asyncio.Future) -> None:
         try:
             future.result()
         except Exception as e:

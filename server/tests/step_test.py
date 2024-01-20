@@ -1,4 +1,5 @@
 import pytest
+
 from continuedev.core.config import ContinueConfig
 from continuedev.core.steps import UserInputStep
 from continuedev.headless import get_headless_autopilot
@@ -14,8 +15,8 @@ from .util.prompts import dotenv_test_pair, tokyo_test_pair
 TEST_CONFIG = ContinueConfig()
 
 
-@pytest.mark.asyncio
-async def test_step():
+@pytest.mark.asyncio()
+async def test_step() -> None:
     pytest.skip("TODO: too slow")
     autopilot = await get_headless_autopilot(config=TEST_CONFIG)
 
@@ -28,8 +29,8 @@ async def test_step():
     assert state.history[-1].description.strip().lower() == tokyo_test_pair[1]
 
 
-@pytest.mark.asyncio
-async def test_traceback_step():
+@pytest.mark.asyncio()
+async def test_traceback_step() -> None:
     pytest.skip("TODO: too slow")
     autopilot = await get_headless_autopilot(config=TEST_CONFIG)
 
@@ -39,16 +40,16 @@ async def test_traceback_step():
     assert dotenv_test_pair[1] in state.history[-1].description
 
 
-@pytest.mark.asyncio
-async def test_edit_step():
+@pytest.mark.asyncio()
+async def test_edit_step() -> None:
     pytest.skip("TODO: too slow")
     autopilot = await get_headless_autopilot(config=TEST_CONFIG)
     sdk = autopilot.sdk
     range_in_file = RangeInFileWithContents(
-        filepath=__file__, range=Range.from_shorthand(0, 0, 0, 0), contents=""
+        filepath=__file__, range=Range.from_shorthand(0, 0, 0, 0), contents="",
     )
     await sdk.add_context_item(
-        HighlightedCodeContextProvider.rif_to_context_item(range_in_file, 0, True)
+        HighlightedCodeContextProvider.rif_to_context_item(range_in_file, 0, True),
     )
 
     await autopilot.run(EditHighlightedCodeStep(user_input="Don't edit this code"))
@@ -56,5 +57,7 @@ async def test_edit_step():
     state = autopilot.session_state
     assert (
         isinstance(state.history[-1].description, str)
-        and len(state.history[-1].description) > 0
+    )
+    assert (
+        len(state.history[-1].description) > 0
     )

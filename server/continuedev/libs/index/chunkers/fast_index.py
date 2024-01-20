@@ -1,32 +1,32 @@
 # TODO:
-"""
-- Follow .continueignore
+"""- Follow .continueignore
 - How do we know to remove embeddings?
 On window load, check the list of branches against
 those you have indexed. Then purge any that don't exist.
 """
 
-from contextlib import contextmanager
 import os
+from contextlib import contextmanager
 from typing import Callable, Generator, List, Tuple
-from ...util.paths import getGlobalFolderPath
-from .ignore import should_ignore_file_factory, local_find_gitignores
+
 import pygit2
+
+from ...util.paths import getGlobalFolderPath
+from .ignore import local_find_gitignores, should_ignore_file_factory
 
 INDEX_CACHE_PATH = os.path.join(getGlobalFolderPath(), ".index_cache")
 INDEX_BRANCHES_PATH = os.path.join(getGlobalFolderPath(), ".index_branches")
 
 
 class DiskSet:
-    """
-    An on-disk set.
+    """An on-disk set.
     - On disk
     - Set operations
     - False positives not okay
-    - False negatives okay
+    - False negatives okay.
     """
 
-    def __init__(self, path: str):
+    def __init__(self, path: str) -> None:
         if not os.path.exists(path):
             with open(path, "w") as f:
                 f.write("")
@@ -35,10 +35,7 @@ class DiskSet:
 
     def __contains__(self, item: str) -> bool:
         self.file.seek(0)
-        for line in self.file.readlines():
-            if line.strip() == item:
-                return True
-        return False
+        return any(line.strip() == item for line in self.file.readlines())
 
     def add(self, item: str) -> None:
         if item in self:
@@ -75,8 +72,7 @@ FileAndHash = Tuple[str, str]
 def stream_files_to_update(
     workspace_dir: str,
 ) -> Generator[FileAndHash, None, None]:
-    """Yield (file, hash) pairs"""
-
+    """Yield (file, hash) pairs."""
     repo = pygit2.Repository(workspace_dir)
     commit = repo.head.peel(pygit2.Commit)
 
@@ -85,18 +81,16 @@ def stream_files_to_update(
 
     with disk_set(INDEX_CACHE_PATH) as already_indexed:
         yield from files_to_update_in(
-            commit, already_indexed, repo.workdir, should_ignore
+            commit, already_indexed, repo.workdir, should_ignore,
         )
 
     # Yield from files changed in the working tree
-    should_yield = set(
-        [
+    should_yield = {
             pygit2.GIT_STATUS_INDEX_NEW,
             pygit2.GIT_STATUS_INDEX_MODIFIED,
             pygit2.GIT_STATUS_WT_MODIFIED,
             pygit2.GIT_STATUS_WT_NEW,
-        ]
-    )
+        }
     for filepath, status in repo.status().items():
         if status in should_yield and not should_ignore(filepath):
             digest = repo.revparse_single("HEAD:" + filepath).hex
@@ -109,7 +103,7 @@ def files_to_update_in(
     path: str,
     should_ignore: Callable[[str], bool],
 ) -> Generator[FileAndHash, None, None]:
-    """Given an object, yield all files to update"""
+    """Given an object, yield all files to update."""
     if obj.hex in already_indexed or should_ignore(path):
         return
 
@@ -118,7 +112,7 @@ def files_to_update_in(
     elif obj.type == pygit2.GIT_OBJ_TREE:
         for entry in obj:
             yield from files_to_update_in(
-                entry, already_indexed, os.path.join(path, entry.name), should_ignore
+                entry, already_indexed, os.path.join(path, entry.name), should_ignore,
             )
     elif obj.type == pygit2.GIT_OBJ_COMMIT:
         yield from files_to_update_in(obj.tree, already_indexed, path, should_ignore)
@@ -130,10 +124,10 @@ def files_to_update_in(
 
 def get_all_branches(workspace_dir: str) -> List[str]:
     repo = pygit2.Repository(workspace_dir)
-    return [ref for ref in repo.branches.local]
+    return list(repo.branches.local)
 
 
-def clean_deleted_branches(current_branches: str):
+def clean_deleted_branches(current_branches: str) -> None:
     with disk_set(INDEX_BRANCHES_PATH) as indexed_branches:
         for branch in indexed_branches:
             if branch not in current_branches:

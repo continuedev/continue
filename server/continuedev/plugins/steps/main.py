@@ -82,13 +82,13 @@ class FasterEditHighlightedCodeStep(Step):
 
         This is the user request: "{user_input}"
         Here is the description of changes to make:
-"""
+""",
     )
 
     async def describe(self, models: Models) -> str:
         return "Editing highlighted code"
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         range_in_files = await sdk.get_code_context(only_editing=True)
         if len(range_in_files) == 0:
             # Get the full contents of all visible files
@@ -122,7 +122,7 @@ class FasterEditHighlightedCodeStep(Step):
         lines = completion.split("\n")
         current_edit = {}
         status = "FILEPATH"
-        for i in range(0, len(lines)):
+        for i in range(len(lines)):
             line = lines[i]
             if line == "FILEPATH":
                 if "FILEPATH" in current_edit:
@@ -157,10 +157,10 @@ class FasterEditHighlightedCodeStep(Step):
                 FileEdit(
                     filepath=filepath,
                     range=Range.from_lines_snippet_in_file(
-                        content=rif_dict[filepath], snippet=replace_me
+                        content=rif_dict[filepath], snippet=replace_me,
                     ),
                     replacement=replace_with,
-                )
+                ),
             )
         # ------------------------------
 
@@ -169,7 +169,7 @@ class FasterEditHighlightedCodeStep(Step):
             diff = await sdk.apply_filesystem_edit(file_edit)
             self._edit_diffs.append(diff)
 
-        for filepath in set([file_edit.filepath for file_edit in file_edits]):
+        for filepath in {file_edit.filepath for file_edit in file_edits}:
             await sdk.ide.saveFile(filepath)
             await sdk.ide.setFileOpen(filepath)
 
@@ -184,10 +184,10 @@ class StarCoderEditHighlightedCodeStep(Step):
 
     async def describe(self, models: Models) -> str:
         return await models.summarize.complete(
-            f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:"
+            f"{self._prompt_and_completion}\n\nPlease give brief a description of the changes made above using markdown bullet points:",
         )
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         range_in_files = await sdk.get_code_context(only_editing=True)
         found_highlighted_code = len(range_in_files) > 0
         if not found_highlighted_code:
@@ -208,7 +208,7 @@ class StarCoderEditHighlightedCodeStep(Step):
 
         for rif in range_in_files:
             prompt = self._prompt.format(
-                code=rif.contents, user_request=self.user_input
+                code=rif.contents, user_request=self.user_input,
             )
 
             segs = ["", ""]
@@ -228,7 +228,7 @@ class StarCoderEditHighlightedCodeStep(Step):
             self._prompt_and_completion += prompt + completion
 
             edits = calculate_diff2(
-                rif.filepath, rif.contents, completion.removesuffix("\n")
+                rif.filepath, rif.contents, completion.removesuffix("\n"),
             )
             for edit in edits:
                 await sdk.ide.applyFileSystemEdit(edit)
@@ -251,23 +251,23 @@ class EditAlreadyEditedRangeStep(Step):
                     You were previously asked to edit this code. The request was:
 
                     "{prev_user_input}"
-                    
+
                     And you generated this diff:
 
                     {diff}
-                    
+
                     Could you please re-edit this code to follow these secondary instructions?
 
                     "{user_input}"
-                    """
+                    """,
     )
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         if os.path.basename(self.range_in_file.filepath) in os.listdir(
-            os.path.expanduser(os.path.join("~", ".continue", "diffs"))
+            os.path.expanduser(os.path.join("~", ".continue", "diffs")),
         ):
             decoded_basename = decode_escaped_path(
-                os.path.basename(self.range_in_file.filepath)
+                os.path.basename(self.range_in_file.filepath),
             )
             self.range_in_file.filepath = decoded_basename
 
@@ -275,7 +275,7 @@ class EditAlreadyEditedRangeStep(Step):
 
         if self.range_in_file.range.start == self.range_in_file.range.end:
             self.range_in_file.range = Range.from_entire_file(
-                await sdk.ide.readFile(self.range_in_file.filepath)
+                await sdk.ide.readFile(self.range_in_file.filepath),
             )
 
         await sdk.run_step(
@@ -287,7 +287,7 @@ class EditAlreadyEditedRangeStep(Step):
                     user_input=self.user_input,
                 ),
                 range_in_files=[self.range_in_file],
-            )
+            ),
         )
 
 
@@ -318,7 +318,7 @@ class EditHighlightedCodeStep(Step):
                 for rif in highlighted_code:
                     if rif.range.start == rif.range.end:
                         range_in_files.append(
-                            RangeInFileWithContents.from_range_in_file(rif, "")
+                            RangeInFileWithContents.from_range_in_file(rif, ""),
                         )
 
         # If still no highlighted code, raise error
@@ -329,15 +329,10 @@ class EditHighlightedCodeStep(Step):
             )
 
         # If all of the ranges are point ranges, only edit the last one
-        if all([rif.range.start == rif.range.end for rif in range_in_files]):
+        if all(rif.range.start == rif.range.end for rif in range_in_files):
             range_in_files = [range_in_files[-1]]
 
-        range_in_files = list(
-            map(
-                lambda x: RangeInFile(filepath=x.filepath, range=x.range),
-                range_in_files,
-            )
-        )
+        range_in_files = [RangeInFile(filepath=x.filepath, range=x.range) for x in range_in_files]
 
         for range_in_file in range_in_files:
             # Check whether re-editing
@@ -346,7 +341,7 @@ class EditHighlightedCodeStep(Step):
                 == os.path.expanduser(os.path.join("~", ".continue", "diffs"))
                 or encode_escaped_path(range_in_file.filepath)
                 in os.listdir(
-                    os.path.expanduser(os.path.join("~", ".continue", "diffs"))
+                    os.path.expanduser(os.path.join("~", ".continue", "diffs")),
                 )
             ) and sdk.context.get("last_edit_user_input") is not None:
                 await sdk.run_step(
@@ -354,7 +349,7 @@ class EditHighlightedCodeStep(Step):
                         range_in_file=range_in_file,
                         user_input=self.user_input,
                         model=self.model,
-                    )
+                    ),
                 )
                 return
 
@@ -380,7 +375,7 @@ class SolveTracebackStep(Step):
     async def describe(self, models: Models) -> str:
         return f"```\n{self.traceback.full_traceback}\n```"
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         prompt = dedent(
             """I ran into this problem with my Python code:
 
@@ -391,7 +386,7 @@ class SolveTracebackStep(Step):
                 {code}
 
                 This is what the code should be in order to avoid the problem:
-            """
+            """,
         ).format(traceback=self.traceback.full_traceback, code="{code}")
 
         range_in_files = []
@@ -400,7 +395,7 @@ class SolveTracebackStep(Step):
             range_in_files.append(RangeInFile.from_entire_file(frame.filepath, content))
 
         await sdk.run_step(
-            DefaultModelEditCodeStep(range_in_files=range_in_files, user_input=prompt)
+            DefaultModelEditCodeStep(range_in_files=range_in_files, user_input=prompt),
         )
 
 
@@ -410,5 +405,5 @@ class EmptyStep(Step):
     async def describe(self, models: Models) -> str:
         return ""
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         pass

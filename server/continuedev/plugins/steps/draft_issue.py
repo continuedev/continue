@@ -46,9 +46,9 @@ class DraftIssueStep(Step):
 
                 Title: {title}
 
-                Body:\n\n"""
+                Body:\n\n""",
                 ),
-            )
+            ),
         ]
         async for chunk in sdk.models.default.stream_chat(messages):
             body += chunk.content

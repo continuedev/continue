@@ -17,7 +17,7 @@ def anthropic_template_messages(messages: List[ChatMessage]) -> str:
     ):
         prompt += f"{HUMAN_PROMPT} Hello."
     for msg in messages:
-        prompt += f"{HUMAN_PROMPT if (msg.role == 'user' or msg.role == 'system') else AI_PROMPT} {msg.content} "
+        prompt += f"{HUMAN_PROMPT if (msg.role in ('user', 'system')) else AI_PROMPT} {msg.content} "
 
     prompt += AI_PROMPT
     return prompt
@@ -29,7 +29,7 @@ def zephyr_template_messages(msgs: List[ChatMessage]) -> str:
     </s>
     <|user|>
     {prompt}</s>
-    <|assistant|>
+    <|assistant|>.
     """
     prompt = ""
 
@@ -157,7 +157,7 @@ CREATE TABLE product_suppliers (
 
 
 def _sqlcoder_template_messages(
-    msgs: List[ChatMessage], schema: str = SQL_CODER_DEFAULT_SCHEMA
+    msgs: List[ChatMessage], schema: str = SQL_CODER_DEFAULT_SCHEMA,
 ) -> str:
     question = msgs[-1].content
     return f"""\
@@ -211,8 +211,8 @@ def llama2_template_messages(msgs: List[ChatMessage]) -> str:
                 <<SYS>>
                 {msgs[0].content}
                 <</SYS>>
-                
-                """
+
+                """,
         )
         if len(msgs) > 1:
             prompt += f"[INST] {system_message}{msgs[1].content} [/INST]"
@@ -243,5 +243,5 @@ def code_llama_python_template_messages(msgs: List[ChatMessage]) -> str:
         [INST]
         You are an expert Python programmer and personal assistant, here is your task: {msgs[-1].content}
         Your answer should start with a [PYTHON] tag and end with a [/PYTHON] tag.
-        [/INST]"""
+        [/INST]""",
     )

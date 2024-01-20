@@ -61,7 +61,7 @@ class SimpleChatStep(Step):
                 end_size = len(chunk.content) - 6
                 if "&" in self.description[-end_size:]:
                     self.description = self.description[:-end_size] + html.unescape(
-                        self.description[-end_size:]
+                        self.description[-end_size:],
                     )
 
         if sdk.config.disable_summaries:
@@ -75,14 +75,14 @@ class SimpleChatStep(Step):
                             f'"{self.description}"\n\nPlease write a short title summarizing the message quoted above. Use no more than 10 words:',
                             max_tokens=20,
                             log=False,
-                        )
+                        ),
                     ),
                     200,
-                )
+                ),
             )
 
         self.chat_context.append(
-            ChatMessage(role="assistant", content=self.description, summary=self.name)
+            ChatMessage(role="assistant", content=self.description, summary=self.name),
         )
 
         # TODO: Never actually closing.

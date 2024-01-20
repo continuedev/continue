@@ -15,7 +15,7 @@ class TerminalContextProvider(ContextProvider):
     dynamic = True
 
     get_last_n_commands: int = Field(
-        3, description="The number of previous commands to reference"
+        3, description="The number of previous commands to reference",
     )
 
     def _terminal_context_item(self, content: str = ""):
@@ -37,8 +37,9 @@ class TerminalContextProvider(ContextProvider):
         return [self._terminal_context_item()]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.provider_title == self.title:
-            raise Exception("Invalid provider title for item")
+        if id.provider_title != self.title:
+            msg = "Invalid provider title for item"
+            raise Exception(msg)
 
         terminal_contents = await self.ide.getTerminalContents(self.get_last_n_commands)
         terminal_contents = terminal_contents[-5000:]

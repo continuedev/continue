@@ -32,19 +32,19 @@ def hasMigrated(migration_id: str) -> bool:
     return os.path.exists(path)
 
 
-def markMigrated(migration_id: str):
+def markMigrated(migration_id: str) -> None:
     path = os.path.join(getMigrationsPath(), migration_id)
     with open(path, "w") as f:
         f.write("")
 
 
-async def migrate(migration_id: str, migrate_func: Callable[[], Awaitable]):
+async def migrate(migration_id: str, migrate_func: Callable[[], Awaitable]) -> None:
     if not hasMigrated(migration_id):
         await migrate_func()
         markMigrated(migration_id)
 
 
-def sync_migrate(migration_id: str, migrate_func: Callable[[], Any]):
+def sync_migrate(migration_id: str, migrate_func: Callable[[], Any]) -> None:
     if not hasMigrated(migration_id):
         migrate_func()
         markMigrated(migration_id)
@@ -83,20 +83,22 @@ def getIndexFolderPath():
 def decode_escaped_path(path: str) -> str:
     """We use a custom escaping scheme to record the full path of a file as a
     corresponding basename, but withut URL encoding, because then the URI just gets
-    interpreted as a full path again."""
+    interpreted as a full path again.
+    """
     return path.replace("_f_", "/").replace("_b_", "\\")
 
 
 def encode_escaped_path(path: str) -> str:
     """We use a custom escaping scheme to record the full path of a file as a
     corresponding basename, but withut URL encoding, because then the URI just gets
-    interpreted as a full path again."""
+    interpreted as a full path again.
+    """
     return path.replace("/", "_f_").replace("\\", "_b_")
 
 
 def getEmbeddingsPathForBranch(workspace_dir: str, branch_name: str):
     path = os.path.join(
-        getIndexFolderPath(), encode_escaped_path(workspace_dir), branch_name
+        getIndexFolderPath(), encode_escaped_path(workspace_dir), branch_name,
     )
     os.makedirs(path, exist_ok=True)
     return path
@@ -113,8 +115,7 @@ def getDevDataFilePath(table_name: str):
 
 def getMeilisearchExePath():
     binary_name = "meilisearch.exe" if os.name == "nt" else "meilisearch"
-    path = os.path.join(getServerFolderPath(), binary_name)
-    return path
+    return os.path.join(getServerFolderPath(), binary_name)
 
 
 def getSessionFilePath(session_id: str):
@@ -153,9 +154,9 @@ def migrateConfigFile(existing: str) -> Optional[str]:
     return None
 
 
-def getConfigFilePath(json: bool = False) -> str:
+def get_config_file_path(json: bool = False) -> str:
     path = os.path.join(
-        getGlobalFolderPath(), "config.py" if not json else "config.json"
+        getGlobalFolderPath(), "config.py" if not json else "config.json",
     )
     os.makedirs(os.path.dirname(path), exist_ok=True)
 
@@ -166,7 +167,7 @@ def getConfigFilePath(json: bool = False) -> str:
                 f.write(default_config)
         else:
             # Make any necessary migrations
-            with open(path, "r") as f:
+            with open(path) as f:
                 existing_content = f.read()
 
             migrated = migrateConfigFile(existing_content)
@@ -178,15 +179,15 @@ def getConfigFilePath(json: bool = False) -> str:
     return path
 
 
-def convertConfigImports(shorten: bool):
-    path = getConfigFilePath()
+def convertConfigImports(shorten: bool) -> None:
+    path = get_config_file_path()
     # Make any necessary migrations
-    with open(path, "r") as f:
+    with open(path) as f:
         existing_content = f.read()
 
     if shorten:
         migrated = existing_content.replace(
-            "from continuedev.src.continuedev.", "from continuedev."
+            "from continuedev.src.continuedev.", "from continuedev.",
         )
     else:
         migrated = re.sub(

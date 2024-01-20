@@ -1,3 +1,4 @@
+import contextlib
 import os
 import socket
 from typing import Any, Dict, Optional
@@ -14,7 +15,7 @@ in_codespaces = os.getenv("CODESPACES") == "true"
 POSTHOG_API_KEY = "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs"
 
 
-def is_connected():
+def is_connected() -> bool:
     try:
         # connect to the host -- tells us if the host is actually reachable
         socket.create_connection(("www.google.com", 80))
@@ -30,12 +31,12 @@ class PostHogLogger:
     ide_info: Optional[Dict] = None
     posthog = None
 
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str) -> None:
         self.api_key = api_key
 
     def setup(
-        self, unique_id: str, allow_anonymous_telemetry: bool, ide_info: Optional[Dict]
-    ):
+        self, unique_id: str, allow_anonymous_telemetry: bool, ide_info: Optional[Dict],
+    ) -> None:
         self.unique_id = unique_id or "NO_UNIQUE_ID"
         self.allow_anonymous_telemetry = allow_anonymous_telemetry or False
         self.ide_info = ide_info
@@ -43,17 +44,14 @@ class PostHogLogger:
         # Capture initial event
         self.capture_event("session_start", {"os": os.name})
 
-    def capture_event(self, event_name: str, event_properties: Any):
-        """Safely capture event. Telemetry should never be the reason Continue doesn't work"""
-        try:
+    def capture_event(self, event_name: str, event_properties: Any) -> None:
+        """Safely capture event. Telemetry should never be the reason Continue doesn't work."""
+        with contextlib.suppress(Exception):
             self._capture_event(event_name, event_properties)
-        except Exception as e:
-            print(f"Failed to capture event: {e}")
-            pass
 
     _found_disconnected: bool = False
 
-    def _capture_event(self, event_name: str, event_properties: Any):
+    def _capture_event(self, event_name: str, event_properties: Any) -> None:
         if not self.allow_anonymous_telemetry:
             return
 
@@ -65,10 +63,10 @@ class PostHogLogger:
             event_properties["codespaces"] = True
 
         server_version_file = os.path.join(
-            getServerFolderPath(), CONTINUE_SERVER_VERSION_FILE
+            getServerFolderPath(), CONTINUE_SERVER_VERSION_FILE,
         )
         if os.path.exists(server_version_file):
-            with open(server_version_file, "r") as f:
+            with open(server_version_file) as f:
                 event_properties["server_version"] = f.read()
 
         # Add operating system
@@ -90,7 +88,8 @@ class PostHogLogger:
         else:
             if not self._found_disconnected:
                 self._found_disconnected = True
-                raise ConnectionError("No internet connection")
+                msg = "No internet connection"
+                raise ConnectionError(msg)
 
 
 posthog_logger = PostHogLogger(api_key=POSTHOG_API_KEY)

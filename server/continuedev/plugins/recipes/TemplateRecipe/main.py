@@ -1,13 +1,12 @@
 from typing import Coroutine
 
-from ....core.main import Observation, Step
+from ....core.main import Step
 from ....core.sdk import ContinueSDK, Models
 
 
 class TemplateRecipe(Step):
-    """
-    A simple recipe that appends a print statement to the currently open file.
-    Use this as a template to create your own!
+    """A simple recipe that appends a print statement to the currently open file.
+    Use this as a template to create your own!.
     """
 
     # Parameters for the recipe
@@ -21,7 +20,7 @@ class TemplateRecipe(Step):
         return f"Appended a statement to print `Hello, {self.name}!` at the end of the file."
 
     # The code executed when the recipe is run
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         visible_files = await sdk.ide.getVisibleFiles()
         await sdk.edit_file(
             filename=visible_files[0],

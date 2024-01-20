@@ -3,21 +3,19 @@ from typing import Any, Dict, List, Optional, Union
 
 import redbaron
 
-from .paths import getConfigFilePath
+from .paths import get_config_file_path
 
 
 def get_config_source():
-    config_file_path = getConfigFilePath()
-    with open(config_file_path, "r") as file:
-        source_code = file.read()
-    return source_code
+    config_file_path = get_config_file_path()
+    with open(config_file_path) as file:
+        return file.read()
 
 
 def load_red():
     source_code = get_config_source()
 
-    red = redbaron.RedBaron(source_code)
-    return red
+    return redbaron.RedBaron(source_code)
 
 
 def get_config_node(red):
@@ -25,12 +23,13 @@ def get_config_node(red):
         if node.type == "assignment" and node.target.value == "config":
             return node
     else:
-        raise Exception("Config file appears to be improperly formatted")
+        msg = "Config file appears to be improperly formatted"
+        raise Exception(msg)
 
 
 def edit_property(
-    args: redbaron.RedBaron, key_path: List[str], value: redbaron.RedBaron
-):
+    args: redbaron.RedBaron, key_path: List[str], value: redbaron.RedBaron,
+) -> None:
     for i in range(len(args)):
         node = args[i]
         if node.type != "call_argument":
@@ -48,11 +47,10 @@ edit_lock = threading.Lock()
 
 
 def edit_config_property(
-    key_path: List[str], value: Union[redbaron.RedBaron, str, float]
-):
-    """
-    key_path: list of strings representing the path to the property
-    value: redbaron node representing the value to set
+    key_path: List[str], value: Union[redbaron.RedBaron, str, float],
+) -> None:
+    """key_path: list of strings representing the path to the property
+    value: redbaron node representing the value to set.
     """
     if isinstance(value, str):
         value = create_string_node(value)
@@ -65,11 +63,11 @@ def edit_config_property(
         config_args = config.value.value[1].value
         edit_property(config_args, key_path, value)
 
-        with open(getConfigFilePath(), "w") as file:
+        with open(get_config_file_path(), "w") as file:
             file.write(red.dumps())
 
 
-def add_config_import(line: str):
+def add_config_import(line: str) -> None:
     # check if the import already exists
     source = get_config_source()
     if line in source:
@@ -80,7 +78,7 @@ def add_config_import(line: str):
         # if it doesn't exist, add it
         red.insert(1, line)
 
-        with open(getConfigFilePath(), "w") as file:
+        with open(get_config_file_path(), "w") as file:
             file.write(red.dumps())
 
 
@@ -112,20 +110,22 @@ def is_default(llm, k, v):
     return v == llm.__fields__[k].default
 
 
-def display_llm_class(llm, new: bool = False, overrides: Dict[str, str] = {}):
+def display_llm_class(llm, new: bool = False, overrides: Optional[Dict[str, str]] = None) -> str:
+    if overrides is None:
+        overrides = {}
     sep = ",\n\t\t\t"
     args = sep.join(
         [
             f"{k}={display_val(v, k) if k not in overrides else overrides[k]}"
             for k, v in llm.dict().items()
             if k not in filtered_attrs and v is not None and not is_default(llm, k, v)
-        ]
+        ],
     )
     return f"{llm.__class__.__name__}(\n\t\t\t{args}\n\t\t)"
 
 
 def create_obj_node(
-    class_name: str, args: Dict[str, str], tabs: int = 1
+    class_name: str, args: Dict[str, str], tabs: int = 1,
 ) -> redbaron.RedBaron:
     args_list = [f"{key}={value}" for key, value in args.items()]
     t = "\t" * tabs

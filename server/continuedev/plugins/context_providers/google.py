@@ -33,7 +33,7 @@ class GoogleContextProvider(ContextProvider):
                 name="Google Search",
                 description="Enter a query to search google",
                 id=ContextItemId(
-                    provider_title=self.title, item_id=self._GOOGLE_CONTEXT_ITEM_ID
+                    provider_title=self.title, item_id=self._GOOGLE_CONTEXT_ITEM_ID,
                 ),
             ),
         )
@@ -52,8 +52,9 @@ class GoogleContextProvider(ContextProvider):
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.provider_title == self.title:
-            raise Exception("Invalid provider title for item")
+        if id.provider_title != self.title:
+            msg = "Invalid provider title for item"
+            raise Exception(msg)
 
         results = await self._google_search(query)
         json_results = json.loads(results)

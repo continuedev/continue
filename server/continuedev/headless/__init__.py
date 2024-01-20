@@ -1,10 +1,11 @@
 from typing import List, Optional, Union
 
-from ..core.autopilot import Autopilot
-from ..core.config import ContinueConfig
-from ..core.context import ContextManager, ContextProvider
-from ..core.main import SessionState
-from ..server.protocols.cli_gui import CommandLineGUI
+from continuedev.core.autopilot import Autopilot
+from continuedev.core.config import ContinueConfig
+from continuedev.core.context import ContextManager, ContextProvider
+from continuedev.core.main import SessionState
+from continuedev.server.protocols.cli_gui import CommandLineGUI
+
 from .headless_ide import LocalIdeProtocol
 
 
@@ -12,8 +13,10 @@ async def get_headless_autopilot(
     directory: Optional[str] = ".",
     state: Optional[SessionState] = None,
     config: Optional[Union[str, ContinueConfig]] = None,
-    context_providers: List[ContextProvider] = [],
+    context_providers: Optional[List[ContextProvider]] = None,
 ) -> Autopilot:
+    if context_providers is None:
+        context_providers = []
     if config is not None:
         if isinstance(config, str):
             _config: ContinueConfig = ContinueConfig.from_filepath(config)

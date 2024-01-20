@@ -29,11 +29,11 @@ class AddFileStep(Step):
     async def describe(self, models: Models) -> str:
         return f"Added a file named `{self.filename}` to the workspace."
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         await sdk.add_file(self.filename, self.file_contents)
 
         await sdk.ide.setFileOpen(
-            os.path.join(sdk.ide.workspace_directory, self.filename)
+            os.path.join(sdk.ide.workspace_directory, self.filename),
         )
 
 
@@ -45,7 +45,7 @@ class DeleteFileStep(Step):
     async def describe(self, models: Models) -> str:
         return f"Deleted a file named `{self.filename}` from the workspace."
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         await sdk.delete_file(self.filename)
 
 
@@ -57,7 +57,7 @@ class AddDirectoryStep(Step):
     async def describe(self, models: Models) -> str:
         return f"Added a directory named `{self.directory_name}` to the workspace."
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         try:
             await sdk.add_directory(self.directory_name)
         except FileExistsError:
@@ -69,7 +69,7 @@ class RunTerminalCommandStep(Step):
     description: str = "Run a terminal command."
     command: str
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         self.description = f"Copy this command and run in your terminal:\n\n```bash\n{self.command}\n```"
 
 
@@ -80,7 +80,7 @@ class ViewDirectoryTreeStep(Step):
     async def describe(self, models: Models) -> str:
         return "Viewed the directory tree."
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         self.description = (
             f"```\n{display_tree(sdk.ide.workspace_directory, True, max_depth=2)}\n```"
         )
@@ -93,7 +93,7 @@ class EditFileStep(Step):
     instructions: str = Field(..., description="The instructions to edit the file.")
     hide: bool = True
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         await sdk.edit_file(self.filename, self.instructions)
 
 
@@ -113,7 +113,7 @@ class ChatWithFunctions(Step):
     description: str = ""
     hide: bool = True
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         step_name_step_class_map = {
             step.name.replace(" ", ""): step.__class__ for step in self.functions
         }
@@ -121,7 +121,7 @@ class ChatWithFunctions(Step):
         functions = [step_to_json_schema(function) for function in self.functions]
 
         self.chat_context.append(
-            ChatMessage(role="user", content=self.user_input, summary=self.user_input)
+            ChatMessage(role="user", content=self.user_input, summary=self.user_input),
         )
 
         last_function_called_name = None
@@ -136,7 +136,7 @@ class ChatWithFunctions(Step):
             gpt350613 = OpenAI(model="gpt-3.5-turbo-0613")
 
             async for msg_chunk in gpt350613.stream_chat(
-                await sdk.get_chat_context(), functions=functions
+                await sdk.get_chat_context(), functions=functions,
             ):
                 if msg_chunk.content != "":
                     msg_content += msg_chunk.content
@@ -161,8 +161,8 @@ class ChatWithFunctions(Step):
             if not was_function_called:
                 self.chat_context.append(
                     ChatMessage(
-                        role="assistant", content=msg_content, summary=msg_content
-                    )
+                        role="assistant", content=msg_content, summary=msg_content,
+                    ),
                 )
                 break
             else:
@@ -191,19 +191,21 @@ class ChatWithFunctions(Step):
                 try:
                     fn_call_params = json.loads(func_args)
                 except json.JSONDecodeError:
-                    raise Exception("The model returned invalid JSON. Please try again")
+                    msg = "The model returned invalid JSON. Please try again"
+                    raise Exception(msg)
                 self.chat_context.append(
                     ChatMessage(
                         role="assistant",
                         content="",
                         function_call=FunctionCall(name=func_name, arguments=func_args),
                         summary=f"Called function {func_name}",
-                    )
+                    ),
                 )
 
                 if func_name not in step_name_step_class_map:
+                    msg = f"The model tried to call a function ({func_name}) that does not exist. Please try again."
                     raise Exception(
-                        f"The model tried to call a function ({func_name}) that does not exist. Please try again."
+                        msg,
                     )
 
                 # if func_name == "AddFileStep":

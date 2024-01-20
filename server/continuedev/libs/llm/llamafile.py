@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import asyncio
 import socket
 import subprocess
-from typing import List, Optional
 
 from continuedev.core.main import ChatMessage, ContinueCustomException
 from continuedev.models.llm import CompletionOptions
@@ -9,7 +10,7 @@ from continuedev.models.llm import CompletionOptions
 from .llamacpp import LlamaCpp
 
 
-def test_port(PORT):
+def test_port(PORT) -> bool:
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         s.bind(("", PORT))  ## Try to open port
@@ -27,8 +28,7 @@ STARTUP_DELAY = 3.0
 
 
 class Llamafile(LlamaCpp):
-    """
-    A [llamafile](https://github.com/Mozilla-Ocho/llamafile#readme) is a self-contained binary that can run an open-source LLM. You can configure this provider in your config.json as follows:
+    """A [llamafile](https://github.com/Mozilla-Ocho/llamafile#readme) is a self-contained binary that can run an open-source LLM. You can configure this provider in your config.json as follows:
 
     ```json title="~/.continue/config.json"
     {
@@ -43,9 +43,9 @@ class Llamafile(LlamaCpp):
     Optionally, you can set the `llamafile_command` property, which will be run to start the llamafile if it isn't already running on port 8080. Be sure to use an absolute path to the llamafile binary. For example: `/Users/yourusername/mistral-7b-instruct-v0.1-Q4_K_M-server.llamafile`.
     """
 
-    llamafile_command: Optional[str] = None
+    llamafile_command: str | None = None
 
-    llamafile_process: Optional[subprocess.Popen] = None
+    llamafile_process: subprocess.Popen | None = None
 
     def check_and_start(self, should_raise: bool) -> bool:
         # Try to start the llamafile if it's not already started on port 8080
@@ -64,7 +64,7 @@ class Llamafile(LlamaCpp):
 
             import threading
 
-            def process_run():
+            def process_run() -> None:
                 p = subprocess.Popen(
                     self.llamafile_command.split(" "),
                     stdout=subprocess.PIPE,
@@ -82,7 +82,7 @@ class Llamafile(LlamaCpp):
 
         return False
 
-    def start(self, unique_id: str | None = None):
+    def start(self, unique_id: str | None = None) -> None:
         super().start(unique_id)
         self.check_and_start(False)
 
@@ -94,7 +94,7 @@ class Llamafile(LlamaCpp):
         return d
 
     async def _stream_chat(
-        self, messages: List[ChatMessage], options: CompletionOptions
+        self, messages: list[ChatMessage], options: CompletionOptions,
     ):
         if self.check_and_start(True):
             await asyncio.sleep(STARTUP_DELAY)

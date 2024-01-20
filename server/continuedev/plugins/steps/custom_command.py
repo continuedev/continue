@@ -14,7 +14,7 @@ class CustomCommandStep(Step):
     async def describe(self, models: Models):
         return self.prompt
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         task = render_templated_string(self.prompt)
 
         prompt_user_input = f"Task: {task}. Additional info: {self.user_input}"
@@ -22,7 +22,7 @@ class CustomCommandStep(Step):
         # Find the last chat message with this slash command and replace it with the user input
         for i in range(len(messages) - 1, -1, -1):
             if messages[i].role == "user" and messages[i].content.startswith(
-                self.slash_command
+                self.slash_command,
             ):
                 messages[i] = messages[i].copy(update={"content": prompt_user_input})
                 break

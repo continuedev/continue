@@ -44,7 +44,7 @@ class EmbeddingsProvider(ContextProvider):
                 name="Embedding Search",
                 description="Enter a query to embedding search codebase",
                 id=ContextItemId(
-                    provider_title=self.title, item_id=self.EMBEDDINGS_CONTEXT_ITEM_ID
+                    provider_title=self.title, item_id=self.EMBEDDINGS_CONTEXT_ITEM_ID,
                 ),
             ),
         )
@@ -54,7 +54,7 @@ class EmbeddingsProvider(ContextProvider):
 
         ret = []
         for node in results.source_nodes:
-            resource_name = list(node.node.relationships.values())[0]
+            resource_name = next(iter(node.node.relationships.values()))
             filepath = resource_name[: resource_name.index("::")]
             ret.append(EmbeddingResult(filename=filepath, content=node.node.text))
 
@@ -65,9 +65,10 @@ class EmbeddingsProvider(ContextProvider):
 
         return [self.BASE_CONTEXT_ITEM]
 
-    async def add_context_item(self, id: ContextItemId, query: str):
-        if not id.provider_title == self.title:
-            raise Exception("Invalid provider title for item")
+    async def add_context_item(self, id: ContextItemId, query: str) -> None:
+        if id.provider_title != self.title:
+            msg = "Invalid provider title for item"
+            raise Exception(msg)
 
         results = await self._get_query_results(query)
 

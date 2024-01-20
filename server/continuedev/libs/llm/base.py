@@ -7,14 +7,12 @@ import aiohttp
 import certifi
 from pydantic import Field, validator
 
-from ...core.config_utils.shared import (
+from continuedev.core.config_utils.shared import (
     autodetect_prompt_templates,
     autodetect_template_function,
 )
-from ...core.main import ChatMessage
-from ...models.llm import BaseCompletionOptions, CompletionOptions, RequestOptions
-from ...models.main import ContinueBaseModel
-from ..util.count_tokens import (
+from continuedev.core.main import ChatMessage
+from continuedev.libs.util.count_tokens import (
     CONTEXT_LENGTH_FOR_MODEL,
     DEFAULT_ARGS,
     compile_chat_messages,
@@ -22,9 +20,15 @@ from ..util.count_tokens import (
     format_chat_messages,
     prune_raw_prompt_from_top,
 )
-from ..util.devdata import dev_data_logger
-from ..util.logging import logger
-from ..util.telemetry import posthog_logger
+from continuedev.libs.util.devdata import dev_data_logger
+from continuedev.libs.util.logging import logger
+from continuedev.libs.util.telemetry import posthog_logger
+from continuedev.models.llm import (
+    BaseCompletionOptions,
+    CompletionOptions,
+    RequestOptions,
+)
+from continuedev.models.main import ContinueBaseModel
 
 
 class LLM(ContinueBaseModel):
@@ -34,7 +38,7 @@ class LLM(ContinueBaseModel):
     )
 
     unique_id: Optional[str] = Field(
-        default=None, description="The unique ID of the user."
+        default=None, description="The unique ID of the user.",
     )
     model: str = Field(
         default=...,
@@ -80,10 +84,10 @@ class LLM(ContinueBaseModel):
     )
 
     api_key: Optional[str] = Field(
-        default=None, description="The API key for the LLM provider."
+        default=None, description="The API key for the LLM provider.",
     )
     api_base: Optional[str] = Field(
-        default=None, description="The base URL of the LLM API."
+        default=None, description="The base URL of the LLM API.",
     )
 
     class Config:
@@ -91,23 +95,23 @@ class LLM(ContinueBaseModel):
         extra = "allow"
         fields = {
             "title": {
-                "description": "A title that will identify this model in the model selection dropdown"
+                "description": "A title that will identify this model in the model selection dropdown",
             },
             "system_message": {
-                "description": "A system message that will always be followed by the LLM"
+                "description": "A system message that will always be followed by the LLM",
             },
             "context_length": {
-                "description": "The maximum context length of the LLM in tokens, as counted by count_tokens."
+                "description": "The maximum context length of the LLM in tokens, as counted by count_tokens.",
             },
             "unique_id": {"description": "The unique ID of the user."},
             "model": {
-                "description": "The name of the model to be used (e.g. gpt-4, codellama)"
+                "description": "The name of the model to be used (e.g. gpt-4, codellama)",
             },
             "prompt_templates": {
-                "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation OR an instance of the PromptTemplate class if you want to control other parameters. See the documentation for more information.'
+                "description": 'A dictionary of prompt templates that can be used to customize the behavior of the LLM in certain situations. For example, set the "edit" key in order to change the prompt that is used for the /edit slash command. Each value in the dictionary is a string templated in mustache syntax, and filled in at runtime with the variables specific to the situation OR an instance of the PromptTemplate class if you want to control other parameters. See the documentation for more information.',
             },
             "template_messages": {
-                "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format."
+                "description": "A function that takes a list of messages and returns a prompt. This ensures that models like llama2, which are trained on specific chat formats, will always receive input in that format.",
             },
         }
 
@@ -128,20 +132,19 @@ class LLM(ContinueBaseModel):
         original_dict["class_name"] = self.__class__.__name__
         return original_dict
 
-    def start(self, unique_id: Optional[str] = None):
+    def start(self, unique_id: Optional[str] = None) -> None:
         """Start the connection to the LLM."""
         self.unique_id = unique_id
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Stop the connection to the LLM."""
-        pass
 
     _config_system_message: Optional[str] = None
     _config_temperature: Optional[float] = None
 
     def set_main_config_params(
-        self, system_msg: Optional[str], temperature: Optional[float]
-    ):
+        self, system_msg: Optional[str], temperature: Optional[float],
+    ) -> None:
         self._config_system_message = system_msg
         self._config_temperature = temperature
 
@@ -185,7 +188,7 @@ class LLM(ContinueBaseModel):
         return args
 
     def compile_log_message(
-        self, prompt: str, completion_options: CompletionOptions
+        self, prompt: str, completion_options: CompletionOptions,
     ) -> str:
         dict = {"context_length": self.context_length}
         dict.update(completion_options.dict(exclude_unset=True, exclude_none=True))
@@ -239,7 +242,7 @@ Settings:
 
         return self.template_messages(msgs)
 
-    def log_tokens_generated(self, model: str, completion: str):
+    def log_tokens_generated(self, model: str, completion: str) -> None:
         tokens = self.count_tokens(completion)
         dev_data_logger.capture(
             "tokens_generated",
@@ -281,7 +284,7 @@ Settings:
         )
 
         prompt = prune_raw_prompt_from_top(
-            self.model, self.context_length, prompt, options.max_tokens
+            self.model, self.context_length, prompt, options.max_tokens,
         )
 
         if not raw:
@@ -334,7 +337,7 @@ Settings:
         )
 
         prompt = prune_raw_prompt_from_top(
-            self.model, self.context_length, prompt, options.max_tokens
+            self.model, self.context_length, prompt, options.max_tokens,
         )
 
         if not raw:
@@ -385,7 +388,7 @@ Settings:
         )
 
         messages = self.compile_chat_messages(
-            options=options, msgs=messages, functions=functions
+            options=options, msgs=messages, functions=functions,
         )
         if self.template_messages is not None:
             prompt = self.template_messages(messages)
@@ -446,7 +449,7 @@ Settings:
         self.log_tokens_generated(options.model, completion)
 
     def _stream_complete(
-        self, prompt, options: CompletionOptions
+        self, prompt, options: CompletionOptions,
     ) -> AsyncGenerator[str, None]:
         """Stream the completion through generator."""
         raise NotImplementedError
@@ -460,16 +463,17 @@ Settings:
         return completion
 
     async def _stream_chat(
-        self, messages: List[ChatMessage], options: CompletionOptions
+        self, messages: List[ChatMessage], options: CompletionOptions,
     ) -> AsyncGenerator[ChatMessage, None]:
         """Stream the chat through generator."""
         if self.template_messages is None:
+            msg = "You must either implement template_messages or _stream_chat"
             raise NotImplementedError(
-                "You must either implement template_messages or _stream_chat"
+                msg,
             )
 
         async for chunk in self._stream_complete(
-            prompt=self.template_messages(messages), options=options
+            prompt=self.template_messages(messages), options=options,
         ):
             yield ChatMessage(role="assistant", content=chunk, summary=chunk)
 

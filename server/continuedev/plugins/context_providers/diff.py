@@ -13,9 +13,7 @@ from ...core.main import (
 
 
 class DiffContextProvider(ContextProvider):
-    """
-    Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
-    """
+    """Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing."""
 
     title = "diff"
     display_title = "Diff"
@@ -25,7 +23,7 @@ class DiffContextProvider(ContextProvider):
     _DIFF_CONTEXT_ITEM_ID = "diff"
 
     workspace_dir: str = Field(
-        None, description="The workspace directory in which to run `git diff`"
+        None, description="The workspace directory in which to run `git diff`",
     )
 
     @property
@@ -36,7 +34,7 @@ class DiffContextProvider(ContextProvider):
                 name="Diff",
                 description="Reference the output of 'git diff' for the current workspace",
                 id=ContextItemId(
-                    provider_title=self.title, item_id=self._DIFF_CONTEXT_ITEM_ID
+                    provider_title=self.title, item_id=self._DIFF_CONTEXT_ITEM_ID,
                 ),
             ),
         )
@@ -46,11 +44,12 @@ class DiffContextProvider(ContextProvider):
         return [self.BASE_CONTEXT_ITEM]
 
     async def get_item(self, id: ContextItemId, query: str) -> ContextItem:
-        if not id.provider_title == self.title:
-            raise Exception("Invalid provider title for item")
+        if id.provider_title != self.title:
+            msg = "Invalid provider title for item"
+            raise Exception(msg)
 
         result = subprocess.run(
-            ["git", "diff"], cwd=self.workspace_dir, capture_output=True, text=True
+            ["git", "diff"], cwd=self.workspace_dir, capture_output=True, text=True, check=False,
         )
         diff = result.stdout
         error = result.stderr

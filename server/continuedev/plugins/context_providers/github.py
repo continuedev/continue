@@ -12,13 +12,11 @@ from ...core.context import (
 
 
 class GitHubIssuesContextProvider(ContextProvider):
-    """
-    The GitHubIssuesContextProvider is a ContextProvider that allows you to search GitHub issues in a repo. Type '@issue' to reference the title and contents of an issue.
-    """
+    """The GitHubIssuesContextProvider is a ContextProvider that allows you to search GitHub issues in a repo. Type '@issue' to reference the title and contents of an issue."""
 
     title = "issues"
     repo_name: str = Field(
-        ..., description="The name of the GitHub repo from which to pull issues"
+        ..., description="The name of the GitHub repo from which to pull issues",
     )
     auth_token: str = Field(
         ...,

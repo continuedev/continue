@@ -35,23 +35,25 @@ CONTEXT_PROVIDER_MODULES = [
 def import_llm_module(module_name, module_title):
     module_name = f"continuedev.libs.llm.{module_name}"
     module = importlib.import_module(module_name)
-    obj = getattr(module, module_title)
-    return obj
+    return getattr(module, module_title)
 
 
 def import_context_provider_module(module_name, module_title):
     module_name = f"continuedev.plugins.context_providers.{module_name}"
     module = importlib.import_module(module_name)
-    obj = getattr(module, module_title)
-    return obj
+    return getattr(module, module_title)
 
 
-def docs_from_schema(schema, filepath, ignore_properties=[], inherited=[]):
+def docs_from_schema(schema, filepath, ignore_properties=None, inherited=None):
     # Generate markdown docs
+    if inherited is None:
+        inherited = []
+    if ignore_properties is None:
+        ignore_properties = []
     properties = ""
     inherited_properties = ""
 
-    def add_property(prop, details, only_required):
+    def add_property(prop, details, only_required) -> str:
         required = prop in schema.get("required", [])
         if only_required != required or prop in ignore_properties:
             return ""
@@ -88,12 +90,12 @@ import ClassPropertyRef from '@site/src/components/ClassPropertyRef.tsx';
 
 {"### Inherited Properties" if inherited_properties else ""}
 
-{inherited_properties}"""
+{inherited_properties}""",
     )
 
 
 llm_module = importlib.import_module("continuedev.libs.llm.base")
-ctx_obj = getattr(llm_module, "LLM")
+ctx_obj = llm_module.LLM
 schema = ctx_obj.schema()
 ctx_properties = schema["properties"].keys()
 
@@ -101,14 +103,14 @@ for module_name, module_title in LLM_MODULES:
     obj = import_llm_module(module_name, module_title)
     schema = obj.schema()
     markdown_docs = docs_from_schema(
-        schema, f"libs/llm/{module_name}.py", inherited=ctx_properties
+        schema, f"libs/llm/{module_name}.py", inherited=ctx_properties,
     )
     with open(f"docs/docs/reference/Models/{module_title.lower()}.md", "w") as f:
         f.write(markdown_docs)
 
 # SerializedContinueConfig
 config_module = importlib.import_module("continuedev.core.config")
-config_obj = getattr(config_module, "SerializedContinueConfig")
+config_obj = config_module.SerializedContinueConfig
 schema = config_obj.schema()
 schema["title"] = "Configuration Options"
 markdown_docs = docs_from_schema(schema, "core/config.py")
@@ -116,7 +118,7 @@ with open("docs/docs/reference/config.md", "w") as f:
     f.write(markdown_docs)
 
 ctx_module = importlib.import_module("continuedev.core.context")
-ctx_obj = getattr(ctx_module, "ContextProvider")
+ctx_obj = ctx_module.ContextProvider
 schema = ctx_obj.schema()
 ctx_properties = schema["properties"].keys()
 for module_name, module_title in CONTEXT_PROVIDER_MODULES:
@@ -135,7 +137,7 @@ for module_name, module_title in CONTEXT_PROVIDER_MODULES:
         inherited=ctx_properties,
     )
     with open(
-        f"docs/docs/reference/Context Providers/{module_title.lower()}.md", "w"
+        f"docs/docs/reference/Context Providers/{module_title.lower()}.md", "w",
     ) as f:
         f.write(markdown_docs)
 

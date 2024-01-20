@@ -3,15 +3,15 @@ from typing import Any, AsyncGenerator, Coroutine, List, Literal, Optional
 
 from pydantic import Field, validator
 
-from ...core.main import ChatMessage, ContinueCustomException
-from ..util.logging import logger
+from continuedev.core.main import ChatMessage, ContinueCustomException
+from continuedev.libs.util.logging import logger
+
 from .base import LLM, CompletionOptions
 from .openai import CHAT_MODELS
 
 
 class GGML(LLM):
-    """
-    See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
+    """See our [5 minute quickstart](https://github.com/continuedev/ggml-server-example) to run any model locally with ggml. While these models don't yet perform as well, they are free, entirely private, and run offline.
 
     You can also use this class for [LM Studio](https://lmstudio.ai).
 
@@ -39,11 +39,11 @@ class GGML(LLM):
         return api_base or "http://127.0.0.1:8000"
 
     model: str = Field(
-        "ggml", description="The name of the model to use (optional for the GGML class)"
+        "ggml", description="The name of the model to use (optional for the GGML class)",
     )
 
     api_type: Optional[Literal["azure", "openai"]] = Field(
-        default=None, description="OpenAI API type."
+        default=None, description="OpenAI API type.",
     )
 
     api_version: Optional[str] = Field(
@@ -52,7 +52,7 @@ class GGML(LLM):
     )
 
     engine: Optional[str] = Field(
-        default=None, description="OpenAI engine. For use with Azure OpenAI Service."
+        default=None, description="OpenAI engine. For use with Azure OpenAI Service.",
     )
 
     chat_endpoint: str = Field(
@@ -61,7 +61,7 @@ class GGML(LLM):
     )
 
     completions_endpoint: str = Field(
-        default="completions", description="The endpoint to call for chat completions"
+        default="completions", description="The endpoint to call for chat completions",
     )
 
     class Config:
@@ -79,13 +79,14 @@ class GGML(LLM):
 
         return headers
 
-    def get_full_server_url(self, endpoint: str):
+    def get_full_server_url(self, endpoint: str) -> str:
         endpoint = endpoint.lstrip("/").rstrip("/")
 
         if self.api_type == "azure":
             if self.engine is None or self.api_version is None or self.api_base is None:
+                msg = "For Azure OpenAI Service, you must specify engine, api_version, and api_base."
                 raise Exception(
-                    "For Azure OpenAI Service, you must specify engine, api_version, and api_base."
+                    msg,
                 )
 
             return f"{self.api_base}/openai/deployments/{self.engine}/{endpoint}?api-version={self.api_version}"
@@ -107,8 +108,9 @@ class GGML(LLM):
                 proxy=self.request_options.proxy,
             ) as resp:
                 if resp.status != 200:
+                    msg = f"Error calling /completions endpoint: {resp.status}"
                     raise Exception(
-                        f"Error calling /completions endpoint: {resp.status}"
+                        msg,
                     )
 
                 async for line in resp.content.iter_any():
@@ -116,9 +118,7 @@ class GGML(LLM):
                         chunks = line.decode("utf-8")
                         for chunk in chunks.split("\n"):
                             if (
-                                chunk.startswith(": ping - ")
-                                or chunk.startswith("data: [DONE]")
-                                or chunk.strip() == ""
+                                chunk.startswith((": ping - ", "data: [DONE]")) or chunk.strip() == ""
                             ):
                                 continue
                             elif chunk.startswith("data: "):
@@ -135,7 +135,7 @@ class GGML(LLM):
                                 yield j["choices"][0]["text"]
 
     async def _stream_chat(
-        self, messages: List[ChatMessage], options
+        self, messages: List[ChatMessage], options,
     ) -> AsyncGenerator[ChatMessage, None]:
         args = self.collect_args(options)
 
@@ -175,20 +175,18 @@ class GGML(LLM):
                             message=detail,
                         )
 
-                    async for line, end in resp.content.iter_chunks():
+                    async for line, _end in resp.content.iter_chunks():
                         json_chunk = line.decode("utf-8")
                         chunks = json_chunk.split("\n")
                         for chunk in chunks:
                             if (
-                                chunk.strip() == ""
-                                or json_chunk.startswith(": ping - ")
-                                or json_chunk.startswith("data: [DONE]")
+                                chunk.strip() == "" or json_chunk.startswith((": ping - ", "data: [DONE]"))
                             ):
                                 continue
                             try:
                                 delta = json.loads(chunk[6:])["choices"][0]["delta"]
                                 yield ChatMessage(
-                                    role="assistant", content=delta.get("content", "")
+                                    role="assistant", content=delta.get("content", ""),
                                 )
                             except Exception:
                                 pass
@@ -216,24 +214,25 @@ class GGML(LLM):
                 proxy=self.request_options.proxy,
             ) as resp:
                 if resp.status != 200:
+                    msg = f"Error calling /completions endpoint: {resp.status}"
                     raise Exception(
-                        f"Error calling /completions endpoint: {resp.status}"
+                        msg,
                     )
 
                 text = await resp.text()
                 try:
-                    completion = json.loads(text)["choices"][0]["text"]
-                    return completion
+                    return json.loads(text)["choices"][0]["text"]
                 except Exception as e:
+                    msg = f"Error calling /completions endpoint: {e}\n\nResponse text: {text}"
                     raise Exception(
-                        f"Error calling /completions endpoint: {e}\n\nResponse text: {text}"
+                        msg,
                     )
 
     async def _complete(self, prompt: str, options: CompletionOptions):
         completion = ""
         if self.model in CHAT_MODELS:
             async for chunk in self._stream_chat(
-                [ChatMessage(role="user", content=prompt)], options
+                [ChatMessage(role="user", content=prompt)], options,
             ):
                 completion += chunk.content
 
@@ -246,7 +245,7 @@ class GGML(LLM):
     async def _stream_complete(self, prompt, options: CompletionOptions):
         if self.model in CHAT_MODELS:
             async for chunk in self._stream_chat(
-                [ChatMessage(role="user", content=prompt)], options
+                [ChatMessage(role="user", content=prompt)], options,
             ):
                 yield chunk.content
 

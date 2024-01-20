@@ -17,8 +17,8 @@ try:
             with open(logfile_path, "w") as f:
                 f.write(tail)
 
-except Exception as e:
-    print("Error truncating log file: {}".format(e))
+except Exception:
+    pass
 
 # Create a logger
 logger = logging.getLogger(__name__)

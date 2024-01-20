@@ -4,10 +4,11 @@ from typing import List
 
 from pydantic import validator
 
-from ...core.main import ChatMessage
-from ..util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
-from ..util.errors import format_exc
-from ..util.telemetry import posthog_logger
+from continuedev.core.main import ChatMessage
+from continuedev.libs.util.count_tokens import CONTEXT_LENGTH_FOR_MODEL
+from continuedev.libs.util.errors import format_exc
+from continuedev.libs.util.telemetry import posthog_logger
+
 from .base import LLM
 
 # SERVER_URL = "http://127.0.0.1:8080"
@@ -21,7 +22,7 @@ class ProxyServer(LLM):
     def start(
         self,
         **kwargs,
-    ):
+    ) -> None:
         super().start(**kwargs)
         self.context_length = CONTEXT_LENGTH_FOR_MODEL[self.model]
 
@@ -35,18 +36,17 @@ class ProxyServer(LLM):
     async def _complete(self, prompt: str, options):
         args = self.collect_args(options)
 
-        async with self.create_client_session() as session:
-            async with session.post(
-                f"{SERVER_URL}/complete",
-                json={"messages": [{"role": "user", "content": prompt}], **args},
-                headers=self.get_headers(),
-                proxy=self.request_options.proxy,
-            ) as resp:
-                resp_text = await resp.text()
-                if resp.status != 200:
-                    raise Exception(resp_text)
+        async with self.create_client_session() as session, session.post(
+            f"{SERVER_URL}/complete",
+            json={"messages": [{"role": "user", "content": prompt}], **args},
+            headers=self.get_headers(),
+            proxy=self.request_options.proxy,
+        ) as resp:
+            resp_text = await resp.text()
+            if resp.status != 200:
+                raise Exception(resp_text)
 
-                return resp_text
+            return resp_text
 
     async def _stream_chat(self, messages: List[ChatMessage], options):
         args = self.collect_args(options)
@@ -93,17 +93,16 @@ class ProxyServer(LLM):
     async def _stream_complete(self, prompt, options):
         args = self.collect_args(options)
 
-        async with self.create_client_session() as session:
-            async with session.post(
-                f"{SERVER_URL}/stream_complete",
-                json={"messages": [{"role": "user", "content": prompt}], **args},
-                headers=self.get_headers(),
-                proxy=self.request_options.proxy,
-            ) as resp:
-                if resp.status != 200:
-                    raise Exception(await resp.text())
+        async with self.create_client_session() as session, session.post(
+            f"{SERVER_URL}/stream_complete",
+            json={"messages": [{"role": "user", "content": prompt}], **args},
+            headers=self.get_headers(),
+            proxy=self.request_options.proxy,
+        ) as resp:
+            if resp.status != 200:
+                raise Exception(await resp.text())
 
-                async for line in resp.content.iter_any():
-                    if line:
-                        decoded_line = line.decode("utf-8")
-                        yield decoded_line
+            async for line in resp.content.iter_any():
+                if line:
+                    decoded_line = line.decode("utf-8")
+                    yield decoded_line

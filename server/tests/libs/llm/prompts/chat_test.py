@@ -1,4 +1,5 @@
 import pytest
+
 from continuedev.core.main import ChatMessage
 from continuedev.libs.llm.prompts.chat import (
     anthropic_template_messages,
@@ -12,7 +13,7 @@ from continuedev.libs.llm.prompts.chat import (
 
 
 @pytest.mark.parametrize(
-    "template,expected",
+    ("template", "expected"),
     [
         (
             template_alpaca_messages,
@@ -55,9 +56,9 @@ Hello!
             anthropic_template_messages,
             """
 
-Human: Always be kind 
+Human: Always be kind
 
-Human: Hello! 
+Human: Hello!
 
 Assistant:""",
         ),
@@ -76,12 +77,11 @@ Hello! [/INST]""",
         ),
     ],
 )
-def test_template_messages(template, expected):
+def test_template_messages(template, expected) -> None:
     templated = template(
         [
             ChatMessage(role="system", content="Always be kind"),
             ChatMessage(role="user", content="Hello!"),
-        ]
+        ],
     )
-    print(templated)
     assert templated == expected

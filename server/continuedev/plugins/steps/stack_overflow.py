@@ -29,7 +29,7 @@ async def get_results(q: str):
         return response.json()
     except Exception:
         logger.warning(
-            "You have been rate limited. Try the search endpoint again in a few minutes."
+            "You have been rate limited. Try the search endpoint again in a few minutes.",
         )
         return {"organic": []}
 
@@ -48,7 +48,7 @@ async def get_link_contents(url: str) -> Optional[str]:
     question = converter.handle(str(bodies[0]))
     answer = converter.handle(str(bodies[1]))
 
-    content = f"""\
+    return f"""\
 # Question: [{title}]({url})
 
 {question}
@@ -57,7 +57,6 @@ async def get_link_contents(url: str) -> Optional[str]:
 
 {answer}
 """
-    return content
 
 
 class StackOverflowStep(Step):
@@ -66,7 +65,7 @@ class StackOverflowStep(Step):
     max_sources: int = 3
     hide: bool = True
 
-    async def run(self, sdk: ContinueSDK):
+    async def run(self, sdk: ContinueSDK) -> None:
         model = sdk.models.chat.model
 
         context_length = sdk.models.chat.context_length
@@ -104,11 +103,11 @@ class StackOverflowStep(Step):
                             id=ContextItemId(
                                 provider_title="",
                                 item_id=remove_meilisearch_disallowed_chars(
-                                    links[len(sources) - 1]
+                                    links[len(sources) - 1],
                                 ),
                             ),
                         ),
-                    )
+                    ),
                 )
 
                 if should_break:
@@ -119,5 +118,5 @@ class StackOverflowStep(Step):
                 name="Answer Question",
                 completion_options=CompletionOptions(model=model),
                 prompt=PROMPT.format(user_input=self.user_input),
-            )
+            ),
         )

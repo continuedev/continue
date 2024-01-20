@@ -8,16 +8,16 @@ def get_env_var(var_name: str):
     return os.getenv(var_name)
 
 
-def make_sure_env_exists():
+def make_sure_env_exists() -> None:
     if not os.path.exists(".env"):
         with open(".env", "w") as f:
             f.write("")
 
 
-def save_env_var(var_name: str, var_value: str):
+def save_env_var(var_name: str, var_value: str) -> None:
     make_sure_env_exists()
 
-    with open(".env", "r") as f:
+    with open(".env") as f:
         lines = f.readlines()
     with open(".env", "w") as f:
         values = {}

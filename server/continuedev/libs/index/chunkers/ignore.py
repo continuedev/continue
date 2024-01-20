@@ -1,5 +1,6 @@
 import os
 from typing import Callable, Dict, List
+
 from ...util.filter_files import DEFAULT_IGNORE_PATTERNS, should_filter_path
 
 FILE_IGNORE_PATTERNS = [
@@ -62,18 +63,18 @@ def gi_basename(path: str) -> str:
 
 def local_find_gitignores(workspace_dir: str) -> Dict[str, str]:
     gitignores = {}
-    for root, dirs, files in os.walk(workspace_dir):
+    for root, _dirs, files in os.walk(workspace_dir):
         for file in files:
-            if file.endswith(".gitignore") or file.endswith(".continueignore"):
+            if file.endswith((".gitignore", ".continueignore")):
                 path = os.path.join(root, file)
-                with open(path, "r") as f:
+                with open(path) as f:
                     gitignores[path] = f.read()
 
     return gitignores
 
 
 def should_ignore_file_factory(
-    ignore_files: List[str], gitignores: Dict[str, str]
+    ignore_files: List[str], gitignores: Dict[str, str],
 ) -> Callable[[str], bool]:
     gitignore_paths = list(gitignores.keys())
 
@@ -82,7 +83,7 @@ def should_ignore_file_factory(
             filter(
                 lambda gitignore_path: filepath.startswith(gi_basename(gitignore_path)),
                 gitignore_paths,
-            )
+            ),
         )
         patterns = []
         for path in paths:

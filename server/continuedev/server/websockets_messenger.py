@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import asyncio
 import json
 import uuid
-from typing import Any, Dict, Optional, Type, TypeVar
+from typing import Any, TypeVar
 
 from fastapi import WebSocket
 from fastapi.websockets import WebSocketState
@@ -20,20 +22,20 @@ class SocketIOMessenger:
     sio: AsyncServer
     sid: str
 
-    futures: Dict[str, asyncio.Future] = {}
+    futures: dict[str, asyncio.Future] = {}
 
-    def __init__(self, sio: AsyncServer, sid: str):
+    def __init__(self, sio: AsyncServer, sid: str) -> None:
         self.sio = sio
         self.sid = sid
 
     async def send(
         self,
         message_type: str,
-        data: Dict[str, Any],
-        message_id: Optional[str] = None,
+        data: dict[str, Any],
+        message_id: str | None = None,
         callback=None,
-    ):
-        def empty_callback(*args):
+    ) -> None:
+        def empty_callback(*args) -> None:
             pass
 
         if callback is None:
@@ -55,18 +57,18 @@ class SocketIOMessenger:
         return await self.futures[message_id]
 
     async def send_and_receive(
-        self, data: Dict[str, Any], resp_model: Type[T], message_type: str
+        self, data: dict[str, Any], resp_model: type[T], message_type: str,
     ) -> T:
         message_id = uuid.uuid4().hex
 
-        async def try_with_timeout(timeout: float):
+        async def try_with_timeout(_timeout: float):
             fut = asyncio.Future()
 
-            def callback(ack_data):
+            def callback(ack_data) -> None:
                 fut.set_result(ack_data)
 
             await self.send(
-                message_type, data, message_id=message_id, callback=callback
+                message_type, data, message_id=message_id, callback=callback,
             )
             response = await fut
             if isinstance(response, str):
@@ -83,7 +85,6 @@ class SocketIOMessenger:
             try:
                 return await try_with_timeout(timeout)
             except asyncio.TimeoutError:
-                print(f"Timed out waiting for response to '{message_type}'")
                 timeout *= 1.5
                 if timeout > 10:
                     raise ContinueCustomException(
@@ -91,9 +92,9 @@ class SocketIOMessenger:
                         message=f"Timed out waiting for response to '{message_type}'. The message sent was: {data or ''}",
                     )
             except asyncio.exceptions.CancelledError:
-                print(f"Cancelled task {message_type}")
+                pass
 
-    def post(self, msg: WebsocketsMessage):
+    def post(self, msg: WebsocketsMessage) -> None:
         if msg.message_id in self.futures:
             self.futures[msg.message_id].set_result(msg)
             del self.futures[msg.message_id]
@@ -103,12 +104,12 @@ class WebsocketsMessenger:
     websocket: WebSocket
     sub_queue: WebsocketsSubscriptionQueue = WebsocketsSubscriptionQueue()
 
-    def __init__(self, ws: WebSocket):
+    def __init__(self, ws: WebSocket) -> None:
         self.ws = ws
 
     async def send(
-        self, message_type: str, data: Dict[str, Any], message_id: Optional[str] = None
-    ):
+        self, message_type: str, data: dict[str, Any], message_id: str | None = None,
+    ) -> None:
         msg = WebsocketsMessage(
             message_type=message_type,
             data=data,
@@ -117,7 +118,7 @@ class WebsocketsMessenger:
         try:
             if self.websocket.application_state == WebSocketState.DISCONNECTED:
                 logger.debug(
-                    f"Tried to send message, but websocket is disconnected: {msg.message_type}"
+                    f"Tried to send message, but websocket is disconnected: {msg.message_type}",
                 )
                 return
 
@@ -131,7 +132,7 @@ class WebsocketsMessenger:
         return resp
 
     async def send_and_receive(
-        self, data: Dict[str, Any], resp_model: Type[T], message_type: str
+        self, data: dict[str, Any], resp_model: type[T], message_type: str,
     ) -> T:
         message_id = uuid.uuid4().hex
 
@@ -152,5 +153,5 @@ class WebsocketsMessenger:
                         message=f"Timed out waiting for response to '{message_type}'. The message sent was: {data or ''}",
                     )
 
-    def post(self, msg: WebsocketsMessage):
+    def post(self, msg: WebsocketsMessage) -> None:
         self.sub_queue.post(msg)
