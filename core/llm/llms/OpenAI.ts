@@ -1,4 +1,3 @@
-import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions";
 import { BaseLLM } from "..";
 import {
   ChatMessage,
@@ -6,6 +5,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
+import { stripImages } from "../countTokens";
 import { streamSse } from "../stream";
 
 const NON_CHAT_MODELS = [
@@ -27,12 +27,23 @@ class OpenAI extends BaseLLM {
     apiBase: "https://api.openai.com",
   };
 
-  protected _convertArgs(
-    options: any,
-    messages: ChatMessage[]
-  ): ChatCompletionCreateParamsBase {
-    const finalOptions: ChatCompletionCreateParamsBase = {
-      messages,
+  protected _convertMessage(message: ChatMessage) {
+    if (typeof message.content === "string") {
+      return message;
+    }
+
+    const parts = message.content.map((part) => {
+      return { type: part.type, text: part.text, image_url: part.imageUrl };
+    });
+    return {
+      ...message,
+      content: parts,
+    };
+  }
+
+  protected _convertArgs(options: any, messages: ChatMessage[]) {
+    const finalOptions = {
+      messages: messages.map(this._convertMessage),
       model: options.model,
       max_tokens: options.maxTokens,
       temperature: options.temperature,
@@ -87,7 +98,7 @@ class OpenAI extends BaseLLM {
       [{ role: "user", content: prompt }],
       options
     )) {
-      yield chunk.content;
+      yield stripImages(chunk.content);
     }
   }
 
@@ -152,7 +163,7 @@ class OpenAI extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     if (NON_CHAT_MODELS.includes(options.model)) {
       for await (const content of this._legacystreamComplete(
-        messages[messages.length - 1]?.content || "",
+        stripImages(messages[messages.length - 1]?.content || ""),
         options
       )) {
         yield {

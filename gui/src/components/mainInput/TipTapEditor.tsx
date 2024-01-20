@@ -68,7 +68,6 @@ interface TipTapEditorProps {
   onEnter: (editorState: JSONContent) => void;
 
   editorState?: JSONContent;
-  content?: string;
 }
 
 function TipTapEditor(props: TipTapEditorProps) {
@@ -218,7 +217,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         style: "font-size: 14px;",
       },
     },
-    content: props.editorState || props.content || "",
+    content: props.editorState || "",
     onUpdate: ({ editor, transaction }) => {
       // If /edit is typed and no context items are selected, select the first
 

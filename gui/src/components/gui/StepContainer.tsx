@@ -3,6 +3,7 @@ import {
   HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
+import { stripImages } from "core/llm/countTokens";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
@@ -91,7 +92,7 @@ function StepContainer(props: StepContainerProps) {
           fontSize={getFontSize()}
         >
           <StyledMarkdownPreview
-            source={props.item.message.content}
+            source={stripImages(props.item.message.content)}
             showCodeBorder={true}
           />
         </ContentDiv>

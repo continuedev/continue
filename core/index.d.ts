@@ -59,6 +59,8 @@ export interface ILLM extends LLMOptions {
   ): Promise<ChatMessage>;
 
   countTokens(text: string): number;
+
+  supportsImages(): boolean;
 }
 
 export interface ContextProviderDescription {
@@ -139,9 +141,17 @@ export interface CompletionOptions extends BaseCompletionOptions {
 
 export type ChatMessageRole = "user" | "assistant" | "system";
 
+export interface MessagePart {
+  type: "text" | "imageUrl";
+  text?: string;
+  imageUrl?: { url: string };
+}
+
+export type MessageContent = string | MessagePart[];
+
 export interface ChatMessage {
   role: ChatMessageRole;
-  content: string;
+  content: MessageContent;
 }
 
 export interface ContextItemId {

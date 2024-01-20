@@ -1,5 +1,5 @@
 import { encodingForModel as _encodingForModel, Tiktoken } from "js-tiktoken";
-import { ChatMessage } from "..";
+import { ChatMessage, MessageContent, MessagePart } from "..";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
 
 let encoding: Tiktoken | null = null;
@@ -13,9 +13,25 @@ function encodingForModel(modelName: string): Tiktoken {
   return encoding;
 }
 
-function countTokens(content: string, modelName: string): number {
+function countImageTokens(content: MessagePart): number {
+  if (content.type === "imageUrl") {
+    return 85;
+  } else {
+    throw new Error("Non-image content type");
+  }
+}
+
+function countTokens(content: MessageContent, modelName: string): number {
   const encoding = encodingForModel(modelName);
-  return encoding.encode(content, "all", []).length;
+  if (Array.isArray(content)) {
+    return content.reduce((acc, part) => {
+      return acc + part.type === "imageUrl"
+        ? countImageTokens(part)
+        : encoding.encode(part.text || "", "all", []).length;
+    }, 0);
+  } else {
+    return encoding.encode(content, "all", []).length;
+  }
 }
 
 function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
@@ -32,6 +48,17 @@ function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
     }
   }
   return flattened;
+}
+
+export function stripImages(content: MessageContent): string {
+  if (Array.isArray(content)) {
+    return content
+      .filter((part) => part.type === "text")
+      .map((part) => part.text)
+      .join("");
+  } else {
+    return content;
+  }
 }
 
 function countChatMessageTokens(
@@ -97,8 +124,12 @@ function pruneRawPromptFromBottom(
   return pruneStringFromBottom(modelName, maxTokens, prompt);
 }
 
-function summarize(message: string): string {
-  return message.substring(0, 100) + "...";
+function summarize(message: MessageContent): string {
+  if (Array.isArray(message)) {
+    return stripImages(message).substring(0, 100) + "...";
+  } else {
+    return message.substring(0, 100) + "...";
+  }
 }
 
 function pruneChatHistory(
@@ -129,7 +160,7 @@ function pruneChatHistory(
   for (let i = 0; i < longerThanOneThird.length; i++) {
     // Prune line-by-line from the top
     const message = longerThanOneThird[i];
-    let lines = message.content.split("\n");
+    let lines = stripImages(message.content).split("\n");
     let tokensRemoved = 0;
     while (
       tokensRemoved < distanceFromThird[i] &&
@@ -190,7 +221,7 @@ function pruneChatHistory(
     message.content = pruneRawPromptFromTop(
       modelName,
       contextLength,
-      message.content,
+      stripImages(message.content),
       tokensForCompletion
     );
     totalTokens = contextLength;
@@ -204,6 +235,7 @@ function compileChatMessages(
   msgs: ChatMessage[] | undefined = undefined,
   contextLength: number,
   maxTokens: number,
+  supportsImages: boolean,
   prompt: string | undefined = undefined,
   functions: any[] | undefined = undefined,
   systemMessage: string | undefined = undefined
@@ -239,6 +271,16 @@ function compileChatMessages(
     throw new Error(
       `maxTokens (${maxTokens}) is too close to contextLength (${contextLength}), which doesn't leave room for response. Try increasing the contextLength parameter of the model in your config.json.`
     );
+  }
+
+  // If images not supported, convert MessagePart[] to string
+  if (!supportsImages) {
+    for (const msg of msgsCopy) {
+      if ("content" in msg && Array.isArray(msg.content)) {
+        const content = stripImages(msg.content);
+        msg.content = content;
+      }
+    }
   }
 
   const history = pruneChatHistory(

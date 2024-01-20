@@ -5,6 +5,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
+import { stripImages } from "../countTokens";
 import { streamResponse } from "../stream";
 
 class GooglePalm extends BaseLLM {
@@ -22,7 +23,7 @@ class GooglePalm extends BaseLLM {
       [{ content: prompt, role: "user" }],
       options
     )) {
-      yield message.content;
+      yield stripImages(message.content);
     }
   }
 

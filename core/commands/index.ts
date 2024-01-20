@@ -1,4 +1,5 @@
 import { CustomCommand, SlashCommand, SlashCommandDescription } from "..";
+import { stripImages } from "../llm/countTokens";
 import SlashCommands from "./slash";
 
 export function slashFromCustomCommand(
@@ -14,7 +15,7 @@ export function slashFromCustomCommand(
       for (let i = messages.length - 1; i >= 0; i--) {
         if (
           messages[i].role === "user" &&
-          messages[i].content.startsWith(`/${customCommand.name}`)
+          stripImages(messages[i].content).startsWith(`/${customCommand.name}`)
         ) {
           messages[i] = { ...messages[i], content: promptUserInput };
           break;
@@ -22,7 +23,7 @@ export function slashFromCustomCommand(
       }
 
       for await (const chunk of llm.streamChat(messages)) {
-        yield chunk.content;
+        yield stripImages(chunk.content);
       }
     },
   };

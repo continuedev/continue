@@ -55,6 +55,25 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "ollama",
 ];
 
+const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = ["openai", "ollama"];
+
+export function modelSupportsImages(
+  provider: ModelProvider,
+  model: string
+): boolean {
+  if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
+    return false;
+  }
+  if (model.includes("llava")) {
+    return true;
+  }
+  if (["gpt-4-vision-preview"].includes(model)) {
+    return true;
+  }
+
+  return false;
+}
+
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
 
@@ -204,6 +223,10 @@ export abstract class BaseLLM implements ILLM {
     return (this.constructor as typeof BaseLLM).providerName;
   }
 
+  supportsImages(): boolean {
+    return modelSupportsImages(this.providerName, this.model);
+  }
+
   uniqueId: string;
   model: string;
 
@@ -297,6 +320,7 @@ export abstract class BaseLLM implements ILLM {
       messages,
       contextLength,
       options.maxTokens || DEFAULT_MAX_TOKENS,
+      this.supportsImages(),
       undefined,
       functions,
       this.systemMessage
