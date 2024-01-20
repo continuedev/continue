@@ -92,7 +92,7 @@ class Ollama extends BaseLLM {
       content: stripImages(message.content),
       images: message.content
         .filter((part) => part.type === "imageUrl")
-        .map((part) => part.imageUrl?.url.replace("data:", "")),
+        .map((part) => part.imageUrl?.url.split(",").at(-1)),
     };
   }
 

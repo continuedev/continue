@@ -1,5 +1,7 @@
 import Document from "@tiptap/extension-document";
+import Dropcursor from "@tiptap/extension-dropcursor";
 import History from "@tiptap/extension-history";
+import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
@@ -23,7 +25,7 @@ import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
-import { isJetBrains, postToIde } from "../../util/ide";
+import { errorPopup, isJetBrains, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -60,6 +62,25 @@ const InputBoxDiv = styled.div`
 
   position: relative;
 `;
+
+function getDataUrlForFile(file: File, img): string {
+  const targetWidth = 512;
+  const targetHeight = 512;
+  const scaleFactor = Math.min(
+    targetWidth / img.width,
+    targetHeight / img.height
+  );
+
+  const canvas = document.createElement("canvas");
+  canvas.width = img.width * scaleFactor;
+  canvas.height = img.height * scaleFactor;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const downsizedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
+  return downsizedDataUrl;
+}
 
 interface TipTapEditorProps {
   availableContextProviders: IContextProvider[];
@@ -135,10 +156,47 @@ function TipTapEditor(props: TipTapEditorProps) {
     props.availableSlashCommands
   );
 
+  async function handleImageFile(
+    file: File
+  ): Promise<[HTMLImageElement, string] | undefined> {
+    let filesize = file.size / 1024 / 1024; // filesize in MB
+    // check image type and size
+    if (
+      (file.type === "image/jpeg" || file.type === "image/png") &&
+      filesize < 10
+    ) {
+      // check dimensions
+      let _URL = window.URL || window.webkitURL;
+      let img = new window.Image();
+      img.src = _URL.createObjectURL(file);
+      console.log(img.src);
+
+      return await new Promise((resolve) => {
+        img.onload = function () {
+          const dataUrl = getDataUrlForFile(file, img);
+
+          let image = new window.Image();
+          console.log("DATA URL: ", dataUrl.slice(0, 50));
+          image.src = dataUrl;
+          image.onload = function () {
+            resolve([image, dataUrl]);
+          };
+        };
+      });
+    } else {
+      errorPopup(
+        "Images need to be in jpg or png format and less than 10MB in size."
+      );
+    }
+    return undefined;
+  }
+
   const editor = useEditor({
     extensions: [
       Document,
       History,
+      Image,
+      Dropcursor,
       Placeholder.configure({
         placeholder: () =>
           historyLengthRef.current === 0
@@ -215,6 +273,32 @@ function TipTapEditor(props: TipTapEditorProps) {
       attributes: {
         class: "outline-none -mt-1 overflow-hidden",
         style: "font-size: 14px;",
+      },
+      handleDrop: function (view, event, slice, moved) {
+        if (
+          !moved &&
+          event.dataTransfer &&
+          event.dataTransfer.files &&
+          event.dataTransfer.files[0]
+        ) {
+          let file = event.dataTransfer.files[0];
+          handleImageFile(file).then(([img, dataUrl]) => {
+            const { schema } = view.state;
+            const coordinates = view.posAtCoords({
+              left: event.clientX,
+              top: event.clientY,
+            });
+            const node = schema.nodes.image.create({ src: dataUrl });
+            const transaction = view.state.tr.insert(
+              Math.max(0, coordinates.pos - 1),
+              [node]
+            );
+            return view.dispatch(transaction);
+          });
+
+          return true;
+        }
+        return false;
       },
     },
     content: props.editorState || "",
@@ -385,6 +469,13 @@ function TipTapEditor(props: TipTapEditorProps) {
         }}
         onEnter={() => {
           onEnterRef.current(editor.getJSON());
+        }}
+        onImageFileSelected={(file) => {
+          handleImageFile(file).then(([img, dataUrl]) => {
+            const { schema } = editor.state;
+            const node = schema.nodes.image.create({ src: dataUrl });
+            editor.state.tr.insert(0, node);
+          });
         }}
       />
     </InputBoxDiv>

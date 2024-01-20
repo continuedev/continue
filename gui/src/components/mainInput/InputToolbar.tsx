@@ -1,3 +1,6 @@
+import { PhotoIcon as OutlinePhotoIcon } from "@heroicons/react/24/outline";
+import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
+import { useRef, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
 
@@ -49,22 +52,65 @@ interface InputToolbarProps {
 
   onClick?: () => void;
 
+  onImageFileSelected?: (file: File) => void;
+
   hidden?: boolean;
 }
 
 function InputToolbar(props: InputToolbarProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [fileSelectHovered, setFileSelectHovered] = useState(false);
+
   return (
     <StyledDiv hidden={props.hidden} onClick={props.onClick} id="input-toolbar">
-      <span
-        style={{
-          color: lightGray,
-        }}
-        onClick={(e) => {
-          props.onAddContextItem();
-        }}
-        className="hover:underline cursor-pointer mr-auto"
-      >
-        + Add Context
+      <span className="cursor-pointer mr-auto flex items-center">
+        <span
+          style={{
+            color: lightGray,
+          }}
+          onClick={(e) => {
+            props.onAddContextItem();
+          }}
+          className="hover:underline cursor-pointer"
+        >
+          + Add Context
+        </span>
+        <span
+          className="ml-1.5 mt-0.5"
+          onMouseLeave={() => setFileSelectHovered(false)}
+          onMouseEnter={() => setFileSelectHovered(true)}
+        >
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }}
+            accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+            onChange={(e) => {
+              for (const file of e.target.files) {
+                props.onImageFileSelected(file);
+              }
+            }}
+          />
+          {fileSelectHovered ? (
+            <SolidPhotoIcon
+              width="1.4em"
+              height="1.4em"
+              color={lightGray}
+              onClick={(e) => {
+                fileInputRef.current?.click();
+              }}
+            />
+          ) : (
+            <OutlinePhotoIcon
+              width="1.4em"
+              height="1.4em"
+              color={lightGray}
+              onClick={(e) => {
+                fileInputRef.current?.click();
+              }}
+            />
+          )}
+        </span>
       </span>
       <span
         style={{
