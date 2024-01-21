@@ -1,4 +1,4 @@
-import { createContext, useState } from "react";
+import { createContext } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -13,9 +13,8 @@ import Models from "./pages/models";
 import MonacoPage from "./pages/monaco";
 import SettingsPage from "./pages/settings";
 
-import { ExtensionIde } from "core/ide";
-import { getBasename } from "core/util";
-import MiniSearch from "minisearch";
+import { ContextSubmenuItem } from "core";
+import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 
 const router = createMemoryRouter([
   {
@@ -67,65 +66,21 @@ const router = createMemoryRouter([
   },
 ]);
 
-const filesMiniSearch = new MiniSearch({
-  fields: ["id", "basename"],
-  storeFields: ["id", "basename"],
-});
-export const FilesSearchContext = createContext<
-  [MiniSearch, MiniSearchResult[]]
->([filesMiniSearch, []]);
-
-const foldersMiniSearch = new MiniSearch({
-  fields: ["id", "basename"],
-  storeFields: ["id", "basename"],
-});
-export const FoldersSearchContext = createContext<
-  [MiniSearch, MiniSearchResult[]]
->([foldersMiniSearch, []]);
-
-(async () => {
-  const files = await new ExtensionIde().listWorkspaceContents();
-  const results = files.map((filepath) => {
-    return { id: filepath, basename: getBasename(filepath) };
-  });
-  filesMiniSearch.addAll(results);
-})();
-
-(async () => {
-  const folders = await new ExtensionIde().listFolders();
-  const results = folders.map((path) => {
-    return { id: path, basename: getBasename(path) };
-  });
-  foldersMiniSearch.addAll(results);
-})();
-
-export interface MiniSearchResult {
-  id: string;
-  basename: string;
-}
+export const SubmenuContextProvidersContext = createContext<
+  (providerTitle: string | undefined, query: string) => ContextSubmenuItem[]
+>(() => []);
 
 function App() {
   const dispatch = useDispatch();
 
   useSetup(dispatch);
 
-  const [filesFirstResultsState, setFilesFirstResults] = useState<
-    MiniSearchResult[]
-  >([]);
-  const [foldersFirstResultsState, setFoldersFirstResults] = useState<
-    MiniSearchResult[]
-  >([]);
+  const { getSubmenuContextItems } = useSubmenuContextProviders();
 
   return (
-    <FilesSearchContext.Provider
-      value={[filesMiniSearch, filesFirstResultsState]}
-    >
-      <FoldersSearchContext.Provider
-        value={[foldersMiniSearch, foldersFirstResultsState]}
-      >
-        <RouterProvider router={router} />
-      </FoldersSearchContext.Provider>
-    </FilesSearchContext.Provider>
+    <SubmenuContextProvidersContext.Provider value={getSubmenuContextItems}>
+      <RouterProvider router={router} />
+    </SubmenuContextProvidersContext.Provider>
   );
 }
 

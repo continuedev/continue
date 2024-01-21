@@ -111,6 +111,10 @@ export function getBasename(filepath: string): string {
   return filepath.split(/[\\/]/).pop() || "";
 }
 
+export function getLastNPathParts(filepath: string, n: number): string {
+  return filepath.split(/[\\/]/).slice(-n).join("/");
+}
+
 export function getMarkdownLanguageTagForFile(filepath: string): string {
   const ext = filepath.split(".").pop();
   switch (ext) {

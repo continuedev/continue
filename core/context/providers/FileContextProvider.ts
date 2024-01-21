@@ -3,15 +3,17 @@ import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
+  ContextSubmenuItem,
+  LoadSubmenuItemsArgs,
 } from "../..";
+import { getBasename, getLastNPathParts } from "../../util";
 
 class FileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "file",
     displayTitle: "Files",
     description: "Type to search",
-    dynamic: false,
-    requiresQuery: false,
+    type: "submenu",
   };
 
   async getContextItems(
@@ -29,7 +31,25 @@ class FileContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
+
+  async loadSubmenuItems(
+    args: LoadSubmenuItemsArgs
+  ): Promise<ContextSubmenuItem[]> {
+    const workspaceDirs = await args.ide.getWorkspaceDirs();
+    const results = await Promise.all(
+      workspaceDirs.map((dir) => {
+        return args.ide.listWorkspaceContents(dir);
+      })
+    );
+    const files = results.flat();
+    return files.map((file) => {
+      return {
+        id: file,
+        title: getBasename(file),
+        description: getLastNPathParts(file, 2),
+      };
+    });
+  }
 }
 
 export default FileContextProvider;

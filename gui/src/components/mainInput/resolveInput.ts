@@ -74,7 +74,7 @@ async function resolveEditorContent(
       });
     } else {
       const data = {
-        name: item.id,
+        name: item.itemType === "contextProvider" ? item.id : item.itemType,
         query: item.query,
         fullInput: paragraphs.join("\n"),
       };

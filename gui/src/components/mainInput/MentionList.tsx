@@ -3,6 +3,7 @@ import {
   ArrowUpOnSquareIcon,
   AtSymbolIcon,
   BeakerIcon,
+  BookOpenIcon,
   ChevronDoubleRightIcon,
   Cog6ToothIcon,
   CommandLineIcon,
@@ -48,6 +49,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   codebase: SparklesIcon,
   problems: ExclamationTriangleIcon,
   folder: FolderIcon,
+  docs: BookOpenIcon,
   "/edit": PaintBrushIcon,
   "/clear": TrashIcon,
   "/test": BeakerIcon,
@@ -159,17 +161,16 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   const selectItem = (index) => {
     const item = props.items[index];
 
-    if (item.type === "contextProvider" && item.id === "file") {
-      setSubMenuTitle("Files - Type to search");
-      props.enterSubmenu(props.editor, "file");
-      return;
-    } else if (item.type === "contextProvider" && item.id === "folder") {
-      setSubMenuTitle("Folder - Type to search");
-      props.enterSubmenu(props.editor, "folder");
+    if (
+      item.type === "contextProvider" &&
+      item.contextProvider?.type === "submenu"
+    ) {
+      setSubMenuTitle(item.description);
+      props.enterSubmenu(props.editor, item.id);
       return;
     }
 
-    if (item.contextProvider?.requiresQuery) {
+    if (item.contextProvider?.type === "query") {
       setSubMenuTitle(item.description);
       setQuerySubmenuItem(item);
       return;
@@ -279,15 +280,18 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         filename={item.title}
                       ></FileIcon>
                     )}
-                    {item.type === "folder" && (
-                      <FolderIcon height="20px" width="20px"></FolderIcon>
-                    )}
-                    {item.type !== "file" && item.type !== "folder" && (
-                      <DropdownIcon
-                        provider={item.id}
-                        type={item.type}
-                        className="mr-2"
-                      />
+                    {item.type !== "file" && (
+                      <>
+                        <DropdownIcon
+                          provider={
+                            item.type === "contextProvider"
+                              ? item.id
+                              : item.type
+                          }
+                          type={item.type}
+                          className="mr-2"
+                        />
+                      </>
                     )}
                     {item.title}
                     {"  "}
@@ -303,7 +307,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                   >
                     {item.description}
                     {item.type === "contextProvider" &&
-                      (item.id === "file" || item.id === "folder") && (
+                      item.contextProvider?.type === "submenu" && (
                         <ArrowRightIcon
                           className="ml-2"
                           width="1.2em"
@@ -315,7 +319,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
               </ItemDiv>
             ))
           ) : (
-            <ItemDiv className="item">No result</ItemDiv>
+            <ItemDiv className="item">No results</ItemDiv>
           )}
         </>
       )}

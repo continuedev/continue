@@ -10,8 +10,7 @@ class TerminalContextProvider extends BaseContextProvider {
     title: "terminal",
     displayTitle: "Terminal",
     description: "Reference the contents of the terminal",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(
@@ -27,7 +26,6 @@ class TerminalContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
 }
 
 export default TerminalContextProvider;

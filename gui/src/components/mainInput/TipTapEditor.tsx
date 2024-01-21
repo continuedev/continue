@@ -17,7 +17,7 @@ import {
   vscInputBorder,
   vscInputBorderFocus,
 } from "..";
-import { FilesSearchContext, FoldersSearchContext } from "../../App";
+import { SubmenuContextProvidersContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
@@ -74,9 +74,7 @@ interface TipTapEditorProps {
 function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useDispatch();
 
-  const [filesMiniSearch, filesFirstResults] = useContext(FilesSearchContext);
-  const [foldersMiniSearch, foldersFirstResults] =
-    useContext(FoldersSearchContext);
+  const getSubmenuContextItems = useContext(SubmenuContextProvidersContext);
 
   const historyLength = useSelector(
     (store: RootStore) => store.state.history.length
@@ -123,13 +121,11 @@ function TipTapEditor(props: TipTapEditorProps) {
     (store: RootStore) => store.state.contextItems
   );
 
-  const filesMiniSearchRef = useUpdatingRef(filesMiniSearch);
-  const foldersMiniSearchRef = useUpdatingRef(foldersMiniSearch);
+  const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(
     props.availableContextProviders
   );
-  const filesFirstResultsRef = useUpdatingRef(filesFirstResults);
-  const foldersFirstResultsRef = useUpdatingRef(foldersFirstResults);
+
   const historyLengthRef = useUpdatingRef(historyLength);
   const onEnterRef = useUpdatingRef(props.onEnter);
   const availableSlashCommandsRef = useUpdatingRef(
@@ -184,10 +180,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
         suggestion: getMentionSuggestion(
           availableContextProvidersRef,
-          filesMiniSearchRef,
-          filesFirstResultsRef,
-          foldersMiniSearchRef,
-          foldersFirstResultsRef,
+          getSubmenuContextItemsRef,
           enterSubmenu,
           onClose,
           onOpen,

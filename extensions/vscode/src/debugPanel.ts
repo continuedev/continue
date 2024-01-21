@@ -593,6 +593,33 @@ export function getSidebarContent(
           respond({ done: true });
           break;
         }
+        case "loadSubmenuItems": {
+          const { title } = data.message;
+          const config = await configHandler.loadConfig(ide);
+          const provider = config.contextProviders?.find(
+            (p) => p.description.title === title
+          );
+          if (!provider) {
+            vscode.window.showErrorMessage(
+              `Unknown provider ${title}. Existing providers: ${config.contextProviders
+                ?.map((p) => p.description.title)
+                .join(", ")}`
+            );
+            respond({ items: [] });
+            break;
+          }
+
+          try {
+            const items = await provider.loadSubmenuItems({ ide });
+            respond({ items });
+          } catch (e) {
+            vscode.window.showErrorMessage(
+              `Error loading submenu items from ${title}: ${e}`
+            );
+            respond({ items: [] });
+          }
+          break;
+        }
         case "getContextItems": {
           const { name, query, fullInput } = data.message;
           const config = await configHandler.loadConfig(ide);

@@ -6,12 +6,13 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../..";
+import { getIndexSqlitePath } from "../../util/paths";
 
-class GitHubIssuesContextProvider extends BaseContextProvider {
+class DocsContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
-    title: "github",
-    displayTitle: "GitHub Issues",
-    description: "Reference GitHub issues",
+    title: "docs",
+    displayTitle: "Docs",
+    description: "Search documentation",
     type: "submenu",
   };
 
@@ -25,8 +26,15 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs
   ): Promise<ContextSubmenuItem[]> {
+    const { open } = await import("sqlite");
+    const sqlite3 = await import("sqlite3");
+    // Load from SQLite, or shared registry
+    const db = await open({
+      filename: getIndexSqlitePath(),
+      driver: sqlite3.Database,
+    });
     return [];
   }
 }
 
-export default GitHubIssuesContextProvider;
+export default DocsContextProvider;

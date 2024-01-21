@@ -61,18 +61,23 @@ export interface ILLM extends LLMOptions {
   countTokens(text: string): number;
 }
 
+export type ContextProviderType = "normal" | "query" | "submenu";
+
 export interface ContextProviderDescription {
   title: string;
   displayTitle: string;
   description: string;
-  dynamic: boolean;
-  requiresQuery: boolean;
+  type: ContextProviderType;
 }
 
-interface ContextProviderExtras {
+export interface ContextProviderExtras {
   fullInput: string;
   embeddingsProvider?: EmbeddingsProvider;
   llm: ILLM;
+  ide: IDE;
+}
+
+export interface LoadSubmenuItemsArgs {
   ide: IDE;
 }
 
@@ -80,10 +85,20 @@ export interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
+  type?: ContextProviderType;
   getContextItems(
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]>;
+  loadSubmenuItems?: (
+    args: LoadSubmenuItemsArgs
+  ) => Promise<ContextSubmenuItem[]>;
+}
+
+export interface ContextSubmenuItem {
+  id: string;
+  title: string;
+  description: string;
 }
 
 export interface IContextProvider {
@@ -93,6 +108,8 @@ export interface IContextProvider {
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]>;
+
+  loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
 }
 
 export interface PersistedSessionInfo {
