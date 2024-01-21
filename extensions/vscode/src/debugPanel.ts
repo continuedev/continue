@@ -1,4 +1,6 @@
 import { ContextItemId, DiffLine, FileEdit, ModelDescription } from "core";
+import { indexDocs } from "core/indexing/docs";
+import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import { readFileSync, writeFileSync } from "fs";
 import * as io from "socket.io-client";
@@ -655,6 +657,34 @@ export function getSidebarContent(
             );
             respond({ items: [] });
           }
+          break;
+        }
+        case "addDocs": {
+          const { url, title } = data;
+          const embeddingsProvider = new TransformersJsEmbeddingsProvider();
+          vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: `Indexing ${title}`,
+              cancellable: false,
+            },
+            async (progress) => {
+              for await (const update of indexDocs(
+                title,
+                new URL(url),
+                embeddingsProvider
+              )) {
+                progress.report({
+                  increment: update.progress * 100,
+                  message: update.desc,
+                });
+              }
+
+              vscode.window.showInformationMessage(
+                `🎉 Successfully indexed ${title}`
+              );
+            }
+          );
           break;
         }
       }

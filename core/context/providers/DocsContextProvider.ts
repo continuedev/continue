@@ -6,6 +6,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../..";
+import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider";
 
 class DocsContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -20,13 +21,25 @@ class DocsContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
     const { retrieveDocs } = await import("../../indexing/docs/db");
-    const [vector] = await extras.embeddingsProvider.embed([query]);
+
+    const embeddingsProvider = new TransformersJsEmbeddingsProvider();
+    const [vector] = await embeddingsProvider.embed([extras.fullInput]);
+
     const chunks = await retrieveDocs(query, vector);
-    return chunks.map((chunk) => ({
-      name: chunk.filepath,
-      description: chunk.filepath,
-      content: chunk.content,
-    }));
+
+    return [
+      ...chunks.map((chunk) => ({
+        name: chunk.otherMetadata?.title || chunk.filepath,
+        description: new URL(chunk.filepath, query).toString(),
+        content: chunk.content,
+      })),
+      {
+        name: "Instructions",
+        description: "Instructions",
+        content:
+          "Use the above documentation to answer the following question. You should not reference anything outside of what is shown, unless it is a commonly known concept. Reference URLs whenever possible. If there isn't enough information to answer the question, suggest where the user might look to learn more.",
+      },
+    ];
   }
 
   async loadSubmenuItems(

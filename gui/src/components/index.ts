@@ -66,14 +66,38 @@ if (typeof document !== "undefined") {
   }
 }
 
+export function parseColorForHex(colorVar: string): string {
+  const value = getComputedStyle(document.documentElement).getPropertyValue(
+    colorVar
+  );
+  if (value.startsWith("#")) {
+    console.log("value", value);
+    return value.slice(0, 7);
+  }
+
+  // Parse rgb
+  const rgb = value
+    .slice(4, -1)
+    .split(",")
+    .map((x) => parseInt(x, 10));
+  let hex =
+    "#" +
+    rgb
+      .map((x) => x.toString(16))
+      .map((x) => (x.length === 1 ? "0" + x : x))
+      .join("");
+  console.log(hex, value);
+  return hex;
+}
+
 export const Button = styled.button`
   padding: 10px 12px;
   margin: 8px 0;
   border-radius: ${defaultBorderRadius};
 
   border: none;
-  color: white;
-  background-color: ${vscListActiveBackground};
+  color: ${vscForeground};
+  background-color: ${vscButtonBackground};
 
   &:disabled {
     color: gray;
@@ -157,6 +181,7 @@ export const Input = styled.input`
 
   &:focus {
     background: ${vscInputBackground};
+    outline: 1px solid ${vscFocusBorder};
   }
 
   &:invalid {

@@ -25,7 +25,7 @@ export async function* indexDocs(
 
   yield {
     progress: 0,
-    desc: "Finding subpages...",
+    desc: "Finding subpages",
   };
 
   const subpaths = await crawlSubpages(baseUrl);
@@ -33,16 +33,18 @@ export async function* indexDocs(
   const chunks: Chunk[] = [];
   const embeddings: number[][] = [];
 
+  const markdownForSubpaths = await Promise.all(
+    subpaths.map((subpath) => convertURLToMarkdown(new URL(subpath, baseUrl)))
+  );
+
   for (let i = 0; i < subpaths.length; i++) {
     const subpath = subpaths[i];
     yield {
-      progress: (i + 1) / (subpaths.length + 1),
-      desc: `Indexing ${subpath}...`,
+      progress: 1 / (subpaths.length + 1),
+      desc: `${subpath}`,
     };
 
-    const subpathUrl = new URL(subpath, baseUrl);
-
-    const markdown = await convertURLToMarkdown(subpathUrl);
+    const markdown = markdownForSubpaths[i];
     const markdownChunks: ChunkWithoutID[] = [];
     for await (const chunk of markdownChunker(markdown, MAX_CHUNK_SIZE, 0)) {
       markdownChunks.push(chunk);
@@ -55,7 +57,11 @@ export async function* indexDocs(
     markdownChunks.forEach((chunk, index) => {
       chunks.push({
         ...chunk,
-        filepath: subpath,
+        filepath:
+          subpath +
+          (chunk.otherMetadata?.fragment
+            ? `#${chunk.otherMetadata.fragment}`
+            : ""),
         index,
         digest: subpath,
       });

@@ -3,16 +3,27 @@ import fetch from "node-fetch";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 // const HCCrawler = require("headless-chrome-crawler");
 
-const IGNORE_PATHS_ENDING_IN = ["favicon.ico", "robots.txt", ".rst.txt"];
+const IGNORE_PATHS_ENDING_IN = [
+  "favicon.ico",
+  "robots.txt",
+  ".rst.txt",
+  // Sphinx documentation
+  "genindex",
+  "py-modindex",
+  "/en/search",
+];
 
 function shouldFilterPath(pathname: string): boolean {
+  if (pathname.endsWith("/")) {
+    pathname = pathname.slice(0, -1);
+  }
   if (IGNORE_PATHS_ENDING_IN.some((path) => pathname.endsWith(path)))
     return true;
   return false;
 }
 
 async function crawlLinks(path: string, baseUrl: URL, visited: Set<string>) {
-  if (visited.has(path)) {
+  if (visited.has(path) || shouldFilterPath(path)) {
     return;
   }
   visited.add(path);
@@ -44,7 +55,7 @@ async function crawlLinks(path: string, baseUrl: URL, visited: Set<string>) {
 
 export async function crawlSubpages(baseUrl: URL) {
   const visited = new Set<string>();
-  await crawlLinks(baseUrl.pathname, baseUrl, visited);
+  await crawlLinks(baseUrl.pathname || "/", baseUrl, visited);
   return [...visited];
 }
 

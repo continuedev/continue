@@ -18,6 +18,7 @@
     "ts-jest": "^29.1.1"
   },
   "dependencies": {
+    "@octokit/rest": "^20.0.2",
     "@xenova/transformers": "^2.14.0",
     "cheerio": "^1.0.0-rc.12",
     "dotenv": "^16.3.1",

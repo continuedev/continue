@@ -2,6 +2,48 @@ import { ChunkWithoutID } from "../..";
 import { countTokens } from "../../llm/countTokens";
 import { basicChunker } from "./basic";
 
+function cleanFragment(fragment: string): string {
+  let originalFragment = fragment;
+  // Remove leading and trailing whitespaces
+  fragment = fragment.trim();
+
+  // If there's a (, remove everything after it
+  const parenIndex = fragment.indexOf("(");
+  if (parenIndex !== -1) {
+    fragment = fragment.slice(0, parenIndex);
+  }
+
+  // Remove all special characters except alphanumeric, hyphen, space, and underscore
+  fragment = fragment.replace(/[^\w\d-\s]/g, "").trim();
+
+  // Convert to lowercase
+  fragment = fragment.toLowerCase();
+
+  // Replace spaces with hyphens
+  fragment = fragment.replace(/\s+/g, "-");
+
+  console.log(`Fragment ${originalFragment} -> ${fragment}`);
+  return fragment;
+}
+
+function cleanHeader(header: string): string {
+  let originalHeader = header;
+  // Remove leading and trailing whitespaces
+  header = header.trim();
+
+  // If there's a (, remove everything after it
+  const parenIndex = header.indexOf("(");
+  if (parenIndex !== -1) {
+    header = header.slice(0, parenIndex);
+  }
+
+  // Remove all special characters except alphanumeric, hyphen, space, and underscore
+  header = header.replace(/[^\w\d-\s]/g, "").trim();
+
+  console.log(`Header ${originalHeader} -> ${header}`);
+  return header;
+}
+
 export async function* markdownChunker(
   content: string,
   maxChunkSize: number,
@@ -62,6 +104,11 @@ export async function* markdownChunker(
         content: section.header + "\n" + chunk.content,
         startLine: section.startLine + chunk.startLine,
         endLine: section.startLine + chunk.endLine,
+        otherMetadata: {
+          fragment:
+            chunk.otherMetadata?.fragment || cleanFragment(section.header),
+          title: chunk.otherMetadata?.title || cleanHeader(section.header),
+        },
       };
     }
   }

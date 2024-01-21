@@ -3,7 +3,12 @@ import { ContextItemWithId } from "core";
 import { ExtensionIde } from "core/ide";
 import React from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscBackground } from "..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscBackground,
+  vscForeground,
+} from "..";
 import FileIcon from "../FileIcon";
 
 const ContextItemDiv = styled.div`
@@ -35,7 +40,10 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
   }
 
   function openContextItem(contextItem: ContextItemWithId) {
-    if (
+    console.log("openContextItem", contextItem);
+    if (contextItem.description.startsWith("http")) {
+      window.open(contextItem.description, "_blank");
+    } else if (
       contextItem.description.startsWith("/") ||
       contextItem.description.startsWith("\\")
     ) {
@@ -88,6 +96,29 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
           }}
         >
           {props.contextItems?.map((contextItem) => {
+            if (contextItem.description.startsWith("http")) {
+              return (
+                <a
+                  href={contextItem.description}
+                  target="_blank"
+                  style={{ color: vscForeground, textDecoration: "none" }}
+                >
+                  <ContextItemDiv
+                    onClick={() => {
+                      openContextItem(contextItem);
+                    }}
+                  >
+                    <FileIcon
+                      filename={contextItem.description.split(" ").shift()}
+                      height="1.6em"
+                      width="1.6em"
+                    ></FileIcon>
+                    {contextItem.name}
+                  </ContextItemDiv>
+                </a>
+              );
+            }
+
             return (
               <ContextItemDiv
                 onClick={() => {

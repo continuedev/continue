@@ -27,6 +27,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -36,7 +37,12 @@ import {
   vscListActiveForeground,
   vscQuickInputBackground,
 } from "..";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
 import FileIcon from "../FileIcon";
+import AddDocsDialog from "../dialogs/AddDocsDialog";
 import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
@@ -141,6 +147,8 @@ interface MentionListProps {
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
+  const dispatch = useDispatch();
+
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
@@ -149,6 +157,32 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   const [querySubmenuItem, setQuerySubmenuItem] = useState<
     ComboBoxItem | undefined
   >(undefined);
+
+  const [allItems, setAllItems] = useState<ComboBoxItem[]>([]);
+
+  useEffect(() => {
+    const items = [...props.items];
+    if (subMenuTitle === "Search documentation") {
+      items.push({
+        title: "Add Docs",
+        type: "action",
+        action: () => {
+          dispatch(setShowDialog(true));
+          dispatch(setDialogMessage(<AddDocsDialog />));
+
+          // Delete back to last '@'
+          const { tr } = props.editor.view.state;
+          const text = tr.doc.textBetween(0, tr.selection.from);
+          const start = text.lastIndexOf("@");
+          props.editor.view.dispatch(
+            tr.delete(start, tr.selection.from).scrollIntoView()
+          );
+        },
+        description: "Add a new documentation source",
+      });
+    }
+    setAllItems(items);
+  }, [subMenuTitle, props.items, props.editor]);
 
   const queryInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -159,7 +193,12 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   }, [querySubmenuItem]);
 
   const selectItem = (index) => {
-    const item = props.items[index];
+    const item = allItems[index];
+
+    if (item.type === "action" && item.action) {
+      item.action();
+      return;
+    }
 
     if (
       item.type === "contextProvider" &&
@@ -182,20 +221,18 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   };
 
   const upHandler = () => {
-    setSelectedIndex(
-      (selectedIndex + props.items.length - 1) % props.items.length
-    );
+    setSelectedIndex((selectedIndex + allItems.length - 1) % allItems.length);
   };
 
   const downHandler = () => {
-    setSelectedIndex((selectedIndex + 1) % props.items.length);
+    setSelectedIndex((selectedIndex + 1) % allItems.length);
   };
 
   const enterHandler = () => {
     selectItem(selectedIndex);
   };
 
-  useEffect(() => setSelectedIndex(0), [props.items]);
+  useEffect(() => setSelectedIndex(0), [allItems]);
 
   useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }) => {
@@ -223,7 +260,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
       }
 
       if (event.key === " ") {
-        if (props.items.length === 1) {
+        if (allItems.length === 1) {
           enterHandler();
           return true;
         }
@@ -260,8 +297,8 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
       ) : (
         <>
           {subMenuTitle && <ItemDiv className="mb-2">{subMenuTitle}</ItemDiv>}
-          {props.items.length ? (
-            props.items.map((item, index) => (
+          {allItems.length ? (
+            allItems.map((item, index) => (
               <ItemDiv
                 as="button"
                 className={`item ${

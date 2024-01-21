@@ -45,6 +45,9 @@ export async function retrieveDocs(
     endLine: doc.endLine,
     index: 0,
     content: doc.content,
+    otherMetadata: {
+      title: doc.title,
+    },
   }));
 }
 
@@ -54,19 +57,8 @@ export async function addDocs(
   chunks: Chunk[],
   embeddings: number[][]
 ) {
-  const db = await open({
-    filename: getDocsSqlitePath(),
-    driver: sqlite3.Database,
-  });
-  await createDocsTable(db);
-  await db.run(
-    `INSERT INTO docs (title, baseUrl) VALUES (?, ?)`,
-    title,
-    baseUrl.toString()
-  );
-
   const data: LanceDbDocsRow[] = chunks.map((chunk, i) => ({
-    title,
+    title: chunk.otherMetadata?.title || title,
     baseUrl: baseUrl.toString(),
     content: chunk.content,
     path: chunk.filepath,
@@ -83,6 +75,18 @@ export async function addDocs(
     const table = await lance.openTable(DOCS_TABLE_NAME);
     await table.add(data);
   }
+
+  // Only after add it to SQLite
+  const db = await open({
+    filename: getDocsSqlitePath(),
+    driver: sqlite3.Database,
+  });
+  await createDocsTable(db);
+  await db.run(
+    `INSERT INTO docs (title, baseUrl) VALUES (?, ?)`,
+    title,
+    baseUrl.toString()
+  );
 }
 
 export async function listDocs(): Promise<
