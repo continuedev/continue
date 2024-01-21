@@ -9,7 +9,7 @@ import {
 
 class GitHubIssuesContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
-    title: "github",
+    title: "issue",
     displayTitle: "GitHub Issues",
     description: "Reference GitHub issues",
     type: "submenu",
@@ -19,13 +19,75 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
-    return [];
+    const issueId = query;
+    const { Octokit } = await import("@octokit/rest");
+
+    const octokit = new Octokit({
+      auth: this.options?.githubToken,
+    });
+
+    const { owner, repo, issue_number } = JSON.parse(issueId);
+
+    const issue = await octokit.issues.get({
+      owner,
+      repo,
+      issue_number,
+    });
+
+    let content = `# GitHub Issue #${issue.data.number.toString()} in ${owner}/${repo}`;
+
+    const comments = await octokit.issues.listComments({
+      owner,
+      repo,
+      issue_number,
+    });
+
+    const parts = [
+      issue.data.body || "No description",
+      ...comments.data.map((comment) => comment.body),
+    ];
+    content += "\n\n" + parts.join("\n\n---\n\n");
+
+    return [
+      {
+        name: issue.data.title,
+        content,
+        description: `#${issue.data.number.toString()}`,
+      },
+    ];
   }
 
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs
   ): Promise<ContextSubmenuItem[]> {
-    return [];
+    const { Octokit } = await import("@octokit/rest");
+
+    const octokit = new Octokit({
+      auth: this.options?.githubToken,
+    });
+
+    const allIssues = [];
+
+    for (const repo of this.options?.repos) {
+      const issues = await octokit.issues.listForRepo({
+        owner: repo.owner,
+        repo: repo.repo,
+        state: repo.type || "open",
+      });
+      allIssues.push(
+        ...issues.data.map((issue) => ({
+          title: issue.title,
+          description: `#${issue.number.toString()}`,
+          id: JSON.stringify({
+            owner: repo.owner,
+            repo: repo.repo,
+            issue_number: issue.number,
+          }),
+        }))
+      );
+    }
+
+    return allIssues;
   }
 }
 

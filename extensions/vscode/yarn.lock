@@ -2268,6 +2268,7 @@ core-util-is@~1.0.0, core-util-is@1.0.2:
   version "1.0.0"
   resolved "file:../../core"
   dependencies:
+    "@octokit/rest" "^20.0.2"
     "@xenova/transformers" "^2.14.0"
     cheerio "^1.0.0-rc.12"
     dotenv "^16.3.1"

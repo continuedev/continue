@@ -82,17 +82,21 @@ Type '@google' to reference the results of a Google search. For example, type "@
 
 Note: You can get an API key for free at [serper.dev](https://serper.dev).
 
-### GitHub
+### GitHub Issues
 
-Type '@issue' to reference the title and contents of a GitHub issue.
+Type '@issue' to reference the conversation inside of a GitHub issue.
 
 ```json
 {
-  "name": "github",
+  "name": "issue",
   "params": {
-    // Change to whichever repo you want to use
-    "repoName": "continuedev/continue",
-    "authToken": "<my_github_auth_token>"
+    "repos": [
+      {
+        "owner": "continuedev",
+        "repo": "continue"
+      }
+    ],
+    "githubToken": "<my_github_auth_token>"
   }
 }
 ```

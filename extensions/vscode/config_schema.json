@@ -1045,13 +1045,13 @@
                           "type": "string",
                           "description": "The type of issues to search for",
                           "enum": ["open", "closed", "all"]
-                        },
-                        "required": ["owner", "repo"]
-                      }
+                        }
+                      },
+                      "required": ["owner", "repo"]
                     }
-                  },
-                  "required": ["repos"]
-                }
+                  }
+                },
+                "required": ["repos"]
               }
             },
             "required": ["params"]

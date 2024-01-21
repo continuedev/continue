@@ -56,6 +56,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   problems: ExclamationTriangleIcon,
   folder: FolderIcon,
   docs: BookOpenIcon,
+  issue: ExclamationCircleIcon,
   "/edit": PaintBrushIcon,
   "/clear": TrashIcon,
   "/test": BeakerIcon,
@@ -74,18 +75,19 @@ function DropdownIcon(props: {
   type: ComboBoxItemType;
 }) {
   const Icon = ICONS_FOR_DROPDOWN[props.provider];
+  const iconClass = `${props.className} flex-shrink-0`;
   if (!Icon) {
     return props.type === "contextProvider" ? (
-      <AtSymbolIcon className={props.className} height="1.2em" width="1.2em" />
+      <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
     ) : (
       <ChevronDoubleRightIcon
-        className={props.className}
+        className={iconClass}
         height="1.2em"
         width="1.2em"
       />
     );
   }
-  return <Icon className={props.className} height="1.2em" width="1.2em" />;
+  return <Icon className={iconClass} height="1.2em" width="1.2em" />;
 }
 
 const ItemsDiv = styled.div`
@@ -339,6 +341,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                       float: "right",
                       textAlign: "right",
                       opacity: index !== selectedIndex ? 0 : 1,
+                      minWidth: "30px",
                     }}
                     className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2 flex items-center"
                   >
@@ -346,7 +349,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                     {item.type === "contextProvider" &&
                       item.contextProvider?.type === "submenu" && (
                         <ArrowRightIcon
-                          className="ml-2"
+                          className="ml-2 flex-shrink-0"
                           width="1.2em"
                           height="1.2em"
                         />
