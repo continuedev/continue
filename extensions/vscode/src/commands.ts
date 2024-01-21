@@ -11,6 +11,8 @@ import {
   streamEdit,
   verticalPerLineDiffManager,
 } from "./diff/verticalPerLine/manager";
+import { VsCodeIde } from "./ideProtocol";
+import { configHandler, llmFromTitle } from "./loadConfig";
 
 function addHighlightedCodeToContext(edit: boolean) {
   const editor = vscode.window.activeTextEditor;
@@ -150,14 +152,84 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   },
   "continue.quickEdit": async () => {
     const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
-    const text = await vscode.window.showInputBox({
+
+    let text = await vscode.window.showInputBox({
       placeHolder: selectionEmpty
-        ? "Describe the code you want to generate"
-        : "Describe how to edit the highlighted code",
+        ? "Describe the code you want to generate (or press enter to add context first)"
+        : "Describe how to edit the highlighted code (or press enter to add context first)",
       title: "Continue Quick Edit",
     });
-    if (text) {
+
+    if (text === undefined) {
+      return;
+    }
+
+    if (text.length > 0) {
       await streamEdit(text);
+    } else {
+      // Pick context first
+      const quickPickItems: Promise<vscode.QuickPickItem[]> = configHandler
+        .loadConfig(new VsCodeIde())
+        .then((config) => {
+          return (
+            config.contextProviders
+              ?.filter((provider) => !provider.description.requiresQuery)
+              .map((provider) => {
+                return {
+                  label: provider.description.displayTitle,
+                  description: provider.description.title,
+                  detail: provider.description.description,
+                };
+              }) || []
+          );
+        });
+
+      const selectedProviders = await vscode.window.showQuickPick(
+        quickPickItems,
+        {
+          title: "Add Context",
+          canPickMany: true,
+        }
+      );
+
+      let text = await vscode.window.showInputBox({
+        placeHolder: selectionEmpty
+          ? "Describe the code you want to generate (or press enter to add context first)"
+          : "Describe how to edit the highlighted code (or press enter to add context first)",
+        title: "Continue Quick Edit",
+      });
+      if (text) {
+        const ide = new VsCodeIde();
+        const llm = await llmFromTitle();
+        const config = await configHandler.loadConfig(ide);
+        const context = (
+          await Promise.all(
+            selectedProviders?.map((providerTitle) => {
+              const provider = config.contextProviders?.find(
+                (provider) =>
+                  provider.description.title === providerTitle.description
+              );
+              if (!provider) {
+                return [];
+              }
+
+              return provider.getContextItems("", {
+                embeddingsProvider: config.embeddingsProvider,
+                ide,
+                llm,
+                fullInput: text || "",
+              });
+            }) || []
+          )
+        ).flat();
+
+        text =
+          context.map((item) => item.content).join("\n\n") +
+          "\n\n---\n\n" +
+          text;
+
+        await streamEdit(text);
+      }
     }
   },
   "continue.writeCommentsForCode": async () => {
