@@ -11,6 +11,11 @@ export interface Chunk extends ChunkWithoutID {
   index: number; // Index of the chunk in the document at filepath
 }
 
+export interface IndexingProgressUpdate {
+  progress: number;
+  desc: string;
+}
+
 export interface LLMReturnValue {
   prompt: string;
   completion: string;

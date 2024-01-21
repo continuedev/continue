@@ -44,6 +44,12 @@ async function crawlLinks(path: string, baseUrl: URL, visited: Set<string>) {
   );
 }
 
+export async function crawlSubpages(baseUrl: URL) {
+  const visited = new Set<string>();
+  await crawlLinks(baseUrl.pathname, baseUrl, visited);
+  return [...visited];
+}
+
 // class NoEscapeTurndownService extends TurndownService {
 //   escape(str: string): string {
 //     return str;
@@ -68,7 +74,7 @@ async function crawlLinks(path: string, baseUrl: URL, visited: Set<string>) {
 
 const nhm = new NodeHtmlMarkdown({}, undefined, undefined);
 
-async function convertURLToMarkdown(url: string): Promise<string> {
+export async function convertURLToMarkdown(url: URL): Promise<string> {
   try {
     const response = await fetch(url);
     const htmlContent = await response.text();
