@@ -1,8 +1,7 @@
 import cheerio from "cheerio";
-import $ from "jquery";
 import fetch from "node-fetch";
 import { NodeHtmlMarkdown } from "node-html-markdown";
-const HCCrawler = require("headless-chrome-crawler");
+// const HCCrawler = require("headless-chrome-crawler");
 
 const IGNORE_PATHS_ENDING_IN = ["favicon.ico", "robots.txt", ".rst.txt"];
 
@@ -20,7 +19,6 @@ async function crawlLinks(path: string, baseUrl: URL, visited: Set<string>) {
 
   const response = await fetch(new URL(path, baseUrl));
   const text = await response.text();
-  console.log(text);
   const $ = cheerio.load(text);
 
   const children: string[] = [];
@@ -99,23 +97,23 @@ const url2 = new URL("https://platform.openai.com/docs/api-reference");
 //   console.log(visited);
 // });
 
-async function hcCrawlLinks() {
-  const results: any[] = [];
-  const crawler = await HCCrawler.launch({
-    // Function to be evaluated in browsers
-    evaluatePage: () => ({
-      title: $("title").text(),
-    }),
-    // Function to be called with evaluated results from browsers
-    onSuccess: (result: any) => {
-      console.log(result);
-      results.push(result.url);
-    },
-  });
-  // Queue a request
-  await crawler.queue(url.toString());
-  await crawler.onIdle(); // Resolved when no queue is left
-  await crawler.close(); // Close the crawler
+// async function hcCrawlLinks() {
+//   const results: any[] = [];
+//   const crawler = await HCCrawler.launch({
+//     // Function to be evaluated in browsers
+//     evaluatePage: () => ({
+//       title: $("title").text(),
+//     }),
+//     // Function to be called with evaluated results from browsers
+//     onSuccess: (result: any) => {
+//       console.log(result);
+//       results.push(result.url);
+//     },
+//   });
+//   // Queue a request
+//   await crawler.queue(url.toString());
+//   await crawler.onIdle(); // Resolved when no queue is left
+//   await crawler.close(); // Close the crawler
 
-  return results;
-}
+//   return results;
+// }

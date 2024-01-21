@@ -19,7 +19,14 @@ class DocsContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
-    return [];
+    const { retrieveDocs } = await import("../../indexing/docs/db");
+    const [vector] = await extras.embeddingsProvider.embed([query]);
+    const chunks = await retrieveDocs(query, vector);
+    return chunks.map((chunk) => ({
+      name: chunk.filepath,
+      description: chunk.filepath,
+      content: chunk.content,
+    }));
   }
 
   async loadSubmenuItems(

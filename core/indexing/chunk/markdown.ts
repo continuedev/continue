@@ -16,6 +16,7 @@ export async function* markdownChunker(
     return;
   } else if (hLevel > 4) {
     yield* basicChunker(content, maxChunkSize);
+    return;
   }
 
   const h = "#".repeat(hLevel + 1) + " ";

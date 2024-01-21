@@ -77,7 +77,7 @@ export interface ContextProviderDescription {
 
 export interface ContextProviderExtras {
   fullInput: string;
-  embeddingsProvider?: EmbeddingsProvider;
+  embeddingsProvider: EmbeddingsProvider;
   llm: ILLM;
   ide: IDE;
 }

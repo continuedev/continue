@@ -7,19 +7,29 @@ import {
 import { MAX_CHUNK_SIZE } from "../../llm/constants";
 import { markdownChunker } from "../chunk/markdown";
 import { convertURLToMarkdown, crawlSubpages } from "./crawl";
-import { addDocs } from "./db";
+import { addDocs, listDocs } from "./db";
 
 export async function* indexDocs(
   title: string,
   baseUrl: URL,
   embeddingsProvider: EmbeddingsProvider
 ): AsyncGenerator<IndexingProgressUpdate> {
+  const existingDocs = await listDocs();
+  if (existingDocs.find((doc) => doc.title === title)) {
+    yield {
+      progress: 1,
+      desc: "Already indexed",
+    };
+    return;
+  }
+
   yield {
     progress: 0,
     desc: "Finding subpages...",
   };
 
   const subpaths = await crawlSubpages(baseUrl);
+  console.log("Found subpaths", subpaths);
   const chunks: Chunk[] = [];
   const embeddings: number[][] = [];
 
@@ -38,7 +48,7 @@ export async function* indexDocs(
       markdownChunks.push(chunk);
     }
 
-    const embeddings = await embeddingsProvider.embed(
+    const subpathEmbeddings = await embeddingsProvider.embed(
       markdownChunks.map((chunk) => chunk.content)
     );
 
@@ -50,7 +60,7 @@ export async function* indexDocs(
         digest: subpath,
       });
     });
-    embeddings.push(...embeddings);
+    embeddings.push(...subpathEmbeddings);
   }
 
   await addDocs(title, baseUrl, chunks, embeddings);

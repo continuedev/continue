@@ -1,8 +1,8 @@
-import { open } from "sqlite";
+import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import * as lancedb from "vectordb";
 import { Chunk } from "../..";
-import { getIndexSqlitePath, getLanceDbPath } from "../../util/paths";
+import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths";
 
 const DOCS_TABLE_NAME = "docs";
 
@@ -16,6 +16,14 @@ interface LanceDbDocsRow {
   endLine: number;
   vector: number[];
   [key: string]: any;
+}
+
+async function createDocsTable(db: Database<sqlite3.Database>) {
+  db.exec(`CREATE TABLE IF NOT EXISTS docs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title STRING NOT NULL,
+        baseUrl STRING NOT NULL
+    )`);
 }
 
 export async function retrieveDocs(
@@ -47,14 +55,10 @@ export async function addDocs(
   embeddings: number[][]
 ) {
   const db = await open({
-    filename: getIndexSqlitePath(),
+    filename: getDocsSqlitePath(),
     driver: sqlite3.Database,
   });
-  await db.exec(`CREATE TABLE IF NOT EXISTS docs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title STRING NOT NULL,
-        baseUrl STRING NOT NULL
-    )`);
+  await createDocsTable(db);
   await db.run(
     `INSERT INTO docs (title, baseUrl) VALUES (?, ?)`,
     title,
@@ -85,9 +89,10 @@ export async function listDocs(): Promise<
   { title: string; baseUrl: string }[]
 > {
   const db = await open({
-    filename: getIndexSqlitePath(),
+    filename: getDocsSqlitePath(),
     driver: sqlite3.Database,
   });
+  await createDocsTable(db);
   const docs = await db.all(`SELECT title, baseUrl FROM docs`);
   return docs;
 }
