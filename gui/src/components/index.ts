@@ -16,6 +16,7 @@ export const VSC_LIST_ACTIVE_FOREGROUND_VAR =
 export const VSC_QUICK_INPUT_BACKGROUND_VAR = "--vscode-quickInput-background";
 export const VSC_INPUT_BORDER_VAR = "--vscode-input-border";
 export const VSC_INPUT_BORDER_FOCUS_VAR = "--vscode-focusBorder";
+export const VSC_BADGE_BACKGROUND_VAR = "--vscode-badge-background";
 
 export const VSC_THEME_COLOR_VARS = [
   VSC_INPUT_BACKGROUND_VAR,
@@ -29,6 +30,7 @@ export const VSC_THEME_COLOR_VARS = [
   VSC_QUICK_INPUT_BACKGROUND_VAR,
   VSC_INPUT_BORDER_VAR,
   VSC_INPUT_BORDER_FOCUS_VAR,
+  VSC_BADGE_BACKGROUND_VAR,
 ];
 
 export const defaultBorderRadius = "5px";
@@ -46,6 +48,7 @@ export const vscFocusBorder = `var(${VSC_FOCUS_BORDER}, #1bbe84)`;
 export const vscListActiveForeground = `var(${VSC_LIST_ACTIVE_FOREGROUND_VAR}, ${VSC_FOREGROUND_VAR})`;
 export const vscInputBorder = `var(${VSC_INPUT_BORDER_VAR}, ${lightGray})`;
 export const vscInputBorderFocus = `var(${VSC_INPUT_BORDER_FOCUS_VAR}, ${lightGray})`;
+export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
 
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {

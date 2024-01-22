@@ -4,9 +4,12 @@ import {
   EmbeddingsProvider,
   IContextProvider,
   ILLM,
+  MessageContent,
+  MessagePart,
 } from "core";
 import { ExtensionIde } from "core/ide";
 import { ideRequest } from "core/ide/messaging";
+import { stripImages } from "core/llm/countTokens";
 import { getBasename } from "core/util";
 
 interface MentionAttrs {
@@ -28,8 +31,8 @@ async function resolveEditorContent(
   contextProviders: IContextProvider[],
   llm: ILLM,
   embeddingsProvider?: EmbeddingsProvider
-): Promise<[ContextItemWithId[], string]> {
-  let paragraphs = [];
+): Promise<[ContextItemWithId[], MessageContent]> {
+  let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
   let slashCommand = undefined;
   for (const p of editorState?.content) {
@@ -41,14 +44,33 @@ async function resolveEditorContent(
       if (text === "") {
         continue;
       }
-      paragraphs.push(text);
+
+      if (parts[parts.length - 1]?.type === "text") {
+        parts[parts.length - 1].text += "\n" + text;
+      } else {
+        parts.push({ type: "text", text });
+      }
       contextItemAttrs.push(...ctxItems);
     } else if (p.type === "codeBlock") {
       if (!p.attrs.item.editing) {
-        paragraphs.push(
-          "```" + p.attrs.item.name + "\n" + p.attrs.item.content + "\n```"
-        );
+        const text =
+          "```" + p.attrs.item.name + "\n" + p.attrs.item.content + "\n```";
+        if (parts[parts.length - 1]?.type === "text") {
+          parts[parts.length - 1].text += "\n" + text;
+        } else {
+          parts.push({
+            type: "text",
+            text,
+          });
+        }
       }
+    } else if (p.type === "image") {
+      parts.push({
+        type: "imageUrl",
+        imageUrl: {
+          url: p.attrs.src,
+        },
+      });
     } else {
       console.warn("Unexpected content type", p.type);
     }
@@ -76,7 +98,7 @@ async function resolveEditorContent(
       const data = {
         name: item.itemType === "contextProvider" ? item.id : item.itemType,
         query: item.query,
-        fullInput: paragraphs.join("\n"),
+        fullInput: stripImages(parts),
       };
       const { items: resolvedItems } = await ideRequest(
         "getContextItems",
@@ -93,12 +115,14 @@ async function resolveEditorContent(
     contextItemsText += "\n";
   }
 
-  let finalText = paragraphs.join("\n").trim();
   if (slashCommand) {
-    finalText = `${slashCommand} ${finalText}`;
+    let firstTextIndex = parts.findIndex((part) => part.type === "text");
+    parts[
+      firstTextIndex
+    ].text = `${slashCommand} ${parts[firstTextIndex].text}`;
   }
 
-  return [contextItems, finalText];
+  return [contextItems, parts];
 }
 
 function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
