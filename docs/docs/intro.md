@@ -8,7 +8,7 @@ keywords: [introduction, intro, continue, autopilot, chatgpt]
 
 ![continue-cover-logo](/img/intro.png)
 
-**Continue keeps developers in flow. Our open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions enable you to easily create your own modular AI software development system that you can improve.**
+**Continue enables you to create your own AI code assistant inside your IDE. Keep your developers in flow with open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions that can be connected to any model, any context, and anything else you need**
 
 Some examples of what you can achieve are:
 
