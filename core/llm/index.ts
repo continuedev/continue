@@ -88,7 +88,6 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
   if (lower.includes("mistral")) {
     return "llama2";
   }
-
   if (lower.includes("deepseek")) {
     return "deepseek";
   }
@@ -202,6 +201,12 @@ export abstract class BaseLLM implements ILLM {
   region?: string;
   projectId?: string;
 
+  // SAP Gen AI Core options
+  resourceGroup?: string;
+  authURL?: string;
+  clientID?: string;
+  clientSecret?: string;
+
   private _llmOptions: LLMOptions;
 
   constructor(options: LLMOptions) {
@@ -252,6 +257,14 @@ export abstract class BaseLLM implements ILLM {
     this.apiType = options.apiType;
     this.region = options.region;
     this.projectId = options.projectId;
+
+    // SAP Gen AI Core options
+    this.resourceGroup = options.resourceGroup;
+    this.authURL = options.authURL;
+    this.clientID = options.clientID;
+    this.clientSecret = options.clientSecret;
+
+
   }
 
   private _compileChatMessages(
