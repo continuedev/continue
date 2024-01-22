@@ -40,7 +40,6 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
   }
 
   function openContextItem(contextItem: ContextItemWithId) {
-    console.log("openContextItem", contextItem);
     if (contextItem.description.startsWith("http")) {
       window.open(contextItem.description, "_blank");
     } else if (
