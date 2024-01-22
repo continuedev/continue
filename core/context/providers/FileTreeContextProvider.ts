@@ -1,6 +1,9 @@
 import { BaseContextProvider } from "..";
-import { ContextItem, ContextProviderDescription } from "../..";
-import { ExtensionIde } from "../../ide";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+} from "../..";
 
 interface Directory {
   name: string;
@@ -40,14 +43,15 @@ class FileTreeContextProvider extends BaseContextProvider {
     requiresQuery: false,
   };
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
-    const workspaceDirs = await new ExtensionIde().getWorkspaceDirs();
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
+    const workspaceDirs = await extras.ide.getWorkspaceDirs();
     let trees = [];
 
     for (let workspaceDir of workspaceDirs) {
-      const contents = await new ExtensionIde().listWorkspaceContents(
-        workspaceDir
-      );
+      const contents = await extras.ide.listWorkspaceContents(workspaceDir);
 
       const subDirTree: Directory = {
         name: splitPath(workspaceDir).pop() || "",
@@ -79,7 +83,9 @@ class FileTreeContextProvider extends BaseContextProvider {
 
     return [
       {
-        content: trees.join("\n\n"),
+        content:
+          "Here is a file tree of the current workspace:\n\n" +
+          trees.join("\n\n"),
         name: "File Tree",
         description: "File Tree",
       },

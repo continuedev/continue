@@ -1,5 +1,9 @@
 import { BaseContextProvider } from "..";
-import { ContextItem, ContextProviderDescription } from "../..";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+} from "../..";
 
 class HttpContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -22,14 +26,18 @@ class HttpContextProvider extends BaseContextProvider {
     };
   }
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
     const response = await fetch(this.options.url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        query,
+        query: query || "",
+        fullInput: extras.fullInput,
       }),
     });
 

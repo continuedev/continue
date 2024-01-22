@@ -107,7 +107,8 @@ describe("/edit slash command", () => {
         contextItemToRangeInFileWithContents(TEST_CONTEXT_ITEM2),
         fullFile,
         new FreeTrial({ model: "gpt-3.5-turbo" }),
-        "implement this function"
+        "implement this function",
+        1200
       );
 
     expect(filePrefix).toEqual(`${f1}`);

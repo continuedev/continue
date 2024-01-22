@@ -2,8 +2,8 @@ import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
-  secondaryDark,
   vscForeground,
+  vscInputBackground,
 } from "..";
 import { getFontSize } from "../../util";
 
@@ -17,7 +17,7 @@ const Div = styled.div<{ fontSize?: number }>`
   margin: 8px auto;
   height: auto;
   width: 100%;
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   color: ${vscForeground};
   z-index: 1;
   border: 1px solid transparent;

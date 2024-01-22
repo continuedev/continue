@@ -149,12 +149,12 @@ class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
 
     if (lineOfModels >= 0) {
       const range = new vscode.Range(lineOfModels, 0, lineOfModels + 1, 0);
-      codeLenses.push(
-        new vscode.CodeLens(range, {
-          title: `+ Add a Model`,
-          command: "continue.addModel",
-        })
-      );
+      // codeLenses.push(
+      //   new vscode.CodeLens(range, {
+      //     title: `+ Add a Model`,
+      //     command: "continue.addModel",
+      //   })
+      // );
     }
 
     const lineOfSystemMessage = lines.findIndex((line) =>

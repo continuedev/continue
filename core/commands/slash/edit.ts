@@ -13,7 +13,7 @@ Example:
 class Database:
     def __init__(self):
         self._data = {{}}
-    
+
     def get(self, key):
         return self._data[key]
 
@@ -44,16 +44,17 @@ export async function getPromptParts(
   rif: RangeInFileWithContents,
   fullFileContents: string,
   model: ILLM,
-  input: string
+  input: string,
+  tokenLimit: number | undefined
 ) {
   let maxTokens = Math.floor(model.contextLength / 2);
 
-  const TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = 1200;
-  if (model.countTokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE) {
-    throw new Error(
-      "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
-    );
-  }
+  const TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = tokenLimit || 1200;
+  // if (model.countTokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE) {
+  //   throw new Error(
+  //     "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
+  //   );
+  // }
 
   const BUFFER_FOR_FUNCTIONS = 400;
   let totalTokens =
@@ -202,7 +203,7 @@ function lineToBeIgnored(line: string, isFirstLine: boolean = false): boolean {
 
 const EditSlashCommand: SlashCommand = {
   name: "edit",
-  description: "Edit highlighted code",
+  description: "Edit selected code",
   run: async function* ({ ide, llm, input, history, contextItems, params }) {
     const contextItemToEdit = contextItems.find(
       (item: ContextItemWithId) =>
@@ -210,7 +211,7 @@ const EditSlashCommand: SlashCommand = {
     );
 
     if (!contextItemToEdit) {
-      yield "Highlight (select and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) the code that you want to edit first";
+      yield "Select (highlight and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) the code that you want to edit first";
       return;
     }
 
@@ -224,7 +225,8 @@ const EditSlashCommand: SlashCommand = {
       rif,
       fullFileContents,
       llm,
-      input
+      input,
+      params?.tokenLimit
     );
     const [dedentedContents, commonWhitespace] =
       dedentAndGetCommonWhitespace(contents);

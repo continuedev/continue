@@ -1,3 +1,4 @@
+import { exec } from "child_process";
 import defaultConfig from "core/config/default";
 import {
   getConfigJsPath,
@@ -12,13 +13,24 @@ import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 
 import * as child_process from "child_process";
-import { ContinueConfig, DiffLine, IDE, SerializedContinueConfig } from "core";
+import {
+  Chunk,
+  ContinueConfig,
+  DiffLine,
+  IDE,
+  Problem,
+  SerializedContinueConfig,
+} from "core";
 import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
+import { LanceDbIndex } from "core/indexing/LanceDbIndex";
+import { IndexTag } from "core/indexing/types";
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { configHandler } from "./loadConfig";
 import mergeJson from "./util/merge";
+import { traverseDirectory } from "./util/traverseDirectory";
 import { getExtensionUri } from "./util/vscode";
 
 async function buildConfigTs(browser: boolean) {
@@ -41,7 +53,7 @@ async function buildConfigTs(browser: boolean) {
   } catch (e) {
     console.log(e);
     vscode.window.showErrorMessage(
-      "Build error. Please check your config.ts file: " + e
+      "Build error. Please check your ~/.continue/config.ts file: " + e
     );
     return undefined;
   }
@@ -73,6 +85,80 @@ class VsCodeIde implements IDE {
           })
           .replace("openai-aiohttp", "openai");
 
+        fs.writeFileSync(configPath, contents, "utf8");
+      });
+
+      migrate("codebaseContextProvider", () => {
+        if (
+          !config.contextProviders?.filter((cp) => cp.name === "codebase")
+            ?.length
+        ) {
+          config.contextProviders = [
+            ...(config.contextProviders || []),
+            {
+              name: "codebase",
+              params: {},
+            },
+          ];
+        }
+
+        if (!config.embeddingsProvider) {
+          config.embeddingsProvider = {
+            provider: "transformers.js",
+          };
+        }
+
+        fs.writeFileSync(
+          configPath,
+          JSON.stringify(config, undefined, 2),
+          "utf8"
+        );
+      });
+
+      migrate("problemsContextProvider", () => {
+        if (
+          !config.contextProviders?.filter((cp) => cp.name === "problems")
+            ?.length
+        ) {
+          config.contextProviders = [
+            ...(config.contextProviders || []),
+            {
+              name: "problems",
+              params: {},
+            },
+          ];
+        }
+
+        fs.writeFileSync(
+          configPath,
+          JSON.stringify(config, undefined, 2),
+          "utf8"
+        );
+      });
+
+      migrate("foldersContextProvider", () => {
+        if (
+          !config.contextProviders?.filter((cp) => cp.name === "folder")
+            ?.length
+        ) {
+          config.contextProviders = [
+            ...(config.contextProviders || []),
+            {
+              name: "folder",
+              params: {},
+            },
+          ];
+        }
+
+        fs.writeFileSync(
+          configPath,
+          JSON.stringify(config, undefined, 2),
+          "utf8"
+        );
+      });
+
+      migrate("renameFreeTrialProvider", () => {
+        contents = contents.replace(/openai-free-trial/g, "free-trial");
         fs.writeFileSync(configPath, contents, "utf8");
       });
 
@@ -171,6 +257,19 @@ class VsCodeIde implements IDE {
       );
       return contents.flat();
     }
+  }
+
+  async listFolders(): Promise<string[]> {
+    const allDirs: string[] = [];
+
+    const workspaceDirs = await this.getWorkspaceDirs();
+    for (const directory of workspaceDirs) {
+      for await (const dir of traverseDirectory(directory, [], false)) {
+        allDirs.push(dir);
+      }
+    }
+
+    return allDirs;
   }
 
   async getWorkspaceDirs(): Promise<string[]> {
@@ -273,6 +372,81 @@ class VsCodeIde implements IDE {
     }
 
     return results.join("\n\n");
+  }
+
+  async getProblems(filepath?: string | undefined): Promise<Problem[]> {
+    const uri = filepath
+      ? vscode.Uri.file(filepath)
+      : vscode.window.activeTextEditor?.document.uri;
+    if (!uri) {
+      return [];
+    }
+    return vscode.languages.getDiagnostics(uri).map((d) => {
+      return {
+        filepath: uri.fsPath,
+        range: {
+          start: {
+            line: d.range.start.line,
+            character: d.range.start.character,
+          },
+          end: { line: d.range.end.line, character: d.range.end.character },
+        },
+        message: d.message,
+      };
+    });
+  }
+
+  async subprocess(command: string): Promise<[string, string]> {
+    return new Promise((resolve, reject) => {
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          console.warn(error);
+          reject(stderr);
+        }
+        resolve([stdout, stderr]);
+      });
+    });
+  }
+
+  async getFilesToEmbed(
+    providerId: string
+  ): Promise<[string, string, string][]> {
+    return [];
+  }
+
+  async sendEmbeddingForChunk(
+    chunk: Chunk,
+    embedding: number[],
+    tags: string[]
+  ) {}
+
+  async retrieveChunks(
+    text: string,
+    n: number,
+    directory: string | undefined
+  ): Promise<Chunk[]> {
+    const embeddingsProvider = (await configHandler.loadConfig(new VsCodeIde()))
+      .embeddingsProvider;
+    if (!embeddingsProvider) {
+      return [];
+    }
+    const lanceDbIndex = new LanceDbIndex(embeddingsProvider, (path) =>
+      ideProtocolClient.readFile(path)
+    );
+
+    const tags = await Promise.all(
+      (await this.getWorkspaceDirs()).map(async (dir) => {
+        let branch = await ideProtocolClient.getBranch(vscode.Uri.file(dir));
+        let tag: IndexTag = {
+          directory: dir,
+          branch,
+          artifactId: lanceDbIndex.artifactId,
+        };
+        return tag;
+      })
+    );
+    let chunks = await lanceDbIndex.retrieve(tags, text, n, directory);
+    return chunks as any[];
   }
 }
 

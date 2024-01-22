@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius, secondaryDark } from "..";
-import { RootStore } from "../../redux/store";
+import { defaultBorderRadius, vscInputBackground } from "..";
 import { postToIde } from "../../util/ide";
 
 const StyledCode = styled.code<{ link: boolean }>`
-  color: ${(props) => (props.link ? "#ff43433" : "#f78383")};
+  color: ${(props) => (props.link ? "#ff4343" : "#f78383")};
   word-wrap: break-word;
   border-radius: ${defaultBorderRadius};
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
 
   ${(props) => props.link && "cursor: pointer;"}
   &:hover {
@@ -18,15 +16,13 @@ const StyledCode = styled.code<{ link: boolean }>`
 `;
 
 function LinkableCode(props: any) {
-  const contextItems = useSelector(
-    (store: RootStore) => store.state.contextItems
-  );
-
   const [linkingDone, setLinkingDone] = useState(false);
   const [isLink, setIsLink] = useState(false);
   const [filepath, setFilepath] = useState("");
+
   useEffect(() => {
     if (linkingDone) return;
+    setLinkingDone(true);
 
     // Get filename from props.children
     let filename: string | undefined = undefined;
@@ -41,25 +37,24 @@ function LinkableCode(props: any) {
     }
     if (!filename) return;
 
-    // Check if matches any context item's filepath
-    let link = false;
-    for (let contextItem of contextItems) {
-      if (contextItem.description.endsWith(filename)) {
-        link = true;
-        setFilepath(contextItem.description);
-        break;
-      }
-    }
+    // Check if this is a real file
+    // TODO
+    let link = filename.slice(-4).includes(".");
 
-    setIsLink(link);
-    setLinkingDone(true);
-  }, [linkingDone, contextItems]);
+    // setIsLink(link);
+    setFilepath(filename);
+  }, [linkingDone]);
 
   const onClick = () => {
     postToIde("showFile", { filepath });
   };
 
-  return <StyledCode {...props} onClick={onClick} link={isLink} />;
+  return (
+    <>
+      {isLink}
+      <StyledCode {...props} onClick={onClick} link={isLink} />
+    </>
+  );
 }
 
 export default LinkableCode;

@@ -1,11 +1,8 @@
-import { DiffLine, FileEdit, ModelDescription } from "core";
-import {
-  editConfigJson,
-  getConfigJsonPath,
-  getDevDataFilePath,
-} from "core/util/paths";
+import { ContextItemId, DiffLine, FileEdit, ModelDescription } from "core";
+import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import { readFileSync, writeFileSync } from "fs";
 import * as io from "socket.io-client";
+import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
@@ -306,6 +303,10 @@ export function getSidebarContent(
           respond(await ide.getWorkspaceDirs());
           break;
         }
+        case "listFolders": {
+          respond(await ide.listFolders());
+          break;
+        }
         case "writeFile": {
           respond(
             await ide.writeFile(data.message.path, data.message.contents)
@@ -313,7 +314,9 @@ export function getSidebarContent(
           break;
         }
         case "showVirtualFile": {
-          respond(await ide.showVirtualFile(data.name, data.content));
+          respond(
+            await ide.showVirtualFile(data.message.name, data.message.content)
+          );
           break;
         }
         case "getContinueDir": {
@@ -330,6 +333,35 @@ export function getSidebarContent(
         }
         case "getSearchResults": {
           respond(await ide.getSearchResults(data.message.query));
+          break;
+        }
+        case "subprocess": {
+          respond(await ide.subprocess(data.message.command));
+          break;
+        }
+        case "getFilesToEmbed": {
+          let filesToEmbed = await ide.getFilesToEmbed(data.message.providerId);
+          respond(filesToEmbed);
+          break;
+        }
+        case "sendChunkForFile": {
+          respond(
+            await ide.sendEmbeddingForChunk(
+              data.message.chunk,
+              data.message.embedding,
+              data.message.tags
+            )
+          );
+          break;
+        }
+        case "retrieveChunks": {
+          respond(
+            await ide.retrieveChunks(
+              data.message.text,
+              data.message.n,
+              data.message.directory
+            )
+          );
           break;
         }
         // History
@@ -387,6 +419,10 @@ export function getSidebarContent(
           );
           break;
         }
+        case "getProblems": {
+          respond(await ide.getProblems(data.message.filepath));
+          break;
+        }
         case "getOpenFiles": {
           respond(await ide.getOpenFiles());
           break;
@@ -405,9 +441,7 @@ export function getSidebarContent(
           break;
         }
         case "logDevData": {
-          const filepath: string = getDevDataFilePath(data.tableName);
-          const jsonLine = JSON.stringify(data.data);
-          writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
+          ideProtocolClient.logDevData(data.tableName, data.data);
           break;
         }
         case "addModel": {
@@ -415,18 +449,52 @@ export function getSidebarContent(
           const config = readFileSync(getConfigJsonPath(), "utf8");
           const configJson = JSON.parse(config);
           configJson.models.push(model);
-          writeFileSync(
-            getConfigJsonPath(),
-            JSON.stringify(
-              configJson,
-              (key, value) => {
-                return value === null ? undefined : value;
-              },
-              2
-            )
+          const newConfigString = JSON.stringify(
+            configJson,
+            (key, value) => {
+              return value === null ? undefined : value;
+            },
+            2
           );
+          writeFileSync(getConfigJsonPath(), newConfigString);
           ideProtocolClient.configUpdate(configJson);
+
           ideProtocolClient.openFile(getConfigJsonPath());
+
+          // Find the range where it was added and highlight
+          let lines = newConfigString.split("\n");
+          let startLine;
+          let endLine;
+          for (let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+
+            if (!startLine) {
+              if (line.trim() === `"title": "${data.model.title}",`) {
+                startLine = i - 1;
+              }
+            } else {
+              if (line.startsWith("    }")) {
+                endLine = i;
+                break;
+              }
+            }
+          }
+
+          if (startLine && endLine) {
+            ideProtocolClient.highlightCode(
+              {
+                filepath: getConfigJsonPath(),
+                range: {
+                  start: { character: 0, line: startLine },
+                  end: { character: 0, line: endLine },
+                },
+              },
+              "#fff1"
+            );
+          }
+          vscode.window.showInformationMessage(
+            "🎉 Your model has been successfully added to config.json. You can use this file to further edit its configuration."
+          );
           break;
         }
         case "deleteModel": {
@@ -442,7 +510,7 @@ export function getSidebarContent(
         case "addOpenAIKey": {
           const configJson = editConfigJson((config) => {
             config.models = config.models.map((m: ModelDescription) => {
-              if (m.provider === "openai-free-trial") {
+              if (m.provider === "free-trial") {
                 m.apiKey = data.key;
                 m.provider = "openai";
               }
@@ -455,24 +523,32 @@ export function getSidebarContent(
         }
         case "llmStreamComplete": {
           const model = await llmFromTitle(data.message.title);
-          for await (const update of model.streamComplete(
+          const gen = model.streamComplete(
             data.message.prompt,
             data.message.completionOptions
-          )) {
-            respond({ content: update });
+          );
+          let next = await gen.next();
+          while (!next.done) {
+            respond({ content: next.value });
+            next = await gen.next();
           }
-          respond({ done: true });
+
+          respond({ done: true, data: next.value });
           break;
         }
         case "llmStreamChat": {
           const model = await llmFromTitle(data.message.title);
-          for await (const update of model.streamChat(
+          const gen = model.streamChat(
             data.message.messages,
             data.message.completionOptions
-          )) {
-            respond({ content: update.content });
+          );
+          let next = await gen.next();
+          while (!next.done) {
+            respond({ content: next.value.content });
+            next = await gen.next();
           }
-          respond({ done: true });
+
+          respond({ done: true, data: next.value });
           break;
         }
         case "llmComplete": {
@@ -517,6 +593,43 @@ export function getSidebarContent(
           respond({ done: true });
           break;
         }
+        case "getContextItems": {
+          const { name, query, fullInput } = data.message;
+          const config = await configHandler.loadConfig(ide);
+          const llm = await llmFromTitle();
+          const provider = config.contextProviders?.find(
+            (p) => p.description.title === name
+          );
+          if (!provider) {
+            vscode.window.showErrorMessage(
+              `Unknown provider ${name}. Existing providers: ${config.contextProviders
+                ?.map((p) => p.description.title)
+                .join(", ")}`
+            );
+            respond({ items: [] });
+            break;
+          }
+
+          try {
+            const id: ContextItemId = {
+              providerTitle: provider.description.title,
+              itemId: uuidv4(),
+            };
+            const items = await provider.getContextItems(query, {
+              llm,
+              embeddingsProvider: config.embeddingsProvider,
+              fullInput,
+              ide,
+            });
+            respond({ items: items.map((item) => ({ ...item, id })) });
+          } catch (e) {
+            vscode.window.showErrorMessage(
+              `Error getting context items from ${name}: ${e}`
+            );
+            respond({ items: [] });
+          }
+          break;
+        }
       }
     } catch (e) {
       vscode.window
@@ -529,7 +642,7 @@ export function getSidebarContent(
             vscode.commands.executeCommand("workbench.action.toggleDevTools");
           }
         });
-      respond({ done: true });
+      respond({ done: true, data: {} });
     }
   });
 

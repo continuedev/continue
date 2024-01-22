@@ -1,6 +1,7 @@
 import {
   ContextItem,
   ContextProviderDescription,
+  ContextProviderExtras,
   CustomContextProvider,
   IContextProvider,
 } from "../..";
@@ -21,8 +22,11 @@ class CustomContextProviderClass implements IContextProvider {
     };
   }
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
-    return await this.custom.getContextItems(query);
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
+    return await this.custom.getContextItems(query, extras);
   }
   async load(): Promise<void> {}
 }

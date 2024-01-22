@@ -1,8 +1,10 @@
 import { JSONContent } from "@tiptap/react";
+import { ContextItemWithId } from "core";
 import { useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { RootStore } from "../../redux/store";
+import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
 import { ComboBoxItemType } from "./types";
 
@@ -53,6 +55,7 @@ interface ContinueInputBoxProps {
 
   editorState?: JSONContent;
   content?: string;
+  contextItems?: ContextItemWithId[];
 }
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
@@ -103,6 +106,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           ></TipTapEditor>
         </GradientBorder>
       </div>
+      <ContextItemsPeek contextItems={props.contextItems}></ContextItemsPeek>
     </div>
   );
 }

@@ -22,6 +22,14 @@ export function getSessionsFolderPath(): string {
   return sessionsPath;
 }
 
+export function getIndexFolderPath(): string {
+  const indexPath = path.join(getContinueGlobalPath(), "index");
+  if (!fs.existsSync(indexPath)) {
+    fs.mkdirSync(indexPath);
+  }
+  return indexPath;
+}
+
 export function getSessionFilePath(sessionId: string): string {
   return path.join(getSessionsFolderPath(), `${sessionId}.json`);
 }
@@ -53,22 +61,38 @@ export function getConfigTsPath(): string {
     );
   }
 
-  const node_modules_path = path.join(getContinueGlobalPath(), "node_modules");
-  if (!fs.existsSync(node_modules_path)) {
-    fs.mkdirSync(node_modules_path);
-    fs.mkdirSync(path.join(node_modules_path, "@types"));
-    fs.mkdirSync(path.join(node_modules_path, "@types/core"));
+  const typesPath = path.join(getContinueGlobalPath(), "types");
+  if (!fs.existsSync(typesPath)) {
+    fs.mkdirSync(typesPath);
   }
-  fs.writeFileSync(
-    path.join(node_modules_path, "@types/core", "index.d.ts"),
-    Types
-  );
+  const corePath = path.join(typesPath, "core");
+  if (!fs.existsSync(corePath)) {
+    fs.mkdirSync(corePath);
+  }
+  const packageJsonPath = path.join(getContinueGlobalPath(), "package.json");
+  if (!fs.existsSync(packageJsonPath)) {
+    fs.writeFileSync(
+      packageJsonPath,
+      JSON.stringify({
+        name: "continue-config",
+        version: "1.0.0",
+        description: "My Continue Configuration",
+        main: "config.js",
+      })
+    );
+  }
+
+  fs.writeFileSync(path.join(corePath, "index.d.ts"), Types);
   return p;
 }
 
 export function getConfigJsPath(node: boolean): string {
   // Do not create automatically
-  return path.join(getContinueGlobalPath(), `config${node ? ".node" : ""}.js`);
+  return path.join(
+    getContinueGlobalPath(),
+    "out",
+    `config${node ? ".node" : ""}.js`
+  );
 }
 
 export function getTsConfigPath(): string {
@@ -82,7 +106,7 @@ export function getTsConfigPath(): string {
             target: "ESNext",
             useDefineForClassFields: true,
             lib: ["DOM", "DOM.Iterable", "ESNext"],
-            allowJs: false,
+            allowJs: true,
             skipLibCheck: true,
             esModuleInterop: false,
             allowSyntheticDefaultImports: true,
@@ -92,7 +116,8 @@ export function getTsConfigPath(): string {
             moduleResolution: "Node",
             noEmit: false,
             noEmitOnError: false,
-            outFile: "./config.js",
+            outFile: "./out/config.js",
+            typeRoots: ["./node_modules/@types", "./types"],
           },
           include: ["./config.ts"],
         },
@@ -141,4 +166,12 @@ export function migrate(id: string, callback: () => void) {
     fs.writeFileSync(migrationPath, "");
     callback();
   }
+}
+
+export function getIndexSqlitePath(): string {
+  return path.join(getIndexFolderPath(), "index.sqlite");
+}
+
+export function getLanceDbPath(): string {
+  return path.join(getIndexFolderPath(), "lancedb");
 }

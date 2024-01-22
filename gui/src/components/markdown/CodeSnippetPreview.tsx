@@ -63,6 +63,9 @@ const StyledHeaderButtonWithText = styled(HeaderButtonWithText)<{
   ${(props) => props.color && `background-color: ${props.color};`}
 `;
 
+// Pre-compile the regular expression outside of the function
+const backticksRegex = /`{3,}/gm
+
 function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const dispatch = useDispatch();
 
@@ -70,6 +73,11 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const [hovered, setHovered] = React.useState(false);
 
   const codeBlockRef = React.useRef<HTMLPreElement>(null);
+  const fence = React.useMemo(() => {
+    const backticks = props.item.content.match(backticksRegex);
+    return backticks ? (backticks.sort().at(-1) + "`") : "```";
+  }, [props.item.content]);
+
 
   return (
     <PreviewMarkdownDiv
@@ -138,9 +146,9 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       </PreviewMarkdownHeader>
       <pre className="m-0" ref={codeBlockRef}>
         <StyledMarkdownPreview
-          source={`\`\`\`${getMarkdownLanguageTagForFile(
+          source={`${fence}${getMarkdownLanguageTagForFile(
             props.item.description
-          )}\n${props.item.content}\n\`\`\``}
+          )}\n${props.item.content}\n${fence}`}
           maxHeight={MAX_PREVIEW_HEIGHT}
           showCodeBorder={false}
         />
@@ -152,13 +160,13 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           text={scrollLocked ? "Scroll" : "Lock Scroll"}
         >
           {scrollLocked ? (
-            <ChevronUpIcon
+            <ChevronDownIcon
               width="1.2em"
               height="1.2em"
               onClick={() => setScrollLocked(false)}
             />
           ) : (
-            <ChevronDownIcon
+            <ChevronUpIcon
               width="1.2em"
               height="1.2em"
               onClick={() => setScrollLocked(true)}

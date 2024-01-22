@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from "react";
+import { createContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -14,6 +14,7 @@ import MonacoPage from "./pages/monaco";
 import SettingsPage from "./pages/settings";
 
 import { ExtensionIde } from "core/ide";
+import { getBasename } from "core/util";
 import MiniSearch from "minisearch";
 
 const router = createMemoryRouter([
@@ -66,14 +67,37 @@ const router = createMemoryRouter([
   },
 ]);
 
-const miniSearch = new MiniSearch({
+const filesMiniSearch = new MiniSearch({
   fields: ["id", "basename"],
   storeFields: ["id", "basename"],
 });
-export const SearchContext = createContext<[MiniSearch, MiniSearchResult[]]>([
-  miniSearch,
-  [],
-]);
+export const FilesSearchContext = createContext<
+  [MiniSearch, MiniSearchResult[]]
+>([filesMiniSearch, []]);
+
+const foldersMiniSearch = new MiniSearch({
+  fields: ["id", "basename"],
+  storeFields: ["id", "basename"],
+});
+export const FoldersSearchContext = createContext<
+  [MiniSearch, MiniSearchResult[]]
+>([foldersMiniSearch, []]);
+
+(async () => {
+  const files = await new ExtensionIde().listWorkspaceContents();
+  const results = files.map((filepath) => {
+    return { id: filepath, basename: getBasename(filepath) };
+  });
+  filesMiniSearch.addAll(results);
+})();
+
+(async () => {
+  const folders = await new ExtensionIde().listFolders();
+  const results = folders.map((path) => {
+    return { id: path, basename: getBasename(path) };
+  });
+  foldersMiniSearch.addAll(results);
+})();
 
 export interface MiniSearchResult {
   id: string;
@@ -85,23 +109,23 @@ function App() {
 
   useSetup(dispatch);
 
-  const [firstResults, setFirstResults] = useState<MiniSearchResult[]>([]);
-
-  useEffect(() => {
-    (async () => {
-      const files = await new ExtensionIde().listWorkspaceContents();
-      const results = files.map((filepath) => {
-        return { id: filepath, basename: filepath.split(/[\\/]/).pop() };
-      });
-      miniSearch.addAll(results);
-      setFirstResults(results);
-    })();
-  }, []);
+  const [filesFirstResultsState, setFilesFirstResults] = useState<
+    MiniSearchResult[]
+  >([]);
+  const [foldersFirstResultsState, setFoldersFirstResults] = useState<
+    MiniSearchResult[]
+  >([]);
 
   return (
-    <SearchContext.Provider value={[miniSearch, firstResults]}>
-      <RouterProvider router={router} />
-    </SearchContext.Provider>
+    <FilesSearchContext.Provider
+      value={[filesMiniSearch, filesFirstResultsState]}
+    >
+      <FoldersSearchContext.Provider
+        value={[foldersMiniSearch, foldersFirstResultsState]}
+      >
+        <RouterProvider router={router} />
+      </FoldersSearchContext.Provider>
+    </FilesSearchContext.Provider>
   );
 }
 

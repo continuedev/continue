@@ -31,6 +31,11 @@
           "description": "The frequency penalty of the completion.",
           "type": "number"
         },
+        "mirostat": {
+          "title": "Mirostat",
+          "description": "Enable Mirostat sampling, controlling perplexity during text generation (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0). Only available for Ollama, LM Studio, and llama.cpp providers",
+          "type": "number"
+        },
         "stop": {
           "title": "Stop",
           "description": "The stop tokens of the completion.",
@@ -99,7 +104,7 @@
           "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
           "enum": [
             "openai",
-            "openai-free-trial",
+            "free-trial",
             "anthropic",
             "together",
             "ollama",
@@ -111,7 +116,8 @@
             "lmstudio",
             "llamafile",
             "mistral",
-            "deepinfra"
+            "deepinfra",
+            "flowise"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/openai)",
@@ -165,13 +171,14 @@
             "none",
             "deepseek",
             "openchat",
-            "xwin-coder"
+            "xwin-coder",
+            "neural-chat"
           ],
           "type": "string"
         },
         "promptTemplates": {
           "title": "Prompt Templates",
-          "description": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://continue.dev/docs/model-setup/configuration#customizing-the-edit-prompt) for an example.",
+          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://continue.dev/docs/model-setup/configuration#customizing-the-edit-prompt) for an example.",
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -218,7 +225,7 @@
         },
         "apiType": {
           "title": "Api Type",
-          "description": "OpenAI API type, either `openai` or `azure`",
+          "markdownDescription": "OpenAI API type, either `openai` or `azure`",
           "enum": ["openai", "azure"]
         },
         "apiVersion": {
@@ -358,7 +365,7 @@
                   { "type": "string" }
                 ]
               },
-              "description": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models)."
+              "markdownDescription": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models)."
             }
           }
         },
@@ -366,7 +373,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai-free-trial"]
+                "enum": ["free-trial"]
               }
             },
             "required": ["provider"]
@@ -374,7 +381,13 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["gpt-3.5-turbo", "gpt-4"]
+                "enum": [
+                  "gpt-3.5-turbo",
+                  "gpt-4",
+                  "phind-codellama-34b",
+                  "gemini-pro",
+                  "mistral-medium"
+                ]
               }
             }
           }
@@ -420,7 +433,8 @@
                       "codeup-13b",
                       "deepseek-1b",
                       "deepseek-7b",
-                      "deepseek-33b"
+                      "deepseek-33b",
+                      "neural-chat-7b"
                     ]
                   },
                   { "type": "string" }
@@ -493,7 +507,7 @@
                   },
                   { "type": "string" }
                 ],
-                "description": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
+                "markdownDescription": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
               }
             }
           }
@@ -510,7 +524,7 @@
           "then": {
             "properties": {
               "model": {
-                "description": "Find the model name you want to use from DeepInfra [here](https://deepinfra.com/models?type=text-generation)."
+                "markdownDescription": "Find the model name you want to use from DeepInfra [here](https://deepinfra.com/models?type=text-generation)."
               }
             }
           }
@@ -551,7 +565,8 @@
                       "codeup-13b",
                       "deepseek-1b",
                       "deepseek-7b",
-                      "deepseek-33b"
+                      "deepseek-33b",
+                      "neural-chat-7b"
                     ]
                   },
                   { "type": "string" }
@@ -581,6 +596,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -589,12 +605,13 @@
                       "codeup-13b",
                       "deepseek-1b",
                       "deepseek-7b",
-                      "deepseek-33b"
+                      "deepseek-33b",
+                      "neural-chat-7b"
                     ]
                   },
                   { "type": "string" }
                 ],
-                "description": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
+                "markdownDescription": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
               }
             }
           }
@@ -676,6 +693,102 @@
             "properties": {
               "streamingUrl": {
                 "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["flowise"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "timeout": {
+                "title": "Timeout",
+                "description": "Set the timeout for each request to Flowise. If you are running a local version of Flowise it might takes a while to respond, you might want to set this to avoid timeouts.",
+                "default": 5000,
+                "type": "integer"
+              },
+              "additionalHeaders": {
+                "description": "A list of additional headers",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "title": "Key",
+                      "description": "Header key",
+                      "type": "string"
+                    },
+                    "value": {
+                      "title": "Value",
+                      "description": "Header value",
+                      "type": "string"
+                    }
+                  },
+                  "required": ["key", "value"]
+                }
+              },
+              "additionalFlowiseConfiguration": {
+                "description": "A list of additional properties to be sent along `overrideConfig`",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "title": "Key",
+                      "description": "Configuration Property key",
+                      "type": "string"
+                    },
+                    "value": {
+                      "title": "Value",
+                      "description": "Configuration Property value"
+                    }
+                  },
+                  "required": ["key", "value"]
+                }
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gpt-3.5-turbo",
+                      "gpt-3.5-turbo-16k",
+                      "gpt-4",
+                      "gpt-3.5-turbo-0613",
+                      "gpt-4-32k",
+                      "gpt-4-1106-preview",
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-1b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "claude-2",
+                      "chat-bison-001",
+                      "gemini-pro",
+                      "mistral-tiny",
+                      "mistral-small",
+                      "mistral-medium"
+                    ]
+                  },
+                  { "type": "string" }
+                ]
               }
             }
           }
@@ -795,7 +908,11 @@
                 "properties": {
                   "recap": {
                     "type": "boolean",
-                    "description": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit."
+                    "markdownDescription": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit."
+                  },
+                  "tokenLimit": {
+                    "type": "integer",
+                    "markdownDescription": "By default, Continue doesn't let you edit extremely large ranges (beyond 1,200 tokens), because the LLM is unlikely to succeed. But if you would like to override this limit with the understanding of possible failure you may do so here."
                   }
                 }
               }
@@ -839,7 +956,10 @@
                 "google",
                 "search",
                 "url",
-                "http"
+                "http",
+                "codebase",
+                "problems",
+                "folder"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -847,7 +967,10 @@
                 "Reference the contents of all open files.",
                 "Enter a search phrase and include the Google search results as context",
                 "Enter a URL and use the contents of the webpage as context",
-                "Write a custom context provider at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup."
+                "Write a custom context provider at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
+                "Use embeddings to automatically find relevant files from throughout the codebase",
+                "Reference all linting errors and warnings in the currently open file",
+                "Include important files from a folder in the prompt, as determined by similarity search"
               ],
               "type": "string"
             },
@@ -883,73 +1006,67 @@
             },
             "required": ["params"]
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["http"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "The HTTP endpoint of your context provider server."
+                  }
+                },
+                "required": ["url"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["codebase", "folder"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "nRetrieve": {
+                    "title": "N Retrieve",
+                    "description": "Number of results to initially retrieve from vector database",
+                    "default": 50,
+                    "type": "integer"
+                  },
+                  "nFinal": {
+                    "title": "N Final",
+                    "description": "Final number of results to use after re-ranking",
+                    "default": 10,
+                    "type": "integer"
+                  },
+                  "useReranking": {
+                    "title": "Use Reranking",
+                    "description": "Whether to use re-ranking, which will allow initial selection of nRetrieve results, then will use an LLM to select the top nFinal results. Disabling re-ranking will give faster, but less accurate, results.",
+                    "default": true,
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "required": ["name"]
-    },
-    "RetrievalSettings": {
-      "title": "RetrievalSettings",
-      "type": "object",
-      "properties": {
-        "nRetrieve": {
-          "title": "N Retrieve",
-          "description": "Number of results to initially retrieve from vector database",
-          "default": 50,
-          "type": "integer"
-        },
-        "nFinal": {
-          "title": "N Final",
-          "description": "Final number of results to use after re-ranking",
-          "default": 10,
-          "type": "integer"
-        },
-        "useReranking": {
-          "title": "Use Reranking",
-          "description": "Whether to use re-ranking, which will allow initial selection of nRetrieve results, then will use an LLM to select the top nFinal results",
-          "default": true,
-          "type": "boolean"
-        },
-        "rerankGroupSize": {
-          "title": "Rerank Group Size",
-          "description": "Number of results to group together when re-ranking. Each group will be processed in parallel.",
-          "default": 5,
-          "type": "integer"
-        },
-        "ignoreFiles": {
-          "title": "Ignore Files",
-          "description": "Files to ignore when indexing the codebase. You can use glob patterns, such as **/*.py. This is useful for directories that contain generated code, or other directories that are not relevant to the codebase.",
-          "default": [],
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "openaiApiKey": {
-          "title": "Openai Api Key",
-          "description": "OpenAI API key",
-          "type": "string"
-        },
-        "apiBase": {
-          "title": "Api Base",
-          "description": "OpenAI API base URL",
-          "type": "string"
-        },
-        "apiType": {
-          "title": "Api Type",
-          "description": "OpenAI API type",
-          "type": "string"
-        },
-        "apiVersion": {
-          "title": "Api Version",
-          "description": "OpenAI API version",
-          "type": "string"
-        },
-        "organizationId": {
-          "title": "Organization Id",
-          "description": "OpenAI organization ID",
-          "type": "string"
-        }
-      }
     },
     "continuedev__core__config__serialized_config__SerializedContinueConfig": {
       "title": "SerializedContinueConfig",
@@ -957,7 +1074,7 @@
       "properties": {
         "allowAnonymousTelemetry": {
           "title": "Allow Anonymous Telemetry",
-          "description": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to False, we will not collect any data.",
+          "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data.",
           "default": true,
           "type": "boolean"
         },
@@ -966,7 +1083,7 @@
           "default": [
             {
               "title": "GPT-4 (trial)",
-              "provider": "openai-free-trial",
+              "provider": "free-trial",
               "model": "gpt-4",
               "apiKey": ""
             }
@@ -1045,40 +1162,54 @@
         },
         "disableSummaries": {
           "title": "Disable Summaries",
-          "description": "If set to `True`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
+          "markdownDescription": "If set to `true`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
           "default": false,
           "type": "boolean"
         },
         "disableIndexing": {
           "title": "Disable Indexing",
-          "description": "If set to `True`, Continue will not index the codebase. This is mainly used for debugging purposes.",
+          "markdownDescription": "If set to `true`, Continue will not index the codebase. This is mainly used for debugging purposes.",
           "default": false,
           "type": "boolean"
         },
         "disableSessionTitles": {
           "title": "Disable Session Titles",
-          "description": "If set to `True`, Continue will not make extra requests to the LLM to generate a summary title of each session.",
+          "markdownDescription": "If set to `true`, Continue will not make extra requests to the LLM to generate a summary title of each session.",
           "default": false,
           "type": "boolean"
         },
-        "retrievalSettings": {
-          "title": "Retrieval Settings",
-          "description": "Settings for the retrieval system. Read more about the retrieval system in the documentation.",
-          "default": {
-            "nRetrieve": 50,
-            "nFinal": 10,
-            "useReranking": true,
-            "rerankGroupSize": 5,
-            "ignoreFiles": [],
-            "openaiApiKey": null,
-            "apiBase": null,
-            "apiType": null,
-            "apiVersion": null,
-            "organizationId": null
+        "embeddingsProvider": {
+          "title": "Embeddings Provider",
+          "description": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser.",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "enum": ["transformers.js", "ollama", "openai"]
+            },
+            "model": {
+              "type": "string"
+            },
+            "apiKey": {
+              "type": "string"
+            },
+            "apiBase": {
+              "type": "string"
+            }
           },
+          "required": ["provider"],
           "allOf": [
             {
-              "$ref": "#/definitions/RetrievalSettings"
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["ollama"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "required": ["model"]
+              }
             }
           ]
         }

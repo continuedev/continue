@@ -1,6 +1,4 @@
 const esbuild = require("esbuild");
-const ncp = require("ncp").ncp;
-const fs = require("fs");
 
 (async () => {
   // Bundles the extension into one file
@@ -16,25 +14,10 @@ const fs = require("fs");
       // eslint-disable-next-line @typescript-eslint/naming-convention
       ".node": "file",
     },
-  });
 
-  // Return instead of copying if on ARM Mac
-  // This is an env var created in the GH Action
-  if (process.env.target === "darwin-arm64") {
-    return;
-  }
-
-  fs.mkdirSync("out/node_modules", { recursive: true });
-
-  ncp.ncp("node_modules/esbuild", "out/node_modules/esbuild", function (err) {
-    if (err) {
-      return console.error(err);
-    }
-  });
-
-  ncp.ncp("node_modules/@esbuild", "out/node_modules/@esbuild", function (err) {
-    if (err) {
-      return console.error(err);
-    }
+    // To allow import.meta.path for transformers.js
+    // https://github.com/evanw/esbuild/issues/1492#issuecomment-893144483
+    inject: ["./importMetaUrl.js"],
+    define: { "import.meta.url": "importMetaUrl" },
   });
 })();

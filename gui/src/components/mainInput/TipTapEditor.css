@@ -1,16 +1,16 @@
 .mention {
-  background-color: #bfe2b6;
+  background-color: var(--vscode-badge-background, #bfe2b6);
+  color: var(--vscode-badge-foreground, --vscode-foreground, #000);
   border-radius: 3px;
-  color: #000;
   font-size: 0.9em;
   padding: 0.05em 0.15em;
   transition: background-color 0.2s ease-in-out;
 }
 
 .command-suggestion {
-  background-color: #bfe2b6;
+  background-color: var(--vscode-badge-background, #bfe2b6);
+  color: var(--vscode-badge-foreground, --vscode-foreground, #000);
   border-radius: 3px;
-  color: #000;
   font-size: 0.9em;
   padding: 0.05em 0.15em;
   transition: background-color 0.2s ease-in-out;

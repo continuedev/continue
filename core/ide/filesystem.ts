@@ -1,5 +1,6 @@
 import * as fs from "fs";
-import { DiffLine, IDE, SerializedContinueConfig } from "..";
+import { DiffLine, IDE, Problem, SerializedContinueConfig } from "..";
+import { Chunk } from "../index";
 import {
   getConfigJsonPath,
   getConfigTsPath,
@@ -46,6 +47,9 @@ class FileSystemIde implements IDE {
         resolve([folder]);
       });
     });
+  }
+  listFolders(): Promise<string[]> {
+    return Promise.resolve([]);
   }
   writeFile(path: string, contents: string): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -105,6 +109,28 @@ class FileSystemIde implements IDE {
 
   async getSearchResults(query: string): Promise<string> {
     return "";
+  }
+
+  async getProblems(filepath?: string | undefined): Promise<Problem[]> {
+    return Promise.resolve([]);
+  }
+
+  async subprocess(command: string): Promise<[string, string]> {
+    return ["", ""];
+  }
+
+  getFilesToEmbed(providerId: string): Promise<[string, string, string][]> {
+    return Promise.resolve([]);
+  }
+
+  sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {}
+
+  retrieveChunks(
+    text: string,
+    n: number,
+    directory: string | undefined
+  ): Promise<Chunk[]> {
+    return Promise.resolve([]);
   }
 }
 

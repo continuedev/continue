@@ -23,7 +23,8 @@
     "deepseek-7b",
     "deepseek-33b",
     "claude-2",
-    "chat-bison-001"
+    "chat-bison-001",
+    "neural-chat-7b"
   ],
   "type": "string"
 }

@@ -7,6 +7,7 @@ import {
   Cog6ToothIcon,
   CommandLineIcon,
   ExclamationCircleIcon,
+  ExclamationTriangleIcon,
   FolderIcon,
   FolderOpenIcon,
   GlobeAltIcon,
@@ -27,11 +28,12 @@ import {
 } from "react";
 import styled from "styled-components";
 import {
-  buttonColor,
   defaultBorderRadius,
   lightGray,
-  secondaryDark,
   vscForeground,
+  vscListActiveBackground,
+  vscListActiveForeground,
+  vscQuickInputBackground,
 } from "..";
 import FileIcon from "../FileIcon";
 import { ComboBoxItem, ComboBoxItemType } from "./types";
@@ -43,6 +45,9 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   search: MagnifyingGlassIcon,
   url: GlobeAltIcon,
   open: FolderOpenIcon,
+  codebase: SparklesIcon,
+  problems: ExclamationTriangleIcon,
+  folder: FolderIcon,
   "/edit": PaintBrushIcon,
   "/clear": TrashIcon,
   "/test": BeakerIcon,
@@ -85,7 +90,7 @@ const ItemsDiv = styled.div`
   padding: 0.2rem;
   position: relative;
 
-  background-color: ${secondaryDark};
+  background-color: ${vscQuickInputBackground};
   /* backdrop-filter: blur(12px); */
 `;
 
@@ -102,7 +107,8 @@ const ItemDiv = styled.div`
   cursor: pointer;
 
   &.is-selected {
-    background-color: ${buttonColor}33;
+    background-color: ${vscListActiveBackground};
+    color: ${vscListActiveForeground};
   }
 `;
 
@@ -126,10 +132,10 @@ const QueryInput = styled.textarea`
 
 interface MentionListProps {
   items: ComboBoxItem[];
-  command: (item: ComboBoxItem) => void;
+  command: (item: any) => void;
 
   editor: Editor;
-  enterSubmenu?: (editor: Editor) => void;
+  enterSubmenu?: (editor: Editor, providerId: string) => void;
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
@@ -153,9 +159,13 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   const selectItem = (index) => {
     const item = props.items[index];
 
-    if (item.id === "file") {
+    if (item.type === "contextProvider" && item.id === "file") {
       setSubMenuTitle("Files - Type to search");
-      props.enterSubmenu(props.editor);
+      props.enterSubmenu(props.editor, "file");
+      return;
+    } else if (item.type === "contextProvider" && item.id === "folder") {
+      setSubMenuTitle("Folder - Type to search");
+      props.enterSubmenu(props.editor, "folder");
       return;
     }
 
@@ -166,7 +176,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
 
     if (item) {
-      props.command(item);
+      props.command({ ...item, itemType: item.type });
     }
   };
 
@@ -269,7 +279,10 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         filename={item.title}
                       ></FileIcon>
                     )}
-                    {item.type !== "file" && (
+                    {item.type === "folder" && (
+                      <FolderIcon height="20px" width="20px"></FolderIcon>
+                    )}
+                    {item.type !== "file" && item.type !== "folder" && (
                       <DropdownIcon
                         provider={item.id}
                         type={item.type}
@@ -281,7 +294,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                   </div>
                   <span
                     style={{
-                      color: vscForeground,
+                      color: vscListActiveForeground,
                       float: "right",
                       textAlign: "right",
                       opacity: index !== selectedIndex ? 0 : 1,
@@ -289,13 +302,14 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                     className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2 flex items-center"
                   >
                     {item.description}
-                    {item.id === "file" && (
-                      <ArrowRightIcon
-                        className="ml-2"
-                        width="1.2em"
-                        height="1.2em"
-                      />
-                    )}
+                    {item.type === "contextProvider" &&
+                      (item.id === "file" || item.id === "folder") && (
+                        <ArrowRightIcon
+                          className="ml-2"
+                          width="1.2em"
+                          height="1.2em"
+                        />
+                      )}
                   </span>
                 </span>
               </ItemDiv>

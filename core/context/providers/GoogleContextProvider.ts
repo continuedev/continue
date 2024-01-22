@@ -1,5 +1,9 @@
 import { BaseContextProvider } from "..";
-import { ContextItem, ContextProviderDescription } from "../..";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+} from "../..";
 
 class GoogleContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -17,7 +21,10 @@ class GoogleContextProvider extends BaseContextProvider {
     this._serperApiKey = options.serperApiKey;
   }
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
     const url = "https://google.serper.dev/search";
 
     const payload = JSON.stringify({ q: query });

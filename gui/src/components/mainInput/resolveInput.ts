@@ -1,12 +1,18 @@
 import { JSONContent } from "@tiptap/react";
-import { IContextProvider } from "core";
+import {
+  ContextItemWithId,
+  EmbeddingsProvider,
+  IContextProvider,
+  ILLM,
+} from "core";
 import { ExtensionIde } from "core/ide";
+import { ideRequest } from "core/ide/messaging";
 import { getBasename } from "core/util";
-import { getContextItems } from "../../hooks/useContextProviders";
 
 interface MentionAttrs {
   label: string;
   id: string;
+  itemType?: string;
   query?: string;
 }
 
@@ -19,10 +25,12 @@ interface MentionAttrs {
 
 async function resolveEditorContent(
   editorState: JSONContent,
-  contextProviders: IContextProvider[]
-): Promise<string> {
+  contextProviders: IContextProvider[],
+  llm: ILLM,
+  embeddingsProvider?: EmbeddingsProvider
+): Promise<[ContextItemWithId[], string]> {
   let paragraphs = [];
-  let contextItems: MentionAttrs[] = [];
+  let contextItemAttrs: MentionAttrs[] = [];
   let slashCommand = undefined;
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
@@ -34,7 +42,7 @@ async function resolveEditorContent(
         continue;
       }
       paragraphs.push(text);
-      contextItems.push(...ctxItems);
+      contextItemAttrs.push(...ctxItems);
     } else if (p.type === "codeBlock") {
       if (!p.attrs.item.editing) {
         paragraphs.push(
@@ -47,21 +55,36 @@ async function resolveEditorContent(
   }
 
   let contextItemsText = "";
+  let contextItems: ContextItemWithId[] = [];
   const ide = new ExtensionIde();
-  for (const item of contextItems) {
-    if (item.id.startsWith("/") || item.id.startsWith("\\")) {
+  for (const item of contextItemAttrs) {
+    if (item.itemType === "file") {
       // This is a quick way to resolve @file references
       const basename = getBasename(item.id);
-      const contents = await ide.readFile(item.id);
-      contextItemsText += `\`\`\`title="${basename}"\n${contents}\n\`\`\`\n`;
+      const content = await ide.readFile(item.id);
+      contextItemsText += `\`\`\`title="${basename}"\n${content}\n\`\`\`\n`;
+      contextItems.push({
+        name: basename,
+        description: item.id,
+        content,
+        id: {
+          providerTitle: "file",
+          itemId: item.id,
+        },
+      });
     } else {
-      const resolvedItems = await getContextItems(
-        contextProviders,
-        item.id,
-        item.query
+      const data = {
+        name: item.id,
+        query: item.query,
+        fullInput: paragraphs.join("\n"),
+      };
+      const { items: resolvedItems } = await ideRequest(
+        "getContextItems",
+        data
       );
+      contextItems.push(...resolvedItems);
       for (const resolvedItem of resolvedItems) {
-        contextItemsText += `\`\`\`title="${item.label}"\n${resolvedItem.content}\n\`\`\`\n`;
+        contextItemsText += resolvedItem.content + "\n\n";
       }
     }
   }
@@ -70,12 +93,12 @@ async function resolveEditorContent(
     contextItemsText += "\n";
   }
 
-  let finalText = contextItemsText + paragraphs.join("\n");
+  let finalText = paragraphs.join("\n").trim();
   if (slashCommand) {
     finalText = `${slashCommand} ${finalText}`;
   }
-  console.log(finalText, editorState?.content);
-  return finalText;
+
+  return [contextItems, finalText];
 }
 
 function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
@@ -86,7 +109,9 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
     if (child.type === "text") {
       text += child.text;
     } else if (child.type === "mention") {
-      text += `@${child.attrs.label}`;
+      if (!["codebase"].includes(child.attrs.id)) {
+        text += child.attrs.label;
+      }
       contextItems.push(child.attrs);
     } else if (child.type === "slashcommand") {
       if (typeof slashCommand === "undefined") {

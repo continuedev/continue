@@ -1,6 +1,10 @@
 import { BaseContextProvider } from "..";
-import { ContextItem, ContextProviderDescription } from "../..";
-import { ExtensionIde } from "../../ide";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+} from "../..";
+import { getBasename } from "../../util";
 
 class OpenFilesContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -11,14 +15,19 @@ class OpenFilesContextProvider extends BaseContextProvider {
     requiresQuery: false,
   };
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
-    const ide = new ExtensionIde();
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
+    const ide = extras.ide;
     const openFiles = await ide.getOpenFiles();
     return await Promise.all(
       openFiles.map(async (filepath: string) => {
         return {
           description: filepath,
-          content: await ide.readFile(filepath),
+          content: `\`\`\`${getBasename(filepath)}\n${await ide.readFile(
+            filepath
+          )}\n\`\`\``,
           name: (filepath.split("/").pop() || "").split("\\").pop() || "",
         };
       })

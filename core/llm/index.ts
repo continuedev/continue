@@ -5,12 +5,18 @@ import {
   ILLM,
   LLMFullCompletionOptions,
   LLMOptions,
+  LLMReturnValue,
   ModelProvider,
   RequestOptions,
   TemplateType,
 } from "..";
 import { ideRequest, ideStreamRequest } from "../ide/messaging";
-import { CONTEXT_LENGTH_FOR_MODEL, DEFAULT_ARGS } from "./constants";
+import {
+  CONTEXT_LENGTH_FOR_MODEL,
+  DEFAULT_ARGS,
+  DEFAULT_CONTEXT_LENGTH,
+  DEFAULT_MAX_TOKENS,
+} from "./constants";
 import {
   compileChatMessages,
   countTokens,
@@ -21,7 +27,9 @@ import {
   chatmlTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
+  neuralChatTemplateMessages,
   openchatTemplateMessages,
+  phi2TemplateMessages,
   phindTemplateMessages,
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
@@ -32,9 +40,11 @@ import {
   codellamaEditPrompt,
   deepseekEditPrompt,
   mistralEditPrompt,
+  neuralChatEditPrompt,
   openchatEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,
+  simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
 } from "./templates/edit";
@@ -63,6 +73,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 
   if (lower.includes("dolphin")) {
     return "chatml";
+  }
+
+  if (lower.includes("phi2")) {
+    return "phi2";
   }
 
   if (lower.includes("phind")) {
@@ -97,6 +111,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "openchat";
   }
 
+  if (lower.includes("neural-chat")) {
+    return "neural-chat";
+  }
+
   return "chatml";
 }
 
@@ -118,6 +136,7 @@ function autodetectTemplateFunction(
     const mapping: Record<TemplateType, any> = {
       llama2: llama2TemplateMessages,
       alpaca: templateAlpacaMessages,
+      phi2: phi2TemplateMessages,
       phind: phindTemplateMessages,
       zephyr: zephyrTemplateMessages,
       anthropic: anthropicTemplateMessages,
@@ -125,6 +144,7 @@ function autodetectTemplateFunction(
       deepseek: deepseekTemplateMessages,
       openchat: openchatTemplateMessages,
       "xwin-coder": xWinCoderTemplateMessages,
+      "neural-chat": neuralChatTemplateMessages,
       none: null,
     };
 
@@ -145,6 +165,8 @@ function autodetectPromptTemplates(
 
   if (templateType === "phind") {
     editTemplate = phindEditPrompt;
+  } else if (templateType === "phi2") {
+    editTemplate = simplifiedEditPrompt;
   } else if (templateType === "zephyr") {
     editTemplate = zephyrEditPrompt;
   } else if (templateType === "llama2") {
@@ -161,6 +183,8 @@ function autodetectPromptTemplates(
     editTemplate = openchatEditPrompt;
   } else if (templateType === "xwin-coder") {
     editTemplate = xWinCoderEditPrompt;
+  } else if (templateType === "neural-chat") {
+    editTemplate = neuralChatEditPrompt;
   } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }
@@ -221,11 +245,11 @@ export abstract class BaseLLM implements ILLM {
     this.uniqueId = options.uniqueId || "None";
     this.model = options.model;
     this.systemMessage = options.systemMessage;
-    this.contextLength = options.contextLength || 4096;
+    this.contextLength = options.contextLength || DEFAULT_CONTEXT_LENGTH;
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",
-      maxTokens: options.completionOptions?.maxTokens || 1024,
+      maxTokens: options.completionOptions?.maxTokens || DEFAULT_MAX_TOKENS,
     };
     this.requestOptions = options.requestOptions;
     this.promptTemplates = {
@@ -264,14 +288,15 @@ export abstract class BaseLLM implements ILLM {
       options.model !== this.model &&
       options.model in CONTEXT_LENGTH_FOR_MODEL
     ) {
-      contextLength = CONTEXT_LENGTH_FOR_MODEL[options.model] || 4096;
+      contextLength =
+        CONTEXT_LENGTH_FOR_MODEL[options.model] || DEFAULT_CONTEXT_LENGTH;
     }
 
     return compileChatMessages(
       options.model,
       messages,
       contextLength,
-      options.maxTokens,
+      options.maxTokens || DEFAULT_MAX_TOKENS,
       undefined,
       functions,
       this.systemMessage
@@ -377,14 +402,22 @@ export abstract class BaseLLM implements ILLM {
     options: LLMFullCompletionOptions = {}
   ) {
     if (!this._shouldRequestDirectly()) {
-      for await (const content of ideStreamRequest("llmStreamComplete", {
+      const gen = ideStreamRequest("llmStreamComplete", {
         prompt,
         title: this.title,
         completionOptions: options,
-      })) {
-        yield content;
+      });
+
+      let next = await gen.next();
+      while (!next.done) {
+        yield next.value;
+        next = await gen.next();
       }
-      return;
+
+      return {
+        prompt: next.value?.prompt,
+        completion: next.value?.completion,
+      };
     }
 
     const { completionOptions, log, raw } =
@@ -394,7 +427,7 @@ export abstract class BaseLLM implements ILLM {
       completionOptions.model,
       this.contextLength,
       prompt,
-      completionOptions.maxTokens
+      completionOptions.maxTokens || DEFAULT_MAX_TOKENS
     );
 
     if (!raw) {
@@ -417,6 +450,8 @@ export abstract class BaseLLM implements ILLM {
     }
 
     this._logTokensGenerated(completionOptions.model, completion);
+
+    return { prompt, completion };
   }
 
   async complete(prompt: string, options: LLMFullCompletionOptions = {}) {
@@ -437,7 +472,7 @@ export abstract class BaseLLM implements ILLM {
       completionOptions.model,
       this.contextLength,
       prompt,
-      completionOptions.maxTokens
+      completionOptions.maxTokens || DEFAULT_MAX_TOKENS
     );
 
     if (!raw) {
@@ -470,16 +505,19 @@ export abstract class BaseLLM implements ILLM {
   async *streamChat(
     messages: ChatMessage[],
     options: LLMFullCompletionOptions = {}
-  ): AsyncGenerator<ChatMessage> {
+  ): AsyncGenerator<ChatMessage, LLMReturnValue> {
     if (!this._shouldRequestDirectly()) {
-      for await (const content of ideStreamRequest("llmStreamChat", {
+      const gen = ideStreamRequest("llmStreamChat", {
         messages,
         title: this.title,
         completionOptions: options,
-      })) {
-        yield { role: "user", content };
+      });
+      let next = await gen.next();
+      while (!next.done) {
+        yield { role: "user", content: next.value };
+        next = await gen.next();
       }
-      return;
+      return { prompt: next.value?.prompt, completion: next.value?.completion };
     }
 
     const { completionOptions, log, raw } =
@@ -525,6 +563,7 @@ export abstract class BaseLLM implements ILLM {
     }
 
     this._logTokensGenerated(completionOptions.model, completion);
+    return { prompt, completion };
   }
 
   protected async *_streamComplete(

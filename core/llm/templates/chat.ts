@@ -141,6 +141,22 @@ function deepseekTemplateMessages(msgs: ChatMessage[]): string {
   return prompt + "### Response:\n";
 }
 
+// See https://huggingface.co/microsoft/phi-2#qa-format
+function phi2TemplateMessages(msgs: ChatMessage[]): string {
+  const HUMAN_PROMPT = "\n\nInstruct:";
+  const AI_PROMPT = "\n\nOutput:";
+  let prompt = "";
+
+  for (const msg of msgs) {
+    prompt += `${
+      msg.role === "user" || msg.role === "system" ? HUMAN_PROMPT : AI_PROMPT
+    } ${msg.content} `;
+  }
+
+  prompt += AI_PROMPT;
+  return prompt;
+}
+
 function phindTemplateMessages(msgs: ChatMessage[]): string {
   let prompt = "";
 
@@ -205,12 +221,36 @@ function xWinCoderTemplateMessages(msgs: ChatMessage[]): string {
   return prompt;
 }
 
+/**
+ * NeuralChat Template
+ * ### System:\n{system_input}\n### User:\n{user_input}\n### Assistant:\n
+ */
+function neuralChatTemplateMessages(msgs: ChatMessage[]): string {
+  let prompt = "";
+
+  if (msgs[0].role === "system") {
+    prompt += `### System:\n${msgs[0].content}\n`;
+    msgs.shift();
+  }
+
+  for (const msg of msgs) {
+    prompt += msg.role === "user" ? "### User:\n" : "### Assistant:\n";
+    prompt += `${msg.content}\n`;
+  }
+
+  prompt += "### Assistant:\n";
+
+  return prompt;
+}
+
 export {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
+  neuralChatTemplateMessages,
   openchatTemplateMessages,
+  phi2TemplateMessages,
   phindTemplateMessages,
   templateAlpacaMessages,
   xWinCoderTemplateMessages,

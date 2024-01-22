@@ -1,6 +1,9 @@
 import { BaseContextProvider } from "..";
-import { ContextItem, ContextProviderDescription } from "../..";
-import { ExtensionIde } from "../../ide";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+} from "../..";
 
 class FileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -11,15 +14,18 @@ class FileContextProvider extends BaseContextProvider {
     requiresQuery: false,
   };
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
     // Assume the query is a filepath
     query = query.trim();
-    const content = await new ExtensionIde().readFile(query);
+    const content = await extras.ide.readFile(query);
     return [
       {
         name: query.split(/[\\/]/).pop() || query,
         description: query,
-        content,
+        content: `\`\`\`${query}\n${content}\n\`\`\``,
       },
     ];
   }

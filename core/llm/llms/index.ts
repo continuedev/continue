@@ -6,9 +6,11 @@ import {
   LLMOptions,
   ModelDescription,
 } from "../..";
+import { DEFAULT_MAX_TOKENS } from "../constants";
 import Anthropic from "./Anthropic";
 import Bedrock from "./Bedrock";
 import DeepInfra from "./DeepInfra";
+import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
 import GooglePalm from "./GooglePalm";
@@ -20,6 +22,7 @@ import Llamafile from "./Llamafile";
 import Mistral from "./Mistral";
 import Ollama from "./Ollama";
 import OpenAI from "./OpenAI";
+import OpenAIFreeTrial from "./OpenAIFreeTrial";
 import Replicate from "./Replicate";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
@@ -89,6 +92,8 @@ const LLMs = [
   Mistral,
   Bedrock,
   DeepInfra,
+  OpenAIFreeTrial,
+  Flowise,
 ];
 
 export async function llmFromDescription(
@@ -121,7 +126,7 @@ export async function llmFromDescription(
       maxTokens:
         finalCompletionOptions.maxTokens ||
         cls.defaultOptions?.completionOptions?.maxTokens ||
-        1024,
+        DEFAULT_MAX_TOKENS,
     },
     systemMessage,
   };

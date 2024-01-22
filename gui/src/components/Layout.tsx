@@ -1,18 +1,17 @@
 import {
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
-  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { postToIde } from "core/ide/messaging";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  secondaryDark,
   vscBackground,
   vscForeground,
+  vscInputBackground,
 } from ".";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -61,7 +60,7 @@ const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
   right: 0;
   margin: 8px;
   margin-top: 0;
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   color: ${vscForeground};
   border-radius: ${defaultBorderRadius};
   padding: 12px;
@@ -93,7 +92,7 @@ const GridDiv = styled.div`
 `;
 
 const DropdownPortalDiv = styled.div`
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   position: relative;
   margin-left: 8px;
   z-index: 200;
@@ -111,9 +110,6 @@ const Layout = () => {
   );
   const showDialog = useSelector(
     (state: RootStore) => state.uiState.showDialog
-  );
-  const indexingProgress = useSelector(
-    (state: RootStore) => state.serverState.indexingProgress
   );
 
   const defaultModel = useSelector(defaultModelSelector);
@@ -164,6 +160,9 @@ const Layout = () => {
         } else {
           navigate("/history");
         }
+      } else if (event.data.type === "indexProgress") {
+        setIndexingProgress(event.data.progress);
+        setIndexingTask(event.data.desc);
       }
     };
     window.addEventListener("message", handler);
@@ -171,6 +170,9 @@ const Layout = () => {
       window.removeEventListener("message", handler);
     };
   }, [location, navigate]);
+
+  const [indexingProgress, setIndexingProgress] = useState(1);
+  const [indexingTask, setIndexingTask] = useState("Indexing Codebase");
 
   return (
     <LayoutTopDiv>
@@ -198,7 +200,7 @@ const Layout = () => {
           <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
           <Footer>
             <div className="mr-auto flex gap-2 items-center">
-              {localStorage.getItem("ide") === "jetbrains" ||
+              {/* {localStorage.getItem("ide") === "jetbrains" ||
                 localStorage.getItem("hideFeature") === "true" || (
                   <SparklesIcon
                     className="cursor-pointer"
@@ -208,7 +210,7 @@ const Layout = () => {
                     onMouseEnter={() => {
                       dispatch(
                         setBottomMessage(
-                          "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)"
+                          `🎁 New Feature: Use ${getMetaKeyLabel()}⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)`
                         )
                       );
                     }}
@@ -225,10 +227,10 @@ const Layout = () => {
                     height="1.3em"
                     color="yellow"
                   />
-                )}
+                )} */}
               <ModelSelect />
               {indexingProgress >= 1 && // Would take up too much space together with indexing progress
-                defaultModel?.providerName === "openai-free-trial" &&
+                defaultModel?.providerName === "free-trial" &&
                 defaultModel?.apiKey === "" &&
                 (location.pathname === "/settings" ||
                   parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
@@ -240,6 +242,7 @@ const Layout = () => {
 
               {indexingProgress < 1 && (
                 <IndexingProgressBar
+                  currentlyIndexing={indexingTask}
                   completed={indexingProgress * 100}
                   total={100}
                 />
@@ -258,7 +261,7 @@ const Layout = () => {
                 // navigate("/settings");
                 postToIde("openConfigJson", {});
               }}
-              text="Settings"
+              text="Config"
             >
               <Cog6ToothIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>

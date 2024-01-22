@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
-import Editor, { DiffEditor } from "@monaco-editor/react";
-import { postToIde } from "../util/ide";
-import { v4 } from "uuid";
-import { secondaryDark } from "../components";
-import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { DiffEditor } from "@monaco-editor/react";
+import React, { useEffect } from "react";
+import { v4 } from "uuid";
+import { vscInputBackground } from "../components";
+import HeaderButtonWithText from "../components/HeaderButtonWithText";
+import { postToIde } from "../util/ide";
 
 interface EditorFrameProps {
   filename: string;
@@ -40,7 +40,7 @@ function EditorFrame(props: EditorFrameProps) {
       <div
         className="my-2 px-2 py-1 flex justify-between items-center"
         style={{
-          backgroundColor: secondaryDark,
+          backgroundColor: vscInputBackground,
         }}
       >
         <code

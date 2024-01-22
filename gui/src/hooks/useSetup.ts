@@ -1,7 +1,7 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { useEffect } from "react";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
-import { errorPopup, postToIde } from "../util/ide";
+import { errorPopup, isJetBrains, postToIde } from "../util/ide";
 
 import {
   intermediateToFinalConfig,
@@ -44,6 +44,7 @@ function useSetup(dispatch: Dispatch<any>) {
           return new ExtensionIde().readFile(filepath);
         }
       );
+
       // Fall back to config.json
       dispatch(setConfig(finalConfig));
     } catch (e) {
@@ -106,14 +107,16 @@ function useSetup(dispatch: Dispatch<any>) {
     return () => window.removeEventListener("message", eventListener);
   }, [defaultModelTitle]);
 
-  // Save theme colors to local storage
+  // Save theme colors to local storage for immediate loading in JetBrains
   useEffect(() => {
-    for (const colorVar of VSC_THEME_COLOR_VARS) {
-      if (document.body.style.getPropertyValue(colorVar)) {
-        localStorage.setItem(
-          colorVar,
-          document.body.style.getPropertyValue(colorVar)
-        );
+    if (isJetBrains()) {
+      for (const colorVar of VSC_THEME_COLOR_VARS) {
+        if (document.body.style.getPropertyValue(colorVar)) {
+          localStorage.setItem(
+            colorVar,
+            document.body.style.getPropertyValue(colorVar)
+          );
+        }
       }
     }
   }, []);

@@ -2,11 +2,11 @@ import { BaseLLM } from "..";
 import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
 import { streamResponse } from "../stream";
 
-// const SERVER_URL = "http://localhost:8080";
-const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
+// const SERVER_URL = "http://localhost:3000";
+const SERVER_URL = "https://node-proxy-server-l6vsfbzhba-uw.a.run.app";
 
 class FreeTrial extends BaseLLM {
-  static providerName: ModelProvider = "openai-free-trial";
+  static providerName: ModelProvider = "free-trial";
 
   private _getHeaders() {
     return {
@@ -15,35 +15,29 @@ class FreeTrial extends BaseLLM {
     };
   }
 
-  protected async _complete(
-    prompt: string,
-    options: CompletionOptions
-  ): Promise<string> {
-    const args = this.collectArgs(options);
-
-    const response = await this.fetch(`${SERVER_URL}/complete`, {
-      method: "POST",
-      headers: this._getHeaders(),
-      body: JSON.stringify({
-        messages: [{ role: "user", content: prompt }],
-        ...args,
-      }),
-    });
-
-    return await response.json();
+  private _convertArgs(options: CompletionOptions): any {
+    return {
+      model: options.model,
+      frequency_penalty: options.frequencyPenalty,
+      presence_penalty: options.presencePenalty,
+      max_tokens: options.maxTokens,
+      stop: options.stop,
+      temperature: options.temperature,
+      top_p: options.topP,
+    };
   }
 
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const args = this.collectArgs(options);
+    const args = this._convertArgs(this.collectArgs(options));
 
     const response = await this.fetch(`${SERVER_URL}/stream_complete`, {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify({
-        messages: [{ role: "user", content: prompt }],
+        prompt,
         ...args,
       }),
     });
@@ -57,7 +51,7 @@ class FreeTrial extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
-    const args = this.collectArgs(options);
+    const args = this._convertArgs(this.collectArgs(options));
 
     const response = await this.fetch(`${SERVER_URL}/stream_chat`, {
       method: "POST",
@@ -68,31 +62,13 @@ class FreeTrial extends BaseLLM {
       }),
     });
 
-    for await (const value of streamResponse(response)) {
-      const chunks = value.split("\n");
-
-      for (const chunk of chunks) {
-        if (chunk.trim() !== "") {
-          const loadedChunk = JSON.parse(chunk);
-
-          yield {
-            role: "assistant",
-            content: loadedChunk.content || "",
-          };
-
-          // if (this.model === "gpt-4") {
-          //   await delay(0.03);
-          // } else {
-          //   await delay(0.01);
-          // }
-        }
-      }
+    for await (const chunk of streamResponse(response)) {
+      yield {
+        role: "assistant",
+        content: chunk,
+      };
     }
   }
-}
-
-async function delay(seconds: number) {
-  return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
 
 export default FreeTrial;

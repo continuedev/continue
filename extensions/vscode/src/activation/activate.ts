@@ -1,4 +1,5 @@
 import { getTsConfigPath } from "core/util/paths";
+import * as fs from "fs";
 import path from "path";
 import { v4 } from "uuid";
 import * as vscode from "vscode";
@@ -7,6 +8,7 @@ import IdeProtocolClient from "../continueIdeClient";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { vsCodeIndexCodebase } from "../util/indexCodebase";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
 import { startProxy } from "./proxy";
@@ -14,47 +16,6 @@ import { startProxy } from "./proxy";
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
 export let windowId: string = v4();
-
-function addPythonPathForConfig() {
-  // Add to python.analysis.extraPaths global setting so config.py gets LSP
-
-  if (
-    vscode.workspace.workspaceFolders?.some((folder) =>
-      folder.uri.fsPath.endsWith("continue")
-    )
-  ) {
-    // Not for the Continue repo
-    return;
-  }
-
-  const pythonConfig = vscode.workspace.getConfiguration("python");
-  const analysisPaths = pythonConfig.get<string[]>("analysis.extraPaths");
-  const autoCompletePaths = pythonConfig.get<string[]>(
-    "autoComplete.extraPaths"
-  );
-  const pathToAdd = extensionContext?.extensionPath;
-  if (analysisPaths && pathToAdd && !analysisPaths.includes(pathToAdd)) {
-    analysisPaths.push(pathToAdd);
-    pythonConfig.update(
-      "analysis.extraPaths",
-      analysisPaths,
-      vscode.ConfigurationTarget.Global
-    );
-  }
-
-  if (
-    autoCompletePaths &&
-    pathToAdd &&
-    !autoCompletePaths.includes(pathToAdd)
-  ) {
-    autoCompletePaths.push(pathToAdd);
-    pythonConfig.update(
-      "autoComplete.extraPaths",
-      autoCompletePaths,
-      vscode.ConfigurationTarget.Global
-    );
-  }
-}
 
 async function openTutorial(context: vscode.ExtensionContext) {
   if (context.globalState.get<boolean>("continue.tutorialShown") !== true) {
@@ -108,7 +69,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
   registerQuickFixProvider();
-  addPythonPathForConfig();
   await openTutorial(context);
   setupInlineTips(context);
   showRefactorMigrationMessage();
@@ -129,4 +89,38 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   );
 
   startProxy();
+  vsCodeIndexCodebase(ideProtocolClient.getWorkspaceDirectories());
+
+  try {
+    // Add icon theme for .continueignore
+    const iconTheme = vscode.workspace
+      .getConfiguration("workbench")
+      .get("iconTheme");
+
+    let found = false;
+    for (let i = vscode.extensions.all.length - 1; i >= 0; i--) {
+      if (found) {
+        break;
+      }
+      const extension = vscode.extensions.all[i];
+      if (extension.packageJSON?.contributes?.iconThemes?.length > 0) {
+        for (const theme of extension.packageJSON.contributes.iconThemes) {
+          if (theme.id === iconTheme) {
+            const themePath = path.join(extension.extensionPath, theme.path);
+            const themeJson = JSON.parse(fs.readFileSync(themePath).toString());
+            themeJson.iconDefinitions["_f_continue"] = {
+              fontCharacter: "⚙️",
+              fontColor: "#fff",
+            };
+            themeJson.fileNames[".continueignore"] = "_f_continue";
+            fs.writeFileSync(themePath, JSON.stringify(themeJson));
+            found = true;
+            break;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.log("Error adding .continueignore file icon: ", e);
+  }
 }

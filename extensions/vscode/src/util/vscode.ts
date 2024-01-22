@@ -1,6 +1,6 @@
-import * as vscode from "vscode";
 import { machineIdSync } from "node-machine-id";
 import * as path from "path";
+import * as vscode from "vscode";
 
 export function translate(range: vscode.Range, lines: number): vscode.Range {
   return new vscode.Range(
@@ -116,17 +116,27 @@ function windowsToPosix(windowsPath: string): string {
   if (posixPath[1] === ":") {
     posixPath = posixPath.slice(2);
   }
-  posixPath = posixPath.replace(" ", "\\ ");
+  // posixPath = posixPath.replace(" ", "\\ ");
   return posixPath;
+}
+
+function isWindowsLocalButNotRemote(): boolean {
+  return (
+    vscode.env.remoteName !== undefined &&
+    ["wsl", "ssh-remote", "dev-container", "attached-container"].includes(
+      vscode.env.remoteName
+    ) &&
+    process.platform === "win32"
+  );
+}
+
+export function getPathSep(): string {
+  return isWindowsLocalButNotRemote() ? "/" : path.sep;
 }
 
 export function uriFromFilePath(filepath: string): vscode.Uri {
   if (vscode.env.remoteName) {
-    if (
-      (vscode.env.remoteName === "wsl" ||
-        vscode.env.remoteName === "ssh-remote") &&
-      process.platform === "win32"
-    ) {
+    if (isWindowsLocalButNotRemote()) {
       filepath = windowsToPosix(filepath);
     }
     return vscode.Uri.parse(

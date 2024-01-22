@@ -66,6 +66,7 @@ class Ollama extends BaseLLM {
         "codellama-7b": "codellama:7b",
         "codellama-13b": "codellama:13b",
         "codellama-34b": "codellama:34b",
+        "phi-2": "phi:2.7b",
         "phind-codellama-34b": "phind-codellama:34b-v2",
         "wizardcoder-7b": "wizardcoder:7b-python",
         "wizardcoder-13b": "wizardcoder:13b-python",
@@ -75,6 +76,7 @@ class Ollama extends BaseLLM {
         "deepseek-1b": "deepseek-coder:1.3b",
         "deepseek-7b": "deepseek-coder:6.7b",
         "deepseek-33b": "deepseek-coder:33b",
+        "neural-chat-7b": "neural-chat:7b-v3.3",
       }[this.model] || this.model
     );
   }
@@ -93,6 +95,7 @@ class Ollama extends BaseLLM {
         num_predict: options.maxTokens,
         stop: options.stop,
         num_ctx: this.contextLength,
+        mirostat: options.mirostat,
       },
     };
 
@@ -162,7 +165,8 @@ class Ollama extends BaseLLM {
       buffer += value;
       // Split the buffer into individual JSON chunks
       const chunks = buffer.split("\n");
-      buffer = chunks.pop() ?? '';
+      buffer = chunks.pop() ?? "";
+
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
         if (chunk.trim() !== "") {

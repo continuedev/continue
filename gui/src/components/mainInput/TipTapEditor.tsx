@@ -12,10 +12,12 @@ import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
-  secondaryDark,
   vscForeground,
+  vscInputBackground,
+  vscInputBorder,
+  vscInputBorderFocus,
 } from "..";
-import { SearchContext } from "../../App";
+import { FilesSearchContext, FoldersSearchContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
@@ -40,15 +42,16 @@ const InputBoxDiv = styled.div`
   margin: 0;
   height: auto;
   width: calc(100% - 18px);
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
   color: ${vscForeground};
   z-index: 1;
-  border: 0.5px solid ${lightGray};
+  border: 0.5px solid ${vscInputBorder};
   outline: none;
   font-size: 14px;
 
   &:focus {
     outline: none;
+    border: 0.5px solid ${vscInputBorderFocus};
   }
 
   &::placeholder {
@@ -71,7 +74,9 @@ interface TipTapEditorProps {
 function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useDispatch();
 
-  const [miniSearch, firstResults] = useContext(SearchContext);
+  const [filesMiniSearch, filesFirstResults] = useContext(FilesSearchContext);
+  const [foldersMiniSearch, foldersFirstResults] =
+    useContext(FoldersSearchContext);
 
   const historyLength = useSelector(
     (store: RootStore) => store.state.history.length
@@ -81,10 +86,10 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const { saveSession } = useHistory(dispatch);
 
-  const inSubmenuRef = useRef(false);
+  const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
 
-  const enterSubmenu = async (editor: Editor) => {
+  const enterSubmenu = async (editor: Editor, providerId: string) => {
     const contents = editor.getText();
     const indexOfAt = contents.lastIndexOf("@");
     if (indexOfAt === -1) {
@@ -95,7 +100,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       from: indexOfAt + 2,
       to: contents.length + 1,
     });
-    inSubmenuRef.current = true;
+    inSubmenuRef.current = providerId;
 
     // to trigger refresh of suggestions
     editor.commands.insertContent(" ");
@@ -106,7 +111,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   };
 
   const onClose = () => {
-    inSubmenuRef.current = false;
+    inSubmenuRef.current = undefined;
     inDropdownRef.current = false;
   };
 
@@ -118,11 +123,13 @@ function TipTapEditor(props: TipTapEditorProps) {
     (store: RootStore) => store.state.contextItems
   );
 
-  const miniSearchRef = useUpdatingRef(miniSearch);
+  const filesMiniSearchRef = useUpdatingRef(filesMiniSearch);
+  const foldersMiniSearchRef = useUpdatingRef(foldersMiniSearch);
   const availableContextProvidersRef = useUpdatingRef(
     props.availableContextProviders
   );
-  const firstResultsRef = useUpdatingRef(firstResults);
+  const filesFirstResultsRef = useUpdatingRef(filesFirstResults);
+  const foldersFirstResultsRef = useUpdatingRef(foldersFirstResults);
   const historyLengthRef = useUpdatingRef(historyLength);
   const onEnterRef = useUpdatingRef(props.onEnter);
   const availableSlashCommandsRef = useUpdatingRef(
@@ -177,14 +184,16 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
         suggestion: getMentionSuggestion(
           availableContextProvidersRef,
-          miniSearchRef,
-          firstResultsRef,
+          filesMiniSearchRef,
+          filesFirstResultsRef,
+          foldersMiniSearchRef,
+          foldersFirstResultsRef,
           enterSubmenu,
           onClose,
           onOpen,
           inSubmenuRef
         ),
-        renderText: (props) => {
+        renderHTML: (props) => {
           return `@${props.node.attrs.label || props.node.attrs.id}`;
         },
       }),

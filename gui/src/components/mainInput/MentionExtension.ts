@@ -5,10 +5,6 @@ import Suggestion, { SuggestionOptions } from "@tiptap/suggestion";
 
 export type MentionOptions = {
   HTMLAttributes: Record<string, any>;
-  renderText: (props: {
-    options: MentionOptions;
-    node: ProseMirrorNode;
-  }) => string;
   renderHTML: (props: {
     options: MentionOptions;
     node: ProseMirrorNode;
@@ -24,9 +20,6 @@ export const Mention = Node.create<MentionOptions>({
   addOptions() {
     return {
       HTMLAttributes: {},
-      renderText({ options, node }) {
-        return `${options.suggestion.char}${node.attrs.label ?? node.attrs.id}`;
-      },
       renderHTML({ options, node }) {
         return [
           "span",
@@ -126,6 +119,20 @@ export const Mention = Node.create<MentionOptions>({
           };
         },
       },
+
+      itemType: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-itemType"),
+        renderHTML: (attributes) => {
+          if (!attributes.itemType) {
+            return {};
+          }
+
+          return {
+            "data-itemType": attributes.itemType,
+          };
+        },
+      },
     };
   },
 
@@ -138,23 +145,6 @@ export const Mention = Node.create<MentionOptions>({
   },
 
   renderHTML({ node, HTMLAttributes }) {
-    if (this.options.renderText !== undefined) {
-      console.warn(
-        "renderText is deprecated use renderText and renderHTML instead"
-      );
-      return [
-        "span",
-        mergeAttributes(
-          { "data-type": this.name },
-          this.options.HTMLAttributes,
-          HTMLAttributes
-        ),
-        this.options.renderText({
-          options: this.options,
-          node,
-        }),
-      ];
-    }
     const html = this.options.renderHTML({
       options: this.options,
       node,
@@ -172,22 +162,6 @@ export const Mention = Node.create<MentionOptions>({
       ];
     }
     return html;
-  },
-
-  renderText({ node }) {
-    if (this.options.renderText !== undefined) {
-      console.warn(
-        "renderText is deprecated use renderText and renderHTML instead"
-      );
-      return this.options.renderText({
-        options: this.options,
-        node,
-      });
-    }
-    return this.options.renderText({
-      options: this.options,
-      node,
-    });
   },
 
   addKeyboardShortcuts() {

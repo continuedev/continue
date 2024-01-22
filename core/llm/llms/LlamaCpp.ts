@@ -14,6 +14,7 @@ class LlamaCpp extends BaseLLM {
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
       min_p: options.minP,
+      mirostat: options.mirostat,
     };
 
     return finalOptions;
@@ -25,7 +26,7 @@ class LlamaCpp extends BaseLLM {
   ): AsyncGenerator<string> {
     const headers = {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.apiKey}`,
       ...this.requestOptions?.headers,
     };
 

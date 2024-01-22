@@ -4,6 +4,7 @@ import {
   ContinueConfig,
   CustomContextProvider,
   CustomLLM,
+  EmbeddingsProviderDescription,
   IContextProvider,
   ModelDescription,
   SerializedContinueConfig,
@@ -16,6 +17,8 @@ import {
 import { contextProviderClassFromName } from "../context/providers";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
+import { AllEmbeddingsProviders } from "../indexing/embeddings";
+import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
@@ -91,10 +94,24 @@ async function intermediateToFinalConfig(
     }
   }
 
+  if (
+    (config.embeddingsProvider as EmbeddingsProviderDescription | undefined)
+      ?.provider
+  ) {
+    const { provider, ...options } =
+      config.embeddingsProvider as EmbeddingsProviderDescription;
+    config.embeddingsProvider = new AllEmbeddingsProviders[provider](options);
+  }
+
+  if (!config.embeddingsProvider) {
+    config.embeddingsProvider = new TransformersJsEmbeddingsProvider();
+  }
+
   return {
     ...config,
     contextProviders,
     models,
+    embeddingsProvider: config.embeddingsProvider as any,
   };
 }
 

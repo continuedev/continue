@@ -3,24 +3,34 @@ import { SerializedContinueConfig } from "..";
 const defaultConfig: SerializedContinueConfig = {
   models: [
     {
-      title: "GPT-4",
-      provider: "openai-free-trial",
+      title: "GPT-4 (Free Trial)",
+      provider: "free-trial",
       model: "gpt-4",
     },
     {
-      title: "GPT-3.5-Turbo",
-      provider: "openai-free-trial",
+      title: "GPT-3.5-Turbo (Free Trial)",
+      provider: "free-trial",
       model: "gpt-3.5-turbo",
+    },
+    {
+      title: "Phind CodeLlama (Free Trial)",
+      provider: "free-trial",
+      model: "phind-codellama-34b",
+    },
+    {
+      title: "Gemini Pro (Free Trial)",
+      provider: "free-trial",
+      model: "gemini-pro",
     },
   ],
   slashCommands: [
     {
       name: "edit",
-      description: "Edit highlighted code",
+      description: "Edit selected code",
     },
     {
       name: "comment",
-      description: "Write comments for the highlighted code",
+      description: "Write comments for the selected code",
     },
     {
       name: "share",
@@ -46,6 +56,7 @@ const defaultConfig: SerializedContinueConfig = {
       params: {},
     },
     { name: "terminal", params: {} },
+    { name: "problems", params: {} },
   ],
 };
 

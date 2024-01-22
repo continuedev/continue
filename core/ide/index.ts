@@ -1,5 +1,6 @@
-import { DiffLine } from "..";
+import { Chunk, DiffLine, Problem } from "..";
 import { IDE, SerializedContinueConfig } from "../index";
+
 import { ideRequest } from "./messaging";
 async function r(messageType: string, options: any = {}) {
   return await ideRequest(messageType, options);
@@ -27,6 +28,10 @@ export class ExtensionIde implements IDE {
 
   async getWorkspaceDirs(): Promise<string[]> {
     return await r("getWorkspaceDirs");
+  }
+
+  async listFolders(): Promise<string[]> {
+    return await r("listFolders");
   }
 
   _continueDir: string | null = null;
@@ -85,5 +90,29 @@ export class ExtensionIde implements IDE {
 
   getSearchResults(query: string): Promise<string> {
     return r("getSearchResults", { query });
+  }
+
+  getProblems(filepath?: string | undefined): Promise<Problem[]> {
+    return r("getProblems", { filepath });
+  }
+
+  subprocess(command: string): Promise<[string, string]> {
+    return r("subprocess", { command });
+  }
+
+  getFilesToEmbed(providerId: string): Promise<[string, string, string][]> {
+    return r("getFilesToEmbed", { providerId });
+  }
+
+  sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {
+    return r("sendChunkForFile", { chunk, embedding, tags });
+  }
+
+  retrieveChunks(
+    text: string,
+    n: number,
+    directory: string | undefined
+  ): Promise<Chunk[]> {
+    return r("retrieveChunks", { text, n, directory });
   }
 }

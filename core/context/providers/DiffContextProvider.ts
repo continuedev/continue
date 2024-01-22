@@ -1,6 +1,9 @@
 import { BaseContextProvider } from "..";
-import { ContextItem, ContextProviderDescription } from "../..";
-import { ExtensionIde } from "../../ide";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+} from "../..";
 
 class DiffContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -11,12 +14,15 @@ class DiffContextProvider extends BaseContextProvider {
     requiresQuery: false,
   };
 
-  async getContextItems(query: string): Promise<ContextItem[]> {
-    const diff = await new ExtensionIde().getDiff();
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
+    const diff = await extras.ide.getDiff();
     return [
       {
         description: "The current git diff",
-        content: diff,
+        content: `\`\`\`git diff\n${diff}\n\`\`\``,
         name: "Git Diff",
       },
     ];

@@ -70,6 +70,7 @@ Instead of writing something like `Ollama(model="phind-codellama:34b", ...)`, wh
     "deepseek-1b",
     "deepseek-7b",
     "deepseek-33b",
+    "neural-chat-7b"
     # Anthropic
     "claude-2",
     # Google PaLM
@@ -80,7 +81,7 @@ If you want to use a model not listed here, you can still do that by specifying 
 
 ### Prompt template auto-detection
 
-Based on the `model` property, we now attempt to [autodetect](https://github.com/continuedev/continue/blob/108e00c7db9cad110c5df53bdd0436b286b92466/server/continuedev/core/config_utils/shared.py#L38) the prompt template. If you want to be explicit, you can select one of our prompt template types (`"llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "deepseek"`) or write a custom prompt template in `config.py`.
+Based on the `model` property, we now attempt to [autodetect](https://github.com/continuedev/continue/blob/108e00c7db9cad110c5df53bdd0436b286b92466/server/continuedev/core/config_utils/shared.py#L38) the prompt template. If you want to be explicit, you can select one of our prompt template types (`"llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "deepseek", "neural-chat"`) or write a custom prompt template in `config.py`.
 
 ### `PromptTemplate`
 
@@ -90,19 +91,19 @@ If you were previously using the `PromptTemplate` class in your `config.py` to w
 
 After the "Full example" these examples will only show the relevant portion of the config file.
 
-### Full example, with OpenAI Free Trial
+### Full example, with Free Trial Models
 
 ```json
 {
   "models": [
     {
       "title": "GPT-4",
-      "provider": "openai-free-trial",
+      "provider": "free-trial",
       "model": "gpt-4"
     },
     {
       "title": "GPT-3.5-Turbo",
-      "provider": "openai-free-trial",
+      "provider": "free-trial",
       "model": "gpt-3.5-turbo"
     }
   ],
@@ -256,7 +257,7 @@ The `completions_options` for each model will override the top-level `completion
   "models": [
     {
       "title": "GPT-4",
-      "provider": "openai-free-trial",
+      "provider": "free-trial",
       "model": "gpt-4",
       "completion_options": {
         "top_p": 0.9,
@@ -266,7 +267,7 @@ The `completions_options` for each model will override the top-level `completion
     },
     {
       "title": "GPT-3.5-Turbo",
-      "provider": "openai-free-trial",
+      "provider": "free-trial",
       "model": "gpt-3.5-turbo"
     }
   ],

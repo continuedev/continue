@@ -9,8 +9,6 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
-scripts/env/**
-scripts/.env
 **/.env
 **/env
 node_modules/**
@@ -18,9 +16,11 @@ node_modules/**
 **/.pytest_cache
 **/__pycache__
 
-scripts/data
-scripts/env
-scripts/.continue_env_installed
+manual-testing-sandbox
+esbuild.js
+esbuild.test.mjs
+importMetaUrl.js
+scripts
 
 server/exe/**
 !out/node_modules/**

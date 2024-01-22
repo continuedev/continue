@@ -1,5 +1,7 @@
 import { Editor, ReactRenderer } from "@tiptap/react";
 import { IContextProvider } from "core";
+import { ExtensionIde } from "core/ide";
+import { getBasename } from "core/util";
 import MiniSearch from "minisearch";
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
@@ -8,7 +10,7 @@ import { ComboBoxItem, ComboBoxItemType } from "./types";
 
 function getSuggestion(
   items: (props: { query: string }) => ComboBoxItem[],
-  enterSubmenu: (editor: Editor) => void = (editor) => {},
+  enterSubmenu: (editor: Editor, providerId: string) => void = (editor) => {},
   onClose: () => void = () => {},
   onOpen: () => void = () => {}
 ) {
@@ -67,7 +69,7 @@ function getSuggestion(
         },
 
         onExit() {
-          popup[0]?.destroy();
+          popup?.[0]?.destroy();
           component.destroy();
           onClose();
         },
@@ -76,6 +78,47 @@ function getSuggestion(
   };
 }
 
+let openFiles: ComboBoxItem[] = [];
+
+function refreshOpenFiles() {
+  new ExtensionIde().getOpenFiles().then(
+    (files) =>
+      (openFiles = files.map((file) => {
+        const baseName = getBasename(file);
+        const lastTwoParts = file.split(/[\\/]/).slice(-2).join("/");
+        return {
+          title: baseName,
+          description: lastTwoParts,
+          id: file,
+          content: file,
+          label: baseName,
+          type: "file" as ComboBoxItemType,
+        };
+      }))
+  );
+}
+refreshOpenFiles();
+
+let folders: ComboBoxItem[] = [];
+function refreshFolders() {
+  new ExtensionIde().listFolders().then((f) => {
+    folders = f.map((folder) => {
+      const baseName = getBasename(folder);
+      const lastTwoParts = folder.split(/[\\/]/).slice(-2).join("/");
+      return {
+        title: baseName,
+        description: lastTwoParts,
+        id: "folder",
+        content: folder,
+        label: baseName,
+        type: "folder" as ComboBoxItemType,
+        query: folder,
+      };
+    });
+  });
+}
+refreshFolders();
+
 function getFileItems(
   query: string,
   miniSearch: MiniSearch,
@@ -83,10 +126,10 @@ function getFileItems(
 ): ComboBoxItem[] {
   let res: any[] = miniSearch.search(query.trim() === "" ? "/" : query, {
     prefix: true,
-    fuzzy: 5,
+    fuzzy: 4,
   });
   if (res.length === 0) {
-    res = firstResults;
+    return openFiles.length > 0 ? openFiles : firstResults;
   }
   return (
     res?.slice(0, 10).map((hit) => {
@@ -104,21 +147,59 @@ function getFileItems(
   );
 }
 
+function getFolderItems(
+  query: string,
+  miniSearch: MiniSearch,
+  firstResults: any[]
+): ComboBoxItem[] {
+  let res: any[] = miniSearch.search(query.trim() === "" ? "/" : query, {
+    prefix: true,
+    fuzzy: 5,
+  });
+
+  if (res.length === 0) {
+    return folders.slice(0, 10);
+  }
+  return (
+    res?.slice(0, 10).map((hit) => {
+      const lastTwoParts = hit.id.split(/[\\/]/).slice(-2).join("/");
+      const item = {
+        title: hit.basename,
+        description: lastTwoParts,
+        id: "folder",
+        content: hit.id,
+        label: hit.basename,
+        query: hit.id,
+        type: "folder" as ComboBoxItemType,
+      };
+      return item;
+    }) || []
+  );
+}
+
 export function getMentionSuggestion(
   availableContextProvidersRef: MutableRefObject<IContextProvider[]>,
-  miniSearchRef: MutableRefObject<MiniSearch>,
-  firstResultsRef: MutableRefObject<any[]>,
-  enterSubmenu: (editor: Editor) => void,
+  filesMiniSearchRef: MutableRefObject<MiniSearch>,
+  filesFirstResultsRef: MutableRefObject<any[]>,
+  foldersMiniSearchRef: MutableRefObject<MiniSearch>,
+  foldersFirstResultsRef: MutableRefObject<any[]>,
+  enterSubmenu: (editor: Editor, providerId: string) => void,
   onClose: () => void,
   onOpen: () => void,
-  inSubmenu: MutableRefObject<boolean>
+  inSubmenu: MutableRefObject<string>
 ) {
   const items = ({ query }) => {
-    if (inSubmenu.current) {
+    if (inSubmenu.current === "file") {
       return getFileItems(
         query,
-        miniSearchRef.current,
-        firstResultsRef.current
+        filesMiniSearchRef.current,
+        filesFirstResultsRef.current
+      );
+    } else if (inSubmenu.current === "folder") {
+      return getFolderItems(
+        query,
+        foldersMiniSearchRef.current,
+        filesFirstResultsRef.current
       );
     }
 
@@ -147,12 +228,14 @@ export function getMentionSuggestion(
     if (mainResults.length === 0) {
       return getFileItems(
         query,
-        miniSearchRef.current,
-        firstResultsRef.current
+        filesMiniSearchRef.current,
+        filesFirstResultsRef.current
       );
     }
     return mainResults;
   };
+
+  refreshOpenFiles();
   return getSuggestion(items, enterSubmenu, onClose, onOpen);
 }
 

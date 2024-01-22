@@ -1,18 +1,15 @@
-import {
-  encodingForModel as _encodingForModel,
-  Tiktoken,
-  TiktokenModel,
-} from "js-tiktoken";
+import { encodingForModel as _encodingForModel, Tiktoken } from "js-tiktoken";
 import { ChatMessage } from "..";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
 
+let encoding: Tiktoken | null = null;
+
 function encodingForModel(modelName: string): Tiktoken {
-  let encoding: Tiktoken;
-  try {
-    encoding = _encodingForModel(modelName as TiktokenModel);
-  } catch (e) {
-    encoding = _encodingForModel("gpt-4");
+  if (encoding) {
+    return encoding;
   }
+
+  encoding = _encodingForModel("gpt-4");
   return encoding;
 }
 
@@ -60,7 +57,7 @@ function pruneStringFromBottom(
     return prompt;
   }
 
-  return encoding.decode(tokens.slice(-maxTokens));
+  return encoding.decode(tokens.slice(0, maxTokens));
 }
 
 function pruneStringFromTop(
@@ -75,7 +72,7 @@ function pruneStringFromTop(
     return prompt;
   }
 
-  return encoding.decode(tokens.slice(-maxTokens));
+  return encoding.decode(tokens.slice(tokens.length - maxTokens));
 }
 
 function pruneRawPromptFromTop(
@@ -87,6 +84,17 @@ function pruneRawPromptFromTop(
   const maxTokens =
     contextLength - tokensForCompletion - TOKEN_BUFFER_FOR_SAFETY;
   return pruneStringFromTop(modelName, maxTokens, prompt);
+}
+
+function pruneRawPromptFromBottom(
+  modelName: string,
+  contextLength: number,
+  prompt: string,
+  tokensForCompletion: number
+): string {
+  const maxTokens =
+    contextLength - tokensForCompletion - TOKEN_BUFFER_FOR_SAFETY;
+  return pruneStringFromBottom(modelName, maxTokens, prompt);
 }
 
 function summarize(message: string): string {
@@ -119,7 +127,7 @@ function pruneChatHistory(
   );
 
   for (let i = 0; i < longerThanOneThird.length; i++) {
-    // Prune line-by-line
+    // Prune line-by-line from the top
     const message = longerThanOneThird[i];
     let lines = message.content.split("\n");
     let tokensRemoved = 0;
@@ -128,7 +136,7 @@ function pruneChatHistory(
       totalTokens > contextLength &&
       lines.length > 0
     ) {
-      const delta = countTokens("\n" + lines.pop()!, modelName);
+      const delta = countTokens("\n" + lines.shift()!, modelName);
       tokensRemoved += delta;
       totalTokens -= delta;
     }
@@ -229,7 +237,7 @@ function compileChatMessages(
 
   if (maxTokens + functionTokens + TOKEN_BUFFER_FOR_SAFETY >= contextLength) {
     throw new Error(
-      `max_tokens (${maxTokens}) is too close to context_length (${contextLength}), which doesn't leave room for chat. This would cause incoherent responses. Try increasing the context_length parameter of the model in your config file.`
+      `maxTokens (${maxTokens}) is too close to contextLength (${contextLength}), which doesn't leave room for response. Try increasing the contextLength parameter of the model in your config.json.`
     );
   }
 

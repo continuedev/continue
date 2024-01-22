@@ -24,6 +24,12 @@ app.use((req, res, next) => {
   proxy.on("response", (response) => {
     res.status(response.statusCode || 500);
     for (let i = 1; i < response.rawHeaders.length; i += 2) {
+      if (
+        response.rawHeaders[i - 1].toLowerCase() ===
+        "access-control-allow-origin"
+      ) {
+        continue;
+      }
       res.setHeader(response.rawHeaders[i - 1], response.rawHeaders[i]);
     }
     response.pipe(res);
@@ -61,6 +67,6 @@ export function startProxy() {
     console.log(`Proxy server is running on port ${PROXY_PORT}`);
   });
   server.on("error", (e) => {
-    console.log("Proxy server already running on port 65433");
+    // console.log("Proxy server already running on port 65433");
   });
 }

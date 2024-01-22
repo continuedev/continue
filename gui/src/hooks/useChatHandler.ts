@@ -1,7 +1,13 @@
 import { Dispatch } from "@reduxjs/toolkit";
 
 import { JSONContent } from "@tiptap/react";
-import { ChatHistory, ChatHistoryItem, ChatMessage, SlashCommand } from "core";
+import {
+  ChatHistory,
+  ChatHistoryItem,
+  ChatMessage,
+  LLMReturnValue,
+  SlashCommand,
+} from "core";
 import { ExtensionIde } from "core/ide";
 import { ideStreamRequest } from "core/ide/messaging";
 import { constructMessages } from "core/llm/constructMessages";
@@ -34,6 +40,9 @@ function useChatHandler(dispatch: Dispatch) {
   const contextItems = useSelector(
     (state: RootStore) => state.state.contextItems
   );
+  const embeddingsProvider = useSelector(
+    (state: RootStore) => state.state.config.embeddingsProvider
+  );
   const history = useSelector((store: RootStore) => store.state.history);
   const contextProviders = useSelector(
     (store: RootStore) => store.state.config.contextProviders || []
@@ -45,11 +54,20 @@ function useChatHandler(dispatch: Dispatch) {
   }, [active]);
 
   async function _streamNormalInput(messages: ChatMessage[]) {
-    for await (const update of defaultModel.streamChat(messages)) {
+    const gen = defaultModel.streamChat(messages);
+    let next = await gen.next();
+
+    while (!next.done) {
       if (!activeRef.current) {
         break;
       }
-      dispatch(streamUpdate(update.content));
+      dispatch(streamUpdate((next.value as ChatMessage).content));
+      next = await gen.next();
+    }
+
+    let returnVal = next.value as LLMReturnValue;
+    if (returnVal) {
+      dispatch(addLogs([[returnVal?.prompt, returnVal?.completion]]));
     }
   }
 
@@ -135,7 +153,12 @@ function useChatHandler(dispatch: Dispatch) {
       }
 
       // Resolve context providers and construct new history
-      const content = await resolveEditorContent(editorState, contextProviders);
+      const [contextItems, content] = await resolveEditorContent(
+        editorState,
+        contextProviders,
+        defaultModel,
+        embeddingsProvider
+      );
       const message: ChatMessage = {
         role: "user",
         content,
@@ -151,7 +174,11 @@ function useChatHandler(dispatch: Dispatch) {
 
       let newHistory: ChatHistory = [...history.slice(0, index), historyItem];
       dispatch(
-        setMessageAtIndex({ message, index: index || newHistory.length - 1 })
+        setMessageAtIndex({
+          message,
+          index: index || newHistory.length - 1,
+          contextItems,
+        })
       );
 
       // TODO: hacky way to allow rerender
@@ -172,30 +199,17 @@ function useChatHandler(dispatch: Dispatch) {
       // Determine if the input is a slash command
       let commandAndInput = getSlashCommandForInput(content);
 
-      const logs = [];
-      const writeLog = async (log: string) => {
-        logs.push(log);
-      };
-      defaultModel.writeLog = writeLog;
-
       if (!commandAndInput) {
         await _streamNormalInput(messages);
       } else {
         const [slashCommand, commandInput] = commandAndInput;
         await _streamSlashCommand(messages, slashCommand, commandInput);
       }
-
-      const pairedLogs = [];
-      for (let i = 0; i < logs.length; i += 2) {
-        pairedLogs.push([logs[i], logs[i + 1]]);
-      }
-      dispatch(addLogs(pairedLogs));
     } catch (e) {
       console.log("Continue: error streaming response: ", e);
       errorPopup(`Error streaming response: ${e.message}`);
     } finally {
       dispatch(setInactive());
-      defaultModel.writeLog = undefined;
     }
   }
 

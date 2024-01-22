@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, secondaryDark } from "..";
+import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
   position: absolute;
@@ -8,7 +8,7 @@ const StyledDiv = styled.div<{ hidden?: boolean }>`
   right: 4px;
   bottom: 4px;
   width: calc(100% - 10px);
-  background-color: ${secondaryDark};
+  background-color: ${vscInputBackground};
 
   ${(props) => (props.hidden ? "display: none;" : "")}
 
