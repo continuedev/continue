@@ -25,7 +25,13 @@ class DocsContextProvider extends BaseContextProvider {
     const embeddingsProvider = new TransformersJsEmbeddingsProvider();
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 
-    const chunks = await retrieveDocs(query, vector);
+    const chunks = await retrieveDocs(
+      query,
+      vector,
+      this.options?.nRetrieve || 15
+    );
+
+    console.log(chunks);
 
     return [
       ...chunks.map((chunk) => ({

@@ -28,13 +28,14 @@ async function createDocsTable(db: Database<sqlite3.Database>) {
 
 export async function retrieveDocs(
   baseUrl: string,
-  vector: number[]
+  vector: number[],
+  nRetrieve: number
 ): Promise<Chunk[]> {
   const lance = await lancedb.connect(getLanceDbPath());
   const table = await lance.openTable(DOCS_TABLE_NAME);
   const docs: LanceDbDocsRow[] = await table
     .search(vector)
-    .limit(20)
+    .limit(nRetrieve)
     .where(`baseUrl = '${baseUrl}'`)
     .execute();
 

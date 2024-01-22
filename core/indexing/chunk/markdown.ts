@@ -2,8 +2,11 @@ import { ChunkWithoutID } from "../..";
 import { countTokens } from "../../llm/countTokens";
 import { basicChunker } from "./basic";
 
-function cleanFragment(fragment: string): string {
-  let originalFragment = fragment;
+function cleanFragment(fragment: string | undefined): string | undefined {
+  if (!fragment) {
+    return undefined;
+  }
+
   // Remove leading and trailing whitespaces
   fragment = fragment.trim();
 
@@ -22,12 +25,14 @@ function cleanFragment(fragment: string): string {
   // Replace spaces with hyphens
   fragment = fragment.replace(/\s+/g, "-");
 
-  console.log(`Fragment ${originalFragment} -> ${fragment}`);
   return fragment;
 }
 
-function cleanHeader(header: string): string {
-  let originalHeader = header;
+function cleanHeader(header: string | undefined): string | undefined {
+  if (!header) {
+    return undefined;
+  }
+
   // Remove leading and trailing whitespaces
   header = header.trim();
 
@@ -40,8 +45,11 @@ function cleanHeader(header: string): string {
   // Remove all special characters except alphanumeric, hyphen, space, and underscore
   header = header.replace(/[^\w\d-\s]/g, "").trim();
 
-  console.log(`Header ${originalHeader} -> ${header}`);
   return header;
+}
+
+function findHeader(lines: string[]): string | undefined {
+  return lines.find((line) => line.startsWith("#"))?.split("# ")[1];
 }
 
 export async function* markdownChunker(
@@ -71,9 +79,10 @@ export async function* markdownChunker(
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].startsWith(h) || i === 0) {
       if (currentSection.length) {
+        const isHeader = currentSection[0].startsWith(h);
         sections.push({
-          header: currentSection[0],
-          content: currentSection.slice(1).join("\n"),
+          header: isHeader ? currentSection[0] : findHeader(currentSection),
+          content: currentSection.slice(isHeader ? 1 : 0).join("\n"),
           startLine: currentSectionStartLine,
           endLine: currentSectionStartLine + currentSection.length,
         });
@@ -86,9 +95,10 @@ export async function* markdownChunker(
   }
 
   if (currentSection.length) {
+    const isHeader = currentSection[0].startsWith(h);
     sections.push({
-      header: currentSection[0],
-      content: currentSection.slice(1).join("\n"),
+      header: isHeader ? currentSection[0] : findHeader(currentSection),
+      content: currentSection.slice(isHeader ? 1 : 0).join("\n"),
       startLine: currentSectionStartLine,
       endLine: currentSectionStartLine + currentSection.length,
     });
@@ -97,7 +107,8 @@ export async function* markdownChunker(
   for (const section of sections) {
     for await (const chunk of markdownChunker(
       section.content,
-      maxChunkSize - countTokens(section.header, "gpt-4"),
+      maxChunkSize -
+        (section.header ? countTokens(section.header, "gpt-4") : 0),
       hLevel + 1
     )) {
       yield {

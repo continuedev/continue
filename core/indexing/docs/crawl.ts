@@ -1,19 +1,27 @@
 import cheerio from "cheerio";
 import fetch from "node-fetch";
-import { NodeHtmlMarkdown } from "node-html-markdown";
 // const HCCrawler = require("headless-chrome-crawler");
 
 const IGNORE_PATHS_ENDING_IN = [
   "favicon.ico",
   "robots.txt",
   ".rst.txt",
-  // Sphinx documentation
+  "index.html", // So as not to duplicate with "/"
+  // ReadTheDocs
   "genindex",
   "py-modindex",
-  "/en/search",
+  "search.html",
+  "search",
+  "genindex.html",
+  "changelog",
+  "changelog.html",
 ];
 
 function shouldFilterPath(pathname: string): boolean {
+  if (pathname.includes("#")) {
+    pathname = pathname.slice(0, pathname.indexOf("#"));
+  }
+
   if (pathname.endsWith("/")) {
     pathname = pathname.slice(0, -1);
   }
@@ -42,7 +50,8 @@ async function crawlLinks(path: string, baseUrl: URL, visited: Set<string>) {
     const parsedUrl = new URL(href, baseUrl);
     if (
       parsedUrl.hostname === baseUrl.hostname &&
-      !visited.has(parsedUrl.pathname)
+      !visited.has(parsedUrl.pathname) &&
+      parsedUrl.pathname.startsWith(baseUrl.pathname)
     ) {
       children.push(parsedUrl.pathname);
     }
@@ -54,8 +63,19 @@ async function crawlLinks(path: string, baseUrl: URL, visited: Set<string>) {
 }
 
 export async function crawlSubpages(baseUrl: URL) {
+  // First, check if the parent of the path redirects to the same page
+  const parentUrl = new URL(baseUrl);
+  parentUrl.pathname = parentUrl.pathname.split("/").slice(0, -1).join("/");
+  const response = await fetch(parentUrl);
+
+  let useParent = response.url === baseUrl.toString();
+
   const visited = new Set<string>();
-  await crawlLinks(baseUrl.pathname || "/", baseUrl, visited);
+  await crawlLinks(
+    (useParent ? parentUrl.pathname : baseUrl.pathname) || "/",
+    baseUrl,
+    visited
+  );
   return [...visited];
 }
 
@@ -80,20 +100,6 @@ export async function crawlSubpages(baseUrl: URL) {
 //     throw new Error("Error converting URL to markdown");
 //   }
 // }
-
-const nhm = new NodeHtmlMarkdown({}, undefined, undefined);
-
-export async function convertURLToMarkdown(url: URL): Promise<string> {
-  try {
-    const response = await fetch(url);
-    const htmlContent = await response.text();
-    const markdown = nhm.translate(htmlContent).trimEnd();
-    return markdown;
-  } catch (err) {
-    console.error(err);
-    throw new Error("Error converting URL to markdown");
-  }
-}
 
 // convertURLToMarkdown("https://python-socketio.readthedocs.io/en/stable").then(
 //   (md) => {

@@ -6,8 +6,9 @@ import {
 } from "../..";
 import { MAX_CHUNK_SIZE } from "../../llm/constants";
 import { markdownChunker } from "../chunk/markdown";
-import { convertURLToMarkdown, crawlSubpages } from "./crawl";
+import { crawlSubpages } from "./crawl";
 import { addDocs, listDocs } from "./db";
+import { convertURLToMarkdown } from "./urlToMarkdown";
 
 export async function* indexDocs(
   title: string,
@@ -28,14 +29,26 @@ export async function* indexDocs(
     desc: "Finding subpages",
   };
 
-  const subpaths = await crawlSubpages(baseUrl);
+  let subpaths = await crawlSubpages(baseUrl);
   console.log("Found subpaths", subpaths);
   const chunks: Chunk[] = [];
   const embeddings: number[][] = [];
 
-  const markdownForSubpaths = await Promise.all(
+  let markdownForSubpaths = await Promise.all(
     subpaths.map((subpath) => convertURLToMarkdown(new URL(subpath, baseUrl)))
   );
+
+  // Filter out undefineds
+  let filteredSubpaths: string[] = [];
+  let filteredMarkdown: string[] = [];
+  for (let i = 0; i < subpaths.length; i++) {
+    if (markdownForSubpaths[i]) {
+      filteredSubpaths.push(subpaths[i]);
+      filteredMarkdown.push(markdownForSubpaths[i]!);
+    }
+  }
+  subpaths = filteredSubpaths;
+  markdownForSubpaths = filteredMarkdown;
 
   for (let i = 0; i < subpaths.length; i++) {
     const subpath = subpaths[i];
@@ -44,7 +57,7 @@ export async function* indexDocs(
       desc: `${subpath}`,
     };
 
-    const markdown = markdownForSubpaths[i];
+    const markdown = markdownForSubpaths[i]!;
     const markdownChunks: ChunkWithoutID[] = [];
     for await (const chunk of markdownChunker(markdown, MAX_CHUNK_SIZE, 0)) {
       markdownChunks.push(chunk);

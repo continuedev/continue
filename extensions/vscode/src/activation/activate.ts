@@ -1,4 +1,3 @@
-import { indexDocs } from "core/indexing/docs";
 import { getTsConfigPath } from "core/util/paths";
 import * as fs from "fs";
 import path from "path";
@@ -7,10 +6,8 @@ import * as vscode from "vscode";
 import { registerAllCommands } from "../commands";
 import IdeProtocolClient from "../continueIdeClient";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
-import { VsCodeIde } from "../ideProtocol";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
-import { configHandler } from "../loadConfig";
 import { vsCodeIndexCodebase } from "../util/indexCodebase";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
@@ -94,24 +91,24 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   startProxy();
   vsCodeIndexCodebase(ideProtocolClient.getWorkspaceDirectories());
 
-  (async () => {
-    const defaultDocsPages = [
-      ["Socket.IO", "https://python-socketio.readthedocs.io/en/stable"],
-      // ["Flask", "https://flask.palletsprojects.com/en/2.0.x/"],
-    ];
+  // (async () => {
+  //   const defaultDocsPages = [
+  //     ["Socket.IO", "https://python-socketio.readthedocs.io/en/stable"],
+  //     // ["Flask", "https://flask.palletsprojects.com/en/2.0.x/"],
+  //   ];
 
-    const config = await configHandler.loadConfig(new VsCodeIde());
+  //   const config = await configHandler.loadConfig(new VsCodeIde());
 
-    defaultDocsPages.forEach(async ([title, url]) => {
-      for await (const update of indexDocs(
-        title,
-        new URL(url),
-        config.embeddingsProvider
-      )) {
-        console.log(update.progress, update.desc);
-      }
-    });
-  })();
+  //   defaultDocsPages.forEach(async ([title, url]) => {
+  //     for await (const update of indexDocs(
+  //       title,
+  //       new URL(url),
+  //       config.embeddingsProvider
+  //     )) {
+  //       console.log(update.progress, update.desc);
+  //     }
+  //   });
+  // })();
 
   try {
     // Add icon theme for .continueignore
