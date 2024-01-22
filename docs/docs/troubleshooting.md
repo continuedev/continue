@@ -1,5 +1,5 @@
 ---
-title: Troubleshooting
+title: ❓ Troubleshooting
 description: Troubleshooting while waiting for help during beta / alpha testing
 keywords: [reload, delete, manually, logs, server, console]
 ---

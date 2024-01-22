@@ -38,7 +38,6 @@ const sidebars = {
         "customization/overview",
         "customization/context-providers",
         "customization/slash-commands",
-        "customization/other-configuration",
       ],
     },
     {

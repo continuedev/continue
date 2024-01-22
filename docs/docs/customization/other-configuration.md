@@ -6,7 +6,7 @@ keywords: [temperature, custom policies, custom system message]
 
 # Other Configuration
 
-See the [ContinueConfig Reference](../reference/config) for the full list of configuration options.
+See the [config.json Reference](../reference/config) for the full list of configuration options.
 
 ## Customize System Message
 

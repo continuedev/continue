@@ -1,5 +1,5 @@
 ---
-title: Quickstart
+title: ⚡️ Quickstart
 description: Getting started with Continue
 keywords: [quickstart, start, install, vscode, jetbrains]
 ---
