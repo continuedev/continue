@@ -28,7 +28,7 @@ class DocsContextProvider extends BaseContextProvider {
     const chunks = await retrieveDocs(
       query,
       vector,
-      this.options?.nRetrieve || 8
+      this.options?.nRetrieve || 15
     );
 
     console.log(chunks);

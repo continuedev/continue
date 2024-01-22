@@ -165,14 +165,12 @@ function TipTapEditor(props: TipTapEditorProps) {
       let _URL = window.URL || window.webkitURL;
       let img = new window.Image();
       img.src = _URL.createObjectURL(file);
-      console.log(img.src);
 
       return await new Promise((resolve) => {
         img.onload = function () {
           const dataUrl = getDataUrlForFile(file, img);
 
           let image = new window.Image();
-          console.log("DATA URL: ", dataUrl.slice(0, 50));
           image.src = dataUrl;
           image.onload = function () {
             resolve([image, dataUrl]);
