@@ -74,6 +74,12 @@ function DropdownIcon(props: {
   className?: string;
   type: ComboBoxItemType;
 }) {
+  if (props.type === "action") {
+    return (
+      <PlusIcon className={props.className} height="1.2em" width="1.2em" />
+    );
+  }
+
   const Icon = ICONS_FOR_DROPDOWN[props.provider];
   const iconClass = `${props.className} flex-shrink-0`;
   if (!Icon) {

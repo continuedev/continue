@@ -1,3 +1,4 @@
+import { Octokit } from "@octokit/rest";
 import { NodeHtmlMarkdown, PostProcessResult } from "node-html-markdown";
 
 const nhm = new NodeHtmlMarkdown(
@@ -21,10 +22,42 @@ const nhm = new NodeHtmlMarkdown(
 const STRIP_BEFORE = ["\n# "];
 const STRIP_AFTER_AND_INCLUDING = ["Was this page helpful?"];
 
+const octokit = new Octokit({
+  auth: undefined,
+});
+async function retrieveGitHubBlob(url: URL): Promise<string | undefined> {
+  const [_, owner, repo, _tree, _main, ...path] = url.pathname.split("/");
+  const response = await octokit.repos.getContent({
+    owner,
+    repo,
+    path: path.join("/"),
+  });
+
+  if (response.status !== 200) {
+    return undefined;
+  }
+
+  const content = Buffer.from(
+    (response.data as any).content || "",
+    "base64"
+  ).toString();
+
+  const fileExtension = url.pathname.split(".").slice(-1)[0];
+  if (fileExtension === "md") {
+    return content;
+  }
+
+  return `\`\`\`${fileExtension} title=${path.join("/")}\n${content}\n\`\`\``;
+}
+
 export async function convertURLToMarkdown(
   url: URL
 ): Promise<string | undefined> {
   try {
+    if (url.hostname === "github.com") {
+      return await retrieveGitHubBlob(url);
+    }
+
     const response = await fetch(url);
 
     if (!response.ok) {
@@ -55,7 +88,7 @@ export async function convertURLToMarkdown(
 
     return markdown;
   } catch (err) {
-    console.error(err);
-    throw new Error("Error converting URL to markdown");
+    console.error("Error converting URL to markdown", err);
+    return undefined;
   }
 }

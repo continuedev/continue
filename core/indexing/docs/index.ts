@@ -53,7 +53,7 @@ export async function* indexDocs(
   for (let i = 0; i < subpaths.length; i++) {
     const subpath = subpaths[i];
     yield {
-      progress: 1 / (subpaths.length + 1),
+      progress: 100 / (subpaths.length + 1),
       desc: `${subpath}`,
     };
 

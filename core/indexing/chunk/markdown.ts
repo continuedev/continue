@@ -10,8 +10,8 @@ function cleanFragment(fragment: string | undefined): string | undefined {
   // Remove leading and trailing whitespaces
   fragment = fragment.trim();
 
-  // If there's a (, remove everything after it
-  const parenIndex = fragment.indexOf("(");
+  // If there's a ](, which would mean a link, remove everything after it
+  const parenIndex = fragment.indexOf("](");
   if (parenIndex !== -1) {
     fragment = fragment.slice(0, parenIndex);
   }

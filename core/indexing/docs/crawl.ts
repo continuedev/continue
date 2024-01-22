@@ -1,3 +1,4 @@
+import { Octokit } from "@octokit/rest";
 import cheerio from "cheerio";
 import fetch from "node-fetch";
 // const HCCrawler = require("headless-chrome-crawler");
@@ -17,7 +18,9 @@ const IGNORE_PATHS_ENDING_IN = [
   "changelog.html",
 ];
 
-function shouldFilterPath(pathname: string): boolean {
+const GITHUB_PATHS_TO_TRAVERSE = ["/blob/", "/tree/"];
+
+function shouldFilterPath(pathname: string, baseUrl: URL): boolean {
   if (pathname.includes("#")) {
     pathname = pathname.slice(0, pathname.indexOf("#"));
   }
@@ -25,13 +28,23 @@ function shouldFilterPath(pathname: string): boolean {
   if (pathname.endsWith("/")) {
     pathname = pathname.slice(0, -1);
   }
+
+  if (baseUrl.hostname === "github.com") {
+    if (
+      pathname.split("/").length > 3 &&
+      !GITHUB_PATHS_TO_TRAVERSE.some((path) => pathname.includes(path))
+    )
+      return true;
+    return false;
+  }
+
   if (IGNORE_PATHS_ENDING_IN.some((path) => pathname.endsWith(path)))
     return true;
   return false;
 }
 
 async function crawlLinks(path: string, baseUrl: URL, visited: Set<string>) {
-  if (visited.has(path) || shouldFilterPath(path)) {
+  if (visited.has(path) || shouldFilterPath(path, baseUrl)) {
     return;
   }
   visited.add(path);
@@ -62,7 +75,53 @@ async function crawlLinks(path: string, baseUrl: URL, visited: Set<string>) {
   );
 }
 
+async function crawlGithubRepo(baseUrl: URL) {
+  const octokit = new Octokit({
+    auth: undefined,
+  });
+
+  const [_, owner, repo] = baseUrl.pathname.split("/");
+
+  let dirContentsConfig = {
+    owner: owner,
+    repo: repo,
+  };
+
+  const tree = await octokit.request(
+    "GET /repos/{owner}/{repo}/git/trees/{tree_sha}",
+    {
+      owner,
+      repo,
+      tree_sha: "main",
+      headers: {
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+      recursive: "true",
+    }
+  );
+
+  const paths = tree.data.tree
+    .filter(
+      (file) => file.type === "blob" && file.path?.endsWith(".md")
+      // ||
+      // file.path?.endsWith(".rst") ||
+      // file.path?.split("/").includes("documentation") ||
+      // file.path?.split("/").includes("docs") ||
+      // file.path?.split("/").includes("doc") ||
+      // file.path?.split("/").includes("examples") ||
+      // file.path?.split("/").includes("example")
+    )
+    .map((file) => baseUrl.pathname + "/tree/main/" + file.path);
+
+  return paths;
+}
+
 export async function crawlSubpages(baseUrl: URL) {
+  // Special case for GitHub repos
+  if (baseUrl.hostname === "github.com") {
+    return crawlGithubRepo(baseUrl);
+  }
+
   // First, check if the parent of the path redirects to the same page
   const parentUrl = new URL(baseUrl);
   parentUrl.pathname = parentUrl.pathname.split("/").slice(0, -1).join("/");
