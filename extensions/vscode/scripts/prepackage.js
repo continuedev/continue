@@ -13,6 +13,12 @@ if (args[2] === "--target") {
 (async () => {
   console.log("Packaging extension for target ", target);
 
+  // Copy config_schema.json to config.json in docs
+  fs.copyFileSync(
+    "config_schema.json",
+    path.join("..", "..", "docs", "static", "schemas", "config.json")
+  );
+
   if (!process.cwd().endsWith("vscode")) {
     // This is sometimes run from root dir instead (e.g. in VS Code tasks)
     process.chdir("extensions/vscode");
