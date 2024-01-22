@@ -5,6 +5,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
+import { stripImages } from "../countTokens";
 
 class Gemini extends BaseLLM {
   static providerName: ModelProvider = "gemini";
@@ -22,7 +23,7 @@ class Gemini extends BaseLLM {
       [{ role: "user", content: prompt }],
       options
     )) {
-      yield chunk.content;
+      yield stripImages(chunk.content);
     }
   }
 

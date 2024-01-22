@@ -12,9 +12,6 @@ import GenerateTerminalCommand from "core/commands/slash/cmd";
 import CommentSlashCommand from "core/commands/slash/comment";
 import EditSlashCommand from "core/commands/slash/edit";
 import ShareSlashCommand from "core/commands/slash/share";
-import DiffContextProvider from "core/context/providers/DiffContextProvider";
-import OpenFilesContextProvider from "core/context/providers/OpenFilesContextProvider";
-import TerminalContextProvider from "core/context/providers/TerminalContextProvider";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import FreeTrial from "core/llm/llms/FreeTrial";
 import { v4 } from "uuid";
@@ -105,11 +102,7 @@ const initialState: RootStore["state"] = {
       ShareSlashCommand,
       GenerateTerminalCommand,
     ],
-    contextProviders: [
-      new DiffContextProvider({}),
-      new OpenFilesContextProvider({}),
-      new TerminalContextProvider({}),
-    ],
+    contextProviders: [],
     embeddingsProvider: new TransformersJsEmbeddingsProvider(),
   },
   title: "New Session",

@@ -10,8 +10,7 @@ class GoogleContextProvider extends BaseContextProvider {
     title: "google",
     displayTitle: "Google",
     description: "Attach the results of a Google search",
-    dynamic: true,
-    requiresQuery: true,
+    type: "query",
   };
 
   private _serperApiKey: string;
@@ -61,7 +60,6 @@ class GoogleContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
 }
 
 export default GoogleContextProvider;

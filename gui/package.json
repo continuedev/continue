@@ -13,6 +13,8 @@
     "@heroicons/react": "^2.0.18",
     "@monaco-editor/react": "^4.6.0",
     "@reduxjs/toolkit": "^1.9.3",
+    "@tiptap/extension-dropcursor": "^2.1.16",
+    "@tiptap/extension-image": "^2.1.16",
     "@tiptap/extension-mention": "^2.1.13",
     "@tiptap/extension-placeholder": "^2.1.13",
     "@tiptap/pm": "^2.1.13",

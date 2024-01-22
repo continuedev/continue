@@ -10,8 +10,7 @@ class SearchContextProvider extends BaseContextProvider {
     title: "search",
     displayTitle: "Search",
     description: "Use ripgrep to exact search the workspace",
-    dynamic: true,
-    requiresQuery: true,
+    type: "query",
   };
 
   async getContextItems(
@@ -27,7 +26,6 @@ class SearchContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
 }
 
 export default SearchContextProvider;

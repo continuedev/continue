@@ -11,8 +11,7 @@ class OpenFilesContextProvider extends BaseContextProvider {
     title: "open",
     displayTitle: "Open Files",
     description: "Reference the current open files",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(
@@ -33,7 +32,6 @@ class OpenFilesContextProvider extends BaseContextProvider {
       })
     );
   }
-  async load(): Promise<void> {}
 }
 
 export default OpenFilesContextProvider;

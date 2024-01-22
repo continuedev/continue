@@ -1,4 +1,5 @@
 import { ContextItemWithId, ILLM, SlashCommand } from "../..";
+import { stripImages } from "../../llm/countTokens";
 import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";
 import {
   RangeInFileWithContents,
@@ -457,7 +458,7 @@ const EditSlashCommand: SlashCommand = {
             4096
           ),
         })) {
-          yield chunk.content;
+          yield stripImages(chunk.content);
         }
       }
 

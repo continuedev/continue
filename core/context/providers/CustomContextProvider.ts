@@ -4,6 +4,7 @@ import {
   ContextProviderExtras,
   CustomContextProvider,
   IContextProvider,
+  LoadSubmenuItemsArgs,
 } from "../..";
 
 class CustomContextProviderClass implements IContextProvider {
@@ -17,8 +18,7 @@ class CustomContextProviderClass implements IContextProvider {
       title: this.custom.title,
       displayTitle: this.custom.displayTitle || this.custom.title,
       description: this.custom.description || "",
-      dynamic: true,
-      requiresQuery: false,
+      type: this.custom.type || "normal",
     };
   }
 
@@ -28,7 +28,10 @@ class CustomContextProviderClass implements IContextProvider {
   ): Promise<ContextItem[]> {
     return await this.custom.getContextItems(query, extras);
   }
-  async load(): Promise<void> {}
+
+  async loadSubmenuItems(args: LoadSubmenuItemsArgs) {
+    return this.custom.loadSubmenuItems?.(args) || [];
+  }
 }
 
 export default CustomContextProviderClass;

@@ -3,6 +3,7 @@ import {
   ArrowUpOnSquareIcon,
   AtSymbolIcon,
   BeakerIcon,
+  BookOpenIcon,
   ChevronDoubleRightIcon,
   Cog6ToothIcon,
   CommandLineIcon,
@@ -26,6 +27,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -35,8 +37,13 @@ import {
   vscListActiveForeground,
   vscQuickInputBackground,
 } from "..";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
 import FileIcon from "../FileIcon";
-import { ComboBoxItem, ComboBoxItemType } from "./types";
+import AddDocsDialog from "../dialogs/AddDocsDialog";
+import { ComboBoxItem } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
@@ -48,6 +55,8 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   codebase: SparklesIcon,
   problems: ExclamationTriangleIcon,
   folder: FolderIcon,
+  docs: BookOpenIcon,
+  issue: ExclamationCircleIcon,
   "/edit": PaintBrushIcon,
   "/clear": TrashIcon,
   "/test": BeakerIcon,
@@ -60,24 +69,34 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   "/issue": ExclamationCircleIcon,
 };
 
-function DropdownIcon(props: {
-  provider: string;
-  className?: string;
-  type: ComboBoxItemType;
-}) {
-  const Icon = ICONS_FOR_DROPDOWN[props.provider];
+function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
+  if (props.item.type === "action") {
+    return (
+      <PlusIcon className={props.className} height="1.2em" width="1.2em" />
+    );
+  }
+
+  const provider =
+    props.item.type === "contextProvider"
+      ? props.item.id
+      : props.item.type === "slashCommand"
+      ? props.item.id
+      : props.item.type;
+
+  const Icon = ICONS_FOR_DROPDOWN[provider];
+  const iconClass = `${props.className} flex-shrink-0`;
   if (!Icon) {
-    return props.type === "contextProvider" ? (
-      <AtSymbolIcon className={props.className} height="1.2em" width="1.2em" />
+    return props.item.type === "contextProvider" ? (
+      <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
     ) : (
       <ChevronDoubleRightIcon
-        className={props.className}
+        className={iconClass}
         height="1.2em"
         width="1.2em"
       />
     );
   }
-  return <Icon className={props.className} height="1.2em" width="1.2em" />;
+  return <Icon className={iconClass} height="1.2em" width="1.2em" />;
 }
 
 const ItemsDiv = styled.div`
@@ -139,6 +158,8 @@ interface MentionListProps {
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
+  const dispatch = useDispatch();
+
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
@@ -147,6 +168,32 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   const [querySubmenuItem, setQuerySubmenuItem] = useState<
     ComboBoxItem | undefined
   >(undefined);
+
+  const [allItems, setAllItems] = useState<ComboBoxItem[]>([]);
+
+  useEffect(() => {
+    const items = [...props.items];
+    if (subMenuTitle === "Search documentation") {
+      items.push({
+        title: "Add Docs",
+        type: "action",
+        action: () => {
+          dispatch(setShowDialog(true));
+          dispatch(setDialogMessage(<AddDocsDialog />));
+
+          // Delete back to last '@'
+          const { tr } = props.editor.view.state;
+          const text = tr.doc.textBetween(0, tr.selection.from);
+          const start = text.lastIndexOf("@");
+          props.editor.view.dispatch(
+            tr.delete(start, tr.selection.from).scrollIntoView()
+          );
+        },
+        description: "Add a new documentation source",
+      });
+    }
+    setAllItems(items);
+  }, [subMenuTitle, props.items, props.editor]);
 
   const queryInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -157,19 +204,23 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   }, [querySubmenuItem]);
 
   const selectItem = (index) => {
-    const item = props.items[index];
+    const item = allItems[index];
 
-    if (item.type === "contextProvider" && item.id === "file") {
-      setSubMenuTitle("Files - Type to search");
-      props.enterSubmenu(props.editor, "file");
-      return;
-    } else if (item.type === "contextProvider" && item.id === "folder") {
-      setSubMenuTitle("Folder - Type to search");
-      props.enterSubmenu(props.editor, "folder");
+    if (item.type === "action" && item.action) {
+      item.action();
       return;
     }
 
-    if (item.contextProvider?.requiresQuery) {
+    if (
+      item.type === "contextProvider" &&
+      item.contextProvider?.type === "submenu"
+    ) {
+      setSubMenuTitle(item.description);
+      props.enterSubmenu(props.editor, item.id);
+      return;
+    }
+
+    if (item.contextProvider?.type === "query") {
       setSubMenuTitle(item.description);
       setQuerySubmenuItem(item);
       return;
@@ -181,20 +232,18 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   };
 
   const upHandler = () => {
-    setSelectedIndex(
-      (selectedIndex + props.items.length - 1) % props.items.length
-    );
+    setSelectedIndex((selectedIndex + allItems.length - 1) % allItems.length);
   };
 
   const downHandler = () => {
-    setSelectedIndex((selectedIndex + 1) % props.items.length);
+    setSelectedIndex((selectedIndex + 1) % allItems.length);
   };
 
   const enterHandler = () => {
     selectItem(selectedIndex);
   };
 
-  useEffect(() => setSelectedIndex(0), [props.items]);
+  useEffect(() => setSelectedIndex(0), [allItems]);
 
   useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }) => {
@@ -222,7 +271,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
       }
 
       if (event.key === " ") {
-        if (props.items.length === 1) {
+        if (allItems.length === 1) {
           enterHandler();
           return true;
         }
@@ -259,8 +308,8 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
       ) : (
         <>
           {subMenuTitle && <ItemDiv className="mb-2">{subMenuTitle}</ItemDiv>}
-          {props.items.length ? (
-            props.items.map((item, index) => (
+          {allItems.length ? (
+            allItems.map((item, index) => (
               <ItemDiv
                 as="button"
                 className={`item ${
@@ -279,15 +328,10 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         filename={item.title}
                       ></FileIcon>
                     )}
-                    {item.type === "folder" && (
-                      <FolderIcon height="20px" width="20px"></FolderIcon>
-                    )}
-                    {item.type !== "file" && item.type !== "folder" && (
-                      <DropdownIcon
-                        provider={item.id}
-                        type={item.type}
-                        className="mr-2"
-                      />
+                    {item.type !== "file" && (
+                      <>
+                        <DropdownIcon item={item} className="mr-2" />
+                      </>
                     )}
                     {item.title}
                     {"  "}
@@ -298,14 +342,15 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                       float: "right",
                       textAlign: "right",
                       opacity: index !== selectedIndex ? 0 : 1,
+                      minWidth: "30px",
                     }}
                     className="whitespace-nowrap overflow-hidden overflow-ellipsis ml-2 flex items-center"
                   >
                     {item.description}
                     {item.type === "contextProvider" &&
-                      (item.id === "file" || item.id === "folder") && (
+                      item.contextProvider?.type === "submenu" && (
                         <ArrowRightIcon
-                          className="ml-2"
+                          className="ml-2 flex-shrink-0"
                           width="1.2em"
                           height="1.2em"
                         />
@@ -315,7 +360,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
               </ItemDiv>
             ))
           ) : (
-            <ItemDiv className="item">No result</ItemDiv>
+            <ItemDiv className="item">No results</ItemDiv>
           )}
         </>
       )}

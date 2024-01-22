@@ -1,4 +1,5 @@
 import { ChatMessage, SlashCommand } from "../..";
+import { stripImages } from "../../llm/countTokens";
 import { removeQuotesAndEscapes } from "../../util";
 
 const PROMPT = (
@@ -43,7 +44,7 @@ const DraftIssueCommand: SlashCommand = {
 
     for await (const chunk of llm.streamChat(messages)) {
       body += chunk.content;
-      yield chunk.content;
+      yield stripImages(chunk.content);
     }
 
     const url = `${params.repositoryUrl}/issues/new?title=${encodeURIComponent(

@@ -91,6 +91,25 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   startProxy();
   vsCodeIndexCodebase(ideProtocolClient.getWorkspaceDirectories());
 
+  // (async () => {
+  //   const defaultDocsPages = [
+  //     ["Socket.IO", "https://python-socketio.readthedocs.io/en/stable"],
+  //     // ["Flask", "https://flask.palletsprojects.com/en/2.0.x/"],
+  //   ];
+
+  //   const config = await configHandler.loadConfig(new VsCodeIde());
+
+  //   defaultDocsPages.forEach(async ([title, url]) => {
+  //     for await (const update of indexDocs(
+  //       title,
+  //       new URL(url),
+  //       config.embeddingsProvider
+  //     )) {
+  //       console.log(update.progress, update.desc);
+  //     }
+  //   });
+  // })();
+
   try {
     // Add icon theme for .continueignore
     const iconTheme = vscode.workspace

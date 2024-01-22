@@ -401,7 +401,6 @@ function GUI(props: GUIProps) {
                         isLastUserInput={isLastUserInput(index)}
                         isMainInput={false}
                         editorState={item.editorState}
-                        content={item.message.content}
                         contextItems={item.contextItems}
                       ></ContinueInputBox>
                     ) : (

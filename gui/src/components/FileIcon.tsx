@@ -26,7 +26,7 @@ const FileIcon = ({ filename, height, width }) => {
   return (
     <div
       dangerouslySetInnerHTML={{ __html: sanitizedSVG }}
-      style={{ width: width, height: height, fill: color }}
+      style={{ width: width, height: height, fill: color, flexShrink: 0 }}
     />
   );
 };
