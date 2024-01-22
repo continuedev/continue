@@ -1,6 +1,6 @@
 mod merkle;
 use homedir::get_my_home;
-use merkle::{build_walk, compute_tree_for_dir, diff, hash_string, ObjectHash};
+use merkle::{compute_tree_for_dir, diff, hash_string};
 use std::{
     collections::HashMap,
     fs::{self, File, OpenOptions},
@@ -18,10 +18,10 @@ fn remove_seps_from_path(dir: &Path) -> String {
     }
 
     // Remove leading slash
-    if path.starts_with("/") || path.starts_with("\\") {
+    if path.starts_with('/') || path.starts_with('\\') {
         path.remove(0);
     }
-    return path;
+    path
 }
 
 fn path_for_tag(dir: &Path, branch: Option<&str>) -> PathBuf {
@@ -33,21 +33,20 @@ fn path_for_tag(dir: &Path, branch: Option<&str>) -> PathBuf {
     } else {
         path.push("main");
     }
-    return path;
+    path
 }
 
-/// Stored in ~/.continue/index/.last_sync
-fn get_last_sync_time(dir: &Path, branch: Option<&str>) -> u64 {
-    // TODO: Error handle here
-    let path = path_for_tag(dir, branch).join(".last_sync");
+// /// Stored in ~/.continue/index/.last_sync
+// fn get_last_sync_time(dir: &Path, branch: Option<&str>) -> u64 {
+//     // TODO: Error handle here
+//     let path = path_for_tag(dir, branch).join(".last_sync");
 
-    let mut file = File::open(path).unwrap();
-    let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
+//     let mut file = File::open(path).unwrap();
+//     let mut contents = String::new();
+//     file.read_to_string(&mut contents).unwrap();
 
-    let last_sync_time = contents.parse::<u64>().unwrap();
-    return last_sync_time;
-}
+//     contents.parse::<u64>().unwrap()
+// }
 
 fn write_sync_time(dir: &Path, branch: Option<&str>) {
     let path = path_for_tag(dir, branch).join(".last_sync");
@@ -60,23 +59,25 @@ fn write_sync_time(dir: &Path, branch: Option<&str>) {
     file.write_all(now.to_string().as_bytes()).unwrap();
 }
 
-/// Use stat to find files since last sync time
-pub fn get_modified_files(dir: &Path, branch: Option<&str>) -> Vec<PathBuf> {
-    let last_sync_time = get_last_sync_time(dir, branch);
-    let mut modified_files = Vec::new();
-    for entry in build_walk(dir) {
-        let entry = entry.unwrap();
-        let path = entry.path();
-        let metadata = path.metadata().unwrap();
-        let modified = metadata.modified().unwrap();
+// /// Use stat to find files since last sync time
+// pub fn get_modified_files(dir: &Path, branch: Option<&str>) -> Vec<PathBuf> {
+//     let last_sync_time = get_last_sync_time(dir, branch);
 
-        if modified.duration_since(UNIX_EPOCH).unwrap().as_secs() > last_sync_time {
-            modified_files.push(path.to_path_buf().clone());
-        }
-    }
+//     build_walk(dir)
+//         .filter_map(|entry| {
+//             let entry = entry.unwrap();
+//             let path = entry.path();
+//             let metadata = path.metadata().unwrap();
+//             let modified = metadata.modified().unwrap();
 
-    return modified_files;
-}
+//             if modified.duration_since(UNIX_EPOCH).unwrap().as_secs() > last_sync_time {
+//                 Some(path.to_path_buf())
+//             } else {
+//                 None
+//             }
+//         })
+//         .collect()
+// }
 
 // Merkle trees are unique to directories, even if nested, but .index_cache is shared between all
 
@@ -87,13 +88,13 @@ struct DiskSet {
 const ITEM_SIZE: usize = 20;
 
 impl DiskSet {
-    pub fn new(path: &str) -> DiskSet {
+    pub fn new(path: &str) -> Self {
         let path = Path::new(path);
         if !path.exists() {
             File::create(path).unwrap();
         }
 
-        DiskSet {
+        Self {
             file: OpenOptions::new()
                 .read(true)
                 .write(true)
@@ -165,7 +166,7 @@ impl IndexCache {
     fn index_cache_path_for_tag(dir: &Path, branch: &str) -> PathBuf {
         let mut path = path_for_tag(dir, Some(branch));
         path.push(".index_cache");
-        return path;
+        path
     }
 
     fn rev_tags_path(hash: [u8; ITEM_SIZE]) -> PathBuf {
@@ -174,20 +175,17 @@ impl IndexCache {
         path.push(".continue/index/rev_tags");
         // Branch by 1) first two chars of hash
         path.push(&hash_str[0..2]);
-        return path;
+        path
     }
 
     fn tag_str(&self) -> String {
-        return format!("{}::{}", self.dir.to_str().unwrap(), self.branch);
+        format!("{}::{}", self.dir.to_str().unwrap(), self.branch)
     }
 
-    fn new(dir: &Path, branch: Option<&str>) -> IndexCache {
-        return IndexCache {
+    fn new(dir: &Path, branch: Option<&str>) -> Self {
+        Self {
             dir: Box::from(dir),
-            branch: match branch {
-                Some(branch) => Box::from(branch),
-                None => Box::from("main"),
-            },
+            branch: Box::from(branch.unwrap_or("main")),
             global_cache: DiskSet::new(
                 get_my_home()
                     .unwrap()
@@ -197,11 +195,11 @@ impl IndexCache {
                     .unwrap(),
             ),
             tag_cache: DiskSet::new(
-                IndexCache::index_cache_path_for_tag(dir, branch.unwrap_or("main"))
+                Self::index_cache_path_for_tag(dir, branch.unwrap_or("main"))
                     .to_str()
                     .unwrap(),
             ),
-        };
+        }
     }
 
     // rev_tags files are just json files with the following format:
@@ -209,29 +207,27 @@ impl IndexCache {
 
     // TODO: You could add_bulk, remove_bulk if this gets slow
 
-    fn read_rev_tags(&self, hash: [u8; ITEM_SIZE]) -> HashMap<String, Vec<String>> {
-        let rev_tags_path = IndexCache::rev_tags_path(hash);
+    fn read_rev_tags(hash: [u8; ITEM_SIZE]) -> HashMap<String, Vec<String>> {
+        let rev_tags_path = Self::rev_tags_path(hash);
         let mut rev_tags_file = OpenOptions::new()
             .read(true)
             .write(true)
             .create(true)
-            .open(&rev_tags_path)
+            .open(rev_tags_path)
             .unwrap();
         let mut contents = String::new();
         rev_tags_file.read_to_string(&mut contents).unwrap();
-        let rev_tags: HashMap<String, Vec<String>> =
-            serde_json::from_str(&contents).unwrap_or(HashMap::new());
 
-        return rev_tags;
+        serde_json::from_str(&contents).unwrap_or_default()
     }
 
-    fn write_rev_tags(&self, hash: [u8; ITEM_SIZE], rev_tags: HashMap<String, Vec<String>>) {
-        let rev_tags_path = IndexCache::rev_tags_path(hash);
+    fn write_rev_tags(hash: [u8; ITEM_SIZE], rev_tags: &HashMap<String, Vec<String>>) {
+        let rev_tags_path = Self::rev_tags_path(hash);
         let mut rev_tags_file = OpenOptions::new()
             .read(true)
             .write(true)
             .create(true)
-            .open(&rev_tags_path)
+            .open(rev_tags_path)
             .unwrap();
         let json = serde_json::to_string(&rev_tags).unwrap();
 
@@ -247,14 +243,14 @@ impl IndexCache {
         self.tag_cache.add(&item.hash);
 
         // Add to rev_tags
-        let mut rev_tags = self.read_rev_tags(item.hash);
+        let mut rev_tags = Self::read_rev_tags(item.hash);
         let tag_str = self.tag_str();
         let hash_str = hash_string(item.hash);
         if !rev_tags.contains_key(hash_str.as_str()) {
             rev_tags.insert(hash_str.clone(), Vec::new());
         }
         rev_tags.get_mut(hash_str.as_str()).unwrap().push(tag_str);
-        self.write_rev_tags(item.hash, rev_tags);
+        Self::write_rev_tags(item.hash, &rev_tags);
     }
 
     fn global_remove(&mut self, item: &ObjDescription) {
@@ -262,48 +258,47 @@ impl IndexCache {
         self.tag_cache.remove(&item.hash);
 
         // Remove from rev_tags
-        let mut rev_tags = self.read_rev_tags(item.hash);
-        let tag_str = self.tag_str();
+        let mut rev_tags = Self::read_rev_tags(item.hash);
         let hash_str = hash_string(item.hash);
         if rev_tags.contains_key(hash_str.as_str()) {
             rev_tags.remove(hash_str.as_str());
         }
-        self.write_rev_tags(item.hash, rev_tags);
+        Self::write_rev_tags(item.hash, &rev_tags);
     }
 
     fn local_remove(&mut self, item: &ObjDescription) {
         self.tag_cache.remove(&item.hash);
 
         // Remove from rev_tags
-        let mut rev_tags = self.read_rev_tags(item.hash);
+        let mut rev_tags = Self::read_rev_tags(item.hash);
         let tag_str = self.tag_str();
         let hash_str = hash_string(item.hash);
         if rev_tags.contains_key(hash_str.as_str()) {
             let tags = rev_tags.get_mut(hash_str.as_str()).unwrap();
             let index = tags.iter().position(|x| *x == tag_str).unwrap();
             tags.remove(index);
-            if tags.len() == 0 {
+            if tags.is_empty() {
                 rev_tags.remove(hash_str.as_str());
             }
         }
-        self.write_rev_tags(item.hash, rev_tags);
+        Self::write_rev_tags(item.hash, &rev_tags);
     }
 
     fn global_contains(&mut self, hash: &[u8; ITEM_SIZE]) -> bool {
         self.global_cache.contains(hash)
     }
 
-    fn tag_contains(&mut self, hash: &[u8; ITEM_SIZE]) -> bool {
-        self.tag_cache.contains(&hash)
-    }
+    // fn tag_contains(&mut self, hash: &[u8; ITEM_SIZE]) -> bool {
+    //     self.tag_cache.contains(hash)
+    // }
 
-    fn get_rev_tags(&self, hash: &[u8; ITEM_SIZE]) -> Vec<String> {
-        let mut rev_tags = self.read_rev_tags(*hash);
+    fn get_rev_tags(hash: &[u8; ITEM_SIZE]) -> Vec<String> {
+        let mut rev_tags = Self::read_rev_tags(*hash);
         let hash_str = hash_string(*hash);
         if rev_tags.contains_key(hash_str.as_str()) {
-            return rev_tags.remove(hash_str.as_str()).unwrap();
+            rev_tags.remove(hash_str.as_str()).unwrap()
         } else {
-            return Vec::new();
+            Vec::new()
         }
     }
 }
@@ -329,10 +324,8 @@ pub fn sync(
 
     let mut tree_path = path_for_tag(dir, branch);
     tree_path.push("merkle_tree");
-    let old_tree: Tree = match Tree::load(&tree_path) {
-        Ok(tree) => tree,
-        Err(_) => Tree::empty(),
-    };
+
+    let old_tree = Tree::load(&tree_path).unwrap_or_default();
 
     // Calculate and save new tree
     // TODO: Use modified files to speed up calculation
@@ -384,7 +377,7 @@ pub fn sync(
             continue;
         }
         if index_cache.global_contains(&item.hash) {
-            if index_cache.get_rev_tags(&item.hash).len() <= 1 {
+            if IndexCache::get_rev_tags(&item.hash).len() <= 1 {
                 // If it's cached only for this tag, remove it from the global cache as well
                 index_cache.global_remove(&item);
                 let hash = hash_string(item.hash);
@@ -402,13 +395,13 @@ pub fn sync(
         }
     }
 
-    return Ok((compute, delete, add_label, remove_label));
+    Ok((compute, delete, add_label, remove_label))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::TempDirBuilder;
+    use crate::{sync::merkle::ObjectHash, utils::TempDirBuilder};
     use std::fs::remove_file;
 
     #[test]
@@ -459,7 +452,7 @@ mod tests {
     #[test]
     fn test_sync() {
         let ti = std::time::Instant::now();
-        let results = sync(
+        let _results = sync(
             Path::new("/Users/natesesti/Desktop/continue"),
             Some("nate/pyO3"),
         );
@@ -469,7 +462,7 @@ mod tests {
 
     #[test]
     fn test_on_vscode_extension() {
-        let results = sync(
+        let _results = sync(
             Path::new("/Users/natesesti/Desktop/continue/extensions/vscode"),
             Some("nate/pyO3"),
         );
@@ -484,8 +477,8 @@ mod tests {
         )
         .expect("Sync failed.");
         println!("First sync took {:?}", ti.elapsed());
-        assert!(results.0.len() > 0);
-        assert!(results.1.len() > 0);
+        assert!(!results.0.is_empty());
+        assert!(!results.1.is_empty());
 
         let ti = std::time::Instant::now();
         let results = sync(
@@ -514,9 +507,9 @@ mod tests {
 
         // Make changes
         let mut file = File::create(temp_dir.path().join("dir1/file1.txt")).unwrap();
-        file.write_all("File 1 changed".as_bytes()).unwrap();
+        file.write_all(b"File 1 changed").unwrap();
         let mut file = File::create(temp_dir.path().join("dir2/file3.txt")).unwrap();
-        file.write_all("File 3 changed".as_bytes()).unwrap();
+        file.write_all(b"File 3 changed").unwrap();
 
         // Sync again
         let results = sync(temp_dir.path(), Some("BRANCH")).expect("Sync failed.");

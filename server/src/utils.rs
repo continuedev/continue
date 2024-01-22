@@ -2,18 +2,19 @@ use std::fs::{self, File};
 use std::io::Write;
 use tempfile::tempdir;
 
+#[derive(Default)]
 pub struct TempDirBuilder {
     files: Vec<(String, String)>,
 }
 
 impl TempDirBuilder {
-    pub fn new() -> TempDirBuilder {
-        return TempDirBuilder { files: Vec::new() };
+    pub fn new() -> Self {
+        Self::default()
     }
 
-    pub fn add(&mut self, path: &str, content: &str) -> &mut TempDirBuilder {
+    pub fn add(&mut self, path: &str, content: &str) -> &mut Self {
         self.files.push((path.to_string(), content.to_string()));
-        return self;
+        self
     }
 
     pub fn create(&self) -> tempfile::TempDir {
@@ -25,9 +26,9 @@ impl TempDirBuilder {
                 fs::create_dir_all(dir).expect("Failed to create directory");
             }
             let mut file = File::create(&file_path).expect("Failed to create test file");
-            writeln!(file, "{}", content).expect("Failed to write to test file");
+            writeln!(file, "{content}").expect("Failed to write to test file");
         }
 
-        return temp_dir;
+        temp_dir
     }
 }

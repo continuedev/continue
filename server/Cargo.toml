@@ -29,3 +29,13 @@ tempfile = "3.8.1"
 
 [dev-dependencies]
 tempfile = "3.8.1"
+
+[lints.clippy]
+all = "deny"
+type_complexity = { level = "allow", priority = 1 }  # remove me
+use_self = "warn"
+
+[lints.rust]
+dead_code = "deny"
+missing_copy_implementations = "warn"
+missing_debug_implementations = "warn"

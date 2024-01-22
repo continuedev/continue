@@ -1,50 +1,51 @@
-use std::collections::HashMap;
-use std::fs;
-use std::io::{self, Read};
-use std::path::{Path, PathBuf};
+// use std::collections::HashMap;
+// use std::fs;
+// use std::io::{self, Read};
+// use std::path::{Path, PathBuf};
 
-pub fn local_find_gitignores(workspace_dir: &Path) -> io::Result<HashMap<PathBuf, String>> {
-    let mut gitignores = HashMap::new();
-    for entry in fs::read_dir(workspace_dir)? {
-        let entry = entry?;
-        let path = entry.path();
-        if path.is_dir() {
-            gitignores.extend(local_find_gitignores(&path)?);
-        } else {
-            match path.file_name().and_then(|name| name.to_str()) {
-                Some(file_name)
-                    if file_name.ends_with(".gitignore")
-                        || file_name.ends_with(".continueignore") =>
-                {
-                    let mut contents = String::new();
-                    fs::File::open(&path)?.read_to_string(&mut contents)?;
-                    gitignores.insert(path, contents);
-                }
-                _ => {}
-            }
-        }
-    }
-    Ok(gitignores)
-}
+// fn main() -> io::Result<()> {
+//     let workspace_dir = Path::new("path/to/workspace");
+//     let gitignore_map = local_find_gitignores(workspace_dir)?;
 
-fn main() -> io::Result<()> {
-    let workspace_dir = Path::new("path/to/workspace");
-    let gitignore_map = local_find_gitignores(workspace_dir)?;
+//     // Print out the result (optional)
+//     for (path, contents) in gitignore_map {
+//         println!("{}:\n{}", path.display(), contents);
+//     }
 
-    // Print out the result (optional)
-    for (path, contents) in gitignore_map {
-        println!("{}:\n{}", path.display(), contents);
-    }
-
-    Ok(())
-}
+//     Ok(())
+// }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use std::collections::HashMap;
     use std::fs::{self, File};
-    use std::io::Write;
+    use std::io::{self, Read, Write};
+    use std::path::{Path, PathBuf};
     use tempfile::tempdir;
+
+    pub fn local_find_gitignores(workspace_dir: &Path) -> io::Result<HashMap<PathBuf, String>> {
+        let mut gitignores = HashMap::new();
+        for entry in fs::read_dir(workspace_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+            if path.is_dir() {
+                gitignores.extend(local_find_gitignores(&path)?);
+            } else {
+                match path.file_name().and_then(|name| name.to_str()) {
+                    Some(file_name)
+                        if file_name.ends_with(".gitignore")
+                            || file_name.ends_with(".continueignore") =>
+                    {
+                        let mut contents = String::new();
+                        fs::File::open(&path)?.read_to_string(&mut contents)?;
+                        gitignores.insert(path, contents);
+                    }
+                    _ => {}
+                }
+            }
+        }
+        Ok(gitignores)
+    }
 
     #[test]
     fn test_local_find_gitignores() -> io::Result<()> {
@@ -59,14 +60,14 @@ mod tests {
             ("dir3", None, ""),
         ];
 
-        for (dir, file, contents) in dir_structure.iter() {
+        for (dir, file, contents) in &dir_structure {
             let dir_path = temp_path.join(dir);
             fs::create_dir(&dir_path)?;
 
             if let Some(file_name) = file {
                 let file_path = dir_path.join(file_name);
                 let mut file = File::create(file_path)?;
-                writeln!(file, "{}", contents)?;
+                writeln!(file, "{contents}")?;
             }
         }
 
@@ -74,7 +75,7 @@ mod tests {
         let gitignores = local_find_gitignores(temp_path)?;
 
         // Verify that the returned HashMap contains the correct paths and contents
-        for (dir, file, contents) in dir_structure.iter() {
+        for (dir, file, contents) in &dir_structure {
             if let Some(file_name) = file {
                 let file_path = temp_path.join(dir).join(file_name);
                 assert!(gitignores.contains_key(&file_path));
@@ -93,7 +94,7 @@ mod tests {
         // Get the current directory
         let current_dir = std::env::current_dir()?;
         let parent_dir = current_dir.parent().unwrap();
-        let gitignores = local_find_gitignores(&parent_dir)?;
+        let gitignores = local_find_gitignores(parent_dir)?;
 
         // Verify that the returned HashMap contains the correct paths and contents
         let top_level_gitignore = parent_dir.join(".gitignore");

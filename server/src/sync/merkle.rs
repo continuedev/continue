@@ -3,21 +3,20 @@ use ignore::{Walk, WalkBuilder};
 use serde::{Deserialize, Serialize};
 use sha1::{Digest, Sha1};
 use std::{
-    io::{self, Read, Result, Write},
+    io::{Read, Result, Write},
     path::{Path, PathBuf},
 };
 
 pub type ObjectHash = [u8; 20];
 
 pub fn hash_string(hash: ObjectHash) -> String {
-    let mut result = String::new();
-    for byte in hash {
-        result.push_str(&format!("{:02x}", byte));
-    }
-    return result;
+    hash.iter().fold(String::new(), |mut output, byte| {
+        output.push_str(&format!("{byte:02x}"));
+        output
+    })
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Tree {
     parent: Option<ObjectHash>,
     children: Vec<Object>,
@@ -48,6 +47,18 @@ enum Object {
     Blob(Blob),
 }
 
+impl From<Tree> for Object {
+    fn from(tree: Tree) -> Self {
+        Self::Tree(tree)
+    }
+}
+
+impl From<Blob> for Object {
+    fn from(blob: Blob) -> Self {
+        Self::Blob(blob)
+    }
+}
+
 pub struct ObjDescription {
     pub hash: ObjectHash,
     pub path: String,
@@ -57,22 +68,22 @@ pub struct ObjDescription {
 impl Object {
     fn hash(&self) -> ObjectHash {
         match self {
-            Object::Tree(tree) => tree.hash,
-            Object::Blob(blob) => blob.hash,
+            Self::Tree(tree) => tree.hash,
+            Self::Blob(blob) => blob.hash,
         }
     }
 
     fn path(&self) -> &String {
         match self {
-            Object::Tree(tree) => &tree.path,
-            Object::Blob(blob) => &blob.path,
+            Self::Tree(tree) => &tree.path,
+            Self::Blob(blob) => &blob.path,
         }
     }
 
     fn json_for_obj(&self) -> String {
         match self {
-            Object::Tree(tree) => tree.json_for_obj(),
-            Object::Blob(blob) => blob.json_for_obj(),
+            Self::Tree(tree) => tree.json_for_obj(),
+            Self::Blob(blob) => blob.json_for_obj(),
         }
     }
 
@@ -80,15 +91,12 @@ impl Object {
         return ObjDescription {
             hash: self.hash(),
             path: self.path().clone(),
-            is_blob: match self {
-                Object::Tree(_) => false,
-                Object::Blob(_) => true,
-            },
+            is_blob: matches!(self, Self::Blob(_)),
         };
     }
 
     /// Return a tuple of (paths to add, paths to remove)
-    fn diff(&self, new_obj: &Object) -> (Vec<ObjDescription>, Vec<ObjDescription>) {
+    fn diff(&self, new_obj: &Self) -> (Vec<ObjDescription>, Vec<ObjDescription>) {
         let mut add: Vec<ObjDescription> = Vec::new();
         let mut remove: Vec<ObjDescription> = Vec::new();
 
@@ -97,7 +105,7 @@ impl Object {
         }
 
         match (self, new_obj) {
-            (Object::Tree(old_tree), Object::Tree(new_tree)) => {
+            (Self::Tree(old_tree), Self::Tree(new_tree)) => {
                 // This is where you recurse like below
                 let (child_add, child_remove) = old_tree.diff_children(new_tree);
                 add.push(new_tree.descr());
@@ -105,23 +113,23 @@ impl Object {
                 add.extend(child_add);
                 remove.extend(child_remove);
             }
-            (Object::Blob(old_blob), Object::Blob(new_blob)) => {
+            (Self::Blob(old_blob), Self::Blob(new_blob)) => {
                 add.push(new_blob.descr());
                 remove.push(old_blob.descr());
             }
-            (Object::Blob(old_blob), Object::Tree(new_tree)) => {
+            (Self::Blob(old_blob), Self::Tree(new_tree)) => {
                 // Remove blob, add entire new tree
                 remove.push(old_blob.descr());
                 add.extend(new_tree.all_obj_descriptions());
             }
-            (Object::Tree(old_tree), Object::Blob(new_blob)) => {
+            (Self::Tree(old_tree), Self::Blob(new_blob)) => {
                 // Remove entire old tree, add blob
                 remove.extend(old_tree.all_obj_descriptions());
                 add.push(new_blob.descr());
             }
         }
 
-        return (add, remove);
+        (add, remove)
     }
 }
 
@@ -140,7 +148,7 @@ pub fn diff(old_tree: &Tree, new_tree: &Tree) -> (Vec<ObjDescription>, Vec<ObjDe
     add.extend(child_add);
     remove.extend(child_remove);
 
-    return (add, remove);
+    (add, remove)
 }
 
 impl Blob {
@@ -153,44 +161,45 @@ impl Blob {
         };
 
         let mut json = serde_json::to_string(&node).unwrap();
-        json.push_str("\n");
-        return json;
+        json.push('\n');
+        json
     }
 
     fn descr(&self) -> ObjDescription {
-        return ObjDescription {
+        ObjDescription {
             hash: self.hash,
             path: self.path.clone(),
             is_blob: true,
-        };
+        }
     }
 }
 
-enum DiffType {
-    Add,
-    Update,
-    Remove,
-}
+// enum DiffType {
+//     Add,
+//     Update,
+//     Remove,
+// }
+
 impl Tree {
     fn descr(&self) -> ObjDescription {
-        return ObjDescription {
+        ObjDescription {
             hash: self.hash,
             path: self.path.clone(),
             is_blob: false,
-        };
+        }
     }
 
     fn json_for_node(&self) -> String {
         let node = SerializeableNode {
             parent: self.parent,
-            children: Some(self.children.iter().map(|child| child.hash()).collect()),
+            children: Some(self.children.iter().map(Object::hash).collect()),
             hash: self.hash,
             path: self.path.clone(),
         };
 
         let mut json = serde_json::to_string(&node).unwrap();
-        json.push_str("\n");
-        return json;
+        json.push('\n');
+        json
     }
 
     fn json_for_obj(&self) -> String {
@@ -201,70 +210,63 @@ impl Tree {
             result.push_str(&child.json_for_obj());
         }
 
-        return result;
+        result
     }
 
-    fn obj_from_jsonl(lines: &mut std::str::Lines, first_line: Option<SerializeableNode>) -> Tree {
-        let root_node = match first_line {
-            Some(line) => line,
-            None => serde_json::from_str(lines.next().unwrap()).unwrap(),
-        };
+    fn obj_from_jsonl(lines: &mut std::str::Lines, first_line: Option<SerializeableNode>) -> Self {
+        let root_node =
+            first_line.unwrap_or_else(|| serde_json::from_str(lines.next().unwrap()).unwrap());
 
-        let mut children: Vec<Object> = Vec::new();
-        for child_hash in root_node.children.unwrap() {
-            let child_jsonl = lines.next().unwrap();
-            let child_node: SerializeableNode = serde_json::from_str(child_jsonl).unwrap();
-            match child_node.children {
-                Some(_) => {
-                    let child = Tree::obj_from_jsonl(lines, Some(child_node));
-                    children.push(Object::Tree(child));
-                }
-                None => {
-                    let child = Blob {
+        let children = root_node
+            .children
+            .unwrap()
+            .into_iter()
+            .map(|_child_hash| {
+                let child_jsonl = lines.next().unwrap();
+                let child_node: SerializeableNode = serde_json::from_str(child_jsonl).unwrap();
+                if child_node.children.is_some() {
+                    Self::obj_from_jsonl(lines, Some(child_node)).into()
+                } else {
+                    Blob {
                         parent: child_node.parent,
                         hash: child_node.hash,
                         path: child_node.path,
-                    };
-                    children.push(Object::Blob(child));
+                    }
+                    .into()
                 }
-            }
-        }
+            })
+            .collect();
 
-        return Tree {
+        Self {
             parent: root_node.parent,
             children,
             hash: root_node.hash,
             path: root_node.path,
-        };
+        }
     }
 
     /// Persist the tree to disk as JSONL
     pub fn persist(&self, filepath: &Path) {
         if let Some(dir) = filepath.parent() {
             std::fs::create_dir_all(dir)
-                .expect(format!("Failed to create dir {}", dir.display()).as_str());
+                .unwrap_or_else(|_| panic!("Failed to create dir {}", dir.display()));
         }
         let mut file = std::fs::File::create(filepath).unwrap();
         file.write_all(self.json_for_obj().as_bytes()).unwrap();
     }
 
     /// Load the tree from JSONL file
-    pub fn load(filepath: &Path) -> Result<Tree> {
+    pub fn load(filepath: &Path) -> Result<Self> {
         let mut file = std::fs::File::open(filepath)?;
         let mut contents = String::new();
         file.read_to_string(&mut contents)?;
         let mut lines = contents.lines();
-        return Ok(Tree::obj_from_jsonl(&mut lines, None));
+        Ok(Self::obj_from_jsonl(&mut lines, None))
     }
 
-    pub fn empty() -> Tree {
-        return Tree {
-            parent: None,
-            children: Vec::new(),
-            hash: tree_hash(Vec::new()),
-            path: String::new(),
-        };
-    }
+    // pub fn empty() -> Self {
+    //     Self::default()
+    // }
 
     fn set_childrens_parent(&mut self) {
         for child in &mut self.children {
@@ -293,12 +295,12 @@ impl Tree {
     fn all_obj_descriptions(&self) -> Vec<ObjDescription> {
         let mut result = Vec::new();
         self.walk(&mut |obj| result.push(obj.descr()));
-        return result;
+        result
     }
 
     /// Return a list of paths that have changed and the type of change (0 = add, 1 = update, 2 = remove)
     /// other is considered the "new" tree
-    fn diff_children(&self, new_tree: &Tree) -> (Vec<ObjDescription>, Vec<ObjDescription>) {
+    fn diff_children(&self, new_tree: &Self) -> (Vec<ObjDescription>, Vec<ObjDescription>) {
         let mut add = Vec::new();
         let mut remove = Vec::new();
 
@@ -331,16 +333,16 @@ impl Tree {
         }
 
         // Remove - along with all children
-        for (path, obj) in old_path_to_object {
+        for obj in old_path_to_object.values() {
             match obj {
-                Object::Tree(tree) => tree.walk(&mut |obj| {
+                Object::Tree(tree) => tree.walk(&mut |_obj| {
                     remove.extend(tree.all_obj_descriptions());
                 }),
                 Object::Blob(_) => remove.push(obj.descr()),
             }
         }
 
-        return (add, remove);
+        (add, remove)
     }
 }
 
@@ -395,7 +397,7 @@ fn global_ignore_path() -> PathBuf {
     path.push(".continue");
     path.push("index");
     path.push(".globalcontinueignore");
-    return path;
+    path
 }
 
 fn create_global_ignore_file() -> PathBuf {
@@ -406,11 +408,11 @@ fn create_global_ignore_file() -> PathBuf {
         let mut file = std::fs::File::create(path).unwrap();
         for pattern in GLOBAL_IGNORE_PATTERNS {
             file.write_all(pattern.as_bytes()).unwrap();
-            file.write_all("\n".as_bytes()).unwrap();
+            file.write_all(b"\n").unwrap();
         }
     }
 
-    return global_ignore_path();
+    global_ignore_path()
 }
 
 pub fn build_walk(dir: &Path) -> Walk {
@@ -420,48 +422,43 @@ pub fn build_walk(dir: &Path) -> Walk {
     let builder = binding.add_custom_ignore_filename(".continueignore");
 
     builder.add_ignore(path);
-    return builder.build();
+    builder.build()
 }
 
 fn sha1_hash(content: &str) -> ObjectHash {
     let mut hasher = Sha1::new();
     hasher.update(content);
-    let result = hasher.finalize();
-    let hash_bytes: [u8; 20] = result.into();
-    return hash_bytes;
+    hasher.finalize().into()
 }
 
 fn blob_hash(content: &str, file_ext: &str) -> ObjectHash {
-    return sha1_hash(&format!("blob {} {}", file_ext, content));
+    sha1_hash(&format!("blob {file_ext} {content}"))
 }
 
 fn create_blob(filepath: &Path, parent: Option<ObjectHash>) -> Result<Blob> {
     let content = std::fs::read_to_string(filepath)?;
     let hash = blob_hash(
         &content,
-        match filepath.extension() {
-            Some(ext) => ext.to_str().unwrap(),
-            None => "",
-        },
+        filepath.extension().map_or("", |ext| ext.to_str().unwrap()),
     );
-    return Ok(Blob {
-        parent: parent,
-        hash: hash,
+    Ok(Blob {
+        parent,
+        hash,
         path: filepath.to_str().unwrap().to_string(),
-    });
+    })
 }
 
-fn tree_hash(children: Vec<ObjectHash>) -> ObjectHash {
+fn tree_hash(children: impl IntoIterator<Item = ObjectHash>) -> ObjectHash {
     let mut hasher = Sha1::new();
-    hasher.update("tree".as_bytes());
+    hasher.update(b"tree");
 
     // Note you're not just concatenating
-    for child in &children {
+    for child in children {
         hasher.update(child);
     }
     let result = hasher.finalize();
     let hash_bytes: [u8; 20] = result.into();
-    return hash_bytes;
+    hash_bytes
 }
 
 struct PreTree {
@@ -474,7 +471,7 @@ impl PreTree {
         return Tree {
             parent: None,
             children: self.children.clone(),
-            hash: tree_hash(self.children.iter().map(|child| child.hash()).collect()),
+            hash: tree_hash(self.children.iter().map(Object::hash)),
             path: self.path.clone(),
         };
     }
@@ -482,7 +479,7 @@ impl PreTree {
 
 /// Compute merkle tree and all sub-objects
 /// The last element in the vector is the root of the tree
-pub fn compute_tree_for_dir(dir: &Path, parent: Option<ObjectHash>) -> Result<Tree> {
+pub fn compute_tree_for_dir(dir: &Path, _parent: Option<ObjectHash>) -> Result<Tree> {
     let mut walk = build_walk(dir);
     let root_entry = walk
         .next() // This is just "."
@@ -535,7 +532,7 @@ pub fn compute_tree_for_dir(dir: &Path, parent: Option<ObjectHash>) -> Result<Tr
                         .children
                         .push(Object::Blob(blob));
                 }
-                Err(err) => {
+                Err(_err) => {
                     // Not UTF-8 formatted. Binary file. Ignore.
                 }
             }
@@ -563,7 +560,7 @@ pub fn compute_tree_for_dir(dir: &Path, parent: Option<ObjectHash>) -> Result<Tr
     // Go through and update the parent of each child
     root_tree.set_childrens_parent();
 
-    return Ok(root_tree);
+    Ok(root_tree)
 }
 
 // Tests
@@ -642,9 +639,8 @@ mod tests {
         // Try adding a file at the root level
         let path = temp_dir.path().join("new_file.txt");
         fs::write(path, "42").expect("Failed to write to file");
-        let tree_prime_prime = compute_tree_for_dir(temp_dir.path(), None)
-            .expect("Failed to compute tree")
-            .clone();
+        let tree_prime_prime =
+            compute_tree_for_dir(temp_dir.path(), None).expect("Failed to compute tree");
 
         // Compare original and ''
         let (add, remove) = diff(&tree, &tree_prime_prime);
