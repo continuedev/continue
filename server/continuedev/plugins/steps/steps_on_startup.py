@@ -1,5 +1,3 @@
-from typing import Type
-
 from ...core.main import Step
 from ...core.sdk import ContinueSDK, Models
 

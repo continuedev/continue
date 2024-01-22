@@ -13,7 +13,6 @@ from ..libs.util.count_tokens import DEFAULT_MAX_TOKENS
 from ..libs.util.devdata import dev_data_logger
 from ..libs.util.strings import (
     dedent_and_get_common_whitespace,
-    remove_quotes_and_escapes,
 )
 from ..libs.util.telemetry import posthog_logger
 from ..libs.util.templating import render_prompt_template
@@ -24,8 +23,6 @@ from .main import (
     ChatMessage,
     ContextItem,
     ContinueCustomException,
-    DeltaStep,
-    SessionUpdate,
     SetStep,
     Step,
 )
