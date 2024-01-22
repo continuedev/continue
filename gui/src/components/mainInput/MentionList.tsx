@@ -43,7 +43,7 @@ import {
 } from "../../redux/slices/uiStateSlice";
 import FileIcon from "../FileIcon";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
-import { ComboBoxItem, ComboBoxItemType } from "./types";
+import { ComboBoxItem } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
@@ -69,21 +69,24 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   "/issue": ExclamationCircleIcon,
 };
 
-function DropdownIcon(props: {
-  provider: string;
-  className?: string;
-  type: ComboBoxItemType;
-}) {
-  if (props.type === "action") {
+function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
+  if (props.item.type === "action") {
     return (
       <PlusIcon className={props.className} height="1.2em" width="1.2em" />
     );
   }
 
-  const Icon = ICONS_FOR_DROPDOWN[props.provider];
+  const provider =
+    props.item.type === "contextProvider"
+      ? props.item.id
+      : props.item.type === "slashCommand"
+      ? props.item.id
+      : props.item.type;
+
+  const Icon = ICONS_FOR_DROPDOWN[provider];
   const iconClass = `${props.className} flex-shrink-0`;
   if (!Icon) {
-    return props.type === "contextProvider" ? (
+    return props.item.type === "contextProvider" ? (
       <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
     ) : (
       <ChevronDoubleRightIcon
@@ -327,15 +330,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                     )}
                     {item.type !== "file" && (
                       <>
-                        <DropdownIcon
-                          provider={
-                            item.type === "contextProvider"
-                              ? item.id
-                              : item.type
-                          }
-                          type={item.type}
-                          className="mr-2"
-                        />
+                        <DropdownIcon item={item} className="mr-2" />
                       </>
                     )}
                     {item.title}
