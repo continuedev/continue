@@ -68,7 +68,7 @@ const router = createMemoryRouter([
 ]);
 
 const filesMiniSearch = new MiniSearch({
-  fields: ["id", "basename"],
+  fields: ["basename"],
   storeFields: ["id", "basename"],
 });
 export const FilesSearchContext = createContext<
@@ -76,7 +76,7 @@ export const FilesSearchContext = createContext<
 >([filesMiniSearch, []]);
 
 const foldersMiniSearch = new MiniSearch({
-  fields: ["id", "basename"],
+  fields: ["basename"],
   storeFields: ["id", "basename"],
 });
 export const FoldersSearchContext = createContext<
