@@ -138,8 +138,7 @@ class VsCodeIde implements IDE {
 
       migrate("foldersContextProvider", () => {
         if (
-          !config.contextProviders?.filter((cp) => cp.name === "folder")
-            ?.length
+          !config.contextProviders?.filter((cp) => cp.name === "folder")?.length
         ) {
           config.contextProviders = [
             ...(config.contextProviders || []),
@@ -332,6 +331,14 @@ class VsCodeIde implements IDE {
 
   async getOpenFiles(): Promise<string[]> {
     return await ideProtocolClient.getOpenFiles();
+  }
+
+  async getPinnedFiles(): Promise<string[]> {
+    const tabArray = vscode.window.tabGroups.all[0].tabs;
+
+    return tabArray
+      .filter((t) => t.isPinned)
+      .map((t) => (t.input as vscode.TabInputText).uri.fsPath);
   }
 
   private async _searchDir(query: string, dir: string): Promise<string> {

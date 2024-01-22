@@ -19,7 +19,9 @@ class OpenFilesContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
     const ide = extras.ide;
-    const openFiles = await ide.getOpenFiles();
+    const openFiles = this.options?.onlyPinned
+      ? await ide.getPinnedFiles()
+      : await ide.getOpenFiles();
     return await Promise.all(
       openFiles.map(async (filepath: string) => {
         return {

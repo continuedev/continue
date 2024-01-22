@@ -429,6 +429,10 @@ export function getSidebarContent(
           respond(await ide.getOpenFiles());
           break;
         }
+        case "getPinnedFiles": {
+          respond(await ide.getPinnedFiles());
+          break;
+        }
         // Other
         case "errorPopup": {
           vscode.window

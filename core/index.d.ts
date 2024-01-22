@@ -311,6 +311,7 @@ export interface IDE {
     diffLine: DiffLine
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
+  getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;

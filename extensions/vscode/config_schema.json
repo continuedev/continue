@@ -964,7 +964,7 @@
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
                 "Reference the contents of the terminal",
-                "Reference the contents of all open files.",
+                "Reference the contents of all open or pinned files.",
                 "Enter a search phrase and include the Google search results as context",
                 "Reference the results of a ripgrep search in your codebase",
                 "Write a custom context provider at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
@@ -1007,6 +1007,28 @@
               }
             },
             "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["open"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "onlyPinned": {
+                    "type": "boolean",
+                    "description": "If set to true, only 'pinned' files will be included.",
+                    "default": false
+                  }
+                }
+              }
+            }
           }
         },
         {
