@@ -6,7 +6,7 @@ keywords: [no internet, air-gapped, local model]
 
 # Running Continue without Internet
 
-Continue can be run even on an air-gapped computer if you use a local model. You'll have to make a few adjustments for this to work.
+Continue can be run even on an air-gapped computer if you use a local model. Only a few adjustments are required for this to work.
 
 1. Download the latest .vsix file from the [Open VSX Registry](https://open-vsx.org/extension/Continue/continue) and [install it to VS Code](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix).
 2. Open `~/.continue/config.json` and set `"allowAnonymousTelemetry": false`. This will stop Continue from attempting requests to PostHog.

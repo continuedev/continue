@@ -203,6 +203,12 @@ function useChatHandler(dispatch: Dispatch) {
         await _streamNormalInput(messages);
       } else {
         const [slashCommand, commandInput] = commandAndInput;
+        posthog.capture("step run", {
+          step_name: slashCommand.name,
+          params: {
+            user_input: commandInput,
+          },
+        });
         await _streamSlashCommand(messages, slashCommand, commandInput);
       }
     } catch (e) {

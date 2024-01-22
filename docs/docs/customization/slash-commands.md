@@ -6,14 +6,112 @@ keywords: [slash command, custom commands, step]
 
 # Slash Commands
 
-Slash commands are shortcuts that can be activated by prefacing your input with '/'. For example, the built-in '/edit' slash command let you stream edits directly into your editor.
+Slash commands are shortcuts that can be activated by typing '/' and selecting from the dropdown. For example, the built-in '/edit' slash command let you stream edits directly into your editor.
+
+![slash-commands](/img/slash-commands.png)
+
+## Built-in Slash Commands
+
+To use any of the built-in slash commands, open `~/.continue/config.json` and add it to the `slashCommands` list.
+
+### `/edit`
+
+Select code with ctrl/cmd + M (VS Code) or ctrl/cmd + J (JetBrains), and then type "/edit", followed by instructions for the edit. Continue will stream the changes into a side-by-side diff editor.
+
+```json
+{
+  "name": "edit",
+  "description": "Edit highlighted code"
+}
+```
+
+### `/comment`
+
+Comment works just like /edit, except it will automatically prompt the LLM to comment the code.
+
+```json
+{
+  "name": "comment",
+  "description": "Write comments for the highlighted code"
+}
+```
+
+### `/share`
+
+Type "/share" to generate a shareable markdown transcript of your current chat history.
+
+```json
+{
+  "name": "share",
+  "description": "Download and share this session"
+}
+```
+
+### `/cmd`
+
+Generate a shell command from natural language and (only in VS Code) automatically paste it into the terminal.
+
+```json
+{
+  "name": "cmd",
+  "description": "Generate a shell command"
+}
+```
+
+### `/commit`
+
+Shows the LLM your current git diff and asks it to generate a commit message.
+
+```json
+{
+  "name": "commit",
+  "description": "Generate a commit message for the current changes"
+}
+```
+
+### `/http`
+
+Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup. The endpoint should return a sequence of string updates, which will be streamed to the Continue sidebar. See our basic [FastAPI example](https://github.com/continuedev/continue/blob/74002369a5e435735b83278fb965e004ae38a97d/core/context/providers/context_provider_server.py#L34-L45) for reference.
+
+```json
+{
+  "name": "http",
+  "description": "Does something custom",
+  "params": { "url": "<my server endpoint>" }
+}
+```
+
+### `/issue`
+
+Describe the issue you'd like to generate, and Continue will turn into a well-formatted title and body, then give you a link to the draft so you can submit. Make sure to set the URL of the repository you want to generate issues for.
+
+```json
+{
+  "name": "issue",
+  "description": "Generate a link to a drafted GitHub issue",
+  "params": { "repositoryUrl": "https://github.com/continuedev/continue" }
+}
+```
+
+### `/so`
+
+The StackOverflow slash command will automatically pull results from StackOverflow to answer your question, quoting links along with its answer.
+
+```json
+{
+  "name": "so",
+  "description": "Reference StackOverflow to answer the question"
+}
+```
+
+## Custom Slash Commands
 
 There are two ways to add custom slash commands:
 
 1. With natural language prompts - this is simpler and only requires writing a string or string template.
 2. With a custom function - this gives you full access to the Continue SDK and allows you to write arbitrary Typescript code.
 
-## "Custom Commands" (Use Natural Language)
+### "Custom Commands" (Use Natural Language)
 
 You can add custom slash commands by adding to the `customCommands` property in `config.json`.
 
@@ -31,7 +129,7 @@ customCommands=[{
 }]
 ```
 
-## Custom Slash Commands
+### Custom Slash Commands
 
 If you want to go a step further than writing custom commands with natural language, you can write a custom function that returns the response. This requires using `config.ts` instead of `config.json`.
 

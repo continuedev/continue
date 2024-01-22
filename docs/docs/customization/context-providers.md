@@ -34,10 +34,26 @@ Type '@terminal' to reference the contents of your IDE's terminal.
 
 ### Open Files
 
-Type '@open' to reference the contents of all of your open files.
+Type '@open' to reference the contents of all of your open files. Set `onlyPinned` to `true` to only reference pinned files.
 
 ```json
-{ "name": "open" }
+{ "name": "open", "params": { "onlyPinned": true } }
+```
+
+### Codebase Retrieval
+
+Type '@codebase' to automatically retrieve the most relevant snippets from your codebase. Read more about indexing and retrieval [here](../walkthroughs/codebase-embeddings.md).
+
+```json
+{ "name": "codebase" }
+```
+
+### Folders
+
+Type '@folder' to use the same retrieval mechanism as '@codebase', but only on a single folder.
+
+```json
+{ "name": "folder" }
 ```
 
 ### Exact Search
@@ -46,17 +62,6 @@ Type '@search' to reference the results of codebase search, just like the result
 
 ```json
 { "name": "search" }
-```
-
-### URLs
-
-Type '@url' and then enter the URL you want to include in the input prompt that appears. The text contents of the page will be fetched and used as context.
-
-```json
-{
-  "name": "url",
-  "params": { "presetUrls": ["https://continue.dev/docs/customization"] }
-}
 ```
 
 ### File Tree

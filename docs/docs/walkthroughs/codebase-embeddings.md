@@ -73,6 +73,8 @@ We also support other methods of generating embeddings, which can be configured 
 
 ### OpenAI
 
+OpenAI's [ada-002 embeddings](https://platform.openai.com/docs/guides/embeddings) are high dimensional embeddings that give great performance on both text and code.
+
 ```json title="~/.continue/config.json"
 {
   "embeddingsProvider": {

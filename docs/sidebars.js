@@ -47,10 +47,10 @@ const sidebars = {
       collapsible: true,
       collapsed: true,
       items: [
-        "walkthroughs/codellama",
+        // "walkthroughs/codellama",
         "walkthroughs/running-continue-without-internet",
         "walkthroughs/codebase-embeddings",
-        "walkthroughs/config-file-migration",
+        // "walkthroughs/config-file-migration",
       ],
     },
     "development-data",
