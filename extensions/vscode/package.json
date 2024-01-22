@@ -124,7 +124,7 @@
       {
         "command": "continue.newSession",
         "category": "Continue",
-        "title": "New Session (⌘ M)",
+        "title": "New Session",
         "icon": "$(add)"
       },
       {
