@@ -70,7 +70,7 @@ const HoverDiv = styled.div`
   height: 100%;
   top: 0;
   left: 0;
-  opacity: 0.3;
+  opacity: 0.5;
   background-color: ${vscBadgeBackground};
   color: ${vscForeground};
   z-index: 100;
@@ -432,6 +432,28 @@ function TipTapEditor(props: TipTapEditorProps) {
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 
+  useEffect(() => {
+    const overListener = (event: DragEvent) => {
+      if (event.shiftKey) return;
+      setShowDragOverMsg(true);
+    };
+    window.addEventListener("dragover", overListener);
+
+    const leaveListener = (event: DragEvent) => {
+      if (event.shiftKey) {
+        setShowDragOverMsg(false);
+      } else {
+        setTimeout(() => setShowDragOverMsg(false), 2000);
+      }
+    };
+    window.addEventListener("dragleave", leaveListener);
+
+    return () => {
+      window.removeEventListener("dragover", overListener);
+      window.removeEventListener("dragleave", leaveListener);
+    };
+  }, []);
+
   return (
     <InputBoxDiv
       className="cursor-text"
@@ -445,7 +467,11 @@ function TipTapEditor(props: TipTapEditorProps) {
       }}
       onDragLeave={(e) => {
         if (e.relatedTarget === null) {
-          setTimeout(() => setShowDragOverMsg(false), 2000);
+          if (e.shiftKey) {
+            setShowDragOverMsg(false);
+          } else {
+            setTimeout(() => setShowDragOverMsg(false), 2000);
+          }
         }
       }}
       onDragEnter={() => {
