@@ -138,8 +138,7 @@ class VsCodeIde implements IDE {
 
       migrate("foldersContextProvider", () => {
         if (
-          !config.contextProviders?.filter((cp) => cp.name === "folder")
-            ?.length
+          !config.contextProviders?.filter((cp) => cp.name === "folder")?.length
         ) {
           config.contextProviders = [
             ...(config.contextProviders || []),
@@ -458,7 +457,9 @@ async function loadFullConfigNode(ide: IDE): Promise<ContinueConfig> {
   if (configJsContents) {
     try {
       // Try config.ts first
-      const module = await require(getConfigJsPath(true));
+      const configJsPath = getConfigJsPath(true);
+      const module = await require(configJsPath);
+      delete require.cache[require.resolve(configJsPath)];
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
       }

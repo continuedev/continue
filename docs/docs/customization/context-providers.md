@@ -131,14 +131,17 @@ interface CustomContextProvider {
 
 As an example, let's say you have a set of internal documents that have been indexed in a vector database. You've set up a simple REST API that allows internal users to query and get back relevant snippets. This context provider will send the query to this server and return the results from the vector database.
 
-```typescript
-const RagContextProvider = {
+```typescript title="~/.continue/config.ts"
+const RagContextProvider: CustomContextProvider = {
   title: "rag",
   displayTitle: "RAG",
   description:
     "Retrieve snippets from our vector database of internal documents",
 
-  getContextItems: async (query: string, extras: ContextProviderExtras) => {
+  getContextItems: async (
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> => {
     const response = await fetch("https://internal_rag_server.com/retrieve", {
       method: "POST",
       body: JSON.stringify({ query }),
@@ -147,7 +150,7 @@ const RagContextProvider = {
     const results = await response.json();
 
     return results.map((result) => ({
-      title: result.title,
+      name: result.title,
       description: result.title,
       content: result.contents,
     }));
@@ -159,7 +162,10 @@ It can then be added in `config.ts` like so:
 
 ```typescript title="~/.continue/config.ts"
 export function modifyConfig(config: Config): Config {
-  config.contextProviders.append(RagContextProvider);
+  if (!config.contextProviders) {
+    config.contextProviders = [];
+  }
+  config.contextProviders.push(RagContextProvider);
   return config;
 }
 ```
@@ -168,7 +174,7 @@ No modification in `config.json` is necessary.
 
 ### Importing outside modules
 
-> Context providers run in a NodeJS environment, but for the time being the `modifyConfig` function will be called both from NodeJS _and_ the browser. This means that if you are importing packages requiring NodeJS, you should dynamically import them inside of the context provider.
+> Context providers run in a NodeJS environment, but for the time being the `modifyConfig` function will be called both from NodeJS _and_ the browser. This means that if you are importing packages requiring NodeJS, you should dynamically import them inside of the context provider (e.g. `const moduleA = await import('./moduleA');`).
 
 To include outside Node modules in your config.ts, run `npm install <module_name>` from the `~/.continue` directory, and then import them in config.ts.
 
