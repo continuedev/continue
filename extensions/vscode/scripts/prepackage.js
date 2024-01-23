@@ -13,6 +13,12 @@ if (args[2] === "--target") {
 (async () => {
   console.log("Packaging extension for target ", target);
 
+  // Copy config_schema.json to config.json in docs
+  fs.copyFileSync(
+    "config_schema.json",
+    path.join("..", "..", "docs", "static", "schemas", "config.json")
+  );
+
   if (!process.cwd().endsWith("vscode")) {
     // This is sometimes run from root dir instead (e.g. in VS Code tasks)
     process.chdir("extensions/vscode");
@@ -84,8 +90,38 @@ if (args[2] === "--target") {
   }
 
   // Copy over native / wasm modules //
-  if (!ghAction()) {
+  if (!ghAction() && fs.existsSync("../bin")) {
     return;
+  }
+
+  // If target doesn't exist, but the bin folder also doesn't, we want to download it once, to help set up the dev environment
+  if (!target) {
+    const os = {
+      aix: "linux",
+      darwin: "darwin",
+      freebsd: "linux",
+      linux: "linux",
+      openbsd: "linux",
+      sunos: "linux",
+      win32: "win32",
+    }[process.platform];
+    const arch = {
+      arm: "arm64",
+      arm64: "arm64",
+      ia32: "x64",
+      loong64: "arm64",
+      mips: "arm64",
+      mipsel: "arm64",
+      ppc: "x64",
+      ppc64: "x64",
+      riscv64: "arm64",
+      s390: "x64",
+      s390x: "x64",
+      x64: "x64",
+    }[process.arch];
+
+    target = `${os}-${arch}`;
+    console.log("Detected target: ", target);
   }
 
   process.chdir("../extensions/vscode");

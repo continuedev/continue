@@ -143,14 +143,6 @@ jobs:
           name: ${{ env.target }}
           path: "extensions/vscode/*.vsix"
 
-      # 6. Upload continue.log as an artifact for debugging of the workflow
-      - name: Upload continue.log
-        uses: actions/upload-artifact@v2
-        with:
-          name: continue-log
-          path: /home/runner/.continue/continue.log
-        if: always()
-
   publish:
     runs-on: ubuntu-latest
     needs:
