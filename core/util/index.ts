@@ -63,6 +63,11 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
     if (lines[i].trim() === "") {
       continue; // hey that's us!
     }
+
+    if (lcp === undefined) {
+      lcp = lines[i].split(lines[i].trim())[0];
+    }
+
     // Iterate through the leading whitespace characters of the current line
     for (let j = 0; j < lcp.length; j++) {
       // If it doesn't have the same whitespace as lcp, then update lcp
