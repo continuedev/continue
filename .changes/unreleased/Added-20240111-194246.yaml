@@ -1,4 +1,0 @@
-project: extensions/vscode
-kind: Added
-body: Add codellama and gemini to free trial, using new server
-time: 2024-01-11T19:42:46.155127-08:00

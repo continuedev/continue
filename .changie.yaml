@@ -26,10 +26,6 @@ newlines:
 envPrefix: CHANGIE_
 
 projects:
-  - label: server
-    key: server
-    changelog: server/CHANGELOG.md
-
   - label: extensions/intellij
     key: extensions/intellij
     changelog: extensions/intellij/CHANGELOG.md
