@@ -93,8 +93,11 @@ const initialState: RootStore["state"] = {
   active: false,
   config: {
     models: [
-      new FreeTrial({ model: "gpt-4", title: "GPT-4" }),
-      new FreeTrial({ model: "gpt-3.5-turbo", title: "GPT-3.5-Turbo" }),
+      new FreeTrial({ model: "gpt-4", title: "GPT-4 (Free Trial)" }),
+      new FreeTrial({
+        model: "gpt-3.5-turbo",
+        title: "GPT-3.5-Turbo (Free Trial)",
+      }),
     ],
     slashCommands: [
       EditSlashCommand,
