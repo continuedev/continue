@@ -172,6 +172,11 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   "continue.optimizeCode": async () => {
     await streamEdit("Optimize this code");
   },
+  "continue.fixGrammar": async () => {
+    await streamEdit(
+      "If there are any grammar or spelling mistakes in this writing, fix them"
+    );
+  },
   "continue.viewLogs": async () => {
     // Open ~/.continue/continue.log
     const logFile = path.join(os.homedir(), ".continue", "continue.log");

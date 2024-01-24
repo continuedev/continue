@@ -90,7 +90,7 @@ if (args[2] === "--target") {
   }
 
   // Copy over native / wasm modules //
-  if (!ghAction() && fs.existsSync("../bin")) {
+  if (!ghAction() && fs.existsSync("./bin")) {
     return;
   }
 
