@@ -627,7 +627,7 @@ export function getSidebarContent(
           break;
         }
         case "getContextItems": {
-          const { name, query, fullInput } = data.message;
+          const { name, query, fullInput, selectedCode } = data.message;
           const config = await configHandler.loadConfig(ide);
           const llm = await llmFromTitle();
           const provider = config.contextProviders?.find(
@@ -653,6 +653,7 @@ export function getSidebarContent(
               embeddingsProvider: config.embeddingsProvider,
               fullInput,
               ide,
+              selectedCode,
             });
             respond({ items: items.map((item) => ({ ...item, id })) });
           } catch (e) {

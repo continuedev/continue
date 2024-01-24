@@ -49,6 +49,7 @@ async function buildConfigTs(browser: boolean) {
       format: browser ? "esm" : "cjs",
       outfile: getConfigJsPath(!browser),
       external: ["fetch", "fs", "path", "os", "child_process"],
+      sourcemap: true,
     });
   } catch (e) {
     console.log(e);

@@ -82,6 +82,7 @@ export interface ContextProviderExtras {
   embeddingsProvider: EmbeddingsProvider;
   llm: ILLM;
   ide: IDE;
+  selectedCode: RangeInFile[];
 }
 
 export interface LoadSubmenuItemsArgs {
