@@ -81,6 +81,10 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
     }
   }
 
+  if (lcp === undefined) {
+    return [s, ""];
+  }
+
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
