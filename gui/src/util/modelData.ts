@@ -440,7 +440,7 @@ const gpt4turbo: ModelPackage = {
   description:
     "A faster, cheaper version of GPT-4 with a longer context length",
   params: {
-    model: "gpt-4-1106-preview",
+    model: "gpt-4-0125-preview",
     contextLength: 128_000,
     title: "GPT-4 Turbo",
   },
