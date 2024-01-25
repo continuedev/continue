@@ -397,7 +397,8 @@ type TemplateType =
   | "openchat"
   | "deepseek"
   | "xwin-coder"
-  | "neural-chat";
+  | "neural-chat"
+  | "llava";
 
 type ModelProvider =
   | "openai"

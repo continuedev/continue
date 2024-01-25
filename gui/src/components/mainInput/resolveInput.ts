@@ -132,13 +132,23 @@ async function resolveEditorContent(
   }
 
   if (slashCommand) {
-    let firstTextIndex = parts.findIndex((part) => part.type === "text");
-    parts[
-      firstTextIndex
-    ].text = `${slashCommand} ${parts[firstTextIndex].text}`;
+    let lastTextIndex = findLastIndex(parts, (part) => part.type === "text");
+    parts[lastTextIndex].text = `${slashCommand} ${parts[lastTextIndex].text}`;
   }
 
   return [contextItems, parts];
+}
+
+function findLastIndex<T>(
+  array: T[],
+  predicate: (value: T, index: number, obj: T[]) => boolean
+): number {
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (predicate(array[i], i, array)) {
+      return i;
+    }
+  }
+  return -1; // if no element satisfies the predicate
 }
 
 function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {

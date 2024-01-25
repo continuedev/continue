@@ -124,6 +124,7 @@ if (args[2] === "--target") {
     target = `${os}-${arch}`;
     console.log("Detected target: ", target);
   }
+  fs.mkdirSync("bin", { recursive: true });
 
   // onnxruntime-node
   await new Promise((resolve, reject) => {

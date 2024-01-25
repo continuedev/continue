@@ -79,13 +79,13 @@ function useChatHandler(dispatch: Dispatch) {
     let slashCommand: SlashCommand | undefined;
     let slashCommandName: string | undefined;
 
-    let firstText =
+    let lastText =
       typeof input === "string"
         ? input
-        : input.filter((part) => part.type === "text")[0]?.text || "";
+        : input.filter((part) => part.type === "text").slice(-1)[0]?.text || "";
 
-    if (firstText.startsWith("/")) {
-      slashCommandName = firstText.split(" ")[0].substring(1);
+    if (lastText.startsWith("/")) {
+      slashCommandName = lastText.split(" ")[0].substring(1);
       slashCommand = slashCommands.find(
         (command) => command.name === slashCommandName
       );
@@ -173,10 +173,10 @@ function useChatHandler(dispatch: Dispatch) {
       };
       const historyItem: ChatHistoryItem = {
         message,
-        contextItems:
-          typeof index === "number"
-            ? history[index].contextItems
-            : contextItems,
+        contextItems,
+        // : typeof index === "number"
+        //   ? history[index].contextItems
+        //   : contextItems,
         editorState,
       };
 
