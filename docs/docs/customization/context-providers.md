@@ -129,7 +129,11 @@ interface CustomContextProvider {
 }
 ```
 
-As an example, let's say you have a set of internal documents that have been indexed in a vector database. You've set up a simple REST API that allows internal users to query and get back relevant snippets. This context provider will send the query to this server and return the results from the vector database.
+As an example, let's say you have a set of internal documents that have been indexed in a vector database. You've set up a simple REST API that allows internal users to query and get back relevant snippets. This context provider will send the query to this server and return the results from the vector database. The return type of `getContextItems` _must_ be an array of objects that have all of the following properties:
+
+- `name`: The name of the context item, which will be displayed as a title
+- `description`: A longer description of the context item
+- `content`: The actual content of the context item, which will be fed to the LLM as context
 
 ```typescript title="~/.continue/config.ts"
 const RagContextProvider: CustomContextProvider = {
