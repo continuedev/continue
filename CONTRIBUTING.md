@@ -56,7 +56,7 @@ Continue is continuously improving, but a feature isn't complete until it is ref
 
 VS Code is assumed for development as Continue is primarily a VS Code tool at the moment. Most of the setup and running is automated through VS Code tasks and launch configurations.
 
-Pre-requisite: you will need `cargo` the rust package manager installed ([get it on rust-lang.org](https://www.rust-lang.org/tools/install)).
+<!-- Pre-requisite: you will need `cargo` the rust package manager installed ([get it on rust-lang.org](https://www.rust-lang.org/tools/install)). -->
 
 1. Clone and open in VS Code the Continue repo `https://github.com/continuedev/continue`
 
@@ -82,11 +82,11 @@ Continue uses [Prettier](https://marketplace.visualstudio.com/items?itemName=esb
 
 ### Writing Slash Commands
 
-A Step can be used as a custom slash command, or called otherwise in a `Policy`. See the [steps README](./server/continuedev/plugins/steps/README.md) to learn how to write a Step.
+See the [slash command documentation](./docs/docs/customization/slash-commands.md) to learn how to write a custom slash command.
 
 ### Writing Context Providers
 
-A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The simplest way to create a `ContextProvider` is to implement the `provide_context_items` method. You can find a great example of this in [GitHubIssuesContextProvider](./server/continuedev/plugins/context_providers/github.py), which allows you to search GitHub Issues in a repo.
+A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The simplest way to create a `ContextProvider` is to implement the `provide_context_items` method. You can find a great example of this in [GitHubIssuesContextProvider](./core/context/providers/GitHubIssuesContextProvider.ts), which allows you to search GitHub Issues in a repo.
 
 ### Adding Models
 
