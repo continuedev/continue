@@ -10,8 +10,7 @@ class HttpContextProvider extends BaseContextProvider {
     title: "http",
     displayTitle: "HTTP",
     description: "Retrieve a context item from a custom server",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   override get description(): ContextProviderDescription {
@@ -21,8 +20,7 @@ class HttpContextProvider extends BaseContextProvider {
       description:
         this.options.description ||
         "Retrieve a context item from a custom server",
-      dynamic: true,
-      requiresQuery: false,
+      type: "normal",
     };
   }
 
@@ -36,7 +34,8 @@ class HttpContextProvider extends BaseContextProvider {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        query,
+        query: query || "",
+        fullInput: extras.fullInput,
       }),
     });
 
@@ -49,7 +48,6 @@ class HttpContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
 }
 
 export default HttpContextProvider;

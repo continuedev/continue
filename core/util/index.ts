@@ -63,6 +63,11 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
     if (lines[i].trim() === "") {
       continue; // hey that's us!
     }
+
+    if (lcp === undefined) {
+      lcp = lines[i].split(lines[i].trim())[0];
+    }
+
     // Iterate through the leading whitespace characters of the current line
     for (let j = 0; j < lcp.length; j++) {
       // If it doesn't have the same whitespace as lcp, then update lcp
@@ -74,6 +79,10 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
         break;
       }
     }
+  }
+
+  if (lcp === undefined) {
+    return [s, ""];
   }
 
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
@@ -109,6 +118,10 @@ export function renderPromptTemplate(
 
 export function getBasename(filepath: string): string {
   return filepath.split(/[\\/]/).pop() || "";
+}
+
+export function getLastNPathParts(filepath: string, n: number): string {
+  return filepath.split(/[\\/]/).slice(-n).join("/");
 }
 
 export function getMarkdownLanguageTagForFile(filepath: string): string {

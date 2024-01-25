@@ -1,4 +1,5 @@
 import { ContextItemWithId, ILLM, SlashCommand } from "../..";
+import { stripImages } from "../../llm/countTokens";
 import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";
 import {
   RangeInFileWithContents,
@@ -50,11 +51,11 @@ export async function getPromptParts(
   let maxTokens = Math.floor(model.contextLength / 2);
 
   const TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = tokenLimit || 1200;
-  if (model.countTokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE) {
-    throw new Error(
-      "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
-    );
-  }
+  // if (model.countTokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE) {
+  //   throw new Error(
+  //     "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
+  //   );
+  // }
 
   const BUFFER_FOR_FUNCTIONS = 400;
   let totalTokens =
@@ -457,7 +458,7 @@ const EditSlashCommand: SlashCommand = {
             4096
           ),
         })) {
-          yield chunk.content;
+          yield stripImages(chunk.content);
         }
       }
 

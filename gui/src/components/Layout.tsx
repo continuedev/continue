@@ -1,7 +1,6 @@
 import {
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
-  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { postToIde } from "core/ide/messaging";
 import { useEffect, useState } from "react";
@@ -201,7 +200,7 @@ const Layout = () => {
           <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
           <Footer>
             <div className="mr-auto flex gap-2 items-center">
-              {localStorage.getItem("ide") === "jetbrains" ||
+              {/* {localStorage.getItem("ide") === "jetbrains" ||
                 localStorage.getItem("hideFeature") === "true" || (
                   <SparklesIcon
                     className="cursor-pointer"
@@ -211,7 +210,7 @@ const Layout = () => {
                     onMouseEnter={() => {
                       dispatch(
                         setBottomMessage(
-                          "🎁 New Feature: Use ⌘⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)"
+                          `🎁 New Feature: Use ${getMetaKeyLabel()}⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)`
                         )
                       );
                     }}
@@ -228,7 +227,7 @@ const Layout = () => {
                     height="1.3em"
                     color="yellow"
                   />
-                )}
+                )} */}
               <ModelSelect />
               {indexingProgress >= 1 && // Would take up too much space together with indexing progress
                 defaultModel?.providerName === "free-trial" &&

@@ -38,7 +38,7 @@ export function getMetaKeyLabel(): string {
     case "windows":
       return "^";
     default:
-      return "⌘";
+      return "^";
   }
 }
 

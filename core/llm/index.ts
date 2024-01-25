@@ -10,10 +10,11 @@ import {
   RequestOptions,
   TemplateType,
 } from "..";
-
 import {
   CONTEXT_LENGTH_FOR_MODEL,
-  DEFAULT_ARGS
+  DEFAULT_ARGS,
+  DEFAULT_CONTEXT_LENGTH,
+  DEFAULT_MAX_TOKENS,
 } from "./constants";
 import {
   compileChatMessages,
@@ -52,6 +53,25 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "openai",
   "ollama",
 ];
+
+const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = ["openai", "ollama"];
+
+export function modelSupportsImages(
+  provider: ModelProvider,
+  model: string
+): boolean {
+  if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
+    return false;
+  }
+  if (model.includes("llava")) {
+    return true;
+  }
+  if (["gpt-4-vision-preview"].includes(model)) {
+    return true;
+  }
+
+  return false;
+}
 
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
@@ -202,6 +222,10 @@ export abstract class BaseLLM implements ILLM {
     return (this.constructor as typeof BaseLLM).providerName;
   }
 
+  supportsImages(): boolean {
+    return modelSupportsImages(this.providerName, this.model);
+  }
+
   uniqueId: string;
   model: string;
 
@@ -243,11 +267,11 @@ export abstract class BaseLLM implements ILLM {
     this.uniqueId = options.uniqueId || "None";
     this.model = options.model;
     this.systemMessage = options.systemMessage;
-    this.contextLength = options.contextLength || 4096;
+    this.contextLength = options.contextLength || DEFAULT_CONTEXT_LENGTH;
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",
-      maxTokens: options.completionOptions?.maxTokens || 1024,
+      maxTokens: options.completionOptions?.maxTokens || DEFAULT_MAX_TOKENS,
     };
     this.requestOptions = options.requestOptions;
     this.promptTemplates = {
@@ -286,14 +310,16 @@ export abstract class BaseLLM implements ILLM {
       options.model !== this.model &&
       options.model in CONTEXT_LENGTH_FOR_MODEL
     ) {
-      contextLength = CONTEXT_LENGTH_FOR_MODEL[options.model] || 4096;
+      contextLength =
+        CONTEXT_LENGTH_FOR_MODEL[options.model] || DEFAULT_CONTEXT_LENGTH;
     }
 
     return compileChatMessages(
       options.model,
       messages,
       contextLength,
-      options.maxTokens,
+      options.maxTokens || DEFAULT_MAX_TOKENS,
+      this.supportsImages(),
       undefined,
       functions,
       this.systemMessage
@@ -405,7 +431,7 @@ export abstract class BaseLLM implements ILLM {
       completionOptions.model,
       this.contextLength,
       prompt,
-      completionOptions.maxTokens
+      completionOptions.maxTokens || DEFAULT_MAX_TOKENS
     );
 
     if (!raw) {
@@ -440,7 +466,7 @@ export abstract class BaseLLM implements ILLM {
       completionOptions.model,
       this.contextLength,
       prompt,
-      completionOptions.maxTokens
+      completionOptions.maxTokens || DEFAULT_MAX_TOKENS
     );
 
     if (!raw) {

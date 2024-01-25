@@ -11,8 +11,7 @@ class CodebaseContextProvider extends BaseContextProvider {
     title: "codebase",
     displayTitle: "Codebase",
     description: "Automatically find relevant files",
-    dynamic: false,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(

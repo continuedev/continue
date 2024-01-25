@@ -4,7 +4,6 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import { ExtensionIde } from "../../ide";
 
 interface Directory {
   name: string;
@@ -40,21 +39,18 @@ class FileTreeContextProvider extends BaseContextProvider {
     title: "tree",
     displayTitle: "File Tree",
     description: "Attach a representation of the file tree",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
-    const workspaceDirs = await new ExtensionIde().getWorkspaceDirs();
+    const workspaceDirs = await extras.ide.getWorkspaceDirs();
     let trees = [];
 
     for (let workspaceDir of workspaceDirs) {
-      const contents = await new ExtensionIde().listWorkspaceContents(
-        workspaceDir
-      );
+      const contents = await extras.ide.listWorkspaceContents(workspaceDir);
 
       const subDirTree: Directory = {
         name: splitPath(workspaceDir).pop() || "",
@@ -94,7 +90,6 @@ class FileTreeContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
 }
 
 export default FileTreeContextProvider;

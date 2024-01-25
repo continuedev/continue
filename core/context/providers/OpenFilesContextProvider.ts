@@ -4,7 +4,6 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import { ExtensionIde } from "../../ide";
 import { getBasename } from "../../util";
 
 class OpenFilesContextProvider extends BaseContextProvider {
@@ -12,16 +11,17 @@ class OpenFilesContextProvider extends BaseContextProvider {
     title: "open",
     displayTitle: "Open Files",
     description: "Reference the current open files",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
-    const ide = new ExtensionIde();
-    const openFiles = await ide.getOpenFiles();
+    const ide = extras.ide;
+    const openFiles = this.options?.onlyPinned
+      ? await ide.getPinnedFiles()
+      : await ide.getOpenFiles();
     return await Promise.all(
       openFiles.map(async (filepath: string) => {
         return {
@@ -34,7 +34,6 @@ class OpenFilesContextProvider extends BaseContextProvider {
       })
     );
   }
-  async load(): Promise<void> {}
 }
 
 export default OpenFilesContextProvider;

@@ -8,11 +8,19 @@ keywords: [talk, embeddings, codebase, experimental]
 
 Continue indexes your codebase so that it can later automatically pull in the most relevant context from throughout your workspace. This is done via a combination of embeddings-based retrieval and keyword search. By default, all embeddings are calculated locally with `all-MiniLM-L6-v2` and stored locally in `~/.continue/index`.
 
-## How to use codebase retrieval
+<!-- ## How to use codebase retrieval -->
 
-Currently, the codebase retrieval feature is available as the "codebase" context provider. You can use it by typing `@codebase` in the input box, and then asking a question. The contents of the input box will be compared with the embeddings from the rest of the codebase to determine relevant files.
+Currently, the codebase retrieval feature is available as the "codebase" and "folder" context providers. You can use them by typing `@codebase` or `@folder` in the input box, and then asking a question. The contents of the input box will be compared with the embeddings from the rest of the codebase (or folder) to determine relevant files.
 
-There are a few options that let you configure the behavior of the codebase context provider. These can be set in `config.json`:
+<!-- Here are some common use cases where it can be useful:
+
+### Asking high-level codebase questions
+
+-  -->
+
+## Configuration
+
+There are a few options that let you configure the behavior of the codebase context provider. These can be set in `config.json`, and are the same for the codebase and folder context providers:
 
 ```json title="~/.continue/config.json"
 {
@@ -72,6 +80,8 @@ We also support other methods of generating embeddings, which can be configured 
 ```
 
 ### OpenAI
+
+OpenAI's [ada-002 embeddings](https://platform.openai.com/docs/guides/embeddings) are high dimensional embeddings that give great performance on both text and code.
 
 ```json title="~/.continue/config.json"
 {

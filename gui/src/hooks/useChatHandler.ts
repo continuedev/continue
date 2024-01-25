@@ -6,11 +6,13 @@ import {
   ChatHistoryItem,
   ChatMessage,
   LLMReturnValue,
+  MessageContent,
   SlashCommand,
 } from "core";
 import { ExtensionIde } from "core/ide";
 import { ideStreamRequest, llmStreamChat } from "core/ide/messaging";
 import { constructMessages } from "core/llm/constructMessages";
+import { stripImages } from "core/llm/countTokens";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
@@ -75,12 +77,18 @@ function useChatHandler(dispatch: Dispatch) {
   }
 
   const getSlashCommandForInput = (
-    input: string
+    input: MessageContent
   ): [SlashCommand, string] | undefined => {
     let slashCommand: SlashCommand | undefined;
     let slashCommandName: string | undefined;
-    if (input.startsWith("/")) {
-      slashCommandName = input.split(" ")[0].substring(1);
+
+    let firstText =
+      typeof input === "string"
+        ? input
+        : input.filter((part) => part.type === "text")[0]?.text || "";
+
+    if (firstText.startsWith("/")) {
+      slashCommandName = firstText.split(" ")[0].substring(1);
       slashCommand = slashCommands.find(
         (command) => command.name === slashCommandName
       );
@@ -90,7 +98,7 @@ function useChatHandler(dispatch: Dispatch) {
     }
 
     // Convert to actual slash command object with runnable function
-    return [slashCommand, input];
+    return [slashCommand, stripImages(input)];
   };
 
   async function* _streamSlashCommandFromVsCode(
@@ -206,6 +214,12 @@ function useChatHandler(dispatch: Dispatch) {
         await _streamNormalInput(messages);
       } else {
         const [slashCommand, commandInput] = commandAndInput;
+        posthog.capture("step run", {
+          step_name: slashCommand.name,
+          params: {
+            user_input: commandInput,
+          },
+        });
         await _streamSlashCommand(messages, slashCommand, commandInput);
       }
     } catch (e) {

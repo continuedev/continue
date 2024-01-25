@@ -49,6 +49,7 @@ async function buildConfigTs(browser: boolean) {
       format: browser ? "esm" : "cjs",
       outfile: getConfigJsPath(!browser),
       external: ["fetch", "fs", "path", "os", "child_process"],
+      sourcemap: true,
     });
   } catch (e) {
     console.log(e);
@@ -138,8 +139,7 @@ class VsCodeIde implements IDE {
 
       migrate("foldersContextProvider", () => {
         if (
-          !config.contextProviders?.filter((cp) => cp.name === "folder")
-            ?.length
+          !config.contextProviders?.filter((cp) => cp.name === "folder")?.length
         ) {
           config.contextProviders = [
             ...(config.contextProviders || []),
@@ -334,6 +334,14 @@ class VsCodeIde implements IDE {
     return await ideProtocolClient.getOpenFiles();
   }
 
+  async getPinnedFiles(): Promise<string[]> {
+    const tabArray = vscode.window.tabGroups.all[0].tabs;
+
+    return tabArray
+      .filter((t) => t.isPinned)
+      .map((t) => (t.input as vscode.TabInputText).uri.fsPath);
+  }
+
   private async _searchDir(query: string, dir: string): Promise<string> {
     const p = child_process.spawn(
       path.join(
@@ -458,7 +466,9 @@ async function loadFullConfigNode(ide: IDE): Promise<ContinueConfig> {
   if (configJsContents) {
     try {
       // Try config.ts first
-      const module = await require(getConfigJsPath(true));
+      const configJsPath = getConfigJsPath(true);
+      const module = await require(configJsPath);
+      delete require.cache[require.resolve(configJsPath)];
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
       }

@@ -1,5 +1,5 @@
 import { ChatMessageRole, SlashCommand } from "../..";
-import { pruneStringFromBottom } from "../../llm/countTokens";
+import { pruneStringFromBottom, stripImages } from "../../llm/countTokens";
 
 const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
 const PROMPT = (
@@ -114,7 +114,7 @@ const StackOverflowSlashCommand: SlashCommand = {
       })),
       { role: "user", content: PROMPT(input) },
     ])) {
-      yield chunk.content;
+      yield stripImages(chunk.content);
     }
   },
 };

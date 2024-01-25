@@ -107,6 +107,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
+  getPinnedFiles(): Promise<string[]> {
+    return Promise.resolve([]);
+  }
+
   async getSearchResults(query: string): Promise<string> {
     return "";
   }

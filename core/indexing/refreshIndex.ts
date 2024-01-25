@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
+import { IndexingProgressUpdate } from "..";
 import { getIndexSqlitePath } from "../util/paths";
 import {
   CodebaseIndex,
@@ -323,7 +324,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     tag: IndexTag,
     results: RefreshIndexResults,
     _: MarkCompleteCallback
-  ): AsyncGenerator<{ progress: number; desc: string }> {
+  ): AsyncGenerator<IndexingProgressUpdate> {
     const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];
     await Promise.all([

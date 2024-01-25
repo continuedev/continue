@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.20",
+  "version": "0.9.29",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -124,7 +124,7 @@
       {
         "command": "continue.newSession",
         "category": "Continue",
-        "title": "New Session (⌘ M)",
+        "title": "New Session",
         "icon": "$(add)"
       },
       {
@@ -152,6 +152,11 @@
         "command": "continue.optimizeCode",
         "category": "Continue",
         "title": "Optimize this Code"
+      },
+      {
+        "command": "continue.fixGrammar",
+        "category": "Continue",
+        "title": "Fix Grammar / Spelling"
       }
     ],
     "keybindings": [
@@ -241,6 +246,11 @@
           "command": "continue.optimizeCode",
           "group": "Continue",
           "when": "editorHasSelection"
+        },
+        {
+          "command": "continue.fixGrammar",
+          "group": "Continue",
+          "when": "editorHasSelection && editorLangId == 'markdown'"
         }
       ],
       "explorer/context": [

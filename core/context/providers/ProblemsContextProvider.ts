@@ -4,7 +4,6 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import { ExtensionIde } from "../../ide";
 import { getBasename } from "../../util";
 
 class ProblemsContextProvider extends BaseContextProvider {
@@ -12,15 +11,14 @@ class ProblemsContextProvider extends BaseContextProvider {
     title: "problems",
     displayTitle: "Problems",
     description: "Reference problems in the current file",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
-    const ide = new ExtensionIde();
+    const ide = extras.ide;
     const problems = await ide.getProblems();
 
     const items = await Promise.all(
@@ -46,7 +44,6 @@ class ProblemsContextProvider extends BaseContextProvider {
 
     return items;
   }
-  async load(): Promise<void> {}
 }
 
 export default ProblemsContextProvider;

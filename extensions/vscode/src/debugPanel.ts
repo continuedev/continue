@@ -1,7 +1,10 @@
-import { DiffLine, FileEdit, ModelDescription } from "core";
+import { ContextItemId, DiffLine, FileEdit, ModelDescription } from "core";
+import { indexDocs } from "core/indexing/docs";
+import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import { readFileSync, writeFileSync } from "fs";
 import * as io from "socket.io-client";
+import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
@@ -432,6 +435,10 @@ export function getSidebarContent(
           respond(await ide.getOpenFiles());
           break;
         }
+        case "getPinnedFiles": {
+          respond(await ide.getPinnedFiles());
+          break;
+        }
         // Other
         case "errorPopup": {
           vscode.window
@@ -604,6 +611,99 @@ export function getSidebarContent(
             respond({ content: update });
           }
           respond({ done: true });
+          break;
+        }
+        case "loadSubmenuItems": {
+          const { title } = data.message;
+          const config = await configHandler.loadConfig(ide);
+          const provider = config.contextProviders?.find(
+            (p) => p.description.title === title
+          );
+          if (!provider) {
+            vscode.window.showErrorMessage(
+              `Unknown provider ${title}. Existing providers: ${config.contextProviders
+                ?.map((p) => p.description.title)
+                .join(", ")}`
+            );
+            respond({ items: [] });
+            break;
+          }
+
+          try {
+            const items = await provider.loadSubmenuItems({ ide });
+            respond({ items });
+          } catch (e) {
+            vscode.window.showErrorMessage(
+              `Error loading submenu items from ${title}: ${e}`
+            );
+            respond({ items: [] });
+          }
+          break;
+        }
+        case "getContextItems": {
+          const { name, query, fullInput, selectedCode } = data.message;
+          const config = await configHandler.loadConfig(ide);
+          const llm = await llmFromTitle();
+          const provider = config.contextProviders?.find(
+            (p) => p.description.title === name
+          );
+          if (!provider) {
+            vscode.window.showErrorMessage(
+              `Unknown provider ${name}. Existing providers: ${config.contextProviders
+                ?.map((p) => p.description.title)
+                .join(", ")}`
+            );
+            respond({ items: [] });
+            break;
+          }
+
+          try {
+            const id: ContextItemId = {
+              providerTitle: provider.description.title,
+              itemId: uuidv4(),
+            };
+            const items = await provider.getContextItems(query, {
+              llm,
+              embeddingsProvider: config.embeddingsProvider,
+              fullInput,
+              ide,
+              selectedCode,
+            });
+            respond({ items: items.map((item) => ({ ...item, id })) });
+          } catch (e) {
+            vscode.window.showErrorMessage(
+              `Error getting context items from ${name}: ${e}`
+            );
+            respond({ items: [] });
+          }
+          break;
+        }
+        case "addDocs": {
+          const { url, title } = data;
+          const embeddingsProvider = new TransformersJsEmbeddingsProvider();
+          vscode.window.withProgress(
+            {
+              location: vscode.ProgressLocation.Notification,
+              title: `Indexing ${title}`,
+              cancellable: false,
+            },
+            async (progress) => {
+              for await (const update of indexDocs(
+                title,
+                new URL(url),
+                embeddingsProvider
+              )) {
+                progress.report({
+                  increment: update.progress * 100,
+                  message: update.desc,
+                });
+              }
+
+              vscode.window.showInformationMessage(
+                `🎉 Successfully indexed ${title}`
+              );
+            }
+          );
           break;
         }
       }

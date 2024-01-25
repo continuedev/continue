@@ -32,7 +32,10 @@ function useHistory(dispatch: Dispatch) {
     dispatch(newSession());
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    let title = truncateText(stateCopy.history[0].message.content, 50);
+    let title = truncateText(
+      stripImages(stateCopy.history[0].message.content),
+      50
+    );
     if (!disableSessionTitles) {
       let fullContent = "";
       for await (const { content } of llmStreamChat(

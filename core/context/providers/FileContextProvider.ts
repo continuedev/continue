@@ -3,16 +3,17 @@ import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
+  ContextSubmenuItem,
+  LoadSubmenuItemsArgs,
 } from "../..";
-import { ExtensionIde } from "../../ide";
+import { getBasename, getLastNPathParts } from "../../util";
 
 class FileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "file",
     displayTitle: "Files",
     description: "Type to search",
-    dynamic: false,
-    requiresQuery: false,
+    type: "submenu",
   };
 
   async getContextItems(
@@ -21,7 +22,7 @@ class FileContextProvider extends BaseContextProvider {
   ): Promise<ContextItem[]> {
     // Assume the query is a filepath
     query = query.trim();
-    const content = await new ExtensionIde().readFile(query);
+    const content = await extras.ide.readFile(query);
     return [
       {
         name: query.split(/[\\/]/).pop() || query,
@@ -30,7 +31,25 @@ class FileContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
+
+  async loadSubmenuItems(
+    args: LoadSubmenuItemsArgs
+  ): Promise<ContextSubmenuItem[]> {
+    const workspaceDirs = await args.ide.getWorkspaceDirs();
+    const results = await Promise.all(
+      workspaceDirs.map((dir) => {
+        return args.ide.listWorkspaceContents(dir);
+      })
+    );
+    const files = results.flat();
+    return files.map((file) => {
+      return {
+        id: file,
+        title: getBasename(file),
+        description: getLastNPathParts(file, 2),
+      };
+    });
+  }
 }
 
 export default FileContextProvider;

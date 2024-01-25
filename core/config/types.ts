@@ -13,6 +13,11 @@ declare global {
     index: number; // Index of the chunk in the document at filepath
   }
   
+  export interface IndexingProgressUpdate {
+    progress: number;
+    desc: string;
+  }
+  
   export interface LLMReturnValue {
     prompt: string;
     completion: string;
@@ -61,30 +66,49 @@ declare global {
     ): Promise<ChatMessage>;
   
     countTokens(text: string): number;
+  
+    supportsImages(): boolean;
   }
+  
+  export type ContextProviderType = "normal" | "query" | "submenu";
   
   export interface ContextProviderDescription {
     title: string;
     displayTitle: string;
     description: string;
-    dynamic: boolean;
-    requiresQuery: boolean;
+    type: ContextProviderType;
   }
   
-  interface ContextProviderExtras {
+  export interface ContextProviderExtras {
     fullInput: string;
-    embeddingsProvider?: EmbeddingsProvider;
+    embeddingsProvider: EmbeddingsProvider;
     llm: ILLM;
+    ide: IDE;
+    selectedCode: RangeInFile[];
+  }
+  
+  export interface LoadSubmenuItemsArgs {
+    ide: IDE;
   }
   
   export interface CustomContextProvider {
     title: string;
     displayTitle?: string;
     description?: string;
+    type?: ContextProviderType;
     getContextItems(
       query: string,
       extras: ContextProviderExtras
     ): Promise<ContextItem[]>;
+    loadSubmenuItems?: (
+      args: LoadSubmenuItemsArgs
+    ) => Promise<ContextSubmenuItem[]>;
+  }
+  
+  export interface ContextSubmenuItem {
+    id: string;
+    title: string;
+    description: string;
   }
   
   export interface IContextProvider {
@@ -94,6 +118,8 @@ declare global {
       query: string,
       extras: ContextProviderExtras
     ): Promise<ContextItem[]>;
+  
+    loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
   }
   
   export interface PersistedSessionInfo {
@@ -134,24 +160,23 @@ declare global {
     message: string;
   }
   
-  export interface CompletionOptions {
+  export interface CompletionOptions extends BaseCompletionOptions {
     model: string;
-  
-    maxTokens: number;
-    temperature?: number;
-    topP?: number;
-    topK?: number;
-    minP?: number;
-    presencePenalty?: number;
-    frequencyPenalty?: number;
-    stop?: string[];
   }
   
   export type ChatMessageRole = "user" | "assistant" | "system";
   
+  export interface MessagePart {
+    type: "text" | "imageUrl";
+    text?: string;
+    imageUrl?: { url: string };
+  }
+  
+  export type MessageContent = string | MessagePart[];
+  
   export interface ChatMessage {
     role: ChatMessageRole;
-    content: string;
+    content: MessageContent;
   }
   
   export interface ContextItemId {
@@ -187,20 +212,11 @@ declare global {
   
   // LLM
   
-  export interface LLMFullCompletionOptions {
+  export interface LLMFullCompletionOptions extends BaseCompletionOptions {
     raw?: boolean;
     log?: boolean;
   
     model?: string;
-  
-    temperature?: number;
-    topP?: number;
-    topK?: number;
-    minP?: number;
-    presencePenalty?: number;
-    frequencyPenalty?: number;
-    stop?: string[];
-    maxTokens?: number;
   }
   export interface LLMOptions {
     model: string;
@@ -265,12 +281,19 @@ declare global {
     line: string;
   }
   
+  export class Problem {
+    filepath: string;
+    range: Range;
+    message: string;
+  }
+  
   export interface IDE {
     getSerializedConfig(): Promise<SerializedContinueConfig>;
     getConfigJsUrl(): Promise<string | undefined>;
     getDiff(): Promise<string>;
     getTerminalContents(): Promise<string>;
     listWorkspaceContents(directory?: string): Promise<string[]>;
+    listFolders(): Promise<string[]>;
     getWorkspaceDirs(): Promise<string[]>;
     writeFile(path: string, contents: string): Promise<void>;
     showVirtualFile(title: string, contents: string): Promise<void>;
@@ -291,8 +314,10 @@ declare global {
       diffLine: DiffLine
     ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
+    getPinnedFiles(): Promise<string[]>;
     getSearchResults(query: string): Promise<string>;
     subprocess(command: string): Promise<[string, string]>;
+    getProblems(filepath?: string | undefined): Promise<Problem[]>;
   
     // Embeddings
     /**
@@ -305,10 +330,9 @@ declare global {
       tags: string[]
     ): void;
     retrieveChunks(
-      v: number[],
+      text: string,
       n: number,
-      tags: string[],
-      providerId: string
+      directory: string | undefined
     ): Promise<Chunk[]>;
   }
   
@@ -320,7 +344,7 @@ declare global {
     addContextItem: (item: ContextItemWithId) => void;
     history: ChatMessage[];
     input: string;
-    params?: any;
+    params?: { [key: string]: any } | undefined;
     contextItems: ContextItemWithId[];
   }
   
@@ -359,12 +383,15 @@ declare global {
     | "url"
     | "tree"
     | "http"
-    | "codebase";
+    | "codebase"
+    | "problems"
+    | "folder";
   
   type TemplateType =
     | "llama2"
     | "alpaca"
     | "zephyr"
+    | "phi2"
     | "phind"
     | "anthropic"
     | "chatml"
@@ -373,7 +400,7 @@ declare global {
     | "deepseek"
     | "xwin-coder"
     | "neural-chat";
-
+  
   type ModelProvider =
     | "openai"
     | "free-trial"
@@ -410,6 +437,7 @@ declare global {
     | "codellama-7b"
     | "codellama-13b"
     | "codellama-34b"
+    | "phi2"
     | "phind-codellama-34b"
     | "wizardcoder-7b"
     | "wizardcoder-13b"
@@ -468,8 +496,9 @@ declare global {
     minP?: number;
     presencePenalty?: number;
     frequencyPenalty?: number;
+    mirostat?: number;
     stop?: string[];
-    maxTokens: number;
+    maxTokens?: number;
   }
   
   export interface ModelDescription {
@@ -556,9 +585,9 @@ declare global {
     disableSessionTitles?: boolean;
     disableIndexing?: boolean;
     userToken?: string;
-    embeddingsProvider?: EmbeddingsProvider;
+    embeddingsProvider: EmbeddingsProvider;
   }
-  
+      
 }
 
 export {};
