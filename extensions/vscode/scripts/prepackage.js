@@ -89,6 +89,7 @@ if (args[2] === "--target") {
   }
 
   process.chdir("../extensions/vscode");
+  fs.mkdirSync("bin", { recursive: true });
 
   // onnxruntime-node
   await new Promise((resolve, reject) => {

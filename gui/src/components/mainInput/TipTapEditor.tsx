@@ -467,7 +467,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       onClick={() => {
         editor && editor.commands.focus();
       }}
-      draggable={true}
       onDragOver={(event) => {
         event.preventDefault();
         setShowDragOverMsg(true);

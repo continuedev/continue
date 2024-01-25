@@ -16,10 +16,14 @@ export function removeQuotesAndEscapes(output: string): string {
   output = output.replace("\\n", "\n");
   output = output.replace("\\t", "\t");
   output = output.replace("\\\\", "\\");
-  if (
+  while (
     (output.startsWith('"') && output.endsWith('"')) ||
     (output.startsWith("'") && output.endsWith("'"))
   ) {
+    output = output.slice(1, -1);
+  }
+
+  while (output.startsWith("`") && output.endsWith("`")) {
     output = output.slice(1, -1);
   }
 
