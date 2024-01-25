@@ -27,6 +27,7 @@ import {
   chatmlTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
+  llavaTemplateMessages,
   neuralChatTemplateMessages,
   openchatTemplateMessages,
   phi2TemplateMessages,
@@ -84,6 +85,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("gemini")
   ) {
     return undefined;
+  }
+
+  if (lower.includes("llava")) {
+    return "llava";
   }
 
   if (lower.includes("xwin")) {
@@ -164,6 +169,7 @@ function autodetectTemplateFunction(
       openchat: openchatTemplateMessages,
       "xwin-coder": xWinCoderTemplateMessages,
       "neural-chat": neuralChatTemplateMessages,
+      llava: llavaTemplateMessages,
       none: null,
     };
 

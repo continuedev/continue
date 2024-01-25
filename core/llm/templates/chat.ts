@@ -69,6 +69,26 @@ function anthropicTemplateMessages(messages: ChatMessage[]): string {
   return prompt;
 }
 
+function llavaTemplateMessages(msgs: ChatMessage[]): string {
+  `A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.
+USER: <image>{prompt}
+ASSISTANT:`;
+
+  let prompt =
+    "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.";
+
+  for (const msg of msgs) {
+    prompt += msg.role === "user" ? "USER: <image>" : "ASSISTANT: ";
+    prompt += msg.content;
+
+    prompt += "\n";
+  }
+
+  prompt += "ASSISTANT: ";
+
+  return prompt;
+}
+
 function zephyrTemplateMessages(msgs: ChatMessage[]): string {
   let prompt = "";
 
@@ -249,6 +269,7 @@ export {
   chatmlTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
+  llavaTemplateMessages,
   neuralChatTemplateMessages,
   openchatTemplateMessages,
   phi2TemplateMessages,
