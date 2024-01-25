@@ -11,6 +11,7 @@
     - [Environment Setup](#environment-setup)
     - [Writing Slash Commands](#writing-slash-commands)
     - [Writing Context Providers](#writing-context-providers)
+    - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
 - [📐 Continue Architecture](#-continue-architecture)
   - [Continue VS Code Extension](#continue-vs-code-extension)
@@ -87,6 +88,19 @@ A Step can be used as a custom slash command, or called otherwise in a `Policy`.
 ### Writing Context Providers
 
 A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The simplest way to create a `ContextProvider` is to implement the `provide_context_items` method. You can find a great example of this in [GitHubIssuesContextProvider](./server/continuedev/plugins/context_providers/github.py), which allows you to search GitHub Issues in a repo.
+
+### Adding an LLM Provider
+
+Continue has support for more than a dozen different LLM "providers", making it easy to use models running on OpenAI, Ollama, Together, LM Studio, and more. You can find all of the existing providers [here](https://github.com/continuedev/continue/tree/main/core/llm/llms), and if you see one missing, you can add it with the following steps:
+
+1. Create a new file in the `core/llm/llms` directory. The name of the file should be the name of the provider, and it should export a class that extends `BaseLLM`. This class should contain the following minimal implementation. We recommend viewing pre-existing providers for more details. The [LlamaCpp Provider](./core/llm/llms/LlamaCpp.ts) is a good simple example.
+
+- `providerName` - the identifier for your provider
+- At least one of `_streamComplete` or `_streamChat` - This is the function that makes the request to the API and returns the streamed response. You only need to implement one because Continue can automatically convert between "chat" and "raw completion".
+
+2. Add your provider to the `LLMs` array in [core/llm/llms/index.ts](./core/llm/llms/index.ts).
+3. If your provider supports images, add it to the `PROVIDER_SUPPORTS_IMAGES` array in [core/llm/index.ts](./core/llm/index.ts).
+4. Add the necessary JSON Schema types to [`config_schema.json`](./extensions/vscode/config_schema.json). This makes sure that Intellisense shows users what options are available for your provider when they are editing `config.json`.
 
 ### Adding Models
 
