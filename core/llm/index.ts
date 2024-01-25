@@ -56,7 +56,12 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "ollama",
 ];
 
-const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = ["openai", "ollama"];
+const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
+  "openai",
+  "ollama",
+  "google-palm",
+  "free-trial",
+];
 
 export function modelSupportsImages(
   provider: ModelProvider,
@@ -65,10 +70,19 @@ export function modelSupportsImages(
   if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
     return false;
   }
+
   if (model.includes("llava")) {
     return true;
   }
+
   if (["gpt-4-vision-preview"].includes(model)) {
+    return true;
+  }
+
+  if (
+    model === "gemini-ultra" &&
+    (provider === "google-palm" || provider === "free-trial")
+  ) {
     return true;
   }
 

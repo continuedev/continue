@@ -386,7 +386,7 @@
                   "gpt-4",
                   "phind-codellama-34b",
                   "gemini-pro",
-                  "mistral-medium"
+                  "gpt-4-vision-preview"
                 ]
               }
             }

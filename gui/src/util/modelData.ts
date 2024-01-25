@@ -55,7 +55,7 @@ const contextLengthInput: InputDescriptor = {
   inputType: CollectInputType.number,
   key: "contextLength",
   label: "Context Length",
-  defaultValue: 2048,
+  defaultValue: undefined,
   required: false,
 };
 const temperatureInput: InputDescriptor = {
@@ -173,7 +173,7 @@ const codeLlamaInstruct: ModelPackage = {
   params: {
     title: "CodeLlama-7b",
     model: "codellama-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   icon: "meta.png",
   dimensions: [
@@ -206,7 +206,7 @@ const llama2Chat: ModelPackage = {
   params: {
     title: "Llama2-7b",
     model: "llama2-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   icon: "meta.png",
   dimensions: [
@@ -240,7 +240,7 @@ const wizardCoder: ModelPackage = {
   params: {
     title: "WizardCoder-7b",
     model: "wizardcoder-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   icon: "wizardlm.png",
   dimensions: [
@@ -273,7 +273,7 @@ const phindCodeLlama: ModelPackage = {
   params: {
     title: "Phind CodeLlama",
     model: "phind-codellama-34b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate", "freetrial"],
 };
@@ -383,7 +383,7 @@ const zephyr: ModelPackage = {
   params: {
     title: "Zephyr",
     model: "zephyr-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   icon: "mistral.png",
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
@@ -396,7 +396,7 @@ const deepseek: ModelPackage = {
   params: {
     title: "DeepSeek",
     model: "deepseek-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   providerOptions: ["lmstudio", "llamacpp"],
 };
@@ -407,7 +407,7 @@ const codeup: ModelPackage = {
   params: {
     title: "CodeUp",
     model: "codeup-13b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
@@ -419,7 +419,7 @@ const neuralChat: ModelPackage = {
   params: {
     title: "NeuralChat",
     model: "neural-chat-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
@@ -443,7 +443,6 @@ const gpt4turbo: ModelPackage = {
     model: "gpt-4-1106-preview",
     contextLength: 128_000,
     title: "GPT-4 Turbo",
-    apiKey: "",
   },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
@@ -455,8 +454,20 @@ const gpt4: ModelPackage = {
   params: {
     model: "gpt-4",
     contextLength: 8096,
-    apiKey: "",
     title: "GPT-4",
+  },
+  providerOptions: ["openai", "freetrial"],
+  icon: "openai.png",
+};
+
+const gpt4vision: ModelPackage = {
+  title: "GPT-4 Vision",
+  description:
+    "A faster version of GPT-4 with longer context length and image support",
+  params: {
+    model: "gpt-4-vision-preview",
+    contextLength: 128_000,
+    title: "GPT-4 Vision",
   },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
@@ -470,7 +481,6 @@ const gpt35turbo: ModelPackage = {
     model: "gpt-3.5-turbo",
     contextLength: 8096,
     title: "GPT-3.5-Turbo",
-    apiKey: "",
   },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
@@ -529,7 +539,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
     icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
-    packages: [gpt4, gpt35turbo, gpt4turbo],
+    packages: [gpt4, gpt35turbo, gpt4turbo, gpt4vision],
     collectInputFor: [
       {
         inputType: CollectInputType.text,
@@ -795,6 +805,7 @@ After it's up and running, you can start using Continue.`,
     packages: [
       { ...gpt4, title: "GPT-4 (trial)" },
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
+      { ...gpt4vision, title: "GPT-4 Vision (trial)" },
       { ...phindCodeLlama, title: "Phind CodeLlama (trial)" },
       { ...gemini, title: "Gemini Pro (trial)" },
     ],

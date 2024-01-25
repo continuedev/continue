@@ -428,6 +428,7 @@ export type ModelName =
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
   | "gpt-4-1106-preview"
+  | "gpt-4-vision-preview"
   // Open Source
   | "mistral-7b"
   | "mistral-8x7b"
