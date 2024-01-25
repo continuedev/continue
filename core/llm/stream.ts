@@ -9,20 +9,12 @@ export async function* streamResponse(
     throw new Error(`No response body returned.`);
   }
 
-  const stream = response.body;
+  const stream = response.body as any;
 
-  const reader = stream.getReader();
   const decoder = new TextDecoder("utf-8");
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
 
-    if (value) {
-      // @ts-ignore
-      yield decoder.decode(value);
-    }
+  for await (const chunk of stream) {
+    yield decoder.decode(chunk);
   }
 }
 

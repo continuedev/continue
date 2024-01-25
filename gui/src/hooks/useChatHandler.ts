@@ -9,7 +9,7 @@ import {
   SlashCommand,
 } from "core";
 import { ExtensionIde } from "core/ide";
-import { ideStreamRequest } from "core/ide/messaging";
+import { ideStreamRequest, llmStreamChat } from "core/ide/messaging";
 import { constructMessages } from "core/llm/constructMessages";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
@@ -54,11 +54,14 @@ function useChatHandler(dispatch: Dispatch) {
   }, [active]);
 
   async function _streamNormalInput(messages: ChatMessage[]) {
-    const gen = defaultModel.streamChat(messages);
+    const abortController = new AbortController();
+    const cancelToken = abortController.signal;
+    const gen = llmStreamChat(defaultModel.title, cancelToken, messages);
     let next = await gen.next();
 
     while (!next.done) {
       if (!activeRef.current) {
+        abortController.abort();
         break;
       }
       dispatch(streamUpdate((next.value as ChatMessage).content));

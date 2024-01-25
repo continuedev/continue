@@ -39,6 +39,8 @@ export async function webviewRequest(
   });
 }
 
+const abortedMessageIds: Set<string> = new Set();
+
 export function getSidebarContent(
   panel: vscode.WebviewPanel | vscode.WebviewView,
   page: string | undefined = undefined,
@@ -144,6 +146,10 @@ export function getSidebarContent(
     };
     try {
       switch (data.type) {
+        case "abort": {
+          abortedMessageIds.add(data.messageId);
+          break;
+        }
         case "websocketForwardingOpen": {
           let url = data.url;
           if (typeof sockets[url] === "undefined") {
@@ -528,6 +534,10 @@ export function getSidebarContent(
           );
           let next = await gen.next();
           while (!next.done) {
+            if (abortedMessageIds.has(data.messageId)) {
+              abortedMessageIds.delete(data.messageId);
+              break;
+            }
             respond({ content: next.value });
             next = await gen.next();
           }
@@ -543,6 +553,10 @@ export function getSidebarContent(
           );
           let next = await gen.next();
           while (!next.done) {
+            if (abortedMessageIds.has(data.messageId)) {
+              abortedMessageIds.delete(data.messageId);
+              break;
+            }
             respond({ content: next.value.content });
             next = await gen.next();
           }

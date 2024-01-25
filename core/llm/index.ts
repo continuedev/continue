@@ -10,8 +10,11 @@ import {
   RequestOptions,
   TemplateType,
 } from "..";
-import { ideRequest, ideStreamRequest } from "../ide/messaging";
-import { CONTEXT_LENGTH_FOR_MODEL, DEFAULT_ARGS } from "./constants";
+
+import {
+  CONTEXT_LENGTH_FOR_MODEL,
+  DEFAULT_ARGS
+} from "./constants";
 import {
   compileChatMessages,
   countTokens,
@@ -35,13 +38,13 @@ import {
   codellamaEditPrompt,
   deepseekEditPrompt,
   mistralEditPrompt,
+  neuralChatEditPrompt,
   openchatEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
-  neuralChatEditPrompt,
 } from "./templates/edit";
 
 const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
@@ -395,25 +398,6 @@ export abstract class BaseLLM implements ILLM {
     prompt: string,
     options: LLMFullCompletionOptions = {}
   ) {
-    if (!this._shouldRequestDirectly()) {
-      const gen = ideStreamRequest("llmStreamComplete", {
-        prompt,
-        title: this.title,
-        completionOptions: options,
-      });
-
-      let next = await gen.next();
-      while (!next.done) {
-        yield next.value;
-        next = await gen.next();
-      }
-
-      return {
-        prompt: next.value?.prompt,
-        completion: next.value?.completion,
-      };
-    }
-
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -449,16 +433,6 @@ export abstract class BaseLLM implements ILLM {
   }
 
   async complete(prompt: string, options: LLMFullCompletionOptions = {}) {
-    if (!this._shouldRequestDirectly()) {
-      return (
-        await ideRequest("llmComplete", {
-          prompt,
-          title: this.title,
-          completionOptions: options,
-        })
-      ).content;
-    }
-
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -500,20 +474,6 @@ export abstract class BaseLLM implements ILLM {
     messages: ChatMessage[],
     options: LLMFullCompletionOptions = {}
   ): AsyncGenerator<ChatMessage, LLMReturnValue> {
-    if (!this._shouldRequestDirectly()) {
-      const gen = ideStreamRequest("llmStreamChat", {
-        messages,
-        title: this.title,
-        completionOptions: options,
-      });
-      let next = await gen.next();
-      while (!next.done) {
-        yield { role: "user", content: next.value };
-        next = await gen.next();
-      }
-      return { prompt: next.value?.prompt, completion: next.value?.completion };
-    }
-
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 

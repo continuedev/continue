@@ -1,6 +1,7 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
-import { ideRequest } from "core/ide/messaging";
+import { ideRequest, llmStreamChat } from "core/ide/messaging";
+import { stripImages } from "core/llm/countTokens";
 import { useSelector } from "react-redux";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
@@ -33,7 +34,10 @@ function useHistory(dispatch: Dispatch) {
 
     let title = truncateText(stateCopy.history[0].message.content, 50);
     if (!disableSessionTitles) {
-      let { content } = await defaultModel.chat(
+      let fullContent = "";
+      for await (const { content } of llmStreamChat(
+        defaultModel.title,
+        undefined,
         [
           ...stateCopy.history.map((item) => item.message),
           {
@@ -43,8 +47,11 @@ function useHistory(dispatch: Dispatch) {
           },
         ],
         { maxTokens: 20 }
-      );
-      title = content;
+      )) {
+        fullContent += content;
+      }
+
+      title = stripImages(fullContent);
     }
 
     const sessionInfo: PersistedSessionInfo = {
