@@ -9,7 +9,7 @@ import { RootStore } from "../redux/store";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
-  fuzzy: 3,
+  fuzzy: 2,
 };
 
 function useSubmenuContextProviders() {
