@@ -9,7 +9,6 @@ import {
   MessageContent,
   SlashCommand,
 } from "core";
-import { ExtensionIde } from "core/ide";
 import { ideStreamRequest, llmStreamChat } from "core/ide/messaging";
 import { constructMessages } from "core/llm/constructMessages";
 import { stripImages } from "core/llm/countTokens";
@@ -19,7 +18,6 @@ import { useSelector } from "react-redux";
 import resolveEditorContent from "../components/mainInput/resolveInput";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
-  addContextItems,
   addLogs,
   initNewActiveMessage,
   resubmitAtIndex,
@@ -101,11 +99,11 @@ function useChatHandler(dispatch: Dispatch) {
     return [slashCommand, stripImages(input)];
   };
 
-  async function* _streamSlashCommandFromVsCode(
+  async function _streamSlashCommand(
     messages: ChatMessage[],
     slashCommand: SlashCommand,
     input: string
-  ): AsyncGenerator<string> {
+  ) {
     const modelTitle = defaultModel.title;
 
     for await (const update of ideStreamRequest("runNodeJsSlashCommand", {
@@ -116,36 +114,6 @@ function useChatHandler(dispatch: Dispatch) {
       contextItems,
       params: slashCommand.params,
     })) {
-      yield update;
-    }
-  }
-
-  async function _streamSlashCommand(
-    messages: ChatMessage[],
-    slashCommand: SlashCommand,
-    input: string
-  ) {
-    let generator: AsyncGenerator<string>;
-    if (slashCommand.runInNodeJs) {
-      generator = _streamSlashCommandFromVsCode(messages, slashCommand, input);
-    } else {
-      const sdk = {
-        input,
-        history: messages,
-        ide: new ExtensionIde(),
-        llm: defaultModel,
-        addContextItem: (item) => {
-          dispatch(addContextItems([item]));
-        },
-        contextItems,
-        params: slashCommand.params,
-      };
-      generator = slashCommand.run(sdk);
-    }
-
-    // TODO: if the model returned fast enough it would immediately break
-    // Ideally you aren't trusting that results of dispatch show up before the first yield
-    for await (const update of generator) {
       if (!activeRef.current) {
         break;
       }
