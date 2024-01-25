@@ -173,10 +173,10 @@ function useChatHandler(dispatch: Dispatch) {
       };
       const historyItem: ChatHistoryItem = {
         message,
-        contextItems:
-          typeof index === "number"
-            ? history[index].contextItems
-            : contextItems,
+        contextItems,
+        // : typeof index === "number"
+        //   ? history[index].contextItems
+        //   : contextItems,
         editorState,
       };
 
