@@ -187,7 +187,14 @@ function TipTapEditor(props: TipTapEditorProps) {
     let filesize = file.size / 1024 / 1024; // filesize in MB
     // check image type and size
     if (
-      (file.type === "image/jpeg" || file.type === "image/png") &&
+      [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/svg",
+        "image/webp",
+      ].includes(file.type) &&
       filesize < 10
     ) {
       // check dimensions
@@ -519,7 +526,10 @@ function TipTapEditor(props: TipTapEditorProps) {
           handleImageFile(file).then(([img, dataUrl]) => {
             const { schema } = editor.state;
             const node = schema.nodes.image.create({ src: dataUrl });
-            editor.state.tr.insert(0, node);
+            editor.commands.command(({ tr }) => {
+              tr.insert(0, node);
+              return true;
+            });
           });
         }}
       />
