@@ -37,6 +37,11 @@ export async function vsCodeIndexCodebase(workspaceDirs: string[]) {
     debugPanelWebview?.postMessage({ type: "indexProgress", progress, desc });
   };
 
+  const config = await configHandler.loadConfig(new VsCodeIde());
+  if (config.disableIndexing) {
+    return;
+  }
+
   const indexesToBuild = await getIndexesToBuild();
 
   let completedDirs = 0;
