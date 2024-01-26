@@ -1,5 +1,5 @@
 import MarkdownPreview from "@uiw/react-markdown-preview";
-import { memo } from "react";
+import React, { memo, useCallback } from "react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -81,9 +81,21 @@ interface StyledMarkdownPreviewProps {
   showCodeBorder?: boolean;
 }
 
+const MemoizedCode = React.memo(({ node, ...codeProps }: any) => {
+  return <code {...codeProps}></code>;
+});
+
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps
 ) {
+  const renderCode = useCallback(({ node, ...codeProps }) => {
+    return codeProps.inline ? (
+      <LinkableCode {...codeProps}></LinkableCode>
+    ) : (
+      <MemoizedCode {...codeProps}></MemoizedCode>
+    );
+  }, []);
+
   return (
     <StyledMarkdownPreviewComponent
       components={{
@@ -94,9 +106,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             </a>
           );
         },
-        code: ({ node, ...props }) => {
-          return <LinkableCode {...props}></LinkableCode>;
-        },
+        code: renderCode,
       }}
       className={props.className}
       maxHeight={props.maxHeight}
