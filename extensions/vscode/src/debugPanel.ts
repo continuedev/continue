@@ -2,7 +2,9 @@ import { ContextItemId, DiffLine, FileEdit, ModelDescription } from "core";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
+import * as fs from "fs";
 import { readFileSync, writeFileSync } from "fs";
+import * as path from "path";
 import * as io from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -708,6 +710,32 @@ export function getSidebarContent(
     }
   });
 
+  let currentTheme = undefined;
+  try {
+    // Pass color theme to webview for syntax highlighting
+    const colorTheme = vscode.workspace
+      .getConfiguration("workbench")
+      .get("colorTheme");
+
+    for (let i = vscode.extensions.all.length - 1; i >= 0; i--) {
+      if (currentTheme) {
+        break;
+      }
+      const extension = vscode.extensions.all[i];
+      if (extension.packageJSON?.contributes?.themes?.length > 0) {
+        for (const theme of extension.packageJSON.contributes.themes) {
+          if (theme.label === colorTheme) {
+            const themePath = path.join(extension.extensionPath, theme.path);
+            currentTheme = fs.readFileSync(themePath).toString();
+            break;
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.log("Error adding .continueignore file icon: ", e);
+  }
+
   return `<!DOCTYPE html>
     <html lang="en">
       <head>
@@ -733,6 +761,7 @@ export function getSidebarContent(
         <script>window.vscMachineId = "${getUniqueId()}"</script>
         <script>window.vscMediaUrl = "${vscMediaUrl}"</script>
         <script>window.ide = "vscode"</script>
+        <script>window.fullColorTheme = ${currentTheme}</script>
         <script>window.workspacePaths = ${JSON.stringify(
           vscode.workspace.workspaceFolders?.map(
             (folder) => folder.uri.fsPath
