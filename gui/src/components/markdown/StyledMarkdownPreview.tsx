@@ -1,4 +1,5 @@
 import MarkdownPreview from "@uiw/react-markdown-preview";
+import { memo } from "react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -80,7 +81,9 @@ interface StyledMarkdownPreviewProps {
   showCodeBorder?: boolean;
 }
 
-function StyledMarkdownPreview(props: StyledMarkdownPreviewProps) {
+const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
+  props: StyledMarkdownPreviewProps
+) {
   return (
     <StyledMarkdownPreviewComponent
       components={{
@@ -105,6 +108,6 @@ function StyledMarkdownPreview(props: StyledMarkdownPreviewProps) {
       showBorder={props.showCodeBorder}
     />
   );
-}
+});
 
 export default StyledMarkdownPreview;
