@@ -1,5 +1,6 @@
-import MarkdownPreview from "@uiw/react-markdown-preview";
-import React, { memo, useCallback } from "react";
+import { memo, useEffect } from "react";
+import { useRemark } from "react-remark";
+import rehypeShikiji from "rehype-shikiji";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -9,77 +10,21 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize } from "../../util";
-import LinkableCode from "./LinkableCode";
+import "./markdown.css";
 
-const tokenColorMap = (window as any).tokenColorMap;
-
-const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
-  light?: boolean;
+const StyledMarkdown = styled.div<{
   fontSize?: number;
   maxHeight?: number;
   showBorder?: boolean;
 }>`
   pre {
-    background-color: ${(props) =>
-      props.light ? vscBackground : vscEditorBackground};
+    background-color: ${vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
     max-width: calc(100vw - 24px);
-  }
+    overflow-x: scroll;
 
-  code {
-    color: #f78383;
-    word-wrap: break-word;
-    border-radius: ${defaultBorderRadius};
-    background-color: ${vscEditorBackground};
-  }
-
-  * .token.builtin {
-    color: ${tokenColorMap["support.function"] || tokenColorMap.keyword};
-  }
-
-  * .token.number {
-    color: ${tokenColorMap["constant.numeric"] || tokenColorMap.constant};
-  }
-
-  * .token.operator {
-    color: ${tokenColorMap["keyword.operator"] ||
-    tokenColorMap.operator ||
-    tokenColorMap.keyword};
-  }
-
-  * .token.function {
-    color: ${tokenColorMap.function || tokenColorMap["support.function"]};
-  }
-
-  * .token.selector {
-    color: ${tokenColorMap.selector ||
-    tokenColorMap["source.css support.function"]};
-  }
-
-  * .token.class-name {
-    color: ${tokenColorMap["entity.name.class"] ||
-    tokenColorMap["entity.name.type"] ||
-    tokenColorMap.class};
-  }
-
-  * .token.macro {
-    color: ${tokenColorMap.macro || tokenColorMap["entity.name.function"]};
-  }
-
-  ${tokenColorMap &&
-  Object.keys(tokenColorMap).map((tokenType) => {
-    return `
-      * .${tokenType} {
-        color: ${tokenColorMap[tokenType]};
-      }
-    `;
-  })}
-
-  pre > code {
-    background-color: ${vscEditorBackground};
-    color: ${vscForeground};
-    padding: ${(props) => (props.showBorder ? "12px" : "0px 2px")};
+    font-size: 12px;
 
     border-radius: ${defaultBorderRadius};
     ${(props) => {
@@ -89,7 +34,7 @@ const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
         `;
       }
     }}
-
+    padding: ${(props) => (props.showBorder ? "12px" : "0px 2px")};
     ${(props) => {
       if (props.maxHeight) {
         return `
@@ -100,7 +45,15 @@ const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
     }}
   }
 
-  background-color: ${(props) => (props.light ? "transparent" : vscBackground)};
+  code {
+    color: #f78383;
+    word-wrap: break-word;
+    border-radius: ${defaultBorderRadius};
+    background-color: ${vscEditorBackground};
+    font-size: 12px;
+  }
+
+  background-color: ${vscBackground};
   font-family:
     system-ui,
     -apple-system,
@@ -114,8 +67,13 @@ const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
     "Helvetica Neue",
     sans-serif;
   font-size: ${(props) => props.fontSize || getFontSize()}px;
-  padding: 8px;
+  padding-left: 8px;
+  padding-right: 8px;
   color: ${vscForeground};
+
+  p {
+    line-height: 1.5;
+  }
 `;
 
 interface StyledMarkdownPreviewProps {
@@ -125,24 +83,18 @@ interface StyledMarkdownPreviewProps {
   showCodeBorder?: boolean;
 }
 
-const MemoizedCode = React.memo(({ node, ...codeProps }: any) => {
-  return <code {...codeProps}></code>;
-});
-
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps
 ) {
-  const renderCode = useCallback(({ node, ...codeProps }) => {
-    return codeProps.inline ? (
-      <LinkableCode {...codeProps}></LinkableCode>
-    ) : (
-      <MemoizedCode {...codeProps}></MemoizedCode>
-    );
-  }, []);
-
-  return (
-    <StyledMarkdownPreviewComponent
-      components={{
+  const [reactContent, setMarkdownSource] = useRemark({
+    rehypePlugins: [
+      [
+        rehypeShikiji as any,
+        { theme: (window as any).fullColorTheme || "nord" },
+      ],
+    ],
+    rehypeReactOptions: {
+      components: {
         a: ({ node, ...props }) => {
           return (
             <a {...props} target="_blank">
@@ -150,17 +102,22 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             </a>
           );
         },
-        code: renderCode,
-      }}
-      className={props.className}
+      },
+    },
+  });
+
+  useEffect(() => {
+    setMarkdownSource(props.source || "");
+  }, [props.source]);
+
+  return (
+    <StyledMarkdown
       maxHeight={props.maxHeight}
       fontSize={getFontSize()}
-      source={props.source || ""}
-      wrapperElement={{
-        "data-color-mode": "dark",
-      }}
       showBorder={props.showCodeBorder}
-    />
+    >
+      {reactContent}
+    </StyledMarkdown>
   );
 });
 
