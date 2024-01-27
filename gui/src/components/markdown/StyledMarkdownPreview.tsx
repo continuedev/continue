@@ -4,10 +4,10 @@ import rehypeShikiji from "rehype-shikiji";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
-  lightGray,
   vscBackground,
   vscEditorBackground,
   vscForeground,
+  vscSidebarBorder,
 } from "..";
 import { getFontSize } from "../../util";
 import PreWithToolbar from "./PreWithToolbar";
@@ -27,11 +27,10 @@ const StyledMarkdown = styled.div<{
 
     font-size: 12px;
 
-    border-radius: ${defaultBorderRadius};
     ${(props) => {
       if (props.showBorder) {
         return `
-          border: 0.5px solid ${lightGray};
+          border: 1px solid ${vscSidebarBorder};
         `;
       }
     }}
@@ -52,7 +51,10 @@ const StyledMarkdown = styled.div<{
     border-radius: ${defaultBorderRadius};
     background-color: ${vscEditorBackground};
     font-size: 12px;
-    font-family: "Courier New", Courier, monospace;
+  }
+
+  code:not(pre > code) {
+    font-family: monospace;
   }
 
   background-color: ${vscBackground};
