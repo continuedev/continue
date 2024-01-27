@@ -283,7 +283,7 @@ export class LanceDbIndex implements CodebaseIndex {
     }
 
     allResults = allResults
-      .sort((a, b) => b._distance - a._distance)
+      .sort((a, b) => a._distance - b._distance)
       .slice(0, n);
 
     const sqliteDb = await SqliteDb.get();
