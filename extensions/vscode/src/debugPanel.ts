@@ -711,6 +711,7 @@ export function getSidebarContent(
   });
 
   let currentTheme = undefined;
+  const tokenColorMap: any = {};
   try {
     // Pass color theme to webview for syntax highlighting
     const colorTheme = vscode.workspace
@@ -728,6 +729,67 @@ export function getSidebarContent(
             const themePath = path.join(extension.extensionPath, theme.path);
             currentTheme = fs.readFileSync(themePath).toString();
             break;
+          }
+        }
+      }
+    }
+
+    // Strip comments from theme
+    currentTheme = currentTheme
+      ?.split("\n")
+      .filter((line) => {
+        return !line.trim().startsWith("//");
+      })
+      .join("\n");
+    const parsedTheme = JSON.parse(currentTheme || "{}");
+
+    const tokenTypes = [
+      "keyword",
+      "type",
+      "literal",
+      "variable",
+      "comment",
+      "function",
+      "interface",
+      "property",
+      "string",
+      "number",
+      "class",
+      "enumMember",
+      "enum",
+      "parameter",
+      "operator",
+      "punctuation",
+      "label",
+      "macro",
+      "regexp",
+      "storage",
+    ];
+
+    for (const tokenType of tokenTypes) {
+      const style = parsedTheme.semanticTokenColors?.[tokenType];
+      if (typeof style === "string") {
+        tokenColorMap[tokenType] = style;
+      } else if (style) {
+        tokenColorMap[tokenType] = style.foreground;
+      }
+    }
+
+    for (const tokenColor of parsedTheme.tokenColors) {
+      if (tokenColor.scope) {
+        for (const tokenType of tokenTypes) {
+          if (tokenColorMap[tokenType]) {
+            continue;
+          }
+
+          const scope = tokenColor.scope;
+          if (Array.isArray(scope) && scope.includes(tokenType)) {
+            tokenColorMap[tokenType] = tokenColor.settings.foreground;
+          } else if (
+            typeof scope === "string" &&
+            (scope === tokenType || scope.split(", ").includes(tokenType))
+          ) {
+            tokenColorMap[tokenType] = tokenColor.settings.foreground;
           }
         }
       }
@@ -762,6 +824,7 @@ export function getSidebarContent(
         <script>window.vscMediaUrl = "${vscMediaUrl}"</script>
         <script>window.ide = "vscode"</script>
         <script>window.fullColorTheme = ${currentTheme}</script>
+        <script>window.tokenColorMap = ${JSON.stringify(tokenColorMap)}</script>
         <script>window.workspacePaths = ${JSON.stringify(
           vscode.workspace.workspaceFolders?.map(
             (folder) => folder.uri.fsPath
