@@ -10,6 +10,7 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize } from "../../util";
+import PreWithToolbar from "./PreWithToolbar";
 import "./markdown.css";
 
 const StyledMarkdown = styled.div<{
@@ -51,6 +52,7 @@ const StyledMarkdown = styled.div<{
     border-radius: ${defaultBorderRadius};
     background-color: ${vscEditorBackground};
     font-size: 12px;
+    font-family: "Courier New", Courier, monospace;
   }
 
   background-color: ${vscBackground};
@@ -100,6 +102,14 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             <a {...props} target="_blank">
               {props.children}
             </a>
+          );
+        },
+        pre: ({ node, ...preProps }) => {
+          console.log(node, preProps);
+          return props.showCodeBorder ? (
+            <PreWithToolbar {...preProps}></PreWithToolbar>
+          ) : (
+            <pre {...preProps}></pre>
           );
         },
       },
