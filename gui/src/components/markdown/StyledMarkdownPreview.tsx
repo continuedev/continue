@@ -11,6 +11,8 @@ import {
 import { getFontSize } from "../../util";
 import LinkableCode from "./LinkableCode";
 
+const tokenColorMap = (window as any).tokenColorMap;
+
 const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
   light?: boolean;
   fontSize?: number;
@@ -31,6 +33,48 @@ const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
     border-radius: ${defaultBorderRadius};
     background-color: ${vscEditorBackground};
   }
+
+  * .token.builtin {
+    color: ${tokenColorMap["support.function"] || tokenColorMap.keyword};
+  }
+
+  * .token.number {
+    color: ${tokenColorMap["constant.numeric"] || tokenColorMap.constant};
+  }
+
+  * .token.operator {
+    color: ${tokenColorMap["keyword.operator"] ||
+    tokenColorMap.operator ||
+    tokenColorMap.keyword};
+  }
+
+  * .token.function {
+    color: ${tokenColorMap.function || tokenColorMap["support.function"]};
+  }
+
+  * .token.selector {
+    color: ${tokenColorMap.selector ||
+    tokenColorMap["source.css support.function"]};
+  }
+
+  * .token.class-name {
+    color: ${tokenColorMap["entity.name.class"] ||
+    tokenColorMap["entity.name.type"] ||
+    tokenColorMap.class};
+  }
+
+  * .token.macro {
+    color: ${tokenColorMap.macro || tokenColorMap["entity.name.function"]};
+  }
+
+  ${tokenColorMap &&
+  Object.keys(tokenColorMap).map((tokenType) => {
+    return `
+      * .${tokenType} {
+        color: ${tokenColorMap[tokenType]};
+      }
+    `;
+  })}
 
   pre > code {
     background-color: ${vscEditorBackground};

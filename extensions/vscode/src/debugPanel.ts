@@ -743,56 +743,34 @@ export function getSidebarContent(
       .join("\n");
     const parsedTheme = JSON.parse(currentTheme || "{}");
 
-    const tokenTypes = [
-      "keyword",
-      "type",
-      "literal",
-      "variable",
-      "comment",
-      "function",
-      "interface",
-      "property",
-      "string",
-      "number",
-      "class",
-      "enumMember",
-      "enum",
-      "parameter",
-      "operator",
-      "punctuation",
-      "label",
-      "macro",
-      "regexp",
-      "storage",
-    ];
-
-    for (const tokenType of tokenTypes) {
-      const style = parsedTheme.semanticTokenColors?.[tokenType];
-      if (typeof style === "string") {
-        tokenColorMap[tokenType] = style;
-      } else if (style) {
-        tokenColorMap[tokenType] = style.foreground;
-      }
+    if (parsedTheme.semanticTokenColors) {
+      Object.keys(parsedTheme.semanticTokenColors).forEach((tokenType) => {
+        const style = parsedTheme.semanticTokenColors[tokenType];
+        if (typeof style === "string") {
+          tokenColorMap[tokenType] = style;
+        } else if (style) {
+          tokenColorMap[tokenType] = style.foreground;
+        }
+      });
     }
 
-    for (const tokenColor of parsedTheme.tokenColors) {
-      if (tokenColor.scope) {
-        for (const tokenType of tokenTypes) {
-          if (tokenColorMap[tokenType]) {
+    if (parsedTheme.tokenColors) {
+      Object.keys(parsedTheme.tokenColors).forEach((tokenColor) => {
+        const style = parsedTheme.tokenColors[tokenColor];
+        let scopes = [];
+        if (Array.isArray(style.scope)) {
+          scopes = style.scope;
+        } else if (typeof style.scope === "string") {
+          scopes = style.scope.split(", ");
+        }
+
+        for (const scope of scopes) {
+          if (tokenColorMap[scope]) {
             continue;
           }
-
-          const scope = tokenColor.scope;
-          if (Array.isArray(scope) && scope.includes(tokenType)) {
-            tokenColorMap[tokenType] = tokenColor.settings.foreground;
-          } else if (
-            typeof scope === "string" &&
-            (scope === tokenType || scope.split(", ").includes(tokenType))
-          ) {
-            tokenColorMap[tokenType] = tokenColor.settings.foreground;
-          }
+          tokenColorMap[scope] = style.settings.foreground;
         }
-      }
+      });
     }
   } catch (e) {
     console.log("Error adding .continueignore file icon: ", e);
