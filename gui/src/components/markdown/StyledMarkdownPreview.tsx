@@ -7,7 +7,6 @@ import {
   vscBackground,
   vscEditorBackground,
   vscForeground,
-  vscSidebarBorder,
 } from "..";
 import { getFontSize } from "../../util";
 import PreWithToolbar from "./PreWithToolbar";
@@ -30,7 +29,7 @@ const StyledMarkdown = styled.div<{
     ${(props) => {
       if (props.showBorder) {
         return `
-          border: 1px solid ${vscSidebarBorder};
+          border: 0.5px solid #8888;
         `;
       }
     }}
@@ -87,6 +86,27 @@ interface StyledMarkdownPreviewProps {
   showCodeBorder?: boolean;
 }
 
+const FadeInWords: React.FC = (props: any) => {
+  const { children, ...otherProps } = props;
+
+  // Split the text into words
+  const words = children
+    .map((child) => {
+      if (typeof child === "string") {
+        return child.split(" ").map((word, index) => (
+          <span className="fade-in-span" key={index}>
+            {word}{" "}
+          </span>
+        ));
+      } else {
+        return <span className="fade-in-span">{child}</span>;
+      }
+    })
+    .flat();
+
+  return <p {...otherProps}>{words}</p>;
+};
+
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps
 ) {
@@ -94,8 +114,20 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
     rehypePlugins: [
       [
         rehypeShikiji as any,
-        { theme: (window as any).fullColorTheme || "nord" },
+        {
+          theme:
+            (window as any).fullColorTheme ||
+            (window as any).colorThemeName ||
+            "dark-plus",
+        },
       ],
+      // [
+      //   rehypeWrapAll,
+      //   {
+      //     selector: "code > span",
+      //     wrapper: "span.fade-in-span",
+      //   },
+      // ],
     ],
     rehypeReactOptions: {
       components: {
@@ -114,6 +146,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             <pre {...preProps}></pre>
           );
         },
+        // p: ({ node, ...props }) => {
+        //   return <FadeInWords {...props}></FadeInWords>;
+        // },
       },
     },
   });

@@ -48,3 +48,16 @@ body {
 a:focus {
   outline: none;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.fade-in-span {
+  animation: fadeIn 0.3s ease-in-out;
+}

@@ -734,6 +734,7 @@ export function getSidebarContent(
   });
 
   let currentTheme = undefined;
+  let colorThemeName = "dark-plus";
   const tokenColorMap: any = {};
   try {
     // Pass color theme to webview for syntax highlighting
@@ -764,37 +765,6 @@ export function getSidebarContent(
         return !line.trim().startsWith("//");
       })
       .join("\n");
-    const parsedTheme = JSON.parse(currentTheme || "{}");
-
-    if (parsedTheme.semanticTokenColors) {
-      Object.keys(parsedTheme.semanticTokenColors).forEach((tokenType) => {
-        const style = parsedTheme.semanticTokenColors[tokenType];
-        if (typeof style === "string") {
-          tokenColorMap[tokenType] = style;
-        } else if (style) {
-          tokenColorMap[tokenType] = style.foreground;
-        }
-      });
-    }
-
-    if (parsedTheme.tokenColors) {
-      Object.keys(parsedTheme.tokenColors).forEach((tokenColor) => {
-        const style = parsedTheme.tokenColors[tokenColor];
-        let scopes = [];
-        if (Array.isArray(style.scope)) {
-          scopes = style.scope;
-        } else if (typeof style.scope === "string") {
-          scopes = style.scope.split(", ");
-        }
-
-        for (const scope of scopes) {
-          if (tokenColorMap[scope]) {
-            continue;
-          }
-          tokenColorMap[scope] = style.settings.foreground;
-        }
-      });
-    }
   } catch (e) {
     console.log("Error adding .continueignore file icon: ", e);
   }
@@ -825,7 +795,7 @@ export function getSidebarContent(
         <script>window.vscMediaUrl = "${vscMediaUrl}"</script>
         <script>window.ide = "vscode"</script>
         <script>window.fullColorTheme = ${currentTheme}</script>
-        <script>window.tokenColorMap = ${JSON.stringify(tokenColorMap)}</script>
+        <script>window.colorThemeName = "${colorThemeName}"</script>
         <script>window.workspacePaths = ${JSON.stringify(
           vscode.workspace.workspaceFolders?.map(
             (folder) => folder.uri.fsPath
