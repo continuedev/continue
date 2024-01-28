@@ -135,6 +135,10 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
       return "python";
     case "js":
       return "javascript";
+    case "jsx":
+      return "jsx";
+    case "tsx":
+      return "tsx";
     case "ts":
       return "typescript";
     case "java":

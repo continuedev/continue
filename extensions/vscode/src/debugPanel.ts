@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
+import { streamEdit } from "./diff/verticalPerLine/manager";
 import historyManager from "./history";
 import { VsCodeIde } from "./ideProtocol";
 import { configHandler, llmFromTitle } from "./loadConfig";
@@ -691,6 +692,28 @@ export function getSidebarContent(
                 `🎉 Successfully indexed ${title}`
               );
             }
+          );
+          break;
+        }
+        case "applyToCurrentFile": {
+          // Select the entire current file
+          const editor = vscode.window.activeTextEditor;
+          if (!editor) {
+            vscode.window.showErrorMessage(
+              "No active editor to apply edits to"
+            );
+            break;
+          }
+          const document = editor.document;
+          const start = new vscode.Position(0, 0);
+          const end = new vscode.Position(
+            document.lineCount - 1,
+            document.lineAt(document.lineCount - 1).text.length
+          );
+          editor.selection = new vscode.Selection(start, end);
+
+          streamEdit(
+            `The following code was suggested as an edit:\n\`\`\`\n${data.text}\n\`\`\`\nPlease apply it to the previous code.`
           );
           break;
         }

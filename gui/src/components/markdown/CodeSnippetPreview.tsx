@@ -64,7 +64,7 @@ const StyledHeaderButtonWithText = styled(HeaderButtonWithText)<{
 `;
 
 // Pre-compile the regular expression outside of the function
-const backticksRegex = /`{3,}/gm
+const backticksRegex = /`{3,}/gm;
 
 function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const dispatch = useDispatch();
@@ -75,9 +75,8 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const codeBlockRef = React.useRef<HTMLPreElement>(null);
   const fence = React.useMemo(() => {
     const backticks = props.item.content.match(backticksRegex);
-    return backticks ? (backticks.sort().at(-1) + "`") : "```";
+    return backticks ? backticks.sort().at(-1) + "`" : "```";
   }, [props.item.content]);
-
 
   return (
     <PreviewMarkdownDiv
