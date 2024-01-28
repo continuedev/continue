@@ -9,9 +9,9 @@ Once you're ready to use your own API key or a different model / provider, press
 If you are unsure what model or provider to use, here is a rule of thumb:
 
 - Use GPT-4 via OpenAI if you want the best possible model overall right now
-- Use X via Together if you want the best open-source model right now
-- Use X via Ollama if you want to run a model locally on Mac or Linux
-- Use X via LM Studio if you want to run a model locally on Windows
+- Use Phind CodeLlama or Mixtral 8x7B via Together if you want the best open-source model right now
+- Use CodeLlama via Ollama if you want to run a model locally on Mac or Linux
+- Use CodeLlama via LM Studio if you want to run a model locally on Windows
 
 Learn more:
 
