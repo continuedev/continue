@@ -1,4 +1,5 @@
 import { ChatMessage } from "../..";
+import { stripImages } from "../countTokens";
 
 function llama2TemplateMessages(msgs: ChatMessage[]): string {
   if (msgs.length === 0) {
@@ -14,7 +15,7 @@ function llama2TemplateMessages(msgs: ChatMessage[]): string {
   let prompt = "";
   let hasSystem = msgs[0].role === "system";
 
-  if (hasSystem && msgs[0].content.trim() === "") {
+  if (hasSystem && stripImages(msgs[0].content).trim() === "") {
     hasSystem = false;
     msgs = msgs.slice(1);
   }
@@ -65,6 +66,26 @@ function anthropicTemplateMessages(messages: ChatMessage[]): string {
   }
 
   prompt += AI_PROMPT;
+  return prompt;
+}
+
+function llavaTemplateMessages(msgs: ChatMessage[]): string {
+  `A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.
+USER: <image>{prompt}
+ASSISTANT:`;
+
+  let prompt =
+    "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.";
+
+  for (const msg of msgs) {
+    prompt += msg.role === "user" ? "USER: <image>" : "ASSISTANT: ";
+    prompt += msg.content;
+
+    prompt += "\n";
+  }
+
+  prompt += "ASSISTANT: ";
+
   return prompt;
 }
 
@@ -123,7 +144,7 @@ function deepseekTemplateMessages(msgs: ChatMessage[]): string {
   prompt +=
     "You are an AI programming assistant, utilizing the DeepSeek Coder model, developed by DeepSeek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer.\n";
   if (msgs[0].role === "system") {
-    system = msgs.shift()!.content;
+    system = stripImages(msgs.shift()!.content);
   }
 
   for (let i = 0; i < msgs.length; i++) {
@@ -248,6 +269,7 @@ export {
   chatmlTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
+  llavaTemplateMessages,
   neuralChatTemplateMessages,
   openchatTemplateMessages,
   phi2TemplateMessages,

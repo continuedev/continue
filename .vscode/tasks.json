@@ -102,8 +102,9 @@
     {
       "label": "install-all-dependencies",
       "type": "shell",
+      "windows": { "command": "./install-dependencies.ps1" },
       "command": "./install-dependencies.sh",
-      "problemMatcher": [] // Empty so users are not promted to select progress reporting
+      "problemMatcher": [] // Empty so users are not prompted to select progress reporting
     },
     //
     // Start the React App for debugging with Vite

@@ -6,6 +6,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
+import { stripImages } from "../countTokens";
 
 class Replicate extends BaseLLM {
   private static MODEL_IDS: {
@@ -72,7 +73,10 @@ class Replicate extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
-    const resp = await this.complete(messages[0]?.content || "", options);
+    const resp = await this.complete(
+      stripImages(messages[0]?.content || ""),
+      options
+    );
   }
 }
 

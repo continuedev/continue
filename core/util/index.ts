@@ -16,10 +16,14 @@ export function removeQuotesAndEscapes(output: string): string {
   output = output.replace("\\n", "\n");
   output = output.replace("\\t", "\t");
   output = output.replace("\\\\", "\\");
-  if (
+  while (
     (output.startsWith('"') && output.endsWith('"')) ||
     (output.startsWith("'") && output.endsWith("'"))
   ) {
+    output = output.slice(1, -1);
+  }
+
+  while (output.startsWith("`") && output.endsWith("`")) {
     output = output.slice(1, -1);
   }
 
@@ -63,6 +67,11 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
     if (lines[i].trim() === "") {
       continue; // hey that's us!
     }
+
+    if (lcp === undefined) {
+      lcp = lines[i].split(lines[i].trim())[0];
+    }
+
     // Iterate through the leading whitespace characters of the current line
     for (let j = 0; j < lcp.length; j++) {
       // If it doesn't have the same whitespace as lcp, then update lcp
@@ -74,6 +83,10 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
         break;
       }
     }
+  }
+
+  if (lcp === undefined) {
+    return [s, ""];
   }
 
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
@@ -111,6 +124,10 @@ export function getBasename(filepath: string): string {
   return filepath.split(/[\\/]/).pop() || "";
 }
 
+export function getLastNPathParts(filepath: string, n: number): string {
+  return filepath.split(/[\\/]/).slice(-n).join("/");
+}
+
 export function getMarkdownLanguageTagForFile(filepath: string): string {
   const ext = filepath.split(".").pop();
   switch (ext) {
@@ -118,6 +135,10 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
       return "python";
     case "js":
       return "javascript";
+    case "jsx":
+      return "jsx";
+    case "tsx":
+      return "tsx";
     case "ts":
       return "typescript";
     case "java":

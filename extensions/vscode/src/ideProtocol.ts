@@ -49,6 +49,7 @@ async function buildConfigTs(browser: boolean) {
       format: browser ? "esm" : "cjs",
       outfile: getConfigJsPath(!browser),
       external: ["fetch", "fs", "path", "os", "child_process"],
+      sourcemap: true,
     });
   } catch (e) {
     console.log(e);
@@ -242,7 +243,7 @@ class VsCodeIde implements IDE {
   }
 
   async getTerminalContents(): Promise<string> {
-    return await ideProtocolClient.getTerminalContents(2);
+    return await ideProtocolClient.getTerminalContents(1);
   }
 
   async listWorkspaceContents(directory?: string): Promise<string[]> {
@@ -331,6 +332,14 @@ class VsCodeIde implements IDE {
 
   async getOpenFiles(): Promise<string[]> {
     return await ideProtocolClient.getOpenFiles();
+  }
+
+  async getPinnedFiles(): Promise<string[]> {
+    const tabArray = vscode.window.tabGroups.all[0].tabs;
+
+    return tabArray
+      .filter((t) => t.isPinned)
+      .map((t) => (t.input as vscode.TabInputText).uri.fsPath);
   }
 
   private async _searchDir(query: string, dir: string): Promise<string> {

@@ -1,5 +1,6 @@
 import Document from "@tiptap/extension-document";
 import History from "@tiptap/extension-history";
+import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
@@ -12,18 +13,19 @@ import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
+  vscBadgeBackground,
   vscForeground,
   vscInputBackground,
   vscInputBorder,
   vscInputBorderFocus,
 } from "..";
-import { FilesSearchContext, FoldersSearchContext } from "../../App";
+import { SubmenuContextProvidersContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
-import { isJetBrains, postToIde } from "../../util/ide";
+import { errorPopup, isJetBrains, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -51,6 +53,7 @@ const InputBoxDiv = styled.div`
 
   &:focus {
     outline: none;
+
     border: 0.5px solid ${vscInputBorderFocus};
   }
 
@@ -61,6 +64,53 @@ const InputBoxDiv = styled.div`
   position: relative;
 `;
 
+const HoverDiv = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0.5;
+  background-color: ${vscBadgeBackground};
+  color: ${vscForeground};
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const HoverTextDiv = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  color: ${vscForeground};
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+function getDataUrlForFile(file: File, img): string {
+  const targetWidth = 512;
+  const targetHeight = 512;
+  const scaleFactor = Math.min(
+    targetWidth / img.width,
+    targetHeight / img.height
+  );
+
+  const canvas = document.createElement("canvas");
+  canvas.width = img.width * scaleFactor;
+  canvas.height = img.height * scaleFactor;
+
+  const ctx = canvas.getContext("2d");
+  ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+  const downsizedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
+  return downsizedDataUrl;
+}
+
 interface TipTapEditorProps {
   availableContextProviders: IContextProvider[];
   availableSlashCommands: ComboBoxItem[];
@@ -68,15 +118,12 @@ interface TipTapEditorProps {
   onEnter: (editorState: JSONContent) => void;
 
   editorState?: JSONContent;
-  content?: string;
 }
 
 function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useDispatch();
 
-  const [filesMiniSearch, filesFirstResults] = useContext(FilesSearchContext);
-  const [foldersMiniSearch, foldersFirstResults] =
-    useContext(FoldersSearchContext);
+  const getSubmenuContextItems = useContext(SubmenuContextProvidersContext);
 
   const historyLength = useSelector(
     (store: RootStore) => store.state.history.length
@@ -123,23 +170,62 @@ function TipTapEditor(props: TipTapEditorProps) {
     (store: RootStore) => store.state.contextItems
   );
 
-  const filesMiniSearchRef = useUpdatingRef(filesMiniSearch);
-  const foldersMiniSearchRef = useUpdatingRef(foldersMiniSearch);
+  const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(
     props.availableContextProviders
   );
-  const filesFirstResultsRef = useUpdatingRef(filesFirstResults);
-  const foldersFirstResultsRef = useUpdatingRef(foldersFirstResults);
+
   const historyLengthRef = useUpdatingRef(historyLength);
   const onEnterRef = useUpdatingRef(props.onEnter);
   const availableSlashCommandsRef = useUpdatingRef(
     props.availableSlashCommands
   );
 
+  async function handleImageFile(
+    file: File
+  ): Promise<[HTMLImageElement, string] | undefined> {
+    let filesize = file.size / 1024 / 1024; // filesize in MB
+    // check image type and size
+    if (
+      [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/svg",
+        "image/webp",
+      ].includes(file.type) &&
+      filesize < 10
+    ) {
+      // check dimensions
+      let _URL = window.URL || window.webkitURL;
+      let img = new window.Image();
+      img.src = _URL.createObjectURL(file);
+
+      return await new Promise((resolve) => {
+        img.onload = function () {
+          const dataUrl = getDataUrlForFile(file, img);
+
+          let image = new window.Image();
+          image.src = dataUrl;
+          image.onload = function () {
+            resolve([image, dataUrl]);
+          };
+        };
+      });
+    } else {
+      errorPopup(
+        "Images need to be in jpg or png format and less than 10MB in size."
+      );
+    }
+    return undefined;
+  }
+
   const editor = useEditor({
     extensions: [
       Document,
       History,
+      Image,
       Placeholder.configure({
         placeholder: () =>
           historyLengthRef.current === 0
@@ -184,10 +270,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         },
         suggestion: getMentionSuggestion(
           availableContextProvidersRef,
-          filesMiniSearchRef,
-          filesFirstResultsRef,
-          foldersMiniSearchRef,
-          foldersFirstResultsRef,
+          getSubmenuContextItemsRef,
           enterSubmenu,
           onClose,
           onOpen,
@@ -218,7 +301,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         style: "font-size: 14px;",
       },
     },
-    content: props.editorState || props.content || "",
+    content: props.editorState || "",
     onUpdate: ({ editor, transaction }) => {
       // If /edit is typed and no context items are selected, select the first
 
@@ -354,11 +437,62 @@ function TipTapEditor(props: TipTapEditorProps) {
     };
   }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
 
+  const [showDragOverMsg, setShowDragOverMsg] = useState(false);
+
+  useEffect(() => {
+    const overListener = (event: DragEvent) => {
+      if (event.shiftKey) return;
+      setShowDragOverMsg(true);
+    };
+    window.addEventListener("dragover", overListener);
+
+    const leaveListener = (event: DragEvent) => {
+      if (event.shiftKey) {
+        setShowDragOverMsg(false);
+      } else {
+        setTimeout(() => setShowDragOverMsg(false), 2000);
+      }
+    };
+    window.addEventListener("dragleave", leaveListener);
+
+    return () => {
+      window.removeEventListener("dragover", overListener);
+      window.removeEventListener("dragleave", leaveListener);
+    };
+  }, []);
+
   return (
     <InputBoxDiv
       className="cursor-text"
       onClick={() => {
         editor && editor.commands.focus();
+      }}
+      onDragOver={(event) => {
+        event.preventDefault();
+        setShowDragOverMsg(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.relatedTarget === null) {
+          if (e.shiftKey) {
+            setShowDragOverMsg(false);
+          } else {
+            setTimeout(() => setShowDragOverMsg(false), 2000);
+          }
+        }
+      }}
+      onDragEnter={() => {
+        setShowDragOverMsg(true);
+      }}
+      onDrop={(event) => {
+        setShowDragOverMsg(false);
+        let file = event.dataTransfer.files[0];
+        handleImageFile(file).then(([img, dataUrl]) => {
+          const { schema } = editor.state;
+          const node = schema.nodes.image.create({ src: dataUrl });
+          const tr = editor.state.tr.insert(0, node);
+          editor.view.dispatch(tr);
+        });
+        event.preventDefault();
       }}
     >
       <EditorContent
@@ -387,7 +521,23 @@ function TipTapEditor(props: TipTapEditorProps) {
         onEnter={() => {
           onEnterRef.current(editor.getJSON());
         }}
+        onImageFileSelected={(file) => {
+          handleImageFile(file).then(([img, dataUrl]) => {
+            const { schema } = editor.state;
+            const node = schema.nodes.image.create({ src: dataUrl });
+            editor.commands.command(({ tr }) => {
+              tr.insert(0, node);
+              return true;
+            });
+          });
+        }}
       />
+      {showDragOverMsg && (
+        <>
+          <HoverDiv></HoverDiv>
+          <HoverTextDiv>Hold ⇧ to drop image</HoverTextDiv>
+        </>
+      )}
     </InputBoxDiv>
   );
 }

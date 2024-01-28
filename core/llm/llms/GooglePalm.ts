@@ -3,8 +3,10 @@ import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
+  MessagePart,
   ModelProvider,
 } from "../..";
+import { stripImages } from "../countTokens";
 import { streamResponse } from "../stream";
 
 class GooglePalm extends BaseLLM {
@@ -22,7 +24,7 @@ class GooglePalm extends BaseLLM {
       [{ content: prompt, role: "user" }],
       options
     )) {
-      yield message.content;
+      yield stripImages(message.content);
     }
   }
 
@@ -41,6 +43,19 @@ class GooglePalm extends BaseLLM {
     }
   }
 
+  private _continuePartToGeminiPart(part: MessagePart) {
+    return part.type === "text"
+      ? {
+          text: part.text,
+        }
+      : {
+          inlineData: {
+            mimeType: "image/jpeg",
+            data: part.imageUrl?.url.split(",")[1],
+          },
+        };
+  }
+
   private async *streamChatGemini(
     messages: ChatMessage[],
     options: CompletionOptions
@@ -50,7 +65,10 @@ class GooglePalm extends BaseLLM {
       contents: messages.map((msg) => {
         return {
           role: msg.role === "assistant" ? "model" : "user",
-          parts: [{ text: msg.content }],
+          parts:
+            typeof msg.content === "string"
+              ? [{ text: msg.content }]
+              : msg.content.map(this._continuePartToGeminiPart),
         };
       }),
     };

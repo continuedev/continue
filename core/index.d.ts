@@ -11,6 +11,11 @@ export interface Chunk extends ChunkWithoutID {
   index: number; // Index of the chunk in the document at filepath
 }
 
+export interface IndexingProgressUpdate {
+  progress: number;
+  desc: string;
+}
+
 export interface LLMReturnValue {
   prompt: string;
   completion: string;
@@ -59,20 +64,28 @@ export interface ILLM extends LLMOptions {
   ): Promise<ChatMessage>;
 
   countTokens(text: string): number;
+
+  supportsImages(): boolean;
 }
+
+export type ContextProviderType = "normal" | "query" | "submenu";
 
 export interface ContextProviderDescription {
   title: string;
   displayTitle: string;
   description: string;
-  dynamic: boolean;
-  requiresQuery: boolean;
+  type: ContextProviderType;
 }
 
-interface ContextProviderExtras {
+export interface ContextProviderExtras {
   fullInput: string;
-  embeddingsProvider?: EmbeddingsProvider;
+  embeddingsProvider: EmbeddingsProvider;
   llm: ILLM;
+  ide: IDE;
+  selectedCode: RangeInFile[];
+}
+
+export interface LoadSubmenuItemsArgs {
   ide: IDE;
 }
 
@@ -80,10 +93,20 @@ export interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
+  type?: ContextProviderType;
   getContextItems(
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]>;
+  loadSubmenuItems?: (
+    args: LoadSubmenuItemsArgs
+  ) => Promise<ContextSubmenuItem[]>;
+}
+
+export interface ContextSubmenuItem {
+  id: string;
+  title: string;
+  description: string;
 }
 
 export interface IContextProvider {
@@ -93,6 +116,8 @@ export interface IContextProvider {
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]>;
+
+  loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
 }
 
 export interface PersistedSessionInfo {
@@ -139,9 +164,17 @@ export interface CompletionOptions extends BaseCompletionOptions {
 
 export type ChatMessageRole = "user" | "assistant" | "system";
 
+export interface MessagePart {
+  type: "text" | "imageUrl";
+  text?: string;
+  imageUrl?: { url: string };
+}
+
+export type MessageContent = string | MessagePart[];
+
 export interface ChatMessage {
   role: ChatMessageRole;
-  content: string;
+  content: MessageContent;
 }
 
 export interface ContextItemId {
@@ -279,6 +312,7 @@ export interface IDE {
     diffLine: DiffLine
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
+  getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
@@ -363,7 +397,8 @@ type TemplateType =
   | "openchat"
   | "deepseek"
   | "xwin-coder"
-  | "neural-chat";
+  | "neural-chat"
+  | "llava";
 
 type ModelProvider =
   | "openai"
@@ -392,7 +427,8 @@ export type ModelName =
   | "gpt-4"
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
-  | "gpt-4-1106-preview"
+  | "gpt-4-0125-preview"
+  | "gpt-4-vision-preview"
   // Open Source
   | "mistral-7b"
   | "mistral-8x7b"

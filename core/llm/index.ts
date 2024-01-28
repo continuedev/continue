@@ -27,6 +27,7 @@ import {
   chatmlTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
+  llavaTemplateMessages,
   neuralChatTemplateMessages,
   openchatTemplateMessages,
   phi2TemplateMessages,
@@ -55,6 +56,39 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "ollama",
 ];
 
+const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
+  "openai",
+  "ollama",
+  "google-palm",
+  "free-trial",
+];
+
+export function modelSupportsImages(
+  provider: ModelProvider,
+  model: string
+): boolean {
+  if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
+    return false;
+  }
+
+  if (model.includes("llava")) {
+    return true;
+  }
+
+  if (["gpt-4-vision-preview"].includes(model)) {
+    return true;
+  }
+
+  if (
+    model === "gemini-ultra" &&
+    (provider === "google-palm" || provider === "free-trial")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
 
@@ -65,6 +99,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("gemini")
   ) {
     return undefined;
+  }
+
+  if (lower.includes("llava")) {
+    return "llava";
   }
 
   if (lower.includes("xwin")) {
@@ -145,6 +183,7 @@ function autodetectTemplateFunction(
       openchat: openchatTemplateMessages,
       "xwin-coder": xWinCoderTemplateMessages,
       "neural-chat": neuralChatTemplateMessages,
+      llava: llavaTemplateMessages,
       none: null,
     };
 
@@ -202,6 +241,10 @@ export abstract class BaseLLM implements ILLM {
 
   get providerName(): ModelProvider {
     return (this.constructor as typeof BaseLLM).providerName;
+  }
+
+  supportsImages(): boolean {
+    return modelSupportsImages(this.providerName, this.model);
   }
 
   uniqueId: string;
@@ -297,6 +340,7 @@ export abstract class BaseLLM implements ILLM {
       messages,
       contextLength,
       options.maxTokens || DEFAULT_MAX_TOKENS,
+      this.supportsImages(),
       undefined,
       functions,
       this.systemMessage

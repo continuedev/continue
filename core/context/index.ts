@@ -2,7 +2,9 @@ import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
+  ContextSubmenuItem,
   IContextProvider,
+  LoadSubmenuItemsArgs,
 } from "..";
 export abstract class BaseContextProvider implements IContextProvider {
   options: { [key: string]: any };
@@ -23,5 +25,9 @@ export abstract class BaseContextProvider implements IContextProvider {
     extras: ContextProviderExtras
   ): Promise<ContextItem[]>;
 
-  abstract load(): Promise<void>;
+  async loadSubmenuItems(
+    args: LoadSubmenuItemsArgs
+  ): Promise<ContextSubmenuItem[]> {
+    return [];
+  }
 }

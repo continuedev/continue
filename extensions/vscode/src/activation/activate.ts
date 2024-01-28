@@ -19,10 +19,20 @@ export let windowId: string = v4();
 
 async function openTutorial(context: vscode.ExtensionContext) {
   if (context.globalState.get<boolean>("continue.tutorialShown") !== true) {
+    const tutorialPath = path.join(
+      getExtensionUri().fsPath,
+      "continue_tutorial.py"
+    );
+    // Ensure keyboard shortcuts match OS
+    const os = process.platform;
+    let tutorialContent = fs.readFileSync(tutorialPath, "utf8");
+    if (os !== "darwin") {
+      tutorialContent = tutorialContent.replace("⌘", "^");
+      fs.writeFileSync(tutorialPath, tutorialContent);
+    }
+
     const doc = await vscode.workspace.openTextDocument(
-      vscode.Uri.file(
-        path.join(getExtensionUri().fsPath, "continue_tutorial.py")
-      )
+      vscode.Uri.file(tutorialPath)
     );
     await vscode.window.showTextDocument(doc);
     context.globalState.update("continue.tutorialShown", true);
@@ -90,6 +100,25 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   startProxy();
   vsCodeIndexCodebase(ideProtocolClient.getWorkspaceDirectories());
+
+  // (async () => {
+  //   const defaultDocsPages = [
+  //     ["Socket.IO", "https://python-socketio.readthedocs.io/en/stable"],
+  //     // ["Flask", "https://flask.palletsprojects.com/en/2.0.x/"],
+  //   ];
+
+  //   const config = await configHandler.loadConfig(new VsCodeIde());
+
+  //   defaultDocsPages.forEach(async ([title, url]) => {
+  //     for await (const update of indexDocs(
+  //       title,
+  //       new URL(url),
+  //       config.embeddingsProvider
+  //     )) {
+  //       console.log(update.progress, update.desc);
+  //     }
+  //   });
+  // })();
 
   try {
     // Add icon theme for .continueignore

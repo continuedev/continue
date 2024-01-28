@@ -90,7 +90,8 @@ if (args[2] === "--target") {
   }
 
   // Copy over native / wasm modules //
-  if (!ghAction() && fs.existsSync("../bin")) {
+  process.chdir("../extensions/vscode");
+  if (!ghAction() && fs.existsSync("./bin")) {
     return;
   }
 
@@ -123,8 +124,7 @@ if (args[2] === "--target") {
     target = `${os}-${arch}`;
     console.log("Detected target: ", target);
   }
-
-  process.chdir("../extensions/vscode");
+  fs.mkdirSync("bin", { recursive: true });
 
   // onnxruntime-node
   await new Promise((resolve, reject) => {

@@ -39,8 +39,7 @@ class FileTreeContextProvider extends BaseContextProvider {
     title: "tree",
     displayTitle: "File Tree",
     description: "Attach a representation of the file tree",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(
@@ -91,7 +90,6 @@ class FileTreeContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
 }
 
 export default FileTreeContextProvider;

@@ -10,8 +10,7 @@ class DiffContextProvider extends BaseContextProvider {
     title: "diff",
     displayTitle: "Git Diff",
     description: "Reference the current git diff",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(
@@ -27,7 +26,6 @@ class DiffContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
 }
 
 export default DiffContextProvider;

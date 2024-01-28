@@ -4,9 +4,13 @@ import {
   EmbeddingsProvider,
   IContextProvider,
   ILLM,
+  MessageContent,
+  MessagePart,
+  RangeInFile,
 } from "core";
 import { ExtensionIde } from "core/ide";
 import { ideRequest } from "core/ide/messaging";
+import { stripImages } from "core/llm/countTokens";
 import { getBasename } from "core/util";
 
 interface MentionAttrs {
@@ -28,9 +32,10 @@ async function resolveEditorContent(
   contextProviders: IContextProvider[],
   llm: ILLM,
   embeddingsProvider?: EmbeddingsProvider
-): Promise<[ContextItemWithId[], string]> {
-  let paragraphs = [];
+): Promise<[ContextItemWithId[], MessageContent]> {
+  let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
+  const selectedCode: RangeInFile[] = [];
   let slashCommand = undefined;
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
@@ -41,14 +46,46 @@ async function resolveEditorContent(
       if (text === "") {
         continue;
       }
-      paragraphs.push(text);
+
+      if (parts[parts.length - 1]?.type === "text") {
+        parts[parts.length - 1].text += "\n" + text;
+      } else {
+        parts.push({ type: "text", text });
+      }
       contextItemAttrs.push(...ctxItems);
     } else if (p.type === "codeBlock") {
       if (!p.attrs.item.editing) {
-        paragraphs.push(
-          "```" + p.attrs.item.name + "\n" + p.attrs.item.content + "\n```"
-        );
+        const text =
+          "```" + p.attrs.item.name + "\n" + p.attrs.item.content + "\n```";
+        if (parts[parts.length - 1]?.type === "text") {
+          parts[parts.length - 1].text += "\n" + text;
+        } else {
+          parts.push({
+            type: "text",
+            text,
+          });
+        }
       }
+
+      const name: string = p.attrs.item.name;
+      let lines = name.substring(name.lastIndexOf("(") + 1);
+      lines = lines.substring(0, lines.lastIndexOf(")"));
+      const [start, end] = lines.split("-");
+
+      selectedCode.push({
+        filepath: p.attrs.item.description,
+        range: {
+          start: { line: parseInt(start) - 1, character: 0 },
+          end: { line: parseInt(end) - 1, character: 0 },
+        },
+      });
+    } else if (p.type === "image") {
+      parts.push({
+        type: "imageUrl",
+        imageUrl: {
+          url: p.attrs.src,
+        },
+      });
     } else {
       console.warn("Unexpected content type", p.type);
     }
@@ -74,9 +111,10 @@ async function resolveEditorContent(
       });
     } else {
       const data = {
-        name: item.id,
+        name: item.itemType === "contextProvider" ? item.id : item.itemType,
         query: item.query,
-        fullInput: paragraphs.join("\n"),
+        fullInput: stripImages(parts),
+        selectedCode,
       };
       const { items: resolvedItems } = await ideRequest(
         "getContextItems",
@@ -93,12 +131,24 @@ async function resolveEditorContent(
     contextItemsText += "\n";
   }
 
-  let finalText = paragraphs.join("\n").trim();
   if (slashCommand) {
-    finalText = `${slashCommand} ${finalText}`;
+    let lastTextIndex = findLastIndex(parts, (part) => part.type === "text");
+    parts[lastTextIndex].text = `${slashCommand} ${parts[lastTextIndex].text}`;
   }
 
-  return [contextItems, finalText];
+  return [contextItems, parts];
+}
+
+function findLastIndex<T>(
+  array: T[],
+  predicate: (value: T, index: number, obj: T[]) => boolean
+): number {
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (predicate(array[i], i, array)) {
+      return i;
+    }
+  }
+  return -1; // if no element satisfies the predicate
 }
 
 function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {

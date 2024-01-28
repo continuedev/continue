@@ -1,4 +1,5 @@
 import { ContextItemWithId, ILLM, SlashCommand } from "../..";
+import { stripImages } from "../../llm/countTokens";
 import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";
 import {
   RangeInFileWithContents,
@@ -205,10 +206,15 @@ const EditSlashCommand: SlashCommand = {
   name: "edit",
   description: "Edit selected code",
   run: async function* ({ ide, llm, input, history, contextItems, params }) {
-    const contextItemToEdit = contextItems.find(
+    let contextItemToEdit = contextItems.find(
       (item: ContextItemWithId) =>
         item.editing && item.id.providerTitle === "code"
     );
+    if (!contextItemToEdit) {
+      contextItemToEdit = contextItems.find(
+        (item: ContextItemWithId) => item.id.providerTitle === "code"
+      );
+    }
 
     if (!contextItemToEdit) {
       yield "Select (highlight and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) the code that you want to edit first";
@@ -457,7 +463,7 @@ const EditSlashCommand: SlashCommand = {
             4096
           ),
         })) {
-          yield chunk.content;
+          yield stripImages(chunk.content);
         }
       }
 

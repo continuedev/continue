@@ -11,8 +11,7 @@ class ProblemsContextProvider extends BaseContextProvider {
     title: "problems",
     displayTitle: "Problems",
     description: "Reference problems in the current file",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(
@@ -45,7 +44,6 @@ class ProblemsContextProvider extends BaseContextProvider {
 
     return items;
   }
-  async load(): Promise<void> {}
 }
 
 export default ProblemsContextProvider;

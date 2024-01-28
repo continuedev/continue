@@ -10,8 +10,7 @@ class URLContextProvider extends BaseContextProvider {
     title: "url",
     displayTitle: "URL",
     description: "Attach the contents of a web page",
-    dynamic: true,
-    requiresQuery: true,
+    type: "query",
   };
 
   async getContextItems(
@@ -39,7 +38,6 @@ class URLContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
 }
 
 export default URLContextProvider;
