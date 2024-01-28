@@ -718,15 +718,24 @@ export function getSidebarContent(
           break;
         }
       }
-    } catch (e) {
+    } catch (e: any) {
       vscode.window
         .showErrorMessage(
-          `Error handling message from Continue side panel: ${e}`,
-          "Show Logs"
+          `Continue error: ${e.message}${
+            e.message.includes("fetch failed")
+              ? ". It is possible that this error is due to certificates not being configured. See the troubleshooting page to learn more."
+              : ""
+          }`,
+          "Show Logs",
+          "Troubleshooting"
         )
         .then((selection) => {
           if (selection === "Show Logs") {
             vscode.commands.executeCommand("workbench.action.toggleDevTools");
+          } else if (selection === "Troubleshooting") {
+            vscode.env.openExternal(
+              vscode.Uri.parse("https://continue.dev/docs/troubleshooting")
+            );
           }
         });
       respond({ done: true, data: {} });
