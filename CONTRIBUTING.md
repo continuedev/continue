@@ -83,11 +83,33 @@ Continue uses [Prettier](https://marketplace.visualstudio.com/items?itemName=esb
 
 ### Writing Slash Commands
 
-See the [slash command documentation](./docs/docs/customization/slash-commands.md) to learn how to write a custom slash command.
+The slash command interface, defined in [core/index.d.ts](./core/index.d.ts), requires you to define a `name` (the text that will be typed to invoke the command), a `description` (the text that will be shown in the slash command menu), and a `run` function that will be called when the command is invoked. The `run` function is an async generator that yields the content to be displayed in the chat. The `run` function is passed a `ContinueSDK` object that can be used to interact with the IDE, call the LLM, and see the chat history, among a few other utilities.
+
+```ts
+export interface SlashCommand {
+  name: string;
+  description: string;
+  params?: { [key: string]: any };
+  run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
+}
+```
+
+There are many example of slash commands in [core/commands/slash](./core/commands/slash) that we recommend borrowing from. Once you've created your new `SlashCommand` in this folder, also be sure to complete the following:
+
+- Add your command to the array in [core/commands/slash/index.ts](./core/commands/slash/index.ts)
+- Add your command to the list in [`config_schema.json`](./extensions/vscode/config_schema.json). This makes sure that Intellisense shows users what commands are available for your provider when they are editing `config.json`. If there are any parameters that your command accepts, you should also follow existing examples in adding them to the JSON Schema.
 
 ### Writing Context Providers
 
-A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The simplest way to create a `ContextProvider` is to implement the `provide_context_items` method. You can find a great example of this in [GitHubIssuesContextProvider](./core/context/providers/GitHubIssuesContextProvider.ts), which allows you to search GitHub Issues in a repo.
+A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The `IContextProvider` interface is defined in [`core/index.d.ts`](./core/index.d.ts), but all built-in context providers extend [`BaseContextProvider`](./core/context/index.ts).
+
+Before defining your context provider, determine which "type" you want to create. The `"query"` type will show a small text input when selected, giving the user the chance to enter something like a Google search query for the [`GoogleContextProvider`](./core/context/providers/GoogleContextProvider.ts). The `"submenu"` type will open up a submenu of items that can be searched through and selected. Examples are the [`GitHubIssuesContextProvider`](./core/context/providers/GitHubIssuesContextProvider.ts) and the [`DocsContextProvider`](./core/context/providers/DocsContextProvider.ts). The `"normal"` type will just immediately add the context item. Examples include the [`DiffContextProvider`](./core/context/providers/DiffContextProvider.ts) and the [`OpenFilesContextProvider`](./core/context/providers/OpenFilesContextProvider.ts).
+
+After you've written your context provider, make sure to complete the following:
+
+- Add it to the array of context providers in [core/context/providers/index.ts](./core/context/providers/index.ts)
+- Add it to the `ContextProviderName` type in [core/index.d.ts](./core/index.d.ts)
+- Add it to the list in [`config_schema.json`](./extensions/vscode/config_schema.json). If there are any parameters that your context provider accepts, you should also follow existing examples in adding them to the JSON Schema.
 
 ### Adding an LLM Provider
 
