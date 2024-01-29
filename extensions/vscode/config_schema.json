@@ -386,7 +386,8 @@
                   "gpt-4",
                   "phind-codellama-34b",
                   "gemini-pro",
-                  "gpt-4-vision-preview"
+                  "gpt-4-vision-preview",
+                  "codellama-70b"
                 ]
               }
             }
@@ -426,6 +427,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -503,6 +505,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b"
                     ]
                   },
@@ -558,6 +561,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -597,6 +601,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -772,6 +777,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",

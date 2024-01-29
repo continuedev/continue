@@ -437,6 +437,7 @@ export type ModelName =
   | "codellama-7b"
   | "codellama-13b"
   | "codellama-34b"
+  | "codellama-70b"
   | "phi2"
   | "phind-codellama-34b"
   | "wizardcoder-7b"

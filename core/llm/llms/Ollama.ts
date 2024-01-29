@@ -67,6 +67,7 @@ class Ollama extends BaseLLM {
         "codellama-7b": "codellama:7b",
         "codellama-13b": "codellama:13b",
         "codellama-34b": "codellama:34b",
+        "codellama-70b": "codellama:70b",
         "phi-2": "phi:2.7b",
         "phind-codellama-34b": "phind-codellama:34b-v2",
         "wizardcoder-7b": "wizardcoder:7b-python",

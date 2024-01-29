@@ -12,6 +12,7 @@ class Together extends BaseLLM {
     "codellama-7b": "togethercomputer/CodeLlama-7b-Instruct",
     "codellama-13b": "togethercomputer/CodeLlama-13b-Instruct",
     "codellama-34b": "togethercomputer/CodeLlama-34b-Instruct",
+    "codellama-70b": "codellama/CodeLlama-70b-Python-hf",
     "llama2-7b": "togethercomputer/llama-2-7b-chat",
     "llama2-13b": "togethercomputer/llama-2-13b-chat",
     "llama2-70b": "togethercomputer/llama-2-70b-chat",
