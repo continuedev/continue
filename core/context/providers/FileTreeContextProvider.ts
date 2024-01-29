@@ -75,9 +75,9 @@ class FileTreeContextProvider extends BaseContextProvider {
         }
 
         currentTree.files.push(parts.pop()!);
-
-        trees.push(formatFileTree(subDirTree));
       }
+
+      trees.push(formatFileTree(subDirTree));
     }
 
     return [

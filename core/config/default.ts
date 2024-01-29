@@ -22,6 +22,11 @@ const defaultConfig: SerializedContinueConfig = {
       provider: "free-trial",
       model: "gemini-pro",
     },
+    {
+      title: "Codellama 70b (Free Trial)",
+      provider: "free-trial",
+      model: "codellama-70b",
+    },
   ],
   slashCommands: [
     {

@@ -41,10 +41,6 @@ body {
   height: 100%;
 }
 
-.press-start-2p {
-  font-family: "Press Start 2P", sans-serif;
-}
-
 a:focus {
   outline: none;
 }

@@ -193,10 +193,28 @@ const codeLlamaInstruct: ModelPackage = {
           model: "codellama-34b",
           title: "CodeLlama-34b",
         },
+        "70b": {
+          model: "codellama-70b",
+          title: "Codellama-70b",
+        },
       },
     },
   ],
   providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
+};
+
+const codellama70bTrial: ModelPackage = {
+  title: "Codellama 70b (Free Trial)",
+  description:
+    "The best code model from Meta, fine-tuned for code generation and conversation",
+  refUrl: "",
+  params: {
+    title: "CodeLlama-70b",
+    model: "codellama-70b",
+    contextLength: 4096,
+  },
+  icon: "meta.png",
+  providerOptions: ["freetrial"],
 };
 
 const llama2Chat: ModelPackage = {
@@ -293,8 +311,8 @@ const mistral: ModelPackage = {
       description: "The number of parameters in the model",
       options: {
         "7b": {
-          model: "wizardcoder-7b",
-          title: "WizardCoder-7b",
+          model: "mistral-7b",
+          title: "Mistral-7b",
         },
         "8x7b (MoE)": {
           model: "mistral-8x7b",
@@ -520,6 +538,7 @@ export const MODEL_INFO: ModelPackage[] = [
   gemini,
   claude2,
   mistral,
+  codellama70bTrial,
   codeLlamaInstruct,
   llama2Chat,
   wizardCoder,
@@ -803,6 +822,7 @@ After it's up and running, you can start using Continue.`,
     icon: "openai.png",
     tags: [ModelProviderTag.Free],
     packages: [
+      codellama70bTrial,
       { ...gpt4, title: "GPT-4 (trial)" },
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
       { ...gpt4vision, title: "GPT-4 Vision (trial)" },

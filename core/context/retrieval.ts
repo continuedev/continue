@@ -151,6 +151,12 @@ export async function retrieveContextItemsFromEmbeddings(
     results = await rerank(results, extras.llm, extras.fullInput, nFinal);
   }
 
+  if (results.length === 0) {
+    throw new Error(
+      "Warning: No results found for @codebase context provider."
+    );
+  }
+
   return [
     ...results.map((r) => {
       const name = `${getBasename(r.filepath)} (${r.startLine}-${r.endLine})`;

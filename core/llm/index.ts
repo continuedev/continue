@@ -92,6 +92,10 @@ export function modelSupportsImages(
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
 
+  if (lower === "codellama-70b") {
+    return "none";
+  }
+
   if (
     lower.includes("gpt") ||
     lower.includes("chat-bison") ||
