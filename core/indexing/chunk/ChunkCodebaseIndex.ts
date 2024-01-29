@@ -84,7 +84,6 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         desc: `Chunking ${getBasename(item.path)}`,
       };
       markComplete([item], IndexResultType.Compute);
-      i++;
     }
 
     // Add tag

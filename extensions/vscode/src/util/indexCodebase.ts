@@ -65,7 +65,7 @@ export async function vsCodeIndexCodebase(workspaceDirs: string[]) {
         };
         const [results, markComplete] = await getComputeDeleteAddRemove(
           tag,
-          stats,
+          { ...stats },
           (filepath) => ideProtocolClient.readFile(filepath)
         );
 
