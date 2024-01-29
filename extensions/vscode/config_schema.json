@@ -961,7 +961,8 @@
                 "codebase",
                 "problems",
                 "folder",
-                "issue"
+                "issue",
+                "tree"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -974,7 +975,8 @@
                 "Reference all linting errors and warnings in the currently open file",
                 "Include important files from a folder in the prompt, as determined by similarity search",
                 "Reference GitHub issues from a repository",
-                "Retrieve important pages from a documentation website, as determined by similarity search"
+                "Retrieve important pages from a documentation website, as determined by similarity search",
+                "Display a file tree of the current workspace"
               ],
               "type": "string"
             },
