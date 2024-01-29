@@ -6,7 +6,7 @@ import { MAX_CHUNK_SIZE } from "../llm/constants";
 import { getBasename } from "../util";
 import { getLanceDbPath } from "../util/paths";
 import { chunkDocument } from "./chunk/chunk";
-import { DatabaseConnection, SqliteDb } from "./refreshIndex";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
   CodebaseIndex,
   IndexResultType,
@@ -14,10 +14,6 @@ import {
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types";
-
-export function tagToString(tag: IndexTag): string {
-  return `${tag.directory}::${tag.branch}::${tag.artifactId}`;
-}
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
