@@ -1,3 +1,4 @@
+import { FullTextSearchCodebaseIndex } from "core/indexing/FullTextSearch";
 import { LanceDbIndex } from "core/indexing/LanceDbIndex";
 import { ChunkCodebaseIndex } from "core/indexing/chunk/ChunkCodebaseIndex";
 import { getComputeDeleteAddRemove } from "core/indexing/refreshIndex";
@@ -28,8 +29,9 @@ async function getIndexesToBuild(): Promise<CodebaseIndex[]> {
   const config = await configHandler.loadConfig(ide);
 
   const indexes = [
+    new ChunkCodebaseIndex(ide.readFile), // Chunking must come first
     new LanceDbIndex(config.embeddingsProvider, ide.readFile),
-    new ChunkCodebaseIndex(ide.readFile),
+    new FullTextSearchCodebaseIndex(),
   ];
 
   return indexes;
