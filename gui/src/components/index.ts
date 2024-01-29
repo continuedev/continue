@@ -80,7 +80,6 @@ export function parseColorForHex(colorVar: string): string {
     colorVar
   );
   if (value.startsWith("#")) {
-    console.log("value", value);
     return value.slice(0, 7);
   }
 
