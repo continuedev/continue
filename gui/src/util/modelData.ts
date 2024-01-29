@@ -293,8 +293,8 @@ const mistral: ModelPackage = {
       description: "The number of parameters in the model",
       options: {
         "7b": {
-          model: "wizardcoder-7b",
-          title: "WizardCoder-7b",
+          model: "mistral-7b",
+          title: "Mistral-7b",
         },
         "8x7b (MoE)": {
           model: "mistral-8x7b",
