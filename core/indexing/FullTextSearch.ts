@@ -14,7 +14,8 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   private async _createTables(db: DatabaseConnection) {
     await db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(
         path,
-        content
+        content,
+        tokenize = 'trigram'
     )`);
 
     await db.exec(`CREATE TABLE IF NOT EXISTS fts_metadata (
@@ -50,7 +51,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
           [item.path, chunk.content]
         );
         await db.run(
-          `INSERT INTO fts_metadata (id, path, cacheKey, chunkId) VALUES (?, ?, ?)`,
+          `INSERT INTO fts_metadata (id, path, cacheKey, chunkId) VALUES (?, ?, ?, ?)`,
           [lastID, item.path, item.cacheKey, chunk.id]
         );
       }
@@ -94,16 +95,16 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     const tagStrings = tags.map(tagToString);
 
     const results = await db.all(
-      `SELECT fts_metadata.chunkId
-        FROM fts
-        JOIN fts_metadata ON fts.rowid = fts_metadata.id
-        JOIN chunk_tags ON fts_metadata.chunkId = chunk_tags.chunkId
-        WHERE fts MATCH ? AND filtered_chunk_tags.tag IN (${tagStrings
-          .map(() => "?")
-          .join(",")})
-        ORDER BY rank
-        LIMIT ?`,
-      [text, ...tagStrings, n]
+      `SELECT fts_metadata.chunkId, fts_metadata.path, fts.content, rank
+      FROM fts
+      JOIN fts_metadata ON fts.rowid = fts_metadata.id
+      JOIN chunk_tags ON fts_metadata.chunkId = chunk_tags.chunkId
+      WHERE fts MATCH '${text}' AND chunk_tags.tag IN (${tagStrings
+        .map(() => "?")
+        .join(",")})
+      ORDER BY rank
+      LIMIT ?`,
+      [...tagStrings, n]
     );
 
     const chunks = await db.all(

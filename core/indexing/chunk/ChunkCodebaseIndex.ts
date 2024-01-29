@@ -12,7 +12,8 @@ import {
 import { chunkDocument } from "./chunk";
 
 export class ChunkCodebaseIndex implements CodebaseIndex {
-  artifactId: string = "chunks";
+  static artifactId: string = "chunks";
+  artifactId: string = ChunkCodebaseIndex.artifactId;
 
   readFile: (filepath: string) => Promise<string>;
   constructor(readFile: (filepath: string) => Promise<string>) {

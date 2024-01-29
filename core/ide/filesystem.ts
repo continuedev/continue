@@ -94,6 +94,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
+  getBranch(dir: string): Promise<string> {
+    return Promise.resolve("");
+  }
+
   async verticalDiffUpdate(
     filepath: string,
     startLine: number,

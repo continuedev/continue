@@ -5,6 +5,9 @@ import {
   ILLM,
   ModelProvider,
 } from "..";
+import { FullTextSearchCodebaseIndex } from "../indexing/FullTextSearch";
+import { ChunkCodebaseIndex } from "../indexing/chunk/ChunkCodebaseIndex";
+import { IndexTag } from "../indexing/types";
 import { getBasename } from "../util";
 
 const RERANK_PROMPT = (
@@ -145,6 +148,26 @@ export async function retrieveContextItemsFromEmbeddings(
     useReranking === false ? nFinal : nRetrieve,
     filterDirectory
   );
+
+  const ftsIndex = new FullTextSearchCodebaseIndex();
+  const workspaceDirs = await extras.ide.getWorkspaceDirs();
+  const branches = await Promise.all(
+    workspaceDirs.map((dir) => extras.ide.getBranch(dir))
+  );
+  const tags: IndexTag[] = workspaceDirs.map((directory, i) => ({
+    directory,
+    branch: branches[i],
+    artifactId: ChunkCodebaseIndex.artifactId,
+  }));
+  let ftsResults = await ftsIndex.retrieve(
+    tags,
+    extras.fullInput.trim().split(" ").join(" OR "),
+    nRetrieve,
+    filterDirectory
+  );
+
+  console.log("SIM RESULTS: ", results);
+  console.log("FTS RESULTS: ", ftsResults);
 
   // Re-ranking
   if (useReranking) {

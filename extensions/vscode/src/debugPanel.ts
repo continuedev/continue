@@ -428,6 +428,11 @@ export function getSidebarContent(
           respond(await ide.getProblems(data.message.filepath));
           break;
         }
+        case "getBranch": {
+          const { dir } = data.message;
+          respond(await ide.getBranch(dir));
+          break;
+        }
         case "getOpenFiles": {
           respond(await ide.getOpenFiles());
           break;

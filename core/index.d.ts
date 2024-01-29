@@ -316,6 +316,7 @@ export interface IDE {
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
+  getBranch(dir: string): Promise<string>;
 
   // Embeddings
   /**

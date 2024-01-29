@@ -112,6 +112,10 @@ export class ExtensionIde implements IDE {
     return r("sendChunkForFile", { chunk, embedding, tags });
   }
 
+  async getBranch(dir: string): Promise<string> {
+    return r("getBranch", { dir });
+  }
+
   retrieveChunks(
     text: string,
     n: number,

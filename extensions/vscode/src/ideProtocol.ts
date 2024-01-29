@@ -416,6 +416,10 @@ class VsCodeIde implements IDE {
     });
   }
 
+  async getBranch(dir: string): Promise<string> {
+    return ideProtocolClient.getBranch(vscode.Uri.file(dir));
+  }
+
   async getFilesToEmbed(
     providerId: string
   ): Promise<[string, string, string][]> {
