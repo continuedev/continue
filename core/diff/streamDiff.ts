@@ -37,7 +37,7 @@ export async function* streamDiff(
         yield { type: "old", line: mutatedOldLines.shift()! };
       }
       if (postponedLines.length > 0) {
-        for (let i = 0; i < postponedLines.length; i++) {
+        for (let i = 0; i <= postponedLines.length; i++) {
           yield { type: "new", line: postponedLines.shift()! };
         }
       }
