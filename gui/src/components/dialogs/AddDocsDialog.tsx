@@ -1,4 +1,5 @@
 import { postToIde } from "core/ide/messaging";
+import { usePostHog } from "posthog-js/react";
 import React, { useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
@@ -22,6 +23,7 @@ function AddDocsDialog() {
   const { addItem } = useSubmenuContextProviders();
 
   const ref = React.useRef<HTMLInputElement>(null);
+  const posthog = usePostHog();
 
   useLayoutEffect(() => {
     if (ref.current) {
@@ -63,6 +65,7 @@ function AddDocsDialog() {
             title: docsTitle,
             description: new URL(docsUrl).hostname,
           });
+          posthog.capture("add_docs", { url: docsUrl });
         }}
       >
         Done
