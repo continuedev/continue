@@ -10,6 +10,10 @@ Pre-release Changes
 ### Added
 * Image support
 * Full-text search index for retrieval
+* Docs context provider
+* CodeLlama-70b support
+### Fixed
+* Fixed proxy setting in config.json
 
 ## v0.8.2 - 2024-01-23
 ### Added
