@@ -13,6 +13,11 @@ const inlineTipDecoration = vscode.window.createTextEditorDecorationType({
 function handleSelectionChange(e: vscode.TextEditorSelectionChangeEvent) {
   const selection = e.selections[0];
   const editor = e.textEditor;
+
+  if (editor.document.uri.toString() === "output:tasks") {
+    return;
+  }
+
   if (
     selection.isEmpty ||
     vscode.workspace
@@ -69,6 +74,10 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor?.document.getText() === "") {
+        if (editor.document.uri.toString() === "output:tasks") {
+          return;
+        }
+
         editor.setDecorations(emptyFileTooltipDecoration, [
           {
             range: new vscode.Range(
