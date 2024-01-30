@@ -300,6 +300,11 @@ export interface IDE {
   runCommand(command: string): Promise<void>;
   saveFile(filepath: string): Promise<void>;
   readFile(filepath: string): Promise<string>;
+  showLines(
+    filepath: string,
+    startLine: number,
+    endLine: number
+  ): Promise<void>;
   showDiff(
     filepath: string,
     newContents: string,

@@ -89,7 +89,8 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     tags: IndexTag[],
     text: string,
     n: number,
-    directory: string | undefined
+    directory: string | undefined,
+    filterPaths: string[] | undefined
   ): Promise<Chunk[]> {
     const db = await SqliteDb.get();
     const tagStrings = tags.map(tagToString);
@@ -99,12 +100,20 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
       FROM fts
       JOIN fts_metadata ON fts.rowid = fts_metadata.id
       JOIN chunk_tags ON fts_metadata.chunkId = chunk_tags.chunkId
-      WHERE fts MATCH '${text}' AND chunk_tags.tag IN (${tagStrings
-        .map(() => "?")
-        .join(",")})
+      WHERE fts MATCH '${text.replace(
+        /\?/g,
+        ""
+      )}' AND chunk_tags.tag IN (${tagStrings.map(() => "?").join(",")})
+        ${
+          filterPaths
+            ? `AND fts_metadata.path IN (${filterPaths
+                .map(() => "?")
+                .join(",")})`
+            : ""
+        }
       ORDER BY rank
       LIMIT ?`,
-      [...tagStrings, n]
+      [...tagStrings, ...(filterPaths || []), n]
     );
 
     const chunks = await db.all(

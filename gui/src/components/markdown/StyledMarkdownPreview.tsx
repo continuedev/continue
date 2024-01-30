@@ -74,7 +74,10 @@ const StyledMarkdown = styled.div<{
   padding-right: 8px;
   color: ${vscForeground};
 
-  p {
+  p,
+  li,
+  ol,
+  ul {
     line-height: 1.5;
   }
 `;

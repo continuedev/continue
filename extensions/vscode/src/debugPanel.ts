@@ -211,25 +211,6 @@ export function getSidebarContent(
           });
           break;
         }
-        case "showLines": {
-          ideProtocolClient.highlightCode(
-            {
-              filepath: data.filepath,
-              range: {
-                start: {
-                  line: data.start,
-                  character: 0,
-                },
-                end: {
-                  line: data.end,
-                  character: 0,
-                },
-              },
-            },
-            "#00ff0022"
-          );
-          break;
-        }
         case "toggleDevTools": {
           vscode.commands.executeCommand("workbench.action.toggleDevTools");
           vscode.commands.executeCommand("continue.viewLogs");
@@ -439,6 +420,11 @@ export function getSidebarContent(
         }
         case "getPinnedFiles": {
           respond(await ide.getPinnedFiles());
+          break;
+        }
+        case "showLines": {
+          const { filepath, startLine, endLine } = data.message;
+          respond(await ide.showLines(filepath, startLine, endLine));
           break;
         }
         // Other

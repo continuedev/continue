@@ -136,18 +136,11 @@ export async function retrieveContextItemsFromEmbeddings(
     return [];
   }
 
-  const nRetrieve = options?.nRetrieve || 20;
-  const nFinal = options?.nFinal || 8;
+  const nFinal = options?.nFinal || 10;
   const useReranking =
     llmCanGenerateInParallel(extras.llm) &&
     (options?.useReranking === undefined ? false : options?.useReranking);
-
-  // Similarity search
-  let results = await extras.ide.retrieveChunks(
-    extras.fullInput,
-    useReranking === false ? nFinal : nRetrieve,
-    filterDirectory
-  );
+  const nRetrieve = useReranking === false ? nFinal : options?.nRetrieve || 20;
 
   const ftsIndex = new FullTextSearchCodebaseIndex();
   const workspaceDirs = await extras.ide.getWorkspaceDirs();
@@ -159,15 +152,38 @@ export async function retrieveContextItemsFromEmbeddings(
     branch: branches[i],
     artifactId: ChunkCodebaseIndex.artifactId,
   }));
+
   let ftsResults = await ftsIndex.retrieve(
     tags,
     extras.fullInput.trim().split(" ").join(" OR "),
+    nRetrieve / 2,
+    filterDirectory,
+    undefined
+  );
+
+  let vecResults = await extras.ide.retrieveChunks(
+    extras.fullInput,
     nRetrieve,
     filterDirectory
   );
 
-  console.log("SIM RESULTS: ", results);
-  console.log("FTS RESULTS: ", ftsResults);
+  // Now combine these (de-duplicate) and re-rank
+  let results = [...ftsResults];
+  for (const vecResult of vecResults) {
+    if (results.length >= nRetrieve) {
+      break;
+    }
+    if (
+      !ftsResults.find(
+        (r) =>
+          r.filepath === vecResult.filepath &&
+          r.startLine === vecResult.startLine &&
+          r.endLine === vecResult.endLine
+      )
+    ) {
+      results.push(vecResult);
+    }
+  }
 
   // Re-ranking
   if (useReranking) {

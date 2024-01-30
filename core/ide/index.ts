@@ -30,6 +30,14 @@ export class ExtensionIde implements IDE {
     return await r("getWorkspaceDirs");
   }
 
+  async showLines(
+    filepath: string,
+    startLine: number,
+    endLine: number
+  ): Promise<void> {
+    return await r("showLines", { filepath, startLine, endLine });
+  }
+
   async listFolders(): Promise<string[]> {
     return await r("listFolders");
   }
