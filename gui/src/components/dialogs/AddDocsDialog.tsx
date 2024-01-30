@@ -26,9 +26,11 @@ function AddDocsDialog() {
   const posthog = usePostHog();
 
   useLayoutEffect(() => {
-    if (ref.current) {
-      ref.current.focus();
-    }
+    setTimeout(() => {
+      if (ref.current) {
+        ref.current.focus();
+      }
+    }, 100);
   }, [ref]);
 
   return (
