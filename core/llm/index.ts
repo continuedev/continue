@@ -380,11 +380,11 @@ export abstract class BaseLLM implements ILLM {
       .map(([key, value]) => `${key}: ${value}`)
       .join("\n");
     return `Settings:
-  ${settings}
+${settings}
 
-  ############################################
+############################################
 
-  ${prompt}`;
+${prompt}`;
   }
 
   private _logTokensGenerated(model: string, completion: string) {
@@ -499,6 +499,10 @@ export abstract class BaseLLM implements ILLM {
 
     this._logTokensGenerated(completionOptions.model, completion);
 
+    if (log && this.writeLog) {
+      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+    }
+
     return { prompt, completion };
   }
 
@@ -539,6 +543,10 @@ export abstract class BaseLLM implements ILLM {
     const completion = await this._complete(prompt, completionOptions);
 
     this._logTokensGenerated(completionOptions.model, completion);
+    if (log && this.writeLog) {
+      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+    }
+
     return completion;
   }
 
@@ -611,6 +619,10 @@ export abstract class BaseLLM implements ILLM {
     }
 
     this._logTokensGenerated(completionOptions.model, completion);
+    if (log && this.writeLog) {
+      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+    }
+
     return { prompt, completion };
   }
 

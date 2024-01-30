@@ -1,9 +1,14 @@
 import { ContinueConfig, IDE, ILLM } from "core";
 import * as fs from "fs";
 import { Agent, ProxyAgent, fetch } from "undici";
+import * as vscode from "vscode";
 import { webviewRequest } from "./debugPanel";
 import { VsCodeIde, loadFullConfigNode } from "./ideProtocol";
 const tls = require("tls");
+
+const outputChannel = vscode.window.createOutputChannel(
+  "Continue - LLM Prompt/Completion"
+);
 
 class VsCodeConfigHandler {
   savedConfig: ContinueConfig | undefined;
@@ -98,6 +103,17 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
       dispatcher: agent,
       headers,
     });
+  };
+
+  llm.writeLog = async (log: string) => {
+    outputChannel.appendLine(
+      "=========================================================================="
+    );
+    outputChannel.appendLine(
+      "=========================================================================="
+    );
+
+    outputChannel.append(log);
   };
 
   return llm;
