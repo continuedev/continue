@@ -1,5 +1,6 @@
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
+import { contextItemToRangeInFileWithContents } from "core/commands/util";
 import { ExtensionIde } from "core/ide";
 import React from "react";
 import styled from "styled-components";
@@ -46,8 +47,11 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
       contextItem.description.startsWith("/") ||
       contextItem.description.startsWith("\\")
     ) {
-      new ExtensionIde().openFile(
-        contextItem.description.split(" ").shift() || ""
+      const rif = contextItemToRangeInFileWithContents(contextItem);
+      new ExtensionIde().showLines(
+        rif.filepath,
+        rif.range.start.line,
+        rif.range.end.line
       );
     } else {
       new ExtensionIde().showVirtualFile(contextItem.name, contextItem.content);

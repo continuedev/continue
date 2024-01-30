@@ -300,6 +300,11 @@ export interface IDE {
   runCommand(command: string): Promise<void>;
   saveFile(filepath: string): Promise<void>;
   readFile(filepath: string): Promise<string>;
+  showLines(
+    filepath: string,
+    startLine: number,
+    endLine: number
+  ): Promise<void>;
   showDiff(
     filepath: string,
     newContents: string,
@@ -316,6 +321,7 @@ export interface IDE {
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
+  getBranch(dir: string): Promise<string>;
 
   // Embeddings
   /**

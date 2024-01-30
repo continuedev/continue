@@ -233,9 +233,9 @@ class IdeProtocolClient {
     panel.webview.html = getSidebarContent(panel, "/monaco", edits);
   }
 
-  openFile(filepath: string) {
+  openFile(filepath: string, range?: vscode.Range) {
     // vscode has a builtin open/get open files
-    openEditorAndRevealRange(filepath, undefined, vscode.ViewColumn.One);
+    return openEditorAndRevealRange(filepath, range, vscode.ViewColumn.One);
   }
 
   async fileExists(filepath: string): Promise<boolean> {

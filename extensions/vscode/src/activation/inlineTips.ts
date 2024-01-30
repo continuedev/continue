@@ -92,6 +92,9 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument((e) => {
+      if (e.document.uri.toString().startsWith("vscode://inline-chat")) {
+        return;
+      }
       if (e.document.getText() === "") {
         vscode.window.visibleTextEditors.forEach((editor) => {
           editor.setDecorations(emptyFileTooltipDecoration, [
