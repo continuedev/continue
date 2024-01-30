@@ -7,7 +7,10 @@ import {
   indexDecorationType,
   redDecorationType,
 } from "./decorations";
-import { editorToVerticalDiffCodeLens } from "./manager";
+import {
+  editorToVerticalDiffCodeLens,
+  verticalPerLineDiffManager,
+} from "./manager";
 
 export class VerticalPerLineDiffHandler {
   private editor: vscode.TextEditor;
@@ -206,27 +209,32 @@ export class VerticalPerLineDiffHandler {
   }
 
   async run(diffLineGenerator: AsyncGenerator<DiffLine>) {
-    // As an indicator of loading
-    this.updateIndexLineDecorations();
+    try {
+      // As an indicator of loading
+      this.updateIndexLineDecorations();
 
-    for await (let diffLine of diffLineGenerator) {
-      if (this.isCancelled) {
-        return;
+      for await (let diffLine of diffLineGenerator) {
+        if (this.isCancelled) {
+          return;
+        }
+        await this.handleDiffLine(diffLine);
       }
-      await this.handleDiffLine(diffLine);
+
+      // Clear deletion buffer
+      await this.insertDeletionBuffer();
+      this.clearIndexLineDecorations();
+
+      // Reject on user typing
+      // const listener = vscode.workspace.onDidChangeTextDocument((e) => {
+      //   if (e.document.uri.fsPath === this.filepath) {
+      //     this.clear(false);
+      //     listener.dispose();
+      //   }
+      // });
+    } catch (e) {
+      verticalPerLineDiffManager.clearForFilepath(this.filepath, false);
+      throw e;
     }
-
-    // Clear deletion buffer
-    await this.insertDeletionBuffer();
-    this.clearIndexLineDecorations();
-
-    // Reject on user typing
-    // const listener = vscode.workspace.onDidChangeTextDocument((e) => {
-    //   if (e.document.uri.fsPath === this.filepath) {
-    //     this.clear(false);
-    //     listener.dispose();
-    //   }
-    // });
   }
 
   async acceptRejectBlock(

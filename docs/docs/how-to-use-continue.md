@@ -1,5 +1,5 @@
 ---
-title: How to use Continue
+title: 🧑‍🎓 How to use Continue
 description: Using LLMs as you code with Continue
 keywords: [how to, edit, refactor, boilerplate, context]
 ---

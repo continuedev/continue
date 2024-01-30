@@ -8,7 +8,6 @@ import { getUniqueId } from "./util/vscode";
 
 let client: any = undefined;
 export async function capture(args: any) {
-  console.log("Capturing posthog event: ", args);
   if (!client) {
     const { PostHog } = await import("posthog-node");
     client = new PostHog("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {

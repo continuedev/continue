@@ -1,4 +1,6 @@
+import { FullTextSearchCodebaseIndex } from "core/indexing/FullTextSearch";
 import { LanceDbIndex } from "core/indexing/LanceDbIndex";
+import { ChunkCodebaseIndex } from "core/indexing/chunk/ChunkCodebaseIndex";
 import { getComputeDeleteAddRemove } from "core/indexing/refreshIndex";
 import { CodebaseIndex, IndexTag, LastModifiedMap } from "core/indexing/types";
 import * as vscode from "vscode";
@@ -23,11 +25,14 @@ const vscodeGetStats = async (
 };
 
 async function getIndexesToBuild(): Promise<CodebaseIndex[]> {
-  const indexes = [];
-
   const ide = new VsCodeIde();
   const config = await configHandler.loadConfig(ide);
-  indexes.push(new LanceDbIndex(config.embeddingsProvider, ide.readFile));
+
+  const indexes = [
+    new ChunkCodebaseIndex(ide.readFile), // Chunking must come first
+    new LanceDbIndex(config.embeddingsProvider, ide.readFile),
+    new FullTextSearchCodebaseIndex(),
+  ];
 
   return indexes;
 }
@@ -62,11 +67,11 @@ export async function vsCodeIndexCodebase(workspaceDirs: string[]) {
         };
         const [results, markComplete] = await getComputeDeleteAddRemove(
           tag,
-          stats,
+          { ...stats },
           (filepath) => ideProtocolClient.readFile(filepath)
         );
 
-        // console.log("RESULTS: ", results);
+        console.log("RESULTS: ", codebaseIndex.artifactId, results);
 
         for await (let { progress, desc } of codebaseIndex.update(
           tag,

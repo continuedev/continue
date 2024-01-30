@@ -4,7 +4,7 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     apiBase: "https://api.openai.com",
-    model: "text-embedding-ada-002",
+    model: "text-embedding-3-large",
   };
 
   get id(): string {

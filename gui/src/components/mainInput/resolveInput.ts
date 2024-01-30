@@ -6,6 +6,7 @@ import {
   ILLM,
   MessageContent,
   MessagePart,
+  RangeInFile,
 } from "core";
 import { ExtensionIde } from "core/ide";
 import { ideRequest } from "core/ide/messaging";
@@ -34,6 +35,7 @@ async function resolveEditorContent(
 ): Promise<[ContextItemWithId[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
+  const selectedCode: RangeInFile[] = [];
   let slashCommand = undefined;
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
@@ -64,6 +66,19 @@ async function resolveEditorContent(
           });
         }
       }
+
+      const name: string = p.attrs.item.name;
+      let lines = name.substring(name.lastIndexOf("(") + 1);
+      lines = lines.substring(0, lines.lastIndexOf(")"));
+      const [start, end] = lines.split("-");
+
+      selectedCode.push({
+        filepath: p.attrs.item.description,
+        range: {
+          start: { line: parseInt(start) - 1, character: 0 },
+          end: { line: parseInt(end) - 1, character: 0 },
+        },
+      });
     } else if (p.type === "image") {
       parts.push({
         type: "imageUrl",
@@ -99,6 +114,7 @@ async function resolveEditorContent(
         name: item.itemType === "contextProvider" ? item.id : item.itemType,
         query: item.query,
         fullInput: stripImages(parts),
+        selectedCode,
       };
       const { items: resolvedItems } = await ideRequest(
         "getContextItems",

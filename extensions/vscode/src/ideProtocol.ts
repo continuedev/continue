@@ -31,7 +31,7 @@ import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { configHandler } from "./loadConfig";
 import mergeJson from "./util/merge";
 import { traverseDirectory } from "./util/traverseDirectory";
-import { getExtensionUri } from "./util/vscode";
+import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 
 async function buildConfigTs(browser: boolean) {
   if (!fs.existsSync(getConfigTsPath())) {
@@ -49,6 +49,7 @@ async function buildConfigTs(browser: boolean) {
       format: browser ? "esm" : "cjs",
       outfile: getConfigJsPath(!browser),
       external: ["fetch", "fs", "path", "os", "child_process"],
+      sourcemap: true,
     });
   } catch (e) {
     console.log(e);
@@ -242,7 +243,7 @@ class VsCodeIde implements IDE {
   }
 
   async getTerminalContents(): Promise<string> {
-    return await ideProtocolClient.getTerminalContents(2);
+    return await ideProtocolClient.getTerminalContents(1);
   }
 
   async listWorkspaceContents(directory?: string): Promise<string[]> {
@@ -292,6 +293,26 @@ class VsCodeIde implements IDE {
 
   async openFile(path: string): Promise<void> {
     ideProtocolClient.openFile(path);
+  }
+
+  async showLines(
+    filepath: string,
+    startLine: number,
+    endLine: number
+  ): Promise<void> {
+    const range = new vscode.Range(
+      new vscode.Position(startLine, 0),
+      new vscode.Position(endLine, 0)
+    );
+    openEditorAndRevealRange(filepath, range).then(() => {
+      ideProtocolClient.highlightCode(
+        {
+          filepath,
+          range,
+        },
+        "#fff1"
+      );
+    });
   }
 
   async runCommand(command: string): Promise<void> {
@@ -415,6 +436,10 @@ class VsCodeIde implements IDE {
     });
   }
 
+  async getBranch(dir: string): Promise<string> {
+    return ideProtocolClient.getBranch(vscode.Uri.file(dir));
+  }
+
   async getFilesToEmbed(
     providerId: string
   ): Promise<[string, string, string][]> {
@@ -465,7 +490,9 @@ async function loadFullConfigNode(ide: IDE): Promise<ContinueConfig> {
   if (configJsContents) {
     try {
       // Try config.ts first
-      const module = await require(getConfigJsPath(true));
+      const configJsPath = getConfigJsPath(true);
+      const module = await require(configJsPath);
+      delete require.cache[require.resolve(configJsPath)];
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
       }

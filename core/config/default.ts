@@ -8,9 +8,9 @@ const defaultConfig: SerializedContinueConfig = {
       model: "gpt-4",
     },
     {
-      title: "GPT-3.5-Turbo (Free Trial)",
+      title: "GPT-4 Vision (Free Trial)",
       provider: "free-trial",
-      model: "gpt-3.5-turbo",
+      model: "gpt-4-vision-preview",
     },
     {
       title: "Phind CodeLlama (Free Trial)",
@@ -21,6 +21,11 @@ const defaultConfig: SerializedContinueConfig = {
       title: "Gemini Pro (Free Trial)",
       provider: "free-trial",
       model: "gemini-pro",
+    },
+    {
+      title: "Codellama 70b (Free Trial)",
+      provider: "free-trial",
+      model: "codellama-70b",
     },
   ],
   slashCommands: [

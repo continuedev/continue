@@ -1,5 +1,5 @@
 import React, { isValidElement, useEffect } from "react";
-import { ReactMarkdown } from "react-markdown/lib/react-markdown";
+import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
 import {
   VSC_BACKGROUND_VAR,

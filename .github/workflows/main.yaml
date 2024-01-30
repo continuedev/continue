@@ -85,6 +85,9 @@ jobs:
         run: |
           cd extensions/vscode
           npm ci
+        env:
+          # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
       - name: Install gui Dependencies
         run: |
@@ -96,31 +99,22 @@ jobs:
           cd core
           npm ci --legacy-peer-deps
 
-      # 2.5. Pre package and download anything that needs to be built on Apple Silicon
-      - name: Prepare the extension
-        run: |
-          cd extensions/vscode
-          npm run prepackage
-
-      - name: Make the out directory
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+      # 2.5. Pre package
+      - name: Make the out/node_modules directory
         run: |
           cd extensions/vscode
           mkdir out
+          cd out
+          mkdir node_modules
 
-      - name: Download node_modules for esbuild on Apple Silicon
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: curl -o extensions/vscode/out/node_modules.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/node_modules.zip
+      - name: Set var for environment info
+        shell: pwsh
+        run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
 
-      - name: Unzip node_modules for esbuild on Apple Silicon
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
+      - name: Prepackage the extension
         run: |
-          cd extensions/vscode/out
-          unzip node_modules.zip
-
-      - name: Remove node_modules.zip for esbuild on Apple Silicon
-        if: matrix.os == 'macos-latest' && matrix.arch == 'arm64'
-        run: rm extensions/vscode/out/node_modules.zip
+          cd extensions/vscode
+          npm run prepackage -- --target ${{ env.target }}
 
       # 3. Run tests for the extension
 
@@ -140,23 +134,19 @@ jobs:
       #   if: matrix.os != 'ubuntu-latest'
 
       # 4. Package the extension
-      - shell: pwsh
-        run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
-      - run: cd extensions/vscode && npx vsce package --target ${{ env.target }}
+      - name: Re-install esbuild
+        run: |
+          cd extensions/vscode
+          npm install -f esbuild
+
+      - name: Package the extension
+        run: cd extensions/vscode && npx vsce package --target ${{ env.target }}
 
       # 5. Upload the .vsix as an artifact
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ env.target }}
           path: "extensions/vscode/*.vsix"
-
-      # 6. Upload continue.log as an artifact for debugging of the workflow
-      - name: Upload continue.log
-        uses: actions/upload-artifact@v2
-        with:
-          name: continue-log
-          path: /home/runner/.continue/continue.log
-        if: always()
 
   publish:
     runs-on: ubuntu-latest
@@ -214,7 +204,7 @@ jobs:
 
       # 5 Send to Discord Webhook
       - name: Discord Commits
-        uses: Sniddl/discord-commits@v1.6
+        uses: Sniddl/discord-commits@1.7
         with:
           webhook: ${{ secrets.DISCORD_WEBHOOK }}
           template: "avatar-with-link"

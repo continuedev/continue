@@ -233,9 +233,9 @@ class IdeProtocolClient {
     panel.webview.html = getSidebarContent(panel, "/monaco", edits);
   }
 
-  openFile(filepath: string) {
+  openFile(filepath: string, range?: vscode.Range) {
     // vscode has a builtin open/get open files
-    openEditorAndRevealRange(filepath, undefined, vscode.ViewColumn.One);
+    return openEditorAndRevealRange(filepath, range, vscode.ViewColumn.One);
   }
 
   async fileExists(filepath: string): Promise<boolean> {
@@ -354,7 +354,20 @@ class IdeProtocolClient {
     }
 
     const allFiles: string[] = [];
-    for await (const file of traverseDirectory(directory, [])) {
+    const gitRoot = await this.getGitRoot(directory);
+    let onlyThisDirectory = undefined;
+    if (gitRoot) {
+      onlyThisDirectory = directory.slice(gitRoot.length).split(path.sep);
+      if (onlyThisDirectory[0] === "") {
+        onlyThisDirectory.shift();
+      }
+    }
+    for await (const file of traverseDirectory(
+      gitRoot || directory,
+      [],
+      true,
+      onlyThisDirectory
+    )) {
       allFiles.push(file);
     }
     return allFiles;
@@ -453,6 +466,11 @@ class IdeProtocolClient {
       repo = await this._getRepo(forDirectory);
     }
     return repo;
+  }
+
+  async getGitRoot(forDirectory: string): Promise<string | undefined> {
+    const repo = await this.getRepo(vscode.Uri.file(forDirectory));
+    return repo?.rootUri?.fsPath;
   }
 
   async getBranch(forDirectory: vscode.Uri) {

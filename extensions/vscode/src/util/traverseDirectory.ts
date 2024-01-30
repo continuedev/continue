@@ -95,7 +95,8 @@ function splitGlob(glob: string): [string | undefined, string, boolean] {
 export async function* traverseDirectory(
   directory: string,
   gitIgnorePatterns: string[],
-  returnFiles: boolean = true
+  returnFiles: boolean = true,
+  onlyThisDirectory?: string[]
 ): AsyncGenerator<string> {
   const nodes = await vscode.workspace.fs.readDirectory(
     uriFromFilePath(directory)
@@ -119,7 +120,9 @@ export async function* traverseDirectory(
             );
             const contents = new TextDecoder().decode(bytes);
             ignorePatterns.push(
-              ...contents.split("\n").filter((p) => p.trim() !== "")
+              ...contents
+                .split("\n")
+                .filter((p) => p.trim() !== "" && p[0] !== "#")
             );
           } else {
             files.push(name);
@@ -133,12 +136,21 @@ export async function* traverseDirectory(
     }
   }
 
-  const allIgnorePatterns = [...gitIgnorePatterns, ...ignorePatterns];
+  const allIgnorePatterns = [...gitIgnorePatterns, ...ignorePatterns].map(
+    (pattern) => {
+      if (!pattern.slice(0, -1).includes("/")) {
+        return "**/" + pattern;
+      }
+      return pattern;
+    }
+  );
   const ig = ignore().add(allIgnorePatterns);
 
-  for (const node of returnFiles ? files : dirs) {
-    if (!ig.ignores(node)) {
-      yield path.join(directory, node);
+  if (!onlyThisDirectory) {
+    for (const node of returnFiles ? files : dirs) {
+      if (!ig.ignores(node)) {
+        yield path.join(directory, node);
+      }
     }
   }
 
@@ -147,7 +159,7 @@ export async function* traverseDirectory(
   for (const ignorePattern of allIgnorePatterns) {
     const [first, rest, leadingWildcard] = splitGlob(ignorePattern);
     if (leadingWildcard) {
-      wildcardPatterns.push("**/" + rest);
+      wildcardPatterns.push("**/" + first + (rest ? "/" + rest : ""));
     }
     if (first) {
       if (subDirIgnorePatterns[first] === undefined) {
@@ -157,10 +169,14 @@ export async function* traverseDirectory(
     }
   }
   const entries = Object.entries(subDirIgnorePatterns);
-
   for (const dir of dirs) {
+    // Skip everything except onlyThisDirectory
+    if (onlyThisDirectory && onlyThisDirectory[0] !== dir) {
+      continue;
+    }
+
     // Recurse if not ignored
-    if (!ig.ignores(dir)) {
+    if (!(ig.ignores(dir + "/") || ig.ignores(dir))) {
       // For patterns who can potentially match items of this subdir, strip the subdir from the start
       const keepPatterns = [...wildcardPatterns];
       for (const [startPattern, subDirPatterns] of entries) {
@@ -171,7 +187,10 @@ export async function* traverseDirectory(
       for await (const file of traverseDirectory(
         path.join(directory, dir),
         keepPatterns,
-        returnFiles
+        returnFiles,
+        onlyThisDirectory && onlyThisDirectory.length > 1
+          ? onlyThisDirectory.slice(1)
+          : undefined
       )) {
         yield file;
       }

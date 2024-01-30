@@ -16,29 +16,28 @@ If you need any help migrating, please reach out to us on Discord.
 
 > Continue has moved to using Typescript configuration. To learn about this, please see [Configuration as Code](../customization/code-config.md).
 
-For configuration that requires code, we now provide a simpler interface that works alongside config.json. In the same folder, `~/.continue`, create a file named `config.py` (the same name as before) and add a function called `modify_config`. This function should take a [`ContinueConfig`](https://github.com/continuedev/continue/blob/main/server/continuedev/core/config.py) object as its only argument, and return a `ContinueConfig` object. This object is essentially the same as the one that was previously defined in `config.py`. This allows you to modify the initial configuration object defined in your `config.json`. Here's an example that cuts the temperature in half:
+For configuration that requires code, we now provide a simpler interface that works alongside config.json. In the same folder, `~/.continue`, create a file named `config.ts` and add a function called `modifyConfig`. This function should take a `Config` object as its only argument, and return a `Config` object. This object is essentially the same as the one that was previously defined in `config.py`. This allows you to modify the initial configuration object defined in your `config.json`. Here's an example that cuts the temperature in half:
 
-```python
-from continuedev.core.config import ContinueConfig
-
-def modify_config(config: ContinueConfig) -> ContinueConfig:
-    config.completion_options.temperature /= 2
-    return config
+```typescript
+function modifyConfig(config: Config): Config {
+  config.completionOptions.temperature /= 2;
+  return config;
+}
 ```
 
 To summarize, these are the steps taken to load your configuration:
 
 1. Load `~/.continue/config.json`
-2. Convert this into a `ContinueConfig` object
-3. If `~/.continue/config.py` exists and has defined `modify_config` correctly, call `modify_config` with the `ContinueConfig` object to generate the final configuration
+2. Convert this into a `Config` object
+3. If `~/.continue/config.ts` exists and has defined `modifyConfig` correctly, call `modifyConfig` with the `Config` object to generate the final configuration
 
 ## List of Changes
 
-### `completion_options`
+### `completionOptions`
 
-The properties `top_p`, `top_k`, `temperature`, `presence_penalty`, and `frequency_penalty` have been moved into a single object called `completion_options`. It can be specified at the top level of the config or within a `models` object.
+The properties `topP`, `topK`, `temperature`, `presencePenalty`, and `frequencyPenalty` have been moved into a single object called `completionOptions`. It can be specified at the top level of the config or within a `models` object.
 
-### `request_options`
+### `requestOptions`
 
 The properties `timeout`, `verify_ssl`, `ca_bundle_path`, `proxy`, and `headers` have been moved into a single object called `request_options`, which can be specified for each `models` object.
 

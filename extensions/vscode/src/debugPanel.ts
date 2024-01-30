@@ -2,12 +2,15 @@ import { ContextItemId, DiffLine, FileEdit, ModelDescription } from "core";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
+import * as fs from "fs";
 import { readFileSync, writeFileSync } from "fs";
+import * as path from "path";
 import * as io from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ideProtocolClient, windowId } from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
+import { streamEdit } from "./diff/verticalPerLine/manager";
 import historyManager from "./history";
 import { VsCodeIde } from "./ideProtocol";
 import { configHandler, llmFromTitle } from "./loadConfig";
@@ -208,25 +211,6 @@ export function getSidebarContent(
           });
           break;
         }
-        case "showLines": {
-          ideProtocolClient.highlightCode(
-            {
-              filepath: data.filepath,
-              range: {
-                start: {
-                  line: data.start,
-                  character: 0,
-                },
-                end: {
-                  line: data.end,
-                  character: 0,
-                },
-              },
-            },
-            "#00ff0022"
-          );
-          break;
-        }
         case "toggleDevTools": {
           vscode.commands.executeCommand("workbench.action.toggleDevTools");
           vscode.commands.executeCommand("continue.viewLogs");
@@ -425,12 +409,22 @@ export function getSidebarContent(
           respond(await ide.getProblems(data.message.filepath));
           break;
         }
+        case "getBranch": {
+          const { dir } = data.message;
+          respond(await ide.getBranch(dir));
+          break;
+        }
         case "getOpenFiles": {
           respond(await ide.getOpenFiles());
           break;
         }
         case "getPinnedFiles": {
           respond(await ide.getPinnedFiles());
+          break;
+        }
+        case "showLines": {
+          const { filepath, startLine, endLine } = data.message;
+          respond(await ide.showLines(filepath, startLine, endLine));
           break;
         }
         // Other
@@ -627,7 +621,7 @@ export function getSidebarContent(
           break;
         }
         case "getContextItems": {
-          const { name, query, fullInput } = data.message;
+          const { name, query, fullInput, selectedCode } = data.message;
           const config = await configHandler.loadConfig(ide);
           const llm = await llmFromTitle();
           const provider = config.contextProviders?.find(
@@ -653,6 +647,7 @@ export function getSidebarContent(
               embeddingsProvider: config.embeddingsProvider,
               fullInput,
               ide,
+              selectedCode,
             });
             respond({ items: items.map((item) => ({ ...item, id })) });
           } catch (e) {
@@ -691,21 +686,88 @@ export function getSidebarContent(
           );
           break;
         }
+        case "applyToCurrentFile": {
+          // Select the entire current file
+          const editor = vscode.window.activeTextEditor;
+          if (!editor) {
+            vscode.window.showErrorMessage(
+              "No active editor to apply edits to"
+            );
+            break;
+          }
+          const document = editor.document;
+          const start = new vscode.Position(0, 0);
+          const end = new vscode.Position(
+            document.lineCount - 1,
+            document.lineAt(document.lineCount - 1).text.length
+          );
+          editor.selection = new vscode.Selection(start, end);
+
+          streamEdit(
+            `The following code was suggested as an edit:\n\`\`\`\n${data.text}\n\`\`\`\nPlease apply it to the previous code.`
+          );
+          break;
+        }
       }
-    } catch (e) {
+    } catch (e: any) {
       vscode.window
         .showErrorMessage(
-          `Error handling message from Continue side panel: ${e}`,
-          "Show Logs"
+          `Continue error: ${e.message}${
+            e.message.includes("fetch failed")
+              ? ". It is possible that this error is due to certificates not being configured. See the troubleshooting page to learn more."
+              : ""
+          }`,
+          "Show Logs",
+          "Troubleshooting"
         )
         .then((selection) => {
           if (selection === "Show Logs") {
             vscode.commands.executeCommand("workbench.action.toggleDevTools");
+          } else if (selection === "Troubleshooting") {
+            vscode.env.openExternal(
+              vscode.Uri.parse("https://continue.dev/docs/troubleshooting")
+            );
           }
         });
       respond({ done: true, data: {} });
     }
   });
+
+  let currentTheme = undefined;
+  let colorThemeName = "dark-plus";
+  const tokenColorMap: any = {};
+  try {
+    // Pass color theme to webview for syntax highlighting
+    const colorTheme = vscode.workspace
+      .getConfiguration("workbench")
+      .get("colorTheme");
+
+    for (let i = vscode.extensions.all.length - 1; i >= 0; i--) {
+      if (currentTheme) {
+        break;
+      }
+      const extension = vscode.extensions.all[i];
+      if (extension.packageJSON?.contributes?.themes?.length > 0) {
+        for (const theme of extension.packageJSON.contributes.themes) {
+          if (theme.label === colorTheme) {
+            const themePath = path.join(extension.extensionPath, theme.path);
+            currentTheme = fs.readFileSync(themePath).toString();
+            break;
+          }
+        }
+      }
+    }
+
+    // Strip comments from theme
+    currentTheme = currentTheme
+      ?.split("\n")
+      .filter((line) => {
+        return !line.trim().startsWith("//");
+      })
+      .join("\n");
+  } catch (e) {
+    console.log("Error adding .continueignore file icon: ", e);
+  }
 
   return `<!DOCTYPE html>
     <html lang="en">
@@ -714,11 +776,6 @@ export function getSidebarContent(
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <script>const vscode = acquireVsCodeApi();</script>
         <link href="${styleMainUri}" rel="stylesheet">
-
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300&display=swap" rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
         <title>Continue</title>
       </head>
@@ -732,6 +789,8 @@ export function getSidebarContent(
         <script>window.vscMachineId = "${getUniqueId()}"</script>
         <script>window.vscMediaUrl = "${vscMediaUrl}"</script>
         <script>window.ide = "vscode"</script>
+        <script>window.fullColorTheme = ${currentTheme}</script>
+        <script>window.colorThemeName = "${colorThemeName}"</script>
         <script>window.workspacePaths = ${JSON.stringify(
           vscode.workspace.workspaceFolders?.map(
             (folder) => folder.uri.fsPath

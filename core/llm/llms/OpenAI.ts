@@ -178,6 +178,15 @@ class OpenAI extends BaseLLM {
       return;
     }
 
+    let body = {
+      ...this._convertArgs(options, messages),
+      stream: true,
+    };
+    // Empty messages cause an error in LM Studio
+    body.messages = body.messages.map((m) => ({
+      ...m,
+      content: m.content === "" ? " " : m.content,
+    })) as any;
     const response = await this.fetch(this._getChatUrl(), {
       method: "POST",
       headers: {
@@ -185,10 +194,7 @@ class OpenAI extends BaseLLM {
         Authorization: `Bearer ${this.apiKey}`,
         "api-key": this.apiKey || "", // For Azure
       },
-      body: JSON.stringify({
-        ...this._convertArgs(options, messages),
-        stream: true,
-      }),
+      body: JSON.stringify(body),
     });
 
     for await (const value of streamSse(response)) {
