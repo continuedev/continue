@@ -682,6 +682,10 @@ export function getSidebarContent(
               vscode.window.showInformationMessage(
                 `🎉 Successfully indexed ${title}`
               );
+
+              debugPanelWebview?.postMessage({
+                type: "refreshSubmenuItems",
+              });
             }
           );
           break;

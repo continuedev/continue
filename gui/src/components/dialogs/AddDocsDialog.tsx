@@ -1,10 +1,10 @@
 import { postToIde } from "core/ide/messaging";
 import { usePostHog } from "posthog-js/react";
-import React, { useLayoutEffect } from "react";
+import React, { useContext, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { Button, Input } from "..";
-import useSubmenuContextProviders from "../../hooks/useSubmenuContextProviders";
+import { SubmenuContextProvidersContext } from "../../App";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
 
 const GridDiv = styled.div`
@@ -20,7 +20,7 @@ function AddDocsDialog() {
   const [urlValid, setUrlValid] = React.useState(false);
   const dispatch = useDispatch();
 
-  const { addItem } = useSubmenuContextProviders();
+  const { addItem } = useContext(SubmenuContextProvidersContext);
 
   const ref = React.useRef<HTMLInputElement>(null);
   const posthog = usePostHog();
