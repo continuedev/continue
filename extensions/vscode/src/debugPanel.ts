@@ -679,7 +679,7 @@ export function getSidebarContent(
                 embeddingsProvider
               )) {
                 progress.report({
-                  increment: update.progress * 100,
+                  increment: update.progress,
                   message: update.desc,
                 });
               }

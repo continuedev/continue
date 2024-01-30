@@ -22,7 +22,7 @@ async function createDocsTable(db: Database<sqlite3.Database>) {
   db.exec(`CREATE TABLE IF NOT EXISTS docs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title STRING NOT NULL,
-        baseUrl STRING NOT NULL
+        baseUrl STRING NOT NULL UNIQUE
     )`);
 }
 
