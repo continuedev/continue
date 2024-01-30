@@ -1,13 +1,21 @@
 import React, { isValidElement, useEffect } from "react";
-import { ReactMarkdown } from "react-markdown/lib/react-markdown";
+import ReactMarkdown from "react-markdown";
 import styled from "styled-components";
-import { vscBackground, vscForeground, vscInputBackground } from "..";
+import {
+  VSC_BACKGROUND_VAR,
+  defaultBorderRadius,
+  parseColorForHex,
+  vscBackground,
+  vscFocusBorder,
+  vscForeground,
+  vscInputBackground,
+} from "..";
 
 const ScreenCover = styled.div`
   position: fixed;
   width: 100%;
   height: 100%;
-  background-color: rgba(168, 168, 168, 0.5);
+  background-color: ${parseColorForHex(VSC_BACKGROUND_VAR)}aa;
   z-index: 100;
 `;
 
@@ -22,10 +30,10 @@ const DialogContainer = styled.div`
 const Dialog = styled.div`
   color: ${vscForeground};
   background-color: ${vscBackground};
-  border-radius: 8px;
+  border-radius: ${defaultBorderRadius};
   display: flex;
   flex-direction: column;
-  box-shadow: 0 0 10px 0 ${vscForeground};
+  border: 1px solid ${vscFocusBorder};
   margin: auto;
   word-wrap: break-word;
   overflow: hidden;
@@ -33,7 +41,7 @@ const Dialog = styled.div`
 
 const TextArea = styled.textarea`
   border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: ${defaultBorderRadius};
   padding: 8px;
   outline: 1px solid black;
   resize: none;

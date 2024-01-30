@@ -1,3 +1,4 @@
+import { DEFAULT_MAX_TOKENS } from "core/llm/constants";
 import { RootStore } from "../store";
 
 export const defaultModelSelector = (state: RootStore) => {
@@ -6,5 +7,5 @@ export const defaultModelSelector = (state: RootStore) => {
 };
 
 export const contextLengthSelector = (state: RootStore) => {
-  return defaultModelSelector(state)?.contextLength || 4096;
+  return defaultModelSelector(state)?.contextLength || DEFAULT_MAX_TOKENS;
 };

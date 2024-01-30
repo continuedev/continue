@@ -1,5 +1,5 @@
 {
-  "title": "SerializedContinueConfig",
+  "title": "config.json",
   "$ref": "#/definitions/continuedev__core__config__serialized_config__SerializedContinueConfig",
   "definitions": {
     "BaseCompletionOptions": {
@@ -29,6 +29,11 @@
         "frequencePenalty": {
           "title": "Frequency Penalty",
           "description": "The frequency penalty of the completion.",
+          "type": "number"
+        },
+        "mirostat": {
+          "title": "Mirostat",
+          "description": "Enable Mirostat sampling, controlling perplexity during text generation (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0). Only available for Ollama, LM Studio, and llama.cpp providers",
           "type": "number"
         },
         "stop": {
@@ -329,7 +334,7 @@
                   "gpt-4",
                   "gpt-3.5-turbo-0613",
                   "gpt-4-32k",
-                  "gpt-4-1106-preview"
+                  "gpt-4-0125-preview"
                 ]
               }
             }
@@ -381,7 +386,8 @@
                   "gpt-4",
                   "phind-codellama-34b",
                   "gemini-pro",
-                  "mistral-medium"
+                  "gpt-4-vision-preview",
+                  "codellama-70b"
                 ]
               }
             }
@@ -412,7 +418,8 @@
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
-                      "gpt-4-1106-preview",
+                      "gpt-4-0125-preview",
+                      "gpt-4-vision-preview",
                       "mistral-7b",
                       "mistral-8x7b",
                       "llama2-7b",
@@ -420,6 +427,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -500,6 +508,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b"
                     ]
                   },
@@ -555,6 +564,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -597,6 +607,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -766,7 +777,8 @@
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
-                      "gpt-4-1106-preview",
+                      "gpt-4-0125-preview",
+                      "gpt-4-vision-preview",
                       "mistral-7b",
                       "mistral-8x7b",
                       "llama2-7b",
@@ -774,6 +786,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -962,22 +975,26 @@
                 "open",
                 "google",
                 "search",
-                "url",
                 "http",
                 "codebase",
                 "problems",
-                "folder"
+                "folder",
+                "issue",
+                "tree"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
                 "Reference the contents of the terminal",
-                "Reference the contents of all open files.",
+                "Reference the contents of all open or pinned files.",
                 "Enter a search phrase and include the Google search results as context",
-                "Enter a URL and use the contents of the webpage as context",
+                "Reference the results of a ripgrep search in your codebase",
                 "Write a custom context provider at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
                 "Use embeddings to automatically find relevant files from throughout the codebase",
                 "Reference all linting errors and warnings in the currently open file",
-                "Include important files from a folder in the prompt, as determined by similarity search"
+                "Include important files from a folder in the prompt, as determined by similarity search",
+                "Reference GitHub issues from a repository",
+                "Retrieve important pages from a documentation website, as determined by similarity search",
+                "Display a file tree of the current workspace"
               ],
               "type": "string"
             },
@@ -1009,6 +1026,97 @@
                   }
                 },
                 "required": ["serperApiKey"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["open"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "onlyPinned": {
+                    "type": "boolean",
+                    "description": "If set to true, only 'pinned' files will be included.",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["issue"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "githubToken": {
+                    "type": "string",
+                    "description": "Your GitHub token to access the GitHub API. Required for private repositories."
+                  },
+                  "repos": {
+                    "type": "array",
+                    "description": "A list of repositories to search for issues",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "owner": {
+                          "type": "string",
+                          "description": "The owner of the repository"
+                        },
+                        "repo": {
+                          "type": "string",
+                          "description": "The name of the repository"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "The type of issues to search for",
+                          "enum": ["open", "closed", "all"]
+                        }
+                      },
+                      "required": ["owner", "repo"]
+                    }
+                  }
+                },
+                "required": ["repos"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["http"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "The HTTP endpoint of your context provider server."
+                  }
+                },
+                "required": ["url"]
               }
             },
             "required": ["params"]
@@ -1053,7 +1161,7 @@
       "required": ["name"]
     },
     "continuedev__core__config__serialized_config__SerializedContinueConfig": {
-      "title": "SerializedContinueConfig",
+      "title": "config.json",
       "type": "object",
       "properties": {
         "allowAnonymousTelemetry": {

@@ -6,6 +6,7 @@ import {
   LLMOptions,
   ModelDescription,
 } from "../..";
+import { DEFAULT_MAX_TOKENS } from "../constants";
 import Anthropic from "./Anthropic";
 import Bedrock from "./Bedrock";
 import DeepInfra from "./DeepInfra";
@@ -125,7 +126,7 @@ export async function llmFromDescription(
       maxTokens:
         finalCompletionOptions.maxTokens ||
         cls.defaultOptions?.completionOptions?.maxTokens ||
-        1024,
+        DEFAULT_MAX_TOKENS,
     },
     systemMessage,
   };

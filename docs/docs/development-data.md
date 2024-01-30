@@ -1,5 +1,5 @@
 ---
-title: Development data
+title: 🧑‍💻 Development data
 description: Collecting data on how you build software
 keywords: [development data, dev data, LLM-aided development]
 ---

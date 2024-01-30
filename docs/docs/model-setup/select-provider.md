@@ -33,7 +33,7 @@ You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-co
 - [SkyPilot](https://github.com/continuedev/deploy-os-code-llm#skypilot)
 - [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints) (OpenAI compatible API)
 
-If the API you use is OpenAI-compatible, you will be able to use the "openai" provider in `config.json` and change the `apiBase` to point to the server. Otherwise, you will need to wire up a new LLM object in `config.ts`. Learn how to do this [here](configuration.md#defining-a-custom-llm-provider)
+If the API you use is OpenAI-compatible, you will be able to use the "openai" provider in `config.json` and change the `apiBase` to point to the server. Otherwise, you may need to wire up a new LLM object in `config.ts`. Learn how to do this [here](configuration.md#defining-a-custom-llm-provider)
 
 ## SaaS
 

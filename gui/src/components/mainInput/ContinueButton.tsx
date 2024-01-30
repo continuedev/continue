@@ -1,10 +1,7 @@
-import styled from "styled-components";
-import { Button, vscBackground } from "..";
 import { PlayIcon, StopIcon } from "@heroicons/react/24/outline";
-import { useSelector } from "react-redux";
-import { RootStore } from "../../redux/store";
 import { useEffect, useState } from "react";
-import { getPlatform } from "../../util";
+import styled from "styled-components";
+import { Button } from "..";
 
 const StyledButton = styled(Button)<{
   color?: string | null;
@@ -72,7 +69,7 @@ function ContinueButton(props: {
       color={buttonColor as any}
       hidden={props.hidden}
       style={{ fontSize: "10px" }}
-      className="m-auto press-start-2p"
+      className="m-auto"
       onClick={props.disabled ? undefined : props.onClick}
       isDisabled={props.disabled}
     >

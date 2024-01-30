@@ -3,7 +3,7 @@ import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
 import { streamResponse } from "../stream";
 
 // const SERVER_URL = "http://localhost:3000";
-const SERVER_URL = "https://node-proxy-server-l6vsfbzhba-uw.a.run.app";
+const SERVER_URL = "https://node-proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
@@ -15,11 +15,23 @@ class FreeTrial extends BaseLLM {
     };
   }
 
+  private _convertArgs(options: CompletionOptions): any {
+    return {
+      model: options.model,
+      frequency_penalty: options.frequencyPenalty,
+      presence_penalty: options.presencePenalty,
+      max_tokens: options.maxTokens,
+      stop: options.stop,
+      temperature: options.temperature,
+      top_p: options.topP,
+    };
+  }
+
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const args = this.collectArgs(options);
+    const args = this._convertArgs(this.collectArgs(options));
 
     const response = await this.fetch(`${SERVER_URL}/stream_complete`, {
       method: "POST",
@@ -35,17 +47,35 @@ class FreeTrial extends BaseLLM {
     }
   }
 
+  protected _convertMessage(message: ChatMessage) {
+    if (typeof message.content === "string") {
+      return message;
+    }
+
+    const parts = message.content.map((part) => {
+      return {
+        type: part.type,
+        text: part.text,
+        image_url: { ...part.imageUrl, detail: "low" },
+      };
+    });
+    return {
+      ...message,
+      content: parts,
+    };
+  }
+
   protected async *_streamChat(
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
-    const args = this.collectArgs(options);
+    const args = this._convertArgs(this.collectArgs(options));
 
     const response = await this.fetch(`${SERVER_URL}/stream_chat`, {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify({
-        messages,
+        messages: messages.map(this._convertMessage),
         ...args,
       }),
     });

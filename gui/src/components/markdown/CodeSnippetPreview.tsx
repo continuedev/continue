@@ -5,6 +5,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
+import { ExtensionIde } from "core/ide";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import React from "react";
 import { useDispatch } from "react-redux";
@@ -64,7 +65,7 @@ const StyledHeaderButtonWithText = styled(HeaderButtonWithText)<{
 `;
 
 // Pre-compile the regular expression outside of the function
-const backticksRegex = /`{3,}/gm
+const backticksRegex = /`{3,}/gm;
 
 function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const dispatch = useDispatch();
@@ -75,9 +76,8 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const codeBlockRef = React.useRef<HTMLPreElement>(null);
   const fence = React.useMemo(() => {
     const backticks = props.item.content.match(backticksRegex);
-    return backticks ? (backticks.sort().at(-1) + "`") : "```";
+    return backticks ? backticks.sort().at(-1) + "`" : "```";
   }, [props.item.content]);
-
 
   return (
     <PreviewMarkdownDiv
@@ -98,11 +98,11 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               .split("(")[1]
               .split(")")[0]
               .split("-");
-            postToIde("showLines", {
-              filepath: props.item.description,
-              start: parseInt(lines[0]) - 1,
-              end: parseInt(lines[1]) - 1,
-            });
+            new ExtensionIde().showLines(
+              props.item.description,
+              parseInt(lines[0]) - 1,
+              parseInt(lines[1]) - 1
+            );
           } else {
             postToIde("showVirtualFile", {
               name: props.item.name,

@@ -4,22 +4,20 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import { ExtensionIde } from "../../ide";
 
 class SearchContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "search",
     displayTitle: "Search",
     description: "Use ripgrep to exact search the workspace",
-    dynamic: true,
-    requiresQuery: true,
+    type: "query",
   };
 
   async getContextItems(
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
-    const results = await new ExtensionIde().getSearchResults(query);
+    const results = await extras.ide.getSearchResults(query);
     return [
       {
         description: "Search results",
@@ -28,7 +26,6 @@ class SearchContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
 }
 
 export default SearchContextProvider;

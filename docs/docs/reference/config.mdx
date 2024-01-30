@@ -1,0 +1,16 @@
+import Schema from "@site/static/schemas/config.json";
+import JSONSchemaViewer from "@theme/JSONSchemaViewer";
+
+# Configuration Options
+
+The following shows the JSON Schema definition for `config.json`:
+
+<JSONSchemaViewer
+  schema={Schema}
+  resolverOptions={{
+    jsonPointer:
+      "#/definitions/continuedev__core__config__serialized_config__SerializedContinueConfig",
+  }}
+/>
+
+[View the source](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json)

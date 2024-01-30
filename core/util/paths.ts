@@ -106,7 +106,7 @@ export function getTsConfigPath(): string {
             target: "ESNext",
             useDefineForClassFields: true,
             lib: ["DOM", "DOM.Iterable", "ESNext"],
-            allowJs: false,
+            allowJs: true,
             skipLibCheck: true,
             esModuleInterop: false,
             allowSyntheticDefaultImports: true,
@@ -178,4 +178,8 @@ export function getLanceDbPath(): string {
 
 export function getTabAutocompleteCacheSqlitePath(): string {
   return path.join(getIndexFolderPath(), "autocompleteCache.sqlite");
+}
+
+export function getDocsSqlitePath(): string {
+  return path.join(getIndexFolderPath(), "docs.sqlite");
 }

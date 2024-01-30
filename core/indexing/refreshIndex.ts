@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
+import { IndexingProgressUpdate } from "..";
 import { getIndexSqlitePath } from "../util/paths";
 import {
   CodebaseIndex,
@@ -13,6 +14,10 @@ import {
 } from "./types";
 
 export type DatabaseConnection = Database<sqlite3.Database>;
+
+export function tagToString(tag: IndexTag): string {
+  return `${tag.directory}::${tag.branch}::${tag.artifactId}`;
+}
 
 export class SqliteDb {
   static db: DatabaseConnection | null = null;
@@ -271,7 +276,7 @@ export async function getComputeDeleteAddRemove(
       removeTag.push({ path, cacheKey });
     } else {
       if (existingTags.length === 0) {
-        console.warn("Existing tags should not be empty when trying to remove");
+        // console.warn("Existing tags should not be empty when trying to remove");
       }
 
       del.push({ path, cacheKey });
@@ -323,7 +328,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     tag: IndexTag,
     results: RefreshIndexResults,
     _: MarkCompleteCallback
-  ): AsyncGenerator<{ progress: number; desc: string }> {
+  ): AsyncGenerator<IndexingProgressUpdate> {
     const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];
     await Promise.all([

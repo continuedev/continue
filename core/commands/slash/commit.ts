@@ -1,4 +1,5 @@
 import { SlashCommand } from "../..";
+import { stripImages } from "../../llm/countTokens";
 
 const CommitMessageCommand: SlashCommand = {
   name: "commit",
@@ -9,7 +10,7 @@ const CommitMessageCommand: SlashCommand = {
     for await (const chunk of llm.streamChat([
       { role: "user", content: prompt },
     ])) {
-      yield chunk.content;
+      yield stripImages(chunk.content);
     }
   },
 };

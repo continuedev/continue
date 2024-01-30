@@ -25,7 +25,6 @@ import {
   vscForeground,
 } from "../components";
 import FTCDialog from "../components/dialogs/FTCDialog";
-import ErrorStepContainer from "../components/gui/ErrorStepContainer";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
@@ -401,7 +400,6 @@ function GUI(props: GUIProps) {
                         isLastUserInput={isLastUserInput(index)}
                         isMainInput={false}
                         editorState={item.editorState}
-                        content={item.message.content}
                         contextItems={item.contextItems}
                       ></ContinueInputBox>
                     ) : (
@@ -432,30 +430,22 @@ function GUI(props: GUIProps) {
                         }
                         onToggle={() => {}}
                       >
-                        {false ? ( // Most of these falses were previously (step.error)
-                          <ErrorStepContainer
-                            onClose={() => {}}
-                            error={undefined}
-                            onDelete={() => {}}
-                          />
-                        ) : (
-                          <StepContainer
-                            index={index}
-                            isLast={index === sessionState.history.length - 1}
-                            isFirst={index === 0}
-                            open={
-                              typeof stepsOpen[index] === "undefined"
-                                ? true
-                                : stepsOpen[index]!
-                            }
-                            key={index}
-                            onUserInput={(input: string) => {}}
-                            item={item}
-                            onReverse={() => {}}
-                            onRetry={() => {}}
-                            onDelete={() => {}}
-                          />
-                        )}
+                        <StepContainer
+                          index={index}
+                          isLast={index === sessionState.history.length - 1}
+                          isFirst={index === 0}
+                          open={
+                            typeof stepsOpen[index] === "undefined"
+                              ? true
+                              : stepsOpen[index]!
+                          }
+                          key={index}
+                          onUserInput={(input: string) => {}}
+                          item={item}
+                          onReverse={() => {}}
+                          onRetry={() => {}}
+                          onDelete={() => {}}
+                        />
                       </TimelineItem>
                     )}
                   </ErrorBoundary>

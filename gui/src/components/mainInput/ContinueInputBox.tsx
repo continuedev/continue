@@ -54,7 +54,6 @@ interface ContinueInputBoxProps {
   onEnter: (editorState: JSONContent) => void;
 
   editorState?: JSONContent;
-  content?: string;
   contextItems?: ContextItemWithId[];
 }
 
@@ -98,7 +97,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         >
           <TipTapEditor
             editorState={props.editorState}
-            content={props.content}
             onEnter={props.onEnter}
             isMainInput={props.isMainInput}
             availableContextProviders={availableContextProviders}

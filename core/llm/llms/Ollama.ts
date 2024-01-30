@@ -5,6 +5,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
+import { stripImages } from "../countTokens";
 import { streamResponse } from "../stream";
 
 class Ollama extends BaseLLM {
@@ -66,6 +67,7 @@ class Ollama extends BaseLLM {
         "codellama-7b": "codellama:7b",
         "codellama-13b": "codellama:13b",
         "codellama-34b": "codellama:34b",
+        "codellama-70b": "codellama:70b",
         "phi-2": "phi:2.7b",
         "phind-codellama-34b": "phind-codellama:34b-v2",
         "wizardcoder-7b": "wizardcoder:7b-python",
@@ -84,6 +86,20 @@ class Ollama extends BaseLLM {
     );
   }
 
+  private _convertMessage(message: ChatMessage) {
+    if (typeof message.content === "string") {
+      return message;
+    }
+
+    return {
+      role: message.role,
+      content: stripImages(message.content),
+      images: message.content
+        .filter((part) => part.type === "imageUrl")
+        .map((part) => part.imageUrl?.url.split(",").at(-1)),
+    };
+  }
+
   private _convertArgs(
     options: CompletionOptions,
     prompt: string | ChatMessage[]
@@ -98,13 +114,14 @@ class Ollama extends BaseLLM {
         num_predict: options.maxTokens,
         stop: options.stop,
         num_ctx: this.contextLength,
+        mirostat: options.mirostat,
       },
     };
 
     if (typeof prompt === "string") {
       finalOptions.prompt = prompt;
     } else {
-      finalOptions.messages = prompt;
+      finalOptions.messages = prompt.map(this._convertMessage);
     }
 
     return finalOptions;

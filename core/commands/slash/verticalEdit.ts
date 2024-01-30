@@ -1,6 +1,7 @@
 import { ContextItemWithId, DiffLine, ILLM, SlashCommand } from "../..";
 import { streamDiff } from "../../diff/streamDiff";
 import { LineStream, streamLines } from "../../diff/util";
+import { stripImages } from "../../llm/countTokens";
 import { gptEditPrompt } from "../../llm/templates/edit";
 import {
   dedentAndGetCommonWhitespace,
@@ -81,7 +82,7 @@ function constructPrompt(
   });
   return typeof rendered === "string"
     ? rendered
-    : rendered[rendered.length - 1].content;
+    : stripImages(rendered[rendered.length - 1].content);
 }
 
 async function* addIndentation(

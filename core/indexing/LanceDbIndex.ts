@@ -1,11 +1,12 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { v4 as uuidv4 } from "uuid";
 import * as lancedb from "vectordb";
-import { Chunk, EmbeddingsProvider } from "..";
+import { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "..";
+import { MAX_CHUNK_SIZE } from "../llm/constants";
 import { getBasename } from "../util";
 import { getLanceDbPath } from "../util/paths";
 import { chunkDocument } from "./chunk/chunk";
-import { DatabaseConnection, SqliteDb } from "./refreshIndex";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
   CodebaseIndex,
   IndexResultType,
@@ -13,10 +14,6 @@ import {
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types";
-
-export function tagToString(tag: IndexTag): string {
-  return `${tag.directory}::${tag.branch}::${tag.artifactId}`;
-}
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
@@ -32,7 +29,7 @@ export class LanceDbIndex implements CodebaseIndex {
     return "vectordb::" + this.embeddingsProvider.id;
   }
 
-  static MAX_CHUNK_SIZE = 512;
+  static MAX_CHUNK_SIZE = MAX_CHUNK_SIZE;
 
   embeddingsProvider: EmbeddingsProvider;
   readFile: (filepath: string) => Promise<string>;
@@ -136,7 +133,7 @@ export class LanceDbIndex implements CodebaseIndex {
       items: PathAndCacheKey[],
       resultType: IndexResultType
     ) => void
-  ): AsyncGenerator<{ progress: number; desc: string }> {
+  ): AsyncGenerator<IndexingProgressUpdate> {
     const tableName = this.tableNameForTag(tag);
     const db = await lancedb.connect(getLanceDbPath());
 
@@ -282,7 +279,7 @@ export class LanceDbIndex implements CodebaseIndex {
     }
 
     allResults = allResults
-      .sort((a, b) => b._distance - a._distance)
+      .sort((a, b) => a._distance - b._distance)
       .slice(0, n);
 
     const sqliteDb = await SqliteDb.get();

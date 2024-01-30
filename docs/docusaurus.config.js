@@ -1,8 +1,9 @@
 // @ts-check
 // Note: type annotations allow type checking and IDEs autocompletion
 
-const lightCodeTheme = require("prism-react-renderer/themes/github");
-const darkCodeTheme = require("prism-react-renderer/themes/dracula");
+const { themes } = require("prism-react-renderer");
+const lightCodeTheme = themes.github;
+const darkCodeTheme = themes.dracula;
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -33,6 +34,8 @@ const config = {
     locales: ["en"],
   },
 
+  themes: [["docusaurus-json-schema-plugin", {}]],
+
   presets: [
     [
       "classic",
@@ -56,7 +59,13 @@ const config = {
   themeConfig:
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
-      metadata: [{name: 'keywords', content: 'open source, ai, vscode, intellij, jetbrains, developer tools, chatgpt, copilot, llm'}],
+      metadata: [
+        {
+          name: "keywords",
+          content:
+            "open source, ai, vscode, intellij, jetbrains, developer tools, chatgpt, copilot, llm",
+        },
+      ],
       // Replace with your project's social card
       image: "img/continue-social-card.png",
       navbar: {
@@ -128,6 +137,7 @@ const config = {
       prism: {
         theme: lightCodeTheme,
         darkTheme: darkCodeTheme,
+        additionalLanguages: ["json"],
       },
       algolia: {
         // The application ID provided by Algolia

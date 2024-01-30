@@ -12,9 +12,6 @@ import GenerateTerminalCommand from "core/commands/slash/cmd";
 import CommentSlashCommand from "core/commands/slash/comment";
 import EditSlashCommand from "core/commands/slash/edit";
 import ShareSlashCommand from "core/commands/slash/share";
-import DiffContextProvider from "core/context/providers/DiffContextProvider";
-import OpenFilesContextProvider from "core/context/providers/OpenFilesContextProvider";
-import TerminalContextProvider from "core/context/providers/TerminalContextProvider";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import FreeTrial from "core/llm/llms/FreeTrial";
 import { v4 } from "uuid";
@@ -96,8 +93,11 @@ const initialState: RootStore["state"] = {
   active: false,
   config: {
     models: [
-      new FreeTrial({ model: "gpt-4", title: "GPT-4" }),
-      new FreeTrial({ model: "gpt-3.5-turbo", title: "GPT-3.5-Turbo" }),
+      new FreeTrial({ model: "gpt-4", title: "GPT-4 (Free Trial)" }),
+      new FreeTrial({
+        model: "gpt-3.5-turbo",
+        title: "GPT-3.5-Turbo (Free Trial)",
+      }),
     ],
     slashCommands: [
       EditSlashCommand,
@@ -105,11 +105,7 @@ const initialState: RootStore["state"] = {
       ShareSlashCommand,
       GenerateTerminalCommand,
     ],
-    contextProviders: [
-      new DiffContextProvider({}),
-      new OpenFilesContextProvider({}),
-      new TerminalContextProvider({}),
-    ],
+    contextProviders: [],
     embeddingsProvider: new TransformersJsEmbeddingsProvider(),
   },
   title: "New Session",
