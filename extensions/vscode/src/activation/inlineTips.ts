@@ -14,7 +14,7 @@ function handleSelectionChange(e: vscode.TextEditorSelectionChangeEvent) {
   const selection = e.selections[0];
   const editor = e.textEditor;
 
-  if (editor.document.uri.toString() === "output:tasks") {
+  if (editor.document.uri.toString().startsWith("output:")) {
     return;
   }
 
@@ -74,7 +74,7 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor?.document.getText() === "") {
-        if (editor.document.uri.toString() === "output:tasks") {
+        if (editor.document.uri.toString().startsWith("output:")) {
           return;
         }
 
