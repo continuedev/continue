@@ -674,7 +674,7 @@ export function getSidebarContent(
                 embeddingsProvider
               )) {
                 progress.report({
-                  increment: update.progress * 100,
+                  increment: update.progress,
                   message: update.desc,
                 });
               }
@@ -682,6 +682,10 @@ export function getSidebarContent(
               vscode.window.showInformationMessage(
                 `🎉 Successfully indexed ${title}`
               );
+
+              debugPanelWebview?.postMessage({
+                type: "refreshSubmenuItems",
+              });
             }
           );
           break;
