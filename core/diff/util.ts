@@ -41,8 +41,8 @@ export function matchLine(
     } else if (linesMatch(newLine, oldLines[i])) {
       // This is a way to fix indentation, but only for sufficiently long lines to avoid matching whitespace or short lines
       if (
-        newLine.trimStart() === oldLines[i].trimStart() &&
-        (permissiveAboutIndentation || newLine.trim().length > 8)
+        newLine.trimStart() === oldLines[i].trimStart() // &&
+        // (permissiveAboutIndentation) || newLine.trim().length > 8)
       ) {
         return [i, true, oldLines[i]];
       }
