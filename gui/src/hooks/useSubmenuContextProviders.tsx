@@ -69,7 +69,6 @@ function useSubmenuContextProviders() {
     }
     setLoaded(true);
     contextProviderDescriptions.forEach(async (description) => {
-      console.log("Loading submenu provider", description.title);
       const minisearch = new MiniSearch<ContextSubmenuItem>({
         fields: ["title"],
         storeFields: ["id", "title", "description"],

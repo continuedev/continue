@@ -90,6 +90,7 @@ export async function* indexDocs(
           (chunk.otherMetadata?.fragment
             ? `#${chunk.otherMetadata.fragment}`
             : ""),
+        otherMetadata: chunk.otherMetadata,
         index,
         digest: subpath,
       });
