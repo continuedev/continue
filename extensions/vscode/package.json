@@ -65,7 +65,7 @@
         "continue.enableTabAutocomplete": {
           "type": "boolean",
           "default": false,
-          "description": "Enable Continue's experimental tab autocomplete feature"
+          "description": "Enable Continue's experimental tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: https://continue.dev/docs/walkthroughs/tab-autocomplete"
         }
       }
     },

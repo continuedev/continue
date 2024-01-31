@@ -543,6 +543,11 @@ export interface EmbeddingsProvider {
   embed(chunks: string[]): Promise<number[][]>;
 }
 
+export interface TabAutocompleteOptions {
+  useCopyBuffer?: boolean;
+  useSuffix?: boolean;
+}
+
 export interface SerializedContinueConfig {
   disallowedSteps?: string[];
   allowAnonymousTelemetry?: boolean;
@@ -557,6 +562,7 @@ export interface SerializedContinueConfig {
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
   tabAutocompleteModel?: ModelDescription;
+  tabAutocompleteOptions?: TabAutocompleteOptions;
 }
 
 export interface Config {
