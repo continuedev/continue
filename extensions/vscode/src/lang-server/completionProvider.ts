@@ -23,10 +23,6 @@ export function setupStatusBar(
   enabled: boolean | undefined,
   loading?: boolean
 ) {
-  if (lastStatusBar) {
-    lastStatusBar.dispose();
-  }
-
   const statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right
   );
@@ -35,6 +31,11 @@ export function setupStatusBar(
     : statusBarItemText(enabled);
   statusBarItem.tooltip = statusBarItemTooltip(enabled);
   statusBarItem.command = "continue.toggleTabAutocompleteEnabled";
+
+  // Swap out with old status bar
+  if (lastStatusBar) {
+    lastStatusBar.dispose();
+  }
   statusBarItem.show();
   lastStatusBar = statusBarItem;
 
@@ -139,7 +140,7 @@ async function getTabCompletion(
       // Cache
       completion = cachedCompletion;
     } else {
-      setupStatusBar(undefined, true);
+      setupStatusBar(true, true);
 
       // LLM
       for await (const update of llm.streamComplete(prompt, {
@@ -272,7 +273,7 @@ export class ContinueCompletionProvider
     } catch (e: any) {
       console.log("Error getting autocompletion: ", e.message);
     } finally {
-      setupStatusBar(undefined, true);
+      setupStatusBar(true, false);
     }
   }
 }
