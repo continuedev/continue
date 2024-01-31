@@ -80,7 +80,8 @@
         "command": "continue.rejectDiff",
         "category": "Continue",
         "title": "Reject Diff",
-        "group": "Continue"
+        "group": "Continue",
+        "icon": "$(stop)"
       },
       {
         "command": "continue.quickEdit",
@@ -259,6 +260,13 @@
         {
           "submenu": "continue.continueSubMenu",
           "group": "0_acontinue"
+        }
+      ],
+      "editor/title/run": [
+        {
+          "command": "continue.rejectDiff",
+          "group": "Continue",
+          "when": "continue.streamingDiff"
         }
       ],
       "continue.continueSubMenu": [
