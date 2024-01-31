@@ -16,7 +16,7 @@ export async function* indexDocs(
   embeddingsProvider: EmbeddingsProvider
 ): AsyncGenerator<IndexingProgressUpdate> {
   const existingDocs = await listDocs();
-  if (existingDocs.find((doc) => doc.title === title)) {
+  if (existingDocs.find((doc) => doc.baseUrl === baseUrl.toString())) {
     yield {
       progress: 1,
       desc: "Already indexed",
@@ -29,8 +29,23 @@ export async function* indexDocs(
     desc: "Finding subpages",
   };
 
-  let subpaths = await crawlSubpages(baseUrl);
-  console.log("Found subpaths", subpaths);
+  const subpathGenerator = crawlSubpages(baseUrl);
+  let { value, done } = await subpathGenerator.next();
+  while (true) {
+    if (done) {
+      break;
+    }
+    yield {
+      progress: 0,
+      desc: `Finding subpages (${value})`,
+    };
+    const next = await subpathGenerator.next();
+    value = next.value;
+    done = next.done;
+  }
+
+  let subpaths = value as string[];
+
   const chunks: Chunk[] = [];
   const embeddings: number[][] = [];
 
@@ -53,7 +68,7 @@ export async function* indexDocs(
   for (let i = 0; i < subpaths.length; i++) {
     const subpath = subpaths[i];
     yield {
-      progress: 1 / (subpaths.length + 1),
+      progress: Math.max(1, Math.floor(100 / (subpaths.length + 1))),
       desc: `${subpath}`,
     };
 
@@ -75,6 +90,7 @@ export async function* indexDocs(
           (chunk.otherMetadata?.fragment
             ? `#${chunk.otherMetadata.fragment}`
             : ""),
+        otherMetadata: chunk.otherMetadata,
         index,
         digest: subpath,
       });

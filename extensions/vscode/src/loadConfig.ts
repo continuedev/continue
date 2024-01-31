@@ -1,9 +1,14 @@
 import { ContinueConfig, IDE, ILLM } from "core";
 import * as fs from "fs";
 import { Agent, ProxyAgent, fetch } from "undici";
+import * as vscode from "vscode";
 import { webviewRequest } from "./debugPanel";
 import { VsCodeIde, loadFullConfigNode } from "./ideProtocol";
 const tls = require("tls");
+
+const outputChannel = vscode.window.createOutputChannel(
+  "Continue - LLM Prompt/Completion"
+);
 
 class VsCodeConfigHandler {
   savedConfig: ContinueConfig | undefined;
@@ -64,18 +69,39 @@ function setupLlm(llm: ILLM): ILLM {
           headersTimeout: timeout,
         });
 
-  llm._fetch = (input, init) => {
+  llm._fetch = async (input, init) => {
     const headers: { [key: string]: string } =
       llm!.requestOptions?.headers || {};
     for (const [key, value] of Object.entries(init?.headers || {})) {
       headers[key] = value as string;
     }
 
-    return fetch(input, {
+    const resp = await fetch(input, {
       ...init,
       dispatcher: agent,
       headers,
     });
+
+    if (!resp.ok) {
+      throw new Error(
+        `HTTP ${resp.status} ${resp.statusText} from ${
+          resp.url
+        }\n\n${await resp.text()}`
+      );
+    }
+
+    return resp;
+  };
+
+  llm.writeLog = async (log: string) => {
+    outputChannel.appendLine(
+      "=========================================================================="
+    );
+    outputChannel.appendLine(
+      "=========================================================================="
+    );
+
+    outputChannel.append(log);
   };
   return llm;
 }

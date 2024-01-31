@@ -43,11 +43,16 @@ function shouldFilterPath(pathname: string, baseUrl: URL): boolean {
   return false;
 }
 
-async function crawlLinks(path: string, baseUrl: URL, visited: Set<string>) {
+async function* crawlLinks(
+  path: string,
+  baseUrl: URL,
+  visited: Set<string>
+): AsyncGenerator<number> {
   if (visited.has(path) || shouldFilterPath(path, baseUrl)) {
     return;
   }
   visited.add(path);
+  yield visited.size;
 
   const response = await fetch(new URL(path, baseUrl));
   const text = await response.text();
@@ -71,8 +76,12 @@ async function crawlLinks(path: string, baseUrl: URL, visited: Set<string>) {
   });
 
   await Promise.all(
-    children.map((child) => crawlLinks(child, baseUrl, visited))
+    children.map(async (child) => {
+      for await (const _ of crawlLinks(child, baseUrl, visited)) {
+      }
+    })
   );
+  yield visited.size;
 }
 
 async function crawlGithubRepo(baseUrl: URL) {
@@ -116,25 +125,44 @@ async function crawlGithubRepo(baseUrl: URL) {
   return paths;
 }
 
-export async function crawlSubpages(baseUrl: URL) {
+export async function* crawlSubpages(
+  baseUrl: URL
+): AsyncGenerator<number, string[]> {
   // Special case for GitHub repos
   if (baseUrl.hostname === "github.com") {
     return crawlGithubRepo(baseUrl);
   }
 
   // First, check if the parent of the path redirects to the same page
-  const parentUrl = new URL(baseUrl);
-  parentUrl.pathname = parentUrl.pathname.split("/").slice(0, -1).join("/");
-  const response = await fetch(parentUrl);
-
-  let useParent = response.url === baseUrl.toString();
+  if (baseUrl.pathname.endsWith("/")) {
+    baseUrl.pathname = baseUrl.pathname.slice(0, -1);
+  }
+  let realBaseUrl = new URL(baseUrl);
+  while (true) {
+    let parentUrl = new URL(realBaseUrl);
+    parentUrl.pathname = parentUrl.pathname.split("/").slice(0, -1).join("/");
+    if (
+      parentUrl.pathname === realBaseUrl.pathname ||
+      parentUrl.pathname === ""
+    ) {
+      break;
+    }
+    const response = await fetch(parentUrl);
+    const redirected = response.url.toString() === baseUrl.toString() + "/";
+    if (!redirected) {
+      break;
+    }
+    realBaseUrl = parentUrl;
+  }
 
   const visited = new Set<string>();
-  await crawlLinks(
-    (useParent ? parentUrl.pathname : baseUrl.pathname) || "/",
-    baseUrl,
+  for await (const count of crawlLinks(
+    realBaseUrl.pathname || "/",
+    realBaseUrl,
     visited
-  );
+  )) {
+    yield count;
+  }
   return [...visited];
 }
 

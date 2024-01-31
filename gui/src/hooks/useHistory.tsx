@@ -1,6 +1,7 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
 import { ideRequest } from "core/ide/messaging";
+import { llmCanGenerateInParallel } from "core/llm";
 import { stripImages } from "core/llm/countTokens";
 import { useSelector } from "react-redux";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
@@ -36,7 +37,7 @@ function useHistory(dispatch: Dispatch) {
       stripImages(stateCopy.history[0].message.content),
       50
     );
-    if (!disableSessionTitles) {
+    if (!disableSessionTitles && llmCanGenerateInParallel(defaultModel)) {
       let { content } = await defaultModel.chat(
         [
           ...stateCopy.history.map((item) => item.message),

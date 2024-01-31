@@ -1,13 +1,8 @@
-import {
-  Chunk,
-  ContextItem,
-  ContextProviderExtras,
-  ILLM,
-  ModelProvider,
-} from "..";
+import { Chunk, ContextItem, ContextProviderExtras, ILLM } from "..";
 import { FullTextSearchCodebaseIndex } from "../indexing/FullTextSearch";
 import { ChunkCodebaseIndex } from "../indexing/chunk/ChunkCodebaseIndex";
 import { IndexTag } from "../indexing/types";
+import { llmCanGenerateInParallel } from "../llm";
 import { getBasename } from "../util";
 
 const RERANK_PROMPT = (
@@ -49,28 +44,6 @@ ${document}
 \`\`\`
 Relevant: 
 `;
-
-const PARALLEL_PROVIDERS: ModelProvider[] = [
-  "anthropic",
-  "bedrock",
-  "deepinfra",
-  "gemini",
-  "google-palm",
-  "huggingface-inference-api",
-  "huggingface-tgi",
-  "mistral",
-  "free-trial",
-  "replicate",
-  "together",
-];
-
-function llmCanGenerateInParallel(llm: ILLM): boolean {
-  if (llm.providerName === "openai") {
-    return llm.model.includes("gpt");
-  }
-
-  return PARALLEL_PROVIDERS.includes(llm.providerName);
-}
 
 async function scoreChunk(
   chunk: Chunk,
