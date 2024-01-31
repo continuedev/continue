@@ -11,6 +11,7 @@
   "dependencies": {
     "@xenova/transformers": "^2.14.0"
   },
+  "engine-strict": true,
   "engines": {
     "node": ">=20.11.0"
   }

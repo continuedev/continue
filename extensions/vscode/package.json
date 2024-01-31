@@ -25,6 +25,7 @@
     "vscode": "^1.67.0",
     "node": ">=20.11.0"
   },
+  "engine-strict": true,
   "galleryBanner": {
     "color": "#1E1E1E",
     "theme": "dark"

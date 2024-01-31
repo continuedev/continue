@@ -33,6 +33,7 @@
     "@lancedb/vectordb-darwin-arm64": "^0.4.3",
     "vectordb": "^0.4.3"
   },
+  "engine-strict": true,
   "engines": {
     "node": ">=20.11.0"
   }

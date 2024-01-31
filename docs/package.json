@@ -40,6 +40,7 @@
       "last 1 safari version"
     ]
   },
+  "engine-strict": true,
   "engines": {
     "node": ">=20.11.0"
   }

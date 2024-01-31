@@ -39,6 +39,7 @@
   "puppeteer": {
     "chromium_revision": "119.0.6045.105"
   },
+  "engine-strict": true,
   "engines": {
     "node": ">=20.11.0"
   }
