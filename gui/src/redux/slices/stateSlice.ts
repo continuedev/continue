@@ -264,6 +264,22 @@ export const stateSlice = createSlice({
       state.history[payload.index].message = payload.message;
       state.history[payload.index].contextItems = payload.contextItems || [];
     },
+    addContextItemsAtIndex: (
+      state,
+      {
+        payload,
+      }: {
+        payload: {
+          index: number;
+          contextItems: ContextItemWithId[];
+        };
+      }
+    ) => {
+      console.log("addContextItemsAtIndex", payload, state.history);
+      if (payload.index < state.history.length) {
+        state.history[payload.index].contextItems.push(...payload.contextItems);
+      }
+    },
     setInactive: (state) => {
       return {
         ...state,
@@ -450,6 +466,7 @@ export const stateSlice = createSlice({
 export const {
   setContextItemsAtIndex,
   addContextItems,
+  addContextItemsAtIndex,
   setInactive,
   streamUpdate,
   newSession,
