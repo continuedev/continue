@@ -88,6 +88,27 @@ export function modelSupportsImages(
 
   return false;
 }
+const PARALLEL_PROVIDERS: ModelProvider[] = [
+  "anthropic",
+  "bedrock",
+  "deepinfra",
+  "gemini",
+  "google-palm",
+  "huggingface-inference-api",
+  "huggingface-tgi",
+  "mistral",
+  "free-trial",
+  "replicate",
+  "together",
+];
+
+export function llmCanGenerateInParallel(llm: ILLM): boolean {
+  if (llm.providerName === "openai") {
+    return llm.model.includes("gpt");
+  }
+
+  return PARALLEL_PROVIDERS.includes(llm.providerName);
+}
 
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
