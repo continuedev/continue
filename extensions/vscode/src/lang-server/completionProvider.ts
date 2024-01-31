@@ -8,33 +8,55 @@ import { DEBOUNCE_DELAY } from "core/autocomplete/parameters";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
-import {
-  CancellationToken,
-  InlineCompletionContext,
-  InlineCompletionItem,
-  InlineCompletionItemProvider,
-  InlineCompletionList,
-  Position,
-  ProviderResult,
-  Range,
-  TextDocument,
-  Uri,
-  commands,
-  env,
-  workspace,
-} from "vscode";
+import * as vscode from "vscode";
 import { ideProtocolClient } from "../activation/activate";
 import { TabAutocompleteModel } from "../loadConfig";
+
+const statusBarItemText = (enabled: boolean | undefined) =>
+  enabled ? "$(check) Continue" : "$(circle-slash) Continue";
+
+const statusBarItemTooltip = (enabled: boolean | undefined) =>
+  enabled ? "Tab autocomplete is enabled" : "Click to enable tab autocomplete";
+
+let lastStatusBar: vscode.StatusBarItem | undefined = undefined;
+export function setupStatusBar(
+  enabled: boolean | undefined,
+  loading?: boolean
+) {
+  if (lastStatusBar) {
+    lastStatusBar.dispose();
+  }
+
+  const statusBarItem = vscode.window.createStatusBarItem(
+    vscode.StatusBarAlignment.Right
+  );
+  statusBarItem.text = loading
+    ? "$(loading~spin) Continue"
+    : statusBarItemText(enabled);
+  statusBarItem.tooltip = statusBarItemTooltip(enabled);
+  statusBarItem.command = "continue.toggleTabAutocompleteEnabled";
+  statusBarItem.show();
+  lastStatusBar = statusBarItem;
+
+  vscode.workspace.onDidChangeConfiguration((event) => {
+    if (event.affectsConfiguration("continue")) {
+      const config = vscode.workspace.getConfiguration("continue");
+      const enabled = config.get<boolean>("enableTabAutocomplete");
+      statusBarItem.dispose();
+      setupStatusBar(enabled);
+    }
+  });
+}
 
 async function getDefinition(
   filepath: string,
   line: number,
   character: number
 ): Promise<AutocompleteSnippet | undefined> {
-  const definitions = (await commands.executeCommand(
+  const definitions = (await vscode.commands.executeCommand(
     "vscode.executeDefinitionProvider",
-    Uri.file(filepath),
-    new Position(line, character)
+    vscode.Uri.file(filepath),
+    new vscode.Position(line, character)
   )) as any;
 
   if (definitions[0]?.targetRange) {
@@ -63,9 +85,9 @@ export interface AutocompleOutcome {
 const autocompleteCache = AutocompleteLruCache.get();
 
 async function getTabCompletion(
-  document: TextDocument,
-  pos: Position,
-  token: CancellationToken
+  document: vscode.TextDocument,
+  pos: vscode.Position,
+  token: vscode.CancellationToken
 ): Promise<AutocompleOutcome | undefined> {
   const startTime = Date.now();
 
@@ -84,11 +106,16 @@ async function getTabCompletion(
     if (!llm) return;
 
     // Prompt
-    const fullPrefix = document.getText(new Range(new Position(0, 0), pos));
-    const fullSuffix = document.getText(
-      new Range(pos, new Position(document.lineCount, Number.MAX_SAFE_INTEGER))
+    const fullPrefix = document.getText(
+      new vscode.Range(new vscode.Position(0, 0), pos)
     );
-    const clipboardText = await env.clipboard.readText();
+    const fullSuffix = document.getText(
+      new vscode.Range(
+        pos,
+        new vscode.Position(document.lineCount, Number.MAX_SAFE_INTEGER)
+      )
+    );
+    const clipboardText = await vscode.env.clipboard.readText();
     const { prefix, suffix } = await constructAutocompletePrompt(
       document.fileName,
       fullPrefix,
@@ -112,6 +139,8 @@ async function getTabCompletion(
       // Cache
       completion = cachedCompletion;
     } else {
+      setupStatusBar(undefined, true);
+
       // LLM
       for await (const update of llm.streamComplete(prompt, {
         ...completionOptions,
@@ -168,17 +197,17 @@ async function getTabCompletion(
 }
 
 export class ContinueCompletionProvider
-  implements InlineCompletionItemProvider
+  implements vscode.InlineCompletionItemProvider
 {
   private static debounceTimeout: NodeJS.Timeout | undefined = undefined;
   private static debouncing: boolean = false;
   private static lastUUID: string | undefined = undefined;
 
   public async provideInlineCompletionItems(
-    document: TextDocument,
-    position: Position,
-    context: InlineCompletionContext,
-    token: CancellationToken
+    document: vscode.TextDocument,
+    position: vscode.Position,
+    context: vscode.InlineCompletionContext,
+    token: vscode.CancellationToken
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
     // Debounce
@@ -203,7 +232,7 @@ export class ContinueCompletionProvider
     }
 
     const enableTabAutocomplete =
-      workspace
+      vscode.workspace
         .getConfiguration("continue")
         .get<boolean>("enableTabAutocomplete") || false;
     if (token.isCancellationRequested || !enableTabAutocomplete) {
@@ -230,9 +259,9 @@ export class ContinueCompletionProvider
       }, 10_000);
 
       return [
-        new InlineCompletionItem(
+        new vscode.InlineCompletionItem(
           completion,
-          new Range(position, position.translate(0, completion.length)),
+          new vscode.Range(position, position.translate(0, completion.length)),
           {
             title: "Log Autocomplete Outcome",
             command: "continue.logAutocompleteOutcome",
@@ -242,6 +271,8 @@ export class ContinueCompletionProvider
       ];
     } catch (e: any) {
       console.log("Error getting autocompletion: ", e.message);
+    } finally {
+      setupStatusBar(undefined, true);
     }
   }
 }

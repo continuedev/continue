@@ -331,6 +331,15 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     outcome.accepted = true;
     ideProtocolClient.logDevData("autocomplete", outcome);
   },
+  "continue.toggleTabAutocompleteEnabled": () => {
+    const config = vscode.workspace.getConfiguration("continue");
+    const enabled = config.get("enableTabAutocomplete");
+    config.update(
+      "enableTabAutocomplete",
+      !enabled,
+      vscode.ConfigurationTarget.Global
+    );
+  },
 };
 
 export function registerAllCommands(context: vscode.ExtensionContext) {
