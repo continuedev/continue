@@ -105,10 +105,13 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
     });
 
     if (!resp.ok) {
+      let text = await resp.text();
+      if (resp.status === 404 && !resp.url.includes("/v1")) {
+        text =
+          "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
+      }
       throw new Error(
-        `HTTP ${resp.status} ${resp.statusText} from ${
-          resp.url
-        }\n\n${await resp.text()}`
+        `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`
       );
     }
 

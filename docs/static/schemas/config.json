@@ -172,7 +172,8 @@
             "deepseek",
             "openchat",
             "xwin-coder",
-            "neural-chat"
+            "neural-chat",
+            "codellama-70b"
           ],
           "type": "string"
         },
