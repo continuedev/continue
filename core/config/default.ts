@@ -13,11 +13,6 @@ const defaultConfig: SerializedContinueConfig = {
       model: "gpt-4-vision-preview",
     },
     {
-      title: "Phind CodeLlama (Free Trial)",
-      provider: "free-trial",
-      model: "phind-codellama-34b",
-    },
-    {
       title: "Gemini Pro (Free Trial)",
       provider: "free-trial",
       model: "gemini-pro",
@@ -62,6 +57,7 @@ const defaultConfig: SerializedContinueConfig = {
     },
     { name: "terminal", params: {} },
     { name: "problems", params: {} },
+    { name: "codebase", params: {} },
   ],
 };
 

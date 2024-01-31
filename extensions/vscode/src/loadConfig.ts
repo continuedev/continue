@@ -1,9 +1,15 @@
 import { ContinueConfig, IDE, ILLM } from "core";
+import Ollama from "core/llm/llms/Ollama";
 import * as fs from "fs";
-import { Agent, fetch } from "undici";
+import { Agent, ProxyAgent, fetch } from "undici";
+import * as vscode from "vscode";
 import { webviewRequest } from "./debugPanel";
 import { VsCodeIde, loadFullConfigNode } from "./ideProtocol";
 const tls = require("tls");
+
+const outputChannel = vscode.window.createOutputChannel(
+  "Continue - LLM Prompt/Completion"
+);
 
 class VsCodeConfigHandler {
   savedConfig: ContinueConfig | undefined;
@@ -24,6 +30,85 @@ class VsCodeConfigHandler {
 export const configHandler = new VsCodeConfigHandler();
 
 const TIMEOUT = 7200; // 7200 seconds = 2 hours
+
+function setupLlm(llm: ILLM): ILLM {
+  // Since we know this is happening in Node.js, we can add requestOptions through a custom agent
+  const ca = [...tls.rootCertificates];
+  const customCerts =
+    typeof llm.requestOptions?.caBundlePath === "string"
+      ? [llm.requestOptions?.caBundlePath]
+      : llm.requestOptions?.caBundlePath;
+  if (customCerts) {
+    ca.push(
+      ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8"))
+    );
+  }
+
+  let timeout = (llm.requestOptions?.timeout || TIMEOUT) * 1000; // measured in ms
+
+  const agent =
+    llm.requestOptions?.proxy !== undefined
+      ? new ProxyAgent({
+          connect: {
+            ca,
+            rejectUnauthorized: llm.requestOptions?.verifySsl,
+            timeout,
+          },
+          uri: llm.requestOptions?.proxy,
+          bodyTimeout: timeout,
+          connectTimeout: timeout,
+          headersTimeout: timeout,
+        })
+      : new Agent({
+          connect: {
+            ca,
+            rejectUnauthorized: llm.requestOptions?.verifySsl,
+            timeout,
+          },
+          bodyTimeout: timeout,
+          connectTimeout: timeout,
+          headersTimeout: timeout,
+        });
+
+  llm._fetch = async (input, init) => {
+    const headers: { [key: string]: string } =
+      llm!.requestOptions?.headers || {};
+    for (const [key, value] of Object.entries(init?.headers || {})) {
+      headers[key] = value as string;
+    }
+
+    const resp = await fetch(input, {
+      ...init,
+      dispatcher: agent,
+      headers,
+    });
+
+    if (!resp.ok) {
+      let text = await resp.text();
+      if (resp.status === 404 && !resp.url.includes("/v1")) {
+        text =
+          "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
+      }
+      throw new Error(
+        `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`
+      );
+    }
+
+    return resp;
+  };
+
+  llm.writeLog = async (log: string) => {
+    outputChannel.appendLine(
+      "=========================================================================="
+    );
+    outputChannel.appendLine(
+      "=========================================================================="
+    );
+
+    outputChannel.append(log);
+  };
+  return llm;
+}
 
 export async function llmFromTitle(title?: string): Promise<ILLM> {
   let config = await configHandler.loadConfig(new VsCodeIde());
@@ -48,44 +133,85 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
     }
   }
 
-  // Since we know this is happening in Node.js, we can add requestOptions through a custom agent
-  const ca = [...tls.rootCertificates];
-  const customCerts =
-    typeof llm.requestOptions?.caBundlePath === "string"
-      ? [llm.requestOptions?.caBundlePath]
-      : llm.requestOptions?.caBundlePath;
-  if (customCerts) {
-    ca.push(
-      ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8"))
-    );
-  }
+  return setupLlm(llm);
+}
 
-  let timeout = (llm.requestOptions?.timeout || TIMEOUT) * 1000; // measured in ms
+export class TabAutocompleteModel {
+  private static _llm: ILLM | undefined;
+  private static defaultTag: string = "deepseek-coder:1.3b-base";
 
-  const agent = new Agent({
-    connect: {
-      ca,
-      rejectUnauthorized: llm.requestOptions?.verifySsl,
-      timeout,
-    },
-    bodyTimeout: timeout,
-    connectTimeout: timeout,
-    headersTimeout: timeout,
-  });
+  private static shownOllamaWarning: boolean = false;
+  private static shownDeepseekWarning: boolean = false;
 
-  llm._fetch = (input, init) => {
-    const headers: { [key: string]: string } =
-      llm!.requestOptions?.headers || {};
-    for (const [key, value] of Object.entries(init?.headers || {})) {
-      headers[key] = value as string;
+  static async getDefaultTabAutocompleteModel() {
+    const llm = new Ollama({
+      model: TabAutocompleteModel.defaultTag,
+    });
+
+    // Check that deepseek is already downloaded
+    try {
+      const models = await llm.listModels();
+      if (!models.includes(TabAutocompleteModel.defaultTag)) {
+        // Raise warning and explain how to download
+        if (!TabAutocompleteModel.shownDeepseekWarning) {
+          vscode.window
+            .showWarningMessage(
+              `Your local Ollama instance doesn't yet have DeepSeek Coder. To download this model, run \`ollama run deepseek-coder:1.3b-base\` (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs`,
+              "Documentation",
+              "Copy Command"
+            )
+            .then((value) => {
+              if (value === "Documentation") {
+                vscode.env.openExternal(
+                  vscode.Uri.parse(
+                    "https://continue.dev/docs/walkthroughs/tab-autocomplete"
+                  )
+                );
+              } else if (value === "Copy Command") {
+                vscode.env.clipboard.writeText(
+                  "ollama run deepseek-coder:1.3b-base"
+                );
+              }
+            });
+          TabAutocompleteModel.shownDeepseekWarning = true;
+        }
+        return undefined;
+      }
+    } catch (e) {
+      if (!TabAutocompleteModel.shownOllamaWarning) {
+        vscode.window
+          .showWarningMessage(
+            "Continue failed to connect to Ollama, which is used by default for tab-autocomplete. If you haven't downloaded it yet, you can do so at https://ollama.ai (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs",
+            "Documentation"
+          )
+          .then((value) => {
+            if (value === "Documentation") {
+              vscode.env.openExternal(
+                vscode.Uri.parse(
+                  "https://continue.dev/docs/walkthroughs/tab-autocomplete"
+                )
+              );
+            }
+          });
+        TabAutocompleteModel.shownOllamaWarning = true;
+      }
+      return undefined;
     }
 
-    return fetch(input, {
-      ...init,
-      dispatcher: agent,
-      headers,
-    });
-  };
+    return llm;
+  }
 
-  return llm;
+  static async get() {
+    if (!TabAutocompleteModel._llm) {
+      const config = await configHandler.loadConfig(new VsCodeIde());
+      if (config.tabAutocompleteModel) {
+        TabAutocompleteModel._llm = setupLlm(config.tabAutocompleteModel);
+      } else {
+        TabAutocompleteModel._llm =
+          await TabAutocompleteModel.getDefaultTabAutocompleteModel();
+      }
+    }
+
+    return TabAutocompleteModel._llm;
+  }
 }

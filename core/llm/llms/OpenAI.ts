@@ -24,7 +24,7 @@ const NON_CHAT_MODELS = [
 class OpenAI extends BaseLLM {
   static providerName: ModelProvider = "openai";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.openai.com",
+    apiBase: "https://api.openai.com/v1",
   };
 
   protected _convertMessage(message: ChatMessage) {
@@ -87,9 +87,7 @@ class OpenAI extends BaseLLM {
       if (url.endsWith("/")) {
         url = url.slice(0, -1);
       }
-      if (!url.endsWith("/v1") && !url.includes("api.perplexity.ai")) {
-        url += "/v1";
-      }
+
       return url + "/completions";
     }
   }
@@ -110,6 +108,10 @@ class OpenAI extends BaseLLM {
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
+    const args: any = this._convertArgs(options, []);
+    args.prompt = prompt;
+    delete args.messages;
+
     const response = await this.fetch(this._getCompletionUrl(), {
       method: "POST",
       headers: {
@@ -118,16 +120,7 @@ class OpenAI extends BaseLLM {
         "api-key": this.apiKey || "", // For Azure
       },
       body: JSON.stringify({
-        ...{
-          prompt,
-          model: options.model,
-          max_tokens: options.maxTokens,
-          temperature: options.temperature,
-          top_p: options.topP,
-          frequency_penalty: options.frequencyPenalty,
-          presence_penalty: options.presencePenalty,
-          stop: options.stop,
-        },
+        ...args,
         stream: true,
       }),
     });
@@ -153,10 +146,6 @@ class OpenAI extends BaseLLM {
         url = url.slice(0, -1);
       }
 
-      if (!url.includes("/v1") && !url.includes("api.perplexity.ai")) {
-        // includes instead of endsWith becuase DeepInfra uses /v1/openai/chat/completions
-        url += "/v1";
-      }
       return url + "/chat/completions";
     }
   }

@@ -11,6 +11,7 @@ import {
   streamEdit,
   verticalPerLineDiffManager,
 } from "./diff/verticalPerLine/manager";
+import { AutocompleOutcome } from "./lang-server/completionProvider";
 
 function addHighlightedCodeToContext(edit: boolean) {
   const editor = vscode.window.activeTextEditor;
@@ -320,6 +321,23 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     const position = editor.selection.active;
     ideProtocolClient.sendMainUserInput(
       `/references ${filepath.fsPath} ${position.line} ${position.character}`
+    );
+  },
+  "continue.logAutocompleteOutcome": (
+    outcome: AutocompleOutcome,
+    logRejectionTimeout: NodeJS.Timeout
+  ) => {
+    clearTimeout(logRejectionTimeout);
+    outcome.accepted = true;
+    ideProtocolClient.logDevData("autocomplete", outcome);
+  },
+  "continue.toggleTabAutocompleteEnabled": () => {
+    const config = vscode.workspace.getConfiguration("continue");
+    const enabled = config.get("enableTabAutocomplete");
+    config.update(
+      "enableTabAutocomplete",
+      !enabled,
+      vscode.ConfigurationTarget.Global
     );
   },
 };

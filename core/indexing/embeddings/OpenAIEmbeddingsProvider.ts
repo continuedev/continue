@@ -3,7 +3,7 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
 class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
   static defaultOptions: Partial<EmbedOptions> | undefined = {
-    apiBase: "https://api.openai.com",
+    apiBase: "https://api.openai.com/v1",
     model: "text-embedding-3-large",
   };
 
@@ -16,13 +16,10 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
     if (apiBase?.endsWith("/")) {
       apiBase = apiBase.slice(0, -1);
     }
-    if (apiBase?.endsWith("/v1")) {
-      apiBase = apiBase.slice(0, -3);
-    }
 
     return await Promise.all(
       chunks.map(async (chunk) => {
-        const resp = await fetch(`${apiBase}/v1/embeddings`, {
+        const resp = await fetch(`${apiBase}/embeddings`, {
           method: "POST",
           body: JSON.stringify({
             input: chunk,

@@ -36,13 +36,15 @@ class DocsContextProvider extends BaseContextProvider {
     return [
       ...chunks
         .map((chunk) => ({
-          name: chunk.filepath
-            .split("/")
-            .slice(1)
-            .join("/")
-            .split("/tree/main/")
-            .slice(1)
-            .join("/"), // chunk.otherMetadata?.title || chunk.filepath,
+          name: chunk.filepath.includes("/tree/main") // For display of GitHub files
+            ? chunk.filepath
+                .split("/")
+                .slice(1)
+                .join("/")
+                .split("/tree/main/")
+                .slice(1)
+                .join("/")
+            : chunk.otherMetadata?.title || chunk.filepath,
           description: new URL(chunk.filepath, query).toString(),
           content: chunk.content,
         }))

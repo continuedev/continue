@@ -233,9 +233,9 @@ class IdeProtocolClient {
     panel.webview.html = getSidebarContent(panel, "/monaco", edits);
   }
 
-  openFile(filepath: string) {
+  openFile(filepath: string, range?: vscode.Range) {
     // vscode has a builtin open/get open files
-    openEditorAndRevealRange(filepath, undefined, vscode.ViewColumn.One);
+    return openEditorAndRevealRange(filepath, range, vscode.ViewColumn.One);
   }
 
   async fileExists(filepath: string): Promise<boolean> {
@@ -408,6 +408,21 @@ class IdeProtocolClient {
       }
     }
     return contents;
+  }
+
+  async readRangeInFile(
+    filepath: string,
+    range: vscode.Range
+  ): Promise<string> {
+    const contents = new TextDecoder().decode(
+      await vscode.workspace.fs.readFile(vscode.Uri.file(filepath))
+    );
+    const lines = contents.split("\n");
+    return (
+      lines.slice(range.start.line, range.end.line).join("\n") +
+      "\n" +
+      lines[range.end.line].slice(0, range.end.character)
+    );
   }
 
   async getTerminalContents(commands: number = -1): Promise<string> {

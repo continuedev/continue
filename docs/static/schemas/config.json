@@ -172,7 +172,8 @@
             "deepseek",
             "openchat",
             "xwin-coder",
-            "neural-chat"
+            "neural-chat",
+            "codellama-70b"
           ],
           "type": "string"
         },
@@ -434,10 +435,13 @@
                       "wizardcoder-34b",
                       "zephyr-7b",
                       "codeup-13b",
-                      "deepseek-1b",
                       "deepseek-7b",
                       "deepseek-33b",
-                      "neural-chat-7b"
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b"
                     ]
                   },
                   { "type": "string" }
@@ -568,10 +572,13 @@
                       "wizardcoder-34b",
                       "zephyr-7b",
                       "codeup-13b",
-                      "deepseek-1b",
                       "deepseek-7b",
                       "deepseek-33b",
-                      "neural-chat-7b"
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b"
                     ]
                   },
                   { "type": "string" }
@@ -609,10 +616,13 @@
                       "wizardcoder-34b",
                       "zephyr-7b",
                       "codeup-13b",
-                      "deepseek-1b",
                       "deepseek-7b",
                       "deepseek-33b",
-                      "neural-chat-7b"
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b"
                     ]
                   },
                   { "type": "string" }
@@ -784,7 +794,6 @@
                       "wizardcoder-34b",
                       "zephyr-7b",
                       "codeup-13b",
-                      "deepseek-1b",
                       "deepseek-7b",
                       "deepseek-33b",
                       "claude-2",
@@ -792,7 +801,11 @@
                       "gemini-pro",
                       "mistral-tiny",
                       "mistral-small",
-                      "mistral-medium"
+                      "mistral-medium",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b"
                     ]
                   },
                   { "type": "string" }
@@ -968,6 +981,7 @@
                 "problems",
                 "folder",
                 "issue",
+                "docs",
                 "tree"
               ],
               "markdownEnumDescriptions": [
@@ -982,6 +996,7 @@
                 "Include important files from a folder in the prompt, as determined by similarity search",
                 "Reference GitHub issues from a repository",
                 "Retrieve important pages from a documentation website, as determined by similarity search",
+                "Index and retrieve the contents of any documentation site, using embeddings to find important snippets",
                 "Display a file tree of the current workspace"
               ],
               "type": "string"
@@ -1292,6 +1307,16 @@
               }
             }
           ]
+        },
+        "tabAutocompleteModel": {
+          "title": "Tab Autocomplete Model",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will not do tab autocompletion.",
+          "default": {
+            "title": "Tab Autocomplete Model",
+            "provider": "ollama",
+            "model": "deepseek-coder:1.3b-base"
+          },
+          "$ref": "#/definitions/ModelDescription"
         }
       }
     }

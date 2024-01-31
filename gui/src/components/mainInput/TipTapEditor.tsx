@@ -123,7 +123,7 @@ interface TipTapEditorProps {
 function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useDispatch();
 
-  const getSubmenuContextItems = useContext(SubmenuContextProvidersContext);
+  const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
 
   const historyLength = useSelector(
     (store: RootStore) => store.state.history.length
