@@ -1,7 +1,8 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { postToIde } from "core/ide/messaging";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { lightGray, vscBackground, vscForeground } from "../components";
+import { Button, lightGray, vscBackground, vscForeground } from "../components";
 import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
 
 const IconDiv = styled.div<{ backgroundColor?: string }>`
@@ -15,6 +16,18 @@ const IconDiv = styled.div<{ backgroundColor?: string }>`
 
   &:hover {
     background-color: ${(props) => props.backgroundColor || lightGray};
+  }
+`;
+
+const TutorialButton = styled(Button)`
+  padding: 2px 4px;
+  margin-left: auto;
+  margin-right: 12px;
+  background-color: transparent;
+  color: ${vscForeground};
+  border: 1px solid ${lightGray};
+  &:hover {
+    background-color: ${lightGray};
   }
 `;
 
@@ -37,6 +50,13 @@ function HelpPage() {
           className="inline-block ml-4 cursor-pointer"
         />
         <h3 className="text-lg font-bold m-2 inline-block">Help Center</h3>
+        <TutorialButton
+          onClick={() => {
+            postToIde("showTutorial", {});
+          }}
+        >
+          Open tutorial
+        </TutorialButton>
       </div>
 
       <div className="grid grid-cols-2 grid-rows-2">

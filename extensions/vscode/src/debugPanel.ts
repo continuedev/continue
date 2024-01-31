@@ -8,7 +8,11 @@ import * as path from "path";
 import * as io from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import { ideProtocolClient, windowId } from "./activation/activate";
+import {
+  ideProtocolClient,
+  showTutorial,
+  windowId,
+} from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
 import { streamEdit } from "./diff/verticalPerLine/manager";
 import historyManager from "./history";
@@ -710,6 +714,10 @@ export function getSidebarContent(
           streamEdit(
             `The following code was suggested as an edit:\n\`\`\`\n${data.text}\n\`\`\`\nPlease apply it to the previous code.`
           );
+          break;
+        }
+        case "showTutorial": {
+          showTutorial();
           break;
         }
       }

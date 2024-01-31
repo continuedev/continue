@@ -17,24 +17,27 @@ export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
 export let windowId: string = v4();
 
-async function openTutorial(context: vscode.ExtensionContext) {
-  if (context.globalState.get<boolean>("continue.tutorialShown") !== true) {
-    const tutorialPath = path.join(
-      getExtensionUri().fsPath,
-      "continue_tutorial.py"
-    );
-    // Ensure keyboard shortcuts match OS
-    const os = process.platform;
+export async function showTutorial() {
+  const tutorialPath = path.join(
+    getExtensionUri().fsPath,
+    "continue_tutorial.py"
+  );
+  // Ensure keyboard shortcuts match OS
+  if (process.platform !== "darwin") {
     let tutorialContent = fs.readFileSync(tutorialPath, "utf8");
-    if (os !== "darwin") {
-      tutorialContent = tutorialContent.replace("⌘", "^");
-      fs.writeFileSync(tutorialPath, tutorialContent);
-    }
+    tutorialContent = tutorialContent.replace("⌘", "^");
+    fs.writeFileSync(tutorialPath, tutorialContent);
+  }
 
-    const doc = await vscode.workspace.openTextDocument(
-      vscode.Uri.file(tutorialPath)
-    );
-    await vscode.window.showTextDocument(doc);
+  const doc = await vscode.workspace.openTextDocument(
+    vscode.Uri.file(tutorialPath)
+  );
+  await vscode.window.showTextDocument(doc);
+}
+
+async function openTutorialFirstTime(context: vscode.ExtensionContext) {
+  if (context.globalState.get<boolean>("continue.tutorialShown") !== true) {
+    await showTutorial();
     context.globalState.update("continue.tutorialShown", true);
   }
 }
@@ -79,7 +82,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
   registerQuickFixProvider();
-  await openTutorial(context);
+  await openTutorialFirstTime(context);
   setupInlineTips(context);
   showRefactorMigrationMessage();
 
