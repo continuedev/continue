@@ -224,7 +224,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         return (tree) => {
           visit(tree, "code", (node: any) => {
             if (!supportedLanguages.includes(node.lang)) {
-              node.lang = "python"; // Default to python to get some highlighting
+              node.lang = "javascript"; // Default to javascript to get some highlighting
             }
           });
         };
