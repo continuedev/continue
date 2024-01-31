@@ -145,6 +145,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
               fontColor: "#fff",
             };
             themeJson.fileNames[".continueignore"] = "_f_continue";
+            themeJson.fileNames[".continuerc.json"] = "_f_continue";
+            themeJson.fileNames["config.json"] = "_f_continue";
             fs.writeFileSync(themePath, JSON.stringify(themeJson));
             found = true;
             break;
