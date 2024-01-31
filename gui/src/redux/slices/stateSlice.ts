@@ -275,7 +275,6 @@ export const stateSlice = createSlice({
         };
       }
     ) => {
-      console.log("addContextItemsAtIndex", payload, state.history);
       if (payload.index < state.history.length) {
         state.history[payload.index].contextItems.push(...payload.contextItems);
       }
