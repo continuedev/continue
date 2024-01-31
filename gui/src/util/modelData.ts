@@ -412,11 +412,31 @@ const deepseek: ModelPackage = {
   description:
     "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
   params: {
-    title: "DeepSeek",
+    title: "DeepSeek-7b",
     model: "deepseek-7b",
     contextLength: 4096,
   },
-  providerOptions: ["lmstudio", "llamacpp"],
+  dimensions: [
+    {
+      name: "Parameter Count",
+      description: "The number of parameters in the model",
+      options: {
+        "1b": {
+          model: "deepseek-1b",
+          title: "DeepSeek-1b",
+        },
+        "7b": {
+          model: "deepseek-7b",
+          title: "DeepSeek-7b",
+        },
+        "33b": {
+          model: "deepseek-33b",
+          title: "DeepSeek-33b",
+        },
+      }
+    },
+  ],
+  providerOptions: ["ollama", "lmstudio", "llamacpp"],
 };
 
 const codeup: ModelPackage = {
@@ -451,6 +471,7 @@ const osModels = [
   codeup,
   zephyr,
   neuralChat,
+  deepseek,
 ];
 
 const gpt4turbo: ModelPackage = {
@@ -703,7 +724,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     params: {
       apiBase: "http://localhost:1234",
     },
-    packages: [...osModels, deepseek],
+    packages: osModels,
     collectInputFor: [...completionParamsInputs],
   },
   replicate: {
@@ -752,7 +773,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
 After it's up and running, you can start using Continue.`,
     icon: "llamacpp.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: [...osModels, deepseek],
+    packages: osModels,
     collectInputFor: [...completionParamsInputs],
   },
   palm: {
