@@ -91,18 +91,28 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
           headersTimeout: timeout,
         });
 
-  llm._fetch = (input, init) => {
+  llm._fetch = async (input, init) => {
     const headers: { [key: string]: string } =
       llm!.requestOptions?.headers || {};
     for (const [key, value] of Object.entries(init?.headers || {})) {
       headers[key] = value as string;
     }
 
-    return fetch(input, {
+    const resp = await fetch(input, {
       ...init,
       dispatcher: agent,
       headers,
     });
+
+    if (!resp.ok) {
+      throw new Error(
+        `HTTP ${resp.status} ${resp.statusText} from ${
+          resp.url
+        }\n\n${await resp.text()}`
+      );
+    }
+
+    return resp;
   };
 
   llm.writeLog = async (log: string) => {
