@@ -6,11 +6,13 @@ import {
   LLMFullCompletionOptions,
   LLMOptions,
   LLMReturnValue,
+  ModelName,
   ModelProvider,
   RequestOptions,
   TemplateType,
 } from "..";
 import { ideRequest, ideStreamRequest } from "../ide/messaging";
+import mergeJson from "../util/merge";
 import {
   CONTEXT_LENGTH_FOR_MODEL,
   DEFAULT_ARGS,
@@ -25,6 +27,7 @@ import {
 import {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
+  codeLlama70bTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
   llavaTemplateMessages,
@@ -38,6 +41,7 @@ import {
 } from "./templates/chat";
 import {
   alpacaEditPrompt,
+  codeLlama70bEditPrompt,
   codellamaEditPrompt,
   deepseekEditPrompt,
   mistralEditPrompt,
@@ -49,11 +53,13 @@ import {
   xWinCoderEditPrompt,
   zephyrEditPrompt,
 } from "./templates/edit";
+import CompletionOptionsForModels from "./templates/options";
 
 const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "lmstudio",
   "openai",
   "ollama",
+  "together",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -113,8 +119,8 @@ export function llmCanGenerateInParallel(llm: ILLM): boolean {
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
 
-  if (lower === "codellama-70b") {
-    return "none";
+  if (lower.includes("codellama") && lower.includes("70b")) {
+    return "codellama-70b";
   }
 
   if (
@@ -209,6 +215,7 @@ function autodetectTemplateFunction(
       "xwin-coder": xWinCoderTemplateMessages,
       "neural-chat": neuralChatTemplateMessages,
       llava: llavaTemplateMessages,
+      "codellama-70b": codeLlama70bTemplateMessages,
       none: null,
     };
 
@@ -249,6 +256,8 @@ function autodetectPromptTemplates(
     editTemplate = xWinCoderEditPrompt;
   } else if (templateType === "neural-chat") {
     editTemplate = neuralChatEditPrompt;
+  } else if (templateType === "codellama-70b") {
+    editTemplate = codeLlama70bEditPrompt;
   } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }
@@ -319,6 +328,12 @@ export abstract class BaseLLM implements ILLM {
       model: options.model || "gpt-4",
       maxTokens: options.completionOptions?.maxTokens || DEFAULT_MAX_TOKENS,
     };
+    if (CompletionOptionsForModels[options.model as ModelName]) {
+      this.completionOptions = mergeJson(
+        this.completionOptions,
+        CompletionOptionsForModels[options.model as ModelName] || {}
+      );
+    }
     this.requestOptions = options.requestOptions;
     this.promptTemplates = {
       ...autodetectPromptTemplates(options.model, templateType),
@@ -450,10 +465,10 @@ ${prompt}`;
     delete options.log;
     delete options.raw;
 
-    const completionOptions: CompletionOptions = {
-      ...this.completionOptions,
-      ...options,
-    };
+    const completionOptions: CompletionOptions = mergeJson(
+      this.completionOptions,
+      options
+    );
 
     return { completionOptions, log, raw };
   }

@@ -404,6 +404,7 @@ type TemplateType =
   | "deepseek"
   | "xwin-coder"
   | "neural-chat"
+  | "codellama-70b"
   | "llava";
 
 type ModelProvider =

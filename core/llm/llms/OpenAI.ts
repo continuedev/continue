@@ -110,6 +110,10 @@ class OpenAI extends BaseLLM {
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
+    const args: any = this._convertArgs(options, []);
+    args.prompt = prompt;
+    delete args.messages;
+
     const response = await this.fetch(this._getCompletionUrl(), {
       method: "POST",
       headers: {
@@ -118,16 +122,7 @@ class OpenAI extends BaseLLM {
         "api-key": this.apiKey || "", // For Azure
       },
       body: JSON.stringify({
-        ...{
-          prompt,
-          model: options.model,
-          max_tokens: options.maxTokens,
-          temperature: options.temperature,
-          top_p: options.topP,
-          frequency_penalty: options.frequencyPenalty,
-          presence_penalty: options.presencePenalty,
-          stop: options.stop,
-        },
+        ...args,
         stream: true,
       }),
     });

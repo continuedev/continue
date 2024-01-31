@@ -140,7 +140,7 @@ const supportedLanguages = [
   "fsharp",
   "git-commit",
   "git-rebase",
-  "go",
+  // "go",
   "graphql",
   "groovy",
   "hack",

@@ -27,9 +27,9 @@ import {
 } from "core/config/load";
 import { LanceDbIndex } from "core/indexing/LanceDbIndex";
 import { IndexTag } from "core/indexing/types";
+import mergeJson from "core/util/merge";
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { configHandler } from "./loadConfig";
-import mergeJson from "./util/merge";
 import { traverseDirectory } from "./util/traverseDirectory";
 import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 
