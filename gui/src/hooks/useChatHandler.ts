@@ -5,6 +5,7 @@ import {
   ChatHistory,
   ChatHistoryItem,
   ChatMessage,
+  ContinueSDK,
   LLMReturnValue,
   MessageContent,
   SlashCommand,
@@ -19,7 +20,7 @@ import { useSelector } from "react-redux";
 import resolveEditorContent from "../components/mainInput/resolveInput";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
-  addContextItems,
+  addContextItemsAtIndex,
   addLogs,
   initNewActiveMessage,
   resubmitAtIndex,
@@ -120,19 +121,25 @@ function useChatHandler(dispatch: Dispatch) {
   async function _streamSlashCommand(
     messages: ChatMessage[],
     slashCommand: SlashCommand,
-    input: string
+    input: string,
+    historyIndex: number
   ) {
     let generator: AsyncGenerator<string>;
     if (slashCommand.runInNodeJs) {
       generator = _streamSlashCommandFromVsCode(messages, slashCommand, input);
     } else {
-      const sdk = {
+      const sdk: ContinueSDK = {
         input,
         history: messages,
         ide: new ExtensionIde(),
         llm: defaultModel,
         addContextItem: (item) => {
-          dispatch(addContextItems([item]));
+          dispatch(
+            addContextItemsAtIndex({
+              index: historyIndex,
+              contextItems: [item],
+            })
+          );
         },
         contextItems,
         params: slashCommand.params,
@@ -181,10 +188,11 @@ function useChatHandler(dispatch: Dispatch) {
       };
 
       let newHistory: ChatHistory = [...history.slice(0, index), historyItem];
+      const historyIndex = index || newHistory.length - 1;
       dispatch(
         setMessageAtIndex({
           message,
-          index: index || newHistory.length - 1,
+          index: historyIndex,
           contextItems,
         })
       );
@@ -217,7 +225,12 @@ function useChatHandler(dispatch: Dispatch) {
             user_input: commandInput,
           },
         });
-        await _streamSlashCommand(messages, slashCommand, commandInput);
+        await _streamSlashCommand(
+          messages,
+          slashCommand,
+          commandInput,
+          historyIndex
+        );
       }
     } catch (e) {
       console.log("Continue: error streaming response: ", e);
