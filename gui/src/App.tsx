@@ -66,19 +66,28 @@ const router = createMemoryRouter([
   },
 ]);
 
-export const SubmenuContextProvidersContext = createContext<
-  (providerTitle: string | undefined, query: string) => ContextSubmenuItem[]
->(() => []);
+export const SubmenuContextProvidersContext = createContext<{
+  getSubmenuContextItems: (
+    providerTitle: string | undefined,
+    query: string
+  ) => ContextSubmenuItem[];
+  addItem: (providerTitle: string, item: ContextSubmenuItem) => void;
+}>({
+  getSubmenuContextItems: () => [],
+  addItem: () => {},
+});
 
 function App() {
   const dispatch = useDispatch();
 
   useSetup(dispatch);
 
-  const { getSubmenuContextItems } = useSubmenuContextProviders();
+  const submenuContextProvidersMethods = useSubmenuContextProviders();
 
   return (
-    <SubmenuContextProvidersContext.Provider value={getSubmenuContextItems}>
+    <SubmenuContextProvidersContext.Provider
+      value={submenuContextProvidersMethods}
+    >
       <RouterProvider router={router} />
     </SubmenuContextProvidersContext.Provider>
   );

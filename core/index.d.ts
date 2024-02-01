@@ -300,6 +300,11 @@ export interface IDE {
   runCommand(command: string): Promise<void>;
   saveFile(filepath: string): Promise<void>;
   readFile(filepath: string): Promise<string>;
+  showLines(
+    filepath: string,
+    startLine: number,
+    endLine: number
+  ): Promise<void>;
   showDiff(
     filepath: string,
     newContents: string,
@@ -316,6 +321,7 @@ export interface IDE {
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
+  getBranch(dir: string): Promise<string>;
 
   // Embeddings
   /**
@@ -397,7 +403,9 @@ type TemplateType =
   | "openchat"
   | "deepseek"
   | "xwin-coder"
-  | "neural-chat";
+  | "neural-chat"
+  | "codellama-70b"
+  | "llava";
 
 type ModelProvider =
   | "openai"
@@ -426,7 +434,8 @@ export type ModelName =
   | "gpt-4"
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
-  | "gpt-4-1106-preview"
+  | "gpt-4-0125-preview"
+  | "gpt-4-vision-preview"
   // Open Source
   | "mistral-7b"
   | "mistral-8x7b"
@@ -435,6 +444,7 @@ export type ModelName =
   | "codellama-7b"
   | "codellama-13b"
   | "codellama-34b"
+  | "codellama-70b"
   | "phi2"
   | "phind-codellama-34b"
   | "wizardcoder-7b"

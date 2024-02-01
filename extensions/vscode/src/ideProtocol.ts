@@ -27,11 +27,11 @@ import {
 } from "core/config/load";
 import { LanceDbIndex } from "core/indexing/LanceDbIndex";
 import { IndexTag } from "core/indexing/types";
+import mergeJson from "core/util/merge";
 import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { configHandler } from "./loadConfig";
-import mergeJson from "./util/merge";
 import { traverseDirectory } from "./util/traverseDirectory";
-import { getExtensionUri } from "./util/vscode";
+import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 
 async function buildConfigTs(browser: boolean) {
   if (!fs.existsSync(getConfigTsPath())) {
@@ -243,7 +243,7 @@ class VsCodeIde implements IDE {
   }
 
   async getTerminalContents(): Promise<string> {
-    return await ideProtocolClient.getTerminalContents(2);
+    return await ideProtocolClient.getTerminalContents(1);
   }
 
   async listWorkspaceContents(directory?: string): Promise<string[]> {
@@ -293,6 +293,26 @@ class VsCodeIde implements IDE {
 
   async openFile(path: string): Promise<void> {
     ideProtocolClient.openFile(path);
+  }
+
+  async showLines(
+    filepath: string,
+    startLine: number,
+    endLine: number
+  ): Promise<void> {
+    const range = new vscode.Range(
+      new vscode.Position(startLine, 0),
+      new vscode.Position(endLine, 0)
+    );
+    openEditorAndRevealRange(filepath, range).then(() => {
+      ideProtocolClient.highlightCode(
+        {
+          filepath,
+          range,
+        },
+        "#fff1"
+      );
+    });
   }
 
   async runCommand(command: string): Promise<void> {
@@ -414,6 +434,10 @@ class VsCodeIde implements IDE {
         resolve([stdout, stderr]);
       });
     });
+  }
+
+  async getBranch(dir: string): Promise<string> {
+    return ideProtocolClient.getBranch(vscode.Uri.file(dir));
   }
 
   async getFilesToEmbed(

@@ -1,17 +1,23 @@
-import { BaseLLM } from "..";
-import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
-import { streamSse } from "../stream";
+import {
+  ChatMessage,
+  CompletionOptions,
+  LLMOptions,
+  ModelProvider,
+} from "../..";
 
-class Together extends BaseLLM {
+import OpenAI from "./OpenAI";
+
+class Together extends OpenAI {
   static providerName: ModelProvider = "together";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.together.xyz",
+    apiBase: "https://api.together.xyz/v1",
   };
 
   private static MODEL_IDS: { [name: string]: string } = {
     "codellama-7b": "togethercomputer/CodeLlama-7b-Instruct",
     "codellama-13b": "togethercomputer/CodeLlama-13b-Instruct",
     "codellama-34b": "togethercomputer/CodeLlama-34b-Instruct",
+    "codellama-70b": "codellama/CodeLlama-70b-Instruct-hf",
     "llama2-7b": "togethercomputer/llama-2-7b-chat",
     "llama2-13b": "togethercomputer/llama-2-13b-chat",
     "llama2-70b": "togethercomputer/llama-2-70b-chat",
@@ -24,17 +30,9 @@ class Together extends BaseLLM {
     return Together.MODEL_IDS[model] || this.model;
   }
 
-  private _convertArgs(options: CompletionOptions, prompt: string) {
-    const finalOptions = {
-      prompt,
-      model: this._getModelName(options.model),
-      temperature: options.temperature,
-      top_p: options.topP,
-      top_k: options.topK,
-      max_tokens: options.maxTokens,
-      repetition_penalty: options.frequencyPenalty,
-    };
-
+  protected _convertArgs(options: any, messages: ChatMessage[]) {
+    const finalOptions = super._convertArgs(options, messages);
+    finalOptions.model = this._getModelName(options.model);
     return finalOptions;
   }
 
@@ -42,22 +40,8 @@ class Together extends BaseLLM {
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const response = await this.fetch(`${this.apiBase}/inference`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({
-        ...this._convertArgs(options, prompt),
-        stream_tokens: true,
-      }),
-    });
-
-    for await (const value of streamSse(response)) {
-      if (value.choices) {
-        yield value.choices[0].text;
-      }
+    for await (const chunk of this._legacystreamComplete(prompt, options)) {
+      yield chunk;
     }
   }
 }

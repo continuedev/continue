@@ -17,14 +17,27 @@ export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
 export let windowId: string = v4();
 
-async function openTutorial(context: vscode.ExtensionContext) {
+export async function showTutorial() {
+  const tutorialPath = path.join(
+    getExtensionUri().fsPath,
+    "continue_tutorial.py"
+  );
+  // Ensure keyboard shortcuts match OS
+  if (process.platform !== "darwin") {
+    let tutorialContent = fs.readFileSync(tutorialPath, "utf8");
+    tutorialContent = tutorialContent.replace("⌘", "^");
+    fs.writeFileSync(tutorialPath, tutorialContent);
+  }
+
+  const doc = await vscode.workspace.openTextDocument(
+    vscode.Uri.file(tutorialPath)
+  );
+  await vscode.window.showTextDocument(doc);
+}
+
+async function openTutorialFirstTime(context: vscode.ExtensionContext) {
   if (context.globalState.get<boolean>("continue.tutorialShown") !== true) {
-    const doc = await vscode.workspace.openTextDocument(
-      vscode.Uri.file(
-        path.join(getExtensionUri().fsPath, "continue_tutorial.py")
-      )
-    );
-    await vscode.window.showTextDocument(doc);
+    await showTutorial();
     context.globalState.update("continue.tutorialShown", true);
   }
 }
@@ -69,7 +82,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   registerAllCodeLensProviders(context);
   registerAllCommands(context);
   registerQuickFixProvider();
-  await openTutorial(context);
+  await openTutorialFirstTime(context);
   setupInlineTips(context);
   showRefactorMigrationMessage();
 
@@ -132,6 +145,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
               fontColor: "#fff",
             };
             themeJson.fileNames[".continueignore"] = "_f_continue";
+            themeJson.fileNames[".continuerc.json"] = "_f_continue";
+            themeJson.fileNames["config.json"] = "_f_continue";
             fs.writeFileSync(themePath, JSON.stringify(themeJson));
             found = true;
             break;

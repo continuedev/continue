@@ -13,6 +13,11 @@ const inlineTipDecoration = vscode.window.createTextEditorDecorationType({
 function handleSelectionChange(e: vscode.TextEditorSelectionChangeEvent) {
   const selection = e.selections[0];
   const editor = e.textEditor;
+
+  if (editor.document.uri.toString().startsWith("output:")) {
+    return;
+  }
+
   if (
     selection.isEmpty ||
     vscode.workspace
@@ -69,6 +74,10 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor?.document.getText() === "") {
+        if (editor.document.uri.toString().startsWith("output:")) {
+          return;
+        }
+
         editor.setDecorations(emptyFileTooltipDecoration, [
           {
             range: new vscode.Range(
@@ -83,6 +92,9 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument((e) => {
+      if (e.document.uri.toString().startsWith("vscode://inline-chat")) {
+        return;
+      }
       if (e.document.getText() === "") {
         vscode.window.visibleTextEditors.forEach((editor) => {
           editor.setDecorations(emptyFileTooltipDecoration, [

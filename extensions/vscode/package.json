@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.29",
+  "version": "0.9.42",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -73,90 +73,108 @@
       {
         "command": "continue.acceptDiff",
         "category": "Continue",
-        "title": "Accept Diff"
+        "title": "Accept Diff",
+        "group": "Continue"
       },
       {
         "command": "continue.rejectDiff",
         "category": "Continue",
-        "title": "Reject Diff"
+        "title": "Reject Diff",
+        "group": "Continue",
+        "icon": "$(stop)"
       },
       {
         "command": "continue.quickEdit",
         "category": "Continue",
-        "title": "Quick Edit"
+        "title": "Quick Edit",
+        "group": "Continue"
       },
       {
         "command": "continue.toggleAuxiliaryBar",
         "category": "Continue",
-        "title": "Toggle Right Sidebar"
+        "title": "Toggle Right Sidebar",
+        "group": "Continue"
       },
       {
         "command": "continue.focusContinueInput",
         "category": "Continue",
-        "title": "Add Highlighted Code to Context"
+        "title": "Add Highlighted Code to Context",
+        "group": "Continue"
       },
       {
         "command": "continue.focusContinueInputWithoutClear",
         "category": "Continue",
-        "title": "Add Highlighted Code to Context"
+        "title": "Add Highlighted Code to Context",
+        "group": "Continue"
       },
       {
         "command": "continue.debugTerminal",
         "category": "Continue",
-        "title": "Debug Terminal"
+        "title": "Debug Terminal",
+        "group": "Continue"
       },
       {
         "command": "continue.toggleFullScreen",
         "category": "Continue",
         "title": "Toggle Full Screen",
-        "icon": "$(fullscreen)"
+        "icon": "$(fullscreen)",
+        "group": "Continue"
       },
       {
         "command": "continue.shareSession",
         "category": "Continue",
-        "title": "Share Session"
+        "title": "Share Session",
+        "group": "Continue"
       },
       {
         "command": "continue.selectFilesAsContext",
         "category": "Continue",
-        "title": "Continue: Select Files as Context"
+        "title": "Continue: Select Files as Context",
+        "group": "Continue"
       },
       {
         "command": "continue.newSession",
         "category": "Continue",
         "title": "New Session",
-        "icon": "$(add)"
+        "icon": "$(add)",
+        "group": "Continue"
       },
       {
         "command": "continue.viewHistory",
         "category": "Continue",
         "title": "View History",
-        "icon": "$(history)"
+        "icon": "$(history)",
+        "group": "Continue"
       },
       {
         "command": "continue.writeCommentsForCode",
         "category": "Continue",
-        "title": "Write Comments for this Code"
+        "title": "Write Comments for this Code",
+        "group": "Continue"
       },
       {
         "command": "continue.writeDocstringForCode",
         "category": "Continue",
-        "title": "Write a Docstring for this Code"
+        "title": "Write a Docstring for this Code",
+        "group": "Continue"
       },
       {
         "command": "continue.fixCode",
         "category": "Continue",
-        "title": "Fix this Code"
+        "title": "Fix this Code",
+        "group": "Continue"
       },
       {
         "command": "continue.optimizeCode",
         "category": "Continue",
-        "title": "Optimize this Code"
+        "title": "Optimize this Code",
+        "group": "Continue"
       },
       {
         "command": "continue.fixGrammar",
         "category": "Continue",
-        "title": "Fix Grammar / Spelling"
+        "title": "Fix Grammar / Spelling",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -209,6 +227,29 @@
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "continue.quickEdit"
+        },
+        {
+          "command": "continue.toggleAuxiliaryBar"
+        },
+        {
+          "command": "continue.focusContinueInput"
+        },
+        {
+          "command": "continue.focusContinueInputWithoutClear"
+        },
+        {
+          "command": "continue.debugTerminal"
+        },
+        {
+          "command": "continue.toggleFullScreen"
+        },
+        {
+          "command": "continue.newSession"
+        }
+      ],
       "webview/context": [
         {
           "command": "continue.shareSession",
@@ -218,7 +259,14 @@
       "editor/context": [
         {
           "submenu": "continue.continueSubMenu",
-          "group": "1_debug@1"
+          "group": "0_acontinue"
+        }
+      ],
+      "editor/title/run": [
+        {
+          "command": "continue.rejectDiff",
+          "group": "Continue",
+          "when": "continue.streamingDiff"
         }
       ],
       "continue.continueSubMenu": [

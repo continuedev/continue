@@ -28,6 +28,13 @@ class FileSystemIde implements IDE {
   getTerminalContents(): Promise<string> {
     return Promise.resolve("");
   }
+  showLines(
+    filepath: string,
+    startLine: number,
+    endLine: number
+  ): Promise<void> {
+    return Promise.resolve();
+  }
   listWorkspaceContents(): Promise<string[]> {
     return new Promise((resolve, reject) => {
       fs.readdir("/tmp/continue", (err, files) => {
@@ -92,6 +99,10 @@ class FileSystemIde implements IDE {
     stepIndex: number
   ): Promise<void> {
     return Promise.resolve();
+  }
+
+  getBranch(dir: string): Promise<string> {
+    return Promise.resolve("");
   }
 
   async verticalDiffUpdate(

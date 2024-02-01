@@ -3,7 +3,14 @@ import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
 import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscBadgeBackground,
+  vscBadgeForeground,
+  vscForeground,
+  vscInputBackground,
+} from "..";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
@@ -36,11 +43,11 @@ const EnterButton = styled.div<{ offFocus: boolean }>`
   background-color: ${(props) =>
     props.offFocus ? undefined : lightGray + "33"};
   border-radius: ${defaultBorderRadius};
-  color: #fff8;
+  color: ${vscForeground};
 
   &:hover {
-    background-color: #cf313199;
-    color: white;
+    background-color: ${vscBadgeBackground};
+    color: ${vscBadgeForeground};
   }
 
   cursor: pointer;
@@ -79,7 +86,7 @@ function InputToolbar(props: InputToolbarProps) {
         >
           + Add Context
         </span>
-        {false && defaultModel?.supportsImages() && (
+        {defaultModel?.supportsImages() && (
           <span
             className="ml-1.5 mt-0.5"
             onMouseLeave={() => setFileSelectHovered(false)}
@@ -120,7 +127,7 @@ function InputToolbar(props: InputToolbarProps) {
       </span>
       <span
         style={{
-          color: props.usingCodebase ? "#fff8" : lightGray,
+          color: props.usingCodebase ? vscBadgeBackground : lightGray,
           backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
           borderRadius: defaultBorderRadius,
           padding: "2px 4px",

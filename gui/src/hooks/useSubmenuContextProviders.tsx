@@ -9,7 +9,7 @@ import { RootStore } from "../redux/store";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
-  fuzzy: 3,
+  fuzzy: 2,
 };
 
 function useSubmenuContextProviders() {
@@ -43,8 +43,20 @@ function useSubmenuContextProviders() {
     });
   }
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data.type !== "refreshSubmenuItems") {
+        return;
+      }
+      setLoaded(false);
+    };
+    window.addEventListener("message", handler);
+    return () => {
+      window.removeEventListener("message", handler);
+    };
+  }, []);
+
   function addItem(providerTitle: string, item: ContextSubmenuItem) {
-    console.log("Adding item", item, providerTitle, Object.keys(minisearches));
     if (!minisearches[providerTitle]) {
       return;
     }
@@ -69,7 +81,6 @@ function useSubmenuContextProviders() {
     }
     setLoaded(true);
     contextProviderDescriptions.forEach(async (description) => {
-      console.log("Loading submenu provider", description.title);
       const minisearch = new MiniSearch<ContextSubmenuItem>({
         fields: ["title"],
         storeFields: ["id", "title", "description"],

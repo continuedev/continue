@@ -190,7 +190,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     await vscode.window.showTextDocument(uri);
   },
   "continue.debugTerminal": async () => {
-    const terminalContents = await ideProtocolClient.getTerminalContents(2);
+    const terminalContents = await ideProtocolClient.getTerminalContents(1);
     vscode.commands.executeCommand("continue.continueGUIView.focus");
     debugPanelWebview?.postMessage({
       type: "userInput",

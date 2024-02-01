@@ -38,6 +38,7 @@ function getSuggestion(
             interactive: true,
             trigger: "manual",
             placement: "bottom-start",
+            maxWidth: `${window.innerWidth - 24}px`,
           });
 
           onOpen();

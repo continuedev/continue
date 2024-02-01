@@ -1,5 +1,4 @@
 import Document from "@tiptap/extension-document";
-import Dropcursor from "@tiptap/extension-dropcursor";
 import History from "@tiptap/extension-history";
 import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
@@ -14,6 +13,7 @@ import styled from "styled-components";
 import {
   defaultBorderRadius,
   lightGray,
+  vscBadgeBackground,
   vscForeground,
   vscInputBackground,
   vscInputBorder,
@@ -53,6 +53,7 @@ const InputBoxDiv = styled.div`
 
   &:focus {
     outline: none;
+
     border: 0.5px solid ${vscInputBorderFocus};
   }
 
@@ -61,6 +62,34 @@ const InputBoxDiv = styled.div`
   }
 
   position: relative;
+`;
+
+const HoverDiv = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0.5;
+  background-color: ${vscBadgeBackground};
+  color: ${vscForeground};
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
+const HoverTextDiv = styled.div`
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  color: ${vscForeground};
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 `;
 
 function getDataUrlForFile(file: File, img): string {
@@ -94,7 +123,7 @@ interface TipTapEditorProps {
 function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useDispatch();
 
-  const getSubmenuContextItems = useContext(SubmenuContextProvidersContext);
+  const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
 
   const historyLength = useSelector(
     (store: RootStore) => store.state.history.length
@@ -158,7 +187,14 @@ function TipTapEditor(props: TipTapEditorProps) {
     let filesize = file.size / 1024 / 1024; // filesize in MB
     // check image type and size
     if (
-      (file.type === "image/jpeg" || file.type === "image/png") &&
+      [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/svg",
+        "image/webp",
+      ].includes(file.type) &&
       filesize < 10
     ) {
       // check dimensions
@@ -190,7 +226,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       Document,
       History,
       Image,
-      Dropcursor,
       Placeholder.configure({
         placeholder: () =>
           historyLengthRef.current === 0
@@ -264,32 +299,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       attributes: {
         class: "outline-none -mt-1 overflow-hidden",
         style: "font-size: 14px;",
-      },
-      handleDrop: function (view, event, slice, moved) {
-        if (
-          !moved &&
-          event.dataTransfer &&
-          event.dataTransfer.files &&
-          event.dataTransfer.files[0]
-        ) {
-          let file = event.dataTransfer.files[0];
-          handleImageFile(file).then(([img, dataUrl]) => {
-            const { schema } = view.state;
-            const coordinates = view.posAtCoords({
-              left: event.clientX,
-              top: event.clientY,
-            });
-            const node = schema.nodes.image.create({ src: dataUrl });
-            const transaction = view.state.tr.insert(
-              Math.max(0, coordinates.pos - 1),
-              [node]
-            );
-            return view.dispatch(transaction);
-          });
-
-          return true;
-        }
-        return false;
       },
     },
     content: props.editorState || "",
@@ -428,11 +437,62 @@ function TipTapEditor(props: TipTapEditorProps) {
     };
   }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
 
+  const [showDragOverMsg, setShowDragOverMsg] = useState(false);
+
+  useEffect(() => {
+    const overListener = (event: DragEvent) => {
+      if (event.shiftKey) return;
+      setShowDragOverMsg(true);
+    };
+    window.addEventListener("dragover", overListener);
+
+    const leaveListener = (event: DragEvent) => {
+      if (event.shiftKey) {
+        setShowDragOverMsg(false);
+      } else {
+        setTimeout(() => setShowDragOverMsg(false), 2000);
+      }
+    };
+    window.addEventListener("dragleave", leaveListener);
+
+    return () => {
+      window.removeEventListener("dragover", overListener);
+      window.removeEventListener("dragleave", leaveListener);
+    };
+  }, []);
+
   return (
     <InputBoxDiv
       className="cursor-text"
       onClick={() => {
         editor && editor.commands.focus();
+      }}
+      onDragOver={(event) => {
+        event.preventDefault();
+        setShowDragOverMsg(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.relatedTarget === null) {
+          if (e.shiftKey) {
+            setShowDragOverMsg(false);
+          } else {
+            setTimeout(() => setShowDragOverMsg(false), 2000);
+          }
+        }
+      }}
+      onDragEnter={() => {
+        setShowDragOverMsg(true);
+      }}
+      onDrop={(event) => {
+        setShowDragOverMsg(false);
+        let file = event.dataTransfer.files[0];
+        handleImageFile(file).then(([img, dataUrl]) => {
+          const { schema } = editor.state;
+          const node = schema.nodes.image.create({ src: dataUrl });
+          const tr = editor.state.tr.insert(0, node);
+          editor.view.dispatch(tr);
+        });
+        event.preventDefault();
       }}
     >
       <EditorContent
@@ -465,10 +525,19 @@ function TipTapEditor(props: TipTapEditorProps) {
           handleImageFile(file).then(([img, dataUrl]) => {
             const { schema } = editor.state;
             const node = schema.nodes.image.create({ src: dataUrl });
-            editor.state.tr.insert(0, node);
+            editor.commands.command(({ tr }) => {
+              tr.insert(0, node);
+              return true;
+            });
           });
         }}
       />
+      {showDragOverMsg && (
+        <>
+          <HoverDiv></HoverDiv>
+          <HoverTextDiv>Hold ⇧ to drop image</HoverTextDiv>
+        </>
+      )}
     </InputBoxDiv>
   );
 }

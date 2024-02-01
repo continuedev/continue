@@ -11,6 +11,7 @@
     - [Environment Setup](#environment-setup)
     - [Writing Slash Commands](#writing-slash-commands)
     - [Writing Context Providers](#writing-context-providers)
+    - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
 - [📐 Continue Architecture](#-continue-architecture)
   - [Continue VS Code Extension](#continue-vs-code-extension)
@@ -56,7 +57,7 @@ Continue is continuously improving, but a feature isn't complete until it is ref
 
 VS Code is assumed for development as Continue is primarily a VS Code tool at the moment. Most of the setup and running is automated through VS Code tasks and launch configurations.
 
-Pre-requisite: you will need `cargo` the rust package manager installed ([get it on rust-lang.org](https://www.rust-lang.org/tools/install)).
+<!-- Pre-requisite: you will need `cargo` the rust package manager installed ([get it on rust-lang.org](https://www.rust-lang.org/tools/install)). -->
 
 1. Clone and open in VS Code the Continue repo `https://github.com/continuedev/continue`
 
@@ -82,11 +83,47 @@ Continue uses [Prettier](https://marketplace.visualstudio.com/items?itemName=esb
 
 ### Writing Slash Commands
 
-A Step can be used as a custom slash command, or called otherwise in a `Policy`. See the [steps README](./server/continuedev/plugins/steps/README.md) to learn how to write a Step.
+The slash command interface, defined in [core/index.d.ts](./core/index.d.ts), requires you to define a `name` (the text that will be typed to invoke the command), a `description` (the text that will be shown in the slash command menu), and a `run` function that will be called when the command is invoked. The `run` function is an async generator that yields the content to be displayed in the chat. The `run` function is passed a `ContinueSDK` object that can be used to interact with the IDE, call the LLM, and see the chat history, among a few other utilities.
+
+```ts
+export interface SlashCommand {
+  name: string;
+  description: string;
+  params?: { [key: string]: any };
+  run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
+}
+```
+
+There are many example of slash commands in [core/commands/slash](./core/commands/slash) that we recommend borrowing from. Once you've created your new `SlashCommand` in this folder, also be sure to complete the following:
+
+- Add your command to the array in [core/commands/slash/index.ts](./core/commands/slash/index.ts)
+- Add your command to the list in [`config_schema.json`](./extensions/vscode/config_schema.json). This makes sure that Intellisense shows users what commands are available for your provider when they are editing `config.json`. If there are any parameters that your command accepts, you should also follow existing examples in adding them to the JSON Schema.
 
 ### Writing Context Providers
 
-A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The simplest way to create a `ContextProvider` is to implement the `provide_context_items` method. You can find a great example of this in [GitHubIssuesContextProvider](./server/continuedev/plugins/context_providers/github.py), which allows you to search GitHub Issues in a repo.
+A `ContextProvider` is a Continue plugin that lets type '@' to quickly select documents as context for the language model. The `IContextProvider` interface is defined in [`core/index.d.ts`](./core/index.d.ts), but all built-in context providers extend [`BaseContextProvider`](./core/context/index.ts).
+
+Before defining your context provider, determine which "type" you want to create. The `"query"` type will show a small text input when selected, giving the user the chance to enter something like a Google search query for the [`GoogleContextProvider`](./core/context/providers/GoogleContextProvider.ts). The `"submenu"` type will open up a submenu of items that can be searched through and selected. Examples are the [`GitHubIssuesContextProvider`](./core/context/providers/GitHubIssuesContextProvider.ts) and the [`DocsContextProvider`](./core/context/providers/DocsContextProvider.ts). The `"normal"` type will just immediately add the context item. Examples include the [`DiffContextProvider`](./core/context/providers/DiffContextProvider.ts) and the [`OpenFilesContextProvider`](./core/context/providers/OpenFilesContextProvider.ts).
+
+After you've written your context provider, make sure to complete the following:
+
+- Add it to the array of context providers in [core/context/providers/index.ts](./core/context/providers/index.ts)
+- Add it to the `ContextProviderName` type in [core/index.d.ts](./core/index.d.ts)
+- Add it to the list in [`config_schema.json`](./extensions/vscode/config_schema.json). If there are any parameters that your context provider accepts, you should also follow existing examples in adding them to the JSON Schema.
+
+### Adding an LLM Provider
+
+Continue has support for more than a dozen different LLM "providers", making it easy to use models running on OpenAI, Ollama, Together, LM Studio, and more. You can find all of the existing providers [here](https://github.com/continuedev/continue/tree/main/core/llm/llms), and if you see one missing, you can add it with the following steps:
+
+1. Create a new file in the `core/llm/llms` directory. The name of the file should be the name of the provider, and it should export a class that extends `BaseLLM`. This class should contain the following minimal implementation. We recommend viewing pre-existing providers for more details. The [LlamaCpp Provider](./core/llm/llms/LlamaCpp.ts) is a good simple example.
+
+- `providerName` - the identifier for your provider
+- At least one of `_streamComplete` or `_streamChat` - This is the function that makes the request to the API and returns the streamed response. You only need to implement one because Continue can automatically convert between "chat" and "raw completion".
+
+2. Add your provider to the `LLMs` array in [core/llm/llms/index.ts](./core/llm/llms/index.ts).
+3. If your provider supports images, add it to the `PROVIDER_SUPPORTS_IMAGES` array in [core/llm/index.ts](./core/llm/index.ts).
+4. Add the necessary JSON Schema types to [`config_schema.json`](./extensions/vscode/config_schema.json). This makes sure that Intellisense shows users what options are available for your provider when they are editing `config.json`.
+5. Add a documentation page for your provider in [`docs/docs/reference/Model Providers`](./docs/docs/reference/Model%20Providers). This should show an example of configuring your provider in `config.json` and explain what options are available.
 
 ### Adding Models
 

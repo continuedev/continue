@@ -17,6 +17,7 @@ The default models available in the GUI:
 - [Code Llama-Instruct-7B](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#1-code-llama)
 - [Code Llama-Instruct-13B](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#1-code-llama)
 - [Code Llama-Instruct-34B](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#1-code-llama)
+- [Code Llama-Instruct-70B](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#1-code-llama)
 - [WizardCoder-7B](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#2-wizardcoder)
 - [WizardCoder-13B](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#2-wizardcoder)
 - [WizardCoder-34B](https://github.com/continuedev/what-llm-to-use/blob/main/README.md#2-wizardcoder)

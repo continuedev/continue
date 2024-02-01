@@ -172,7 +172,8 @@
             "deepseek",
             "openchat",
             "xwin-coder",
-            "neural-chat"
+            "neural-chat",
+            "codellama-70b"
           ],
           "type": "string"
         },
@@ -334,7 +335,7 @@
                   "gpt-4",
                   "gpt-3.5-turbo-0613",
                   "gpt-4-32k",
-                  "gpt-4-1106-preview"
+                  "gpt-4-0125-preview"
                 ]
               }
             }
@@ -386,7 +387,8 @@
                   "gpt-4",
                   "phind-codellama-34b",
                   "gemini-pro",
-                  "mistral-medium"
+                  "gpt-4-vision-preview",
+                  "codellama-70b"
                 ]
               }
             }
@@ -417,7 +419,8 @@
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
-                      "gpt-4-1106-preview",
+                      "gpt-4-0125-preview",
+                      "gpt-4-vision-preview",
                       "mistral-7b",
                       "mistral-8x7b",
                       "llama2-7b",
@@ -425,6 +428,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -502,6 +506,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b"
                     ]
                   },
@@ -557,6 +562,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -596,6 +602,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -762,7 +769,8 @@
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
-                      "gpt-4-1106-preview",
+                      "gpt-4-0125-preview",
+                      "gpt-4-vision-preview",
                       "mistral-7b",
                       "mistral-8x7b",
                       "llama2-7b",
@@ -770,6 +778,7 @@
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
+                      "codellama-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -959,7 +968,9 @@
                 "codebase",
                 "problems",
                 "folder",
-                "issue"
+                "issue",
+                "docs",
+                "tree"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -972,7 +983,9 @@
                 "Reference all linting errors and warnings in the currently open file",
                 "Include important files from a folder in the prompt, as determined by similarity search",
                 "Reference GitHub issues from a repository",
-                "Retrieve important pages from a documentation website, as determined by similarity search"
+                "Retrieve important pages from a documentation website, as determined by similarity search",
+                "Index and retrieve the contents of any documentation site, using embeddings to find important snippets",
+                "Display a file tree of the current workspace"
               ],
               "type": "string"
             },

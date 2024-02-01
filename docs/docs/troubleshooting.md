@@ -18,6 +18,27 @@ To solve many problems, the first step is reading the logs to find the relevant 
 4. Select the `Console` tab
 5. Read the console logs
 
+## Configure Certificates
+
+If you're seeing a `fetch failed` error and your network requires custom certificates, you will need to configure them in `config.json`. In each of the objects in the `"models"` array, add `requestOptions.caBundlePath` like this:
+
+```json
+{
+  "models": [
+    {
+      "title": "My Model",
+      ...
+      "requestOptions": {
+        "caBundlePath": "/path/to/cert.pem"
+      }
+    }
+  ],
+  ...
+}
+```
+
+You may also set `requestOptions.caBundlePath` to an array of paths to multiple certificates.
+
 ## Download a Newer Version
 
 If you are using an older version of the Continue extension, particularly one which depends on the separate Python server, we would recommend downloading the latest version of the extension, as we are constantly making bug fixes and are likely to have solved any major issues.

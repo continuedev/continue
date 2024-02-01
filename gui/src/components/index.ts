@@ -17,6 +17,8 @@ export const VSC_QUICK_INPUT_BACKGROUND_VAR = "--vscode-quickInput-background";
 export const VSC_INPUT_BORDER_VAR = "--vscode-input-border";
 export const VSC_INPUT_BORDER_FOCUS_VAR = "--vscode-focusBorder";
 export const VSC_BADGE_BACKGROUND_VAR = "--vscode-badge-background";
+export const VSC_BADGE_FOREGROUND_VAR = "--vscode-badge-foreground";
+export const VSC_SIDEBAR_BORDER_VAR = "--vscode-sideBar-border";
 
 export const VSC_THEME_COLOR_VARS = [
   VSC_INPUT_BACKGROUND_VAR,
@@ -31,6 +33,8 @@ export const VSC_THEME_COLOR_VARS = [
   VSC_INPUT_BORDER_VAR,
   VSC_INPUT_BORDER_FOCUS_VAR,
   VSC_BADGE_BACKGROUND_VAR,
+  VSC_SIDEBAR_BORDER_VAR,
+  VSC_BADGE_FOREGROUND_VAR,
 ];
 
 export const defaultBorderRadius = "5px";
@@ -49,6 +53,8 @@ export const vscListActiveForeground = `var(${VSC_LIST_ACTIVE_FOREGROUND_VAR}, $
 export const vscInputBorder = `var(${VSC_INPUT_BORDER_VAR}, ${lightGray})`;
 export const vscInputBorderFocus = `var(${VSC_INPUT_BORDER_FOCUS_VAR}, ${lightGray})`;
 export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
+export const vscBadgeForeground = `var(${VSC_BADGE_FOREGROUND_VAR}, #fff)`;
+export const vscSidebarBorder = `var(${VSC_SIDEBAR_BORDER_VAR}, transparent)`;
 
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {
@@ -74,7 +80,6 @@ export function parseColorForHex(colorVar: string): string {
     colorVar
   );
   if (value.startsWith("#")) {
-    console.log("value", value);
     return value.slice(0, 7);
   }
 
@@ -89,7 +94,6 @@ export function parseColorForHex(colorVar: string): string {
       .map((x) => x.toString(16))
       .map((x) => (x.length === 1 ? "0" + x : x))
       .join("");
-  console.log(hex, value);
   return hex;
 }
 
@@ -113,11 +117,13 @@ export const Button = styled.button`
 
 export const StyledTooltip = styled(Tooltip)`
   font-size: 12px;
-  background-color: rgb(60 60 60);
+  background-color: ${vscEditorBackground};
+  color: ${vscForeground};
   border-radius: ${defaultBorderRadius};
-  padding: 6px;
-  padding-left: 12px;
-  padding-right: 12px;
+  box-shadow: 0 0 3px 0 ${vscForeground};
+  padding: 4px;
+  padding-left: 8px;
+  padding-right: 8px;
   z-index: 1000;
 
   max-width: 80vw;

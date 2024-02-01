@@ -1,6 +1,7 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
 import { ideRequest, llmStreamChat } from "core/ide/messaging";
+import { llmCanGenerateInParallel } from "core/llm";
 import { stripImages } from "core/llm/countTokens";
 import { useSelector } from "react-redux";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
@@ -36,7 +37,12 @@ function useHistory(dispatch: Dispatch) {
       stripImages(stateCopy.history[0].message.content),
       50
     );
-    if (!disableSessionTitles) {
+
+    if (
+      false && // Causing maxTokens to be set to 20 for main requests sometimes, so disabling until resolved
+      !disableSessionTitles &&
+      llmCanGenerateInParallel(defaultModel)
+    ) {
       let fullContent = "";
       for await (const { content } of llmStreamChat(
         defaultModel.title,

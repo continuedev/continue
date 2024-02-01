@@ -2,9 +2,14 @@ import { ContinueConfig, IDE, ILLM } from "core";
 import { https } from "follow-redirects";
 import * as fs from "fs";
 import fetch from "node-fetch";
+import * as vscode from "vscode";
 import { webviewRequest } from "./debugPanel";
 import { VsCodeIde, loadFullConfigNode } from "./ideProtocol";
 const tls = require("tls");
+
+const outputChannel = vscode.window.createOutputChannel(
+  "Continue - LLM Prompt/Completion"
+);
 
 class VsCodeConfigHandler {
   savedConfig: ContinueConfig | undefined;
@@ -72,18 +77,42 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
     keepAliveMsecs: timeout,
   });
 
-  llm._fetch = (input, init) => {
+  llm._fetch = async (input, init) => {
     const headers: { [key: string]: string } =
       llm!.requestOptions?.headers || {};
     for (const [key, value] of Object.entries(init?.headers || {})) {
       headers[key] = value as string;
     }
 
-    return fetch(input, {
+    const resp = await fetch(input, {
       ...init,
       headers,
       agent,
     });
+
+    if (!resp.ok) {
+      let text = await resp.text();
+      if (resp.status === 404 && !resp.url.includes("/v1")) {
+        text =
+          "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
+      }
+      throw new Error(
+        `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`
+      );
+    }
+
+    return resp;
+  };
+
+  llm.writeLog = async (log: string) => {
+    outputChannel.appendLine(
+      "=========================================================================="
+    );
+    outputChannel.appendLine(
+      "=========================================================================="
+    );
+
+    outputChannel.append(log);
   };
 
   return llm;

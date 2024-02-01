@@ -18,6 +18,7 @@ import { useSelector } from "react-redux";
 import resolveEditorContent from "../components/mainInput/resolveInput";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
+  addContextItemsAtIndex,
   addLogs,
   initNewActiveMessage,
   resubmitAtIndex,
@@ -80,13 +81,13 @@ function useChatHandler(dispatch: Dispatch) {
     let slashCommand: SlashCommand | undefined;
     let slashCommandName: string | undefined;
 
-    let firstText =
+    let lastText =
       typeof input === "string"
         ? input
-        : input.filter((part) => part.type === "text")[0]?.text || "";
+        : input.filter((part) => part.type === "text").slice(-1)[0]?.text || "";
 
-    if (firstText.startsWith("/")) {
-      slashCommandName = firstText.split(" ")[0].substring(1);
+    if (lastText.startsWith("/")) {
+      slashCommandName = lastText.split(" ")[0].substring(1);
       slashCommand = slashCommands.find(
         (command) => command.name === slashCommandName
       );
@@ -102,9 +103,18 @@ function useChatHandler(dispatch: Dispatch) {
   async function _streamSlashCommand(
     messages: ChatMessage[],
     slashCommand: SlashCommand,
-    input: string
+    input: string,
+    historyIndex: number
   ) {
     const modelTitle = defaultModel.title;
+    const addContextItem = (item) => {
+      dispatch(
+        addContextItemsAtIndex({
+          index: historyIndex,
+          contextItems: [item],
+        })
+      );
+    };
 
     for await (const update of ideStreamRequest("runNodeJsSlashCommand", {
       input,
@@ -144,18 +154,19 @@ function useChatHandler(dispatch: Dispatch) {
       };
       const historyItem: ChatHistoryItem = {
         message,
-        contextItems:
-          typeof index === "number"
-            ? history[index].contextItems
-            : contextItems,
+        contextItems,
+        // : typeof index === "number"
+        //   ? history[index].contextItems
+        //   : contextItems,
         editorState,
       };
 
       let newHistory: ChatHistory = [...history.slice(0, index), historyItem];
+      const historyIndex = index || newHistory.length - 1;
       dispatch(
         setMessageAtIndex({
           message,
-          index: index || newHistory.length - 1,
+          index: historyIndex,
           contextItems,
         })
       );
@@ -188,7 +199,12 @@ function useChatHandler(dispatch: Dispatch) {
             user_input: commandInput,
           },
         });
-        await _streamSlashCommand(messages, slashCommand, commandInput);
+        await _streamSlashCommand(
+          messages,
+          slashCommand,
+          commandInput,
+          historyIndex
+        );
       }
     } catch (e) {
       console.log("Continue: error streaming response: ", e);

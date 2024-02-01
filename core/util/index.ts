@@ -16,10 +16,14 @@ export function removeQuotesAndEscapes(output: string): string {
   output = output.replace("\\n", "\n");
   output = output.replace("\\t", "\t");
   output = output.replace("\\\\", "\\");
-  if (
+  while (
     (output.startsWith('"') && output.endsWith('"')) ||
     (output.startsWith("'") && output.endsWith("'"))
   ) {
+    output = output.slice(1, -1);
+  }
+
+  while (output.startsWith("`") && output.endsWith("`")) {
     output = output.slice(1, -1);
   }
 
@@ -131,6 +135,10 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
       return "python";
     case "js":
       return "javascript";
+    case "jsx":
+      return "jsx";
+    case "tsx":
+      return "tsx";
     case "ts":
       return "typescript";
     case "java":
