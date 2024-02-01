@@ -55,7 +55,7 @@
         "continue.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "description": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at https://continue.dev/docs/telemetry."
+          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://continue.dev/docs/telemetry)."
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -65,7 +65,7 @@
         "continue.enableTabAutocomplete": {
           "type": "boolean",
           "default": false,
-          "description": "Enable Continue's experimental tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: https://continue.dev/docs/walkthroughs/tab-autocomplete"
+          "markdownDescription": "Enable Continue's experimental tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://continue.dev/docs/walkthroughs/tab-autocomplete)"
         }
       }
     },
