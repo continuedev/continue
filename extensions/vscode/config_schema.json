@@ -1310,7 +1310,7 @@
         },
         "tabAutocompleteModel": {
           "title": "Tab Autocomplete Model",
-          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will not do tab autocompletion.",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using deepseek-coder:1.3b-base on a local Ollama instance.",
           "default": {
             "title": "Tab Autocomplete Model",
             "provider": "ollama",

@@ -5,7 +5,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { diffManager } from "./diff/horizontal";
-import { configHandler } from "./loadConfig";
+import { TabAutocompleteModel, configHandler } from "./loadConfig";
 import {
   SuggestionRanges,
   acceptSuggestionCommand,
@@ -49,6 +49,7 @@ class IdeProtocolClient {
         const configJson = JSON.parse(config);
         this.configUpdate(configJson);
         configHandler.reloadConfig();
+        TabAutocompleteModel.clearLlm();
       } else if (
         filepath.endsWith(".continueignore") ||
         filepath.endsWith(".gitignore")

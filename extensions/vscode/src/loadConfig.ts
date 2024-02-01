@@ -86,8 +86,13 @@ function setupLlm(llm: ILLM): ILLM {
     if (!resp.ok) {
       let text = await resp.text();
       if (resp.status === 404 && !resp.url.includes("/v1")) {
-        text =
-          "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
+        if (text.includes("try pulling it first")) {
+          const model = JSON.parse(text).error.split(" ")[1].slice(1, -1);
+          text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
+        } else {
+          text =
+            "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
+        }
       }
       throw new Error(
         `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`
@@ -142,6 +147,10 @@ export class TabAutocompleteModel {
 
   private static shownOllamaWarning: boolean = false;
   private static shownDeepseekWarning: boolean = false;
+
+  static clearLlm() {
+    TabAutocompleteModel._llm = undefined;
+  }
 
   static async getDefaultTabAutocompleteModel() {
     const llm = new Ollama({

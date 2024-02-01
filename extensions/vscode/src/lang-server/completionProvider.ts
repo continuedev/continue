@@ -191,8 +191,20 @@ async function getTabCompletion(
       modelName: llm.model,
       completionOptions,
     };
-  } catch (e) {
+  } catch (e: any) {
     console.warn("Error generating autocompletion: ", e);
+    if (!ContinueCompletionProvider.errorsShown.has(e.message)) {
+      ContinueCompletionProvider.errorsShown.add(e.message);
+      vscode.window.showErrorMessage(e.message, "Documentation").then((val) => {
+        if (val === "Documentation") {
+          vscode.env.openExternal(
+            vscode.Uri.parse(
+              "https://continue.dev/docs/walkthroughs/tab-autocomplete"
+            )
+          );
+        }
+      });
+    }
     return undefined;
   }
 }
@@ -203,6 +215,8 @@ export class ContinueCompletionProvider
   private static debounceTimeout: NodeJS.Timeout | undefined = undefined;
   private static debouncing: boolean = false;
   private static lastUUID: string | undefined = undefined;
+
+  public static errorsShown: Set<string> = new Set();
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
@@ -271,7 +285,7 @@ export class ContinueCompletionProvider
         ),
       ];
     } catch (e: any) {
-      console.log("Error getting autocompletion: ", e.message);
+      console.warn("Error getting autocompletion: ", e.message);
     } finally {
       setupStatusBar(true, false);
     }
