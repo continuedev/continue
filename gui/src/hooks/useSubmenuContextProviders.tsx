@@ -57,7 +57,6 @@ function useSubmenuContextProviders() {
   }, []);
 
   function addItem(providerTitle: string, item: ContextSubmenuItem) {
-    console.log("Adding item", item, providerTitle, Object.keys(minisearches));
     if (!minisearches[providerTitle]) {
       return;
     }
