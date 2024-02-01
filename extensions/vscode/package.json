@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.8.7",
+  "version": "0.9.44",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -22,7 +22,7 @@
   "description": "Open-source autopilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",
   "engines": {
-    "vscode": "^1.67.0",
+    "vscode": "^1.70.0",
     "node": ">=20.11.0"
   },
   "galleryBanner": {
@@ -56,17 +56,17 @@
         "continue.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "description": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at https://continue.dev/docs/telemetry."
+          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://continue.dev/docs/telemetry)."
         },
         "continue.showInlineTip": {
           "type": "boolean",
           "default": true,
           "description": "Show inline suggestion to use the Continue keyboard shortcuts."
         },
-        "continue.proxyServerUrl": {
-          "type": "string",
-          "default": "http://localhost:65433",
-          "description": "An optional proxy server URL through which you can route all Continue requests. Do not change this unless you have set up your own server to proxy requests."
+        "continue.enableTabAutocomplete": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable Continue's experimental tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://continue.dev/docs/walkthroughs/tab-autocomplete)"
         }
       }
     },
@@ -74,90 +74,108 @@
       {
         "command": "continue.acceptDiff",
         "category": "Continue",
-        "title": "Accept Diff"
+        "title": "Accept Diff",
+        "group": "Continue"
       },
       {
         "command": "continue.rejectDiff",
         "category": "Continue",
-        "title": "Reject Diff"
+        "title": "Reject Diff",
+        "group": "Continue",
+        "icon": "$(stop)"
       },
       {
         "command": "continue.quickEdit",
         "category": "Continue",
-        "title": "Quick Edit"
+        "title": "Quick Edit",
+        "group": "Continue"
       },
       {
         "command": "continue.toggleAuxiliaryBar",
         "category": "Continue",
-        "title": "Toggle Right Sidebar"
+        "title": "Toggle Right Sidebar",
+        "group": "Continue"
       },
       {
         "command": "continue.focusContinueInput",
         "category": "Continue",
-        "title": "Add Highlighted Code to Context"
+        "title": "Add Highlighted Code to Context",
+        "group": "Continue"
       },
       {
         "command": "continue.focusContinueInputWithoutClear",
         "category": "Continue",
-        "title": "Add Highlighted Code to Context"
+        "title": "Add Highlighted Code to Context",
+        "group": "Continue"
       },
       {
         "command": "continue.debugTerminal",
         "category": "Continue",
-        "title": "Debug Terminal"
+        "title": "Debug Terminal",
+        "group": "Continue"
       },
       {
         "command": "continue.toggleFullScreen",
         "category": "Continue",
         "title": "Toggle Full Screen",
-        "icon": "$(fullscreen)"
+        "icon": "$(fullscreen)",
+        "group": "Continue"
       },
       {
         "command": "continue.shareSession",
         "category": "Continue",
-        "title": "Share Session"
+        "title": "Share Session",
+        "group": "Continue"
       },
       {
         "command": "continue.selectFilesAsContext",
         "category": "Continue",
-        "title": "Continue: Select Files as Context"
+        "title": "Continue: Select Files as Context",
+        "group": "Continue"
       },
       {
         "command": "continue.newSession",
         "category": "Continue",
         "title": "New Session",
-        "icon": "$(add)"
+        "icon": "$(add)",
+        "group": "Continue"
       },
       {
         "command": "continue.viewHistory",
         "category": "Continue",
         "title": "View History",
-        "icon": "$(history)"
+        "icon": "$(history)",
+        "group": "Continue"
       },
       {
         "command": "continue.writeCommentsForCode",
         "category": "Continue",
-        "title": "Write Comments for this Code"
+        "title": "Write Comments for this Code",
+        "group": "Continue"
       },
       {
         "command": "continue.writeDocstringForCode",
         "category": "Continue",
-        "title": "Write a Docstring for this Code"
+        "title": "Write a Docstring for this Code",
+        "group": "Continue"
       },
       {
         "command": "continue.fixCode",
         "category": "Continue",
-        "title": "Fix this Code"
+        "title": "Fix this Code",
+        "group": "Continue"
       },
       {
         "command": "continue.optimizeCode",
         "category": "Continue",
-        "title": "Optimize this Code"
+        "title": "Optimize this Code",
+        "group": "Continue"
       },
       {
         "command": "continue.fixGrammar",
         "category": "Continue",
-        "title": "Fix Grammar / Spelling"
+        "title": "Fix Grammar / Spelling",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -210,6 +228,29 @@
       }
     ],
     "menus": {
+      "commandPalette": [
+        {
+          "command": "continue.quickEdit"
+        },
+        {
+          "command": "continue.toggleAuxiliaryBar"
+        },
+        {
+          "command": "continue.focusContinueInput"
+        },
+        {
+          "command": "continue.focusContinueInputWithoutClear"
+        },
+        {
+          "command": "continue.debugTerminal"
+        },
+        {
+          "command": "continue.toggleFullScreen"
+        },
+        {
+          "command": "continue.newSession"
+        }
+      ],
       "webview/context": [
         {
           "command": "continue.shareSession",
@@ -219,7 +260,14 @@
       "editor/context": [
         {
           "submenu": "continue.continueSubMenu",
-          "group": "1_debug@1"
+          "group": "0_acontinue"
+        }
+      ],
+      "editor/title/run": [
+        {
+          "command": "continue.rejectDiff",
+          "group": "Continue",
+          "when": "continue.streamingDiff"
         }
       ],
       "continue.continueSubMenu": [
@@ -383,7 +431,7 @@
     "@types/node-fetch": "^2.6.2",
     "@types/react-dom": "^18.2.4",
     "@types/request": "^2.48.8",
-    "@types/vscode": "1.67",
+    "@types/vscode": "1.70",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
@@ -412,6 +460,7 @@
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",
+    "handlebars": "^4.7.8",
     "highlight.js": "^11.7.0",
     "highlightable": "^1.3.0-beta.0",
     "http-proxy": "^1.18.1",

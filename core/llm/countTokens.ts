@@ -72,6 +72,26 @@ function countChatMessageTokens(
   return countTokens(chatMessage.content, modelName) + TOKENS_PER_MESSAGE;
 }
 
+function pruneLinesFromTop(prompt: string, maxTokens: number): string {
+  let totalTokens = countTokens(prompt, "gpt-4");
+  const lines = prompt.split("\n");
+  while (totalTokens > maxTokens && lines.length > 0) {
+    totalTokens -= countTokens(lines.shift()!, "gpt-4");
+  }
+
+  return lines.join("\n");
+}
+
+function pruneLinesFromBottom(prompt: string, maxTokens: number): string {
+  let totalTokens = countTokens(prompt, "gpt-4");
+  const lines = prompt.split("\n");
+  while (totalTokens > maxTokens && lines.length > 0) {
+    totalTokens -= countTokens(lines.pop()!, "gpt-4");
+  }
+
+  return lines.join("\n");
+}
+
 function pruneStringFromBottom(
   modelName: string,
   maxTokens: number,
@@ -307,6 +327,9 @@ function compileChatMessages(
 export {
   compileChatMessages,
   countTokens,
+  pruneLinesFromBottom,
+  pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
+  pruneStringFromTop,
 };

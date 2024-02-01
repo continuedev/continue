@@ -32,6 +32,14 @@ Type '@terminal' to reference the contents of your IDE's terminal.
 { "name": "terminal" }
 ```
 
+### Documentation
+
+Type `@docs` to index and retrieve snippets from any documentation site. You can add any site by selecting "Add Docs" in the dropdown, then entering the root URL of the documentation site and a title to remember it by. After the site has been indexed, you can type `@docs`, select your documentation from the dropdown, and Continue will use similarity search to automatically find important sections when answering your question.
+
+```json
+{ "name": "docs" }
+```
+
 ### Open Files
 
 Type '@open' to reference the contents of all of your open files. Set `onlyPinned` to `true` to only reference pinned files.

@@ -7,7 +7,6 @@ import {
   LoadSubmenuItemsArgs,
 } from "../..";
 import { getBasename, getLastNPathParts } from "../../util";
-import { retrieveContextItemsFromEmbeddings } from "../retrieval";
 
 class FolderContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -21,6 +20,7 @@ class FolderContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
+    const { retrieveContextItemsFromEmbeddings } = await import("../retrieval");
     return retrieveContextItemsFromEmbeddings(extras, this.options, query);
   }
   async loadSubmenuItems(

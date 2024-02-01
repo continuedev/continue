@@ -8,7 +8,11 @@ import * as path from "path";
 import * as io from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import { ideProtocolClient, windowId } from "./activation/activate";
+import {
+  ideProtocolClient,
+  showTutorial,
+  windowId,
+} from "./activation/activate";
 import { getContinueServerUrl } from "./bridge";
 import { streamEdit } from "./diff/verticalPerLine/manager";
 import historyManager from "./history";
@@ -211,25 +215,6 @@ export function getSidebarContent(
           });
           break;
         }
-        case "showLines": {
-          ideProtocolClient.highlightCode(
-            {
-              filepath: data.filepath,
-              range: {
-                start: {
-                  line: data.start,
-                  character: 0,
-                },
-                end: {
-                  line: data.end,
-                  character: 0,
-                },
-              },
-            },
-            "#00ff0022"
-          );
-          break;
-        }
         case "toggleDevTools": {
           vscode.commands.executeCommand("workbench.action.toggleDevTools");
           vscode.commands.executeCommand("continue.viewLogs");
@@ -428,12 +413,22 @@ export function getSidebarContent(
           respond(await ide.getProblems(data.message.filepath));
           break;
         }
+        case "getBranch": {
+          const { dir } = data.message;
+          respond(await ide.getBranch(dir));
+          break;
+        }
         case "getOpenFiles": {
           respond(await ide.getOpenFiles());
           break;
         }
         case "getPinnedFiles": {
           respond(await ide.getPinnedFiles());
+          break;
+        }
+        case "showLines": {
+          const { filepath, startLine, endLine } = data.message;
+          respond(await ide.showLines(filepath, startLine, endLine));
           break;
         }
         // Other
@@ -683,7 +678,7 @@ export function getSidebarContent(
                 embeddingsProvider
               )) {
                 progress.report({
-                  increment: update.progress * 100,
+                  increment: update.progress,
                   message: update.desc,
                 });
               }
@@ -691,6 +686,10 @@ export function getSidebarContent(
               vscode.window.showInformationMessage(
                 `🎉 Successfully indexed ${title}`
               );
+
+              debugPanelWebview?.postMessage({
+                type: "refreshSubmenuItems",
+              });
             }
           );
           break;
@@ -717,18 +716,25 @@ export function getSidebarContent(
           );
           break;
         }
+        case "showTutorial": {
+          showTutorial();
+          break;
+        }
       }
     } catch (e: any) {
+      let message = `Continue error: ${e.message}`;
+      if (e.cause) {
+        if (e.cause.name === "ConnectTimeoutError") {
+          message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in config.json by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://continue.dev/docs/reference/config`;
+        } else if (e.cause.code === "ECONNREFUSED") {
+          message = `Connection was refused. This likely means that there is no server running at the specified URL. If you are running your own server you may need to set the "apiBase" parameter in config.json. For example, you can set up an OpenAI-compatible server like here: https://continue.dev/docs/reference/Model%20Providers/openai#openai-compatible-servers--apis`;
+        } else {
+          message = `The request failed with "${e.cause.name}": ${e.cause.message}. If you're having trouble setting up Continue, please see the troubleshooting guide for help.`;
+        }
+      }
+
       vscode.window
-        .showErrorMessage(
-          `Continue error: ${e.message}${
-            e.message.includes("fetch failed")
-              ? ". It is possible that this error is due to certificates not being configured. See the troubleshooting page to learn more."
-              : ""
-          }`,
-          "Show Logs",
-          "Troubleshooting"
-        )
+        .showErrorMessage(message, "Show Logs", "Troubleshooting")
         .then((selection) => {
           if (selection === "Show Logs") {
             vscode.commands.executeCommand("workbench.action.toggleDevTools");

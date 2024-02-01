@@ -1,8 +1,9 @@
 import { Chunk, ChunkWithoutID } from "../..";
 import { MAX_CHUNK_SIZE } from "../../llm/constants";
 import { countTokens } from "../../llm/countTokens";
+import { supportedLanguages } from "../../util/treeSitter";
 import { basicChunker } from "./basic";
-import { codeChunker, supportedLanguages } from "./code";
+import { codeChunker } from "./code";
 
 async function* chunkDocumentWithoutId(
   filepath: string,

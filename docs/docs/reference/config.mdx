@@ -3,7 +3,7 @@ import JSONSchemaViewer from "@theme/JSONSchemaViewer";
 
 # Configuration Options
 
-The following shows the JSON Schema definition for `config.json`:
+The following shows the JSON Schema definition for `config.json`. You can also define a partial `config.json` object in a file called `.continuerc.json` at the root of your workspace. This will be [applied on top of](https://github.com/continuedev/continue/blob/74c1eb5e25c517c575f72d26227d31d5d2ea18ed/extensions/vscode/src/ideProtocol.ts#L165-L173) any configuration from `config.json`.
 
 <JSONSchemaViewer
   schema={Schema}
