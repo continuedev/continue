@@ -1,4 +1,5 @@
 import { ContinueConfig, IDE, ILLM } from "core";
+import Ollama from "core/llm/llms/Ollama";
 import * as fs from "fs";
 import { Agent, ProxyAgent, fetch } from "undici";
 import * as vscode from "vscode";
@@ -30,29 +31,7 @@ export const configHandler = new VsCodeConfigHandler();
 
 const TIMEOUT = 7200; // 7200 seconds = 2 hours
 
-export async function llmFromTitle(title?: string): Promise<ILLM> {
-  let config = await configHandler.loadConfig(new VsCodeIde());
-
-  if (title === undefined) {
-    const resp = await webviewRequest("getDefaultModelTitle");
-    if (resp?.defaultModelTitle) {
-      title = resp.defaultModelTitle;
-    }
-  }
-
-  let llm = title
-    ? config.models.find((llm) => llm.title === title)
-    : config.models[0];
-  if (!llm) {
-    // Try to reload config
-    configHandler.reloadConfig();
-    config = await configHandler.loadConfig(new VsCodeIde());
-    llm = config.models.find((llm) => llm.title === title);
-    if (!llm) {
-      throw new Error(`Unknown model ${title}`);
-    }
-  }
-
+function setupLlm(llm: ILLM): ILLM {
   // Since we know this is happening in Node.js, we can add requestOptions through a custom agent
   const ca = [...tls.rootCertificates];
   const customCerts =
@@ -128,6 +107,111 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
 
     outputChannel.append(log);
   };
-
   return llm;
+}
+
+export async function llmFromTitle(title?: string): Promise<ILLM> {
+  let config = await configHandler.loadConfig(new VsCodeIde());
+
+  if (title === undefined) {
+    const resp = await webviewRequest("getDefaultModelTitle");
+    if (resp?.defaultModelTitle) {
+      title = resp.defaultModelTitle;
+    }
+  }
+
+  let llm = title
+    ? config.models.find((llm) => llm.title === title)
+    : config.models[0];
+  if (!llm) {
+    // Try to reload config
+    configHandler.reloadConfig();
+    config = await configHandler.loadConfig(new VsCodeIde());
+    llm = config.models.find((llm) => llm.title === title);
+    if (!llm) {
+      throw new Error(`Unknown model ${title}`);
+    }
+  }
+
+  return setupLlm(llm);
+}
+
+export class TabAutocompleteModel {
+  private static _llm: ILLM | undefined;
+  private static defaultTag: string = "deepseek-coder:1.3b-base";
+
+  private static shownOllamaWarning: boolean = false;
+  private static shownDeepseekWarning: boolean = false;
+
+  static async getDefaultTabAutocompleteModel() {
+    const llm = new Ollama({
+      model: TabAutocompleteModel.defaultTag,
+    });
+
+    // Check that deepseek is already downloaded
+    try {
+      const models = await llm.listModels();
+      if (!models.includes(TabAutocompleteModel.defaultTag)) {
+        // Raise warning and explain how to download
+        if (!TabAutocompleteModel.shownDeepseekWarning) {
+          vscode.window
+            .showWarningMessage(
+              `Your local Ollama instance doesn't yet have DeepSeek Coder. To download this model, run \`ollama run deepseek-coder:1.3b-base\` (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs`,
+              "Documentation",
+              "Copy Command"
+            )
+            .then((value) => {
+              if (value === "Documentation") {
+                vscode.env.openExternal(
+                  vscode.Uri.parse(
+                    "https://continue.dev/docs/walkthroughs/tab-autocomplete"
+                  )
+                );
+              } else if (value === "Copy Command") {
+                vscode.env.clipboard.writeText(
+                  "ollama run deepseek-coder:1.3b-base"
+                );
+              }
+            });
+          TabAutocompleteModel.shownDeepseekWarning = true;
+        }
+        return undefined;
+      }
+    } catch (e) {
+      if (!TabAutocompleteModel.shownOllamaWarning) {
+        vscode.window
+          .showWarningMessage(
+            "Continue failed to connect to Ollama, which is used by default for tab-autocomplete. If you haven't downloaded it yet, you can do so at https://ollama.ai (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs",
+            "Documentation"
+          )
+          .then((value) => {
+            if (value === "Documentation") {
+              vscode.env.openExternal(
+                vscode.Uri.parse(
+                  "https://continue.dev/docs/walkthroughs/tab-autocomplete"
+                )
+              );
+            }
+          });
+        TabAutocompleteModel.shownOllamaWarning = true;
+      }
+      return undefined;
+    }
+
+    return llm;
+  }
+
+  static async get() {
+    if (!TabAutocompleteModel._llm) {
+      const config = await configHandler.loadConfig(new VsCodeIde());
+      if (config.tabAutocompleteModel) {
+        TabAutocompleteModel._llm = setupLlm(config.tabAutocompleteModel);
+      } else {
+        TabAutocompleteModel._llm =
+          await TabAutocompleteModel.getDefaultTabAutocompleteModel();
+      }
+    }
+
+    return TabAutocompleteModel._llm;
+  }
 }

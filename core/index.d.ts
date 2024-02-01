@@ -452,7 +452,6 @@ export type ModelName =
   | "wizardcoder-34b"
   | "zephyr-7b"
   | "codeup-13b"
-  | "deepseek-1b"
   | "deepseek-7b"
   | "deepseek-33b"
   | "neural-chat-7b"
@@ -465,7 +464,12 @@ export type ModelName =
   // Mistral
   | "mistral-tiny"
   | "mistral-small"
-  | "mistral-medium";
+  | "mistral-medium"
+  // Tab autocomplete
+  | "deepseek-1b"
+  | "starcoder-1b"
+  | "starcoder-3b"
+  | "stable-code-3b";
 
 export interface RequestOptions {
   timeout?: number;
@@ -540,6 +544,11 @@ export interface EmbeddingsProvider {
   embed(chunks: string[]): Promise<number[][]>;
 }
 
+export interface TabAutocompleteOptions {
+  useCopyBuffer?: boolean;
+  useSuffix?: boolean;
+}
+
 export interface SerializedContinueConfig {
   disallowedSteps?: string[];
   allowAnonymousTelemetry?: boolean;
@@ -553,6 +562,8 @@ export interface SerializedContinueConfig {
   disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
+  tabAutocompleteModel?: ModelDescription;
+  tabAutocompleteOptions?: TabAutocompleteOptions;
 }
 
 export interface Config {
@@ -581,6 +592,8 @@ export interface Config {
   userToken?: string;
   /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
+  /** The model that Continue will use for tab autocompletions. */
+  tabAutocompleteModel?: CustomLLM | ModelDescription;
 }
 
 export interface ContinueConfig {
@@ -594,4 +607,5 @@ export interface ContinueConfig {
   disableIndexing?: boolean;
   userToken?: string;
   embeddingsProvider: EmbeddingsProvider;
+  tabAutocompleteModel?: ILLM;
 }
