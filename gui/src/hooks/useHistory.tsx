@@ -37,7 +37,11 @@ function useHistory(dispatch: Dispatch) {
       stripImages(stateCopy.history[0].message.content),
       50
     );
-    if (!disableSessionTitles && llmCanGenerateInParallel(defaultModel)) {
+    if (
+      false && // Causing maxTokens to be set to 20 for main requests sometimes, so disabling until resolved
+      !disableSessionTitles &&
+      llmCanGenerateInParallel(defaultModel)
+    ) {
       let { content } = await defaultModel.chat(
         [
           ...stateCopy.history.map((item) => item.message),
