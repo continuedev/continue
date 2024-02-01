@@ -342,12 +342,18 @@ async function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
   );
 }
 
-export async function acceptDiffCommand(newFilepath?: string) {
+export async function acceptDiffCommand(newFilepath?: string | vscode.Uri) {
+  if (newFilepath instanceof vscode.Uri) {
+    newFilepath = newFilepath.fsPath;
+  }
   verticalPerLineDiffManager.clearForFilepath(newFilepath, true);
   await diffManager.acceptDiff(newFilepath);
 }
 
-export async function rejectDiffCommand(newFilepath?: string) {
+export async function rejectDiffCommand(newFilepath?: string | vscode.Uri) {
+  if (newFilepath instanceof vscode.Uri) {
+    newFilepath = newFilepath.fsPath;
+  }
   verticalPerLineDiffManager.clearForFilepath(newFilepath, false);
   await diffManager.rejectDiff(newFilepath);
 }

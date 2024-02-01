@@ -104,6 +104,7 @@ class Ollama extends BaseLLM {
     const finalOptions: any = {
       model: this._getModel(),
       raw: true,
+      keep_alive: 60 * 30, // 30 minutes
       options: {
         temperature: options.temperature,
         top_p: options.topP,

@@ -1,9 +1,14 @@
 import { ContinueConfig, IDE, ILLM } from "core";
 import * as fs from "fs";
-import { Agent, fetch } from "undici";
+import { Agent, ProxyAgent, fetch } from "undici";
+import * as vscode from "vscode";
 import { webviewRequest } from "./debugPanel";
 import { VsCodeIde, loadFullConfigNode } from "./ideProtocol";
 const tls = require("tls");
+
+const outputChannel = vscode.window.createOutputChannel(
+  "Continue - LLM Prompt/Completion"
+);
 
 class VsCodeConfigHandler {
   savedConfig: ContinueConfig | undefined;
@@ -62,29 +67,66 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
 
   let timeout = (llm.requestOptions?.timeout || TIMEOUT) * 1000; // measured in ms
 
-  const agent = new Agent({
-    connect: {
-      ca,
-      rejectUnauthorized: llm.requestOptions?.verifySsl,
-      timeout,
-    },
-    bodyTimeout: timeout,
-    connectTimeout: timeout,
-    headersTimeout: timeout,
-  });
+  const agent =
+    llm.requestOptions?.proxy !== undefined
+      ? new ProxyAgent({
+          connect: {
+            ca,
+            rejectUnauthorized: llm.requestOptions?.verifySsl,
+            timeout,
+          },
+          uri: llm.requestOptions?.proxy,
+          bodyTimeout: timeout,
+          connectTimeout: timeout,
+          headersTimeout: timeout,
+        })
+      : new Agent({
+          connect: {
+            ca,
+            rejectUnauthorized: llm.requestOptions?.verifySsl,
+            timeout,
+          },
+          bodyTimeout: timeout,
+          connectTimeout: timeout,
+          headersTimeout: timeout,
+        });
 
-  llm._fetch = (input, init) => {
+  llm._fetch = async (input, init) => {
     const headers: { [key: string]: string } =
       llm!.requestOptions?.headers || {};
     for (const [key, value] of Object.entries(init?.headers || {})) {
       headers[key] = value as string;
     }
 
-    return fetch(input, {
+    const resp = await fetch(input, {
       ...init,
       dispatcher: agent,
       headers,
     });
+
+    if (!resp.ok) {
+      let text = await resp.text();
+      if (resp.status === 404 && !resp.url.includes("/v1")) {
+        text =
+          "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
+      }
+      throw new Error(
+        `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`
+      );
+    }
+
+    return resp;
+  };
+
+  llm.writeLog = async (log: string) => {
+    outputChannel.appendLine(
+      "=========================================================================="
+    );
+    outputChannel.appendLine(
+      "=========================================================================="
+    );
+
+    outputChannel.append(log);
   };
 
   return llm;

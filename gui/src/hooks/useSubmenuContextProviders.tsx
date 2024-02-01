@@ -43,8 +43,20 @@ function useSubmenuContextProviders() {
     });
   }
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.data.type !== "refreshSubmenuItems") {
+        return;
+      }
+      setLoaded(false);
+    };
+    window.addEventListener("message", handler);
+    return () => {
+      window.removeEventListener("message", handler);
+    };
+  }, []);
+
   function addItem(providerTitle: string, item: ContextSubmenuItem) {
-    console.log("Adding item", item, providerTitle, Object.keys(minisearches));
     if (!minisearches[providerTitle]) {
       return;
     }

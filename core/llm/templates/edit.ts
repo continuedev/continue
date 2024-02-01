@@ -138,18 +138,25 @@ Sure! Here's the code you requested:
 \`\`\`{{{language}}}
 `;
 
+const codeLlama70bEditPrompt = `<s>Source: system\n\n You are an expert programmer and write code on the first attempt without any errors or fillers. <step> Source: user\n\n Rewrite the code to satisfy this request: "{{{userInput}}}"
+
+\`\`\`{{{language}}}
+{{{codeToEdit}}}
+\`\`\` <step> Source: assistant\nDestination: user\n\n `;
+
 export {
   alpacaEditPrompt,
+  codeLlama70bEditPrompt,
   codellamaEditPrompt,
   codellamaInfillEditPrompt,
   deepseekEditPrompt,
   gptEditPrompt,
   mistralEditPrompt,
+  neuralChatEditPrompt,
   openchatEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
-  neuralChatEditPrompt,
 };

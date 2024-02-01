@@ -5,6 +5,7 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
+import { ExtensionIde } from "core/ide";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import React from "react";
 import { useDispatch } from "react-redux";
@@ -97,11 +98,11 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               .split("(")[1]
               .split(")")[0]
               .split("-");
-            postToIde("showLines", {
-              filepath: props.item.description,
-              start: parseInt(lines[0]) - 1,
-              end: parseInt(lines[1]) - 1,
-            });
+            new ExtensionIde().showLines(
+              props.item.description,
+              parseInt(lines[0]) - 1,
+              parseInt(lines[1]) - 1
+            );
           } else {
             postToIde("showVirtualFile", {
               name: props.item.name,
