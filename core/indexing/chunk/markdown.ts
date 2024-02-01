@@ -58,14 +58,29 @@ export async function* markdownChunker(
   hLevel: number
 ): AsyncGenerator<ChunkWithoutID> {
   if (countTokens(content, "gpt-4") <= maxChunkSize) {
+    const header = findHeader(content.split("\n"));
     yield {
       content,
       startLine: 0,
       endLine: content.split("\n").length,
+      otherMetadata: {
+        fragment: cleanFragment(header),
+        title: cleanHeader(header),
+      },
     };
     return;
   } else if (hLevel > 4) {
-    yield* basicChunker(content, maxChunkSize);
+    const header = findHeader(content.split("\n"));
+
+    for (const chunk of basicChunker(content, maxChunkSize)) {
+      yield {
+        ...chunk,
+        otherMetadata: {
+          fragment: cleanFragment(header),
+          title: cleanHeader(header),
+        },
+      };
+    }
     return;
   }
 

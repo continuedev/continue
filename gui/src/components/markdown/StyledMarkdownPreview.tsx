@@ -1,7 +1,8 @@
-import { memo, useEffect } from "react";
+import React, { memo, useEffect } from "react";
 import { useRemark } from "react-remark";
 import rehypeShikiji from "rehype-shikiji";
 import styled from "styled-components";
+import { visit } from "unist-util-visit";
 import {
   defaultBorderRadius,
   vscBackground,
@@ -50,6 +51,7 @@ const StyledMarkdown = styled.div<{
     border-radius: ${defaultBorderRadius};
     background-color: ${vscEditorBackground};
     font-size: 12px;
+    font-family: var(--vscode-editor-font-family);
   }
 
   code:not(pre > code) {
@@ -74,7 +76,10 @@ const StyledMarkdown = styled.div<{
   padding-right: 8px;
   color: ${vscForeground};
 
-  p {
+  p,
+  li,
+  ol,
+  ul {
     line-height: 1.5;
   }
 `;
@@ -107,10 +112,124 @@ const FadeInWords: React.FC = (props: any) => {
   return <p {...otherProps}>{words}</p>;
 };
 
+const supportedLanguages = [
+  "abap",
+  "actionscript-3",
+  "ada",
+  "apex",
+  "applescript",
+  "asm",
+  "awk",
+  "bat",
+  "c",
+  "clojure",
+  "cobol",
+  "coffee",
+  "cpp",
+  "crystal",
+  "csharp",
+  "css",
+  "d",
+  "dart",
+  "diff",
+  "dockerfile",
+  "elixir",
+  "elm",
+  "erlang",
+  // "fortran",
+  "fsharp",
+  "git-commit",
+  "git-rebase",
+  // "go",
+  "graphql",
+  "groovy",
+  "hack",
+  "haml",
+  "handlebars",
+  "haskell",
+  "hcl",
+  "hlsl",
+  "html",
+  "ini",
+  "java",
+  "javascript",
+  "jinja-html",
+  "json",
+  "jsonc",
+  "jsonnet",
+  "jsx",
+  "julia",
+  "kotlin",
+  "latex",
+  "less",
+  "lisp",
+  "log",
+  "logo",
+  "lua",
+  "makefile",
+  "markdown",
+  "matlab",
+  "nix",
+  "objective-c",
+  "ocaml",
+  "pascal",
+  "perl",
+  "perl6",
+  "php",
+  "pls",
+  "postcss",
+  "powershell",
+  "prolog",
+  "pug",
+  "puppet",
+  "purescript",
+  "python",
+  "r",
+  "razor",
+  "ruby",
+  "rust",
+  "sas",
+  "sass",
+  "scala",
+  "scheme",
+  "scss",
+  "shaderlab",
+  "shellscript",
+  "smalltalk",
+  "sql",
+  "stylus",
+  "svelte",
+  "swift",
+  "tcl",
+  "toml",
+  "ts",
+  "tsx",
+  "typescript",
+  "vb",
+  "viml",
+  "vue",
+  "wasm",
+  "xml",
+  "xsl",
+  "yaml",
+  "文言",
+];
+
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps
 ) {
   const [reactContent, setMarkdownSource] = useRemark({
+    remarkPlugins: [
+      () => {
+        return (tree) => {
+          visit(tree, "code", (node: any) => {
+            if (!supportedLanguages.includes(node.lang)) {
+              node.lang = "javascript"; // Default to javascript to get some highlighting
+            }
+          });
+        };
+      },
+    ],
     rehypePlugins: [
       [
         rehypeShikiji as any,
@@ -119,6 +238,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             (window as any).fullColorTheme ||
             (window as any).colorThemeName ||
             "dark-plus",
+          addLanguageClass: true,
         },
       ],
       // [
@@ -139,7 +259,6 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          console.log(node, preProps);
           return props.showCodeBorder ? (
             <PreWithToolbar {...preProps}></PreWithToolbar>
           ) : (

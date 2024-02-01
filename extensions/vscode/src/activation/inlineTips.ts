@@ -74,7 +74,10 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor?.document.getText() === "") {
-        if (editor.document.uri.toString().startsWith("output:")) {
+        if (
+          editor.document.uri.toString().startsWith("output:") ||
+          editor.document.uri.scheme === "comment"
+        ) {
           return;
         }
 
@@ -92,6 +95,9 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument((e) => {
+      if (e.document.uri.toString().startsWith("vscode://inline-chat")) {
+        return;
+      }
       if (e.document.getText() === "") {
         vscode.window.visibleTextEditors.forEach((editor) => {
           editor.setDecorations(emptyFileTooltipDecoration, [

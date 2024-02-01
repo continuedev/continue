@@ -264,9 +264,26 @@ function neuralChatTemplateMessages(msgs: ChatMessage[]): string {
   return prompt;
 }
 
+/**
+'<s>Source: system\n\n System prompt <step> Source: user\n\n First user query <step> Source: assistant\n\n Model response to first query <step> Source: user\n\n Second user query <step> Source: assistant\nDestination: user\n\n '
+ */
+function codeLlama70bTemplateMessages(msgs: ChatMessage[]): string {
+  let prompt = "<s>";
+
+  for (const msg of msgs) {
+    prompt += `Source: ${msg.role}\n\n ${stripImages(msg.content).trim()}`;
+    prompt += " <step> ";
+  }
+
+  prompt += "Source: assistant\nDestination: user\n\n";
+
+  return prompt;
+}
+
 export {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
+  codeLlama70bTemplateMessages,
   deepseekTemplateMessages,
   llama2TemplateMessages,
   llavaTemplateMessages,

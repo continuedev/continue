@@ -33,7 +33,9 @@ if (args[2] === "--target") {
   execSync("npm install");
   console.log("npm install in gui completed");
 
-  execSync("npm run build");
+  if (ghAction()) {
+    execSync("npm run build");
+  }
 
   // Copy over the dist folder to the Intellij extension //
   const intellijExtensionWebviewPath = path.join(

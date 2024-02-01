@@ -108,14 +108,28 @@ export async function streamEdit(input: string) {
       editor.selection.active
     );
 
-    await diffHandler.run(
-      streamDiffLines(
-        rangeContent,
-        llm,
-        input,
-        getMarkdownLanguageTagForFile(filepath)
-      )
+    vscode.commands.executeCommand(
+      "setContext",
+      "continue.streamingDiff",
+      true
     );
+
+    try {
+      await diffHandler.run(
+        streamDiffLines(
+          rangeContent,
+          llm,
+          input,
+          getMarkdownLanguageTagForFile(filepath)
+        )
+      );
+    } finally {
+      vscode.commands.executeCommand(
+        "setContext",
+        "continue.streamingDiff",
+        false
+      );
+    }
   }
 }
 
