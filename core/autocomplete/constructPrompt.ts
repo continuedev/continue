@@ -37,8 +37,13 @@ async function getTreePathAtCursor(
   filepath: string,
   fileContents: string,
   cursorIndex: number
-): Promise<Parser.SyntaxNode[]> {
+): Promise<Parser.SyntaxNode[] | undefined> {
   const parser = await getParserForFile(filepath);
+
+  if (!parser) {
+    return undefined;
+  }
+
   const ast = parser.parse(fileContents);
   const path = [ast.rootNode];
   while (path[path.length - 1].childCount > 0) {
@@ -86,21 +91,23 @@ export async function constructAutocompletePrompt(
   );
 
   // Get function def when inside call expression
-  let callExpression = undefined;
-  for (let node of treePath.reverse()) {
-    if (node.type === "call_expression") {
-      callExpression = node;
-      break;
+  if (treePath) {
+    let callExpression = undefined;
+    for (let node of treePath.reverse()) {
+      if (node.type === "call_expression") {
+        callExpression = node;
+        break;
+      }
     }
-  }
-  if (callExpression) {
-    const definition = await getDefinition(
-      filepath,
-      callExpression.startPosition.row,
-      callExpression.startPosition.column
-    );
-    if (definition) {
-      snippets.push(definition);
+    if (callExpression) {
+      const definition = await getDefinition(
+        filepath,
+        callExpression.startPosition.row,
+        callExpression.startPosition.column
+      );
+      if (definition) {
+        snippets.push(definition);
+      }
     }
   }
 
