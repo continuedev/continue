@@ -283,10 +283,6 @@ export function getSidebarContent(
           respond(await ide.getSerializedConfig());
           break;
         }
-        case "getConfigJsUrl": {
-          respond(await ide.getConfigJsUrl());
-          break;
-        }
         case "getTerminalContents": {
           respond(await ide.getTerminalContents());
           break;
@@ -588,7 +584,7 @@ export function getSidebarContent(
             params,
           } = data.message;
 
-          const config = await configHandler.loadConfig(ide);
+          const config = await configHandler.loadConfig();
           const llm = await llmFromTitle(modelTitle);
           const slashCommand = config.slashCommands?.find(
             (sc) => sc.name === slashCommandName
@@ -613,7 +609,7 @@ export function getSidebarContent(
         }
         case "loadSubmenuItems": {
           const { title } = data.message;
-          const config = await configHandler.loadConfig(ide);
+          const config = await configHandler.loadConfig();
           const provider = config.contextProviders?.find(
             (p) => p.description.title === title
           );
@@ -640,7 +636,7 @@ export function getSidebarContent(
         }
         case "getContextItems": {
           const { name, query, fullInput, selectedCode } = data.message;
-          const config = await configHandler.loadConfig(ide);
+          const config = await configHandler.loadConfig();
           const llm = await llmFromTitle();
           const provider = config.contextProviders?.find(
             (p) => p.description.title === name

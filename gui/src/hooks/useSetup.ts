@@ -47,10 +47,7 @@ function useSetup(dispatch: Dispatch<any>) {
 
       // Fall back to config.json
       dispatch(setConfig(finalConfig));
-    } catch (e) {
-      console.log("Error loading config.json: ", e);
-      errorPopup(e.message);
-    }
+    } catch (e) {}
   };
 
   // Load config from the IDE

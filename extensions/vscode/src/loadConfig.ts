@@ -1,10 +1,12 @@
-import { ContinueConfig, IDE, ILLM } from "core";
+import { ContinueConfig, ILLM } from "core";
+import defaultConfig from "core/config/default";
+import { loadFullConfigNode } from "core/config/load";
+import { getConfigJsonPath } from "core/util/paths";
 import { https } from "follow-redirects";
 import * as fs from "fs";
 import fetch from "node-fetch";
 import * as vscode from "vscode";
 import { webviewRequest } from "./debugPanel";
-import { VsCodeIde, loadFullConfigNode } from "./ideProtocol";
 const tls = require("tls");
 
 const outputChannel = vscode.window.createOutputChannel(
@@ -18,12 +20,33 @@ class VsCodeConfigHandler {
     this.savedConfig = undefined;
   }
 
-  async loadConfig(ide: IDE): Promise<ContinueConfig> {
-    if (this.savedConfig) {
+  async loadConfig(): Promise<ContinueConfig> {
+    try {
+      if (this.savedConfig) {
+        return this.savedConfig;
+      }
+      this.savedConfig = await loadFullConfigNode(ideProtocolClient.readFile);
+      this.savedConfig.allowAnonymousTelemetry =
+        this.savedConfig.allowAnonymousTelemetry &&
+        vscode.workspace.getConfiguration("continue").get("telemetryEnabled");
       return this.savedConfig;
+    } catch (e) {
+      vscode.window
+        .showErrorMessage(
+          "Error loading config.json. Please check your config.json file: " + e,
+          "Open config.json"
+        )
+        .then((selection) => {
+          if (selection === "Open config.json") {
+            vscode.workspace
+              .openTextDocument(getConfigJsonPath())
+              .then((doc) => {
+                vscode.window.showTextDocument(doc);
+              });
+          }
+        });
+      return defaultConfig;
     }
-    this.savedConfig = await loadFullConfigNode(ide);
-    return this.savedConfig;
   }
 }
 
@@ -32,7 +55,7 @@ export const configHandler = new VsCodeConfigHandler();
 const TIMEOUT = 7200; // 7200 seconds = 2 hours
 
 export async function llmFromTitle(title?: string): Promise<ILLM> {
-  let config = await configHandler.loadConfig(new VsCodeIde());
+  let config = await configHandler.loadConfig();
 
   if (title === undefined) {
     const resp = await webviewRequest("getDefaultModelTitle");
@@ -47,7 +70,7 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
   if (!llm) {
     // Try to reload config
     configHandler.reloadConfig();
-    config = await configHandler.loadConfig(new VsCodeIde());
+    config = await configHandler.loadConfig();
     llm = config.models.find((llm) => llm.title === title);
     if (!llm) {
       throw new Error(`Unknown model ${title}`);

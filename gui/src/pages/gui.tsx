@@ -146,9 +146,6 @@ function GUI(props: GUIProps) {
   const defaultModel = useSelector(defaultModelSelector);
 
   const active = useSelector((state: RootStore) => state.state.active);
-  const contextProviders = useSelector(
-    (state: RootStore) => state.state.config.contextProviders || []
-  );
 
   // #endregion
 
