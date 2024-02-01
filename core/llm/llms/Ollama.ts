@@ -207,6 +207,14 @@ class Ollama extends BaseLLM {
       }
     }
   }
+
+  async listModels(): Promise<string[]> {
+    const response = await this.fetch(`${this.apiBase}/api/tags`, {
+      method: "GET",
+    });
+    const data = await response.json();
+    return data.models.map((model: any) => model.name);
+  }
 }
 
 export default Ollama;
