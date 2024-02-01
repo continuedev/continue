@@ -54,7 +54,7 @@ class OpenAI extends BaseLLM {
       top_p: options.topP,
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
-      stop: options.stop,
+      stop: options.stop?.slice(0, 4),
     };
 
     return finalOptions;

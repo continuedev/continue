@@ -34,6 +34,16 @@ const deepseekFimTemplateWrongPipeChar: AutocompleteTemplate = {
   completionOptions: { stop: ["<|fim▁begin|>", "<|fim▁hole|>", "<|fim▁end|>"] },
 };
 
+const gptAutocompleteTemplate: AutocompleteTemplate = {
+  template: `Your task is to complete the line at the end of this code block:
+\`\`\`
+{{{prefix}}}
+\`\`\`
+
+The last line is incomplete, and you should provide the rest of that line. If the line is already complete, just return a new line. Otherwise, DO NOT provide explanation, a code block, or extra whitespace, just the code that should be added to the last line to complete it:`,
+  completionOptions: { stop: ["\n"] },
+};
+
 export function getTemplateForModel(model: string): AutocompleteTemplate {
   if (
     model.includes("starcoder") ||
@@ -49,6 +59,10 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
 
   if (model.includes("deepseek")) {
     return deepseekFimTemplate;
+  }
+
+  if (model.includes("gpt")) {
+    return gptAutocompleteTemplate;
   }
 
   return stableCodeFimTemplate;

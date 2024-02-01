@@ -551,6 +551,7 @@ export interface TabAutocompleteOptions {
   debounceDelay: number;
   maxSuffixPercentage: number;
   prefixPercentage: number;
+  template?: string;
 }
 
 export interface SerializedContinueConfig {

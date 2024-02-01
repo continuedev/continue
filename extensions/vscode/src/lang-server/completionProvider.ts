@@ -130,7 +130,9 @@ async function getTabCompletion(
       options
     );
 
-    const { template, completionOptions } = getTemplateForModel(llm.model);
+    const { template, completionOptions } = options.template
+      ? { template: options.template, completionOptions: {} }
+      : getTemplateForModel(llm.model);
 
     const compiledTemplate = Handlebars.compile(template);
     const prompt = compiledTemplate({ prefix, suffix });

@@ -1317,6 +1317,41 @@
             "model": "deepseek-coder:1.3b-base"
           },
           "$ref": "#/definitions/ModelDescription"
+        },
+        "tabAutocompleteOptions": {
+          "title": "TabAutocompleteOptions",
+          "type": "object",
+          "properties": {
+            "useCopyBuffer": {
+              "type": "boolean",
+              "description": "Determines whether the copy buffer will be considered when contructing the prompt."
+            },
+            "useSuffix": {
+              "type": "boolean",
+              "description": "Determines whether to use the file suffix in the prompt."
+            },
+            "maxPromptTokens": {
+              "type": "number",
+              "description": "The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context."
+            },
+            "debounceDelay": {
+              "type": "number",
+              "description": "The delay in milliseconds before triggering autocomplete after a keystroke."
+            },
+            "maxSuffixPercentage": {
+              "type": "number",
+              "description": "The maximum percentage of the prompt that can be dedicated to the suffix."
+            },
+            "prefixPercentage": {
+              "type": "number",
+              "description": "The percentage of the input that should be dedicated to the prefix."
+            },
+            "template": {
+              "type": "string",
+              "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
+            }
+          },
+          "required": []
         }
       }
     }
