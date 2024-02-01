@@ -98,32 +98,29 @@ This exact function and a few other default implementations are available in [`c
 
 You also have access to customize the prompt used in the '/edit' slash command. We already have a well-engineered prompt for GPT-4 and sensible defaults for less powerful open-source models, but you might wish to play with the prompt and try to find a more reliable alternative if you are for example getting English as well as code in your output.
 
-To customize the prompt, use the `promptTemplates` property of any `LLM`, which is a dictionary, and set the "edit" key to a template string with Mustache syntax. The 'filePrefix', 'fileSuffix', 'codeToEdit', 'contextItems', and 'userInput' variables are available in the template. Here is an example (the default for non-GPT-4 models):
+To customize the prompt, use the `promptTemplates` property of any model, which is a dictionary, and set the "edit" key to a template string with Mustache syntax. The 'filePrefix', 'fileSuffix', 'codeToEdit', 'language', 'contextItems', and 'userInput' variables are available in the template. Here is an example:
 
 ```typescript
-`
-[INST] Consider the following code:
-\`\`\`
+const codellamaEditPrompt = `\`\`\`{{{language}}}
 {{{codeToEdit}}}
-
 \`\`\`
-Edit the code to perfectly satisfy the following user request:
-{{{userInput}}}
-Output nothing except for the code. No code block, no English explanation, no start/end tags.
-[/INST]
-`;
+[INST] You are an expert programmer and personal assistant. Your task is to rewrite the above code with these instructions: "{{{userInput}}}"
+
+Your answer should be given inside of a code block. It should use the same kind of indentation as above.
+[/INST] Sure! Here's the rewritten code you requested:
+\`\`\`{{{language}}}`;
 ```
 
-It can then be used like this in `config.py`:
+It can then be used like this in `config.ts`:
 
-```typescript title="~/.continue/config.py"
+```typescript title="~/.continue/config.ts"
 function modifyConfig(config: Config): Config {
   config.models[0].promptTemplates["edit"] = "<INSERT_TEMPLATE_HERE>";
   return config;
 }
 ```
 
-A few pre-made templates are available in [`continuedev.libs.llm.prompts.edit`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/prompts/edit.py).
+You can find all existing templates for /edit in [`core/llm/templates/edit.ts`](https://github.com/continuedev/continue/blob/main/core/llm/templates/edit.ts).
 
 ## Defining a Custom LLM Provider
 

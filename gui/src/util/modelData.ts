@@ -701,7 +701,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     icon: "lmstudio.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     params: {
-      apiBase: "http://localhost:1234",
+      apiBase: "http://localhost:1234/v1",
     },
     packages: [...osModels, deepseek],
     collectInputFor: [...completionParamsInputs],
@@ -803,7 +803,7 @@ After it's up and running, you can start using Continue.`,
     collectInputFor: [
       {
         ...apiBaseInput,
-        defaultValue: "http://localhost:8000",
+        defaultValue: "http://localhost:8000/v1",
       },
       ...completionParamsInputs,
     ],
