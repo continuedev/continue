@@ -8,6 +8,10 @@ import IdeProtocolClient from "../continueIdeClient";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import {
+  ContinueCompletionProvider,
+  setupStatusBar,
+} from "../lang-server/completionProvider";
 import { vsCodeIndexCodebase } from "../util/indexCodebase";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
@@ -85,6 +89,17 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   await openTutorialFirstTime(context);
   setupInlineTips(context);
   showRefactorMigrationMessage();
+  const config = vscode.workspace.getConfiguration("continue");
+  const enabled = config.get<boolean>("enableTabAutocomplete");
+  setupStatusBar(enabled);
+
+  // Register inline completion provider
+  context.subscriptions.push(
+    vscode.languages.registerInlineCompletionItemProvider(
+      [{ pattern: "**" }],
+      new ContinueCompletionProvider()
+    )
+  );
 
   ideProtocolClient = new IdeProtocolClient(context);
 

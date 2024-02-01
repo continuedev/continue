@@ -22,7 +22,7 @@
   "description": "Open-source autopilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",
   "engines": {
-    "vscode": "^1.67.0"
+    "vscode": "^1.70.0"
   },
   "galleryBanner": {
     "color": "#1E1E1E",
@@ -62,10 +62,10 @@
           "default": true,
           "description": "Show inline suggestion to use the Continue keyboard shortcuts."
         },
-        "continue.proxyServerUrl": {
-          "type": "string",
-          "default": "http://localhost:65433",
-          "description": "An optional proxy server URL through which you can route all Continue requests. Do not change this unless you have set up your own server to proxy requests."
+        "continue.enableTabAutocomplete": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable Continue's experimental tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: https://continue.dev/docs/walkthroughs/tab-autocomplete"
         }
       }
     },
@@ -430,7 +430,7 @@
     "@types/node-fetch": "^2.6.2",
     "@types/react-dom": "^18.2.4",
     "@types/request": "^2.48.8",
-    "@types/vscode": "1.67",
+    "@types/vscode": "1.70",
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
@@ -459,6 +459,7 @@
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",
+    "handlebars": "^4.7.8",
     "highlight.js": "^11.7.0",
     "highlightable": "^1.3.0-beta.0",
     "http-proxy": "^1.18.1",

@@ -74,7 +74,10 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor?.document.getText() === "") {
-        if (editor.document.uri.toString().startsWith("output:")) {
+        if (
+          editor.document.uri.toString().startsWith("output:") ||
+          editor.document.uri.scheme === "comment"
+        ) {
           return;
         }
 
