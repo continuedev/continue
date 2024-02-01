@@ -545,8 +545,12 @@ export interface EmbeddingsProvider {
 }
 
 export interface TabAutocompleteOptions {
-  useCopyBuffer?: boolean;
-  useSuffix?: boolean;
+  useCopyBuffer: boolean;
+  useSuffix: boolean;
+  maxPromptTokens: number;
+  debounceDelay: number;
+  maxSuffixPercentage: number;
+  prefixPercentage: number;
 }
 
 export interface SerializedContinueConfig {
@@ -563,7 +567,7 @@ export interface SerializedContinueConfig {
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
   tabAutocompleteModel?: ModelDescription;
-  tabAutocompleteOptions?: TabAutocompleteOptions;
+  tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
 }
 
 export interface Config {
@@ -594,6 +598,8 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?: CustomLLM | ModelDescription;
+  /** Options for tab autocomplete */
+  tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
 }
 
 export interface ContinueConfig {
@@ -608,4 +614,5 @@ export interface ContinueConfig {
   userToken?: string;
   embeddingsProvider: EmbeddingsProvider;
   tabAutocompleteModel?: ILLM;
+  tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
 }

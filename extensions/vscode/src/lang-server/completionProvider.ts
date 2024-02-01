@@ -1,16 +1,18 @@
+import { TabAutocompleteOptions } from "core";
 import { AutocompleteLruCache } from "core/autocomplete/cache";
 import {
   AutocompleteSnippet,
   constructAutocompletePrompt,
   languageForFilepath,
 } from "core/autocomplete/constructPrompt";
-import { DEBOUNCE_DELAY } from "core/autocomplete/parameters";
+import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "../activation/activate";
-import { TabAutocompleteModel } from "../loadConfig";
+import { VsCodeIde } from "../ideProtocol";
+import { TabAutocompleteModel, configHandler } from "../loadConfig";
 
 const statusBarItemText = (enabled: boolean | undefined) =>
   enabled ? "$(check) Continue" : "$(circle-slash) Continue";
@@ -88,7 +90,8 @@ const autocompleteCache = AutocompleteLruCache.get();
 async function getTabCompletion(
   document: vscode.TextDocument,
   pos: vscode.Position,
-  token: vscode.CancellationToken
+  token: vscode.CancellationToken,
+  options: TabAutocompleteOptions
 ): Promise<AutocompleOutcome | undefined> {
   const startTime = Date.now();
 
@@ -123,7 +126,8 @@ async function getTabCompletion(
       fullSuffix,
       clipboardText,
       lang,
-      getDefinition
+      getDefinition,
+      options
     );
 
     const { template, completionOptions } = getTemplateForModel(llm.model);
@@ -229,12 +233,18 @@ export class ContinueCompletionProvider
     const uuid = uuidv4();
     ContinueCompletionProvider.lastUUID = uuid;
 
+    const config = await configHandler.loadConfig(new VsCodeIde());
+    const options = {
+      ...config.tabAutocompleteOptions,
+      ...DEFAULT_AUTOCOMPLETE_OPTS,
+    };
+
     if (ContinueCompletionProvider.debouncing) {
       ContinueCompletionProvider.debounceTimeout?.refresh();
       const lastUUID = await new Promise((resolve) =>
         setTimeout(() => {
           resolve(ContinueCompletionProvider.lastUUID);
-        }, DEBOUNCE_DELAY)
+        }, options.debounceDelay)
       );
       if (uuid !== lastUUID) {
         return [];
@@ -243,7 +253,7 @@ export class ContinueCompletionProvider
       ContinueCompletionProvider.debouncing = true;
       ContinueCompletionProvider.debounceTimeout = setTimeout(async () => {
         ContinueCompletionProvider.debouncing = false;
-      }, DEBOUNCE_DELAY);
+      }, options.debounceDelay);
     }
 
     const enableTabAutocomplete =
@@ -255,7 +265,12 @@ export class ContinueCompletionProvider
     }
 
     try {
-      const outcome = await getTabCompletion(document, position, token);
+      const outcome = await getTabCompletion(
+        document,
+        position,
+        token,
+        options
+      );
       const completion = outcome?.completion;
 
       if (!completion) {

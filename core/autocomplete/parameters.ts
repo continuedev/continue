@@ -1,4 +1,10 @@
-export const MAX_PROMPT_TOKENS = 1_000;
-export const PREFIX_PERCENTAGE = 0.85;
-export const MAX_SUFFIX_PERCENTAGE = 0.25;
-export const DEBOUNCE_DELAY = 350;
+import { TabAutocompleteOptions } from "..";
+
+export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
+  useCopyBuffer: true,
+  useSuffix: true,
+  maxPromptTokens: 650,
+  prefixPercentage: 0.85,
+  maxSuffixPercentage: 0.25,
+  debounceDelay: 350,
+};

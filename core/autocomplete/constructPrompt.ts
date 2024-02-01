@@ -1,4 +1,5 @@
 import Parser from "web-tree-sitter";
+import { TabAutocompleteOptions } from "..";
 import {
   countTokens,
   pruneLinesFromBottom,
@@ -7,11 +8,6 @@ import {
 import { getBasename } from "../util";
 import { getParserForFile } from "../util/treeSitter";
 import { AutocompleteLanguageInfo, Typescript } from "./languages";
-import {
-  MAX_PROMPT_TOKENS,
-  MAX_SUFFIX_PERCENTAGE,
-  PREFIX_PERCENTAGE,
-} from "./parameters";
 
 export function languageForFilepath(
   filepath: string
@@ -79,7 +75,8 @@ export async function constructAutocompletePrompt(
     filepath: string,
     line: number,
     character: number
-  ) => Promise<AutocompleteSnippet | undefined>
+  ) => Promise<AutocompleteSnippet | undefined>,
+  options: TabAutocompleteOptions
 ): Promise<{ prefix: string; suffix: string; useFim: boolean }> {
   // Find external snippets
   const snippets: AutocompleteSnippet[] = [];
@@ -118,7 +115,7 @@ export async function constructAutocompletePrompt(
     )
     .join("\n");
   const maxPrefixTokens =
-    MAX_PROMPT_TOKENS * PREFIX_PERCENTAGE -
+    options.maxPromptTokens * options.prefixPercentage -
     countTokens(formattedSnippets, "gpt-4");
   let prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens);
   if (formattedSnippets.length > 0) {
@@ -126,8 +123,8 @@ export async function constructAutocompletePrompt(
   }
 
   const maxSuffixTokens = Math.min(
-    MAX_PROMPT_TOKENS - countTokens(prefix, "gpt-4"),
-    MAX_SUFFIX_PERCENTAGE * MAX_PROMPT_TOKENS
+    options.maxPromptTokens - countTokens(prefix, "gpt-4"),
+    options.maxSuffixPercentage * options.maxPromptTokens
   );
   let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens);
 
