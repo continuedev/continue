@@ -3,7 +3,7 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
 class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
   static defaultOptions: Partial<EmbedOptions> | undefined = {
-    apiBase: "https://api.openai.com",
+    apiBase: "https://api.openai.com/v1",
     model: "text-embedding-3-large",
   };
 
