@@ -11,7 +11,7 @@ import {
   streamEdit,
   verticalPerLineDiffManager,
 } from "./diff/verticalPerLine/manager";
-import { AutocompleOutcome } from "./lang-server/completionProvider";
+import { AutocompleteOutcome } from "./lang-server/completionProvider";
 
 function addHighlightedCodeToContext(edit: boolean) {
   const editor = vscode.window.activeTextEditor;
@@ -324,7 +324,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     );
   },
   "continue.logAutocompleteOutcome": (
-    outcome: AutocompleOutcome,
+    outcome: AutocompleteOutcome,
     logRejectionTimeout: NodeJS.Timeout
   ) => {
     clearTimeout(logRejectionTimeout);

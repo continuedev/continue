@@ -75,7 +75,7 @@ async function getDefinition(
   return undefined;
 }
 
-export interface AutocompleOutcome {
+export interface AutocompleteOutcome {
   accepted?: boolean;
   time: number;
   prompt: string;
@@ -83,16 +83,133 @@ export interface AutocompleOutcome {
   modelProvider: string;
   modelName: string;
   completionOptions: any;
+  cacheHit: boolean;
 }
 
 const autocompleteCache = AutocompleteLruCache.get();
+
+class ListenableGenerator<T> {
+  private _source: AsyncGenerator<T>;
+  private _buffer: T[] = [];
+  private _listeners: Set<(value: T) => void> = new Set();
+  private _isEnded: boolean = false;
+
+  constructor(source: AsyncGenerator<T>) {
+    this._source = source;
+    this._start();
+  }
+
+  private async _start() {
+    try {
+      for await (const value of this._source) {
+        this._buffer.push(value);
+        for (const listener of this._listeners) {
+          listener(value);
+        }
+      }
+    } finally {
+      this._isEnded = true;
+      for (const listener of this._listeners) {
+        listener(null as any);
+      }
+    }
+  }
+
+  listen(listener: (value: T) => void) {
+    this._listeners.add(listener);
+    for (const value of this._buffer) {
+      listener(value);
+    }
+    if (this._isEnded) {
+      listener(null as any);
+    }
+  }
+
+  async *tee(): AsyncGenerator<T> {
+    let resolve: (value: any) => void;
+    let promise = new Promise<T>((res) => {
+      resolve = res;
+    });
+    this._listeners.add(resolve!);
+
+    try {
+      for (const value of this._buffer) {
+        yield value;
+      }
+      while (!this._isEnded) {
+        const value = await promise;
+        promise = new Promise<T>((res) => {
+          resolve = res;
+        });
+        yield value;
+      }
+    } finally {
+      this._listeners.delete(resolve!);
+    }
+  }
+}
+
+class GeneratorReuseManager {
+  static currentGenerator: ListenableGenerator<string> | undefined;
+  static pendingGeneratorPrefix: string | undefined;
+  static pendingCompletion: string = "";
+
+  private static _createListenableGenerator(
+    gen: AsyncGenerator<string>,
+    prefix: string
+  ) {
+    const listenableGen = new ListenableGenerator(gen);
+    listenableGen.listen(
+      (chunk) => (GeneratorReuseManager.pendingCompletion += chunk ?? "")
+    );
+
+    GeneratorReuseManager.pendingGeneratorPrefix = prefix;
+    GeneratorReuseManager.pendingCompletion = "";
+    GeneratorReuseManager.currentGenerator = listenableGen;
+  }
+
+  static async *getGenerator(
+    prefix: string,
+    newGenerator: () => AsyncGenerator<string>
+  ): AsyncGenerator<string> {
+    // Check if current can be reused
+    if (
+      !(
+        GeneratorReuseManager.currentGenerator &&
+        GeneratorReuseManager.pendingGeneratorPrefix &&
+        (
+          GeneratorReuseManager.pendingGeneratorPrefix +
+          GeneratorReuseManager.pendingCompletion
+        ).startsWith(prefix) &&
+        // for e.g. backspace
+        GeneratorReuseManager.pendingGeneratorPrefix.length <= prefix.length
+      )
+    ) {
+      // Create a wrapper over the current generator to fix the prompt
+      GeneratorReuseManager._createListenableGenerator(newGenerator(), prefix);
+    }
+
+    let alreadyTyped = prefix.slice(
+      GeneratorReuseManager.pendingGeneratorPrefix?.length
+    );
+    for await (let chunk of GeneratorReuseManager.currentGenerator!.tee()) {
+      while (chunk.length && alreadyTyped.length) {
+        if (chunk[0] === alreadyTyped[0]) {
+          alreadyTyped = alreadyTyped.slice(1);
+          chunk = chunk.slice(1);
+        } else break;
+      }
+      yield chunk;
+    }
+  }
+}
 
 async function getTabCompletion(
   document: vscode.TextDocument,
   pos: vscode.Position,
   token: vscode.CancellationToken,
   options: TabAutocompleteOptions
-): Promise<AutocompleOutcome | undefined> {
+): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
   // Filter
@@ -142,24 +259,31 @@ async function getTabCompletion(
 
     const cache = await autocompleteCache;
     const cachedCompletion = await cache.get(prompt);
+    let cacheHit = false;
     if (cachedCompletion) {
       // Cache
+      cacheHit = true;
       completion = cachedCompletion;
     } else {
       setupStatusBar(true, true);
 
+      // Try to reuse pending requests if what the user typed matches start of completion
+      let generator = GeneratorReuseManager.getGenerator(prefix, () =>
+        llm.streamComplete(prompt, {
+          ...completionOptions,
+          temperature: 0,
+          raw: true,
+          stop: [
+            ...(completionOptions?.stop || []),
+            "\n\n",
+            "```",
+            ...lang.stopWords,
+          ],
+        })
+      );
+
       // LLM
-      for await (const update of llm.streamComplete(prompt, {
-        ...completionOptions,
-        temperature: 0,
-        raw: true,
-        stop: [
-          ...(completionOptions?.stop || []),
-          "\n\n",
-          "```",
-          ...lang.stopWords,
-        ],
-      })) {
+      for await (const update of generator) {
         completion += update;
         if (token.isCancellationRequested) {
           return undefined;
@@ -196,6 +320,7 @@ async function getTabCompletion(
       modelProvider: llm.providerName,
       modelName: llm.model,
       completionOptions,
+      cacheHit,
     };
   } catch (e: any) {
     console.warn("Error generating autocompletion: ", e);
@@ -281,7 +406,9 @@ export class ContinueCompletionProvider
 
       // Do some stuff later so as not to block return. Latency matters
       setTimeout(async () => {
-        (await autocompleteCache).put(outcome.prompt, completion);
+        if (!outcome.cacheHit) {
+          (await autocompleteCache).put(outcome.prompt, completion);
+        }
       }, 100);
 
       const logRejectionTimeout = setTimeout(() => {
