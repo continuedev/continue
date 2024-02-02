@@ -2,7 +2,7 @@ import { Chunk, ContextItem, ContextProviderExtras, ILLM } from "..";
 import { FullTextSearchCodebaseIndex } from "../indexing/FullTextSearch";
 import { ChunkCodebaseIndex } from "../indexing/chunk/ChunkCodebaseIndex";
 import { IndexTag } from "../indexing/types";
-import { llmCanGenerateInParallel } from "../llm";
+import { llmCanGenerateInParallel } from "../llm/autodetect";
 import { getBasename } from "../util";
 
 const RERANK_PROMPT = (
@@ -111,7 +111,7 @@ export async function retrieveContextItemsFromEmbeddings(
 
   const nFinal = options?.nFinal || 10;
   const useReranking =
-    llmCanGenerateInParallel(extras.llm) &&
+    llmCanGenerateInParallel(extras.llm.providerName, extras.llm.model) &&
     (options?.useReranking === undefined ? false : options?.useReranking);
   const nRetrieve = useReranking === false ? nFinal : options?.nRetrieve || 20;
 

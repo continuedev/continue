@@ -24,9 +24,9 @@ function useSubmenuContextProviders() {
 
   const contextProviderDescriptions = useSelector(
     (state: RootStore) =>
-      state.state.config.contextProviders
-        ?.map((provider) => provider.description)
-        .filter((desc) => desc.type === "submenu") || []
+      state.state.config.contextProviders.filter(
+        (desc) => desc.type === "submenu"
+      ) || []
   );
 
   const [loaded, setLoaded] = useState(false);

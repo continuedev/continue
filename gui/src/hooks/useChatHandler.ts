@@ -7,7 +7,7 @@ import {
   ChatMessage,
   LLMReturnValue,
   MessageContent,
-  SlashCommand,
+  SlashCommandDescription,
 } from "core";
 import { ideStreamRequest, llmStreamChat } from "core/ide/messaging";
 import { constructMessages } from "core/llm/constructMessages";
@@ -41,13 +41,8 @@ function useChatHandler(dispatch: Dispatch) {
   const contextItems = useSelector(
     (state: RootStore) => state.state.contextItems
   );
-  const embeddingsProvider = useSelector(
-    (state: RootStore) => state.state.config.embeddingsProvider
-  );
+
   const history = useSelector((store: RootStore) => store.state.history);
-  const contextProviders = useSelector(
-    (store: RootStore) => store.state.config.contextProviders || []
-  );
   const active = useSelector((store: RootStore) => store.state.active);
   const activeRef = useRef(active);
   useEffect(() => {
@@ -77,8 +72,8 @@ function useChatHandler(dispatch: Dispatch) {
 
   const getSlashCommandForInput = (
     input: MessageContent
-  ): [SlashCommand, string] | undefined => {
-    let slashCommand: SlashCommand | undefined;
+  ): [SlashCommandDescription, string] | undefined => {
+    let slashCommand: SlashCommandDescription | undefined;
     let slashCommandName: string | undefined;
 
     let lastText =
@@ -102,7 +97,7 @@ function useChatHandler(dispatch: Dispatch) {
 
   async function _streamSlashCommand(
     messages: ChatMessage[],
-    slashCommand: SlashCommand,
+    slashCommand: SlashCommandDescription,
     input: string,
     historyIndex: number
   ) {
@@ -142,12 +137,7 @@ function useChatHandler(dispatch: Dispatch) {
       }
 
       // Resolve context providers and construct new history
-      const [contextItems, content] = await resolveEditorContent(
-        editorState,
-        contextProviders,
-        defaultModel,
-        embeddingsProvider
-      );
+      const [contextItems, content] = await resolveEditorContent(editorState);
       const message: ChatMessage = {
         role: "user",
         content,

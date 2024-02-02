@@ -1,12 +1,8 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { useEffect } from "react";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
-import { errorPopup, isJetBrains, postToIde } from "../util/ide";
+import { isJetBrains, postToIde } from "../util/ide";
 
-import {
-  intermediateToFinalConfig,
-  serializedToIntermediateConfig,
-} from "core/config/load";
 import { ExtensionIde } from "core/ide/index";
 import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
@@ -17,37 +13,7 @@ import useChatHandler from "./useChatHandler";
 
 function useSetup(dispatch: Dispatch<any>) {
   const loadConfig = async () => {
-    try {
-      const ide = new ExtensionIde();
-      let serialized = await ide.getSerializedConfig();
-      let intermediate = serializedToIntermediateConfig(serialized);
-
-      const configJsUrl = await ide.getConfigJsUrl();
-      if (configJsUrl) {
-        try {
-          // Try config.ts first
-          const module = await import(configJsUrl);
-          if (!module.modifyConfig) {
-            throw new Error(
-              "config.ts does not export a modifyConfig function."
-            );
-          }
-          intermediate = module.modifyConfig(intermediate);
-        } catch (e) {
-          console.log("Error loading config.ts: ", e);
-          errorPopup(e.message);
-        }
-      }
-      const finalConfig = await intermediateToFinalConfig(
-        intermediate,
-        async (filepath) => {
-          return new ExtensionIde().readFile(filepath);
-        }
-      );
-
-      // Fall back to config.json
-      dispatch(setConfig(finalConfig));
-    } catch (e) {}
+    dispatch(setConfig(await new ExtensionIde().getSerializedConfig()));
   };
 
   // Load config from the IDE

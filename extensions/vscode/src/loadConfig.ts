@@ -1,12 +1,19 @@
-import { ContinueConfig, ILLM } from "core";
+import { ContinueConfig, ILLM, SerializedContinueConfig } from "core";
 import defaultConfig from "core/config/default";
-import { loadFullConfigNode } from "core/config/load";
+import {
+  finalToBrowserConfig,
+  intermediateToFinalConfig,
+  loadFullConfigNode,
+  serializedToIntermediateConfig,
+} from "core/config/load";
 import { getConfigJsonPath } from "core/util/paths";
 import { https } from "follow-redirects";
 import * as fs from "fs";
 import fetch from "node-fetch";
+import * as path from "path";
 import * as vscode from "vscode";
-import { webviewRequest } from "./debugPanel";
+import { ideProtocolClient } from "./activation/activate";
+import { debugPanelWebview, webviewRequest } from "./debugPanel";
 const tls = require("tls");
 
 const outputChannel = vscode.window.createOutputChannel(
@@ -20,15 +27,42 @@ class VsCodeConfigHandler {
     this.savedConfig = undefined;
   }
 
+  private async _getWorkspaceConfigs() {
+    const workspaceDirs = await ideProtocolClient.getWorkspaceDirectories();
+    const configs: Partial<SerializedContinueConfig>[] = [];
+    for (const workspaceDir of workspaceDirs) {
+      const files = await vscode.workspace.fs.readDirectory(
+        vscode.Uri.file(workspaceDir)
+      );
+      for (const [filename, type] of files) {
+        if (type === vscode.FileType.File && filename === ".continurc.json") {
+          const contents = await ideProtocolClient.readFile(
+            path.join(workspaceDir, filename)
+          );
+          configs.push(JSON.parse(contents));
+        }
+      }
+    }
+    return configs;
+  }
+
   async loadConfig(): Promise<ContinueConfig> {
     try {
       if (this.savedConfig) {
         return this.savedConfig;
       }
-      this.savedConfig = await loadFullConfigNode(ideProtocolClient.readFile);
+      this.savedConfig = await loadFullConfigNode(
+        ideProtocolClient.readFile,
+        await this._getWorkspaceConfigs()
+      );
       this.savedConfig.allowAnonymousTelemetry =
         this.savedConfig.allowAnonymousTelemetry &&
         vscode.workspace.getConfiguration("continue").get("telemetryEnabled");
+
+      // Update the sidebar panel
+      const browserConfig = finalToBrowserConfig(this.savedConfig);
+      debugPanelWebview?.postMessage({ type: "configUpdate", browserConfig });
+
       return this.savedConfig;
     } catch (e) {
       vscode.window
@@ -45,7 +79,10 @@ class VsCodeConfigHandler {
               });
           }
         });
-      return defaultConfig;
+      return intermediateToFinalConfig(
+        serializedToIntermediateConfig(defaultConfig),
+        ideProtocolClient.readFile
+      );
     }
   }
 }

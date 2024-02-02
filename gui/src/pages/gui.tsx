@@ -242,7 +242,7 @@ function GUI(props: GUIProps) {
   const sendInput = useCallback(
     (editorState: JSONContent) => {
       if (
-        defaultModel.providerName === "free-trial" &&
+        defaultModel?.provider === "free-trial" &&
         defaultModel?.apiKey === ""
       ) {
         const ftc = localStorage.getItem("ftc");

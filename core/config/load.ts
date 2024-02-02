@@ -2,6 +2,7 @@ import * as fs from "fs";
 import {
   BaseCompletionOptions,
   Config,
+  ContextProviderDescription,
   ContextProviderWithParams,
   ContinueConfig,
   CustomContextProvider,
@@ -26,6 +27,7 @@ import TransformersJsEmbeddingsProvider from "../indexing/embeddings/Transformer
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
+import mergeJson from "../util/merge";
 import {
   getConfigJsPath,
   getConfigJsonPath,
@@ -218,7 +220,7 @@ interface BrowserSerializedContinueConfig {
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   slashCommands?: SlashCommandDescription[];
-  contextProviders?: ContextProviderWithParams[];
+  contextProviders?: ContextProviderDescription[];
   disableIndexing?: boolean;
   disableSessionTitles?: boolean;
   userToken?: string;
@@ -245,7 +247,11 @@ function finalToBrowserConfig(
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
-    slashCommands: final.slashCommands?.map((m) => m.description),
+    slashCommands: final.slashCommands?.map((m) => ({
+      name: m.name,
+      description: m.description,
+      options: m.params,
+    })),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
     disableSessionTitles: final.disableSessionTitles,
