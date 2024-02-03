@@ -1,4 +1,5 @@
 import crypto from "crypto";
+import * as fs from "fs";
 import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { IndexingProgressUpdate } from "..";
@@ -46,13 +47,16 @@ export class SqliteDb {
     );
   }
 
+  private static indexSqlitePath = getIndexSqlitePath();
+
   static async get() {
-    if (SqliteDb.db) {
+    if (SqliteDb.db && fs.existsSync(SqliteDb.indexSqlitePath)) {
       return SqliteDb.db;
     }
 
+    SqliteDb.indexSqlitePath = getIndexSqlitePath();
     SqliteDb.db = await open({
-      filename: getIndexSqlitePath(),
+      filename: SqliteDb.indexSqlitePath,
       driver: sqlite3.Database,
     });
 

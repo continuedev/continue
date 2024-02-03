@@ -70,9 +70,15 @@ export const supportedLanguages: { [key: string]: string } = {
 export async function getParserForFile(filepath: string) {
   await Parser.init();
   const parser = new Parser();
-  const extension = path.extname(filepath);
+  const extension = path.extname(filepath).slice(1);
 
   if (!supportedLanguages[extension]) {
+    console.warn(
+      "Unable to load language for file",
+      extension,
+      "from path: ",
+      filepath
+    );
     return undefined;
   }
 
