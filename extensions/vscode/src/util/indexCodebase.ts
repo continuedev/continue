@@ -26,7 +26,7 @@ const vscodeGetStats = async (
 
 async function getIndexesToBuild(): Promise<CodebaseIndex[]> {
   const ide = new VsCodeIde();
-  const config = await configHandler.loadConfig(ide);
+  const config = await configHandler.loadConfig();
 
   const indexes = [
     new ChunkCodebaseIndex(ide.readFile), // Chunking must come first
@@ -42,7 +42,7 @@ export async function vsCodeIndexCodebase(workspaceDirs: string[]) {
     debugPanelWebview?.postMessage({ type: "indexProgress", progress, desc });
   };
 
-  const config = await configHandler.loadConfig(new VsCodeIde());
+  const config = await configHandler.loadConfig();
   if (config.disableIndexing) {
     return;
   }

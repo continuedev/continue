@@ -1,0 +1,9 @@
+{
+    "customCommands": [
+        {
+            "name": "hello",
+            "prompt": "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+            "description": "This is an example custom command. Use /config to edit it and create more"
+        }
+    ]
+}

@@ -49,6 +49,8 @@ export async function webviewRequest(
   });
 }
 
+const abortedMessageIds: Set<string> = new Set();
+
 export function getSidebarContent(
   panel: vscode.WebviewPanel | vscode.WebviewView,
   page: string | undefined = undefined,
@@ -154,6 +156,10 @@ export function getSidebarContent(
     };
     try {
       switch (data.type) {
+        case "abort": {
+          abortedMessageIds.add(data.messageId);
+          break;
+        }
         case "websocketForwardingOpen": {
           let url = data.url;
           if (typeof sockets[url] === "undefined") {
@@ -275,10 +281,6 @@ export function getSidebarContent(
         }
         case "getSerializedConfig": {
           respond(await ide.getSerializedConfig());
-          break;
-        }
-        case "getConfigJsUrl": {
-          respond(await ide.getConfigJsUrl());
           break;
         }
         case "getTerminalContents": {
@@ -461,8 +463,7 @@ export function getSidebarContent(
             2
           );
           writeFileSync(getConfigJsonPath(), newConfigString);
-          ideProtocolClient.configUpdate(configJson);
-
+          configHandler.reloadConfig();
           ideProtocolClient.openFile(getConfigJsonPath());
 
           // Find the range where it was added and highlight
@@ -508,7 +509,7 @@ export function getSidebarContent(
             );
             return config;
           });
-          ideProtocolClient.configUpdate(configJson);
+          configHandler.reloadConfig();
           break;
         }
         case "addOpenAIKey": {
@@ -522,7 +523,7 @@ export function getSidebarContent(
             });
             return config;
           });
-          ideProtocolClient.configUpdate(configJson);
+          configHandler.reloadConfig();
           break;
         }
         case "llmStreamComplete": {
@@ -533,6 +534,11 @@ export function getSidebarContent(
           );
           let next = await gen.next();
           while (!next.done) {
+            if (abortedMessageIds.has(data.messageId)) {
+              abortedMessageIds.delete(data.messageId);
+              next = await gen.return({ completion: "", prompt: "" });
+              break;
+            }
             respond({ content: next.value });
             next = await gen.next();
           }
@@ -548,6 +554,11 @@ export function getSidebarContent(
           );
           let next = await gen.next();
           while (!next.done) {
+            if (abortedMessageIds.has(data.messageId)) {
+              abortedMessageIds.delete(data.messageId);
+              next = await gen.return({ completion: "", prompt: "" });
+              break;
+            }
             respond({ content: next.value.content });
             next = await gen.next();
           }
@@ -572,9 +583,10 @@ export function getSidebarContent(
             slashCommandName,
             contextItems,
             params,
+            historyIndex,
           } = data.message;
 
-          const config = await configHandler.loadConfig(ide);
+          const config = await configHandler.loadConfig();
           const llm = await llmFromTitle(modelTitle);
           const slashCommand = config.slashCommands?.find(
             (sc) => sc.name === slashCommandName
@@ -590,16 +602,23 @@ export function getSidebarContent(
             contextItems,
             params,
             ide,
-            addContextItem: () => {},
+            addContextItem: (item) => {
+              debugPanelWebview?.postMessage({
+                type: "addContextItem",
+                message: { item, historyIndex },
+              });
+            },
           })) {
-            respond({ content: update });
+            if (update) {
+              respond({ content: update });
+            }
           }
           respond({ done: true });
           break;
         }
         case "loadSubmenuItems": {
           const { title } = data.message;
-          const config = await configHandler.loadConfig(ide);
+          const config = await configHandler.loadConfig();
           const provider = config.contextProviders?.find(
             (p) => p.description.title === title
           );
@@ -626,7 +645,7 @@ export function getSidebarContent(
         }
         case "getContextItems": {
           const { name, query, fullInput, selectedCode } = data.message;
-          const config = await configHandler.loadConfig(ide);
+          const config = await configHandler.loadConfig();
           const llm = await llmFromTitle();
           const provider = config.contextProviders?.find(
             (p) => p.description.title === name

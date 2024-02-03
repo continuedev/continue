@@ -1,6 +1,6 @@
 import { FileEdit, RangeInFile } from "core";
-import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
-import { readFileSync, writeFileSync } from "fs";
+import { getDevDataFilePath } from "core/util/paths";
+import { writeFileSync } from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
@@ -29,11 +29,7 @@ class IdeProtocolClient {
   private static PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } =
     {};
 
-  private readonly context: vscode.ExtensionContext;
-
   constructor(context: vscode.ExtensionContext) {
-    this.context = context;
-
     // Listen for file saving
     vscode.workspace.onDidSaveTextDocument((event) => {
       const filepath = event.uri.fsPath;
@@ -45,9 +41,6 @@ class IdeProtocolClient {
         filepath.endsWith(".continue\\config.ts") ||
         filepath.endsWith(".continuerc.json")
       ) {
-        const config = readFileSync(getConfigJsonPath(), "utf8");
-        const configJson = JSON.parse(config);
-        this.configUpdate(configJson);
         configHandler.reloadConfig();
         TabAutocompleteModel.clearLlm();
       } else if (
@@ -106,13 +99,6 @@ class IdeProtocolClient {
   }
 
   visibleMessages: Set<string> = new Set();
-
-  configUpdate(config: any) {
-    debugPanelWebview?.postMessage({
-      type: "configUpdate",
-      config,
-    });
-  }
 
   async gotoDefinition(
     filepath: string,

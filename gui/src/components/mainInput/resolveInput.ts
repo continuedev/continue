@@ -1,9 +1,6 @@
 import { JSONContent } from "@tiptap/react";
 import {
   ContextItemWithId,
-  EmbeddingsProvider,
-  IContextProvider,
-  ILLM,
   MessageContent,
   MessagePart,
   RangeInFile,
@@ -28,10 +25,7 @@ interface MentionAttrs {
  */
 
 async function resolveEditorContent(
-  editorState: JSONContent,
-  contextProviders: IContextProvider[],
-  llm: ILLM,
-  embeddingsProvider?: EmbeddingsProvider
+  editorState: JSONContent
 ): Promise<[ContextItemWithId[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];

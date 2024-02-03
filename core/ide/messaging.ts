@@ -1,5 +1,6 @@
 // import "vscode-webview";
 import { v4 as uuidv4 } from "uuid";
+import { ChatMessage, LLMFullCompletionOptions, LLMReturnValue } from "..";
 interface vscode {
   postMessage(message: any): vscode;
 }
@@ -65,7 +66,8 @@ export async function ideRequest(type: string, message: any): Promise<any> {
 
 export async function* ideStreamRequest(
   type: string,
-  message: any
+  message: any,
+  cancelToken?: AbortSignal
 ): AsyncGenerator<any, any> {
   const messageId = uuidv4();
 
@@ -89,6 +91,10 @@ export async function* ideStreamRequest(
   };
   window.addEventListener("message", handler);
 
+  cancelToken?.addEventListener("abort", () => {
+    postToIde("abort", { messageId });
+  });
+
   while (!done) {
     if (buffer.length > index) {
       const chunk = buffer.slice(index);
@@ -105,4 +111,28 @@ export async function* ideStreamRequest(
   }
 
   return returnVal;
+}
+
+export async function* llmStreamChat(
+  modelTitle: string,
+  cancelToken: AbortSignal | undefined,
+  messages: ChatMessage[],
+  options: LLMFullCompletionOptions = {}
+): AsyncGenerator<ChatMessage, LLMReturnValue> {
+  const gen = ideStreamRequest(
+    "llmStreamChat",
+    {
+      messages,
+      title: modelTitle,
+      completionOptions: options,
+    },
+    cancelToken
+  );
+
+  let next = await gen.next();
+  while (!next.done) {
+    yield { role: "user", content: next.value };
+    next = await gen.next();
+  }
+  return { prompt: next.value?.prompt, completion: next.value?.completion };
 }

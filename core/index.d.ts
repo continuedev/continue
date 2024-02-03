@@ -1,3 +1,5 @@
+import { BrowserSerializedContinueConfig } from "./config/load";
+
 export interface ChunkWithoutID {
   content: string;
   startLine: number;
@@ -286,8 +288,7 @@ export class Problem {
 }
 
 export interface IDE {
-  getSerializedConfig(): Promise<SerializedContinueConfig>;
-  getConfigJsUrl(): Promise<string | undefined>;
+  getSerializedConfig(): Promise<BrowserSerializedContinueConfig>;
   getDiff(): Promise<string>;
   getTerminalContents(): Promise<string>;
   listWorkspaceContents(directory?: string): Promise<string[]>;
@@ -555,7 +556,6 @@ export interface TabAutocompleteOptions {
 }
 
 export interface SerializedContinueConfig {
-  disallowedSteps?: string[];
   allowAnonymousTelemetry?: boolean;
   models: ModelDescription[];
   systemMessage?: string;

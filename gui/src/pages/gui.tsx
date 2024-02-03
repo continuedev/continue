@@ -146,9 +146,6 @@ function GUI(props: GUIProps) {
   const defaultModel = useSelector(defaultModelSelector);
 
   const active = useSelector((state: RootStore) => state.state.active);
-  const contextProviders = useSelector(
-    (state: RootStore) => state.state.config.contextProviders || []
-  );
 
   // #endregion
 
@@ -245,7 +242,7 @@ function GUI(props: GUIProps) {
   const sendInput = useCallback(
     (editorState: JSONContent) => {
       if (
-        defaultModel.providerName === "free-trial" &&
+        defaultModel?.provider === "free-trial" &&
         defaultModel?.apiKey === ""
       ) {
         const ftc = localStorage.getItem("ftc");
