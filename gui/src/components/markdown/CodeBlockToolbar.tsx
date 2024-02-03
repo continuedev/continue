@@ -49,9 +49,9 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
           }}
         >
           {applying ? (
-            <CheckIcon className="w-5 h-5 text-green-500" />
+            <CheckIcon className="w-4 h-4 text-green-500" />
           ) : (
-            <PlayIcon className="w-5 h-5" />
+            <PlayIcon className="w-4 h-4" />
           )}
         </HeaderButtonWithText>
         <HeaderButtonWithText
@@ -64,9 +64,9 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
           }}
         >
           {copied ? (
-            <CheckIcon className="w-5 h-5 text-green-500" />
+            <CheckIcon className="w-4 h-4 text-green-500" />
           ) : (
-            <ClipboardIcon className="w-5 h-5" />
+            <ClipboardIcon className="w-4 h-4" />
           )}
         </HeaderButtonWithText>
       </SecondDiv>

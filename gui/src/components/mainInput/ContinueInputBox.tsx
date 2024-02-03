@@ -22,7 +22,7 @@ const GradientBorder = styled.div<{
   borderColor?: string;
   isFirst: boolean;
   isLast: boolean;
-  loading: boolean;
+  loading: 0 | 1;
 }>`
   border-radius: ${(props) => props.borderRadius || "0"};
   padding: 1px;
@@ -87,7 +87,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         }}
       >
         <GradientBorder
-          loading={active && props.isLastUserInput}
+          loading={active && props.isLastUserInput ? 1 : 0}
           isFirst={false}
           isLast={false}
           borderColor={

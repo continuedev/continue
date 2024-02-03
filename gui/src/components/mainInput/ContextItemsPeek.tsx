@@ -102,10 +102,11 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
             paddingTop: "2px",
           }}
         >
-          {props.contextItems?.map((contextItem) => {
+          {props.contextItems?.map((contextItem, idx) => {
             if (contextItem.description.startsWith("http")) {
               return (
                 <a
+                  key={idx}
                   href={contextItem.description}
                   target="_blank"
                   style={{ color: vscForeground, textDecoration: "none" }}
