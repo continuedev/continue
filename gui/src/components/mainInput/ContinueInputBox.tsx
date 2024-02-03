@@ -3,10 +3,10 @@ import { ContextItemWithId } from "core";
 import { useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
+import { selectSlashCommands } from "../../redux/selectors";
 import { RootStore } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
-import { ComboBoxItemType } from "./types";
 
 const gradient = keyframes`
   0% {
@@ -59,16 +59,7 @@ interface ContinueInputBoxProps {
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
   const active = useSelector((store: RootStore) => store.state.active);
-  const availableSlashCommands = useSelector(
-    (state: RootStore) =>
-      state.state.config.slashCommands?.map((cmd) => {
-        return {
-          title: `/${cmd.name}`,
-          description: cmd.description,
-          type: "slashCommand" as ComboBoxItemType,
-        };
-      }) || []
-  );
+  const availableSlashCommands = useSelector(selectSlashCommands);
   const availableContextProviders = useSelector(
     (store: RootStore) => store.state.config.contextProviders
   );
