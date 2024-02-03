@@ -117,9 +117,10 @@ function ModelConfig() {
             )}
             <h2>{modelInfo?.title}</h2>
           </div>
-          {modelInfo?.tags?.map((tag) => {
+          {modelInfo?.tags?.map((tag, idx) => {
             return (
               <span
+                key={idx}
                 style={{
                   backgroundColor: `${MODEL_PROVIDER_TAG_COLORS[tag]}55`,
                   color: "white",
@@ -146,9 +147,9 @@ function ModelConfig() {
 
               {modelInfo?.collectInputFor
                 ?.filter((d) => d.required)
-                .map((d) => {
+                .map((d, idx) => {
                   return (
-                    <div>
+                    <div key={idx}>
                       <label htmlFor={d.key}>{d.key}</label>
                       <Input
                         type={d.inputType}
@@ -176,10 +177,10 @@ function ModelConfig() {
                 <b>Advanced (optional)</b>
               </summary>
 
-              {modelInfo?.collectInputFor?.map((d) => {
+              {modelInfo?.collectInputFor?.map((d, idx) => {
                 if (d.required) return null;
                 return (
-                  <div>
+                  <div key={idx}>
                     <label htmlFor={d.key}>
                       {d.key.split(".")[d.key.split(".").length - 1]}
                     </label>
@@ -207,9 +208,10 @@ function ModelConfig() {
           <h3 className="mb-2">Select a model preset</h3>
         </div>
         <GridDiv>
-          {modelInfo?.packages.map((pkg) => {
+          {modelInfo?.packages.map((pkg, idx) => {
             return (
               <ModelCard
+                key={idx}
                 disabled={disableModelCards()}
                 title={pkg.title}
                 description={pkg.description}

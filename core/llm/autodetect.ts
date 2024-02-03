@@ -110,6 +110,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "llava";
   }
 
+  if (lower.includes("tinyllama")) {
+    return "zephyr";
+  }
+
   if (lower.includes("xwin")) {
     return "xwin-coder";
   }
