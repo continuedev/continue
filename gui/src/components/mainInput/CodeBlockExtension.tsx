@@ -21,7 +21,7 @@ const CodeBlockComponent = ({
     (state: RootStore) => state.state.contextItems
   );
   return (
-    <NodeViewWrapper className="code-block-with-content">
+    <NodeViewWrapper className="code-block-with-content" as="p">
       <CodeSnippetPreview
         borderColor={
           item.id === contextItems[0]?.id
