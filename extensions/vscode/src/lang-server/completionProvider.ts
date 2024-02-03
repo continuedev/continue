@@ -132,25 +132,23 @@ class ListenableGenerator<T> {
   }
 
   async *tee(): AsyncGenerator<T> {
-    let resolve: (value: any) => void;
-    let promise = new Promise<T>((res) => {
-      resolve = res;
-    });
-    this._listeners.add(resolve!);
-
     try {
       for (const value of this._buffer) {
         yield value;
       }
       while (!this._isEnded) {
-        const value = await promise;
-        promise = new Promise<T>((res) => {
+        let resolve: (value: any) => void;
+        let promise = new Promise<T>((res) => {
           resolve = res;
         });
+        this._listeners.add(resolve!);
+        const value = await promise;
+        this._listeners.delete(resolve!);
+
         yield value;
       }
     } finally {
-      this._listeners.delete(resolve!);
+      // this._listeners.delete(resolve!);
     }
   }
 }
@@ -207,7 +205,9 @@ class GeneratorReuseManager {
         if (chunk[0] === alreadyTyped[0]) {
           alreadyTyped = alreadyTyped.slice(1);
           chunk = chunk.slice(1);
-        } else break;
+        } else {
+          break;
+        }
       }
       yield chunk;
     }
@@ -376,22 +376,22 @@ export class ContinueCompletionProvider
       ...DEFAULT_AUTOCOMPLETE_OPTS,
     };
 
-    // if (ContinueCompletionProvider.debouncing) {
-    //   ContinueCompletionProvider.debounceTimeout?.refresh();
-    //   const lastUUID = await new Promise((resolve) =>
-    //     setTimeout(() => {
-    //       resolve(ContinueCompletionProvider.lastUUID);
-    //     }, options.debounceDelay)
-    //   );
-    //   if (uuid !== lastUUID) {
-    //     return [];
-    //   }
-    // } else {
-    //   ContinueCompletionProvider.debouncing = true;
-    //   ContinueCompletionProvider.debounceTimeout = setTimeout(async () => {
-    //     ContinueCompletionProvider.debouncing = false;
-    //   }, options.debounceDelay);
-    // }
+    if (ContinueCompletionProvider.debouncing) {
+      ContinueCompletionProvider.debounceTimeout?.refresh();
+      const lastUUID = await new Promise((resolve) =>
+        setTimeout(() => {
+          resolve(ContinueCompletionProvider.lastUUID);
+        }, options.debounceDelay)
+      );
+      if (uuid !== lastUUID) {
+        return [];
+      }
+    } else {
+      ContinueCompletionProvider.debouncing = true;
+      ContinueCompletionProvider.debounceTimeout = setTimeout(async () => {
+        ContinueCompletionProvider.debouncing = false;
+      }, options.debounceDelay);
+    }
 
     const enableTabAutocomplete =
       vscode.workspace
