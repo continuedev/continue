@@ -7,7 +7,7 @@ import {
   serializedToIntermediateConfig,
 } from "core/config/load";
 import { getConfigJsonPath } from "core/util/paths";
-import { https } from "follow-redirects";
+import { http, https } from "follow-redirects";
 import * as fs from "fs";
 import fetch from "node-fetch";
 import * as path from "path";
@@ -128,16 +128,20 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
 
   let timeout = (llm.requestOptions?.timeout || TIMEOUT) * 1000; // measured in ms
 
-  const agent = new https.Agent({
+  const agentOptions = {
     ca,
     rejectUnauthorized: llm.requestOptions?.verifySsl,
     timeout,
     sessionTimeout: timeout,
     keepAlive: true,
     keepAliveMsecs: timeout,
-  });
+  };
 
   llm._fetch = async (input, init) => {
+    // Create agent
+    const protocol = new URL(input).protocol === "https:" ? https : http;
+    const agent = new protocol.Agent(agentOptions);
+
     const headers: { [key: string]: string } =
       llm!.requestOptions?.headers || {};
     for (const [key, value] of Object.entries(init?.headers || {})) {

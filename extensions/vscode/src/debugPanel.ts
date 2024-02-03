@@ -602,7 +602,9 @@ export function getSidebarContent(
             ide,
             addContextItem: () => {},
           })) {
-            respond({ content: update });
+            if (update) {
+              respond({ content: update });
+            }
           }
           respond({ done: true });
           break;
