@@ -9,11 +9,11 @@ import * as io from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import {
+  extensionContext,
   ideProtocolClient,
   showTutorial,
   windowId,
 } from "./activation/activate";
-import { getContinueServerUrl } from "./bridge";
 import { streamEdit } from "./diff/verticalPerLine/manager";
 import historyManager from "./history";
 import { VsCodeIde } from "./ideProtocol";
@@ -52,6 +52,7 @@ export async function webviewRequest(
 const abortedMessageIds: Set<string> = new Set();
 
 export function getSidebarContent(
+  context: vscode.ExtensionContext | undefined,
   panel: vscode.WebviewPanel | vscode.WebviewView,
   page: string | undefined = undefined,
   edits: FileEdit[] | undefined = undefined,
@@ -71,8 +72,9 @@ export function getSidebarContent(
     .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui"))
     .toString();
 
-  const isProduction = true; // context?.extensionMode === vscode.ExtensionMode.Development;
-  if (isProduction) {
+  const inDevelopmentMode =
+    context?.extensionMode === vscode.ExtensionMode.Development;
+  if (!inDevelopmentMode) {
     scriptUri = panel.webview
       .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui/assets/index.js"))
       .toString();
@@ -81,12 +83,15 @@ export function getSidebarContent(
       .toString();
   } else {
     scriptUri = "http://localhost:5173/src/main.tsx";
-    styleMainUri = "http://localhost:5173/src/main.css";
+    styleMainUri = "http://localhost:5173/src/index.css";
   }
 
   panel.webview.options = {
     enableScripts: true,
-    localResourceRoots: [vscode.Uri.joinPath(extensionUri, "gui")],
+    localResourceRoots: [
+      vscode.Uri.joinPath(extensionUri, "gui"),
+      vscode.Uri.joinPath(extensionUri, "assets"),
+    ],
     enableCommandUris: true,
     portMapping: [
       {
@@ -97,53 +102,6 @@ export function getSidebarContent(
   };
 
   const nonce = getNonce();
-
-  async function connectWebsocket(url: string) {
-    return new Promise((resolve, reject) => {
-      const onMessage = (message: any) => {
-        panel.webview.postMessage({
-          type: "websocketForwardingMessage",
-          url,
-          data: message,
-        });
-      };
-      const onOpen = () => {
-        panel.webview.postMessage({
-          type: "websocketForwardingOpen",
-          url,
-        });
-        resolve(null);
-      };
-      const onClose = () => {
-        sockets[url] = undefined;
-        panel.webview.postMessage({
-          type: "websocketForwardingClose",
-          url,
-        });
-      };
-      const onError = (e: any) => {
-        panel.webview.postMessage({
-          type: "websocketForwardingError",
-          url,
-          error: e,
-        });
-      };
-      try {
-        const socket = io.io(
-          `${getContinueServerUrl()}?window_id=${windowId}`,
-          {
-            path: "/gui/socket.io",
-            transports: ["websocket", "polling", "flashsocket"],
-          }
-        );
-        sockets[url] = socket;
-        resolve(null);
-      } catch (e) {
-        console.log("Failed to connect to GUI websocket for forwarding", e);
-        reject(e);
-      }
-    });
-  }
 
   panel.webview.onDidReceiveMessage(async (data) => {
     const ide = new VsCodeIde();
@@ -158,44 +116,6 @@ export function getSidebarContent(
       switch (data.type) {
         case "abort": {
           abortedMessageIds.add(data.messageId);
-          break;
-        }
-        case "websocketForwardingOpen": {
-          let url = data.url;
-          if (typeof sockets[url] === "undefined") {
-            await connectWebsocket(url);
-          } else {
-            console.log(
-              "Websocket connection requested by GUI already open at",
-              url
-            );
-            panel.webview.postMessage({
-              type: "websocketForwardingOpen",
-              url,
-            });
-          }
-          break;
-        }
-        case "websocketForwardingClose": {
-          let url = data.url;
-          let socket = sockets[url];
-          if (typeof socket !== "undefined") {
-            socket.close();
-            sockets[url] = undefined;
-          }
-          break;
-        }
-        case "websocketForwardingMessage": {
-          let url = data.url;
-          let socket = sockets[url];
-          if (typeof socket === "undefined") {
-            await connectWebsocket(url);
-          }
-          socket = sockets[url];
-          if (typeof socket === "undefined") {
-            throw new Error("Failed to connect socket for forwarding");
-          }
-          socket.send(data.message);
           break;
         }
         case "showFile": {
@@ -815,11 +735,22 @@ export function getSidebarContent(
       </head>
       <body>
         <div id="root"></div>
+
+        ${
+          inDevelopmentMode &&
+          `<script type="module">
+          import RefreshRuntime from "http://localhost:5173/@react-refresh"
+          RefreshRuntime.injectIntoGlobalHook(window)
+          window.$RefreshReg$ = () => {}
+          window.$RefreshSig$ = () => (type) => type
+          window.__vite_plugin_react_preamble_installed__ = true
+          </script>`
+        }
+
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
 
         <script>localStorage.setItem("ide", "vscode")</script>
         <script>window.windowId = "${windowId}"</script>
-        <script>window.serverUrl = "${getContinueServerUrl()}"</script>
         <script>window.vscMachineId = "${getUniqueId()}"</script>
         <script>window.vscMediaUrl = "${vscMediaUrl}"</script>
         <script>window.ide = "vscode"</script>
@@ -855,6 +786,6 @@ export class ContinueGUIWebviewViewProvider
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ): void | Thenable<void> {
-    webviewView.webview.html = getSidebarContent(webviewView);
+    webviewView.webview.html = getSidebarContent(extensionContext, webviewView);
   }
 }

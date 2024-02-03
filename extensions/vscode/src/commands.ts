@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 
-import { ideProtocolClient } from "./activation/activate";
+import { extensionContext, ideProtocolClient } from "./activation/activate";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { acceptDiffCommand, rejectDiffCommand } from "./diff/horizontal";
 import {
@@ -300,7 +300,13 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       "Continue",
       vscode.ViewColumn.One
     );
-    panel.webview.html = getSidebarContent(panel, undefined, undefined, true);
+    panel.webview.html = getSidebarContent(
+      extensionContext,
+      panel,
+      undefined,
+      undefined,
+      true
+    );
   },
   "continue.selectFilesAsContext": (
     firstUri: vscode.Uri,

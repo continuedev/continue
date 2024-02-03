@@ -3,6 +3,7 @@ import { getDevDataFilePath } from "core/util/paths";
 import { writeFileSync } from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
+import { extensionContext } from "./activation/activate";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { diffManager } from "./diff/horizontal";
 import { TabAutocompleteModel, configHandler } from "./loadConfig";
@@ -217,7 +218,12 @@ class IdeProtocolClient {
       "Continue",
       vscode.ViewColumn.One
     );
-    panel.webview.html = getSidebarContent(panel, "/monaco", edits);
+    panel.webview.html = getSidebarContent(
+      extensionContext,
+      panel,
+      "/monaco",
+      edits
+    );
   }
 
   openFile(filepath: string, range?: vscode.Range) {

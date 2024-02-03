@@ -41,10 +41,7 @@
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],
       "outFiles": ["${workspaceFolder}/extensions/vscode/out/**/*.js"],
-      "preLaunchTask": "vscode-extension:build",
-      "env": {
-        "CONTINUE_SERVER_URL": "http://localhost:8001"
-      }
+      "preLaunchTask": "vscode-extension:build"
     },
     // Has to be run after starting the server (separately or using the compound configuration)
     {
