@@ -192,6 +192,9 @@ class GeneratorReuseManager {
       GeneratorReuseManager.pendingGeneratorPrefix?.length
     );
     for await (let chunk of GeneratorReuseManager.currentGenerator!.tee()) {
+      if (!chunk) {
+        continue;
+      }
       while (chunk.length && alreadyTyped.length) {
         if (chunk[0] === alreadyTyped[0]) {
           alreadyTyped = alreadyTyped.slice(1);

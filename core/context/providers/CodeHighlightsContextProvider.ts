@@ -4,6 +4,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
+import { getBasename } from "../../util";
 
 const highlighterPromise = import("llm-code-highlighter/dist/index.continue");
 
@@ -25,7 +26,7 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
       await Promise.all(
         openFiles.map(async (filepath: string) => {
           return {
-            name: (filepath.split("/").pop() || "").split("\\").pop() || "",
+            name: getBasename(filepath),
             absPath: filepath,
             content: `${await ide.readFile(filepath)}`,
           };
