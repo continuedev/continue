@@ -9,6 +9,8 @@ import {
 import { getConfigJsonPath } from "core/util/paths";
 import { http, https } from "follow-redirects";
 import * as fs from "fs";
+import { HttpProxyAgent } from "http-proxy-agent";
+import { HttpsProxyAgent } from "https-proxy-agent";
 import fetch from "node-fetch";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -25,6 +27,7 @@ class VsCodeConfigHandler {
 
   reloadConfig() {
     this.savedConfig = undefined;
+    this.loadConfig();
   }
 
   private async _getWorkspaceConfigs() {
@@ -35,7 +38,7 @@ class VsCodeConfigHandler {
         vscode.Uri.file(workspaceDir)
       );
       for (const [filename, type] of files) {
-        if (type === vscode.FileType.File && filename === ".continurc.json") {
+        if (type === vscode.FileType.File && filename === ".continuerc.json") {
           const contents = await ideProtocolClient.readFile(
             path.join(workspaceDir, filename)
           );
@@ -137,10 +140,16 @@ export async function llmFromTitle(title?: string): Promise<ILLM> {
     keepAliveMsecs: timeout,
   };
 
+  const proxy = llm.requestOptions?.proxy;
+
   llm._fetch = async (input, init) => {
     // Create agent
     const protocol = new URL(input).protocol === "https:" ? https : http;
-    const agent = new protocol.Agent(agentOptions);
+    const agent = proxy
+      ? new URL(input).protocol === "https:"
+        ? new HttpsProxyAgent(proxy, agentOptions)
+        : new HttpProxyAgent(proxy, agentOptions)
+      : new protocol.Agent(agentOptions);
 
     const headers: { [key: string]: string } =
       llm!.requestOptions?.headers || {};

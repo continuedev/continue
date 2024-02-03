@@ -7,7 +7,11 @@ import { ExtensionIde } from "core/ide/index";
 import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { setVscMachineId } from "../redux/slices/configSlice";
-import { setConfig, setInactive } from "../redux/slices/stateSlice";
+import {
+  addContextItemsAtIndex,
+  setConfig,
+  setInactive,
+} from "../redux/slices/stateSlice";
 import { RootStore } from "../redux/store";
 import useChatHandler from "./useChatHandler";
 
@@ -60,6 +64,14 @@ function useSetup(dispatch: Dispatch<any>) {
           break;
         case "submitMessage":
           streamResponse(event.data.message);
+          break;
+        case "addContextItem":
+          dispatch(
+            addContextItemsAtIndex({
+              index: event.data.message.historyIndex,
+              contextItems: [event.data.message.item],
+            })
+          );
           break;
         case "getDefaultModelTitle":
           postToIde("getDefaultModelTitle", { defaultModelTitle });

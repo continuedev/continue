@@ -70,7 +70,7 @@ export const SubmenuContextProvidersContext = createContext<{
   getSubmenuContextItems: (
     providerTitle: string | undefined,
     query: string
-  ) => ContextSubmenuItem[];
+  ) => (ContextSubmenuItem & { providerTitle: string })[];
   addItem: (providerTitle: string, item: ContextSubmenuItem) => void;
 }>({
   getSubmenuContextItems: () => [],

@@ -18,7 +18,6 @@ import { useSelector } from "react-redux";
 import resolveEditorContent from "../components/mainInput/resolveInput";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
-  addContextItemsAtIndex,
   addLogs,
   initNewActiveMessage,
   resubmitAtIndex,
@@ -102,14 +101,6 @@ function useChatHandler(dispatch: Dispatch) {
     historyIndex: number
   ) {
     const modelTitle = defaultModel.title;
-    const addContextItem = (item) => {
-      dispatch(
-        addContextItemsAtIndex({
-          index: historyIndex,
-          contextItems: [item],
-        })
-      );
-    };
 
     for await (const update of ideStreamRequest("runNodeJsSlashCommand", {
       input,
@@ -118,6 +109,7 @@ function useChatHandler(dispatch: Dispatch) {
       slashCommandName: slashCommand.name,
       contextItems,
       params: slashCommand.params,
+      historyIndex,
     })) {
       if (!activeRef.current) {
         break;

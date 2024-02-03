@@ -59,7 +59,7 @@
         "timeout": {
           "title": "Timeout",
           "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
-          "default": 300,
+          "default": 7200,
           "type": "integer"
         },
         "verifySsl": {
@@ -212,7 +212,7 @@
           "title": "Request Options",
           "description": "Options for the HTTP request to the LLM.",
           "default": {
-            "timeout": 300,
+            "timeout": 7200,
             "verifySsl": null,
             "caBundlePath": null,
             "proxy": null,

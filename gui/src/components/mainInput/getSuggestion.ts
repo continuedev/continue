@@ -1,5 +1,5 @@
 import { Editor, ReactRenderer } from "@tiptap/react";
-import { ContextSubmenuItem, IContextProvider } from "core";
+import { ContextProviderDescription, ContextSubmenuItem } from "core";
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
 import MentionList from "./MentionList";
@@ -68,7 +68,7 @@ function getSuggestion(
 
         onExit() {
           popup?.[0]?.destroy();
-          component.destroy();
+          component?.destroy();
           onClose();
         },
       };
@@ -77,7 +77,7 @@ function getSuggestion(
 }
 
 export function getMentionSuggestion(
-  availableContextProvidersRef: MutableRefObject<IContextProvider[]>,
+  availableContextProvidersRef: MutableRefObject<ContextProviderDescription[]>,
   getSubmenuContextItemsRef: MutableRefObject<
     (
       providerTitle: string | undefined,
@@ -109,21 +109,17 @@ export function getMentionSuggestion(
       availableContextProvidersRef.current
         ?.filter(
           (provider) =>
-            provider.description.title
-              .toLowerCase()
-              .startsWith(query.toLowerCase()) ||
-            provider.description.displayTitle
-              .toLowerCase()
-              .startsWith(query.toLowerCase())
+            provider.title.toLowerCase().startsWith(query.toLowerCase()) ||
+            provider.displayTitle.toLowerCase().startsWith(query.toLowerCase())
         )
         .map((provider) => ({
-          name: provider.description.displayTitle,
-          description: provider.description.description,
-          id: provider.description.title,
-          title: provider.description.displayTitle,
-          label: provider.description.displayTitle,
+          name: provider.displayTitle,
+          description: provider.description,
+          id: provider.title,
+          title: provider.displayTitle,
+          label: provider.displayTitle,
           type: "contextProvider" as ComboBoxItemType,
-          contextProvider: provider.description,
+          contextProvider: provider,
         }))
         .sort((c, _) => (c.id === "file" ? -1 : 1)) || [];
 

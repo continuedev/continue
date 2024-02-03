@@ -463,8 +463,7 @@ export function getSidebarContent(
             2
           );
           writeFileSync(getConfigJsonPath(), newConfigString);
-          ideProtocolClient.configUpdate(configJson);
-
+          configHandler.reloadConfig();
           ideProtocolClient.openFile(getConfigJsonPath());
 
           // Find the range where it was added and highlight
@@ -510,7 +509,7 @@ export function getSidebarContent(
             );
             return config;
           });
-          ideProtocolClient.configUpdate(configJson);
+          configHandler.reloadConfig();
           break;
         }
         case "addOpenAIKey": {
@@ -524,7 +523,7 @@ export function getSidebarContent(
             });
             return config;
           });
-          ideProtocolClient.configUpdate(configJson);
+          configHandler.reloadConfig();
           break;
         }
         case "llmStreamComplete": {
@@ -582,6 +581,7 @@ export function getSidebarContent(
             slashCommandName,
             contextItems,
             params,
+            historyIndex,
           } = data.message;
 
           const config = await configHandler.loadConfig();
@@ -600,7 +600,12 @@ export function getSidebarContent(
             contextItems,
             params,
             ide,
-            addContextItem: () => {},
+            addContextItem: (item) => {
+              debugPanelWebview?.postMessage({
+                type: "addContextItem",
+                message: { item, historyIndex },
+              });
+            },
           })) {
             if (update) {
               respond({ content: update });
