@@ -98,9 +98,16 @@ class ListenableGenerator<T> {
     this._start();
   }
 
+  public cancel() {
+    this._isEnded = true;
+  }
+
   private async _start() {
     try {
       for await (const value of this._source) {
+        if (this._isEnded) {
+          break;
+        }
         this._buffer.push(value);
         for (const listener of this._listeners) {
           listener(value);
@@ -157,6 +164,8 @@ class GeneratorReuseManager {
     gen: AsyncGenerator<string>,
     prefix: string
   ) {
+    GeneratorReuseManager.currentGenerator?.cancel();
+
     const listenableGen = new ListenableGenerator(gen);
     listenableGen.listen(
       (chunk) => (GeneratorReuseManager.pendingCompletion += chunk ?? "")
@@ -181,16 +190,15 @@ class GeneratorReuseManager {
           GeneratorReuseManager.pendingCompletion
         ).startsWith(prefix) &&
         // for e.g. backspace
-        GeneratorReuseManager.pendingGeneratorPrefix.length <= prefix.length
+        GeneratorReuseManager.pendingGeneratorPrefix?.length <= prefix?.length
       )
     ) {
       // Create a wrapper over the current generator to fix the prompt
       GeneratorReuseManager._createListenableGenerator(newGenerator(), prefix);
     }
 
-    let alreadyTyped = prefix.slice(
-      GeneratorReuseManager.pendingGeneratorPrefix?.length
-    );
+    let alreadyTyped =
+      prefix.slice(GeneratorReuseManager.pendingGeneratorPrefix?.length) || "";
     for await (let chunk of GeneratorReuseManager.currentGenerator!.tee()) {
       if (!chunk) {
         continue;
@@ -294,10 +302,10 @@ async function getTabCompletion(
         let foundEndLine = false;
         for (const end of lang.endOfLine) {
           if (completion.includes(end + "\n")) {
-            completion =
-              completion.slice(0, completion.indexOf(end + "\n")) + end;
-            foundEndLine = true;
-            break;
+            // completion =
+            //   completion.slice(0, completion.indexOf(end + "\n")) + end;
+            // foundEndLine = true;
+            // break;
           }
         }
         if (foundEndLine) {
@@ -368,22 +376,22 @@ export class ContinueCompletionProvider
       ...DEFAULT_AUTOCOMPLETE_OPTS,
     };
 
-    if (ContinueCompletionProvider.debouncing) {
-      ContinueCompletionProvider.debounceTimeout?.refresh();
-      const lastUUID = await new Promise((resolve) =>
-        setTimeout(() => {
-          resolve(ContinueCompletionProvider.lastUUID);
-        }, options.debounceDelay)
-      );
-      if (uuid !== lastUUID) {
-        return [];
-      }
-    } else {
-      ContinueCompletionProvider.debouncing = true;
-      ContinueCompletionProvider.debounceTimeout = setTimeout(async () => {
-        ContinueCompletionProvider.debouncing = false;
-      }, options.debounceDelay);
-    }
+    // if (ContinueCompletionProvider.debouncing) {
+    //   ContinueCompletionProvider.debounceTimeout?.refresh();
+    //   const lastUUID = await new Promise((resolve) =>
+    //     setTimeout(() => {
+    //       resolve(ContinueCompletionProvider.lastUUID);
+    //     }, options.debounceDelay)
+    //   );
+    //   if (uuid !== lastUUID) {
+    //     return [];
+    //   }
+    // } else {
+    //   ContinueCompletionProvider.debouncing = true;
+    //   ContinueCompletionProvider.debounceTimeout = setTimeout(async () => {
+    //     ContinueCompletionProvider.debouncing = false;
+    //   }, options.debounceDelay);
+    // }
 
     const enableTabAutocomplete =
       vscode.workspace
