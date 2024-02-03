@@ -1,4 +1,4 @@
-import { getTsConfigPath } from "core/util/paths";
+import { getTsConfigPath, migrate } from "core/util/paths";
 import * as fs from "fs";
 import path from "path";
 import { v4 } from "uuid";
@@ -118,6 +118,15 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   startProxy();
   vsCodeIndexCodebase(ideProtocolClient.getWorkspaceDirectories());
+
+  migrate("showWelcome", () => {
+    vscode.commands.executeCommand(
+      "markdown.showPreview",
+      vscode.Uri.file(
+        path.join(getExtensionUri().fsPath, "media", "welcome.md")
+      )
+    );
+  });
 
   // (async () => {
   //   const defaultDocsPages = [
