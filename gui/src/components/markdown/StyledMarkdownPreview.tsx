@@ -60,6 +60,7 @@ const StyledMarkdown = styled.div<{
 
   background-color: ${vscBackground};
   font-family:
+    var(--vscode-font-family),
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
