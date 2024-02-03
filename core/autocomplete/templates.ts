@@ -45,23 +45,24 @@ The last line is incomplete, and you should provide the rest of that line. If th
 };
 
 export function getTemplateForModel(model: string): AutocompleteTemplate {
+  const lowerCaseModel = model.toLowerCase()
   if (
-    model.includes("starcoder") ||
-    model.includes("star-coder") ||
-    model.includes("stable")
+    lowerCaseModel.includes("starcoder") ||
+    lowerCaseModel.includes("star-coder") ||
+    lowerCaseModel.includes("stable")
   ) {
     return stableCodeFimTemplate;
   }
 
-  if (model.includes("codellama")) {
+  if (lowerCaseModel.includes("codellama")) {
     return codeLlamaFimTemplate;
   }
 
-  if (model.includes("deepseek")) {
+  if (lowerCaseModel.includes("deepseek")) {
     return deepseekFimTemplate;
   }
 
-  if (model.includes("gpt")) {
+  if (lowerCaseModel.includes("gpt")) {
     return gptAutocompleteTemplate;
   }
 
