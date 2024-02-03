@@ -448,7 +448,6 @@
   },
   "dependencies": {
     "@electron/rebuild": "^3.2.10",
-    "@lancedb/vectordb-darwin-arm64": "^0.4.8",
     "@reduxjs/toolkit": "^1.9.3",
     "@types/jest": "^29.5.11",
     "@types/node-fetch": "^2.6.11",
