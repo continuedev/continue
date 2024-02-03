@@ -126,13 +126,21 @@ export async function retrieveContextItemsFromEmbeddings(
     artifactId: ChunkCodebaseIndex.artifactId,
   }));
 
-  let ftsResults = await ftsIndex.retrieve(
-    tags,
-    extras.fullInput.trim().split(" ").join(" OR "),
-    nRetrieve / 2,
-    filterDirectory,
-    undefined
-  );
+  let ftsResults: Chunk[] = [];
+
+  try {
+    if (extras.fullInput.trim() !== "") {
+      ftsResults = await ftsIndex.retrieve(
+        tags,
+        extras.fullInput.trim().split(" ").join(" OR "),
+        nRetrieve / 2,
+        filterDirectory,
+        undefined
+      );
+    }
+  } catch (e) {
+    console.warn("Error retrieving from FTS:", e);
+  }
 
   let vecResults = await extras.ide.retrieveChunks(
     extras.fullInput,
