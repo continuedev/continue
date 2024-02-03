@@ -11,7 +11,6 @@ import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "../activation/activate";
-import { VsCodeIde } from "../ideProtocol";
 import { TabAutocompleteModel, configHandler } from "../loadConfig";
 
 const statusBarItemText = (enabled: boolean | undefined) =>
@@ -360,7 +359,7 @@ export class ContinueCompletionProvider
     const uuid = uuidv4();
     ContinueCompletionProvider.lastUUID = uuid;
 
-    const config = await configHandler.loadConfig(new VsCodeIde());
+    const config = await configHandler.loadConfig();
     const options = {
       ...config.tabAutocompleteOptions,
       ...DEFAULT_AUTOCOMPLETE_OPTS,
