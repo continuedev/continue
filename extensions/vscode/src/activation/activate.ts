@@ -15,7 +15,6 @@ import {
 import { vsCodeIndexCodebase } from "../util/indexCodebase";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
-import { startProxy } from "./proxy";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
@@ -116,7 +115,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     )
   );
 
-  startProxy();
   vsCodeIndexCodebase(ideProtocolClient.getWorkspaceDirectories());
 
   migrate("showWelcome", () => {
