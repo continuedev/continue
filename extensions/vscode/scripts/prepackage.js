@@ -183,6 +183,19 @@ if (args[2] === "--target") {
   );
   console.log("[info] Copied tree-sitter wasms");
 
+  // tree-sitter tag query files
+  ncp(
+    path.join(
+      __dirname,
+      "../../../core/node_modules/llm-code-highlighter/dist/tag-qry"
+    ),
+    path.join(__dirname, "../out/tag-qry"),
+    (error) => {
+      if (error)
+        console.warn("Error copying code-highlighter tag-qry files", error);
+    }
+  );
+
   function ghAction() {
     return target !== undefined;
   }
