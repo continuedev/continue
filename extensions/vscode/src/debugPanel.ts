@@ -536,6 +536,7 @@ export function getSidebarContent(
           while (!next.done) {
             if (abortedMessageIds.has(data.messageId)) {
               abortedMessageIds.delete(data.messageId);
+              next = await gen.return({ completion: "", prompt: "" });
               break;
             }
             respond({ content: next.value });
@@ -555,6 +556,7 @@ export function getSidebarContent(
           while (!next.done) {
             if (abortedMessageIds.has(data.messageId)) {
               abortedMessageIds.delete(data.messageId);
+              next = await gen.return({ completion: "", prompt: "" });
               break;
             }
             respond({ content: next.value.content });
