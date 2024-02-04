@@ -737,14 +737,15 @@ export function getSidebarContent(
         <div id="root"></div>
 
         ${
-          inDevelopmentMode &&
-          `<script type="module">
+          inDevelopmentMode
+            ? `<script type="module">
           import RefreshRuntime from "http://localhost:5173/@react-refresh"
           RefreshRuntime.injectIntoGlobalHook(window)
           window.$RefreshReg$ = () => {}
           window.$RefreshSig$ = () => (type) => type
           window.__vite_plugin_react_preamble_installed__ = true
           </script>`
+            : null
         }
 
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
