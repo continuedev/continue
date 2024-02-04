@@ -1,8 +1,6 @@
 import React, { memo, useEffect } from "react";
 import { useRemark } from "react-remark";
-import rehypeShikiji from "rehype-shikiji";
 import styled from "styled-components";
-import { visit } from "unist-util-visit";
 import {
   defaultBorderRadius,
   vscBackground,
@@ -10,7 +8,7 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize } from "../../util";
-import PreWithToolbar from "./PreWithToolbar";
+import MonacoCodeBlock from "./MonacoCodeBlock";
 import "./markdown.css";
 
 const StyledMarkdown = styled.div<{
@@ -116,143 +114,10 @@ const FadeInWords: React.FC = (props: any) => {
   return <p {...otherProps}>{words}</p>;
 };
 
-const supportedLanguages = [
-  "abap",
-  "actionscript-3",
-  "ada",
-  "apex",
-  "applescript",
-  "asm",
-  "awk",
-  "bat",
-  "c",
-  "clojure",
-  "cobol",
-  "coffee",
-  "cpp",
-  "crystal",
-  "csharp",
-  "css",
-  "d",
-  "dart",
-  "diff",
-  "dockerfile",
-  "elixir",
-  "elm",
-  "erlang",
-  // "fortran",
-  "fsharp",
-  "git-commit",
-  "git-rebase",
-  // "go",
-  "graphql",
-  "groovy",
-  "hack",
-  "haml",
-  "handlebars",
-  "haskell",
-  "hcl",
-  "hlsl",
-  "html",
-  "ini",
-  "java",
-  "javascript",
-  "jinja-html",
-  "json",
-  "jsonc",
-  "jsonnet",
-  "jsx",
-  "julia",
-  "kotlin",
-  "latex",
-  "less",
-  "lisp",
-  "log",
-  "logo",
-  "lua",
-  "makefile",
-  "markdown",
-  "matlab",
-  "nix",
-  "objective-c",
-  "ocaml",
-  "pascal",
-  "perl",
-  "perl6",
-  "php",
-  "pls",
-  "postcss",
-  "powershell",
-  "prolog",
-  "pug",
-  "puppet",
-  "purescript",
-  "python",
-  "r",
-  "razor",
-  "ruby",
-  "rust",
-  "sas",
-  "sass",
-  "scala",
-  "scheme",
-  "scss",
-  "shaderlab",
-  "shellscript",
-  "smalltalk",
-  "sql",
-  "stylus",
-  "svelte",
-  "swift",
-  "tcl",
-  "toml",
-  "ts",
-  "tsx",
-  "typescript",
-  "vb",
-  "viml",
-  "vue",
-  "wasm",
-  "xml",
-  "xsl",
-  "yaml",
-  "文言",
-];
-
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps
 ) {
   const [reactContent, setMarkdownSource] = useRemark({
-    remarkPlugins: [
-      () => {
-        return (tree) => {
-          visit(tree, "code", (node: any) => {
-            if (!supportedLanguages.includes(node.lang)) {
-              node.lang = "javascript"; // Default to javascript to get some highlighting
-            }
-          });
-        };
-      },
-    ],
-    rehypePlugins: [
-      [
-        rehypeShikiji as any,
-        {
-          theme:
-            (window as any).fullColorTheme ||
-            (window as any).colorThemeName ||
-            "dark-plus",
-          addLanguageClass: true,
-        },
-      ],
-      // [
-      //   rehypeWrapAll,
-      //   {
-      //     selector: "code > span",
-      //     wrapper: "span.fade-in-span",
-      //   },
-      // ],
-    ],
     rehypeReactOptions: {
       components: {
         a: ({ node, ...props }) => {
@@ -263,11 +128,17 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          return props.showCodeBorder ? (
-            <PreWithToolbar {...preProps}></PreWithToolbar>
-          ) : (
-            <pre {...preProps}></pre>
+          return (
+            <MonacoCodeBlock
+              preProps={preProps}
+              codeString={preProps.children?.[0]?.props?.children?.[0] || ""}
+            />
           );
+          // return props.showCodeBorder ? (
+          //   <PreWithToolbar {...preProps}></PreWithToolbar>
+          // ) : (
+          //   <pre {...preProps}></pre>
+          // );
         },
         // p: ({ node, ...props }) => {
         //   return <FadeInWords {...props}></FadeInWords>;
