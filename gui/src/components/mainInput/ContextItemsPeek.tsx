@@ -135,6 +135,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
 
             return (
               <ContextItemDiv
+                key={idx}
                 onClick={() => {
                   openContextItem(contextItem);
                 }}
