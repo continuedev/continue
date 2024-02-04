@@ -14,6 +14,7 @@ echo "Installing GUI extension dependencies..."
 pushd gui
 npm install
 npm link core
+npm run build
 popd
 # VSCode Extension (will also package GUI)
 echo "Installing VSCode extension dependencies..."

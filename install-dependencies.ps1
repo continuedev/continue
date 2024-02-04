@@ -80,6 +80,7 @@ Write-Output "`nInstalling GUI extension dependencies..." -ForegroundColor White
 Push-Location gui
 npm install
 npm link core
+npm run build
 Pop-Location
 
 # VSCode Extension (will also package GUI)
