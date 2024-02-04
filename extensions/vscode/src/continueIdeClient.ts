@@ -359,7 +359,7 @@ class IdeProtocolClient {
       gitRoot || directory,
       [],
       true,
-      onlyThisDirectory
+      gitRoot === directory ? undefined : onlyThisDirectory
     )) {
       allFiles.push(file);
     }

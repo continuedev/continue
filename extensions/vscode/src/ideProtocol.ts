@@ -49,7 +49,12 @@ class VsCodeIde implements IDE {
 
     const workspaceDirs = await this.getWorkspaceDirs();
     for (const directory of workspaceDirs) {
-      for await (const dir of traverseDirectory(directory, [], false)) {
+      for await (const dir of traverseDirectory(
+        directory,
+        [],
+        false,
+        undefined
+      )) {
         allDirs.push(dir);
       }
     }
