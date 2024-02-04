@@ -117,6 +117,11 @@ export async function retrieveContextItemsFromEmbeddings(
 
   const ftsIndex = new FullTextSearchCodebaseIndex();
   const workspaceDirs = await extras.ide.getWorkspaceDirs();
+
+  if (workspaceDirs.length === 0) {
+    throw new Error("No workspace directories found");
+  }
+
   const branches = await Promise.all(
     workspaceDirs.map((dir) => extras.ide.getBranch(dir))
   );
