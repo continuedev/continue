@@ -223,7 +223,7 @@ if (args[2] === "--target") {
         "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
         "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
       }[target];
-      execSync(`npm install -f ${packageToInstall}`);
+      execSync(`npm install -f ${packageToInstall} --no-save`);
     }
 
     // Download and unzip esbuild
