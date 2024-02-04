@@ -263,8 +263,6 @@ The flow of information in the above example is as follows:
 
 ### Importing outside modules
 
-> Context providers run in a NodeJS environment, but for the time being the `modifyConfig` function will be called both from NodeJS _and_ the browser. This means that if you are importing packages requiring NodeJS, you should dynamically import them inside of the context provider (e.g. `const moduleA = await import('./moduleA');`).
-
 To include outside Node modules in your config.ts, run `npm install <module_name>` from the `~/.continue` directory, and then import them in config.ts.
 
 Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.ts` and any dependencies into a single Javascript file. The exact configuration used can be found [here](https://github.com/continuedev/continue/blob/5c9874400e223bbc9786a8823614a2e501fbdaf7/extensions/vscode/src/ideProtocol.ts#L45-L52).
