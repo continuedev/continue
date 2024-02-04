@@ -745,7 +745,7 @@ export function getSidebarContent(
           window.$RefreshSig$ = () => (type) => type
           window.__vite_plugin_react_preamble_installed__ = true
           </script>`
-            : null
+            : ""
         }
 
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
