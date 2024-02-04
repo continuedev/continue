@@ -46,6 +46,9 @@ const StyledMarkdown = styled.div<{
   }
 
   code {
+    span.line:empty {
+      display: none;
+    }
     color: #f78383;
     word-wrap: break-word;
     border-radius: ${defaultBorderRadius};
