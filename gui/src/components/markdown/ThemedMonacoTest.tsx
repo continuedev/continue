@@ -184,7 +184,9 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
       forceMoveMarkers: true,
     };
 
+    editor.updateOptions({ readOnly: false });
     editor.executeEdits("my-source", [op]);
+    editor.updateOptions({ readOnly: true });
   };
 
   useEffect(() => {
@@ -219,7 +221,7 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
         }
         theme="vs-dark"
         options={{
-          readOnly: false,
+          readOnly: true,
           minimap: { enabled: false },
           scrollBeyondLastLine: false,
           scrollbar: {
