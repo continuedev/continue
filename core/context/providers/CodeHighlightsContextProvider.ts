@@ -48,7 +48,7 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
     );
     return [
       {
-        content: repoMap,
+        content: repoMap ? repoMap : "",
         name: "Code Highlights",
         description: "Code highlights from open files",
       },
