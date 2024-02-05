@@ -21,8 +21,8 @@ const TopDiv = styled.div`
 
 const SecondDiv = styled.div`
   position: absolute;
-  top: 2px;
-  right: 2px;
+  top: 4px;
+  right: 4px;
   display: flex;
   gap: 4px;
 `;

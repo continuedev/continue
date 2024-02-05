@@ -1,7 +1,7 @@
 import { wireTmGrammars } from "monaco-editor-textmate";
 import { Registry } from "monaco-textmate";
-import { useMemo, useRef, useState } from "react";
-import MonacoEditor from "react-monaco-editor";
+import { useEffect, useMemo, useRef, useState } from "react";
+import MonacoEditor, { monaco } from "react-monaco-editor";
 import styled from "styled-components";
 import {
   VSC_EDITOR_BACKGROUND_VAR,
@@ -126,19 +126,9 @@ interface MonacoCodeBlockProps {
 
 export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
   const monacoRef = useRef(null);
-  const editorRef = useRef();
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
-  // code in editor
   const [value, setValue] = useState(props.codeString);
-
-  const setCurrentTheme = (themeId) => {
-    monacoRef.current.editor.defineTheme("custom-theme", theme.theme);
-
-    liftOff(monacoRef.current).then(() => {
-      monacoRef.current.editor.setTheme("custom-theme");
-      setValue(props.codeString);
-    });
-  };
 
   const liftOff = async (monaco) => {
     const grammars = new Map();
@@ -157,20 +147,62 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
     monacoRef.current = monaco;
     editorRef.current = editor;
 
-    setCurrentTheme(theme);
+    monacoRef.current.editor.defineTheme("custom-theme", theme.theme);
+    liftOff(monacoRef.current).then(() => {
+      monacoRef.current.editor.setTheme("custom-theme");
+    });
   };
 
-  const onEditorChange = (value) => {
-    setValue(value);
+  const prevFullTextRef = useRef("");
+
+  const appendText = (text: string) => {
+    const editor = editorRef.current;
+    const model = editor.getModel();
+    if (!model) return;
+
+    let lineCount = prevFullTextRef.current.split("\n").length;
+    const modelLineCount = model.getLineCount();
+    lineCount = lineCount === 0 ? 1 : lineCount;
+    lineCount = Math.min(lineCount, modelLineCount);
+    const lastLineColumn = model.getLineMaxColumn(lineCount);
+
+    const id = { major: 1, minor: 1 };
+    const op = {
+      identifier: id,
+      range: {
+        startLineNumber: lineCount,
+        startColumn: lastLineColumn,
+        endLineNumber: lineCount + 1,
+        endColumn: 0,
+      },
+      text: text,
+      forceMoveMarkers: true,
+    };
+
+    editor.executeEdits("my-source", [op]);
   };
+
+  useEffect(() => {
+    const newText = props.codeString.slice(
+      prevFullTextRef.current.length - 1 > 0
+        ? prevFullTextRef.current.length - 1
+        : 0
+    );
+
+    appendText(newText);
+    prevFullTextRef.current = props.codeString;
+  }, [props.codeString]);
+
+  useEffect(() => {
+    appendText(props.codeString);
+  }, []);
 
   const memoizedEditor = useMemo(
     () => (
       <MonacoEditor
-        height={props.codeString.split("\n").length * 18 + 4}
-        value={props.codeString}
+        height={200}
+        defaultValue={props.codeString}
         editorDidMount={onEditorDidMount}
-        onChange={onEditorChange}
         language={
           supportedLanguagesArray.includes(props.language)
             ? props.language
@@ -178,7 +210,7 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
         }
         theme="vs-dark"
         options={{
-          readOnly: true,
+          readOnly: false,
           minimap: { enabled: false },
           scrollBeyondLastLine: false,
           scrollbar: {
@@ -198,7 +230,7 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
         }}
       />
     ),
-    [onEditorChange, onEditorDidMount]
+    []
   );
 
   return (
