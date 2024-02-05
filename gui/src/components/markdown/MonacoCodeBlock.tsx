@@ -184,17 +184,12 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
       forceMoveMarkers: true,
     };
 
-    editor.updateOptions({ readOnly: false });
-    editor.executeEdits("my-source", [op]);
-    editor.updateOptions({ readOnly: true });
+    editor.getModel().applyEdits([op]);
   };
 
   useEffect(() => {
-    let newText = props.codeString.slice(
-      prevFullTextRef.current.length - 1 > 0
-        ? prevFullTextRef.current.length - 1
-        : 0
-    );
+    let newText = props.codeString.slice(prevFullTextRef.current.length);
+    if (newText === "") return;
 
     // To avoid the optimistic code block fences. Because the unwanted ones are always at the end of the block, this solves the problem
     if (newText.endsWith("`") || newText.endsWith("`\n")) {
@@ -248,6 +243,7 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
           fontVariations: true,
           padding: { top: 4, bottom: 4 },
           fontFamily,
+          trimAutoWhitespace: false,
         }}
       />
     );

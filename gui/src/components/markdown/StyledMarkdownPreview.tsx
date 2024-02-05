@@ -137,7 +137,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
                 "typescript"
               }
               preProps={preProps}
-              codeString={preProps.children?.[0]?.props?.children?.[0] || ""}
+              codeString={
+                preProps.children?.[0]?.props?.children?.[0].trim() || ""
+              }
             />
           );
           return props.showCodeBorder ? (
