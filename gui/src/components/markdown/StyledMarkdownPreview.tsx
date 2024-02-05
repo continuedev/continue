@@ -8,6 +8,7 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize } from "../../util";
+import PreWithToolbar from "./PreWithToolbar";
 import { ThemedMonacoTest } from "./ThemedMonacoTest";
 import "./markdown.css";
 
@@ -128,7 +129,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          return (
+          const monacoEditor = (
             <ThemedMonacoTest
               showBorder={props.showCodeBorder}
               language={
@@ -139,11 +140,11 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
               codeString={preProps.children?.[0]?.props?.children?.[0] || ""}
             />
           );
-          // return props.showCodeBorder ? (
-          //   <PreWithToolbar {...preProps}></PreWithToolbar>
-          // ) : (
-          //   <pre {...preProps}></pre>
-          // );
+          return props.showCodeBorder ? (
+            <PreWithToolbar>{monacoEditor}</PreWithToolbar>
+          ) : (
+            monacoEditor
+          );
         },
         // p: ({ node, ...props }) => {
         //   return <FadeInWords {...props}></FadeInWords>;

@@ -111,10 +111,10 @@ const theme = {
   },
 };
 
-const ContainerDiv = styled.div<{ showBorder: 0 | 1 }>`
+const Container = styled.div<{ showBorder: 0 | 1 }>`
   border-radius: ${defaultBorderRadius};
   overflow: hidden;
-  border: ${(props) => (props.showBorder ? "1px solid #8888" : "none")};
+  margin: 0;
 `;
 
 interface MonacoCodeBlockProps {
@@ -176,6 +176,7 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
             ? props.language
             : "typescript"
         }
+        theme="vs-dark"
         options={{
           readOnly: true,
           minimap: { enabled: false },
@@ -201,8 +202,8 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
   );
 
   return (
-    <ContainerDiv showBorder={props.showBorder} {...props.preProps}>
+    <Container showBorder={props.showBorder} {...props.preProps}>
       {memoizedEditor}
-    </ContainerDiv>
+    </Container>
   );
 };

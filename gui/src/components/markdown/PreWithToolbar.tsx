@@ -16,13 +16,14 @@ function PreWithToolbar(props: any) {
     }
   }
 
-  function childrenToText(children: any) {
-    return children.map((child: any) => childToText(child)).join("");
+  function childrenToText(child: any) {
+    return child.props.codeString || "";
   }
 
   return (
     <pre
       {...props}
+      style={{ padding: "0px" }}
       className="relative"
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}

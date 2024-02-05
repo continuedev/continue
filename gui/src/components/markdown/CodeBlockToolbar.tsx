@@ -16,12 +16,13 @@ const TopDiv = styled.div`
   height: 0;
   width: 0;
   overflow: visible;
+  z-index: 100;
 `;
 
 const SecondDiv = styled.div`
   position: absolute;
-  top: -6px;
-  right: -6px;
+  top: 2px;
+  right: 2px;
   display: flex;
   gap: 4px;
 `;
