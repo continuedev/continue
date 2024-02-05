@@ -209,8 +209,13 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
     appendText(props.codeString);
   }, []);
 
-  const memoizedEditor = useMemo(
-    () => (
+  const memoizedEditor = useMemo(() => {
+    const rootStyle = getComputedStyle(document.documentElement);
+    const fontFamily = rootStyle
+      .getPropertyValue("--vscode-editor-font-family")
+      .trim();
+
+    return (
       <MonacoEditor
         defaultValue={props.codeString}
         editorDidMount={onEditorDidMount}
@@ -239,11 +244,14 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
           },
           renderLineHighlight: "none",
           automaticLayout: true,
+          fontLigatures: true,
+          fontVariations: true,
+          padding: { top: 4, bottom: 4 },
+          fontFamily,
         }}
       />
-    ),
-    []
-  );
+    );
+  }, []);
 
   return (
     <Container showBorder={props.showBorder} {...props.preProps}>
