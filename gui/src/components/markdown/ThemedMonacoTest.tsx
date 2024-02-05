@@ -151,6 +151,13 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
     liftOff(monacoRef.current).then(() => {
       monacoRef.current.editor.setTheme("custom-theme");
     });
+
+    editorRef.current.onDidContentSizeChange(() => {
+      const contentHeight = editorRef.current.getContentHeight();
+      const layoutInfo = editorRef.current.getLayoutInfo();
+      const width = layoutInfo.width;
+      editorRef.current.layout({ height: contentHeight, width });
+    });
   };
 
   const prevFullTextRef = useRef("");
@@ -200,7 +207,6 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
   const memoizedEditor = useMemo(
     () => (
       <MonacoEditor
-        height={200}
         defaultValue={props.codeString}
         editorDidMount={onEditorDidMount}
         language={
@@ -227,6 +233,7 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
             indentation: false,
           },
           renderLineHighlight: "none",
+          automaticLayout: true,
         }}
       />
     ),
