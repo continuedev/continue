@@ -2,9 +2,7 @@ import { ContextItemId, DiffLine, FileEdit, ModelDescription } from "core";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
-import * as fs from "fs";
 import { readFileSync, writeFileSync } from "fs";
-import * as path from "path";
 import * as io from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -18,6 +16,7 @@ import { streamEdit } from "./diff/verticalPerLine/manager";
 import historyManager from "./history";
 import { VsCodeIde } from "./ideProtocol";
 import { configHandler, llmFromTitle } from "./loadConfig";
+import { getTheme } from "./util/getTheme";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 
 let sockets: { [url: string]: io.Socket | undefined } = {};
@@ -687,41 +686,7 @@ export function getSidebarContent(
     }
   });
 
-  let currentTheme = undefined;
-  let colorThemeName = "dark-plus";
-  const tokenColorMap: any = {};
-  try {
-    // Pass color theme to webview for syntax highlighting
-    const colorTheme = vscode.workspace
-      .getConfiguration("workbench")
-      .get("colorTheme");
-
-    for (let i = vscode.extensions.all.length - 1; i >= 0; i--) {
-      if (currentTheme) {
-        break;
-      }
-      const extension = vscode.extensions.all[i];
-      if (extension.packageJSON?.contributes?.themes?.length > 0) {
-        for (const theme of extension.packageJSON.contributes.themes) {
-          if (theme.label === colorTheme) {
-            const themePath = path.join(extension.extensionPath, theme.path);
-            currentTheme = fs.readFileSync(themePath).toString();
-            break;
-          }
-        }
-      }
-    }
-
-    // Strip comments from theme
-    currentTheme = currentTheme
-      ?.split("\n")
-      .filter((line) => {
-        return !line.trim().startsWith("//");
-      })
-      .join("\n");
-  } catch (e) {
-    console.log("Error adding .continueignore file icon: ", e);
-  }
+  const currentTheme = getTheme();
 
   return `<!DOCTYPE html>
     <html lang="en">
@@ -755,8 +720,8 @@ export function getSidebarContent(
         <script>window.vscMachineId = "${getUniqueId()}"</script>
         <script>window.vscMediaUrl = "${vscMediaUrl}"</script>
         <script>window.ide = "vscode"</script>
-        <script>window.fullColorTheme = ${currentTheme}</script>
-        <script>window.colorThemeName = "${colorThemeName}"</script>
+        <script>window.fullColorTheme = ${JSON.stringify(currentTheme)}</script>
+        <script>window.colorThemeName = "dark-plus"</script>
         <script>window.workspacePaths = ${JSON.stringify(
           vscode.workspace.workspaceFolders?.map(
             (folder) => folder.uri.fsPath

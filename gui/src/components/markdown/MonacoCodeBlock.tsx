@@ -18,8 +18,38 @@ interface MonacoCodeBlockProps {
 const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
-  const handleEditorMount: OnMount = (editor) => {
+  const handleEditorMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
+
+    // const aTheme = {
+    //   base: "vs-dark" as const,
+    //   inherit: true,
+    //   rules: [
+    //     {
+    //       token: "identifier",
+    //       foreground: "9CDCFE",
+    //     },
+    //     {
+    //       token: "punctuation.definition.comment",
+    //       foreground: "DCDCAA",
+    //     },
+    //     {
+    //       token: "type",
+    //       foreground: "1AAFB0",
+    //     },
+    //   ],
+    //   colors: {},
+    // };
+    // const bTheme = {
+    //   ...(window as any).fullColorTheme,
+    //   base: "vs-dark",
+    //   inherit: true,
+    //   encodedTokensColors: undefined,
+    //   // rules: [],
+    //   colors: {},
+    // };
+    // monaco.editor.defineTheme("custom-theme", bTheme);
+    // monaco.editor.setTheme("custom-theme");
   };
 
   const [currentText, setCurrentText] = useState(props.codeString);

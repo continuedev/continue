@@ -8,7 +8,7 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize } from "../../util";
-import MonacoCodeBlock from "./MonacoCodeBlock";
+import { ThemedMonacoTest } from "./ThemedMonacoTest";
 import "./markdown.css";
 
 const StyledMarkdown = styled.div<{
@@ -129,7 +129,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         },
         pre: ({ node, ...preProps }) => {
           return (
-            <MonacoCodeBlock
+            // <MonacoCodeBlock
+            <ThemedMonacoTest
               preProps={preProps}
               codeString={preProps.children?.[0]?.props?.children?.[0] || ""}
             />
