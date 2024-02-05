@@ -8,8 +8,8 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize } from "../../util";
+import { MonacoCodeBlock } from "./MonacoCodeBlock";
 import PreWithToolbar from "./PreWithToolbar";
-import { ThemedMonacoTest } from "./ThemedMonacoTest";
 import "./markdown.css";
 
 const StyledMarkdown = styled.div<{
@@ -130,7 +130,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         },
         pre: ({ node, ...preProps }) => {
           const monacoEditor = (
-            <ThemedMonacoTest
+            <MonacoCodeBlock
               showBorder={props.showCodeBorder}
               language={
                 preProps.children?.[0]?.props?.className?.split("-")[1] ||
