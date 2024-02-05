@@ -129,8 +129,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         },
         pre: ({ node, ...preProps }) => {
           return (
-            // <MonacoCodeBlock
             <ThemedMonacoTest
+              showBorder={props.showCodeBorder}
+              language={
+                preProps.children?.[0]?.props?.className?.split("-")[1] ||
+                "typescript"
+              }
               preProps={preProps}
               codeString={preProps.children?.[0]?.props?.children?.[0] || ""}
             />
