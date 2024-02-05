@@ -1,6 +1,6 @@
 import { wireTmGrammars } from "monaco-editor-textmate";
 import { Registry } from "monaco-textmate";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import MonacoEditor, { monaco } from "react-monaco-editor";
 import styled from "styled-components";
 import {
@@ -128,8 +128,6 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
   const monacoRef = useRef(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
-  const [value, setValue] = useState(props.codeString);
-
   const liftOff = async (monaco) => {
     const grammars = new Map();
 
@@ -190,11 +188,16 @@ export const ThemedMonacoTest = (props: MonacoCodeBlockProps) => {
   };
 
   useEffect(() => {
-    const newText = props.codeString.slice(
+    let newText = props.codeString.slice(
       prevFullTextRef.current.length - 1 > 0
         ? prevFullTextRef.current.length - 1
         : 0
     );
+
+    // To avoid the optimistic code block fences. Because the unwanted ones are always at the end of the block, this solves the problem
+    if (newText.endsWith("`") || newText.endsWith("`\n")) {
+      newText = newText.slice(0, newText.indexOf("`"));
+    }
 
     appendText(newText);
     prevFullTextRef.current = props.codeString;
