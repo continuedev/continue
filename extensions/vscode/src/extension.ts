@@ -1,5 +1,7 @@
 /**
  * This is the entry point for the extension.
+ * 
+ * 2024-02 Modified by Lukas Prediger, Copyright (c) 2023 CSC - IT Center for Science Ltd.
  */
 
 import * as vscode from "vscode";
@@ -31,7 +33,8 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 
   const { activateExtension } = await import("./activation/activate");
   try {
-    await activateExtension(context);
+    const ownApi = await activateExtension(context);
+    return ownApi;
   } catch (e) {
     console.log("Error activating extension: ", e);
     vscode.window
@@ -52,7 +55,7 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  dynamicImportAndActivate(context);
+  return dynamicImportAndActivate(context);
 }
 
 export function deactivate() {

@@ -1,3 +1,7 @@
+/**
+ * 2024-02 Modified by Lukas Prediger, Copyright (c) 2023 CSC - IT Center for Science Ltd.
+ */
+
 import { getTsConfigPath } from "core/util/paths";
 import * as fs from "fs";
 import path from "path";
@@ -86,7 +90,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   setupInlineTips(context);
   showRefactorMigrationMessage();
 
-  ideProtocolClient = new IdeProtocolClient(context);
+  ideProtocolClient = new IdeProtocolClient();
+  context.subscriptions.push(ideProtocolClient);
 
   // Register Continue GUI as sidebar webview, and beginning a new session
   const provider = new ContinueGUIWebviewViewProvider();
@@ -157,4 +162,10 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   } catch (e) {
     console.log("Error adding .continueignore file icon: ", e);
   }
+
+  const extensionApi = {
+    "addExtensionModel": ideProtocolClient.addExtensionModel,
+    "removeExtensionModel": ideProtocolClient.removeExtensionModel,
+  };
+  return extensionApi;
 }

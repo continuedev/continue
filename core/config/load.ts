@@ -1,3 +1,7 @@
+/**
+ * 2024-02 Modified by Lukas Prediger, Copyright (c) 2023 CSC - IT Center for Science Ltd.
+ */
+
 import {
   Config,
   ContextProviderWithParams,
@@ -115,4 +119,18 @@ async function intermediateToFinalConfig(
   };
 }
 
-export { intermediateToFinalConfig, serializedToIntermediateConfig };
+function injectExtensionModelsToFinalConfig(config: ContinueConfig, extensionModels: readonly CustomLLM[]) {
+  var configWithExtensionModels = {...config};
+  configWithExtensionModels.extensionModels = [...extensionModels];
+
+  var models = [...config.models];
+  for (var modelDescription of extensionModels) {
+    const model = new CustomLLMClass(modelDescription);
+    models.push(model);
+  }
+  configWithExtensionModels.models = models;
+
+  return configWithExtensionModels;
+}
+
+export { injectExtensionModelsToFinalConfig, intermediateToFinalConfig, serializedToIntermediateConfig };

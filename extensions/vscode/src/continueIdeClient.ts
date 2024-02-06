@@ -1,4 +1,8 @@
-import { FileEdit, RangeInFile } from "core";
+/**
+ * 2024-02 Modified by Lukas Prediger, Copyright (c) 2023 CSC - IT Center for Science Ltd.
+ */
+
+import { CustomLLM, FileEdit, RangeInFile } from "core";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
 import { readFileSync, writeFileSync } from "fs";
 import * as path from "path";
@@ -20,22 +24,26 @@ import {
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./util/vscode";
+import { VsCodeIde } from "./ideProtocol";
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 
 const continueVirtualDocumentScheme = "continue";
 
-class IdeProtocolClient {
+class IdeProtocolClient implements vscode.Disposable {
   private static PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } =
     {};
 
-  private readonly context: vscode.ExtensionContext;
+  private disposable: vscode.Disposable;
 
-  constructor(context: vscode.ExtensionContext) {
-    this.context = context;
+  constructor() {
+    const extensionModelsChangeSubscription = configHandler.onConfigChanged(
+      e => { this.configUpdate(e.config); },
+      this
+    );
 
     // Listen for file saving
-    vscode.workspace.onDidSaveTextDocument((event) => {
+    const configFileChangeSubscription = vscode.workspace.onDidSaveTextDocument((event) => {
       const filepath = event.uri.fsPath;
 
       if (
@@ -45,10 +53,7 @@ class IdeProtocolClient {
         filepath.endsWith(".continue\\config.ts") ||
         filepath.endsWith(".continuerc.json")
       ) {
-        const config = readFileSync(getConfigJsonPath(), "utf8");
-        const configJson = JSON.parse(config);
-        this.configUpdate(configJson);
-        configHandler.reloadConfig();
+        configHandler.reloadConfig(new VsCodeIde());
       } else if (
         filepath.endsWith(".continueignore") ||
         filepath.endsWith(".gitignore")
@@ -96,12 +101,19 @@ class IdeProtocolClient {
         return uri.query;
       }
     })();
-    context.subscriptions.push(
+
+    this.disposable = vscode.Disposable.from(
+      extensionModelsChangeSubscription,
+      configFileChangeSubscription,
       vscode.workspace.registerTextDocumentContentProvider(
         continueVirtualDocumentScheme,
         documentContentProvider
       )
     );
+  }
+
+  dispose() {
+    this.disposable.dispose();
   }
 
   visibleMessages: Set<string> = new Set();
@@ -111,6 +123,26 @@ class IdeProtocolClient {
       type: "configUpdate",
       config,
     });
+  }
+
+  addExtensionModel(customLLM: CustomLLM, modelAddedCallback?: () => void, modelRemovedCallback?: () => void): vscode.Disposable {
+    var eventSubscription = configHandler.onExtensionModelsChange(e => {
+      if (modelAddedCallback && e.added?.find(addedModelTitle => addedModelTitle === customLLM.options?.title)) {
+        modelAddedCallback();
+      }
+
+      if (modelRemovedCallback && e.removed?.find(removedModelTitle => removedModelTitle === customLLM.options?.title)) {
+        modelRemovedCallback();
+      }
+    });
+
+    configHandler.addExtensionModel(customLLM);
+
+    return eventSubscription;
+  }
+
+  removeExtensionModel(customLLMTitle: string) {
+    configHandler.removeExtensionModel(customLLMTitle);
   }
 
   async gotoDefinition(

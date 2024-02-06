@@ -1,3 +1,7 @@
+/**
+ * 2024-02 Modified by Lukas Prediger, Copyright (c) 2023 CSC - IT Center for Science Ltd.
+ */
+
 export interface ChunkWithoutID {
   content: string;
   startLine: number;
@@ -586,6 +590,7 @@ export interface Config {
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
   models: ILLM[];
+  extensionModels?: CustomLLM[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
   slashCommands?: SlashCommand[];

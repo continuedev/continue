@@ -1,9 +1,15 @@
+/**
+ * 2024-02 Modified by Lukas Prediger, Copyright (c) 2023 CSC - IT Center for Science Ltd.
+ */
+
 import { Dispatch } from "@reduxjs/toolkit";
 import { useEffect } from "react";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
 import { errorPopup, isJetBrains, postToIde } from "../util/ide";
 
+import { ContinueConfig, CustomLLM } from "core";
 import {
+  injectExtensionModelsToFinalConfig,
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
 } from "core/config/load";
@@ -16,7 +22,7 @@ import { RootStore } from "../redux/store";
 import useChatHandler from "./useChatHandler";
 
 function useSetup(dispatch: Dispatch<any>) {
-  const loadConfig = async () => {
+  const loadConfig = async (previousConfig?: ContinueConfig) => {
     try {
       const ide = new ExtensionIde();
       let serialized = await ide.getSerializedConfig();
@@ -42,11 +48,15 @@ function useSetup(dispatch: Dispatch<any>) {
         intermediate,
         async (filepath) => {
           return new ExtensionIde().readFile(filepath);
-        }
+        },
+      );
+      const finalConfigWithExtensionModels = injectExtensionModelsToFinalConfig(
+        finalConfig,
+        (previousConfig?.extensionModels as (CustomLLM[] | undefined)) || []
       );
 
       // Fall back to config.json
-      dispatch(setConfig(finalConfig));
+      dispatch(setConfig(finalConfigWithExtensionModels));
     } catch (e) {
       console.log("Error loading config.json: ", e);
       errorPopup(e.message);
@@ -93,7 +103,8 @@ function useSetup(dispatch: Dispatch<any>) {
           dispatch(setInactive());
           break;
         case "configUpdate":
-          loadConfig();
+          const config = event.data.config as ContinueConfig;
+          loadConfig(config);
           break;
         case "submitMessage":
           streamResponse(event.data.message);

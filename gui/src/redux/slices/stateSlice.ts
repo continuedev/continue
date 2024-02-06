@@ -1,3 +1,7 @@
+/**
+ * 2024-02 Modified by Lukas Prediger, Copyright (c) 2023 CSC - IT Center for Science Ltd.
+ */
+
 import { createSlice } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
@@ -99,6 +103,7 @@ const initialState: RootStore["state"] = {
         title: "GPT-3.5-Turbo (Free Trial)",
       }),
     ],
+    extensionModels: [],
     slashCommands: [
       EditSlashCommand,
       CommentSlashCommand,
