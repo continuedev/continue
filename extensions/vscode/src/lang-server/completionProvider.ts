@@ -265,7 +265,9 @@ async function getTabCompletion(
         new vscode.Position(document.lineCount, Number.MAX_SAFE_INTEGER)
       )
     );
-    const lineBelowCursor = document.lineAt(pos.line + 1).text;
+    const lineBelowCursor = document.lineAt(
+      Math.min(pos.line + 1, document.lineCount)
+    ).text;
     const clipboardText = await vscode.env.clipboard.readText();
     const { prefix, suffix } = await constructAutocompletePrompt(
       document.fileName,
