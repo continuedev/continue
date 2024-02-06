@@ -14,7 +14,6 @@ import "./markdown.css";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
-  maxHeight?: number;
   showBorder?: boolean;
 }>`
   pre {
@@ -34,14 +33,6 @@ const StyledMarkdown = styled.div<{
       }
     }}
     padding: ${(props) => (props.showBorder ? "12px" : "0px 2px")};
-    ${(props) => {
-      if (props.maxHeight) {
-        return `
-          max-height: ${props.maxHeight}px;
-          overflow-y: auto;
-        `;
-      }
-    }}
   }
 
   code {
@@ -89,9 +80,9 @@ const StyledMarkdown = styled.div<{
 
 interface StyledMarkdownPreviewProps {
   source?: string;
-  maxHeight?: number;
   className?: string;
   showCodeBorder?: boolean;
+  scrollLocked?: boolean;
 }
 
 const FadeInWords: React.FC = (props: any) => {
@@ -131,6 +122,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         pre: ({ node, ...preProps }) => {
           const monacoEditor = (
             <MonacoCodeBlock
+              maxHeight={props.showCodeBorder ? undefined : 160}
+              scrollLocked={props.scrollLocked}
               showBorder={props.showCodeBorder}
               language={
                 preProps.children?.[0]?.props?.className?.split("-")[1] ||
@@ -160,11 +153,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [props.source]);
 
   return (
-    <StyledMarkdown
-      maxHeight={props.maxHeight}
-      fontSize={getFontSize()}
-      showBorder={props.showCodeBorder}
-    >
+    <StyledMarkdown fontSize={getFontSize()} showBorder={props.showCodeBorder}>
       {reactContent}
     </StyledMarkdown>
   );

@@ -118,6 +118,8 @@ interface MonacoCodeBlockProps {
   preProps: any;
   language: string;
   showBorder: boolean;
+  scrollLocked?: boolean;
+  maxHeight?: number;
 }
 
 export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
@@ -125,16 +127,18 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
   const liftOff = async (monaco) => {
-    const grammars = new Map();
-
-    for (const [scopeName, [languageId, _]] of Object.entries(
-      supportedLanguages
-    )) {
-      grammars.set(languageId, scopeName);
-      monaco.languages.register({ id: languageId });
+    try {
+      const grammars = new Map();
+      for (const [scopeName, [languageId, _]] of Object.entries(
+        supportedLanguages
+      )) {
+        grammars.set(languageId, scopeName);
+        monaco.languages.register({ id: languageId });
+      }
+      await wireTmGrammars(monaco, registry, grammars, editorRef.current);
+    } catch (e) {
+      console.error("Error wiring grammars", e);
     }
-
-    await wireTmGrammars(monaco, registry, grammars, editorRef.current);
   };
 
   const onEditorDidMount = (editor, monaco) => {
@@ -146,12 +150,14 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
       monacoRef.current.editor.setTheme("custom-theme");
     });
 
-    editorRef.current.onDidContentSizeChange(() => {
-      const contentHeight = editorRef.current.getContentHeight();
-      const layoutInfo = editorRef.current.getLayoutInfo();
-      const width = layoutInfo.width;
-      editorRef.current.layout({ height: contentHeight, width });
-    });
+    if (!(props.maxHeight && !props.scrollLocked)) {
+      editorRef.current.onDidContentSizeChange(() => {
+        const contentHeight = editorRef.current.getContentHeight();
+        const layoutInfo = editorRef.current.getLayoutInfo();
+        const width = layoutInfo.width;
+        editorRef.current.layout({ height: contentHeight, width });
+      });
+    }
   };
 
   useEffect(() => {
@@ -233,7 +239,15 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
             : "typescript"
         }
         theme="vs-dark"
+        height={
+          props.maxHeight &&
+          props.scrollLocked &&
+          props.codeString.split("\n").length * 18 > props.maxHeight
+            ? props.maxHeight
+            : null
+        }
         options={{
+          automaticLayout: !(props.maxHeight && !props.scrollLocked),
           readOnly: true,
           minimap: { enabled: false },
           scrollBeyondLastLine: false,
@@ -251,7 +265,6 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
             indentation: false,
           },
           renderLineHighlight: "none",
-          automaticLayout: true,
           fontLigatures: true,
           fontVariations: true,
           padding: { top: 4, bottom: 4 },
@@ -260,7 +273,7 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
         }}
       />
     );
-  }, []);
+  }, [props.scrollLocked, props.maxHeight]);
 
   return (
     <Container showBorder={props.showBorder} {...props.preProps}>
