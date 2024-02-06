@@ -6,7 +6,9 @@ data/
 src/client
 .continue
 
-gui
 exe
 bin
 assets
+
+gui/*
+!gui/onigasm.wasm
