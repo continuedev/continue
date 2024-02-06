@@ -6,7 +6,9 @@ import {
   languageForFilepath,
 } from "core/autocomplete/constructPrompt";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
+import { stopAtSimilarLine } from "core/autocomplete/streaming";
 import { getTemplateForModel } from "core/autocomplete/templates";
+import { streamLines } from "core/diff/util";
 import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -259,6 +261,7 @@ async function getTabCompletion(
         new vscode.Position(document.lineCount, Number.MAX_SAFE_INTEGER)
       )
     );
+    const lineBelowCursor = document.lineAt(pos.line + 1).text;
     const clipboardText = await vscode.env.clipboard.readText();
     const { prefix, suffix } = await constructAutocompletePrompt(
       document.fileName,
@@ -306,25 +309,25 @@ async function getTabCompletion(
       );
 
       // LLM
-      for await (const update of generator) {
-        completion += update;
-        if (token.isCancellationRequested) {
-          stopStatusBarLoading();
-          return undefined;
-        }
-
-        let foundEndLine = false;
-        for (const end of lang.endOfLine) {
-          if (completion.includes(end + "\n")) {
-            // completion =
-            //   completion.slice(0, completion.indexOf(end + "\n")) + end;
-            // foundEndLine = true;
-            // break;
+      let cancelled = false;
+      const generatorWithCancellation = async function* () {
+        for await (const update of generator) {
+          if (token.isCancellationRequested) {
+            stopStatusBarLoading();
+            cancelled = true;
+            return undefined;
           }
+          yield update;
         }
-        if (foundEndLine) {
-          break;
-        }
+      };
+      const lineGenerator = streamLines(generatorWithCancellation());
+      const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
+      for await (const update of finalGenerator) {
+        completion += update;
+      }
+
+      if (cancelled) {
+        return undefined;
       }
 
       // Don't return empty

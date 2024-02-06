@@ -56,7 +56,9 @@ export function matchLine(
 /**
  * Convert a stream of arbitrary chunks to a stream of lines
  */
-export async function* streamLines(streamCompletion: LineStream): LineStream {
+export async function* streamLines(
+  streamCompletion: AsyncGenerator<string>
+): LineStream {
   let buffer = "";
   for await (const chunk of streamCompletion) {
     buffer += chunk;
