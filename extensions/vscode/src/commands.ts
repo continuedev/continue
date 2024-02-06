@@ -123,11 +123,12 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     acceptRejectVerticalDiffBlock(false, filepath, index);
   },
   "continue.quickFix": async (message: string, code: string, edit: boolean) => {
-    ideProtocolClient.sendMainUserInput(
-      `${
+    debugPanelWebview?.postMessage({
+      type: "newSessionWithPrompt",
+      prompt: `${
         edit ? "/edit " : ""
-      }${code}\n\nHow do I fix this problem in the above code?: ${message}`
-    );
+      }${code}\n\nHow do I fix this problem in the above code?: ${message}`,
+    });
     if (!edit) {
       vscode.commands.executeCommand("continue.continueGUIView.focus");
     }
