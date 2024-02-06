@@ -20,10 +20,23 @@ const statusBarItemTooltip = (enabled: boolean | undefined) =>
   enabled ? "Tab autocomplete is enabled" : "Click to enable tab autocomplete";
 
 let lastStatusBar: vscode.StatusBarItem | undefined = undefined;
+let statusBarFalseTimeout: NodeJS.Timeout | undefined = undefined;
+
+function stopStatusBarLoading() {
+  statusBarFalseTimeout = setTimeout(() => {
+    setupStatusBar(true, false);
+  }, 100);
+}
+
 export function setupStatusBar(
   enabled: boolean | undefined,
   loading?: boolean
 ) {
+  if (loading !== false) {
+    clearTimeout(statusBarFalseTimeout);
+    statusBarFalseTimeout = undefined;
+  }
+
   const statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right
   );
@@ -140,8 +153,8 @@ class ListenableGenerator<T> {
         let resolve: (value: any) => void;
         let promise = new Promise<T>((res) => {
           resolve = res;
+          this._listeners.add(resolve!);
         });
-        this._listeners.add(resolve!);
         const value = await promise;
         this._listeners.delete(resolve!);
 
@@ -296,6 +309,7 @@ async function getTabCompletion(
       for await (const update of generator) {
         completion += update;
         if (token.isCancellationRequested) {
+          stopStatusBarLoading();
           return undefined;
         }
 
@@ -441,7 +455,7 @@ export class ContinueCompletionProvider
     } catch (e: any) {
       console.warn("Error getting autocompletion: ", e.message);
     } finally {
-      setupStatusBar(true, false);
+      stopStatusBarLoading();
     }
   }
 }
