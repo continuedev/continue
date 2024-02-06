@@ -3,7 +3,6 @@ import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import { readFileSync, writeFileSync } from "fs";
-import * as io from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import {
@@ -18,8 +17,6 @@ import { VsCodeIde } from "./ideProtocol";
 import { configHandler, llmFromTitle } from "./loadConfig";
 import { getTheme } from "./util/getTheme";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
-
-let sockets: { [url: string]: io.Socket | undefined } = {};
 
 export let debugPanelWebview: vscode.Webview | undefined;
 
@@ -687,6 +684,12 @@ export function getSidebarContent(
   });
 
   const currentTheme = getTheme();
+  vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration("workbench.colorTheme")) {
+      // Send new theme to GUI to update embedded Monaco themes
+      debugPanelWebview?.postMessage({ type: "setTheme", theme: getTheme() });
+    }
+  });
 
   return `<!DOCTYPE html>
     <html lang="en">

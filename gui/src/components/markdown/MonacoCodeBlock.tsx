@@ -96,20 +96,16 @@ const registry = new Registry({
   },
 });
 
-const theme = {
-  id: "custom-theme",
-  name: "Custom Theme",
-  theme: {
-    ...(window as any).fullColorTheme,
-    base: "vs-dark",
-    inherit: true,
-    encodedTokensColors: undefined,
-    // rules: [],
-    colors: {
-      "editor.background": parseColorForHex(VSC_EDITOR_BACKGROUND_VAR),
-    },
+const getThemeFromWindow = () => ({
+  ...(window as any).fullColorTheme,
+  base: "vs-dark",
+  inherit: true,
+  encodedTokensColors: undefined,
+  // rules: [],
+  colors: {
+    "editor.background": parseColorForHex(VSC_EDITOR_BACKGROUND_VAR),
   },
-};
+});
 
 const Container = styled.div<{ showBorder: 0 | 1 }>`
   border-radius: ${defaultBorderRadius};
@@ -145,7 +141,7 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
     monacoRef.current = monaco;
     editorRef.current = editor;
 
-    monacoRef.current.editor.defineTheme("custom-theme", theme.theme);
+    monacoRef.current.editor.defineTheme("custom-theme", getThemeFromWindow());
     liftOff(monacoRef.current).then(() => {
       monacoRef.current.editor.setTheme("custom-theme");
     });
@@ -157,6 +153,23 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
       editorRef.current.layout({ height: contentHeight, width });
     });
   };
+
+  useEffect(() => {
+    const listener = (e) => {
+      if (e.data.type === "setTheme") {
+        (window as any).fullColorTheme = e.data.theme;
+        monacoRef.current.editor.defineTheme(
+          "custom-theme",
+          getThemeFromWindow()
+        );
+        monacoRef.current.editor.setTheme("custom-theme");
+      }
+    };
+    window.addEventListener("message", listener);
+    return () => {
+      window.removeEventListener("message", listener);
+    };
+  }, [monacoRef.current]);
 
   const prevFullTextRef = useRef("");
 
