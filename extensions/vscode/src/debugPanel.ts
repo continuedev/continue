@@ -1,3 +1,7 @@
+/**
+ * 2024-02 Modified by Lukas Prediger, Copyright (c) 2023 CSC - IT Center for Science Ltd.
+ */
+
 import { ContextItemId, DiffLine, FileEdit, ModelDescription } from "core";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
@@ -448,6 +452,10 @@ export function getSidebarContent(
           ideProtocolClient.logDevData(data.tableName, data.data);
           break;
         }
+        case "onLoad":
+          const config = await configHandler.loadConfig(ide);
+          ideProtocolClient.configUpdate(config);
+          break;
         case "addModel": {
           const model = data.model;
           const config = readFileSync(getConfigJsonPath(), "utf8");
@@ -461,7 +469,8 @@ export function getSidebarContent(
             2
           );
           writeFileSync(getConfigJsonPath(), newConfigString);
-          ideProtocolClient.configUpdate(configJson);
+          // ideProtocolClient.configUpdate(configJson);
+          await configHandler.reloadConfig(ide);
 
           ideProtocolClient.openFile(getConfigJsonPath());
 
@@ -502,13 +511,17 @@ export function getSidebarContent(
           break;
         }
         case "deleteModel": {
-          const configJson = editConfigJson((config) => {
-            config.models = config.models.filter(
-              (m: any) => m.title !== data.title
-            );
-            return config;
-          });
-          ideProtocolClient.configUpdate(configJson);
+          // if the model is an extension model, we let configHandler handle the removal
+          if (!configHandler.removeExtensionModel(data.title)) {
+            // otherwise, we need to remove it from the config JSON and reload the config manually
+            const configJson = editConfigJson((config) => {
+              config.models = config.models.filter(
+                (m: any) => m.title !== data.title
+              );
+              return config;
+            });
+            await configHandler.reloadConfig(ide);
+          }
           break;
         }
         case "addOpenAIKey": {
@@ -522,7 +535,7 @@ export function getSidebarContent(
             });
             return config;
           });
-          ideProtocolClient.configUpdate(configJson);
+          await configHandler.reloadConfig(ide);
           break;
         }
         case "llmStreamComplete": {
