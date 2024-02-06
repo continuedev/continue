@@ -1,5 +1,7 @@
 import React, { memo, useEffect } from "react";
 import { useRemark } from "react-remark";
+// import rehypeKatex from "rehype-katex";
+// import remarkMath from "remark-math";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -110,6 +112,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps
 ) {
   const [reactContent, setMarkdownSource] = useRemark({
+    // remarkPlugins: [remarkMath],
+    // rehypePlugins: [rehypeKatex as any, {}],
     rehypeReactOptions: {
       components: {
         a: ({ node, ...props }) => {
