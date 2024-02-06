@@ -196,6 +196,22 @@ if (args[2] === "--target") {
     }
   );
 
+  // textmate-syntaxes
+  await new Promise((resolve, reject) => {
+    ncp(
+      path.join(__dirname, "../textmate-syntaxes"),
+      path.join(__dirname, "../gui/textmate-syntaxes"),
+      (error) => {
+        if (error) {
+          console.warn("[error] Error copying textmate-syntaxes", error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      }
+    );
+  });
+
   function ghAction() {
     return target !== undefined;
   }

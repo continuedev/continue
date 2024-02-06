@@ -111,8 +111,6 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     ORDER BY rank
     LIMIT ?`;
 
-    console.log(query);
-
     const results = await db.all(query, [
       ...tagStrings,
       ...(filterPaths || []),
