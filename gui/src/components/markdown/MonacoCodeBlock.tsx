@@ -207,6 +207,8 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
   };
 
   useEffect(() => {
+    if (props.codeString === prevFullTextRef.current) return;
+
     let newText = props.codeString.slice(prevFullTextRef.current.length);
     if (newText === "") return;
 
@@ -217,7 +219,7 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
 
     appendText(newText);
     prevFullTextRef.current = props.codeString;
-  }, [props.codeString]);
+  }, [props.codeString, prevFullTextRef.current]);
 
   useEffect(() => {
     appendText(props.codeString);

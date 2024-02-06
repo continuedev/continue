@@ -34,7 +34,10 @@ function useHistory(dispatch: Dispatch) {
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     let title = truncateText(
-      stripImages(stateCopy.history[0].message.content),
+      stripImages(stateCopy.history[0].message.content)
+        .split("\n")
+        .filter((l) => l.trim() !== "")
+        .slice(-1)[0] || "",
       50
     );
 

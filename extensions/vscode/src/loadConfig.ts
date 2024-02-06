@@ -13,7 +13,6 @@ import * as fs from "fs";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import fetch from "node-fetch";
-import * as path from "path";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 import { debugPanelWebview, webviewRequest } from "./debugPanel";
@@ -32,16 +31,15 @@ class VsCodeConfigHandler {
   }
 
   private async _getWorkspaceConfigs() {
-    const workspaceDirs = await ideProtocolClient.getWorkspaceDirectories();
+    const workspaceDirs =
+      vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [];
     const configs: Partial<SerializedContinueConfig>[] = [];
     for (const workspaceDir of workspaceDirs) {
-      const files = await vscode.workspace.fs.readDirectory(
-        vscode.Uri.file(workspaceDir)
-      );
+      const files = await vscode.workspace.fs.readDirectory(workspaceDir);
       for (const [filename, type] of files) {
         if (type === vscode.FileType.File && filename === ".continuerc.json") {
           const contents = await ideProtocolClient.readFile(
-            path.join(workspaceDir, filename)
+            vscode.Uri.joinPath(workspaceDir, filename).fsPath
           );
           configs.push(JSON.parse(contents));
         }

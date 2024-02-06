@@ -270,7 +270,7 @@ async function getTabCompletion(
     ).text;
     const clipboardText = await vscode.env.clipboard.readText();
     const { prefix, suffix } = await constructAutocompletePrompt(
-      document.fileName,
+      document.uri.toString(),
       fullPrefix,
       fullSuffix,
       clipboardText,
