@@ -136,7 +136,6 @@ function ModelConfig() {
           <StyledMarkdownPreview
             className="mt-2"
             source={modelInfo?.longDescription || modelInfo?.description}
-            maxHeight={200}
           />
           <br />
 
