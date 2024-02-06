@@ -72,8 +72,8 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
 
   useEffect(() => {
     const listener = (e) => {
-      dispatch(newSession());
       if (e.data.type === "newSessionWithPrompt") {
+        dispatch(newSession());
         setEditorState(e.data.prompt);
       }
     };

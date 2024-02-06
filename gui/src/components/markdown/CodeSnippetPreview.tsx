@@ -32,7 +32,7 @@ const PreviewMarkdownHeader = styled.div`
   padding: 2px 6px;
   border-bottom: 0.5px solid ${lightGray};
   word-break: break-all;
-  font-size: ${getFontSize()}px;
+  font-size: ${getFontSize() - 2}px;
   display: flex;
   align-items: center;
 `;
@@ -114,7 +114,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               }}
               {...(props.editing && { color: "#f0f4" })}
             >
-              <PaintBrushIcon width="1.2em" height="1.2em" />
+              <PaintBrushIcon width="1.1em" height="1.1em" />
             </StyledHeaderButtonWithText>
           )}
           <HeaderButtonWithText
@@ -124,7 +124,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               props.onDelete();
             }}
           >
-            <XMarkIcon width="1.2em" height="1.2em" />
+            <XMarkIcon width="1.1em" height="1.1em" />
           </HeaderButtonWithText>
         </div>
       </PreviewMarkdownHeader>
