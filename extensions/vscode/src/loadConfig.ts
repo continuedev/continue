@@ -55,9 +55,15 @@ class VsCodeConfigHandler {
       if (this.savedConfig) {
         return this.savedConfig;
       }
+      let workspaceConfigs: any[] = [];
+      try {
+        workspaceConfigs = await this._getWorkspaceConfigs();
+      } catch (e) {
+        console.warn("Failed to load workspace configs");
+      }
       this.savedConfig = await loadFullConfigNode(
         ideProtocolClient.readFile,
-        await this._getWorkspaceConfigs()
+        workspaceConfigs
       );
       this.savedConfig.allowAnonymousTelemetry =
         this.savedConfig.allowAnonymousTelemetry &&
