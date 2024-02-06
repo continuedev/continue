@@ -1465,6 +1465,11 @@ command-line-usage@^7.0.0, command-line-usage@7.0.1:
     table-layout "^3.0.0"
     typical "^7.1.1"
 
+commander@^12.0.0:
+  version "12.0.0"
+  resolved "https://registry.npmjs.org/commander/-/commander-12.0.0.tgz"
+  integrity sha512-MwVNWlYjDTtOjX5PiD7o5pK0UrFU/OYgcJfjjK4RaHZETNtjJqrZa9Y9ds88+A+f+d5lv+561eZ+yCKoS3gbAA==
+
 concat-map@0.0.1:
   version "0.0.1"
   resolved "https://registry.npmjs.org/concat-map/-/concat-map-0.0.1.tgz"
@@ -2695,10 +2700,10 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.npmjs.org/lines-and-columns/-/lines-and-columns-1.2.4.tgz"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-llm-code-highlighter@^0.0.1:
-  version "0.0.1"
-  resolved "https://registry.npmjs.org/llm-code-highlighter/-/llm-code-highlighter-0.0.1.tgz"
-  integrity sha512-26PExkQxeh5EiBNroldpV82pZDrjC6C5v4PLcm5ZpGIKExrHs9Hqw36B+1Fg+dxXGZMnwlCZ+6EbC2FEVocmcw==
+llm-code-highlighter@^0.0.3:
+  version "0.0.3"
+  resolved "https://registry.npmjs.org/llm-code-highlighter/-/llm-code-highlighter-0.0.3.tgz"
+  integrity sha512-l/R+m6ngXRTYxzoCzqpBk5TiSVpS4Ek9fKx/PIy25HV6XDbCC6iOfVITPPSTGkh7NlI+tN5vWjdqUfN3YW+HwQ==
   dependencies:
     graphology "^0.25.4"
     graphology-metrics "^2.2.0"
