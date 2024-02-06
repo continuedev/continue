@@ -1,6 +1,17 @@
 import { distance } from "fastest-levenshtein";
 import { LineStream } from "../diff/util";
 
+export async function* streamWithNewLines(stream: LineStream): LineStream {
+  let firstLine = true;
+  for await (const nextLine of stream) {
+    if (!firstLine) {
+      yield "\n";
+    }
+    firstLine = false;
+    yield nextLine;
+  }
+}
+
 export async function* stopAtSimilarLine(
   stream: LineStream,
   line: string

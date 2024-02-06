@@ -1,12 +1,16 @@
 import { TabAutocompleteOptions } from "core";
 import { AutocompleteLruCache } from "core/autocomplete/cache";
+import { onlyWhitespaceAfterEndOfLine } from "core/autocomplete/charStream";
 import {
   AutocompleteSnippet,
   constructAutocompletePrompt,
   languageForFilepath,
 } from "core/autocomplete/constructPrompt";
+import {
+  stopAtSimilarLine,
+  streamWithNewLines,
+} from "core/autocomplete/lineStream";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
-import { stopAtSimilarLine } from "core/autocomplete/streaming";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import { streamLines } from "core/diff/util";
 import Handlebars from "handlebars";
@@ -320,7 +324,11 @@ async function getTabCompletion(
           yield update;
         }
       };
-      const lineGenerator = streamLines(generatorWithCancellation());
+      const gen2 = onlyWhitespaceAfterEndOfLine(
+        generatorWithCancellation(),
+        lang.endOfLine
+      );
+      const lineGenerator = streamWithNewLines(streamLines(gen2));
       const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
       for await (const update of finalGenerator) {
         completion += update;

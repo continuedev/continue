@@ -7,12 +7,12 @@ import {
 } from "../llm/countTokens";
 import { getBasename } from "../util";
 import { getParserForFile } from "../util/treeSitter";
-import { AutocompleteLanguageInfo, Typescript } from "./languages";
+import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
 
 export function languageForFilepath(
   filepath: string
 ): AutocompleteLanguageInfo {
-  return Typescript;
+  return LANGUAGES[filepath.split(".").slice(-1)[0]] || Typescript;
 }
 
 function formatExternalSnippet(
