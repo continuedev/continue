@@ -70,19 +70,19 @@ export function setupStatusBar(
 }
 
 async function getDefinition(
-  filepath: string,
+  uri: string,
   line: number,
   character: number
 ): Promise<AutocompleteSnippet | undefined> {
   const definitions = (await vscode.commands.executeCommand(
     "vscode.executeDefinitionProvider",
-    vscode.Uri.file(filepath),
+    vscode.Uri.parse(uri),
     new vscode.Position(line, character)
   )) as any;
 
   if (definitions[0]?.targetRange) {
     return {
-      filepath,
+      filepath: uri,
       content: await ideProtocolClient.readRangeInFile(
         definitions[0].targetUri.fsPath,
         definitions[0].targetRange
