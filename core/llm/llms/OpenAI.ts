@@ -74,9 +74,12 @@ class OpenAI extends BaseLLM {
 
     return completion;
   }
-  private _getCompletionUrl() {
+
+  private _getEndpoint(
+    endpoint: "/chat/completions" | "/completions" | "/models"
+  ) {
     if (this.apiType === "azure") {
-      return `${this.apiBase}/openai/deployments/${this.engine}/completions?api-version=${this.apiVersion}`;
+      return `${this.apiBase}/openai/deployments/${this.engine}${endpoint}?api-version=${this.apiVersion}`;
     } else {
       let url = this.apiBase;
       if (!url) {
@@ -88,7 +91,7 @@ class OpenAI extends BaseLLM {
         url = url.slice(0, -1);
       }
 
-      return url + "/completions";
+      return url + endpoint;
     }
   }
 
@@ -112,7 +115,7 @@ class OpenAI extends BaseLLM {
     args.prompt = prompt;
     delete args.messages;
 
-    const response = await this.fetch(this._getCompletionUrl(), {
+    const response = await this.fetch(this._getEndpoint("/completions"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -129,24 +132,6 @@ class OpenAI extends BaseLLM {
       if (value.choices?.[0]?.text) {
         yield value.choices[0].text;
       }
-    }
-  }
-
-  private _getChatUrl() {
-    if (this.apiType === "azure") {
-      return `${this.apiBase}/openai/deployments/${this.engine}/chat/completions?api-version=${this.apiVersion}`;
-    } else {
-      let url = this.apiBase;
-      if (!url) {
-        throw new Error(
-          "No API base URL provided. Please set the 'apiBase' option in config.json"
-        );
-      }
-      if (url.endsWith("/")) {
-        url = url.slice(0, -1);
-      }
-
-      return url + "/chat/completions";
     }
   }
 
@@ -176,7 +161,7 @@ class OpenAI extends BaseLLM {
       ...m,
       content: m.content === "" ? " " : m.content,
     })) as any;
-    const response = await this.fetch(this._getChatUrl(), {
+    const response = await this.fetch(this._getEndpoint("/chat/completions"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -191,6 +176,19 @@ class OpenAI extends BaseLLM {
         yield value.choices[0].delta;
       }
     }
+  }
+
+  async listModels(): Promise<string[]> {
+    const response = await this.fetch(this._getEndpoint("/models"), {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "api-key": this.apiKey || "", // For Azure
+      },
+    });
+
+    const data = await response.json();
+    return data.data.map((m: any) => m.id);
   }
 }
 

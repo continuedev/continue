@@ -335,7 +335,8 @@
                   "gpt-4",
                   "gpt-3.5-turbo-0613",
                   "gpt-4-32k",
-                  "gpt-4-0125-preview"
+                  "gpt-4-0125-preview",
+                  "AUTODETECT"
                 ]
               }
             }
@@ -388,7 +389,8 @@
                   "phind-codellama-34b",
                   "gemini-pro",
                   "gpt-4-vision-preview",
-                  "codellama-70b"
+                  "codellama-70b",
+                  "AUTODETECT"
                 ]
               }
             }
@@ -441,7 +443,8 @@
                       "deepseek-1b",
                       "stable-code-3b",
                       "starcoder-1b",
-                      "starcoder-3b"
+                      "starcoder-3b",
+                      "AUTODETECT"
                     ]
                   },
                   { "type": "string" }
@@ -622,7 +625,8 @@
                       "deepseek-1b",
                       "stable-code-3b",
                       "starcoder-1b",
-                      "starcoder-3b"
+                      "starcoder-3b",
+                      "AUTODETECT"
                     ]
                   },
                   { "type": "string" }
