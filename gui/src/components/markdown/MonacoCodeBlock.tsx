@@ -8,6 +8,7 @@ import {
   defaultBorderRadius,
   parseColorForHex,
 } from "..";
+import { useAppendedString } from "../../hooks/useAppendedString";
 import "./monaco.css";
 
 const fetchTextMateGrammar = async (lang: string): Promise<string> => {
@@ -129,6 +130,8 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
   const monacoRef = useRef(null);
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
 
+  /* THEMING */
+
   const liftOff = async (monaco) => {
     try {
       const grammars = new Map();
@@ -183,14 +186,13 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
     };
   }, [monacoRef.current]);
 
-  const prevFullTextRef = useRef("");
+  /* STREAMING UPDATES */
 
-  const appendText = (text: string) => {
+  const appendText = (text: string, lineCount: number) => {
     const editor = editorRef.current;
     const model = editor.getModel();
     if (!model) return;
 
-    let lineCount = prevFullTextRef.current.split("\n").length;
     const modelLineCount = model.getLineCount();
     lineCount = lineCount === 0 ? 1 : lineCount;
     lineCount = Math.min(lineCount, modelLineCount);
@@ -212,24 +214,22 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
     editor.getModel().applyEdits([op]);
   };
 
-  useEffect(() => {
-    if (props.codeString === prevFullTextRef.current) return;
+  // useEffect(() => {
+  //   if (props.codeString === prevFullTextRef.current) return;
 
-    let newText = props.codeString.slice(prevFullTextRef.current.length);
-    if (newText === "") return;
+  //   let newText = props.codeString.slice(prevFullTextRef.current.length);
+  //   if (newText === "") return;
 
-    // To avoid the optimistic code block fences. Because the unwanted ones are always at the end of the block, this solves the problem
-    if (newText.endsWith("`") || newText.endsWith("`\n")) {
-      newText = newText.slice(0, newText.indexOf("`"));
-    }
+  //   // To avoid the optimistic code block fences. Because the unwanted ones are always at the end of the block, this solves the problem
+  //   if (newText.endsWith("`") || newText.endsWith("`\n")) {
+  //     newText = newText.slice(0, newText.indexOf("`"));
+  //   }
 
-    appendText(newText);
-    prevFullTextRef.current = props.codeString;
-  }, [props.codeString, prevFullTextRef.current]);
+  //   appendText(newText);
+  //   prevFullTextRef.current = props.codeString;
+  // }, [props.codeString, prevFullTextRef.current]);
 
-  useEffect(() => {
-    appendText(props.codeString);
-  }, []);
+  useAppendedString(props.codeString, appendText);
 
   const memoizedEditor = useMemo(() => {
     const rootStyle = getComputedStyle(document.documentElement);
