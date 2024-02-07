@@ -96,16 +96,19 @@ const registry = new Registry({
   },
 });
 
-const getThemeFromWindow = () => ({
-  ...(window as any).fullColorTheme,
-  base: "vs-dark",
-  inherit: true,
-  encodedTokensColors: undefined,
-  // rules: [],
-  colors: {
-    "editor.background": parseColorForHex(VSC_EDITOR_BACKGROUND_VAR),
-  },
-});
+const getThemeFromWindow = () => {
+  const colorTheme = (window as any).fullColorTheme;
+  return {
+    ...colorTheme,
+    base: colorTheme.base || "vs-dark",
+    inherit: true,
+    encodedTokensColors: undefined,
+    // rules: [],
+    colors: {
+      "editor.background": parseColorForHex(VSC_EDITOR_BACKGROUND_VAR),
+    },
+  };
+};
 
 const Container = styled.div<{ showBorder: 0 | 1 }>`
   border-radius: ${defaultBorderRadius};
@@ -141,7 +144,10 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
     }
   };
 
-  const onEditorDidMount = (editor, monaco) => {
+  const onEditorDidMount = (
+    editor: monaco.editor.IStandaloneCodeEditor,
+    monaco: any
+  ) => {
     monacoRef.current = monaco;
     editorRef.current = editor;
 
