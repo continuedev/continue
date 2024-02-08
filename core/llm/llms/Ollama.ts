@@ -183,12 +183,16 @@ class Ollama extends BaseLLM {
       stream: true,
     });
 
-    for await (const chunk of response) {
-      if (!chunk?.message?.content) continue;
-      yield {
-        role: "assistant",
-        content: chunk.message.content,
-      };
+    try {
+      for await (const chunk of response) {
+        if (!chunk?.message?.content) continue;
+        yield {
+          role: "assistant",
+          content: chunk.message.content,
+        };
+      }
+    } finally {
+      client.abort();
     }
   }
 
