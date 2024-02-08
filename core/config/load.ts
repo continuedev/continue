@@ -164,19 +164,56 @@ async function intermediateToFinalConfig(
 ): Promise<ContinueConfig> {
   const models: BaseLLM[] = [];
   for (const desc of config.models) {
-    let llm: BaseLLM | undefined;
     if (isModelDescription(desc)) {
-      llm = await llmFromDescription(
+      const llm = await llmFromDescription(
         desc,
         readFile,
         config.completionOptions,
         config.systemMessage
       );
+      if (!llm) continue;
+
+      if (llm.model === "AUTODETECT") {
+        const modelNames = await llm.listModels();
+        const detectedModels = await Promise.all(
+          modelNames.map(async (modelName) => {
+            return await llmFromDescription(
+              {
+                ...desc,
+                model: modelName,
+                title: llm.title + " - " + modelName,
+              },
+              readFile,
+              config.completionOptions,
+              config.systemMessage
+            );
+          })
+        );
+        models.push(
+          ...(detectedModels.filter(
+            (x) => typeof x !== "undefined"
+          ) as BaseLLM[])
+        );
+      } else {
+        models.push(llm);
+      }
     } else {
-      llm = new CustomLLMClass(desc);
+      const llm = new CustomLLMClass(desc);
+      if (llm.model === "AUTODETECT") {
+        const modelNames = await llm.listModels();
+        const models = modelNames.map(
+          (modelName) =>
+            new CustomLLMClass({
+              ...desc,
+              options: { ...desc.options, model: modelName },
+            })
+        );
+
+        models.push(...models);
+      } else {
+        models.push(llm);
+      }
     }
-    if (!llm) continue;
-    models.push(llm);
   }
 
   let autocompleteLlm: BaseLLM | undefined = undefined;

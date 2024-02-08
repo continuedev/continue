@@ -18,6 +18,9 @@ class Ollama extends BaseLLM {
   constructor(options: LLMOptions) {
     super(options);
 
+    if (options.model === "AUTODETECT") {
+      return;
+    }
     this.fetch(`${this.apiBase}/api/show`, {
       method: "POST",
       body: JSON.stringify({ name: this._getModel() }),

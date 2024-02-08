@@ -121,9 +121,10 @@ const StyledListboxOptions = styled(Listbox.Options)`
   position: absolute;
   bottom: calc(100% - 16px);
   max-width: 100%;
+  max-height: 80vh;
 
   border-radius: ${defaultBorderRadius};
-  overflow: hidden;
+  overflow: scroll;
 `;
 
 const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`

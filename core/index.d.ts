@@ -68,6 +68,8 @@ export interface ILLM extends LLMOptions {
   countTokens(text: string): number;
 
   supportsImages(): boolean;
+
+  listModels(): Promise<string[]>;
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -264,6 +266,9 @@ export interface CustomLLMWithOptionals {
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
   ) => AsyncGenerator<string>;
+  listModels?: (
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+  ) => Promise<string[]>;
 }
 
 /**
@@ -429,6 +434,7 @@ type ModelProvider =
   | "flowise";
 
 export type ModelName =
+  | "AUTODETECT"
   // OpenAI
   | "gpt-3.5-turbo"
   | "gpt-3.5-turbo-16k"
