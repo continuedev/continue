@@ -589,7 +589,19 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
     icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
-    packages: [gpt4, gpt35turbo, gpt4turbo, gpt4vision, AUTODETECT],
+    packages: [
+      gpt4,
+      gpt35turbo,
+      gpt4turbo,
+      gpt4vision,
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "OpenAI",
+        },
+      },
+    ],
     collectInputFor: [
       {
         inputType: CollectInputType.text,
@@ -646,7 +658,16 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama pull <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
     icon: "ollama.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
-    packages: [AUTODETECT, ...osModels],
+    packages: [
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "Ollama",
+        },
+      },
+      ...osModels,
+    ],
     collectInputFor: [
       ...completionParamsInputs,
       { ...apiBaseInput, defaultValue: "http://localhost:11434" },
@@ -734,7 +755,16 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     params: {
       apiBase: "http://localhost:1234/v1",
     },
-    packages: [AUTODETECT, ...osModels],
+    packages: [
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "LM Studio",
+        },
+      },
+      ...osModels,
+    ],
     collectInputFor: [...completionParamsInputs],
   },
   replicate: {
@@ -840,7 +870,16 @@ After it's up and running, you can start using Continue.`,
     ],
     icon: "openai.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: [AUTODETECT, ...osModels],
+    packages: [
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "OpenAI",
+        },
+      },
+      ...osModels,
+    ],
   },
   freetrial: {
     title: "Continue limited free trial",
@@ -859,7 +898,13 @@ After it's up and running, you can start using Continue.`,
       { ...gpt4vision, title: "GPT-4 Vision (trial)" },
       { ...phindCodeLlama, title: "Phind CodeLlama (trial)" },
       { ...gemini, title: "Gemini Pro (trial)" },
-      AUTODETECT,
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "Free Trial",
+        },
+      },
     ],
     collectInputFor: [...completionParamsInputs],
   },
