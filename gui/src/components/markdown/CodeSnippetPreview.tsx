@@ -14,7 +14,7 @@ import { getFontSize } from "../../util";
 import { postToIde } from "../../util/ide";
 import FileIcon from "../FileIcon";
 import HeaderButtonWithText from "../HeaderButtonWithText";
-import { MonacoCodeBlock } from "./MonacoCodeBlock";
+import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
 const PreviewMarkdownDiv = styled.div<{
   borderColor?: string;
@@ -58,9 +58,17 @@ const StyledHeaderButtonWithText = styled(HeaderButtonWithText)<{
 
 const MAX_PREVIEW_HEIGHT = 300;
 
+// Pre-compile the regular expression outside of the function
+const backticksRegex = /`{3,}/gm;
+
 function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const [collapsed, setCollapsed] = React.useState(true);
   const [hovered, setHovered] = React.useState(false);
+
+  const fence = React.useMemo(() => {
+    const backticks = props.item.content.match(backticksRegex);
+    return backticks ? backticks.sort().at(-1) + "`" : "```";
+  }, [props.item.content]);
 
   const codeBlockRef = React.useRef<HTMLDivElement>(null);
 
@@ -141,12 +149,12 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           overflow: collapsed ? "hidden" : "auto",
         }}
       >
-        <MonacoCodeBlock
-          codeString={props.item.content}
-          preProps={{}}
-          showBorder={false}
-          language={getMarkdownLanguageTagForFile(props.item.description)}
-        ></MonacoCodeBlock>
+        <StyledMarkdownPreview
+          source={`${fence}${getMarkdownLanguageTagForFile(
+            props.item.description
+          )}\n${props.item.content}\n${fence}`}
+          showCodeBorder={false}
+        />
       </div>
 
       {codeBlockRef.current?.scrollHeight > MAX_PREVIEW_HEIGHT && (
