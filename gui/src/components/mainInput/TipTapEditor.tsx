@@ -5,7 +5,11 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
-import { ContextItemWithId, IContextProvider, RangeInFile } from "core";
+import {
+  ContextItemWithId,
+  ContextProviderDescription,
+  RangeInFile,
+} from "core";
 import { getBasename } from "core/util";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -112,7 +116,7 @@ function getDataUrlForFile(file: File, img): string {
 }
 
 interface TipTapEditorProps {
-  availableContextProviders: IContextProvider[];
+  availableContextProviders: ContextProviderDescription[];
   availableSlashCommands: ComboBoxItem[];
   isMainInput: boolean;
   onEnter: (editorState: JSONContent) => void;

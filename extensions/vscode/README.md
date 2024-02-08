@@ -1,4 +1,4 @@
-> 🎁 **New! [Try out the new JetBrains extension (Alpha)](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
+> 🎉 **Tab autocomplete now available in pre-release (experimental)**
 
 ![Continue logo](media/c_d.png)
 
@@ -6,31 +6,31 @@
 
 <div align="center">
 
-**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—an IDE extension that brings the power of ChatGPT to [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
+**[Continue](https://continue.dev/docs) is an open-source autopilot for VS Code and JetBrains—the easiest way to code with any LLM**
 
 </div>
 
 <div align="center">
 
 <a target="_blank" href="https://opensource.org/licenses/Apache-2.0" style="background:none">
-    <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" style="height: 36px;" />
+    <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" style="height: 20px;" />
 </a>
 <a target="_blank" href="https://continue.dev/docs" style="background:none">
-    <img src="https://img.shields.io/badge/continue_docs-%23BE1B55" style="height: 36px;" />
+    <img src="https://img.shields.io/badge/continue_docs-%23BE1B55" style="height: 20px;" />
 </a>
 <a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
-    <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" style="height: 36px;" />
+    <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" style="height: 20px;" />
 </a>
 
 <p></p>
 
-![Editing With Continue](media/readme.gif)
-
 </div>
 
-## Task, not tab, auto-complete
+# ⏩ Features
 
-### Get possible explanations
+# 🔎 Ask about highlighted code
+
+![Editing With Continue](media/readme.gif)
 
 Highlight + select code sections and ask a question to get another perspective
 
@@ -38,7 +38,19 @@ Highlight + select code sections and ask a question to get another perspective
 - “where in the page should I be making this request to the backend?”
 - “how can I communicate between these iframes?”
 
-### Edit in natural language
+# 🪄 Reference context inline
+
+![Reference context inline](media/image.gif)
+
+- "@diff check my commit for mistakes"
+- "how does @server.py stream responses?"
+- "how do i fix this error in the @terminal?"
+
+# ⚡️ Get completions directly in your editor
+
+![Continue autocomplete](media/autocomplete.gif)
+
+# ✏️ Edit in natural language
 
 Highlight + select a section of code and instruct Continue to refactor it
 
@@ -46,15 +58,19 @@ Highlight + select a section of code and instruct Continue to refactor it
 - “/edit change this plot into a bar chart in this dashboard component”
 - “/edit rewrite this function to be async”
 
-### Generate files from scratch
+![Above line edit](media/above-line-edit.gif)
 
-Open a blank file and let Continue start new Python scripts, React components, etc.
+# 🚀 Generate files from scratch
 
-- “/edit here is a connector for postgres, now write one for kafka”
-- “/edit make an IAM policy that creates a user with read-only access to S3”
-- “/edit use this schema to write me a SQL query that gets recently churned users”
+![Generate files from scratch](media/scratch.gif)
 
-## Getting Started
+Open a blank file, <kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd>, and let Continue start new Python scripts, React components, etc.
+
+- “here is a connector for postgres, now write one for kafka”
+- “make an IAM policy that creates a user with read-only access to S3”
+- “use this schema to write me a SQL query that gets recently churned users”
+
+# Getting Started
 
 You can try out Continue for free using a proxy server that securely makes calls with our API key to models like GPT-4, Gemini Pro, and Phind CodeLlama via OpenAI, Google, and Together respectively.
 

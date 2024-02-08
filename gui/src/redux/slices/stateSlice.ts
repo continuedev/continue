@@ -5,15 +5,9 @@ import {
   ChatMessage,
   ContextItemId,
   ContextItemWithId,
-  ContinueConfig,
   PersistedSessionInfo,
 } from "core";
-import GenerateTerminalCommand from "core/commands/slash/cmd";
-import CommentSlashCommand from "core/commands/slash/comment";
-import EditSlashCommand from "core/commands/slash/edit";
-import ShareSlashCommand from "core/commands/slash/share";
-import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
-import FreeTrial from "core/llm/llms/FreeTrial";
+import { BrowserSerializedContinueConfig } from "core/config/load";
 import { v4 } from "uuid";
 import { RootStore } from "../store";
 
@@ -93,20 +87,36 @@ const initialState: RootStore["state"] = {
   active: false,
   config: {
     models: [
-      new FreeTrial({ model: "gpt-4", title: "GPT-4 (Free Trial)" }),
-      new FreeTrial({
-        model: "gpt-3.5-turbo",
+      {
+        title: "GPT-4 (Free Trial)",
+        model: "gpt-4",
+        provider: "free-trial",
+      },
+      {
         title: "GPT-3.5-Turbo (Free Trial)",
-      }),
+        model: "gpt-3.5-turbo",
+        provider: "free-trial",
+      },
     ],
     slashCommands: [
-      EditSlashCommand,
-      CommentSlashCommand,
-      ShareSlashCommand,
-      GenerateTerminalCommand,
+      {
+        name: "edit",
+        description: "Edit selected code",
+      },
+      {
+        name: "comment",
+        description: "Write comments for the selected code",
+      },
+      {
+        name: "share",
+        description: "Download and share this session",
+      },
+      {
+        name: "cmd",
+        description: "Generate a shell command",
+      },
     ],
     contextProviders: [],
-    embeddingsProvider: new TransformersJsEmbeddingsProvider(),
   },
   title: "New Session",
   sessionId: v4(),
@@ -117,7 +127,10 @@ export const stateSlice = createSlice({
   name: "state",
   initialState,
   reducers: {
-    setConfig: (state, { payload }: { payload: ContinueConfig }) => {
+    setConfig: (
+      state,
+      { payload }: { payload: BrowserSerializedContinueConfig }
+    ) => {
       const config = payload;
       const defaultModelTitle = config.models.find(
         (model) => model.title === state.defaultModelTitle

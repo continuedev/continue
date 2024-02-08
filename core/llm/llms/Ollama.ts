@@ -79,6 +79,9 @@ class Ollama extends BaseLLM {
         "deepseek-7b": "deepseek-coder:6.7b",
         "deepseek-33b": "deepseek-coder:33b",
         "neural-chat-7b": "neural-chat:7b-v3.3",
+        "starcoder-1b": "starcoder:1b",
+        "starcoder-3b": "starcoder:3b",
+        "stable-code-3b": "stable-code:3b",
       }[this.model] || this.model
     );
   }
@@ -203,6 +206,14 @@ class Ollama extends BaseLLM {
         }
       }
     }
+  }
+
+  async listModels(): Promise<string[]> {
+    const response = await this.fetch(`${this.apiBase}/api/tags`, {
+      method: "GET",
+    });
+    const data = await response.json();
+    return data.models.map((model: any) => model.name);
   }
 }
 

@@ -96,7 +96,7 @@ export async function* traverseDirectory(
   directory: string,
   gitIgnorePatterns: string[],
   returnFiles: boolean = true,
-  onlyThisDirectory?: string[]
+  onlyThisDirectory: string[] | undefined
 ): AsyncGenerator<string> {
   const nodes = await vscode.workspace.fs.readDirectory(
     uriFromFilePath(directory)

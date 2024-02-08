@@ -59,7 +59,7 @@
         "timeout": {
           "title": "Timeout",
           "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
-          "default": 300,
+          "default": 7200,
           "type": "integer"
         },
         "verifySsl": {
@@ -212,7 +212,7 @@
           "title": "Request Options",
           "description": "Options for the HTTP request to the LLM.",
           "default": {
-            "timeout": 300,
+            "timeout": 7200,
             "verifySsl": null,
             "caBundlePath": null,
             "proxy": null,
@@ -435,10 +435,13 @@
                       "wizardcoder-34b",
                       "zephyr-7b",
                       "codeup-13b",
-                      "deepseek-1b",
                       "deepseek-7b",
                       "deepseek-33b",
-                      "neural-chat-7b"
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b"
                     ]
                   },
                   { "type": "string" }
@@ -569,10 +572,13 @@
                       "wizardcoder-34b",
                       "zephyr-7b",
                       "codeup-13b",
-                      "deepseek-1b",
                       "deepseek-7b",
                       "deepseek-33b",
-                      "neural-chat-7b"
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b"
                     ]
                   },
                   { "type": "string" }
@@ -610,10 +616,13 @@
                       "wizardcoder-34b",
                       "zephyr-7b",
                       "codeup-13b",
-                      "deepseek-1b",
                       "deepseek-7b",
                       "deepseek-33b",
-                      "neural-chat-7b"
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b"
                     ]
                   },
                   { "type": "string" }
@@ -785,7 +794,6 @@
                       "wizardcoder-34b",
                       "zephyr-7b",
                       "codeup-13b",
-                      "deepseek-1b",
                       "deepseek-7b",
                       "deepseek-33b",
                       "claude-2",
@@ -793,7 +801,11 @@
                       "gemini-pro",
                       "mistral-tiny",
                       "mistral-small",
-                      "mistral-medium"
+                      "mistral-medium",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b"
                     ]
                   },
                   { "type": "string" }
@@ -985,7 +997,8 @@
                 "Reference GitHub issues from a repository",
                 "Retrieve important pages from a documentation website, as determined by similarity search",
                 "Index and retrieve the contents of any documentation site, using embeddings to find important snippets",
-                "Display a file tree of the current workspace"
+                "Display a file tree of the current workspace",
+                "Include a repo map showing important code objects"
               ],
               "type": "string"
             },
@@ -1295,6 +1308,51 @@
               }
             }
           ]
+        },
+        "tabAutocompleteModel": {
+          "title": "Tab Autocomplete Model",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using deepseek-coder:1.3b-base on a local Ollama instance.",
+          "default": {
+            "title": "Tab Autocomplete Model",
+            "provider": "ollama",
+            "model": "deepseek-coder:1.3b-base"
+          },
+          "$ref": "#/definitions/ModelDescription"
+        },
+        "tabAutocompleteOptions": {
+          "title": "TabAutocompleteOptions",
+          "type": "object",
+          "properties": {
+            "useCopyBuffer": {
+              "type": "boolean",
+              "description": "Determines whether the copy buffer will be considered when contructing the prompt."
+            },
+            "useSuffix": {
+              "type": "boolean",
+              "description": "Determines whether to use the file suffix in the prompt."
+            },
+            "maxPromptTokens": {
+              "type": "number",
+              "description": "The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context."
+            },
+            "debounceDelay": {
+              "type": "number",
+              "description": "The delay in milliseconds before triggering autocomplete after a keystroke."
+            },
+            "maxSuffixPercentage": {
+              "type": "number",
+              "description": "The maximum percentage of the prompt that can be dedicated to the suffix."
+            },
+            "prefixPercentage": {
+              "type": "number",
+              "description": "The percentage of the input that should be dedicated to the prefix."
+            },
+            "template": {
+              "type": "string",
+              "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
+            }
+          },
+          "required": []
         }
       }
     }

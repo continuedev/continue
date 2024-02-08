@@ -5,7 +5,7 @@ import { getBasename, getLastNPathParts } from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
+import { selectContextProviderDescriptions } from "../redux/selectors";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -23,10 +23,7 @@ function useSubmenuContextProviders() {
   }>({});
 
   const contextProviderDescriptions = useSelector(
-    (state: RootStore) =>
-      state.state.config.contextProviders
-        ?.map((provider) => provider.description)
-        .filter((desc) => desc.type === "submenu") || []
+    selectContextProviderDescriptions
   );
 
   const [loaded, setLoaded] = useState(false);

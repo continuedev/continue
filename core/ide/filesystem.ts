@@ -1,24 +1,11 @@
 import * as fs from "fs";
-import { DiffLine, IDE, Problem, SerializedContinueConfig } from "..";
+import { DiffLine, IDE, Problem } from "..";
+import { BrowserSerializedContinueConfig } from "../config/load";
 import { Chunk } from "../index";
-import {
-  getConfigJsonPath,
-  getConfigTsPath,
-  getContinueGlobalPath,
-} from "../util/paths";
+import { getContinueGlobalPath } from "../util/paths";
 
 class FileSystemIde implements IDE {
-  async getSerializedConfig(): Promise<SerializedContinueConfig> {
-    const configPath = getConfigJsonPath();
-    let contents = fs.readFileSync(configPath, "utf8");
-    return JSON.parse(contents) as SerializedContinueConfig;
-  }
-
-  async getConfigJsUrl(): Promise<string | undefined> {
-    if (!fs.existsSync(getConfigTsPath())) {
-      return undefined;
-    }
-
+  async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
     throw new Error("Not implemented");
   }
 

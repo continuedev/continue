@@ -1,6 +1,8 @@
 type JsonObject = { [key: string]: any };
 
 export function mergeJson(first: JsonObject, second: JsonObject): any {
+  first = { ...first };
+
   try {
     for (var key in second) {
       let secondValue = second[key];

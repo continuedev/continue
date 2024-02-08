@@ -1,11 +1,12 @@
 import { FileEdit, RangeInFile } from "core";
-import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
-import { readFileSync, writeFileSync } from "fs";
+import { getDevDataFilePath } from "core/util/paths";
+import { writeFileSync } from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
+import { extensionContext } from "./activation/activate";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { diffManager } from "./diff/horizontal";
-import { configHandler } from "./loadConfig";
+import { TabAutocompleteModel, configHandler } from "./loadConfig";
 import {
   SuggestionRanges,
   acceptSuggestionCommand,
@@ -29,11 +30,7 @@ class IdeProtocolClient {
   private static PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } =
     {};
 
-  private readonly context: vscode.ExtensionContext;
-
   constructor(context: vscode.ExtensionContext) {
-    this.context = context;
-
     // Listen for file saving
     vscode.workspace.onDidSaveTextDocument((event) => {
       const filepath = event.uri.fsPath;
@@ -45,10 +42,8 @@ class IdeProtocolClient {
         filepath.endsWith(".continue\\config.ts") ||
         filepath.endsWith(".continuerc.json")
       ) {
-        const config = readFileSync(getConfigJsonPath(), "utf8");
-        const configJson = JSON.parse(config);
-        this.configUpdate(configJson);
         configHandler.reloadConfig();
+        TabAutocompleteModel.clearLlm();
       } else if (
         filepath.endsWith(".continueignore") ||
         filepath.endsWith(".gitignore")
@@ -105,13 +100,6 @@ class IdeProtocolClient {
   }
 
   visibleMessages: Set<string> = new Set();
-
-  configUpdate(config: any) {
-    debugPanelWebview?.postMessage({
-      type: "configUpdate",
-      config,
-    });
-  }
 
   async gotoDefinition(
     filepath: string,
@@ -230,7 +218,12 @@ class IdeProtocolClient {
       "Continue",
       vscode.ViewColumn.One
     );
-    panel.webview.html = getSidebarContent(panel, "/monaco", edits);
+    panel.webview.html = getSidebarContent(
+      extensionContext,
+      panel,
+      "/monaco",
+      edits
+    );
   }
 
   openFile(filepath: string, range?: vscode.Range) {
@@ -366,7 +359,7 @@ class IdeProtocolClient {
       gitRoot || directory,
       [],
       true,
-      onlyThisDirectory
+      gitRoot === directory ? undefined : onlyThisDirectory
     )) {
       allFiles.push(file);
     }
@@ -408,6 +401,21 @@ class IdeProtocolClient {
       }
     }
     return contents;
+  }
+
+  async readRangeInFile(
+    filepath: string,
+    range: vscode.Range
+  ): Promise<string> {
+    const contents = new TextDecoder().decode(
+      await vscode.workspace.fs.readFile(vscode.Uri.file(filepath))
+    );
+    const lines = contents.split("\n");
+    return (
+      lines.slice(range.start.line, range.end.line).join("\n") +
+      "\n" +
+      lines[range.end.line].slice(0, range.end.character)
+    );
   }
 
   async getTerminalContents(commands: number = -1): Promise<string> {

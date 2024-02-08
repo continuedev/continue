@@ -2,7 +2,7 @@ import { Chunk, ContextItem, ContextProviderExtras, ILLM } from "..";
 import { FullTextSearchCodebaseIndex } from "../indexing/FullTextSearch";
 import { ChunkCodebaseIndex } from "../indexing/chunk/ChunkCodebaseIndex";
 import { IndexTag } from "../indexing/types";
-import { llmCanGenerateInParallel } from "../llm";
+import { llmCanGenerateInParallel } from "../llm/autodetect";
 import { getBasename } from "../util";
 
 const RERANK_PROMPT = (
@@ -111,12 +111,17 @@ export async function retrieveContextItemsFromEmbeddings(
 
   const nFinal = options?.nFinal || 10;
   const useReranking =
-    llmCanGenerateInParallel(extras.llm) &&
+    llmCanGenerateInParallel(extras.llm.providerName, extras.llm.model) &&
     (options?.useReranking === undefined ? false : options?.useReranking);
   const nRetrieve = useReranking === false ? nFinal : options?.nRetrieve || 20;
 
   const ftsIndex = new FullTextSearchCodebaseIndex();
   const workspaceDirs = await extras.ide.getWorkspaceDirs();
+
+  if (workspaceDirs.length === 0) {
+    throw new Error("No workspace directories found");
+  }
+
   const branches = await Promise.all(
     workspaceDirs.map((dir) => extras.ide.getBranch(dir))
   );
@@ -126,13 +131,21 @@ export async function retrieveContextItemsFromEmbeddings(
     artifactId: ChunkCodebaseIndex.artifactId,
   }));
 
-  let ftsResults = await ftsIndex.retrieve(
-    tags,
-    extras.fullInput.trim().split(" ").join(" OR "),
-    nRetrieve / 2,
-    filterDirectory,
-    undefined
-  );
+  let ftsResults: Chunk[] = [];
+
+  try {
+    if (extras.fullInput.trim() !== "") {
+      ftsResults = await ftsIndex.retrieve(
+        tags,
+        extras.fullInput.trim().split(" ").join(" OR "),
+        nRetrieve / 2,
+        filterDirectory,
+        undefined
+      );
+    }
+  } catch (e) {
+    console.warn("Error retrieving from FTS:", e);
+  }
 
   let vecResults = await extras.ide.retrieveChunks(
     extras.fullInput,

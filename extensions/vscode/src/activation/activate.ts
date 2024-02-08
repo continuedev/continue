@@ -1,4 +1,4 @@
-import { getTsConfigPath } from "core/util/paths";
+import { getTsConfigPath, migrate } from "core/util/paths";
 import * as fs from "fs";
 import path from "path";
 import { v4 } from "uuid";
@@ -8,10 +8,13 @@ import IdeProtocolClient from "../continueIdeClient";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import {
+  ContinueCompletionProvider,
+  setupStatusBar,
+} from "../lang-server/completionProvider";
 import { vsCodeIndexCodebase } from "../util/indexCodebase";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
-import { startProxy } from "./proxy";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
@@ -85,6 +88,19 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   await openTutorialFirstTime(context);
   setupInlineTips(context);
   showRefactorMigrationMessage();
+  const config = vscode.workspace.getConfiguration("continue");
+  const enabled = config.get<boolean>("enableTabAutocomplete");
+
+  // Register inline completion provider (odd versions are pre-release)
+  if (parseInt(context.extension.packageJSON.version.split(".")[1]) % 2 !== 0) {
+    setupStatusBar(enabled);
+    context.subscriptions.push(
+      vscode.languages.registerInlineCompletionItemProvider(
+        [{ pattern: "**" }],
+        new ContinueCompletionProvider()
+      )
+    );
+  }
 
   ideProtocolClient = new IdeProtocolClient(context);
 
@@ -101,8 +117,16 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     )
   );
 
-  startProxy();
   vsCodeIndexCodebase(ideProtocolClient.getWorkspaceDirectories());
+
+  migrate("showWelcome", () => {
+    vscode.commands.executeCommand(
+      "markdown.showPreview",
+      vscode.Uri.file(
+        path.join(getExtensionUri().fsPath, "media", "welcome.md")
+      )
+    );
+  });
 
   // (async () => {
   //   const defaultDocsPages = [

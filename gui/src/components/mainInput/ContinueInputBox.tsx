@@ -1,12 +1,14 @@
 import { JSONContent } from "@tiptap/react";
 import { ContextItemWithId } from "core";
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
+import { selectSlashCommands } from "../../redux/selectors";
+import { newSession } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
-import { ComboBoxItemType } from "./types";
 
 const gradient = keyframes`
   0% {
@@ -22,7 +24,7 @@ const GradientBorder = styled.div<{
   borderColor?: string;
   isFirst: boolean;
   isLast: boolean;
-  loading: boolean;
+  loading: 0 | 1;
 }>`
   border-radius: ${(props) => props.borderRadius || "0"};
   padding: 1px;
@@ -58,20 +60,29 @@ interface ContinueInputBoxProps {
 }
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
+  const dispatch = useDispatch();
+
   const active = useSelector((store: RootStore) => store.state.active);
-  const availableSlashCommands = useSelector(
-    (state: RootStore) =>
-      state.state.config.slashCommands?.map((cmd) => {
-        return {
-          title: `/${cmd.name}`,
-          description: cmd.description,
-          type: "slashCommand" as ComboBoxItemType,
-        };
-      }) || []
-  );
+  const availableSlashCommands = useSelector(selectSlashCommands);
   const availableContextProviders = useSelector(
     (store: RootStore) => store.state.config.contextProviders
   );
+
+  const [editorState, setEditorState] = useState(props.editorState);
+
+  useEffect(() => {
+    const listener = (e) => {
+      if (e.data.type === "newSessionWithPrompt") {
+        dispatch(newSession());
+        setEditorState(e.data.prompt);
+      }
+    };
+
+    window.addEventListener("message", listener);
+    return () => {
+      window.removeEventListener("message", listener);
+    };
+  }, []);
 
   return (
     <div
@@ -87,7 +98,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         }}
       >
         <GradientBorder
-          loading={active && props.isLastUserInput}
+          loading={active && props.isLastUserInput ? 1 : 0}
           isFirst={false}
           isLast={false}
           borderColor={
@@ -96,7 +107,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           borderRadius={defaultBorderRadius}
         >
           <TipTapEditor
-            editorState={props.editorState}
+            editorState={editorState}
             onEnter={props.onEnter}
             isMainInput={props.isMainInput}
             availableContextProviders={availableContextProviders}

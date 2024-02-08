@@ -62,7 +62,6 @@ const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
 function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const isUserInput = props.item.message.role === "user";
-  const sessionHistory = useSelector((store: RootStore) => store.state.history);
   const active = useSelector((store: RootStore) => store.state.active);
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);

@@ -2,25 +2,21 @@ import { ContextItemId, DiffLine, FileEdit, ModelDescription } from "core";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
-import * as fs from "fs";
 import { readFileSync, writeFileSync } from "fs";
-import * as path from "path";
-import * as io from "socket.io-client";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import {
+  extensionContext,
   ideProtocolClient,
   showTutorial,
   windowId,
 } from "./activation/activate";
-import { getContinueServerUrl } from "./bridge";
 import { streamEdit } from "./diff/verticalPerLine/manager";
 import historyManager from "./history";
 import { VsCodeIde } from "./ideProtocol";
 import { configHandler, llmFromTitle } from "./loadConfig";
+import { getTheme } from "./util/getTheme";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
-
-let sockets: { [url: string]: io.Socket | undefined } = {};
 
 export let debugPanelWebview: vscode.Webview | undefined;
 
@@ -49,7 +45,10 @@ export async function webviewRequest(
   });
 }
 
+const abortedMessageIds: Set<string> = new Set();
+
 export function getSidebarContent(
+  context: vscode.ExtensionContext | undefined,
   panel: vscode.WebviewPanel | vscode.WebviewView,
   page: string | undefined = undefined,
   edits: FileEdit[] | undefined = undefined,
@@ -69,8 +68,9 @@ export function getSidebarContent(
     .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui"))
     .toString();
 
-  const isProduction = true; // context?.extensionMode === vscode.ExtensionMode.Development;
-  if (isProduction) {
+  const inDevelopmentMode =
+    context?.extensionMode === vscode.ExtensionMode.Development;
+  if (!inDevelopmentMode) {
     scriptUri = panel.webview
       .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui/assets/index.js"))
       .toString();
@@ -79,12 +79,15 @@ export function getSidebarContent(
       .toString();
   } else {
     scriptUri = "http://localhost:5173/src/main.tsx";
-    styleMainUri = "http://localhost:5173/src/main.css";
+    styleMainUri = "http://localhost:5173/src/index.css";
   }
 
   panel.webview.options = {
     enableScripts: true,
-    localResourceRoots: [vscode.Uri.joinPath(extensionUri, "gui")],
+    localResourceRoots: [
+      vscode.Uri.joinPath(extensionUri, "gui"),
+      vscode.Uri.joinPath(extensionUri, "assets"),
+    ],
     enableCommandUris: true,
     portMapping: [
       {
@@ -95,53 +98,6 @@ export function getSidebarContent(
   };
 
   const nonce = getNonce();
-
-  async function connectWebsocket(url: string) {
-    return new Promise((resolve, reject) => {
-      const onMessage = (message: any) => {
-        panel.webview.postMessage({
-          type: "websocketForwardingMessage",
-          url,
-          data: message,
-        });
-      };
-      const onOpen = () => {
-        panel.webview.postMessage({
-          type: "websocketForwardingOpen",
-          url,
-        });
-        resolve(null);
-      };
-      const onClose = () => {
-        sockets[url] = undefined;
-        panel.webview.postMessage({
-          type: "websocketForwardingClose",
-          url,
-        });
-      };
-      const onError = (e: any) => {
-        panel.webview.postMessage({
-          type: "websocketForwardingError",
-          url,
-          error: e,
-        });
-      };
-      try {
-        const socket = io.io(
-          `${getContinueServerUrl()}?window_id=${windowId}`,
-          {
-            path: "/gui/socket.io",
-            transports: ["websocket", "polling", "flashsocket"],
-          }
-        );
-        sockets[url] = socket;
-        resolve(null);
-      } catch (e) {
-        console.log("Failed to connect to GUI websocket for forwarding", e);
-        reject(e);
-      }
-    });
-  }
 
   panel.webview.onDidReceiveMessage(async (data) => {
     const ide = new VsCodeIde();
@@ -154,42 +110,8 @@ export function getSidebarContent(
     };
     try {
       switch (data.type) {
-        case "websocketForwardingOpen": {
-          let url = data.url;
-          if (typeof sockets[url] === "undefined") {
-            await connectWebsocket(url);
-          } else {
-            console.log(
-              "Websocket connection requested by GUI already open at",
-              url
-            );
-            panel.webview.postMessage({
-              type: "websocketForwardingOpen",
-              url,
-            });
-          }
-          break;
-        }
-        case "websocketForwardingClose": {
-          let url = data.url;
-          let socket = sockets[url];
-          if (typeof socket !== "undefined") {
-            socket.close();
-            sockets[url] = undefined;
-          }
-          break;
-        }
-        case "websocketForwardingMessage": {
-          let url = data.url;
-          let socket = sockets[url];
-          if (typeof socket === "undefined") {
-            await connectWebsocket(url);
-          }
-          socket = sockets[url];
-          if (typeof socket === "undefined") {
-            throw new Error("Failed to connect socket for forwarding");
-          }
-          socket.send(data.message);
+        case "abort": {
+          abortedMessageIds.add(data.messageId);
           break;
         }
         case "showFile": {
@@ -275,10 +197,6 @@ export function getSidebarContent(
         }
         case "getSerializedConfig": {
           respond(await ide.getSerializedConfig());
-          break;
-        }
-        case "getConfigJsUrl": {
-          respond(await ide.getConfigJsUrl());
           break;
         }
         case "getTerminalContents": {
@@ -461,8 +379,7 @@ export function getSidebarContent(
             2
           );
           writeFileSync(getConfigJsonPath(), newConfigString);
-          ideProtocolClient.configUpdate(configJson);
-
+          configHandler.reloadConfig();
           ideProtocolClient.openFile(getConfigJsonPath());
 
           // Find the range where it was added and highlight
@@ -508,7 +425,7 @@ export function getSidebarContent(
             );
             return config;
           });
-          ideProtocolClient.configUpdate(configJson);
+          configHandler.reloadConfig();
           break;
         }
         case "addOpenAIKey": {
@@ -522,7 +439,7 @@ export function getSidebarContent(
             });
             return config;
           });
-          ideProtocolClient.configUpdate(configJson);
+          configHandler.reloadConfig();
           break;
         }
         case "llmStreamComplete": {
@@ -533,6 +450,11 @@ export function getSidebarContent(
           );
           let next = await gen.next();
           while (!next.done) {
+            if (abortedMessageIds.has(data.messageId)) {
+              abortedMessageIds.delete(data.messageId);
+              next = await gen.return({ completion: "", prompt: "" });
+              break;
+            }
             respond({ content: next.value });
             next = await gen.next();
           }
@@ -548,6 +470,11 @@ export function getSidebarContent(
           );
           let next = await gen.next();
           while (!next.done) {
+            if (abortedMessageIds.has(data.messageId)) {
+              abortedMessageIds.delete(data.messageId);
+              next = await gen.return({ completion: "", prompt: "" });
+              break;
+            }
             respond({ content: next.value.content });
             next = await gen.next();
           }
@@ -572,9 +499,10 @@ export function getSidebarContent(
             slashCommandName,
             contextItems,
             params,
+            historyIndex,
           } = data.message;
 
-          const config = await configHandler.loadConfig(ide);
+          const config = await configHandler.loadConfig();
           const llm = await llmFromTitle(modelTitle);
           const slashCommand = config.slashCommands?.find(
             (sc) => sc.name === slashCommandName
@@ -590,16 +518,23 @@ export function getSidebarContent(
             contextItems,
             params,
             ide,
-            addContextItem: () => {},
+            addContextItem: (item) => {
+              debugPanelWebview?.postMessage({
+                type: "addContextItem",
+                message: { item, historyIndex },
+              });
+            },
           })) {
-            respond({ content: update });
+            if (update) {
+              respond({ content: update });
+            }
           }
           respond({ done: true });
           break;
         }
         case "loadSubmenuItems": {
           const { title } = data.message;
-          const config = await configHandler.loadConfig(ide);
+          const config = await configHandler.loadConfig();
           const provider = config.contextProviders?.find(
             (p) => p.description.title === title
           );
@@ -626,7 +561,7 @@ export function getSidebarContent(
         }
         case "getContextItems": {
           const { name, query, fullInput, selectedCode } = data.message;
-          const config = await configHandler.loadConfig(ide);
+          const config = await configHandler.loadConfig();
           const llm = await llmFromTitle();
           const provider = config.contextProviders?.find(
             (p) => p.description.title === name
@@ -748,41 +683,13 @@ export function getSidebarContent(
     }
   });
 
-  let currentTheme = undefined;
-  let colorThemeName = "dark-plus";
-  const tokenColorMap: any = {};
-  try {
-    // Pass color theme to webview for syntax highlighting
-    const colorTheme = vscode.workspace
-      .getConfiguration("workbench")
-      .get("colorTheme");
-
-    for (let i = vscode.extensions.all.length - 1; i >= 0; i--) {
-      if (currentTheme) {
-        break;
-      }
-      const extension = vscode.extensions.all[i];
-      if (extension.packageJSON?.contributes?.themes?.length > 0) {
-        for (const theme of extension.packageJSON.contributes.themes) {
-          if (theme.label === colorTheme) {
-            const themePath = path.join(extension.extensionPath, theme.path);
-            currentTheme = fs.readFileSync(themePath).toString();
-            break;
-          }
-        }
-      }
+  const currentTheme = getTheme();
+  vscode.workspace.onDidChangeConfiguration((e) => {
+    if (e.affectsConfiguration("workbench.colorTheme")) {
+      // Send new theme to GUI to update embedded Monaco themes
+      debugPanelWebview?.postMessage({ type: "setTheme", theme: getTheme() });
     }
-
-    // Strip comments from theme
-    currentTheme = currentTheme
-      ?.split("\n")
-      .filter((line) => {
-        return !line.trim().startsWith("//");
-      })
-      .join("\n");
-  } catch (e) {
-    console.log("Error adding .continueignore file icon: ", e);
-  }
+  });
 
   return `<!DOCTYPE html>
     <html lang="en">
@@ -796,25 +703,34 @@ export function getSidebarContent(
       </head>
       <body>
         <div id="root"></div>
+
+        ${
+          inDevelopmentMode
+            ? `<script type="module">
+          import RefreshRuntime from "http://localhost:5173/@react-refresh"
+          RefreshRuntime.injectIntoGlobalHook(window)
+          window.$RefreshReg$ = () => {}
+          window.$RefreshSig$ = () => (type) => type
+          window.__vite_plugin_react_preamble_installed__ = true
+          </script>`
+            : ""
+        }
+
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
 
         <script>localStorage.setItem("ide", "vscode")</script>
         <script>window.windowId = "${windowId}"</script>
-        <script>window.serverUrl = "${getContinueServerUrl()}"</script>
         <script>window.vscMachineId = "${getUniqueId()}"</script>
         <script>window.vscMediaUrl = "${vscMediaUrl}"</script>
         <script>window.ide = "vscode"</script>
-        <script>window.fullColorTheme = ${currentTheme}</script>
-        <script>window.colorThemeName = "${colorThemeName}"</script>
+        <script>window.fullColorTheme = ${JSON.stringify(currentTheme)}</script>
+        <script>window.colorThemeName = "dark-plus"</script>
         <script>window.workspacePaths = ${JSON.stringify(
           vscode.workspace.workspaceFolders?.map(
             (folder) => folder.uri.fsPath
           ) || []
         )}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>
-        <script>window.proxyServerUrl = "${vscode.workspace
-          .getConfiguration("continue")
-          .get("proxyServerUrl")}"</script>
 
         ${
           edits
@@ -836,6 +752,6 @@ export class ContinueGUIWebviewViewProvider
     _context: vscode.WebviewViewResolveContext,
     _token: vscode.CancellationToken
   ): void | Thenable<void> {
-    webviewView.webview.html = getSidebarContent(webviewView);
+    webviewView.webview.html = getSidebarContent(extensionContext, webviewView);
   }
 }

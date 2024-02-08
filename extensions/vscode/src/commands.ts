@@ -3,7 +3,7 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 
-import { ideProtocolClient } from "./activation/activate";
+import { extensionContext, ideProtocolClient } from "./activation/activate";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { acceptDiffCommand, rejectDiffCommand } from "./diff/horizontal";
 import {
@@ -11,6 +11,7 @@ import {
   streamEdit,
   verticalPerLineDiffManager,
 } from "./diff/verticalPerLine/manager";
+import { AutocompleteOutcome } from "./lang-server/completionProvider";
 
 function addHighlightedCodeToContext(edit: boolean) {
   const editor = vscode.window.activeTextEditor;
@@ -122,11 +123,12 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     acceptRejectVerticalDiffBlock(false, filepath, index);
   },
   "continue.quickFix": async (message: string, code: string, edit: boolean) => {
-    ideProtocolClient.sendMainUserInput(
-      `${
+    debugPanelWebview?.postMessage({
+      type: "newSessionWithPrompt",
+      prompt: `${
         edit ? "/edit " : ""
-      }${code}\n\nHow do I fix this problem in the above code?: ${message}`
-    );
+      }${code}\n\nHow do I fix this problem in the above code?: ${message}`,
+    });
     if (!edit) {
       vscode.commands.executeCommand("continue.continueGUIView.focus");
     }
@@ -299,7 +301,13 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       "Continue",
       vscode.ViewColumn.One
     );
-    panel.webview.html = getSidebarContent(panel, undefined, undefined, true);
+    panel.webview.html = getSidebarContent(
+      extensionContext,
+      panel,
+      undefined,
+      undefined,
+      true
+    );
   },
   "continue.selectFilesAsContext": (
     firstUri: vscode.Uri,
@@ -320,6 +328,23 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     const position = editor.selection.active;
     ideProtocolClient.sendMainUserInput(
       `/references ${filepath.fsPath} ${position.line} ${position.character}`
+    );
+  },
+  "continue.logAutocompleteOutcome": (
+    outcome: AutocompleteOutcome,
+    logRejectionTimeout: NodeJS.Timeout
+  ) => {
+    clearTimeout(logRejectionTimeout);
+    outcome.accepted = true;
+    ideProtocolClient.logDevData("autocomplete", outcome);
+  },
+  "continue.toggleTabAutocompleteEnabled": () => {
+    const config = vscode.workspace.getConfiguration("continue");
+    const enabled = config.get("enableTabAutocomplete");
+    config.update(
+      "enableTabAutocomplete",
+      !enabled,
+      vscode.ConfigurationTarget.Global
     );
   },
 };

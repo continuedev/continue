@@ -12,6 +12,8 @@ Pre-release Changes
 * Full-text search index for retrieval
 * Docs context provider
 * CodeLlama-70b support
+### Changed
+* config.ts only runs in NodeJS, not browser
 ### Fixed
 * Fixed proxy setting in config.json
 

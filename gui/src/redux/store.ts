@@ -12,6 +12,7 @@ import {
   ContinueConfig,
   SlashCommandDescription,
 } from "core";
+import { BrowserSerializedContinueConfig } from "core/config/load";
 import { createTransform, persistReducer, persistStore } from "redux-persist";
 import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
@@ -27,7 +28,7 @@ export interface RootStore {
     history: ChatHistory;
     contextItems: ContextItemWithId[];
     active: boolean;
-    config: ContinueConfig;
+    config: BrowserSerializedContinueConfig;
     title: string;
     sessionId: string;
     defaultModelTitle: string;

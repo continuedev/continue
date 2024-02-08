@@ -5,13 +5,11 @@ import {
   ChatHistory,
   ChatHistoryItem,
   ChatMessage,
-  ContinueSDK,
   LLMReturnValue,
   MessageContent,
-  SlashCommand,
+  SlashCommandDescription,
 } from "core";
-import { ExtensionIde } from "core/ide";
-import { ideStreamRequest } from "core/ide/messaging";
+import { ideStreamRequest, llmStreamChat } from "core/ide/messaging";
 import { constructMessages } from "core/llm/constructMessages";
 import { stripImages } from "core/llm/countTokens";
 import { usePostHog } from "posthog-js/react";
@@ -20,7 +18,6 @@ import { useSelector } from "react-redux";
 import resolveEditorContent from "../components/mainInput/resolveInput";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
-  addContextItemsAtIndex,
   addLogs,
   initNewActiveMessage,
   resubmitAtIndex,
@@ -43,13 +40,8 @@ function useChatHandler(dispatch: Dispatch) {
   const contextItems = useSelector(
     (state: RootStore) => state.state.contextItems
   );
-  const embeddingsProvider = useSelector(
-    (state: RootStore) => state.state.config.embeddingsProvider
-  );
+
   const history = useSelector((store: RootStore) => store.state.history);
-  const contextProviders = useSelector(
-    (store: RootStore) => store.state.config.contextProviders || []
-  );
   const active = useSelector((store: RootStore) => store.state.active);
   const activeRef = useRef(active);
   useEffect(() => {
@@ -57,11 +49,14 @@ function useChatHandler(dispatch: Dispatch) {
   }, [active]);
 
   async function _streamNormalInput(messages: ChatMessage[]) {
-    const gen = defaultModel.streamChat(messages);
+    const abortController = new AbortController();
+    const cancelToken = abortController.signal;
+    const gen = llmStreamChat(defaultModel.title, cancelToken, messages);
     let next = await gen.next();
 
     while (!next.done) {
       if (!activeRef.current) {
+        abortController.abort();
         break;
       }
       dispatch(streamUpdate((next.value as ChatMessage).content));
@@ -76,8 +71,8 @@ function useChatHandler(dispatch: Dispatch) {
 
   const getSlashCommandForInput = (
     input: MessageContent
-  ): [SlashCommand, string] | undefined => {
-    let slashCommand: SlashCommand | undefined;
+  ): [SlashCommandDescription, string] | undefined => {
+    let slashCommand: SlashCommandDescription | undefined;
     let slashCommandName: string | undefined;
 
     let lastText =
@@ -99,11 +94,12 @@ function useChatHandler(dispatch: Dispatch) {
     return [slashCommand, stripImages(input)];
   };
 
-  async function* _streamSlashCommandFromVsCode(
+  async function _streamSlashCommand(
     messages: ChatMessage[],
-    slashCommand: SlashCommand,
-    input: string
-  ): AsyncGenerator<string> {
+    slashCommand: SlashCommandDescription,
+    input: string,
+    historyIndex: number
+  ) {
     const modelTitle = defaultModel.title;
 
     for await (const update of ideStreamRequest("runNodeJsSlashCommand", {
@@ -113,43 +109,8 @@ function useChatHandler(dispatch: Dispatch) {
       slashCommandName: slashCommand.name,
       contextItems,
       params: slashCommand.params,
+      historyIndex,
     })) {
-      yield update;
-    }
-  }
-
-  async function _streamSlashCommand(
-    messages: ChatMessage[],
-    slashCommand: SlashCommand,
-    input: string,
-    historyIndex: number
-  ) {
-    let generator: AsyncGenerator<string>;
-    if (slashCommand.runInNodeJs) {
-      generator = _streamSlashCommandFromVsCode(messages, slashCommand, input);
-    } else {
-      const sdk: ContinueSDK = {
-        input,
-        history: messages,
-        ide: new ExtensionIde(),
-        llm: defaultModel,
-        addContextItem: (item) => {
-          dispatch(
-            addContextItemsAtIndex({
-              index: historyIndex,
-              contextItems: [item],
-            })
-          );
-        },
-        contextItems,
-        params: slashCommand.params,
-      };
-      generator = slashCommand.run(sdk);
-    }
-
-    // TODO: if the model returned fast enough it would immediately break
-    // Ideally you aren't trusting that results of dispatch show up before the first yield
-    for await (const update of generator) {
       if (!activeRef.current) {
         break;
       }
@@ -168,12 +129,7 @@ function useChatHandler(dispatch: Dispatch) {
       }
 
       // Resolve context providers and construct new history
-      const [contextItems, content] = await resolveEditorContent(
-        editorState,
-        contextProviders,
-        defaultModel,
-        embeddingsProvider
-      );
+      const [contextItems, content] = await resolveEditorContent(editorState);
       const message: ChatMessage = {
         role: "user",
         content,

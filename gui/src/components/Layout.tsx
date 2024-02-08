@@ -230,7 +230,7 @@ const Layout = () => {
                 )} */}
               <ModelSelect />
               {indexingProgress >= 1 && // Would take up too much space together with indexing progress
-                defaultModel?.providerName === "free-trial" &&
+                defaultModel?.provider === "free-trial" &&
                 defaultModel?.apiKey === "" &&
                 (location.pathname === "/settings" ||
                   parseInt(localStorage.getItem("ftc") || "0") >= 125) && (

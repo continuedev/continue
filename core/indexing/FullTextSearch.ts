@@ -95,26 +95,27 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     const db = await SqliteDb.get();
     const tagStrings = tags.map(tagToString);
 
-    const results = await db.all(
-      `SELECT fts_metadata.chunkId, fts_metadata.path, fts.content, rank
-      FROM fts
-      JOIN fts_metadata ON fts.rowid = fts_metadata.id
-      JOIN chunk_tags ON fts_metadata.chunkId = chunk_tags.chunkId
-      WHERE fts MATCH '${text.replace(
-        /\?/g,
-        ""
-      )}' AND chunk_tags.tag IN (${tagStrings.map(() => "?").join(",")})
-        ${
-          filterPaths
-            ? `AND fts_metadata.path IN (${filterPaths
-                .map(() => "?")
-                .join(",")})`
-            : ""
-        }
-      ORDER BY rank
-      LIMIT ?`,
-      [...tagStrings, ...(filterPaths || []), n]
-    );
+    const query = `SELECT fts_metadata.chunkId, fts_metadata.path, fts.content, rank
+    FROM fts
+    JOIN fts_metadata ON fts.rowid = fts_metadata.id
+    JOIN chunk_tags ON fts_metadata.chunkId = chunk_tags.chunkId
+    WHERE fts MATCH '${text.replace(
+      /\?/g,
+      ""
+    )}' AND chunk_tags.tag IN (${tagStrings.map(() => "?").join(",")})
+      ${
+        filterPaths
+          ? `AND fts_metadata.path IN (${filterPaths.map(() => "?").join(",")})`
+          : ""
+      }
+    ORDER BY rank
+    LIMIT ?`;
+
+    const results = await db.all(query, [
+      ...tagStrings,
+      ...(filterPaths || []),
+      n,
+    ]);
 
     const chunks = await db.all(
       `SELECT * FROM chunks WHERE id IN (${results.map(() => "?").join(",")})`,

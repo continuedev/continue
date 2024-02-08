@@ -15,6 +15,7 @@ import SettingsPage from "./pages/settings";
 
 import { ContextSubmenuItem } from "core";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
+import { useVscTheme } from "./hooks/useVscTheme";
 
 const router = createMemoryRouter([
   {
@@ -70,26 +71,31 @@ export const SubmenuContextProvidersContext = createContext<{
   getSubmenuContextItems: (
     providerTitle: string | undefined,
     query: string
-  ) => ContextSubmenuItem[];
+  ) => (ContextSubmenuItem & { providerTitle: string })[];
   addItem: (providerTitle: string, item: ContextSubmenuItem) => void;
 }>({
   getSubmenuContextItems: () => [],
   addItem: () => {},
 });
 
+export const VscThemeContext = createContext<any>(undefined);
+
 function App() {
   const dispatch = useDispatch();
 
   useSetup(dispatch);
 
+  const vscTheme = useVscTheme();
   const submenuContextProvidersMethods = useSubmenuContextProviders();
 
   return (
-    <SubmenuContextProvidersContext.Provider
-      value={submenuContextProvidersMethods}
-    >
-      <RouterProvider router={router} />
-    </SubmenuContextProvidersContext.Provider>
+    <VscThemeContext.Provider value={vscTheme}>
+      <SubmenuContextProvidersContext.Provider
+        value={submenuContextProvidersMethods}
+      >
+        <RouterProvider router={router} />
+      </SubmenuContextProvidersContext.Provider>
+    </VscThemeContext.Provider>
   );
 }
 

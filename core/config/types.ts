@@ -533,7 +533,6 @@ declare global {
   }
   
   export interface SerializedContinueConfig {
-    disallowedSteps?: string[];
     allowAnonymousTelemetry?: boolean;
     models: ModelDescription[];
     systemMessage?: string;

@@ -1,7 +1,7 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
-import { ideRequest } from "core/ide/messaging";
-import { llmCanGenerateInParallel } from "core/llm";
+import { ideRequest, llmStreamChat } from "core/ide/messaging";
+import { llmCanGenerateInParallel } from "core/llm/autodetect";
 import { stripImages } from "core/llm/countTokens";
 import { useSelector } from "react-redux";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
@@ -34,15 +34,22 @@ function useHistory(dispatch: Dispatch) {
     await new Promise((resolve) => setTimeout(resolve, 10));
 
     let title = truncateText(
-      stripImages(stateCopy.history[0].message.content),
+      stripImages(stateCopy.history[0].message.content)
+        .split("\n")
+        .filter((l) => l.trim() !== "")
+        .slice(-1)[0] || "",
       50
     );
+
     if (
       false && // Causing maxTokens to be set to 20 for main requests sometimes, so disabling until resolved
       !disableSessionTitles &&
-      llmCanGenerateInParallel(defaultModel)
+      llmCanGenerateInParallel(defaultModel.provider, defaultModel.model)
     ) {
-      let { content } = await defaultModel.chat(
+      let fullContent = "";
+      for await (const { content } of llmStreamChat(
+        defaultModel.title,
+        undefined,
         [
           ...stateCopy.history.map((item) => item.message),
           {
@@ -52,8 +59,11 @@ function useHistory(dispatch: Dispatch) {
           },
         ],
         { maxTokens: 20 }
-      );
-      title = stripImages(content);
+      )) {
+        fullContent += content;
+      }
+
+      title = stripImages(fullContent);
     }
 
     const sessionInfo: PersistedSessionInfo = {

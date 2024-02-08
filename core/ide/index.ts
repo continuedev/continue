@@ -1,17 +1,14 @@
 import { Chunk, DiffLine, Problem } from "..";
-import { IDE, SerializedContinueConfig } from "../index";
+import { BrowserSerializedContinueConfig } from "../config/load";
+import { IDE } from "../index";
 
 import { ideRequest } from "./messaging";
 async function r(messageType: string, options: any = {}) {
   return await ideRequest(messageType, options);
 }
 export class ExtensionIde implements IDE {
-  async getSerializedConfig(): Promise<SerializedContinueConfig> {
+  async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
     return await r("getSerializedConfig");
-  }
-
-  async getConfigJsUrl(): Promise<string | undefined> {
-    return await r("getConfigJsUrl");
   }
 
   async getDiff() {
