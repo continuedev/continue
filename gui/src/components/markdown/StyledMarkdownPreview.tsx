@@ -2,7 +2,9 @@ import React, { memo, useEffect } from "react";
 import { useRemark } from "react-remark";
 // import rehypeKatex from "rehype-katex";
 // import remarkMath from "remark-math";
+import rehypeHighlight from "rehype-highlight";
 import styled from "styled-components";
+import { visit } from "unist-util-visit";
 import {
   defaultBorderRadius,
   vscBackground,
@@ -10,8 +12,8 @@ import {
   vscForeground,
 } from "..";
 import { getFontSize } from "../../util";
-import { MonacoCodeBlock } from "./MonacoCodeBlock";
 import PreWithToolbar from "./PreWithToolbar";
+import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import "./markdown.css";
 
 const StyledMarkdown = styled.div<{
@@ -24,8 +26,7 @@ const StyledMarkdown = styled.div<{
 
     max-width: calc(100vw - 24px);
     overflow-x: scroll;
-
-    font-size: 12px;
+    overflow-y: hidden;
 
     ${(props) => {
       if (props.showBorder) {
@@ -41,7 +42,6 @@ const StyledMarkdown = styled.div<{
     span.line:empty {
       display: none;
     }
-    color: #f78383;
     word-wrap: break-word;
     border-radius: ${defaultBorderRadius};
     background-color: ${vscEditorBackground};
@@ -51,6 +51,7 @@ const StyledMarkdown = styled.div<{
 
   code:not(pre > code) {
     font-family: monospace;
+    color: #f78383;
   }
 
   background-color: ${vscBackground};
@@ -114,6 +115,20 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   const [reactContent, setMarkdownSource] = useRemark({
     // remarkPlugins: [remarkMath],
     // rehypePlugins: [rehypeKatex as any, {}],
+    remarkPlugins: [
+      () => {
+        return (tree) => {
+          visit(tree, "code", (node: any) => {
+            if (!node.lang) {
+              node.lang === "javascript";
+            } else if (node.lang.includes(".")) {
+              node.lang = node.lang.split(".").slice(-1)[0];
+            }
+          });
+        };
+      },
+    ],
+    rehypePlugins: [rehypeHighlight as any, {}],
     rehypeReactOptions: {
       components: {
         a: ({ node, ...props }) => {
@@ -124,30 +139,39 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
-          const monacoEditor = (
-            <MonacoCodeBlock
-              maxHeight={props.showCodeBorder ? undefined : 160}
-              scrollLocked={props.scrollLocked}
-              showBorder={props.showCodeBorder}
-              language={
-                preProps.children?.[0]?.props?.className?.split("-")[1] ||
-                "typescript"
-              }
-              preProps={preProps}
-              codeString={
-                preProps.children?.[0]?.props?.children?.[0].trim() || ""
-              }
-            />
-          );
           return props.showCodeBorder ? (
-            <PreWithToolbar>{monacoEditor}</PreWithToolbar>
+            <PreWithToolbar>
+              <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+            </PreWithToolbar>
           ) : (
-            monacoEditor
+            <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
           );
         },
-        // p: ({ node, ...props }) => {
-        //   return <FadeInWords {...props}></FadeInWords>;
-        // },
+        //   pre: ({ node, ...preProps }) => {
+        //     const codeString =
+        //       preProps.children?.[0]?.props?.children?.[0].trim() || "";
+        //     const monacoEditor = (
+        //       <MonacoCodeBlock
+        //         showBorder={props.showCodeBorder}
+        //         language={
+        //           preProps.children?.[0]?.props?.className?.split("-")[1] ||
+        //           "typescript"
+        //         }
+        //         preProps={preProps}
+        //         codeString={codeString}
+        //       />
+        //     );
+        //     return props.showCodeBorder ? (
+        //       <PreWithToolbar copyvalue={codeString}>
+        //         <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+        //       </PreWithToolbar>
+        //     ) : (
+        //       <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+        //     );
+        //   },
+        //   // p: ({ node, ...props }) => {
+        //   //   return <FadeInWords {...props}></FadeInWords>;
+        //   // },
       },
     },
   });
