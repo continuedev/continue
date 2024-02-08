@@ -6,13 +6,13 @@ import {
 } from "../..";
 import { getBasename } from "../../util";
 
-import { getSourceSetHighlights } from "llm-code-highlighter/dist/index.continue";
+import { getFileOutlineHighlights } from "llm-code-highlighter/dist/index.continue";
 
-class CodeHighlightsContextProvider extends BaseContextProvider {
+class CodeOutlineContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
-    title: "highlights",
-    displayTitle: "Highlights",
-    description: "Code highlights from open files",
+    title: "outlines",
+    displayTitle: "Outlines",
+    description: "Definition lines only (from open files)",
     type: "normal",
   };
 
@@ -32,10 +32,7 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
           };
         })
       );
-    const topPercentile = 0.5;
-    const repoMap = await getSourceSetHighlights(
-      topPercentile,
-      [],
+    const outlines = await getFileOutlineHighlights(
       allFiles
         .filter((file) => file.content.length > 0)
         .map((file) => {
@@ -47,9 +44,9 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
     );
     return [
       {
-        content: repoMap ? repoMap : "",
-        name: "Code Highlights",
-        description: "Code highlights from open files",
+        content: outlines ? outlines : "",
+        name: "Code Outline",
+        description: "Definition lines only (from open files)",
       },
     ];
   }
@@ -57,4 +54,4 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
   async load(): Promise<void> {}
 }
 
-export default CodeHighlightsContextProvider;
+export default CodeOutlineContextProvider;
