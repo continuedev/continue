@@ -1,24 +1,8 @@
 import { useState } from "react";
 import CodeBlockToolBar from "./CodeBlockToolbar";
 
-function PreWithToolbar(props: any) {
+function PreWithToolbar(props: { copyvalue: string; children: any }) {
   const [hovering, setHovering] = useState(false);
-
-  function childToText(child: any) {
-    if (typeof child === "string") {
-      return child;
-    } else if (child?.props) {
-      return childToText(child.props?.children);
-    } else if (Array.isArray(child)) {
-      return childrenToText(child);
-    } else {
-      return "";
-    }
-  }
-
-  function childrenToText(child: any) {
-    return child.props.codeString || "";
-  }
 
   return (
     <pre
@@ -28,11 +12,7 @@ function PreWithToolbar(props: any) {
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {hovering && (
-        <CodeBlockToolBar
-          text={childrenToText(props.children)}
-        ></CodeBlockToolBar>
-      )}
+      {hovering && <CodeBlockToolBar text={props.copyvalue}></CodeBlockToolBar>}
       {props.children}
     </pre>
   );

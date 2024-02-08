@@ -122,8 +122,6 @@ interface MonacoCodeBlockProps {
   preProps: any;
   language: string;
   showBorder: boolean;
-  scrollLocked?: boolean;
-  maxHeight?: number;
 }
 
 export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
@@ -159,14 +157,12 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
       monacoRef.current.editor.setTheme("custom-theme");
     });
 
-    if (!(props.maxHeight && !props.scrollLocked)) {
-      editorRef.current.onDidContentSizeChange(() => {
-        const contentHeight = editorRef.current.getContentHeight();
-        const layoutInfo = editorRef.current.getLayoutInfo();
-        const width = layoutInfo.width;
-        editorRef.current.layout({ height: contentHeight, width });
+    editorRef.current.onDidContentSizeChange(() => {
+      editorRef.current.layout({
+        width: editorRef.current.getLayoutInfo().width,
+        height: editorRef.current.getContentHeight(),
       });
-    }
+    });
   };
 
   useEffect(() => {
@@ -247,15 +243,8 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
             : "typescript"
         }
         theme="vs-dark"
-        height={
-          props.maxHeight &&
-          props.scrollLocked &&
-          props.codeString.split("\n").length * 18 > props.maxHeight
-            ? props.maxHeight
-            : null
-        }
         options={{
-          automaticLayout: !(props.maxHeight && !props.scrollLocked),
+          automaticLayout: true,
           readOnly: true,
           minimap: { enabled: false },
           scrollBeyondLastLine: false,
@@ -281,7 +270,7 @@ export const MonacoCodeBlock = (props: MonacoCodeBlockProps) => {
         }}
       />
     );
-  }, [props.scrollLocked, props.maxHeight]);
+  }, []);
 
   return (
     <Container showBorder={props.showBorder} {...props.preProps}>

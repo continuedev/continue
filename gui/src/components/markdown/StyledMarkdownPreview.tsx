@@ -124,23 +124,23 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
+          const codeString =
+            preProps.children?.[0]?.props?.children?.[0].trim() || "";
           const monacoEditor = (
             <MonacoCodeBlock
-              maxHeight={props.showCodeBorder ? undefined : 160}
-              scrollLocked={props.scrollLocked}
               showBorder={props.showCodeBorder}
               language={
                 preProps.children?.[0]?.props?.className?.split("-")[1] ||
                 "typescript"
               }
               preProps={preProps}
-              codeString={
-                preProps.children?.[0]?.props?.children?.[0].trim() || ""
-              }
+              codeString={codeString}
             />
           );
           return props.showCodeBorder ? (
-            <PreWithToolbar>{monacoEditor}</PreWithToolbar>
+            <PreWithToolbar copyvalue={codeString}>
+              {monacoEditor}
+            </PreWithToolbar>
           ) : (
             monacoEditor
           );

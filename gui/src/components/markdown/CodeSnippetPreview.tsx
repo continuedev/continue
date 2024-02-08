@@ -1,4 +1,9 @@
-import { PaintBrushIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  PaintBrushIcon,
+  XMarkIcon,
+} from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { ExtensionIde } from "core/ide";
 import { getMarkdownLanguageTagForFile } from "core/util";
@@ -9,7 +14,7 @@ import { getFontSize } from "../../util";
 import { postToIde } from "../../util/ide";
 import FileIcon from "../FileIcon";
 import HeaderButtonWithText from "../HeaderButtonWithText";
-import StyledMarkdownPreview from "./StyledMarkdownPreview";
+import { MonacoCodeBlock } from "./MonacoCodeBlock";
 
 const PreviewMarkdownDiv = styled.div<{
   borderColor?: string;
@@ -51,18 +56,13 @@ const StyledHeaderButtonWithText = styled(HeaderButtonWithText)<{
   ${(props) => props.color && `background-color: ${props.color};`}
 `;
 
-// Pre-compile the regular expression outside of the function
-const backticksRegex = /`{3,}/gm;
+const MAX_PREVIEW_HEIGHT = 300;
 
 function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
-  const [scrollLocked, setScrollLocked] = React.useState(true);
+  const [collapsed, setCollapsed] = React.useState(true);
   const [hovered, setHovered] = React.useState(false);
 
   const codeBlockRef = React.useRef<HTMLDivElement>(null);
-  const fence = React.useMemo(() => {
-    const backticks = props.item.content.match(backticksRegex);
-    return backticks ? backticks.sort().at(-1) + "`" : "```";
-  }, [props.item.content]);
 
   return (
     <PreviewMarkdownDiv
@@ -128,36 +128,47 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           </HeaderButtonWithText>
         </div>
       </PreviewMarkdownHeader>
-      <div className="m-0" ref={codeBlockRef}>
-        <StyledMarkdownPreview
-          scrollLocked={scrollLocked}
-          source={`${fence}${getMarkdownLanguageTagForFile(
-            props.item.description
-          )}\n${props.item.content}\n${fence}`}
-          showCodeBorder={false}
-        />
+      <div
+        className="m-0"
+        ref={codeBlockRef}
+        style={{
+          height: collapsed
+            ? `${Math.min(
+                MAX_PREVIEW_HEIGHT,
+                codeBlockRef.current?.scrollHeight
+              )}px`
+            : undefined,
+          overflow: collapsed ? "hidden" : "auto",
+        }}
+      >
+        <MonacoCodeBlock
+          codeString={props.item.content}
+          preProps={{}}
+          showBorder={false}
+          language={getMarkdownLanguageTagForFile(props.item.description)}
+        ></MonacoCodeBlock>
       </div>
 
-      {/* {hovered && codeBlockRef.current?.scrollHeight > MAX_PREVIEW_HEIGHT && (
+      {codeBlockRef.current?.scrollHeight > MAX_PREVIEW_HEIGHT && (
         <HeaderButtonWithText
           className="bottom-1 right-1 absolute"
-          text={scrollLocked ? "Scroll" : "Lock Scroll"}
+          text={collapsed ? "Expand" : "Collapse"}
         >
-          {scrollLocked ? (
+          {collapsed ? (
             <ChevronDownIcon
               width="1.2em"
               height="1.2em"
-              onClick={() => setScrollLocked(false)}
+              onClick={() => setCollapsed(false)}
             />
           ) : (
             <ChevronUpIcon
               width="1.2em"
               height="1.2em"
-              onClick={() => setScrollLocked(true)}
+              onClick={() => setCollapsed(true)}
             />
           )}
         </HeaderButtonWithText>
-      )} */}
+      )}
     </PreviewMarkdownDiv>
   );
 }
