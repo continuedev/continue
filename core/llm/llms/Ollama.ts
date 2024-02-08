@@ -1,3 +1,4 @@
+import * as ollama from "ollama";
 import { BaseLLM } from "..";
 import {
   ChatMessage,
@@ -174,40 +175,21 @@ class Ollama extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
-    const response = await this.fetch(`${this.apiBase}/api/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(this._convertArgs(options, messages)),
+    const client = new ollama.Ollama({
+      host: this.apiBase,
+      fetch: this.fetch.bind(this),
+    });
+    const response = await client.chat({
+      ...this._convertArgs(options, messages),
+      stream: true,
     });
 
-    let buffer = "";
-    for await (const value of streamResponse(response)) {
-      // Append the received chunk to the buffer
-      buffer += value;
-      // Split the buffer into individual JSON chunks
-      const chunks = buffer.split("\n");
-      buffer = chunks.pop() ?? "";
-
-      for (let i = 0; i < chunks.length; i++) {
-        const chunk = chunks[i];
-        if (chunk.trim() !== "") {
-          try {
-            const j = JSON.parse(chunk);
-            if (j.message?.content) {
-              yield {
-                role: "assistant",
-                content: j.message.content,
-              };
-            } else if (j.error) {
-              throw new Error(j.error);
-            }
-          } catch (e) {
-            throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);
-          }
-        }
-      }
+    for await (const chunk of response) {
+      if (!chunk?.message?.content) continue;
+      yield {
+        role: "assistant",
+        content: chunk.message.content,
+      };
     }
   }
 
