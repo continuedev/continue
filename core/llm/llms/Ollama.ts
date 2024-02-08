@@ -177,7 +177,6 @@ class Ollama extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     const client = new ollama.Ollama({
       host: this.apiBase,
-      fetch: this.fetch.bind(this),
     });
     const response = await client.chat({
       ...this._convertArgs(options, messages),
