@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.57",
+  "version": "0.9.58",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -484,6 +484,7 @@
     "uuidv4": "^6.2.13",
     "vectordb": "^0.4.3",
     "vscode-languageclient": "^8.0.2",
-    "ws": "^8.13.0"
+    "ws": "^8.13.0",
+    "yarn": "^1.22.21"
   }
 }
