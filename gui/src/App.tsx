@@ -14,8 +14,8 @@ import MonacoPage from "./pages/monaco";
 import SettingsPage from "./pages/settings";
 
 import { ContextSubmenuItem } from "core";
-import { useMonacoTheme } from "./hooks/useMonacoTheme";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
+import { useVscTheme } from "./hooks/useVscTheme";
 
 const router = createMemoryRouter([
   {
@@ -78,24 +78,24 @@ export const SubmenuContextProvidersContext = createContext<{
   addItem: () => {},
 });
 
-export const MonacoThemeContext = createContext<any>(undefined);
+export const VscThemeContext = createContext<any>(undefined);
 
 function App() {
   const dispatch = useDispatch();
 
   useSetup(dispatch);
 
-  const monacoTheme = useMonacoTheme();
+  const vscTheme = useVscTheme();
   const submenuContextProvidersMethods = useSubmenuContextProviders();
 
   return (
-    <MonacoThemeContext.Provider value={monacoTheme}>
+    <VscThemeContext.Provider value={vscTheme}>
       <SubmenuContextProvidersContext.Provider
         value={submenuContextProvidersMethods}
       >
         <RouterProvider router={router} />
       </SubmenuContextProvidersContext.Provider>
-    </MonacoThemeContext.Provider>
+    </VscThemeContext.Provider>
   );
 }
 
