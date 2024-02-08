@@ -13,6 +13,7 @@ import {
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import { streamLines } from "core/diff/util";
+import OpenAI from "core/llm/llms/OpenAI";
 import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -253,6 +254,9 @@ async function getTabCompletion(
   try {
     // Model
     const llm = await TabAutocompleteModel.get();
+    if (llm instanceof OpenAI) {
+      llm.useLegacyCompletionsEndpoint = true;
+    }
     if (!llm) return;
 
     // Prompt

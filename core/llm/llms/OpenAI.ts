@@ -22,6 +22,8 @@ const NON_CHAT_MODELS = [
 ];
 
 class OpenAI extends BaseLLM {
+  public useLegacyCompletionsEndpoint = false;
+
   static providerName: ModelProvider = "openai";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.openai.com/v1",
@@ -139,7 +141,10 @@ class OpenAI extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
-    if (NON_CHAT_MODELS.includes(options.model)) {
+    if (
+      NON_CHAT_MODELS.includes(options.model) ||
+      this.useLegacyCompletionsEndpoint
+    ) {
       for await (const content of this._legacystreamComplete(
         stripImages(messages[messages.length - 1]?.content || ""),
         options
