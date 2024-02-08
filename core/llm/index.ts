@@ -123,6 +123,10 @@ export abstract class BaseLLM implements ILLM {
     this.projectId = options.projectId;
   }
 
+  listModels(): Promise<string[]> {
+    return Promise.resolve([]);
+  }
+
   private _compileChatMessages(
     options: CompletionOptions,
     messages: ChatMessage[],

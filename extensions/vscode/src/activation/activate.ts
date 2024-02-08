@@ -90,15 +90,17 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   showRefactorMigrationMessage();
   const config = vscode.workspace.getConfiguration("continue");
   const enabled = config.get<boolean>("enableTabAutocomplete");
-  setupStatusBar(enabled);
 
-  // Register inline completion provider
-  context.subscriptions.push(
-    vscode.languages.registerInlineCompletionItemProvider(
-      [{ pattern: "**" }],
-      new ContinueCompletionProvider()
-    )
-  );
+  // Register inline completion provider (odd versions are pre-release)
+  if (parseInt(context.extension.packageJSON.version.split(".")[1]) % 2 !== 0) {
+    setupStatusBar(enabled);
+    context.subscriptions.push(
+      vscode.languages.registerInlineCompletionItemProvider(
+        [{ pattern: "**" }],
+        new ContinueCompletionProvider()
+      )
+    );
+  }
 
   ideProtocolClient = new IdeProtocolClient(context);
 
