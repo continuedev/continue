@@ -7515,6 +7515,11 @@ yargs@^17.0.1, yargs@^17.3.1:
     y18n "^5.0.5"
     yargs-parser "^21.1.1"
 
+yarn@^1.22.21:
+  version "1.22.21"
+  resolved "https://registry.npmjs.org/yarn/-/yarn-1.22.21.tgz"
+  integrity sha512-ynXaJsADJ9JiZ84zU25XkPGOvVMmZ5b7tmTSpKURYwgELdjucAOydqIOrOfTxVYcNXe91xvLZwcRh68SR3liCg==
+
 yauzl@^2.3.1, yauzl@^2.9.2:
   version "2.10.0"
   resolved "https://registry.npmjs.org/yauzl/-/yauzl-2.10.0.tgz"
