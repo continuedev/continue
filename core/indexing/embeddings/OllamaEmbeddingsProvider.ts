@@ -27,7 +27,11 @@ class OllamaEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   embed(chunks: string[]) {
-    return Promise.all(chunks.map((chunk) => embedOne(chunk, this.options)));
+    const results: any = [];
+    for (const chunk of chunks) {
+      results.push(embedOne(chunk, this.options));
+    }
+    return results;
   }
 }
 

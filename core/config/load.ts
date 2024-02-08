@@ -174,42 +174,50 @@ async function intermediateToFinalConfig(
       if (!llm) continue;
 
       if (llm.model === "AUTODETECT") {
-        const modelNames = await llm.listModels();
-        const detectedModels = await Promise.all(
-          modelNames.map(async (modelName) => {
-            return await llmFromDescription(
-              {
-                ...desc,
-                model: modelName,
-                title: llm.title + " - " + modelName,
-              },
-              readFile,
-              config.completionOptions,
-              config.systemMessage
-            );
-          })
-        );
-        models.push(
-          ...(detectedModels.filter(
-            (x) => typeof x !== "undefined"
-          ) as BaseLLM[])
-        );
+        try {
+          const modelNames = await llm.listModels();
+          const detectedModels = await Promise.all(
+            modelNames.map(async (modelName) => {
+              return await llmFromDescription(
+                {
+                  ...desc,
+                  model: modelName,
+                  title: llm.title + " - " + modelName,
+                },
+                readFile,
+                config.completionOptions,
+                config.systemMessage
+              );
+            })
+          );
+          models.push(
+            ...(detectedModels.filter(
+              (x) => typeof x !== "undefined"
+            ) as BaseLLM[])
+          );
+        } catch (e) {
+          console.warn("Error listing models: ", e);
+        }
       } else {
         models.push(llm);
       }
     } else {
       const llm = new CustomLLMClass(desc);
       if (llm.model === "AUTODETECT") {
-        const modelNames = await llm.listModels();
-        const models = modelNames.map(
-          (modelName) =>
-            new CustomLLMClass({
-              ...desc,
-              options: { ...desc.options, model: modelName },
-            })
-        );
+        try {
+          const modelNames = await llm.listModels();
+          const models = modelNames.map(
+            (modelName) =>
+              new CustomLLMClass({
+                ...desc,
+                options: { ...desc.options, model: modelName },
+              })
+          );
 
-        models.push(...models);
+          models.push(...models);
+        } catch (e) {
+          console.warn("Error listing models: ", e);
+        }
       } else {
         models.push(llm);
       }
