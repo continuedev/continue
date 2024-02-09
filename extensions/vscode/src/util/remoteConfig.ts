@@ -38,7 +38,7 @@ export async function setupRemoteConfigSync() {
 }
 
 async function syncRemoteConfig(userToken: string, remoteConfigServerUrl: URL) {
-  const response = await fetch(`${remoteConfigServerUrl}/sync`, {
+  const response = await fetch(new URL("sync", remoteConfigServerUrl).href, {
     method: "GET",
     headers: {
       Authorization: `Bearer ${userToken}`,
