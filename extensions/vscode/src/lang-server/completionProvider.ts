@@ -304,17 +304,21 @@ async function getTabCompletion(
       setupStatusBar(true, true);
 
       // Try to reuse pending requests if what the user typed matches start of completion
+      let stop = [
+        ...(completionOptions?.stop || []),
+        "\n\n",
+        "```",
+        ...lang.stopWords,
+      ];
+      if (options.disableMultiLineCompletions) {
+        stop.unshift("\n");
+      }
       let generator = GeneratorReuseManager.getGenerator(prefix, () =>
         llm.streamComplete(prompt, {
           ...completionOptions,
           temperature: 0,
           raw: true,
-          stop: [
-            ...(completionOptions?.stop || []),
-            "\n\n",
-            "```",
-            ...lang.stopWords,
-          ],
+          stop,
         })
       );
 

@@ -1,4 +1,5 @@
 import { getTsConfigPath, migrate } from "core/util/paths";
+import { Telemetry } from "core/util/posthog";
 import * as fs from "fs";
 import path from "path";
 import { v4 } from "uuid";
@@ -13,6 +14,7 @@ import {
   setupStatusBar,
 } from "../lang-server/completionProvider";
 import { vsCodeIndexCodebase } from "../util/indexCodebase";
+import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
 
@@ -180,5 +182,13 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     }
   } catch (e) {
     console.log("Error adding .continueignore file icon: ", e);
+  }
+
+  // Load Continue configuration
+  if (!context.globalState.get("hasBeenInstalled")) {
+    context.globalState.update("hasBeenInstalled", true);
+    Telemetry.capture("install", {
+      extensionVersion: getExtensionVersion(),
+    });
   }
 }

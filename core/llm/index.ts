@@ -12,6 +12,7 @@ import {
   TemplateType,
 } from "..";
 import mergeJson from "../util/merge";
+import { Telemetry } from "../util/posthog";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -191,12 +192,11 @@ ${prompt}`;
 
   private _logTokensGenerated(model: string, completion: string) {
     let tokens = this.countTokens(completion);
-    // TODO
-    // posthogLogger.captureEvent("tokens_generated", {
-    //   model: model,
-    //   tokens: tokens,
-    //   model_class: this.constructor.name,
-    // });
+    Telemetry.capture("tokens_generated", {
+      model: model,
+      provider: this.providerName,
+      tokens: tokens,
+    });
   }
 
   _fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> =
