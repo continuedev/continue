@@ -179,7 +179,7 @@ class Ollama extends BaseLLM {
     const client = new ollama.Ollama({
       host: this.apiBase,
       
-      fetch: async (input, config) => {
+      fetch: (input, config) => {
         return fetch(input, {
           ...config,
           headers: {
