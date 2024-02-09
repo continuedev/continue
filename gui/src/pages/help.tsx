@@ -35,7 +35,7 @@ const TutorialButton = styled(Button)`
 function HelpPage() {
   const navigate = useNavigate();
 
-  // Route events to the GUI page.
+  // Switch to main gui and bubble up event.
   useEffect(() => {
     const listener = (e) => {
       if(e.data.type !== "getOpenFiles") {
