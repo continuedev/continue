@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground, vscForeground } from "../components";
 import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
+import React, { useEffect } from "react";
 
 const IconDiv = styled.div<{ backgroundColor?: string }>`
   display: flex;
@@ -33,6 +34,26 @@ const TutorialButton = styled(Button)`
 
 function HelpPage() {
   const navigate = useNavigate();
+
+  // Route events to the GUI page.
+  useEffect(() => {
+    const listener = (e) => {
+      if(e.data.type !== "getOpenFiles") {
+        navigate("/");
+
+        // Need to wait to get routed to GUI page.
+        setTimeout(() => {
+          window.postMessage(e.data, "*");
+        }, 200);
+      }
+    };
+
+    window.addEventListener("message", listener);
+
+    return () => {
+      window.removeEventListener("message", listener);
+    };
+  }, []);
 
   return (
     <div className="overflow-y-scroll">
