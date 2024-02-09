@@ -24,9 +24,7 @@ class Ollama extends BaseLLM {
     }
     this.fetch(`${this.apiBase}/api/show`, {
       method: "POST",
-      headers: this.apiKey ? {
-        "Authorization": `Basic ${btoa("api-key:" + this.apiKey)}`
-      } : {},
+      headers: {},
       body: JSON.stringify({ name: this._getModel() }),
     }).then(async (response) => {
       if (response.status !== 200) {
@@ -141,10 +139,7 @@ class Ollama extends BaseLLM {
   ): AsyncGenerator<string> {
     const response = await this.fetch(`${this.apiBase}/api/generate`, {
       method: "POST",
-      headers: this.apiKey ? {
-        "Content-Type": "application/json",
-        "Authorization": `Basic ${btoa("api-key:" + this.apiKey)}`
-      } : {
+      headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(this._convertArgs(options, prompt)),
@@ -187,9 +182,10 @@ class Ollama extends BaseLLM {
       fetch: async (input, config) => {
         return fetch(input, {
           ...config,
-          headers: this.apiKey ? {
-            "Authorization": `Basic ${btoa("api-key:" + this.apiKey)}`
-          } : {},
+          headers: {
+            ...(config?.headers || {}),
+            ...(this.requestOptions?.headers || {})
+          }
         });
       }
     });
