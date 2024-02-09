@@ -8,6 +8,7 @@ import {
 } from "core/config/load";
 import Ollama from "core/llm/llms/Ollama";
 import { getConfigJsonPath } from "core/util/paths";
+import { Telemetry } from "core/util/posthog";
 import { http, https } from "follow-redirects";
 import * as fs from "fs";
 import { HttpProxyAgent } from "http-proxy-agent";
@@ -16,6 +17,7 @@ import fetch from "node-fetch";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 import { debugPanelWebview, webviewRequest } from "./debugPanel";
+import { getUniqueId } from "./util/vscode";
 const tls = require("tls");
 
 const outputChannel = vscode.window.createOutputChannel(
@@ -70,6 +72,12 @@ class VsCodeConfigHandler {
       // Update the sidebar panel
       const browserConfig = finalToBrowserConfig(this.savedConfig);
       debugPanelWebview?.postMessage({ type: "configUpdate", browserConfig });
+
+      // Setup telemetry only after (and if) we know it is enabled
+      await Telemetry.setup(
+        this.savedConfig.allowAnonymousTelemetry ?? true,
+        getUniqueId()
+      );
 
       return this.savedConfig;
     } catch (e) {

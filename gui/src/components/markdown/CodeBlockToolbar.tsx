@@ -25,6 +25,7 @@ const SecondDiv = styled.div`
   right: 4px;
   display: flex;
   gap: 4px;
+  background-color: ${vscEditorBackground};
 `;
 
 interface CodeBlockToolBarProps {

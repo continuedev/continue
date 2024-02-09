@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.52",
+  "version": "0.9.58",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -448,7 +448,8 @@
     "@types/ws": "^8.5.4",
     "@typescript-eslint/eslint-plugin": "^5.45.0",
     "@typescript-eslint/parser": "^5.45.0",
-    "@vscode/test-electron": "^2.2.0",
+    "@vscode/test-cli": "^0.0.6",
+    "@vscode/test-electron": "^2.3.9",
     "@vscode/vsce": "^2.22.0",
     "cargo-cp-artifact": "^0.1",
     "esbuild": "^0.17.19",
@@ -499,6 +500,7 @@
     "uuidv4": "^6.2.13",
     "vectordb": "^0.4.3",
     "vscode-languageclient": "^8.0.2",
-    "ws": "^8.13.0"
+    "ws": "^8.13.0",
+    "yarn": "^1.22.21"
   }
 }

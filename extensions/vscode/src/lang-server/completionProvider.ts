@@ -13,6 +13,7 @@ import {
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import { streamLines } from "core/diff/util";
+import OpenAI from "core/llm/llms/OpenAI";
 import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -70,19 +71,19 @@ export function setupStatusBar(
 }
 
 async function getDefinition(
-  filepath: string,
+  uri: string,
   line: number,
   character: number
 ): Promise<AutocompleteSnippet | undefined> {
   const definitions = (await vscode.commands.executeCommand(
     "vscode.executeDefinitionProvider",
-    vscode.Uri.file(filepath),
+    vscode.Uri.parse(uri),
     new vscode.Position(line, character)
   )) as any;
 
   if (definitions[0]?.targetRange) {
     return {
-      filepath,
+      filepath: uri,
       content: await ideProtocolClient.readRangeInFile(
         definitions[0].targetUri.fsPath,
         definitions[0].targetRange
@@ -253,6 +254,9 @@ async function getTabCompletion(
   try {
     // Model
     const llm = await TabAutocompleteModel.get();
+    if (llm instanceof OpenAI) {
+      llm.useLegacyCompletionsEndpoint = true;
+    }
     if (!llm) return;
 
     // Prompt
@@ -300,17 +304,21 @@ async function getTabCompletion(
       setupStatusBar(true, true);
 
       // Try to reuse pending requests if what the user typed matches start of completion
+      let stop = [
+        ...(completionOptions?.stop || []),
+        "\n\n",
+        "```",
+        ...lang.stopWords,
+      ];
+      if (options.disableMultiLineCompletions) {
+        stop.unshift("\n");
+      }
       let generator = GeneratorReuseManager.getGenerator(prefix, () =>
         llm.streamComplete(prompt, {
           ...completionOptions,
           temperature: 0,
           raw: true,
-          stop: [
-            ...(completionOptions?.stop || []),
-            "\n\n",
-            "```",
-            ...lang.stopWords,
-          ],
+          stop,
         })
       );
 
