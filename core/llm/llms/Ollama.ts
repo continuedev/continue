@@ -24,6 +24,7 @@ class Ollama extends BaseLLM {
     }
     this.fetch(`${this.apiBase}/api/show`, {
       method: "POST",
+      headers: {},
       body: JSON.stringify({ name: this._getModel() }),
     }).then(async (response) => {
       if (response.status !== 200) {
@@ -177,6 +178,16 @@ class Ollama extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     const client = new ollama.Ollama({
       host: this.apiBase,
+      
+      fetch: (input, config) => {
+        return fetch(input, {
+          ...config,
+          headers: {
+            ...(config?.headers || {}),
+            ...(this.requestOptions?.headers || {})
+          }
+        });
+      }
     });
     const response = await client.chat({
       ...this._convertArgs(options, messages),
