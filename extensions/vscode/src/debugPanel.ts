@@ -639,6 +639,14 @@ export function getSidebarContent(
             break;
           }
           const document = editor.document;
+
+          if (document.getText().trim() === "") {
+            editor.edit((editBuilder) => {
+              editBuilder.insert(document.positionAt(0), data.text);
+            });
+            return;
+          }
+
           const start = new vscode.Position(0, 0);
           const end = new vscode.Position(
             document.lineCount - 1,
