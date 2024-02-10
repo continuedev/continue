@@ -1,12 +1,19 @@
 import { TabAutocompleteOptions } from "core";
 import { AutocompleteLruCache } from "core/autocomplete/cache";
+import { onlyWhitespaceAfterEndOfLine } from "core/autocomplete/charStream";
 import {
   AutocompleteSnippet,
   constructAutocompletePrompt,
   languageForFilepath,
 } from "core/autocomplete/constructPrompt";
+import {
+  stopAtSimilarLine,
+  streamWithNewLines,
+} from "core/autocomplete/lineStream";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
 import { getTemplateForModel } from "core/autocomplete/templates";
+import { streamLines } from "core/diff/util";
+import OpenAI from "core/llm/llms/OpenAI";
 import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -20,10 +27,23 @@ const statusBarItemTooltip = (enabled: boolean | undefined) =>
   enabled ? "Tab autocomplete is enabled" : "Click to enable tab autocomplete";
 
 let lastStatusBar: vscode.StatusBarItem | undefined = undefined;
+let statusBarFalseTimeout: NodeJS.Timeout | undefined = undefined;
+
+function stopStatusBarLoading() {
+  statusBarFalseTimeout = setTimeout(() => {
+    setupStatusBar(true, false);
+  }, 100);
+}
+
 export function setupStatusBar(
   enabled: boolean | undefined,
   loading?: boolean
 ) {
+  if (loading !== false) {
+    clearTimeout(statusBarFalseTimeout);
+    statusBarFalseTimeout = undefined;
+  }
+
   const statusBarItem = vscode.window.createStatusBarItem(
     vscode.StatusBarAlignment.Right
   );
@@ -51,19 +71,19 @@ export function setupStatusBar(
 }
 
 async function getDefinition(
-  filepath: string,
+  uri: string,
   line: number,
   character: number
 ): Promise<AutocompleteSnippet | undefined> {
   const definitions = (await vscode.commands.executeCommand(
     "vscode.executeDefinitionProvider",
-    vscode.Uri.file(filepath),
+    vscode.Uri.parse(uri),
     new vscode.Position(line, character)
   )) as any;
 
   if (definitions[0]?.targetRange) {
     return {
-      filepath,
+      filepath: uri,
       content: await ideProtocolClient.readRangeInFile(
         definitions[0].targetUri.fsPath,
         definitions[0].targetRange
@@ -140,8 +160,8 @@ class ListenableGenerator<T> {
         let resolve: (value: any) => void;
         let promise = new Promise<T>((res) => {
           resolve = res;
+          this._listeners.add(resolve!);
         });
-        this._listeners.add(resolve!);
         const value = await promise;
         this._listeners.delete(resolve!);
 
@@ -234,6 +254,9 @@ async function getTabCompletion(
   try {
     // Model
     const llm = await TabAutocompleteModel.get();
+    if (llm instanceof OpenAI) {
+      llm.useLegacyCompletionsEndpoint = true;
+    }
     if (!llm) return;
 
     // Prompt
@@ -246,9 +269,12 @@ async function getTabCompletion(
         new vscode.Position(document.lineCount, Number.MAX_SAFE_INTEGER)
       )
     );
+    const lineBelowCursor = document.lineAt(
+      Math.min(pos.line + 1, document.lineCount - 1)
+    ).text;
     const clipboardText = await vscode.env.clipboard.readText();
     const { prefix, suffix } = await constructAutocompletePrompt(
-      document.fileName,
+      document.uri.toString(),
       fullPrefix,
       fullSuffix,
       clipboardText,
@@ -278,39 +304,48 @@ async function getTabCompletion(
       setupStatusBar(true, true);
 
       // Try to reuse pending requests if what the user typed matches start of completion
+      let stop = [
+        ...(completionOptions?.stop || []),
+        "\n\n",
+        "```",
+        ...lang.stopWords,
+      ];
+      if (options.disableMultiLineCompletions) {
+        stop.unshift("\n");
+      }
       let generator = GeneratorReuseManager.getGenerator(prefix, () =>
         llm.streamComplete(prompt, {
           ...completionOptions,
           temperature: 0,
           raw: true,
-          stop: [
-            ...(completionOptions?.stop || []),
-            "\n\n",
-            "```",
-            ...lang.stopWords,
-          ],
+          stop,
         })
       );
 
       // LLM
-      for await (const update of generator) {
-        completion += update;
-        if (token.isCancellationRequested) {
-          return undefined;
-        }
-
-        let foundEndLine = false;
-        for (const end of lang.endOfLine) {
-          if (completion.includes(end + "\n")) {
-            // completion =
-            //   completion.slice(0, completion.indexOf(end + "\n")) + end;
-            // foundEndLine = true;
-            // break;
+      let cancelled = false;
+      const generatorWithCancellation = async function* () {
+        for await (const update of generator) {
+          if (token.isCancellationRequested) {
+            stopStatusBarLoading();
+            cancelled = true;
+            return undefined;
           }
+          yield update;
         }
-        if (foundEndLine) {
-          break;
-        }
+      };
+      const gen2 = onlyWhitespaceAfterEndOfLine(
+        generatorWithCancellation(),
+        lang.endOfLine
+      );
+      const lineGenerator = streamWithNewLines(streamLines(gen2));
+      const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
+      for await (const update of finalGenerator) {
+        completion += update;
+      }
+
+      if (cancelled) {
+        return undefined;
       }
 
       // Don't return empty
@@ -441,7 +476,7 @@ export class ContinueCompletionProvider
     } catch (e: any) {
       console.warn("Error getting autocompletion: ", e.message);
     } finally {
-      setupStatusBar(true, false);
+      stopStatusBarLoading();
     }
   }
 }

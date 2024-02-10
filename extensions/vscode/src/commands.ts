@@ -11,7 +11,9 @@ import {
   streamEdit,
   verticalPerLineDiffManager,
 } from "./diff/verticalPerLine/manager";
+import { VsCodeIde } from "./ideProtocol";
 import { AutocompleteOutcome } from "./lang-server/completionProvider";
+import { configHandler, llmFromTitle } from "./loadConfig";
 
 function addHighlightedCodeToContext(edit: boolean) {
   const editor = vscode.window.activeTextEditor;
@@ -123,11 +125,12 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     acceptRejectVerticalDiffBlock(false, filepath, index);
   },
   "continue.quickFix": async (message: string, code: string, edit: boolean) => {
-    ideProtocolClient.sendMainUserInput(
-      `${
+    debugPanelWebview?.postMessage({
+      type: "newSessionWithPrompt",
+      prompt: `${
         edit ? "/edit " : ""
-      }${code}\n\nHow do I fix this problem in the above code?: ${message}`
-    );
+      }${code}\n\nHow do I fix this problem in the above code?: ${message}`,
+    });
     if (!edit) {
       vscode.commands.executeCommand("continue.continueGUIView.focus");
     }
@@ -151,14 +154,84 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   },
   "continue.quickEdit": async () => {
     const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
-    const text = await vscode.window.showInputBox({
+
+    let text = await vscode.window.showInputBox({
       placeHolder: selectionEmpty
-        ? "Describe the code you want to generate"
-        : "Describe how to edit the highlighted code",
+        ? "Describe the code you want to generate (or press enter to add context first)"
+        : "Describe how to edit the highlighted code (or press enter to add context first)",
       title: "Continue Quick Edit",
     });
-    if (text) {
+
+    if (text === undefined) {
+      return;
+    }
+
+    if (text.length > 0) {
       await streamEdit(text);
+    } else {
+      // Pick context first
+      const quickPickItems: Promise<vscode.QuickPickItem[]> = configHandler
+        .loadConfig()
+        .then((config) => {
+          return (
+            config.contextProviders
+              ?.filter((provider) => provider.description.type === "normal")
+              .map((provider) => {
+                return {
+                  label: provider.description.displayTitle,
+                  description: provider.description.title,
+                  detail: provider.description.description,
+                };
+              }) || []
+          );
+        });
+
+      const selectedProviders = await vscode.window.showQuickPick(
+        quickPickItems,
+        {
+          title: "Add Context",
+          canPickMany: true,
+        }
+      );
+
+      let text = await vscode.window.showInputBox({
+        placeHolder: selectionEmpty
+          ? "Describe the code you want to generate (or press enter to add context first)"
+          : "Describe how to edit the highlighted code (or press enter to add context first)",
+        title: "Continue Quick Edit",
+      });
+      if (text) {
+        const llm = await llmFromTitle();
+        const config = await configHandler.loadConfig();
+        const context = (
+          await Promise.all(
+            selectedProviders?.map((providerTitle) => {
+              const provider = config.contextProviders?.find(
+                (provider) =>
+                  provider.description.title === providerTitle.description
+              );
+              if (!provider) {
+                return [];
+              }
+
+              return provider.getContextItems("", {
+                embeddingsProvider: config.embeddingsProvider,
+                ide: new VsCodeIde(),
+                llm,
+                fullInput: text || "",
+                selectedCode: [],
+              });
+            }) || []
+          )
+        ).flat();
+
+        text =
+          context.map((item) => item.content).join("\n\n") +
+          "\n\n---\n\n" +
+          text;
+
+        await streamEdit(text);
+      }
     }
   },
   "continue.writeCommentsForCode": async () => {

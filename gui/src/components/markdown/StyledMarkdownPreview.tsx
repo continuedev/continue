@@ -1,6 +1,8 @@
 import React, { memo, useEffect } from "react";
 import { useRemark } from "react-remark";
-import rehypeShikiji from "rehype-shikiji";
+// import rehypeKatex from "rehype-katex";
+// import remarkMath from "remark-math";
+import rehypeHighlight from "rehype-highlight";
 import styled from "styled-components";
 import { visit } from "unist-util-visit";
 import {
@@ -11,11 +13,11 @@ import {
 } from "..";
 import { getFontSize } from "../../util";
 import PreWithToolbar from "./PreWithToolbar";
+import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import "./markdown.css";
 
 const StyledMarkdown = styled.div<{
   fontSize?: number;
-  maxHeight?: number;
   showBorder?: boolean;
 }>`
   pre {
@@ -24,8 +26,7 @@ const StyledMarkdown = styled.div<{
 
     max-width: calc(100vw - 24px);
     overflow-x: scroll;
-
-    font-size: 12px;
+    overflow-y: hidden;
 
     ${(props) => {
       if (props.showBorder) {
@@ -35,21 +36,12 @@ const StyledMarkdown = styled.div<{
       }
     }}
     padding: ${(props) => (props.showBorder ? "12px" : "0px 2px")};
-    ${(props) => {
-      if (props.maxHeight) {
-        return `
-          max-height: ${props.maxHeight}px;
-          overflow-y: auto;
-        `;
-      }
-    }}
   }
 
   code {
     span.line:empty {
       display: none;
     }
-    color: #f78383;
     word-wrap: break-word;
     border-radius: ${defaultBorderRadius};
     background-color: ${vscEditorBackground};
@@ -58,7 +50,8 @@ const StyledMarkdown = styled.div<{
   }
 
   code:not(pre > code) {
-    font-family: monospace;
+    font-family: var(--vscode-editor-font-family);
+    color: #f78383;
   }
 
   background-color: ${vscBackground};
@@ -90,9 +83,9 @@ const StyledMarkdown = styled.div<{
 
 interface StyledMarkdownPreviewProps {
   source?: string;
-  maxHeight?: number;
   className?: string;
   showCodeBorder?: boolean;
+  scrollLocked?: boolean;
 }
 
 const FadeInWords: React.FC = (props: any) => {
@@ -116,143 +109,26 @@ const FadeInWords: React.FC = (props: any) => {
   return <p {...otherProps}>{words}</p>;
 };
 
-const supportedLanguages = [
-  "abap",
-  "actionscript-3",
-  "ada",
-  "apex",
-  "applescript",
-  "asm",
-  "awk",
-  "bat",
-  "c",
-  "clojure",
-  "cobol",
-  "coffee",
-  "cpp",
-  "crystal",
-  "csharp",
-  "css",
-  "d",
-  "dart",
-  "diff",
-  "dockerfile",
-  "elixir",
-  "elm",
-  "erlang",
-  // "fortran",
-  "fsharp",
-  "git-commit",
-  "git-rebase",
-  // "go",
-  "graphql",
-  "groovy",
-  "hack",
-  "haml",
-  "handlebars",
-  "haskell",
-  "hcl",
-  "hlsl",
-  "html",
-  "ini",
-  "java",
-  "javascript",
-  "jinja-html",
-  "json",
-  "jsonc",
-  "jsonnet",
-  "jsx",
-  "julia",
-  "kotlin",
-  "latex",
-  "less",
-  "lisp",
-  "log",
-  "logo",
-  "lua",
-  "makefile",
-  "markdown",
-  "matlab",
-  "nix",
-  "objective-c",
-  "ocaml",
-  "pascal",
-  "perl",
-  "perl6",
-  "php",
-  "pls",
-  "postcss",
-  "powershell",
-  "prolog",
-  "pug",
-  "puppet",
-  "purescript",
-  "python",
-  "r",
-  "razor",
-  "ruby",
-  "rust",
-  "sas",
-  "sass",
-  "scala",
-  "scheme",
-  "scss",
-  "shaderlab",
-  "shellscript",
-  "smalltalk",
-  "sql",
-  "stylus",
-  "svelte",
-  "swift",
-  "tcl",
-  "toml",
-  "ts",
-  "tsx",
-  "typescript",
-  "vb",
-  "viml",
-  "vue",
-  "wasm",
-  "xml",
-  "xsl",
-  "yaml",
-  "文言",
-];
-
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps
 ) {
   const [reactContent, setMarkdownSource] = useRemark({
+    // remarkPlugins: [remarkMath],
+    // rehypePlugins: [rehypeKatex as any, {}],
     remarkPlugins: [
       () => {
         return (tree) => {
           visit(tree, "code", (node: any) => {
-            if (!supportedLanguages.includes(node.lang)) {
-              node.lang = "javascript"; // Default to javascript to get some highlighting
+            if (!node.lang) {
+              node.lang === "javascript";
+            } else if (node.lang.includes(".")) {
+              node.lang = node.lang.split(".").slice(-1)[0];
             }
           });
         };
       },
     ],
-    rehypePlugins: [
-      [
-        rehypeShikiji as any,
-        {
-          theme:
-            (window as any).fullColorTheme ||
-            (window as any).colorThemeName ||
-            "dark-plus",
-          addLanguageClass: true,
-        },
-      ],
-      // [
-      //   rehypeWrapAll,
-      //   {
-      //     selector: "code > span",
-      //     wrapper: "span.fade-in-span",
-      //   },
-      // ],
-    ],
+    rehypePlugins: [rehypeHighlight as any, {}],
     rehypeReactOptions: {
       components: {
         a: ({ node, ...props }) => {
@@ -264,14 +140,38 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         },
         pre: ({ node, ...preProps }) => {
           return props.showCodeBorder ? (
-            <PreWithToolbar {...preProps}></PreWithToolbar>
+            <PreWithToolbar>
+              <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+            </PreWithToolbar>
           ) : (
-            <pre {...preProps}></pre>
+            <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
           );
         },
-        // p: ({ node, ...props }) => {
-        //   return <FadeInWords {...props}></FadeInWords>;
-        // },
+        //   pre: ({ node, ...preProps }) => {
+        //     const codeString =
+        //       preProps.children?.[0]?.props?.children?.[0].trim() || "";
+        //     const monacoEditor = (
+        //       <MonacoCodeBlock
+        //         showBorder={props.showCodeBorder}
+        //         language={
+        //           preProps.children?.[0]?.props?.className?.split("-")[1] ||
+        //           "typescript"
+        //         }
+        //         preProps={preProps}
+        //         codeString={codeString}
+        //       />
+        //     );
+        //     return props.showCodeBorder ? (
+        //       <PreWithToolbar copyvalue={codeString}>
+        //         <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+        //       </PreWithToolbar>
+        //     ) : (
+        //       <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+        //     );
+        //   },
+        //   // p: ({ node, ...props }) => {
+        //   //   return <FadeInWords {...props}></FadeInWords>;
+        //   // },
       },
     },
   });
@@ -281,11 +181,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   }, [props.source]);
 
   return (
-    <StyledMarkdown
-      maxHeight={props.maxHeight}
-      fontSize={getFontSize()}
-      showBorder={props.showCodeBorder}
-    >
+    <StyledMarkdown fontSize={getFontSize()} showBorder={props.showCodeBorder}>
       {reactContent}
     </StyledMarkdown>
   );

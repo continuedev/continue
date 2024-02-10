@@ -1,0 +1,1567 @@
+{
+  "title": "config.json",
+  "$ref": "#/definitions/SerializedContinueConfig",
+  "definitions": {
+    "BaseCompletionOptions": {
+      "title": "BaseCompletionOptions",
+      "type": "object",
+      "properties": {
+        "temperature": {
+          "title": "Temperature",
+          "description": "The temperature of the completion.",
+          "type": "number"
+        },
+        "topP": {
+          "title": "Top P",
+          "description": "The topP of the completion.",
+          "type": "number"
+        },
+        "topK": {
+          "title": "Top K",
+          "description": "The topK of the completion.",
+          "type": "integer"
+        },
+        "presencePenalty": {
+          "title": "Presence Penalty",
+          "description": "The presence penalty Aof the completion.",
+          "type": "number"
+        },
+        "frequencePenalty": {
+          "title": "Frequency Penalty",
+          "description": "The frequency penalty of the completion.",
+          "type": "number"
+        },
+        "mirostat": {
+          "title": "Mirostat",
+          "description": "Enable Mirostat sampling, controlling perplexity during text generation (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0). Only available for Ollama, LM Studio, and llama.cpp providers",
+          "type": "number"
+        },
+        "stop": {
+          "title": "Stop",
+          "description": "The stop tokens of the completion.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "maxTokens": {
+          "title": "Max Tokens",
+          "description": "The maximum number of tokens to generate.",
+          "default": 600,
+          "type": "integer"
+        }
+      }
+    },
+    "RequestOptions": {
+      "title": "RequestOptions",
+      "type": "object",
+      "properties": {
+        "timeout": {
+          "title": "Timeout",
+          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
+          "default": 7200,
+          "type": "integer"
+        },
+        "verifySsl": {
+          "title": "Verify Ssl",
+          "description": "Whether to verify SSL certificates for requests.",
+          "type": "boolean"
+        },
+        "caBundlePath": {
+          "title": "Ca Bundle Path",
+          "description": "Path to a custom CA bundle to use when making the HTTP request",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "proxy": {
+          "title": "Proxy",
+          "description": "Proxy URL to use when making the HTTP request",
+          "type": "string"
+        },
+        "headers": {
+          "title": "Headers",
+          "description": "Headers to use when making the HTTP request",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "ModelDescription": {
+      "title": "ModelDescription",
+      "type": "object",
+      "properties": {
+        "title": {
+          "title": "Title",
+          "description": "The title you wish to give your model.",
+          "type": "string"
+        },
+        "provider": {
+          "title": "Provider",
+          "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
+          "enum": [
+            "openai",
+            "free-trial",
+            "anthropic",
+            "together",
+            "ollama",
+            "huggingface-tgi",
+            "huggingface-inference-api",
+            "llama.cpp",
+            "replicate",
+            "google-palm",
+            "lmstudio",
+            "llamafile",
+            "mistral",
+            "deepinfra",
+            "flowise"
+          ],
+          "markdownEnumDescriptions": [
+            "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/openai)",
+            "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/freetrial)",
+            "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/anthropicllm)",
+            "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/togetherllm)",
+            "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama pull <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/ollama)",
+            "### Huggingface TGI\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/huggingfacetgi)",
+            "### Huggingface Inference API\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/huggingfaceinferenceapi)",
+            "### Llama.cpp\nllama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:\n\n1. Clone the repository with `git clone https://github.com/ggerganov/llama.cpp`.\n2. `cd llama.cpp`\n3. Run `make` to build the server.\n4. Download the model you'd like to use and place it in the `llama.cpp/models` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))\n5. Run the llama.cpp server with the command below (replacing with the model you downloaded):\n\n```shell\n.\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf\n```\n\nAfter it's up and running, you can start using Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamacpp)",
+            "### Replicate\nReplicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/replicatellm)",
+            "### Google PALM\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/googlepalmapi)",
+            "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/lmstudio)",
+            "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamafile)",
+            "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
+            "### DeepInfra\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/deepinfra)"
+          ],
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "description": "The name of the model. Used to autodetect prompt template.",
+          "type": "string"
+        },
+        "apiKey": {
+          "title": "Api Key",
+          "description": "OpenAI, Anthropic, Together, or other API key",
+          "type": "string"
+        },
+        "apiBase": {
+          "title": "Api Base",
+          "description": "The base URL of the LLM API.",
+          "type": "string"
+        },
+        "contextLength": {
+          "title": "Context Length",
+          "description": "The maximum context length of the LLM in tokens, as counted by countTokens.",
+          "default": 2048,
+          "type": "integer"
+        },
+        "template": {
+          "title": "Template",
+          "description": "The chat template used to format messages. This is auto-detected for most models, but can be overridden here. Choose none if you are using vLLM or another server that automatically handles prompting.",
+          "enum": [
+            "llama2",
+            "alpaca",
+            "zephyr",
+            "phind",
+            "anthropic",
+            "chatml",
+            "none",
+            "deepseek",
+            "openchat",
+            "xwin-coder",
+            "neural-chat",
+            "codellama-70b"
+          ],
+          "type": "string"
+        },
+        "promptTemplates": {
+          "title": "Prompt Templates",
+          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://continue.dev/docs/model-setup/configuration#customizing-the-edit-prompt) for an example.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "completionOptions": {
+          "title": "Completion Options",
+          "description": "Options for the completion endpoint. Read more about the completion options in the documentation.",
+          "default": {
+            "temperature": null,
+            "topP": null,
+            "topK": null,
+            "presencePenalty": null,
+            "frequencyPenalty": null,
+            "stop": null,
+            "maxTokens": 600
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/BaseCompletionOptions"
+            }
+          ]
+        },
+        "systemMessage": {
+          "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
+          "type": "string"
+        },
+        "requestOptions": {
+          "title": "Request Options",
+          "description": "Options for the HTTP request to the LLM.",
+          "default": {
+            "timeout": 7200,
+            "verifySsl": null,
+            "caBundlePath": null,
+            "proxy": null,
+            "headers": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RequestOptions"
+            }
+          ]
+        },
+        "apiType": {
+          "title": "Api Type",
+          "markdownDescription": "OpenAI API type, either `openai` or `azure`",
+          "enum": [
+            "openai",
+            "azure"
+          ]
+        },
+        "apiVersion": {
+          "title": "Api Version",
+          "description": "Azure OpenAI API version (e.g. 2023-07-01-preview)",
+          "type": "string"
+        },
+        "engine": {
+          "title": "Engine",
+          "description": "Azure OpenAI engine",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "provider",
+        "model"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "type": "str"
+              }
+            },
+            "not": {
+              "required": [
+                "provider"
+              ]
+            }
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "description": "Choose a provider first, then model options will be shown here."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "openai",
+                  "anthropic",
+                  "google-palm",
+                  "huggingface-inference-api",
+                  "replicate",
+                  "together"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "required": [
+              "apiKey"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "huggingface-tgi"
+                ]
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "apiBase"
+            ]
+          },
+          "required": [
+            "provider"
+          ]
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "openai"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "engine": {
+                "type": "string"
+              },
+              "apiType": {
+                "type": "string"
+              },
+              "apiVersion": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "openai"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "gpt-3.5-turbo",
+                  "gpt-3.5-turbo-16k",
+                  "gpt-4",
+                  "gpt-3.5-turbo-0613",
+                  "gpt-4-32k",
+                  "gpt-4-0125-preview",
+                  "AUTODETECT"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "replicate"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "llama2-7b",
+                      "llama2-13b"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "markdownDescription": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models)."
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "free-trial"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "gpt-3.5-turbo",
+                  "gpt-4",
+                  "phind-codellama-34b",
+                  "gemini-pro",
+                  "gpt-4-vision-preview",
+                  "codellama-70b",
+                  "AUTODETECT"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "openai"
+                ]
+              },
+              "apiType": {
+                "not": {
+                  "const": "azure"
+                }
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gpt-3.5-turbo",
+                      "gpt-3.5-turbo-16k",
+                      "gpt-4",
+                      "gpt-3.5-turbo-0613",
+                      "gpt-4-32k",
+                      "gpt-4-0125-preview",
+                      "gpt-4-vision-preview",
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "anthropic"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "claude-2",
+                      "claude-instant-1"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "google-palm"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "chat-bison-001",
+                  "gemini-pro"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "together"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "phind-codellama-34b"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "markdownDescription": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "deepinfra"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "markdownDescription": "Find the model name you want to use from DeepInfra [here](https://deepinfra.com/models?type=text-generation)."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "huggingface-tgi",
+                  "huggingface-inference-api",
+                  "llama.cpp",
+                  "text-gen-webui",
+                  "llamafile"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "ollama"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "mistral-7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "phi-2",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "markdownDescription": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "mistral"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "mistral-tiny",
+                  "mistral-small",
+                  "mistral-medium"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "apiType": {
+                "const": "azure"
+              }
+            },
+            "required": [
+              "apiType"
+            ]
+          },
+          "then": {
+            "required": [
+              "engine",
+              "apiVersion",
+              "apiBase"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "openai"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "useLegacyCompletionsEndpoint": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "const": "llamafile"
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "llamafileCommand": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "text-gen-webui"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "streamingUrl": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "flowise"
+                ]
+              }
+            },
+            "required": [
+              "provider"
+            ]
+          },
+          "then": {
+            "properties": {
+              "timeout": {
+                "title": "Timeout",
+                "description": "Set the timeout for each request to Flowise. If you are running a local version of Flowise it might takes a while to respond, you might want to set this to avoid timeouts.",
+                "default": 5000,
+                "type": "integer"
+              },
+              "additionalHeaders": {
+                "description": "A list of additional headers",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "title": "Key",
+                      "description": "Header key",
+                      "type": "string"
+                    },
+                    "value": {
+                      "title": "Value",
+                      "description": "Header value",
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "value"
+                  ]
+                }
+              },
+              "additionalFlowiseConfiguration": {
+                "description": "A list of additional properties to be sent along `overrideConfig`",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "title": "Key",
+                      "description": "Configuration Property key",
+                      "type": "string"
+                    },
+                    "value": {
+                      "title": "Value",
+                      "description": "Configuration Property value"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "value"
+                  ]
+                }
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gpt-3.5-turbo",
+                      "gpt-3.5-turbo-16k",
+                      "gpt-4",
+                      "gpt-3.5-turbo-0613",
+                      "gpt-4-32k",
+                      "gpt-4-0125-preview",
+                      "gpt-4-vision-preview",
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "claude-2",
+                      "chat-bison-001",
+                      "gemini-pro",
+                      "mistral-tiny",
+                      "mistral-small",
+                      "mistral-medium",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ModelRoles": {
+      "title": "ModelRoles",
+      "type": "object",
+      "properties": {
+        "default": {
+          "title": "Default",
+          "description": "The default model. If other model roles are not set, they will fall back to default.",
+          "type": "string"
+        },
+        "chat": {
+          "title": "Chat",
+          "description": "The model to use for chat. If not set, will fall back to default.",
+          "type": "string"
+        },
+        "edit": {
+          "title": "Edit",
+          "description": "The model to use for editing. If not set, will fall back to default.",
+          "type": "string"
+        },
+        "summarize": {
+          "title": "Summarize",
+          "description": "The model to use for summarization. If not set, will fall back to default.",
+          "type": "string"
+        }
+      },
+      "required": [
+        "default"
+      ]
+    },
+    "SlashCommand": {
+      "title": "SlashCommand",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "anyOf": [
+            {
+              "enum": [
+                "issue",
+                "share",
+                "so",
+                "cmd",
+                "edit",
+                "comment",
+                "http",
+                "commit"
+              ],
+              "type": "string",
+              "markdownEnumDescriptions": [
+                "Generate a link to a drafted GitHub issue",
+                "Export the current chat session to markdown",
+                "Reference StackOverflow to answer the question",
+                "Generate a terminal command and paste it into the terminal",
+                "Edit the highlighted code with given instructions",
+                "Add comments to the highlighted code",
+                "Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
+                "Generate a commit message for the current changes"
+              ]
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "step": {
+          "title": "Step",
+          "description": "This property is no longer required and has no effect. To use a built-in slash command, instead set the 'name' property to one of the pre-configured options.",
+          "type": "string"
+        },
+        "params": {
+          "title": "Params",
+          "default": {},
+          "type": "object"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "issue"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "repositoryUrl": {
+                    "type": "string",
+                    "description": "Enter the URL of the GitHub repository for which you want to generate the issue."
+                  }
+                },
+                "required": [
+                  "repositoryUrl"
+                ]
+              }
+            },
+            "required": [
+              "params"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "edit"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "recap": {
+                    "type": "boolean",
+                    "markdownDescription": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit."
+                  },
+                  "tokenLimit": {
+                    "type": "integer",
+                    "markdownDescription": "By default, Continue doesn't let you edit extremely large ranges (beyond 1,200 tokens), because the LLM is unlikely to succeed. But if you would like to override this limit with the understanding of possible failure you may do so here."
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "required": [
+        "name",
+        "description"
+      ]
+    },
+    "CustomCommand": {
+      "title": "CustomCommand",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "prompt",
+        "description"
+      ]
+    },
+    "ContextProviderWithParams": {
+      "title": "ContextProviderWithParams",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "anyOf": [
+            {
+              "enum": [
+                "diff",
+                "terminal",
+                "open",
+                "google",
+                "search",
+                "http",
+                "codebase",
+                "problems",
+                "folder",
+                "issue",
+                "docs",
+                "tree"
+              ],
+              "markdownEnumDescriptions": [
+                "Reference the contents of the current changes as given by `git diff`",
+                "Reference the contents of the terminal",
+                "Reference the contents of all open or pinned files.",
+                "Enter a search phrase and include the Google search results as context",
+                "Reference the results of a ripgrep search in your codebase",
+                "Write a custom context provider at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
+                "Use embeddings to automatically find relevant files from throughout the codebase",
+                "Reference all linting errors and warnings in the currently open file",
+                "Include important files from a folder in the prompt, as determined by similarity search",
+                "Reference GitHub issues from a repository",
+                "Retrieve important pages from a documentation website, as determined by similarity search",
+                "Index and retrieve the contents of any documentation site, using embeddings to find important snippets",
+                "Display a file tree of the current workspace",
+                "Include a repo map showing important code objects"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "params": {
+          "title": "Params",
+          "default": {},
+          "type": "object"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "google"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "serperApiKey": {
+                    "type": "string",
+                    "description": "Your API key for https://serper.dev in order to get Google search results"
+                  }
+                },
+                "required": [
+                  "serperApiKey"
+                ]
+              }
+            },
+            "required": [
+              "params"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "open"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "onlyPinned": {
+                    "type": "boolean",
+                    "description": "If set to true, only 'pinned' files will be included.",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "issue"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "githubToken": {
+                    "type": "string",
+                    "description": "Your GitHub token to access the GitHub API. Required for private repositories."
+                  },
+                  "repos": {
+                    "type": "array",
+                    "description": "A list of repositories to search for issues",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "owner": {
+                          "type": "string",
+                          "description": "The owner of the repository"
+                        },
+                        "repo": {
+                          "type": "string",
+                          "description": "The name of the repository"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "The type of issues to search for",
+                          "enum": [
+                            "open",
+                            "closed",
+                            "all"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "owner",
+                        "repo"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "repos"
+                ]
+              }
+            },
+            "required": [
+              "params"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "http"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "The HTTP endpoint of your context provider server."
+                  }
+                },
+                "required": [
+                  "url"
+                ]
+              }
+            },
+            "required": [
+              "params"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "codebase",
+                  "folder"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "nRetrieve": {
+                    "title": "N Retrieve",
+                    "description": "Number of results to initially retrieve from vector database",
+                    "default": 50,
+                    "type": "integer"
+                  },
+                  "nFinal": {
+                    "title": "N Final",
+                    "description": "Final number of results to use after re-ranking",
+                    "default": 10,
+                    "type": "integer"
+                  },
+                  "useReranking": {
+                    "title": "Use Reranking",
+                    "description": "Whether to use re-ranking, which will allow initial selection of nRetrieve results, then will use an LLM to select the top nFinal results. Disabling re-ranking will give faster, but less accurate, results.",
+                    "default": true,
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "required": [
+        "name"
+      ]
+    },
+    "SerializedContinueConfig": {
+      "title": "config.json",
+      "type": "object",
+      "properties": {
+        "allowAnonymousTelemetry": {
+          "title": "Allow Anonymous Telemetry",
+          "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data.",
+          "default": true,
+          "type": "boolean"
+        },
+        "models": {
+          "title": "Models",
+          "default": [
+            {
+              "title": "GPT-4 (trial)",
+              "provider": "free-trial",
+              "model": "gpt-4",
+              "apiKey": ""
+            }
+          ],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ModelDescription"
+          }
+        },
+        "systemMessage": {
+          "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
+          "type": "string"
+        },
+        "completionOptions": {
+          "title": "Completion Options",
+          "description": "Default options for completion. These will be overriden by any options set for a specific model.",
+          "default": {
+            "temperature": null,
+            "topP": null,
+            "topK": null,
+            "presencePenalty": null,
+            "frequencyPenalty": null,
+            "stop": null,
+            "maxTokens": 600
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/BaseCompletionOptions"
+            }
+          ]
+        },
+        "slashCommands": {
+          "title": "Slash Commands",
+          "description": "An array of slash commands that let you map custom Steps to a shortcut.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SlashCommand"
+          }
+        },
+        "customCommands": {
+          "title": "Custom Commands",
+          "description": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt.",
+          "default": [
+            {
+              "name": "test",
+              "prompt": "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+              "description": "This is an example custom command. Use /config to edit it and create more"
+            }
+          ],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CustomCommand"
+          }
+        },
+        "contextProviders": {
+          "title": "Context Providers",
+          "description": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in the documentation.",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextProviderWithParams"
+          }
+        },
+        "userToken": {
+          "title": "User Token",
+          "description": "An optional token to identify the user.",
+          "type": "string"
+        },
+        "dataServerUrl": {
+          "title": "Data Server Url",
+          "description": "The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
+          "default": "https://us-west1-autodebug.cloudfunctions.net",
+          "type": "string"
+        },
+        "disableSummaries": {
+          "title": "Disable Summaries",
+          "markdownDescription": "If set to `true`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
+          "default": false,
+          "type": "boolean"
+        },
+        "disableIndexing": {
+          "title": "Disable Indexing",
+          "markdownDescription": "If set to `true`, Continue will not index the codebase. This is mainly used for debugging purposes.",
+          "default": false,
+          "type": "boolean"
+        },
+        "disableSessionTitles": {
+          "title": "Disable Session Titles",
+          "markdownDescription": "If set to `true`, Continue will not make extra requests to the LLM to generate a summary title of each session.",
+          "default": false,
+          "type": "boolean"
+        },
+        "embeddingsProvider": {
+          "title": "Embeddings Provider",
+          "description": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser.",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "enum": [
+                "transformers.js",
+                "ollama",
+                "openai"
+              ]
+            },
+            "model": {
+              "type": "string"
+            },
+            "apiKey": {
+              "type": "string"
+            },
+            "apiBase": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": [
+                      "ollama"
+                    ]
+                  }
+                },
+                "required": [
+                  "provider"
+                ]
+              },
+              "then": {
+                "required": [
+                  "model"
+                ]
+              }
+            }
+          ]
+        },
+        "tabAutocompleteModel": {
+          "title": "Tab Autocomplete Model",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using deepseek-coder:1.3b-base on a local Ollama instance.",
+          "default": {
+            "title": "Tab Autocomplete Model",
+            "provider": "ollama",
+            "model": "deepseek-coder:1.3b-base"
+          },
+          "$ref": "#/definitions/ModelDescription"
+        },
+        "tabAutocompleteOptions": {
+          "title": "TabAutocompleteOptions",
+          "type": "object",
+          "properties": {
+            "useCopyBuffer": {
+              "type": "boolean",
+              "description": "Determines whether the copy buffer will be considered when contructing the prompt."
+            },
+            "useSuffix": {
+              "type": "boolean",
+              "description": "Determines whether to use the file suffix in the prompt."
+            },
+            "maxPromptTokens": {
+              "type": "number",
+              "description": "The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context."
+            },
+            "debounceDelay": {
+              "type": "number",
+              "description": "The delay in milliseconds before triggering autocomplete after a keystroke."
+            },
+            "maxSuffixPercentage": {
+              "type": "number",
+              "description": "The maximum percentage of the prompt that can be dedicated to the suffix."
+            },
+            "prefixPercentage": {
+              "type": "number",
+              "description": "The percentage of the input that should be dedicated to the prefix."
+            },
+            "template": {
+              "type": "string",
+              "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
+            },
+            "disableMultiLineCompletions": {
+              "type": "boolean",
+              "description": "If set to true, Continue will only complete a single line at a time."
+            }
+          },
+          "required": []
+        },
+        "mergeBehavior": {
+          "type": "string",
+          "enum": [
+            "merge",
+            "overwrite"
+          ],
+          "default": "merge",
+          "title": "Merge behavior",
+          "markdownDescription": "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json."
+        }
+      }
+    }
+  }
+}

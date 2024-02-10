@@ -8,7 +8,6 @@ import { ContextItemWithId } from "core";
 import { ExtensionIde } from "core/ide";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import React from "react";
-import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
 import { getFontSize } from "../../util";
@@ -17,10 +16,7 @@ import FileIcon from "../FileIcon";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
 
-const MAX_PREVIEW_HEIGHT = 160;
-
 const PreviewMarkdownDiv = styled.div<{
-  scroll: boolean;
   borderColor?: string;
 }>`
   background-color: ${vscEditorBackground};
@@ -34,18 +30,14 @@ const PreviewMarkdownDiv = styled.div<{
   & div {
     background-color: ${vscEditorBackground};
   }
-
-  & code {
-    overflow-y: ${(props) => (props.scroll ? "scroll" : "hidden")} !important;
-  }
 `;
 
-const PreviewMarkdownHeader = styled.p`
+const PreviewMarkdownHeader = styled.div`
   margin: 0;
   padding: 2px 6px;
   border-bottom: 0.5px solid ${lightGray};
   word-break: break-all;
-  font-size: ${getFontSize()}px;
+  font-size: ${getFontSize() - 2}px;
   display: flex;
   align-items: center;
 `;
@@ -64,24 +56,24 @@ const StyledHeaderButtonWithText = styled(HeaderButtonWithText)<{
   ${(props) => props.color && `background-color: ${props.color};`}
 `;
 
+const MAX_PREVIEW_HEIGHT = 300;
+
 // Pre-compile the regular expression outside of the function
 const backticksRegex = /`{3,}/gm;
 
 function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
-  const dispatch = useDispatch();
-
-  const [scrollLocked, setScrollLocked] = React.useState(true);
+  const [collapsed, setCollapsed] = React.useState(true);
   const [hovered, setHovered] = React.useState(false);
 
-  const codeBlockRef = React.useRef<HTMLPreElement>(null);
   const fence = React.useMemo(() => {
     const backticks = props.item.content.match(backticksRegex);
     return backticks ? backticks.sort().at(-1) + "`" : "```";
   }, [props.item.content]);
 
+  const codeBlockRef = React.useRef<HTMLDivElement>(null);
+
   return (
     <PreviewMarkdownDiv
-      scroll={!scrollLocked}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       borderColor={props.borderColor}
@@ -130,7 +122,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               }}
               {...(props.editing && { color: "#f0f4" })}
             >
-              <PaintBrushIcon width="1.2em" height="1.2em" />
+              <PaintBrushIcon width="1.1em" height="1.1em" />
             </StyledHeaderButtonWithText>
           )}
           <HeaderButtonWithText
@@ -140,36 +132,47 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               props.onDelete();
             }}
           >
-            <XMarkIcon width="1.2em" height="1.2em" />
+            <XMarkIcon width="1.1em" height="1.1em" />
           </HeaderButtonWithText>
         </div>
       </PreviewMarkdownHeader>
-      <pre className="m-0" ref={codeBlockRef}>
+      <div
+        className="m-0"
+        ref={codeBlockRef}
+        style={{
+          height: collapsed
+            ? `${Math.min(
+                MAX_PREVIEW_HEIGHT,
+                codeBlockRef.current?.scrollHeight
+              )}px`
+            : undefined,
+          overflow: collapsed ? "hidden" : "auto",
+        }}
+      >
         <StyledMarkdownPreview
           source={`${fence}${getMarkdownLanguageTagForFile(
             props.item.description
           )}\n${props.item.content}\n${fence}`}
-          maxHeight={MAX_PREVIEW_HEIGHT}
           showCodeBorder={false}
         />
-      </pre>
+      </div>
 
-      {hovered && codeBlockRef.current?.scrollHeight > MAX_PREVIEW_HEIGHT && (
+      {codeBlockRef.current?.scrollHeight > MAX_PREVIEW_HEIGHT && (
         <HeaderButtonWithText
           className="bottom-1 right-1 absolute"
-          text={scrollLocked ? "Scroll" : "Lock Scroll"}
+          text={collapsed ? "Expand" : "Collapse"}
         >
-          {scrollLocked ? (
+          {collapsed ? (
             <ChevronDownIcon
               width="1.2em"
               height="1.2em"
-              onClick={() => setScrollLocked(false)}
+              onClick={() => setCollapsed(false)}
             />
           ) : (
             <ChevronUpIcon
               width="1.2em"
               height="1.2em"
-              onClick={() => setScrollLocked(true)}
+              onClick={() => setCollapsed(true)}
             />
           )}
         </HeaderButtonWithText>

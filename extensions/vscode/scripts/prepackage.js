@@ -18,6 +18,17 @@ if (args[2] === "--target") {
     "config_schema.json",
     path.join("..", "..", "docs", "static", "schemas", "config.json")
   );
+  // Modify and copy for .continuerc.json
+  const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
+  schema.definitions.SerializedContinueConfig.properties.mergeBehavior = {
+    type: "string",
+    enum: ["merge", "overwrite"],
+    default: "merge",
+    title: "Merge behavior",
+    markdownDescription:
+      "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json.",
+  };
+  fs.writeFileSync("continue_rc_schema.json", JSON.stringify(schema, null, 2));
 
   if (!process.cwd().endsWith("vscode")) {
     // This is sometimes run from root dir instead (e.g. in VS Code tasks)
@@ -195,6 +206,22 @@ if (args[2] === "--target") {
         console.warn("Error copying code-highlighter tag-qry files", error);
     }
   );
+
+  // textmate-syntaxes
+  await new Promise((resolve, reject) => {
+    ncp(
+      path.join(__dirname, "../textmate-syntaxes"),
+      path.join(__dirname, "../gui/textmate-syntaxes"),
+      (error) => {
+        if (error) {
+          console.warn("[error] Error copying textmate-syntaxes", error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      }
+    );
+  });
 
   function ghAction() {
     return target !== undefined;

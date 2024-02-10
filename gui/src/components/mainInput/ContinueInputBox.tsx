@@ -1,9 +1,11 @@
 import { JSONContent } from "@tiptap/react";
 import { ContextItemWithId } from "core";
-import { useSelector } from "react-redux";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { selectSlashCommands } from "../../redux/selectors";
+import { newSession } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
@@ -58,11 +60,29 @@ interface ContinueInputBoxProps {
 }
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
+  const dispatch = useDispatch();
+
   const active = useSelector((store: RootStore) => store.state.active);
   const availableSlashCommands = useSelector(selectSlashCommands);
   const availableContextProviders = useSelector(
     (store: RootStore) => store.state.config.contextProviders
   );
+
+  const [editorState, setEditorState] = useState(props.editorState);
+
+  useEffect(() => {
+    const listener = (e) => {
+      if (e.data.type === "newSessionWithPrompt") {
+        dispatch(newSession());
+        setEditorState(e.data.prompt);
+      }
+    };
+
+    window.addEventListener("message", listener);
+    return () => {
+      window.removeEventListener("message", listener);
+    };
+  }, []);
 
   return (
     <div
@@ -87,7 +107,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           borderRadius={defaultBorderRadius}
         >
           <TipTapEditor
-            editorState={props.editorState}
+            editorState={editorState}
             onEnter={props.onEnter}
             isMainInput={props.isMainInput}
             availableContextProviders={availableContextProviders}

@@ -13,6 +13,7 @@ import { setDefaultModel } from "../redux/slices/stateSlice";
 import { addModel } from "../util/ide";
 import { MODEL_INFO, PROVIDER_INFO } from "../util/modelData";
 import { CustomModelButton } from "./modelconfig";
+import { useNavigationListener } from "../hooks/useNavigationListener";
 
 const IntroDiv = styled.div`
   padding: 8px 12px;
@@ -33,6 +34,7 @@ const GridDiv = styled.div`
 function Models() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  useNavigationListener();
 
   const [providersSelected, setProvidersSelected] = React.useState(true);
 

@@ -68,6 +68,8 @@ export interface ILLM extends LLMOptions {
   countTokens(text: string): number;
 
   supportsImages(): boolean;
+
+  listModels(): Promise<string[]>;
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -264,6 +266,9 @@ export interface CustomLLMWithOptionals {
     options: CompletionOptions,
     fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
   ) => AsyncGenerator<string>;
+  listModels?: (
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+  ) => Promise<string[]>;
 }
 
 /**
@@ -429,6 +434,7 @@ type ModelProvider =
   | "flowise";
 
 export type ModelName =
+  | "AUTODETECT"
   // OpenAI
   | "gpt-3.5-turbo"
   | "gpt-3.5-turbo-16k"
@@ -553,6 +559,7 @@ export interface TabAutocompleteOptions {
   maxSuffixPercentage: number;
   prefixPercentage: number;
   template?: string;
+  disableMultiLineCompletions?: boolean;
 }
 
 export interface SerializedContinueConfig {
@@ -570,6 +577,12 @@ export interface SerializedContinueConfig {
   tabAutocompleteModel?: ModelDescription;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
 }
+
+export type ConfigMergeType = "merge" | "overwrite";
+
+export type ContinueRcJson = Partial<SerializedContinueConfig> & {
+  mergeBehavior: ConfigMergeType;
+};
 
 export interface Config {
   /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://continue.dev/docs/telemetry */

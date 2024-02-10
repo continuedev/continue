@@ -1,4 +1,4 @@
-import { ContinueConfig, ILLM, SerializedContinueConfig } from "core";
+import { ContinueConfig, ContinueRcJson, ILLM } from "core";
 import defaultConfig from "core/config/default";
 import {
   finalToBrowserConfig,
@@ -8,15 +8,16 @@ import {
 } from "core/config/load";
 import Ollama from "core/llm/llms/Ollama";
 import { getConfigJsonPath } from "core/util/paths";
+import { Telemetry } from "core/util/posthog";
 import { http, https } from "follow-redirects";
 import * as fs from "fs";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import fetch from "node-fetch";
-import * as path from "path";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 import { debugPanelWebview, webviewRequest } from "./debugPanel";
+import { getUniqueId } from "./util/vscode";
 const tls = require("tls");
 
 const outputChannel = vscode.window.createOutputChannel(
@@ -32,16 +33,15 @@ class VsCodeConfigHandler {
   }
 
   private async _getWorkspaceConfigs() {
-    const workspaceDirs = await ideProtocolClient.getWorkspaceDirectories();
-    const configs: Partial<SerializedContinueConfig>[] = [];
+    const workspaceDirs =
+      vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [];
+    const configs: ContinueRcJson[] = [];
     for (const workspaceDir of workspaceDirs) {
-      const files = await vscode.workspace.fs.readDirectory(
-        vscode.Uri.file(workspaceDir)
-      );
+      const files = await vscode.workspace.fs.readDirectory(workspaceDir);
       for (const [filename, type] of files) {
         if (type === vscode.FileType.File && filename === ".continuerc.json") {
           const contents = await ideProtocolClient.readFile(
-            path.join(workspaceDir, filename)
+            vscode.Uri.joinPath(workspaceDir, filename).fsPath
           );
           configs.push(JSON.parse(contents));
         }
@@ -55,9 +55,15 @@ class VsCodeConfigHandler {
       if (this.savedConfig) {
         return this.savedConfig;
       }
+      let workspaceConfigs: ContinueRcJson[] = [];
+      try {
+        workspaceConfigs = await this._getWorkspaceConfigs();
+      } catch (e) {
+        console.warn("Failed to load workspace configs");
+      }
       this.savedConfig = await loadFullConfigNode(
         ideProtocolClient.readFile,
-        await this._getWorkspaceConfigs()
+        workspaceConfigs
       );
       this.savedConfig.allowAnonymousTelemetry =
         this.savedConfig.allowAnonymousTelemetry &&
@@ -66,6 +72,12 @@ class VsCodeConfigHandler {
       // Update the sidebar panel
       const browserConfig = finalToBrowserConfig(this.savedConfig);
       debugPanelWebview?.postMessage({ type: "configUpdate", browserConfig });
+
+      // Setup telemetry only after (and if) we know it is enabled
+      await Telemetry.setup(
+        this.savedConfig.allowAnonymousTelemetry ?? true,
+        getUniqueId()
+      );
 
       return this.savedConfig;
     } catch (e) {
@@ -148,6 +160,9 @@ function setupLlm(llm: ILLM): ILLM {
         if (text.includes("try pulling it first")) {
           const model = JSON.parse(text).error.split(" ")[1].slice(1, -1);
           text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
+        } else if (text.includes("/api/chat")) {
+          text =
+            "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
         } else {
           text =
             "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";

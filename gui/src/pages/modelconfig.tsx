@@ -22,6 +22,7 @@ import {
   PROVIDER_INFO,
   updatedObj,
 } from "../util/modelData";
+import { useNavigationListener } from "../hooks/useNavigationListener";
 
 const GridDiv = styled.div`
   display: grid;
@@ -57,6 +58,7 @@ export const CustomModelButton = styled.div<{ disabled: boolean }>`
 `;
 
 function ModelConfig() {
+  useNavigationListener();
   const formMethods = useForm();
   const { modelName } = useParams();
 
@@ -136,7 +138,6 @@ function ModelConfig() {
           <StyledMarkdownPreview
             className="mt-2"
             source={modelInfo?.longDescription || modelInfo?.description}
-            maxHeight={200}
           />
           <br />
 

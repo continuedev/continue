@@ -2,33 +2,11 @@
  * This is the entry point for the extension.
  */
 
+import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 import { getExtensionVersion } from "./util/util";
-import { getUniqueId } from "./util/vscode";
-
-let client: any = undefined;
-export async function capture(args: any) {
-  if (!client) {
-    const { PostHog } = await import("posthog-node");
-    client = new PostHog("phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs", {
-      host: "https://app.posthog.com",
-    });
-  }
-  client.capture(args);
-}
 
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
-  if (!context.globalState.get("hasBeenInstalled")) {
-    context.globalState.update("hasBeenInstalled", true);
-    capture({
-      distinctId: getUniqueId(),
-      event: "install",
-      properties: {
-        extensionVersion: getExtensionVersion(),
-      },
-    });
-  }
-
   const { activateExtension } = await import("./activation/activate");
   try {
     await activateExtension(context);
@@ -56,13 +34,9 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 export function deactivate() {
-  capture({
-    distinctId: getUniqueId(),
-    event: "deactivate",
-    properties: {
-      extensionVersion: getExtensionVersion(),
-    },
+  Telemetry.capture("deactivate", {
+    extensionVersion: getExtensionVersion(),
   });
 
-  client?.shutdown();
+  Telemetry.shutdownPosthogClient();
 }

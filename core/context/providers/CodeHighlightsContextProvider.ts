@@ -6,7 +6,7 @@ import {
 } from "../..";
 import { getBasename } from "../../util";
 
-const highlighterPromise = import("llm-code-highlighter/dist/index.continue");
+import { getSourceSetHighlights } from "llm-code-highlighter/dist/index.continue";
 
 class CodeHighlightsContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -33,8 +33,7 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
         })
       );
     const topPercentile = 0.5;
-    const highlighter = await highlighterPromise;
-    const repoMap = await highlighter.getRepoHighlights(
+    const repoMap = await getSourceSetHighlights(
       topPercentile,
       [],
       allFiles
