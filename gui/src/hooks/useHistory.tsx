@@ -70,7 +70,7 @@ function useHistory(dispatch: Dispatch) {
       history: stateCopy.history,
       title: title,
       sessionId: stateCopy.sessionId,
-      workspaceDirectory: (window as any).workspacePaths?.[0] || "",
+      workspaceDirectory: window.workspacePaths?.[0] || "",
     };
     return await ideRequest("saveSession", sessionInfo);
   }

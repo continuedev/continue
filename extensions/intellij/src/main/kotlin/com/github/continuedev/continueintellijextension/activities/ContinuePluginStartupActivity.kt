@@ -178,7 +178,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                     val workspacePaths =
                             if (project.basePath != null) arrayOf(project.basePath) else emptyList<String>()
 
-                    continuePluginService.worksapcePaths = workspacePaths as Array<String>
+                    continuePluginService.workspacePaths = workspacePaths as Array<String>
                 }
 
                 EditorFactory.getInstance().eventMulticaster.addSelectionListener(
