@@ -1,24 +1,32 @@
 import { v4 as uuidv4 } from "uuid";
+import { PersistedSessionInfo } from "..";
 
 export abstract class Messenger {
   abstract send(messageType: string, message: any, messageId?: string): string;
-  abstract onMessage(
-    messageType: string,
-    handler: (message: any) => Promise<any> | undefined
-  ): void;
+  abstract on(messageType: string, handler: (message: any) => any): void;
 }
 
-export interface Message {
+export interface Message<T = any> {
   messageType: string;
   messageId: string;
-  message: any;
+  data: T;
 }
 
+type Protocol = {
+  "history/list": [undefined, PersistedSessionInfo[]];
+  "history/delete": [{ id: string }, void];
+  "history/load": [{ id: string }, PersistedSessionInfo];
+  "history/save": [PersistedSessionInfo, void];
+  "devdata/log": [{ tableName: string; data: any }, void];
+};
+type ProtocolKeys = keyof Protocol;
+
+type ProtocolCallbacks = {
+  [K in ProtocolKeys]: (msg: Protocol[K][0]) => Protocol[K][1];
+};
+
 export class IpcMessenger extends Messenger {
-  listeners = new Map<
-    string,
-    ((message: Message) => Promise<any> | undefined)[]
-  >();
+  listeners = new Map<string, ((message: Message) => any)[]>();
 
   constructor() {
     super();
@@ -30,7 +38,7 @@ export class IpcMessenger extends Messenger {
       try {
         const msg: Message = JSON.parse(d);
         if (
-          msg.message !== undefined ||
+          msg.data !== undefined ||
           msg.messageType !== undefined ||
           msg.messageId !== undefined
         ) {
@@ -52,7 +60,7 @@ export class IpcMessenger extends Messenger {
     messageId = messageId ?? uuidv4();
     const data: Message = {
       messageType,
-      message,
+      data: message,
       messageId,
     };
     // process.send?.(data);
@@ -60,9 +68,9 @@ export class IpcMessenger extends Messenger {
     return messageId;
   }
 
-  onMessage(
-    messageType: string,
-    handler: (message: Message) => Promise<any> | undefined
+  on<T extends keyof Protocol>(
+    messageType: T,
+    handler: (message: Message<Protocol[T][0]>) => Protocol[T][1]
   ): void {
     if (!this.listeners.has(messageType)) {
       this.listeners.set(messageType, []);

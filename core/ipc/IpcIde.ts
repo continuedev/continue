@@ -5,8 +5,8 @@ import { IpcMessenger } from "./messenger";
 export class IpcIde implements IDE {
   private messenger: IpcMessenger;
 
-  constructor() {
-    this.messenger = new IpcMessenger();
+  constructor(messenger: IpcMessenger) {
+    this.messenger = messenger;
   }
 
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {

@@ -1,6 +1,7 @@
 import { ContextItemId, DiffLine, FileEdit, ModelDescription } from "core";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
+import historyManager from "core/util/history";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import { readFileSync, writeFileSync } from "fs";
 import { v4 as uuidv4 } from "uuid";
@@ -12,7 +13,6 @@ import {
   windowId,
 } from "./activation/activate";
 import { streamEdit } from "./diff/verticalPerLine/manager";
-import historyManager from "./history";
 import { VsCodeIde } from "./ideProtocol";
 import { configHandler, llmFromTitle } from "./loadConfig";
 import { getTheme } from "./util/getTheme";
