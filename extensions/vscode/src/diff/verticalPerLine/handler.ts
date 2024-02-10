@@ -175,6 +175,11 @@ export class VerticalPerLineDiffHandler {
   }
 
   clear(accept: boolean) {
+    vscode.commands.executeCommand(
+      "setContext",
+      "continue.streamingDiff",
+      false
+    );
     const rangesToDelete = accept
       ? this.redDecorationManager.getRanges()
       : this.greenDecorationManager.getRanges();

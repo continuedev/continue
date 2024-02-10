@@ -131,22 +131,15 @@ export async function streamEdit(input: string) {
     }
     input = `Original request: ${existingHandler.input}\nUpdated request: ${input}`;
   }
-  try {
-    await diffHandler.run(
-      streamDiffLines(
-        rangeContent,
-        llm,
-        input,
-        getMarkdownLanguageTagForFile(filepath)
-      )
-    );
-  } finally {
-    vscode.commands.executeCommand(
-      "setContext",
-      "continue.streamingDiff",
-      false
-    );
-  }
+
+  await diffHandler.run(
+    streamDiffLines(
+      rangeContent,
+      llm,
+      input,
+      getMarkdownLanguageTagForFile(filepath)
+    )
+  );
 }
 
 export interface VerticalDiffCodeLens {

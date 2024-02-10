@@ -199,6 +199,12 @@
         "key": "shift+ctrl+backspace"
       },
       {
+        "command": "continue.rejectDiff",
+        "mac": "cmd+z",
+        "key": "ctrl+z",
+        "when": "continue.streamingDiff"
+      },
+      {
         "command": "continue.quickEdit",
         "mac": "cmd+shift+l",
         "key": "ctrl+shift+l"
