@@ -41,7 +41,7 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
       if (codeLenses.length === 2) {
         codeLenses.push(
           new vscode.CodeLens(range, {
-            title: `(${getMetaKeyLabel()}⇧↩/${getMetaKeyLabel()}⇧⌫ to accept/reject all)`,
+            title: `(${getMetaKeyLabel()}⇧↩/${getMetaKeyLabel()}⇧⌫ to accept/reject all, ${getMetaKeyLabel()}⇧L to retry)`,
             command: "",
           })
         );
