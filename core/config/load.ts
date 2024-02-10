@@ -5,6 +5,7 @@ import {
   ContextProviderDescription,
   ContextProviderWithParams,
   ContinueConfig,
+  ContinueRcJson,
   CustomContextProvider,
   CustomLLM,
   EmbeddingsProviderDescription,
@@ -36,7 +37,7 @@ import {
 } from "../util/paths";
 
 function loadSerializedConfig(
-  workspaceConfigs: Partial<SerializedContinueConfig>[]
+  workspaceConfigs: ContinueRcJson[]
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath();
   let contents = fs.readFileSync(configPath, "utf8");
@@ -116,7 +117,7 @@ function loadSerializedConfig(
   });
 
   for (const workspaceConfig of workspaceConfigs) {
-    config = mergeJson(config, workspaceConfig);
+    config = mergeJson(config, workspaceConfig, workspaceConfig.mergeBehavior);
   }
 
   return config;
@@ -353,7 +354,7 @@ async function buildConfigTs(browser: boolean) {
 
 async function loadFullConfigNode(
   readFile: (filepath: string) => Promise<string>,
-  workspaceConfigs: Partial<SerializedContinueConfig>[]
+  workspaceConfigs: ContinueRcJson[]
 ): Promise<ContinueConfig> {
   let serialized = loadSerializedConfig(workspaceConfigs);
   let intermediate = serializedToIntermediateConfig(serialized);

@@ -397,7 +397,7 @@
       },
       {
         "fileMatch": ".continuerc.json",
-        "url": "./config_schema.json"
+        "url": "./continue_rc_schema.json"
       }
     ]
   },

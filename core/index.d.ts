@@ -578,6 +578,12 @@ export interface SerializedContinueConfig {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
 }
 
+export type ConfigMergeType = "merge" | "overwrite";
+
+export type ContinueRcJson = Partial<SerializedContinueConfig> & {
+  mergeBehavior: ConfigMergeType;
+};
+
 export interface Config {
   /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://continue.dev/docs/telemetry */
   allowAnonymousTelemetry?: boolean;

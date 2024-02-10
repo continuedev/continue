@@ -1,6 +1,6 @@
 {
   "title": "config.json",
-  "$ref": "#/definitions/continuedev__core__config__serialized_config__SerializedContinueConfig",
+  "$ref": "#/definitions/SerializedContinueConfig",
   "definitions": {
     "BaseCompletionOptions": {
       "title": "BaseCompletionOptions",
@@ -1168,7 +1168,7 @@
       ],
       "required": ["name"]
     },
-    "continuedev__core__config__serialized_config__SerializedContinueConfig": {
+    "SerializedContinueConfig": {
       "title": "config.json",
       "type": "object",
       "properties": {
