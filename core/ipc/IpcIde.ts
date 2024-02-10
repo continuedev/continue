@@ -1,7 +1,14 @@
 import { Chunk, DiffLine, IDE, Problem } from "..";
 import { BrowserSerializedContinueConfig } from "../config/load";
+import { IpcMessenger } from "./messenger";
 
 export class IpcIde implements IDE {
+  private messenger: IpcMessenger;
+
+  constructor() {
+    this.messenger = new IpcMessenger();
+  }
+
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
     throw new Error("Method not implemented.");
   }
