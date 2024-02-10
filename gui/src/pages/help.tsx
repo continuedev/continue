@@ -4,6 +4,9 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground, vscForeground } from "../components";
 import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
+import { useNavigationListener } from "../hooks/useNavigationListener";
+
+
 
 const IconDiv = styled.div<{ backgroundColor?: string }>`
   display: flex;
@@ -32,6 +35,7 @@ const TutorialButton = styled(Button)`
 `;
 
 function HelpPage() {
+  useNavigationListener();
   const navigate = useNavigate();
 
   return (

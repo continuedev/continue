@@ -9,6 +9,7 @@ import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import useHistory from "../hooks/useHistory";
 import { newSession } from "../redux/slices/stateSlice";
 import { getFontSize } from "../util";
+import { useNavigationListener } from "../hooks/useNavigationListener";
 
 const Tr = styled.tr`
   &:hover {
@@ -125,7 +126,9 @@ function lastPartOfPath(path: string): string {
 }
 
 function History() {
+  useNavigationListener();
   const navigate = useNavigate();
+  
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [filteredAndSortedSessions, setFilteredAndSortedSessions] = useState<
     SessionInfo[]
