@@ -1,38 +1,18 @@
-import { createSlice } from "@reduxjs/toolkit";
-import { RootStore } from "../store";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 const windowAny: any = window;
 
 export const configSlice = createSlice({
   name: "config",
   initialState: {
-    vscMachineId: windowAny.vscMachineId || undefined,
-  } as RootStore["config"],
+    vscMachineId: window.vscMachineId,
+  },
   reducers: {
-    setVscMachineId: (
-      state: RootStore["config"],
-      action: { type: string; payload: string }
-    ) => ({
-      ...state,
-      vscMachineId: action.payload,
-    }),
-    setSessionId: (
-      state: RootStore["config"],
-      action: { type: string; payload: string }
-    ) => ({
-      ...state,
-      sessionId: action.payload,
-    }),
-    setDataSwitchOn: (
-      state: RootStore["config"],
-      action: { type: string; payload: boolean }
-    ) => ({
-      ...state,
-      dataSwitchOn: action.payload,
-    }),
+    setVscMachineId: (state, action: PayloadAction<string>) => {
+      state.vscMachineId = action.payload;
+    },
   },
 });
 
-export const { setVscMachineId, setSessionId, setDataSwitchOn } =
-  configSlice.actions;
+export const { setVscMachineId } = configSlice.actions;
 export default configSlice.reducer;

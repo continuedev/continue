@@ -13,7 +13,7 @@ import {
   vscBackground,
   vscInputBackground,
 } from "..";
-import { RootStore } from "../../redux/store";
+import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
 import { logDevData } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
@@ -62,7 +62,7 @@ const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
 function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const isUserInput = props.item.message.role === "user";
-  const active = useSelector((store: RootStore) => store.state.active);
+  const active = useSelector((store: RootState) => store.state.active);
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 

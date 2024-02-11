@@ -25,7 +25,7 @@ import {
   setMessageAtIndex,
   streamUpdate,
 } from "../redux/slices/stateSlice";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 import { errorPopup } from "../util/ide";
 
 function useChatHandler(dispatch: Dispatch) {
@@ -34,15 +34,15 @@ function useChatHandler(dispatch: Dispatch) {
   const defaultModel = useSelector(defaultModelSelector);
 
   const slashCommands = useSelector(
-    (store: RootStore) => store.state.config.slashCommands || []
+    (store: RootState) => store.state.config.slashCommands || []
   );
 
   const contextItems = useSelector(
-    (state: RootStore) => state.state.contextItems
+    (state: RootState) => state.state.contextItems
   );
 
-  const history = useSelector((store: RootStore) => store.state.history);
-  const active = useSelector((store: RootStore) => store.state.active);
+  const history = useSelector((store: RootState) => store.state.history);
+  const active = useSelector((store: RootState) => store.state.active);
   const activeRef = useRef(active);
   useEffect(() => {
     activeRef.current = active;

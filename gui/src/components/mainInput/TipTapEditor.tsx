@@ -27,7 +27,7 @@ import { SubmenuContextProvidersContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
-import { RootStore } from "../../redux/store";
+import { RootState } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
 import { errorPopup, isJetBrains, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
@@ -130,7 +130,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
 
   const historyLength = useSelector(
-    (store: RootStore) => store.state.history.length
+    (store: RootState) => store.state.history.length
   );
 
   const [inputFocused, setInputFocused] = useState(false);
@@ -171,7 +171,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   };
 
   const contextItems = useSelector(
-    (store: RootStore) => store.state.contextItems
+    (store: RootState) => store.state.contextItems
   );
 
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
