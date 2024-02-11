@@ -66,11 +66,9 @@ export async function* streamLines(
     buffer = lines.pop() ?? "";
     for (const line of lines) {
       yield line;
-      console.log(line);
     }
   }
   if (buffer.length > 0) {
     yield buffer;
-    console.log(buffer);
   }
 }

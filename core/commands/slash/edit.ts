@@ -1,4 +1,12 @@
 import { ContextItemWithId, ILLM, SlashCommand } from "../..";
+import {
+  filterCodeBlockLines,
+  filterEnglishLinesAtEnd,
+  filterEnglishLinesAtStart,
+  fixCodeLlamaFirstLineIndentation,
+  streamWithNewLines,
+} from "../../autocomplete/lineStream";
+import { streamLines } from "../../diff/util";
 import { stripImages } from "../../llm/countTokens";
 import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";
 import {
@@ -449,10 +457,17 @@ const EditSlashCommand: SlashCommand = {
         messages = rendered;
       }
 
-      generator = llm.streamComplete(rendered as string, {
+      const completion = llm.streamComplete(rendered as string, {
         maxTokens: Math.min(maxTokens, Math.floor(llm.contextLength / 2), 4096),
         raw: true,
       });
+      let lines = streamLines(completion);
+
+      lines = filterEnglishLinesAtStart(lines);
+
+      lines = filterEnglishLinesAtEnd(filterCodeBlockLines(lines));
+
+      generator = streamWithNewLines(fixCodeLlamaFirstLineIndentation(lines));
     } else {
       async function* gen() {
         for await (let chunk of llm.streamChat(messages, {
