@@ -137,6 +137,7 @@ function useChatHandler(dispatch: Dispatch) {
 
       // Resolve context providers and construct new history
       const [contextItems, content] = await resolveEditorContent(editorState);
+      console.log(contextItems, content);
       const message: ChatMessage = {
         role: "user",
         content,

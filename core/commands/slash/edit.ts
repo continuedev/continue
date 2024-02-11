@@ -229,6 +229,15 @@ const EditSlashCommand: SlashCommand = {
       return;
     }
 
+    // Strip unecessary parts of the input (the fact that you have to do this is suboptimal, should be refactored away)
+    input = input.replace(
+      `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,
+      ""
+    );
+    if (input.startsWith("/edit")) {
+      input = input.replace("/edit", "").trimStart();
+    }
+
     const rif: RangeInFileWithContents =
       contextItemToRangeInFileWithContents(contextItemToEdit);
 
@@ -248,17 +257,16 @@ const EditSlashCommand: SlashCommand = {
 
     let prompt = compilePrompt(filePrefix, contents, fileSuffix, input);
     let fullFileContentsLines = fullFileContents.split("\n");
+    let fullPrefixLines = fullFileContentsLines.slice(
+      0,
+      Math.max(0, rif.range.start.line - 1)
+    );
+    let fullSuffixLines = fullFileContentsLines.slice(rif.range.end.line);
 
     let linesToDisplay: string[] = [];
 
     async function sendDiffUpdate(lines: string[], final: boolean = false) {
       let completion = lines.join("\n");
-
-      let fullPrefixLines = fullFileContentsLines.slice(
-        0,
-        rif.range.start.line - 1
-      );
-      let fullSuffixLines = fullFileContentsLines.slice(rif.range.end.line);
 
       // Don't do this at the very end, just show the inserted code
       if (final) {
@@ -461,13 +469,15 @@ const EditSlashCommand: SlashCommand = {
         maxTokens: Math.min(maxTokens, Math.floor(llm.contextLength / 2), 4096),
         raw: true,
       });
-      let lines = streamLines(completion);
+      let lineStream = streamLines(completion);
 
-      lines = filterEnglishLinesAtStart(lines);
+      lineStream = filterEnglishLinesAtStart(lineStream);
 
-      lines = filterEnglishLinesAtEnd(filterCodeBlockLines(lines));
+      lineStream = filterEnglishLinesAtEnd(filterCodeBlockLines(lineStream));
 
-      generator = streamWithNewLines(fixCodeLlamaFirstLineIndentation(lines));
+      generator = streamWithNewLines(
+        fixCodeLlamaFirstLineIndentation(lineStream)
+      );
     } else {
       async function* gen() {
         for await (let chunk of llm.streamChat(messages, {
@@ -485,7 +495,6 @@ const EditSlashCommand: SlashCommand = {
       generator = gen();
     }
 
-    let lastTaskTime = Date.now();
     for await (let chunk of generator) {
       // Stop early if it is repeating the fileSuffix or the step was deleted
       if (repeatingFileSuffix) {
@@ -523,7 +532,7 @@ const EditSlashCommand: SlashCommand = {
         else if (
           (linesOfPrefixCopied > 0 || completionLinesCovered === 0) &&
           linesOfPrefixCopied < filePrefix.split("\n").length &&
-          chunkLines[i] === fullFileContentsLines[linesOfPrefixCopied]
+          chunkLines[i] === fullPrefixLines[linesOfPrefixCopied]
         ) {
           // This is a sketchy way of stopping it from repeating the filePrefix. Is a bug if output happens to have a matching line
           linesOfPrefixCopied += 1;
@@ -548,17 +557,13 @@ const EditSlashCommand: SlashCommand = {
         currentLineInFile += 1;
       }
 
-      // Debounce the diff updates, last in only out for each period
-      if (lastTaskTime === null || Date.now() - lastTaskTime > 150) {
-        lastTaskTime = Date.now();
-        await sendDiffUpdate(
-          lines.concat([
-            unfinishedLine?.startsWith("<")
-              ? commonWhitespace
-              : commonWhitespace + unfinishedLine,
-          ])
-        );
-      }
+      await sendDiffUpdate(
+        lines.concat([
+          unfinishedLine?.startsWith("<")
+            ? commonWhitespace
+            : commonWhitespace + unfinishedLine,
+        ])
+      );
     }
 
     // Add the unfinished line

@@ -165,6 +165,11 @@ export async function* fixCodeLlamaFirstLineIndentation(lines: LineStream) {
   }
 }
 
+function isUselessLine(line: string): boolean {
+  const trimmed = line.trim().toLowerCase();
+  return trimmed === "" || trimmed === "```" || trimmed.startsWith("// end");
+}
+
 export async function* filterLeadingAndTrailingNewLineInsertion(
   diffLines: AsyncGenerator<DiffLine>
 ): AsyncGenerator<DiffLine> {
@@ -172,8 +177,7 @@ export async function* filterLeadingAndTrailingNewLineInsertion(
   let buffer: DiffLine[] = [];
   for await (let diffLine of diffLines) {
     let isBlankLineInsertion =
-      diffLine.type === "new" &&
-      (diffLine.line.trim() === "" || diffLine.line.trim() === "```");
+      diffLine.type === "new" && isUselessLine(diffLine.line);
     if (isFirst && isBlankLineInsertion) {
       isFirst = false;
       continue;
