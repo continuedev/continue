@@ -525,9 +525,11 @@ export function getSidebarContent(
               });
             },
           })) {
-            if (update) {
-              respond({ content: update });
+            if (abortedMessageIds.has(data.messageId)) {
+              abortedMessageIds.delete(data.messageId);
+              break;
             }
+            respond({ content: update });
           }
           respond({ done: true });
           break;

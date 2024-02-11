@@ -248,7 +248,7 @@ const EditSlashCommand: SlashCommand = {
 
       let fullPrefixLines = fullFileContentsLines.slice(
         0,
-        rif.range.start.line
+        rif.range.start.line - 1
       );
       let fullSuffixLines = fullFileContentsLines.slice(rif.range.end.line);
 
