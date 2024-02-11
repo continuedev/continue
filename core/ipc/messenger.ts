@@ -1,5 +1,13 @@
 import { v4 as uuidv4 } from "uuid";
-import { PersistedSessionInfo } from "..";
+import {
+  ChatMessage,
+  CompletionOptions,
+  ContextItem,
+  ContextSubmenuItem,
+  PersistedSessionInfo,
+  RangeInFile,
+  SerializedContinueConfig,
+} from "..";
 
 export abstract class Messenger {
   abstract send(messageType: string, message: any, messageId?: string): string;
@@ -13,11 +21,69 @@ export interface Message<T = any> {
 }
 
 type Protocol = {
+  abort: [undefined, void];
   "history/list": [undefined, PersistedSessionInfo[]];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, PersistedSessionInfo];
   "history/save": [PersistedSessionInfo, void];
   "devdata/log": [{ tableName: string; data: any }, void];
+  "config/addOpenAiKey": [string, void];
+  "config/addModel": [
+    { model: SerializedContinueConfig["models"][number] },
+    void,
+  ];
+  "config/deleteModel": [{ title: string }, void];
+  "context/getContextItems": [
+    {
+      name: string;
+      query: string;
+      fullInput: string;
+      selectedCode: RangeInFile[];
+    },
+    ContextItem[],
+  ];
+  "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
+  "context/addDocs": [{ title: string; url: string }, void];
+  "autocomplete/complete": [
+    { filepath: string; line: number; column: number },
+    string[],
+  ];
+  "command/run": [
+    {
+      input: string;
+      history: ChatMessage[];
+      modelTitle: string;
+      slashCommandName: string;
+      contextItems: ContextItem[];
+      params: any;
+      historyIndex: number;
+    },
+    AsyncGenerator<string>,
+  ];
+  "llm/complete": [
+    {
+      prompt: string;
+      completionOptions: CompletionOptions;
+      title: string;
+    },
+    AsyncGenerator<string>,
+  ];
+  "llm/streamComplete": [
+    {
+      prompt: string;
+      completionOptions: CompletionOptions;
+      title: string;
+    },
+    AsyncGenerator<string>,
+  ];
+  "llm/streamChat": [
+    {
+      messages: ChatMessage[];
+      completionOptions: CompletionOptions;
+      title: string;
+    },
+    AsyncGenerator<string>,
+  ];
 };
 type ProtocolKeys = keyof Protocol;
 

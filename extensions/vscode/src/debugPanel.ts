@@ -247,31 +247,6 @@ export function getSidebarContent(
           respond(await ide.subprocess(data.message.command));
           break;
         }
-        case "getFilesToEmbed": {
-          let filesToEmbed = await ide.getFilesToEmbed(data.message.providerId);
-          respond(filesToEmbed);
-          break;
-        }
-        case "sendChunkForFile": {
-          respond(
-            await ide.sendEmbeddingForChunk(
-              data.message.chunk,
-              data.message.embedding,
-              data.message.tags
-            )
-          );
-          break;
-        }
-        case "retrieveChunks": {
-          respond(
-            await ide.retrieveChunks(
-              data.message.text,
-              data.message.n,
-              data.message.directory
-            )
-          );
-          break;
-        }
         // History
         case "history": {
           respond(historyManager.list());
