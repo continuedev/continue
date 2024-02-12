@@ -197,6 +197,11 @@ ${prompt}`;
       provider: this.providerName,
       tokens: tokens,
     });
+    Telemetry.capture("tokensGenerated", {
+      model: model,
+      provider: this.providerName,
+      tokens: tokens,
+    });
   }
 
   _fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> =
