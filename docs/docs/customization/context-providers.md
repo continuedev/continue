@@ -116,9 +116,17 @@ Type '@issue' to reference the conversation in a GitHub issue. Make sure to incl
 
 Type '@outline' to reference the outline of all currently open files. The outline of a files consists of only the function and class definitions in the file. Supported file extensions are '.js', '.mjs', '.go', '.c', '.cc', '.cs', '.cpp', '.el', '.ex', '.elm', '.java', '.ml', '.php', '.ql', '.rb', '.rs', '.ts'
 
+```json
+{ "name": "outline" }
+```
+
 ### Code Highlights
 
 Type '@highlights' to reference the 'highlights' from all currently open files. The highlights are computed using Paul Gauthier's so-called ['repomap'](https://aider.chat/docs/repomap.html) technique in [Aider Chat](https://github.com/paul-gauthier/aider). Supported file extensions are the same as for '@Outline' (behind the scenes, we use the corresponding tree-sitter grammars for language parsing).
+
+```json
+{ "name": "highlights" }
+```
 
 ### Requesting Context Providers
 
