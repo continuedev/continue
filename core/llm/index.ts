@@ -434,6 +434,6 @@ ${prompt}`;
     if (typeof window === "undefined") {
       return true;
     }
-    return (window as any)?.ide !== "vscode";
+    return window?.ide !== "vscode";
   }
 }

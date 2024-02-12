@@ -1,5 +1,24 @@
 import { BrowserSerializedContinueConfig } from "./config/load";
 
+declare global {
+  interface Window {
+    ide?: "vscode";
+    windowId: string;
+    serverUrl: string;
+    vscMachineId: string;
+    vscMediaUrl: string;
+    fullColorTheme?: {
+      rules?: {
+        token?: string;
+        foreground?: string;
+      }[];
+    };
+    colorThemeName?: string;
+    workspacePaths?: string[];
+    postIntellijMessage?: (type: string, data: any) => void;
+  }
+}
+
 export interface ChunkWithoutID {
   content: string;
   startLine: number;

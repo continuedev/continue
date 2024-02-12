@@ -1,12 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
 import { RootStore } from "../store";
 
-const windowAny: any = window;
-
 export const configSlice = createSlice({
   name: "config",
   initialState: {
-    vscMachineId: windowAny.vscMachineId || undefined,
+    vscMachineId: window.vscMachineId || undefined,
   } as RootStore["config"],
   reducers: {
     setVscMachineId: (
