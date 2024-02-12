@@ -2703,10 +2703,10 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.npmjs.org/lines-and-columns/-/lines-and-columns-1.2.4.tgz"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-llm-code-highlighter@^0.0.5:
-  version "0.0.5"
-  resolved "https://registry.npmjs.org/llm-code-highlighter/-/llm-code-highlighter-0.0.5.tgz"
-  integrity sha512-rzizZgdEXRJhS0p75fwjhtlRYblq8F9zss4cCavZNEliYTFVqt1sEDmCCmjCTGkJp7hK1z77PrzcrT7KXqxhGA==
+llm-code-highlighter@^0.0.6:
+  version "0.0.6"
+  resolved "https://registry.npmjs.org/llm-code-highlighter/-/llm-code-highlighter-0.0.6.tgz"
+  integrity sha512-UPTu3zsX/juK6eXxqefwrOG18Tk/4RlOnlnNPMHqrw4Xr5AMHxMI10HpzgDYpAAZ3VqHM+tdDxsPtiA/+Fc2Rg==
   dependencies:
     graphology "^0.25.4"
     graphology-metrics "^2.2.0"
