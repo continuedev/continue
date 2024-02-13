@@ -81,11 +81,16 @@ export async function constructAutocompletePrompt(
   // Find external snippets
   const snippets: AutocompleteSnippet[] = [];
 
-  const treePath = await getTreePathAtCursor(
-    filepath,
-    fullPrefix + fullSuffix,
-    fullPrefix.length
-  );
+  let treePath;
+  try {
+    treePath = await getTreePathAtCursor(
+      filepath,
+      fullPrefix + fullSuffix,
+      fullPrefix.length
+    );
+  } catch (e) {
+    console.error("Failed to parse AST", e);
+  }
 
   // Get function def when inside call expression
   if (treePath) {
