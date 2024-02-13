@@ -137,6 +137,13 @@ export const R = {
   endOfLine: [""],
 };
 
+// Dart
+export const Dart = {
+  stopWords: ["class", "import", "void", "enum"],
+  comment: "//",
+  endOfLine: [";"],
+};
+
 export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   ts: Typescript,
   js: Typescript,
@@ -171,4 +178,5 @@ export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   fsscript: FSharp,
   r: R,
   R: R,
+  dart: Dart,
 };
