@@ -109,6 +109,34 @@ export const Ruby = {
   endOfLine: [""],
 };
 
+// Clojure
+export const Clojure = {
+  stopWords: ["def", "fn", "let", "do", "if", "defn", "ns", "defmacro"],
+  comment: ";",
+  endOfLine: [""],
+};
+
+// Julia
+export const Julia = {
+  stopWords: ["function", "macro", "if", "else", "elseif", "while", "for", "begin", "end", "module"],
+  comment: "#",
+  endOfLine: [";"],
+};
+
+// F#
+export const FSharp = {
+  stopWords: ["let", "type", "module", "namespace", "open", "if", "then", "else", "match", "with"],
+  comment: "//",
+  endOfLine: [""], 
+};
+
+// R
+export const R = {
+  stopWords: ["function", "if", "else", "for", "while", "repeat", "library", "require"],
+  comment: "#",
+  endOfLine: [""],
+};
+
 export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   ts: Typescript,
   js: Typescript,
@@ -133,4 +161,14 @@ export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   rails: RubyOnRails,
   swift: Swift,
   kt: Kotlin,
+  clj: Clojure,
+  cljs: Clojure,
+  cljc: Clojure,
+  jl: Julia,
+  fs: FSharp, 
+  fsi: FSharp, 
+  fsx: FSharp, 
+  fsscript: FSharp,
+  r: R,
+  R: R,
 };
