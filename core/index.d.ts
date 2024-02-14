@@ -1,5 +1,3 @@
-import { BrowserSerializedContinueConfig } from "./config/load";
-
 export interface ChunkWithoutID {
   content: string;
   startLine: number;
@@ -293,12 +291,14 @@ export class Problem {
 }
 
 export interface IDE {
-  getSerializedConfig(): Promise<BrowserSerializedContinueConfig>;
   getDiff(): Promise<string>;
+  isTelemetryEnabled(): Promise<boolean>;
+  getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
   listWorkspaceContents(directory?: string): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
+  getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
   writeFile(path: string, contents: string): Promise<void>;
   showVirtualFile(title: string, contents: string): Promise<void>;
   getContinueDir(): Promise<string>;
@@ -306,6 +306,7 @@ export interface IDE {
   runCommand(command: string): Promise<void>;
   saveFile(filepath: string): Promise<void>;
   readFile(filepath: string): Promise<string>;
+  readRangeInFile(filepath: string, range: Range): Promise<string>;
   showLines(
     filepath: string,
     startLine: number,
@@ -316,34 +317,13 @@ export interface IDE {
     newContents: string,
     stepIndex: number
   ): Promise<void>;
-  verticalDiffUpdate(
-    filepath: string,
-    startLine: number,
-    endLine: number,
-    diffLine: DiffLine
-  ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
   getBranch(dir: string): Promise<string>;
-
-  // Embeddings
-  /**
-   * Returns list of [tag, filepath, hash of contents] that need to be embedded
-   */
-  getFilesToEmbed(providerId: string): Promise<[string, string, string][]>;
-  sendEmbeddingForChunk(
-    chunk: Chunk,
-    embedding: number[],
-    tags: string[]
-  ): void;
-  retrieveChunks(
-    text: string,
-    n: number,
-    directory: string | undefined
-  ): Promise<Chunk[]>;
+  getStats(directory: string): Promise<{ [path: string]: number }>;
 }
 
 // Slash Commands

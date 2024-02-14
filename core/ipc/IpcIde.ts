@@ -1,5 +1,4 @@
-import { Chunk, DiffLine, IDE, Problem } from "..";
-import { BrowserSerializedContinueConfig } from "../config/load";
+import { Chunk, ContinueRcJson, IDE, Problem, Range } from "..";
 import { IpcMessenger } from "./messenger";
 
 export class IpcIde implements IDE {
@@ -8,8 +7,23 @@ export class IpcIde implements IDE {
   constructor(messenger: IpcMessenger) {
     this.messenger = messenger;
   }
+  readRangeInFile(filepath: string, range: Range): Promise<string> {
+    throw new Error("Method not implemented.");
+  }
 
-  getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
+  getStats(directory: string): Promise<{ [path: string]: number }> {
+    throw new Error("Method not implemented.");
+  }
+
+  isTelemetryEnabled(): Promise<boolean> {
+    throw new Error("Method not implemented.");
+  }
+
+  getUniqueId(): Promise<string> {
+    throw new Error("Method not implemented.");
+  }
+
+  getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
     throw new Error("Method not implemented.");
   }
   getDiff(): Promise<string> {
@@ -59,14 +73,6 @@ export class IpcIde implements IDE {
     filepath: string,
     newContents: string,
     stepIndex: number
-  ): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  verticalDiffUpdate(
-    filepath: string,
-    startLine: number,
-    endLine: number,
-    diffLine: DiffLine
   ): Promise<void> {
     throw new Error("Method not implemented.");
   }

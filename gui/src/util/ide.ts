@@ -55,13 +55,6 @@ export async function ideRequest(type: string, data: any): Promise<any> {
   });
 }
 
-export async function withProgress(title: string, fn: () => Promise<any>) {
-  postToIde("withProgress", { title, done: false });
-  return fn().finally(() => {
-    postToIde("withProgress", { title, done: true });
-  });
-}
-
 export function errorPopup(message: string) {
   postToIde("errorPopup", { message });
 }

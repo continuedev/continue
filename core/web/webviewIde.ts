@@ -1,14 +1,27 @@
-import { Chunk, DiffLine, Problem } from "..";
-import { BrowserSerializedContinueConfig } from "../config/load";
+import { ContinueRcJson, Problem, Range } from "..";
 import { IDE } from "../index";
 
-import { ideRequest } from "./messaging";
+import { ideRequest } from "./message";
 async function r(messageType: string, options: any = {}) {
   return await ideRequest(messageType, options);
 }
-export class ExtensionIde implements IDE {
-  async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
-    return await r("getSerializedConfig");
+export class WebviewIde implements IDE {
+  readRangeInFile(filepath: string, range: Range): Promise<string> {
+    return r("readRangeInFile", { filepath, range });
+  }
+  getStats(directory: string): Promise<{ [path: string]: number }> {
+    return r("getStats", { directory });
+  }
+  isTelemetryEnabled(): Promise<boolean> {
+    return r("isTelemetryEnabled");
+  }
+
+  getUniqueId(): Promise<string> {
+    return r("getUniqueId");
+  }
+
+  getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
+    return r("getWorkspaceConfigs");
   }
 
   async getDiff() {
@@ -80,15 +93,6 @@ export class ExtensionIde implements IDE {
     await r("showDiff", { filepath, newContents, stepIndex });
   }
 
-  async verticalDiffUpdate(
-    filepath: string,
-    startLine: number,
-    endLine: number,
-    diffLine: DiffLine
-  ) {
-    await r("diffLine", { filepath, startLine, endLine, diffLine });
-  }
-
   getOpenFiles(): Promise<string[]> {
     return r("getOpenFiles");
   }
@@ -109,23 +113,7 @@ export class ExtensionIde implements IDE {
     return r("subprocess", { command });
   }
 
-  getFilesToEmbed(providerId: string): Promise<[string, string, string][]> {
-    return r("getFilesToEmbed", { providerId });
-  }
-
-  sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {
-    return r("sendChunkForFile", { chunk, embedding, tags });
-  }
-
   async getBranch(dir: string): Promise<string> {
     return r("getBranch", { dir });
-  }
-
-  retrieveChunks(
-    text: string,
-    n: number,
-    directory: string | undefined
-  ): Promise<Chunk[]> {
-    return r("retrieveChunks", { text, n, directory });
   }
 }

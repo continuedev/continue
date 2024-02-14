@@ -1,17 +1,9 @@
-import { ContextItemWithId, DiffLine, ILLM, SlashCommand } from "../..";
-import { streamDiff } from "../../diff/streamDiff";
-import { LineStream, streamLines } from "../../diff/util";
-import { stripImages } from "../../llm/countTokens";
-import { gptEditPrompt } from "../../llm/templates/edit";
-import {
-  dedentAndGetCommonWhitespace,
-  getMarkdownLanguageTagForFile,
-  renderPromptTemplate,
-} from "../../util";
-import {
-  RangeInFileWithContents,
-  contextItemToRangeInFileWithContents,
-} from "../util";
+import { dedentAndGetCommonWhitespace, renderPromptTemplate } from ".";
+import { DiffLine, ILLM } from "..";
+import { streamDiff } from "../diff/streamDiff";
+import { LineStream, streamLines } from "../diff/util";
+import { stripImages } from "../llm/countTokens";
+import { gptEditPrompt } from "../llm/templates/edit";
 
 function shouldRemoveLineBeforeStart(line: string): boolean {
   return (
@@ -215,38 +207,3 @@ export async function* streamDiffLines(
     yield diffLine;
   }
 }
-
-const VerticalEditSlashCommand: SlashCommand = {
-  name: "verticalEdit",
-  description: "Edit selected code with vertical diff",
-  run: async function* ({ ide, llm, input, contextItems }) {
-    const contextItemToEdit = contextItems.find(
-      (item: ContextItemWithId) =>
-        item.editing && item.id.providerTitle === "code"
-    );
-
-    if (!contextItemToEdit) {
-      yield "Highlight the code that you want to edit first";
-      return;
-    }
-
-    const rif: RangeInFileWithContents =
-      contextItemToRangeInFileWithContents(contextItemToEdit);
-    const startLine = rif.range.start.line;
-    const endLine = rif.range.end.line;
-    const filepath = rif.filepath;
-
-    const diffLineGenerator = streamDiffLines(
-      rif.contents,
-      llm,
-      input,
-      getMarkdownLanguageTagForFile(rif.filepath)
-    );
-
-    for await (const diffLine of diffLineGenerator) {
-      await ide.verticalDiffUpdate(filepath, startLine, endLine, diffLine);
-    }
-  },
-};
-
-export default VerticalEditSlashCommand;

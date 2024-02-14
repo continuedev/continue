@@ -8,20 +8,27 @@ import {
   RangeInFile,
   SerializedContinueConfig,
 } from "..";
+import { Message } from "../util/messenger";
 
 export abstract class Messenger {
   abstract send(messageType: string, message: any, messageId?: string): string;
-  abstract on(messageType: string, handler: (message: any) => any): void;
+  abstract on<T extends keyof Protocol>(
+    messageType: T,
+    handler: (message: Message<Protocol[T][0]>) => Protocol[T][1]
+  ): void;
+  abstract invoke<T extends keyof Protocol>(
+    messageType: T,
+    data: Protocol[T][0]
+  ): Protocol[T][1];
 }
 
-export interface Message<T = any> {
-  messageType: string;
-  messageId: string;
-  data: T;
-}
-
-type Protocol = {
+export type Protocol = {
+  // New
+  "update/modelChange": [string, void];
+  // Special
   abort: [undefined, void];
+
+  // History
   "history/list": [undefined, PersistedSessionInfo[]];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, PersistedSessionInfo];
@@ -33,6 +40,7 @@ type Protocol = {
     void,
   ];
   "config/deleteModel": [{ title: string }, void];
+  "config/reload": [undefined, void];
   "context/getContextItems": [
     {
       name: string;
@@ -40,9 +48,12 @@ type Protocol = {
       fullInput: string;
       selectedCode: RangeInFile[];
     },
-    ContextItem[],
+    Promise<ContextItem[]>,
   ];
-  "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
+  "context/loadSubmenuItems": [
+    { title: string },
+    Promise<ContextSubmenuItem[]>,
+  ];
   "context/addDocs": [{ title: string; url: string }, void];
   "autocomplete/complete": [
     { filepath: string; line: number; column: number },
@@ -92,7 +103,7 @@ type ProtocolCallbacks = {
 };
 
 export class IpcMessenger extends Messenger {
-  listeners = new Map<string, ((message: Message) => any)[]>();
+  listeners = new Map<keyof Protocol, ((message: Message) => any)[]>();
 
   constructor() {
     super();
@@ -142,5 +153,16 @@ export class IpcMessenger extends Messenger {
       this.listeners.set(messageType, []);
     }
     this.listeners.get(messageType)?.push(handler);
+  }
+
+  invoke<T extends keyof Protocol>(
+    messageType: T,
+    data: Protocol[T][0]
+  ): Protocol[T][1] {
+    return this.listeners.get(messageType)?.[0]?.({
+      messageId: uuidv4(),
+      messageType,
+      data,
+    });
   }
 }

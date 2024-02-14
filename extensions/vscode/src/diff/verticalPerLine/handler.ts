@@ -7,10 +7,7 @@ import {
   indexDecorationType,
   redDecorationType,
 } from "./decorations";
-import {
-  editorToVerticalDiffCodeLens,
-  verticalPerLineDiffManager,
-} from "./manager";
+import { VerticalDiffCodeLens } from "./manager";
 
 export class VerticalPerLineDiffHandler {
   private editor: vscode.TextEditor;
@@ -33,6 +30,14 @@ export class VerticalPerLineDiffHandler {
     startLine: number,
     endLine: number,
     editor: vscode.TextEditor,
+    private readonly editorToVerticalDiffCodeLens: Map<
+      string,
+      VerticalDiffCodeLens[]
+    >,
+    private readonly clearForFilepath: (
+      filepath: string | undefined,
+      accept: boolean
+    ) => void,
     input?: string
   ) {
     this.currentLineIndex = startLine;
@@ -71,13 +76,13 @@ export class VerticalPerLineDiffHandler {
     }
 
     if (this.deletionBuffer.length || this.insertedInCurrentBlock > 0) {
-      const blocks = editorToVerticalDiffCodeLens.get(this.filepath) || [];
+      const blocks = this.editorToVerticalDiffCodeLens.get(this.filepath) || [];
       blocks.push({
         start: this.currentLineIndex - this.insertedInCurrentBlock,
         numRed: this.deletionBuffer.length,
         numGreen: this.insertedInCurrentBlock,
       });
-      editorToVerticalDiffCodeLens.set(this.filepath, blocks);
+      this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
     }
 
     if (this.deletionBuffer.length === 0) {
@@ -183,7 +188,7 @@ export class VerticalPerLineDiffHandler {
     this.greenDecorationManager.clear();
     this.clearIndexLineDecorations();
 
-    editorToVerticalDiffCodeLens.delete(this.filepath);
+    this.editorToVerticalDiffCodeLens.delete(this.filepath);
 
     this.editor.edit((editBuilder) => {
       for (const range of rangesToDelete) {
@@ -246,7 +251,7 @@ export class VerticalPerLineDiffHandler {
       //   }
       // });
     } catch (e) {
-      verticalPerLineDiffManager.clearForFilepath(this.filepath, false);
+      this.clearForFilepath(this.filepath, false);
       throw e;
     }
   }
@@ -283,7 +288,7 @@ export class VerticalPerLineDiffHandler {
 
     // Shift the codelens objects
     const blocks =
-      editorToVerticalDiffCodeLens
+      this.editorToVerticalDiffCodeLens
         .get(this.filepath)
         ?.filter((x) => x.start !== startLine)
         .map((x) => {
@@ -292,6 +297,6 @@ export class VerticalPerLineDiffHandler {
           }
           return x;
         }) || [];
-    editorToVerticalDiffCodeLens.set(this.filepath, blocks);
+    this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
   }
 }

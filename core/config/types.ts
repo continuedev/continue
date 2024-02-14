@@ -288,7 +288,6 @@ declare global {
   }
   
   export interface IDE {
-    getSerializedConfig(): Promise<SerializedContinueConfig>;
     getConfigJsUrl(): Promise<string | undefined>;
     getDiff(): Promise<string>;
     getTerminalContents(): Promise<string>;
@@ -306,12 +305,6 @@ declare global {
       filepath: string,
       newContents: string,
       stepIndex: number
-    ): Promise<void>;
-    verticalDiffUpdate(
-      filepath: string,
-      startLine: number,
-      endLine: number,
-      diffLine: DiffLine
     ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
     getPinnedFiles(): Promise<string[]>;

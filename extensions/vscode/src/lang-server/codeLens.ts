@@ -1,19 +1,26 @@
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
-import { DIFF_DIRECTORY, diffManager } from "../diff/horizontal";
-import { editorToVerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
+import { DIFF_DIRECTORY, DiffManager } from "../diff/horizontal";
+import { VerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
 import { editorSuggestionsLocked, editorToSuggestions } from "../suggestions";
 import { getMetaKeyLabel } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 
 class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
+  constructor(
+    private readonly editorToVerticalDiffCodeLens: Map<
+      string,
+      VerticalDiffCodeLens[]
+    >
+  ) {}
+
   public provideCodeLenses(
     document: vscode.TextDocument,
     _: vscode.CancellationToken
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     const filepath = document.uri.fsPath;
-    const blocks = editorToVerticalDiffCodeLens.get(filepath);
+    const blocks = this.editorToVerticalDiffCodeLens.get(filepath);
     if (!blocks) {
       return [];
     }
@@ -96,6 +103,12 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
 }
 
 class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
+  diffManager: DiffManager;
+
+  constructor(diffManager: DiffManager) {
+    this.diffManager = diffManager;
+  }
+
   public provideCodeLenses(
     document: vscode.TextDocument,
     _: vscode.CancellationToken
@@ -103,7 +116,7 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
     if (path.dirname(document.uri.fsPath) === DIFF_DIRECTORY) {
       const codeLenses: vscode.CodeLens[] = [];
       let range = new vscode.Range(0, 0, 1, 0);
-      const diffInfo = diffManager.diffAtNewFilepath(document.uri.fsPath);
+      const diffInfo = this.diffManager.diffAtNewFilepath(document.uri.fsPath);
       if (diffInfo) {
         range = diffInfo.range;
       }
@@ -334,7 +347,11 @@ let suggestionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let configPyCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let tutorialCodeLensDisposable: vscode.Disposable | undefined = undefined;
 
-export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
+export function registerAllCodeLensProviders(
+  context: vscode.ExtensionContext,
+  diffManager: DiffManager,
+  editorToVerticalDiffCodeLens: Map<string, VerticalDiffCodeLens[]>
+) {
   if (verticalPerLineCodeLensProvider) {
     verticalPerLineCodeLensProvider.dispose();
   }
@@ -353,7 +370,7 @@ export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
 
   verticalPerLineCodeLensProvider = vscode.languages.registerCodeLensProvider(
     "*",
-    new VerticalPerLineCodeLensProvider()
+    new VerticalPerLineCodeLensProvider(editorToVerticalDiffCodeLens)
   );
   suggestionsCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",
@@ -361,7 +378,7 @@ export function registerAllCodeLensProviders(context: vscode.ExtensionContext) {
   );
   diffsCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",
-    new DiffViewerCodeLensProvider()
+    new DiffViewerCodeLensProvider(diffManager)
   );
   configPyCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { setServerStatusMessage } from "../redux/slices/miscSlice";
 import { isJetBrains, postToIde } from "../util/ide";
 
-import { ExtensionIde } from "core/ide/index";
+import { ideRequest } from "core/ide/messaging";
 import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { setVscMachineId } from "../redux/slices/configSlice";
@@ -17,7 +17,8 @@ import useChatHandler from "./useChatHandler";
 
 function useSetup(dispatch: Dispatch<any>) {
   const loadConfig = async () => {
-    dispatch(setConfig(await new ExtensionIde().getSerializedConfig()));
+    const config = await ideRequest("getSerializedConfig", {});
+    dispatch(setConfig(config));
   };
 
   // Load config from the IDE

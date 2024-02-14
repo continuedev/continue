@@ -3,11 +3,8 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
-import { extensionContext } from "../activation/activate";
-import { debugPanelWebview } from "../debugPanel";
 import { getMetaKeyLabel, getPlatform } from "../util/util";
 import { uriFromFilePath } from "../util/vscode";
-import { verticalPerLineDiffManager } from "./verticalPerLine/manager";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -32,7 +29,7 @@ export const DIFF_DIRECTORY = path
   .join(os.homedir(), ".continue", "diffs")
   .replace(/^C:/, "c:");
 
-class DiffManager {
+export class DiffManager {
   // Create a temporary file in the global .continue directory which displays the updated version
   // Doing this because virtual files are read-only
   private diffs: Map<string, DiffInfo> = new Map();
@@ -50,7 +47,16 @@ class DiffManager {
     }
   }
 
-  constructor() {
+  webview: vscode.Webview | undefined;
+  private readonly extensionContext: vscode.ExtensionContext;
+
+  constructor(
+    webview: vscode.Webview | undefined,
+    extensionContext: vscode.ExtensionContext
+  ) {
+    this.webview = webview;
+    this.extensionContext = extensionContext;
+
     this.setupDirectory();
 
     // Listen for file closes, and if it's a diff file, clean up
@@ -123,7 +129,7 @@ class DiffManager {
       .update("codeLens", true, vscode.ConfigurationTarget.Global);
 
     if (
-      extensionContext?.globalState.get<boolean>(
+      this.extensionContext.globalState.get<boolean>(
         "continue.showDiffInfoMessage"
       ) !== false
     ) {
@@ -136,7 +142,7 @@ class DiffManager {
         .then((selection) => {
           if (selection === "Don't show again") {
             // Get the global state
-            extensionContext?.globalState.update(
+            this.extensionContext.globalState.update(
               "continue.showDiffInfoMessage",
               false
             );
@@ -297,7 +303,7 @@ class DiffManager {
     }
 
     // Stop the step at step_index in case it is still streaming
-    debugPanelWebview?.postMessage({ type: "setInactive" });
+    this.webview?.postMessage({ type: "setInactive" });
 
     vscode.workspace.textDocuments
       .find((doc) => doc.uri.fsPath === newFilepath)
@@ -309,8 +315,6 @@ class DiffManager {
     await recordAcceptReject(false, diffInfo);
   }
 }
-
-export const diffManager = new DiffManager();
 
 async function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
   const devDataDir = devDataPath();
@@ -340,20 +344,4 @@ async function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
     vscode.Uri.file(suggestionsPath),
     JSON.stringify(suggestions, null, 4)
   );
-}
-
-export async function acceptDiffCommand(newFilepath?: string | vscode.Uri) {
-  if (newFilepath instanceof vscode.Uri) {
-    newFilepath = newFilepath.fsPath;
-  }
-  verticalPerLineDiffManager.clearForFilepath(newFilepath, true);
-  await diffManager.acceptDiff(newFilepath);
-}
-
-export async function rejectDiffCommand(newFilepath?: string | vscode.Uri) {
-  if (newFilepath instanceof vscode.Uri) {
-    newFilepath = newFilepath.fsPath;
-  }
-  verticalPerLineDiffManager.clearForFilepath(newFilepath, false);
-  await diffManager.rejectDiff(newFilepath);
 }
