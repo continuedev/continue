@@ -7,7 +7,6 @@ const IGNORE_PATHS_ENDING_IN = [
   "favicon.ico",
   "robots.txt",
   ".rst.txt",
-  "index.html", // So as not to duplicate with "/"
   // ReadTheDocs
   "genindex",
   "py-modindex",

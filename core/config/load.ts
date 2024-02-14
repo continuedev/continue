@@ -5,6 +5,7 @@ import {
   ContextProviderDescription,
   ContextProviderWithParams,
   ContinueConfig,
+  ContinueRcJson,
   CustomContextProvider,
   CustomLLM,
   EmbeddingsProviderDescription,
@@ -36,7 +37,7 @@ import {
 } from "../util/paths";
 
 function loadSerializedConfig(
-  workspaceConfigs: Partial<SerializedContinueConfig>[]
+  workspaceConfigs: ContinueRcJson[]
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath();
   let contents = fs.readFileSync(configPath, "utf8");
@@ -116,7 +117,7 @@ function loadSerializedConfig(
   });
 
   for (const workspaceConfig of workspaceConfigs) {
-    config = mergeJson(config, workspaceConfig);
+    config = mergeJson(config, workspaceConfig, workspaceConfig.mergeBehavior);
   }
 
   return config;
@@ -164,19 +165,64 @@ async function intermediateToFinalConfig(
 ): Promise<ContinueConfig> {
   const models: BaseLLM[] = [];
   for (const desc of config.models) {
-    let llm: BaseLLM | undefined;
     if (isModelDescription(desc)) {
-      llm = await llmFromDescription(
+      const llm = await llmFromDescription(
         desc,
         readFile,
         config.completionOptions,
         config.systemMessage
       );
+      if (!llm) continue;
+
+      if (llm.model === "AUTODETECT") {
+        try {
+          const modelNames = await llm.listModels();
+          const detectedModels = await Promise.all(
+            modelNames.map(async (modelName) => {
+              return await llmFromDescription(
+                {
+                  ...desc,
+                  model: modelName,
+                  title: llm.title + " - " + modelName,
+                },
+                readFile,
+                config.completionOptions,
+                config.systemMessage
+              );
+            })
+          );
+          models.push(
+            ...(detectedModels.filter(
+              (x) => typeof x !== "undefined"
+            ) as BaseLLM[])
+          );
+        } catch (e) {
+          console.warn("Error listing models: ", e);
+        }
+      } else {
+        models.push(llm);
+      }
     } else {
-      llm = new CustomLLMClass(desc);
+      const llm = new CustomLLMClass(desc);
+      if (llm.model === "AUTODETECT") {
+        try {
+          const modelNames = await llm.listModels();
+          const models = modelNames.map(
+            (modelName) =>
+              new CustomLLMClass({
+                ...desc,
+                options: { ...desc.options, model: modelName },
+              })
+          );
+
+          models.push(...models);
+        } catch (e) {
+          console.warn("Error listing models: ", e);
+        }
+      } else {
+        models.push(llm);
+      }
     }
-    if (!llm) continue;
-    models.push(llm);
   }
 
   let autocompleteLlm: BaseLLM | undefined = undefined;
@@ -308,7 +354,7 @@ async function buildConfigTs(browser: boolean) {
 
 async function loadFullConfigNode(
   readFile: (filepath: string) => Promise<string>,
-  workspaceConfigs: Partial<SerializedContinueConfig>[]
+  workspaceConfigs: ContinueRcJson[]
 ): Promise<ContinueConfig> {
   let serialized = loadSerializedConfig(workspaceConfigs);
   let intermediate = serializedToIntermediateConfig(serialized);

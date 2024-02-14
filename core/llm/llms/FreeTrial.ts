@@ -87,6 +87,16 @@ class FreeTrial extends BaseLLM {
       };
     }
   }
+
+  async listModels(): Promise<string[]> {
+    return [
+      "gpt-3.5-turbo",
+      "gpt-4",
+      "gemini-pro",
+      "gpt-4-vision-preview",
+      "codellama-70b",
+    ];
+  }
 }
 
 export default FreeTrial;

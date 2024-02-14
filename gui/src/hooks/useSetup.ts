@@ -44,11 +44,11 @@ function useSetup(dispatch: Dispatch<any>) {
     const eventListener = (event: any) => {
       switch (event.data.type) {
         case "onLoad":
-          (window as any).windowId = event.data.windowId;
-          (window as any).serverUrl = event.data.serverUrl;
-          (window as any).workspacePaths = event.data.workspacePaths;
-          (window as any).vscMachineId = event.data.vscMachineId;
-          (window as any).vscMediaUrl = event.data.vscMediaUrl;
+          window.windowId = event.data.windowId;
+          window.serverUrl = event.data.serverUrl;
+          window.workspacePaths = event.data.workspacePaths;
+          window.vscMachineId = event.data.vscMachineId;
+          window.vscMediaUrl = event.data.vscMediaUrl;
           dispatch(setVscMachineId(event.data.vscMachineId));
           // dispatch(setVscMediaUrl(event.data.vscMediaUrl));
 

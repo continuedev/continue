@@ -49,6 +49,8 @@ const DEFAULT_IGNORE_FILETYPES = [
   "*.webm",
   "*.jar",
   "*.onnx",
+  "*.parquet",
+  "*.pqt",
 ];
 export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
 const DEFAULT_IGNORE_DIRS = [

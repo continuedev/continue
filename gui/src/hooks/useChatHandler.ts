@@ -100,18 +100,25 @@ function useChatHandler(dispatch: Dispatch) {
     input: string,
     historyIndex: number
   ) {
+    const abortController = new AbortController();
+    const cancelToken = abortController.signal;
     const modelTitle = defaultModel.title;
 
-    for await (const update of ideStreamRequest("runNodeJsSlashCommand", {
-      input,
-      history: messages,
-      modelTitle,
-      slashCommandName: slashCommand.name,
-      contextItems,
-      params: slashCommand.params,
-      historyIndex,
-    })) {
+    for await (const update of ideStreamRequest(
+      "runNodeJsSlashCommand",
+      {
+        input,
+        history: messages,
+        modelTitle,
+        slashCommandName: slashCommand.name,
+        contextItems,
+        params: slashCommand.params,
+        historyIndex,
+      },
+      cancelToken
+    )) {
       if (!activeRef.current) {
+        abortController.abort();
         break;
       }
       if (typeof update === "string") {
@@ -130,6 +137,7 @@ function useChatHandler(dispatch: Dispatch) {
 
       // Resolve context providers and construct new history
       const [contextItems, content] = await resolveEditorContent(editorState);
+      console.log(contextItems, content);
       const message: ChatMessage = {
         role: "user",
         content,

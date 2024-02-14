@@ -1,4 +1,4 @@
-import { ContinueConfig, ILLM, SerializedContinueConfig } from "core";
+import { ContinueConfig, ContinueRcJson, ILLM } from "core";
 import defaultConfig from "core/config/default";
 import {
   finalToBrowserConfig,
@@ -8,6 +8,7 @@ import {
 } from "core/config/load";
 import Ollama from "core/llm/llms/Ollama";
 import { getConfigJsonPath } from "core/util/paths";
+import { Telemetry } from "core/util/posthog";
 import { http, https } from "follow-redirects";
 import * as fs from "fs";
 import { HttpProxyAgent } from "http-proxy-agent";
@@ -16,6 +17,7 @@ import fetch from "node-fetch";
 import * as vscode from "vscode";
 import { ideProtocolClient } from "./activation/activate";
 import { debugPanelWebview, webviewRequest } from "./debugPanel";
+import { getUniqueId } from "./util/vscode";
 const tls = require("tls");
 
 const outputChannel = vscode.window.createOutputChannel(
@@ -33,7 +35,7 @@ class VsCodeConfigHandler {
   private async _getWorkspaceConfigs() {
     const workspaceDirs =
       vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [];
-    const configs: Partial<SerializedContinueConfig>[] = [];
+    const configs: ContinueRcJson[] = [];
     for (const workspaceDir of workspaceDirs) {
       const files = await vscode.workspace.fs.readDirectory(workspaceDir);
       for (const [filename, type] of files) {
@@ -53,7 +55,7 @@ class VsCodeConfigHandler {
       if (this.savedConfig) {
         return this.savedConfig;
       }
-      let workspaceConfigs: any[] = [];
+      let workspaceConfigs: ContinueRcJson[] = [];
       try {
         workspaceConfigs = await this._getWorkspaceConfigs();
       } catch (e) {
@@ -70,6 +72,12 @@ class VsCodeConfigHandler {
       // Update the sidebar panel
       const browserConfig = finalToBrowserConfig(this.savedConfig);
       debugPanelWebview?.postMessage({ type: "configUpdate", browserConfig });
+
+      // Setup telemetry only after (and if) we know it is enabled
+      await Telemetry.setup(
+        this.savedConfig.allowAnonymousTelemetry ?? true,
+        getUniqueId()
+      );
 
       return this.savedConfig;
     } catch (e) {

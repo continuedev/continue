@@ -13,6 +13,7 @@ import {
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import { streamLines } from "core/diff/util";
+import OpenAI from "core/llm/llms/OpenAI";
 import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -253,6 +254,9 @@ async function getTabCompletion(
   try {
     // Model
     const llm = await TabAutocompleteModel.get();
+    if (llm instanceof OpenAI) {
+      llm.useLegacyCompletionsEndpoint = true;
+    }
     if (!llm) return;
 
     // Prompt
@@ -300,17 +304,21 @@ async function getTabCompletion(
       setupStatusBar(true, true);
 
       // Try to reuse pending requests if what the user typed matches start of completion
+      let stop = [
+        ...(completionOptions?.stop || []),
+        "\n\n",
+        "```",
+        ...lang.stopWords,
+      ];
+      if (options.disableMultiLineCompletions) {
+        stop.unshift("\n");
+      }
       let generator = GeneratorReuseManager.getGenerator(prefix, () =>
         llm.streamComplete(prompt, {
           ...completionOptions,
           temperature: 0,
           raw: true,
-          stop: [
-            ...(completionOptions?.stop || []),
-            "\n\n",
-            "```",
-            ...lang.stopWords,
-          ],
+          stop,
         })
       );
 

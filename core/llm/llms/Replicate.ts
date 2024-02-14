@@ -1,27 +1,21 @@
 import ReplicateClient from "replicate";
 import { BaseLLM } from "..";
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
+import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
 
 class Replicate extends BaseLLM {
   private static MODEL_IDS: {
     [name: string]: `${string}/${string}:${string}`;
   } = {
     "codellama-7b":
-      "meta/codellama-7b-instruct:6527b83e01e41412db37de5110a8670e3701ee95872697481a355e05ce12af0e",
+      "meta/codellama-7b-instruct:aac3ab196f8a75729aab9368cd45ea6ad3fc793b6cda93b1ded17299df369332",
     "codellama-13b":
-      "meta/codellama-13b-instruct:1f01a52ff933873dff339d5fb5e1fd6f24f77456836f514fa05e91c1a42699c7",
+      "meta/codellama-13b-instruct:a5e2d67630195a09b96932f5fa541fe64069c97d40cd0b69cdd91919987d0e7f",
     "codellama-34b":
-      "meta/codellama-34b-instruct:8281a5c610f6e88237ff3ddaf3c33b56f60809e2bdd19fbec2fda742aa18167e",
-    "llama2-7b":
-      "meta/llama-2-7b-chat:8e6975e5ed6174911a6ff3d60540dfd4844201974602551e10e9e87ab143d81e",
-    "llama2-13b":
-      "meta/llama-2-13b-chat:f4e2de70d66816a838a89eeeb621910adffb0dd0baba3976c96980970978018d",
+      "meta/codellama-34b-instruct:eeb928567781f4e90d2aba57a51baef235de53f907c214a4ab42adabf5bb9736",
+    "codellama-70b":
+      "meta/codellama-70b-instruct:a279116fe47a0f65701a8817188601e2fe8f4b9e04a518789655ea7b995851bf",
+    "llama2-7b": "meta/llama-2-7b-chat" as any,
+    "llama2-13b": "meta/llama-2-13b-chat" as any,
     "zephyr-7b":
       "nateraw/zephyr-7b-beta:b79f33de5c6c4e34087d44eaea4a9d98ce5d3f3a09522f7328eea0685003a931",
     "mistral-7b":
@@ -69,18 +63,23 @@ class Replicate extends BaseLLM {
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    yield await this._complete(prompt, options);
+    const [model, args] = this._convertArgs(options, prompt);
+    for await (const event of this._replicate.stream(model, args)) {
+      if (event.event === "output") {
+        yield event.data;
+      }
+    }
   }
 
-  protected async *_streamChat(
-    messages: ChatMessage[],
-    options: CompletionOptions
-  ): AsyncGenerator<ChatMessage> {
-    const resp = await this.complete(
-      stripImages(messages[0]?.content || ""),
-      options
-    );
-  }
+  // protected async *_streamChat(
+  //   messages: ChatMessage[],
+  //   options: CompletionOptions
+  // ): AsyncGenerator<ChatMessage> {
+  //   const resp = await this.complete(
+  //     stripImages(messages[0]?.content || ""),
+  //     options
+  //   );
+  // }
 }
 
 export default Replicate;

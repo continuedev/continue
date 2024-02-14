@@ -12,6 +12,7 @@ import {
   TemplateType,
 } from "..";
 import mergeJson from "../util/merge";
+import { Telemetry } from "../util/posthog";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -123,6 +124,10 @@ export abstract class BaseLLM implements ILLM {
     this.projectId = options.projectId;
   }
 
+  listModels(): Promise<string[]> {
+    return Promise.resolve([]);
+  }
+
   private _compileChatMessages(
     options: CompletionOptions,
     messages: ChatMessage[],
@@ -187,12 +192,16 @@ ${prompt}`;
 
   private _logTokensGenerated(model: string, completion: string) {
     let tokens = this.countTokens(completion);
-    // TODO
-    // posthogLogger.captureEvent("tokens_generated", {
-    //   model: model,
-    //   tokens: tokens,
-    //   model_class: this.constructor.name,
-    // });
+    Telemetry.capture("tokens_generated", {
+      model: model,
+      provider: this.providerName,
+      tokens: tokens,
+    });
+    Telemetry.capture("tokensGenerated", {
+      model: model,
+      provider: this.providerName,
+      tokens: tokens,
+    });
   }
 
   _fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> =
@@ -430,6 +439,6 @@ ${prompt}`;
     if (typeof window === "undefined") {
       return true;
     }
-    return (window as any)?.ide !== "vscode";
+    return window?.ide !== "vscode";
   }
 }

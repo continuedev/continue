@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { selectSlashCommands } from "../../redux/selectors";
-import { newSession } from "../../redux/slices/stateSlice";
+import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
@@ -72,9 +72,14 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
 
   useEffect(() => {
     const listener = (e) => {
-      if (e.data.type === "newSessionWithPrompt") {
+      if (e.data.type === "newSessionWithPrompt" && props.isMainInput) {
         dispatch(newSession());
-        setEditorState(e.data.prompt);
+        dispatch(
+          setMessageAtIndex({
+            message: { role: "user", content: e.data.prompt },
+            index: 0,
+          })
+        );
       }
     };
 

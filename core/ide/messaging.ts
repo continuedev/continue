@@ -10,7 +10,7 @@ declare const vscode: any;
 function _postToIde(type: string, data: any) {
   if (typeof vscode === "undefined") {
     if (localStorage.getItem("ide") === "jetbrains") {
-      if ((window as any).postIntellijMessage === undefined) {
+      if (window.postIntellijMessage === undefined) {
         console.log(
           "Unable to send message: postIntellijMessage is undefined. ",
           type,
@@ -18,7 +18,7 @@ function _postToIde(type: string, data: any) {
         );
         throw new Error("postIntellijMessage is undefined");
       }
-      (window as any).postIntellijMessage?.(type, data);
+      window.postIntellijMessage?.(type, data);
       return;
     } else {
       console.log("Unable to send message: vscode is undefined. ", type, data);
@@ -85,7 +85,7 @@ export async function* ideStreamRequest(
         done = true;
         returnVal = event.data.message.data;
       } else {
-        buffer += event.data.message.content;
+        buffer += event.data.message.content || "";
       }
     }
   };
@@ -100,6 +100,8 @@ export async function* ideStreamRequest(
       const chunk = buffer.slice(index);
       index = buffer.length;
       yield chunk;
+    } else {
+      yield undefined;
     }
     await new Promise((resolve) => setTimeout(resolve, 50));
   }
@@ -131,7 +133,9 @@ export async function* llmStreamChat(
 
   let next = await gen.next();
   while (!next.done) {
-    yield { role: "user", content: next.value };
+    if (next.value) {
+      yield { role: "user", content: next.value };
+    }
     next = await gen.next();
   }
   return { prompt: next.value?.prompt, completion: next.value?.completion };

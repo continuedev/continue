@@ -15,7 +15,7 @@ export const Typescript = {
 export const Python = {
   stopWords: ["def", "class"],
   comment: "#",
-  endOfLine: [""],
+  endOfLine: [],
 };
 
 // Java

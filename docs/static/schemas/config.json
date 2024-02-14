@@ -1,6 +1,6 @@
 {
   "title": "config.json",
-  "$ref": "#/definitions/continuedev__core__config__serialized_config__SerializedContinueConfig",
+  "$ref": "#/definitions/SerializedContinueConfig",
   "definitions": {
     "BaseCompletionOptions": {
       "title": "BaseCompletionOptions",
@@ -335,7 +335,9 @@
                   "gpt-4",
                   "gpt-3.5-turbo-0613",
                   "gpt-4-32k",
-                  "gpt-4-turbo-preview"
+                  "gpt-4-0125-preview",
+                  "gpt-4-turbo-preview",
+                  "AUTODETECT"
                 ]
               }
             }
@@ -388,7 +390,8 @@
                   "phind-codellama-34b",
                   "gemini-pro",
                   "gpt-4-vision-preview",
-                  "codellama-70b"
+                  "codellama-70b",
+                  "AUTODETECT"
                 ]
               }
             }
@@ -441,7 +444,8 @@
                       "deepseek-1b",
                       "stable-code-3b",
                       "starcoder-1b",
-                      "starcoder-3b"
+                      "starcoder-3b",
+                      "AUTODETECT"
                     ]
                   },
                   { "type": "string" }
@@ -622,7 +626,8 @@
                       "deepseek-1b",
                       "stable-code-3b",
                       "starcoder-1b",
-                      "starcoder-3b"
+                      "starcoder-3b",
+                      "AUTODETECT"
                     ]
                   },
                   { "type": "string" }
@@ -982,7 +987,9 @@
                 "folder",
                 "issue",
                 "docs",
-                "tree"
+                "tree",
+                "highlights",
+                "outline"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -998,7 +1005,9 @@
                 "Retrieve important pages from a documentation website, as determined by similarity search",
                 "Index and retrieve the contents of any documentation site, using embeddings to find important snippets",
                 "Display a file tree of the current workspace",
-                "Include a repo map showing important code objects"
+                "Include a repo map showing important code objects",
+                "Displays important snippets of code from the currently open files",
+                "Displays definition lines from the currently open files"
               ],
               "type": "string"
             },
@@ -1164,7 +1173,7 @@
       ],
       "required": ["name"]
     },
-    "continuedev__core__config__serialized_config__SerializedContinueConfig": {
+    "SerializedContinueConfig": {
       "title": "config.json",
       "type": "object",
       "properties": {
@@ -1350,6 +1359,10 @@
             "template": {
               "type": "string",
               "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
+            },
+            "disableMultiLineCompletions": {
+              "type": "boolean",
+              "description": "If set to true, Continue will only complete a single line at a time."
             }
           },
           "required": []

@@ -71,8 +71,15 @@
           "title": "Ca Bundle Path",
           "description": "Path to a custom CA bundle to use when making the HTTP request",
           "anyOf": [
-            { "type": "string" },
-            { "type": "array", "items": { "type": "string" } }
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           ]
         },
         "proxy": {
@@ -227,7 +234,10 @@
         "apiType": {
           "title": "Api Type",
           "markdownDescription": "OpenAI API type, either `openai` or `azure`",
-          "enum": ["openai", "azure"]
+          "enum": [
+            "openai",
+            "azure"
+          ]
         },
         "apiVersion": {
           "title": "Api Version",
@@ -240,7 +250,11 @@
           "type": "string"
         }
       },
-      "required": ["title", "provider", "model"],
+      "required": [
+        "title",
+        "provider",
+        "model"
+      ],
       "allOf": [
         {
           "if": {
@@ -250,7 +264,9 @@
               }
             },
             "not": {
-              "required": ["provider"]
+              "required": [
+                "provider"
+              ]
             }
           },
           "then": {
@@ -275,33 +291,47 @@
                 ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
-            "required": ["apiKey"]
+            "required": [
+              "apiKey"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["huggingface-tgi"]
+                "enum": [
+                  "huggingface-tgi"
+                ]
               }
             }
           },
           "then": {
-            "required": ["apiBase"]
+            "required": [
+              "apiBase"
+            ]
           },
-          "required": ["provider"]
+          "required": [
+            "provider"
+          ]
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "openai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -321,10 +351,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "openai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -347,10 +381,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["replicate"]
+                "enum": [
+                  "replicate"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -365,7 +403,9 @@
                       "llama2-13b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               },
               "markdownDescription": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models)."
@@ -376,10 +416,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["free-trial"]
+                "enum": [
+                  "free-trial"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -401,7 +445,9 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "openai"
+                ]
               },
               "apiType": {
                 "not": {
@@ -409,7 +455,9 @@
                 }
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -448,7 +496,9 @@
                       "AUTODETECT"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -458,17 +508,28 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["anthropic"]
+                "enum": [
+                  "anthropic"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
               "model": {
                 "anyOf": [
-                  { "enum": ["claude-2", "claude-instant-1"] },
-                  { "type": "string" }
+                  {
+                    "enum": [
+                      "claude-2",
+                      "claude-instant-1"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -478,15 +539,22 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["google-palm"]
+                "enum": [
+                  "google-palm"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": ["chat-bison-001", "gemini-pro"]
+                "enum": [
+                  "chat-bison-001",
+                  "gemini-pro"
+                ]
               }
             }
           }
@@ -495,10 +563,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["together"]
+                "enum": [
+                  "together"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -517,7 +589,9 @@
                       "phind-codellama-34b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ],
                 "markdownDescription": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
               }
@@ -528,10 +602,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["deepinfra"]
+                "enum": [
+                  "deepinfra"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -554,7 +632,9 @@
                 ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -585,7 +665,9 @@
                       "starcoder-3b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -595,10 +677,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["ollama"]
+                "enum": [
+                  "ollama"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -630,7 +716,9 @@
                       "AUTODETECT"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ],
                 "markdownDescription": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
               }
@@ -641,15 +729,23 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["mistral"]
+                "enum": [
+                  "mistral"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": ["mistral-tiny", "mistral-small", "mistral-medium"]
+                "enum": [
+                  "mistral-tiny",
+                  "mistral-small",
+                  "mistral-medium"
+                ]
               }
             }
           }
@@ -661,20 +757,30 @@
                 "const": "azure"
               }
             },
-            "required": ["apiType"]
+            "required": [
+              "apiType"
+            ]
           },
           "then": {
-            "required": ["engine", "apiVersion", "apiBase"]
+            "required": [
+              "engine",
+              "apiVersion",
+              "apiBase"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": ["openai"]
+                "enum": [
+                  "openai"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -691,7 +797,9 @@
                 "const": "llamafile"
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -705,10 +813,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["text-gen-webui"]
+                "enum": [
+                  "text-gen-webui"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -722,10 +834,14 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["flowise"]
+                "enum": [
+                  "flowise"
+                ]
               }
             },
-            "required": ["provider"]
+            "required": [
+              "provider"
+            ]
           },
           "then": {
             "properties": {
@@ -752,7 +868,10 @@
                       "type": "string"
                     }
                   },
-                  "required": ["key", "value"]
+                  "required": [
+                    "key",
+                    "value"
+                  ]
                 }
               },
               "additionalFlowiseConfiguration": {
@@ -771,7 +890,10 @@
                       "description": "Configuration Property value"
                     }
                   },
-                  "required": ["key", "value"]
+                  "required": [
+                    "key",
+                    "value"
+                  ]
                 }
               },
               "model": {
@@ -813,7 +935,9 @@
                       "starcoder-3b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -846,7 +970,9 @@
           "type": "string"
         }
       },
-      "required": ["default"]
+      "required": [
+        "default"
+      ]
     },
     "SlashCommand": {
       "title": "SlashCommand",
@@ -878,7 +1004,9 @@
                 "Generate a commit message for the current changes"
               ]
             },
-            { "type": "string" }
+            {
+              "type": "string"
+            }
           ]
         },
         "description": {
@@ -901,7 +1029,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["issue"]
+                "enum": [
+                  "issue"
+                ]
               }
             }
           },
@@ -914,17 +1044,23 @@
                     "description": "Enter the URL of the GitHub repository for which you want to generate the issue."
                   }
                 },
-                "required": ["repositoryUrl"]
+                "required": [
+                  "repositoryUrl"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["edit"]
+                "enum": [
+                  "edit"
+                ]
               }
             }
           },
@@ -946,7 +1082,10 @@
           }
         }
       ],
-      "required": ["name", "description"]
+      "required": [
+        "name",
+        "description"
+      ]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -965,7 +1104,11 @@
           "type": "string"
         }
       },
-      "required": ["name", "prompt", "description"]
+      "required": [
+        "name",
+        "prompt",
+        "description"
+      ]
     },
     "ContextProviderWithParams": {
       "title": "ContextProviderWithParams",
@@ -1011,7 +1154,9 @@
               ],
               "type": "string"
             },
-            { "type": "string" }
+            {
+              "type": "string"
+            }
           ]
         },
         "params": {
@@ -1025,7 +1170,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["google"]
+                "enum": [
+                  "google"
+                ]
               }
             }
           },
@@ -1038,17 +1185,23 @@
                     "description": "Your API key for https://serper.dev in order to get Google search results"
                   }
                 },
-                "required": ["serperApiKey"]
+                "required": [
+                  "serperApiKey"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["open"]
+                "enum": [
+                  "open"
+                ]
               }
             }
           },
@@ -1070,7 +1223,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["issue"]
+                "enum": [
+                  "issue"
+                ]
               }
             }
           },
@@ -1099,24 +1254,37 @@
                         "type": {
                           "type": "string",
                           "description": "The type of issues to search for",
-                          "enum": ["open", "closed", "all"]
+                          "enum": [
+                            "open",
+                            "closed",
+                            "all"
+                          ]
                         }
                       },
-                      "required": ["owner", "repo"]
+                      "required": [
+                        "owner",
+                        "repo"
+                      ]
                     }
                   }
                 },
-                "required": ["repos"]
+                "required": [
+                  "repos"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["http"]
+                "enum": [
+                  "http"
+                ]
               }
             }
           },
@@ -1129,17 +1297,24 @@
                     "description": "The HTTP endpoint of your context provider server."
                   }
                 },
-                "required": ["url"]
+                "required": [
+                  "url"
+                ]
               }
             },
-            "required": ["params"]
+            "required": [
+              "params"
+            ]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": ["codebase", "folder"]
+                "enum": [
+                  "codebase",
+                  "folder"
+                ]
               }
             }
           },
@@ -1171,7 +1346,9 @@
           }
         }
       ],
-      "required": ["name"]
+      "required": [
+        "name"
+      ]
     },
     "SerializedContinueConfig": {
       "title": "config.json",
@@ -1289,7 +1466,11 @@
           "type": "object",
           "properties": {
             "provider": {
-              "enum": ["transformers.js", "ollama", "openai"]
+              "enum": [
+                "transformers.js",
+                "ollama",
+                "openai"
+              ]
             },
             "model": {
               "type": "string"
@@ -1301,19 +1482,27 @@
               "type": "string"
             }
           },
-          "required": ["provider"],
+          "required": [
+            "provider"
+          ],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["ollama"]
+                    "enum": [
+                      "ollama"
+                    ]
                   }
                 },
-                "required": ["provider"]
+                "required": [
+                  "provider"
+                ]
               },
               "then": {
-                "required": ["model"]
+                "required": [
+                  "model"
+                ]
               }
             }
           ]
@@ -1366,6 +1555,16 @@
             }
           },
           "required": []
+        },
+        "mergeBehavior": {
+          "type": "string",
+          "enum": [
+            "merge",
+            "overwrite"
+          ],
+          "default": "merge",
+          "title": "Merge behavior",
+          "markdownDescription": "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json."
         }
       }
     }

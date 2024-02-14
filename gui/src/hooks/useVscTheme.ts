@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 
-const hljsToTextMate = {
+const hljsToTextMate: Record<string, string[]> = {
   ".hljs-comment": ["comment"],
   ".hljs-tag": ["tag"],
 
@@ -51,7 +51,9 @@ const hljsToTextMate = {
   ".hljs-params": ["variable", "operator", "number"],
 };
 
-function constructTheme(tmTheme: any): any {
+function constructTheme(
+  tmTheme: typeof window.fullColorTheme
+): Record<string, string> {
   const rules = tmTheme["rules"] || [];
 
   const tokenToForeground = {};
@@ -78,13 +80,13 @@ function constructTheme(tmTheme: any): any {
 
 export function useVscTheme() {
   const [theme, setTheme] = useState<any>(
-    constructTheme((window as any).fullColorTheme || {})
+    constructTheme(window.fullColorTheme || {})
   );
 
   useEffect(() => {
     const listener = (e) => {
       if (e.data.type === "setTheme") {
-        (window as any).fullColorTheme = e.data.theme;
+        window.fullColorTheme = e.data.theme;
         setTheme(constructTheme(e.data.theme));
       }
     };
