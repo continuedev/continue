@@ -77,11 +77,19 @@ if (args[2] === "--target") {
     });
   });
 
+  // Put back index.html
   if (fs.existsSync(indexHtmlPath)) {
     fs.rmSync(indexHtmlPath, {});
   }
   fs.copyFileSync("tmp_index.html", indexHtmlPath);
   fs.unlinkSync("tmp_index.html");
+
+  // Copy over other misc. files
+  fs.copyFileSync(
+    "../extensions/vscode/gui/onigasm.wasm",
+    path.join(intellijExtensionWebviewPath, "onigasm.wasm")
+  );
+
   console.log("[info] Copied gui build to Intellij extension");
 
   // Then copy over the dist folder to the VSCode extension //
