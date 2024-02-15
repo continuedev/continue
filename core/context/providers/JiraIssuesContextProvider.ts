@@ -73,7 +73,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
       .then((result) => result.data);
 
     // @ts-ignore
-    const adf2md = await import("adf2md");
+    const adf2md = await import("adf2md/dist/adf2md.min.js");
 
     const parts = [
       `# Jira Issue ${issue.key}: ${issue.fields.summary}`,
