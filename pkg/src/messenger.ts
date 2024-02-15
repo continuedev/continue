@@ -8,8 +8,8 @@ import {
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
-} from "..";
-import { Message } from "../util/messenger";
+} from "../../core";
+import { Message } from "../../core/util/messenger";
 
 export abstract class Messenger {
   abstract send(messageType: string, message: any, messageId?: string): string;

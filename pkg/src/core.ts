@@ -1,12 +1,12 @@
+import { ContextItemId, IDE } from "core";
+import { ConfigHandler } from "core/config/handler";
+import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
+import { indexDocs } from "core/indexing/docs";
+import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { CodebaseIndexer } from "core/indexing/indexCodebase";
+import { logDevData } from "core/util/devdata";
+import historyManager from "core/util/history";
 import { v4 as uuidv4 } from "uuid";
-import { ContextItemId, IDE } from "..";
-import { ConfigHandler } from "../config/handler";
-import { addModel, addOpenAIKey, deleteModel } from "../config/util";
-import { indexDocs } from "../indexing/docs";
-import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { CodebaseIndexer } from "../indexing/indexCodebase";
-import { logDevData } from "../util/devdata";
-import historyManager from "../util/history";
 import { Messenger, Protocol } from "./messenger";
 
 export class Core {

@@ -1,4 +1,4 @@
-import { Chunk, ContinueRcJson, IDE, Problem, Range } from "..";
+import { Chunk, ContinueRcJson, IDE, Problem, Range } from "../../core";
 import { IpcMessenger } from "./messenger";
 
 export class IpcIde implements IDE {
