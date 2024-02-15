@@ -7,10 +7,11 @@ import { CodebaseIndexer } from "core/indexing/indexCodebase";
 import { logDevData } from "core/util/devdata";
 import historyManager from "core/util/history";
 import { v4 as uuidv4 } from "uuid";
-import { Messenger, Protocol } from "./messenger";
+import { IpcMessenger } from "./messenger";
+import { Protocol } from "./protocol";
 
 export class Core {
-  private messenger: Messenger;
+  private messenger: IpcMessenger;
   private readonly ide: IDE;
   private readonly configHandler: ConfigHandler;
   private readonly codebaseIndexer: CodebaseIndexer;
@@ -25,13 +26,13 @@ export class Core {
     return await this.configHandler.llmFromTitle(this.selectedModelTitle);
   }
 
-  constructor(messenger: Messenger, ide: IDE) {
+  constructor(messenger: IpcMessenger, ide: IDE) {
     this.messenger = messenger;
     this.ide = ide;
     this.configHandler = new ConfigHandler(this.ide);
     this.codebaseIndexer = new CodebaseIndexer(this.configHandler, this.ide);
 
-    const on = this.messenger.on;
+    const on = this.messenger.on.bind(this.messenger);
 
     // New
     on("update/modelChange", (msg) => {

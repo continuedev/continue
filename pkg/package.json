@@ -10,7 +10,9 @@
     ],
     "assets": [
       "../core/node_modules/sqlite3/**/*",
-      "node_modules/@lancedb/**/*"
+      "node_modules/@lancedb/**/*",
+      "out/tree-sitter.wasm",
+      "out/tree-sitter-wasms/*"
     ],
     "targets": [
       "node18-darwin-arm64"
