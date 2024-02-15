@@ -68,6 +68,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
             registerAppSchemeHandler()
 
             browser.loadURL("http://continue/index.html")
+//            browser.loadURL("http://localhost:5173/index.html")
             Disposer.register(project, browser)
 
             val continuePluginService = ServiceManager.getService(
@@ -81,12 +82,23 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
             myJSQueryOpenInBrowser.addHandler { msg: String? ->
                 val parser = JsonParser()
                 val json: JsonObject = parser.parse(msg).asJsonObject
-                val type = json.get("type").asString
+                val messageType = json.get("messageType").asString
                 val data = json.get("data").asJsonObject
+                val messageId = json.get("messageId").asString
 
                 val ide = continuePluginService.ideProtocolClient;
 
-                when (type) {
+                val respond = fun(data: Any?) {
+                    val jsonData = mutableMapOf(
+                        "messageId" to messageId,
+                        "data" to data,
+                        "messageType" to messageType
+                    )
+                    val jsonString = Gson().toJson(jsonData)
+                    browser.executeJavaScriptAsync("""window.postMessage($jsonString, "*");""")
+                }
+
+                when (messageType) {
                     "onLoad" -> {
                         GlobalScope.launch {
                             // Set the colors to match Intellij theme
@@ -121,14 +133,12 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                             browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-editor-background\", \"$defaultBackgroundHex\");")
 
                             val jsonData = mutableMapOf(
-                                    "type" to "onLoad",
                                     "windowId" to continuePluginService.windowId,
                                     "workspacePaths" to continuePluginService.worksapcePaths,
                                     "vscMachineId" to getMachineUniqueID(),
                                     "vscMediaUrl" to "http://continue",
                             )
-                            val jsonString = Gson().toJson(jsonData)
-                            browser.executeJavaScriptAsync("""window.postMessage($jsonString, "*");""")
+                            respond(jsonData)
                         }
 
                     }
@@ -172,7 +182,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                     // IDE //
                     else -> {
                         if (msg != null) {
-                            ide?.handleWebsocketMessage(msg)
+                            ide?.handleMessage(msg, respond)
                         }
                     }
                 }

@@ -9,6 +9,7 @@ import "./index.css";
 import { persistor, store } from "./redux/store";
 
 (async () => {
+  // "" lets it pass through to the correct path for JetBrains
   const onigPath = ((window as any).vscMediaUrl ?? "") + "/onigasm.wasm";
   const resp = await fetch(onigPath);
   const onigWasm = await resp.arrayBuffer();

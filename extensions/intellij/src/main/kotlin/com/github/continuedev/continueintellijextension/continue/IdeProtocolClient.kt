@@ -1,28 +1,19 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
-import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.*
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
-import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
-import com.intellij.execution.ExecutionManager
-import com.intellij.execution.process.ProcessAdapter
-import com.intellij.execution.process.ProcessEvent
-import com.intellij.execution.ui.RunContentDescriptor
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
-import com.intellij.openapi.project.ProjectManagerListener
 import com.intellij.openapi.ui.MessageType
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
@@ -32,15 +23,10 @@ import com.intellij.openapi.wm.WindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import kotlinx.coroutines.*
-import net.minidev.json.JSONObject
-import org.jetbrains.annotations.NotNull
 import java.io.*
 import java.net.NetworkInterface
 import java.nio.charset.Charset
-import java.nio.file.Files
-import java.nio.file.Paths
 import java.util.*
-import kotlin.coroutines.ContinuationInterceptor
 
 
 fun uuid(): String {
@@ -146,26 +132,18 @@ class IdeProtocolClient (
         continuePluginService.dispatchCustomEvent(json)
     }
 
-    fun handleWebsocketMessage(text: String) {
+    fun handleMessage(text: String, respond: (Any?) -> Unit) {
         coroutineScope.launch(Dispatchers.IO) {
             val parsedMessage: Map<String, Any> = Gson().fromJson(
                     text,
                     object : TypeToken<Map<String, Any>>() {}.type
             )
-            val messageType = parsedMessage["type"] as? String
+            val messageType = parsedMessage["messageType"] as? String
             if (messageType == null) {
                 println("Recieved message without type: $text")
                 return@launch
             }
             val data = parsedMessage["data"] as Map<*, *>
-
-            fun respond(responseData: Any?) {
-                if (data["messageId"] == null) {
-                    println("Recieved message without messageId: $text")
-                    return
-                }
-                send(messageType, responseData ?: emptyMap<String, String>(), data["messageId"] as String);
-            }
 
             val historyManager = HistoryManager()
 
