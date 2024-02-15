@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useWebviewListener } from "./useWebviewListener";
 
 const hljsToTextMate = {
   ".hljs-comment": ["comment"],
@@ -81,18 +82,10 @@ export function useVscTheme() {
     constructTheme((window as any).fullColorTheme || {})
   );
 
-  useEffect(() => {
-    const listener = (e) => {
-      if (e.data.type === "setTheme") {
-        (window as any).fullColorTheme = e.data.theme;
-        setTheme(constructTheme(e.data.theme));
-      }
-    };
-    window.addEventListener("message", listener);
-    return () => {
-      window.removeEventListener("message", listener);
-    };
-  }, []);
+  useWebviewListener("setTheme", async (data) => {
+    (window as any).fullColorTheme = data.theme;
+    setTheme(constructTheme(data.theme));
+  });
 
   return theme;
 }

@@ -1,43 +1,45 @@
-import { ContinueRcJson, Problem, Range } from "..";
-import { IDE } from "../index";
-
-import { ideRequest } from "./message";
-async function r(messageType: string, options: any = {}) {
-  return await ideRequest(messageType, options);
+import { ContinueRcJson, IDE, Problem, Range } from "core";
+import { WebviewProtocol } from "core/web/webviewProtocol";
+import { ideRequest } from "./ide";
+function r<T extends keyof WebviewProtocol>(
+  messageType: T,
+  data: WebviewProtocol[T][0]
+): Promise<WebviewProtocol[T][1]> {
+  return ideRequest(messageType, data);
 }
 export class WebviewIde implements IDE {
   readRangeInFile(filepath: string, range: Range): Promise<string> {
     return r("readRangeInFile", { filepath, range });
   }
   getStats(directory: string): Promise<{ [path: string]: number }> {
-    return r("getStats", { directory });
+    throw new Error("Method not implemented.");
   }
   isTelemetryEnabled(): Promise<boolean> {
-    return r("isTelemetryEnabled");
+    return r("isTelemetryEnabled", undefined);
   }
 
   getUniqueId(): Promise<string> {
-    return r("getUniqueId");
+    return r("getUniqueId", undefined);
   }
 
   getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
-    return r("getWorkspaceConfigs");
+    return r("getWorkspaceConfigs", undefined);
   }
 
   async getDiff() {
-    return await r("getDiff");
+    return await r("getDiff", undefined);
   }
 
   async getTerminalContents() {
-    return await r("getTerminalContents");
+    return await r("getTerminalContents", undefined);
   }
 
   async listWorkspaceContents(directory?: string): Promise<string[]> {
-    return await r("listWorkspaceContents");
+    return await r("listWorkspaceContents", undefined);
   }
 
   async getWorkspaceDirs(): Promise<string[]> {
-    return await r("getWorkspaceDirs");
+    return await r("getWorkspaceDirs", undefined);
   }
 
   async showLines(
@@ -49,7 +51,7 @@ export class WebviewIde implements IDE {
   }
 
   async listFolders(): Promise<string[]> {
-    return await r("listFolders");
+    return await r("listFolders", undefined);
   }
 
   _continueDir: string | null = null;
@@ -58,7 +60,7 @@ export class WebviewIde implements IDE {
     if (this._continueDir) {
       return this._continueDir;
     }
-    const dir = await r("getContinueDir");
+    const dir = await r("getContinueDir", undefined);
     this._continueDir = dir;
     return dir;
   }
@@ -94,11 +96,11 @@ export class WebviewIde implements IDE {
   }
 
   getOpenFiles(): Promise<string[]> {
-    return r("getOpenFiles");
+    return r("getOpenFiles", undefined);
   }
 
   getPinnedFiles(): Promise<string[]> {
-    return r("getPinnedFiles");
+    return r("getPinnedFiles", undefined);
   }
 
   getSearchResults(query: string): Promise<string> {

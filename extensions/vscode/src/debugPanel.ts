@@ -10,6 +10,7 @@ export class ContinueGUIWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
   public static readonly viewType = "continue.continueGUIView";
+  public webviewProtocol?: VsCodeWebviewProtocol;
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -121,11 +122,11 @@ export class ContinueGUIWebviewViewProvider
     vscode.workspace.onDidChangeConfiguration((e) => {
       if (e.affectsConfiguration("workbench.colorTheme")) {
         // Send new theme to GUI to update embedded Monaco themes
-        this._webview?.postMessage({ type: "setTheme", theme: getTheme() });
+        this.webviewProtocol?.request("setTheme", { theme: getTheme() });
       }
     });
 
-    const webviewProtocol = new VsCodeWebviewProtocol(
+    this.webviewProtocol = new VsCodeWebviewProtocol(
       panel.webview,
       ide,
       configHandler,

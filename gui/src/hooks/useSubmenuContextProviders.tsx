@@ -1,11 +1,12 @@
 import { ContextSubmenuItem } from "core";
-import { ExtensionIde } from "core/ide";
-import { ideRequest } from "core/ide/messaging";
 import { getBasename, getLastNPathParts } from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { selectContextProviderDescriptions } from "../redux/selectors";
+import { ideRequest } from "../util/ide";
+import { WebviewIde } from "../util/webviewIde";
+import { useWebviewListener } from "./useWebviewListener";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
@@ -29,7 +30,7 @@ function useSubmenuContextProviders() {
   const [loaded, setLoaded] = useState(false);
 
   async function getOpenFileItems() {
-    const openFiles = await new ExtensionIde().getOpenFiles();
+    const openFiles = await new WebviewIde().getOpenFiles();
     return openFiles.map((file) => {
       return {
         id: file,
@@ -40,18 +41,9 @@ function useSubmenuContextProviders() {
     });
   }
 
-  useEffect(() => {
-    const handler = (e) => {
-      if (e.data.type !== "refreshSubmenuItems") {
-        return;
-      }
-      setLoaded(false);
-    };
-    window.addEventListener("message", handler);
-    return () => {
-      window.removeEventListener("message", handler);
-    };
-  }, []);
+  useWebviewListener("refreshSubmenuItems", async (data) => {
+    setLoaded(true);
+  });
 
   function addItem(providerTitle: string, item: ContextSubmenuItem) {
     if (!minisearches[providerTitle]) {
@@ -82,7 +74,7 @@ function useSubmenuContextProviders() {
         fields: ["title"],
         storeFields: ["id", "title", "description"],
       });
-      const { items } = await ideRequest("loadSubmenuItems", {
+      const items = await ideRequest("loadSubmenuItems", {
         title: description.title,
       });
       minisearch.addAll(items);

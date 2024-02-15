@@ -1,7 +1,9 @@
-import { useEffect } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { ReverseWebviewProtocol } from "core/web/webviewProtocol";
+import { useLocation, useNavigate } from "react-router-dom";
+import { v4 as uuidv4 } from "uuid";
+import { useWebviewListener } from "./useWebviewListener";
 
-const openGUITypes = [
+const openGUITypes: (keyof ReverseWebviewProtocol)[] = [
   "highlightedCode",
   "newSessionWithPrompt",
   "focusContinueInput",
@@ -13,30 +15,36 @@ export const useNavigationListener = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  useEffect(() => {
-    const listener = (e) => {
-      if(openGUITypes.includes(e.data.type)) {
-        
+  for (const messageType of openGUITypes) {
+    useWebviewListener(
+      messageType,
+      async (data) => {
         navigate("/");
         setTimeout(() => {
-          window.postMessage(e.data, "*");
+          window.postMessage(
+            {
+              messageType,
+              data,
+              messageId: uuidv4(),
+            },
+            "*"
+          );
         }, 200);
+      },
+      [navigate]
+    );
+  }
+
+  useWebviewListener(
+    "viewHistory",
+    async () => {
+      // Toggle the history page / main page
+      if (location.pathname === "/history") {
+        navigate("/");
+      } else {
+        navigate("/history");
       }
-
-      if(e.data.type === "viewHistory") {
-        // Toggle the history page / main page
-        if (location.pathname === "/history") {
-          navigate("/");
-        } else {
-          navigate("/history");
-        }
-      }
-    };
-
-    window.addEventListener("message", listener);
-
-    return () => {
-      window.removeEventListener("message", listener);
-    };
-  }, [navigate]);
-}
+    },
+    [location, navigate]
+  );
+};

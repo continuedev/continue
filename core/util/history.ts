@@ -3,7 +3,7 @@ import { PersistedSessionInfo, SessionInfo } from "..";
 import { getSessionFilePath, getSessionsListPath } from "./paths";
 
 class HistoryManager {
-  list(): PersistedSessionInfo[] {
+  list(): SessionInfo[] {
     const filepath = getSessionsListPath();
     if (!fs.existsSync(filepath)) {
       return [];

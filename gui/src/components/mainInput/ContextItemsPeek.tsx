@@ -1,7 +1,6 @@
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { contextItemToRangeInFileWithContents } from "core/commands/util";
-import { ExtensionIde } from "core/ide";
 import React from "react";
 import styled from "styled-components";
 import {
@@ -10,6 +9,7 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
+import { WebviewIde } from "../../util/webviewIde";
 import FileIcon from "../FileIcon";
 
 const ContextItemDiv = styled.div`
@@ -49,16 +49,16 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
     ) {
       if (contextItem.name.includes(" (") && contextItem.name.endsWith(")")) {
         const rif = contextItemToRangeInFileWithContents(contextItem);
-        new ExtensionIde().showLines(
+        new WebviewIde().showLines(
           rif.filepath,
           rif.range.start.line,
           rif.range.end.line
         );
       } else {
-        new ExtensionIde().openFile(contextItem.description);
+        new WebviewIde().openFile(contextItem.description);
       }
     } else {
-      new ExtensionIde().showVirtualFile(contextItem.name, contextItem.content);
+      new WebviewIde().showVirtualFile(contextItem.name, contextItem.content);
     }
   }
 

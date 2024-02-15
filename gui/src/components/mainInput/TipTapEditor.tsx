@@ -26,6 +26,7 @@ import {
 import { SubmenuContextProvidersContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
@@ -225,7 +226,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     return undefined;
   }
 
-  const editor = useEditor({
+  const editor: Editor = useEditor({
     extensions: [
       Document,
       History,
@@ -358,7 +359,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           setIgnoreHighlightedCode(false);
         }, 100);
       } else if (event.key === "Escape") {
-        postToIde("focusEditor", {});
+        postToIde("focusEditor", undefined);
       }
     };
 
@@ -370,6 +371,109 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, []);
 
   // IDE event listeners
+  useWebviewListener(
+    "userInput",
+    async (data) => {
+      if (!props.isMainInput) {
+        return;
+      }
+      editor?.commands.insertContent(data.input);
+      onEnterRef.current(editor.getJSON());
+    },
+    [editor, onEnterRef.current, props.isMainInput]
+  );
+
+  useWebviewListener(
+    "focusContinueInput",
+    async (data) => {
+      if (!props.isMainInput) {
+        return;
+      }
+      if (historyLength > 0) {
+        saveSession();
+      }
+      editor?.commands.focus("end");
+    },
+    [historyLength, saveSession, editor, props.isMainInput]
+  );
+
+  useWebviewListener(
+    "focusContinueInputWithoutClear",
+    async () => {
+      if (!props.isMainInput) {
+        return;
+      }
+      editor?.commands.focus("end");
+    },
+    [editor, props.isMainInput]
+  );
+
+  useWebviewListener(
+    "focusContinueInputWithNewSession",
+    async () => {
+      if (!props.isMainInput) {
+        return;
+      }
+      saveSession();
+      editor?.commands.focus("end");
+    },
+    [editor, props.isMainInput]
+  );
+
+  useWebviewListener(
+    "highlightedCode",
+    async (data) => {
+      if (!props.isMainInput || !editor) {
+        return;
+      }
+      if (!ignoreHighlightedCode) {
+        const rif: RangeInFile & { contents: string } =
+          data.rangeInFileWithContents;
+        const basename = getBasename(rif.filepath);
+        const item: ContextItemWithId = {
+          content: rif.contents,
+          name: `${basename} (${rif.range.start.line + 1}-${
+            rif.range.end.line + 1
+          })`,
+          description: rif.filepath,
+          id: {
+            providerTitle: "code",
+            itemId: rif.filepath,
+          },
+        };
+
+        let index = 0;
+        for (const el of editor.getJSON().content) {
+          if (el.type === "codeBlock") {
+            index += 2;
+          } else {
+            break;
+          }
+        }
+        editor
+          .chain()
+          .insertContentAt(index, {
+            type: "codeBlock",
+            attrs: {
+              item,
+            },
+          })
+          .run();
+        setTimeout(() => {
+          editor.commands.focus("end");
+        }, 100);
+      }
+      setIgnoreHighlightedCode(false);
+    },
+    [
+      editor,
+      props.isMainInput,
+      historyLength,
+      ignoreHighlightedCode,
+      props.isMainInput,
+    ]
+  );
+
   useEffect(() => {
     if (!props.isMainInput) {
       return;
@@ -377,68 +481,6 @@ function TipTapEditor(props: TipTapEditorProps) {
     if (editor && document.hasFocus()) {
       editor.commands.focus();
     }
-    const handler = async (event: any) => {
-      if (!editor) return;
-
-      if (event.data.type === "userInput") {
-        const input = event.data.input;
-        editor.commands.insertContent(input);
-        onEnterRef.current(editor.getJSON());
-      } else if (event.data.type === "focusContinueInput") {
-        if (historyLength > 0) {
-          saveSession();
-        }
-        editor.commands.focus("end");
-      } else if (event.data.type === "focusContinueInputWithoutClear") {
-        editor.commands.focus("end");
-      } else if (event.data.type === "focusContinueInputWithNewSession") {
-        saveSession();
-        editor.commands.focus("end");
-      } else if (event.data.type === "highlightedCode") {
-        if (!ignoreHighlightedCode) {
-          const rif: RangeInFile & { contents: string } =
-            event.data.rangeInFileWithContents;
-          const basename = getBasename(rif.filepath);
-          const item: ContextItemWithId = {
-            content: rif.contents,
-            name: `${basename} (${rif.range.start.line + 1}-${
-              rif.range.end.line + 1
-            })`,
-            description: rif.filepath,
-            id: {
-              providerTitle: "code",
-              itemId: rif.filepath,
-            },
-          };
-
-          let index = 0;
-          for (const el of editor.getJSON().content) {
-            if (el.type === "codeBlock") {
-              index += 2;
-            } else {
-              break;
-            }
-          }
-          editor
-            .chain()
-            .insertContentAt(index, {
-              type: "codeBlock",
-              attrs: {
-                item,
-              },
-            })
-            .run();
-          setTimeout(() => {
-            editor.commands.focus("end");
-          }, 100);
-        }
-        setIgnoreHighlightedCode(false);
-      }
-    };
-    window.addEventListener("message", handler);
-    return () => {
-      window.removeEventListener("message", handler);
-    };
   }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);

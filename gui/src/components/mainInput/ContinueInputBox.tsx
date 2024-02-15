@@ -1,9 +1,10 @@
 import { JSONContent } from "@tiptap/react";
 import { ContextItemWithId } from "core";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectSlashCommands } from "../../redux/selectors";
 import { newSession } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
@@ -70,19 +71,10 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
 
   const [editorState, setEditorState] = useState(props.editorState);
 
-  useEffect(() => {
-    const listener = (e) => {
-      if (e.data.type === "newSessionWithPrompt") {
-        dispatch(newSession());
-        setEditorState(e.data.prompt);
-      }
-    };
-
-    window.addEventListener("message", listener);
-    return () => {
-      window.removeEventListener("message", listener);
-    };
-  }, []);
+  useWebviewListener("newSessionWithPrompt", async (data) => {
+    dispatch(newSession());
+    setEditorState(data.prompt as any); // any -> JSONContent
+  });
 
   return (
     <div

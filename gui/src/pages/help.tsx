@@ -1,12 +1,10 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { postToIde } from "core/ide/messaging";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Button, lightGray, vscBackground, vscForeground } from "../components";
 import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
 import { useNavigationListener } from "../hooks/useNavigationListener";
-
-
+import { postToIde } from "../util/ide";
 
 const IconDiv = styled.div<{ backgroundColor?: string }>`
   display: flex;
@@ -56,7 +54,7 @@ function HelpPage() {
         <h3 className="text-lg font-bold m-2 inline-block">Help Center</h3>
         <TutorialButton
           onClick={() => {
-            postToIde("showTutorial", {});
+            postToIde("showTutorial", undefined);
           }}
         >
           Open tutorial

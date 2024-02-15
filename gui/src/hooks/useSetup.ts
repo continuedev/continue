@@ -1,9 +1,5 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { useEffect } from "react";
-import { setServerStatusMessage } from "../redux/slices/miscSlice";
-import { isJetBrains, postToIde } from "../util/ide";
-
-import { ideRequest } from "core/ide/messaging";
 import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { setVscMachineId } from "../redux/slices/configSlice";
@@ -13,11 +9,13 @@ import {
   setInactive,
 } from "../redux/slices/stateSlice";
 import { RootStore } from "../redux/store";
+import { ideRequest, isJetBrains } from "../util/ide";
 import useChatHandler from "./useChatHandler";
+import { useWebviewListener } from "./useWebviewListener";
 
 function useSetup(dispatch: Dispatch<any>) {
   const loadConfig = async () => {
-    const config = await ideRequest("getSerializedConfig", {});
+    const config = await ideRequest("getSerializedConfig", undefined);
     dispatch(setConfig(config));
   };
 
@@ -31,7 +29,15 @@ function useSetup(dispatch: Dispatch<any>) {
     dispatch(setInactive());
 
     // Tell JetBrains the webview is ready
-    postToIde("onLoad", {});
+    ideRequest("onLoad", undefined).then((msg) => {
+      (window as any).windowId = msg.windowId;
+      (window as any).serverUrl = msg.serverUrl;
+      (window as any).workspacePaths = msg.workspacePaths;
+      (window as any).vscMachineId = msg.vscMachineId;
+      (window as any).vscMediaUrl = msg.vscMediaUrl;
+      dispatch(setVscMachineId(msg.vscMachineId));
+      // dispatch(setVscMediaUrl(msg.vscMediaUrl));
+    });
   }, []);
 
   const { streamResponse } = useChatHandler(dispatch);
@@ -41,47 +47,34 @@ function useSetup(dispatch: Dispatch<any>) {
   );
 
   // IDE event listeners
-  useEffect(() => {
-    const eventListener = (event: any) => {
-      switch (event.data.type) {
-        case "onLoad":
-          (window as any).windowId = event.data.windowId;
-          (window as any).serverUrl = event.data.serverUrl;
-          (window as any).workspacePaths = event.data.workspacePaths;
-          (window as any).vscMachineId = event.data.vscMachineId;
-          (window as any).vscMediaUrl = event.data.vscMediaUrl;
-          dispatch(setVscMachineId(event.data.vscMachineId));
-          // dispatch(setVscMediaUrl(event.data.vscMediaUrl));
+  useWebviewListener("setInactive", async () => {
+    dispatch(setInactive());
+  });
 
-          break;
-        case "serverStatus":
-          dispatch(setServerStatusMessage(event.data.message));
-          break;
-        case "setInactive":
-          dispatch(setInactive());
-          break;
-        case "configUpdate":
-          loadConfig();
-          break;
-        case "submitMessage":
-          streamResponse(event.data.message);
-          break;
-        case "addContextItem":
-          dispatch(
-            addContextItemsAtIndex({
-              index: event.data.message.historyIndex,
-              contextItems: [event.data.message.item],
-            })
-          );
-          break;
-        case "getDefaultModelTitle":
-          postToIde("getDefaultModelTitle", { defaultModelTitle });
-          break;
-      }
-    };
-    window.addEventListener("message", eventListener);
-    return () => window.removeEventListener("message", eventListener);
-  }, [defaultModelTitle]);
+  useWebviewListener("configUpdate", async () => {
+    loadConfig();
+  });
+
+  useWebviewListener("submitMessage", async (data) => {
+    streamResponse(data.message);
+  });
+
+  useWebviewListener("addContextItem", async (data) => {
+    dispatch(
+      addContextItemsAtIndex({
+        index: data.historyIndex,
+        contextItems: [data.item],
+      })
+    );
+  });
+
+  useWebviewListener(
+    "getDefaultModelTitle",
+    async () => {
+      return defaultModelTitle;
+    },
+    [defaultModelTitle]
+  );
 
   // Save theme colors to local storage for immediate loading in JetBrains
   useEffect(() => {

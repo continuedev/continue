@@ -10,10 +10,11 @@ import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { AutocompleteOutcome } from "./lang-server/completionProvider";
+import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 function addHighlightedCodeToContext(
   edit: boolean,
-  webview: vscode.Webview | undefined
+  webviewProtocol: VsCodeWebviewProtocol | undefined
 ) {
   const editor = vscode.window.activeTextEditor;
   if (editor) {
@@ -36,10 +37,8 @@ function addHighlightedCodeToContext(
       },
     };
 
-    webview?.postMessage({
-      type: "highlightedCode",
+    webviewProtocol?.request("highlightedCode", {
       rangeInFileWithContents,
-      edit,
     });
   }
 }
@@ -47,7 +46,7 @@ function addHighlightedCodeToContext(
 async function addEntireFileToContext(
   filepath: vscode.Uri,
   edit: boolean,
-  debugPanelWebview: vscode.Webview | undefined
+  webviewProtocol: VsCodeWebviewProtocol | undefined
 ) {
   // If a directory, add all files in the directory
   const stat = await vscode.workspace.fs.stat(filepath);
@@ -58,7 +57,7 @@ async function addEntireFileToContext(
         addEntireFileToContext(
           vscode.Uri.joinPath(filepath, filename),
           edit,
-          debugPanelWebview
+          webviewProtocol
         );
       }
     }
@@ -82,10 +81,8 @@ async function addEntireFileToContext(
     },
   };
 
-  debugPanelWebview?.postMessage({
-    type: "highlightedCode",
+  webviewProtocol?.request("highlightedCode", {
     rangeInFileWithContents,
-    edit,
   });
 }
 
@@ -126,29 +123,28 @@ const commandsMap: (
     verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index);
   },
   "continue.quickFix": async (message: string, code: string, edit: boolean) => {
-    sidebar.webview?.postMessage({
-      type: "newSessionWithPrompt",
+    sidebar.webviewProtocol?.request("newSessionWithPrompt", {
       prompt: `${
         edit ? "/edit " : ""
       }${code}\n\nHow do I fix this problem in the above code?: ${message}`,
     });
+
     if (!edit) {
       vscode.commands.executeCommand("continue.continueGUIView.focus");
     }
   },
   "continue.focusContinueInput": async () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    sidebar.webview?.postMessage({
-      type: "focusContinueInput",
-    });
-    addHighlightedCodeToContext(false, sidebar.webview);
+    sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+    addHighlightedCodeToContext(false, sidebar.webviewProtocol);
   },
   "continue.focusContinueInputWithoutClear": async () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    sidebar.webview?.postMessage({
-      type: "focusContinueInputWithoutClear",
-    });
-    addHighlightedCodeToContext(true, sidebar.webview);
+    sidebar.webviewProtocol?.request(
+      "focusContinueInputWithoutClear",
+      undefined
+    );
+    addHighlightedCodeToContext(true, sidebar.webviewProtocol);
   },
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
@@ -267,8 +263,7 @@ const commandsMap: (
   "continue.debugTerminal": async () => {
     const terminalContents = await ide.getTerminalContents();
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    sidebar.webview?.postMessage({
-      type: "userInput",
+    sidebar.webviewProtocol?.request("userInput", {
       input: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents}`,
     });
   },
@@ -281,15 +276,11 @@ const commandsMap: (
   // Commands without keyboard shortcuts
   "continue.addModel": () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    sidebar.webview?.postMessage({
-      type: "addModel",
-    });
+    sidebar.webviewProtocol?.request("addModel", undefined);
   },
   "continue.openSettingsUI": () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    sidebar.webview?.postMessage({
-      type: "openSettings",
-    });
+    sidebar.webviewProtocol?.request("openSettings", undefined);
   },
   "continue.sendMainUserInput": (text: string) => {
     sidebar.sendMainUserInput(text);
@@ -323,14 +314,10 @@ const commandsMap: (
     ide.runCommand(text);
   },
   "continue.newSession": () => {
-    sidebar.webview?.postMessage({
-      type: "newSession",
-    });
+    sidebar.webviewProtocol?.request("newSession", undefined);
   },
   "continue.viewHistory": () => {
-    sidebar.webview?.postMessage({
-      type: "viewHistory",
-    });
+    sidebar.webviewProtocol?.request("viewHistory", undefined);
   },
   "continue.toggleFullScreen": () => {
     // Check if full screen is already open by checking open tabs
@@ -392,7 +379,7 @@ const commandsMap: (
     vscode.commands.executeCommand("continue.continueGUIView.focus");
 
     for (const uri of uris) {
-      addEntireFileToContext(uri, false, sidebar.webview);
+      addEntireFileToContext(uri, false, sidebar.webviewProtocol);
     }
   },
   "continue.updateAllReferences": (filepath: vscode.Uri) => {

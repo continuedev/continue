@@ -7,10 +7,12 @@ import { logDevData } from "core/util/devdata";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
 import { getConfigJsonPath } from "core/util/paths";
-import { WebviewProtocol } from "core/web/webviewProtocol";
+import {
+  ReverseWebviewProtocol,
+  WebviewProtocol,
+} from "core/web/webviewProtocol";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import { Webview } from "vscode";
 import { showTutorial } from "./activation/activate";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 
@@ -18,19 +20,21 @@ export class VsCodeWebviewProtocol {
   listeners = new Map<keyof WebviewProtocol, ((message: Message) => any)[]>();
   abortedMessageIds: Set<string> = new Set();
 
-  private send(messageType: string, message: any, messageId?: string): string {
+  private send(messageType: string, data: any, messageId?: string): string {
     const id = messageId || uuidv4();
     this.webview.postMessage({
-      type: messageType,
-      message,
-      messageId: messageId || id,
+      messageType,
+      data,
+      messageId: id,
     });
     return id;
   }
 
   private on<T extends keyof WebviewProtocol>(
     messageType: T,
-    handler: (message: Message<WebviewProtocol[T][0]>) => WebviewProtocol[T][1]
+    handler: (
+      message: Message<WebviewProtocol[T][0]>
+    ) => Promise<WebviewProtocol[T][1]> | WebviewProtocol[T][1]
   ): void {
     if (!this.listeners.has(messageType)) {
       this.listeners.set(messageType, []);
@@ -39,7 +43,7 @@ export class VsCodeWebviewProtocol {
   }
 
   constructor(
-    private readonly webview: Webview,
+    readonly webview: vscode.Webview,
     private readonly ide: IDE,
     private readonly configHandler: ConfigHandler,
     private readonly verticalDiffManager: VerticalPerLineDiffManager
@@ -101,15 +105,17 @@ export class VsCodeWebviewProtocol {
     this.on("openConfigJson", (msg) => {
       this.ide.openFile(getConfigJsonPath());
     });
-    this.on("readRangeInFile", (msg) => {
-      vscode.workspace.openTextDocument(msg.data.filepath).then((document) => {
-        let start = new vscode.Position(0, 0);
-        let end = new vscode.Position(5, 0);
-        let range = new vscode.Range(start, end);
+    this.on("readRangeInFile", async (msg) => {
+      return await vscode.workspace
+        .openTextDocument(msg.data.filepath)
+        .then((document) => {
+          let start = new vscode.Position(0, 0);
+          let end = new vscode.Position(5, 0);
+          let range = new vscode.Range(start, end);
 
-        let contents = document.getText(range);
-        return contents;
-      });
+          let contents = document.getText(range);
+          return contents;
+        });
     });
     this.on("toggleDevTools", (msg) => {
       vscode.commands.executeCommand("workbench.action.toggleDevTools");
@@ -171,11 +177,9 @@ export class VsCodeWebviewProtocol {
     });
     this.on("saveSession", (msg) => {
       historyManager.save(msg.data);
-      return {};
     });
     this.on("deleteSession", (msg) => {
       historyManager.delete(msg.data);
-      return {};
     });
     this.on("loadSession", (msg) => {
       return historyManager.load(msg.data);
@@ -357,9 +361,9 @@ export class VsCodeWebviewProtocol {
         params,
         ide,
         addContextItem: (item) => {
-          protocol.webview?.postMessage({
-            type: "addContextItem",
-            message: { item, historyIndex },
+          protocol.request("addContextItem", {
+            item,
+            historyIndex,
           });
         },
       })) {
@@ -458,9 +462,7 @@ export class VsCodeWebviewProtocol {
             `🎉 Successfully indexed ${title}`
           );
 
-          this.webview?.postMessage({
-            type: "refreshSubmenuItems",
-          });
+          this.request("refreshSubmenuItems", undefined);
         }
       );
     });
@@ -485,6 +487,20 @@ export class VsCodeWebviewProtocol {
     });
     this.on("showTutorial", (msg) => {
       showTutorial();
+    });
+  }
+
+  public request<T extends keyof ReverseWebviewProtocol>(
+    messageType: T,
+    data: ReverseWebviewProtocol[T][0]
+  ): Promise<ReverseWebviewProtocol[T][1]> {
+    const messageId = uuidv4();
+    return new Promise((resolve) => {
+      this.send(messageType, data, messageId);
+      const disposable = this.webview.onDidReceiveMessage((msg) => {
+        resolve(msg);
+        disposable.dispose();
+      });
     });
   }
 }

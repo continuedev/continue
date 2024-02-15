@@ -9,7 +9,6 @@ import {
   MessageContent,
   SlashCommandDescription,
 } from "core";
-import { ideStreamRequest, llmStreamChat } from "core/ide/messaging";
 import { constructMessages } from "core/llm/constructMessages";
 import { stripImages } from "core/llm/countTokens";
 import { usePostHog } from "posthog-js/react";
@@ -26,7 +25,7 @@ import {
   streamUpdate,
 } from "../redux/slices/stateSlice";
 import { RootStore } from "../redux/store";
-import { errorPopup } from "../util/ide";
+import { errorPopup, ideStreamRequest, llmStreamChat } from "../util/ide";
 
 function useChatHandler(dispatch: Dispatch) {
   const posthog = usePostHog();

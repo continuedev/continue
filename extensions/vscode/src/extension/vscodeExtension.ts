@@ -13,6 +13,7 @@ import {
   setupStatusBar,
 } from "../lang-server/completionProvider";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
   private configHandler: ConfigHandler;
@@ -24,9 +25,10 @@ export class VsCodeExtension {
   private indexer: CodebaseIndexer;
   private diffManager: DiffManager;
   private verticalDiffManager: VerticalPerLineDiffManager;
+  private webviewProtocol: VsCodeWebviewProtocol;
 
   constructor(context: vscode.ExtensionContext) {
-    this.diffManager = new DiffManager(undefined, context);
+    this.diffManager = new DiffManager(context);
     this.ide = new VsCodeIde(this.diffManager);
     this.configHandler = new ConfigHandler(this.ide);
     this.verticalDiffManager = new VerticalPerLineDiffManager(
@@ -42,7 +44,20 @@ export class VsCodeExtension {
       this.extensionContext,
       this.verticalDiffManager
     );
-    this.diffManager.webview = this.sidebar.webview;
+
+    // Sidebar
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(
+        "continue.continueGUIView",
+        this.sidebar,
+        {
+          webviewOptions: { retainContextWhenHidden: true },
+        }
+      )
+    );
+    this.webviewProtocol = this.sidebar.webviewProtocol!;
+
+    this.diffManager.webviewProtocol = this.webviewProtocol;
     this.indexer = new CodebaseIndexer(this.configHandler, this.ide);
 
     // CodeLens
@@ -73,17 +88,6 @@ export class VsCodeExtension {
         )
       );
     }
-
-    // Sidebar
-    context.subscriptions.push(
-      vscode.window.registerWebviewViewProvider(
-        "continue.continueGUIView",
-        this.sidebar,
-        {
-          webviewOptions: { retainContextWhenHidden: true },
-        }
-      )
-    );
 
     // Commands
     registerAllCommands(
@@ -116,9 +120,7 @@ export class VsCodeExtension {
         filepath.endsWith(".continueignore") ||
         filepath.endsWith(".gitignore")
       ) {
-        this.sidebar.webview?.postMessage({
-          type: "updateEmbeddings",
-        });
+        // Update embeddings! (TODO)
       }
     });
 
@@ -172,12 +174,8 @@ export class VsCodeExtension {
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
 
   private async refreshCodebaseIndex(dirs: string[]) {
-    for await (const { progress, desc } of this.indexer.refresh(dirs)) {
-      this.sidebar.webview?.postMessage({
-        type: "indexProgress",
-        progress,
-        desc,
-      });
+    for await (const update of this.indexer.refresh(dirs)) {
+      this.webviewProtocol.request("indexProgress", update);
     }
   }
 }

@@ -3,10 +3,10 @@ import {
   ClipboardIcon,
   PlayIcon,
 } from "@heroicons/react/24/outline";
-import { postToIde } from "core/ide/messaging";
 import { useState } from "react";
 import styled from "styled-components";
 import { vscEditorBackground } from "..";
+import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 
 const TopDiv = styled.div`

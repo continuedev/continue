@@ -7,6 +7,7 @@ import {
   PersistedSessionInfo,
   RangeInFile,
   SerializedContinueConfig,
+  SessionInfo,
 } from "..";
 import { Message } from "../util/messenger";
 
@@ -29,7 +30,7 @@ export type Protocol = {
   abort: [undefined, void];
 
   // History
-  "history/list": [undefined, PersistedSessionInfo[]];
+  "history/list": [undefined, SessionInfo[]];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, PersistedSessionInfo];
   "history/save": [PersistedSessionInfo, void];

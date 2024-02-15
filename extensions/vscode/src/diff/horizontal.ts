@@ -5,6 +5,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { getMetaKeyLabel, getPlatform } from "../util/util";
 import { uriFromFilePath } from "../util/vscode";
+import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -47,16 +48,9 @@ export class DiffManager {
     }
   }
 
-  webview: vscode.Webview | undefined;
-  private readonly extensionContext: vscode.ExtensionContext;
+  webviewProtocol: VsCodeWebviewProtocol | undefined;
 
-  constructor(
-    webview: vscode.Webview | undefined,
-    extensionContext: vscode.ExtensionContext
-  ) {
-    this.webview = webview;
-    this.extensionContext = extensionContext;
-
+  constructor(private readonly extensionContext: vscode.ExtensionContext) {
     this.setupDirectory();
 
     // Listen for file closes, and if it's a diff file, clean up
@@ -303,7 +297,7 @@ export class DiffManager {
     }
 
     // Stop the step at step_index in case it is still streaming
-    this.webview?.postMessage({ type: "setInactive" });
+    this.webviewProtocol?.request("setInactive", undefined);
 
     vscode.workspace.textDocuments
       .find((doc) => doc.uri.fsPath === newFilepath)

@@ -19,7 +19,10 @@ export class CodebaseIndexer {
 
     const indexes = [
       new ChunkCodebaseIndex(this.ide.readFile.bind(this.ide)), // Chunking must come first
-      new LanceDbIndex(config.embeddingsProvider, this.ide.readFile),
+      new LanceDbIndex(
+        config.embeddingsProvider,
+        this.ide.readFile.bind(this.ide)
+      ),
       new FullTextSearchCodebaseIndex(),
     ];
 

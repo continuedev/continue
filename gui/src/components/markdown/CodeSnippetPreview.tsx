@@ -5,13 +5,13 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
-import { ExtensionIde } from "core/ide";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import React from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
 import { getFontSize } from "../../util";
 import { postToIde } from "../../util/ide";
+import { WebviewIde } from "../../util/webviewIde";
 import FileIcon from "../FileIcon";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
@@ -90,7 +90,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               .split("(")[1]
               .split(")")[0]
               .split("-");
-            new ExtensionIde().showLines(
+            new WebviewIde().showLines(
               props.item.description,
               parseInt(lines[0]) - 1,
               parseInt(lines[1]) - 1
