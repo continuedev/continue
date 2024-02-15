@@ -98,7 +98,6 @@ export class VsCodeWebviewProtocol {
             });
         }
       }
-      respond({ done: true, data: {} });
     });
   }
 

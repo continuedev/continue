@@ -15,6 +15,7 @@ import { ConfigHandler } from "core/config/handler";
 import { streamLines } from "core/diff/util";
 import OpenAI from "core/llm/llms/OpenAI";
 import { logDevData } from "core/util/devdata";
+import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
