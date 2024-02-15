@@ -94,6 +94,14 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "extraBodyProperties": {
+          "title": "Extra Body Properties",
+          "description": "This object will be merged with the body when making the HTTP requests",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
         }
       }
     },
@@ -223,7 +231,8 @@
             "verifySsl": null,
             "caBundlePath": null,
             "proxy": null,
-            "headers": null
+            "headers": null,
+            "extraBodyProperties": null
           },
           "allOf": [
             {

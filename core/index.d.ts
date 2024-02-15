@@ -503,6 +503,7 @@ export interface RequestOptions {
   caBundlePath?: string | string[];
   proxy?: string;
   headers?: { [key: string]: string };
+  extraBodyProperties?: { [key: string]: string };
 }
 
 export interface StepWithParams {

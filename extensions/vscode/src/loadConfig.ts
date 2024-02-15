@@ -148,8 +148,25 @@ function setupLlm(llm: ILLM): ILLM {
       headers[key] = value as string;
     }
 
+    let updatedBody: string | undefined = undefined;
+    try {
+      if (
+        llm.requestOptions?.extraBodyProperties &&
+        typeof init.body === "string"
+      ) {
+        const parsedBody = JSON.parse(init.body);
+        updatedBody = JSON.stringify({
+          ...parsedBody,
+          ...llm.requestOptions.extraBodyProperties,
+        });
+      }
+    } catch (e) {
+      console.log("Unable to parse HTTP request body: ", e);
+    }
+
     const resp = await fetch(input, {
       ...init,
+      body: updatedBody ?? init.body,
       headers,
       agent,
     });
