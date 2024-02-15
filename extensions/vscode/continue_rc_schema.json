@@ -1283,6 +1283,49 @@
             "properties": {
               "name": {
                 "enum": [
+                  "jira"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "description": "Your Jira domain, for example company.atlassian.net."
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "The email that you log into Jira with"
+                  },
+                  "token": {
+                    "type": "string",
+                    "description": "Your atlassian API token from https://id.atlassian.com/manage-profile/security/api-tokens"
+                  },
+                  "issueQuery": {
+                    "type": "string",
+                    "description": "Customize the query used to find Jira issues"
+                  }
+                },
+                "required": [
+                  "domain",
+                  "email",
+                  "token"
+                ]
+              }
+            },
+            "required": [
+              "params"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
                   "http"
                 ]
               }

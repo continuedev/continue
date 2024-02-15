@@ -6,7 +6,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../..";
-import type { AxiosInstance } from 'axios';
+import type { AxiosInstance } from "axios";
 
 interface JiraComment {
   id: string;
@@ -45,7 +45,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
   };
 
   private async createApi(): Promise<AxiosInstance> {
-    const {default: Axios} = await import('axios');
+    const { default: Axios } = await import("axios");
 
     return Axios.create({
       baseURL: `https://${this.options.domain}/rest/api/3/`,
@@ -61,7 +61,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras
   ): Promise<ContextItem[]> {
     const issueId = query;
-    
+
     const api = await this.createApi();
 
     const issue = await api
@@ -71,9 +71,9 @@ class JiraIssuesContextProvider extends BaseContextProvider {
         },
       })
       .then((result) => result.data);
-    
-    // @ts-expect-error
-    const adf2md = await import('adf2md');
+
+    // @ts-ignore
+    const adf2md = await import("adf2md");
 
     const parts = [
       `# Jira Issue ${issue.key}: ${issue.fields.summary}`,
