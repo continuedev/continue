@@ -65,7 +65,17 @@ export class VsCodeWebviewProtocol {
       for (const handler of handlers) {
         try {
           const response = await handler(msg);
-          respond(response || {});
+          if (
+            response &&
+            typeof response[Symbol.asyncIterator] === "function"
+          ) {
+            for await (const update of response) {
+              respond(update);
+            }
+            respond({ done: true });
+          } else {
+            respond(response || {});
+          }
         } catch (e: any) {
           console.error(
             "Error handling webview message: " +
