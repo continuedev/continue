@@ -31,6 +31,7 @@ export class VsCodeExtension {
     this.diffManager = new DiffManager(context);
     this.ide = new VsCodeIde(this.diffManager);
     this.configHandler = new ConfigHandler(this.ide);
+    this.configHandler.reloadConfig();
     this.verticalDiffManager = new VerticalPerLineDiffManager(
       this.configHandler
     );
@@ -55,7 +56,7 @@ export class VsCodeExtension {
         }
       )
     );
-    this.webviewProtocol = this.sidebar.webviewProtocol!;
+    this.webviewProtocol = this.sidebar.webviewProtocol;
 
     this.diffManager.webviewProtocol = this.webviewProtocol;
     this.indexer = new CodebaseIndexer(this.configHandler, this.ide);

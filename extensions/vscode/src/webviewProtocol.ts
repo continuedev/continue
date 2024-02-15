@@ -22,7 +22,7 @@ export class VsCodeWebviewProtocol {
 
   private send(messageType: string, data: any, messageId?: string): string {
     const id = messageId || uuidv4();
-    this.webview.postMessage({
+    this.webview?.postMessage({
       messageType,
       data,
       messageId: id,
@@ -42,13 +42,18 @@ export class VsCodeWebviewProtocol {
     this.listeners.get(messageType)?.push(handler);
   }
 
-  constructor(
-    readonly webview: vscode.Webview,
-    private readonly ide: IDE,
-    private readonly configHandler: ConfigHandler,
-    private readonly verticalDiffManager: VerticalPerLineDiffManager
-  ) {
-    webview.onDidReceiveMessage(async (msg) => {
+  _webview?: vscode.Webview;
+  _webviewListener?: vscode.Disposable;
+
+  get webview(): vscode.Webview | undefined {
+    return this._webview;
+  }
+
+  set webview(webView: vscode.Webview) {
+    this._webview = webView;
+    this._webviewListener?.dispose();
+
+    this._webviewListener = this._webview.onDidReceiveMessage(async (msg) => {
       if (!msg.messageType || !msg.messageId) {
         throw new Error("Invalid webview protocol msg: " + JSON.stringify(msg));
       }
@@ -95,7 +100,13 @@ export class VsCodeWebviewProtocol {
       }
       respond({ done: true, data: {} });
     });
+  }
 
+  constructor(
+    private readonly ide: IDE,
+    private readonly configHandler: ConfigHandler,
+    private readonly verticalDiffManager: VerticalPerLineDiffManager
+  ) {
     this.on("abort", (msg) => {
       this.abortedMessageIds.add(msg.messageId);
     });
@@ -496,10 +507,15 @@ export class VsCodeWebviewProtocol {
   ): Promise<ReverseWebviewProtocol[T][1]> {
     const messageId = uuidv4();
     return new Promise((resolve) => {
+      if (!this.webview) {
+        resolve(undefined);
+        return;
+      }
+
       this.send(messageType, data, messageId);
       const disposable = this.webview.onDidReceiveMessage((msg) => {
         resolve(msg);
-        disposable.dispose();
+        disposable?.dispose();
       });
     });
   }

@@ -10,7 +10,7 @@ export class ContinueGUIWebviewViewProvider
   implements vscode.WebviewViewProvider
 {
   public static readonly viewType = "continue.continueGUIView";
-  public webviewProtocol?: VsCodeWebviewProtocol;
+  public webviewProtocol: VsCodeWebviewProtocol;
 
   resolveWebviewView(
     webviewView: vscode.WebviewView,
@@ -46,28 +46,12 @@ export class ContinueGUIWebviewViewProvider
     private readonly windowId: string,
     private readonly extensionContext: vscode.ExtensionContext,
     private readonly verticalDiffManager: VerticalPerLineDiffManager
-  ) {}
-
-  async webviewRequest(messageType: string, data: any = {}): Promise<any> {
-    return new Promise((resolve, reject) => {
-      if (!this._webview) {
-        resolve(undefined);
-      }
-
-      const listener = this._webview?.onDidReceiveMessage((data) => {
-        if (data.type === messageType) {
-          resolve(data);
-          listener?.dispose();
-        }
-      });
-
-      this._webview?.postMessage({ type: messageType, data });
-
-      setTimeout(() => {
-        reject("Error communciating with Continue side panel: timed out");
-        listener?.dispose();
-      }, 500);
-    });
+  ) {
+    this.webviewProtocol = new VsCodeWebviewProtocol(
+      ide,
+      configHandler,
+      verticalDiffManager
+    );
   }
 
   getSidebarContent(
@@ -126,12 +110,7 @@ export class ContinueGUIWebviewViewProvider
       }
     });
 
-    this.webviewProtocol = new VsCodeWebviewProtocol(
-      panel.webview,
-      ide,
-      configHandler,
-      verticalDiffManager
-    );
+    this.webviewProtocol.webview = panel.webview;
 
     return `<!DOCTYPE html>
       <html lang="en">

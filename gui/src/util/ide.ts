@@ -45,15 +45,16 @@ function _postToIde(messageType: string, data: any, messageId?: string) {
 export function postToIde<T extends keyof WebviewProtocol>(
   messageType: T,
   data: WebviewProtocol[T][0],
+  messageId?: string,
   attempt: number = 0
 ) {
   try {
-    _postToIde(messageType, data);
+    _postToIde(messageType, data, messageId);
   } catch (error) {
     if (attempt < 5) {
       console.log(`Attempt ${attempt} failed. Retrying...`);
       setTimeout(
-        () => postToIde(messageType, data, attempt + 1),
+        () => postToIde(messageType, data, messageId, attempt + 1),
         Math.pow(2, attempt) * 1000
       );
     } else {
@@ -85,7 +86,7 @@ export async function ideRequest<T extends keyof WebviewProtocol>(
     };
     window.addEventListener("message", handler);
 
-    postToIde(messageType, data);
+    postToIde(messageType, data, messageId);
   }) as any;
 }
 
@@ -96,7 +97,7 @@ export async function* ideStreamRequest<T extends keyof WebviewProtocol>(
 ): WebviewProtocol[T][1] {
   const messageId = uuidv4();
 
-  postToIde(messageType, data);
+  postToIde(messageType, data, messageId);
 
   let buffer = "";
   let index = 0;
@@ -117,7 +118,7 @@ export async function* ideStreamRequest<T extends keyof WebviewProtocol>(
   window.addEventListener("message", handler);
 
   cancelToken?.addEventListener("abort", () => {
-    postToIde("abort", messageId);
+    postToIde("abort", undefined, messageId);
   });
 
   while (!done) {
