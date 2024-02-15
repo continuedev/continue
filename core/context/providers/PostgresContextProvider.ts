@@ -7,9 +7,6 @@ import {
   ContextSubmenuItem,
 } from "../..";
 
-const ALL_TABLES = "__all_tables";
-const DEFAULT_SAMPLE_ROWS = 3;
-
 class PostgresContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "postgres",
@@ -17,6 +14,9 @@ class PostgresContextProvider extends BaseContextProvider {
     description: "Retrieve PostgreSQL table schema and sample rows",
     type: "submenu",
   };
+
+  static ALL_TABLES = "__all_tables";
+  static DEFAULT_SAMPLE_ROWS = 3;
 
   constructor(options: {
     host: string;
@@ -41,6 +41,20 @@ class PostgresContextProvider extends BaseContextProvider {
     });
   }
 
+  private async getTableNames(pool: any): Promise<string[]> {
+    const schema = this.options.schema ?? "public";
+    var tablesInfoQuery = `
+SELECT table_schema, table_name
+FROM information_schema.tables`;
+    if (schema != null) {
+      tablesInfoQuery += ` WHERE table_schema = '${schema}'`;
+    }
+    const { rows: tablesInfo } = await pool.query(tablesInfoQuery);
+    return tablesInfo.map(
+      (tableInfo: any) => `${tableInfo.table_schema}.${tableInfo.table_name}`
+    );
+  }
+
   async getContextItems(
     query: string = "",
     _: ContextProviderExtras = {} as ContextProviderExtras
@@ -50,49 +64,48 @@ class PostgresContextProvider extends BaseContextProvider {
     try {
       const contextItems: ContextItem[] = [];
 
-      var schemaQuery = `
-SELECT column_name, data_type, character_maximum_length
-FROM INFORMATION_SCHEMA.COLUMNS`;
-      if (this.options.query != ALL_TABLES) {
+      const tableNames = [];
+      if (query === PostgresContextProvider.ALL_TABLES) {
+        tableNames.push(...(await this.getTableNames(pool)));
+      } else {
+        tableNames.push(query);
+      }
+
+      for (const tableName of tableNames) {
         // Get the table schema
-        const tableName = query;
         if (!tableName.includes(".")) {
           throw new Error(
             `Table name must be in format schema.table_name, got ${tableName}`
           );
         }
-        schemaQuery += `WHERE table_name = '${tableName.split(".")[1]}'`;
-      }
-
-      const { rows: tableSchemas } = await pool.query(schemaQuery);
-
-      var prompt = `Postgres schema for database ${this.options.database}`;
-      for (const tableSchema of tableSchemas) {
-        const tableName = query;
+        var schemaQuery = `
+SELECT column_name, data_type, character_maximum_length
+FROM INFORMATION_SCHEMA.COLUMNS
+WHERE table_schema = '${tableName.split(".")[0]}'
+  AND table_name = '${tableName.split(".")[1]}'`;
+        console.log("schemaQuery", schemaQuery);
+        const { rows: tableSchema } = await pool.query(schemaQuery);
 
         // Get the sample rows
-        const sampleRows = this.options.sampleRows ?? DEFAULT_SAMPLE_ROWS;
+        const sampleRows =
+          this.options.sampleRows ??
+          PostgresContextProvider.DEFAULT_SAMPLE_ROWS;
         const { rows: sampleRowResults } = await pool.query(`
 SELECT *
 FROM ${tableName}
 LIMIT ${sampleRows}`);
 
         // Create prompt from the table schema and sample rows
-        var prompt = `Table schema for ${tableName}:\n${JSON.stringify(
-          tableSchema,
-          null,
-          2
-        )}\n\n`;
+        var prompt = `Postgres schema for database ${this.options.database} table ${tableName}:\n`;
+        prompt += `${JSON.stringify(tableSchema, null, 2)}\n\n`;
         prompt += `Sample rows: ${JSON.stringify(sampleRowResults, null, 2)}`;
-      }
 
-      contextItems.push({
-        name: `${this.options.database}-${query}-schema-and-sample-rows`,
-        description: `Schema and sample rows for ${
-          query == ALL_TABLES ? "all table" : query
-        } in ${this.options.database} database`,
-        content: prompt,
-      });
+        contextItems.push({
+          name: `${this.options.database}-${tableName}-schema-and-sample-rows`,
+          description: `Schema and sample rows for table ${tableName}`,
+          content: prompt,
+        });
+      }
 
       return contextItems;
     } catch (error) {
@@ -106,32 +119,22 @@ LIMIT ${sampleRows}`);
   ): Promise<ContextSubmenuItem[]> {
     const pool = await this.getPool();
 
-    const schema = this.options.schema ?? "public";
-    var tablesInfoQuery = `
-SELECT table_schema, table_name
-FROM information_schema.tables`;
-    if (schema != null) {
-      tablesInfoQuery += ` WHERE table_schema = '${schema}'`;
-    }
-    const tablesInfo = await pool.query(tablesInfoQuery).rows;
-
     try {
       const contextItems: ContextSubmenuItem[] = [];
+      const tableNames = await this.getTableNames(pool);
 
-      for (const tableInfo of tablesInfo) {
-        const tableName = `${tableInfo.table_schema}.${tableInfo.table_name}`;
-
+      for (const tableName of tableNames) {
         contextItems.push({
           id: tableName,
           title: tableName,
           description: `Schema from ${tableName} and ${this.options.sampleRows} sample rows.`,
         });
-        contextItems.push({
-          id: ALL_TABLES,
-          title: "All tables",
-          description: `Schema from all tables and ${this.options.sampleRows} sample rows each.`,
-        });
       }
+      contextItems.push({
+        id: PostgresContextProvider.ALL_TABLES,
+        title: "All tables",
+        description: `Schema from all tables and ${this.options.sampleRows} sample rows each.`,
+      });
 
       return contextItems;
     } catch (error) {
