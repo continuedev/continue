@@ -1,5 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 
+import { getCoreLogsPath } from "core/util/paths";
+import * as fs from "fs";
 import { Message } from "../../core/util/messenger";
 import { Protocol } from "./protocol";
 
@@ -8,30 +10,37 @@ export class IpcMessenger {
   idListeners = new Map<string, (message: Message) => any>();
 
   constructor() {
-    console.log = console.error;
+    const logger = (message: any, ...optionalParams: any[]) => {
+      const logFilePath = getCoreLogsPath();
+      const logMessage = `${message} ${optionalParams.join(" ")}\n`;
+      fs.appendFileSync(logFilePath, logMessage);
+    };
+    console.log = logger;
+    console.error = logger;
+    console.warn = logger;
+    console.log("[info] Starting Continue core...");
 
     process.stdin.on("data", (data) => {
-      const d = data.toString();
+      console.log("Receieved data: ", data);
       try {
+        const d = data.toString();
         const msg: Message = JSON.parse(d);
-        if (
-          msg.data !== undefined ||
-          msg.messageType !== undefined ||
-          msg.messageId !== undefined
-        ) {
+        if (msg.messageType === undefined || msg.messageId === undefined) {
           throw new Error("Invalid message sent: " + JSON.stringify(msg));
         }
 
         // Call handler and respond with return value
-        this.typeListeners.get(msg.messageType)?.forEach(async (handler) => {
-          const response = await handler(msg);
-          this.send(msg.messageType, response, msg.messageId);
-        });
+        this.typeListeners
+          .get(msg.messageType as any)
+          ?.forEach(async (handler) => {
+            const response = await handler(msg);
+            this.send(msg.messageType, response, msg.messageId);
+          });
 
         // Call handler which is waiting for the response, nothing to return
         this.idListeners.get(msg.messageId)?.(msg);
       } catch (e) {
-        console.error("Invalid JSON:", d);
+        console.error("Invalid JSON:", data);
         return;
       }
     });
@@ -45,7 +54,8 @@ export class IpcMessenger {
       messageId,
     };
     // process.send?.(data);
-    process.stdout?.write(JSON.stringify(data));
+    process.stdout?.write(JSON.stringify(data) + "\n");
+    console.log("Sent: ", JSON.stringify(data));
     return messageId;
   }
 

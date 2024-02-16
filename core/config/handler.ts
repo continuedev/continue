@@ -18,7 +18,11 @@ export class ConfigHandler {
   private readonly ide: IDE;
   constructor(ide: IDE) {
     this.ide = ide;
-    this.loadConfig();
+    try {
+      this.loadConfig();
+    } catch (e) {
+      console.error("Failed to load config: ", e);
+    }
   }
 
   reloadConfig() {

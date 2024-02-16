@@ -23,11 +23,13 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "node build.js",
     "build:old": "ncc build src/index.ts -o out && pkg .",
-    "build:dev": "tsc"
+    "build:dev": "tsc",
+    "esbuild": "node build.js --esbuild-only"
   },
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@types/follow-redirects": "^1.14.4",
     "@types/uuid": "^9.0.8",
     "@vercel/ncc": "^0.38.1",
     "esbuild": "^0.19.11",
@@ -37,6 +39,7 @@
   "dependencies": {
     "commander": "^12.0.0",
     "core": "file:../core",
+    "follow-redirects": "^1.15.5",
     "uuid": "^9.0.1",
     "vectordb": "^0.4.10"
   }

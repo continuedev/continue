@@ -183,3 +183,7 @@ export function getTabAutocompleteCacheSqlitePath(): string {
 export function getDocsSqlitePath(): string {
   return path.join(getIndexFolderPath(), "docs.sqlite");
 }
+
+export function getCoreLogsPath(): string {
+  return path.join(getContinueGlobalPath(), "core.log");
+}

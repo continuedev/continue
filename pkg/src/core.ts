@@ -39,6 +39,18 @@ export class Core {
       this.selectedModelTitle = msg.data;
     });
 
+    // Special
+    on("abort", (msg) => {
+      // TODO
+    });
+
+    on("ping", (msg) => {
+      if (msg.data !== "ping") {
+        throw new Error("ping message incorrect");
+      }
+      return "pong";
+    });
+
     // History
     on("history/list", (msg) => {
       return historyManager.list();

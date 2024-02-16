@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.activities
 
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
+import com.github.continuedev.continueintellijextension.`continue`.CoreMessenger
 import com.github.continuedev.continueintellijextension.`continue`.startProxyServer
 import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSelectionStrategy
 import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
@@ -30,7 +31,9 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import javax.swing.*
-
+import com.intellij.openapi.application.PathManager;
+import com.intellij.ide.plugins.PluginManager
+import com.intellij.openapi.extensions.PluginId
 
 class WelcomeDialogWrapper(val project: Project) : DialogWrapper(true) {
     private var panel: JPanel? = null
@@ -156,17 +159,17 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 //                settings.continueState.shownWelcomeDialog = true
             }
 
-            GlobalScope.async(Dispatchers.IO) {
-                val ideProtocolClient = IdeProtocolClient(
+            val ideProtocolClient = IdeProtocolClient(
                     continuePluginService,
                     defaultStrategy,
                     coroutineScope,
                     project.basePath,
                     project
-                )
+            )
 
-                continuePluginService.ideProtocolClient = ideProtocolClient
+            continuePluginService.ideProtocolClient = ideProtocolClient
 
+            GlobalScope.async(Dispatchers.IO) {
                 val listener =
                         ContinuePluginSelectionListener(
                                 ideProtocolClient,
@@ -193,6 +196,18 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 }
             }
 
+            GlobalScope.async(Dispatchers.IO) {
+                val myPluginId = "com.github.continuedev.continueintellijextension"
+                val pluginDescriptor = PluginManager.getPlugin(PluginId.getId(myPluginId))
+
+                if (pluginDescriptor == null) {
+                    throw Exception("Plugin not found")
+                }
+                val pluginPath = pluginDescriptor.pluginPath
+                val continueCorePath = Paths.get(pluginPath.toString(), "core", "pkg").toString()
+
+                val coreMessenger = CoreMessenger(continueCorePath, ideProtocolClient);
+            }
         }
     }
 

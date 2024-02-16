@@ -3,6 +3,14 @@ const { execSync } = require("child_process");
 
 const esbuildOutputFile = "out/index.js";
 
+let esbuildOnly = false;
+for (let i = 2; i < process.argv.length; i++) {
+  if (process.argv[i] === "--esbuild-only") {
+    esbuildOnly = true;
+    break; // Exit the loop once the flag is found
+  }
+}
+
 (async () => {
   //   console.log("[info] Building with ncc...");
   //   execSync(`npx ncc build src/index.ts -o out`);
@@ -27,6 +35,10 @@ const esbuildOutputFile = "out/index.js";
     inject: ["./importMetaUrl.js"],
     define: { "import.meta.url": "importMetaUrl" },
   });
+
+  if (esbuildOnly) {
+    return;
+  }
 
   console.log("[info] Building binary with pkg...");
   execSync("npx pkg .");

@@ -13,6 +13,7 @@ export type Protocol = {
   // New
   "update/modelChange": [string, void];
   // Special
+  ping: [string, string];
   abort: [undefined, void];
 
   // History
