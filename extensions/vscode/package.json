@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.66",
+  "version": "0.9.67",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -461,6 +461,7 @@
     "axios": "^1.2.5",
     "core": "file:../../core",
     "cors": "^2.8.5",
+    "dbinfoz": "^0.1.4",
     "downshift": "^7.6.0",
     "express": "^4.18.2",
     "fkill": "^8.1.0",

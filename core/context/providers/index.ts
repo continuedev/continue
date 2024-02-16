@@ -3,6 +3,7 @@ import { ContextProviderName } from "../..";
 import CodebaseContextProvider from "./CodebaseContextProvider";
 import CodeHighlightsContextProvider from "./CodeHighlightsContextProvider";
 import CodeOutlineContextProvider from "./CodeOutlineContextProvider";
+import DatabaseContextProvider from "./DatabaseContextProvider";
 import DiffContextProvider from "./DiffContextProvider";
 import DocsContextProvider from "./DocsContextProvider";
 import FileTreeContextProvider from "./FileTreeContextProvider";
@@ -17,6 +18,7 @@ import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
 
 const Providers: (typeof BaseContextProvider)[] = [
+  DatabaseContextProvider,
   DiffContextProvider,
   FileTreeContextProvider,
   GitHubIssuesContextProvider,

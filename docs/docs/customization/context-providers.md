@@ -128,6 +128,38 @@ Type '@highlights' to reference the 'highlights' from all currently open files. 
 { "name": "highlights" }
 ```
 
+### Database Tables
+
+Type `@database` to reference table schemas you can use the drop-down or start typeing table names based off of your configuration. Configuration supports multiple databases, allowing you to specify various connection details for PostgreSQL, MySQL, SQLite. Each connection should include a unique name, the connection_type (e.g., postgres, sqlite), and the necessary connection parameters specific to each database type.
+
+```json
+{
+  "name": "database",
+  "params": {
+    "connections": [
+      {
+        "name": "examplePostgres",
+        "connection_type": "postgres",
+        "connection": {
+          "user": "username",
+          "host": "localhost",
+          "database": "exampleDB",
+          "password": "yourPassword",
+          "port": 5432
+        }
+      },
+      {
+        "name": "exampleSqlite",
+        "connection_type": "sqlite",
+        "connection": {
+          "filename": "/path/to/your/sqlite/database.db"
+        }
+      }
+    ]
+  }
+}
+```
+
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new ContextProvider.

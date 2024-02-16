@@ -1292,6 +1292,88 @@
             "properties": {
               "name": {
                 "enum": [
+                  "database"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "connections": {
+                    "type": "array",
+                    "description": "A list of database connections",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "A unique name for this database connection"
+                        },
+                        "connection_type": {
+                          "type": "string",
+                          "description": "The type of database (e.g., 'postgres', 'mysql')",
+                          "enum": [
+                            "postgres",
+                            "mysql",
+                            "sqlite"
+                          ]
+                        },
+                        "connection": {
+                          "type": "object",
+                          "properties": {
+                            "user": {
+                              "type": "string",
+                              "description": "The database user name"
+                            },
+                            "host": {
+                              "type": "string",
+                              "description": "The host address of the database server"
+                            },
+                            "database": {
+                              "type": "string",
+                              "description": "The name of the database to connect to"
+                            },
+                            "password": {
+                              "type": "string",
+                              "description": "The password for the database user"
+                            },
+                            "port": {
+                              "type": "integer",
+                              "description": "The port number to connect to at the host"
+                            },
+                            "filename": {
+                              "type": "string",
+                              "description": "File location for simple file DB's"
+                            }
+                          },
+                          "required": []
+                        }
+                      },
+                      "required": [
+                        "name",
+                        "type",
+                        "connection"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "connections"
+                ]
+              }
+            },
+            "required": [
+              "params"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
                   "http"
                 ]
               }
