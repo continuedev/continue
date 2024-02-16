@@ -118,6 +118,7 @@ export function getMentionSuggestion(
           id: provider.title,
           title: provider.displayTitle,
           label: provider.displayTitle,
+          renderInlineAs: provider.renderInlineAs,
           type: "contextProvider" as ComboBoxItemType,
           contextProvider: provider,
         }))

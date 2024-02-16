@@ -97,6 +97,7 @@ export interface ContextProviderDescription {
   title: string;
   displayTitle: string;
   description: string;
+  renderInlineAs?: string;
   type: ContextProviderType;
 }
 
@@ -116,6 +117,7 @@ export interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
+  renderInlineAs?: string;
   type?: ContextProviderType;
   getContextItems(
     query: string,
