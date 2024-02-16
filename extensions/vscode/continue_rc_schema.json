@@ -98,10 +98,7 @@
         "extraBodyProperties": {
           "title": "Extra Body Properties",
           "description": "This object will be merged with the body when making the HTTP requests",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
+          "type": "object"
         }
       }
     },
