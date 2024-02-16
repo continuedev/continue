@@ -128,6 +128,31 @@ Type '@highlights' to reference the 'highlights' from all currently open files. 
 { "name": "highlights" }
 ```
 
+### PostgreSQL
+
+Type `@postgres` to reference the schema of a table, and some sample rows. A dropdown will appear, allowing you to select a specific table, or all tables.
+
+The only required settings are those for creating the database connection: `host`, `port`, `user`, `password`, and `database`.
+
+By default, the `schema` filter is set to `public`, and the `sampleRows` is set to 3. You may unset the schema if you want to include tables from all schemas.
+
+[Here is a short demo.](https://github.com/continuedev/continue/pull/859)
+
+```json
+{
+  "name": "postgres",
+  "params": {
+    "host": "localhost",
+    "port": 5436,
+    "user": "myuser",
+    "password": "catsarecool",
+    "database": "animals",
+    "schema": "public",
+    "sampleRows": 3
+  }
+}
+```
+
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new ContextProvider.
