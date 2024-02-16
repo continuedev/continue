@@ -55,6 +55,10 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
     class ContinuePluginWindow(toolWindow: ToolWindow, project: Project) {
 
+        val PASS_THROUGH_TO_CORE = listOf(
+                "getSerializedConfig"
+        )
+
         init {
             System.setProperty("ide.browser.jcef.jsQueryPoolSize", JS_QUERY_POOL_SIZE)
         }
@@ -83,8 +87,8 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                 val parser = JsonParser()
                 val json: JsonObject = parser.parse(msg).asJsonObject
                 val messageType = json.get("messageType").asString
-                val data = json.get("data").asJsonObject
-                val messageId = json.get("messageId").asString
+                val data = json.get("data")
+                val messageId = json.get("messageId")?.asString
 
                 val ide = continuePluginService.ideProtocolClient;
 
@@ -96,6 +100,11 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                     )
                     val jsonString = Gson().toJson(jsonData)
                     browser.executeJavaScriptAsync("""window.postMessage($jsonString, "*");""")
+                }
+
+                if (PASS_THROUGH_TO_CORE.contains(messageType)) {
+                    continuePluginService.coreMessenger?.request(messageType, data, respond)
+                    return@addHandler null
                 }
 
                 when (messageType) {
@@ -143,6 +152,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
                     }
                     "showLines" -> {
+                        val data = data.asJsonObject
                         ide?.highlightCode(RangeInFile(
                                 data.get("filepath").asString,
                                 Range(Position(
@@ -156,9 +166,11 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                         ),"#00ff0022")
                     }
                     "showVirtualFile" -> {
+                        val data = data.asJsonObject
                         ide?.showVirtualFile(data.get("name").asString, data.get("content").asString)
                     }
                     "showFile" -> {
+                        val data = data.asJsonObject
                         ide?.setFileOpen(data.get("filepath").asString)
                     }
                     "reloadWindow" -> {}
@@ -166,6 +178,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                         ide?.setFileOpen(getConfigJsonPath())
                     }
                     "readRangeInFile" -> {
+                        val data = data.asJsonObject
                         ide?.readRangeInFile(RangeInFile(
                                 data.get("filepath").asString,
                                 Range(Position(
@@ -211,8 +224,8 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
         fun executeJavaScript(browser: CefBrowser?, myJSQueryOpenInBrowser: JBCefJSQuery) {
             // Execute JavaScript - you might want to handle potential exceptions here
-            val script = """window.postIntellijMessage = function(type, data) {
-                const msg = JSON.stringify({type, data});
+            val script = """window.postIntellijMessage = function(messageType, data, messageId) {
+                const msg = JSON.stringify({messageType, data, messageId});
                 ${myJSQueryOpenInBrowser.inject("msg")}
             }""".trimIndent()
 

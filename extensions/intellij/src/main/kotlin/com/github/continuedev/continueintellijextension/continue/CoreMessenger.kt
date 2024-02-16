@@ -27,7 +27,7 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
         println("Subprocess exited with code: $exitCode")
     }
 
-    fun request(messageType: String, data: Any, onResponse: (String) -> Unit) {
+    fun request(messageType: String, data: Any?, onResponse: (String) -> Unit) {
         val messageId = uuid();
         val message = gson.toJson(mapOf(
                 "messageId" to messageId,

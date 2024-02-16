@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.services
 
+import com.github.continuedev.continueintellijextension.`continue`.CoreMessenger
 import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
 import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory
@@ -21,6 +22,7 @@ class ContinuePluginService(project: Project) : Disposable, DumbAware {
     var continuePluginWindow: ContinuePluginToolWindowFactory.ContinuePluginWindow? = null
 
     var ideProtocolClient: IdeProtocolClient? = null
+    var coreMessenger: CoreMessenger? = null
     var worksapcePaths: Array<String>? = null
     var windowId: String = UUID.randomUUID().toString()
 

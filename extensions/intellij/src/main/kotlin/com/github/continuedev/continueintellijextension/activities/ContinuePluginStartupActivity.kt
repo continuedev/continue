@@ -207,6 +207,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 val continueCorePath = Paths.get(pluginPath.toString(), "core", "pkg").toString()
 
                 val coreMessenger = CoreMessenger(continueCorePath, ideProtocolClient);
+                continuePluginService.coreMessenger = coreMessenger
             }
         }
     }

@@ -23,7 +23,11 @@ function _postToIde(messageType: string, data: any, messageId?: string) {
         );
         throw new Error("postIntellijMessage is undefined");
       }
-      (window as any).postIntellijMessage?.(messageType, data);
+      (window as any).postIntellijMessage?.(
+        messageType,
+        data,
+        messageId ?? uuidv4()
+      );
       return;
     } else {
       console.log(
