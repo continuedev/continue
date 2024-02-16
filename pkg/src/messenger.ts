@@ -54,7 +54,7 @@ export class IpcMessenger {
       messageId,
     };
     // process.send?.(data);
-    process.stdout?.write(JSON.stringify(data) + "\n");
+    process.stdout?.write(JSON.stringify(data) + "\r\n");
     console.log("Sent: ", JSON.stringify(data));
     return messageId;
   }

@@ -1,5 +1,4 @@
 package com.github.continuedev.continueintellijextension.`continue`
-import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -7,8 +6,6 @@ import java.io.OutputStreamWriter
 import java.io.*
 
 import com.google.gson.Gson
-import com.intellij.openapi.components.ServiceManager
-import java.io.*
 
 class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
     private val writer: OutputStreamWriter
@@ -41,14 +38,14 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
         write(message)
     }
 
-    private fun handleResponse(json: String) {
+    private fun handleMessage(json: String) {
         val responseMap = gson.fromJson(json, Map::class.java)
         val messageId = responseMap["messageId"].toString()
         val messageType = responseMap["messageType"].toString()
-        val responseData = gson.toJson(responseMap["data"])
+        val data = gson.toJson(responseMap["data"])
 
         // IDE listeners
-        if (ideMessageTypes.contains(responseMap["messageType"])) {
+        if (ideMessageTypes.contains(messageType)) {
             ideProtocolClient.handleMessage(json) { data ->
                 val message = gson.toJson(mapOf(
                         "messageId" to messageId,
@@ -61,7 +58,7 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
 
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
-            listener(responseData)
+            listener(data)
             responseListeners.remove(messageId)
         }
     }
@@ -118,7 +115,7 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
                     val line = reader.readLine()
                     println("Core: $line")
                     if (line != null && line.isNotEmpty()) {
-                        handleResponse(line)
+                        handleMessage(line)
                     }
                 }
             } catch (e: IOException) {

@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.services
 
 import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
+import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory
 import com.google.gson.Gson
 import com.intellij.openapi.Disposable
@@ -33,10 +34,19 @@ class ContinuePluginService(project: Project) : Disposable, DumbAware {
         }
     }
 
-    fun dispatchCustomEvent(
-        data: String
+    fun sendToWebview(
+        messageType: String,
+        data: Any?,
+        messageId: String = uuid()
     ) {
-        val jsCode = buildJavaScript(data)
+        val jsonData = Gson().toJson(
+            mapOf(
+                "messageId" to messageId,
+                "messageType" to messageType,
+                "data" to data
+            )
+        )
+        val jsCode = buildJavaScript(jsonData)
 
         try {
             continuePluginWindow?.webView?.executeJavaScriptAsync(jsCode)

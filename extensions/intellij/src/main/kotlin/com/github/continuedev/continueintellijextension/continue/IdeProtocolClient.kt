@@ -123,13 +123,7 @@ class IdeProtocolClient (
 
     private fun send(messageType: String, data: Any?, messageId: String? = null) {
         val id = messageId ?: uuid()
-        val message = IdeMessage(
-                messageType,
-                id,
-                data
-        )
-        val json = Gson().toJson(message)
-        continuePluginService.dispatchCustomEvent(json)
+        continuePluginService.sendToWebview(messageType, data, id)
     }
 
     fun handleMessage(text: String, respond: (Any?) -> Unit) {
@@ -143,7 +137,7 @@ class IdeProtocolClient (
                 println("Recieved message without type: $text")
                 return@launch
             }
-            val data = parsedMessage["data"] as Map<*, *>
+            val data = parsedMessage["data"]
 
             val historyManager = HistoryManager()
 
@@ -171,8 +165,12 @@ class IdeProtocolClient (
                         ))
                     }
 
+                    "getUniqueId" -> {
+                        respond(uniqueId())
+                    }
+
                     "showDiff" -> {
-                        val data = data["message"] as Map<String, Any>
+                        val data = data as Map<String, Any>
                         diffManager.showDiff(
                                 data["filepath"] as String,
                                 data["newContents"] as String,
@@ -182,8 +180,29 @@ class IdeProtocolClient (
                     }
 
                     "readFile" -> {
-                        val msg = readFile((data["message"] as Map<String, String>)["filepath"] as String)
+                        val msg = readFile((data as Map<String, String>)["filepath"] as String)
                         respond(msg)
+                    }
+
+                    "isTelemetryEnabled" -> {
+                        respond(true)
+                    }
+
+                    "readRangeInFile" -> {
+                        val fullContents = readFile((data as Map<String, String>)["filepath"] as String)
+                        val range = data["range"] as Map<String, Any>
+                        val start = range["start"] as Map<String, Any>
+                        val end = range["end"] as Map<String, Any>
+                        val startLine = start["line"] as Int
+                        val startCharacter = start["character"] as Int
+                        val endLine = end["line"] as Int
+                        val endCharacter = end["character"] as Int
+
+                        val firstLine = fullContents.split("\n")[startLine].slice(startCharacter until fullContents.split("\n")[startLine].length)
+                        val lastLine = fullContents.split("\n")[endLine].slice(0 until endCharacter)
+                        val between = fullContents.split("\n").slice(startLine + 1 until endLine).joinToString("\n")
+
+                        respond(firstLine + "\n" + between + "\n" + lastLine)
                     }
 
                     "listWorkspaceContents" -> {
@@ -192,6 +211,10 @@ class IdeProtocolClient (
 
                     "getWorkspaceDirs" -> {
                         respond(workspaceDirectories())
+                    }
+
+                    "getWorkspaceConfigs" -> {
+                        respond(emptyList<String>())
                     }
 
                     "getTerminalContents" -> {
@@ -207,10 +230,11 @@ class IdeProtocolClient (
                     }
 
                     "saveFile" -> {
-                        saveFile((data["message"] as Map<String, String>)["filepath"] ?: throw Exception("No filepath provided"))
+                        saveFile((data as Map<String, String>)["filepath"] ?: throw Exception("No filepath provided"))
                         respond(null)
                     }
                     "showVirtualFile" -> {
+                        val data = data as Map<String, Any>
                         showVirtualFile(
                             data["name"] as String,
                             data["contents"] as String
@@ -220,10 +244,11 @@ class IdeProtocolClient (
 
                     "connected" -> {}
                     "showMessage" -> {
-                        showMessage(data["message"] as String)
+                        showMessage(data as String)
                         respond(null)
                     }
                     "setFileOpen" -> {
+                        val data = data as Map<String, Any>
                         setFileOpen(
                                 data["filepath"] as String,
                                 data["open"] as Boolean
@@ -231,8 +256,27 @@ class IdeProtocolClient (
                         respond(null)
                     }
 
+                    "showLines" -> {
+                        val data = data as Map<String, Any>
+                        val filepath = data["filepath"] as String
+                        val startLine = data["startLine"] as Int
+                        val endLine = data["endLine"] as Int
+                        highlightCode(
+                                RangeInFile(
+                                        filepath,
+                                        Range(
+                                                Position(startLine, 0),
+                                                Position(endLine, 0)
+                                        )
+                                ),
+                                data["color"] as String
+                        )
+                        respond(null)
+                    }
+
                     "highlightCode" -> {
                         val gson = Gson()
+                        val data = data as Map<String, Any>
                         val json = gson.toJson(data["rangeInFile"])
                         val type = object : TypeToken<RangeInFile>() {}.type
                         val rangeInFile =
@@ -304,7 +348,7 @@ class IdeProtocolClient (
                         respond(configJsDataUrl)
                     }
                     "writeFile" -> {
-                        val msg = data["message"] as Map<String, String>;
+                        val msg = data as Map<String, String>;
                         val file = File(msg["path"])
                         file.writeText(msg["contents"] as String)
                         respond(null);
@@ -313,7 +357,7 @@ class IdeProtocolClient (
                         respond(getContinueGlobalPath())
                     }
                     "openFile" -> {
-                        setFileOpen((data["message"] as Map<String, Any>)["path"] as String)
+                        setFileOpen((data as Map<String, Any>)["path"] as String)
                         respond(null)
                     }
                     "runCommand" -> {
@@ -321,7 +365,12 @@ class IdeProtocolClient (
                         // Running commands not yet supported in JetBrains
                     }
                     "errorPopup" -> {
-                        showMessage(data["message"] as String)
+                        showMessage(data as String)
+                        respond(null)
+                    }
+
+                    "listFolders" -> {
+                        respond(null)
                     }
 
                     // History
@@ -329,15 +378,15 @@ class IdeProtocolClient (
                         respond(historyManager.list());
                     }
                     "saveSession" -> {
-                        historyManager.save(data["message"] as PersistedSessionInfo);
+                        historyManager.save(data as PersistedSessionInfo);
                         respond(null);
                     }
                     "deleteSession" -> {
-                        historyManager.delete(data["message"] as String);
+                        historyManager.delete(data as String);
                         respond(null);
                     }
                     "loadSession" -> {
-                        val session = historyManager.load(data["message"] as String)
+                        val session = historyManager.load(data as String)
                         respond(session)
                     }
                     "getSearchResults" -> {
@@ -349,7 +398,12 @@ class IdeProtocolClient (
                         val openFiles = visibleFiles()
                         respond(openFiles)
                     }
+                    "getPinnedFiles" -> {
+                        val openFiles = visibleFiles()
+                        respond(openFiles)
+                    }
                     "logDevData" -> {
+                        val data = data as Map<String, Any>
                         val filename = data["tableName"] as String
                         val jsonLine = data["data"]
                         val filepath = getDevDataFilepath(filename)
@@ -357,6 +411,7 @@ class IdeProtocolClient (
                         File(filepath).appendText(contents)
                     }
                     "addModel" -> {
+                        val data = data as Map<String, Any>
                         val model = data["model"] as Map<String, Any>
                         val updatedConfig = editConfigJson {
                             val models = it["models"] as MutableList<Map<String, Any>>
@@ -370,7 +425,7 @@ class IdeProtocolClient (
                     "deleteModel" -> {
                         val configJson = editConfigJson { config ->
                             var models: MutableList<Map<String, Any>> = config["models"] as MutableList<Map<String, Any>>
-
+                            val data = data as Map<String, Any>
                             val model = data["title"] as String
                             models = models.filter { it["title"] != model }.toMutableList()
                             config["models"] = models
@@ -380,6 +435,7 @@ class IdeProtocolClient (
                     }
                     "addOpenAIKey" -> {
                         val updatedConfig = editConfigJson { config ->
+                            val data = data as Map<String, Any>
                             val key = data["key"] as String
                             var models = config["models"] as MutableList<MutableMap<String, Any>>
                             models = models.map {
@@ -410,12 +466,7 @@ class IdeProtocolClient (
     }
 
     fun configUpdate(config: Map<String, Any>) {
-        val data = mapOf(
-            "type" to "configUpdate",
-            "config" to config
-        )
-        val json = Gson().toJson(data)
-        continuePluginService.dispatchCustomEvent(json)
+        continuePluginService.sendToWebview("configUpdate", config)
     }
 
     private fun editConfigJson(callback: (config: MutableMap<String, Any>) -> Map<String, Any>): Map<String, Any> {
@@ -559,20 +610,17 @@ class IdeProtocolClient (
 //                edit
 //        ))
 
-        continuePluginService.dispatchCustomEvent(
-            Gson().toJson(mapOf(
-                "type" to "highlightedCode",
+        continuePluginService.sendToWebview(
+"highlightedCode",
+           mapOf(
                 "rangeInFileWithContents" to rif,
                 "edit" to edit
-            )))
+            )
+        )
     }
 
     fun sendMainUserInput(input: String) {
-        val data = mapOf(
-                "type" to "userInput",
-                "input" to input,
-        )
-        continuePluginService.dispatchCustomEvent(Gson().toJson(data))
+        continuePluginService.sendToWebview("userInput", mapOf("input" to input))
     }
 
     fun sendAcceptRejectDiff(accepted: Boolean, stepIndex: Int) {
