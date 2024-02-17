@@ -1,3 +1,4 @@
+import { BrowserSerializedContinueConfig } from "core/config/load";
 import {
   ChatMessage,
   CompletionOptions,
@@ -83,4 +84,7 @@ export type Protocol = {
     },
     AsyncGenerator<string>,
   ];
+
+  // Pass-through from webview
+  getSerializedConfig: [undefined, Promise<BrowserSerializedContinueConfig>];
 };

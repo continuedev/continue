@@ -119,6 +119,11 @@ export class Core {
       });
       return items;
     });
+
+    // Pass-through
+    on("getSerializedConfig", (msg) => {
+      return this.configHandler.getSerializedConfig();
+    });
   }
 
   public invoke<T extends keyof Protocol>(

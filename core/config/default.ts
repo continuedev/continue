@@ -3,11 +3,6 @@ import { SerializedContinueConfig } from "..";
 const defaultConfig: SerializedContinueConfig = {
   models: [
     {
-      title: "GPT-4 (Free Trial)",
-      provider: "free-trial",
-      model: "gpt-4",
-    },
-    {
       title: "GPT-4 Vision (Free Trial)",
       provider: "free-trial",
       model: "gpt-4-vision-preview",

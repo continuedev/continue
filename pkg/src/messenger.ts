@@ -21,29 +21,43 @@ export class IpcMessenger {
     console.log("[info] Starting Continue core...");
 
     process.stdin.on("data", (data) => {
-      console.log("Receieved data: ", data);
-      try {
-        const d = data.toString();
-        const msg: Message = JSON.parse(d);
-        if (msg.messageType === undefined || msg.messageId === undefined) {
-          throw new Error("Invalid message sent: " + JSON.stringify(msg));
-        }
-
-        // Call handler and respond with return value
-        this.typeListeners
-          .get(msg.messageType as any)
-          ?.forEach(async (handler) => {
-            const response = await handler(msg);
-            this.send(msg.messageType, response, msg.messageId);
-          });
-
-        // Call handler which is waiting for the response, nothing to return
-        this.idListeners.get(msg.messageId)?.(msg);
-      } catch (e) {
-        console.error("Invalid JSON:", data);
-        return;
-      }
+      this._handleData(data);
     });
+    process.stdout.on("close", () => {
+      fs.writeFileSync("./error.log", `${new Date().toISOString()}\n`);
+      console.log("[info] Exiting Continue core...");
+      process.exit(1);
+    });
+    process.stdin.on("close", () => {
+      fs.writeFileSync("./error.log", `${new Date().toISOString()}\n`);
+      console.log("[info] Exiting Continue core...");
+      process.exit(1);
+    });
+  }
+
+  private _handleData(data: Buffer) {
+    console.log("Receieved data: ", data);
+    try {
+      const d = data.toString();
+      const msg: Message = JSON.parse(d);
+      if (msg.messageType === undefined || msg.messageId === undefined) {
+        throw new Error("Invalid message sent: " + JSON.stringify(msg));
+      }
+
+      // Call handler and respond with return value
+      this.typeListeners
+        .get(msg.messageType as any)
+        ?.forEach(async (handler) => {
+          const response = await handler(msg);
+          this.send(msg.messageType, response, msg.messageId);
+        });
+
+      // Call handler which is waiting for the response, nothing to return
+      this.idListeners.get(msg.messageId)?.(msg);
+    } catch (e) {
+      console.error("Invalid JSON:", data);
+      return;
+    }
   }
 
   send(messageType: string, message: any, messageId?: string): string {

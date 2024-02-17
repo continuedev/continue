@@ -340,7 +340,7 @@ async function buildConfigTs(browser: boolean) {
       sourcemap: true,
     });
   } catch (e) {
-    throw new Error(
+    console.log(
       "Build error. Please check your ~/.continue/config.ts file: " + e
     );
     return undefined;

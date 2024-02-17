@@ -317,29 +317,6 @@ class IdeProtocolClient (
 
                         respond(output.toString());
                     }
-                    "getSerializedConfig" -> {
-                        val configPath = getConfigJsonPath()
-                        var config = File(configPath).readText()
-
-                        migrate("camelCaseConfig") {
-                            if (config.contains("_")) {
-                                config = config
-                                        .replace(Regex("(_\\w)")) { it.value[1].uppercase() }
-                                        .replace("openai-aiohttp", "openai")
-                                // Rewrite to config.json
-                                File(configPath).writeText(config)
-                            }
-                        }
-
-                        migrate("renameFreeTrialProvider") {
-                            config = config.replace("openai-free-trial", "free-trial");
-                            File(configPath).writeText(config)
-                        }
-
-                        val mapType = object : TypeToken<Map<String, Any>>() {}.type
-                        val parsed: Map<String, Any> = Gson().fromJson(config, mapType)
-                        respond(parsed)
-                    }
                     "getConfigJsUrl" -> {
                         // Calculate a data URL for the config.js file
                         val configJsPath = getConfigJsPath()

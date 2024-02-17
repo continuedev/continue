@@ -1,10 +1,7 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
-import com.github.continuedev.continueintellijextension.`continue`.Position
-import com.github.continuedev.continueintellijextension.`continue`.Range
-import com.github.continuedev.continueintellijextension.`continue`.RangeInFile
-import com.github.continuedev.continueintellijextension.`continue`.getMachineUniqueID
+import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
@@ -99,7 +96,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                         "messageType" to messageType
                     )
                     val jsonString = Gson().toJson(jsonData)
-                    browser.executeJavaScriptAsync("""window.postMessage($jsonString, "*");""")
+                    continuePluginService.sendToWebview(messageType, data, messageId ?: uuid())
                 }
 
                 if (PASS_THROUGH_TO_CORE.contains(messageType)) {

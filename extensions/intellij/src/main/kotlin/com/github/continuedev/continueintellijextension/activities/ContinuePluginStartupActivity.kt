@@ -1,10 +1,7 @@
 package com.github.continuedev.continueintellijextension.activities
 
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
-import com.github.continuedev.continueintellijextension.`continue`.CoreMessenger
-import com.github.continuedev.continueintellijextension.`continue`.startProxyServer
-import com.github.continuedev.continueintellijextension.`continue`.DefaultTextSelectionStrategy
-import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
+import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
@@ -123,6 +120,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             project,
             ContinuePluginService::class.java
         )
+
+        val theme = GetTheme().getTheme()
 
         val defaultStrategy = DefaultTextSelectionStrategy()
 

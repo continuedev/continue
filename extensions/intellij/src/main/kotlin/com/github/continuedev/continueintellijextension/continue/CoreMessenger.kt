@@ -16,7 +16,7 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
     private val ideProtocolClient = ideProtocolClient
 
     private fun write(message: String) {
-        writer.write(message + "\n")
+        writer.write(message + "\r\n")
         writer.flush()
     }
 
@@ -101,17 +101,9 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
         writer = OutputStreamWriter(outputStream)
         reader = BufferedReader(InputStreamReader(inputStream))
 
-        var sentPing = false
-
         Thread {
             try {
                 while (true) {
-                    if (!sentPing) {
-                        sentPing = true
-                        request("ping", "ping") { response ->
-                            println("Response!: $response")
-                        }
-                    }
                     val line = reader.readLine()
                     println("Core: $line")
                     if (line != null && line.isNotEmpty()) {
