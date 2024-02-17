@@ -53,7 +53,24 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
     class ContinuePluginWindow(toolWindow: ToolWindow, project: Project) {
 
         val PASS_THROUGH_TO_CORE = listOf(
-                "getSerializedConfig"
+                    "abort",
+                    "getContinueDir",
+                    "history",
+                    "saveSession",
+                    "deleteSession",
+                    "loadSession",
+                    "logDevData",
+                    "addModel",
+                    "deleteModel",
+                    "addOpenAIKey",
+                    "llmStreamComplete",
+                    "llmStreamChat",
+                    "llmComplete",
+                    "runNodeJsSlashCommand",
+                    "loadSubmenuItems",
+                    "getContextItems",
+                    "addDocs",
+                    "getSerializedConfig",
         )
 
         init {
@@ -108,35 +125,8 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                     "onLoad" -> {
                         GlobalScope.launch {
                             // Set the colors to match Intellij theme
-                            val globalScheme = EditorColorsManager.getInstance().globalScheme
-                            val defaultBackground = globalScheme.defaultBackground
-                            val defaultForeground = globalScheme.defaultForeground
-                            val defaultBackgroundHex = String.format("#%02x%02x%02x", defaultBackground.red, defaultBackground.green, defaultBackground.blue)
-                            val defaultForegroundHex = String.format("#%02x%02x%02x", defaultForeground.red, defaultForeground.green, defaultForeground.blue)
-
-                            val grayscale = (defaultBackground.red * 0.3 + defaultBackground.green * 0.59 + defaultBackground.blue * 0.11).toInt()
-
-                            val adjustedRed: Int
-                            val adjustedGreen: Int
-                            val adjustedBlue: Int
-
-                            val tint: Int = 20
-                            if (grayscale > 128) { // if closer to white
-                                adjustedRed = max(0, defaultBackground.red - tint)
-                                adjustedGreen = max(0, defaultBackground.green - tint)
-                                adjustedBlue = max(0, defaultBackground.blue - tint)
-                            } else { // if closer to black
-                                adjustedRed = min(255, defaultBackground.red + tint)
-                                adjustedGreen = min(255, defaultBackground.green + tint)
-                                adjustedBlue = min(255, defaultBackground.blue + tint)
-                            }
-
-                            val secondaryDarkHex = String.format("#%02x%02x%02x", adjustedRed, adjustedGreen, adjustedBlue)
-
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-editor-foreground\", \"$defaultForegroundHex\");")
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-sideBar-background\", \"$defaultBackgroundHex\");")
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-input-background\", \"$secondaryDarkHex\");")
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-editor-background\", \"$defaultBackgroundHex\");")
+                            val colors = GetTheme().getTheme();
+                            continuePluginService.sendToWebview("setColors", colors)
 
                             val jsonData = mutableMapOf(
                                     "windowId" to continuePluginService.windowId,

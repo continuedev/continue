@@ -105,9 +105,10 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
             try {
                 while (true) {
                     val line = reader.readLine()
-                    println("Core: $line")
                     if (line != null && line.isNotEmpty()) {
                         handleMessage(line)
+                    } else {
+                        Thread.sleep(100)
                     }
                 }
             } catch (e: IOException) {

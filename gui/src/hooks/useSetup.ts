@@ -51,6 +51,12 @@ function useSetup(dispatch: Dispatch<any>) {
     dispatch(setInactive());
   });
 
+  useWebviewListener("setColors", async (colors) => {
+    Object.keys(colors).forEach((key) => {
+      document.body.style.setProperty(key, colors[key]);
+    });
+  });
+
   useWebviewListener("configUpdate", async () => {
     loadConfig();
   });

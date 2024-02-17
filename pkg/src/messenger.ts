@@ -35,6 +35,11 @@ export class IpcMessenger {
     });
   }
 
+  mock(data: any) {
+    const d = JSON.stringify(data);
+    this._handleData(Buffer.from(d));
+  }
+
   private _handleData(data: Buffer) {
     console.log("Receieved data: ", data);
     try {

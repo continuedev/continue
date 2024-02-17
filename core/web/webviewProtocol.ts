@@ -157,4 +157,5 @@ export type ReverseWebviewProtocol = {
   newSession: [undefined, void];
   refreshSubmenuItems: [undefined, void];
   setTheme: [{ theme: any }, void];
+  setColors: [{ [key: string]: string }, void];
 };
