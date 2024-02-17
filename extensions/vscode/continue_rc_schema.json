@@ -499,6 +499,9 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
+                      "mistral-tiny",
+                      "mistral-small",
+                      "mistral-medium",
                       "AUTODETECT"
                     ]
                   },
