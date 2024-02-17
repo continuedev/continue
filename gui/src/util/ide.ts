@@ -82,7 +82,8 @@ export async function ideRequest<T extends keyof WebviewProtocol>(
     const handler = (event: any) => {
       if (event.data.messageId === messageId) {
         window.removeEventListener("message", handler);
-        resolve(event.data.data);
+        const responseData = JSON.parse(event.data.data ?? null);
+        resolve(responseData);
       }
     };
     window.addEventListener("message", handler);
