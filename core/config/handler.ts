@@ -68,8 +68,8 @@ export class ConfigHandler {
 
       return this.savedConfig;
     } catch (e: any) {
-      console.error("Failed to load config: ", e.message);
-      throw new Error("Failed to load config: " + e.message);
+      console.error("Failed to loadConfig: ", e.message);
+      throw new Error("Failed to loadConfig: " + e.message);
     }
   }
 

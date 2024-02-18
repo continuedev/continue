@@ -58,7 +58,7 @@ export class IpcMessenger {
           const response = await handler(msg);
           this.send(msg.messageType, response, msg.messageId);
         } catch (e) {
-          console.warn("Error running handler: ", e);
+          console.warn(`Error running handler for "${msg.messageType}": `, e);
         }
       });
 

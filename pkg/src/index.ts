@@ -1,6 +1,6 @@
 import { Command } from "commander";
-import FileSystemIde from "core/util/filesystem";
 import fs from "fs";
+import { IpcIde } from "./IpcIde";
 import { Core } from "./core";
 import { IpcMessenger } from "./messenger";
 
@@ -9,8 +9,8 @@ const program = new Command();
 program.action(() => {
   try {
     const messenger = new IpcMessenger();
-    // const ide = new IpcIde(messenger);
-    const ide = new FileSystemIde();
+    const ide = new IpcIde(messenger);
+    // const ide = new FileSystemIde();
     const core = new Core(messenger, ide);
 
     // setTimeout(() => {
