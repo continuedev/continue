@@ -21,16 +21,17 @@ for (let i = 2; i < process.argv.length; i++) {
   const DYNAMIC_IMPORTS = [
     "esbuild",
     "@esbuild",
-    "@lancedb",
+    // "@lancedb",
     "posthog-node",
     "@octokit",
   ];
   fs.mkdirSync("out/node_modules", { recursive: true });
+  fs.mkdirSync("bin/node_modules", { recursive: true });
 
   await Promise.all(
     DYNAMIC_IMPORTS.map(
       (mod) =>
-        new Promise((resolve, reject) =>
+        new Promise((resolve, reject) => {
           ncp(
             `node_modules/${mod}`,
             `out/node_modules/${mod}`,
@@ -42,8 +43,20 @@ for (let i = 2; i < process.argv.length; i++) {
                 resolve();
               }
             }
-          )
-        )
+          );
+          ncp(
+            `node_modules/${mod}`,
+            `bin/node_modules/${mod}`,
+            function (error) {
+              if (error) {
+                console.error(`[error] Error copying ${mod}`, error);
+                reject(error);
+              } else {
+                resolve();
+              }
+            }
+          );
+        })
     )
   );
   console.log(`[info] Copied ${DYNAMIC_IMPORTS.join(", ")}`);
@@ -74,6 +87,9 @@ for (let i = 2; i < process.argv.length; i++) {
   }
 
   console.log("[info] Building binary with pkg...");
-  execSync("npx pkg .");
+  execSync(`npx pkg pkgJson/darwin-arm64`);
+  // execSync(
+  //   `npx pkg out/index.js --target node18-darwin-arm64 --no-bytecode --public-packages "*" --public -o bin/pkg`
+  // );
   console.log("[info] Done!");
 })();

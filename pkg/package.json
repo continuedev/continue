@@ -27,7 +27,7 @@
     "esbuild": "node build.js --esbuild-only"
   },
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "devDependencies": {
     "@types/follow-redirects": "^1.14.4",
     "@types/uuid": "^9.0.8",
