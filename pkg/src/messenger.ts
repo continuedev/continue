@@ -40,29 +40,40 @@ export class IpcMessenger {
     this._handleData(Buffer.from(d));
   }
 
-  private _handleData(data: Buffer) {
-    console.log("Receieved data: ", data);
+  private _handleLine(line: string) {
     try {
-      const d = data.toString();
-      const msg: Message = JSON.parse(d);
+      console.log("LINE: ", line);
+      const msg: Message = JSON.parse(line);
       if (msg.messageType === undefined || msg.messageId === undefined) {
         throw new Error("Invalid message sent: " + JSON.stringify(msg));
       }
 
       // Call handler and respond with return value
-      this.typeListeners
-        .get(msg.messageType as any)
-        ?.forEach(async (handler) => {
+      const listeners = this.typeListeners.get(msg.messageType as any);
+      if (!listeners) {
+        console.log("No listeners for messageType: ", msg.messageType);
+      }
+      listeners?.forEach(async (handler) => {
+        try {
           const response = await handler(msg);
           this.send(msg.messageType, response, msg.messageId);
-        });
+        } catch (e) {
+          console.warn("Error running handler: ", e);
+        }
+      });
 
       // Call handler which is waiting for the response, nothing to return
       this.idListeners.get(msg.messageId)?.(msg);
     } catch (e) {
-      console.error("Invalid JSON:", data);
+      console.error("Error parsing line: ", line, e);
       return;
     }
+  }
+
+  private _handleData(data: Buffer) {
+    const d = data.toString();
+    const lines = d.split("\n").filter((line) => line.trim() !== "");
+    lines.forEach((line) => this._handleLine(line));
   }
 
   send(messageType: string, message: any, messageId?: string): string {
@@ -73,8 +84,8 @@ export class IpcMessenger {
       messageId,
     };
     // process.send?.(data);
+    console.log("Sending: ", JSON.stringify(data));
     process.stdout?.write(JSON.stringify(data) + "\r\n");
-    console.log("Sent: ", JSON.stringify(data));
     return messageId;
   }
 

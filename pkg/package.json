@@ -37,9 +37,12 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@octokit/rest": "^20.0.2",
     "commander": "^12.0.0",
     "core": "file:../core",
     "follow-redirects": "^1.15.5",
+    "ncp": "^2.0.0",
+    "posthog-node": "^3.6.3",
     "uuid": "^9.0.1",
     "vectordb": "^0.4.10"
   }
