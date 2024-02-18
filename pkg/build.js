@@ -19,11 +19,11 @@ for (let i = 2; i < process.argv.length; i++) {
 
   // Copy node_modules for pre-built binaries
   const DYNAMIC_IMPORTS = [
-    "esbuild",
-    "@esbuild",
-    // "@lancedb",
-    "posthog-node",
-    "@octokit",
+    // "esbuild",
+    // "@esbuild",
+    // // "@lancedb",
+    // "posthog-node",
+    // "@octokit",
   ];
   fs.mkdirSync("out/node_modules", { recursive: true });
   fs.mkdirSync("bin/node_modules", { recursive: true });
@@ -87,7 +87,9 @@ for (let i = 2; i < process.argv.length; i++) {
   }
 
   console.log("[info] Building binary with pkg...");
-  execSync(`npx pkg pkgJson/darwin-arm64`);
+  execSync(
+    `npx pkg --no-bytecode --public-packages "*" --public pkgJson/darwin-arm64`
+  );
   // execSync(
   //   `npx pkg out/index.js --target node18-darwin-arm64 --no-bytecode --public-packages "*" --public -o bin/pkg`
   // );
