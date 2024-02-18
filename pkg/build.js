@@ -4,6 +4,11 @@ const fs = require("fs");
 const ncp = require("ncp").ncp;
 
 const esbuildOutputFile = "out/index.js";
+const platforms = ["darwin", "linux", "win32"];
+const architectures = ["x64", "arm64"];
+const targets = platforms.flatMap((platform) =>
+  architectures.map((arch) => `${platform}-${arch}`)
+);
 
 let esbuildOnly = false;
 for (let i = 2; i < process.argv.length; i++) {
@@ -86,10 +91,13 @@ for (let i = 2; i < process.argv.length; i++) {
     return;
   }
 
-  console.log("[info] Building binary with pkg...");
-  execSync(
-    `npx pkg --no-bytecode --public-packages "*" --public pkgJson/darwin-arm64`
-  );
+  console.log("[info] Building binaries with pkg...");
+  for (const target of targets) {
+    console.log(`[info] Building ${target}...`);
+    execSync(
+      `npx pkg --no-bytecode --public-packages "*" --public pkgJson/${target} --out-path bin/${target}`
+    );
+  }
   // execSync(
   //   `npx pkg out/index.js --target node18-darwin-arm64 --no-bytecode --public-packages "*" --public -o bin/pkg`
   // );

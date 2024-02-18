@@ -8,9 +8,11 @@ The build process is otherwise defined entirely in `build.js`.
 
 ### List of native modules
 
-- sqlite3
-- lancedb
-- esbuild
+- sqlite3/build/Release/node_sqlite3.node (\*)
+- @lancedb/\*\*
+- esbuild?
+- @esbuild?
+- onnxruntime-node?
 
 ### List of dynamically imported modules
 
@@ -22,3 +24,5 @@ The build process is otherwise defined entirely in `build.js`.
 
 - tree-sitter.wasm
 - tree-sitter-wasms/
+
+(\*) = need to download for each platform manually
