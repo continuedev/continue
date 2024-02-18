@@ -6,7 +6,7 @@ const ncp = require("ncp").ncp;
 const esbuildOutputFile = "out/index.js";
 const platforms = ["darwin", "linux", "win32"];
 const architectures = ["x64", "arm64"];
-const targets = platforms.flatMap((platform) =>
+let targets = platforms.flatMap((platform) =>
   architectures.map((arch) => `${platform}-${arch}`)
 );
 
@@ -14,7 +14,9 @@ let esbuildOnly = false;
 for (let i = 2; i < process.argv.length; i++) {
   if (process.argv[i] === "--esbuild-only") {
     esbuildOnly = true;
-    break; // Exit the loop once the flag is found
+  }
+  if (process.argv[i - 1] === "--target") {
+    targets = [process.argv[i]];
   }
 }
 

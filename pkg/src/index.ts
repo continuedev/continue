@@ -1,8 +1,12 @@
 import { Command } from "commander";
+import { getCoreLogsPath } from "core/util/paths";
 import fs from "fs";
 import { IpcIde } from "./IpcIde";
 import { Core } from "./core";
 import { IpcMessenger } from "./messenger";
+
+const logFilePath = getCoreLogsPath();
+fs.appendFileSync(logFilePath, "[info] Starting Continue core...\n");
 
 const program = new Command();
 

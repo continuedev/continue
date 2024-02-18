@@ -42,7 +42,6 @@ export class IpcMessenger {
 
   private _handleLine(line: string) {
     try {
-      console.log("LINE: ", line);
       const msg: Message = JSON.parse(line);
       if (msg.messageType === undefined || msg.messageId === undefined) {
         throw new Error("Invalid message sent: " + JSON.stringify(msg));
@@ -94,7 +93,6 @@ export class IpcMessenger {
       messageId,
     };
     // process.send?.(data);
-    console.log("Sending: ", JSON.stringify(data));
     process.stdout?.write(JSON.stringify(data) + "\r\n");
     return messageId;
   }

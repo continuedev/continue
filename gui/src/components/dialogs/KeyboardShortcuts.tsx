@@ -92,12 +92,7 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ ⌫",
     windows: "⌃ ⌫",
-    description: "Stop Active Step",
-  },
-  {
-    mac: "Tab",
-    windows: "Tab",
-    description: "Toggle between context items",
+    description: "Cancel response",
   },
   {
     mac: "⌘ K ⌘ M",
@@ -120,7 +115,7 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ ⇧ J",
     windows: "⌃ ⇧ J",
-    description: "Edit Highlighted Code",
+    description: "Ask Follow-Up about Highlighted Code",
   },
   {
     mac: "⌘ ⇧ ⏎",
@@ -135,22 +130,17 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌥ ⇧ J",
     windows: "⌥ ⇧ J",
-    description: "Quick Text Entry",
+    description: "Quick Input",
   },
   {
     mac: "⌥ ⌘ J",
     windows: "⌥ ⌃ J",
-    description: "Toggle Auxiliary Bar",
+    description: "Toggle Sidebar",
   },
   {
     mac: "⌘ ⌫",
     windows: "⌃ ⌫",
-    description: "Stop Active Step",
-  },
-  {
-    mac: "Tab",
-    windows: "Tab",
-    description: "Toggle between context items",
+    description: "Cancel respoonse",
   },
   {
     mac: "⌘ '",

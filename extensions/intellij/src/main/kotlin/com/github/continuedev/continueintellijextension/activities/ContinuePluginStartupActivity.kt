@@ -203,7 +203,22 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                     throw Exception("Plugin not found")
                 }
                 val pluginPath = pluginDescriptor.pluginPath
-                val continueCorePath = Paths.get(pluginPath.toString(), "core", "pkg").toString()
+                val osName = System.getProperty("os.name").toLowerCase()
+                val os = when {
+                    osName.contains("mac") || osName.contains("darwin") -> "darwin"
+                    osName.contains("win") -> "win32"
+                    osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
+                    else -> "linux"
+                }
+                val osArch = System.getProperty("os.arch").toLowerCase()
+                val arch = when {
+                    osArch.contains("aarch64") || (osArch.contains("arm") && osArch.contains("64")) -> "arm64"
+                    osArch.contains("amd64") || osArch.contains("x86_64") -> "x64"
+                    else -> "x64"
+                }
+                val target = "$os-$arch"
+
+                val continueCorePath = Paths.get(pluginPath.toString(), "core", target, "pkg").toString()
 
                 val coreMessenger = CoreMessenger(continueCorePath, ideProtocolClient);
                 continuePluginService.coreMessenger = coreMessenger

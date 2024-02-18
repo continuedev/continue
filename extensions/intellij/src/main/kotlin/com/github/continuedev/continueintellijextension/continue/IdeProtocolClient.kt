@@ -287,16 +287,6 @@ class IdeProtocolClient (
 
                     "setSuggestionsLocked" -> {}
                     "getSessionId" -> {}
-                    "highlightedCode" -> {
-                        val rifWithContents = getHighlightedCode()
-                        val rifs: MutableList<RangeInFile> = mutableListOf()
-                        if (rifWithContents != null) {
-                            val rif = RangeInFile(rifWithContents.filepath, rifWithContents.range)
-                            rifs += rif
-                        }
-                        respond(mapOf("highlightedCode" to rifs))
-                    }
-
 
                     // NEW //
                     "getDiff" -> {
