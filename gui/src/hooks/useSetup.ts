@@ -15,7 +15,7 @@ import { useWebviewListener } from "./useWebviewListener";
 
 function useSetup(dispatch: Dispatch<any>) {
   const loadConfig = async () => {
-    const config = await ideRequest("getSerializedConfig", undefined);
+    const config = await ideRequest("config/getBrowserSerialized", undefined);
     dispatch(setConfig(config));
   };
 

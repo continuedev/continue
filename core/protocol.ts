@@ -1,14 +1,20 @@
-import { BrowserSerializedContinueConfig } from "core/config/load";
 import {
   ChatMessage,
-  CompletionOptions,
-  ContextItem,
+  ContextItemWithId,
   ContextSubmenuItem,
+  LLMFullCompletionOptions,
+  MessageContent,
   PersistedSessionInfo,
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
-} from "../../core";
+} from ".";
+import { BrowserSerializedContinueConfig } from "./config/load";
+
+export type ProtocolGeneratorType<T> = AsyncGenerator<{
+  done?: boolean;
+  content: T;
+}>;
 
 export type Protocol = {
   // New
@@ -28,6 +34,10 @@ export type Protocol = {
     { model: SerializedContinueConfig["models"][number] },
     void,
   ];
+  "config/getBrowserSerialized": [
+    undefined,
+    Promise<BrowserSerializedContinueConfig>,
+  ];
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, void];
   "context/getContextItems": [
@@ -37,7 +47,7 @@ export type Protocol = {
       fullInput: string;
       selectedCode: RangeInFile[];
     },
-    Promise<ContextItem[]>,
+    Promise<ContextItemWithId[]>,
   ];
   "context/loadSubmenuItems": [
     { title: string },
@@ -54,37 +64,34 @@ export type Protocol = {
       history: ChatMessage[];
       modelTitle: string;
       slashCommandName: string;
-      contextItems: ContextItem[];
+      contextItems: ContextItemWithId[];
       params: any;
       historyIndex: number;
     },
-    AsyncGenerator<string>,
+    ProtocolGeneratorType<string>,
   ];
   "llm/complete": [
     {
       prompt: string;
-      completionOptions: CompletionOptions;
+      completionOptions: LLMFullCompletionOptions;
       title: string;
     },
-    AsyncGenerator<string>,
+    string,
   ];
   "llm/streamComplete": [
     {
       prompt: string;
-      completionOptions: CompletionOptions;
+      completionOptions: LLMFullCompletionOptions;
       title: string;
     },
-    AsyncGenerator<string>,
+    ProtocolGeneratorType<string>,
   ];
   "llm/streamChat": [
     {
       messages: ChatMessage[];
-      completionOptions: CompletionOptions;
+      completionOptions: LLMFullCompletionOptions;
       title: string;
     },
-    AsyncGenerator<string>,
+    ProtocolGeneratorType<MessageContent>,
   ];
-
-  // Pass-through from webview
-  getSerializedConfig: [undefined, Promise<BrowserSerializedContinueConfig>];
 };

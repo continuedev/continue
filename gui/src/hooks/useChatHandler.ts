@@ -25,7 +25,7 @@ import {
   streamUpdate,
 } from "../redux/slices/stateSlice";
 import { RootStore } from "../redux/store";
-import { errorPopup, ideStreamRequest, llmStreamChat } from "../util/ide";
+import { ideStreamRequest, llmStreamChat, postToIde } from "../util/ide";
 
 function useChatHandler(dispatch: Dispatch) {
   const posthog = usePostHog();
@@ -101,7 +101,7 @@ function useChatHandler(dispatch: Dispatch) {
   ) {
     const modelTitle = defaultModel.title;
 
-    for await (const update of ideStreamRequest("runNodeJsSlashCommand", {
+    for await (const update of ideStreamRequest("command/run", {
       input,
       history: messages,
       modelTitle,
@@ -189,7 +189,9 @@ function useChatHandler(dispatch: Dispatch) {
       }
     } catch (e) {
       console.log("Continue: error streaming response: ", e);
-      errorPopup(`Error streaming response: ${e.message}`);
+      postToIde("errorPopup", {
+        message: `Error streaming response: ${e.message}`,
+      });
     } finally {
       dispatch(setInactive());
     }

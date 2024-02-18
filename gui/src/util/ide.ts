@@ -82,7 +82,10 @@ export async function ideRequest<T extends keyof WebviewProtocol>(
     const handler = (event: any) => {
       if (event.data.messageId === messageId) {
         window.removeEventListener("message", handler);
-        const responseData = JSON.parse(event.data.data ?? null);
+        let responseData = event.data.data ?? null;
+        try {
+          responseData = JSON.parse(responseData);
+        } catch {}
         resolve(responseData);
       }
     };
@@ -148,7 +151,7 @@ export async function* llmStreamChat(
   options: LLMFullCompletionOptions = {}
 ): AsyncGenerator<ChatMessage, LLMReturnValue> {
   const gen = ideStreamRequest(
-    "llmStreamChat",
+    "llm/streamChat",
     {
       messages,
       title: modelTitle,
@@ -163,22 +166,6 @@ export async function* llmStreamChat(
     next = await gen.next();
   }
   return { prompt: next.value?.prompt, completion: next.value?.completion };
-}
-
-export function errorPopup(message: string) {
-  postToIde("errorPopup", { message });
-}
-
-export function logDevData(tableName: string, data: any) {
-  postToIde("logDevData", { tableName, data });
-}
-
-export function deleteModel(title: any) {
-  postToIde("deleteModel", { title });
-}
-
-export function addOpenAIKey(key: string) {
-  postToIde("addOpenAIKey", { key });
 }
 
 export function appendText(text: string) {

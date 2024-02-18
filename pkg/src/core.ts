@@ -117,11 +117,14 @@ export class Core {
         ide,
         selectedCode: msg.data.selectedCode,
       });
-      return items;
+      return items.map((item) => ({
+        ...item,
+        id,
+      }));
     });
 
     // Pass-through
-    on("getSerializedConfig", (msg) => {
+    on("config/getBrowserSerialized", (msg) => {
       return this.configHandler.getSerializedConfig();
     });
   }

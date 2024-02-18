@@ -155,7 +155,7 @@ export class VsCodeWebviewProtocol {
     this.on("getDiff", async (msg) => {
       return await ide.getDiff();
     });
-    this.on("getSerializedConfig", async (msg) => {
+    this.on("config/getBrowserSerialized", async (msg) => {
       return await configHandler.getSerializedConfig();
     });
     this.on("getTerminalContents", async (msg) => {
@@ -192,17 +192,17 @@ export class VsCodeWebviewProtocol {
       return await ide.subprocess(msg.data.command);
     });
     // History
-    this.on("history", (msg) => {
+    this.on("history/list", (msg) => {
       return historyManager.list();
     });
-    this.on("saveSession", (msg) => {
+    this.on("history/save", (msg) => {
       historyManager.save(msg.data);
     });
-    this.on("deleteSession", (msg) => {
-      historyManager.delete(msg.data);
+    this.on("history/delete", (msg) => {
+      historyManager.delete(msg.data.id);
     });
-    this.on("loadSession", (msg) => {
-      return historyManager.load(msg.data);
+    this.on("history/load", (msg) => {
+      return historyManager.load(msg.data.id);
     });
     this.on("saveFile", async (msg) => {
       return await ide.saveFile(msg.data.filepath);
@@ -245,11 +245,11 @@ export class VsCodeWebviewProtocol {
           }
         });
     });
-    this.on("logDevData", (msg) => {
+    this.on("devdata/log", (msg) => {
       logDevData(msg.data.tableName, msg.data.data);
     });
-    this.on("addModel", (msg) => {
-      const model = msg.data;
+    this.on("config/addModel", (msg) => {
+      const model = msg.data.model;
       const newConfigString = addModel(model);
       this.configHandler.reloadConfig();
       this.ide.openFile(getConfigJsonPath());
@@ -285,18 +285,18 @@ export class VsCodeWebviewProtocol {
         "🎉 Your model has been successfully added to config.json. You can use this file to further edit its configuration."
       );
     });
-    this.on("deleteModel", (msg) => {
+    this.on("config/deleteModel", (msg) => {
       deleteModel(msg.data.title);
       this.configHandler.reloadConfig();
     });
-    this.on("addOpenAIKey", async (msg) => {
-      addOpenAIKey(msg.data.key);
+    this.on("config/addOpenAiKey", async (msg) => {
+      addOpenAIKey(msg.data);
       this.configHandler.reloadConfig();
     });
 
     async function* llmStreamComplete(
       protocol: VsCodeWebviewProtocol,
-      msg: Message<WebviewProtocol["llmStreamComplete"][0]>
+      msg: Message<WebviewProtocol["llm/streamComplete"][0]>
     ) {
       const model = await protocol.configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamComplete(
@@ -316,11 +316,11 @@ export class VsCodeWebviewProtocol {
 
       return { done: true, content: next.value };
     }
-    this.on("llmStreamComplete", (msg) => llmStreamComplete(this, msg));
+    this.on("llm/streamComplete", (msg) => llmStreamComplete(this, msg));
 
     async function* llmStreamChat(
       protocol: VsCodeWebviewProtocol,
-      msg: Message<WebviewProtocol["llmStreamChat"][0]>
+      msg: Message<WebviewProtocol["llm/streamChat"][0]>
     ) {
       const model = await protocol.configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamChat(
@@ -340,19 +340,19 @@ export class VsCodeWebviewProtocol {
 
       return { done: true, content: next.value };
     }
-    this.on("llmStreamChat", (msg) => llmStreamChat(this, msg));
-    this.on("llmComplete", async (msg) => {
+    this.on("llm/streamChat", (msg) => llmStreamChat(this, msg));
+    this.on("llm/complete", async (msg) => {
       const model = await this.configHandler.llmFromTitle(msg.data.title);
       const completion = await model.complete(
         msg.data.prompt,
         msg.data.completionOptions
       );
-      return { content: completion };
+      return completion;
     });
 
     async function* runNodeJsSlashCommand(
       protocol: VsCodeWebviewProtocol,
-      msg: Message<WebviewProtocol["runNodeJsSlashCommand"][0]>
+      msg: Message<WebviewProtocol["command/run"][0]>
     ) {
       const {
         input,
@@ -393,9 +393,9 @@ export class VsCodeWebviewProtocol {
       }
       yield { done: true, content: "" };
     }
-    this.on("runNodeJsSlashCommand", (msg) => runNodeJsSlashCommand(this, msg));
+    this.on("command/run", (msg) => runNodeJsSlashCommand(this, msg));
 
-    this.on("loadSubmenuItems", async (msg) => {
+    this.on("context/loadSubmenuItems", async (msg) => {
       const { title } = msg.data;
       const config = await this.configHandler.loadConfig();
       const provider = config.contextProviders?.find(
@@ -421,7 +421,7 @@ export class VsCodeWebviewProtocol {
       }
     });
 
-    this.on("getContextItems", async (msg) => {
+    this.on("context/getContextItems", async (msg) => {
       const { name, query, fullInput, selectedCode } = msg.data;
       const config = await this.configHandler.loadConfig();
       const llm = await this.configHandler.llmFromTitle();
@@ -457,7 +457,7 @@ export class VsCodeWebviewProtocol {
         return [];
       }
     });
-    this.on("addDocs", (msg) => {
+    this.on("context/addDocs", (msg) => {
       const { url, title } = msg.data;
       const embeddingsProvider = new TransformersJsEmbeddingsProvider();
       vscode.window.withProgress(

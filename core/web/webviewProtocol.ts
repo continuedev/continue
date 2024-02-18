@@ -1,33 +1,14 @@
 import {
-  ChatMessage,
   ContextItemWithId,
-  ContextSubmenuItem,
   ContinueRcJson,
   DiffLine,
-  LLMFullCompletionOptions,
-  MessageContent,
-  ModelDescription,
-  PersistedSessionInfo,
   Problem,
   Range,
-  RangeInFile,
-  SessionInfo,
 } from "..";
 import { RangeInFileWithContents } from "../commands/util";
-import { BrowserSerializedContinueConfig } from "../config/load";
+import { Protocol } from "../protocol";
 
-export type WebviewProtocol = {
-  abort: [string, void];
-  onLoad: [
-    undefined,
-    {
-      windowId: string;
-      serverUrl: string;
-      workspacePaths: string[];
-      vscMachineId: string;
-      vscMediaUrl: string;
-    },
-  ];
+export type IdeProtocol = {
   listWorkspaceContents: [undefined, string[]];
   getWorkspaceDirs: [undefined, string[]];
   listFolders: [undefined, string[]];
@@ -38,10 +19,6 @@ export type WebviewProtocol = {
   runCommand: [{ command: string }, void];
   getSearchResults: [{ query: string }, string];
   subprocess: [{ command: string }, [string, string]];
-  history: [undefined, SessionInfo[]];
-  saveSession: [PersistedSessionInfo, void];
-  deleteSession: [string, void];
-  loadSession: [string, PersistedSessionInfo];
   saveFile: [{ filepath: string }, void];
   readFile: [{ filepath: string }, string];
   showDiff: [
@@ -62,75 +39,38 @@ export type WebviewProtocol = {
   getOpenFiles: [undefined, string[]];
   getPinnedFiles: [undefined, string[]];
   showLines: [{ filepath: string; startLine: number; endLine: number }, void];
-  errorPopup: [{ message: string }, void];
-  logDevData: [{ tableName: string; data: any }, void];
-  addModel: [ModelDescription, void];
-  deleteModel: [{ title: string }, void];
-  addOpenAIKey: [{ key: string }, void];
-  llmStreamComplete: [
-    {
-      title: string;
-      prompt: string;
-      completionOptions: LLMFullCompletionOptions;
-    },
-    AsyncGenerator<{ content: string; done?: boolean }>,
-  ];
-  llmStreamChat: [
-    {
-      title: string;
-      messages: ChatMessage[];
-      completionOptions: LLMFullCompletionOptions;
-    },
-    AsyncGenerator<{ content: MessageContent; done?: boolean }>,
-  ];
-  llmComplete: [
-    {
-      title: string;
-      prompt: string;
-      completionOptions: LLMFullCompletionOptions;
-    },
-    { content: string },
-  ];
-  runNodeJsSlashCommand: [
-    {
-      input: string;
-      history: ChatMessage[];
-      modelTitle: string;
-      slashCommandName: string;
-      contextItems: ContextItemWithId[];
-      params: { [key: string]: any } | undefined;
-      historyIndex: number;
-    },
-    AsyncGenerator<{ content: string; done?: boolean }>,
-  ];
-  loadSubmenuItems: [{ title: string }, ContextSubmenuItem[]];
-  getContextItems: [
-    {
-      name: string;
-      query: string;
-      fullInput: string;
-      selectedCode: RangeInFile[];
-    },
-    ContextItemWithId[],
-  ];
-  addDocs: [{ url: string; title: string }, void];
-  applyToCurrentFile: [{ text: string }, void];
-  showTutorial: [undefined, void];
-  showFile: [{ filepath: string }, void];
-  openConfigJson: [undefined, void];
   readRangeInFile: [{ filepath: string; range: Range }, string];
-  toggleDevTools: [undefined, void];
-  reloadWindow: [undefined, void];
-  focusEditor: [undefined, void];
-  toggleFullScreen: [undefined, void];
   getDiff: [undefined, string];
-  getSerializedConfig: [undefined, BrowserSerializedContinueConfig];
+  getWorkspaceConfigs: [undefined, ContinueRcJson[]];
   getTerminalContents: [undefined, string];
   isTelemetryEnabled: [undefined, boolean];
   getUniqueId: [undefined, string];
-  getWorkspaceConfigs: [undefined, ContinueRcJson[]];
-  getDefaultModelTitle: [{ defaultModelTitle: string }, void];
 };
+
+export type WebviewProtocol = Protocol &
+  IdeProtocol & {
+    onLoad: [
+      undefined,
+      {
+        windowId: string;
+        serverUrl: string;
+        workspacePaths: string[];
+        vscMachineId: string;
+        vscMediaUrl: string;
+      },
+    ];
+
+    errorPopup: [{ message: string }, void];
+    applyToCurrentFile: [{ text: string }, void];
+    showTutorial: [undefined, void];
+    showFile: [{ filepath: string }, void];
+    openConfigJson: [undefined, void];
+
+    toggleDevTools: [undefined, void];
+    reloadWindow: [undefined, void];
+    focusEditor: [undefined, void];
+    toggleFullScreen: [undefined, void];
+  };
 
 export type ReverseWebviewProtocol = {
   setInactive: [undefined, void];

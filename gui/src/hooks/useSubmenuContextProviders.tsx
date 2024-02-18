@@ -74,7 +74,7 @@ function useSubmenuContextProviders() {
         fields: ["title"],
         storeFields: ["id", "title", "description"],
       });
-      const items = await ideRequest("loadSubmenuItems", {
+      const items = await ideRequest("context/loadSubmenuItems", {
         title: description.title,
       });
       minisearch.addAll(items);

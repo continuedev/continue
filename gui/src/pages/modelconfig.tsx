@@ -246,7 +246,7 @@ function ModelConfig() {
                     ...formParams,
                     provider: modelInfo.provider,
                   };
-                  postToIde("addModel", model);
+                  postToIde("config/addModel", model);
                   dispatch(setDefaultModel(model.title));
                   navigate("/");
                 }}

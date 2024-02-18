@@ -24,7 +24,7 @@ function useHistory(dispatch: Dispatch) {
   );
 
   async function getHistory(): Promise<SessionInfo[]> {
-    return await ideRequest("history", undefined);
+    return await ideRequest("history/list", undefined);
   }
 
   async function saveSession() {
@@ -72,15 +72,15 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: (window as any).workspacePaths?.[0] || "",
     };
-    return await ideRequest("saveSession", sessionInfo);
+    return await ideRequest("history/save", sessionInfo);
   }
 
-  async function deleteSession(sessionId: string) {
-    return await ideRequest("deleteSession", sessionId);
+  async function deleteSession(id: string) {
+    return await ideRequest("history/delete", { id });
   }
 
-  async function loadSession(sessionId: string): Promise<PersistedSessionInfo> {
-    return await ideRequest("loadSession", sessionId);
+  async function loadSession(id: string): Promise<PersistedSessionInfo> {
+    return await ideRequest("history/load", { id });
   }
 
   return { getHistory, saveSession, deleteSession, loadSession };

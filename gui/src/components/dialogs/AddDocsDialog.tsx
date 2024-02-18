@@ -58,7 +58,7 @@ function AddDocsDialog() {
         disabled={!docsUrl || !urlValid}
         className="ml-auto"
         onClick={() => {
-          postToIde("addDocs", { url: docsUrl, title: docsTitle });
+          postToIde("context/addDocs", { url: docsUrl, title: docsTitle });
           setDocsTitle("");
           setDocsUrl("");
           dispatch(setShowDialog(false));

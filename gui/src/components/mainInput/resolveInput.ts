@@ -110,7 +110,7 @@ async function resolveEditorContent(
         fullInput: stripImages(parts),
         selectedCode,
       };
-      const resolvedItems = await ideRequest("getContextItems", data);
+      const resolvedItems = await ideRequest("context/getContextItems", data);
       contextItems.push(...resolvedItems);
       for (const resolvedItem of resolvedItems) {
         contextItemsText += resolvedItem.content + "\n\n";

@@ -22,7 +22,7 @@ import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
-import { deleteModel } from "../../util/ide";
+import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 
 const GridDiv = styled.div`
@@ -144,7 +144,7 @@ function ListBoxOption({
           <HeaderButtonWithText
             text="Delete"
             onClick={(e) => {
-              deleteModel(option.title);
+              postToIde("config/deleteModel", { title: option.title });
               e.stopPropagation();
               e.preventDefault();
             }}

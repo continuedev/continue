@@ -117,7 +117,7 @@ function Models() {
                   ),
                   provider: PROVIDER_INFO[selectedProvider].provider,
                 };
-                postToIde("addModel", model);
+                postToIde("config/addModel", model);
                 dispatch(setDefaultModel(model.title));
                 navigate("/");
               }}

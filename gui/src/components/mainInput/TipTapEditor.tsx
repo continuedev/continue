@@ -30,7 +30,7 @@ import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
-import { errorPopup, isJetBrains, postToIde } from "../../util/ide";
+import { isJetBrains, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -219,9 +219,10 @@ function TipTapEditor(props: TipTapEditorProps) {
         };
       });
     } else {
-      errorPopup(
-        "Images need to be in jpg or png format and less than 10MB in size."
-      );
+      postToIde("errorPopup", {
+        message:
+          "Images need to be in jpg or png format and less than 10MB in size.",
+      });
     }
     return undefined;
   }
