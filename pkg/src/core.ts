@@ -6,6 +6,7 @@ import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/Transform
 import { CodebaseIndexer } from "core/indexing/indexCodebase";
 import { logDevData } from "core/util/devdata";
 import historyManager from "core/util/history";
+import { Message } from "core/util/messenger";
 import { v4 as uuidv4 } from "uuid";
 import { IpcMessenger } from "./messenger";
 import { Protocol } from "./protocol";
@@ -15,6 +16,8 @@ export class Core {
   private readonly ide: IDE;
   private readonly configHandler: ConfigHandler;
   private readonly codebaseIndexer: CodebaseIndexer;
+
+  private abortedMessageIds: Set<string> = new Set();
 
   private selectedModelTitle: string | undefined;
 
@@ -123,10 +126,37 @@ export class Core {
       }));
     });
 
-    // Pass-through
     on("config/getBrowserSerialized", (msg) => {
       return this.configHandler.getSerializedConfig();
     });
+
+    async function* llmStreamChat(
+      configHandler: ConfigHandler,
+      abortedMessageIds: Set<string>,
+      msg: Message<Protocol["llm/streamChat"][0]>
+    ) {
+      const model = await configHandler.llmFromTitle(msg.data.title);
+      const gen = model.streamChat(
+        msg.data.messages,
+        msg.data.completionOptions
+      );
+      let next = await gen.next();
+      while (!next.done) {
+        if (abortedMessageIds.has(msg.messageId)) {
+          abortedMessageIds.delete(msg.messageId);
+          next = await gen.return({ completion: "", prompt: "" });
+          break;
+        }
+        yield { content: next.value.content };
+        next = await gen.next();
+      }
+
+      return { done: true, content: next.value };
+    }
+
+    on("llm/streamChat", (msg) =>
+      llmStreamChat(this.configHandler, this.abortedMessageIds, msg)
+    );
   }
 
   public invoke<T extends keyof Protocol>(

@@ -72,6 +72,14 @@ export function respondToIde<T extends keyof ReverseWebviewProtocol>(
   _postToIde(messageType, data, messageId);
 }
 
+function safeParseResponse(data: any) {
+  let responseData = data ?? null;
+  try {
+    responseData = JSON.parse(responseData);
+  } catch {}
+  return responseData;
+}
+
 export async function ideRequest<T extends keyof WebviewProtocol>(
   messageType: T,
   data: WebviewProtocol[T][0]
@@ -82,11 +90,7 @@ export async function ideRequest<T extends keyof WebviewProtocol>(
     const handler = (event: any) => {
       if (event.data.messageId === messageId) {
         window.removeEventListener("message", handler);
-        let responseData = event.data.data ?? null;
-        try {
-          responseData = JSON.parse(responseData);
-        } catch {}
-        resolve(responseData);
+        resolve(safeParseResponse(event.data.data));
       }
     };
     window.addEventListener("message", handler);
@@ -111,12 +115,13 @@ export async function* ideStreamRequest<T extends keyof WebviewProtocol>(
 
   const handler = (event: { data: Message }) => {
     if (event.data.messageId === messageId) {
-      if (event.data.data.done) {
+      const responseData = safeParseResponse(event.data.data);
+      if (responseData.done) {
         window.removeEventListener("message", handler);
         done = true;
-        returnVal = event.data.data;
+        returnVal = responseData;
       } else {
-        buffer += event.data.data.content;
+        buffer += responseData.content;
       }
     }
   };

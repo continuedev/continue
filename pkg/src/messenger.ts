@@ -56,7 +56,17 @@ export class IpcMessenger {
       listeners?.forEach(async (handler) => {
         try {
           const response = await handler(msg);
-          this.send(msg.messageType, response, msg.messageId);
+          if (
+            response &&
+            typeof response[Symbol.asyncIterator] === "function"
+          ) {
+            for await (const update of response) {
+              this.send(msg.messageType, update, msg.messageId);
+            }
+            this.send(msg.messageType, { done: true }, msg.messageId);
+          } else {
+            this.send(msg.messageType, response || {}, msg.messageId);
+          }
         } catch (e) {
           console.warn(`Error running handler for "${msg.messageType}": `, e);
         }

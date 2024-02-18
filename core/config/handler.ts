@@ -115,6 +115,11 @@ export class ConfigHandler {
         headers[key] = value as string;
       }
 
+      // Replace localhost with 127.0.0.1
+      input = new URL(input);
+      if (input.hostname === "localhost") {
+        input.hostname = "127.0.0.1";
+      }
       const resp = await fetch(input, {
         ...init,
         headers,

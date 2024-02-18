@@ -59,9 +59,24 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
             listener(data)
-            responseListeners.remove(messageId)
+            if (generatorTypes.contains(messageType)) {
+                val parsedData = gson.fromJson(data, Map::class.java)
+                val done = parsedData["done"] as Boolean?
+                if (done == true) {
+                    responseListeners.remove(messageId)
+                } else {}
+            } else {
+                responseListeners.remove(messageId)
+            }
+
         }
     }
+
+    private val generatorTypes = listOf(
+            "llm/streamComplete",
+            "llm/streamChat",
+            "command/run"
+    )
 
     private val ideMessageTypes = listOf(
         "readRangeInFile",
