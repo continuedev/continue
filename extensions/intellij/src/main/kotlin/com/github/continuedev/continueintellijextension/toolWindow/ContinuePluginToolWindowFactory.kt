@@ -117,7 +117,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                 }
 
                 if (PASS_THROUGH_TO_CORE.contains(messageType)) {
-                    continuePluginService.coreMessenger?.request(messageType, data, respond)
+                    continuePluginService.coreMessenger?.request(messageType, data, messageId, respond)
                     return@addHandler null
                 }
 

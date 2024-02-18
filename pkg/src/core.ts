@@ -44,7 +44,7 @@ export class Core {
 
     // Special
     on("abort", (msg) => {
-      // TODO
+      this.abortedMessageIds.add(msg.messageId);
     });
 
     on("ping", (msg) => {
@@ -157,6 +157,84 @@ export class Core {
     on("llm/streamChat", (msg) =>
       llmStreamChat(this.configHandler, this.abortedMessageIds, msg)
     );
+
+    async function* llmStreamComplete(
+      configHandler: ConfigHandler,
+      abortedMessageIds: Set<string>,
+
+      msg: Message<Protocol["llm/streamComplete"][0]>
+    ) {
+      const model = await configHandler.llmFromTitle(msg.data.title);
+      const gen = model.streamComplete(
+        msg.data.prompt,
+        msg.data.completionOptions
+      );
+      let next = await gen.next();
+      while (!next.done) {
+        if (abortedMessageIds.has(msg.messageId)) {
+          abortedMessageIds.delete(msg.messageId);
+          next = await gen.return({ completion: "", prompt: "" });
+          break;
+        }
+        yield { content: next.value };
+        next = await gen.next();
+      }
+
+      return { done: true, content: next.value };
+    }
+
+    on("llm/streamComplete", (msg) =>
+      llmStreamComplete(this.configHandler, this.abortedMessageIds, msg)
+    );
+
+    async function* runNodeJsSlashCommand(
+      configHandler: ConfigHandler,
+      abortedMessageIds: Set<string>,
+      msg: Message<Protocol["command/run"][0]>
+    ) {
+      const {
+        input,
+        history,
+        modelTitle,
+        slashCommandName,
+        contextItems,
+        params,
+        historyIndex,
+      } = msg.data;
+
+      const config = await configHandler.loadConfig();
+      const llm = await configHandler.llmFromTitle(modelTitle);
+      const slashCommand = config.slashCommands?.find(
+        (sc) => sc.name === slashCommandName
+      );
+      if (!slashCommand) {
+        throw new Error(`Unknown slash command ${slashCommandName}`);
+      }
+
+      for await (const content of slashCommand.run({
+        input,
+        history,
+        llm,
+        contextItems,
+        params,
+        ide,
+        addContextItem: (item) => {
+          // TODO
+          // protocol.request("addContextItem", {
+          //   item,
+          //   historyIndex,
+          // });
+        },
+      })) {
+        if (content) {
+          yield { content };
+        }
+      }
+      yield { done: true, content: "" };
+    }
+    on("command/run", (msg) =>
+      runNodeJsSlashCommand(this.configHandler, this.abortedMessageIds, msg)
+    );
   }
 
   public invoke<T extends keyof Protocol>(
@@ -167,11 +245,3 @@ export class Core {
     return response;
   }
 }
-
-/**
- * configHandler should be in core? Probably everything should be in core?
- * - get rc files (define in IpcIde)
- * - override anonymous telemetry (telemetryAllowed)
- * - send config to browser whenever it loads (triggers come from IDE so that should happen there)
- * - access to a "readFile" function (ide.readFile)
- */
