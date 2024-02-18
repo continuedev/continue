@@ -290,7 +290,16 @@ export class Problem {
   message: string;
 }
 
+export type IdeType = "vscode" | "jetbrains";
+export interface IdeInfo {
+  ideType: IdeType;
+  name: string;
+  version: string;
+  remoteName: string;
+}
+
 export interface IDE {
+  getIdeInfo(): Promise<IdeInfo>;
   getDiff(): Promise<string>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;

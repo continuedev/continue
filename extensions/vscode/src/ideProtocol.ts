@@ -4,7 +4,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import * as child_process from "child_process";
-import { ContinueRcJson, IDE, Problem, Range } from "core";
+import { ContinueRcJson, IDE, IdeInfo, Problem, Range } from "core";
 import { DiffManager } from "./diff/horizontal";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { traverseDirectory } from "./util/traverseDirectory";
@@ -15,6 +15,14 @@ class VsCodeIde implements IDE {
 
   constructor(private readonly diffManager: DiffManager) {
     this.ideUtils = new VsCodeIdeUtils();
+  }
+  getIdeInfo(): Promise<IdeInfo> {
+    return Promise.resolve({
+      ideType: "vscode",
+      name: vscode.env.appName,
+      version: vscode.version,
+      remoteName: vscode.env.remoteName || "local",
+    });
   }
   readRangeInFile(filepath: string, range: Range): Promise<string> {
     return this.ideUtils.readRangeInFile(

@@ -10,6 +10,7 @@ import {
   CustomLLM,
   EmbeddingsProviderDescription,
   IContextProvider,
+  IdeType,
   ModelDescription,
   SerializedContinueConfig,
   SlashCommand,
@@ -37,9 +38,10 @@ import {
 } from "../util/paths";
 
 function loadSerializedConfig(
-  workspaceConfigs: ContinueRcJson[]
+  workspaceConfigs: ContinueRcJson[],
+  ideType: IdeType = "vscode"
 ): SerializedContinueConfig {
-  const configPath = getConfigJsonPath();
+  const configPath = getConfigJsonPath(ideType);
   let contents = fs.readFileSync(configPath, "utf8");
   let config = JSON.parse(contents) as SerializedContinueConfig;
   if (config.allowAnonymousTelemetry === undefined) {
@@ -354,9 +356,10 @@ async function buildConfigTs(browser: boolean) {
 
 async function loadFullConfigNode(
   readFile: (filepath: string) => Promise<string>,
-  workspaceConfigs: ContinueRcJson[]
+  workspaceConfigs: ContinueRcJson[],
+  ideType: IdeType
 ): Promise<ContinueConfig> {
-  let serialized = loadSerializedConfig(workspaceConfigs);
+  let serialized = loadSerializedConfig(workspaceConfigs, ideType);
   let intermediate = serializedToIntermediateConfig(serialized);
 
   const configJsContents = await buildConfigTs(false);

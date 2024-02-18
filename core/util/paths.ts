@@ -1,8 +1,8 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { SerializedContinueConfig } from "..";
-import defaultConfig from "../config/default";
+import { IdeType, SerializedContinueConfig } from "..";
+import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
 
 export function getContinueGlobalPath(): string {
@@ -42,10 +42,14 @@ export function getSessionsListPath(): string {
   return filepath;
 }
 
-export function getConfigJsonPath(): string {
+export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
   const p = path.join(getContinueGlobalPath(), "config.json");
   if (!fs.existsSync(p)) {
-    fs.writeFileSync(p, JSON.stringify(defaultConfig, null, 2));
+    if (ideType === "jetbrains") {
+      fs.writeFileSync(p, JSON.stringify(defaultConfigJetBrains, null, 2));
+    } else {
+      fs.writeFileSync(p, JSON.stringify(defaultConfig, null, 2));
+    }
   }
   return p;
 }

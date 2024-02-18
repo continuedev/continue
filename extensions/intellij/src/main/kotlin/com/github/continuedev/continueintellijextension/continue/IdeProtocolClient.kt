@@ -147,7 +147,7 @@ class IdeProtocolClient (
                         mapOf("uniqueId" to uniqueId())
                     )
 
-                    "ide" -> {
+                    "getIdeInfo" -> {
                         val applicationInfo = ApplicationInfo.getInstance()
                         val ideName: String = applicationInfo.fullApplicationName
                         val ideVersion = applicationInfo.fullVersion
@@ -159,6 +159,7 @@ class IdeProtocolClient (
                             remoteName = "ssh"
                         }
                         respond(mapOf(
+                            "ideType" to "jetbrains",
                             "name" to ideName,
                             "version" to ideVersion,
                             "remoteName" to remoteName

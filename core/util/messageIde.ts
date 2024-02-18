@@ -1,9 +1,12 @@
-import { ContinueRcJson, IDE, Problem, Range } from "..";
+import { ContinueRcJson, IDE, IdeInfo, Problem, Range } from "..";
 
 export class MessageIde implements IDE {
   constructor(
     private readonly request: (messageType: string, data: any) => Promise<any>
   ) {}
+  getIdeInfo(): Promise<IdeInfo> {
+    return this.request("getIdeInfo", undefined);
+  }
 
   readRangeInFile(filepath: string, range: Range): Promise<string> {
     return this.request("readRangeInFile", { filepath, range });

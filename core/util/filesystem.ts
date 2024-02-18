@@ -1,8 +1,16 @@
 import * as fs from "fs";
-import { ContinueRcJson, IDE, Problem, Range } from "..";
+import { ContinueRcJson, IDE, IdeInfo, Problem, Range } from "..";
 import { getContinueGlobalPath } from "./paths";
 
 class FileSystemIde implements IDE {
+  getIdeInfo(): Promise<IdeInfo> {
+    return Promise.resolve({
+      ideType: "vscode",
+      name: "na",
+      version: "0.1",
+      remoteName: "na",
+    });
+  }
   readRangeInFile(filepath: string, range: Range): Promise<string> {
     return Promise.resolve("");
   }

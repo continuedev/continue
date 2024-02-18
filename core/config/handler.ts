@@ -54,7 +54,8 @@ export class ConfigHandler {
 
       this.savedConfig = await loadFullConfigNode(
         this.ide.readFile,
-        workspaceConfigs
+        workspaceConfigs,
+        (await this.ide.getIdeInfo()).ideType
       );
       this.savedConfig.allowAnonymousTelemetry =
         this.savedConfig.allowAnonymousTelemetry &&
