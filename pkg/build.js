@@ -20,6 +20,14 @@ for (let i = 2; i < process.argv.length; i++) {
   }
 }
 
+const targetToLanceDb = {
+  "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
+  "darwin-x64": "@lancedb/vectordb-darwin-x64",
+  "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
+  "linux-x64": "@lancedb/vectordb-linux-x64-gnu",
+  "win32-x64": "@lancedb/vectordb-win32-x64-msvc",
+};
+
 (async () => {
   //   console.log("[info] Building with ncc...");
   //   execSync(`npx ncc build src/index.ts -o out`);
@@ -67,6 +75,14 @@ for (let i = 2; i < process.argv.length; i++) {
     )
   );
   console.log(`[info] Copied ${DYNAMIC_IMPORTS.join(", ")}`);
+
+  console.log("[info] Downloading prebuilt lancedb...");
+  for (const target of targets) {
+    if (targetToLanceDb[target]) {
+      console.log(`[info] Downloading ${target}...`);
+      execSync(`npm install -f ${targetToLanceDb[target]} --no-save`);
+    }
+  }
 
   console.log("[info] Building with esbuild...");
   // Bundles the extension into one file

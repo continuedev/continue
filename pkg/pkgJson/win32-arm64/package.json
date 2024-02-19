@@ -9,7 +9,7 @@
     ],
     "assets": [
       "../../../core/node_modules/sqlite3/**/*",
-      "../../node_modules/@lancedb/**/*",
+      "../../node_modules/@lancedb/vectordb-win32-x64-msvc/index.node",
       "../../out/tree-sitter.wasm",
       "../../out/tree-sitter-wasms/*"
     ],
