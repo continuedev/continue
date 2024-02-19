@@ -646,7 +646,7 @@ export interface ContinueConfig {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
 }
 
-interface BrowserSerializedContinueConfig {
+export interface BrowserSerializedContinueConfig {
   allowAnonymousTelemetry?: boolean;
   models: ModelDescription[];
   systemMessage?: string;

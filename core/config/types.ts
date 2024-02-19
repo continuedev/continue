@@ -1,5 +1,24 @@
 const Types = `
 declare global {
+  declare global {
+    interface Window {
+      ide?: "vscode";
+      windowId: string;
+      serverUrl: string;
+      vscMachineId: string;
+      vscMediaUrl: string;
+      fullColorTheme?: {
+        rules?: {
+          token?: string;
+          foreground?: string;
+        }[];
+      };
+      colorThemeName?: string;
+      workspacePaths?: string[];
+      postIntellijMessage?: (type: string, data: any) => void;
+    }
+  }
+  
   export interface ChunkWithoutID {
     content: string;
     startLine: number;
@@ -68,6 +87,8 @@ declare global {
     countTokens(text: string): number;
   
     supportsImages(): boolean;
+  
+    listModels(): Promise<string[]>;
   }
   
   export type ContextProviderType = "normal" | "query" | "submenu";
@@ -76,6 +97,7 @@ declare global {
     title: string;
     displayTitle: string;
     description: string;
+    renderInlineAs?: string;
     type: ContextProviderType;
   }
   
@@ -95,6 +117,7 @@ declare global {
     title: string;
     displayTitle?: string;
     description?: string;
+    renderInlineAs?: string;
     type?: ContextProviderType;
     getContextItems(
       query: string,
@@ -264,6 +287,9 @@ declare global {
       options: CompletionOptions,
       fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
     ) => AsyncGenerator<string>;
+    listModels?: (
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+    ) => Promise<string[]>;
   }
   
   /**
@@ -288,7 +314,7 @@ declare global {
   }
   
   export interface IDE {
-    getConfigJsUrl(): Promise<string | undefined>;
+    getSerializedConfig(): Promise<BrowserSerializedContinueConfig>;
     getDiff(): Promise<string>;
     getTerminalContents(): Promise<string>;
     listWorkspaceContents(directory?: string): Promise<string[]>;
@@ -301,6 +327,11 @@ declare global {
     runCommand(command: string): Promise<void>;
     saveFile(filepath: string): Promise<void>;
     readFile(filepath: string): Promise<string>;
+    showLines(
+      filepath: string,
+      startLine: number,
+      endLine: number
+    ): Promise<void>;
     showDiff(
       filepath: string,
       newContents: string,
@@ -311,6 +342,7 @@ declare global {
     getSearchResults(query: string): Promise<string>;
     subprocess(command: string): Promise<[string, string]>;
     getProblems(filepath?: string | undefined): Promise<Problem[]>;
+    getBranch(dir: string): Promise<string>;
   
     // Embeddings
     /**
@@ -392,7 +424,9 @@ declare global {
     | "openchat"
     | "deepseek"
     | "xwin-coder"
-    | "neural-chat";
+    | "neural-chat"
+    | "codellama-70b"
+    | "llava";
   
   type ModelProvider =
     | "openai"
@@ -415,6 +449,7 @@ declare global {
     | "flowise";
   
   export type ModelName =
+    | "AUTODETECT"
     // OpenAI
     | "gpt-3.5-turbo"
     | "gpt-3.5-turbo-16k"
@@ -422,6 +457,7 @@ declare global {
     | "gpt-3.5-turbo-0613"
     | "gpt-4-32k"
     | "gpt-4-turbo-preview"
+    | "gpt-4-vision-preview"
     // Open Source
     | "mistral-7b"
     | "mistral-8x7b"
@@ -430,6 +466,7 @@ declare global {
     | "codellama-7b"
     | "codellama-13b"
     | "codellama-34b"
+    | "codellama-70b"
     | "phi2"
     | "phind-codellama-34b"
     | "wizardcoder-7b"
@@ -437,7 +474,6 @@ declare global {
     | "wizardcoder-34b"
     | "zephyr-7b"
     | "codeup-13b"
-    | "deepseek-1b"
     | "deepseek-7b"
     | "deepseek-33b"
     | "neural-chat-7b"
@@ -450,7 +486,12 @@ declare global {
     // Mistral
     | "mistral-tiny"
     | "mistral-small"
-    | "mistral-medium";
+    | "mistral-medium"
+    // Tab autocomplete
+    | "deepseek-1b"
+    | "starcoder-1b"
+    | "starcoder-3b"
+    | "stable-code-3b";
   
   export interface RequestOptions {
     timeout?: number;
@@ -458,6 +499,7 @@ declare global {
     caBundlePath?: string | string[];
     proxy?: string;
     headers?: { [key: string]: string };
+    extraBodyProperties?: { [key: string]: any };
   }
   
   export interface StepWithParams {
@@ -525,6 +567,17 @@ declare global {
     embed(chunks: string[]): Promise<number[][]>;
   }
   
+  export interface TabAutocompleteOptions {
+    useCopyBuffer: boolean;
+    useSuffix: boolean;
+    maxPromptTokens: number;
+    debounceDelay: number;
+    maxSuffixPercentage: number;
+    prefixPercentage: number;
+    template?: string;
+    disableMultiLineCompletions?: boolean;
+  }
+  
   export interface SerializedContinueConfig {
     allowAnonymousTelemetry?: boolean;
     models: ModelDescription[];
@@ -537,7 +590,15 @@ declare global {
     disableSessionTitles?: boolean;
     userToken?: string;
     embeddingsProvider?: EmbeddingsProviderDescription;
+    tabAutocompleteModel?: ModelDescription;
+    tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   }
+  
+  export type ConfigMergeType = "merge" | "overwrite";
+  
+  export type ContinueRcJson = Partial<SerializedContinueConfig> & {
+    mergeBehavior: ConfigMergeType;
+  };
   
   export interface Config {
     /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://continue.dev/docs/telemetry */
@@ -565,6 +626,10 @@ declare global {
     userToken?: string;
     /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
     embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
+    /** The model that Continue will use for tab autocompletions. */
+    tabAutocompleteModel?: CustomLLM | ModelDescription;
+    /** Options for tab autocomplete */
+    tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   }
   
   export interface ContinueConfig {
@@ -578,8 +643,22 @@ declare global {
     disableIndexing?: boolean;
     userToken?: string;
     embeddingsProvider: EmbeddingsProvider;
+    tabAutocompleteModel?: ILLM;
+    tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   }
-      
+  
+  export interface BrowserSerializedContinueConfig {
+    allowAnonymousTelemetry?: boolean;
+    models: ModelDescription[];
+    systemMessage?: string;
+    completionOptions?: BaseCompletionOptions;
+    slashCommands?: SlashCommandDescription[];
+    contextProviders?: ContextProviderDescription[];
+    disableIndexing?: boolean;
+    disableSessionTitles?: boolean;
+    userToken?: string;
+    embeddingsProvider?: string;
+  }  
 }
 
 export {};
