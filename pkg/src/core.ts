@@ -83,7 +83,10 @@ export class Core {
     on("config/deleteModel", (msg) => {
       deleteModel(msg.data.title);
     });
-    on("config/reload", (msg) => {});
+    on("config/reload", (msg) => {
+      this.configHandler.reloadConfig();
+      return this.configHandler.getSerializedConfig();
+    });
 
     // Context providers
     on("context/addDocs", async (msg) => {

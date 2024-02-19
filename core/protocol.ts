@@ -39,7 +39,7 @@ export type Protocol = {
     Promise<BrowserSerializedContinueConfig>,
   ];
   "config/deleteModel": [{ title: string }, void];
-  "config/reload": [undefined, void];
+  "config/reload": [undefined, Promise<BrowserSerializedContinueConfig>];
   "context/getContextItems": [
     {
       name: string;

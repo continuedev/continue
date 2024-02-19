@@ -49,9 +49,6 @@ export class IpcMessenger {
 
       // Call handler and respond with return value
       const listeners = this.typeListeners.get(msg.messageType as any);
-      if (!listeners) {
-        console.log("No listeners for messageType: ", msg.messageType);
-      }
       listeners?.forEach(async (handler) => {
         try {
           const response = await handler(msg);

@@ -52,10 +52,11 @@ export class ConfigHandler {
         console.warn("Failed to load workspace configs");
       }
 
+      const ideInfo = await this.ide.getIdeInfo();
       this.savedConfig = await loadFullConfigNode(
         this.ide.readFile,
         workspaceConfigs,
-        (await this.ide.getIdeInfo()).ideType
+        ideInfo.ideType
       );
       this.savedConfig.allowAnonymousTelemetry =
         this.savedConfig.allowAnonymousTelemetry &&

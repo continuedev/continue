@@ -102,7 +102,8 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
         "getSearchResults",
         "getProblems",
         "subprocess",
-        "getBranch"
+        "getBranch",
+        "getIdeInfo"
     )
 
     init {
