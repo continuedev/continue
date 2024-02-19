@@ -706,7 +706,7 @@ class IdeProtocolClient (
         return fileEditorManager.openFiles.toList().map { it.path }
     }
 
-    private fun showMessage(msg: String) {
+    fun showMessage(msg: String) {
         val statusBar = WindowManager.getInstance().getStatusBar(project)
 
         JBPopupFactory.getInstance()

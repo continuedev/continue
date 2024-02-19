@@ -78,6 +78,28 @@ class WelcomeDialogWrapper(val project: Project) : DialogWrapper(true) {
     }
 }
 
+fun showTutorial(project: Project) {
+    ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("continue_tutorial.py").use { `is` ->
+        if (`is` == null) {
+            throw IOException("Resource not found: continue_tutorial.py")
+        }
+        var content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
+        if (!System.getProperty("os.name").toLowerCase().contains("mac")) {
+            content = content.replace("⌘", "⌃")
+        }
+        val filepath = Paths.get(getContinueGlobalPath(), "continue_tutorial.py").toString()
+        File(filepath).writeText(content)
+        val virtualFile = LocalFileSystem.getInstance().findFileByPath(filepath)
+
+
+        ApplicationManager.getApplication().invokeLater {
+            if (virtualFile != null) {
+                FileEditorManager.getInstance(project).openFile(virtualFile, true)
+            }
+        }
+    }
+}
+
 class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
     private val coroutineScope = CoroutineScope(Dispatchers.IO)
 
@@ -131,24 +153,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             if (!settings.continueState.shownWelcomeDialog) {
                 settings.continueState.shownWelcomeDialog = true
                 // Open continue_tutorial.py
-                ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("continue_tutorial.py").use { `is` ->
-                    if (`is` == null) {
-                        throw IOException("Resource not found: continue_tutorial.py")
-                    }
-                    var content = StreamUtil.readText(`is`, StandardCharsets.UTF_8)
-                    if (!System.getProperty("os.name").toLowerCase().contains("mac")) {
-                        content = content.replace("⌘", "⌃")
-                    }
-                    val filepath = Paths.get(getContinueGlobalPath(), "continue_tutorial.py").toString()
-                    File(filepath).writeText(content)
-                    val virtualFile = LocalFileSystem.getInstance().findFileByPath(filepath)
-
-                    if (virtualFile != null) {
-                        ApplicationManager.getApplication().invokeLater {
-                            FileEditorManager.getInstance(project).openFile(virtualFile, true)
-                        }
-                    }
-                }
+                showTutorial(project)
 
                 // Show the welcome dialog
 //                withContext(Dispatchers.Main) {

@@ -116,6 +116,11 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
         writer = OutputStreamWriter(outputStream)
         reader = BufferedReader(InputStreamReader(inputStream))
 
+        process.onExit().thenRun {
+            val err = process.errorStream.bufferedReader().readText()
+            ideProtocolClient.showMessage("Core process exited with output: $err")
+        }
+
         Thread {
             try {
                 while (true) {

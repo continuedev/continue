@@ -1,5 +1,6 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
+import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
 import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
@@ -151,6 +152,9 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                                 )),
 
                         ),"#00ff0022")
+                    }
+                    "showTutorial" -> {
+                        showTutorial(project)
                     }
                     "showVirtualFile" -> {
                         val data = data.asJsonObject
