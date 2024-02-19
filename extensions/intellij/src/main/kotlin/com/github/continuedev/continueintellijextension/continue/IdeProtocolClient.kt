@@ -89,7 +89,7 @@ class AsyncFileSaveListener : AsyncFileListener {
     }
     override fun prepareChange(events: MutableList<out VFileEvent>): AsyncFileListener.ChangeApplier? {
         for (event in events) {
-            if (event.path.endsWith(".continue/config.json") || event.path.endsWith(".continue/config.ts") || event.path.endsWith(".continue\\config.json") || event.path.endsWith(".continue\\config.ts")) {
+            if (event.path.endsWith(".continue/config.json") || event.path.endsWith(".continue/config.ts") || event.path.endsWith(".continue\\config.json") || event.path.endsWith(".continue\\config.ts") || event.path.endsWith(".continuerc.json")) {
                 return object : AsyncFileListener.ChangeApplier {
                     override fun afterVfsChange() {
                         val config = readConfigJson()
@@ -434,6 +434,7 @@ class IdeProtocolClient (
     }
 
     fun configUpdate(config: Map<String, Any>) {
+        continuePluginService.coreMessenger?.request("config/reload", null, null) { _ -> }
         continuePluginService.sendToWebview("configUpdate", config)
     }
 

@@ -13,10 +13,21 @@ if (args[2] === "--target") {
 (async () => {
   console.log("[info] Packaging extension for target ", target);
 
-  // Copy config_schema.json to config.json in docs
+  // Copy config_schema.json to config.json in docs and intellij
   fs.copyFileSync(
     "config_schema.json",
     path.join("..", "..", "docs", "static", "schemas", "config.json")
+  );
+  fs.copyFileSync(
+    "config_schema.json",
+    path.join(
+      "..",
+      "intellij",
+      "src",
+      "main",
+      "resources",
+      "config_schema.json"
+    )
   );
   // Modify and copy for .continuerc.json
   const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
