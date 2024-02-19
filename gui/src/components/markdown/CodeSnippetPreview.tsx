@@ -74,7 +74,6 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
 
   return (
     <PreviewMarkdownDiv
-      contentEditable={false}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       borderColor={props.borderColor}
@@ -138,6 +137,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         </div>
       </PreviewMarkdownHeader>
       <div
+        contentEditable={false}
         className="m-0"
         ref={codeBlockRef}
         style={{
