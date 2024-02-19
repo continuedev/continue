@@ -1,5 +1,3 @@
-import { BrowserSerializedContinueConfig } from "./config/load";
-
 declare global {
   interface Window {
     ide?: "vscode";
@@ -651,4 +649,17 @@ export interface ContinueConfig {
   embeddingsProvider: EmbeddingsProvider;
   tabAutocompleteModel?: ILLM;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+}
+
+export interface BrowserSerializedContinueConfig {
+  allowAnonymousTelemetry?: boolean;
+  models: ModelDescription[];
+  systemMessage?: string;
+  completionOptions?: BaseCompletionOptions;
+  slashCommands?: SlashCommandDescription[];
+  contextProviders?: ContextProviderDescription[];
+  disableIndexing?: boolean;
+  disableSessionTitles?: boolean;
+  userToken?: string;
+  embeddingsProvider?: string;
 }

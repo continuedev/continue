@@ -1,8 +1,7 @@
 import * as fs from "fs";
 import {
-  BaseCompletionOptions,
+  BrowserSerializedContinueConfig,
   Config,
-  ContextProviderDescription,
   ContextProviderWithParams,
   ContinueConfig,
   ContinueRcJson,
@@ -13,7 +12,6 @@ import {
   ModelDescription,
   SerializedContinueConfig,
   SlashCommand,
-  SlashCommandDescription,
 } from "..";
 
 import {
@@ -273,19 +271,6 @@ async function intermediateToFinalConfig(
     embeddingsProvider: config.embeddingsProvider as any,
     tabAutocompleteModel: autocompleteLlm,
   };
-}
-
-interface BrowserSerializedContinueConfig {
-  allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
-  systemMessage?: string;
-  completionOptions?: BaseCompletionOptions;
-  slashCommands?: SlashCommandDescription[];
-  contextProviders?: ContextProviderDescription[];
-  disableIndexing?: boolean;
-  disableSessionTitles?: boolean;
-  userToken?: string;
-  embeddingsProvider?: string;
 }
 
 function finalToBrowserConfig(
