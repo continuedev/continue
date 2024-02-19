@@ -67,6 +67,7 @@ export type Protocol = {
       contextItems: ContextItemWithId[];
       params: any;
       historyIndex: number;
+      selectedCode: RangeInFile[];
     },
     ProtocolGeneratorType<string>,
   ];

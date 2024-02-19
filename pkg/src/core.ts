@@ -203,6 +203,7 @@ export class Core {
         contextItems,
         params,
         historyIndex,
+        selectedCode,
       } = msg.data;
 
       const config = await configHandler.loadConfig();
@@ -228,6 +229,8 @@ export class Core {
           //   historyIndex,
           // });
         },
+        selectedCode,
+        config,
       })) {
         if (content) {
           yield { content };

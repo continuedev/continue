@@ -7,6 +7,7 @@ import {
   ChatMessage,
   LLMReturnValue,
   MessageContent,
+  RangeInFile,
   SlashCommandDescription,
 } from "core";
 import { constructMessages } from "core/llm/constructMessages";
@@ -97,7 +98,8 @@ function useChatHandler(dispatch: Dispatch) {
     messages: ChatMessage[],
     slashCommand: SlashCommandDescription,
     input: string,
-    historyIndex: number
+    historyIndex: number,
+    selectedCode: RangeInFile[]
   ) {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
@@ -113,6 +115,7 @@ function useChatHandler(dispatch: Dispatch) {
         contextItems,
         params: slashCommand.params,
         historyIndex,
+        selectedCode,
       },
       cancelToken
     )) {
@@ -135,8 +138,9 @@ function useChatHandler(dispatch: Dispatch) {
       }
 
       // Resolve context providers and construct new history
-      const [contextItems, content] = await resolveEditorContent(editorState);
-      console.log(contextItems, content);
+      const [contextItems, selectedCode, content] =
+        await resolveEditorContent(editorState);
+
       const message: ChatMessage = {
         role: "user",
         content,
@@ -192,7 +196,8 @@ function useChatHandler(dispatch: Dispatch) {
           messages,
           slashCommand,
           commandInput,
-          historyIndex
+          historyIndex,
+          selectedCode
         );
       }
     } catch (e) {

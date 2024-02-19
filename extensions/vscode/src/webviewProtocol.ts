@@ -362,6 +362,7 @@ export class VsCodeWebviewProtocol {
         contextItems,
         params,
         historyIndex,
+        selectedCode,
       } = msg.data;
 
       const config = await protocol.configHandler.loadConfig();
@@ -386,6 +387,8 @@ export class VsCodeWebviewProtocol {
             historyIndex,
           });
         },
+        selectedCode,
+        config,
       })) {
         if (content) {
           yield { content };

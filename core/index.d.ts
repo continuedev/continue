@@ -370,6 +370,8 @@ export interface ContinueSDK {
   input: string;
   params?: { [key: string]: any } | undefined;
   contextItems: ContextItemWithId[];
+  selectedCode: RangeInFile[];
+  config: ContinueConfig;
 }
 
 export interface SlashCommand {

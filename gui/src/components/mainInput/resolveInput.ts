@@ -26,7 +26,7 @@ interface MentionAttrs {
 
 async function resolveEditorContent(
   editorState: JSONContent
-): Promise<[ContextItemWithId[], MessageContent]> {
+): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
   const selectedCode: RangeInFile[] = [];
@@ -127,7 +127,7 @@ async function resolveEditorContent(
     parts[lastTextIndex].text = `${slashCommand} ${parts[lastTextIndex].text}`;
   }
 
-  return [contextItems, parts];
+  return [contextItems, selectedCode, parts];
 }
 
 function findLastIndex<T>(
