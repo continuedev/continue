@@ -99,6 +99,22 @@ for (let i = 2; i < process.argv.length; i++) {
     execSync(
       `npx pkg --no-bytecode --public-packages "*" --public pkgJson/${target} --out-path bin/${target}`
     );
+
+    // Download and unzip prebuilt sqlite3 binary for the target
+    const downloadUrl = `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${
+      target === "win32-arm64" ? "win32-ia32" : target
+    }.tar.gz`;
+    execSync(`curl -L -o bin/${target}/build.tar.gz ${downloadUrl}`);
+    execSync(`cd bin/${target} && tar -xvzf build.tar.gz`);
+    fs.copyFileSync(
+      `bin/${target}/build/Release/node_sqlite3.node`,
+      `bin/${target}/node_sqlite3.node`
+    );
+    fs.unlinkSync(`bin/${target}/build.tar.gz`);
+    fs.rmSync(`bin/${target}/build`, {
+      recursive: true,
+      force: true,
+    });
   }
   // execSync(
   //   `npx pkg out/index.js --target node18-darwin-arm64 --no-bytecode --public-packages "*" --public -o bin/pkg`
