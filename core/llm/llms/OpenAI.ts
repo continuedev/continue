@@ -21,6 +21,21 @@ const NON_CHAT_MODELS = [
   "ada",
 ];
 
+const CHAT_ONLY_MODELS = [
+  "gpt-3.5-turbo",
+  "gpt-3.5-turbo-0613",
+  "gpt-3.5-turbo-16k",
+  "gpt-4",
+  "gpt-35-turbo-16k",
+  "gpt-35-turbo-0613",
+  "gpt-35-turbo",
+  "gpt-4-32k",
+  "gpt-4-turbo-preview",
+  "gpt-4-vision",
+  "gpt-4-0125-preview",
+  "gpt-4-1106-preview",
+];
+
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint = false;
 
@@ -142,8 +157,9 @@ class OpenAI extends BaseLLM {
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
     if (
-      NON_CHAT_MODELS.includes(options.model) ||
-      this.useLegacyCompletionsEndpoint
+      !CHAT_ONLY_MODELS.includes(options.model) &&
+      (NON_CHAT_MODELS.includes(options.model) ||
+        this.useLegacyCompletionsEndpoint)
     ) {
       for await (const content of this._legacystreamComplete(
         stripImages(messages[messages.length - 1]?.content || ""),

@@ -64,8 +64,8 @@ function TableRow({
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const apiUrl = (window as any).serverUrl;
-  const workspacePaths = (window as any).workspacePaths || [""];
+  const apiUrl = window.serverUrl;
+  const workspacePaths = window.workspacePaths || [""];
   const [hovered, setHovered] = useState(false);
 
   const { saveSession, deleteSession, loadSession } = useHistory(dispatch);
@@ -133,8 +133,8 @@ function History() {
   const [filteredAndSortedSessions, setFilteredAndSortedSessions] = useState<
     SessionInfo[]
   >([]);
-  const apiUrl = (window as any).serverUrl;
-  const workspacePaths = (window as any).workspacePaths || [];
+  const apiUrl = window.serverUrl;
+  const workspacePaths = window.workspacePaths || [];
 
   const deleteSessionInUI = async (sessionId: string) => {
     setSessions((prev) =>

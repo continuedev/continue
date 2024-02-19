@@ -2,7 +2,7 @@ import { useState } from "react";
 import { parseHexColor } from "../components";
 import { useWebviewListener } from "./useWebviewListener";
 
-const hljsToTextMate = {
+const hljsToTextMate: Record<string, string[]> = {
   ".hljs-comment": ["comment"],
   ".hljs-tag": ["tag"],
 
@@ -53,7 +53,9 @@ const hljsToTextMate = {
   ".hljs-params": ["variable", "operator", "number"],
 };
 
-function constructTheme(tmTheme: any): any {
+function constructTheme(
+  tmTheme: typeof window.fullColorTheme
+): Record<string, string> {
   const rules = tmTheme["rules"] || [];
 
   const tokenToForeground = {};
@@ -149,11 +151,11 @@ function fallbackTheme() {
 
 export function useVscTheme() {
   const [theme, setTheme] = useState<any>(
-    constructTheme((window as any).fullColorTheme || {})
+    constructTheme(window.fullColorTheme || {})
   );
 
   useWebviewListener("setTheme", async (data) => {
-    (window as any).fullColorTheme = data.theme;
+    window.fullColorTheme = data.theme;
     setTheme(constructTheme(data.theme));
   });
 

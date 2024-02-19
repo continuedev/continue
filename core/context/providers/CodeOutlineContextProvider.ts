@@ -10,8 +10,8 @@ import { getFileOutlineHighlights } from "llm-code-highlighter/dist/index.contin
 
 class CodeOutlineContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
-    title: "outlines",
-    displayTitle: "Outlines",
+    title: "outline",
+    displayTitle: "Outline",
     description: "Definition lines only (from open files)",
     type: "normal",
   };

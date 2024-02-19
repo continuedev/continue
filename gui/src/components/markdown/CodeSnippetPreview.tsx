@@ -153,7 +153,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         <StyledMarkdownPreview
           source={`${fence}${getMarkdownLanguageTagForFile(
             props.item.description
-          )}\n${props.item.content}\n${fence}`}
+          )}\n${props.item.content.trim()}\n${fence}`}
           showCodeBorder={false}
         />
       </div>

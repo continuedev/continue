@@ -6,7 +6,7 @@ import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectSlashCommands } from "../../redux/selectors";
-import { newSession } from "../../redux/slices/stateSlice";
+import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
@@ -71,10 +71,21 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
 
   const [editorState, setEditorState] = useState(props.editorState);
 
-  useWebviewListener("newSessionWithPrompt", async (data) => {
-    dispatch(newSession());
-    setEditorState(data.prompt as any); // any -> JSONContent
-  });
+  useWebviewListener(
+    "newSessionWithPrompt",
+    async (data) => {
+      if (props.isMainInput) {
+        dispatch(newSession());
+        dispatch(
+          setMessageAtIndex({
+            message: { role: "user", content: data.prompt },
+            index: 0,
+          })
+        );
+      }
+    },
+    [props.isMainInput]
+  );
 
   return (
     <div

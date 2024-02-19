@@ -197,6 +197,11 @@ ${prompt}`;
       provider: this.providerName,
       tokens: tokens,
     });
+    Telemetry.capture("tokensGenerated", {
+      model: model,
+      provider: this.providerName,
+      tokens: tokens,
+    });
   }
 
   _fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> =
@@ -434,6 +439,6 @@ ${prompt}`;
     if (typeof window === "undefined") {
       return true;
     }
-    return (window as any)?.ide !== "vscode";
+    return window?.ide !== "vscode";
   }
 }

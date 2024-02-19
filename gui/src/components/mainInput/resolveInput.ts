@@ -148,11 +148,12 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
   let slashCommand = undefined;
   for (const child of p.content || []) {
     if (child.type === "text") {
-      text += child.text;
+      text += text === "" ? child.text.trimStart() : child.text;
     } else if (child.type === "mention") {
-      if (!["codebase"].includes(child.attrs.id)) {
-        text += child.attrs.label;
-      }
+      text +=
+        typeof child.attrs.renderInlineAs === "string"
+          ? child.attrs.renderInlineAs
+          : child.attrs.label;
       contextItems.push(child.attrs);
     } else if (child.type === "slashcommand") {
       if (typeof slashCommand === "undefined") {

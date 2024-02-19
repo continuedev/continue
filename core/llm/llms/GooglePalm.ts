@@ -14,6 +14,7 @@ class GooglePalm extends BaseLLM {
 
   static defaultOptions: Partial<LLMOptions> = {
     model: "chat-bison-001",
+    apiBase: "https://generativelanguage.googleapis.com",
   };
 
   protected async *_streamComplete(
@@ -60,7 +61,7 @@ class GooglePalm extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
-    const apiURL = `https://generativelanguage.googleapis.com/v1/models/${options.model}:streamGenerateContent?key=${this.apiKey}`;
+    const apiURL = `${this.apiBase}/v1/models/${options.model}:streamGenerateContent?key=${this.apiKey}`;
     const body = {
       contents: messages.map((msg) => {
         return {
@@ -135,7 +136,7 @@ class GooglePalm extends BaseLLM {
       msgList.push({ content: message.content });
     }
 
-    const apiURL = `https://generativelanguage.googleapis.com/v1beta2/models/${options.model}:generateMessage?key=${this.apiKey}`;
+    const apiURL = `${this.apiBase}/v1beta2/models/${options.model}:generateMessage?key=${this.apiKey}`;
     const body = { prompt: { messages: msgList } };
     const response = await this.fetch(apiURL, {
       method: "POST",

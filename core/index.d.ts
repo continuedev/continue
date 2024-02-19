@@ -1,3 +1,22 @@
+declare global {
+  interface Window {
+    ide?: "vscode";
+    windowId: string;
+    serverUrl: string;
+    vscMachineId: string;
+    vscMediaUrl: string;
+    fullColorTheme?: {
+      rules?: {
+        token?: string;
+        foreground?: string;
+      }[];
+    };
+    colorThemeName?: string;
+    workspacePaths?: string[];
+    postIntellijMessage?: (type: string, data: any) => void;
+  }
+}
+
 export interface ChunkWithoutID {
   content: string;
   startLine: number;
@@ -76,6 +95,7 @@ export interface ContextProviderDescription {
   title: string;
   displayTitle: string;
   description: string;
+  renderInlineAs?: string;
   type: ContextProviderType;
 }
 
@@ -95,6 +115,7 @@ export interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
+  renderInlineAs?: string;
   type?: ContextProviderType;
   getContextItems(
     query: string,
@@ -430,7 +451,7 @@ export type ModelName =
   | "gpt-4"
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
-  | "gpt-4-0125-preview"
+  | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
   // Open Source
   | "mistral-7b"
@@ -473,6 +494,7 @@ export interface RequestOptions {
   caBundlePath?: string | string[];
   proxy?: string;
   headers?: { [key: string]: string };
+  extraBodyProperties?: { [key: string]: any };
 }
 
 export interface StepWithParams {
@@ -618,4 +640,17 @@ export interface ContinueConfig {
   embeddingsProvider: EmbeddingsProvider;
   tabAutocompleteModel?: ILLM;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+}
+
+interface BrowserSerializedContinueConfig {
+  allowAnonymousTelemetry?: boolean;
+  models: ModelDescription[];
+  systemMessage?: string;
+  completionOptions?: BaseCompletionOptions;
+  slashCommands?: SlashCommandDescription[];
+  contextProviders?: ContextProviderDescription[];
+  disableIndexing?: boolean;
+  disableSessionTitles?: boolean;
+  userToken?: string;
+  embeddingsProvider?: string;
 }

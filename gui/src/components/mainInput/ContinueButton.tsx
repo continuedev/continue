@@ -43,8 +43,6 @@ function ContinueButton(props: {
   disabled: boolean;
   showStop: boolean;
 }) {
-  const vscMediaUrl = (window as any).vscMediaUrl;
-
   const [buttonColor, setButtonColor] = useState<string | null>(
     localStorage.getItem("continueButtonColor")
   );
@@ -80,8 +78,8 @@ function ContinueButton(props: {
         </>
       ) : (
         <>
-          {vscMediaUrl ? (
-            <img src={`${vscMediaUrl}/play_button.png`} height="18px" />
+          {window.vscMediaUrl ? (
+            <img src={`${window.vscMediaUrl}/play_button.png`} height="18px" />
           ) : (
             <PlayIcon width="18px" height="18px" />
           )}

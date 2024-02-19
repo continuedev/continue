@@ -132,7 +132,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
                             val jsonData = mutableMapOf(
                                     "windowId" to continuePluginService.windowId,
-                                    "workspacePaths" to continuePluginService.worksapcePaths,
+                                    "workspacePaths" to continuePluginService.workspacePaths,
                                     "vscMachineId" to getMachineUniqueID(),
                                     "vscMediaUrl" to "http://continue",
                             )

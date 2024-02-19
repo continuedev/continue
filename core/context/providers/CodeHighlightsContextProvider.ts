@@ -6,7 +6,10 @@ import {
 } from "../..";
 import { getBasename } from "../../util";
 
-import { getSourceSetHighlights } from "llm-code-highlighter/dist/index.continue";
+import { getHighlightsThatFit, ILLMContextSizer } from "llm-code-highlighter/dist/index.continue";
+import { countTokens } from "../../llm/countTokens";
+
+const HIGHLIGHTS_TOKEN_BUDGET = 2000;
 
 class CodeHighlightsContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -32,9 +35,13 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
           };
         })
       );
-    const topPercentile = 0.5;
-    const repoMap = await getSourceSetHighlights(
-      topPercentile,
+    const contextSizer =  {
+      fits(content: string): boolean {
+        return countTokens(content, "") < HIGHLIGHTS_TOKEN_BUDGET;
+      }
+    } as ILLMContextSizer
+    const repoMap = await getHighlightsThatFit(
+      contextSizer,
       [],
       allFiles
         .filter((file) => file.content.length > 0)

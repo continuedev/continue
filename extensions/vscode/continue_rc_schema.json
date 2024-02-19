@@ -94,6 +94,11 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "extraBodyProperties": {
+          "title": "Extra Body Properties",
+          "description": "This object will be merged with the body when making the HTTP requests",
+          "type": "object"
         }
       }
     },
@@ -223,7 +228,8 @@
             "verifySsl": null,
             "caBundlePath": null,
             "proxy": null,
-            "headers": null
+            "headers": null,
+            "extraBodyProperties": null
           },
           "allOf": [
             {
@@ -370,6 +376,7 @@
                   "gpt-3.5-turbo-0613",
                   "gpt-4-32k",
                   "gpt-4-0125-preview",
+                  "gpt-4-turbo-preview",
                   "AUTODETECT"
                 ]
               }
@@ -469,7 +476,7 @@
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
-                      "gpt-4-0125-preview",
+                      "gpt-4-turbo-preview",
                       "gpt-4-vision-preview",
                       "mistral-7b",
                       "mistral-8x7b",
@@ -492,6 +499,9 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
+                      "mistral-tiny",
+                      "mistral-small",
+                      "mistral-medium",
                       "AUTODETECT"
                     ]
                   },
@@ -904,7 +914,7 @@
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
-                      "gpt-4-0125-preview",
+                      "gpt-4-turbo-preview",
                       "gpt-4-vision-preview",
                       "mistral-7b",
                       "mistral-8x7b",
@@ -1129,7 +1139,9 @@
                 "folder",
                 "issue",
                 "docs",
-                "tree"
+                "tree",
+                "highlights",
+                "outline"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1145,7 +1157,9 @@
                 "Retrieve important pages from a documentation website, as determined by similarity search",
                 "Index and retrieve the contents of any documentation site, using embeddings to find important snippets",
                 "Display a file tree of the current workspace",
-                "Include a repo map showing important code objects"
+                "Include a repo map showing important code objects",
+                "Displays important snippets of code from the currently open files",
+                "Displays definition lines from the currently open files"
               ],
               "type": "string"
             },

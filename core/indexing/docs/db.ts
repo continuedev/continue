@@ -1,6 +1,5 @@
 import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
-import * as lancedb from "vectordb";
 import { Chunk } from "../..";
 import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths";
 
@@ -31,6 +30,7 @@ export async function retrieveDocs(
   vector: number[],
   nRetrieve: number
 ): Promise<Chunk[]> {
+  const lancedb = await import("vectordb");
   const lance = await lancedb.connect(getLanceDbPath());
   const table = await lance.openTable(DOCS_TABLE_NAME);
   const docs: LanceDbDocsRow[] = await table
@@ -68,6 +68,7 @@ export async function addDocs(
     vector: embeddings[i],
   }));
 
+  const lancedb = await import("vectordb");
   const lance = await lancedb.connect(getLanceDbPath());
   const tableNames = await lance.tableNames();
   if (!tableNames.includes(DOCS_TABLE_NAME)) {
