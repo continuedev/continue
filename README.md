@@ -26,7 +26,7 @@
 
 </div>
 
-## Task, not tab, auto-complete
+## Task and tab autocomplete
 
 ### Answer coding questions
 
@@ -51,6 +51,12 @@ Open a blank file and let Continue start new Python scripts, React components, e
 - “/edit get me started with a basic supabase edge function”
 - “/edit implement a c++ shortest path algo in a concise way”
 - “/edit create a docker compose file with php and mysql server"
+
+### And much more!
+
+- Try out [experimental support for local tab autocomplete](https://continue.dev/docs/walkthroughs/tab-autocomplete) in VS Code
+- Use [built-in context providers](https://continue.dev/docs/customization/context-providers#built-in-context-providers) or create your own [custom context providers](https://continue.dev/docs/customization/context-providers#building-your-own-context-provider)
+- Use [built-in slash commands](https://arc.net/l/quote/zbhwfjmp) or create your own [custom slash commands](https://continue.dev/docs/customization/slash-commands#custom-slash-commands)
 
 ## Getting Started
 
