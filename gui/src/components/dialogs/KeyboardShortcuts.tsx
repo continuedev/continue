@@ -55,18 +55,18 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
 
 const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
-    mac: "⌘ M",
-    windows: "⌃ M",
+    mac: "⌘ L",
+    windows: "⌃ L",
     description: "Ask about Highlighted Code",
+  },
+  {
+    mac: "⌘ I",
+    windows: "⌃ I",
+    description: "Edit highlighted code",
   },
   {
     mac: "⌘ ⇧ L",
     windows: "⌃ ⇧ L",
-    description: "Edit highlighted code",
-  },
-  {
-    mac: "⌘ ⇧ M",
-    windows: "⌃ ⇧ M",
     description: "Ask Follow-Up about Highlighted Code",
   },
   {
