@@ -333,7 +333,9 @@ class IdeProtocolClient (
                         // Running commands not yet supported in JetBrains
                     }
                     "errorPopup" -> {
-                        showMessage(data as String)
+                        val data = data as Map<String, Any>
+                        val message = data["message"] as String
+                        showMessage(message)
                         respond(null)
                     }
 
