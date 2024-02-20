@@ -1,4 +1,5 @@
 import {
+  BrowserSerializedContinueConfig,
   ChatMessage,
   ContextItemWithId,
   ContextSubmenuItem,
@@ -9,7 +10,6 @@ import {
   SerializedContinueConfig,
   SessionInfo,
 } from ".";
-import { BrowserSerializedContinueConfig } from "./config/load";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;

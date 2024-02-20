@@ -1,5 +1,4 @@
 import { createSlice } from "@reduxjs/toolkit";
-import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import FreeTrial from "core/llm/llms/FreeTrial";
 import { RootStore } from "../store";
 
@@ -27,8 +26,7 @@ const initialState: RootStore["serverState"] = {
       new FreeTrial({ model: "gpt-4" }),
       new FreeTrial({ model: "gpt-3.5-turbo" }),
     ],
-    embeddingsProvider: new TransformersJsEmbeddingsProvider(),
-  },
+  } as any,
   contextProviders: [],
   savedContextGroups: [],
   indexingProgress: 1.0,
