@@ -39,7 +39,6 @@ export const CustomModelButton = styled.div<{ disabled: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
   transition: all 0.5s;
 
   ${(props) =>

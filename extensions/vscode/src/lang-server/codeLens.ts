@@ -35,12 +35,12 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
       );
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: "Accept ✅",
+          title: "Accept",
           command: "continue.acceptVerticalDiffBlock",
           arguments: [filepath, i],
         }),
         new vscode.CodeLens(range, {
-          title: "Reject ❌",
+          title: "Reject",
           command: "continue.rejectVerticalDiffBlock",
           arguments: [filepath, i],
         })
@@ -78,12 +78,12 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
       );
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: "Accept ✅",
+          title: "Accept",
           command: "continue.acceptSuggestion",
           arguments: [suggestion],
         }),
         new vscode.CodeLens(range, {
-          title: "Reject ❌",
+          title: "Reject",
           command: "continue.rejectSuggestion",
           arguments: [suggestion],
         })

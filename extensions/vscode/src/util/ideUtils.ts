@@ -219,7 +219,9 @@ export class VsCodeIdeUtils {
       !(
         document.languageId === "plaintext" &&
         document.getText() === "accessible-buffer-accessible-buffer-"
-      ) && !document.uri.scheme.startsWith("git")
+      ) &&
+      !document.uri.scheme.startsWith("git") &&
+      document.uri.scheme !== "vscode-scm"
     );
   }
 

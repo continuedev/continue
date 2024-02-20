@@ -62,6 +62,8 @@ describe("/edit slash command", () => {
       history: [],
       input: "implement this function",
       contextItems: [TEST_CONTEXT_ITEM],
+      selectedCode: [],
+      config: {} as any,
     };
 
     let total = "";
