@@ -1,16 +1,29 @@
-import { encodingForModel as _encodingForModel, Tiktoken } from "js-tiktoken";
+import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
+// @ts-expect-error
+import llamaTokenizer from "llama-tokenizer-js";
 import { ChatMessage, MessageContent, MessagePart } from "..";
+import { autodetectTemplateType } from "./autodetect";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
 
-let encoding: Tiktoken | null = null;
+interface Encoding {
+  encode: Tiktoken["encode"];
+  decode: Tiktoken["decode"];
+}
 
-function encodingForModel(modelName: string): Tiktoken {
-  if (encoding) {
-    return encoding;
+let gptEncoding: Encoding | null = null;
+
+function encodingForModel(modelName: string): Encoding {
+  const modelType = autodetectTemplateType(modelName);
+
+  if (!modelType || modelType === "none") {
+    if (!gptEncoding) {
+      gptEncoding = _encodingForModel("gpt-4");
+    }
+
+    return gptEncoding;
   }
 
-  encoding = _encodingForModel("gpt-4");
-  return encoding;
+  return llamaTokenizer;
 }
 
 function countImageTokens(content: MessagePart): number {
@@ -21,7 +34,11 @@ function countImageTokens(content: MessagePart): number {
   }
 }
 
-function countTokens(content: MessageContent, modelName: string): number {
+function countTokens(
+  content: MessageContent,
+  // defaults to llama2 because the tokenizer tends to produce more tokens
+  modelName: string = "llama2"
+): number {
   const encoding = encodingForModel(modelName);
   if (Array.isArray(content)) {
     return content.reduce((acc, part) => {
@@ -72,21 +89,29 @@ function countChatMessageTokens(
   return countTokens(chatMessage.content, modelName) + TOKENS_PER_MESSAGE;
 }
 
-function pruneLinesFromTop(prompt: string, maxTokens: number): string {
-  let totalTokens = countTokens(prompt, "gpt-4");
+function pruneLinesFromTop(
+  prompt: string,
+  maxTokens: number,
+  modelName: string
+): string {
+  let totalTokens = countTokens(prompt, modelName);
   const lines = prompt.split("\n");
   while (totalTokens > maxTokens && lines.length > 0) {
-    totalTokens -= countTokens(lines.shift()!, "gpt-4");
+    totalTokens -= countTokens(lines.shift()!, modelName);
   }
 
   return lines.join("\n");
 }
 
-function pruneLinesFromBottom(prompt: string, maxTokens: number): string {
-  let totalTokens = countTokens(prompt, "gpt-4");
+function pruneLinesFromBottom(
+  prompt: string,
+  maxTokens: number,
+  modelName: string
+): string {
+  let totalTokens = countTokens(prompt, modelName);
   const lines = prompt.split("\n");
   while (totalTokens > maxTokens && lines.length > 0) {
-    totalTokens -= countTokens(lines.pop()!, "gpt-4");
+    totalTokens -= countTokens(lines.pop()!, modelName);
   }
 
   return lines.join("\n");

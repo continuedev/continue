@@ -275,8 +275,9 @@ export class ContinueCompletionProvider
         fullSuffix,
         clipboardText,
         lang,
-        this.promptBuilder.getDefinition,
-        options
+        this.promptBuilder.getDefinition.bind(this.promptBuilder),
+        options,
+        llm.model
       );
 
       const { template, completionOptions } = options.template
