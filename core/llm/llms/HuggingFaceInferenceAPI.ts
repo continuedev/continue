@@ -1,34 +1,31 @@
 import { BaseLLM } from "..";
-import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
+import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
+import { streamResponse } from "../stream";
 
 class HuggingFaceInferenceAPI extends BaseLLM {
   static providerName: ModelProvider = "huggingface-inference-api";
-
-  private _convertArgs(options: CompletionOptions, prompt: string) {
-    const finalOptions = {};
-
-    return finalOptions;
-  }
-
-  protected async _complete(
-    prompt: string,
-    options: CompletionOptions
-  ): Promise<string> {
-    throw new Error("Method not implemented.");
-  }
+  static defaultOptions: Partial<LLMOptions> | undefined = {
+    apiBase: "https://api-inference.huggingface.co",
+  };
 
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    throw new Error("Method not implemented.");
-  }
-
-  protected async *_streamChat(
-    messages: ChatMessage[],
-    options: CompletionOptions
-  ): AsyncGenerator<ChatMessage> {
-    throw new Error("Method not implemented.");
+    const response = await this.fetch(
+      `${this.apiBase}/models/${options.model}`,
+      {
+        headers: { Authorization: `Bearer ${this.apiKey}` },
+        method: "POST",
+        body: JSON.stringify({
+          inputs: prompt,
+          stream: true,
+        }),
+      }
+    );
+    for await (const chunk of streamResponse(response)) {
+      yield chunk;
+    }
   }
 }
 
