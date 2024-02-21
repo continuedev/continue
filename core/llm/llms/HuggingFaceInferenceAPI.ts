@@ -1,6 +1,6 @@
 import { BaseLLM } from "..";
 import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
-import { streamResponse } from "../stream";
+import { streamSse } from "../stream";
 
 class HuggingFaceInferenceAPI extends BaseLLM {
   static providerName: ModelProvider = "huggingface-inference-api";
@@ -24,8 +24,8 @@ class HuggingFaceInferenceAPI extends BaseLLM {
         stream: true,
       }),
     });
-    for await (const chunk of streamResponse(response)) {
-      yield chunk;
+    for await (const chunk of streamSse(response)) {
+      yield chunk?.text || "";
     }
   }
 }
