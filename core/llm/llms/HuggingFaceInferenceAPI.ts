@@ -13,7 +13,11 @@ class HuggingFaceInferenceAPI extends BaseLLM {
     options: CompletionOptions
   ): AsyncGenerator<string> {
     const response = await this.fetch(`${this.apiBase}`, {
-      headers: { Authorization: `Bearer ${this.apiKey}` },
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       method: "POST",
       body: JSON.stringify({
         inputs: prompt,
