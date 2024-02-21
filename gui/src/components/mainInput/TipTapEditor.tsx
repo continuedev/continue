@@ -235,7 +235,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       Placeholder.configure({
         placeholder: () =>
           historyLengthRef.current === 0
-            ? "Ask a question, '/' for slash commands, '@' to add context"
+            ? "Ask anything, '/' for slash commands, '@' to add context"
             : "Ask a follow-up",
       }),
       Paragraph.extend({
