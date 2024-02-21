@@ -414,7 +414,8 @@ type ContextProviderName =
   | "http"
   | "codebase"
   | "problems"
-  | "folder";
+  | "folder"
+  | "jira";
 
 type TemplateType =
   | "llama2"

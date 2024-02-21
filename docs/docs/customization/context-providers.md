@@ -112,6 +112,32 @@ Type '@issue' to reference the conversation in a GitHub issue. Make sure to incl
 }
 ```
 
+### Jira Issues
+
+Type '@jira' to reference the conversation in a Jira issue. Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens).
+
+```json
+{
+  "name": "issue",
+  "params": {
+    "domain": "company.atlassian.net",
+    "email": "someone@somewhere.com",
+    "token ": "ATATT..."
+  }
+}
+```
+
+#### Issue Query
+
+By default, the following query will be used to find issues:
+
+```jql
+assignee = currentUser() AND resolution = Unresolved order by updated DESC
+```
+
+You can override this query by setting the `issueQuery` parameter.
+
+
 ### Code Outline
 
 Type '@outline' to reference the outline of all currently open files. The outline of a files consists of only the function and class definitions in the file. Supported file extensions are '.js', '.mjs', '.go', '.c', '.cc', '.cs', '.cpp', '.el', '.ex', '.elm', '.java', '.ml', '.php', '.ql', '.rb', '.rs', '.ts'
