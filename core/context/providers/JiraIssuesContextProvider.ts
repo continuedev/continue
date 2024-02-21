@@ -1,3 +1,4 @@
+import type { AxiosInstance } from "axios";
 import { BaseContextProvider } from "..";
 import {
   ContextItem,
@@ -6,7 +7,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../..";
-import type { AxiosInstance } from "axios";
+const { convert } = require("adf-to-md");
 
 interface JiraComment {
   id: string;
@@ -72,14 +73,11 @@ class JiraIssuesContextProvider extends BaseContextProvider {
       })
       .then((result) => result.data);
 
-    // @ts-ignore
-    const adf2md = await import("adf2md/dist/adf2md.min.js");
-
     const parts = [
       `# Jira Issue ${issue.key}: ${issue.fields.summary}`,
       "## Description",
       issue.fields.description
-        ? adf2md.convert(issue.fields.description).result
+        ? convert(issue.fields.description).result
         : "No description",
     ];
 
@@ -88,7 +86,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
 
       parts.push(
         ...issue.fields.comment.comments.map((comment) => {
-          const commentText = adf2md.convert(comment.body).result;
+          const commentText = convert(comment.body).result;
 
           return `### ${comment.author.displayName} on ${comment.created}\n\n${commentText}`;
         })
