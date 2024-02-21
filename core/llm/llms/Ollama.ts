@@ -120,6 +120,7 @@ class Ollama extends BaseLLM {
         stop: options.stop,
         num_ctx: this.contextLength,
         mirostat: options.mirostat,
+        num_thread: options.numThreads,
       },
     };
 

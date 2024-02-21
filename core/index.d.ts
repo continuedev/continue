@@ -538,6 +538,7 @@ interface BaseCompletionOptions {
   mirostat?: number;
   stop?: string[];
   maxTokens?: number;
+  numThreads?: number;
 }
 
 export interface ModelDescription {
