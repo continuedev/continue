@@ -315,6 +315,7 @@ export interface IDE {
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig>;
   getDiff(): Promise<string>;
   getTerminalContents(): Promise<string>;
+  getDebugLocals(): Promise<string>;
   listWorkspaceContents(directory?: string): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
@@ -406,6 +407,7 @@ type ContextProviderName =
   | "diff"
   | "github"
   | "terminal"
+  | "locals"
   | "open"
   | "google"
   | "search"

@@ -19,6 +19,10 @@ export class ExtensionIde implements IDE {
     return await r("getTerminalContents");
   }
 
+  async getDebugLocals() {
+    return await r("getTerminalContents");
+  }
+
   async listWorkspaceContents(directory?: string): Promise<string[]> {
     return await r("listWorkspaceContents");
   }

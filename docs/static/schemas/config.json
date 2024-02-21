@@ -987,6 +987,7 @@
               "enum": [
                 "diff",
                 "terminal",
+                "locals",
                 "open",
                 "google",
                 "search",

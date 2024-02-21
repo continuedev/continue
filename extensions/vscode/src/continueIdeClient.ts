@@ -447,6 +447,31 @@ class IdeProtocolClient {
     return terminalContents;
   }
 
+  async getDebugLocals(threadIndex: number = 0): Promise<string> {
+    const session = vscode.debug.activeDebugSession;
+
+    if (!session) {
+      vscode.window.showWarningMessage(
+        "No active debug session found, therefore no debug context will be provided for the llm."
+      );
+      return "";
+    }
+
+    const threadsResponse = await session.customRequest("threads");
+    const traceResponse = await session.customRequest("stackTrace", {
+      threadId: threadsResponse.threads[threadIndex].threadId,
+      startFrame: 0,
+    });
+    const scopesResponse = await session.customRequest("scopes", {
+      frameId: traceResponse.stackFrames[0].id,
+    });
+    const variablesResponse = await session.customRequest("variables", {
+      variablesReference: scopesResponse.scopes[0].variablesReference,
+    });
+
+    return variablesResponse as string;
+  }
+
   private async _getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
     // Use the native git extension to get the branch name
     const extension = vscode.extensions.getExtension("vscode.git");

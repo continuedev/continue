@@ -5,6 +5,9 @@ import { Chunk } from "../index";
 import { getContinueGlobalPath } from "../util/paths";
 
 class FileSystemIde implements IDE {
+  async getDebugLocals(): Promise<string> {
+    throw new Error("Method not implemented.");
+  }
   async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
     throw new Error("Not implemented");
   }

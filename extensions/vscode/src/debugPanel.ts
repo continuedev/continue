@@ -203,6 +203,9 @@ export function getSidebarContent(
           respond(await ide.getTerminalContents());
           break;
         }
+        case "getDebugLocals": {
+          respond(await ide.getDebugLocals())
+        }
         case "listWorkspaceContents": {
           respond(await ide.listWorkspaceContents());
           break;

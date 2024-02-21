@@ -14,6 +14,7 @@ import OpenFilesContextProvider from "./OpenFilesContextProvider";
 import ProblemsContextProvider from "./ProblemsContextProvider";
 import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
+import LocalsProvider from "./LocalsProvider";
 import URLContextProvider from "./URLContextProvider";
 
 const Providers: (typeof BaseContextProvider)[] = [
@@ -22,6 +23,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   GitHubIssuesContextProvider,
   GoogleContextProvider,
   TerminalContextProvider,
+  LocalsProvider,
   URLContextProvider,
   OpenFilesContextProvider,
   HttpContextProvider,

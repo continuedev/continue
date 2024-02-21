@@ -31,6 +31,10 @@ class VsCodeIde implements IDE {
     return await ideProtocolClient.getTerminalContents(1);
   }
 
+  async getDebugLocals(): Promise<string> {
+    return await ideProtocolClient.getDebugLocals();
+  }
+
   async listWorkspaceContents(directory?: string): Promise<string[]> {
     if (directory) {
       return await ideProtocolClient.getDirectoryContents(directory, true);
