@@ -13,7 +13,7 @@ class GooglePalm extends BaseLLM {
   static providerName: ModelProvider = "google-palm";
 
   static defaultOptions: Partial<LLMOptions> = {
-    model: "chat-bison-001",
+    model: "gemini-pro",
     apiBase: "https://generativelanguage.googleapis.com",
   };
 
