@@ -369,14 +369,21 @@ function TipTapEditor(props: TipTapEditorProps) {
     };
   }, []);
 
+  
+
   // IDE event listeners
   useEffect(() => {
     if (!props.isMainInput) {
       return;
     }
-    if (editor && document.hasFocus()) {
+
+    if (editor) {
       editor.commands.focus();
+      setTimeout(() => {
+        editor.commands.blur();
+      }, 0); 
     }
+
     const handler = async (event: any) => {
       if (!editor) return;
 
