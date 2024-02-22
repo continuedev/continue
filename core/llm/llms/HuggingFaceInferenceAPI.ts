@@ -1,12 +1,9 @@
 import { BaseLLM } from "..";
-import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
+import { CompletionOptions, ModelProvider } from "../..";
 import { streamSse } from "../stream";
 
 class HuggingFaceInferenceAPI extends BaseLLM {
   static providerName: ModelProvider = "huggingface-inference-api";
-  static defaultOptions: Partial<LLMOptions> | undefined = {
-    apiBase: "https://api-inference.huggingface.co",
-  };
 
   private _convertArgs(options: CompletionOptions) {
     return {
@@ -21,7 +18,13 @@ class HuggingFaceInferenceAPI extends BaseLLM {
     prompt: string,
     options: CompletionOptions
   ): AsyncGenerator<string> {
-    const response = await this.fetch(`${this.apiBase}`, {
+    if (!this.apiBase) {
+      throw new Error(
+        "No API base URL provided. Please add the `apiBase` field in your config.json."
+      );
+    }
+
+    const response = await this.fetch(this.apiBase, {
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
         "Content-Type": "application/json",
