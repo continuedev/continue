@@ -353,6 +353,10 @@ function getTarget() {
   return `${os}-${arch}`;
 }
 
+function escapeSpacesInPath(p: string): string {
+  return p.replace(/ /g, "\\ ");
+}
+
 async function buildConfigTs() {
   if (!fs.existsSync(getConfigTsPath())) {
     return undefined;
@@ -364,7 +368,11 @@ async function buildConfigTs() {
         path.dirname(process.execPath) +
           `/esbuild${
             getTarget().startsWith("win32") ? ".exe" : ""
-          } ${getConfigTsPath()} --bundle --outfile=${getConfigJsPath()} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`
+          } ${escapeSpacesInPath(
+            getConfigTsPath()
+          )} --bundle --outfile=${escapeSpacesInPath(
+            getConfigJsPath()
+          )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`
       );
     } else {
       // Dynamic import esbuild so potentially disastrous errors can be caught
