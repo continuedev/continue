@@ -1,4 +1,5 @@
 import * as fs from "fs";
+import path from "path";
 import {
   BaseCompletionOptions,
   Config,
@@ -16,7 +17,6 @@ import {
   SlashCommand,
   SlashCommandDescription,
 } from "..";
-
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
@@ -36,6 +36,7 @@ import {
   getConfigTsPath,
   migrate,
 } from "../util/paths";
+const { execSync } = require("child_process");
 
 function loadSerializedConfig(
   workspaceConfigs: ContinueRcJson[],
@@ -323,24 +324,62 @@ function finalToBrowserConfig(
   };
 }
 
-async function buildConfigTs(browser: boolean) {
+function getTarget() {
+  const os =
+    {
+      aix: "linux",
+      darwin: "darwin",
+      freebsd: "linux",
+      linux: "linux",
+      openbsd: "linux",
+      sunos: "linux",
+      win32: "win32",
+    }[process.platform as string] ?? "linux";
+  const arch = {
+    arm: "arm64",
+    arm64: "arm64",
+    ia32: "x64",
+    loong64: "arm64",
+    mips: "arm64",
+    mipsel: "arm64",
+    ppc: "x64",
+    ppc64: "x64",
+    riscv64: "arm64",
+    s390: "x64",
+    s390x: "x64",
+    x64: "x64",
+  }[process.arch];
+
+  return `${os}-${arch}`;
+}
+
+async function buildConfigTs() {
   if (!fs.existsSync(getConfigTsPath())) {
     return undefined;
   }
 
   try {
-    // Dynamic import esbuild so potentially disastrous errors can be caught
-    const esbuild = require("esbuild");
+    if (process.env.IS_BINARY === "true") {
+      execSync(
+        path.dirname(process.execPath) +
+          `/esbuild${
+            getTarget().startsWith("win32") ? ".exe" : ""
+          } ${getConfigTsPath()} --bundle --outfile=${getConfigJsPath()} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`
+      );
+    } else {
+      // Dynamic import esbuild so potentially disastrous errors can be caught
+      const esbuild = require("esbuild");
 
-    await esbuild.build({
-      entryPoints: [getConfigTsPath()],
-      bundle: true,
-      platform: browser ? "browser" : "node",
-      format: browser ? "esm" : "cjs",
-      outfile: getConfigJsPath(!browser),
-      external: ["fetch", "fs", "path", "os", "child_process"],
-      sourcemap: true,
-    });
+      await esbuild.build({
+        entryPoints: [getConfigTsPath()],
+        bundle: true,
+        platform: "node",
+        format: "cjs",
+        outfile: getConfigJsPath(),
+        external: ["fetch", "fs", "path", "os", "child_process"],
+        sourcemap: true,
+      });
+    }
   } catch (e) {
     console.log(
       "Build error. Please check your ~/.continue/config.ts file: " + e
@@ -348,10 +387,10 @@ async function buildConfigTs(browser: boolean) {
     return undefined;
   }
 
-  if (!fs.existsSync(getConfigJsPath(!browser))) {
+  if (!fs.existsSync(getConfigJsPath())) {
     return undefined;
   }
-  return fs.readFileSync(getConfigJsPath(!browser), "utf8");
+  return fs.readFileSync(getConfigJsPath(), "utf8");
 }
 
 async function loadFullConfigNode(
@@ -362,11 +401,11 @@ async function loadFullConfigNode(
   let serialized = loadSerializedConfig(workspaceConfigs, ideType);
   let intermediate = serializedToIntermediateConfig(serialized);
 
-  const configJsContents = await buildConfigTs(false);
+  const configJsContents = await buildConfigTs();
   if (configJsContents) {
     try {
       // Try config.ts first
-      const configJsPath = getConfigJsPath(true);
+      const configJsPath = getConfigJsPath();
       const module = await require(configJsPath);
       delete require.cache[require.resolve(configJsPath)];
       if (!module.modifyConfig) {

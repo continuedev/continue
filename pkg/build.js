@@ -34,8 +34,8 @@ const targetToLanceDb = {
 
   // Copy node_modules for pre-built binaries
   const DYNAMIC_IMPORTS = [
-    "esbuild",
-    "@esbuild",
+    // "esbuild",
+    // "@esbuild",
     // // "@lancedb",
     // "posthog-node",
     // "@octokit",
@@ -84,36 +84,13 @@ const targetToLanceDb = {
     }
   }
 
-  console.log("[info] Downloading prebuilt esbuild...");
-  const esbuildDir = "out/node_modules/@esbuild";
-  for (const target of targets) {
-    const targetDir = `${esbuildDir}/${target}`;
-
-    console.log(`[info] Downloading ${target}...`);
-    fs.mkdirSync(`${targetDir}/bin`, {
-      recursive: true,
-    });
-    execSync(
-      `curl -o ${esbuildDir}/esbuild.tgz https://registry.npmjs.org/@esbuild/${target}/-/${target}-0.19.11.tgz`
-    );
-    execSync(`tar -xzvf ${esbuildDir}/esbuild.tgz -C ${esbuildDir}`);
-    await new Promise((resolve) =>
-      ncp(`${esbuildDir}/package`, targetDir, resolve)
-    );
-    fs.rmSync(`${esbuildDir}/esbuild.tgz`);
-    fs.rmSync(`${esbuildDir}/package`, {
-      force: true,
-      recursive: true,
-    });
-  }
-
   console.log("[info] Building with esbuild...");
   // Bundles the extension into one file
   await esbuild.build({
     entryPoints: ["src/index.ts"],
     bundle: true,
     outfile: esbuildOutputFile,
-    external: DYNAMIC_IMPORTS,
+    external: ["esbuild", ...DYNAMIC_IMPORTS],
     format: "cjs",
     platform: "node",
     sourcemap: true,
@@ -134,25 +111,43 @@ const targetToLanceDb = {
 
   console.log("[info] Building binaries with pkg...");
   for (const target of targets) {
+    const targetDir = `bin/${target}`;
     console.log(`[info] Building ${target}...`);
     execSync(
-      `npx pkg --no-bytecode --public-packages "*" --public pkgJson/${target} --out-path bin/${target}`
+      `npx pkg --no-bytecode --public-packages "*" --public pkgJson/${target} --out-path ${targetDir}`
     );
 
     // Download and unzip prebuilt sqlite3 binary for the target
     const downloadUrl = `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${
       target === "win32-arm64" ? "win32-ia32" : target
     }.tar.gz`;
-    execSync(`curl -L -o bin/${target}/build.tar.gz ${downloadUrl}`);
-    execSync(`cd bin/${target} && tar -xvzf build.tar.gz`);
+    execSync(`curl -L -o ${targetDir}/build.tar.gz ${downloadUrl}`);
+    execSync(`cd ${targetDir} && tar -xvzf build.tar.gz`);
     fs.copyFileSync(
-      `bin/${target}/build/Release/node_sqlite3.node`,
-      `bin/${target}/node_sqlite3.node`
+      `${targetDir}/build/Release/node_sqlite3.node`,
+      `${targetDir}/node_sqlite3.node`
     );
-    fs.unlinkSync(`bin/${target}/build.tar.gz`);
-    fs.rmSync(`bin/${target}/build`, {
+    fs.unlinkSync(`${targetDir}/build.tar.gz`);
+    fs.rmSync(`${targetDir}/build`, {
       recursive: true,
       force: true,
+    });
+
+    // Download and unzip prebuilt esbuild binary for the target
+    console.log(`[info] Downloading esbuild for ${target}...`);
+    execSync(
+      `curl -o ${targetDir}/esbuild.tgz https://registry.npmjs.org/@esbuild/${target}/-/${target}-0.19.11.tgz`
+    );
+    execSync(`tar -xzvf ${targetDir}/esbuild.tgz -C ${targetDir}`);
+    if (target.startsWith("win32")) {
+      fs.cpSync(`${targetDir}/package/esbuild.exe`, `${targetDir}/esbuild.exe`);
+    } else {
+      fs.cpSync(`${targetDir}/package/bin/esbuild`, `${targetDir}/esbuild`);
+    }
+    fs.rmSync(`${targetDir}/esbuild.tgz`);
+    fs.rmSync(`${targetDir}/package`, {
+      force: true,
+      recursive: true,
     });
   }
   // execSync(
