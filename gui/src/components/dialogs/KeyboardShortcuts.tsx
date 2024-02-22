@@ -57,7 +57,7 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ M",
     windows: "⌃ M",
-    description: "Ask about Highlighted Code",
+    description: "Select Code + New Session",
   },
   {
     mac: "⌘ ⇧ L",
@@ -67,7 +67,7 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ ⇧ M",
     windows: "⌃ ⇧ M",
-    description: "Ask Follow-Up about Highlighted Code",
+    description: "Select Code",
   },
   {
     mac: "⌘ ⇧ ⏎",
@@ -110,12 +110,12 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ J",
     windows: "⌃ J",
-    description: "Ask about Highlighted Code",
+    description: "Select Code + New Session",
   },
   {
     mac: "⌘ ⇧ J",
     windows: "⌃ ⇧ J",
-    description: "Ask Follow-Up about Highlighted Code",
+    description: "Select Code",
   },
   {
     mac: "⌘ ⇧ ⏎",
