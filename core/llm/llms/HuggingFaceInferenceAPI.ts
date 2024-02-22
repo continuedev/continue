@@ -35,7 +35,12 @@ class HuggingFaceInferenceAPI extends BaseLLM {
       }),
     });
     for await (const chunk of streamSse(response)) {
-      yield chunk?.token?.text || "";
+      let text = chunk?.token?.text ?? "";
+      if (text.endsWith("</s>")) {
+        yield text.slice(0, -5);
+      } else {
+        yield text;
+      }
     }
   }
 }
