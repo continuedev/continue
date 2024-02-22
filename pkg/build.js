@@ -34,8 +34,8 @@ const targetToLanceDb = {
 
   // Copy node_modules for pre-built binaries
   const DYNAMIC_IMPORTS = [
-    // "esbuild",
-    // "@esbuild",
+    "esbuild",
+    "@esbuild",
     // // "@lancedb",
     // "posthog-node",
     // "@octokit",
@@ -82,6 +82,29 @@ const targetToLanceDb = {
       console.log(`[info] Downloading ${target}...`);
       execSync(`npm install -f ${targetToLanceDb[target]} --no-save`);
     }
+  }
+
+  console.log("[info] Downloading prebuilt esbuild...");
+  const esbuildDir = "out/node_modules/@esbuild";
+  for (const target of targets) {
+    const targetDir = `${esbuildDir}/${target}`;
+
+    console.log(`[info] Downloading ${target}...`);
+    fs.mkdirSync(`${targetDir}/bin`, {
+      recursive: true,
+    });
+    execSync(
+      `curl -o ${esbuildDir}/esbuild.tgz https://registry.npmjs.org/@esbuild/${target}/-/${target}-0.19.11.tgz`
+    );
+    execSync(`tar -xzvf ${esbuildDir}/esbuild.tgz -C ${esbuildDir}`);
+    await new Promise((resolve) =>
+      ncp(`${esbuildDir}/package`, targetDir, resolve)
+    );
+    fs.rmSync(`${esbuildDir}/esbuild.tgz`);
+    fs.rmSync(`${esbuildDir}/package`, {
+      force: true,
+      recursive: true,
+    });
   }
 
   console.log("[info] Building with esbuild...");
