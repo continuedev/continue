@@ -8,6 +8,15 @@ class HuggingFaceInferenceAPI extends BaseLLM {
     apiBase: "https://api-inference.huggingface.co",
   };
 
+  private _convertArgs(options: CompletionOptions) {
+    return {
+      max_new_tokens: options.maxTokens ?? 1024,
+      temperature: options.temperature,
+      top_k: options.topK,
+      top_p: options.topP,
+    };
+  }
+
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions
@@ -22,6 +31,7 @@ class HuggingFaceInferenceAPI extends BaseLLM {
       body: JSON.stringify({
         inputs: prompt,
         stream: true,
+        parameters: this._convertArgs(options),
       }),
     });
     for await (const chunk of streamSse(response)) {

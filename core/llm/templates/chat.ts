@@ -1,14 +1,13 @@
 import { ChatMessage } from "../..";
 import { stripImages } from "../countTokens";
 
-
 /**
  * @description Template for LLAMA2 messages:
- * 
+ *
  * <s>[INST] <<SYS>>
  * {{ system_prompt }}
  * <</SYS>>
- * 
+ *
  * {{ user_msg_1 }} [/INST] {{ model_answer_1 }} </s><s>[INST] {{ user_msg_2 }} [/INST] {{ model_answer_2 }} </s><s>[INST] {{ user_msg_3 }} [/INST]
  */
 function llama2TemplateMessages(msgs: ChatMessage[]): string {
@@ -131,6 +130,9 @@ function templateAlpacaMessages(msgs: ChatMessage[]): string {
   if (msgs[0].role === "system") {
     prompt += `${msgs[0].content}\n\n`;
     msgs.shift();
+  } else {
+    prompt +=
+      "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n";
   }
 
   for (const msg of msgs) {

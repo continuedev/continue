@@ -303,7 +303,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["huggingface-tgi"]
+                "enum": ["huggingface-tgi", "huggingface-inference-api"]
               }
             }
           },

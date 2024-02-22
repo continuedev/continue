@@ -375,7 +375,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       return;
     }
 
-    if (editor && document.hasFocus()) {
+    if (editor && !document.hasFocus()) {
       editor.commands.focus();
       setTimeout(() => {
         // https://github.com/continuedev/continue/pull/881

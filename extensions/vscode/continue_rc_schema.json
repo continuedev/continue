@@ -317,7 +317,8 @@
             "properties": {
               "provider": {
                 "enum": [
-                  "huggingface-tgi"
+                  "huggingface-tgi",
+                  "huggingface-inference-api"
                 ]
               }
             }
