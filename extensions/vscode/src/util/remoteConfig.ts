@@ -19,7 +19,11 @@ export async function setupRemoteConfigSync() {
     60
   );
 
-  if (userToken === null || remoteConfigServerUrl === null) {
+  if (
+    userToken === null ||
+    remoteConfigServerUrl === null ||
+    remoteConfigServerUrl.trim() === ""
+  ) {
     return;
   }
   if (!URL.canParse(remoteConfigServerUrl)) {
