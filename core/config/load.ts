@@ -365,7 +365,7 @@ async function buildConfigTs() {
   try {
     if (process.env.IS_BINARY === "true") {
       execSync(
-        path.dirname(process.execPath) +
+        escapeSpacesInPath(path.dirname(process.execPath)) +
           `/esbuild${
             getTarget().startsWith("win32") ? ".exe" : ""
           } ${escapeSpacesInPath(
