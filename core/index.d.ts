@@ -1,4 +1,21 @@
-import { BrowserSerializedContinueConfig } from "./config/load";
+declare global {
+  interface Window {
+    ide?: "vscode";
+    windowId: string;
+    serverUrl: string;
+    vscMachineId: string;
+    vscMediaUrl: string;
+    fullColorTheme?: {
+      rules?: {
+        token?: string;
+        foreground?: string;
+      }[];
+    };
+    colorThemeName?: string;
+    workspacePaths?: string[];
+    postIntellijMessage?: (type: string, data: any) => void;
+  }
+}
 
 export interface ChunkWithoutID {
   content: string;
@@ -78,6 +95,7 @@ export interface ContextProviderDescription {
   title: string;
   displayTitle: string;
   description: string;
+  renderInlineAs?: string;
   type: ContextProviderType;
 }
 
@@ -97,6 +115,7 @@ export interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
+  renderInlineAs?: string;
   type?: ContextProviderType;
   getContextItems(
     query: string,
@@ -395,7 +414,8 @@ type ContextProviderName =
   | "http"
   | "codebase"
   | "problems"
-  | "folder";
+  | "folder"
+  | "jira";
 
 type TemplateType =
   | "llama2"
@@ -441,7 +461,7 @@ export type ModelName =
   | "gpt-4"
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
-  | "gpt-4-0125-preview"
+  | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
   // Open Source
   | "mistral-7b"
@@ -484,6 +504,7 @@ export interface RequestOptions {
   caBundlePath?: string | string[];
   proxy?: string;
   headers?: { [key: string]: string };
+  extraBodyProperties?: { [key: string]: any };
 }
 
 export interface StepWithParams {
@@ -518,6 +539,7 @@ interface BaseCompletionOptions {
   mirostat?: number;
   stop?: string[];
   maxTokens?: number;
+  numThreads?: number;
 }
 
 export interface ModelDescription {
@@ -578,6 +600,12 @@ export interface SerializedContinueConfig {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
 }
 
+export type ConfigMergeType = "merge" | "overwrite";
+
+export type ContinueRcJson = Partial<SerializedContinueConfig> & {
+  mergeBehavior: ConfigMergeType;
+};
+
 export interface Config {
   /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://continue.dev/docs/telemetry */
   allowAnonymousTelemetry?: boolean;
@@ -623,4 +651,17 @@ export interface ContinueConfig {
   embeddingsProvider: EmbeddingsProvider;
   tabAutocompleteModel?: ILLM;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+}
+
+export interface BrowserSerializedContinueConfig {
+  allowAnonymousTelemetry?: boolean;
+  models: ModelDescription[];
+  systemMessage?: string;
+  completionOptions?: BaseCompletionOptions;
+  slashCommands?: SlashCommandDescription[];
+  contextProviders?: ContextProviderDescription[];
+  disableIndexing?: boolean;
+  disableSessionTitles?: boolean;
+  userToken?: string;
+  embeddingsProvider?: string;
 }

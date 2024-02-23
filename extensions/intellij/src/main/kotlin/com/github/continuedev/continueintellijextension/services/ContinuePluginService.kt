@@ -20,7 +20,7 @@ class ContinuePluginService(project: Project) : Disposable, DumbAware {
     var continuePluginWindow: ContinuePluginToolWindowFactory.ContinuePluginWindow? = null
 
     var ideProtocolClient: IdeProtocolClient? = null
-    var worksapcePaths: Array<String>? = null
+    var workspacePaths: Array<String>? = null
     var windowId: String = UUID.randomUUID().toString()
 
     override fun dispose() {

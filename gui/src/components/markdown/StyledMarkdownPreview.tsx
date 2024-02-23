@@ -50,7 +50,7 @@ const StyledMarkdown = styled.div<{
   }
 
   code:not(pre > code) {
-    font-family: monospace;
+    font-family: var(--vscode-editor-font-family);
     color: #f78383;
   }
 

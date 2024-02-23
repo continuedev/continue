@@ -112,6 +112,48 @@ Type '@issue' to reference the conversation in a GitHub issue. Make sure to incl
 }
 ```
 
+### Jira Issues
+
+Type '@jira' to reference the conversation in a Jira issue. Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens).
+
+```json
+{
+  "name": "issue",
+  "params": {
+    "domain": "company.atlassian.net",
+    "email": "someone@somewhere.com",
+    "token ": "ATATT..."
+  }
+}
+```
+
+#### Issue Query
+
+By default, the following query will be used to find issues:
+
+```jql
+assignee = currentUser() AND resolution = Unresolved order by updated DESC
+```
+
+You can override this query by setting the `issueQuery` parameter.
+
+
+### Code Outline
+
+Type '@outline' to reference the outline of all currently open files. The outline of a files consists of only the function and class definitions in the file. Supported file extensions are '.js', '.mjs', '.go', '.c', '.cc', '.cs', '.cpp', '.el', '.ex', '.elm', '.java', '.ml', '.php', '.ql', '.rb', '.rs', '.ts'
+
+```json
+{ "name": "outline" }
+```
+
+### Code Highlights
+
+Type '@highlights' to reference the 'highlights' from all currently open files. The highlights are computed using Paul Gauthier's so-called ['repomap'](https://aider.chat/docs/repomap.html) technique in [Aider Chat](https://github.com/paul-gauthier/aider). Supported file extensions are the same as for '@Outline' (behind the scenes, we use the corresponding tree-sitter grammars for language parsing).
+
+```json
+{ "name": "highlights" }
+```
+
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new ContextProvider.

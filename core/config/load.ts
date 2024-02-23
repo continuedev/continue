@@ -1,10 +1,10 @@
 import * as fs from "fs";
 import {
-  BaseCompletionOptions,
+  BrowserSerializedContinueConfig,
   Config,
-  ContextProviderDescription,
   ContextProviderWithParams,
   ContinueConfig,
+  ContinueRcJson,
   CustomContextProvider,
   CustomLLM,
   EmbeddingsProviderDescription,
@@ -12,7 +12,6 @@ import {
   ModelDescription,
   SerializedContinueConfig,
   SlashCommand,
-  SlashCommandDescription,
 } from "..";
 
 import {
@@ -36,7 +35,7 @@ import {
 } from "../util/paths";
 
 function loadSerializedConfig(
-  workspaceConfigs: Partial<SerializedContinueConfig>[]
+  workspaceConfigs: ContinueRcJson[]
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath();
   let contents = fs.readFileSync(configPath, "utf8");
@@ -116,7 +115,7 @@ function loadSerializedConfig(
   });
 
   for (const workspaceConfig of workspaceConfigs) {
-    config = mergeJson(config, workspaceConfig);
+    config = mergeJson(config, workspaceConfig, workspaceConfig.mergeBehavior);
   }
 
   return config;
@@ -274,19 +273,6 @@ async function intermediateToFinalConfig(
   };
 }
 
-interface BrowserSerializedContinueConfig {
-  allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
-  systemMessage?: string;
-  completionOptions?: BaseCompletionOptions;
-  slashCommands?: SlashCommandDescription[];
-  contextProviders?: ContextProviderDescription[];
-  disableIndexing?: boolean;
-  disableSessionTitles?: boolean;
-  userToken?: string;
-  embeddingsProvider?: string;
-}
-
 function finalToBrowserConfig(
   final: ContinueConfig
 ): BrowserSerializedContinueConfig {
@@ -353,7 +339,7 @@ async function buildConfigTs(browser: boolean) {
 
 async function loadFullConfigNode(
   readFile: (filepath: string) => Promise<string>,
-  workspaceConfigs: Partial<SerializedContinueConfig>[]
+  workspaceConfigs: ContinueRcJson[]
 ): Promise<ContinueConfig> {
   let serialized = loadSerializedConfig(workspaceConfigs);
   let intermediate = serializedToIntermediateConfig(serialized);

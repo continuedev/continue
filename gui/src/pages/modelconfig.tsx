@@ -22,6 +22,7 @@ import {
   PROVIDER_INFO,
   updatedObj,
 } from "../util/modelData";
+import { useNavigationListener } from "../hooks/useNavigationListener";
 
 const GridDiv = styled.div`
   display: grid;
@@ -57,6 +58,7 @@ export const CustomModelButton = styled.div<{ disabled: boolean }>`
 `;
 
 function ModelConfig() {
+  useNavigationListener();
   const formMethods = useForm();
   const { modelName } = useParams();
 
@@ -70,7 +72,6 @@ function ModelConfig() {
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const vscMediaUrl = (window as any).vscMediaUrl;
 
   const disableModelCards = useCallback(() => {
     return (
@@ -108,9 +109,9 @@ function ModelConfig() {
 
         <div className="px-2">
           <div style={{ display: "flex", alignItems: "center" }}>
-            {vscMediaUrl && modelInfo?.icon && (
+            {window.vscMediaUrl && modelInfo?.icon && (
               <img
-                src={`${vscMediaUrl}/logos/${modelInfo?.icon}`}
+                src={`${window.vscMediaUrl}/logos/${modelInfo?.icon}`}
                 height="24px"
                 style={{ marginRight: "10px" }}
               />

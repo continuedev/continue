@@ -19,13 +19,27 @@ export class VerticalPerLineDiffHandler {
   private currentLineIndex: number;
   private cancelled: boolean = false;
 
+  public get range(): vscode.Range {
+    const startLine = Math.min(this.startLine, this.endLine);
+    const endLine = Math.max(this.startLine, this.endLine);
+    return new vscode.Range(startLine, 0, endLine, Number.MAX_SAFE_INTEGER);
+  }
+
   private newLinesAdded: number = 0;
 
-  constructor(startLine: number, endLine: number, editor: vscode.TextEditor) {
+  public input?: string;
+
+  constructor(
+    startLine: number,
+    endLine: number,
+    editor: vscode.TextEditor,
+    input?: string
+  ) {
     this.currentLineIndex = startLine;
     this.startLine = startLine;
     this.endLine = endLine;
     this.editor = editor;
+    this.input = input;
 
     this.redDecorationManager = new DecorationTypeRangeManager(
       redDecorationType,
@@ -161,6 +175,11 @@ export class VerticalPerLineDiffHandler {
   }
 
   clear(accept: boolean) {
+    vscode.commands.executeCommand(
+      "setContext",
+      "continue.streamingDiff",
+      false
+    );
     const rangesToDelete = accept
       ? this.redDecorationManager.getRanges()
       : this.greenDecorationManager.getRanges();

@@ -1,4 +1,4 @@
-import { ContinueConfig, ILLM, SerializedContinueConfig } from "core";
+import { ContinueConfig, ContinueRcJson, ILLM } from "core";
 import defaultConfig from "core/config/default";
 import {
   finalToBrowserConfig,
@@ -35,7 +35,7 @@ class VsCodeConfigHandler {
   private async _getWorkspaceConfigs() {
     const workspaceDirs =
       vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [];
-    const configs: Partial<SerializedContinueConfig>[] = [];
+    const configs: ContinueRcJson[] = [];
     for (const workspaceDir of workspaceDirs) {
       const files = await vscode.workspace.fs.readDirectory(workspaceDir);
       for (const [filename, type] of files) {
@@ -55,7 +55,7 @@ class VsCodeConfigHandler {
       if (this.savedConfig) {
         return this.savedConfig;
       }
-      let workspaceConfigs: any[] = [];
+      let workspaceConfigs: ContinueRcJson[] = [];
       try {
         workspaceConfigs = await this._getWorkspaceConfigs();
       } catch (e) {
@@ -148,8 +148,25 @@ function setupLlm(llm: ILLM): ILLM {
       headers[key] = value as string;
     }
 
+    let updatedBody: string | undefined = undefined;
+    try {
+      if (
+        llm.requestOptions?.extraBodyProperties &&
+        typeof init.body === "string"
+      ) {
+        const parsedBody = JSON.parse(init.body);
+        updatedBody = JSON.stringify({
+          ...parsedBody,
+          ...llm.requestOptions.extraBodyProperties,
+        });
+      }
+    } catch (e) {
+      console.log("Unable to parse HTTP request body: ", e);
+    }
+
     const resp = await fetch(input, {
       ...init,
+      body: updatedBody ?? init.body,
       headers,
       agent,
     });

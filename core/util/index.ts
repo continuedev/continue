@@ -37,7 +37,7 @@ export function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
 
   if (!(url.startsWith("http://") || url.startsWith("https://"))) {
     // Relative URL
-    const fullUrl = `${(window as any).vscMediaUrl}/${url}`;
+    const fullUrl = `${window.vscMediaUrl}/${url}`;
     return (window as any)._fetch(fullUrl, init);
   }
 

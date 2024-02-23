@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.58",
+  "version": "0.9.71",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -65,7 +65,7 @@
         "continue.enableTabAutocomplete": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Enable Continue's experimental tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://continue.dev/docs/walkthroughs/tab-autocomplete)"
+          "markdownDescription": "Enable Continue's experimental tab autocomplete feature (pre-release only). Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://continue.dev/docs/walkthroughs/tab-autocomplete)"
         },
         "continue.remoteConfigServerUrl": {
           "type": "string",
@@ -212,6 +212,12 @@
         "command": "continue.rejectDiff",
         "mac": "shift+cmd+backspace",
         "key": "shift+ctrl+backspace"
+      },
+      {
+        "command": "continue.rejectDiff",
+        "mac": "cmd+z",
+        "key": "ctrl+z",
+        "when": "continue.streamingDiff"
       },
       {
         "command": "continue.quickEdit",
@@ -412,7 +418,7 @@
       },
       {
         "fileMatch": ".continuerc.json",
-        "url": "./config_schema.json"
+        "url": "./continue_rc_schema.json"
       }
     ]
   },

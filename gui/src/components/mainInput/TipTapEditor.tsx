@@ -374,9 +374,15 @@ function TipTapEditor(props: TipTapEditorProps) {
     if (!props.isMainInput) {
       return;
     }
-    if (editor && document.hasFocus()) {
+
+    if (editor && !document.hasFocus()) {
       editor.commands.focus();
+      // setTimeout(() => {
+      //   // https://github.com/continuedev/continue/pull/881
+      //   editor.commands.blur();
+      // }, 0);
     }
+
     const handler = async (event: any) => {
       if (!editor) return;
 

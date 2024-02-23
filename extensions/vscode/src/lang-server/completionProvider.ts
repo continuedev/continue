@@ -273,15 +273,16 @@ async function getTabCompletion(
       Math.min(pos.line + 1, document.lineCount - 1)
     ).text;
     const clipboardText = await vscode.env.clipboard.readText();
-    const { prefix, suffix } = await constructAutocompletePrompt(
-      document.uri.toString(),
-      fullPrefix,
-      fullSuffix,
-      clipboardText,
-      lang,
-      getDefinition,
-      options
-    );
+    const { prefix, suffix, completeMultiline } =
+      await constructAutocompletePrompt(
+        document.uri.toString(),
+        fullPrefix,
+        fullSuffix,
+        clipboardText,
+        lang,
+        getDefinition,
+        options
+      );
 
     const { template, completionOptions } = options.template
       ? { template: options.template, completionOptions: {} }
@@ -310,7 +311,7 @@ async function getTabCompletion(
         "```",
         ...lang.stopWords,
       ];
-      if (options.disableMultiLineCompletions) {
+      if (options.disableMultiLineCompletions || !completeMultiline) {
         stop.unshift("\n");
       }
       let generator = GeneratorReuseManager.getGenerator(prefix, () =>

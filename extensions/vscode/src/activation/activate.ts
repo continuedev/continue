@@ -15,7 +15,7 @@ import {
 } from "../lang-server/completionProvider";
 import { vsCodeIndexCodebase } from "../util/indexCodebase";
 import { setupRemoteConfigSync } from "../util/remoteConfig";
-import { getExtensionVersion, getPlatform } from "../util/util";
+import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
 
@@ -149,46 +149,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   //     }
   //   });
   // })();
-
-  if (getPlatform() === "mac") {
-    // Icon is too large and distracting on other platforms
-    try {
-      // Add icon theme for .continueignore
-      const iconTheme = vscode.workspace
-        .getConfiguration("workbench")
-        .get("iconTheme");
-
-      let found = false;
-      for (let i = vscode.extensions.all.length - 1; i >= 0; i--) {
-        if (found) {
-          break;
-        }
-        const extension = vscode.extensions.all[i];
-        if (extension.packageJSON?.contributes?.iconThemes?.length > 0) {
-          for (const theme of extension.packageJSON.contributes.iconThemes) {
-            if (theme.id === iconTheme) {
-              const themePath = path.join(extension.extensionPath, theme.path);
-              const themeJson = JSON.parse(
-                fs.readFileSync(themePath).toString()
-              );
-              themeJson.iconDefinitions["_f_continue"] = {
-                fontCharacter: "⚙️",
-                fontColor: "#fff",
-              };
-              themeJson.fileNames[".continueignore"] = "_f_continue";
-              themeJson.fileNames[".continuerc.json"] = "_f_continue";
-              themeJson.fileNames["config.json"] = "_f_continue";
-              fs.writeFileSync(themePath, JSON.stringify(themeJson));
-              found = true;
-              break;
-            }
-          }
-        }
-      }
-    } catch (e) {
-      console.log("Error adding .continueignore file icon: ", e);
-    }
-  }
 
   // Load Continue configuration
   if (!context.globalState.get("hasBeenInstalled")) {

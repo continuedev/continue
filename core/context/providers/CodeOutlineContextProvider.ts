@@ -6,12 +6,12 @@ import {
 } from "../..";
 import { getBasename } from "../../util";
 
-import { getFileOutlineHighlights } from "llm-code-highlighter/dist/index.continue";
+import { getOutlines } from "llm-code-highlighter/dist/index.continue";
 
 class CodeOutlineContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
-    title: "outlines",
-    displayTitle: "Outlines",
+    title: "outline",
+    displayTitle: "Outline",
     description: "Definition lines only (from open files)",
     type: "normal",
   };
@@ -32,7 +32,7 @@ class CodeOutlineContextProvider extends BaseContextProvider {
           };
         })
       );
-    const outlines = await getFileOutlineHighlights(
+    const outlines = await getOutlines(
       allFiles
         .filter((file) => file.content.length > 0)
         .map((file) => {

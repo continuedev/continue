@@ -8,6 +8,7 @@ import {
   PersistedSessionInfo,
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
+import { stripImages } from "core/llm/countTokens";
 import { v4 } from "uuid";
 import { RootStore } from "../store";
 
@@ -274,6 +275,22 @@ export const stateSlice = createSlice({
         };
       }
     ) => {
+      if (payload.index >= state.history.length) {
+        state.history.push({
+          message: payload.message,
+          editorState: {
+            type: "doc",
+            content: stripImages(payload.message.content)
+              .split("\n")
+              .map((line) => ({
+                type: "paragraph",
+                content: line === "" ? [] : [{ type: "text", text: line }],
+              })),
+          },
+          contextItems: [],
+        });
+        return;
+      }
       state.history[payload.index].message = payload.message;
       state.history[payload.index].contextItems = payload.contextItems || [];
     },

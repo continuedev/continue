@@ -9,6 +9,7 @@ import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import useHistory from "../hooks/useHistory";
 import { newSession } from "../redux/slices/stateSlice";
 import { getFontSize } from "../util";
+import { useNavigationListener } from "../hooks/useNavigationListener";
 
 const Tr = styled.tr`
   &:hover {
@@ -63,8 +64,8 @@ function TableRow({
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const apiUrl = (window as any).serverUrl;
-  const workspacePaths = (window as any).workspacePaths || [""];
+  const apiUrl = window.serverUrl;
+  const workspacePaths = window.workspacePaths || [""];
   const [hovered, setHovered] = useState(false);
 
   const { saveSession, deleteSession, loadSession } = useHistory(dispatch);
@@ -125,13 +126,15 @@ function lastPartOfPath(path: string): string {
 }
 
 function History() {
+  useNavigationListener();
   const navigate = useNavigate();
+  
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [filteredAndSortedSessions, setFilteredAndSortedSessions] = useState<
     SessionInfo[]
   >([]);
-  const apiUrl = (window as any).serverUrl;
-  const workspacePaths = (window as any).workspacePaths || [];
+  const apiUrl = window.serverUrl;
+  const workspacePaths = window.workspacePaths || [];
 
   const deleteSessionInUI = async (sessionId: string) => {
     setSessions((prev) =>

@@ -1,6 +1,5 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { v4 as uuidv4 } from "uuid";
-import * as lancedb from "vectordb";
 import { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "..";
 import { MAX_CHUNK_SIZE } from "../llm/constants";
 import { getBasename } from "../util";
@@ -134,6 +133,7 @@ export class LanceDbIndex implements CodebaseIndex {
       resultType: IndexResultType
     ) => void
   ): AsyncGenerator<IndexingProgressUpdate> {
+    const lancedb = await import("vectordb");
     const tableName = this.tableNameForTag(tag);
     const db = await lancedb.connect(getLanceDbPath());
 
@@ -141,7 +141,7 @@ export class LanceDbIndex implements CodebaseIndex {
     await this.createSqliteCacheTable(sqlite);
 
     // Compute
-    let table: lancedb.Table | undefined = undefined;
+    let table = undefined;
     let needToCreateTable = true;
     const existingTables = await db.tableNames();
     let computedRows: LanceDbRow[] = [];
@@ -243,7 +243,7 @@ export class LanceDbIndex implements CodebaseIndex {
     n: number,
     directory: string | undefined,
     vector: number[],
-    db: lancedb.Connection
+    db: any /// lancedb.Connection
   ): Promise<LanceDbRow[]> {
     const tableName = this.tableNameForTag(tag);
     const tableNames = await db.tableNames();
@@ -269,6 +269,10 @@ export class LanceDbIndex implements CodebaseIndex {
     n: number,
     directory: string | undefined
   ): Promise<Chunk[]> {
+    const lancedb = await import("vectordb");
+    if (!lancedb.connect) {
+      throw new Error("LanceDB failed to load a native module");
+    }
     const [vector] = await this.embeddingsProvider.embed([text]);
     const db = await lancedb.connect(getLanceDbPath());
 

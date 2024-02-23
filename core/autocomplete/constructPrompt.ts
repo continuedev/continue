@@ -29,11 +29,10 @@ function formatExternalSnippet(
   return lines.join("\n");
 }
 
-async function getTreePathAtCursor(
+async function getAst(
   filepath: string,
-  fileContents: string,
-  cursorIndex: number
-): Promise<Parser.SyntaxNode[] | undefined> {
+  fileContents: string
+): Promise<Parser.Tree | undefined> {
   const parser = await getParserForFile(filepath);
 
   if (!parser) {
@@ -41,6 +40,13 @@ async function getTreePathAtCursor(
   }
 
   const ast = parser.parse(fileContents);
+  return ast;
+}
+
+async function getTreePathAtCursor(
+  ast: Parser.Tree,
+  cursorIndex: number
+): Promise<Parser.SyntaxNode[] | undefined> {
   const path = [ast.rootNode];
   while (path[path.length - 1].childCount > 0) {
     let foundChild = false;
@@ -65,6 +71,35 @@ export interface AutocompleteSnippet {
   content: string;
 }
 
+const BLOCK_TYPES = ["body", "statement_block"];
+
+function shouldCompleteMultiline(
+  treePath: Parser.SyntaxNode[],
+  cursorLine: number
+): boolean {
+  // If at the base of the file, do multiline
+  if (treePath.length === 1) {
+    return true;
+  }
+
+  // If at the first line of an otherwise empty funtion body, do multiline
+  for (let i = treePath.length - 1; i >= 0; i--) {
+    const node = treePath[i];
+    if (
+      BLOCK_TYPES.includes(node.type) &&
+      Math.abs(node.startPosition.row - cursorLine) <= 1
+    ) {
+      let text = node.text;
+      text = text.slice(text.indexOf("{") + 1);
+      text = text.slice(0, text.lastIndexOf("}"));
+      text = text.trim();
+      return text.split("\n").length === 1;
+    }
+  }
+
+  return false;
+}
+
 export async function constructAutocompletePrompt(
   filepath: string,
   fullPrefix: string,
@@ -77,18 +112,30 @@ export async function constructAutocompletePrompt(
     character: number
   ) => Promise<AutocompleteSnippet | undefined>,
   options: TabAutocompleteOptions
-): Promise<{ prefix: string; suffix: string; useFim: boolean }> {
+): Promise<{
+  prefix: string;
+  suffix: string;
+  useFim: boolean;
+  completeMultiline: boolean;
+}> {
   // Find external snippets
   const snippets: AutocompleteSnippet[] = [];
 
-  const treePath = await getTreePathAtCursor(
-    filepath,
-    fullPrefix + fullSuffix,
-    fullPrefix.length
-  );
+  let treePath: Parser.SyntaxNode[] | undefined;
+  try {
+    const ast = await getAst(filepath, fullPrefix + fullSuffix);
+    if (!ast) {
+      throw new Error(`AST undefined for ${filepath}`);
+    }
 
-  // Get function def when inside call expression
+    treePath = await getTreePathAtCursor(ast, fullPrefix.length);
+  } catch (e) {
+    console.error("Failed to parse AST", e);
+  }
+
+  let completeMultiline = false;
   if (treePath) {
+    // Get function def when inside call expression
     let callExpression = undefined;
     for (let node of treePath.reverse()) {
       if (node.type === "call_expression") {
@@ -106,6 +153,10 @@ export async function constructAutocompletePrompt(
         snippets.push(definition);
       }
     }
+
+    // Use AST to determine whether to complete multiline
+    let cursorLine = fullPrefix.split("\n").length - 1;
+    completeMultiline = shouldCompleteMultiline(treePath, cursorLine);
   }
 
   // Construct basic prefix / suffix
@@ -128,5 +179,5 @@ export async function constructAutocompletePrompt(
   );
   let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens);
 
-  return { prefix, suffix, useFim: true };
+  return { prefix, suffix, useFim: true, completeMultiline };
 }

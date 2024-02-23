@@ -137,7 +137,7 @@ export async function retrieveContextItemsFromEmbeddings(
     if (extras.fullInput.trim() !== "") {
       ftsResults = await ftsIndex.retrieve(
         tags,
-        extras.fullInput.trim().split(" ").join(" OR "),
+        extras.fullInput.trim().split(" ").map(element => `"${element}"`).join(" OR "),
         nRetrieve / 2,
         filterDirectory,
         undefined

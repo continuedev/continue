@@ -17,7 +17,7 @@ const CustomPostHogProvider = ({ children }: PropsWithChildren) => {
         api_host: "https://app.posthog.com",
         disable_session_recording: true,
       });
-      posthog.identify((window as any).vscMachineId);
+      posthog.identify(window.vscMachineId);
       posthog.opt_in_capturing();
       setClient(client);
     } else {
