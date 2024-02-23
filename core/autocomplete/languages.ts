@@ -57,7 +57,7 @@ export const Scala = {
 export const Go = {
   stopWords: ["func", "package", "import", "type"],
   comment: "//",
-  endOfLine: [""],
+  endOfLine: [],
 };
 
 // Rust
@@ -69,9 +69,18 @@ export const Rust = {
 
 // Haskell
 export const Haskell = {
-  stopWords: ["data", "type", "newtype", "class", "instance", "let", "in", "where"],
+  stopWords: [
+    "data",
+    "type",
+    "newtype",
+    "class",
+    "instance",
+    "let",
+    "in",
+    "where",
+  ],
   comment: "--",
-  endOfLine: [""],
+  endOfLine: [],
 };
 
 // PHP
@@ -85,7 +94,7 @@ export const PHP = {
 export const RubyOnRails = {
   stopWords: ["def", "class", "module"],
   comment: "#",
-  endOfLine: [""],
+  endOfLine: [],
 };
 
 // Swift
@@ -106,35 +115,66 @@ export const Kotlin = {
 export const Ruby = {
   stopWords: ["class", "module", "def"],
   comment: "#",
-  endOfLine: [""],
+  endOfLine: [],
 };
 
 // Clojure
 export const Clojure = {
   stopWords: ["def", "fn", "let", "do", "if", "defn", "ns", "defmacro"],
   comment: ";",
-  endOfLine: [""],
+  endOfLine: [],
 };
 
 // Julia
 export const Julia = {
-  stopWords: ["function", "macro", "if", "else", "elseif", "while", "for", "begin", "end", "module"],
+  stopWords: [
+    "function",
+    "macro",
+    "if",
+    "else",
+    "elseif",
+    "while",
+    "for",
+    "begin",
+    "end",
+    "module",
+  ],
   comment: "#",
   endOfLine: [";"],
 };
 
 // F#
 export const FSharp = {
-  stopWords: ["let", "type", "module", "namespace", "open", "if", "then", "else", "match", "with"],
+  stopWords: [
+    "let",
+    "type",
+    "module",
+    "namespace",
+    "open",
+    "if",
+    "then",
+    "else",
+    "match",
+    "with",
+  ],
   comment: "//",
-  endOfLine: [""], 
+  endOfLine: [],
 };
 
 // R
 export const R = {
-  stopWords: ["function", "if", "else", "for", "while", "repeat", "library", "require"],
+  stopWords: [
+    "function",
+    "if",
+    "else",
+    "for",
+    "while",
+    "repeat",
+    "library",
+    "require",
+  ],
   comment: "#",
-  endOfLine: [""],
+  endOfLine: [],
 };
 
 // Dart
@@ -154,7 +194,7 @@ export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   java: Java,
   cpp: Cpp,
   cxx: Cpp,
-  h: Cpp, 
+  h: Cpp,
   hpp: Cpp,
   cs: CSharp,
   c: C,
@@ -172,9 +212,9 @@ export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   cljs: Clojure,
   cljc: Clojure,
   jl: Julia,
-  fs: FSharp, 
-  fsi: FSharp, 
-  fsx: FSharp, 
+  fs: FSharp,
+  fsi: FSharp,
+  fsx: FSharp,
   fsscript: FSharp,
   r: R,
   R: R,
