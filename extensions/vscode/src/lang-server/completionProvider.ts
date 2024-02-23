@@ -311,7 +311,10 @@ async function getTabCompletion(
         "```",
         ...lang.stopWords,
       ];
-      if (options.disableMultiLineCompletions || !completeMultiline) {
+      if (
+        options.multilineCompletions !== "always" &&
+        (options.multilineCompletions === "never" || !completeMultiline)
+      ) {
         stop.unshift("\n");
       }
       let generator = GeneratorReuseManager.getGenerator(prefix, () =>

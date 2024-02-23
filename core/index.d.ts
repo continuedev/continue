@@ -581,7 +581,7 @@ export interface TabAutocompleteOptions {
   maxSuffixPercentage: number;
   prefixPercentage: number;
   template?: string;
-  disableMultiLineCompletions?: boolean;
+  multilineCompletions?: "always" | "never" | "auto";
 }
 
 export interface SerializedContinueConfig {
