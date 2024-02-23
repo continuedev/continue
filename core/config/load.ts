@@ -14,6 +14,7 @@ import {
   SlashCommand,
 } from "..";
 
+import dotenv from "dotenv";
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
@@ -33,30 +34,39 @@ import {
   getConfigJsonPath,
   getConfigJsonPathForRemote,
   getConfigTsPath,
+  getContinueDotEnvPath,
   migrate,
 } from "../util/paths";
+
+function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
+  let content = fs.readFileSync(filepath, "utf8");
+  let config = JSON.parse(content) as SerializedContinueConfig;
+  if (config.env && Array.isArray(config.env)) {
+    const env = {
+      ...process.env,
+      ...dotenv.parse(fs.readFileSync(getContinueDotEnvPath())),
+    };
+
+    config.env.forEach((envVar) => {
+      content = content.replaceAll(
+        new RegExp(`"${envVar}"`, "g"),
+        `"${env[envVar]}"`
+      );
+    });
+  }
+
+  return JSON.parse(content);
+}
 
 function loadSerializedConfig(
   workspaceConfigs: ContinueRcJson[],
   remoteConfigServerUrl: URL | undefined
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath();
-  let contents = fs.readFileSync(configPath, "utf8");
-  let config = JSON.parse(contents) as SerializedContinueConfig;
+  let config = resolveSerializedConfig(configPath);
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
   }
-
-  // Migrate to camelCase - replace all instances of "snake_case" with "camelCase"
-  migrate("camelCaseConfig", () => {
-    contents = contents
-      .replace(/(_\w)/g, function (m) {
-        return m[1].toUpperCase();
-      })
-      .replace("openai-aiohttp", "openai");
-
-    fs.writeFileSync(configPath, contents, "utf8");
-  });
 
   migrate("codebaseContextProvider", () => {
     if (
@@ -112,17 +122,11 @@ function loadSerializedConfig(
     fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
   });
 
-  migrate("renameFreeTrialProvider", () => {
-    contents = contents.replace(/openai-free-trial/g, "free-trial");
-    fs.writeFileSync(configPath, contents, "utf8");
-  });
-
   if (remoteConfigServerUrl) {
-    const remoteConfigJson = fs.readFileSync(
-      getConfigJsonPathForRemote(remoteConfigServerUrl),
-      "utf-8"
+    const remoteConfigJson = resolveSerializedConfig(
+      getConfigJsonPathForRemote(remoteConfigServerUrl)
     );
-    config = mergeJson(config, JSON.parse(remoteConfigJson), "merge");
+    config = mergeJson(config, remoteConfigJson, "merge");
   }
 
   for (const workspaceConfig of workspaceConfigs) {

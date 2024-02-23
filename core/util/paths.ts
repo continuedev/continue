@@ -210,3 +210,7 @@ export function getConfigJsonPathForRemote(remoteConfigServerUrl: URL): string {
 export function getConfigJsPathForRemote(remoteConfigServerUrl: URL): string {
   return path.join(getPathToRemoteConfig(remoteConfigServerUrl), "config.js");
 }
+
+export function getContinueDotEnvPath(): string {
+  return path.join(getContinueGlobalPath(), ".env");
+}

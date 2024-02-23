@@ -585,6 +585,7 @@ export interface TabAutocompleteOptions {
 }
 
 export interface SerializedContinueConfig {
+  env?: string[];
   allowAnonymousTelemetry?: boolean;
   models: ModelDescription[];
   systemMessage?: string;
