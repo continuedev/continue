@@ -1,68 +1,111 @@
 import {
   getConfigJsPathForRemote,
   getConfigJsonPathForRemote,
-  getPathToRemoteConfig,
 } from "core/util/paths";
 import * as fs from "fs";
 import * as vscode from "vscode";
 import { configHandler } from "../loadConfig";
 
-let remoteConfigSyncInterval: NodeJS.Timer | undefined = undefined;
+export class RemoteConfigSync {
+  private userToken: string | null;
+  private remoteConfigServerUrl: string | null;
+  private remoteConfigSyncPeriod: number;
 
-export async function setupRemoteConfigSync() {
-  const settings = vscode.workspace.getConfiguration("continue");
-  const userToken = settings.get<string | null>("userToken", null);
-  const remoteConfigServerUrl = settings.get<string | null>(
-    "remoteConfigServerUrl",
-    null
-  );
-  const remoteConfigSyncPeriod = settings.get<number>(
-    "remoteConfigSyncPeriod",
-    60
-  );
+  private syncInterval: NodeJS.Timer | undefined = undefined;
 
-  if (
-    userToken === null ||
-    remoteConfigServerUrl === null ||
-    remoteConfigServerUrl.trim() === ""
-  ) {
-    return;
+  constructor() {
+    const { userToken, remoteConfigServerUrl, remoteConfigSyncPeriod } =
+      this.loadVsCodeSettings();
+    this.userToken = userToken;
+    this.remoteConfigServerUrl = remoteConfigServerUrl;
+    this.remoteConfigSyncPeriod = remoteConfigSyncPeriod;
+
+    // Listen for changes to VS Code settings, then trigger a refresh
+    vscode.workspace.onDidChangeConfiguration((event) => {
+      if (event.affectsConfiguration("continue")) {
+        const { userToken, remoteConfigServerUrl, remoteConfigSyncPeriod } =
+          this.loadVsCodeSettings();
+        if (
+          userToken !== this.userToken ||
+          remoteConfigServerUrl !== this.remoteConfigServerUrl ||
+          remoteConfigSyncPeriod !== this.remoteConfigSyncPeriod
+        ) {
+          this.userToken = userToken;
+          this.remoteConfigServerUrl = remoteConfigServerUrl;
+          this.remoteConfigSyncPeriod = remoteConfigSyncPeriod;
+
+          this.setInterval();
+        }
+      }
+    });
   }
-  if (!URL.canParse(remoteConfigServerUrl)) {
-    vscode.window.showErrorMessage(
-      "The value set for 'remoteConfigServerUrl' is not valid: ",
-      remoteConfigServerUrl
+
+  private loadVsCodeSettings() {
+    const settings = vscode.workspace.getConfiguration("continue");
+    const userToken = settings.get<string | null>("userToken", null);
+    const remoteConfigServerUrl = settings.get<string | null>(
+      "remoteConfigServerUrl",
+      null
     );
-    return;
+    const remoteConfigSyncPeriod = settings.get<number>(
+      "remoteConfigSyncPeriod",
+      60
+    );
+
+    return {
+      userToken,
+      remoteConfigServerUrl,
+      remoteConfigSyncPeriod,
+    };
   }
 
-  // Sync once
-  await syncRemoteConfig(userToken, new URL(remoteConfigServerUrl));
+  async setup() {
+    if (
+      this.userToken === null ||
+      this.remoteConfigServerUrl === null ||
+      this.remoteConfigServerUrl.trim() === ""
+    ) {
+      return;
+    }
+    if (!URL.canParse(this.remoteConfigServerUrl)) {
+      vscode.window.showErrorMessage(
+        "The value set for 'remoteConfigServerUrl' is not valid: ",
+        this.remoteConfigServerUrl
+      );
+      return;
+    }
 
-  // Set timer to sync at user-defined interval
-  if (remoteConfigSyncInterval !== undefined) {
-    clearInterval(remoteConfigSyncInterval);
+    // Sync once
+    await this.sync(this.userToken, new URL(this.remoteConfigServerUrl));
+
+    // Set timer to sync at user-defined interval
+    this.setInterval();
   }
-  remoteConfigSyncInterval = setInterval(() => {
-    syncRemoteConfig(userToken, new URL(remoteConfigServerUrl));
-  }, remoteConfigSyncPeriod * 1000);
-}
 
-async function syncRemoteConfig(userToken: string, remoteConfigServerUrl: URL) {
-  const response = await fetch(new URL("sync", remoteConfigServerUrl).href, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${userToken}`,
-    },
-  });
+  private setInterval() {
+    if (this.syncInterval !== undefined) {
+      clearInterval(this.syncInterval);
+    }
+    this.syncInterval = setInterval(() => {
+      if (!this.userToken || !this.remoteConfigServerUrl) return;
+      this.sync(this.userToken, new URL(this.remoteConfigServerUrl));
+    }, this.remoteConfigSyncPeriod * 1000);
+  }
 
-  const remoteConfigDirectory = getPathToRemoteConfig(remoteConfigServerUrl);
+  async sync(userToken: string, remoteConfigServerUrl: URL) {
+    const response = await fetch(new URL("sync", remoteConfigServerUrl).href, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${userToken}`,
+      },
+    });
 
-  const { configJson, configJs } = await response.json();
-  fs.writeFileSync(
-    getConfigJsonPathForRemote(remoteConfigServerUrl),
-    configJson
-  );
-  fs.writeFileSync(getConfigJsPathForRemote(remoteConfigServerUrl), configJs);
-  configHandler.reloadConfig();
+    const { configJson, configJs } = await response.json();
+    fs.writeFileSync(
+      getConfigJsonPathForRemote(remoteConfigServerUrl),
+      configJson
+    );
+    fs.writeFileSync(getConfigJsPathForRemote(remoteConfigServerUrl), configJs);
+    configHandler.reloadConfig();
+  }
 }
