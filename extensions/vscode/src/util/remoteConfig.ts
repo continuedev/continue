@@ -7,6 +7,8 @@ import * as fs from "fs";
 import * as vscode from "vscode";
 import { configHandler } from "../loadConfig";
 
+let remoteConfigSyncInterval: NodeJS.Timer | undefined = undefined;
+
 export async function setupRemoteConfigSync() {
   const settings = vscode.workspace.getConfiguration("continue");
   const userToken = settings.get<string | null>("userToken", null);
@@ -34,9 +36,14 @@ export async function setupRemoteConfigSync() {
     return;
   }
 
-  // Sync once and then set timer
+  // Sync once
   await syncRemoteConfig(userToken, new URL(remoteConfigServerUrl));
-  setInterval(() => {
+
+  // Set timer to sync at user-defined interval
+  if (remoteConfigSyncInterval !== undefined) {
+    clearInterval(remoteConfigSyncInterval);
+  }
+  remoteConfigSyncInterval = setInterval(() => {
     syncRemoteConfig(userToken, new URL(remoteConfigServerUrl));
   }, remoteConfigSyncPeriod * 1000);
 }
