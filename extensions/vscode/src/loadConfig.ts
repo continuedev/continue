@@ -61,9 +61,15 @@ class VsCodeConfigHandler {
       } catch (e) {
         console.warn("Failed to load workspace configs");
       }
+
+      const remoteConfigServerUrl = vscode.workspace
+        .getConfiguration("continue")
+        .get<string | undefined>("remoteConfigServerUrl", undefined);
+
       this.savedConfig = await loadFullConfigNode(
         ideProtocolClient.readFile,
-        workspaceConfigs
+        workspaceConfigs,
+        remoteConfigServerUrl ? new URL(remoteConfigServerUrl) : undefined
       );
       this.savedConfig.allowAnonymousTelemetry =
         this.savedConfig.allowAnonymousTelemetry &&
