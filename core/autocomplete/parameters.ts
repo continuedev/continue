@@ -7,6 +7,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   prefixPercentage: 0.85,
   maxSuffixPercentage: 0.25,
   debounceDelay: 350,
+  multilineCompletions: "auto",
   slidingWindowPrefixPercentage: 0.75,
   slidingWindowSize: 100,
 };
