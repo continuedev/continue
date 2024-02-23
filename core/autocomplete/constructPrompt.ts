@@ -10,6 +10,7 @@ import { getBasename } from "../util";
 
 import { getAst, getScopeAroundRange, getTreePathAtCursor } from "./ast";
 import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
+import { rankSnippets } from "./ranking";
 import { slidingWindowMatcher } from "./slidingWindow";
 
 export function languageForFilepath(
@@ -82,7 +83,7 @@ export async function constructAutocompletePrompt(
   completeMultiline: boolean;
 }> {
   // Find external snippets
-  const snippets: FileWithContents[] = (await Promise.all(
+  let snippets: FileWithContents[] = (await Promise.all(
     recentlyEditedRanges
       .map(async (r) => {
         const scope = await getScopeAroundRange(r);
@@ -144,6 +145,17 @@ export async function constructAutocompletePrompt(
     let cursorLine = fullPrefix.split("\n").length - 1;
     completeMultiline = shouldCompleteMultiline(treePath, cursorLine);
   }
+
+  // Rank / order the snippets
+  snippets = rankSnippets(
+    snippets,
+    fullPrefix,
+    fullSuffix,
+    options.slidingWindowPrefixPercentage,
+    options.slidingWindowSize
+  );
+
+  // How to add snippets to the prefix? Count separately? Always keep some of the prefix??
 
   // Construct basic prefix / suffix
   const formattedSnippets = snippets

@@ -1,4 +1,5 @@
 import { FileWithContents } from "..";
+import { symbolSimilarity } from "./ranking";
 
 function* slidingWindow(
   content: string,
@@ -24,41 +25,6 @@ function* slidingWindow(
   }
 }
 
-function getSymbolsForSnippet(snippet: string): Set<string> {
-  const symbols = snippet
-    .split(
-      new RegExp(
-        `[s\.\:\'\,\;\"\*\&\^\|\\\#\@\$\!\%\(\)\[\]\{\}\<\>\/\?\+\-\/]`,
-        "g"
-      )
-    )
-    .map((s) => s.trim());
-  return new Set(symbols);
-}
-
-/**
- * Calculate similarity as number of shared symbols divided by total number of unique symbols between both.
- */
-function slidingWindowSimilarity(a: string, b: string): number {
-  const aSet = getSymbolsForSnippet(a);
-  const bSet = getSymbolsForSnippet(b);
-  const totalSet = new Set([...aSet, ...bSet]);
-
-  // Avoid division by zero
-  if (totalSet.size === 0) {
-    return 0;
-  }
-
-  let intersection = 0;
-  for (const symbol of aSet) {
-    if (bSet.has(symbol)) {
-      intersection++;
-    }
-  }
-
-  return intersection / totalSet.size;
-}
-
 /**
  * Match by similarity over sliding windows of recent documents.
  * @param recentDocuments
@@ -78,7 +44,7 @@ export async function slidingWindowMatcher(
 
   for (const { filepath, contents } of recentDocuments) {
     for (const window of slidingWindow(contents, windowSize)) {
-      const similarity = slidingWindowSimilarity(
+      const similarity = symbolSimilarity(
         window,
         prefix.slice(-windowSize * slidingWindowPrefixPercentage) +
           suffix.slice(windowSize * (1 - slidingWindowPrefixPercentage))
