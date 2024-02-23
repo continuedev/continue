@@ -63,15 +63,26 @@ class OpenAI extends BaseLLM {
   }
 
   protected _convertArgs(options: any, messages: ChatMessage[]) {
+    const {
+      model,
+      maxTokens,
+      temperature,
+      topP,
+      frequencyPenalty,
+      presencePenalty,
+      stop,
+      ...rest
+    } = options;
     const finalOptions = {
       messages: messages.map(this._convertMessage),
-      model: options.model,
-      max_tokens: options.maxTokens,
-      temperature: options.temperature,
-      top_p: options.topP,
-      frequency_penalty: options.frequencyPenalty,
-      presence_penalty: options.presencePenalty,
-      stop: options.stop?.slice(0, 4),
+      model,
+      max_tokens: maxTokens,
+      temperature,
+      top_p: topP,
+      frequency_penalty: frequencyPenalty,
+      presence_penalty: presencePenalty,
+      stop: stop?.slice(0, 4),
+      ...rest,
     };
 
     return finalOptions;
@@ -178,7 +189,7 @@ class OpenAI extends BaseLLM {
       stream: true,
     };
     // Empty messages cause an error in LM Studio
-    body.messages = body.messages.map((m) => ({
+    body.messages = body.messages.map((m: ChatMessage) => ({
       ...m,
       content: m.content === "" ? " " : m.content,
     })) as any;
