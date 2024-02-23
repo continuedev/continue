@@ -19,6 +19,7 @@ import * as vscode from "vscode";
 import { ideProtocolClient } from "../activation/activate";
 import { TabAutocompleteModel } from "../loadConfig";
 import { ContinueCompletionProvider } from "./completionProvider";
+import { RecentlyEditedTracker } from "./recentlyEdited";
 import { setupStatusBar, stopStatusBarLoading } from "./statusBar";
 
 async function getDefinition(
@@ -57,6 +58,7 @@ export interface AutocompleteOutcome {
 }
 
 const autocompleteCache = AutocompleteLruCache.get();
+const recentlyEditedTracker = new RecentlyEditedTracker();
 
 export async function getTabCompletion(
   document: vscode.TextDocument,
@@ -105,7 +107,8 @@ export async function getTabCompletion(
         clipboardText,
         lang,
         getDefinition,
-        options
+        options,
+        await recentlyEditedTracker.getRecentlyEditedRanges()
       );
 
     const { template, completionOptions } = options.template

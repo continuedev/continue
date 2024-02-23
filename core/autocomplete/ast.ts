@@ -1,0 +1,76 @@
+import Parser from "web-tree-sitter";
+import { RangeInFileWithContents } from "../commands/util";
+import { getParserForFile } from "../util/treeSitter";
+
+export async function getAst(
+  filepath: string,
+  fileContents: string
+): Promise<Parser.Tree | undefined> {
+  const parser = await getParserForFile(filepath);
+
+  if (!parser) {
+    return undefined;
+  }
+
+  const ast = parser.parse(fileContents);
+  return ast;
+}
+
+export async function getTreePathAtCursor(
+  ast: Parser.Tree,
+  cursorIndex: number
+): Promise<Parser.SyntaxNode[] | undefined> {
+  const path = [ast.rootNode];
+  while (path[path.length - 1].childCount > 0) {
+    let foundChild = false;
+    for (let child of path[path.length - 1].children) {
+      if (child.startIndex <= cursorIndex && child.endIndex >= cursorIndex) {
+        path.push(child);
+        foundChild = true;
+        break;
+      }
+    }
+
+    if (!foundChild) {
+      break;
+    }
+  }
+
+  return path;
+}
+
+export async function getScopeAroundRange(
+  range: RangeInFileWithContents
+): Promise<string | undefined> {
+  const ast = await getAst(range.filepath, range.contents);
+  if (!ast) {
+    return undefined;
+  }
+
+  const { start: s, end: e } = range.range;
+  const lines = range.contents.split("\n");
+  const startIndex =
+    lines.slice(0, s.line).join("\n").length +
+    lines[s.line].slice(s.character).length;
+  const endIndex =
+    lines.slice(0, e.line).join("\n").length +
+    lines[e.line].slice(0, e.character).length;
+
+  let node = ast.rootNode;
+  while (node.childCount > 0) {
+    let foundChild = false;
+    for (let child of node.children) {
+      if (child.startIndex < startIndex && child.endIndex > endIndex) {
+        node = child;
+        foundChild = true;
+        break;
+      }
+    }
+
+    if (!foundChild) {
+      break;
+    }
+  }
+
+  return node.text;
+}

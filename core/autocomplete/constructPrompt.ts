@@ -1,12 +1,14 @@
 import Parser from "web-tree-sitter";
 import { TabAutocompleteOptions } from "..";
+import { RangeInFileWithContents } from "../commands/util";
 import {
   countTokens,
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../llm/countTokens";
 import { getBasename } from "../util";
-import { getParserForFile } from "../util/treeSitter";
+
+import { getAst, getScopeAroundRange, getTreePathAtCursor } from "./ast";
 import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
 
 export function languageForFilepath(
@@ -27,43 +29,6 @@ function formatExternalSnippet(
     comment,
   ];
   return lines.join("\n");
-}
-
-async function getAst(
-  filepath: string,
-  fileContents: string
-): Promise<Parser.Tree | undefined> {
-  const parser = await getParserForFile(filepath);
-
-  if (!parser) {
-    return undefined;
-  }
-
-  const ast = parser.parse(fileContents);
-  return ast;
-}
-
-async function getTreePathAtCursor(
-  ast: Parser.Tree,
-  cursorIndex: number
-): Promise<Parser.SyntaxNode[] | undefined> {
-  const path = [ast.rootNode];
-  while (path[path.length - 1].childCount > 0) {
-    let foundChild = false;
-    for (let child of path[path.length - 1].children) {
-      if (child.startIndex <= cursorIndex && child.endIndex >= cursorIndex) {
-        path.push(child);
-        foundChild = true;
-        break;
-      }
-    }
-
-    if (!foundChild) {
-      break;
-    }
-  }
-
-  return path;
 }
 
 export interface AutocompleteSnippet {
@@ -111,7 +76,8 @@ export async function constructAutocompletePrompt(
     line: number,
     character: number
   ) => Promise<AutocompleteSnippet | undefined>,
-  options: TabAutocompleteOptions
+  options: TabAutocompleteOptions,
+  recentlyEditedRanges: RangeInFileWithContents[]
 ): Promise<{
   prefix: string;
   suffix: string;
@@ -119,7 +85,19 @@ export async function constructAutocompletePrompt(
   completeMultiline: boolean;
 }> {
   // Find external snippets
-  const snippets: AutocompleteSnippet[] = [];
+  const snippets: AutocompleteSnippet[] = (await Promise.all(
+    recentlyEditedRanges
+      .map(async (r) => {
+        const scope = await getScopeAroundRange(r);
+        if (!scope) return null;
+
+        return {
+          filepath: r.filepath,
+          content: r.contents,
+        };
+      })
+      .filter((s) => !!s)
+  )) as any;
 
   let treePath: Parser.SyntaxNode[] | undefined;
   try {
