@@ -1,3 +1,4 @@
+import dotenv from "dotenv";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
@@ -211,6 +212,11 @@ export function getConfigJsPathForRemote(remoteConfigServerUrl: URL): string {
   return path.join(getPathToRemoteConfig(remoteConfigServerUrl), "config.js");
 }
 
-export function getContinueDotEnvPath(): string {
-  return path.join(getContinueGlobalPath(), ".env");
+export function getContinueDotEnv(): { [key: string]: string } {
+  const filepath = path.join(getContinueGlobalPath(), ".env");
+  if (fs.existsSync(filepath)) {
+    return dotenv.parse(fs.readFileSync(filepath));
+  } else {
+    return {};
+  }
 }

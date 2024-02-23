@@ -14,7 +14,6 @@ import {
   SlashCommand,
 } from "..";
 
-import dotenv from "dotenv";
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
@@ -34,7 +33,7 @@ import {
   getConfigJsonPath,
   getConfigJsonPathForRemote,
   getConfigTsPath,
-  getContinueDotEnvPath,
+  getContinueDotEnv,
   migrate,
 } from "../util/paths";
 
@@ -44,7 +43,7 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   if (config.env && Array.isArray(config.env)) {
     const env = {
       ...process.env,
-      ...dotenv.parse(fs.readFileSync(getContinueDotEnvPath())),
+      ...getContinueDotEnv(),
     };
 
     config.env.forEach((envVar) => {
