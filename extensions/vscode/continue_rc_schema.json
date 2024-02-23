@@ -1607,8 +1607,12 @@
               "type": "string",
               "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
             },
-            "disableMultiLineCompletions": {
-              "type": "boolean",
+            "multilineCompletions": {
+              "enum": [
+                "always",
+                "never",
+                "auto"
+              ],
               "description": "If set to true, Continue will only complete a single line at a time."
             }
           },

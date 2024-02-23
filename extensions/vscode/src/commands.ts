@@ -4,6 +4,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import { extensionContext, ideProtocolClient } from "./activation/activate";
+import { AutocompleteOutcome } from "./autocomplete/getTabCompletion";
 import { debugPanelWebview, getSidebarContent } from "./debugPanel";
 import { acceptDiffCommand, rejectDiffCommand } from "./diff/horizontal";
 import {
@@ -12,7 +13,6 @@ import {
   verticalPerLineDiffManager,
 } from "./diff/verticalPerLine/manager";
 import { VsCodeIde } from "./ideProtocol";
-import { AutocompleteOutcome } from "./lang-server/completionProvider";
 import { configHandler, llmFromTitle } from "./loadConfig";
 
 function addHighlightedCodeToContext(edit: boolean) {

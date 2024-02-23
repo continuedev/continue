@@ -4,15 +4,13 @@ import * as fs from "fs";
 import path from "path";
 import { v4 } from "uuid";
 import * as vscode from "vscode";
+import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
+import { setupStatusBar } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
 import IdeProtocolClient from "../continueIdeClient";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
-import {
-  ContinueCompletionProvider,
-  setupStatusBar,
-} from "../lang-server/completionProvider";
 import { vsCodeIndexCodebase } from "../util/indexCodebase";
 import { setupRemoteConfigSync } from "../util/remoteConfig";
 import { getExtensionVersion } from "../util/util";
