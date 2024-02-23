@@ -1,8 +1,7 @@
-import { TabAutocompleteOptions } from "core";
+import { FileWithContents, TabAutocompleteOptions } from "core";
 import { AutocompleteLruCache } from "core/autocomplete/cache";
 import { onlyWhitespaceAfterEndOfLine } from "core/autocomplete/charStream";
 import {
-  AutocompleteSnippet,
   constructAutocompletePrompt,
   languageForFilepath,
 } from "core/autocomplete/constructPrompt";
@@ -26,7 +25,7 @@ async function getDefinition(
   uri: string,
   line: number,
   character: number
-): Promise<AutocompleteSnippet | undefined> {
+): Promise<FileWithContents | undefined> {
   const definitions = (await vscode.commands.executeCommand(
     "vscode.executeDefinitionProvider",
     vscode.Uri.parse(uri),
@@ -36,7 +35,7 @@ async function getDefinition(
   if (definitions[0]?.targetRange) {
     return {
       filepath: uri,
-      content: await ideProtocolClient.readRangeInFile(
+      contents: await ideProtocolClient.readRangeInFile(
         definitions[0].targetUri.fsPath,
         definitions[0].targetRange
       ),
@@ -108,7 +107,8 @@ export async function getTabCompletion(
         lang,
         getDefinition,
         options,
-        await recentlyEditedTracker.getRecentlyEditedRanges()
+        await recentlyEditedTracker.getRecentlyEditedRanges(),
+        await recentlyEditedTracker.getRecentlyEditedDocuments()
       );
 
     const { template, completionOptions } = options.template

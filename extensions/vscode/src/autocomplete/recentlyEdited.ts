@@ -1,3 +1,4 @@
+import { FileWithContents } from "core";
 import { RecentlyEditedRange } from "core/autocomplete/recentlyEdited";
 import * as vscode from "vscode";
 
@@ -7,10 +8,18 @@ interface VsCodeRecentlyEditedRange {
   range: vscode.Range;
 }
 
+interface VsCodeRecentlyEditedDocument {
+  timestamp: number;
+  uri: vscode.Uri;
+}
+
 export class RecentlyEditedTracker {
   private static staleTime = 1000 * 60 * 2;
   private static maxRecentlyEditedRanges = 3;
   private recentlyEditedRanges: VsCodeRecentlyEditedRange[] = [];
+
+  private recentlyEditedDocuments: VsCodeRecentlyEditedDocument[] = [];
+  private static maxRecentlyEditedDocuments = 10;
 
   constructor() {
     vscode.workspace.onDidChangeTextDocument((event) => {
@@ -28,6 +37,17 @@ export class RecentlyEditedTracker {
           );
         }
       });
+
+      const newLength = this.recentlyEditedDocuments.unshift({
+        uri: event.document.uri,
+        timestamp: Date.now(),
+      });
+      if (newLength >= RecentlyEditedTracker.maxRecentlyEditedDocuments) {
+        this.recentlyEditedDocuments = this.recentlyEditedDocuments.slice(
+          0,
+          RecentlyEditedTracker.maxRecentlyEditedDocuments
+        );
+      }
     });
 
     setInterval(() => {
@@ -59,6 +79,17 @@ export class RecentlyEditedTracker {
             character: entry.range.end.character,
           },
         },
+      }))
+    );
+  }
+
+  public async getRecentlyEditedDocuments(): Promise<FileWithContents[]> {
+    return Promise.all(
+      this.recentlyEditedDocuments.map(async (entry) => ({
+        filepath: entry.uri.fsPath,
+        contents: await vscode.workspace.fs
+          .readFile(entry.uri)
+          .then((content) => content.toString()),
       }))
     );
   }

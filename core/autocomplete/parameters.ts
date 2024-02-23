@@ -3,8 +3,10 @@ import { TabAutocompleteOptions } from "..";
 export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   useCopyBuffer: true,
   useSuffix: true,
-  maxPromptTokens: 650,
+  maxPromptTokens: 500,
   prefixPercentage: 0.85,
   maxSuffixPercentage: 0.25,
   debounceDelay: 350,
+  slidingWindowPrefixPercentage: 0.75,
+  slidingWindowSize: 100,
 };

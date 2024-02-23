@@ -1,5 +1,5 @@
 import Parser from "web-tree-sitter";
-import { TabAutocompleteOptions } from "..";
+import { FileWithContents, TabAutocompleteOptions } from "..";
 import { RangeInFileWithContents } from "../commands/util";
 import {
   countTokens,
@@ -10,6 +10,7 @@ import { getBasename } from "../util";
 
 import { getAst, getScopeAroundRange, getTreePathAtCursor } from "./ast";
 import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
+import { slidingWindowMatcher } from "./slidingWindow";
 
 export function languageForFilepath(
   filepath: string
@@ -29,11 +30,6 @@ function formatExternalSnippet(
     comment,
   ];
   return lines.join("\n");
-}
-
-export interface AutocompleteSnippet {
-  filepath: string;
-  content: string;
 }
 
 const BLOCK_TYPES = ["body", "statement_block"];
@@ -75,9 +71,10 @@ export async function constructAutocompletePrompt(
     filepath: string,
     line: number,
     character: number
-  ) => Promise<AutocompleteSnippet | undefined>,
+  ) => Promise<FileWithContents | undefined>,
   options: TabAutocompleteOptions,
-  recentlyEditedRanges: RangeInFileWithContents[]
+  recentlyEditedRanges: RangeInFileWithContents[],
+  recentlyEditedDocuments: FileWithContents[]
 ): Promise<{
   prefix: string;
   suffix: string;
@@ -85,7 +82,7 @@ export async function constructAutocompletePrompt(
   completeMultiline: boolean;
 }> {
   // Find external snippets
-  const snippets: AutocompleteSnippet[] = (await Promise.all(
+  const snippets: FileWithContents[] = (await Promise.all(
     recentlyEditedRanges
       .map(async (r) => {
         const scope = await getScopeAroundRange(r);
@@ -98,6 +95,17 @@ export async function constructAutocompletePrompt(
       })
       .filter((s) => !!s)
   )) as any;
+
+  snippets.push(
+    ...(await slidingWindowMatcher(
+      recentlyEditedDocuments,
+      fullPrefix,
+      fullSuffix,
+      3,
+      options.slidingWindowPrefixPercentage,
+      options.slidingWindowSize
+    ))
+  );
 
   let treePath: Parser.SyntaxNode[] | undefined;
   try {
@@ -140,7 +148,7 @@ export async function constructAutocompletePrompt(
   // Construct basic prefix / suffix
   const formattedSnippets = snippets
     .map((snippet) =>
-      formatExternalSnippet(snippet.filepath, snippet.content, language)
+      formatExternalSnippet(snippet.filepath, snippet.contents, language)
     )
     .join("\n");
   const maxPrefixTokens =
