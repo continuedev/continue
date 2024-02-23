@@ -93,19 +93,37 @@ export class RemoteConfigSync {
   }
 
   async sync(userToken: string, remoteConfigServerUrl: URL) {
-    const response = await fetch(new URL("sync", remoteConfigServerUrl).href, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${userToken}`,
-      },
-    });
+    try {
+      const response = await fetch(
+        new URL("sync", remoteConfigServerUrl).href,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${userToken}`,
+          },
+        }
+      );
 
-    const { configJson, configJs } = await response.json();
-    fs.writeFileSync(
-      getConfigJsonPathForRemote(remoteConfigServerUrl),
-      configJson
-    );
-    fs.writeFileSync(getConfigJsPathForRemote(remoteConfigServerUrl), configJs);
-    configHandler.reloadConfig();
+      if (!response.ok) {
+        vscode.window.showErrorMessage(
+          `Failed to sync remote config (HTTP ${response.status}): ${response.statusText}`
+        );
+        return;
+      }
+
+      const { configJson, configJs } = await response.json();
+
+      fs.writeFileSync(
+        getConfigJsonPathForRemote(remoteConfigServerUrl),
+        configJson
+      );
+      fs.writeFileSync(
+        getConfigJsPathForRemote(remoteConfigServerUrl),
+        configJs
+      );
+      configHandler.reloadConfig();
+    } catch (e) {
+      vscode.window.showErrorMessage(`Failed to sync remote config: ${e}`);
+    }
   }
 }
