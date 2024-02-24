@@ -90,13 +90,9 @@ export function getConfigTsPath(): string {
   return p;
 }
 
-export function getConfigJsPath(node: boolean): string {
+export function getConfigJsPath(): string {
   // Do not create automatically
-  return path.join(
-    getContinueGlobalPath(),
-    "out",
-    `config${node ? ".node" : ""}.js`
-  );
+  return path.join(getContinueGlobalPath(), "out", "config.js");
 }
 
 export function getTsConfigPath(): string {

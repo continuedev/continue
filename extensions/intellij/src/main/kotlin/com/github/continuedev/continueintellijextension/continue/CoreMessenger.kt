@@ -6,6 +6,9 @@ import java.io.OutputStreamWriter
 import java.io.*
 
 import com.google.gson.Gson
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.nio.file.attribute.PosixFilePermission
 
 class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
     private val writer: OutputStreamWriter
@@ -106,7 +109,33 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
         "getIdeInfo"
     )
 
+    private fun setPermissions(destination: String) {
+        val osName = System.getProperty("os.name").toLowerCase()
+        if (osName.contains("mac") || osName.contains("darwin")) {
+            ProcessBuilder(
+                    "xattr",
+                    "-dr",
+                    "com.apple.quarantine",
+                    destination
+            ).start()
+            setFilePermissions(destination, "rwxr-xr-x")
+        } else if (osName.contains("nix") || osName.contains("nux") || osName.contains("mac")) {
+            setFilePermissions(destination, "rwxr-xr-x")
+        }
+    }
+
+    private fun setFilePermissions(path: String, posixPermissions: String) {
+        val perms = HashSet<PosixFilePermission>()
+        if (posixPermissions.contains("r")) perms.add(PosixFilePermission.OWNER_READ)
+        if (posixPermissions.contains("w")) perms.add(PosixFilePermission.OWNER_WRITE)
+        if (posixPermissions.contains("x")) perms.add(PosixFilePermission.OWNER_EXECUTE)
+        Files.setPosixFilePermissions(Paths.get(path), perms)
+    }
+
     init {
+        // Set proper permissions
+        setPermissions(continueCorePath)
+
         // Start the subprocess
         val processBuilder = ProcessBuilder(continueCorePath)
         process = processBuilder.start()

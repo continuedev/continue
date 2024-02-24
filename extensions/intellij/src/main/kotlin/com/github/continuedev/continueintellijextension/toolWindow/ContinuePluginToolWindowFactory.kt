@@ -76,11 +76,11 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
         init {
             System.setProperty("ide.browser.jcef.jsQueryPoolSize", JS_QUERY_POOL_SIZE)
-//            System.setProperty("ide.browser.jcef.osr.enabled", "true")
+            System.setProperty("ide.browser.jcef.osr.enabled", "false")
         }
 
         val webView: JBCefBrowser by lazy {
-            val browser = JBCefBrowser()
+            val browser = JBCefBrowser.createBuilder().setOffScreenRendering(false).build()
             browser.jbCefClient.setProperty(
                     JBCefClient.Properties.JS_QUERY_POOL_SIZE,
                     JS_QUERY_POOL_SIZE
@@ -88,6 +88,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
             registerAppSchemeHandler()
 
             browser.loadURL("http://continue/index.html")
+//            browser.loadHTML("<html><body><input type='text'/></body></html>")
 //            browser.loadURL("http://localhost:5173/index.html")
             Disposer.register(project, browser)
 

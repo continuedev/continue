@@ -1,3 +1,4 @@
+process.env.IS_BINARY = "true";
 import { Command } from "commander";
 import { getCoreLogsPath } from "core/util/paths";
 import fs from "fs";
