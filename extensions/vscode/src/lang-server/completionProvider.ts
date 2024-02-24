@@ -1,8 +1,7 @@
-import { TabAutocompleteOptions } from "core";
+import { IDE, TabAutocompleteOptions } from "core";
 import { AutocompleteLruCache } from "core/autocomplete/cache";
 import { onlyWhitespaceAfterEndOfLine } from "core/autocomplete/charStream";
 import {
-  AutocompleteSnippet,
   constructAutocompletePrompt,
   languageForFilepath,
 } from "core/autocomplete/constructPrompt";
@@ -12,13 +11,15 @@ import {
 } from "core/autocomplete/lineStream";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
 import { getTemplateForModel } from "core/autocomplete/templates";
+import { ConfigHandler } from "core/config/handler";
 import { streamLines } from "core/diff/util";
 import OpenAI from "core/llm/llms/OpenAI";
+import { logDevData } from "core/util/devdata";
 import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import { ideProtocolClient } from "../activation/activate";
-import { TabAutocompleteModel, configHandler } from "../loadConfig";
+import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import { AutocompletePromptBuilder } from "./autocompletePromptBuilder";
 
 const statusBarItemText = (enabled: boolean | undefined) =>
   enabled ? "$(check) Continue" : "$(circle-slash) Continue";
@@ -68,30 +69,6 @@ export function setupStatusBar(
       setupStatusBar(enabled);
     }
   });
-}
-
-async function getDefinition(
-  uri: string,
-  line: number,
-  character: number
-): Promise<AutocompleteSnippet | undefined> {
-  const definitions = (await vscode.commands.executeCommand(
-    "vscode.executeDefinitionProvider",
-    vscode.Uri.parse(uri),
-    new vscode.Position(line, character)
-  )) as any;
-
-  if (definitions[0]?.targetRange) {
-    return {
-      filepath: uri,
-      content: await ideProtocolClient.readRangeInFile(
-        definitions[0].targetUri.fsPath,
-        definitions[0].targetRange
-      ),
-    };
-  }
-
-  return undefined;
 }
 
 export interface AutocompleteOutcome {
@@ -234,158 +211,6 @@ class GeneratorReuseManager {
   }
 }
 
-async function getTabCompletion(
-  document: vscode.TextDocument,
-  pos: vscode.Position,
-  token: vscode.CancellationToken,
-  options: TabAutocompleteOptions
-): Promise<AutocompleteOutcome | undefined> {
-  const startTime = Date.now();
-
-  // Filter
-  const lang = languageForFilepath(document.fileName);
-  const line = document.lineAt(pos).text;
-  for (const endOfLine of lang.endOfLine) {
-    if (line.endsWith(endOfLine) && pos.character >= endOfLine.length) {
-      return undefined;
-    }
-  }
-
-  try {
-    // Model
-    const llm = await TabAutocompleteModel.get();
-    if (llm instanceof OpenAI) {
-      llm.useLegacyCompletionsEndpoint = true;
-    }
-    if (!llm) return;
-
-    // Prompt
-    const fullPrefix = document.getText(
-      new vscode.Range(new vscode.Position(0, 0), pos)
-    );
-    const fullSuffix = document.getText(
-      new vscode.Range(
-        pos,
-        new vscode.Position(document.lineCount, Number.MAX_SAFE_INTEGER)
-      )
-    );
-    const lineBelowCursor = document.lineAt(
-      Math.min(pos.line + 1, document.lineCount - 1)
-    ).text;
-    const clipboardText = await vscode.env.clipboard.readText();
-    const { prefix, suffix, completeMultiline } =
-      await constructAutocompletePrompt(
-        document.uri.toString(),
-        fullPrefix,
-        fullSuffix,
-        clipboardText,
-        lang,
-        getDefinition,
-        options
-      );
-
-    const { template, completionOptions } = options.template
-      ? { template: options.template, completionOptions: {} }
-      : getTemplateForModel(llm.model);
-
-    const compiledTemplate = Handlebars.compile(template);
-    const prompt = compiledTemplate({ prefix, suffix });
-
-    // Completion
-    let completion = "";
-
-    const cache = await autocompleteCache;
-    const cachedCompletion = await cache.get(prompt);
-    let cacheHit = false;
-    if (cachedCompletion) {
-      // Cache
-      cacheHit = true;
-      completion = cachedCompletion;
-    } else {
-      setupStatusBar(true, true);
-
-      // Try to reuse pending requests if what the user typed matches start of completion
-      let stop = [
-        ...(completionOptions?.stop || []),
-        "\n\n",
-        "```",
-        ...lang.stopWords,
-      ];
-      if (options.disableMultiLineCompletions || !completeMultiline) {
-        stop.unshift("\n");
-      }
-      let generator = GeneratorReuseManager.getGenerator(prefix, () =>
-        llm.streamComplete(prompt, {
-          ...completionOptions,
-          temperature: 0,
-          raw: true,
-          stop,
-        })
-      );
-
-      // LLM
-      let cancelled = false;
-      const generatorWithCancellation = async function* () {
-        for await (const update of generator) {
-          if (token.isCancellationRequested) {
-            stopStatusBarLoading();
-            cancelled = true;
-            return undefined;
-          }
-          yield update;
-        }
-      };
-      const gen2 = onlyWhitespaceAfterEndOfLine(
-        generatorWithCancellation(),
-        lang.endOfLine
-      );
-      const lineGenerator = streamWithNewLines(streamLines(gen2));
-      const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
-      for await (const update of finalGenerator) {
-        completion += update;
-      }
-
-      if (cancelled) {
-        return undefined;
-      }
-
-      // Don't return empty
-      if (completion.trim().length <= 0) {
-        return undefined;
-      }
-
-      // Post-processing
-      completion = completion.trimEnd();
-    }
-
-    const time = Date.now() - startTime;
-    return {
-      time,
-      completion,
-      prompt,
-      modelProvider: llm.providerName,
-      modelName: llm.model,
-      completionOptions,
-      cacheHit,
-    };
-  } catch (e: any) {
-    console.warn("Error generating autocompletion: ", e);
-    if (!ContinueCompletionProvider.errorsShown.has(e.message)) {
-      ContinueCompletionProvider.errorsShown.add(e.message);
-      vscode.window.showErrorMessage(e.message, "Documentation").then((val) => {
-        if (val === "Documentation") {
-          vscode.env.openExternal(
-            vscode.Uri.parse(
-              "https://continue.dev/docs/walkthroughs/tab-autocomplete"
-            )
-          );
-        }
-      });
-    }
-    return undefined;
-  }
-}
-
 export class ContinueCompletionProvider
   implements vscode.InlineCompletionItemProvider
 {
@@ -394,6 +219,174 @@ export class ContinueCompletionProvider
   private static lastUUID: string | undefined = undefined;
 
   public static errorsShown: Set<string> = new Set();
+
+  private readonly promptBuilder: AutocompletePromptBuilder;
+
+  constructor(
+    private readonly configHandler: ConfigHandler,
+    private readonly ide: IDE,
+    private readonly tabAutocompleteModel: TabAutocompleteModel
+  ) {
+    this.promptBuilder = new AutocompletePromptBuilder(ide);
+  }
+
+  async getTabCompletion(
+    document: vscode.TextDocument,
+    pos: vscode.Position,
+    token: vscode.CancellationToken,
+    options: TabAutocompleteOptions
+  ): Promise<AutocompleteOutcome | undefined> {
+    const startTime = Date.now();
+
+    // Filter
+    const lang = languageForFilepath(document.fileName);
+    const line = document.lineAt(pos).text;
+    for (const endOfLine of lang.endOfLine) {
+      if (line.endsWith(endOfLine) && pos.character >= endOfLine.length) {
+        return undefined;
+      }
+    }
+
+    try {
+      // Model
+      const llm = await this.tabAutocompleteModel.get();
+      if (llm instanceof OpenAI) {
+        llm.useLegacyCompletionsEndpoint = true;
+      }
+      if (!llm) return;
+
+      // Prompt
+      const fullPrefix = document.getText(
+        new vscode.Range(new vscode.Position(0, 0), pos)
+      );
+      const fullSuffix = document.getText(
+        new vscode.Range(
+          pos,
+          new vscode.Position(document.lineCount, Number.MAX_SAFE_INTEGER)
+        )
+      );
+      const lineBelowCursor = document.lineAt(
+        Math.min(pos.line + 1, document.lineCount - 1)
+      ).text;
+      const clipboardText = await vscode.env.clipboard.readText();
+      const { prefix, suffix, completeMultiline } =
+        await constructAutocompletePrompt(
+          document.uri.toString(),
+          fullPrefix,
+          fullSuffix,
+          clipboardText,
+          lang,
+          this.promptBuilder.getDefinition.bind(this.promptBuilder),
+          options,
+          llm.model
+        );
+
+      const { template, completionOptions } = options.template
+        ? { template: options.template, completionOptions: {} }
+        : getTemplateForModel(llm.model);
+
+      const compiledTemplate = Handlebars.compile(template);
+      const prompt = compiledTemplate({ prefix, suffix });
+
+      // Completion
+      let completion = "";
+
+      const cache = await autocompleteCache;
+      const cachedCompletion = await cache.get(prompt);
+      let cacheHit = false;
+      if (cachedCompletion) {
+        // Cache
+        cacheHit = true;
+        completion = cachedCompletion;
+      } else {
+        setupStatusBar(true, true);
+
+        // Try to reuse pending requests if what the user typed matches start of completion
+        let stop = [
+          ...(completionOptions?.stop || []),
+          "\n\n",
+          "```",
+          ...lang.stopWords,
+        ];
+        if (options.disableMultiLineCompletions || !completeMultiline) {
+          stop.unshift("\n");
+        }
+        let generator = GeneratorReuseManager.getGenerator(prefix, () =>
+          llm.streamComplete(prompt, {
+            ...completionOptions,
+            temperature: 0,
+            raw: true,
+            stop,
+          })
+        );
+
+        // LLM
+        let cancelled = false;
+        const generatorWithCancellation = async function* () {
+          for await (const update of generator) {
+            if (token.isCancellationRequested) {
+              stopStatusBarLoading();
+              cancelled = true;
+              return undefined;
+            }
+            yield update;
+          }
+        };
+        const gen2 = onlyWhitespaceAfterEndOfLine(
+          generatorWithCancellation(),
+          lang.endOfLine
+        );
+        const lineGenerator = streamWithNewLines(streamLines(gen2));
+        const finalGenerator = stopAtSimilarLine(
+          lineGenerator,
+          lineBelowCursor
+        );
+        for await (const update of finalGenerator) {
+          completion += update;
+        }
+
+        if (cancelled) {
+          return undefined;
+        }
+
+        // Don't return empty
+        if (completion.trim().length <= 0) {
+          return undefined;
+        }
+
+        // Post-processing
+        completion = completion.trimEnd();
+      }
+
+      const time = Date.now() - startTime;
+      return {
+        time,
+        completion,
+        prompt,
+        modelProvider: llm.providerName,
+        modelName: llm.model,
+        completionOptions,
+        cacheHit,
+      };
+    } catch (e: any) {
+      console.warn("Error generating autocompletion: ", e);
+      if (!ContinueCompletionProvider.errorsShown.has(e.message)) {
+        ContinueCompletionProvider.errorsShown.add(e.message);
+        vscode.window
+          .showErrorMessage(e.message, "Documentation")
+          .then((val) => {
+            if (val === "Documentation") {
+              vscode.env.openExternal(
+                vscode.Uri.parse(
+                  "https://continue.dev/docs/walkthroughs/tab-autocomplete"
+                )
+              );
+            }
+          });
+      }
+      return undefined;
+    }
+  }
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
@@ -406,7 +399,7 @@ export class ContinueCompletionProvider
     const uuid = uuidv4();
     ContinueCompletionProvider.lastUUID = uuid;
 
-    const config = await configHandler.loadConfig();
+    const config = await this.configHandler.loadConfig();
     const options = {
       ...config.tabAutocompleteOptions,
       ...DEFAULT_AUTOCOMPLETE_OPTS,
@@ -438,7 +431,7 @@ export class ContinueCompletionProvider
     }
 
     try {
-      const outcome = await getTabCompletion(
+      const outcome = await this.getTabCompletion(
         document,
         position,
         token,
@@ -460,7 +453,7 @@ export class ContinueCompletionProvider
       const logRejectionTimeout = setTimeout(() => {
         // Wait 10 seconds, then assume it wasn't accepted
         outcome.accepted = false;
-        ideProtocolClient.logDevData("autocomplete", outcome);
+        logDevData("autocomplete", outcome);
       }, 10_000);
 
       return [

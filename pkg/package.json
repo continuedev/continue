@@ -1,0 +1,49 @@
+{
+  "name": "pkg",
+  "version": "1.0.0",
+  "description": "",
+  "main": "out/index.js",
+  "bin": "out/index.js",
+  "pkg": {
+    "scripts": [
+      "node_modules/axios/**/*"
+    ],
+    "assets": [
+      "../core/node_modules/sqlite3/**/*",
+      "node_modules/@lancedb/**/*",
+      "out/tree-sitter.wasm",
+      "out/tree-sitter-wasms/*"
+    ],
+    "targets": [
+      "node18-darwin-arm64"
+    ],
+    "outputPath": "bin"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build.js",
+    "build:old": "ncc build src/index.ts -o out && pkg .",
+    "build:dev": "tsc",
+    "esbuild": "node build.js --esbuild-only"
+  },
+  "author": "",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/follow-redirects": "^1.14.4",
+    "@types/uuid": "^9.0.8",
+    "@vercel/ncc": "^0.38.1",
+    "esbuild": "^0.19.11",
+    "pkg": "^5.8.1",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.2",
+    "commander": "^12.0.0",
+    "core": "file:../core",
+    "follow-redirects": "^1.15.5",
+    "ncp": "^2.0.0",
+    "posthog-node": "^3.6.3",
+    "uuid": "^9.0.1",
+    "vectordb": "^0.4.10"
+  }
+}

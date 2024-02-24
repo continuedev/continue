@@ -4,13 +4,11 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.google.gson.Gson
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.impl.SimpleDataContext
 import com.intellij.openapi.components.ServiceManager
  import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
 import java.awt.Dimension
-import java.awt.GridLayout
 import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
@@ -130,7 +128,7 @@ class QuickTextEntryAction : AnAction() {
              }
 
              continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-             continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInput")))
+             continuePluginService.sendToWebview("focusContinueInput", null)
 
          }
     }
@@ -179,7 +177,7 @@ class FocusContinueInputWithoutClearAction : AnAction() {
 
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInputWithoutClear")))
+        continuePluginService.sendToWebview("focusContinueInputWithoutClear", null)
 
         continuePluginService.ideProtocolClient?.sendHighlightedCode()
     }
@@ -202,7 +200,7 @@ class FocusContinueInputAction : AnAction() {
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
 
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInput")))
+        continuePluginService.sendToWebview("focusContinueInput", null)
 
         continuePluginService.ideProtocolClient?.sendHighlightedCode()
     }
@@ -225,7 +223,7 @@ class NewContinueSessionAction : AnAction() {
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
 
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInputWithNewSession")))
+        continuePluginService.sendToWebview("focusContinueInputWithNewSession", null)
     }
 }
 
@@ -239,6 +237,6 @@ class ViewHistoryAction : AnAction() {
 
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
 
-        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "viewHistory")))
+        continuePluginService.sendToWebview("viewHistory", null)
     }
 }

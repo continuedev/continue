@@ -5,10 +5,10 @@ import {
   MessagePart,
   RangeInFile,
 } from "core";
-import { ExtensionIde } from "core/ide";
-import { ideRequest } from "core/ide/messaging";
 import { stripImages } from "core/llm/countTokens";
 import { getBasename } from "core/util";
+import { ideRequest } from "../../util/ide";
+import { WebviewIde } from "../../util/webviewIde";
 
 interface MentionAttrs {
   label: string;
@@ -26,7 +26,7 @@ interface MentionAttrs {
 
 async function resolveEditorContent(
   editorState: JSONContent
-): Promise<[ContextItemWithId[], MessageContent]> {
+): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
   const selectedCode: RangeInFile[] = [];
@@ -87,7 +87,7 @@ async function resolveEditorContent(
 
   let contextItemsText = "";
   let contextItems: ContextItemWithId[] = [];
-  const ide = new ExtensionIde();
+  const ide = new WebviewIde();
   for (const item of contextItemAttrs) {
     if (item.itemType === "file") {
       // This is a quick way to resolve @file references
@@ -110,10 +110,7 @@ async function resolveEditorContent(
         fullInput: stripImages(parts),
         selectedCode,
       };
-      const { items: resolvedItems } = await ideRequest(
-        "getContextItems",
-        data
-      );
+      const resolvedItems = await ideRequest("context/getContextItems", data);
       contextItems.push(...resolvedItems);
       for (const resolvedItem of resolvedItems) {
         contextItemsText += resolvedItem.content + "\n\n";
@@ -130,7 +127,7 @@ async function resolveEditorContent(
     parts[lastTextIndex].text = `${slashCommand} ${parts[lastTextIndex].text}`;
   }
 
-  return [contextItems, parts];
+  return [contextItems, selectedCode, parts];
 }
 
 function findLastIndex<T>(

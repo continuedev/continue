@@ -8,11 +8,11 @@ Continue is currently in the left sidebar, but we recommend moving it to the rig
 
 ## 🔑 Most important shortcuts
 
-<kbd>Cmd/Ctrl</kbd> + <kbd>M</kbd> = Select code
+<kbd>Cmd/Ctrl</kbd> + <kbd>L</kbd> = Select code
 
-<kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>M</kbd> = Select code for follow-up
+<kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> = Select code for follow-up
 
-<kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd> = Quick edit
+<kbd>Cmd/Ctrl</kbd> + <kbd>I</kbd> = Quick edit
 
 <kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> = Automatically debug terminal
 

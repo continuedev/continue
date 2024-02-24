@@ -1,15 +1,40 @@
 import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
 import { PersistedSessionInfo, SessionInfo } from "core";
+import MiniSearch from "minisearch";
 import React, { Fragment, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { lightGray, vscBackground, vscInputBackground } from "../components";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscBackground,
+  vscBadgeBackground,
+  vscForeground,
+  vscInputBackground,
+} from "../components";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import useHistory from "../hooks/useHistory";
+import { useNavigationListener } from "../hooks/useNavigationListener";
 import { newSession } from "../redux/slices/stateSlice";
 import { getFontSize } from "../util";
-import { useNavigationListener } from "../hooks/useNavigationListener";
+
+const SearchBar = styled.input`
+  padding: 4px 8px;
+  border-radius: ${defaultBorderRadius};
+  border: 0.5px solid #888;
+  outline: none;
+  width: 90vw;
+  max-width: 500px;
+  margin: 8px auto;
+  display: block;
+  background-color: ${vscInputBackground};
+  color: ${vscForeground};
+  &:focus {
+    border: 0.5px solid ${vscBadgeBackground};
+    outline: none;
+  }
+`;
 
 const Tr = styled.tr`
   &:hover {
@@ -128,7 +153,7 @@ function lastPartOfPath(path: string): string {
 function History() {
   useNavigationListener();
   const navigate = useNavigate();
-  
+
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [filteredAndSortedSessions, setFilteredAndSortedSessions] = useState<
     SessionInfo[]
@@ -149,15 +174,38 @@ function History() {
   const dispatch = useDispatch();
   const { getHistory } = useHistory(dispatch);
 
+  const [minisearch, setMinisearch] = useState<
+    MiniSearch<{ title: string; sessionId: string }>
+  >(
+    new MiniSearch({
+      fields: ["title"],
+      storeFields: ["title", "sessionId", "id"],
+    })
+  );
+  const [searchTerm, setSearchTerm] = useState("");
+
   useEffect(() => {
     const fetchSessions = async () => {
       const sessions = await getHistory();
       setSessions(sessions);
+      minisearch.addAll(
+        sessions.map((session) => ({
+          title: session.title,
+          sessionId: session.sessionId,
+          id: session.sessionId,
+        }))
+      );
     };
     fetchSessions();
   }, []);
 
   useEffect(() => {
+    const sessionIds = minisearch
+      .search(searchTerm, {
+        fuzzy: 0.1,
+      })
+      .map((result) => result.id);
+
     setFilteredAndSortedSessions(
       sessions
         .filter((session) => {
@@ -170,13 +218,17 @@ function History() {
           }
           return workspacePaths.includes(session.workspaceDirectory);
         })
+        // Filter by search term
+        .filter((session) => {
+          return searchTerm === "" || sessionIds.includes(session.sessionId);
+        })
         .sort(
           (a, b) =>
             parseDate(b.dateCreated).getTime() -
             parseDate(a.dateCreated).getTime()
         )
     );
-  }, [filteringByWorkspace, sessions]);
+  }, [filteringByWorkspace, sessions, searchTerm, minisearch]);
 
   useEffect(() => {
     setHeaderHeight(stickyHistoryHeaderRef.current?.clientHeight || 100);
@@ -236,6 +288,11 @@ function History() {
       )}
 
       <div>
+        <SearchBar
+          placeholder="Search past sessions"
+          type="text"
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
         <table className="w-full border-spacing-0 border-collapse">
           <tbody>
             {filteredAndSortedSessions.map((session, index) => {

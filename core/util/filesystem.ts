@@ -1,12 +1,30 @@
 import * as fs from "fs";
-import { DiffLine, IDE, Problem } from "..";
-import { BrowserSerializedContinueConfig } from "../config/load";
-import { Chunk } from "../index";
-import { getContinueGlobalPath } from "../util/paths";
+import { ContinueRcJson, IDE, IdeInfo, Problem, Range } from "..";
+import { getContinueGlobalPath } from "./paths";
 
 class FileSystemIde implements IDE {
-  async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
-    throw new Error("Not implemented");
+  getIdeInfo(): Promise<IdeInfo> {
+    return Promise.resolve({
+      ideType: "vscode",
+      name: "na",
+      version: "0.1",
+      remoteName: "na",
+    });
+  }
+  readRangeInFile(filepath: string, range: Range): Promise<string> {
+    return Promise.resolve("");
+  }
+  getStats(directory: string): Promise<{ [path: string]: number }> {
+    return Promise.resolve({});
+  }
+  isTelemetryEnabled(): Promise<boolean> {
+    return Promise.resolve(false);
+  }
+  getUniqueId(): Promise<string> {
+    return Promise.resolve("NOT_UNIQUE");
+  }
+  getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
+    return Promise.resolve([]);
   }
 
   getDiff(): Promise<string> {
@@ -92,15 +110,6 @@ class FileSystemIde implements IDE {
     return Promise.resolve("");
   }
 
-  async verticalDiffUpdate(
-    filepath: string,
-    startLine: number,
-    endLine: number,
-    diffLine: DiffLine
-  ) {
-    return Promise.resolve();
-  }
-
   getOpenFiles(): Promise<string[]> {
     return Promise.resolve([]);
   }
@@ -119,20 +128,6 @@ class FileSystemIde implements IDE {
 
   async subprocess(command: string): Promise<[string, string]> {
     return ["", ""];
-  }
-
-  getFilesToEmbed(providerId: string): Promise<[string, string, string][]> {
-    return Promise.resolve([]);
-  }
-
-  sendEmbeddingForChunk(chunk: Chunk, embedding: number[], tags: string[]) {}
-
-  retrieveChunks(
-    text: string,
-    n: number,
-    directory: string | undefined
-  ): Promise<Chunk[]> {
-    return Promise.resolve([]);
   }
 }
 

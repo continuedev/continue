@@ -18,5 +18,5 @@
     "noEmitOnError": false,
     "types": ["jest", "node"]
   },
-  "include": ["./**/*.ts"]
+  "include": ["./**/*.ts", "indexing/embeddings/TransformersJsWorkerThread.js"]
 }

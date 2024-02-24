@@ -15,7 +15,7 @@ import {
 } from "..";
 import { RootStore } from "../../redux/store";
 import { getFontSize } from "../../util";
-import { logDevData } from "../../util/ide";
+import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 
@@ -70,7 +70,10 @@ function StepContainer(props: StepContainerProps) {
     setFeedback(feedback);
     if (props.item.promptLogs?.length) {
       for (const [prompt, completion] of props.item.promptLogs) {
-        logDevData("chat", { prompt, completion, feedback });
+        postToIde("devdata/log", {
+          tableName: "chat",
+          data: { prompt, completion, feedback },
+        });
       }
     }
   };

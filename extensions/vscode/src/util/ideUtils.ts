@@ -1,104 +1,24 @@
 import { FileEdit, RangeInFile } from "core";
-import { getDevDataFilePath } from "core/util/paths";
-import { writeFileSync } from "fs";
-import * as path from "path";
+import path from "path";
 import * as vscode from "vscode";
-import { extensionContext } from "./activation/activate";
-import { debugPanelWebview, getSidebarContent } from "./debugPanel";
-import { diffManager } from "./diff/horizontal";
-import { TabAutocompleteModel, configHandler } from "./loadConfig";
+import { VsCodeExtension } from "../extension/vscodeExtension";
 import {
   SuggestionRanges,
   acceptSuggestionCommand,
   editorSuggestionsLocked,
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
-} from "./suggestions";
-import { vsCodeIndexCodebase } from "./util/indexCodebase";
-import { defaultIgnoreFile, traverseDirectory } from "./util/traverseDirectory";
+} from "../suggestions";
+import { defaultIgnoreFile, traverseDirectory } from "./traverseDirectory";
 import {
   getUniqueId,
   openEditorAndRevealRange,
   uriFromFilePath,
-} from "./util/vscode";
+} from "./vscode";
 const util = require("util");
-const exec = util.promisify(require("child_process").exec);
+const asyncExec = util.promisify(require("child_process").exec);
 
-const continueVirtualDocumentScheme = "continue";
-
-class IdeProtocolClient {
-  private static PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } =
-    {};
-
-  constructor(context: vscode.ExtensionContext) {
-    // Listen for file saving
-    vscode.workspace.onDidSaveTextDocument((event) => {
-      const filepath = event.uri.fsPath;
-
-      if (
-        filepath.endsWith(".continue/config.json") ||
-        filepath.endsWith(".continue\\config.json") ||
-        filepath.endsWith(".continue/config.ts") ||
-        filepath.endsWith(".continue\\config.ts") ||
-        filepath.endsWith(".continuerc.json")
-      ) {
-        configHandler.reloadConfig();
-        TabAutocompleteModel.clearLlm();
-      } else if (
-        filepath.endsWith(".continueignore") ||
-        filepath.endsWith(".gitignore")
-      ) {
-        debugPanelWebview?.postMessage({
-          type: "updateEmbeddings",
-        });
-      }
-    });
-
-    // Refresh index when branch is changed
-    this.getWorkspaceDirectories().forEach(async (dir) => {
-      const repo = await this.getRepo(vscode.Uri.file(dir));
-      if (repo) {
-        repo.state.onDidChange(() => {
-          // args passed to this callback are always undefined, so keep track of previous branch
-          const currentBranch = repo?.state?.HEAD?.name;
-          if (currentBranch) {
-            if (IdeProtocolClient.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]) {
-              if (
-                currentBranch !==
-                IdeProtocolClient.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]
-              ) {
-                // Trigger refresh of index only in this directory
-                vsCodeIndexCodebase([dir]);
-              }
-            }
-
-            IdeProtocolClient.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir] =
-              currentBranch;
-          }
-        });
-      }
-    });
-
-    // Register a content provider for the readonly virtual documents
-    const documentContentProvider = new (class
-      implements vscode.TextDocumentContentProvider
-    {
-      // emitter and its event
-      onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
-      onDidChange = this.onDidChangeEmitter.event;
-
-      provideTextDocumentContent(uri: vscode.Uri): string {
-        return uri.query;
-      }
-    })();
-    context.subscriptions.push(
-      vscode.workspace.registerTextDocumentContentProvider(
-        continueVirtualDocumentScheme,
-        documentContentProvider
-      )
-    );
-  }
-
+export class VsCodeIdeUtils {
   visibleMessages: Set<string> = new Set();
 
   async gotoDefinition(
@@ -207,10 +127,6 @@ class IdeProtocolClient {
     );
   }
 
-  async showDiff(filepath: string, replacement: string, step_index: number) {
-    await diffManager.writeDiff(filepath, replacement, step_index);
-  }
-
   showMultiFileEdit(edits: FileEdit[]) {
     vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     const panel = vscode.window.createWebviewPanel(
@@ -218,12 +134,13 @@ class IdeProtocolClient {
       "Continue",
       vscode.ViewColumn.One
     );
-    panel.webview.html = getSidebarContent(
-      extensionContext,
-      panel,
-      "/monaco",
-      edits
-    );
+    // panel.webview.html = this.sidebar.getSidebarContent(
+    //   extensionContext,
+    //   panel,
+    //   this.ide,
+    //   "/monaco",
+    //   edits
+    // );
   }
 
   openFile(filepath: string, range?: vscode.Range) {
@@ -244,9 +161,9 @@ class IdeProtocolClient {
     vscode.workspace
       .openTextDocument(
         vscode.Uri.parse(
-          `${continueVirtualDocumentScheme}:${encodeURIComponent(
-            name
-          )}?${encodeURIComponent(contents)}`
+          `${
+            VsCodeExtension.continueVirtualDocumentScheme
+          }:${encodeURIComponent(name)}?${encodeURIComponent(contents)}`
         )
       )
       .then((doc) => {
@@ -480,7 +397,7 @@ class IdeProtocolClient {
     let repo = await this.getRepo(forDirectory);
     if (repo?.state?.HEAD?.name === undefined) {
       try {
-        const { stdout } = await exec("git rev-parse --abbrev-ref HEAD", {
+        const { stdout } = await asyncExec("git rev-parse --abbrev-ref HEAD", {
           cwd: forDirectory.fsPath,
         });
         return stdout?.trim() || "NONE";
@@ -533,30 +450,4 @@ class IdeProtocolClient {
       });
     return rangeInFiles;
   }
-
-  async runCommand(command: string) {
-    if (vscode.window.terminals.length) {
-      vscode.window.terminals[0].show();
-      vscode.window.terminals[0].sendText(command, false);
-    } else {
-      const terminal = vscode.window.createTerminal();
-      terminal.show();
-      terminal.sendText(command, false);
-    }
-  }
-
-  sendMainUserInput(input: string) {
-    debugPanelWebview?.postMessage({
-      type: "userInput",
-      input,
-    });
-  }
-
-  logDevData(tableName: string, data: any) {
-    const filepath: string = getDevDataFilePath(tableName);
-    const jsonLine = JSON.stringify(data);
-    writeFileSync(filepath, `${jsonLine}\n`, { flag: "a" });
-  }
 }
-
-export default IdeProtocolClient;

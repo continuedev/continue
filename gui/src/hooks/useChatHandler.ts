@@ -7,9 +7,9 @@ import {
   ChatMessage,
   LLMReturnValue,
   MessageContent,
+  RangeInFile,
   SlashCommandDescription,
 } from "core";
-import { ideStreamRequest, llmStreamChat } from "core/ide/messaging";
 import { constructMessages } from "core/llm/constructMessages";
 import { stripImages } from "core/llm/countTokens";
 import { usePostHog } from "posthog-js/react";
@@ -26,7 +26,7 @@ import {
   streamUpdate,
 } from "../redux/slices/stateSlice";
 import { RootStore } from "../redux/store";
-import { errorPopup } from "../util/ide";
+import { ideStreamRequest, llmStreamChat, postToIde } from "../util/ide";
 
 function useChatHandler(dispatch: Dispatch) {
   const posthog = usePostHog();
@@ -98,14 +98,15 @@ function useChatHandler(dispatch: Dispatch) {
     messages: ChatMessage[],
     slashCommand: SlashCommandDescription,
     input: string,
-    historyIndex: number
+    historyIndex: number,
+    selectedCode: RangeInFile[]
   ) {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
     const modelTitle = defaultModel.title;
 
     for await (const update of ideStreamRequest(
-      "runNodeJsSlashCommand",
+      "command/run",
       {
         input,
         history: messages,
@@ -114,6 +115,7 @@ function useChatHandler(dispatch: Dispatch) {
         contextItems,
         params: slashCommand.params,
         historyIndex,
+        selectedCode,
       },
       cancelToken
     )) {
@@ -136,8 +138,9 @@ function useChatHandler(dispatch: Dispatch) {
       }
 
       // Resolve context providers and construct new history
-      const [contextItems, content] = await resolveEditorContent(editorState);
-      console.log(contextItems, content);
+      const [contextItems, selectedCode, content] =
+        await resolveEditorContent(editorState);
+
       const message: ChatMessage = {
         role: "user",
         content,
@@ -193,12 +196,15 @@ function useChatHandler(dispatch: Dispatch) {
           messages,
           slashCommand,
           commandInput,
-          historyIndex
+          historyIndex,
+          selectedCode
         );
       }
     } catch (e) {
       console.log("Continue: error streaming response: ", e);
-      errorPopup(`Error streaming response: ${e.message}`);
+      postToIde("errorPopup", {
+        message: `Error streaming response: ${e.message}`,
+      });
     } finally {
       dispatch(setInactive());
     }

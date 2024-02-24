@@ -27,10 +27,7 @@ function EditorFrame(props: EditorFrameProps) {
     };
     window.addEventListener("message", eventListener);
 
-    postToIde("readRangeInFile", {
-      filepath: props.filename,
-      messageId: messageId,
-    });
+    postToIde("readFile", { filepath: props.filename });
 
     return () => window.removeEventListener("message", eventListener);
   }, []);

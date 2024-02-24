@@ -111,7 +111,8 @@ export async function constructAutocompletePrompt(
     line: number,
     character: number
   ) => Promise<AutocompleteSnippet | undefined>,
-  options: TabAutocompleteOptions
+  options: TabAutocompleteOptions,
+  modelName: string
 ): Promise<{
   prefix: string;
   suffix: string;
@@ -167,17 +168,17 @@ export async function constructAutocompletePrompt(
     .join("\n");
   const maxPrefixTokens =
     options.maxPromptTokens * options.prefixPercentage -
-    countTokens(formattedSnippets, "gpt-4");
-  let prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens);
+    countTokens(formattedSnippets, modelName);
+  let prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens, modelName);
   if (formattedSnippets.length > 0) {
     prefix = formattedSnippets + "\n" + prefix;
   }
 
   const maxSuffixTokens = Math.min(
-    options.maxPromptTokens - countTokens(prefix, "gpt-4"),
+    options.maxPromptTokens - countTokens(prefix, modelName),
     options.maxSuffixPercentage * options.maxPromptTokens
   );
-  let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens);
+  let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
 
   return { prefix, suffix, useFim: true, completeMultiline };
 }

@@ -2,10 +2,10 @@ import * as dotenv from "dotenv";
 import { ContinueSDK } from "..";
 import EditSlashCommand, { getPromptParts } from "../commands/slash/edit";
 import { contextItemToRangeInFileWithContents } from "../commands/util";
-import FileSystemIde from "../ide/filesystem";
 import FreeTrial from "../llm/llms/FreeTrial";
 import Ollama from "../llm/llms/Ollama";
 import { dedentAndGetCommonWhitespace } from "../util";
+import FileSystemIde from "../util/filesystem";
 
 jest.setTimeout(100_000);
 
@@ -62,6 +62,8 @@ describe("/edit slash command", () => {
       history: [],
       input: "implement this function",
       contextItems: [TEST_CONTEXT_ITEM],
+      selectedCode: [],
+      config: {} as any,
     };
 
     let total = "";

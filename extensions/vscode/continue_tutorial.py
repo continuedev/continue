@@ -19,7 +19,7 @@ You can either
 - follow along by clicking the gray CodeLens buttons above the lines, in order, starting with "Begin Section"
 """
 
-# region —————————————————————————— Part 1: Ask a question about code [⌘ M] ——————————————————————————
+# region —————————————————————————— Part 1: Ask a question about code [⌘ L] ——————————————————————————
 
 
 """Step 1: Highlight the function below"""
@@ -34,14 +34,14 @@ def mysterious_function(x):
     return x
 
 
-"""Step 2: Use the keyboard shortcut [⌘ M] to
+"""Step 2: Use the keyboard shortcut [⌘ L] to
 select the code and toggle the Continue input box"""
 
 """Step 3: Ask a question and press Enter"""
 
 # endregion
 
-# region ————————————————————————————————— Part 2: Edit code [⌘ ⇧ L] —————————————————————————————————
+# region ————————————————————————————————— Part 2: Edit code [⌘ I] —————————————————————————————————
 
 
 """Step 1: Highlight this code"""
@@ -60,7 +60,7 @@ def mysterious_function(x):
     return x
 
 
-"""Step 2: Use the keyboard shortcut [⌘ ⇧ L] to edit"""
+"""Step 2: Use the keyboard shortcut [⌘ I] to edit"""
 
 """Step 3: Type "<your edit request>" and press Enter"""
 

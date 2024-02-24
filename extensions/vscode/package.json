@@ -195,13 +195,13 @@
     "keybindings": [
       {
         "command": "continue.focusContinueInput",
-        "mac": "cmd+m",
-        "key": "ctrl+m"
+        "mac": "cmd+l",
+        "key": "ctrl+l"
       },
       {
         "command": "continue.focusContinueInputWithoutClear",
-        "mac": "cmd+shift+m",
-        "key": "ctrl+shift+m"
+        "mac": "cmd+shift+l",
+        "key": "ctrl+shift+l"
       },
       {
         "command": "continue.acceptDiff",
@@ -221,8 +221,8 @@
       },
       {
         "command": "continue.quickEdit",
-        "mac": "cmd+shift+l",
-        "key": "ctrl+shift+l"
+        "mac": "cmd+i",
+        "key": "ctrl+i"
       },
       {
         "command": "continue.toggleAuxiliaryBar",

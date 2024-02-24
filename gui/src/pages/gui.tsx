@@ -30,6 +30,7 @@ import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
+import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession, setInactive } from "../redux/slices/stateSlice";
 import {
@@ -348,18 +349,14 @@ function GUI(props: GUIProps) {
 
   const { saveSession } = useHistory(dispatch);
 
-  useEffect(() => {
-    const handler = (event: any) => {
-      if (event.data.type === "newSession") {
-        saveSession();
-        mainTextInputRef.current?.focus?.();
-      }
-    };
-    window.addEventListener("message", handler);
-    return () => {
-      window.removeEventListener("message", handler);
-    };
-  }, [saveSession]);
+  useWebviewListener(
+    "newSession",
+    async () => {
+      saveSession();
+      mainTextInputRef.current?.focus?.();
+    },
+    [saveSession]
+  );
 
   const isLastUserInput = useCallback(
     (index: number): boolean => {
@@ -471,7 +468,7 @@ function GUI(props: GUIProps) {
               }}
               className="mr-auto"
             >
-              New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "M"})
+              New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
             </NewSessionButton>
           ) : null}
         </div>

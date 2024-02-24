@@ -22,7 +22,7 @@ import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { RootStore } from "../../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
-import { deleteModel } from "../../util/ide";
+import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 
 const GridDiv = styled.div`
@@ -32,24 +32,6 @@ const GridDiv = styled.div`
   border: 0.5px solid ${lightGray};
   border-radius: ${defaultBorderRadius};
   overflow: hidden;
-`;
-
-const Select = styled.select`
-  border: none;
-  max-width: 50vw;
-  background-color: ${vscBackground};
-  color: ${vscForeground};
-  padding: 6px;
-  max-height: 35vh;
-  overflow: scroll;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-  }
-  &:hover {
-    background-color: ${vscInputBackground};
-  }
 `;
 
 const StyledPlusIcon = styled(PlusIcon)`
@@ -64,18 +46,6 @@ const StyledPlusIcon = styled(PlusIcon)`
     background-color: ${vscInputBackground};
   }
   border-left: 0.5px solid ${lightGray};
-`;
-
-const NewProviderDiv = styled.div`
-  cursor: pointer;
-  padding: 8px;
-  padding-left: 16px;
-  padding-right: 16px;
-  border-top: 0.5px solid ${lightGray};
-
-  &:hover {
-    background-color: ${vscInputBackground};
-  }
 `;
 
 const StyledListbox = styled(Listbox)`
@@ -124,7 +94,7 @@ const StyledListboxOptions = styled(Listbox.Options)`
   max-height: 80vh;
 
   border-radius: ${defaultBorderRadius};
-  overflow: scroll;
+  overflow-y: scroll;
 `;
 
 const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
@@ -174,7 +144,7 @@ function ListBoxOption({
           <HeaderButtonWithText
             text="Delete"
             onClick={(e) => {
-              deleteModel(option.title);
+              postToIde("config/deleteModel", { title: option.title });
               e.stopPropagation();
               e.preventDefault();
             }}
