@@ -13,6 +13,7 @@ import {
   setupStatusBar,
 } from "../lang-server/completionProvider";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import { RemoteConfigSync } from "../util/remoteConfig";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
@@ -51,6 +52,14 @@ export class VsCodeExtension {
       this.extensionContext,
       this.verticalDiffManager
     );
+    try {
+      const configSync = new RemoteConfigSync(
+        this.configHandler.reloadConfig.bind(this.configHandler)
+      );
+      configSync.setup();
+    } catch (e) {
+      console.warn(`Failed to sync remote config: ${e}`);
+    }
 
     // Sidebar
     context.subscriptions.push(

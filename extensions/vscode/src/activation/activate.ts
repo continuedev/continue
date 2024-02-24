@@ -5,7 +5,6 @@ import path from "path";
 import * as vscode from "vscode";
 import { VsCodeExtension } from "../extension/vscodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
-import { RemoteConfigSync } from "../util/remoteConfig";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
@@ -94,12 +93,5 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     Telemetry.capture("install", {
       extensionVersion: getExtensionVersion(),
     });
-  }
-
-  try {
-    const configSync = new RemoteConfigSync();
-    configSync.setup();
-  } catch (e) {
-    console.warn(`Failed to sync remote config: ${e}`);
   }
 }

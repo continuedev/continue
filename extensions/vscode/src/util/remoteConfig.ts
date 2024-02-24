@@ -12,7 +12,7 @@ export class RemoteConfigSync {
 
   private syncInterval: NodeJS.Timer | undefined = undefined;
 
-  constructor() {
+  constructor(private triggerReloadConfig: () => void) {
     const { userToken, remoteConfigServerUrl, remoteConfigSyncPeriod } =
       this.loadVsCodeSettings();
     this.userToken = userToken;
@@ -120,7 +120,7 @@ export class RemoteConfigSync {
         getConfigJsPathForRemote(remoteConfigServerUrl),
         configJs
       );
-      configHandler.reloadConfig();
+      this.triggerReloadConfig();
     } catch (e) {
       vscode.window.showErrorMessage(`Failed to sync remote config: ${e}`);
     }
