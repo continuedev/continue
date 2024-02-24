@@ -27,6 +27,15 @@ const exec = util.promisify(require("child_process").exec);
 const continueVirtualDocumentScheme = "continue";
 
 class IdeProtocolClient {
+  async getAvailableThreads(): Promise<string[]> {
+    const session = vscode.debug.activeDebugSession;
+    if (!session) return [];
+
+    const threadsResponse = await session.customRequest("threads");
+    return threadsResponse.threads.map(
+      (thread: { id: number; name: string }) => `${thread.id}, ${thread.name}`
+    );
+  }
   private static PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } =
     {};
 
@@ -457,19 +466,26 @@ class IdeProtocolClient {
       return "";
     }
 
-    const threadsResponse = await session.customRequest("threads");
-    const traceResponse = await session.customRequest("stackTrace", {
-      threadId: threadsResponse.threads[threadIndex].threadId,
-      startFrame: 0,
-    });
-    const scopesResponse = await session.customRequest("scopes", {
-      frameId: traceResponse.stackFrames[0].id,
-    });
-    const variablesResponse = await session.customRequest("variables", {
-      variablesReference: scopesResponse.scopes[0].variablesReference,
-    });
+    const variablesResponse = await session
+      .customRequest("threads")
+      .then((threadsResponse) =>
+        session.customRequest("stackTrace", {
+          threadId: threadsResponse.threads[threadIndex].threadId,
+          startFrame: 0,
+        })
+      )
+      .then((traceResponse) =>
+        session.customRequest("scopes", {
+          frameId: traceResponse.stackFrames[0].id,
+        })
+      )
+      .then((scopesResponse) =>
+        session.customRequest("variables", {
+          variablesReference: scopesResponse.scopes[0].variablesReference,
+        })
+      );
 
-    return variablesResponse as string;
+    return JSON.stringify(variablesResponse);
   }
 
   private async _getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {

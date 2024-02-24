@@ -7,6 +7,9 @@ async function r(messageType: string, options: any = {}) {
   return await ideRequest(messageType, options);
 }
 export class ExtensionIde implements IDE {
+  async getAvailableThreads(): Promise<string[]> {
+    return await r("getAvailableThreads");
+  }
   async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
     return await r("getSerializedConfig");
   }
@@ -19,7 +22,7 @@ export class ExtensionIde implements IDE {
     return await r("getTerminalContents");
   }
 
-  async getDebugLocals() {
+  async getDebugLocals(threadIndex: number) {
     return await r("getTerminalContents");
   }
 

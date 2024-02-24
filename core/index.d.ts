@@ -315,7 +315,8 @@ export interface IDE {
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig>;
   getDiff(): Promise<string>;
   getTerminalContents(): Promise<string>;
-  getDebugLocals(): Promise<string>;
+  getDebugLocals(threadIndex: number): Promise<string>;
+  getAvailableThreads(): Promise<string[]>;
   listWorkspaceContents(directory?: string): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;

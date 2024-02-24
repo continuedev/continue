@@ -204,7 +204,7 @@ export function getSidebarContent(
           break;
         }
         case "getDebugLocals": {
-          respond(await ide.getDebugLocals())
+          respond(await ide.getDebugLocals(data.message.threadIndex))
         }
         case "listWorkspaceContents": {
           respond(await ide.listWorkspaceContents());

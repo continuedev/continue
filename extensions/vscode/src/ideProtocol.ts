@@ -18,6 +18,9 @@ import { traverseDirectory } from "./util/traverseDirectory";
 import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 
 class VsCodeIde implements IDE {
+  async getAvailableThreads(): Promise<string[]> {
+    return await ideProtocolClient.getAvailableThreads();
+  }
   async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
     const config = await configHandler.loadConfig();
     return finalToBrowserConfig(config);
@@ -31,8 +34,8 @@ class VsCodeIde implements IDE {
     return await ideProtocolClient.getTerminalContents(1);
   }
 
-  async getDebugLocals(): Promise<string> {
-    return await ideProtocolClient.getDebugLocals();
+  async getDebugLocals(threadIndex: number): Promise<string> {
+    return await ideProtocolClient.getDebugLocals(threadIndex);
   }
 
   async listWorkspaceContents(directory?: string): Promise<string[]> {

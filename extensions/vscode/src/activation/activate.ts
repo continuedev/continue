@@ -17,6 +17,7 @@ import { vsCodeIndexCodebase } from "../util/indexCodebase";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
+import { debugPanelWebview } from "../debugPanel";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
@@ -128,6 +129,17 @@ export async function activateExtension(context: vscode.ExtensionContext) {
         path.join(getExtensionUri().fsPath, "media", "welcome.md")
       )
     );
+  });
+
+  vscode.debug.registerDebugAdapterTrackerFactory("*", {
+    createDebugAdapterTracker(session: vscode.DebugSession) {
+      return {
+        onDidSendMessage(message: any) {
+          if (message.type == "event" && message.event == "breakpoint")
+            debugPanelWebview?.postMessage({ type: "refreshSubmenuItems" });
+        },
+      };
+    },
   });
 
   // (async () => {
