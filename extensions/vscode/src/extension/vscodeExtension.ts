@@ -30,7 +30,13 @@ export class VsCodeExtension {
   constructor(context: vscode.ExtensionContext) {
     this.diffManager = new DiffManager(context);
     this.ide = new VsCodeIde(this.diffManager);
-    this.configHandler = new ConfigHandler(this.ide);
+    const remoteUrl = vscode.workspace
+      .getConfiguration("continue")
+      .get<string | undefined>("remoteConfigServerUrl", undefined);
+    this.configHandler = new ConfigHandler(
+      this.ide,
+      remoteUrl === undefined ? undefined : new URL(remoteUrl)
+    );
     this.configHandler.reloadConfig();
     this.verticalDiffManager = new VerticalPerLineDiffManager(
       this.configHandler

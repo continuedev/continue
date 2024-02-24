@@ -16,7 +16,8 @@ export class ConfigHandler {
   private savedBrowserConfig?: BrowserSerializedContinueConfig;
 
   private readonly ide: IDE;
-  constructor(ide: IDE) {
+  private readonly remoteConfigServerUrl: URL | undefined;
+  constructor(ide: IDE, remoteConfigServerUrl: URL | undefined) {
     this.ide = ide;
     try {
       this.loadConfig();
@@ -56,6 +57,7 @@ export class ConfigHandler {
       this.savedConfig = await loadFullConfigNode(
         this.ide.readFile,
         workspaceConfigs,
+        this.remoteConfigServerUrl,
         ideInfo.ideType
       );
       this.savedConfig.allowAnonymousTelemetry =
