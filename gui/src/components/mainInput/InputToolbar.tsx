@@ -13,6 +13,7 @@ import {
   vscInputBackground,
 } from "..";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { getMetaKeyLabel } from "../../util";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
   position: absolute;
@@ -137,9 +138,7 @@ function InputToolbar(props: InputToolbarProps) {
         onClick={props.useCodebase}
         className={"hover:underline cursor-pointer float-right"}
       >
-        {/* {downshiftProps.inputValue?.startsWith("/codebase")
-      ? "Using Codebase"
-      : `${getMetaKeyLabel()} ⏎ Use Codebase`} */}
+        {getMetaKeyLabel()} ⏎ Use Codebase
       </span>
 
       <EnterButton

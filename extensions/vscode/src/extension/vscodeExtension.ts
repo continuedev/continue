@@ -36,7 +36,9 @@ export class VsCodeExtension {
       .get<string | undefined>("remoteConfigServerUrl", undefined);
     this.configHandler = new ConfigHandler(
       this.ide,
-      remoteUrl === undefined ? undefined : new URL(remoteUrl)
+      remoteUrl === undefined || remoteUrl === ""
+        ? undefined
+        : new URL(remoteUrl)
     );
     this.configHandler.reloadConfig();
     this.verticalDiffManager = new VerticalPerLineDiffManager(

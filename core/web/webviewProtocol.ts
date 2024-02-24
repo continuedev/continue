@@ -61,6 +61,7 @@ export type WebviewProtocol = Protocol &
     ];
 
     errorPopup: [{ message: string }, void];
+    openUrl: [string, void];
     applyToCurrentFile: [{ text: string }, void];
     showTutorial: [undefined, void];
     showFile: [{ filepath: string }, void];

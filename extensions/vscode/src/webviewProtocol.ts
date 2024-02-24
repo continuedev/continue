@@ -511,6 +511,10 @@ export class VsCodeWebviewProtocol {
     this.on("showTutorial", (msg) => {
       showTutorial();
     });
+
+    this.on("openUrl", (msg) => {
+      vscode.env.openExternal(vscode.Uri.parse(msg.data));
+    });
   }
 
   public request<T extends keyof ReverseWebviewProtocol>(
