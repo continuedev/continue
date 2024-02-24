@@ -140,10 +140,10 @@ export const StyledTooltip = styled(Tooltip)`
   background-color: ${vscEditorBackground};
   color: ${vscForeground};
   border-radius: ${defaultBorderRadius};
-  box-shadow: 0 0 3px 0 ${vscForeground};
-  padding: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
+  box-shadow: 0 0 1px 0 ${vscForeground};
+  padding: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
   z-index: 1000;
 
   max-width: 80vw;

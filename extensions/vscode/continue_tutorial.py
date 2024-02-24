@@ -1,18 +1,11 @@
 """
-Welcome to Continue!
-
 _________               _____ _____                       
 __  ____/______ _______ __  /____(_)_______ ____  _______ 
 _  /     _  __ \__  __ \_  __/__  / __  __ \_  / / /_  _ \
 / /___   / /_/ /_  / / // /_  _  /  _  / / // /_/ / /  __/
 \____/   \____/ /_/ /_/ \__/  /_/   /_/ /_/ \__,_/  \___/ 
 
-This is a 2 minute tutorial.
-
-It will walk you through the basic features:
-1. Ask a question
-2. Edit code
-3. Debug
+Welcome to Continue! This is a 2 minute tutorial.
 
 You can either
 - follow the instructions on your own, or
@@ -72,7 +65,7 @@ accept [⌘ ⇧ ⏎] or reject [⌘ ⇧ ⌫] the edit"""
 # region ———————————————————————————— Part 3: Debug automatically [⌘ ⇧ R] ————————————————————————————
 
 
-"""Step 1: Run this Python file"""
+"""Step 1: Run this Python file (it should error!)"""
 
 
 def print_sum(list_to_print):

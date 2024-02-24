@@ -297,7 +297,7 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
         new vscode.CodeLens(range, {
           title: "Highlight the function",
           command: "continue.selectRange",
-          arguments: [lineOf11 + 1, lineOf11 + 8],
+          arguments: [lineOf11 + 3, lineOf11 + 11],
         })
       );
     }
