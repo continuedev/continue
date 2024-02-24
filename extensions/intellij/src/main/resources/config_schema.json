@@ -49,6 +49,11 @@
           "description": "The maximum number of tokens to generate.",
           "default": 600,
           "type": "integer"
+        },
+        "numThreads": {
+          "title": "Number of threads",
+          "description": "The number of threads used in the generation process. Only available for Ollama (this is the num_thread parameter)",
+          "type": "integer"
         }
       }
     },
@@ -71,8 +76,15 @@
           "title": "Ca Bundle Path",
           "description": "Path to a custom CA bundle to use when making the HTTP request",
           "anyOf": [
-            { "type": "string" },
-            { "type": "array", "items": { "type": "string" } }
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           ]
         },
         "proxy": {
@@ -291,7 +303,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["huggingface-tgi"]
+                "enum": ["huggingface-tgi", "huggingface-inference-api"]
               }
             }
           },
@@ -371,7 +383,9 @@
                       "llama2-13b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               },
               "markdownDescription": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models)."
@@ -457,7 +471,9 @@
                       "AUTODETECT"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -476,8 +492,12 @@
             "properties": {
               "model": {
                 "anyOf": [
-                  { "enum": ["claude-2", "claude-instant-1"] },
-                  { "type": "string" }
+                  {
+                    "enum": ["claude-2", "claude-instant-1"]
+                  },
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -526,7 +546,9 @@
                       "phind-codellama-34b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ],
                 "markdownDescription": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
               }
@@ -594,7 +616,9 @@
                       "starcoder-3b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -639,7 +663,9 @@
                       "AUTODETECT"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ],
                 "markdownDescription": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
               }
@@ -822,7 +848,9 @@
                       "starcoder-3b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -887,7 +915,9 @@
                 "Generate a commit message for the current changes"
               ]
             },
-            { "type": "string" }
+            {
+              "type": "string"
+            }
           ]
         },
         "description": {
@@ -1020,7 +1050,9 @@
               ],
               "type": "string"
             },
-            { "type": "string" }
+            {
+              "type": "string"
+            }
           ]
         },
         "params": {
@@ -1116,6 +1148,41 @@
                   }
                 },
                 "required": ["repos"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["jira"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "description": "Your Jira domain, for example company.atlassian.net."
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "The email that you log into Jira with"
+                  },
+                  "token": {
+                    "type": "string",
+                    "description": "Your atlassian API token from https://id.atlassian.com/manage-profile/security/api-tokens"
+                  },
+                  "issueQuery": {
+                    "type": "string",
+                    "description": "Customize the query used to find Jira issues"
+                  }
+                },
+                "required": ["domain", "email", "token"]
               }
             },
             "required": ["params"]

@@ -4,7 +4,6 @@ import {
 } from "core/util/paths";
 import * as fs from "fs";
 import * as vscode from "vscode";
-import { configHandler } from "../loadConfig";
 
 export class RemoteConfigSync {
   private userToken: string | null;
