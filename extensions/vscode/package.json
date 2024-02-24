@@ -226,8 +226,8 @@
       },
       {
         "command": "continue.toggleAuxiliaryBar",
-        "mac": "alt+cmd+m",
-        "key": "alt+ctrl+m"
+        "mac": "alt+cmd+l",
+        "key": "alt+ctrl+l"
       },
       {
         "command": "continue.debugTerminal",
