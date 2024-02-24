@@ -381,7 +381,7 @@ const mistralMedium: ModelPackage = {
   ],
 };
 
-const gemini: ModelPackage = {
+const geminiPro: ModelPackage = {
   title: "Gemini Pro",
   description: "A highly capable model created by Google DeepMind",
   params: {
@@ -416,6 +416,7 @@ const deepseek: ModelPackage = {
     model: "deepseek-7b",
     contextLength: 4096,
   },
+  icon: "deepseek.png",
   dimensions: [
     {
       name: "Parameter Count",
@@ -463,15 +464,14 @@ const neuralChat: ModelPackage = {
 };
 
 const osModels = [
-  codeLlamaInstruct,
-  llama2Chat,
+  deepseek,
   wizardCoder,
-  phindCodeLlama,
+  codeLlamaInstruct,
   mistral,
-  codeup,
+  phindCodeLlama,
+  llama2Chat,
   zephyr,
   neuralChat,
-  deepseek,
 ];
 
 const gpt4turbo: ModelPackage = {
@@ -563,21 +563,19 @@ const AUTODETECT: ModelPackage = {
 };
 
 export const MODEL_INFO: ModelPackage[] = [
+  gpt4turbo,
   gpt4,
   gpt35turbo,
-  gpt4turbo,
-  gemini,
+  geminiPro,
   claude2,
+  deepseek,
   mistral,
   codellama70bTrial,
-  codeLlamaInstruct,
-  llama2Chat,
   wizardCoder,
+  codeLlamaInstruct,
   phindCodeLlama,
-  codeup,
-  chatBison,
+  llama2Chat,
   zephyr,
-  deepseek,
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -653,7 +651,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     title: "Ollama",
     provider: "ollama",
     description:
-      "One of the fastest ways to get started with local models on Mac or Linux",
+      "One of the fastest ways to get started with local models on Mac, Linux, or Windows",
     longDescription:
       'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama pull <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
     icon: "ollama.png",
@@ -672,46 +670,6 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ...completionParamsInputs,
       { ...apiBaseInput, defaultValue: "http://localhost:11434" },
     ],
-  },
-  mistral: {
-    title: "Mistral API",
-    provider: "mistral",
-    description:
-      "The Mistral API provides hosted access to their models, including Mistral-7b, Mixtral, and the very capable mistral-medium",
-    icon: "mistral.png",
-    longDescription: `To get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)`,
-    tags: [
-      ModelProviderTag["Requires API Key"],
-      ModelProviderTag["Open-Source"],
-    ],
-    params: {
-      apiKey: "",
-    },
-    collectInputFor: [
-      {
-        inputType: CollectInputType.text,
-        key: "apiKey",
-        label: "API Key",
-        placeholder: "Enter your Mistral API key",
-        required: true,
-      },
-      ...completionParamsInputs,
-    ],
-    packages: [mistralTiny, mistralSmall, mistralMedium].map((p) => {
-      p.params.contextLength = 4096;
-      return p;
-    }),
-  },
-  llamafile: {
-    title: "llamafile",
-    provider: "llamafile",
-    icon: "llamafile.png",
-    description:
-      "llamafiles are a self-contained binary to run an open-source LLM",
-    longDescription: `To get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n\`\`\`shell\nchmod +x ./llamafile\n./llamafile\n\`\`\``,
-    tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
-    packages: osModels,
-    collectInputFor: [...completionParamsInputs],
   },
   together: {
     title: "TogetherAI",
@@ -743,6 +701,55 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       return p;
     }),
   },
+  palm: {
+    title: "Google Gemini API",
+    provider: "google-palm",
+    refPage: "googlepalmapi",
+    description:
+      "Try out Google's state-of-the-art Gemini model from their API.",
+    longDescription: `To get started with Google Gemini API, obtain your API key from [here](https://ai.google.dev/tutorials/workspace_auth_quickstart) and paste it below.`,
+    icon: "gemini.png",
+    tags: [ModelProviderTag["Requires API Key"]],
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Gemini API key",
+        required: true,
+      },
+    ],
+    packages: [geminiPro],
+  },
+  mistral: {
+    title: "Mistral API",
+    provider: "mistral",
+    description:
+      "The Mistral API provides hosted access to their models, including Mistral-7b, Mixtral, and the very capable mistral-medium",
+    icon: "mistral.png",
+    longDescription: `To get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)`,
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Mistral API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
+    packages: [mistralTiny, mistralSmall, mistralMedium].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
+  },
   lmstudio: {
     title: "LM Studio",
     provider: "lmstudio",
@@ -765,6 +772,17 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
       ...osModels,
     ],
+    collectInputFor: [...completionParamsInputs],
+  },
+  llamafile: {
+    title: "llamafile",
+    provider: "llamafile",
+    icon: "llamafile.png",
+    description:
+      "llamafiles are a self-contained binary to run an open-source LLM",
+    longDescription: `To get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n\`\`\`shell\nchmod +x ./llamafile\n./llamafile\n\`\`\``,
+    tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
+    packages: osModels,
     collectInputFor: [...completionParamsInputs],
   },
   replicate: {
@@ -816,37 +834,6 @@ After it's up and running, you can start using Continue.`,
     packages: osModels,
     collectInputFor: [...completionParamsInputs],
   },
-  palm: {
-    title: "Google PaLM API",
-    provider: "google-palm",
-    refPage: "googlepalmapi",
-    description:
-      "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite. Includes the Gemini Pro model",
-    longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.`,
-    icon: "google-palm.png",
-    tags: [ModelProviderTag["Requires API Key"]],
-    collectInputFor: [
-      {
-        inputType: CollectInputType.text,
-        key: "apiKey",
-        label: "API Key",
-        placeholder: "Enter your MakerSpace API key",
-        required: true,
-      },
-    ],
-    packages: [
-      gemini,
-      {
-        title: "chat-bison-001",
-        description:
-          "Google PaLM's chat-bison-001 model, fine-tuned for chatting about code",
-        params: {
-          model: "chat-bison-001",
-          contextLength: 8000,
-        },
-      },
-    ],
-  },
   "openai-aiohttp": {
     title: "Other OpenAI-compatible API",
     provider: "openai",
@@ -897,7 +884,7 @@ After it's up and running, you can start using Continue.`,
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
       { ...gpt4vision, title: "GPT-4 Vision (trial)" },
       { ...phindCodeLlama, title: "Phind CodeLlama (trial)" },
-      { ...gemini, title: "Gemini Pro (trial)" },
+      { ...geminiPro, title: "Gemini Pro (trial)" },
       {
         ...AUTODETECT,
         params: {
