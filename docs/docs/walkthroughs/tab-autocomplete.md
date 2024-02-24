@@ -16,7 +16,7 @@ Once it has been downloaded, you should begin to see completions in VS Code.
 
 All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this:
 
-```json
+```json title=~/.continue/config.json
 {
     "tabAutocompleteModel": {
         "title": "Tab Autocomplete Model",
@@ -49,6 +49,24 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 - `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number)
 - `prefixPercentage`: The percentage of the input that should be dedicated to the prefix. (Number)
 - `template`: An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables. (String)
+
+### Full example
+
+```json title=~/.continue/config.json
+{
+  "tabAutocompleteModel": {
+    "title": "Tab Autocomplete Model",
+    "provider": "ollama",
+    "model": "deepseek-coder:1.3b-base",
+    "apiBase": "https://<my endpoint>"
+  },
+  "tabAutocompleteOptions": {
+    "useCopyBuffer": false,
+    "maxPromptTokens": 400,
+    "prefixPercentage": 0.5
+  }
+}
+```
 
 ## Troubleshooting
 

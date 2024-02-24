@@ -417,7 +417,8 @@ type ContextProviderName =
   | "http"
   | "codebase"
   | "problems"
-  | "folder";
+  | "folder"
+  | "jira";
 
 type TemplateType =
   | "llama2"
@@ -541,6 +542,7 @@ interface BaseCompletionOptions {
   mirostat?: number;
   stop?: string[];
   maxTokens?: number;
+  numThreads?: number;
 }
 
 export interface ModelDescription {

@@ -29,13 +29,16 @@ import CustomLLMClass from "../llm/llms/CustomLLM";
 import mergeJson from "../util/merge";
 import {
   getConfigJsPath,
+  getConfigJsPathForRemote,
   getConfigJsonPath,
+  getConfigJsonPathForRemote,
   getConfigTsPath,
   migrate,
 } from "../util/paths";
 
 function loadSerializedConfig(
-  workspaceConfigs: ContinueRcJson[]
+  workspaceConfigs: ContinueRcJson[],
+  remoteConfigServerUrl: URL | undefined
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath();
   let contents = fs.readFileSync(configPath, "utf8");
@@ -113,6 +116,14 @@ function loadSerializedConfig(
     contents = contents.replace(/openai-free-trial/g, "free-trial");
     fs.writeFileSync(configPath, contents, "utf8");
   });
+
+  if (remoteConfigServerUrl) {
+    const remoteConfigJson = fs.readFileSync(
+      getConfigJsonPathForRemote(remoteConfigServerUrl),
+      "utf-8"
+    );
+    config = mergeJson(config, JSON.parse(remoteConfigJson), "merge");
+  }
 
   for (const workspaceConfig of workspaceConfigs) {
     config = mergeJson(config, workspaceConfig, workspaceConfig.mergeBehavior);
@@ -339,9 +350,13 @@ async function buildConfigTs(browser: boolean) {
 
 async function loadFullConfigNode(
   readFile: (filepath: string) => Promise<string>,
-  workspaceConfigs: ContinueRcJson[]
+  workspaceConfigs: ContinueRcJson[],
+  remoteConfigServerUrl: URL | undefined
 ): Promise<ContinueConfig> {
-  let serialized = loadSerializedConfig(workspaceConfigs);
+  let serialized = loadSerializedConfig(
+    workspaceConfigs,
+    remoteConfigServerUrl
+  );
   let intermediate = serializedToIntermediateConfig(serialized);
 
   const configJsContents = await buildConfigTs(false);
@@ -359,6 +374,24 @@ async function loadFullConfigNode(
       console.log("Error loading config.ts: ", e);
     }
   }
+
+  // Remote config.js
+  if (remoteConfigServerUrl) {
+    try {
+      const configJsPathForRemote = getConfigJsPathForRemote(
+        remoteConfigServerUrl
+      );
+      const module = await require(configJsPathForRemote);
+      delete require.cache[require.resolve(configJsPathForRemote)];
+      if (!module.modifyConfig) {
+        throw new Error("config.ts does not export a modifyConfig function.");
+      }
+      intermediate = module.modifyConfig(intermediate);
+    } catch (e) {
+      console.log("Error loading remotely set config.js: ", e);
+    }
+  }
+
   const finalConfig = await intermediateToFinalConfig(intermediate, readFile);
   return finalConfig;
 }

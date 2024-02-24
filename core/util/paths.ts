@@ -183,3 +183,30 @@ export function getTabAutocompleteCacheSqlitePath(): string {
 export function getDocsSqlitePath(): string {
   return path.join(getIndexFolderPath(), "docs.sqlite");
 }
+
+export function getRemoteConfigsFolderPath(): string {
+  const dir = path.join(getContinueGlobalPath(), ".configs");
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+  }
+  return dir;
+}
+
+export function getPathToRemoteConfig(remoteConfigServerUrl: URL): string {
+  const dir = path.join(
+    getRemoteConfigsFolderPath(),
+    remoteConfigServerUrl.hostname
+  );
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+  }
+  return dir;
+}
+
+export function getConfigJsonPathForRemote(remoteConfigServerUrl: URL): string {
+  return path.join(getPathToRemoteConfig(remoteConfigServerUrl), "config.json");
+}
+
+export function getConfigJsPathForRemote(remoteConfigServerUrl: URL): string {
+  return path.join(getPathToRemoteConfig(remoteConfigServerUrl), "config.js");
+}

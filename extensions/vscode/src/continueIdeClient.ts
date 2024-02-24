@@ -307,12 +307,7 @@ class IdeProtocolClient {
   // In some cases vscode.window.visibleTextEditors can return non-code editors
   // e.g. terminal editors in side-by-side mode
   private documentIsCode(document: vscode.TextDocument) {
-    return (
-      !(
-        document.languageId === "plaintext" &&
-        document.getText() === "accessible-buffer-accessible-buffer-"
-      ) && !document.uri.scheme.startsWith("git")
-    );
+    return document.uri.scheme === "file";
   }
 
   getOpenFiles(): string[] {

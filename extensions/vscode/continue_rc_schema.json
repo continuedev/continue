@@ -49,6 +49,11 @@
           "description": "The maximum number of tokens to generate.",
           "default": 600,
           "type": "integer"
+        },
+        "numThreads": {
+          "title": "Number of threads",
+          "description": "The number of threads used in the generation process. Only available for Ollama (this is the num_thread parameter)",
+          "type": "integer"
         }
       }
     },
@@ -312,7 +317,8 @@
             "properties": {
               "provider": {
                 "enum": [
-                  "huggingface-tgi"
+                  "huggingface-tgi",
+                  "huggingface-inference-api"
                 ]
               }
             }
@@ -1280,6 +1286,49 @@
                 },
                 "required": [
                   "repos"
+                ]
+              }
+            },
+            "required": [
+              "params"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "jira"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "description": "Your Jira domain, for example company.atlassian.net."
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "The email that you log into Jira with"
+                  },
+                  "token": {
+                    "type": "string",
+                    "description": "Your atlassian API token from https://id.atlassian.com/manage-profile/security/api-tokens"
+                  },
+                  "issueQuery": {
+                    "type": "string",
+                    "description": "Customize the query used to find Jira issues"
+                  }
+                },
+                "required": [
+                  "domain",
+                  "email",
+                  "token"
                 ]
               }
             },

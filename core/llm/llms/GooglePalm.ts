@@ -13,7 +13,7 @@ class GooglePalm extends BaseLLM {
   static providerName: ModelProvider = "google-palm";
 
   static defaultOptions: Partial<LLMOptions> = {
-    model: "chat-bison-001",
+    model: "gemini-pro",
     apiBase: "https://generativelanguage.googleapis.com",
   };
 
@@ -29,16 +29,37 @@ class GooglePalm extends BaseLLM {
     }
   }
 
+  private removeSystemMessage(messages: ChatMessage[]) {
+    const msgs = [...messages];
+
+    if (msgs[0]?.role === "system") {
+      let sysMsg = msgs.shift()!.content;
+      // @ts-ignore
+      if (msgs[0]?.role === "user") {
+        msgs[0].content = `System message - follow these instructions in every response: ${sysMsg}\n\n---\n\n${msgs[0].content}`;
+      }
+    }
+
+    return msgs;
+  }
+
   protected async *_streamChat(
     messages: ChatMessage[],
     options: CompletionOptions
   ): AsyncGenerator<ChatMessage> {
+    let convertedMsgs = this.removeSystemMessage(messages);
     if (options.model.includes("gemini")) {
-      for await (const message of this.streamChatGemini(messages, options)) {
+      for await (const message of this.streamChatGemini(
+        convertedMsgs,
+        options
+      )) {
         yield message;
       }
     } else {
-      for await (const message of this.streamChatBison(messages, options)) {
+      for await (const message of this.streamChatBison(
+        convertedMsgs,
+        options
+      )) {
         yield message;
       }
     }

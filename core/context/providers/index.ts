@@ -16,6 +16,7 @@ import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import LocalsProvider from "./LocalsProvider";
 import URLContextProvider from "./URLContextProvider";
+import JiraIssuesContextProvider from "./JiraIssuesContextProvider";
 
 const Providers: (typeof BaseContextProvider)[] = [
   DiffContextProvider,
@@ -34,6 +35,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   DocsContextProvider,
   CodeHighlightsContextProvider,
   CodeOutlineContextProvider,
+  JiraIssuesContextProvider,
 ];
 
 export function contextProviderClassFromName(

@@ -14,6 +14,7 @@ import {
   setupStatusBar,
 } from "../lang-server/completionProvider";
 import { vsCodeIndexCodebase } from "../util/indexCodebase";
+import { setupRemoteConfigSync } from "../util/remoteConfig";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
@@ -167,5 +168,11 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     Telemetry.capture("install", {
       extensionVersion: getExtensionVersion(),
     });
+  }
+
+  try {
+    setupRemoteConfigSync();
+  } catch (e) {
+    console.warn(`Failed to sync remote config: ${e}`);
   }
 }

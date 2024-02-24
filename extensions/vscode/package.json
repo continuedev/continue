@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.68",
+  "version": "0.9.72",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -66,6 +66,21 @@
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable Continue's experimental tab autocomplete feature (pre-release only). Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://continue.dev/docs/walkthroughs/tab-autocomplete)"
+        },
+        "continue.remoteConfigServerUrl": {
+          "type": "string",
+          "default": null,
+          "markdownDescription": "If your team is set up to use shared configuration, enter the server URL here and your user token below to enable automatic syncing."
+        },
+        "continue.userToken": {
+          "type": "string",
+          "default": null,
+          "markdownDescription": "If your team is set up to use shared configuration, enter your user token here and your server URL above to enable automatic syncing."
+        },
+        "continue.remoteConfigSyncPeriod": {
+          "type": "number",
+          "default": 60,
+          "description": "The period of time in minutes between automatic syncs."
         }
       }
     },
