@@ -232,10 +232,14 @@ const commandsMap: (
     }
   },
   "continue.writeCommentsForCode": async () => {
-    await verticalDiffManager.streamEdit("Write comments for this code");
+    await verticalDiffManager.streamEdit(
+      "Write comments for this code. Do not change anything about the code itself."
+    );
   },
   "continue.writeDocstringForCode": async () => {
-    await verticalDiffManager.streamEdit("Write a docstring for this code");
+    await verticalDiffManager.streamEdit(
+      "Write a docstring for this code. Do not change anything about the code itself."
+    );
   },
   "continue.fixCode": async () => {
     await verticalDiffManager.streamEdit("Fix this code");
@@ -245,7 +249,7 @@ const commandsMap: (
   },
   "continue.fixGrammar": async () => {
     await verticalDiffManager.streamEdit(
-      "If there are any grammar or spelling mistakes in this writing, fix them"
+      "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing."
     );
   },
   "continue.viewLogs": async () => {
@@ -264,7 +268,7 @@ const commandsMap: (
     const terminalContents = await ide.getTerminalContents();
     vscode.commands.executeCommand("continue.continueGUIView.focus");
     sidebar.webviewProtocol?.request("userInput", {
-      input: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents}`,
+      input: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents.trim()}`,
     });
   },
   "continue.hideInlineTip": () => {

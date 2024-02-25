@@ -78,7 +78,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   const vscodeExtension = new VsCodeExtension(context);
 
-  migrate("showWelcome", () => {
+  migrate("showWelcome_1", () => {
     vscode.commands.executeCommand(
       "markdown.showPreview",
       vscode.Uri.file(
