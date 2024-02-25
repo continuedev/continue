@@ -1,5 +1,5 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
-// @ts-expect-error
+// @ts-ignore
 import llamaTokenizer from "llama-tokenizer-js";
 import { ChatMessage, MessageContent, MessagePart } from "..";
 import { autodetectTemplateType } from "./autodetect";

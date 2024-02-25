@@ -113,7 +113,9 @@ function TableRow({
             navigate("/");
           }}
         >
-          <div className="text-md">{session.title}</div>
+          <div className="text-md">
+            {JSON.stringify(session.title).slice(1, -1)}
+          </div>
           <div className="text-gray-400">
             {date.toLocaleString("en-US", {
               year: "2-digit",
@@ -271,28 +273,20 @@ function History() {
         )} */}
       </div>
 
-      {sessions.filter((session) => {
-        if (
-          !filteringByWorkspace ||
-          typeof workspacePaths === "undefined" ||
-          typeof session.workspaceDirectory === "undefined"
-        ) {
-          return true;
-        }
-        return workspacePaths.includes(session.workspaceDirectory);
-      }).length === 0 && (
-        <div className="text-center m-4">
-          No past sessions found. To start a new session, either click the "+"
-          button or use the keyboard shortcut: <b>Option + Command + N</b>
-        </div>
-      )}
-
       <div>
         <SearchBar
           placeholder="Search past sessions"
           type="text"
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+
+        {filteredAndSortedSessions.length === 0 && (
+          <div className="text-center m-4">
+            No past sessions found. To start a new session, either click the "+"
+            button or use the keyboard shortcut: <b>Option + Command + N</b>
+          </div>
+        )}
+
         <table className="w-full border-spacing-0 border-collapse">
           <tbody>
             {filteredAndSortedSessions.map((session, index) => {

@@ -353,7 +353,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     const handleKeyDown = (event: any) => {
       if (
         isMetaEquivalentKeyPressed(event) &&
-        (isJetBrains() ? event.code === "KeyJ" : event.code === "KeyM")
+        (isJetBrains() ? event.code === "KeyJ" : event.code === "KeyL")
       ) {
         setIgnoreHighlightedCode(true);
         setTimeout(() => {
@@ -393,7 +393,9 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (historyLength > 0) {
         saveSession();
       }
-      editor?.commands.focus("end");
+      setTimeout(() => {
+        editor?.commands.focus("end");
+      }, 20);
     },
     [historyLength, saveSession, editor, props.isMainInput]
   );
@@ -404,7 +406,9 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (!props.isMainInput) {
         return;
       }
-      editor?.commands.focus("end");
+      setTimeout(() => {
+        editor?.commands.focus("end");
+      }, 20);
     },
     [editor, props.isMainInput]
   );
@@ -416,7 +420,9 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
       saveSession();
-      editor?.commands.focus("end");
+      setTimeout(() => {
+        editor?.commands.focus("end");
+      }, 20);
     },
     [editor, props.isMainInput]
   );
@@ -476,11 +482,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
 
   useEffect(() => {
-    if (!props.isMainInput) {
-      return;
-    }
-
-    if (editor && !document.hasFocus()) {
+    if (props.isMainInput && editor && document.hasFocus()) {
       editor.commands.focus();
       // setTimeout(() => {
       //   // https://github.com/continuedev/continue/pull/881

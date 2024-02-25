@@ -1,12 +1,8 @@
 # 👋 Welcome to Continue
 
-## ❗️ Before you get started
-
-Continue is currently in the left sidebar, but we recommend moving it to the right. This way it won't cover your file explorer. You can move it back at any time.
-
-![Move Continue to right sidebar](./sidebar.gif)
-
 ## 🔑 Most important shortcuts
+
+> If you've been using Continue, these have changed
 
 <kbd>Cmd/Ctrl</kbd> + <kbd>L</kbd> = Select code
 
@@ -15,6 +11,12 @@ Continue is currently in the left sidebar, but we recommend moving it to the rig
 <kbd>Cmd/Ctrl</kbd> + <kbd>I</kbd> = Quick edit
 
 <kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>R</kbd> = Automatically debug terminal
+
+## ❗️ Before you get started
+
+Continue is currently in the left sidebar, but we recommend moving it to the right. This way it won't cover your file explorer. You can move it back at any time.
+
+![Move Continue to right sidebar](./sidebar.gif)
 
 ## ⚡️ Setting up tab autocomplete
 
