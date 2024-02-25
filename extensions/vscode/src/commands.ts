@@ -12,6 +12,13 @@ import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { AutocompleteOutcome } from "./lang-server/completionProvider";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
+function getFullScreenTab() {
+  const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
+  return tabs.find(
+    (tab) => (tab.input as any).viewType?.endsWith("continue.continueGUIView")
+  );
+}
+
 function addHighlightedCodeToContext(
   edit: boolean,
   webviewProtocol: VsCodeWebviewProtocol | undefined
@@ -134,12 +141,16 @@ const commandsMap: (
     }
   },
   "continue.focusContinueInput": async () => {
-    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    if (!getFullScreenTab()) {
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+    }
     sidebar.webviewProtocol?.request("focusContinueInput", undefined);
     addHighlightedCodeToContext(false, sidebar.webviewProtocol);
   },
   "continue.focusContinueInputWithoutClear": async () => {
-    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    if (!getFullScreenTab()) {
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+    }
     sidebar.webviewProtocol?.request(
       "focusContinueInputWithoutClear",
       undefined
@@ -325,13 +336,7 @@ const commandsMap: (
   },
   "continue.toggleFullScreen": () => {
     // Check if full screen is already open by checking open tabs
-    const tabs = vscode.window.tabGroups.all.flatMap(
-      (tabGroup) => tabGroup.tabs
-    );
-
-    const fullScreenTab = tabs.find(
-      (tab) => (tab.input as any).viewType?.endsWith("continue.continueGUIView")
-    );
+    const fullScreenTab = getFullScreenTab();
 
     // Check if the active editor is the Continue GUI View
     if (fullScreenTab && fullScreenTab.isActive) {
