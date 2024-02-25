@@ -26,33 +26,62 @@ export class RecentlyEditedTracker {
       event.contentChanges.forEach((change) => {
         const editedRange = {
           uri: event.document.uri,
-          range: change.range,
+          range: new vscode.Range(
+            new vscode.Position(change.range.start.line, 0),
+            new vscode.Position(change.range.end.line + 1, 0)
+          ),
           timestamp: Date.now(),
         };
-        const newLength = this.recentlyEditedRanges.unshift(editedRange);
-        if (newLength >= RecentlyEditedTracker.maxRecentlyEditedRanges) {
-          this.recentlyEditedRanges = this.recentlyEditedRanges.slice(
-            0,
-            RecentlyEditedTracker.maxRecentlyEditedRanges
-          );
-        }
+        this.insertRange(editedRange);
       });
 
-      const newLength = this.recentlyEditedDocuments.unshift({
-        uri: event.document.uri,
-        timestamp: Date.now(),
-      });
-      if (newLength >= RecentlyEditedTracker.maxRecentlyEditedDocuments) {
-        this.recentlyEditedDocuments = this.recentlyEditedDocuments.slice(
-          0,
-          RecentlyEditedTracker.maxRecentlyEditedDocuments
-        );
-      }
+      this.insertDocument(event.document.uri);
     });
 
     setInterval(() => {
       this.removeOldEntries();
     }, 1000 * 15);
+  }
+
+  private insertRange(editedRange: VsCodeRecentlyEditedRange): void {
+    // Check for overlap with any existing ranges
+    for (let i = 0; i < this.recentlyEditedRanges.length; i++) {
+      let range = this.recentlyEditedRanges[i];
+      if (range.range.intersection(editedRange.range)) {
+        range = {
+          ...range,
+          range: range.range.union(editedRange.range),
+        };
+        return;
+      }
+    }
+
+    // Otherwise, just add the new and maintain max size
+    const newLength = this.recentlyEditedRanges.unshift(editedRange);
+    if (newLength >= RecentlyEditedTracker.maxRecentlyEditedRanges) {
+      this.recentlyEditedRanges = this.recentlyEditedRanges.slice(
+        0,
+        RecentlyEditedTracker.maxRecentlyEditedRanges
+      );
+    }
+  }
+
+  private insertDocument(uri: vscode.Uri): void {
+    // Don't add a duplicate
+    if (this.recentlyEditedDocuments.some((doc) => doc.uri === uri)) {
+      return;
+    }
+
+    const newLength = this.recentlyEditedDocuments.unshift({
+      uri,
+      timestamp: Date.now(),
+    });
+    if (newLength >= RecentlyEditedTracker.maxRecentlyEditedDocuments) {
+      this.recentlyEditedDocuments = this.recentlyEditedDocuments.slice(
+        0,
+        RecentlyEditedTracker.maxRecentlyEditedDocuments
+      );
+    }
   }
 
   private removeOldEntries() {

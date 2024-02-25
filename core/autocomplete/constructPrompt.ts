@@ -83,7 +83,25 @@ export async function constructAutocompletePrompt(
   completeMultiline: boolean;
 }> {
   // Find external snippets
-  let snippets: FileWithContents[] = (await Promise.all(
+  let snippets: FileWithContents[] = [];
+
+  const windowAroundCursor =
+    fullPrefix.slice(
+      -options.slidingWindowSize * options.slidingWindowPrefixPercentage
+    ) +
+    fullSuffix.slice(
+      options.slidingWindowSize * (1 - options.slidingWindowPrefixPercentage)
+    );
+
+  const slidingWindowMatches = await slidingWindowMatcher(
+    recentlyEditedDocuments,
+    windowAroundCursor,
+    3,
+    options.slidingWindowSize
+  );
+  snippets.push(...slidingWindowMatches);
+
+  const recentlyEdited = await Promise.all(
     recentlyEditedRanges
       .map(async (r) => {
         const scope = await getScopeAroundRange(r);
@@ -91,22 +109,12 @@ export async function constructAutocompletePrompt(
 
         return {
           filepath: r.filepath,
-          content: r.contents,
+          contents: r.contents,
         };
       })
       .filter((s) => !!s)
-  )) as any;
-
-  snippets.push(
-    ...(await slidingWindowMatcher(
-      recentlyEditedDocuments,
-      fullPrefix,
-      fullSuffix,
-      3,
-      options.slidingWindowPrefixPercentage,
-      options.slidingWindowSize
-    ))
   );
+  snippets.push(...(recentlyEdited as any));
 
   let treePath: Parser.SyntaxNode[] | undefined;
   try {
@@ -147,13 +155,7 @@ export async function constructAutocompletePrompt(
   }
 
   // Rank / order the snippets
-  snippets = rankSnippets(
-    snippets,
-    fullPrefix,
-    fullSuffix,
-    options.slidingWindowPrefixPercentage,
-    options.slidingWindowSize
-  );
+  snippets = rankSnippets(snippets, windowAroundCursor);
 
   // How to add snippets to the prefix? Count separately? Always keep some of the prefix??
 

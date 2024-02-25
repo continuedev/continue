@@ -1,27 +1,24 @@
 import { FileWithContents } from "..";
 
+const rx = /[\s.,\/#!$%\^&\*;:{}=\-_`~()\[\]]/g;
 function getSymbolsForSnippet(snippet: string): Set<string> {
   const symbols = snippet
-    .split(
-      new RegExp(
-        `[s\.\:\'\,\;\"\*\&\^\|\\\#\@\$\!\%\(\)\[\]\{\}\<\>\/\?\+\-\/]`,
-        "g"
-      )
-    )
-    .map((s) => s.trim());
+    .split(rx)
+    .map((s) => s.trim())
+    .filter((s) => s !== "");
   return new Set(symbols);
 }
 
 /**
  * Calculate similarity as number of shared symbols divided by total number of unique symbols between both.
  */
-export function symbolSimilarity(a: string, b: string): number {
+export function jaccardSimilarity(a: string, b: string): number {
   const aSet = getSymbolsForSnippet(a);
   const bSet = getSymbolsForSnippet(b);
-  const totalSet = new Set([...aSet, ...bSet]);
+  const union = new Set([...aSet, ...bSet]).size;
 
   // Avoid division by zero
-  if (totalSet.size === 0) {
+  if (union === 0) {
     return 0;
   }
 
@@ -32,7 +29,7 @@ export function symbolSimilarity(a: string, b: string): number {
     }
   }
 
-  return intersection / totalSet.size;
+  return intersection / union;
 }
 
 /**
@@ -40,20 +37,11 @@ export function symbolSimilarity(a: string, b: string): number {
  */
 export function rankSnippets(
   snippets: FileWithContents[],
-  prefix: string,
-  suffix: string,
-  slidingWindowPrefixPercentage: number,
-  windowSize: number
+  windowAroundCursor: string
 ): FileWithContents[] {
-  const scores = snippets.map((snippet) => {
-    const b =
-      prefix.slice(-windowSize * slidingWindowPrefixPercentage) +
-      suffix.slice(0, windowSize * (1 - slidingWindowPrefixPercentage));
-
-    return {
-      score: symbolSimilarity(snippet.contents, b),
-      snippet,
-    };
-  });
+  const scores = snippets.map((snippet) => ({
+    score: jaccardSimilarity(snippet.contents, windowAroundCursor),
+    snippet,
+  }));
   return scores.sort((a, b) => a.score - b.score).map((s) => s.snippet);
 }

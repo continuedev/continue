@@ -1,5 +1,5 @@
 import { FileWithContents } from "..";
-import { symbolSimilarity } from "./ranking";
+import { jaccardSimilarity } from "./ranking";
 
 function* slidingWindow(
   content: string,
@@ -33,10 +33,8 @@ function* slidingWindow(
  */
 export async function slidingWindowMatcher(
   recentDocuments: FileWithContents[],
-  prefix: string,
-  suffix: string,
+  windowAroundCursor: string,
   topN: number,
-  slidingWindowPrefixPercentage: number,
   windowSize: number
 ): Promise<FileWithContents[]> {
   // Sorted lowest similarity to highest
@@ -44,11 +42,7 @@ export async function slidingWindowMatcher(
 
   for (const { filepath, contents } of recentDocuments) {
     for (const window of slidingWindow(contents, windowSize)) {
-      const similarity = symbolSimilarity(
-        window,
-        prefix.slice(-windowSize * slidingWindowPrefixPercentage) +
-          suffix.slice(windowSize * (1 - slidingWindowPrefixPercentage))
-      );
+      const similarity = jaccardSimilarity(window, windowAroundCursor);
 
       // Insertion sort
       let i = -1;
@@ -63,5 +57,6 @@ export async function slidingWindowMatcher(
     }
   }
 
+  // TODO: convert the arbitrary window frame to some whole AST node?
   return topMatches;
 }

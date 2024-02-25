@@ -51,10 +51,10 @@ export async function getScopeAroundRange(
   const lines = range.contents.split("\n");
   const startIndex =
     lines.slice(0, s.line).join("\n").length +
-    lines[s.line].slice(s.character).length;
+      lines[s.line]?.slice(s.character).length ?? 0;
   const endIndex =
     lines.slice(0, e.line).join("\n").length +
-    lines[e.line].slice(0, e.character).length;
+      lines[e.line]?.slice(0, e.character).length ?? 0;
 
   let node = ast.rootNode;
   while (node.childCount > 0) {
