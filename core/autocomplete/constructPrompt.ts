@@ -1,5 +1,5 @@
 import Parser from "web-tree-sitter";
-import { FileWithContents, TabAutocompleteOptions } from "..";
+import { TabAutocompleteOptions } from "..";
 import { RangeInFileWithContents } from "../commands/util";
 import {
   countTokens,
@@ -72,10 +72,10 @@ export async function constructAutocompletePrompt(
     filepath: string,
     line: number,
     character: number
-  ) => Promise<FileWithContents | undefined>,
+  ) => Promise<RangeInFileWithContents | undefined>,
   options: TabAutocompleteOptions,
   recentlyEditedRanges: RangeInFileWithContents[],
-  recentlyEditedDocuments: FileWithContents[]
+  recentlyEditedDocuments: RangeInFileWithContents[]
 ): Promise<{
   prefix: string;
   suffix: string;
@@ -83,7 +83,7 @@ export async function constructAutocompletePrompt(
   completeMultiline: boolean;
 }> {
   // Find external snippets
-  let snippets: FileWithContents[] = [];
+  let snippets: RangeInFileWithContents[] = [];
 
   const windowAroundCursor =
     fullPrefix.slice(
@@ -107,10 +107,7 @@ export async function constructAutocompletePrompt(
         const scope = await getScopeAroundRange(r);
         if (!scope) return null;
 
-        return {
-          filepath: r.filepath,
-          contents: r.contents,
-        };
+        return r;
       })
       .filter((s) => !!s)
   );
@@ -155,7 +152,10 @@ export async function constructAutocompletePrompt(
   }
 
   // Rank / order the snippets
-  snippets = rankSnippets(snippets, windowAroundCursor);
+  snippets = rankSnippets(snippets, windowAroundCursor).filter(
+    // Filter out snippets that are already in prefix
+    (snippet) => snippet.score < 0.98
+  );
 
   // How to add snippets to the prefix? Count separately? Always keep some of the prefix??
 

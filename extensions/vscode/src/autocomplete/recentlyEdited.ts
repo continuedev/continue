@@ -1,5 +1,5 @@
-import { FileWithContents } from "core";
 import { RecentlyEditedRange } from "core/autocomplete/recentlyEdited";
+import { RangeInFileWithContents } from "core/commands/util";
 import * as vscode from "vscode";
 
 interface VsCodeRecentlyEditedRange {
@@ -112,14 +112,28 @@ export class RecentlyEditedTracker {
     );
   }
 
-  public async getRecentlyEditedDocuments(): Promise<FileWithContents[]> {
+  public async getRecentlyEditedDocuments(): Promise<
+    RangeInFileWithContents[]
+  > {
     return Promise.all(
-      this.recentlyEditedDocuments.map(async (entry) => ({
-        filepath: entry.uri.fsPath,
-        contents: await vscode.workspace.fs
+      this.recentlyEditedDocuments.map(async (entry) => {
+        const contents = await vscode.workspace.fs
           .readFile(entry.uri)
-          .then((content) => content.toString()),
-      }))
+          .then((content) => content.toString());
+        const lines = contents.split("\n");
+
+        return {
+          filepath: entry.uri.fsPath,
+          contents,
+          range: {
+            start: { line: 0, character: 0 },
+            end: {
+              line: lines.length - 1,
+              character: lines[lines.length - 1].length,
+            },
+          },
+        };
+      })
     );
   }
 }

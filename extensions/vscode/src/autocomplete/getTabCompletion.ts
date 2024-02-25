@@ -1,4 +1,4 @@
-import { FileWithContents, TabAutocompleteOptions } from "core";
+import { TabAutocompleteOptions } from "core";
 import { AutocompleteLruCache } from "core/autocomplete/cache";
 import { onlyWhitespaceAfterEndOfLine } from "core/autocomplete/charStream";
 import {
@@ -11,6 +11,7 @@ import {
 } from "core/autocomplete/lineStream";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import { GeneratorReuseManager } from "core/autocomplete/util";
+import { RangeInFileWithContents } from "core/commands/util";
 import { streamLines } from "core/diff/util";
 import OpenAI from "core/llm/llms/OpenAI";
 import Handlebars from "handlebars";
@@ -25,7 +26,7 @@ async function getDefinition(
   uri: string,
   line: number,
   character: number
-): Promise<FileWithContents | undefined> {
+): Promise<RangeInFileWithContents | undefined> {
   const definitions = (await vscode.commands.executeCommand(
     "vscode.executeDefinitionProvider",
     vscode.Uri.parse(uri),
@@ -39,6 +40,7 @@ async function getDefinition(
         definitions[0].targetUri.fsPath,
         definitions[0].targetRange
       ),
+      range: definitions[0].targetRange,
     };
   }
 
