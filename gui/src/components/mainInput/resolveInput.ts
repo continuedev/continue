@@ -124,7 +124,9 @@ async function resolveEditorContent(
 
   if (slashCommand) {
     let lastTextIndex = findLastIndex(parts, (part) => part.type === "text");
-    parts[lastTextIndex].text = `${slashCommand} ${parts[lastTextIndex].text}`;
+    parts[lastTextIndex].text = `${slashCommand} ${
+      parts[lastTextIndex]?.text || ""
+    }`;
   }
 
   return [contextItems, selectedCode, parts];
