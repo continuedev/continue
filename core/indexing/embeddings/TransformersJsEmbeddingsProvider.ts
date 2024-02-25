@@ -1,12 +1,37 @@
-import { Worker } from "worker_threads";
+import {
+  PipelineType,
+  env,
+  pipeline,
+} from "../../vendor/node_modules/@xenova/transformers";
+
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
+
+env.allowLocalModels = true;
+env.allowRemoteModels = false;
+if (typeof window === "undefined") {
+  // The embeddings provider should just never be called in the browser
+  env.localModelPath = `${__dirname}/../models`;
+}
+
+class EmbeddingsPipeline {
+  static task: PipelineType = "feature-extraction";
+  static model = "all-MiniLM-L6-v2";
+  static instance: any | null = null;
+
+  static async getInstance() {
+    if (this.instance === null) {
+      this.instance = await pipeline(this.task, this.model);
+    }
+
+    return this.instance;
+  }
+}
 
 class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static MaxGroupSize: number = 4;
-  static ModelName: string = "all-MiniLM-L2-v6";
 
   constructor() {
-    super({ model: TransformersJsEmbeddingsProvider.ModelName });
+    super({ model: "all-MiniLM-L2-v6" });
   }
 
   get id(): string {
@@ -14,27 +39,33 @@ class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   async embed(chunks: string[]) {
-    return new Promise((resolve, reject) => {
-      const worker = new Worker("./TransformersJsWorkerThread.js");
+    let extractor = await EmbeddingsPipeline.getInstance();
 
-      worker.postMessage(chunks);
+    if (!extractor) {
+      throw new Error("TransformerJS embeddings pipeline is not initialized");
+    }
 
-      worker.on("message", (result) => {
-        if (result.error) {
-          reject(new Error(result.error));
-        } else {
-          resolve(result);
-        }
+    if (chunks.length === 0) {
+      return [];
+    }
+
+    let outputs = [];
+    for (
+      let i = 0;
+      i < chunks.length;
+      i += TransformersJsEmbeddingsProvider.MaxGroupSize
+    ) {
+      let chunkGroup = chunks.slice(
+        i,
+        i + TransformersJsEmbeddingsProvider.MaxGroupSize
+      );
+      let output = await extractor(chunkGroup, {
+        pooling: "mean",
+        normalize: true,
       });
-
-      worker.on("error", reject);
-
-      worker.on("exit", (code) => {
-        if (code !== 0) {
-          reject(new Error(`Worker stopped with exit code ${code}`));
-        }
-      });
-    }) as any;
+      outputs.push(...output.tolist());
+    }
+    return outputs;
   }
 }
 
