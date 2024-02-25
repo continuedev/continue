@@ -11,41 +11,15 @@ import {
 } from "core/autocomplete/lineStream";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import { GeneratorReuseManager } from "core/autocomplete/util";
-import { RangeInFileWithContents } from "core/commands/util";
 import { streamLines } from "core/diff/util";
 import OpenAI from "core/llm/llms/OpenAI";
 import Handlebars from "handlebars";
 import * as vscode from "vscode";
-import { ideProtocolClient } from "../activation/activate";
 import { TabAutocompleteModel } from "../loadConfig";
 import { ContinueCompletionProvider } from "./completionProvider";
+import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
 import { setupStatusBar, stopStatusBarLoading } from "./statusBar";
-
-async function getDefinition(
-  uri: string,
-  line: number,
-  character: number
-): Promise<RangeInFileWithContents | undefined> {
-  const definitions = (await vscode.commands.executeCommand(
-    "vscode.executeDefinitionProvider",
-    vscode.Uri.parse(uri),
-    new vscode.Position(line, character)
-  )) as any;
-
-  if (definitions[0]?.targetRange) {
-    return {
-      filepath: uri,
-      contents: await ideProtocolClient.readRangeInFile(
-        definitions[0].targetUri.fsPath,
-        definitions[0].targetRange
-      ),
-      range: definitions[0].targetRange,
-    };
-  }
-
-  return undefined;
-}
 
 export interface AutocompleteOutcome {
   accepted?: boolean;
@@ -107,7 +81,7 @@ export async function getTabCompletion(
         fullSuffix,
         clipboardText,
         lang,
-        getDefinition,
+        getDefinitionsFromLsp,
         options,
         await recentlyEditedTracker.getRecentlyEditedRanges(),
         await recentlyEditedTracker.getRecentlyEditedDocuments()

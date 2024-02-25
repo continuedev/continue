@@ -35,7 +35,7 @@ function formatExternalSnippet(
 
 const BLOCK_TYPES = ["body", "statement_block"];
 
-function shouldCompleteMultiline(
+function shouldCompleteMultilineAst(
   treePath: Parser.SyntaxNode[],
   cursorLine: number
 ): boolean {
@@ -62,17 +62,42 @@ function shouldCompleteMultiline(
   return false;
 }
 
+async function shouldCompleteMultiline(
+  filepath: string,
+  fullPrefix: string,
+  fullSuffix: string
+): Promise<boolean> {
+  // Use AST to determine whether to complete multiline
+  let treePath: Parser.SyntaxNode[] | undefined;
+  try {
+    const ast = await getAst(filepath, fullPrefix + fullSuffix);
+    if (!ast) {
+      throw new Error(`AST undefined for ${filepath}`);
+    }
+
+    treePath = await getTreePathAtCursor(ast, fullPrefix.length);
+  } catch (e) {
+    console.error("Failed to parse AST", e);
+  }
+
+  let completeMultiline = false;
+  if (treePath) {
+    let cursorLine = fullPrefix.split("\n").length - 1;
+    completeMultiline = shouldCompleteMultilineAst(treePath, cursorLine);
+  }
+  return completeMultiline;
+}
+
 export async function constructAutocompletePrompt(
   filepath: string,
   fullPrefix: string,
   fullSuffix: string,
   clipboardText: string,
   language: AutocompleteLanguageInfo,
-  getDefinition: (
-    filepath: string,
-    line: number,
-    character: number
-  ) => Promise<RangeInFileWithContents | undefined>,
+  getDefinitions: (
+    document: RangeInFileWithContents,
+    cursorIndex: number
+  ) => Promise<RangeInFileWithContents[]>,
   options: TabAutocompleteOptions,
   recentlyEditedRanges: RangeInFileWithContents[],
   recentlyEditedDocuments: RangeInFileWithContents[]
@@ -113,44 +138,6 @@ export async function constructAutocompletePrompt(
   );
   snippets.push(...(recentlyEdited as any));
 
-  let treePath: Parser.SyntaxNode[] | undefined;
-  try {
-    const ast = await getAst(filepath, fullPrefix + fullSuffix);
-    if (!ast) {
-      throw new Error(`AST undefined for ${filepath}`);
-    }
-
-    treePath = await getTreePathAtCursor(ast, fullPrefix.length);
-  } catch (e) {
-    console.error("Failed to parse AST", e);
-  }
-
-  let completeMultiline = false;
-  if (treePath) {
-    // Get function def when inside call expression
-    let callExpression = undefined;
-    for (let node of treePath.reverse()) {
-      if (node.type === "call_expression") {
-        callExpression = node;
-        break;
-      }
-    }
-    if (callExpression) {
-      const definition = await getDefinition(
-        filepath,
-        callExpression.startPosition.row,
-        callExpression.startPosition.column
-      );
-      if (definition) {
-        snippets.push(definition);
-      }
-    }
-
-    // Use AST to determine whether to complete multiline
-    let cursorLine = fullPrefix.split("\n").length - 1;
-    completeMultiline = shouldCompleteMultiline(treePath, cursorLine);
-  }
-
   // Rank / order the snippets
   snippets = rankSnippets(snippets, windowAroundCursor).filter(
     // Filter out snippets that are already in prefix
@@ -179,5 +166,14 @@ export async function constructAutocompletePrompt(
   );
   let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens);
 
-  return { prefix, suffix, useFim: true, completeMultiline };
+  return {
+    prefix,
+    suffix,
+    useFim: true,
+    completeMultiline: await shouldCompleteMultiline(
+      filepath,
+      fullPrefix,
+      fullSuffix
+    ),
+  };
 }
