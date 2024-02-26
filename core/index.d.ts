@@ -413,7 +413,8 @@ type ContextProviderName =
   | "problems"
   | "folder"
   | "jira"
-  | "postgres";
+  | "postgres"
+  | "database";
 
 type TemplateType =
   | "llama2"
