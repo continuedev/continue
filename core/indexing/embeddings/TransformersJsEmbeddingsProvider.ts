@@ -4,13 +4,14 @@ import {
   pipeline,
 } from "../../vendor/node_modules/@xenova/transformers";
 
+import path from "path";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
 env.allowLocalModels = true;
 env.allowRemoteModels = false;
 if (typeof window === "undefined") {
   // The embeddings provider should just never be called in the browser
-  env.localModelPath = `${__dirname}/../models`;
+  env.localModelPath = path.join(__dirname, "..", "models");
 }
 
 class EmbeddingsPipeline {
