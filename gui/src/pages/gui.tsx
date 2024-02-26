@@ -38,7 +38,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
 import { isJetBrains } from "../util/ide";
 
@@ -141,11 +141,11 @@ function GUI(props: GUIProps) {
   // #endregion
 
   // #region Selectors
-  const sessionState = useSelector((state: RootStore) => state.state);
+  const sessionState = useSelector((state: RootState) => state.state);
 
   const defaultModel = useSelector(defaultModelSelector);
 
-  const active = useSelector((state: RootStore) => state.state.active);
+  const active = useSelector((state: RootState) => state.state.active);
 
   // #endregion
 
@@ -168,7 +168,7 @@ function GUI(props: GUIProps) {
   const [userScrolledAwayFromBottom, setUserScrolledAwayFromBottom] =
     useState<boolean>(false);
 
-  const state = useSelector((state: RootStore) => state.state);
+  const state = useSelector((state: RootState) => state.state);
 
   useEffect(() => {
     const handleScroll = () => {

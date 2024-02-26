@@ -1,9 +1,9 @@
 import { createSelector } from "@reduxjs/toolkit";
 import { ComboBoxItemType } from "../../components/mainInput/types";
-import { RootStore } from "../store";
+import { RootState } from "../store";
 
 export const selectSlashCommands = createSelector(
-  [(store: RootStore) => store.state.config.slashCommands],
+  [(store: RootState) => store.state.config.slashCommands],
   (slashCommands) => {
     return (
       slashCommands?.map((cmd) => {
@@ -18,7 +18,7 @@ export const selectSlashCommands = createSelector(
 );
 
 export const selectContextProviderDescriptions = createSelector(
-  [(store: RootStore) => store.state.config.contextProviders],
+  [(store: RootState) => store.state.config.contextProviders],
   (providers) => {
     return providers.filter((desc) => desc.type === "submenu") || [];
   }

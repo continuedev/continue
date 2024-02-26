@@ -19,7 +19,7 @@ import {
   setBottomMessageCloseTimeout,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { postToIde } from "../util/ide";
 import HeaderButtonWithText from "./HeaderButtonWithText";
@@ -107,23 +107,23 @@ const Layout = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const dialogMessage = useSelector(
-    (state: RootStore) => state.uiState.dialogMessage
+    (state: RootState) => state.uiState.dialogMessage
   );
   const showDialog = useSelector(
-    (state: RootStore) => state.uiState.showDialog
+    (state: RootState) => state.uiState.showDialog
   );
 
   const defaultModel = useSelector(defaultModelSelector);
   // #region Selectors
 
   const bottomMessage = useSelector(
-    (state: RootStore) => state.uiState.bottomMessage
+    (state: RootState) => state.uiState.bottomMessage
   );
   const displayBottomMessageOnBottom = useSelector(
-    (state: RootStore) => state.uiState.displayBottomMessageOnBottom
+    (state: RootState) => state.uiState.displayBottomMessageOnBottom
   );
 
-  const timeline = useSelector((state: RootStore) => state.state.history);
+  const timeline = useSelector((state: RootState) => state.state.history);
 
   // #endregion
 
