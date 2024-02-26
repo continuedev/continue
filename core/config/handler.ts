@@ -17,8 +17,15 @@ export class ConfigHandler {
 
   private readonly ide: IDE;
   private readonly remoteConfigServerUrl: URL | undefined;
-  constructor(ide: IDE, remoteConfigServerUrl: URL | undefined) {
+  private readonly writeLog: (text: string) => void;
+  constructor(
+    ide: IDE,
+    remoteConfigServerUrl: URL | undefined,
+    writeLog: (text: string) => void
+  ) {
     this.ide = ide;
+    this.remoteConfigServerUrl = remoteConfigServerUrl;
+    this.writeLog = writeLog;
     try {
       this.loadConfig();
     } catch (e) {
@@ -171,16 +178,7 @@ export class ConfigHandler {
     };
 
     llm.writeLog = async (log: string) => {
-      // const outputChannel = vscode.window.createOutputChannel(
-      //   "Continue - LLM Prompt/Completion"
-      // );
-      // outputChannel.appendLine(
-      //   "=========================================================================="
-      // );
-      // outputChannel.appendLine(
-      //   "=========================================================================="
-      // );
-      // outputChannel.append(log);
+      this.writeLog(log);
     };
     return llm;
   }

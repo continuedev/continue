@@ -34,12 +34,27 @@ export class VsCodeExtension {
     const remoteUrl = vscode.workspace
       .getConfiguration("continue")
       .get<string | undefined>("remoteConfigServerUrl", undefined);
+
+    // Config Handler with output channel
+    const outputChannel = vscode.window.createOutputChannel(
+      "Continue - LLM Prompt/Completion"
+    );
     this.configHandler = new ConfigHandler(
       this.ide,
       remoteUrl === undefined || remoteUrl === ""
         ? undefined
-        : new URL(remoteUrl)
+        : new URL(remoteUrl),
+      async (log: string) => {
+        outputChannel.appendLine(
+          "=========================================================================="
+        );
+        outputChannel.appendLine(
+          "=========================================================================="
+        );
+        outputChannel.append(log);
+      }
     );
+
     this.configHandler.reloadConfig();
     this.verticalDiffManager = new VerticalPerLineDiffManager(
       this.configHandler

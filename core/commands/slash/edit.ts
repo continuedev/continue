@@ -428,7 +428,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     let messages = history;
-    messages.push({ role: "user", content: prompt });
+    messages[messages.length - 1] = { role: "user", content: prompt };
 
     let linesOfPrefixCopied = 0;
     let lines = [];
