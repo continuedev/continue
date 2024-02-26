@@ -2,25 +2,12 @@ import { getTsConfigPath, migrate } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import * as fs from "fs";
 import path from "path";
-import { v4 } from "uuid";
 import * as vscode from "vscode";
-import { registerAllCommands } from "../commands";
-import IdeProtocolClient from "../continueIdeClient";
-import { ContinueGUIWebviewViewProvider } from "../debugPanel";
+import { VsCodeExtension } from "../extension/vscodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
-import { registerAllCodeLensProviders } from "../lang-server/codeLens";
-import {
-  ContinueCompletionProvider,
-  setupStatusBar,
-} from "../lang-server/completionProvider";
-import { vsCodeIndexCodebase } from "../util/indexCodebase";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
-
-export let extensionContext: vscode.ExtensionContext | undefined = undefined;
-export let ideProtocolClient: IdeProtocolClient;
-export let windowId: string = v4();
 
 export async function showTutorial() {
   const tutorialPath = path.join(
@@ -47,7 +34,9 @@ async function openTutorialFirstTime(context: vscode.ExtensionContext) {
   }
 }
 
-function showRefactorMigrationMessage() {
+function showRefactorMigrationMessage(
+  extensionContext: vscode.ExtensionContext
+) {
   // Only if the vscode setting continue.manuallyRunningSserver is true
   const manuallyRunningServer =
     vscode.workspace
@@ -81,47 +70,15 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
   getTsConfigPath();
 
-  extensionContext = context;
-
   // Register commands and providers
-  registerAllCodeLensProviders(context);
-  registerAllCommands(context);
   registerQuickFixProvider();
   await openTutorialFirstTime(context);
   setupInlineTips(context);
-  showRefactorMigrationMessage();
-  const config = vscode.workspace.getConfiguration("continue");
-  const enabled = config.get<boolean>("enableTabAutocomplete");
+  showRefactorMigrationMessage(context);
 
-  // Register inline completion provider (odd versions are pre-release)
-  if (parseInt(context.extension.packageJSON.version.split(".")[1]) % 2 !== 0) {
-    setupStatusBar(enabled);
-    context.subscriptions.push(
-      vscode.languages.registerInlineCompletionItemProvider(
-        [{ pattern: "**" }],
-        new ContinueCompletionProvider()
-      )
-    );
-  }
+  const vscodeExtension = new VsCodeExtension(context);
 
-  ideProtocolClient = new IdeProtocolClient(context);
-
-  // Register Continue GUI as sidebar webview, and beginning a new session
-  const provider = new ContinueGUIWebviewViewProvider();
-
-  context.subscriptions.push(
-    vscode.window.registerWebviewViewProvider(
-      "continue.continueGUIView",
-      provider,
-      {
-        webviewOptions: { retainContextWhenHidden: true },
-      }
-    )
-  );
-
-  vsCodeIndexCodebase(ideProtocolClient.getWorkspaceDirectories());
-
-  migrate("showWelcome", () => {
+  migrate("showWelcome_1", () => {
     vscode.commands.executeCommand(
       "markdown.showPreview",
       vscode.Uri.file(
@@ -129,25 +86,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       )
     );
   });
-
-  // (async () => {
-  //   const defaultDocsPages = [
-  //     ["Socket.IO", "https://python-socketio.readthedocs.io/en/stable"],
-  //     // ["Flask", "https://flask.palletsprojects.com/en/2.0.x/"],
-  //   ];
-
-  //   const config = await configHandler.loadConfig(new VsCodeIde());
-
-  //   defaultDocsPages.forEach(async ([title, url]) => {
-  //     for await (const update of indexDocs(
-  //       title,
-  //       new URL(url),
-  //       config.embeddingsProvider
-  //     )) {
-  //       console.log(update.progress, update.desc);
-  //     }
-  //   });
-  // })();
 
   // Load Continue configuration
   if (!context.globalState.get("hasBeenInstalled")) {

@@ -13,7 +13,7 @@ export async function* streamDiff(
   oldLines: string[],
   newLines: LineStream
 ): AsyncGenerator<DiffLine> {
-  oldLines = [...oldLines]; // be careful
+  const mutatedOldLines = [...oldLines]; // be careful
   let seenIndentationMistake = false;
 
   let newLineResult = await newLines.next();

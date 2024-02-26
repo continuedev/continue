@@ -298,6 +298,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                   itemType: querySubmenuItem.type,
                   query: queryInputRef.current.value,
                   label: `${querySubmenuItem.label}: ${queryInputRef.current.value}`,
+                  itemType: querySubmenuItem.type,
                 });
               }
             } else if (e.key === "Escape") {

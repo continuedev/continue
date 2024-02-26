@@ -1,8 +1,8 @@
 import * as fs from "fs";
+import path from "path";
 import {
-  BaseCompletionOptions,
+  BrowserSerializedContinueConfig,
   Config,
-  ContextProviderDescription,
   ContextProviderWithParams,
   ContinueConfig,
   ContinueRcJson,
@@ -10,12 +10,11 @@ import {
   CustomLLM,
   EmbeddingsProviderDescription,
   IContextProvider,
+  IdeType,
   ModelDescription,
   SerializedContinueConfig,
   SlashCommand,
-  SlashCommandDescription,
 } from "..";
-
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
@@ -31,31 +30,45 @@ import CustomLLMClass from "../llm/llms/CustomLLM";
 import mergeJson from "../util/merge";
 import {
   getConfigJsPath,
+  getConfigJsPathForRemote,
   getConfigJsonPath,
+  getConfigJsonPathForRemote,
   getConfigTsPath,
+  getContinueDotEnv,
   migrate,
 } from "../util/paths";
+const { execSync } = require("child_process");
+
+function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
+  let content = fs.readFileSync(filepath, "utf8");
+  let config = JSON.parse(content) as SerializedContinueConfig;
+  if (config.env && Array.isArray(config.env)) {
+    const env = {
+      ...process.env,
+      ...getContinueDotEnv(),
+    };
+
+    config.env.forEach((envVar) => {
+      content = content.replaceAll(
+        new RegExp(`"${envVar}"`, "g"),
+        `"${env[envVar]}"`
+      );
+    });
+  }
+
+  return JSON.parse(content);
+}
 
 function loadSerializedConfig(
-  workspaceConfigs: ContinueRcJson[]
+  workspaceConfigs: ContinueRcJson[],
+  remoteConfigServerUrl: URL | undefined,
+  ideType: IdeType
 ): SerializedContinueConfig {
-  const configPath = getConfigJsonPath();
-  let contents = fs.readFileSync(configPath, "utf8");
-  let config = JSON.parse(contents) as SerializedContinueConfig;
+  const configPath = getConfigJsonPath(ideType);
+  let config = resolveSerializedConfig(configPath);
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
   }
-
-  // Migrate to camelCase - replace all instances of "snake_case" with "camelCase"
-  migrate("camelCaseConfig", () => {
-    contents = contents
-      .replace(/(_\w)/g, function (m) {
-        return m[1].toUpperCase();
-      })
-      .replace("openai-aiohttp", "openai");
-
-    fs.writeFileSync(configPath, contents, "utf8");
-  });
 
   migrate("codebaseContextProvider", () => {
     if (
@@ -111,10 +124,12 @@ function loadSerializedConfig(
     fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
   });
 
-  migrate("renameFreeTrialProvider", () => {
-    contents = contents.replace(/openai-free-trial/g, "free-trial");
-    fs.writeFileSync(configPath, contents, "utf8");
-  });
+  if (remoteConfigServerUrl) {
+    const remoteConfigJson = resolveSerializedConfig(
+      getConfigJsonPathForRemote(remoteConfigServerUrl)
+    );
+    config = mergeJson(config, remoteConfigJson, "merge");
+  }
 
   for (const workspaceConfig of workspaceConfigs) {
     config = mergeJson(config, workspaceConfig, workspaceConfig.mergeBehavior);
@@ -275,19 +290,6 @@ async function intermediateToFinalConfig(
   };
 }
 
-interface BrowserSerializedContinueConfig {
-  allowAnonymousTelemetry?: boolean;
-  models: ModelDescription[];
-  systemMessage?: string;
-  completionOptions?: BaseCompletionOptions;
-  slashCommands?: SlashCommandDescription[];
-  contextProviders?: ContextProviderDescription[];
-  disableIndexing?: boolean;
-  disableSessionTitles?: boolean;
-  userToken?: string;
-  embeddingsProvider?: string;
-}
-
 function finalToBrowserConfig(
   final: ContinueConfig
 ): BrowserSerializedContinueConfig {
@@ -321,49 +323,101 @@ function finalToBrowserConfig(
   };
 }
 
-async function buildConfigTs(browser: boolean) {
+function getTarget() {
+  const os =
+    {
+      aix: "linux",
+      darwin: "darwin",
+      freebsd: "linux",
+      linux: "linux",
+      openbsd: "linux",
+      sunos: "linux",
+      win32: "win32",
+    }[process.platform as string] ?? "linux";
+  const arch = {
+    arm: "arm64",
+    arm64: "arm64",
+    ia32: "x64",
+    loong64: "arm64",
+    mips: "arm64",
+    mipsel: "arm64",
+    ppc: "x64",
+    ppc64: "x64",
+    riscv64: "arm64",
+    s390: "x64",
+    s390x: "x64",
+    x64: "x64",
+  }[process.arch];
+
+  return `${os}-${arch}`;
+}
+
+function escapeSpacesInPath(p: string): string {
+  return p.replace(/ /g, "\\ ");
+}
+
+async function buildConfigTs() {
   if (!fs.existsSync(getConfigTsPath())) {
     return undefined;
   }
 
   try {
-    // Dynamic import esbuild so potentially disastrous errors can be caught
-    const esbuild = require("esbuild");
+    if (process.env.IS_BINARY === "true") {
+      execSync(
+        escapeSpacesInPath(path.dirname(process.execPath)) +
+          `/esbuild${
+            getTarget().startsWith("win32") ? ".exe" : ""
+          } ${escapeSpacesInPath(
+            getConfigTsPath()
+          )} --bundle --outfile=${escapeSpacesInPath(
+            getConfigJsPath()
+          )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`
+      );
+    } else {
+      // Dynamic import esbuild so potentially disastrous errors can be caught
+      const esbuild = require("esbuild");
 
-    await esbuild.build({
-      entryPoints: [getConfigTsPath()],
-      bundle: true,
-      platform: browser ? "browser" : "node",
-      format: browser ? "esm" : "cjs",
-      outfile: getConfigJsPath(!browser),
-      external: ["fetch", "fs", "path", "os", "child_process"],
-      sourcemap: true,
-    });
+      await esbuild.build({
+        entryPoints: [getConfigTsPath()],
+        bundle: true,
+        platform: "node",
+        format: "cjs",
+        outfile: getConfigJsPath(),
+        external: ["fetch", "fs", "path", "os", "child_process"],
+        sourcemap: true,
+      });
+    }
   } catch (e) {
-    throw new Error(
+    console.log(
       "Build error. Please check your ~/.continue/config.ts file: " + e
     );
     return undefined;
   }
 
-  if (!fs.existsSync(getConfigJsPath(!browser))) {
+  if (!fs.existsSync(getConfigJsPath())) {
     return undefined;
   }
-  return fs.readFileSync(getConfigJsPath(!browser), "utf8");
+  return fs.readFileSync(getConfigJsPath(), "utf8");
 }
 
 async function loadFullConfigNode(
   readFile: (filepath: string) => Promise<string>,
-  workspaceConfigs: ContinueRcJson[]
+  workspaceConfigs: ContinueRcJson[],
+  remoteConfigServerUrl: URL | undefined,
+  ideType: IdeType
 ): Promise<ContinueConfig> {
-  let serialized = loadSerializedConfig(workspaceConfigs);
+  let serialized = loadSerializedConfig(
+    workspaceConfigs,
+    remoteConfigServerUrl,
+    ideType
+  );
   let intermediate = serializedToIntermediateConfig(serialized);
 
-  const configJsContents = await buildConfigTs(false);
+  const configJsContents = await buildConfigTs();
   if (configJsContents) {
     try {
       // Try config.ts first
-      const configJsPath = getConfigJsPath(true);
+      const configJsPath = getConfigJsPath();
       const module = await require(configJsPath);
       delete require.cache[require.resolve(configJsPath)];
       if (!module.modifyConfig) {
@@ -374,6 +428,24 @@ async function loadFullConfigNode(
       console.log("Error loading config.ts: ", e);
     }
   }
+
+  // Remote config.js
+  if (remoteConfigServerUrl) {
+    try {
+      const configJsPathForRemote = getConfigJsPathForRemote(
+        remoteConfigServerUrl
+      );
+      const module = await require(configJsPathForRemote);
+      delete require.cache[require.resolve(configJsPathForRemote)];
+      if (!module.modifyConfig) {
+        throw new Error("config.ts does not export a modifyConfig function.");
+      }
+      intermediate = module.modifyConfig(intermediate);
+    } catch (e) {
+      console.log("Error loading remotely set config.js: ", e);
+    }
+  }
+
   const finalConfig = await intermediateToFinalConfig(intermediate, readFile);
   return finalConfig;
 }

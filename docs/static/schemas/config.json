@@ -49,6 +49,11 @@
           "description": "The maximum number of tokens to generate.",
           "default": 600,
           "type": "integer"
+        },
+        "numThreads": {
+          "title": "Number of threads",
+          "description": "The number of threads used in the generation process. Only available for Ollama (this is the num_thread parameter)",
+          "type": "integer"
         }
       }
     },
@@ -71,8 +76,15 @@
           "title": "Ca Bundle Path",
           "description": "Path to a custom CA bundle to use when making the HTTP request",
           "anyOf": [
-            { "type": "string" },
-            { "type": "array", "items": { "type": "string" } }
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           ]
         },
         "proxy": {
@@ -87,6 +99,11 @@
           "additionalProperties": {
             "type": "string"
           }
+        },
+        "extraBodyProperties": {
+          "title": "Extra Body Properties",
+          "description": "This object will be merged with the body when making the HTTP requests",
+          "type": "object"
         }
       }
     },
@@ -216,7 +233,8 @@
             "verifySsl": null,
             "caBundlePath": null,
             "proxy": null,
-            "headers": null
+            "headers": null,
+            "extraBodyProperties": null
           },
           "allOf": [
             {
@@ -285,7 +303,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["huggingface-tgi"]
+                "enum": ["huggingface-tgi", "huggingface-inference-api"]
               }
             }
           },
@@ -365,7 +383,9 @@
                       "llama2-13b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               },
               "markdownDescription": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models)."
@@ -445,10 +465,15 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
+                      "mistral-tiny",
+                      "mistral-small",
+                      "mistral-medium",
                       "AUTODETECT"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -467,8 +492,12 @@
             "properties": {
               "model": {
                 "anyOf": [
-                  { "enum": ["claude-2", "claude-instant-1"] },
-                  { "type": "string" }
+                  {
+                    "enum": ["claude-2", "claude-instant-1"]
+                  },
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -517,7 +546,9 @@
                       "phind-codellama-34b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ],
                 "markdownDescription": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
               }
@@ -585,7 +616,9 @@
                       "starcoder-3b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -630,7 +663,9 @@
                       "AUTODETECT"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ],
                 "markdownDescription": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
               }
@@ -813,7 +848,9 @@
                       "starcoder-3b"
                     ]
                   },
-                  { "type": "string" }
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -878,7 +915,9 @@
                 "Generate a commit message for the current changes"
               ]
             },
-            { "type": "string" }
+            {
+              "type": "string"
+            }
           ]
         },
         "description": {
@@ -989,7 +1028,8 @@
                 "docs",
                 "tree",
                 "highlights",
-                "outline"
+                "outline",
+                "postgres"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1007,11 +1047,14 @@
                 "Display a file tree of the current workspace",
                 "Include a repo map showing important code objects",
                 "Displays important snippets of code from the currently open files",
-                "Displays definition lines from the currently open files"
+                "Displays definition lines from the currently open files",
+                "References Postgres table schema and sample rows"
               ],
               "type": "string"
             },
-            { "type": "string" }
+            {
+              "type": "string"
+            }
           ]
         },
         "params": {
@@ -1116,6 +1159,102 @@
           "if": {
             "properties": {
               "name": {
+                "enum": ["database"]
+              }
+            }
+          },
+          "then": {
+            "connections": {
+              "type": "array",
+              "description": "A list of database connections",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "A unique name for this database connection"
+                  },
+                  "connection_type": {
+                    "type": "string",
+                    "description": "The type of database (e.g., 'postgres', 'mysql')",
+                    "enum": ["postgres", "mysql", "sqlite"]
+                  },
+                  "connection": {
+                    "type": "object",
+                    "properties": {
+                      "user": {
+                        "type": "string",
+                        "description": "The database user name"
+                      },
+                      "host": {
+                        "type": "string",
+                        "description": "The host address of the database server"
+                      },
+                      "database": {
+                        "type": "string",
+                        "description": "The name of the database to connect to"
+                      },
+                      "password": {
+                        "type": "string",
+                        "description": "The password for the database user"
+                      },
+                      "port": {
+                        "type": "integer",
+                        "description": "The port number to connect to at the host"
+                      },
+                      "filename": {
+                        "type": "string",
+                        "description": "File location for simple file DB's"
+                      }
+                    },
+                    "required": []
+                  }
+                },
+                "required": ["name", "type", "connection"]
+              }
+            }
+          },
+          "required": ["connections"]
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["jira"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "description": "Your Jira domain, for example company.atlassian.net."
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "The email that you log into Jira with"
+                  },
+                  "token": {
+                    "type": "string",
+                    "description": "Your atlassian API token from https://id.atlassian.com/manage-profile/security/api-tokens"
+                  },
+                  "issueQuery": {
+                    "type": "string",
+                    "description": "Customize the query used to find Jira issues"
+                  }
+                },
+                "required": ["domain", "email", "token"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
                 "enum": ["http"]
               }
             }
@@ -1168,6 +1307,65 @@
                 }
               }
             }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["postgres"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "host": {
+                    "title": "Host",
+                    "description": "Database host",
+                    "default": "localhost",
+                    "type": "string"
+                  },
+                  "port": {
+                    "title": "Port",
+                    "description": "Database port",
+                    "default": 5432,
+                    "type": "integer"
+                  },
+                  "user": {
+                    "title": "User",
+                    "description": "Database user",
+                    "default": "postgres",
+                    "type": "string"
+                  },
+                  "password": {
+                    "title": "Password",
+                    "description": "Database password",
+                    "type": "string"
+                  },
+                  "database": {
+                    "title": "Database",
+                    "description": "Database name",
+                    "default": "postgres",
+                    "type": "string"
+                  },
+                  "schema": {
+                    "title": "Schema",
+                    "description": "Database schema",
+                    "default": "public",
+                    "type": "string"
+                  },
+                  "sampleRows": {
+                    "title": "Sample Rows",
+                    "description": "Number of rows to sample from the database",
+                    "default": 3,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "required": ["host", "port", "user", "password", "database"]
           }
         }
       ],

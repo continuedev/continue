@@ -59,10 +59,7 @@ function collapseChildren(
   }
   code = code.slice(node.startIndex);
   let removedChild = false;
-  while (
-    countTokens(code, "gpt-4") > maxChunkSize &&
-    collapsedChildren.length > 0
-  ) {
+  while (countTokens(code) > maxChunkSize && collapsedChildren.length > 0) {
     removedChild = true;
     // Remove children starting at the end - TODO: Add multiple chunks so no children are missing
     const childCode = collapsedChildren.pop()!;
@@ -169,7 +166,7 @@ function* getSmartCollapsedChunks(
   // Keep entire text if not over size
   if (
     (root || node.type in collapsedNodeConstructors) &&
-    countTokens(node.text, "gpt-4") < maxChunkSize
+    countTokens(node.text) < maxChunkSize
   ) {
     yield {
       content: node.text,

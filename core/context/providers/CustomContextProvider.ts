@@ -19,6 +19,7 @@ class CustomContextProviderClass implements IContextProvider {
       displayTitle: this.custom.displayTitle || this.custom.title,
       description: this.custom.description || "",
       type: this.custom.type || "normal",
+      renderInlineAs: this.custom.renderInlineAs,
     };
   }
 

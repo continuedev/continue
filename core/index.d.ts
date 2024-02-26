@@ -1,5 +1,3 @@
-import { BrowserSerializedContinueConfig } from "./config/load";
-
 declare global {
   interface Window {
     ide?: "vscode";
@@ -15,7 +13,11 @@ declare global {
     };
     colorThemeName?: string;
     workspacePaths?: string[];
-    postIntellijMessage?: (type: string, data: any) => void;
+    postIntellijMessage?: (
+      messageType: string,
+      data: any,
+      messageIde: string
+    ) => void;
   }
 }
 
@@ -97,6 +99,7 @@ export interface ContextProviderDescription {
   title: string;
   displayTitle: string;
   description: string;
+  renderInlineAs?: string;
   type: ContextProviderType;
 }
 
@@ -116,6 +119,7 @@ export interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
+  renderInlineAs?: string;
   type?: ContextProviderType;
   getContextItems(
     query: string,
@@ -311,13 +315,24 @@ export class Problem {
   message: string;
 }
 
+export type IdeType = "vscode" | "jetbrains";
+export interface IdeInfo {
+  ideType: IdeType;
+  name: string;
+  version: string;
+  remoteName: string;
+}
+
 export interface IDE {
-  getSerializedConfig(): Promise<BrowserSerializedContinueConfig>;
+  getIdeInfo(): Promise<IdeInfo>;
   getDiff(): Promise<string>;
+  isTelemetryEnabled(): Promise<boolean>;
+  getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
   listWorkspaceContents(directory?: string): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
+  getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
   writeFile(path: string, contents: string): Promise<void>;
   showVirtualFile(title: string, contents: string): Promise<void>;
   getContinueDir(): Promise<string>;
@@ -325,6 +340,7 @@ export interface IDE {
   runCommand(command: string): Promise<void>;
   saveFile(filepath: string): Promise<void>;
   readFile(filepath: string): Promise<string>;
+  readRangeInFile(filepath: string, range: Range): Promise<string>;
   showLines(
     filepath: string,
     startLine: number,
@@ -335,34 +351,13 @@ export interface IDE {
     newContents: string,
     stepIndex: number
   ): Promise<void>;
-  verticalDiffUpdate(
-    filepath: string,
-    startLine: number,
-    endLine: number,
-    diffLine: DiffLine
-  ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
   getBranch(dir: string): Promise<string>;
-
-  // Embeddings
-  /**
-   * Returns list of [tag, filepath, hash of contents] that need to be embedded
-   */
-  getFilesToEmbed(providerId: string): Promise<[string, string, string][]>;
-  sendEmbeddingForChunk(
-    chunk: Chunk,
-    embedding: number[],
-    tags: string[]
-  ): void;
-  retrieveChunks(
-    text: string,
-    n: number,
-    directory: string | undefined
-  ): Promise<Chunk[]>;
+  getStats(directory: string): Promise<{ [path: string]: number }>;
 }
 
 // Slash Commands
@@ -375,6 +370,8 @@ export interface ContinueSDK {
   input: string;
   params?: { [key: string]: any } | undefined;
   contextItems: ContextItemWithId[];
+  selectedCode: RangeInFile[];
+  config: ContinueConfig;
 }
 
 export interface SlashCommand {
@@ -414,7 +411,10 @@ type ContextProviderName =
   | "http"
   | "codebase"
   | "problems"
-  | "folder";
+  | "folder"
+  | "jira"
+  | "postgres"
+  | "database";
 
 type TemplateType =
   | "llama2"
@@ -503,6 +503,7 @@ export interface RequestOptions {
   caBundlePath?: string | string[];
   proxy?: string;
   headers?: { [key: string]: string };
+  extraBodyProperties?: { [key: string]: any };
 }
 
 export interface StepWithParams {
@@ -537,6 +538,7 @@ interface BaseCompletionOptions {
   mirostat?: number;
   stop?: string[];
   maxTokens?: number;
+  numThreads?: number;
 }
 
 export interface ModelDescription {
@@ -582,6 +584,7 @@ export interface TabAutocompleteOptions {
 }
 
 export interface SerializedContinueConfig {
+  env?: string[];
   allowAnonymousTelemetry?: boolean;
   models: ModelDescription[];
   systemMessage?: string;
@@ -648,4 +651,17 @@ export interface ContinueConfig {
   embeddingsProvider: EmbeddingsProvider;
   tabAutocompleteModel?: ILLM;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+}
+
+export interface BrowserSerializedContinueConfig {
+  allowAnonymousTelemetry?: boolean;
+  models: ModelDescription[];
+  systemMessage?: string;
+  completionOptions?: BaseCompletionOptions;
+  slashCommands?: SlashCommandDescription[];
+  contextProviders?: ContextProviderDescription[];
+  disableIndexing?: boolean;
+  disableSessionTitles?: boolean;
+  userToken?: string;
+  embeddingsProvider?: string;
 }

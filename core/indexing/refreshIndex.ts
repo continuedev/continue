@@ -165,12 +165,14 @@ async function getAddRemoveForTag(
         case AddRemoveResultType.Remove:
           await db.run(
             `DELETE FROM tag_catalog WHERE
-              path IN (?) AND
+              cacheKey = ? AND
+              path = ? AND
               dir = ? AND
               branch = ? AND
               artifactId = ?
           `,
-            remove.map((r) => `'${r.path}'`).join(", "),
+            cacheKey,
+            path,
             tag.directory,
             tag.branch,
             tag.artifactId

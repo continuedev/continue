@@ -1,5 +1,6 @@
 import { Chunk, ContextItem, ContextProviderExtras, ILLM } from "..";
 import { FullTextSearchCodebaseIndex } from "../indexing/FullTextSearch";
+import { LanceDbIndex } from "../indexing/LanceDbIndex";
 import { ChunkCodebaseIndex } from "../indexing/chunk/ChunkCodebaseIndex";
 import { IndexTag } from "../indexing/types";
 import { llmCanGenerateInParallel } from "../llm/autodetect";
@@ -137,7 +138,7 @@ export async function retrieveContextItemsFromEmbeddings(
     if (extras.fullInput.trim() !== "") {
       ftsResults = await ftsIndex.retrieve(
         tags,
-        extras.fullInput.trim().split(" ").join(" OR "),
+        extras.fullInput.trim().split(" ").map(element => `"${element}"`).join(" OR "),
         nRetrieve / 2,
         filterDirectory,
         undefined
@@ -147,7 +148,11 @@ export async function retrieveContextItemsFromEmbeddings(
     console.warn("Error retrieving from FTS:", e);
   }
 
-  let vecResults = await extras.ide.retrieveChunks(
+  const lanceDbIndex = new LanceDbIndex(extras.embeddingsProvider, (path) =>
+    extras.ide.readFile(path)
+  );
+  let vecResults = await lanceDbIndex.retrieve(
+    tags,
     extras.fullInput,
     nRetrieve,
     filterDirectory

@@ -55,19 +55,19 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
 
 const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
-    mac: "⌘ M",
-    windows: "⌃ M",
-    description: "Ask about Highlighted Code",
+    mac: "⌘ L",
+    windows: "⌃ L",
+    description: "Select Code + New Session",
+  },
+  {
+    mac: "⌘ I",
+    windows: "⌃ I",
+    description: "Edit highlighted code",
   },
   {
     mac: "⌘ ⇧ L",
     windows: "⌃ ⇧ L",
-    description: "Edit highlighted code",
-  },
-  {
-    mac: "⌘ ⇧ M",
-    windows: "⌃ ⇧ M",
-    description: "Ask Follow-Up about Highlighted Code",
+    description: "Select Code",
   },
   {
     mac: "⌘ ⇧ ⏎",
@@ -92,12 +92,7 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ ⌫",
     windows: "⌃ ⌫",
-    description: "Stop Active Step",
-  },
-  {
-    mac: "Tab",
-    windows: "Tab",
-    description: "Toggle between context items",
+    description: "Cancel response",
   },
   {
     mac: "⌘ K ⌘ M",
@@ -115,12 +110,12 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ J",
     windows: "⌃ J",
-    description: "Ask about Highlighted Code",
+    description: "Select Code + New Session",
   },
   {
     mac: "⌘ ⇧ J",
     windows: "⌃ ⇧ J",
-    description: "Edit Highlighted Code",
+    description: "Select Code",
   },
   {
     mac: "⌘ ⇧ ⏎",
@@ -135,22 +130,17 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌥ ⇧ J",
     windows: "⌥ ⇧ J",
-    description: "Quick Text Entry",
+    description: "Quick Input",
   },
   {
     mac: "⌥ ⌘ J",
     windows: "⌥ ⌃ J",
-    description: "Toggle Auxiliary Bar",
+    description: "Toggle Sidebar",
   },
   {
     mac: "⌘ ⌫",
     windows: "⌃ ⌫",
-    description: "Stop Active Step",
-  },
-  {
-    mac: "Tab",
-    windows: "Tab",
-    description: "Toggle between context items",
+    description: "Cancel respoonse",
   },
   {
     mac: "⌘ '",

@@ -12,6 +12,7 @@ class CodebaseContextProvider extends BaseContextProvider {
     displayTitle: "Codebase",
     description: "Automatically find relevant files",
     type: "normal",
+    renderInlineAs: "",
   };
 
   async getContextItems(

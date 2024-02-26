@@ -3,19 +3,26 @@ import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
 
-import { extensionContext, ideProtocolClient } from "./activation/activate";
-import { debugPanelWebview, getSidebarContent } from "./debugPanel";
-import { acceptDiffCommand, rejectDiffCommand } from "./diff/horizontal";
-import {
-  editorToVerticalDiffCodeLens,
-  streamEdit,
-  verticalPerLineDiffManager,
-} from "./diff/verticalPerLine/manager";
-import { VsCodeIde } from "./ideProtocol";
+import { IDE } from "core";
+import { ConfigHandler } from "core/config/handler";
+import { logDevData } from "core/util/devdata";
+import { ContinueGUIWebviewViewProvider } from "./debugPanel";
+import { DiffManager } from "./diff/horizontal";
+import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { AutocompleteOutcome } from "./lang-server/completionProvider";
-import { configHandler, llmFromTitle } from "./loadConfig";
+import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
-function addHighlightedCodeToContext(edit: boolean) {
+function getFullScreenTab() {
+  const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
+  return tabs.find(
+    (tab) => (tab.input as any).viewType?.endsWith("continue.continueGUIView")
+  );
+}
+
+function addHighlightedCodeToContext(
+  edit: boolean,
+  webviewProtocol: VsCodeWebviewProtocol | undefined
+) {
   const editor = vscode.window.activeTextEditor;
   if (editor) {
     const selection = editor.selection;
@@ -37,22 +44,28 @@ function addHighlightedCodeToContext(edit: boolean) {
       },
     };
 
-    debugPanelWebview?.postMessage({
-      type: "highlightedCode",
+    webviewProtocol?.request("highlightedCode", {
       rangeInFileWithContents,
-      edit,
     });
   }
 }
 
-async function addEntireFileToContext(filepath: vscode.Uri, edit: boolean) {
+async function addEntireFileToContext(
+  filepath: vscode.Uri,
+  edit: boolean,
+  webviewProtocol: VsCodeWebviewProtocol | undefined
+) {
   // If a directory, add all files in the directory
   const stat = await vscode.workspace.fs.stat(filepath);
   if (stat.type === vscode.FileType.Directory) {
     const files = await vscode.workspace.fs.readDirectory(filepath);
     for (const [filename, type] of files) {
       if (type === vscode.FileType.File) {
-        addEntireFileToContext(vscode.Uri.joinPath(filepath, filename), edit);
+        addEntireFileToContext(
+          vscode.Uri.joinPath(filepath, filename),
+          edit,
+          webviewProtocol
+        );
       }
     }
     return;
@@ -75,79 +88,74 @@ async function addEntireFileToContext(filepath: vscode.Uri, edit: boolean) {
     },
   };
 
-  debugPanelWebview?.postMessage({
-    type: "highlightedCode",
+  webviewProtocol?.request("highlightedCode", {
     rangeInFileWithContents,
-    edit,
   });
 }
 
-function acceptRejectVerticalDiffBlock(
-  accept: boolean,
-  filepath?: string,
-  index?: number
-) {
-  if (!filepath) {
-    const activeEditor = vscode.window.activeTextEditor;
-    if (!activeEditor) {
-      return;
-    }
-    filepath = activeEditor.document.uri.fsPath;
-  }
-
-  if (typeof index === "undefined") {
-    index = 0;
-  }
-
-  let blocks = editorToVerticalDiffCodeLens.get(filepath);
-  const block = blocks?.[index];
-  if (!blocks || !block) {
-    return;
-  }
-
-  const handler = verticalPerLineDiffManager.getHandlerForFile(filepath);
-  if (!handler) {
-    return;
-  }
-
-  // CodeLens object removed from editorToVerticalDiffCodeLens here
-  handler.acceptRejectBlock(accept, block.start, block.numGreen, block.numRed);
-}
-
 // Copy everything over from extension.ts
-const commandsMap: { [command: string]: (...args: any) => any } = {
-  "continue.acceptDiff": acceptDiffCommand,
-  "continue.rejectDiff": rejectDiffCommand,
+const commandsMap: (
+  ide: IDE,
+  extensionContext: vscode.ExtensionContext,
+  sidebar: ContinueGUIWebviewViewProvider,
+  configHandler: ConfigHandler,
+  diffManager: DiffManager,
+  verticalDiffManager: VerticalPerLineDiffManager
+) => { [command: string]: (...args: any) => any } = (
+  ide,
+  extensionContext,
+  sidebar,
+  configHandler,
+  diffManager,
+  verticalDiffManager
+) => ({
+  "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
+    if (newFilepath instanceof vscode.Uri) {
+      newFilepath = newFilepath.fsPath;
+    }
+    verticalDiffManager.clearForFilepath(newFilepath, true);
+    await diffManager.acceptDiff(newFilepath);
+  },
+  "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
+    if (newFilepath instanceof vscode.Uri) {
+      newFilepath = newFilepath.fsPath;
+    }
+    verticalDiffManager.clearForFilepath(newFilepath, false);
+    await diffManager.rejectDiff(newFilepath);
+  },
   "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
-    acceptRejectVerticalDiffBlock(true, filepath, index);
+    verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index);
   },
   "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number) => {
-    acceptRejectVerticalDiffBlock(false, filepath, index);
+    verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index);
   },
   "continue.quickFix": async (message: string, code: string, edit: boolean) => {
-    debugPanelWebview?.postMessage({
-      type: "newSessionWithPrompt",
+    sidebar.webviewProtocol?.request("newSessionWithPrompt", {
       prompt: `${
         edit ? "/edit " : ""
       }${code}\n\nHow do I fix this problem in the above code?: ${message}`,
     });
+
     if (!edit) {
       vscode.commands.executeCommand("continue.continueGUIView.focus");
     }
   },
   "continue.focusContinueInput": async () => {
-    vscode.commands.executeCommand("continue.continueGUIView.focus");
-    debugPanelWebview?.postMessage({
-      type: "focusContinueInput",
-    });
-    addHighlightedCodeToContext(false);
+    if (!getFullScreenTab()) {
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+    }
+    sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+    addHighlightedCodeToContext(false, sidebar.webviewProtocol);
   },
   "continue.focusContinueInputWithoutClear": async () => {
-    vscode.commands.executeCommand("continue.continueGUIView.focus");
-    debugPanelWebview?.postMessage({
-      type: "focusContinueInputWithoutClear",
-    });
-    addHighlightedCodeToContext(true);
+    if (!getFullScreenTab()) {
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+    }
+    sidebar.webviewProtocol?.request(
+      "focusContinueInputWithoutClear",
+      undefined
+    );
+    addHighlightedCodeToContext(true, sidebar.webviewProtocol);
   },
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
@@ -167,7 +175,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     }
 
     if (text.length > 0) {
-      await streamEdit(text);
+      await verticalDiffManager.streamEdit(text);
     } else {
       // Pick context first
       const quickPickItems: Promise<vscode.QuickPickItem[]> = configHandler
@@ -201,7 +209,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
         title: "Continue Quick Edit",
       });
       if (text) {
-        const llm = await llmFromTitle();
+        const llm = await configHandler.llmFromTitle();
         const config = await configHandler.loadConfig();
         const context = (
           await Promise.all(
@@ -216,7 +224,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
 
               return provider.getContextItems("", {
                 embeddingsProvider: config.embeddingsProvider,
-                ide: new VsCodeIde(),
+                ide,
                 llm,
                 fullInput: text || "",
                 selectedCode: [],
@@ -230,25 +238,29 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
           "\n\n---\n\n" +
           text;
 
-        await streamEdit(text);
+        await verticalDiffManager.streamEdit(text);
       }
     }
   },
   "continue.writeCommentsForCode": async () => {
-    await streamEdit("Write comments for this code");
+    await verticalDiffManager.streamEdit(
+      "Write comments for this code. Do not change anything about the code itself."
+    );
   },
   "continue.writeDocstringForCode": async () => {
-    await streamEdit("Write a docstring for this code");
+    await verticalDiffManager.streamEdit(
+      "Write a docstring for this code. Do not change anything about the code itself."
+    );
   },
   "continue.fixCode": async () => {
-    await streamEdit("Fix this code");
+    await verticalDiffManager.streamEdit("Fix this code");
   },
   "continue.optimizeCode": async () => {
-    await streamEdit("Optimize this code");
+    await verticalDiffManager.streamEdit("Optimize this code");
   },
   "continue.fixGrammar": async () => {
-    await streamEdit(
-      "If there are any grammar or spelling mistakes in this writing, fix them"
+    await verticalDiffManager.streamEdit(
+      "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing."
     );
   },
   "continue.viewLogs": async () => {
@@ -264,11 +276,10 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     await vscode.window.showTextDocument(uri);
   },
   "continue.debugTerminal": async () => {
-    const terminalContents = await ideProtocolClient.getTerminalContents(1);
+    const terminalContents = await ide.getTerminalContents();
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    debugPanelWebview?.postMessage({
-      type: "userInput",
-      input: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents}`,
+    sidebar.webviewProtocol?.request("userInput", {
+      input: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents.trim()}`,
     });
   },
   "continue.hideInlineTip": () => {
@@ -280,21 +291,17 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   // Commands without keyboard shortcuts
   "continue.addModel": () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    debugPanelWebview?.postMessage({
-      type: "addModel",
-    });
+    sidebar.webviewProtocol?.request("addModel", undefined);
   },
   "continue.openSettingsUI": () => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
-    debugPanelWebview?.postMessage({
-      type: "openSettings",
-    });
+    sidebar.webviewProtocol?.request("openSettings", undefined);
   },
   "continue.sendMainUserInput": (text: string) => {
-    ideProtocolClient.sendMainUserInput(text);
+    sidebar.sendMainUserInput(text);
   },
   "continue.shareSession": () => {
-    ideProtocolClient.sendMainUserInput("/share");
+    sidebar.sendMainUserInput("/share");
   },
   "continue.selectRange": (startLine: number, endLine: number) => {
     if (!vscode.window.activeTextEditor) {
@@ -319,27 +326,17 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     });
   },
   "continue.sendToTerminal": (text: string) => {
-    ideProtocolClient.runCommand(text);
+    ide.runCommand(text);
   },
   "continue.newSession": () => {
-    debugPanelWebview?.postMessage({
-      type: "newSession",
-    });
+    sidebar.webviewProtocol?.request("newSession", undefined);
   },
   "continue.viewHistory": () => {
-    debugPanelWebview?.postMessage({
-      type: "viewHistory",
-    });
+    sidebar.webviewProtocol?.request("viewHistory", undefined);
   },
   "continue.toggleFullScreen": () => {
     // Check if full screen is already open by checking open tabs
-    const tabs = vscode.window.tabGroups.all.flatMap(
-      (tabGroup) => tabGroup.tabs
-    );
-
-    const fullScreenTab = tabs.find(
-      (tab) => (tab.input as any).viewType?.endsWith("continue.continueGUIView")
-    );
+    const fullScreenTab = getFullScreenTab();
 
     // Check if the active editor is the Continue GUI View
     if (fullScreenTab && fullScreenTab.isActive) {
@@ -364,7 +361,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       return;
     }
 
-    // Close the sidebars
+    // Close the sidebar.webviews
     // vscode.commands.executeCommand("workbench.action.closeSidebar");
     vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     // vscode.commands.executeCommand("workbench.action.toggleZenMode");
@@ -373,9 +370,12 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       "Continue",
       vscode.ViewColumn.One
     );
-    panel.webview.html = getSidebarContent(
+    panel.webview.html = sidebar.getSidebarContent(
       extensionContext,
       panel,
+      ide,
+      configHandler,
+      verticalDiffManager,
       undefined,
       undefined,
       true
@@ -388,7 +388,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
 
     for (const uri of uris) {
-      addEntireFileToContext(uri, false);
+      addEntireFileToContext(uri, false, sidebar.webviewProtocol);
     }
   },
   "continue.updateAllReferences": (filepath: vscode.Uri) => {
@@ -398,7 +398,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       return;
     }
     const position = editor.selection.active;
-    ideProtocolClient.sendMainUserInput(
+    sidebar.sendMainUserInput(
       `/references ${filepath.fsPath} ${position.line} ${position.character}`
     );
   },
@@ -408,7 +408,7 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
   ) => {
     clearTimeout(logRejectionTimeout);
     outcome.accepted = true;
-    ideProtocolClient.logDevData("autocomplete", outcome);
+    logDevData("autocomplete", outcome);
   },
   "continue.toggleTabAutocompleteEnabled": () => {
     const config = vscode.workspace.getConfiguration("continue");
@@ -419,10 +419,27 @@ const commandsMap: { [command: string]: (...args: any) => any } = {
       vscode.ConfigurationTarget.Global
     );
   },
-};
+});
 
-export function registerAllCommands(context: vscode.ExtensionContext) {
-  for (const [command, callback] of Object.entries(commandsMap)) {
+export function registerAllCommands(
+  context: vscode.ExtensionContext,
+  ide: IDE,
+  extensionContext: vscode.ExtensionContext,
+  sidebar: ContinueGUIWebviewViewProvider,
+  configHandler: ConfigHandler,
+  diffManager: DiffManager,
+  verticalDiffManager: VerticalPerLineDiffManager
+) {
+  for (const [command, callback] of Object.entries(
+    commandsMap(
+      ide,
+      extensionContext,
+      sidebar,
+      configHandler,
+      diffManager,
+      verticalDiffManager
+    )
+  )) {
     context.subscriptions.push(
       vscode.commands.registerCommand(command, callback)
     );

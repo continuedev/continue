@@ -13,10 +13,21 @@ if (args[2] === "--target") {
 (async () => {
   console.log("[info] Packaging extension for target ", target);
 
-  // Copy config_schema.json to config.json in docs
+  // Copy config_schema.json to config.json in docs and intellij
   fs.copyFileSync(
     "config_schema.json",
     path.join("..", "..", "docs", "static", "schemas", "config.json")
+  );
+  fs.copyFileSync(
+    "config_schema.json",
+    path.join(
+      "..",
+      "intellij",
+      "src",
+      "main",
+      "resources",
+      "config_schema.json"
+    )
   );
   // Modify and copy for .continuerc.json
   const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
@@ -77,11 +88,19 @@ if (args[2] === "--target") {
     });
   });
 
+  // Put back index.html
   if (fs.existsSync(indexHtmlPath)) {
     fs.rmSync(indexHtmlPath, {});
   }
   fs.copyFileSync("tmp_index.html", indexHtmlPath);
   fs.unlinkSync("tmp_index.html");
+
+  // Copy over other misc. files
+  fs.copyFileSync(
+    "../extensions/vscode/gui/onigasm.wasm",
+    path.join(intellijExtensionWebviewPath, "onigasm.wasm")
+  );
+
   console.log("[info] Copied gui build to Intellij extension");
 
   // Then copy over the dist folder to the VSCode extension //

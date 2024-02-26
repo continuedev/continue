@@ -20,10 +20,15 @@ import {
 } from "..";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
-import { RootStore } from "../../redux/store";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
+import { RootState } from "../../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
-import { deleteModel } from "../../util/ide";
+import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
+import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 
 const GridDiv = styled.div`
   display: grid;
@@ -32,24 +37,6 @@ const GridDiv = styled.div`
   border: 0.5px solid ${lightGray};
   border-radius: ${defaultBorderRadius};
   overflow: hidden;
-`;
-
-const Select = styled.select`
-  border: none;
-  max-width: 50vw;
-  background-color: ${vscBackground};
-  color: ${vscForeground};
-  padding: 6px;
-  max-height: 35vh;
-  overflow: scroll;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-  }
-  &:hover {
-    background-color: ${vscInputBackground};
-  }
 `;
 
 const StyledPlusIcon = styled(PlusIcon)`
@@ -64,18 +51,6 @@ const StyledPlusIcon = styled(PlusIcon)`
     background-color: ${vscInputBackground};
   }
   border-left: 0.5px solid ${lightGray};
-`;
-
-const NewProviderDiv = styled.div`
-  cursor: pointer;
-  padding: 8px;
-  padding-left: 16px;
-  padding-right: 16px;
-  border-top: 0.5px solid ${lightGray};
-
-  &:hover {
-    background-color: ${vscInputBackground};
-  }
 `;
 
 const StyledListbox = styled(Listbox)`
@@ -124,7 +99,7 @@ const StyledListboxOptions = styled(Listbox.Options)`
   max-height: 80vh;
 
   border-radius: ${defaultBorderRadius};
-  overflow: scroll;
+  overflow-y: scroll;
 `;
 
 const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
@@ -148,6 +123,7 @@ function ListBoxOption({
   idx: number;
   showDelete?: boolean;
 }) {
+  const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -174,7 +150,17 @@ function ListBoxOption({
           <HeaderButtonWithText
             text="Delete"
             onClick={(e) => {
-              deleteModel(option.title);
+              dispatch(setShowDialog(true));
+              dispatch(
+                setDialogMessage(
+                  <ConfirmationDialog
+                    text={`Are you sure you want to delete this model? (${option.title})`}
+                    onConfirm={() => {
+                      postToIde("config/deleteModel", { title: option.title });
+                    }}
+                  />
+                )
+              );
               e.stopPropagation();
               e.preventDefault();
             }}
@@ -209,7 +195,7 @@ function ModelSelect(props: {}) {
   const dispatch = useDispatch();
   const defaultModel = useSelector(defaultModelSelector);
   const allModels = useSelector(
-    (state: RootStore) => state.state.config.models
+    (state: RootState) => state.state.config.models
   );
 
   const navigate = useNavigate();

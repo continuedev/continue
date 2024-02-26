@@ -1,5 +1,4 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { postToIde } from "core/ide/messaging";
 import _ from "lodash";
 import { useCallback, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -14,15 +13,15 @@ import {
 } from "../components";
 import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
 import ModelCard from "../components/modelSelection/ModelCard";
+import { useNavigationListener } from "../hooks/useNavigationListener";
 import { setDefaultModel } from "../redux/slices/stateSlice";
-import { addModel } from "../util/ide";
+import { postToIde } from "../util/ide";
 import {
   MODEL_PROVIDER_TAG_COLORS,
   ModelInfo,
   PROVIDER_INFO,
   updatedObj,
 } from "../util/modelData";
-import { useNavigationListener } from "../hooks/useNavigationListener";
 
 const GridDiv = styled.div`
   display: grid;
@@ -40,7 +39,6 @@ export const CustomModelButton = styled.div<{ disabled: boolean }>`
   display: flex;
   justify-content: center;
   align-items: center;
-  width: 100%;
   transition: all 0.5s;
 
   ${(props) =>
@@ -246,7 +244,7 @@ function ModelConfig() {
                     ...formParams,
                     provider: modelInfo.provider,
                   };
-                  addModel(model);
+                  postToIde("config/addModel", { model });
                   dispatch(setDefaultModel(model.title));
                   navigate("/");
                 }}
@@ -264,7 +262,7 @@ function ModelConfig() {
             <CustomModelButton
               disabled={false}
               onClick={(e) => {
-                postToIde("openConfigJson", {});
+                postToIde("openConfigJson", undefined);
               }}
             >
               <h3 className="text-center my-2">Open config.json</h3>
