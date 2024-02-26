@@ -8,7 +8,7 @@ import {
   setConfig,
   setInactive,
 } from "../redux/slices/stateSlice";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 import { ideRequest, isJetBrains } from "../util/ide";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
@@ -43,7 +43,7 @@ function useSetup(dispatch: Dispatch<any>) {
   const { streamResponse } = useChatHandler(dispatch);
 
   const defaultModelTitle = useSelector(
-    (store: RootStore) => store.state.defaultModelTitle
+    (store: RootState) => store.state.defaultModelTitle
   );
 
   // IDE event listeners

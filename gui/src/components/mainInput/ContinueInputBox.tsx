@@ -7,7 +7,7 @@ import { defaultBorderRadius, vscBackground } from "..";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectSlashCommands } from "../../redux/selectors";
 import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
-import { RootStore } from "../../redux/store";
+import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
 
@@ -64,10 +64,10 @@ interface ContinueInputBoxProps {
 function ContinueInputBox(props: ContinueInputBoxProps) {
   const dispatch = useDispatch();
 
-  const active = useSelector((store: RootStore) => store.state.active);
+  const active = useSelector((store: RootState) => store.state.active);
   const availableSlashCommands = useSelector(selectSlashCommands);
   const availableContextProviders = useSelector(
-    (store: RootStore) => store.state.config.contextProviders
+    (store: RootState) => store.state.config.contextProviders
   );
 
   const [editorState, setEditorState] = useState(props.editorState);

@@ -1,5 +1,5 @@
-import { RootStore } from "../store";
+import { RootState } from "../store";
 
-const selectBottomMessage = (state: RootStore) => state.uiState.bottomMessage;
+const selectBottomMessage = (state: RootState) => state.uiState.bottomMessage;
 
 export { selectBottomMessage };

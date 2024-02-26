@@ -24,7 +24,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
-import { RootStore } from "../../redux/store";
+import { RootState } from "../../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
@@ -195,7 +195,7 @@ function ModelSelect(props: {}) {
   const dispatch = useDispatch();
   const defaultModel = useSelector(defaultModelSelector);
   const allModels = useSelector(
-    (state: RootStore) => state.state.config.models
+    (state: RootState) => state.state.config.models
   );
 
   const navigate = useNavigate();

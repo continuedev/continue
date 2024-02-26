@@ -6,7 +6,7 @@ import { stripImages } from "core/llm/countTokens";
 import { useSelector } from "react-redux";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 import { ideRequest } from "../util/ide";
 
 function truncateText(text: string, maxLength: number) {
@@ -17,10 +17,10 @@ function truncateText(text: string, maxLength: number) {
 }
 
 function useHistory(dispatch: Dispatch) {
-  const state = useSelector((state: RootStore) => state.state);
+  const state = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
   const disableSessionTitles = useSelector(
-    (store: RootStore) => store.state.config.disableSessionTitles
+    (store: RootState) => store.state.config.disableSessionTitles
   );
 
   async function getHistory(): Promise<SessionInfo[]> {

@@ -16,7 +16,7 @@ import {
 } from "../components";
 import InfoHover from "../components/InfoHover";
 import Loader from "../components/loaders/Loader";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 import { getFontSize, getPlatform } from "../util";
 import { postToIde } from "../util/ide";
 
@@ -99,7 +99,7 @@ function Settings() {
   const onSubmit = (data: ContinueConfig) => console.log(data);
 
   const navigate = useNavigate();
-  const config = useSelector((state: RootStore) => state.state.config);
+  const config = useSelector((state: RootState) => state.state.config);
   const dispatch = useDispatch();
 
   const submitChanges = () => {
