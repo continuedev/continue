@@ -13,14 +13,15 @@ export async function* streamDiff(
   oldLines: string[],
   newLines: LineStream
 ): AsyncGenerator<DiffLine> {
-  oldLines = [...oldLines]; // be careful
+  const mutatedOldLines = [...oldLines]; // be careful
   let seenIndentationMistake = false;
 
   let newLineResult = await newLines.next();
+  const postponedLines: string[] = [];
   while (oldLines.length > 0 && !newLineResult.done) {
     const [matchIndex, isPerfectMatch, newLine] = matchLine(
       newLineResult.value,
-      oldLines,
+      mutatedOldLines,
       seenIndentationMistake
     );
     if (!seenIndentationMistake && newLineResult.value !== newLine) {
@@ -29,20 +30,25 @@ export async function* streamDiff(
 
     if (matchIndex < 0) {
       // Insert new line
-      yield { type: "new", line: newLine };
+      postponedLines.push(newLine);
     } else {
       // Insert all deleted lines before match
       for (let i = 0; i < matchIndex; i++) {
-        yield { type: "old", line: oldLines.shift()! };
+        yield { type: "old", line: mutatedOldLines.shift()! };
+      }
+      if (postponedLines.length > 0) {
+        for (let i = 0; i <= postponedLines.length; i++) {
+          yield { type: "new", line: postponedLines.shift()! };
+        }
       }
 
       if (isPerfectMatch) {
         // Same
-        yield { type: "same", line: oldLines.shift()! };
+        yield { type: "same", line: mutatedOldLines.shift()! };
       } else {
         // Delete old line and insert the new
-        yield { type: "old", line: oldLines.shift()! };
-        yield { type: "new", line: newLine };
+        yield { type: "old", line: mutatedOldLines.shift()! };
+        postponedLines.push(newLine);
       }
     }
 
@@ -50,15 +56,21 @@ export async function* streamDiff(
   }
 
   // Once at the edge, only one choice
-  if (newLineResult.done === true && oldLines.length > 0) {
+  if (newLineResult.done === true && mutatedOldLines.length > 0) {
     for (let oldLine of oldLines) {
       yield { type: "old", line: oldLine };
     }
   }
 
-  if (!newLineResult.done && oldLines.length === 0) {
+  if (!newLineResult.done && mutatedOldLines.length === 0) {
     yield { type: "new", line: newLineResult.value };
     for await (const newLine of newLines) {
+      yield { type: "new", line: newLine };
+    }
+  }
+
+  if (postponedLines.length > 0) {
+    for await (const newLine of postponedLines) {
       yield { type: "new", line: newLine };
     }
   }
