@@ -58,6 +58,7 @@ interface ContinueInputBoxProps {
 
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
+  hidden?: boolean;
 }
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
@@ -92,6 +93,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
       style={{
         paddingTop: "4px",
         backgroundColor: vscBackground,
+        display: props.hidden ? "none" : "inherit",
       }}
     >
       <div

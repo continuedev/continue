@@ -36,7 +36,6 @@ import { newSession, setInactive } from "../redux/slices/stateSlice";
 import {
   setDialogEntryOn,
   setDialogMessage,
-  setDisplayBottomMessageOnBottom,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootStore } from "../redux/store";
@@ -166,22 +165,6 @@ function GUI(props: GUIProps) {
   const topGuiDivRef = useRef<HTMLDivElement>(null);
 
   // #region Effects
-
-  // Set displayBottomMessageOnBottom
-  const aboveComboBoxDivRef = useRef<HTMLDivElement>(null);
-  const bottomMessage = useSelector(
-    (state: RootStore) => state.uiState.bottomMessage
-  );
-  useEffect(() => {
-    if (!aboveComboBoxDivRef.current) return;
-    dispatch(
-      setDisplayBottomMessageOnBottom(
-        aboveComboBoxDivRef.current.getBoundingClientRect().top <
-          window.innerHeight / 2
-      )
-    );
-  }, [bottomMessage, aboveComboBoxDivRef.current]);
-
   const [userScrolledAwayFromBottom, setUserScrolledAwayFromBottom] =
     useState<boolean>(false);
 
@@ -388,6 +371,7 @@ function GUI(props: GUIProps) {
                   >
                     {item.message.role === "user" ? (
                       <ContinueInputBox
+                        key={index}
                         onEnter={async (editorState) => {
                           streamResponse(editorState, index);
                         }}
@@ -448,14 +432,14 @@ function GUI(props: GUIProps) {
             })}
           </StepsDiv>
 
-          <div ref={aboveComboBoxDivRef} />
-          {active || (
-            <ContinueInputBox
-              onEnter={sendInput}
-              isLastUserInput={false}
-              isMainInput={true}
-            ></ContinueInputBox>
-          )}
+          <ContinueInputBox
+            key={state.history.length}
+            onEnter={sendInput}
+            isLastUserInput={false}
+            isMainInput={true}
+            hidden={active}
+          ></ContinueInputBox>
+
           {active ? (
             <>
               <br />

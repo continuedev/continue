@@ -20,10 +20,15 @@ import {
 } from "..";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
 import { RootStore } from "../../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
+import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 
 const GridDiv = styled.div`
   display: grid;
@@ -118,6 +123,7 @@ function ListBoxOption({
   idx: number;
   showDelete?: boolean;
 }) {
+  const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -144,7 +150,17 @@ function ListBoxOption({
           <HeaderButtonWithText
             text="Delete"
             onClick={(e) => {
-              postToIde("config/deleteModel", { title: option.title });
+              dispatch(setShowDialog(true));
+              dispatch(
+                setDialogMessage(
+                  <ConfirmationDialog
+                    text={`Are you sure you want to delete this model? (${option.title})`}
+                    onConfirm={() => {
+                      postToIde("config/deleteModel", { title: option.title });
+                    }}
+                  />
+                )
+              );
               e.stopPropagation();
               e.preventDefault();
             }}
