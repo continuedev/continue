@@ -181,7 +181,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
 
   const historyLengthRef = useUpdatingRef(historyLength);
-  const onEnterRef = useUpdatingRef(props.onEnter);
   const availableSlashCommandsRef = useUpdatingRef(
     props.availableSlashCommands
   );
@@ -246,12 +245,12 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return false;
               }
 
-              onEnterRef.current(this.editor.getJSON());
+              onEnterRef.current();
               return true;
             },
 
             "Cmd-Enter": () => {
-              onEnterRef.current(this.editor.getJSON());
+              onEnterRef.current();
               return true;
             },
 
@@ -346,6 +345,11 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
   });
 
+  const onEnterRef = useUpdatingRef(() => {
+    props.onEnter(editor.getJSON());
+    editor.commands.clearContent(true);
+  }, [props.onEnter, editor]);
+
   // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
   const [ignoreHighlightedCode, setIgnoreHighlightedCode] = useState(false);
 
@@ -379,7 +383,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
       editor?.commands.insertContent(data.input);
-      onEnterRef.current(editor.getJSON());
+      onEnterRef.current();
     },
     [editor, onEnterRef.current, props.isMainInput]
   );
@@ -572,9 +576,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             editor.commands.insertContent("@");
           }
         }}
-        onEnter={() => {
-          onEnterRef.current(editor.getJSON());
-        }}
+        onEnter={onEnterRef.current}
         onImageFileSelected={(file) => {
           handleImageFile(file).then(([img, dataUrl]) => {
             const { schema } = editor.state;

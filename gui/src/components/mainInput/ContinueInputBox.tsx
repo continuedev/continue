@@ -1,6 +1,5 @@
 import { JSONContent } from "@tiptap/react";
 import { ContextItemWithId } from "core";
-import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
@@ -70,8 +69,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
     (store: RootState) => store.state.config.contextProviders
   );
 
-  const [editorState, setEditorState] = useState(props.editorState);
-
   useWebviewListener(
     "newSessionWithPrompt",
     async (data) => {
@@ -112,7 +109,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           borderRadius={defaultBorderRadius}
         >
           <TipTapEditor
-            editorState={editorState}
+            editorState={props.editorState}
             onEnter={props.onEnter}
             isMainInput={props.isMainInput}
             availableContextProviders={availableContextProviders}

@@ -371,7 +371,6 @@ function GUI(props: GUIProps) {
                   >
                     {item.message.role === "user" ? (
                       <ContinueInputBox
-                        key={index}
                         onEnter={async (editorState) => {
                           streamResponse(editorState, index);
                         }}
@@ -433,7 +432,6 @@ function GUI(props: GUIProps) {
           </StepsDiv>
 
           <ContinueInputBox
-            key={state.history.length}
             onEnter={sendInput}
             isLastUserInput={false}
             isMainInput={true}
