@@ -472,7 +472,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           .run();
         setTimeout(() => {
           editor.commands.focus("end");
-        }, 100);
+        }, 200);
       }
       setIgnoreHighlightedCode(false);
     },
