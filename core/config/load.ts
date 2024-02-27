@@ -59,6 +59,13 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   return JSON.parse(content);
 }
 
+const configMergeKeys = {
+  "models": (a: any, b: any) => a.title === b.title,
+  "contextProviders": (a: any, b: any) => a.name === b.name,
+  "slashCommands": (a: any, b: any) => a.name === b.name,
+  "customCommands": (a: any, b: any) => a.name === b.name,
+}
+
 function loadSerializedConfig(
   workspaceConfigs: ContinueRcJson[],
   remoteConfigServerUrl: URL | undefined,
@@ -128,11 +135,11 @@ function loadSerializedConfig(
     const remoteConfigJson = resolveSerializedConfig(
       getConfigJsonPathForRemote(remoteConfigServerUrl)
     );
-    config = mergeJson(config, remoteConfigJson, "merge");
+    config = mergeJson(config, remoteConfigJson, "merge", configMergeKeys);
   }
 
   for (const workspaceConfig of workspaceConfigs) {
-    config = mergeJson(config, workspaceConfig, workspaceConfig.mergeBehavior);
+    config = mergeJson(config, workspaceConfig, workspaceConfig.mergeBehavior, configMergeKeys);
   }
 
   return config;
@@ -455,5 +462,5 @@ export {
   intermediateToFinalConfig,
   loadFullConfigNode,
   serializedToIntermediateConfig,
-  type BrowserSerializedContinueConfig,
+  type BrowserSerializedContinueConfig
 };
