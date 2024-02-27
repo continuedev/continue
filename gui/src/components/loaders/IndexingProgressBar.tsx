@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
+import { postToIde } from "../../util/ide";
 
 const DIAMETER = 6;
 const CircleDiv = styled.div`
@@ -64,6 +65,10 @@ const IndexingProgressBar = ({
 
   const [expanded, setExpanded] = useState(true);
   const [hovered, setHovered] = useState(false);
+
+  useEffect(() => {
+    postToIde("index/setPaused", !expanded);
+  }, [expanded]);
 
   return (
     <div

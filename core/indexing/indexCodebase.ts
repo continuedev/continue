@@ -6,12 +6,27 @@ import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
 import { getComputeDeleteAddRemove } from "./refreshIndex";
 import { CodebaseIndex, IndexTag } from "./types";
 
+export class PauseToken {
+  constructor(private _paused: boolean) {}
+
+  set paused(value: boolean) {
+    this._paused = value;
+  }
+
+  get paused(): boolean {
+    return this._paused;
+  }
+}
+
 export class CodebaseIndexer {
   configHandler: ConfigHandler;
   ide: IDE;
-  constructor(configHandler: ConfigHandler, ide: IDE) {
+  pauseToken: PauseToken;
+
+  constructor(configHandler: ConfigHandler, ide: IDE, pauseToken: PauseToken) {
     this.configHandler = configHandler;
     this.ide = ide;
+    this.pauseToken = pauseToken;
   }
 
   private async getIndexesToBuild(): Promise<CodebaseIndex[]> {
@@ -41,6 +56,12 @@ export class CodebaseIndexer {
 
     let completedDirs = 0;
 
+    yield {
+      progress:
+        0,
+      desc: "Starting indexing...",
+    };
+
     for (let directory of workspaceDirs) {
       const stats = await this.ide.getStats(directory);
       const branch = await this.ide.getBranch(directory);
@@ -64,6 +85,11 @@ export class CodebaseIndexer {
             results,
             markComplete
           )) {
+            // Handle pausing in this loop because it's the only one really taking time
+            while (this.pauseToken.paused) {
+              await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+
             yield {
               progress:
                 (completedDirs +

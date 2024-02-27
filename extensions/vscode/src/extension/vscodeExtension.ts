@@ -1,5 +1,5 @@
 import { ConfigHandler } from "core/config/handler";
-import { CodebaseIndexer } from "core/indexing/indexCodebase";
+import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { registerAllCommands } from "../commands";
@@ -90,8 +90,21 @@ export class VsCodeExtension {
     );
     this.webviewProtocol = this.sidebar.webviewProtocol;
 
+    // Indexing + pause token
+    const indexingPauseToken = new PauseToken(
+      context.globalState.get<boolean>("continue.indexingPaused") === false
+    );
+    this.webviewProtocol.on("index/setPaused", (msg) => {
+      context.globalState.update("continue.indexingPaused", msg.data);
+      indexingPauseToken.paused = msg.data;
+    });
+
     this.diffManager.webviewProtocol = this.webviewProtocol;
-    this.indexer = new CodebaseIndexer(this.configHandler, this.ide);
+    this.indexer = new CodebaseIndexer(
+      this.configHandler,
+      this.ide,
+      indexingPauseToken
+    );
 
     // CodeLens
     registerAllCodeLensProviders(

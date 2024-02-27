@@ -30,7 +30,7 @@ export class VsCodeWebviewProtocol {
     return id;
   }
 
-  private on<T extends keyof WebviewProtocol>(
+  on<T extends keyof WebviewProtocol>(
     messageType: T,
     handler: (
       message: Message<WebviewProtocol[T][0]>
