@@ -52,7 +52,8 @@ export class VsCodeExtension {
           "=========================================================================="
         );
         outputChannel.append(log);
-      }
+      },
+      () => this.webviewProtocol?.request("configUpdate", undefined)
     );
 
     this.configHandler.reloadConfig();

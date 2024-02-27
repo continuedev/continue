@@ -18,14 +18,17 @@ export class ConfigHandler {
   private readonly ide: IDE;
   private readonly remoteConfigServerUrl: URL | undefined;
   private readonly writeLog: (text: string) => void;
+  private readonly onConfigUpdate: () => void;
   constructor(
     ide: IDE,
     remoteConfigServerUrl: URL | undefined,
-    writeLog: (text: string) => void
+    writeLog: (text: string) => void,
+    onConfigUpdate: () => void
   ) {
     this.ide = ide;
     this.remoteConfigServerUrl = remoteConfigServerUrl;
     this.writeLog = writeLog;
+    this.onConfigUpdate = onConfigUpdate;
     try {
       this.loadConfig();
     } catch (e) {
@@ -37,6 +40,7 @@ export class ConfigHandler {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
     this.loadConfig();
+    this.onConfigUpdate()
   }
 
   async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {

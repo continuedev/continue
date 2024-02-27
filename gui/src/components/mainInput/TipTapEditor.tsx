@@ -354,8 +354,11 @@ function TipTapEditor(props: TipTapEditorProps) {
     }
     
     props.onEnter(json);
-    editor.commands.clearContent(true);
-  }, [props.onEnter, editor]);
+
+    if (props.isMainInput) {
+      editor.commands.clearContent(true);
+    }
+  }, [props.onEnter, editor, props.isMainInput]);
 
   // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
   const [ignoreHighlightedCode, setIgnoreHighlightedCode] = useState(false);
@@ -381,6 +384,14 @@ function TipTapEditor(props: TipTapEditorProps) {
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, []);
+
+  // Re-focus main input after done generating
+  const active = useSelector((state: RootState) => state.state.active);
+  useEffect(() => {
+    if (editor && !active && props.isMainInput) {
+      editor.commands.focus();
+    }
+  }, [props.isMainInput, active,editor])
 
   // IDE event listeners
   useWebviewListener(

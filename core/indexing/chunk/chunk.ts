@@ -23,7 +23,7 @@ async function* chunkDocumentWithoutId(
       }
       return;
     } catch (e) {
-      console.error(`Failed to parse ${filepath}: `, e);
+      // console.error(`Failed to parse ${filepath}: `, e);
       // falls back to basicChunker
     }
   }
