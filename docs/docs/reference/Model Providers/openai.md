@@ -29,6 +29,7 @@ OpenAI compatible servers
 - [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)
 - [LocalAI](https://localai.io/basics/getting_started/)
 - [llama-cpp-python](https://github.com/abetlen/llama-cpp-python#web-server)
+- [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples)
 
 OpenAI compatible APIs
 

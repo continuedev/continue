@@ -21,6 +21,7 @@ You can run a model on your local computer using:
 - [Text generation web UI](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [FastChat](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [llama-cpp-python](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
+- [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples) (OpenAI compatible server)
 
 Once you have it running, you will need to configure it in the GUI or manually add it to your `config.json`.
 
