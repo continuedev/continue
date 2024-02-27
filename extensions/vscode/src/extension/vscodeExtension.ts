@@ -92,7 +92,7 @@ export class VsCodeExtension {
 
     // Indexing + pause token
     const indexingPauseToken = new PauseToken(
-      context.globalState.get<boolean>("continue.indexingPaused") === false
+      context.globalState.get<boolean>("continue.indexingPaused") === true
     );
     this.webviewProtocol.on("index/setPaused", (msg) => {
       context.globalState.update("continue.indexingPaused", msg.data);
