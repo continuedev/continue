@@ -346,7 +346,14 @@ function TipTapEditor(props: TipTapEditorProps) {
   });
 
   const onEnterRef = useUpdatingRef(() => {
-    props.onEnter(editor.getJSON());
+    const json = editor.getJSON()
+
+    // Don't do anything if input box is empty
+    if (!json.content?.some(c => c.content)) {
+      return
+    }
+    
+    props.onEnter(json);
     editor.commands.clearContent(true);
   }, [props.onEnter, editor]);
 
