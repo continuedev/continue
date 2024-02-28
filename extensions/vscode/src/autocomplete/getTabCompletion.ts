@@ -1,4 +1,4 @@
-import { TabAutocompleteOptions } from "core";
+import { IDE, TabAutocompleteOptions } from "core";
 import { AutocompleteLruCache } from "core/autocomplete/cache";
 import { onlyWhitespaceAfterEndOfLine } from "core/autocomplete/charStream";
 import {
@@ -15,7 +15,7 @@ import { streamLines } from "core/diff/util";
 import OpenAI from "core/llm/llms/OpenAI";
 import Handlebars from "handlebars";
 import * as vscode from "vscode";
-import { TabAutocompleteModel } from "../loadConfig";
+import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { ContinueCompletionProvider } from "./completionProvider";
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
@@ -39,7 +39,9 @@ export async function getTabCompletion(
   document: vscode.TextDocument,
   pos: vscode.Position,
   token: vscode.CancellationToken,
-  options: TabAutocompleteOptions
+  options: TabAutocompleteOptions,
+  tabAutocompleteModel: TabAutocompleteModel,
+  ide: IDE
 ): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
@@ -54,7 +56,7 @@ export async function getTabCompletion(
 
   try {
     // Model
-    const llm = await TabAutocompleteModel.get();
+    const llm = await tabAutocompleteModel.get()
     if (llm instanceof OpenAI) {
       llm.useLegacyCompletionsEndpoint = true;
     }
@@ -81,10 +83,11 @@ export async function getTabCompletion(
         fullSuffix,
         clipboardText,
         lang,
-        getDefinitionsFromLsp,
+        (document, cursorIndex) => getDefinitionsFromLsp(document, cursorIndex, ide),
         options,
         await recentlyEditedTracker.getRecentlyEditedRanges(),
-        await recentlyEditedTracker.getRecentlyEditedDocuments()
+        await recentlyEditedTracker.getRecentlyEditedDocuments(),
+        llm.model
       );
 
     const { template, completionOptions } = options.template

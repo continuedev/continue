@@ -69,7 +69,9 @@ export class ContinueCompletionProvider
         document,
         position,
         token,
-        options
+        options,
+        this.tabAutocompleteModel,
+        this.ide
       );
       const completion = outcome?.completion;
 

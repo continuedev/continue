@@ -1,5 +1,5 @@
 import { IDE } from "core";
-import { AutocompleteSnippet } from "core/autocomplete/constructPrompt";
+import { AutocompleteSnippet } from "core/autocomplete/ranking";
 import * as vscode from "vscode";
 
 export class AutocompletePromptBuilder {
@@ -19,10 +19,12 @@ export class AutocompletePromptBuilder {
     if (definitions[0]?.targetRange) {
       return {
         filepath: uri,
-        content: await this.ide.readRangeInFile(
+        contents: await this.ide.readRangeInFile(
           definitions[0].targetUri.fsPath,
           definitions[0].targetRange
         ),
+        range: definitions[0].targetRange,
+        score: 0.8
       };
     }
 

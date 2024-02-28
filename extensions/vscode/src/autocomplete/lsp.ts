@@ -1,9 +1,8 @@
-import { RangeInFile } from "core";
+import { IDE, RangeInFile } from "core";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/ast";
 import { RangeInFileWithContents } from "core/commands/util";
 import * as vscode from "vscode";
 import Parser from "web-tree-sitter";
-import { ideProtocolClient } from "../activation/activate";
 
 type GotoProviderName =
   | "vscode.executeDefinitionProvider"
@@ -67,7 +66,8 @@ async function getDefinitionsForNode(
 
 export async function getDefinitionsFromLsp(
   document: RangeInFileWithContents,
-  cursorIndex: number
+  cursorIndex: number,
+  ide: IDE
 ): Promise<RangeInFileWithContents[]> {
   const ast = await getAst(document.filepath, document.contents);
   if (!ast) return [];
@@ -82,7 +82,7 @@ export async function getDefinitionsFromLsp(
       ...(await Promise.all(
         definitions.map(async (def) => ({
           ...def,
-          contents: await ideProtocolClient.readRangeInFile(
+          contents: await ide.readRangeInFile(
             def.filepath,
             new vscode.Range(
               new vscode.Position(
