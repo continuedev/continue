@@ -172,18 +172,21 @@ if (args[2] === "--target") {
   if (target) {
     // If building for production, only need the binaries for current platform
     if (!target.startsWith("darwin")) {
-      fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/darwin"), {
+      fs.rmSync(path.join(__dirname, "../bin/napi-v3/darwin"), {
         recursive: true,
+        force: true
       });
     }
     if (!target.startsWith("linux")) {
-      fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/linux"), {
+      fs.rmSync(path.join(__dirname, "../bin/napi-v3/linux"), {
         recursive: true,
+        force: true
       });
     }
     if (!target.startsWith("win")) {
-      fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/win32"), {
+      fs.rmSync(path.join(__dirname, "../bin/napi-v3/win32"), {
         recursive: true,
+        force: true
       });
     }
   }
