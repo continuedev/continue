@@ -127,7 +127,7 @@ function InputToolbar(props: InputToolbarProps) {
             </span>
           )}
       </span>
-      <span
+      {/* <span
         style={{
           color: props.usingCodebase ? vscBadgeBackground : lightGray,
           backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
@@ -137,10 +137,8 @@ function InputToolbar(props: InputToolbarProps) {
         onClick={props.useCodebase}
         className={"hover:underline cursor-pointer float-right"}
       >
-        {/* {downshiftProps.inputValue?.startsWith("/codebase")
-      ? "Using Codebase"
-      : `${getMetaKeyLabel()} ⏎ Use Codebase`} */}
-      </span>
+        {getMetaKeyLabel()} ⏎ Use Codebase
+      </span> */}
 
       <EnterButton
         offFocus={props.usingCodebase}

@@ -75,6 +75,26 @@ if (typeof document !== "undefined") {
   }
 }
 
+export function parseHexColor(hexColor: string): {
+  r: number;
+  g: number;
+  b: number;
+} {
+  if (hexColor.startsWith("#")) {
+    hexColor = hexColor.slice(1);
+  }
+
+  if (hexColor.length > 6) {
+    hexColor = hexColor.slice(0, 6);
+  }
+
+  const r = parseInt(hexColor.substring(0, 2), 16);
+  const g = parseInt(hexColor.substring(2, 4), 16);
+  const b = parseInt(hexColor.substring(4, 6), 16);
+
+  return { r, g, b };
+}
+
 export function parseColorForHex(colorVar: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(
     colorVar
@@ -120,10 +140,10 @@ export const StyledTooltip = styled(Tooltip)`
   background-color: ${vscEditorBackground};
   color: ${vscForeground};
   border-radius: ${defaultBorderRadius};
-  box-shadow: 0 0 3px 0 ${vscForeground};
-  padding: 4px;
-  padding-left: 8px;
-  padding-right: 8px;
+  box-shadow: 0 0 1px 0 ${vscForeground};
+  padding: 2px;
+  padding-left: 4px;
+  padding-right: 4px;
   z-index: 1000;
 
   max-width: 80vw;

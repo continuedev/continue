@@ -10,7 +10,7 @@ import { getBasename } from "../util";
 
 import { getAst, getScopeAroundRange, getTreePathAtCursor } from "./ast";
 import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
-import { rankSnippets } from "./ranking";
+import { AutocompleteSnippet, rankSnippets } from "./ranking";
 import { slidingWindowMatcher } from "./slidingWindow";
 
 export function languageForFilepath(
@@ -65,9 +65,25 @@ function shouldCompleteMultilineAst(
 async function shouldCompleteMultiline(
   filepath: string,
   fullPrefix: string,
-  fullSuffix: string
-): Promise<boolean> {
-  // Use AST to determine whether to complete multiline
+  fullSuffix: string,
+  clipboardText: string,
+  language: AutocompleteLanguageInfo,
+  getDefinition: (
+    filepath: string,
+    line: number,
+    character: number
+  ) => Promise<AutocompleteSnippet | undefined>,
+  options: TabAutocompleteOptions,
+  modelName: string
+): Promise<{
+  prefix: string;
+  suffix: string;
+  useFim: boolean;
+  completeMultiline: boolean;
+}> {
+  // Find external snippets
+  const snippets: AutocompleteSnippet[] = [];
+
   let treePath: Parser.SyntaxNode[] | undefined;
   try {
     const ast = await getAst(filepath, fullPrefix + fullSuffix);
@@ -154,17 +170,17 @@ export async function constructAutocompletePrompt(
     .join("\n");
   const maxPrefixTokens =
     options.maxPromptTokens * options.prefixPercentage -
-    countTokens(formattedSnippets, "gpt-4");
-  let prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens);
+    countTokens(formattedSnippets, modelName);
+  let prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens, modelName);
   if (formattedSnippets.length > 0) {
     prefix = formattedSnippets + "\n" + prefix;
   }
 
   const maxSuffixTokens = Math.min(
-    options.maxPromptTokens - countTokens(prefix, "gpt-4"),
+    options.maxPromptTokens - countTokens(prefix, modelName),
     options.maxSuffixPercentage * options.maxPromptTokens
   );
-  let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens);
+  let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
 
   return {
     prefix,

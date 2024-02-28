@@ -1,7 +1,10 @@
-import { createSlice } from "@reduxjs/toolkit";
-import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
+import {
+  ContextProviderDescription,
+  ContinueConfig,
+  SlashCommandDescription,
+} from "core";
 import FreeTrial from "core/llm/llms/FreeTrial";
-import { RootStore } from "../store";
 
 const TEST_SLASH_COMMANDS = [
   {
@@ -18,7 +21,17 @@ const TEST_SLASH_COMMANDS = [
   },
 ];
 
-const initialState: RootStore["serverState"] = {
+type ServerState = {
+  meilisearchUrl: string | undefined;
+  slashCommands: SlashCommandDescription[];
+  selectedContextItems: any[];
+  config: ContinueConfig;
+  contextProviders: ContextProviderDescription[];
+  savedContextGroups: any[]; // TODO: Context groups
+  indexingProgress: number;
+};
+
+const initialState: ServerState = {
   meilisearchUrl: undefined,
   slashCommands: [],
   selectedContextItems: [],
@@ -27,8 +40,7 @@ const initialState: RootStore["serverState"] = {
       new FreeTrial({ model: "gpt-4" }),
       new FreeTrial({ model: "gpt-3.5-turbo" }),
     ],
-    embeddingsProvider: new TransformersJsEmbeddingsProvider(),
-  },
+  } as any,
   contextProviders: [],
   savedContextGroups: [],
   indexingProgress: 1.0,
@@ -38,27 +50,27 @@ export const serverStateSlice = createSlice({
   name: "serverState",
   initialState,
   reducers: {
-    setSlashCommands: (state, action) => {
-      return {
-        ...state,
-        slashCommands: [
-          ...action.payload,
-          { name: "codebase", description: "Retrieve codebase context" },
-          { name: "so", description: "Search StackOverflow" },
-        ],
-      };
+    setSlashCommands: (
+      state,
+      action: PayloadAction<ServerState["slashCommands"]>
+    ) => {
+      state.slashCommands = [
+        ...action.payload,
+        { name: "codebase", description: "Retrieve codebase context" },
+        { name: "so", description: "Search StackOverflow" },
+      ];
     },
-    setContextProviders: (state, action) => {
-      return {
-        ...state,
-        contextProviders: action.payload,
-      };
+    setContextProviders: (
+      state,
+      action: PayloadAction<ServerState["contextProviders"]>
+    ) => {
+      state.contextProviders = action.payload;
     },
-    setIndexingProgress: (state, { payload }: { payload: number }) => {
-      return {
-        ...state,
-        indexingProgress: payload,
-      };
+    setIndexingProgress: (
+      state,
+      action: PayloadAction<ServerState["indexingProgress"]>
+    ) => {
+      state.indexingProgress = action.payload;
     },
   },
 });

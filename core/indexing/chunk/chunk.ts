@@ -23,7 +23,7 @@ async function* chunkDocumentWithoutId(
       }
       return;
     } catch (e) {
-      console.error(`Failed to parse ${filepath}: `, e);
+      // console.error(`Failed to parse ${filepath}: `, e);
       // falls back to basicChunker
     }
   }
@@ -43,11 +43,11 @@ export async function* chunkDocument(
     contents,
     maxChunkSize
   )) {
-    if (countTokens(chunkWithoutId.content, "gpt-4") > MAX_CHUNK_SIZE) {
+    if (countTokens(chunkWithoutId.content) > MAX_CHUNK_SIZE) {
       console.warn(
         `Chunk with more than ${maxChunkSize} tokens constructed: `,
         filepath,
-        countTokens(chunkWithoutId.content, "gpt-4")
+        countTokens(chunkWithoutId.content)
       );
       continue;
     }

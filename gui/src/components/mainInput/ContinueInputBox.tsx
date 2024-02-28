@@ -1,12 +1,12 @@
 import { JSONContent } from "@tiptap/react";
 import { ContextItemWithId } from "core";
-import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectSlashCommands } from "../../redux/selectors";
 import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
-import { RootStore } from "../../redux/store";
+import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
 
@@ -57,43 +57,40 @@ interface ContinueInputBoxProps {
 
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
+  hidden?: boolean;
 }
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
   const dispatch = useDispatch();
 
-  const active = useSelector((store: RootStore) => store.state.active);
+  const active = useSelector((store: RootState) => store.state.active);
   const availableSlashCommands = useSelector(selectSlashCommands);
   const availableContextProviders = useSelector(
-    (store: RootStore) => store.state.config.contextProviders
+    (store: RootState) => store.state.config.contextProviders
   );
 
-  const [editorState, setEditorState] = useState(props.editorState);
-
-  useEffect(() => {
-    const listener = (e) => {
-      if (e.data.type === "newSessionWithPrompt" && props.isMainInput) {
+  useWebviewListener(
+    "newSessionWithPrompt",
+    async (data) => {
+      if (props.isMainInput) {
         dispatch(newSession());
         dispatch(
           setMessageAtIndex({
-            message: { role: "user", content: e.data.prompt },
+            message: { role: "user", content: data.prompt },
             index: 0,
           })
         );
       }
-    };
-
-    window.addEventListener("message", listener);
-    return () => {
-      window.removeEventListener("message", listener);
-    };
-  }, []);
+    },
+    [props.isMainInput]
+  );
 
   return (
     <div
       style={{
         paddingTop: "4px",
         backgroundColor: vscBackground,
+        display: props.hidden ? "none" : "inherit",
       }}
     >
       <div
@@ -112,7 +109,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           borderRadius={defaultBorderRadius}
         >
           <TipTapEditor
-            editorState={editorState}
+            editorState={props.editorState}
             onEnter={props.onEnter}
             isMainInput={props.isMainInput}
             availableContextProviders={availableContextProviders}

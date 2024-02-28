@@ -2,6 +2,7 @@ import { Editor, ReactRenderer } from "@tiptap/react";
 import { ContextProviderDescription, ContextSubmenuItem } from "core";
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
+import { ideRequest } from "../../util/ide";
 import MentionList from "./MentionList";
 import { ComboBoxItem, ComboBoxItemType } from "./types";
 
@@ -105,7 +106,7 @@ export function getMentionSuggestion(
       });
     }
 
-    const mainResults =
+    const mainResults: any[] =
       availableContextProvidersRef.current
         ?.filter(
           (provider) =>
@@ -133,6 +134,20 @@ export function getMentionSuggestion(
           type: result.providerTitle as ComboBoxItemType,
           query: result.id,
         };
+      });
+    } else if (
+      mainResults.length === availableContextProvidersRef.current.length
+    ) {
+      mainResults.push({
+        title: "Add more context providers",
+        type: "action",
+        action: () => {
+          ideRequest(
+            "openUrl",
+            "https://continue.dev/docs/customization/context-providers#built-in-context-providers"
+          );
+        },
+        description: "",
       });
     }
     return mainResults;
