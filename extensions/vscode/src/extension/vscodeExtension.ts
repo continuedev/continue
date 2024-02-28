@@ -41,7 +41,7 @@ export class VsCodeExtension {
     );
     this.configHandler = new ConfigHandler(
       this.ide,
-      remoteUrl === undefined || remoteUrl === ""
+      typeof remoteUrl !== "string" || remoteUrl === ""
         ? undefined
         : new URL(remoteUrl),
       async (log: string) => {
