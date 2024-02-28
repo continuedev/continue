@@ -1,9 +1,11 @@
+import { IDE } from "core";
 import AutocompleteLruCache from "core/autocomplete/cache";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
+import { ConfigHandler } from "core/config/handler";
+import { logDevData } from "core/util/devdata";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import { ideProtocolClient } from "../activation/activate";
-import { configHandler } from "../loadConfig";
+import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { getTabCompletion } from "./getTabCompletion";
 import { stopStatusBarLoading } from "./statusBar";
 
@@ -18,6 +20,8 @@ export class ContinueCompletionProvider
 
   public static errorsShown: Set<string> = new Set();
 
+  constructor(private readonly configHandler: ConfigHandler, private readonly ide: IDE, private readonly tabAutocompleteModel: TabAutocompleteModel) {}
+
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
@@ -29,7 +33,7 @@ export class ContinueCompletionProvider
     const uuid = uuidv4();
     ContinueCompletionProvider.lastUUID = uuid;
 
-    const config = await configHandler.loadConfig();
+    const config = await this.configHandler.loadConfig();
     const options = {
       ...config.tabAutocompleteOptions,
       ...DEFAULT_AUTOCOMPLETE_OPTS,
@@ -86,7 +90,7 @@ export class ContinueCompletionProvider
       const logRejectionTimeout = setTimeout(() => {
         // Wait 10 seconds, then assume it wasn't accepted
         outcome.accepted = false;
-        ideProtocolClient.logDevData("autocomplete", outcome);
+        logDevData("autocomplete", outcome);
       }, 10_000);
 
       return [

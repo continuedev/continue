@@ -10,7 +10,7 @@ import { getBasename } from "../util";
 
 import { getAst, getScopeAroundRange, getTreePathAtCursor } from "./ast";
 import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
-import { AutocompleteSnippet, rankSnippets } from "./ranking";
+import { rankSnippets } from "./ranking";
 import { slidingWindowMatcher } from "./slidingWindow";
 
 export function languageForFilepath(
@@ -65,25 +65,9 @@ function shouldCompleteMultilineAst(
 async function shouldCompleteMultiline(
   filepath: string,
   fullPrefix: string,
-  fullSuffix: string,
-  clipboardText: string,
-  language: AutocompleteLanguageInfo,
-  getDefinition: (
-    filepath: string,
-    line: number,
-    character: number
-  ) => Promise<AutocompleteSnippet | undefined>,
-  options: TabAutocompleteOptions,
-  modelName: string
-): Promise<{
-  prefix: string;
-  suffix: string;
-  useFim: boolean;
-  completeMultiline: boolean;
-}> {
-  // Find external snippets
-  const snippets: AutocompleteSnippet[] = [];
-
+  fullSuffix: string
+): Promise<boolean> {
+  // Use AST to determine whether to complete multiline
   let treePath: Parser.SyntaxNode[] | undefined;
   try {
     const ast = await getAst(filepath, fullPrefix + fullSuffix);
@@ -116,7 +100,8 @@ export async function constructAutocompletePrompt(
   ) => Promise<RangeInFileWithContents[]>,
   options: TabAutocompleteOptions,
   recentlyEditedRanges: RangeInFileWithContents[],
-  recentlyEditedDocuments: RangeInFileWithContents[]
+  recentlyEditedDocuments: RangeInFileWithContents[],
+  modelName: string
 ): Promise<{
   prefix: string;
   suffix: string;

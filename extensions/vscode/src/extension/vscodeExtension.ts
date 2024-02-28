@@ -2,16 +2,16 @@ import { ConfigHandler } from "core/config/handler";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
+import {
+  ContinueCompletionProvider,
+} from "../autocomplete/completionProvider";
+import { setupStatusBar } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
 import { DiffManager } from "../diff/horizontal";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
-import {
-  ContinueCompletionProvider,
-  setupStatusBar,
-} from "../lang-server/completionProvider";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { RemoteConfigSync } from "../util/remoteConfig";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";

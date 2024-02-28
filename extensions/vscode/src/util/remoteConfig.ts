@@ -88,7 +88,7 @@ export class RemoteConfigSync {
     this.syncInterval = setInterval(() => {
       if (!this.userToken || !this.remoteConfigServerUrl) return;
       this.sync(this.userToken, new URL(this.remoteConfigServerUrl));
-    }, this.remoteConfigSyncPeriod * 1000);
+    }, this.remoteConfigSyncPeriod * 1000 * 60);
   }
 
   async sync(userToken: string, remoteConfigServerUrl: URL) {
