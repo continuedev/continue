@@ -49,6 +49,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 - `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number)
 - `prefixPercentage`: The percentage of the input that should be dedicated to the prefix. (Number)
 - `template`: An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables. (String)
+- `multilineCompletions`: Whether to enable multiline completions ("always", "never", or "auto"). Defaults to "auto".
 
 ### Full example
 

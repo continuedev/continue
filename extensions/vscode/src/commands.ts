@@ -6,10 +6,10 @@ import * as vscode from "vscode";
 import { IDE } from "core";
 import { ConfigHandler } from "core/config/handler";
 import { logDevData } from "core/util/devdata";
+import { AutocompleteOutcome } from "./autocomplete/getTabCompletion";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
-import { AutocompleteOutcome } from "./lang-server/completionProvider";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 function getFullScreenTab() {

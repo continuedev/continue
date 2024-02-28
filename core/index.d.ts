@@ -166,6 +166,11 @@ export interface RangeInFile {
   range: Range;
 }
 
+export interface FileWithContents {
+  filepath: string;
+  contents: string;
+}
+
 export interface Range {
   start: Position;
   end: Position;
@@ -580,7 +585,9 @@ export interface TabAutocompleteOptions {
   maxSuffixPercentage: number;
   prefixPercentage: number;
   template?: string;
-  disableMultiLineCompletions?: boolean;
+  multilineCompletions: "always" | "never" | "auto";
+  slidingWindowPrefixPercentage: number;
+  slidingWindowSize: number;
 }
 
 export interface SerializedContinueConfig {
