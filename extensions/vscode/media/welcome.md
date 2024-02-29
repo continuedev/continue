@@ -2,7 +2,7 @@
 
 ## 🔑 Most important shortcuts
 
-> If you've been using Continue, these have changed
+> If you've been using Continue, these have changed. You can always customize them in VS Code settings.
 
 <kbd>Cmd/Ctrl</kbd> + <kbd>L</kbd> = Select code
 
