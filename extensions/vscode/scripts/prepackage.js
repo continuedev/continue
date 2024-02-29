@@ -72,7 +72,7 @@ if (args[2] === "--target") {
 
   const indexHtmlPath = path.join(intellijExtensionWebviewPath, "index.html");
   fs.copyFileSync(indexHtmlPath, "tmp_index.html");
-  fs.rmSync(intellijExtensionWebviewPath, { recursive: true });
+  rimrafSync(intellijExtensionWebviewPath);
   fs.mkdirSync(intellijExtensionWebviewPath, { recursive: true });
 
   await new Promise((resolve, reject) => {
@@ -90,7 +90,7 @@ if (args[2] === "--target") {
 
   // Put back index.html
   if (fs.existsSync(indexHtmlPath)) {
-    fs.rmSync(indexHtmlPath, {});
+    rimrafSync(indexHtmlPath);
   }
   fs.copyFileSync("tmp_index.html", indexHtmlPath);
   fs.unlinkSync("tmp_index.html");
@@ -172,22 +172,13 @@ if (args[2] === "--target") {
   if (target) {
     // If building for production, only need the binaries for current platform
     if (!target.startsWith("darwin")) {
-      fs.rmSync(path.join(__dirname, "../bin/napi-v3/darwin"), {
-        recursive: true,
-        force: true
-      });
+      rimrafSync(path.join(__dirname, "../bin/napi-v3/darwin"));
     }
     if (!target.startsWith("linux")) {
-      fs.rmSync(path.join(__dirname, "../bin/napi-v3/linux"), {
-        recursive: true,
-        force: true
-      });
+      rimrafSync(path.join(__dirname, "../bin/napi-v3/linux"));
     }
     if (!target.startsWith("win")) {
-      fs.rmSync(path.join(__dirname, "../bin/napi-v3/win32"), {
-        recursive: true,
-        force: true
-      });
+      rimrafSync(path.join(__dirname, "../bin/napi-v3/win32"));
     }
   }
   console.log("[info] Copied onnxruntime-node");
