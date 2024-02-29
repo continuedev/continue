@@ -1,6 +1,6 @@
-# Tab Autocomplete (Experimental)
+# Tab Autocomplete (beta)
 
-Continue now provides experimental support for tab autocomplete in VS Code. You can enable it by downloading the pre-release version of the extension, opening VS Code settings, and then checking the box that says "Enable Tab Autocomplete". There is also a button on the bottom/status bar for fast access. We will be greatly improving the experience over the next few releases, and it is always helpful to hear feedback. If you have any problems or suggestions, please let us know in our [Discord](https://discord.gg/vapESyrFmJ).
+Continue now provides support for tab autocomplete in [the VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) (make sure to download the pre-release). We will be greatly improving the experience over the next few releases, and it is always helpful to hear feedback. If you have any problems or suggestions, please let us know in our [Discord](https://discord.gg/vapESyrFmJ).
 
 ## Setting up with Ollama (default)
 
@@ -76,7 +76,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 Follow these steps to ensure that everything is set up correctly:
 
 1. Make sure you have the pre-release version of the extension installed.
-2. Make sure you have the "Enable Tab Autocomplete" setting checked.
+2. Make sure you have the "Enable Tab Autocomplete" setting checked (can toggle by clicking the "Continue" button in the status bar).
 3. Make sure you have downloaded Ollama.
 4. Run `ollama run starcoder:3b` to verify that the model is downloaded.
 5. Make sure that any other completion providers are disabled (e.g. Copilot), as they may interfere.
@@ -86,11 +86,11 @@ Follow these steps to ensure that everything is set up correctly:
 
 ### Completions are slow
 
-We are working on this! You can expect improvements in the time frame of the next few days. For now, you will probably see faster completions in smaller files where there isn't as much context above the cursor.
+Depending on your hardware, you may want to try a smaller, faster model. If 3b isn't working for you we recommend trying `deepseek-coder:1.3b-base`.
 
 ### Completions don't know about my code
 
-We are working on this as well! Right now Continue only sees your current file surrounding the cursor. We're already partway through building a full-text search feature that will help Continue know about other files. You can expect to see improvements in the time frame of roughly a week.
+We are working on this! Right now Continue uses the Language Server Protocol to add definitions to the prompt, as well as using similarity search over recently edited files. We will be improving the accuracy of this system greatly over the next few weeks.
 
 ### Completions contain formatting errors
 
