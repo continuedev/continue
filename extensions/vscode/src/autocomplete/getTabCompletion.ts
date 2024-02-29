@@ -6,6 +6,7 @@ import {
   languageForFilepath,
 } from "core/autocomplete/constructPrompt";
 import {
+  avoidPathLine,
   stopAtSimilarLine,
   streamWithNewLines,
 } from "core/autocomplete/lineStream";
@@ -158,7 +159,7 @@ export async function getTabCompletion(
         generatorWithCancellation(),
         lang.endOfLine
       );
-      const lineGenerator = streamWithNewLines(streamLines(gen2));
+      const lineGenerator = streamWithNewLines(avoidPathLine(streamLines(gen2), lang.comment));
       const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
       for await (const update of finalGenerator) {
         completion += update;

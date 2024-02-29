@@ -2,6 +2,17 @@ import { distance } from "fastest-levenshtein";
 import { DiffLine } from "..";
 import { LineStream } from "../diff/util";
 
+export async function* avoidPathLine(stream: LineStream, comment: string): LineStream {
+  // Snippets are inserted as comments with a line at the start '// Path: <PATH>'.
+  // Sometimes the model with copy this pattern, which is unwanted
+  for await (const line of stream){
+    if (line.startsWith(comment + " Path: ")) {
+      continue;
+    }
+    yield line;
+  }
+}
+
 export async function* streamWithNewLines(stream: LineStream): LineStream {
   let firstLine = true;
   for await (const nextLine of stream) {
