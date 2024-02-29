@@ -10,7 +10,7 @@ import { getBasename } from "../util";
 
 import { getAst, getScopeAroundRange, getTreePathAtCursor } from "./ast";
 import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
-import { AutocompleteSnippet, fillPromptWithSnippets, rankSnippets } from "./ranking";
+import { AutocompleteSnippet, fillPromptWithSnippets, rankSnippets, removeRangeFromSnippets } from "./ranking";
 import { slidingWindowMatcher } from "./slidingWindow";
 
 export function languageForFilepath(
@@ -90,6 +90,7 @@ async function shouldCompleteMultiline(
 
 export async function constructAutocompletePrompt(
   filepath: string,
+  cursorLine: number,
   fullPrefix: string,
   fullSuffix: string,
   clipboardText: string,
@@ -124,7 +125,7 @@ export async function constructAutocompletePrompt(
   );
   snippets.push(...slidingWindowMatches);
 
-  const recentlyEdited = await Promise.all(
+  const recentlyEdited = (await Promise.all(
     recentlyEditedRanges
       .map(async (r) => {
         const scope = await getScopeAroundRange(r);
@@ -132,39 +133,54 @@ export async function constructAutocompletePrompt(
 
         return r;
       })
-      .filter((s) => !!s)
-  );
+  )).filter((s) => !!s);
   snippets.push(...(recentlyEdited as any));
 
   // Rank / order the snippets
-  const scoredSnippets = rankSnippets(snippets, windowAroundCursor).filter(
-    // Filter out snippets that are already in prefix
-    (snippet) => snippet.score < 0.98
-  );
+  const scoredSnippets = rankSnippets(snippets, windowAroundCursor)
 
   // Fill maxSnippetTokens with snippets
   const maxSnippetTokens = options.maxPromptTokens * options.maxSnippetPercentage;
-  const finalSnippets = fillPromptWithSnippets(scoredSnippets, maxSnippetTokens, modelName);
-
-  // Construct basic prefix / suffix
-  const formattedSnippets = finalSnippets
-    .map((snippet) =>
-      formatExternalSnippet(snippet.filepath, snippet.contents, language)
-    )
-    .join("\n");
+  
+  // Construct basic prefix
   const maxPrefixTokens =
-    options.maxPromptTokens * options.prefixPercentage -
-    countTokens(formattedSnippets, modelName);
+  options.maxPromptTokens * options.prefixPercentage
   let prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens, modelName);
-  if (formattedSnippets.length > 0) {
-    prefix = formattedSnippets + "\n" + prefix;
-  }
-
+  
+  // Construct suffix
   const maxSuffixTokens = Math.min(
     options.maxPromptTokens - countTokens(prefix, modelName),
     options.maxSuffixPercentage * options.maxPromptTokens
   );
   let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
+  
+  // Remove prefix range from snippets
+  let finalSnippets = fillPromptWithSnippets(scoredSnippets, maxSnippetTokens, modelName);
+  const prefixLines = prefix.split('\n').length;
+  const suffixLines = suffix.split('\n').length;
+  const buffer = 8;
+  const prefixSuffixRangeWithBuffer = {
+    start: {
+      line: cursorLine - prefixLines - buffer,
+      character: 0
+    },
+    end: {
+      line: cursorLine + suffixLines+ buffer,
+      character: 0
+    }
+  }
+  finalSnippets = removeRangeFromSnippets(finalSnippets, filepath.split("://").slice(-1)[0], prefixSuffixRangeWithBuffer);
+  
+  // Format snippets as comments and prepend to prefix
+  const formattedSnippets = finalSnippets
+  .map((snippet) =>
+  formatExternalSnippet(snippet.filepath, snippet.contents, language)
+  )
+  .join("\n");
+  if (formattedSnippets.length > 0) {
+    prefix = formattedSnippets + "\n\n" + prefix;
+  }
+
 
   return {
     prefix,

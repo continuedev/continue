@@ -68,26 +68,31 @@ export const supportedLanguages: { [key: string]: string } = {
 };
 
 export async function getParserForFile(filepath: string) {
-  await Parser.init();
-  const parser = new Parser();
-  const extension = path.extname(filepath).slice(1);
-
-  if (!supportedLanguages[extension]) {
-    console.warn(
-      "Unable to load language for file",
-      extension,
-      "from path: ",
-      filepath
+  try {
+    await Parser.init();
+    const parser = new Parser();
+    const extension = path.extname(filepath).slice(1);
+  
+    if (!supportedLanguages[extension]) {
+      console.warn(
+        "Unable to load language for file",
+        extension,
+        "from path: ",
+        filepath
+      );
+      return undefined;
+    }
+  
+    const wasmPath = path.join(
+      __dirname,
+      "tree-sitter-wasms",
+      `tree-sitter-${supportedLanguages[extension]}.wasm`
     );
+    const language = await Parser.Language.load(wasmPath);
+    parser.setLanguage(language);
+    return parser;
+  } catch (e) {
+    console.error("Unable to load language for file", filepath, e);
     return undefined;
   }
-
-  const wasmPath = path.join(
-    __dirname,
-    "tree-sitter-wasms",
-    `tree-sitter-${supportedLanguages[extension]}.wasm`
-  );
-  const language = await Parser.Language.load(wasmPath);
-  parser.setLanguage(language);
-  return parser;
 }

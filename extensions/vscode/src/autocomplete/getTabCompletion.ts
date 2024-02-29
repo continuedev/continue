@@ -50,7 +50,7 @@ export async function getTabCompletion(
   const lang = languageForFilepath(document.fileName);
   const line = document.lineAt(pos).text;
   for (const endOfLine of lang.endOfLine) {
-    if (line.endsWith(endOfLine) && pos.character >= endOfLine.length) {
+    if (line.endsWith(endOfLine) && pos.character >= line.length) {
       return undefined;
     }
   }
@@ -88,6 +88,7 @@ export async function getTabCompletion(
     const { prefix, suffix, completeMultiline } =
       await constructAutocompletePrompt(
         document.uri.toString(),
+        pos.line,
         fullPrefix,
         fullSuffix,
         clipboardText,
