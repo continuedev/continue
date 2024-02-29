@@ -1,5 +1,6 @@
 import { IDE, RangeInFile } from "core";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/ast";
+import { AutocompleteSnippet } from "core/autocomplete/ranking";
 import { RangeInFileWithContents } from "core/commands/util";
 import * as vscode from "vscode";
 import Parser from "web-tree-sitter";
@@ -65,11 +66,12 @@ async function getDefinitionsForNode(
  */
 
 export async function getDefinitionsFromLsp(
-  document: RangeInFileWithContents,
+  filepath: string,
+  contents: string,
   cursorIndex: number,
   ide: IDE
-): Promise<RangeInFileWithContents[]> {
-  const ast = await getAst(document.filepath, document.contents);
+): Promise<AutocompleteSnippet[]> {
+  const ast = await getAst(filepath, contents);
   if (!ast) return [];
 
   const treePath = await getTreePathAtCursor(ast, cursorIndex);
@@ -77,7 +79,7 @@ export async function getDefinitionsFromLsp(
 
   const results: RangeInFileWithContents[] = [];
   for (const node of treePath.reverse()) {
-    const definitions = await getDefinitionsForNode(document.filepath, node);
+    const definitions = await getDefinitionsForNode(filepath, node);
     results.push(
       ...(await Promise.all(
         definitions.map(async (def) => ({
@@ -97,5 +99,8 @@ export async function getDefinitionsFromLsp(
     );
   }
 
-  return results;
+  return results.map((result) => ({
+    ...result,
+    score: 0.8
+  }));
 }

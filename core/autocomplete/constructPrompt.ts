@@ -10,7 +10,7 @@ import { getBasename } from "../util";
 
 import { getAst, getScopeAroundRange, getTreePathAtCursor } from "./ast";
 import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
-import { rankSnippets } from "./ranking";
+import { AutocompleteSnippet, fillPromptWithSnippets, rankSnippets } from "./ranking";
 import { slidingWindowMatcher } from "./slidingWindow";
 
 export function languageForFilepath(
@@ -94,14 +94,11 @@ export async function constructAutocompletePrompt(
   fullSuffix: string,
   clipboardText: string,
   language: AutocompleteLanguageInfo,
-  getDefinitions: (
-    document: RangeInFileWithContents,
-    cursorIndex: number
-  ) => Promise<RangeInFileWithContents[]>,
   options: TabAutocompleteOptions,
   recentlyEditedRanges: RangeInFileWithContents[],
   recentlyEditedDocuments: RangeInFileWithContents[],
-  modelName: string
+  modelName: string,
+  extraSnippets: AutocompleteSnippet[]
 ): Promise<{
   prefix: string;
   suffix: string;
@@ -109,7 +106,7 @@ export async function constructAutocompletePrompt(
   completeMultiline: boolean;
 }> {
   // Find external snippets
-  let snippets: RangeInFileWithContents[] = [];
+  let snippets: RangeInFileWithContents[] = extraSnippets;
 
   const windowAroundCursor =
     fullPrefix.slice(
@@ -140,15 +137,17 @@ export async function constructAutocompletePrompt(
   snippets.push(...(recentlyEdited as any));
 
   // Rank / order the snippets
-  snippets = rankSnippets(snippets, windowAroundCursor).filter(
+  const scoredSnippets = rankSnippets(snippets, windowAroundCursor).filter(
     // Filter out snippets that are already in prefix
     (snippet) => snippet.score < 0.98
   );
 
-  // How to add snippets to the prefix? Count separately? Always keep some of the prefix??
+  // Fill maxSnippetTokens with snippets
+  const maxSnippetTokens = options.maxPromptTokens * options.maxSnippetPercentage;
+  const finalSnippets = fillPromptWithSnippets(scoredSnippets, maxSnippetTokens, modelName);
 
   // Construct basic prefix / suffix
-  const formattedSnippets = snippets
+  const formattedSnippets = finalSnippets
     .map((snippet) =>
       formatExternalSnippet(snippet.filepath, snippet.contents, language)
     )

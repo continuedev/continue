@@ -59,6 +59,11 @@ export const defaultConfig: SerializedContinueConfig = {
     { name: "problems", params: {} },
     { name: "codebase", params: {} },
   ],
+  tabAutocompleteModel: {
+    title: "Starcoder 3b",
+    provider: "ollama",
+    model: "starcoder-3b",
+  }
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {

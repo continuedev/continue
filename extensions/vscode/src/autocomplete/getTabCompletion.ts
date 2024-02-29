@@ -9,6 +9,7 @@ import {
   stopAtSimilarLine,
   streamWithNewLines,
 } from "core/autocomplete/lineStream";
+import { AutocompleteSnippet } from "core/autocomplete/ranking";
 import { getTemplateForModel } from "core/autocomplete/templates";
 import { GeneratorReuseManager } from "core/autocomplete/util";
 import { streamLines } from "core/diff/util";
@@ -76,6 +77,14 @@ export async function getTabCompletion(
       Math.min(pos.line + 1, document.lineCount - 1)
     ).text;
     const clipboardText = await vscode.env.clipboard.readText();
+
+    let extrasSnippets = (await Promise.race([
+      getDefinitionsFromLsp(document.uri.fsPath, fullPrefix + fullSuffix, fullPrefix.length, ide),
+      new Promise((resolve) => {
+        setTimeout(() => resolve([]), 100);
+      })
+    ])) as AutocompleteSnippet[]
+
     const { prefix, suffix, completeMultiline } =
       await constructAutocompletePrompt(
         document.uri.toString(),
@@ -83,11 +92,11 @@ export async function getTabCompletion(
         fullSuffix,
         clipboardText,
         lang,
-        (document, cursorIndex) => getDefinitionsFromLsp(document, cursorIndex, ide),
         options,
         await recentlyEditedTracker.getRecentlyEditedRanges(),
         await recentlyEditedTracker.getRecentlyEditedDocuments(),
-        llm.model
+        llm.model,
+        extrasSnippets
       );
 
     const { template, completionOptions } = options.template

@@ -10,4 +10,5 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   multilineCompletions: "auto",
   slidingWindowPrefixPercentage: 0.75,
   slidingWindowSize: 500,
+  maxSnippetPercentage: 0.6
 };

@@ -588,6 +588,7 @@ export interface TabAutocompleteOptions {
   multilineCompletions: "always" | "never" | "auto";
   slidingWindowPrefixPercentage: number;
   slidingWindowSize: number;
+  maxSnippetPercentage: number;
 }
 
 export interface SerializedContinueConfig {

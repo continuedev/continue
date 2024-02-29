@@ -1,4 +1,5 @@
 import { RangeInFileWithContents } from "../commands/util";
+import { countTokens } from "../llm/countTokens";
 
 export type AutocompleteSnippet = RangeInFileWithContents & {
   score: number;
@@ -110,3 +111,24 @@ function mergeOverlappingRangeContents(
   const numOverlapping = first.range.end.line - second.range.start.line;
   return firstLines.slice(-numOverlapping).join("\n") + "\n" + second.contents;
 }
+
+
+/**
+ * Fill the allowed space with snippets
+ */
+export function fillPromptWithSnippets(snippets: AutocompleteSnippet[], maxSnippetTokens: number, modelName: string): AutocompleteSnippet[] {
+  let tokensRemaining = maxSnippetTokens;
+  const keptSnippets: AutocompleteSnippet[] = []
+  for (let i = 0; i < snippets.length; i++) {
+    const snippet = snippets[i];
+    const tokenCount = countTokens(snippet.contents, modelName)
+    if (tokensRemaining - tokenCount >= 0) {
+      tokensRemaining -= tokenCount;
+      keptSnippets.push(snippet);
+    } else {
+      continue;
+    }
+  }
+
+  return keptSnippets;
+};
