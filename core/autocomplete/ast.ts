@@ -41,7 +41,7 @@ export async function getTreePathAtCursor(
 
 export async function getScopeAroundRange(
   range: RangeInFileWithContents
-): Promise<string | undefined> {
+): Promise<RangeInFileWithContents | undefined> {
   const ast = await getAst(range.filepath, range.contents);
   if (!ast) {
     return undefined;
@@ -51,10 +51,10 @@ export async function getScopeAroundRange(
   const lines = range.contents.split("\n");
   const startIndex =
     lines.slice(0, s.line).join("\n").length +
-      lines[s.line]?.slice(s.character).length ?? 0;
+      (lines[s.line]?.slice(s.character).length ?? 0);
   const endIndex =
     lines.slice(0, e.line).join("\n").length +
-      lines[e.line]?.slice(0, e.character).length ?? 0;
+      (lines[e.line]?.slice(0, e.character).length ?? 0);
 
   let node = ast.rootNode;
   while (node.childCount > 0) {
@@ -72,5 +72,18 @@ export async function getScopeAroundRange(
     }
   }
 
-  return node.text;
+  return {
+    contents: node.text,
+    filepath: range.filepath,
+    range: {
+      start: {
+        line: node.startPosition.row,
+        character: node.startPosition.column,
+      }, 
+      end: {
+        line: node.endPosition.row,
+        character: node.endPosition.column,
+      }
+    },
+  }
 }

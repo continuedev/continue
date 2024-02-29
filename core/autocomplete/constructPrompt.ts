@@ -8,7 +8,7 @@ import {
 } from "../llm/countTokens";
 import { getBasename } from "../util";
 
-import { getAst, getScopeAroundRange, getTreePathAtCursor } from "./ast";
+import { getAst, getTreePathAtCursor } from "./ast";
 import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
 import { AutocompleteSnippet, fillPromptWithSnippets, rankSnippets, removeRangeFromSnippets } from "./ranking";
 import { slidingWindowMatcher } from "./slidingWindow";
@@ -128,10 +128,8 @@ export async function constructAutocompletePrompt(
   const recentlyEdited = (await Promise.all(
     recentlyEditedRanges
       .map(async (r) => {
-        const scope = await getScopeAroundRange(r);
-        if (!scope) return null;
-
         return r;
+        // return await getScopeAroundRange(r);
       })
   )).filter((s) => !!s);
   snippets.push(...(recentlyEdited as any));
