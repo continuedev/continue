@@ -27,7 +27,7 @@ function formatExternalSnippet(
   const comment = language.comment;
   const lines = [
     comment + " Path: " + getBasename(filepath),
-    ...snippet.split("\n").map((line) => comment + " " + line),
+    ...snippet.trim().split("\n").map((line) => comment + " " + line),
     comment,
   ];
   return lines.join("\n");
@@ -153,9 +153,8 @@ export async function constructAutocompletePrompt(
     options.maxSuffixPercentage * options.maxPromptTokens
   );
   let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
-  
+
   // Remove prefix range from snippets
-  let finalSnippets = fillPromptWithSnippets(scoredSnippets, maxSnippetTokens, modelName);
   const prefixLines = prefix.split('\n').length;
   const suffixLines = suffix.split('\n').length;
   const buffer = 8;
@@ -169,7 +168,11 @@ export async function constructAutocompletePrompt(
       character: 0
     }
   }
-  finalSnippets = removeRangeFromSnippets(finalSnippets, filepath.split("://").slice(-1)[0], prefixSuffixRangeWithBuffer);
+  let finalSnippets = removeRangeFromSnippets(scoredSnippets, filepath.split("://").slice(-1)[0], prefixSuffixRangeWithBuffer);
+
+  // Filter snippets for those with best scores (must be above threshold)
+  finalSnippets = finalSnippets.filter((snippet) => snippet.score >= options.recentlyEditedSimilarityThreshold)
+  finalSnippets = fillPromptWithSnippets(scoredSnippets, maxSnippetTokens, modelName);
   
   // Format snippets as comments and prepend to prefix
   const formattedSnippets = finalSnippets

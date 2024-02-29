@@ -589,6 +589,7 @@ export interface TabAutocompleteOptions {
   slidingWindowPrefixPercentage: number;
   slidingWindowSize: number;
   maxSnippetPercentage: number;
+  recentlyEditedSimilarityThreshold: number;
 }
 
 export interface SerializedContinueConfig {
