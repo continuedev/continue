@@ -1,5 +1,5 @@
 import * as path from "path";
-import Parser, { init, Language } from "web-tree-sitter";
+const Parser = require("web-tree-sitter")
 
 export const supportedLanguages: { [key: string]: string } = {
   cpp: "cpp",
@@ -68,7 +68,7 @@ export const supportedLanguages: { [key: string]: string } = {
 };
 
 export async function getParserForFile(filepath: string) {
-  await init();
+  await Parser.init();
   const parser = new Parser();
   const extension = path.extname(filepath).slice(1);
 
@@ -87,7 +87,7 @@ export async function getParserForFile(filepath: string) {
     "tree-sitter-wasms",
     `tree-sitter-${supportedLanguages[extension]}.wasm`
   );
-  const language = await Language.load(wasmPath);
+  const language = await Parser.Language.load(wasmPath);
   parser.setLanguage(language);
   return parser;
 }

@@ -1,7 +1,5 @@
 import { BaseContextProvider } from "..";
 import { ContextProviderName } from "../..";
-import CodeHighlightsContextProvider from "./CodeHighlightsContextProvider";
-import CodeOutlineContextProvider from "./CodeOutlineContextProvider";
 import CodebaseContextProvider from "./CodebaseContextProvider";
 import DatabaseContextProvider from "./DatabaseContextProvider";
 import DiffContextProvider from "./DiffContextProvider";
@@ -33,8 +31,8 @@ const Providers: (typeof BaseContextProvider)[] = [
   ProblemsContextProvider,
   FolderContextProvider,
   DocsContextProvider,
-  CodeHighlightsContextProvider,
-  CodeOutlineContextProvider,
+  // CodeHighlightsContextProvider,
+  // CodeOutlineContextProvider,
   JiraIssuesContextProvider,
   PostgresContextProvider,
   DatabaseContextProvider,
