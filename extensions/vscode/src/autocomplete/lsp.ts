@@ -24,7 +24,7 @@ async function executeGotoProvider(
   )) as any;
 
   return definitions.map((d: any) => ({
-    filepath: uri,
+    filepath: d.targetUri.fsPath,
     range: d.targetRange,
   }));
 }

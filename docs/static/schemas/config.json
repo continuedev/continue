@@ -1565,6 +1565,10 @@
             "useCache": {
               "type": "boolean",
               "description": "Whether to cache completions"
+            },
+            "onlyMyCode": {
+              "type": "boolean",
+              "description": "If set to true, Continue will not include any snippets from go to definition unless they are within your repository"
             }
           },
           "required": []

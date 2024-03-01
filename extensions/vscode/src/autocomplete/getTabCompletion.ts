@@ -87,6 +87,13 @@ export async function getTabCompletion(
       })
     ])) as AutocompleteSnippet[]
 
+    const workspaceDirs = await ide.getWorkspaceDirs();
+    if (options.onlyMyCode) {
+      extrasSnippets = extrasSnippets.filter((snippet) => {
+        return workspaceDirs.some((dir) => snippet.filepath.startsWith(dir));
+      })
+    }
+
     const { prefix, suffix, completeMultiline } =
       await constructAutocompletePrompt(
         document.uri.toString(),

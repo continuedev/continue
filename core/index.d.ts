@@ -591,6 +591,7 @@ export interface TabAutocompleteOptions {
   maxSnippetPercentage: number;
   recentlyEditedSimilarityThreshold: number;
   useCache: boolean;
+  onlyMyCode: boolean;
 }
 
 export interface SerializedContinueConfig {
