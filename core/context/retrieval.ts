@@ -9,7 +9,7 @@ import { getBasename } from "../util";
 const RERANK_PROMPT = (
   query: string,
   documentId: string,
-  document: string
+  document: string,
 ) => `You are an expert software developer responsible for helping detect whether the retrieved snippet of code is relevant to the query. For a given input, you need to output a single word: "Yes" or "No" indicating the retrieved snippet is relevant to the query.
 
 Query: Where is the FastAPI server?
@@ -49,7 +49,7 @@ Relevant:
 async function scoreChunk(
   chunk: Chunk,
   llm: ILLM,
-  query: string
+  query: string,
 ): Promise<number> {
   const completion = await llm.complete(
     RERANK_PROMPT(query, getBasename(chunk.filepath), chunk.content),
@@ -59,7 +59,7 @@ async function scoreChunk(
         llm.providerName.startsWith("openai") && llm.model.startsWith("gpt-4")
           ? "gpt-3.5-turbo"
           : llm.model,
-    }
+    },
   );
 
   if (!completion) {
@@ -79,7 +79,7 @@ async function scoreChunk(
     return 0.0;
   } else {
     console.warn(
-      `Unexpected response from single token reranker: "${answer}". Expected "yes" or "no".`
+      `Unexpected response from single token reranker: "${answer}". Expected "yes" or "no".`,
     );
     return 0.0;
   }
@@ -89,10 +89,10 @@ async function rerank(
   chunks: Chunk[],
   llm: ILLM,
   query: string,
-  nFinal: number
+  nFinal: number,
 ): Promise<Chunk[]> {
   const scores = await Promise.all(
-    chunks.map((chunk) => scoreChunk(chunk, llm, query))
+    chunks.map((chunk) => scoreChunk(chunk, llm, query)),
   );
   const sorted = chunks
     .map((chunk, i) => ({ chunk, score: scores[i] }))
@@ -104,7 +104,7 @@ async function rerank(
 export async function retrieveContextItemsFromEmbeddings(
   extras: ContextProviderExtras,
   options: any | undefined,
-  filterDirectory: string | undefined
+  filterDirectory: string | undefined,
 ): Promise<ContextItem[]> {
   if (!extras.embeddingsProvider) {
     return [];
@@ -123,9 +123,14 @@ export async function retrieveContextItemsFromEmbeddings(
     throw new Error("No workspace directories found");
   }
 
-  const branches = await Promise.all(
-    workspaceDirs.map((dir) => extras.ide.getBranch(dir))
-  );
+  const branches = (await Promise.race([
+    workspaceDirs.map((dir) => extras.ide.getBranch(dir)),
+    new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(["NONE"]);
+      }, 500);
+    }),
+  ])) as string[];
   const tags: IndexTag[] = workspaceDirs.map((directory, i) => ({
     directory,
     branch: branches[i],
@@ -138,10 +143,14 @@ export async function retrieveContextItemsFromEmbeddings(
     if (extras.fullInput.trim() !== "") {
       ftsResults = await ftsIndex.retrieve(
         tags,
-        extras.fullInput.trim().split(" ").map(element => `"${element}"`).join(" OR "),
+        extras.fullInput
+          .trim()
+          .split(" ")
+          .map((element) => `"${element}"`)
+          .join(" OR "),
         nRetrieve / 2,
         filterDirectory,
-        undefined
+        undefined,
       );
     }
   } catch (e) {
@@ -149,13 +158,13 @@ export async function retrieveContextItemsFromEmbeddings(
   }
 
   const lanceDbIndex = new LanceDbIndex(extras.embeddingsProvider, (path) =>
-    extras.ide.readFile(path)
+    extras.ide.readFile(path),
   );
   let vecResults = await lanceDbIndex.retrieve(
     tags,
     extras.fullInput,
     nRetrieve,
-    filterDirectory
+    filterDirectory,
   );
 
   // Now combine these (de-duplicate) and re-rank
@@ -169,7 +178,7 @@ export async function retrieveContextItemsFromEmbeddings(
         (r) =>
           r.filepath === vecResult.filepath &&
           r.startLine === vecResult.startLine &&
-          r.endLine === vecResult.endLine
+          r.endLine === vecResult.endLine,
       )
     ) {
       results.push(vecResult);
@@ -183,7 +192,7 @@ export async function retrieveContextItemsFromEmbeddings(
 
   if (results.length === 0) {
     throw new Error(
-      "Warning: No results found for @codebase context provider."
+      "Warning: No results found for @codebase context provider.",
     );
   }
 

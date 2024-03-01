@@ -6,6 +6,7 @@ import * as vscode from "vscode";
 import { IDE } from "core";
 import { ConfigHandler } from "core/config/handler";
 import { logDevData } from "core/util/devdata";
+import { Telemetry } from "core/util/posthog";
 import { AutocompleteOutcome } from "./autocomplete/getTabCompletion";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
@@ -409,6 +410,13 @@ const commandsMap: (
     clearTimeout(logRejectionTimeout);
     outcome.accepted = true;
     logDevData("autocomplete", outcome);
+    Telemetry.capture("autocomplete", {
+      accepted: outcome.accepted,
+      modelName: outcome.modelName,
+      modelProvider: outcome.modelProvider,
+      time: outcome.time,
+      cacheHit: outcome.cacheHit
+    })
   },
   "continue.toggleTabAutocompleteEnabled": () => {
     const config = vscode.workspace.getConfiguration("continue");
