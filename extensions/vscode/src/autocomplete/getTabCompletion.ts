@@ -7,6 +7,7 @@ import {
 } from "core/autocomplete/constructPrompt";
 import {
   avoidPathLine,
+  stopAtLines,
   stopAtSimilarLine,
   streamWithNewLines,
 } from "core/autocomplete/lineStream";
@@ -112,7 +113,7 @@ export async function getTabCompletion(
     let completion = "";
 
     const cache = await autocompleteCache;
-    const cachedCompletion = await cache.get(prompt);
+    const cachedCompletion = options.useCache ? await cache.get(prompt) : undefined;
     let cacheHit = false;
     if (cachedCompletion) {
       // Cache
@@ -159,7 +160,7 @@ export async function getTabCompletion(
         generatorWithCancellation(),
         lang.endOfLine
       );
-      const lineGenerator = streamWithNewLines(avoidPathLine(streamLines(gen2), lang.comment));
+      const lineGenerator = streamWithNewLines(avoidPathLine(stopAtLines(streamLines(gen2)), lang.comment));
       const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
       for await (const update of finalGenerator) {
         completion += update;

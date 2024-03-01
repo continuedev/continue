@@ -1212,9 +1212,9 @@
                 },
                 "required": ["name", "type", "connection"]
               }
-            }
-          },
-          "required": ["connections"]
+            },
+            "required": ["connections"]
+          }
         },
         {
           "if": {
@@ -1561,6 +1561,10 @@
             "multilineCompletions": {
               "enum": ["always", "never", "auto"],
               "description": "If set to true, Continue will only complete a single line at a time."
+            },
+            "useCache": {
+              "type": "boolean",
+              "description": "Whether to cache completions"
             }
           },
           "required": []

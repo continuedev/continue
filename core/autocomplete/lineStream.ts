@@ -50,6 +50,19 @@ export async function* stopAtSimilarLine(
   }
 }
 
+const LINES_TO_STOP_AT = [
+  "# End of file."
+]
+
+export async function* stopAtLines(stream: LineStream): LineStream {
+  for await (const line of stream) {
+    if (LINES_TO_STOP_AT.includes(line)) {
+      break;
+    }
+    yield line;
+  }
+}
+
 function shouldRemoveLineBeforeStart(line: string): boolean {
   return (
     line.trimStart().startsWith("```") ||
