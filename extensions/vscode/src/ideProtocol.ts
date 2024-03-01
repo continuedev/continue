@@ -18,6 +18,9 @@ import { traverseDirectory } from "./util/traverseDirectory";
 import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 
 class VsCodeIde implements IDE {
+  async getTopLevelCallStackSources(threadIndex: number, stackDepth: number): Promise<string[]> {
+    return await ideProtocolClient.getTopLevelCallStackSources(threadIndex, stackDepth);
+  }
   async getAvailableThreads(): Promise<string[]> {
     return await ideProtocolClient.getAvailableThreads();
   }

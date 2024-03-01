@@ -5,6 +5,9 @@ import { Chunk } from "../index";
 import { getContinueGlobalPath } from "../util/paths";
 
 class FileSystemIde implements IDE {
+  getTopLevelCallStackSources(threadIndex: number, stackDepth: number): Promise<string[]> {
+    throw new Error("Method not implemented.");
+  }
   getAvailableThreads(): Promise<string[]> {
     throw new Error("Method not implemented.");
   }

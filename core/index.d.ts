@@ -316,6 +316,10 @@ export interface IDE {
   getDiff(): Promise<string>;
   getTerminalContents(): Promise<string>;
   getDebugLocals(threadIndex: number): Promise<string>;
+  getTopLevelCallStackSources(
+    threadIndex: number,
+    stackDepth: number
+  ): Promise<string[]>;
   getAvailableThreads(): Promise<string[]>;
   listWorkspaceContents(directory?: string): Promise<string[]>;
   listFolders(): Promise<string[]>;

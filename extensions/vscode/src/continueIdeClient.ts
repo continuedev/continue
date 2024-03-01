@@ -21,6 +21,7 @@ import {
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./util/vscode";
+import { trace } from "console";
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 
@@ -480,7 +481,69 @@ class IdeProtocolClient {
         })
       );
 
-    return JSON.stringify(variablesResponse);
+    const filteredVariables = variablesResponse.variables.map(
+      (variable: any) => ({
+        name: variable.name,
+        type: variable.type,
+        value: variable.value,
+      })
+    );
+
+    return JSON.stringify(filteredVariables);
+  }
+
+  async getTopLevelCallStackSources(
+    threadIndex: number,
+    stackDepth: number = 3
+  ): Promise<string[]> {
+    const session = vscode.debug.activeDebugSession;
+
+    const sources = await session
+      ?.customRequest("threads")
+      .then((threadsResponse) =>
+        session.customRequest("stackTrace", {
+          threadId: threadsResponse.threads[threadIndex].threadId,
+          startFrame: 0,
+        })
+      )
+      .then((traceResponse) =>
+        traceResponse.stackFrames
+          .slice(0, stackDepth)
+          .map(async (stackFrame: any) =>
+            this.retrieveSource(
+              await session.customRequest("scopes", {
+                frameId: stackFrame.id,
+              })
+            )
+          )
+      );
+
+    return Promise.all(sources);
+  }
+
+  private async retrieveSource(scopesResponse: any): Promise<string> {
+    const scope = scopesResponse.scopes[0];
+    if (!scope.source) return "";
+
+    const sourceRef = scope.source.sourceReference;
+    if (sourceRef && sourceRef > 0) {
+      const sourceResponse =
+        await vscode.debug.activeDebugSession?.customRequest("source", {
+          source: scope.source,
+          sourceReference: sourceRef,
+        });
+      return sourceResponse.content; // TODO: test this
+    } else if (scope.line) {
+      return await this.readRangeInFile(
+        scope.source.path,
+        new vscode.Range(
+          scope.line - 1, // The line number starts from 1
+          scope.column,
+          scope.endLine - 1,
+          scope.endColumn
+        )
+      );
+    } else return "";
   }
 
   private async _getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {

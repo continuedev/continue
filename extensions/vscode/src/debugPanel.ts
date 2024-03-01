@@ -204,7 +204,15 @@ export function getSidebarContent(
           break;
         }
         case "getDebugLocals": {
-          respond(await ide.getDebugLocals(data.message.threadIndex))
+          respond(await ide.getDebugLocals(data.message.threadIndex));
+        }
+        case "getTopLevelCallStackSources": {
+          respond(
+            await ide.getTopLevelCallStackSources(
+              data.message.threadIndex,
+              data.message.stackDepth
+            )
+          );
         }
         case "listWorkspaceContents": {
           respond(await ide.listWorkspaceContents());

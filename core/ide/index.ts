@@ -7,6 +7,12 @@ async function r(messageType: string, options: any = {}) {
   return await ideRequest(messageType, options);
 }
 export class ExtensionIde implements IDE {
+  async getTopLevelCallStackSources(
+    threadIndex: number,
+    stackDepth: number
+  ): Promise<string[]> {
+    return await r("getTopLevelCallStackSources");
+  }
   async getAvailableThreads(): Promise<string[]> {
     return await r("getAvailableThreads");
   }
