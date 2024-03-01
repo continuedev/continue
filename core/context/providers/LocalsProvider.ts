@@ -23,16 +23,19 @@ class LocalsProvider extends BaseContextProvider {
     const localVariables = await extras.ide.getDebugLocals(Number(query));
     const callStacksSources = await extras.ide.getTopLevelCallStackSources(
       Number(query),
-      3
+      this.options?.stackDepth || 3
     );
     const callStackContents = callStacksSources.reduce(
       (acc, source, index) =>
-        acc + `\n\ncall stack ${index}\n` + "```\n" + source + "\n```", ""
+        acc + `\n\ncall stack ${index}\n` + "```\n" + source + "\n```",
+      ""
     );
     return [
       {
         description: "The value, name and possibly type of the local variables",
-        content: `Current local variable contents:\n\n${localVariables}.\n\n Current top level call stacks: \n\n ${callStackContents}`,
+        content:
+          `Current local variable contents:\n\n${localVariables}.\n` +
+          `Current top level call stacks: \n\n${callStackContents}`,
         name: "Locals",
       },
     ];
