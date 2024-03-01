@@ -36,6 +36,8 @@ Type '@terminal' to reference the contents of your IDE's terminal.
 
 Type `@docs` to index and retrieve snippets from any documentation site. You can add any site by selecting "Add Docs" in the dropdown, then entering the root URL of the documentation site and a title to remember it by. After the site has been indexed, you can type `@docs`, select your documentation from the dropdown, and Continue will use similarity search to automatically find important sections when answering your question.
 
+> The crawler currently works only on static sites that don't require Javascript to load. An example of a page that won't be correctly indexed is [the OpenAI documentation](https://platform.openai.com/docs/overview)
+
 ```json
 { "name": "docs" }
 ```
