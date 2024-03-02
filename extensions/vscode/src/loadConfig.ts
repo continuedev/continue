@@ -159,7 +159,7 @@ function setupLlm(llm: ILLM): ILLM {
       if (resp.status === 404 && !resp.url.includes("/v1")) {
         if (text.includes("try pulling it first")) {
           const model = JSON.parse(text).error.split(" ")[1].slice(1, -1);
-          text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
+          text = `The model "${model}" was not found. To download it, run \`ollama pull ${model}\`.`;
         } else if (text.includes("/api/chat")) {
           text =
             "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
@@ -239,7 +239,7 @@ export class TabAutocompleteModel {
         if (!TabAutocompleteModel.shownDeepseekWarning) {
           vscode.window
             .showWarningMessage(
-              `Your local Ollama instance doesn't yet have DeepSeek Coder. To download this model, run \`ollama run deepseek-coder:1.3b-base\` (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs`,
+              `Your local Ollama instance doesn't yet have DeepSeek Coder. To download this model, run \`ollama pull deepseek-coder:1.3b-base\` (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs`,
               "Documentation",
               "Copy Command"
             )
@@ -252,7 +252,7 @@ export class TabAutocompleteModel {
                 );
               } else if (value === "Copy Command") {
                 vscode.env.clipboard.writeText(
-                  "ollama run deepseek-coder:1.3b-base"
+                  "ollama pull deepseek-coder:1.3b-base"
                 );
               }
             });
