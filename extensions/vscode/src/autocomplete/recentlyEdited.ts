@@ -31,7 +31,7 @@ export class RecentlyEditedTracker {
           uri: event.document.uri,
           range: new vscode.Range(
             new vscode.Position(change.range.start.line, 0),
-            new vscode.Position(change.range.end.line + 1, 0)
+            new vscode.Position(change.range.end.line + 1, 0),
           ),
           timestamp: Date.now(),
         };
@@ -64,7 +64,7 @@ export class RecentlyEditedTracker {
     if (newLength >= RecentlyEditedTracker.maxRecentlyEditedRanges) {
       this.recentlyEditedRanges = this.recentlyEditedRanges.slice(
         0,
-        RecentlyEditedTracker.maxRecentlyEditedRanges
+        RecentlyEditedTracker.maxRecentlyEditedRanges,
       );
     }
   }
@@ -82,61 +82,81 @@ export class RecentlyEditedTracker {
     if (newLength >= RecentlyEditedTracker.maxRecentlyEditedDocuments) {
       this.recentlyEditedDocuments = this.recentlyEditedDocuments.slice(
         0,
-        RecentlyEditedTracker.maxRecentlyEditedDocuments
+        RecentlyEditedTracker.maxRecentlyEditedDocuments,
       );
     }
   }
 
   private removeOldEntries() {
     this.recentlyEditedRanges = this.recentlyEditedRanges.filter(
-      (entry) => entry.timestamp > Date.now() - RecentlyEditedTracker.staleTime
+      (entry) => entry.timestamp > Date.now() - RecentlyEditedTracker.staleTime,
     );
   }
 
   public async getRecentlyEditedRanges(): Promise<RecentlyEditedRange[]> {
-    return Promise.all(
-      this.recentlyEditedRanges.map(async (entry) => ({
-        timestamp: entry.timestamp,
-        filepath: entry.uri.fsPath,
-        contents: await vscode.workspace.fs
-          .readFile(entry.uri)
-          .then((content) => content.toString().split("\n").slice(entry.range.start.line, entry.range.end.line + 1).join("\n")),
-        range: {
-          start: {
-            line: entry.range.start.line,
-            character: entry.range.start.character,
-          },
-          end: {
-            line: entry.range.end.line,
-            character: entry.range.end.character,
-          },
-        },
-      }))
+    const results = await Promise.all(
+      this.recentlyEditedRanges.map(async (entry) => {
+        try {
+          const contents = await vscode.workspace.fs
+            .readFile(entry.uri)
+            .then((content) =>
+              content
+                .toString()
+                .split("\n")
+                .slice(entry.range.start.line, entry.range.end.line + 1)
+                .join("\n"),
+            );
+          return {
+            timestamp: entry.timestamp,
+            filepath: entry.uri.fsPath,
+            contents,
+            range: {
+              start: {
+                line: entry.range.start.line,
+                character: entry.range.start.character,
+              },
+              end: {
+                line: entry.range.end.line,
+                character: entry.range.end.character,
+              },
+            },
+          };
+        } catch (e) {
+          return null;
+        }
+      }),
     );
+    return results.filter((result) => result !== null) as any;
   }
 
   public async getRecentlyEditedDocuments(): Promise<
     RangeInFileWithContents[]
   > {
-    return Promise.all(
+    const results = await Promise.all(
       this.recentlyEditedDocuments.map(async (entry) => {
-        const contents = await vscode.workspace.fs
-          .readFile(entry.uri)
-          .then((content) => content.toString());
-        const lines = contents.split("\n");
+        try {
+          const contents = await vscode.workspace.fs
+            .readFile(entry.uri)
+            .then((content) => content.toString());
+          const lines = contents.split("\n");
 
-        return {
-          filepath: entry.uri.fsPath,
-          contents,
-          range: {
-            start: { line: 0, character: 0 },
-            end: {
-              line: lines.length - 1,
-              character: lines[lines.length - 1].length,
+          return {
+            filepath: entry.uri.fsPath,
+            contents,
+            range: {
+              start: { line: 0, character: 0 },
+              end: {
+                line: lines.length - 1,
+                character: lines[lines.length - 1].length,
+              },
             },
-          },
-        };
-      })
+          };
+        } catch (e) {
+          return null;
+        }
+      }),
     );
+
+    return results.filter((result) => result !== null) as any;
   }
 }
