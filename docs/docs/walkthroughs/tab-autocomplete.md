@@ -8,7 +8,6 @@ We recommend setting up tab-autocomplete with a local Ollama instance. To do thi
 
 ```bash
 ollama pull starcoder:3b
-ollama serve
 ```
 
 Once it has been downloaded, you should begin to see completions in VS Code.
