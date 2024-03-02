@@ -29,19 +29,24 @@ class VsCodeIde implements IDE {
       filepath,
       new vscode.Range(
         new vscode.Position(range.start.line, range.start.character),
-        new vscode.Position(range.end.line, range.end.character)
-      )
+        new vscode.Position(range.end.line, range.end.character),
+      ),
     );
   }
 
   async getStats(directory: string): Promise<{ [path: string]: number }> {
+    const scheme = vscode.workspace.workspaceFolders?.[0].uri.scheme;
     const files = await this.listWorkspaceContents(directory);
     const pathToLastModified: { [path: string]: number } = {};
     await Promise.all(
       files.map(async (file) => {
-        let stat = await vscode.workspace.fs.stat(vscode.Uri.file(file));
+        const uri = vscode.Uri.from({
+          scheme: scheme ? scheme : "file",
+          path: file,
+        });
+        let stat = await vscode.workspace.fs.stat(uri);
         pathToLastModified[file] = stat.mtime;
-      })
+      }),
     );
 
     return pathToLastModified;
@@ -77,7 +82,7 @@ class VsCodeIde implements IDE {
       const contents = await Promise.all(
         this.ideUtils
           .getWorkspaceDirectories()
-          .map((dir) => this.ideUtils.getDirectoryContents(dir, true))
+          .map((dir) => this.ideUtils.getDirectoryContents(dir, true)),
       );
       return contents.flat();
     }
@@ -92,7 +97,7 @@ class VsCodeIde implements IDE {
       for (const [filename, type] of files) {
         if (type === vscode.FileType.File && filename === ".continuerc.json") {
           const contents = await this.ideUtils.readFile(
-            vscode.Uri.joinPath(workspaceDir, filename).fsPath
+            vscode.Uri.joinPath(workspaceDir, filename).fsPath,
           );
           configs.push(JSON.parse(contents));
         }
@@ -110,7 +115,7 @@ class VsCodeIde implements IDE {
         directory,
         [],
         false,
-        undefined
+        undefined,
       )) {
         allDirs.push(dir);
       }
@@ -130,7 +135,7 @@ class VsCodeIde implements IDE {
   async writeFile(path: string, contents: string): Promise<void> {
     await vscode.workspace.fs.writeFile(
       vscode.Uri.file(path),
-      Buffer.from(contents)
+      Buffer.from(contents),
     );
   }
 
@@ -145,11 +150,11 @@ class VsCodeIde implements IDE {
   async showLines(
     filepath: string,
     startLine: number,
-    endLine: number
+    endLine: number,
   ): Promise<void> {
     const range = new vscode.Range(
       new vscode.Position(startLine, 0),
-      new vscode.Position(endLine, 0)
+      new vscode.Position(endLine, 0),
     );
     openEditorAndRevealRange(filepath, range).then(() => {
       // TODO: Highlight lines
@@ -183,7 +188,7 @@ class VsCodeIde implements IDE {
   async showDiff(
     filepath: string,
     newContents: string,
-    stepIndex: number
+    stepIndex: number,
   ): Promise<void> {
     await this.diffManager.writeDiff(filepath, newContents, stepIndex);
   }
@@ -208,10 +213,10 @@ class VsCodeIde implements IDE {
         "@vscode",
         "ripgrep",
         "bin",
-        "rg"
+        "rg",
       ),
       ["-i", "-C", "2", `"${query}"`, "."],
-      { cwd: dir }
+      { cwd: dir },
     );
     let output = "";
 
