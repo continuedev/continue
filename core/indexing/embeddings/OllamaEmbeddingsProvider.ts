@@ -26,10 +26,10 @@ class OllamaEmbeddingsProvider extends BaseEmbeddingsProvider {
     return "ollama::" + this.options.model;
   }
 
-  embed(chunks: string[]) {
+  async embed(chunks: string[]) {
     const results: any = [];
     for (const chunk of chunks) {
-      results.push(embedOne(chunk, this.options));
+      results.push(await embedOne(chunk, this.options));
     }
     return results;
   }

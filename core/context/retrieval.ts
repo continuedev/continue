@@ -1,7 +1,6 @@
 import { Chunk, ContextItem, ContextProviderExtras, ILLM } from "..";
 import { FullTextSearchCodebaseIndex } from "../indexing/FullTextSearch";
 import { LanceDbIndex } from "../indexing/LanceDbIndex";
-import { ChunkCodebaseIndex } from "../indexing/chunk/ChunkCodebaseIndex";
 import { IndexTag } from "../indexing/types";
 import { llmCanGenerateInParallel } from "../llm/autodetect";
 import { getBasename } from "../util";
@@ -124,25 +123,26 @@ export async function retrieveContextItemsFromEmbeddings(
   }
 
   const branches = (await Promise.race([
-    workspaceDirs.map((dir) => extras.ide.getBranch(dir)),
+    Promise.all(workspaceDirs.map((dir) => extras.ide.getBranch(dir))),
     new Promise((resolve) => {
       setTimeout(() => {
         resolve(["NONE"]);
       }, 500);
     }),
   ])) as string[];
-  const tags: IndexTag[] = workspaceDirs.map((directory, i) => ({
-    directory,
-    branch: branches[i],
-    artifactId: ChunkCodebaseIndex.artifactId,
-  }));
+  const tags: (artifactId: string) => IndexTag[] = (artifactId: string) =>
+    workspaceDirs.map((directory, i) => ({
+      directory,
+      branch: branches[i],
+      artifactId,
+    }));
 
   let ftsResults: Chunk[] = [];
 
   try {
     if (extras.fullInput.trim() !== "") {
       ftsResults = await ftsIndex.retrieve(
-        tags,
+        tags(ftsIndex.artifactId),
         extras.fullInput
           .trim()
           .split(" ")
@@ -161,7 +161,7 @@ export async function retrieveContextItemsFromEmbeddings(
     extras.ide.readFile(path),
   );
   let vecResults = await lanceDbIndex.retrieve(
-    tags,
+    tags(lanceDbIndex.artifactId),
     extras.fullInput,
     nRetrieve,
     filterDirectory,
