@@ -39,6 +39,14 @@ If you're seeing a `fetch failed` error and your network requires custom certifi
 
 You may also set `requestOptions.caBundlePath` to an array of paths to multiple certificates.
 
+## Upgrade VS Code Version
+
+Continue is built against Node.js version 19.0.0 and may not be compatible with older versions of Node. If the extension completely fails to load (e.g. pressing ctrl/cmd+L causes a warning that the command does not exist, and the sidebar does not load), you may want to try upgrading VS Code to the latest version.
+
+## Android Studio - JCEF Not Supported
+
+Certain versions of Android Studio, unlike other JetBrains IDEs, do not by default support the Java Chromium Embedded Framework, which is required for Continue's web-based sidebar. If you see an error saying that JCEF failed to initialize, you may be able to solve the problem by [changing your boot runtime](https://github.com/continuedev/continue/issues/596#issuecomment-1789327178).
+
 ## Download a Newer Version
 
 If you are using an older version of the Continue extension, particularly one which depends on the separate Python server, we would recommend downloading the latest version of the extension, as we are constantly making bug fixes and are likely to have solved any major issues.
