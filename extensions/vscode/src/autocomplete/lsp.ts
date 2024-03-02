@@ -15,23 +15,25 @@ async function executeGotoProvider(
   uri: string,
   line: number,
   character: number,
-  name: GotoProviderName
+  name: GotoProviderName,
 ): Promise<RangeInFile[]> {
   const definitions = (await vscode.commands.executeCommand(
     name,
     vscode.Uri.parse(uri),
-    new vscode.Position(line, character)
+    new vscode.Position(line, character),
   )) as any;
 
-  return definitions.map((d: any) => ({
-    filepath: d.targetUri.fsPath,
-    range: d.targetRange,
-  }));
+  return definitions
+    .filter((d: any) => d.targetUri && d.targetRange)
+    .map((d: any) => ({
+      filepath: d.targetUri.fsPath,
+      range: d.targetRange,
+    }));
 }
 
 async function getDefinitionsForNode(
   uri: string,
-  node: Parser.SyntaxNode
+  node: Parser.SyntaxNode,
 ): Promise<RangeInFile[]> {
   const ranges: RangeInFile[] = [];
   switch (node.type) {
@@ -41,7 +43,7 @@ async function getDefinitionsForNode(
         uri,
         node.startPosition.row,
         node.startPosition.column,
-        "vscode.executeDefinitionProvider"
+        "vscode.executeDefinitionProvider",
       );
       ranges.push(...defs);
       break;
@@ -69,7 +71,7 @@ export async function getDefinitionsFromLsp(
   filepath: string,
   contents: string,
   cursorIndex: number,
-  ide: IDE
+  ide: IDE,
 ): Promise<AutocompleteSnippet[]> {
   const ast = await getAst(filepath, contents);
   if (!ast) return [];
@@ -89,18 +91,18 @@ export async function getDefinitionsFromLsp(
             new vscode.Range(
               new vscode.Position(
                 def.range.start.line,
-                def.range.start.character
+                def.range.start.character,
               ),
-              new vscode.Position(def.range.end.line, def.range.end.character)
-            )
+              new vscode.Position(def.range.end.line, def.range.end.character),
+            ),
           ),
-        }))
-      ))
+        })),
+      )),
     );
   }
 
   return results.map((result) => ({
     ...result,
-    score: 0.8
+    score: 0.8,
   }));
 }
