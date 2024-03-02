@@ -107,20 +107,20 @@ const Layout = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const dialogMessage = useSelector(
-    (state: RootState) => state.uiState.dialogMessage
+    (state: RootState) => state.uiState.dialogMessage,
   );
   const showDialog = useSelector(
-    (state: RootState) => state.uiState.showDialog
+    (state: RootState) => state.uiState.showDialog,
   );
 
   const defaultModel = useSelector(defaultModelSelector);
   // #region Selectors
 
   const bottomMessage = useSelector(
-    (state: RootState) => state.uiState.bottomMessage
+    (state: RootState) => state.uiState.bottomMessage,
   );
   const displayBottomMessageOnBottom = useSelector(
-    (state: RootState) => state.uiState.displayBottomMessageOnBottom
+    (state: RootState) => state.uiState.displayBottomMessageOnBottom,
   );
 
   const timeline = useSelector((state: RootState) => state.state.history);
@@ -152,7 +152,7 @@ const Layout = () => {
     async () => {
       navigate("/models");
     },
-    [navigate]
+    [navigate],
   );
 
   useWebviewListener("openSettings", async () => {
@@ -169,7 +169,7 @@ const Layout = () => {
         navigate("/history");
       }
     },
-    [location, navigate]
+    [location, navigate],
   );
 
   useWebviewListener("indexProgress", async (data) => {
@@ -237,7 +237,6 @@ const Layout = () => {
               <ModelSelect />
               {indexingProgress >= 1 && // Would take up too much space together with indexing progress
                 defaultModel?.provider === "free-trial" &&
-                defaultModel?.apiKey === "" &&
                 (location.pathname === "/settings" ||
                   parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
                   <ProgressBar

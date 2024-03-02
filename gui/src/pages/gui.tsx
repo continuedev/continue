@@ -225,10 +225,7 @@ function GUI(props: GUIProps) {
 
   const sendInput = useCallback(
     (editorState: JSONContent) => {
-      if (
-        defaultModel?.provider === "free-trial" &&
-        defaultModel?.apiKey === ""
-      ) {
+      if (defaultModel?.provider === "free-trial") {
         const ftc = localStorage.getItem("ftc");
         if (ftc) {
           const u = parseInt(ftc);
@@ -253,7 +250,7 @@ function GUI(props: GUIProps) {
         let currentCount = parseInt(counter);
         localStorage.setItem(
           "mainTextEntryCounter",
-          (currentCount + 1).toString()
+          (currentCount + 1).toString(),
         );
         if (currentCount === 300) {
           dispatch(
@@ -276,8 +273,8 @@ function GUI(props: GUIProps) {
                       setDialogMessage(
                         <div className="text-center p-4">
                           Thanks! We'll be in touch soon.
-                        </div>
-                      )
+                        </div>,
+                      ),
                     );
                   }}
                   style={{
@@ -311,8 +308,8 @@ function GUI(props: GUIProps) {
                     Submit
                   </button>
                 </form>
-              </div>
-            )
+              </div>,
+            ),
           );
           dispatch(setDialogEntryOn(false));
           dispatch(setShowDialog(true));
@@ -327,7 +324,7 @@ function GUI(props: GUIProps) {
       defaultModel,
       state,
       streamResponse,
-    ]
+    ],
   );
 
   const { saveSession } = useHistory(dispatch);
@@ -338,7 +335,7 @@ function GUI(props: GUIProps) {
       saveSession();
       mainTextInputRef.current?.focus?.();
     },
-    [saveSession]
+    [saveSession],
   );
 
   const isLastUserInput = useCallback(
@@ -352,7 +349,7 @@ function GUI(props: GUIProps) {
       }
       return !foundLaterUserInput;
     },
-    [state.history]
+    [state.history],
   );
 
   return (
