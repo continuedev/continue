@@ -32,7 +32,7 @@ If you haven't already installed Continue, you can do that [here](https://market
 ## Ollama
 
 1. Download Ollama [here](https://ollama.ai/) (it should walk you through the rest of these steps)
-2. Open a terminal and run `ollama pull codellama`, `ollama serve`.
+2. Open a terminal and run `ollama pull codellama`
 3. Change your Continue config file like this:
 
 ```json title="~/.continue/config.json"
