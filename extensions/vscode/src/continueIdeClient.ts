@@ -22,21 +22,14 @@ import {
   uriFromFilePath,
 } from "./util/vscode";
 import { trace } from "console";
+import { threadStopped } from "./debug/debug";
+
 const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 
 const continueVirtualDocumentScheme = "continue";
 
 class IdeProtocolClient {
-  async getAvailableThreads(): Promise<string[]> {
-    const session = vscode.debug.activeDebugSession;
-    if (!session) return [];
-
-    const threadsResponse = await session.customRequest("threads");
-    return threadsResponse.threads.map(
-      (thread: { id: number; name: string }) => `${thread.id}, ${thread.name}`
-    );
-  }
   private static PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } =
     {};
 
@@ -452,6 +445,27 @@ class IdeProtocolClient {
     return terminalContents;
   }
 
+  private async _getThreads(session: vscode.DebugSession) {
+    const threadsResponse = await session.customRequest("threads");
+    const threads = threadsResponse.threads.filter((thread: any) =>
+      threadStopped.get(thread.id)
+    );
+    threads.sort((a: any, b: any) => a.id - b.id);
+    threadsResponse.threads = threads;
+
+    return threadsResponse;
+  }
+
+  async getAvailableThreads(): Promise<string[]> {
+    const session = vscode.debug.activeDebugSession;
+    if (!session) return [];
+
+    const threadsResponse = await this._getThreads(session);
+    return threadsResponse.threads.map(
+      (thread: { id: number; name: string }) => `${thread.id}, ${thread.name}`
+    );
+  }
+
   async getDebugLocals(threadIndex: number = 0): Promise<string> {
     const session = vscode.debug.activeDebugSession;
 
@@ -462,11 +476,10 @@ class IdeProtocolClient {
       return "";
     }
 
-    const variablesResponse = await session
-      .customRequest("threads")
+    const variablesResponse = await this._getThreads(session)
       .then((threadsResponse) =>
         session.customRequest("stackTrace", {
-          threadId: threadsResponse.threads[threadIndex].threadId,
+          threadId: threadsResponse.threads[threadIndex].id,
           startFrame: 0,
         })
       )
@@ -481,15 +494,16 @@ class IdeProtocolClient {
         })
       );
 
-    const filteredVariables = variablesResponse.variables.map(
-      (variable: any) => ({
-        name: variable.name,
-        type: variable.type,
-        value: variable.value,
-      })
-    );
+    const variableContext = variablesResponse.variables
+      .filter((variable: any) => variable.type !== "global")
+      .reduce(
+        (acc: any, variable: any) =>
+          `${acc}\nname: ${variable.name}, type: ${variable.type}, ` +
+          `value: ${variable.value}`,
+        ""
+      );
 
-    return JSON.stringify(filteredVariables);
+    return variableContext;
   }
 
   async getTopLevelCallStackSources(
@@ -497,53 +511,67 @@ class IdeProtocolClient {
     stackDepth: number = 3
   ): Promise<string[]> {
     const session = vscode.debug.activeDebugSession;
+    if (!session) return [];
 
-    const sources = await session
-      ?.customRequest("threads")
+    const sourcesPromises = await this._getThreads(session)
       .then((threadsResponse) =>
         session.customRequest("stackTrace", {
-          threadId: threadsResponse.threads[threadIndex].threadId,
+          threadId: threadsResponse.threads[threadIndex].id,
           startFrame: 0,
         })
       )
       .then((traceResponse) =>
         traceResponse.stackFrames
           .slice(0, stackDepth)
-          .map(async (stackFrame: any) =>
-            this.retrieveSource(
-              await session.customRequest("scopes", {
-                frameId: stackFrame.id,
-              })
-            )
-          )
+          .map(async (stackFrame: any) => {
+            const scopeResponse = await session.customRequest("scopes", {
+              frameId: stackFrame.id,
+            });
+
+            const scope = scopeResponse.scopes[0];
+
+            return await this.retrieveSource(scope.source ? scope : stackFrame);
+          })
       );
 
-    return Promise.all(sources);
+    return Promise.all(sourcesPromises);
   }
 
-  private async retrieveSource(scopesResponse: any): Promise<string> {
-    const scope = scopesResponse.scopes[0];
-    if (!scope.source) return "";
+  private async retrieveSource(sourceContainer: any): Promise<string> {
+    if (!sourceContainer.source) return "";
 
-    const sourceRef = scope.source.sourceReference;
+    const sourceRef = sourceContainer.source.sourceReference;
     if (sourceRef && sourceRef > 0) {
+      // according to the spec, source might be ony available in a debug session
+      // not yet able to test this branch
       const sourceResponse =
         await vscode.debug.activeDebugSession?.customRequest("source", {
-          source: scope.source,
+          source: sourceContainer.source,
           sourceReference: sourceRef,
         });
-      return sourceResponse.content; // TODO: test this
-    } else if (scope.line) {
+      return sourceResponse.content;
+    } else if (sourceContainer.line && sourceContainer.endLine) {
       return await this.readRangeInFile(
-        scope.source.path,
+        sourceContainer.source.path,
         new vscode.Range(
-          scope.line - 1, // The line number starts from 1
-          scope.column,
-          scope.endLine - 1,
-          scope.endColumn
+          sourceContainer.line - 1, // The line number from scope response starts from 1
+          sourceContainer.column,
+          sourceContainer.endLine - 1,
+          sourceContainer.endColumn
         )
       );
-    } else return "";
+    } else if (sourceContainer.line)
+      // fall back to 5 line of context
+      return await this.readRangeInFile(
+        sourceContainer.source.path,
+        new vscode.Range(
+          sourceContainer.line - 3,
+          0,
+          sourceContainer.line + 2,
+          0
+        )
+      );
+    else return "unavailable";
   }
 
   private async _getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {

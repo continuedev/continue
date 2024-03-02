@@ -18,7 +18,7 @@ import { setupRemoteConfigSync } from "../util/remoteConfig";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
-import { debugPanelWebview } from "../debugPanel";
+import { registerDebugTracker } from "../debug/debug";
 
 export let extensionContext: vscode.ExtensionContext | undefined = undefined;
 export let ideProtocolClient: IdeProtocolClient;
@@ -132,16 +132,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     );
   });
 
-  vscode.debug.registerDebugAdapterTrackerFactory("*", {
-    createDebugAdapterTracker(session: vscode.DebugSession) {
-      return {
-        onDidSendMessage(message: any) {
-          if (message.type == "event" && message.event == "breakpoint")
-            debugPanelWebview?.postMessage({ type: "refreshSubmenuItems" });
-        },
-      };
-    },
-  });
+  registerDebugTracker();
 
   // (async () => {
   //   const defaultDocsPages = [
