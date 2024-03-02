@@ -26,6 +26,7 @@ import OpenAIFreeTrial from "./OpenAIFreeTrial";
 import Replicate from "./Replicate";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
+import Msty from "./Msty";
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -94,6 +95,7 @@ const LLMs = [
   DeepInfra,
   OpenAIFreeTrial,
   Flowise,
+  Msty
 ];
 
 export async function llmFromDescription(

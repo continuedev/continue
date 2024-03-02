@@ -69,7 +69,7 @@ function Models() {
         To set up an LLM you will choose
         <ul>
           <li>
-            a provider (the service used to run the LLM, e.g. Ollama,
+            a provider (the service used to run the LLM, e.g. Ollama, Msty,
             TogetherAI) and
           </li>
           <li>a model (the LLM being run, e.g. GPT-4, CodeLlama).</li>

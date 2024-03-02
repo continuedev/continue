@@ -34,6 +34,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "openai",
   "ollama",
   "together",
+  "msty",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -41,6 +42,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "ollama",
   "google-palm",
   "free-trial",
+  "msty"
 ];
 
 function modelSupportsImages(provider: ModelProvider, model: string): boolean {

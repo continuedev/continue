@@ -1,7 +1,7 @@
 ---
 title: Select a provider
 description: Swap out different LLM providers
-keywords: [openai, anthropic, PaLM, ollama, ggml]
+keywords: [openai, anthropic, PaLM, ollama, ggml, msty]
 ---
 
 # Select a model provider
@@ -22,6 +22,7 @@ You can run a model on your local computer using:
 - [FastChat](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [llama-cpp-python](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples) (OpenAI compatible server)
+- [Msty](../reference/Model%20Providers/msty.md)
 
 Once you have it running, you will need to configure it in the GUI or manually add it to your `config.json`.
 

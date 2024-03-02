@@ -451,7 +451,8 @@ type ModelProvider =
   | "mistral"
   | "bedrock"
   | "deepinfra"
-  | "flowise";
+  | "flowise"
+  | "msty";
 
 export type ModelName =
   | "AUTODETECT"

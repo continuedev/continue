@@ -33,7 +33,7 @@
         },
         "mirostat": {
           "title": "Mirostat",
-          "description": "Enable Mirostat sampling, controlling perplexity during text generation (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0). Only available for Ollama, LM Studio, and llama.cpp providers",
+          "description": "Enable Mirostat sampling, controlling perplexity during text generation (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0). Only available for Ollama, LM Studio, Msty, and llama.cpp providers",
           "type": "number"
         },
         "stop": {
@@ -117,7 +117,8 @@
             "llamafile",
             "mistral",
             "deepinfra",
-            "flowise"
+            "flowise",
+            "msty"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/openai)",
@@ -133,7 +134,8 @@
             "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/lmstudio)",
             "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamafile)",
             "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
-            "### DeepInfra\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/deepinfra)"
+            "### DeepInfra\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/deepinfra)",
+            "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/) and open the application, and click 'Setup Local AI'\n2. Go to Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)"
           ],
           "type": "string"
         },
@@ -633,6 +635,52 @@
                   { "type": "string" }
                 ],
                 "markdownDescription": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["msty"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "mistral-7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "phi-2",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b",
+                      "AUTODETECT"
+                    ]
+                  },
+                  { "type": "string" }
+                ],
+                "markdownDescription": "Select a pre-defined option, or find the exact model tag for a model from Local AI Module page in Msty."
               }
             }
           }

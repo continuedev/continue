@@ -10,7 +10,7 @@ If you are unsure what model or provider to use, here is our current rule of thu
 
 - Use GPT-4 via OpenAI if you want the best possible model overall
 - Use DeepSeek Coder 33B via the Together API if you want the best open-source model
-- Use DeepSeek Coder 6.7B with Ollama if you want to run a model locally
+- Use DeepSeek Coder 6.7B with Ollama or Msty if you want to run a model locally
 
 Learn more:
 
