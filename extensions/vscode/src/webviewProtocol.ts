@@ -489,7 +489,7 @@ export class VsCodeWebviewProtocol {
         },
       );
     });
-    this.on("applyToCurrentFile", (msg) => {
+    this.on("applyToCurrentFile", async (msg) => {
       // Select the entire current file
       const editor = vscode.window.activeTextEditor;
       if (!editor) {
@@ -506,6 +506,7 @@ export class VsCodeWebviewProtocol {
 
       this.verticalDiffManager.streamEdit(
         `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`,
+        await this.request("getDefaultModelTitle", undefined),
       );
     });
     this.on("showTutorial", (msg) => {
@@ -529,10 +530,14 @@ export class VsCodeWebviewProtocol {
       }
 
       this.send(messageType, data, messageId);
-      const disposable = this.webview.onDidReceiveMessage((msg) => {
-        resolve(msg);
-        disposable?.dispose();
-      });
+      const disposable = this.webview.onDidReceiveMessage(
+        (msg: Message<ReverseWebviewProtocol[T][1]>) => {
+          if (msg.messageId === messageId) {
+            resolve(msg.data);
+            disposable?.dispose();
+          }
+        },
+      );
     });
   }
 }

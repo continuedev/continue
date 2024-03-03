@@ -176,7 +176,11 @@ const commandsMap: (
     }
 
     if (text.length > 0) {
-      await verticalDiffManager.streamEdit(text);
+      const modelName = await sidebar.webviewProtocol.request(
+        "getDefaultModelTitle",
+        undefined,
+      );
+      await verticalDiffManager.streamEdit(text, modelName);
     } else {
       // Pick context first
       const quickPickItems: Promise<vscode.QuickPickItem[]> = configHandler
@@ -239,29 +243,44 @@ const commandsMap: (
           "\n\n---\n\n" +
           text;
 
-        await verticalDiffManager.streamEdit(text);
+        await verticalDiffManager.streamEdit(
+          text,
+          await sidebar.webviewProtocol.request(
+            "getDefaultModelTitle",
+            undefined,
+          ),
+        );
       }
     }
   },
   "continue.writeCommentsForCode": async () => {
     await verticalDiffManager.streamEdit(
       "Write comments for this code. Do not change anything about the code itself.",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
     );
   },
   "continue.writeDocstringForCode": async () => {
     await verticalDiffManager.streamEdit(
       "Write a docstring for this code. Do not change anything about the code itself.",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
     );
   },
   "continue.fixCode": async () => {
-    await verticalDiffManager.streamEdit("Fix this code");
+    await verticalDiffManager.streamEdit(
+      "Fix this code",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+    );
   },
   "continue.optimizeCode": async () => {
-    await verticalDiffManager.streamEdit("Optimize this code");
+    await verticalDiffManager.streamEdit(
+      "Optimize this code",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+    );
   },
   "continue.fixGrammar": async () => {
     await verticalDiffManager.streamEdit(
       "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
     );
   },
   "continue.viewLogs": async () => {

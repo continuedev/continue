@@ -35,7 +35,7 @@ export class VerticalPerLineDiffManager {
         endLine,
         editor,
         this.editorToVerticalDiffCodeLens,
-        this.clearForFilepath,
+        this.clearForFilepath.bind(this),
         input,
       );
       this.filepathToEditorMap.set(filepath, handler);
@@ -60,7 +60,7 @@ export class VerticalPerLineDiffManager {
           endLine,
           editor,
           this.editorToVerticalDiffCodeLens,
-          this.clearForFilepath,
+          this.clearForFilepath.bind(this),
         );
         this.filepathToEditorMap.set(filepath, handler);
         return handler;
@@ -127,7 +127,7 @@ export class VerticalPerLineDiffManager {
     );
   }
 
-  async streamEdit(input: string) {
+  async streamEdit(input: string, modelTitle: string | undefined) {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       return;
@@ -159,7 +159,7 @@ export class VerticalPerLineDiffManager {
         editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER),
       );
     const rangeContent = editor.document.getText(selectedRange);
-    const llm = await this.configHandler.llmFromTitle();
+    const llm = await this.configHandler.llmFromTitle(modelTitle);
 
     // Unselect the range
     editor.selection = new vscode.Selection(
@@ -190,6 +190,8 @@ export class VerticalPerLineDiffManager {
           getMarkdownLanguageTagForFile(filepath),
         ),
       );
+    } catch (e) {
+      console.error("Error streaming diff:", e);
     } finally {
       vscode.commands.executeCommand(
         "setContext",
