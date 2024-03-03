@@ -88,6 +88,7 @@ export class GeneratorReuseManager {
   static async *getGenerator(
     prefix: string,
     newGenerator: () => AsyncGenerator<string>,
+    multiline: boolean,
   ): AsyncGenerator<string> {
     // Check if current can be reused
     if (
@@ -120,7 +121,14 @@ export class GeneratorReuseManager {
           break;
         }
       }
-      yield chunk;
+
+      const newLineIndex = chunk.indexOf("\n");
+      if (multiline || newLineIndex === -1) {
+        yield chunk;
+      } else {
+        yield chunk.slice(0, newLineIndex);
+        break;
+      }
     }
   }
 }

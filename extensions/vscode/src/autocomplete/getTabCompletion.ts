@@ -144,19 +144,21 @@ export async function getTabCompletion(
         "```",
         ...lang.stopWords,
       ];
-      if (
-        options.multilineCompletions !== "always" &&
-        (options.multilineCompletions === "never" || !completeMultiline)
-      ) {
-        stop.unshift("\n");
-      }
-      let generator = GeneratorReuseManager.getGenerator(prefix, () =>
-        llm.streamComplete(prompt, {
-          ...completionOptions,
-          temperature: 0,
-          raw: true,
-          stop,
-        }),
+
+      const multiline =
+        options.multilineCompletions !== "never" &&
+        (options.multilineCompletions === "always" || completeMultiline);
+
+      let generator = GeneratorReuseManager.getGenerator(
+        prefix,
+        () =>
+          llm.streamComplete(prompt, {
+            ...completionOptions,
+            temperature: 0,
+            raw: true,
+            stop,
+          }),
+        multiline,
       );
 
       // LLM

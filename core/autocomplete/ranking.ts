@@ -94,7 +94,11 @@ function mergeSnippetsByRange(
     if (merged.length > 0 && last.range.end.line >= next.range.start.line) {
       // Merge with previous snippet
       last.score = Math.max(last.score, next.score);
-      last.range.end = next.range.end;
+      try {
+        last.range.end = next.range.end;
+      } catch (e) {
+        console.log("Error merging ranges", e);
+      }
       last.contents = mergeOverlappingRangeContents(last, next);
     } else {
       merged.push(next);
