@@ -27,6 +27,7 @@ import TransformersJsEmbeddingsProvider from "../indexing/embeddings/Transformer
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
+import { copyOf } from "../util";
 import mergeJson from "../util/merge";
 import {
   getConfigJsPath,
@@ -213,7 +214,7 @@ async function intermediateToFinalConfig(
                   title: llm.title + " - " + modelName,
                 },
                 readFile,
-                config.completionOptions,
+                copyOf(config.completionOptions),
                 config.systemMessage,
               );
             }),

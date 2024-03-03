@@ -185,3 +185,7 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
       return "";
   }
 }
+
+export function copyOf(obj: any): any {
+  return JSON.parse(JSON.stringify(obj));
+}
