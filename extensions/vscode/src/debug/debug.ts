@@ -1,10 +1,10 @@
 import * as vscode from "vscode";
-import { debugPanelWebview } from "../debugPanel";
+import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export const threadStopped: Map<number, boolean> = new Map();
 // Arrays has better perf but you probably won't have thousands of threads in a single debug session
 
-export function registerDebugTracker() {
+export function registerDebugTracker(webviewProtocol: VsCodeWebviewProtocol) {
   vscode.debug.registerDebugAdapterTrackerFactory("*", {
     createDebugAdapterTracker(session: vscode.DebugSession) {
       return {
@@ -30,7 +30,7 @@ export function registerDebugTracker() {
                     threadStopped.set(key, false)
                   );
 
-                debugPanelWebview?.postMessage({ type: "refreshSubmenuItems" });
+                webviewProtocol?.request("refreshSubmenuItems", undefined);
                 break;
 
               case "thread":

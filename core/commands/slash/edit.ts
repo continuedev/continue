@@ -230,13 +230,18 @@ const EditSlashCommand: SlashCommand = {
     }
 
     // Strip unecessary parts of the input (the fact that you have to do this is suboptimal, should be refactored away)
-    input = input.replace(
+    let content = history[history.length - 1].content;
+    if (typeof content !== "string") {
+      content.forEach((part) => {
+        if (part.text && part.text.startsWith("/edit")) {
+          part.text = part.text.replace("/edit", "").trimStart();
+        }
+      })
+    }
+    let userInput = stripImages(content).replace(
       `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,
       ""
     );
-    if (input.startsWith("/edit")) {
-      input = input.replace("/edit", "").trimStart();
-    }
 
     const rif: RangeInFileWithContents =
       contextItemToRangeInFileWithContents(contextItemToEdit);
@@ -248,14 +253,14 @@ const EditSlashCommand: SlashCommand = {
       rif,
       fullFileContents,
       llm,
-      input,
+      userInput,
       params?.tokenLimit
     );
     const [dedentedContents, commonWhitespace] =
       dedentAndGetCommonWhitespace(contents);
     contents = dedentedContents;
 
-    let prompt = compilePrompt(filePrefix, contents, fileSuffix, input);
+    let prompt = compilePrompt(filePrefix, contents, fileSuffix, userInput);
     let fullFileContentsLines = fullFileContents.split("\n");
     let fullPrefixLines = fullFileContentsLines.slice(
       0,
@@ -428,7 +433,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     let messages = history;
-    messages.push({ role: "user", content: prompt });
+    messages[messages.length - 1] = { role: "user", content: prompt };
 
     let linesOfPrefixCopied = 0;
     let lines = [];
@@ -447,7 +452,7 @@ const EditSlashCommand: SlashCommand = {
         messages.slice(0, messages.length - 1),
         {
           codeToEdit: rif.contents,
-          userInput: input,
+          userInput,
           filePrefix: filePrefix,
           fileSuffix: fileSuffix,
           systemMessage: llm.systemMessage || "",

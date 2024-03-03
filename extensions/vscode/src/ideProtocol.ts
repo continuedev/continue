@@ -2,56 +2,119 @@ import { exec } from "child_process";
 import { getContinueGlobalPath } from "core/util/paths";
 import * as path from "path";
 import * as vscode from "vscode";
-import { ideProtocolClient } from "./activation/activate";
 
 import * as child_process from "child_process";
-import { Chunk, DiffLine, IDE, Problem } from "core";
-import {
-  BrowserSerializedContinueConfig,
-  finalToBrowserConfig,
-} from "core/config/load";
-import { LanceDbIndex } from "core/indexing/LanceDbIndex";
-import { IndexTag } from "core/indexing/types";
-import { verticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
-import { configHandler } from "./loadConfig";
+import { ContinueRcJson, IDE, IdeInfo, Problem, Range } from "core";
+import { DiffManager } from "./diff/horizontal";
+import { VsCodeIdeUtils } from "./util/ideUtils";
 import { traverseDirectory } from "./util/traverseDirectory";
 import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
 
 class VsCodeIde implements IDE {
-  async getTopLevelCallStackSources(threadIndex: number, stackDepth: number): Promise<string[]> {
-    return await ideProtocolClient.getTopLevelCallStackSources(threadIndex, stackDepth);
+  ideUtils: VsCodeIdeUtils;
+
+  constructor(private readonly diffManager: DiffManager) {
+    this.ideUtils = new VsCodeIdeUtils();
   }
-  async getAvailableThreads(): Promise<string[]> {
-    return await ideProtocolClient.getAvailableThreads();
+  getIdeInfo(): Promise<IdeInfo> {
+    return Promise.resolve({
+      ideType: "vscode",
+      name: vscode.env.appName,
+      version: vscode.version,
+      remoteName: vscode.env.remoteName || "local",
+    });
   }
-  async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
-    const config = await configHandler.loadConfig();
-    return finalToBrowserConfig(config);
+  readRangeInFile(filepath: string, range: Range): Promise<string> {
+    return this.ideUtils.readRangeInFile(
+      filepath,
+      new vscode.Range(
+        new vscode.Position(range.start.line, range.start.character),
+        new vscode.Position(range.end.line, range.end.character),
+      ),
+    );
+  }
+
+  async getStats(directory: string): Promise<{ [path: string]: number }> {
+    const scheme = vscode.workspace.workspaceFolders?.[0].uri.scheme;
+    const files = await this.listWorkspaceContents(directory);
+    const pathToLastModified: { [path: string]: number } = {};
+    await Promise.all(
+      files.map(async (file) => {
+        const uri = vscode.Uri.from({
+          scheme: scheme ? scheme : "file",
+          path: file,
+        });
+        let stat = await vscode.workspace.fs.stat(uri);
+        pathToLastModified[file] = stat.mtime;
+      }),
+    );
+
+    return pathToLastModified;
+  }
+
+  async getRepo(dir: vscode.Uri): Promise<any> {
+    return this.ideUtils.getRepo(dir);
+  }
+
+  async isTelemetryEnabled(): Promise<boolean> {
+    return (
+      (await vscode.workspace
+        .getConfiguration("continue")
+        .get("telemetryEnabled")) ?? true
+    );
+  }
+  getUniqueId(): Promise<string> {
+    return Promise.resolve(vscode.env.machineId);
   }
 
   async getDiff(): Promise<string> {
-    return await ideProtocolClient.getDiff();
+    return await this.ideUtils.getDiff();
   }
 
   async getTerminalContents(): Promise<string> {
-    return await ideProtocolClient.getTerminalContents(1);
+    return await this.ideUtils.getTerminalContents(1);
   }
 
   async getDebugLocals(threadIndex: number): Promise<string> {
-    return await ideProtocolClient.getDebugLocals(threadIndex);
+    return await this.ideUtils.getDebugLocals(threadIndex);
+  }
+
+  async getTopLevelCallStackSources(threadIndex: number, stackDepth: number): Promise<string[]> {
+    return await this.ideUtils.getTopLevelCallStackSources(threadIndex, stackDepth);
+  }
+  async getAvailableThreads(): Promise<string[]> {
+    return await this.ideUtils.getAvailableThreads();
   }
 
   async listWorkspaceContents(directory?: string): Promise<string[]> {
     if (directory) {
-      return await ideProtocolClient.getDirectoryContents(directory, true);
+      return await this.ideUtils.getDirectoryContents(directory, true);
     } else {
       const contents = await Promise.all(
-        ideProtocolClient
+        this.ideUtils
           .getWorkspaceDirectories()
-          .map((dir) => ideProtocolClient.getDirectoryContents(dir, true))
+          .map((dir) => this.ideUtils.getDirectoryContents(dir, true)),
       );
       return contents.flat();
     }
+  }
+
+  async getWorkspaceConfigs() {
+    const workspaceDirs =
+      vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [];
+    const configs: ContinueRcJson[] = [];
+    for (const workspaceDir of workspaceDirs) {
+      const files = await vscode.workspace.fs.readDirectory(workspaceDir);
+      for (const [filename, type] of files) {
+        if (type === vscode.FileType.File && filename === ".continuerc.json") {
+          const contents = await this.ideUtils.readFile(
+            vscode.Uri.joinPath(workspaceDir, filename).fsPath,
+          );
+          configs.push(JSON.parse(contents));
+        }
+      }
+    }
+    return configs;
   }
 
   async listFolders(): Promise<string[]> {
@@ -63,7 +126,7 @@ class VsCodeIde implements IDE {
         directory,
         [],
         false,
-        undefined
+        undefined,
       )) {
         allDirs.push(dir);
       }
@@ -73,7 +136,7 @@ class VsCodeIde implements IDE {
   }
 
   async getWorkspaceDirs(): Promise<string[]> {
-    return ideProtocolClient.getWorkspaceDirectories();
+    return this.ideUtils.getWorkspaceDirectories();
   }
 
   async getContinueDir(): Promise<string> {
@@ -83,75 +146,66 @@ class VsCodeIde implements IDE {
   async writeFile(path: string, contents: string): Promise<void> {
     await vscode.workspace.fs.writeFile(
       vscode.Uri.file(path),
-      Buffer.from(contents)
+      Buffer.from(contents),
     );
   }
 
   async showVirtualFile(title: string, contents: string): Promise<void> {
-    ideProtocolClient.showVirtualFile(title, contents);
+    this.ideUtils.showVirtualFile(title, contents);
   }
 
   async openFile(path: string): Promise<void> {
-    ideProtocolClient.openFile(path);
+    this.ideUtils.openFile(path);
   }
 
   async showLines(
     filepath: string,
     startLine: number,
-    endLine: number
+    endLine: number,
   ): Promise<void> {
     const range = new vscode.Range(
       new vscode.Position(startLine, 0),
-      new vscode.Position(endLine, 0)
+      new vscode.Position(endLine, 0),
     );
     openEditorAndRevealRange(filepath, range).then(() => {
-      ideProtocolClient.highlightCode(
-        {
-          filepath,
-          range,
-        },
-        "#fff1"
-      );
+      // TODO: Highlight lines
+      // this.ideUtils.highlightCode(
+      //   {
+      //     filepath,
+      //     range,
+      //   },
+      //   "#fff1"
+      // );
     });
   }
 
   async runCommand(command: string): Promise<void> {
-    await ideProtocolClient.runCommand(command);
+    if (vscode.window.terminals.length) {
+      vscode.window.terminals[0].show();
+      vscode.window.terminals[0].sendText(command, false);
+    } else {
+      const terminal = vscode.window.createTerminal();
+      terminal.show();
+      terminal.sendText(command, false);
+    }
   }
 
   async saveFile(filepath: string): Promise<void> {
-    await ideProtocolClient.saveFile(filepath);
+    await this.ideUtils.saveFile(filepath);
   }
   async readFile(filepath: string): Promise<string> {
-    return await ideProtocolClient.readFile(filepath);
+    return await this.ideUtils.readFile(filepath);
   }
   async showDiff(
     filepath: string,
     newContents: string,
-    stepIndex: number
+    stepIndex: number,
   ): Promise<void> {
-    await ideProtocolClient.showDiff(filepath, newContents, stepIndex);
-  }
-
-  async verticalDiffUpdate(
-    filepath: string,
-    startLine: number,
-    endLine: number,
-    diffLine: DiffLine
-  ) {
-    const diffHandler =
-      verticalPerLineDiffManager.getOrCreateVerticalPerLineDiffHandler(
-        filepath,
-        startLine,
-        endLine
-      );
-    if (diffHandler) {
-      await diffHandler.handleDiffLine(diffLine);
-    }
+    await this.diffManager.writeDiff(filepath, newContents, stepIndex);
   }
 
   async getOpenFiles(): Promise<string[]> {
-    return await ideProtocolClient.getOpenFiles();
+    return await this.ideUtils.getOpenFiles();
   }
 
   async getPinnedFiles(): Promise<string[]> {
@@ -170,10 +224,10 @@ class VsCodeIde implements IDE {
         "@vscode",
         "ripgrep",
         "bin",
-        "rg"
+        "rg",
       ),
       ["-i", "-C", "2", `"${query}"`, "."],
-      { cwd: dir }
+      { cwd: dir },
     );
     let output = "";
 
@@ -237,48 +291,7 @@ class VsCodeIde implements IDE {
   }
 
   async getBranch(dir: string): Promise<string> {
-    return ideProtocolClient.getBranch(vscode.Uri.file(dir));
-  }
-
-  async getFilesToEmbed(
-    providerId: string
-  ): Promise<[string, string, string][]> {
-    return [];
-  }
-
-  async sendEmbeddingForChunk(
-    chunk: Chunk,
-    embedding: number[],
-    tags: string[]
-  ) {}
-
-  async retrieveChunks(
-    text: string,
-    n: number,
-    directory: string | undefined
-  ): Promise<Chunk[]> {
-    const embeddingsProvider = (await configHandler.loadConfig())
-      .embeddingsProvider;
-    if (!embeddingsProvider) {
-      return [];
-    }
-    const lanceDbIndex = new LanceDbIndex(embeddingsProvider, (path) =>
-      ideProtocolClient.readFile(path)
-    );
-
-    const tags = await Promise.all(
-      (await this.getWorkspaceDirs()).map(async (dir) => {
-        let branch = await ideProtocolClient.getBranch(vscode.Uri.file(dir));
-        let tag: IndexTag = {
-          directory: dir,
-          branch,
-          artifactId: lanceDbIndex.artifactId,
-        };
-        return tag;
-      })
-    );
-    let chunks = await lanceDbIndex.retrieve(tags, text, n, directory);
-    return chunks as any[];
+    return this.ideUtils.getBranch(vscode.Uri.file(dir));
   }
 }
 

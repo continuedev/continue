@@ -52,6 +52,27 @@ For many cases, either Continue will have a built-in provider or the API you use
 
 However, if neither of these are the case, you will need to wire up a new LLM object. Learn how to do this [here](#defining-a-custom-llm-provider).
 
+## Authentication
+
+If you need to send custom headers for authentication, you may use the `requestOptions.headers` property like in this example with Ollama:
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "title": "Ollama",
+      "provider": "ollama",
+      "model": "llama2-7b",
+      "requestOptions": {
+        "headers": {
+          "Authorization": "Bearer xxx"
+        }
+      }
+    }
+  ]
+}
+```
+
 ## Customizing the Chat Template
 
 Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like `"[INST] How do I write bubble sort in Rust? [/INST]"`. Continue will automatically attempt to detect the correct prompt format based on the `model`value that you provide, but if you are receiving nonsense responses, you can use the`template`property to explicitly set the format that you expect. The options are:`["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "openchat", "neural-chat", "none"]`.

@@ -56,8 +56,8 @@
     {
       "label": "vscode-extension:continue-ui:build",
       "type": "shell",
-      "command": "node",
-      "args": ["${workspaceFolder}/extensions/vscode/scripts/prepackage.js"],
+      "command": "proxychains",
+      "args": ["-q", "node", "${workspaceFolder}/extensions/vscode/scripts/prepackage.js"],
       "problemMatcher": ["$tsc"],
       "presentation": {
         "revealProblems": "onProblem",
@@ -136,6 +136,18 @@
           }
         }
       ]
+    },
+    //
+    // esbuild for the core binary
+    {
+      "label": "pkg:esbuild",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "esbuild"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "pkg"
+      }
     }
   ]
 }

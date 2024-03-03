@@ -13,10 +13,21 @@ if (args[2] === "--target") {
 (async () => {
   console.log("[info] Packaging extension for target ", target);
 
-  // Copy config_schema.json to config.json in docs
+  // Copy config_schema.json to config.json in docs and intellij
   fs.copyFileSync(
     "config_schema.json",
     path.join("..", "..", "docs", "static", "schemas", "config.json")
+  );
+  fs.copyFileSync(
+    "config_schema.json",
+    path.join(
+      "..",
+      "intellij",
+      "src",
+      "main",
+      "resources",
+      "config_schema.json"
+    )
   );
   // Modify and copy for .continuerc.json
   const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
@@ -61,7 +72,7 @@ if (args[2] === "--target") {
 
   const indexHtmlPath = path.join(intellijExtensionWebviewPath, "index.html");
   fs.copyFileSync(indexHtmlPath, "tmp_index.html");
-  fs.rmSync(intellijExtensionWebviewPath, { recursive: true });
+  rimrafSync(intellijExtensionWebviewPath);
   fs.mkdirSync(intellijExtensionWebviewPath, { recursive: true });
 
   await new Promise((resolve, reject) => {
@@ -77,11 +88,19 @@ if (args[2] === "--target") {
     });
   });
 
+  // Put back index.html
   if (fs.existsSync(indexHtmlPath)) {
-    fs.rmSync(indexHtmlPath, {});
+    rimrafSync(indexHtmlPath);
   }
   fs.copyFileSync("tmp_index.html", indexHtmlPath);
   fs.unlinkSync("tmp_index.html");
+
+  // Copy over other misc. files
+  fs.copyFileSync(
+    "../extensions/vscode/gui/onigasm.wasm",
+    path.join(intellijExtensionWebviewPath, "onigasm.wasm")
+  );
+
   console.log("[info] Copied gui build to Intellij extension");
 
   // Then copy over the dist folder to the VSCode extension //
@@ -153,19 +172,13 @@ if (args[2] === "--target") {
   if (target) {
     // If building for production, only need the binaries for current platform
     if (!target.startsWith("darwin")) {
-      fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/darwin"), {
-        recursive: true,
-      });
+      rimrafSync(path.join(__dirname, "../bin/napi-v3/darwin"));
     }
     if (!target.startsWith("linux")) {
-      fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/linux"), {
-        recursive: true,
-      });
+      rimrafSync(path.join(__dirname, "../bin/napi-v3/linux"));
     }
     if (!target.startsWith("win")) {
-      fs.rmdirSync(path.join(__dirname, "../bin/napi-v3/win32"), {
-        recursive: true,
-      });
+      rimrafSync(path.join(__dirname, "../bin/napi-v3/win32"));
     }
   }
   console.log("[info] Copied onnxruntime-node");

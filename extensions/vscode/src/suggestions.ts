@@ -1,8 +1,5 @@
 import * as vscode from "vscode";
-import { openEditorAndRevealRange } from "./util/vscode";
-import { translate } from "./util/vscode";
-import { registerAllCodeLensProviders } from "./lang-server/codeLens";
-import { extensionContext, ideProtocolClient } from "./activation/activate";
+import { openEditorAndRevealRange, translate } from "./util/vscode";
 
 export interface SuggestionRanges {
   oldRange: vscode.Range;
@@ -125,9 +122,9 @@ export function rerenderDecorations(editorUri: string) {
     vscode.TextEditorRevealType.Default
   );
 
-  if (extensionContext) {
-    registerAllCodeLensProviders(extensionContext);
-  }
+  // if (extensionContext) {
+  //   registerAllCodeLensProviders(extensionContext);
+  // }
 }
 
 export function suggestionDownCommand() {

@@ -57,7 +57,7 @@ export async function* markdownChunker(
   maxChunkSize: number,
   hLevel: number
 ): AsyncGenerator<ChunkWithoutID> {
-  if (countTokens(content, "gpt-4") <= maxChunkSize) {
+  if (countTokens(content) <= maxChunkSize) {
     const header = findHeader(content.split("\n"));
     yield {
       content,
@@ -122,8 +122,7 @@ export async function* markdownChunker(
   for (const section of sections) {
     for await (const chunk of markdownChunker(
       section.content,
-      maxChunkSize -
-        (section.header ? countTokens(section.header, "gpt-4") : 0),
+      maxChunkSize - (section.header ? countTokens(section.header) : 0),
       hLevel + 1
     )) {
       yield {

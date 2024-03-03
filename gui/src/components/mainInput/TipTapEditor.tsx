@@ -26,10 +26,11 @@ import {
 import { SubmenuContextProvidersContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
-import { RootStore } from "../../redux/store";
+import { RootState } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
-import { errorPopup, isJetBrains, postToIde } from "../../util/ide";
+import { isJetBrains, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -130,7 +131,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
 
   const historyLength = useSelector(
-    (store: RootStore) => store.state.history.length
+    (store: RootState) => store.state.history.length
   );
 
   const [inputFocused, setInputFocused] = useState(false);
@@ -171,7 +172,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   };
 
   const contextItems = useSelector(
-    (store: RootStore) => store.state.contextItems
+    (store: RootState) => store.state.contextItems
   );
 
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
@@ -180,7 +181,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
 
   const historyLengthRef = useUpdatingRef(historyLength);
-  const onEnterRef = useUpdatingRef(props.onEnter);
   const availableSlashCommandsRef = useUpdatingRef(
     props.availableSlashCommands
   );
@@ -218,14 +218,15 @@ function TipTapEditor(props: TipTapEditorProps) {
         };
       });
     } else {
-      errorPopup(
-        "Images need to be in jpg or png format and less than 10MB in size."
-      );
+      postToIde("errorPopup", {
+        message:
+          "Images need to be in jpg or png format and less than 10MB in size.",
+      });
     }
     return undefined;
   }
 
-  const editor = useEditor({
+  const editor: Editor = useEditor({
     extensions: [
       Document,
       History,
@@ -233,7 +234,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       Placeholder.configure({
         placeholder: () =>
           historyLengthRef.current === 0
-            ? "Ask a question, '/' for slash commands, '@' to add context"
+            ? "Ask anything, '/' for slash commands, '@' to add context"
             : "Ask a follow-up",
       }),
       Paragraph.extend({
@@ -244,12 +245,12 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return false;
               }
 
-              onEnterRef.current(this.editor.getJSON());
+              onEnterRef.current();
               return true;
             },
 
             "Cmd-Enter": () => {
-              onEnterRef.current(this.editor.getJSON());
+              onEnterRef.current();
               return true;
             },
 
@@ -344,6 +345,21 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
   });
 
+  const onEnterRef = useUpdatingRef(() => {
+    const json = editor.getJSON()
+
+    // Don't do anything if input box is empty
+    if (!json.content?.some(c => c.content)) {
+      return
+    }
+    
+    props.onEnter(json);
+
+    if (props.isMainInput) {
+      editor.commands.clearContent(true);
+    }
+  }, [props.onEnter, editor, props.isMainInput]);
+
   // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
   const [ignoreHighlightedCode, setIgnoreHighlightedCode] = useState(false);
 
@@ -351,14 +367,14 @@ function TipTapEditor(props: TipTapEditorProps) {
     const handleKeyDown = (event: any) => {
       if (
         isMetaEquivalentKeyPressed(event) &&
-        (isJetBrains() ? event.code === "KeyJ" : event.code === "KeyM")
+        (isJetBrains() ? event.code === "KeyJ" : event.code === "KeyL")
       ) {
         setIgnoreHighlightedCode(true);
         setTimeout(() => {
           setIgnoreHighlightedCode(false);
         }, 100);
       } else if (event.key === "Escape") {
-        postToIde("focusEditor", {});
+        postToIde("focusEditor", undefined);
       }
     };
 
@@ -369,82 +385,132 @@ function TipTapEditor(props: TipTapEditorProps) {
     };
   }, []);
 
-  // IDE event listeners
+  // Re-focus main input after done generating
+  const active = useSelector((state: RootState) => state.state.active);
   useEffect(() => {
-    if (!props.isMainInput) {
-      return;
+    if (editor && !active && props.isMainInput) {
+      editor.commands.focus();
     }
+  }, [props.isMainInput, active,editor])
 
-    if (editor && !document.hasFocus()) {
+  // IDE event listeners
+  useWebviewListener(
+    "userInput",
+    async (data) => {
+      if (!props.isMainInput) {
+        return;
+      }
+      editor?.commands.insertContent(data.input);
+      onEnterRef.current();
+    },
+    [editor, onEnterRef.current, props.isMainInput]
+  );
+
+  useWebviewListener(
+    "focusContinueInput",
+    async (data) => {
+      if (!props.isMainInput) {
+        return;
+      }
+      if (historyLength > 0) {
+        saveSession();
+      }
+      setTimeout(() => {
+        editor?.commands.focus("end");
+      }, 20);
+    },
+    [historyLength, saveSession, editor, props.isMainInput]
+  );
+
+  useWebviewListener(
+    "focusContinueInputWithoutClear",
+    async () => {
+      if (!props.isMainInput) {
+        return;
+      }
+      setTimeout(() => {
+        editor?.commands.focus("end");
+      }, 20);
+    },
+    [editor, props.isMainInput]
+  );
+
+  useWebviewListener(
+    "focusContinueInputWithNewSession",
+    async () => {
+      if (!props.isMainInput) {
+        return;
+      }
+      saveSession();
+      setTimeout(() => {
+        editor?.commands.focus("end");
+      }, 20);
+    },
+    [editor, props.isMainInput]
+  );
+
+  useWebviewListener(
+    "highlightedCode",
+    async (data) => {
+      if (!props.isMainInput || !editor) {
+        return;
+      }
+      if (!ignoreHighlightedCode) {
+        const rif: RangeInFile & { contents: string } =
+          data.rangeInFileWithContents;
+        const basename = getBasename(rif.filepath);
+        const item: ContextItemWithId = {
+          content: rif.contents,
+          name: `${basename} (${rif.range.start.line + 1}-${
+            rif.range.end.line + 1
+          })`,
+          description: rif.filepath,
+          id: {
+            providerTitle: "code",
+            itemId: rif.filepath,
+          },
+        };
+
+        let index = 0;
+        for (const el of editor.getJSON().content) {
+          if (el.type === "codeBlock") {
+            index += 2;
+          } else {
+            break;
+          }
+        }
+        editor
+          .chain()
+          .insertContentAt(index, {
+            type: "codeBlock",
+            attrs: {
+              item,
+            },
+          })
+          .run();
+        setTimeout(() => {
+          editor.commands.focus("end");
+        }, 200);
+      }
+      setIgnoreHighlightedCode(false);
+    },
+    [
+      editor,
+      props.isMainInput,
+      historyLength,
+      ignoreHighlightedCode,
+      props.isMainInput,
+    ]
+  );
+
+  useEffect(() => {
+    if (props.isMainInput && editor && document.hasFocus()) {
       editor.commands.focus();
       // setTimeout(() => {
       //   // https://github.com/continuedev/continue/pull/881
       //   editor.commands.blur();
       // }, 0);
     }
-
-    const handler = async (event: any) => {
-      if (!editor) return;
-
-      if (event.data.type === "userInput") {
-        const input = event.data.input;
-        editor.commands.insertContent(input);
-        onEnterRef.current(editor.getJSON());
-      } else if (event.data.type === "focusContinueInput") {
-        if (historyLength > 0) {
-          saveSession();
-        }
-        editor.commands.focus("end");
-      } else if (event.data.type === "focusContinueInputWithoutClear") {
-        editor.commands.focus("end");
-      } else if (event.data.type === "focusContinueInputWithNewSession") {
-        saveSession();
-        editor.commands.focus("end");
-      } else if (event.data.type === "highlightedCode") {
-        if (!ignoreHighlightedCode) {
-          const rif: RangeInFile & { contents: string } =
-            event.data.rangeInFileWithContents;
-          const basename = getBasename(rif.filepath);
-          const item: ContextItemWithId = {
-            content: rif.contents,
-            name: `${basename} (${rif.range.start.line + 1}-${
-              rif.range.end.line + 1
-            })`,
-            description: rif.filepath,
-            id: {
-              providerTitle: "code",
-              itemId: rif.filepath,
-            },
-          };
-
-          let index = 0;
-          for (const el of editor.getJSON().content) {
-            if (el.type === "codeBlock") {
-              index += 2;
-            } else {
-              break;
-            }
-          }
-          editor
-            .chain()
-            .insertContentAt(index, {
-              type: "codeBlock",
-              attrs: {
-                item,
-              },
-            })
-            .run();
-          setTimeout(() => {
-            editor.commands.focus("end");
-          }, 100);
-        }
-        setIgnoreHighlightedCode(false);
-      }
-    };
-    window.addEventListener("message", handler);
-    return () => {
-      window.removeEventListener("message", handler);
-    };
   }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
@@ -528,9 +594,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             editor.commands.insertContent("@");
           }
         }}
-        onEnter={() => {
-          onEnterRef.current(editor.getJSON());
-        }}
+        onEnter={onEnterRef.current}
         onImageFileSelected={(file) => {
           handleImageFile(file).then(([img, dataUrl]) => {
             const { schema } = editor.state;
