@@ -13,7 +13,7 @@ function collapsedReplacement(node: SyntaxNode): string {
 
 function firstChild(
   node: SyntaxNode,
-  grammarName: string | string[]
+  grammarName: string | string[],
 ): SyntaxNode | null {
   if (Array.isArray(grammarName)) {
     return (
@@ -30,7 +30,7 @@ function collapseChildren(
   blockTypes: string[],
   collapseTypes: string[],
   collapseBlockTypes: string[],
-  maxChunkSize: number
+  maxChunkSize: number,
 ): string {
   code = code.slice(0, node.endIndex);
   const block = firstChild(node, blockTypes);
@@ -38,7 +38,7 @@ function collapseChildren(
 
   if (block) {
     const childrenToCollapse = block.children.filter((child) =>
-      collapseTypes.includes(child.type)
+      collapseTypes.includes(child.type),
     );
     for (const child of childrenToCollapse.reverse()) {
       const grandChild = firstChild(child, collapseBlockTypes);
@@ -99,7 +99,7 @@ function collapseChildren(
 function constructClassDefinitionChunk(
   node: SyntaxNode,
   code: string,
-  maxChunkSize: number
+  maxChunkSize: number,
 ): string {
   return collapseChildren(
     node,
@@ -107,14 +107,14 @@ function constructClassDefinitionChunk(
     ["block", "class_body", "declaration_list"],
     ["method_definition", "function_definition", "function_item"],
     ["block", "statement_block"],
-    maxChunkSize
+    maxChunkSize,
   );
 }
 
 function constructFunctionDefinitionChunk(
   node: SyntaxNode,
   code: string,
-  maxChunkSize: number
+  maxChunkSize: number,
 ): string {
   const bodyNode = node.children[node.children.length - 1];
   const funcText =
@@ -144,7 +144,7 @@ const collapsedNodeConstructors: {
   [key: string]: (
     node: SyntaxNode,
     code: string,
-    maxChunkSize: number
+    maxChunkSize: number,
   ) => string;
 } = {
   // Classes, structs, etc
@@ -161,7 +161,7 @@ function* getSmartCollapsedChunks(
   node: SyntaxNode,
   code: string,
   maxChunkSize: number,
-  root = true
+  root = true,
 ): Generator<ChunkWithoutID> {
   // Keep entire text if not over size
   if (
@@ -194,7 +194,7 @@ function* getSmartCollapsedChunks(
 export async function* codeChunker(
   filepath: string,
   contents: string,
-  maxChunkSize: number
+  maxChunkSize: number,
 ): AsyncGenerator<ChunkWithoutID> {
   if (contents.trim().length === 0) {
     return;

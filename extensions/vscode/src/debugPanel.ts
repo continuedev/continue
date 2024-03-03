@@ -15,7 +15,7 @@ export class ContinueGUIWebviewViewProvider
   resolveWebviewView(
     webviewView: vscode.WebviewView,
     _context: vscode.WebviewViewResolveContext,
-    _token: vscode.CancellationToken
+    _token: vscode.CancellationToken,
   ): void | Thenable<void> {
     this._webview = webviewView.webview;
     webviewView.webview.html = this.getSidebarContent(
@@ -23,7 +23,7 @@ export class ContinueGUIWebviewViewProvider
       webviewView,
       this.ide,
       this.configHandler,
-      this.verticalDiffManager
+      this.verticalDiffManager,
     );
   }
 
@@ -45,12 +45,12 @@ export class ContinueGUIWebviewViewProvider
     private readonly ide: IDE,
     private readonly windowId: string,
     private readonly extensionContext: vscode.ExtensionContext,
-    private readonly verticalDiffManager: VerticalPerLineDiffManager
+    private readonly verticalDiffManager: VerticalPerLineDiffManager,
   ) {
     this.webviewProtocol = new VsCodeWebviewProtocol(
       ide,
       configHandler,
-      verticalDiffManager
+      verticalDiffManager,
     );
   }
 
@@ -62,7 +62,7 @@ export class ContinueGUIWebviewViewProvider
     verticalDiffManager: VerticalPerLineDiffManager,
     page: string | undefined = undefined,
     edits: FileEdit[] | undefined = undefined,
-    isFullScreen: boolean = false
+    isFullScreen: boolean = false,
   ): string {
     let extensionUri = getExtensionUri();
     let scriptUri: string;
@@ -148,8 +148,8 @@ export class ContinueGUIWebviewViewProvider
         <script>window.colorThemeName = "dark-plus"</script>
         <script>window.workspacePaths = ${JSON.stringify(
           vscode.workspace.workspaceFolders?.map(
-            (folder) => folder.uri.fsPath
-          ) || []
+            (folder) => folder.uri.fsPath,
+          ) || [],
         )}</script>
         <script>window.isFullScreen = ${isFullScreen}</script>
 

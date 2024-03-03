@@ -16,7 +16,7 @@ class ProblemsContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const ide = extras.ide;
     const problems = await ide.getProblems();
@@ -28,18 +28,18 @@ class ProblemsContextProvider extends BaseContextProvider {
         const rangeContent = lines
           .slice(
             Math.max(0, problem.range.start.line - 2),
-            problem.range.end.line + 2
+            problem.range.end.line + 2,
           )
           .join("\n");
 
         return {
           description: "Problems in current file",
           content: `\`\`\`${getBasename(
-            problem.filepath
+            problem.filepath,
           )}\n${rangeContent}\n\`\`\`\n${problem.message}\n\n`,
           name: `Warning in ${getBasename(problem.filepath)}`,
         };
-      })
+      }),
     );
 
     return items.length === 0

@@ -30,7 +30,7 @@ type VerticalPerLineDiffEvent =
 
 async function* streamVerticalPerLineDiff(
   lineGenerator: AsyncGenerator<string>,
-  oldCode: string
+  oldCode: string,
 ): AsyncGenerator<VerticalPerLineDiffEvent> {
   const remainingLines = oldCode.split("\n");
   let index = 0; // Index in terms of oldCode

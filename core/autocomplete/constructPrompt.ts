@@ -10,11 +10,16 @@ import { getBasename } from "../util";
 
 import { getAst, getTreePathAtCursor } from "./ast";
 import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
-import { AutocompleteSnippet, fillPromptWithSnippets, rankSnippets, removeRangeFromSnippets } from "./ranking";
+import {
+  AutocompleteSnippet,
+  fillPromptWithSnippets,
+  rankSnippets,
+  removeRangeFromSnippets,
+} from "./ranking";
 import { slidingWindowMatcher } from "./slidingWindow";
 
 export function languageForFilepath(
-  filepath: string
+  filepath: string,
 ): AutocompleteLanguageInfo {
   return LANGUAGES[filepath.split(".").slice(-1)[0]] || Typescript;
 }
@@ -22,12 +27,15 @@ export function languageForFilepath(
 function formatExternalSnippet(
   filepath: string,
   snippet: string,
-  language: AutocompleteLanguageInfo
+  language: AutocompleteLanguageInfo,
 ) {
   const comment = language.comment;
   const lines = [
     comment + " Path: " + getBasename(filepath),
-    ...snippet.trim().split("\n").map((line) => comment + " " + line),
+    ...snippet
+      .trim()
+      .split("\n")
+      .map((line) => comment + " " + line),
     comment,
   ];
   return lines.join("\n");
@@ -37,7 +45,7 @@ const BLOCK_TYPES = ["body", "statement_block"];
 
 function shouldCompleteMultilineAst(
   treePath: Parser.SyntaxNode[],
-  cursorLine: number
+  cursorLine: number,
 ): boolean {
   // If at the base of the file, do multiline
   if (treePath.length === 1) {
@@ -65,7 +73,7 @@ function shouldCompleteMultilineAst(
 async function shouldCompleteMultiline(
   filepath: string,
   fullPrefix: string,
-  fullSuffix: string
+  fullSuffix: string,
 ): Promise<boolean> {
   // Use AST to determine whether to complete multiline
   let treePath: Parser.SyntaxNode[] | undefined;
@@ -99,7 +107,7 @@ export async function constructAutocompletePrompt(
   recentlyEditedRanges: RangeInFileWithContents[],
   recentlyEditedDocuments: RangeInFileWithContents[],
   modelName: string,
-  extraSnippets: AutocompleteSnippet[]
+  extraSnippets: AutocompleteSnippet[],
 ): Promise<{
   prefix: string;
   suffix: string;
@@ -111,77 +119,87 @@ export async function constructAutocompletePrompt(
 
   const windowAroundCursor =
     fullPrefix.slice(
-      -options.slidingWindowSize * options.slidingWindowPrefixPercentage
+      -options.slidingWindowSize * options.slidingWindowPrefixPercentage,
     ) +
     fullSuffix.slice(
-      options.slidingWindowSize * (1 - options.slidingWindowPrefixPercentage)
+      options.slidingWindowSize * (1 - options.slidingWindowPrefixPercentage),
     );
 
   const slidingWindowMatches = await slidingWindowMatcher(
     recentlyEditedDocuments,
     windowAroundCursor,
     3,
-    options.slidingWindowSize
+    options.slidingWindowSize,
   );
   snippets.push(...slidingWindowMatches);
 
-  const recentlyEdited = (await Promise.all(
-    recentlyEditedRanges
-      .map(async (r) => {
+  const recentlyEdited = (
+    await Promise.all(
+      recentlyEditedRanges.map(async (r) => {
         return r;
         // return await getScopeAroundRange(r);
-      })
-  )).filter((s) => !!s);
+      }),
+    )
+  ).filter((s) => !!s);
   snippets.push(...(recentlyEdited as any));
 
   // Rank / order the snippets
-  const scoredSnippets = rankSnippets(snippets, windowAroundCursor)
+  const scoredSnippets = rankSnippets(snippets, windowAroundCursor);
 
   // Fill maxSnippetTokens with snippets
-  const maxSnippetTokens = options.maxPromptTokens * options.maxSnippetPercentage;
-  
+  const maxSnippetTokens =
+    options.maxPromptTokens * options.maxSnippetPercentage;
+
   // Construct basic prefix
-  const maxPrefixTokens =
-  options.maxPromptTokens * options.prefixPercentage
+  const maxPrefixTokens = options.maxPromptTokens * options.prefixPercentage;
   let prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens, modelName);
-  
+
   // Construct suffix
   const maxSuffixTokens = Math.min(
     options.maxPromptTokens - countTokens(prefix, modelName),
-    options.maxSuffixPercentage * options.maxPromptTokens
+    options.maxSuffixPercentage * options.maxPromptTokens,
   );
   let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
 
   // Remove prefix range from snippets
-  const prefixLines = prefix.split('\n').length;
-  const suffixLines = suffix.split('\n').length;
+  const prefixLines = prefix.split("\n").length;
+  const suffixLines = suffix.split("\n").length;
   const buffer = 8;
   const prefixSuffixRangeWithBuffer = {
     start: {
       line: cursorLine - prefixLines - buffer,
-      character: 0
+      character: 0,
     },
     end: {
-      line: cursorLine + suffixLines+ buffer,
-      character: 0
-    }
-  }
-  let finalSnippets = removeRangeFromSnippets(scoredSnippets, filepath.split("://").slice(-1)[0], prefixSuffixRangeWithBuffer);
+      line: cursorLine + suffixLines + buffer,
+      character: 0,
+    },
+  };
+  let finalSnippets = removeRangeFromSnippets(
+    scoredSnippets,
+    filepath.split("://").slice(-1)[0],
+    prefixSuffixRangeWithBuffer,
+  );
 
   // Filter snippets for those with best scores (must be above threshold)
-  finalSnippets = finalSnippets.filter((snippet) => snippet.score >= options.recentlyEditedSimilarityThreshold)
-  finalSnippets = fillPromptWithSnippets(scoredSnippets, maxSnippetTokens, modelName);
-  
+  finalSnippets = finalSnippets.filter(
+    (snippet) => snippet.score >= options.recentlyEditedSimilarityThreshold,
+  );
+  finalSnippets = fillPromptWithSnippets(
+    scoredSnippets,
+    maxSnippetTokens,
+    modelName,
+  );
+
   // Format snippets as comments and prepend to prefix
   const formattedSnippets = finalSnippets
-  .map((snippet) =>
-  formatExternalSnippet(snippet.filepath, snippet.contents, language)
-  )
-  .join("\n");
+    .map((snippet) =>
+      formatExternalSnippet(snippet.filepath, snippet.contents, language),
+    )
+    .join("\n");
   if (formattedSnippets.length > 0) {
     prefix = formattedSnippets + "\n\n" + prefix;
   }
-
 
   return {
     prefix,
@@ -190,7 +208,7 @@ export async function constructAutocompletePrompt(
     completeMultiline: await shouldCompleteMultiline(
       filepath,
       fullPrefix,
-      fullSuffix
+      fullSuffix,
     ),
   };
 }

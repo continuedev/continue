@@ -30,7 +30,7 @@ class Ollama extends BaseLLM {
         if (response.status !== 200) {
           console.warn(
             "Error calling Ollama /api/show endpoint: ",
-            await response.text()
+            await response.text(),
           );
           return;
         }
@@ -110,7 +110,7 @@ class Ollama extends BaseLLM {
 
   private _convertArgs(
     options: CompletionOptions,
-    prompt: string | ChatMessage[]
+    prompt: string | ChatMessage[],
   ) {
     const finalOptions: any = {
       model: this._getModel(),
@@ -139,7 +139,7 @@ class Ollama extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const response = await this.fetch(`${this.apiBase}/api/generate`, {
       method: "POST",
@@ -178,7 +178,7 @@ class Ollama extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const response = await this.fetch(`${this.apiBase}/api/chat`, {
       method: "POST",

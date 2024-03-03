@@ -1,6 +1,6 @@
 export async function* onlyWhitespaceAfterEndOfLine(
   stream: AsyncGenerator<string>,
-  endOfLine: string[]
+  endOfLine: string[],
 ): AsyncGenerator<string> {
   let pending = "";
   for await (let chunk of stream) {

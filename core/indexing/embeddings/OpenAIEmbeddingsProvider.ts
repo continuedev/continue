@@ -32,7 +32,7 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
         });
         const data = await resp.json();
         return data.data[0].embedding;
-      })
+      }),
     );
   }
 }

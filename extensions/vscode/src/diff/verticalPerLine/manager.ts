@@ -22,7 +22,7 @@ export class VerticalPerLineDiffManager {
     filepath: string,
     startLine: number,
     endLine: number,
-    input: string
+    input: string,
   ) {
     if (this.filepathToEditorMap.has(filepath)) {
       this.filepathToEditorMap.get(filepath)?.clear(false);
@@ -36,7 +36,7 @@ export class VerticalPerLineDiffManager {
         editor,
         this.editorToVerticalDiffCodeLens,
         this.clearForFilepath,
-        input
+        input,
       );
       this.filepathToEditorMap.set(filepath, handler);
       return handler;
@@ -48,7 +48,7 @@ export class VerticalPerLineDiffManager {
   getOrCreateVerticalPerLineDiffHandler(
     filepath: string,
     startLine: number,
-    endLine: number
+    endLine: number,
   ) {
     if (this.filepathToEditorMap.has(filepath)) {
       return this.filepathToEditorMap.get(filepath)!;
@@ -60,7 +60,7 @@ export class VerticalPerLineDiffManager {
           endLine,
           editor,
           this.editorToVerticalDiffCodeLens,
-          this.clearForFilepath
+          this.clearForFilepath,
         );
         this.filepathToEditorMap.set(filepath, handler);
         return handler;
@@ -93,7 +93,7 @@ export class VerticalPerLineDiffManager {
   acceptRejectVerticalDiffBlock(
     accept: boolean,
     filepath?: string,
-    index?: number
+    index?: number,
   ) {
     if (!filepath) {
       const activeEditor = vscode.window.activeTextEditor;
@@ -123,7 +123,7 @@ export class VerticalPerLineDiffManager {
       accept,
       block.start,
       block.numGreen,
-      block.numRed
+      block.numRed,
     );
   }
 
@@ -146,7 +146,7 @@ export class VerticalPerLineDiffManager {
       filepath,
       existingHandler?.range.start.line ?? startLine,
       existingHandler?.range.end.line ?? endLine,
-      input
+      input,
     );
     if (!diffHandler) {
       return;
@@ -156,7 +156,7 @@ export class VerticalPerLineDiffManager {
       existingHandler?.range ??
       new vscode.Range(
         editor.selection.start.with(undefined, 0),
-        editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER)
+        editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER),
       );
     const rangeContent = editor.document.getText(selectedRange);
     const llm = await this.configHandler.llmFromTitle();
@@ -164,19 +164,19 @@ export class VerticalPerLineDiffManager {
     // Unselect the range
     editor.selection = new vscode.Selection(
       editor.selection.active,
-      editor.selection.active
+      editor.selection.active,
     );
 
     vscode.commands.executeCommand(
       "setContext",
       "continue.streamingDiff",
-      true
+      true,
     );
 
     if (existingHandler?.input) {
       if (existingHandler.input.startsWith("Original request: ")) {
         existingHandler.input = existingHandler.input.substring(
-          "Original request: ".length
+          "Original request: ".length,
         );
       }
       input = `Original request: ${existingHandler.input}\nUpdated request: ${input}`;
@@ -187,14 +187,14 @@ export class VerticalPerLineDiffManager {
           rangeContent,
           llm,
           input,
-          getMarkdownLanguageTagForFile(filepath)
-        )
+          getMarkdownLanguageTagForFile(filepath),
+        ),
       );
     } finally {
       vscode.commands.executeCommand(
         "setContext",
         "continue.streamingDiff",
-        false
+        false,
       );
     }
   }

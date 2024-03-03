@@ -96,13 +96,13 @@ type PromptTemplate =
   | string
   | ((
       history: ChatMessage[],
-      otherData: Record<string, string>
+      otherData: Record<string, string>,
     ) => string | ChatMessage[]);
 
 export function renderPromptTemplate(
   template: PromptTemplate,
   history: ChatMessage[],
-  otherData: Record<string, string>
+  otherData: Record<string, string>,
 ): string | ChatMessage[] {
   if (typeof template === "string") {
     let data: any = {

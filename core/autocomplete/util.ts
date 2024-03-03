@@ -71,13 +71,13 @@ export class GeneratorReuseManager {
 
   private static _createListenableGenerator(
     gen: AsyncGenerator<string>,
-    prefix: string
+    prefix: string,
   ) {
     GeneratorReuseManager.currentGenerator?.cancel();
 
     const listenableGen = new ListenableGenerator(gen);
     listenableGen.listen(
-      (chunk) => (GeneratorReuseManager.pendingCompletion += chunk ?? "")
+      (chunk) => (GeneratorReuseManager.pendingCompletion += chunk ?? ""),
     );
 
     GeneratorReuseManager.pendingGeneratorPrefix = prefix;
@@ -87,7 +87,7 @@ export class GeneratorReuseManager {
 
   static async *getGenerator(
     prefix: string,
-    newGenerator: () => AsyncGenerator<string>
+    newGenerator: () => AsyncGenerator<string>,
   ): AsyncGenerator<string> {
     // Check if current can be reused
     if (

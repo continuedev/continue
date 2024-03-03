@@ -32,12 +32,12 @@ class HistoryManager {
       sessionsList = JSON.parse(sessionsListRaw);
     } catch (error) {
       throw new Error(
-        `It looks like there is a JSON formatting error in your sessions.json file (${sessionsListFile}). Please fix this before creating a new session.`
+        `It looks like there is a JSON formatting error in your sessions.json file (${sessionsListFile}). Please fix this before creating a new session.`,
       );
     }
 
     sessionsList = sessionsList.filter(
-      (session) => session.sessionId !== sessionId
+      (session) => session.sessionId !== sessionId,
     );
 
     fs.writeFileSync(sessionsListFile, JSON.stringify(sessionsList));
@@ -50,7 +50,7 @@ class HistoryManager {
         throw new Error(`Session file ${sessionFile} does not exist`);
       }
       const session: PersistedSessionInfo = JSON.parse(
-        fs.readFileSync(sessionFile, "utf8")
+        fs.readFileSync(sessionFile, "utf8"),
       );
       session.sessionId = sessionId;
       return session;
@@ -69,7 +69,7 @@ class HistoryManager {
     // Save the main session json file
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),
-      JSON.stringify(session)
+      JSON.stringify(session),
     );
 
     // Read and update the sessions list
@@ -114,11 +114,11 @@ class HistoryManager {
     } catch (error) {
       if (error instanceof SyntaxError) {
         throw new Error(
-          `It looks like there is a JSON formatting error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session.`
+          `It looks like there is a JSON formatting error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session.`,
         );
       } else {
         throw new Error(
-          `It looks like there is a validation error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session. Error: ${error}`
+          `It looks like there is a validation error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session. Error: ${error}`,
         );
       }
     }

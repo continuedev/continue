@@ -7,7 +7,7 @@ export function translate(range: vscode.Range, lines: number): vscode.Range {
     range.start.line + lines,
     range.start.character,
     range.end.line + lines,
-    range.end.character
+    range.end.character,
   );
 }
 
@@ -26,7 +26,7 @@ export function getExtensionUri(): vscode.Uri {
 }
 
 export function getViewColumnOfFile(
-  filepath: string
+  filepath: string,
 ): vscode.ViewColumn | undefined {
   for (let tabGroup of vscode.window.tabGroups.all) {
     for (let tab of tabGroup.tabs) {
@@ -72,13 +72,13 @@ let showTextDocumentInProcess = false;
 export function openEditorAndRevealRange(
   editorFilename: string,
   range?: vscode.Range,
-  viewColumn?: vscode.ViewColumn
+  viewColumn?: vscode.ViewColumn,
 ): Promise<vscode.TextEditor> {
   return new Promise((resolve, _) => {
     if (editorFilename.startsWith("~")) {
       editorFilename = path.join(
         process.env.HOME || process.env.USERPROFILE || "",
-        editorFilename.slice(1)
+        editorFilename.slice(1),
       );
     }
     vscode.workspace.openTextDocument(editorFilename).then(async (doc) => {
@@ -95,7 +95,7 @@ export function openEditorAndRevealRange(
         vscode.window
           .showTextDocument(
             doc,
-            getViewColumnOfFile(editorFilename) || viewColumn
+            getViewColumnOfFile(editorFilename) || viewColumn,
           )
           .then((editor) => {
             if (range) {
@@ -124,7 +124,7 @@ function isWindowsLocalButNotRemote(): boolean {
   return (
     vscode.env.remoteName !== undefined &&
     ["wsl", "ssh-remote", "dev-container", "attached-container"].includes(
-      vscode.env.remoteName
+      vscode.env.remoteName,
     ) &&
     process.platform === "win32"
   );
@@ -140,7 +140,7 @@ export function uriFromFilePath(filepath: string): vscode.Uri {
       filepath = windowsToPosix(filepath);
     }
     return vscode.Uri.parse(
-      `vscode-remote://${vscode.env.remoteName}${filepath}`
+      `vscode-remote://${vscode.env.remoteName}${filepath}`,
     );
   } else {
     return vscode.Uri.file(filepath);

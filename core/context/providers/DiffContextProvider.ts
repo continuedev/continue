@@ -15,7 +15,7 @@ class DiffContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const diff = await extras.ide.getDiff();
     return [

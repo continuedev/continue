@@ -22,7 +22,7 @@ class GoogleContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const url = "https://google.serper.dev/search";
 

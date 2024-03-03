@@ -8,7 +8,7 @@ class Bedrock extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const response = await this.fetch(
       `${this.apiBase}/model/${options.model}/invoke-with-response-stream`,
@@ -22,7 +22,7 @@ class Bedrock extends BaseLLM {
         body: JSON.stringify({
           inputText: prompt,
         }),
-      }
+      },
     );
 
     for await (const value of streamSse(response)) {

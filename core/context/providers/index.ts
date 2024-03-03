@@ -39,7 +39,7 @@ const Providers: (typeof BaseContextProvider)[] = [
 ];
 
 export function contextProviderClassFromName(
-  name: ContextProviderName
+  name: ContextProviderName,
 ): typeof BaseContextProvider | undefined {
   const cls = Providers.find((cls) => cls.description.title === name);
 

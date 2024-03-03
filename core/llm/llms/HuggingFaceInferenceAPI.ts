@@ -16,11 +16,11 @@ class HuggingFaceInferenceAPI extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     if (!this.apiBase) {
       throw new Error(
-        "No API base URL provided. Please add the `apiBase` field in your config.json."
+        "No API base URL provided. Please add the `apiBase` field in your config.json.",
       );
     }
 

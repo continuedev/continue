@@ -16,7 +16,7 @@ function constructPrompt(
   codeToEdit: string,
   llm: ILLM,
   userInput: string,
-  language: string | undefined
+  language: string | undefined,
 ): string {
   const template = llm.promptTemplates?.edit ?? gptEditPrompt;
   const rendered = renderPromptTemplate(template, [], {
@@ -31,7 +31,7 @@ function constructPrompt(
 
 async function* addIndentation(
   diffLineGenerator: AsyncGenerator<DiffLine>,
-  indentation: string
+  indentation: string,
 ): AsyncGenerator<DiffLine> {
   for await (const diffLine of diffLineGenerator) {
     yield {
@@ -49,7 +49,7 @@ export async function* streamDiffLines(
   oldCode: string,
   llm: ILLM,
   input: string,
-  language: string | undefined
+  language: string | undefined,
 ): AsyncGenerator<DiffLine> {
   // Strip common indentation for the LLM, then add back after generation
   const [withoutIndentation, commonIndentation] =

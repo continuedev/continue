@@ -44,11 +44,11 @@ export class RemoteConfigSync {
     const userToken = settings.get<string | null>("userToken", null);
     const remoteConfigServerUrl = settings.get<string | null>(
       "remoteConfigServerUrl",
-      null
+      null,
     );
     const remoteConfigSyncPeriod = settings.get<number>(
       "remoteConfigSyncPeriod",
-      60
+      60,
     );
 
     return {
@@ -69,7 +69,7 @@ export class RemoteConfigSync {
     if (!URL.canParse(this.remoteConfigServerUrl)) {
       vscode.window.showErrorMessage(
         "The value set for 'remoteConfigServerUrl' is not valid: ",
-        this.remoteConfigServerUrl
+        this.remoteConfigServerUrl,
       );
       return;
     }
@@ -85,10 +85,13 @@ export class RemoteConfigSync {
     if (this.syncInterval !== undefined) {
       clearInterval(this.syncInterval);
     }
-    this.syncInterval = setInterval(() => {
-      if (!this.userToken || !this.remoteConfigServerUrl) return;
-      this.sync(this.userToken, new URL(this.remoteConfigServerUrl));
-    }, this.remoteConfigSyncPeriod * 1000 * 60);
+    this.syncInterval = setInterval(
+      () => {
+        if (!this.userToken || !this.remoteConfigServerUrl) return;
+        this.sync(this.userToken, new URL(this.remoteConfigServerUrl));
+      },
+      this.remoteConfigSyncPeriod * 1000 * 60,
+    );
   }
 
   async sync(userToken: string, remoteConfigServerUrl: URL) {
@@ -100,12 +103,12 @@ export class RemoteConfigSync {
           headers: {
             Authorization: `Bearer ${userToken}`,
           },
-        }
+        },
       );
 
       if (!response.ok) {
         vscode.window.showErrorMessage(
-          `Failed to sync remote config (HTTP ${response.status}): ${response.statusText}`
+          `Failed to sync remote config (HTTP ${response.status}): ${response.statusText}`,
         );
         return;
       }
@@ -114,11 +117,11 @@ export class RemoteConfigSync {
 
       fs.writeFileSync(
         getConfigJsonPathForRemote(remoteConfigServerUrl),
-        configJson
+        configJson,
       );
       fs.writeFileSync(
         getConfigJsPathForRemote(remoteConfigServerUrl),
-        configJs
+        configJs,
       );
       this.triggerReloadConfig();
     } catch (e) {

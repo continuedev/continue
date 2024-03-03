@@ -2,7 +2,7 @@ import { ContinueRcJson, IDE, IdeInfo, Problem, Range } from "..";
 
 export class MessageIde implements IDE {
   constructor(
-    private readonly request: (messageType: string, data: any) => Promise<any>
+    private readonly request: (messageType: string, data: any) => Promise<any>,
   ) {}
   getIdeInfo(): Promise<IdeInfo> {
     return this.request("getIdeInfo", undefined);
@@ -45,7 +45,7 @@ export class MessageIde implements IDE {
   async showLines(
     filepath: string,
     startLine: number,
-    endLine: number
+    endLine: number,
   ): Promise<void> {
     return await this.request("showLines", { filepath, startLine, endLine });
   }
@@ -90,7 +90,7 @@ export class MessageIde implements IDE {
   async showDiff(
     filepath: string,
     newContents: string,
-    stepIndex: number
+    stepIndex: number,
   ): Promise<void> {
     await this.request("showDiff", { filepath, newContents, stepIndex });
   }

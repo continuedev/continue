@@ -29,7 +29,7 @@ class FreeTrial extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args = this._convertArgs(this.collectArgs(options));
 
@@ -67,7 +67,7 @@ class FreeTrial extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(this.collectArgs(options));
 

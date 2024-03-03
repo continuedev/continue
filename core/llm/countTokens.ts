@@ -37,7 +37,7 @@ function countImageTokens(content: MessagePart): number {
 function countTokens(
   content: MessageContent,
   // defaults to llama2 because the tokenizer tends to produce more tokens
-  modelName: string = "llama2"
+  modelName: string = "llama2",
 ): number {
   const encoding = encodingForModel(modelName);
   if (Array.isArray(content)) {
@@ -80,7 +80,7 @@ export function stripImages(content: MessageContent): string {
 
 function countChatMessageTokens(
   modelName: string,
-  chatMessage: ChatMessage
+  chatMessage: ChatMessage,
 ): number {
   // Doing simpler, safer version of what is here:
   // https://github.com/openai/openai-cookbook/blob/main/examples/How_to_count_tokens_with_tiktoken.ipynb
@@ -92,7 +92,7 @@ function countChatMessageTokens(
 function pruneLinesFromTop(
   prompt: string,
   maxTokens: number,
-  modelName: string
+  modelName: string,
 ): string {
   let totalTokens = countTokens(prompt, modelName);
   const lines = prompt.split("\n");
@@ -106,7 +106,7 @@ function pruneLinesFromTop(
 function pruneLinesFromBottom(
   prompt: string,
   maxTokens: number,
-  modelName: string
+  modelName: string,
 ): string {
   let totalTokens = countTokens(prompt, modelName);
   const lines = prompt.split("\n");
@@ -120,7 +120,7 @@ function pruneLinesFromBottom(
 function pruneStringFromBottom(
   modelName: string,
   maxTokens: number,
-  prompt: string
+  prompt: string,
 ): string {
   const encoding = encodingForModel(modelName);
 
@@ -135,7 +135,7 @@ function pruneStringFromBottom(
 function pruneStringFromTop(
   modelName: string,
   maxTokens: number,
-  prompt: string
+  prompt: string,
 ): string {
   const encoding = encodingForModel(modelName);
 
@@ -151,7 +151,7 @@ function pruneRawPromptFromTop(
   modelName: string,
   contextLength: number,
   prompt: string,
-  tokensForCompletion: number
+  tokensForCompletion: number,
 ): string {
   const maxTokens =
     contextLength - tokensForCompletion - TOKEN_BUFFER_FOR_SAFETY;
@@ -162,7 +162,7 @@ function pruneRawPromptFromBottom(
   modelName: string,
   contextLength: number,
   prompt: string,
-  tokensForCompletion: number
+  tokensForCompletion: number,
 ): string {
   const maxTokens =
     contextLength - tokensForCompletion - TOKEN_BUFFER_FOR_SAFETY;
@@ -181,7 +181,7 @@ function pruneChatHistory(
   modelName: string,
   chatHistory: ChatMessage[],
   contextLength: number,
-  tokensForCompletion: number
+  tokensForCompletion: number,
 ): ChatMessage[] {
   let totalTokens =
     tokensForCompletion +
@@ -195,11 +195,11 @@ function pruneChatHistory(
 
   const longerThanOneThird = longestMessages.filter(
     (message: ChatMessage) =>
-      countTokens(message.content, modelName) > contextLength / 3
+      countTokens(message.content, modelName) > contextLength / 3,
   );
   const distanceFromThird = longerThanOneThird.map(
     (message: ChatMessage) =>
-      countTokens(message.content, modelName) - contextLength / 3
+      countTokens(message.content, modelName) - contextLength / 3,
   );
 
   for (let i = 0; i < longerThanOneThird.length; i++) {
@@ -267,7 +267,7 @@ function pruneChatHistory(
       modelName,
       contextLength,
       stripImages(message.content),
-      tokensForCompletion
+      tokensForCompletion,
     );
     totalTokens = contextLength;
   }
@@ -283,7 +283,7 @@ function compileChatMessages(
   supportsImages: boolean,
   prompt: string | undefined = undefined,
   functions: any[] | undefined = undefined,
-  systemMessage: string | undefined = undefined
+  systemMessage: string | undefined = undefined,
 ): ChatMessage[] {
   const msgsCopy = msgs ? msgs.map((msg) => ({ ...msg })) : [];
 
@@ -314,7 +314,7 @@ function compileChatMessages(
 
   if (maxTokens + functionTokens + TOKEN_BUFFER_FOR_SAFETY >= contextLength) {
     throw new Error(
-      `maxTokens (${maxTokens}) is too close to contextLength (${contextLength}), which doesn't leave room for response. Try increasing the contextLength parameter of the model in your config.json.`
+      `maxTokens (${maxTokens}) is too close to contextLength (${contextLength}), which doesn't leave room for response. Try increasing the contextLength parameter of the model in your config.json.`,
     );
   }
 
@@ -332,7 +332,7 @@ function compileChatMessages(
     modelName,
     msgsCopy,
     contextLength,
-    functionTokens + maxTokens + TOKEN_BUFFER_FOR_SAFETY
+    functionTokens + maxTokens + TOKEN_BUFFER_FOR_SAFETY,
   );
 
   if (

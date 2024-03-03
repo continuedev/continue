@@ -20,7 +20,7 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const ide = extras.ide;
     const openFiles = await ide.getOpenFiles();
@@ -32,7 +32,7 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
             absPath: filepath,
             content: `${await ide.readFile(filepath)}`,
           };
-        })
+        }),
       );
     // const contextSizer =  {
     //   fits(content: string): boolean {
@@ -58,7 +58,7 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
     //     description: "Code highlights from open files",
     //   },
     // ];
-    return []
+    return [];
   }
 
   async load(): Promise<void> {}

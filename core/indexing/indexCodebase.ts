@@ -36,7 +36,7 @@ export class CodebaseIndexer {
       new ChunkCodebaseIndex(this.ide.readFile.bind(this.ide)), // Chunking must come first
       new LanceDbIndex(
         config.embeddingsProvider,
-        this.ide.readFile.bind(this.ide)
+        this.ide.readFile.bind(this.ide),
       ),
       new FullTextSearchCodebaseIndex(),
     ];
@@ -45,7 +45,7 @@ export class CodebaseIndexer {
   }
 
   async *refresh(
-    workspaceDirs: string[]
+    workspaceDirs: string[],
   ): AsyncGenerator<IndexingProgressUpdate> {
     const config = await this.configHandler.loadConfig();
     if (config.disableIndexing) {
@@ -57,8 +57,7 @@ export class CodebaseIndexer {
     let completedDirs = 0;
 
     yield {
-      progress:
-        0,
+      progress: 0,
       desc: "Starting indexing...",
     };
 
@@ -77,13 +76,13 @@ export class CodebaseIndexer {
           const [results, markComplete] = await getComputeDeleteAddRemove(
             tag,
             { ...stats },
-            (filepath) => this.ide.readFile(filepath)
+            (filepath) => this.ide.readFile(filepath),
           );
 
           for await (let { progress, desc } of codebaseIndex.update(
             tag,
             results,
-            markComplete
+            markComplete,
           )) {
             // Handle pausing in this loop because it's the only one really taking time
             while (this.pauseToken.paused) {

@@ -81,7 +81,7 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
 
 function llmCanGenerateInParallel(
   provider: ModelProvider,
-  model: string
+  model: string,
 ): boolean {
   if (provider === "openai") {
     return model.includes("gpt");
@@ -168,7 +168,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 function autodetectTemplateFunction(
   model: string,
   provider: ModelProvider,
-  explicitTemplate: TemplateType | undefined = undefined
+  explicitTemplate: TemplateType | undefined = undefined,
 ) {
   if (
     explicitTemplate === undefined &&
@@ -205,7 +205,7 @@ function autodetectTemplateFunction(
 
 function autodetectPromptTemplates(
   model: string,
-  explicitTemplate: TemplateType | undefined = undefined
+  explicitTemplate: TemplateType | undefined = undefined,
 ) {
   const templateType = explicitTemplate || autodetectTemplateType(model);
   const templates: Record<string, any> = {};

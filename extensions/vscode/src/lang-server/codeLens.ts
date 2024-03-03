@@ -12,12 +12,12 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
     private readonly editorToVerticalDiffCodeLens: Map<
       string,
       VerticalDiffCodeLens[]
-    >
+    >,
   ) {}
 
   public provideCodeLenses(
     document: vscode.TextDocument,
-    _: vscode.CancellationToken
+    _: vscode.CancellationToken,
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     const filepath = document.uri.fsPath;
     const blocks = this.editorToVerticalDiffCodeLens.get(filepath);
@@ -31,7 +31,7 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
       const start = new vscode.Position(block.start, 0);
       const range = new vscode.Range(
         start,
-        start.translate(block.numGreen + block.numRed)
+        start.translate(block.numGreen + block.numRed),
       );
       codeLenses.push(
         new vscode.CodeLens(range, {
@@ -43,14 +43,14 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
           title: "Reject",
           command: "continue.rejectVerticalDiffBlock",
           arguments: [filepath, i],
-        })
+        }),
       );
       if (codeLenses.length === 2) {
         codeLenses.push(
           new vscode.CodeLens(range, {
             title: `(${getMetaKeyLabel()}⇧↩/${getMetaKeyLabel()}⇧⌫ to accept/reject all, ${getMetaKeyLabel()}I to retry)`,
             command: "",
-          })
+          }),
         );
       }
     }
@@ -62,7 +62,7 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
 class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
-    _: vscode.CancellationToken
+    _: vscode.CancellationToken,
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     const suggestions = editorToSuggestions.get(document.uri.toString());
     if (!suggestions) {
@@ -74,7 +74,7 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
     for (const suggestion of suggestions) {
       const range = new vscode.Range(
         suggestion.oldRange.start,
-        suggestion.newRange.end
+        suggestion.newRange.end,
       );
       codeLenses.push(
         new vscode.CodeLens(range, {
@@ -86,14 +86,14 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
           title: "Reject",
           command: "continue.rejectSuggestion",
           arguments: [suggestion],
-        })
+        }),
       );
       if (codeLenses.length === 2) {
         codeLenses.push(
           new vscode.CodeLens(range, {
             title: `(${getMetaKeyLabel()}⇧↩/${getMetaKeyLabel()}⇧⌫ to accept/reject all)`,
             command: "",
-          })
+          }),
         );
       }
     }
@@ -111,7 +111,7 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
 
   public provideCodeLenses(
     document: vscode.TextDocument,
-    _: vscode.CancellationToken
+    _: vscode.CancellationToken,
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     if (path.dirname(document.uri.fsPath) === DIFF_DIRECTORY) {
       const codeLenses: vscode.CodeLens[] = [];
@@ -130,7 +130,7 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
           title: `Reject All ❌ (${getMetaKeyLabel()}⇧⌫)`,
           command: "continue.rejectDiff",
           arguments: [document.uri.fsPath],
-        })
+        }),
         // new vscode.CodeLens(range, {
         //   title: `Further Edit ✏️ (${getMetaKeyLabel()}⇧M)`,
         //   command: "continue.focusContinueInputWithEdit",
@@ -146,7 +146,7 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
 class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
-    _: vscode.CancellationToken
+    _: vscode.CancellationToken,
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     const codeLenses: vscode.CodeLens[] = [];
 
@@ -171,7 +171,7 @@ class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     const lineOfSystemMessage = lines.findIndex((line) =>
-      line.includes("ContinueConfig(")
+      line.includes("ContinueConfig("),
     );
 
     if (lineOfSystemMessage >= 0) {
@@ -179,13 +179,13 @@ class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
         lineOfSystemMessage,
         0,
         lineOfSystemMessage + 1,
-        0
+        0,
       );
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: `✏️ Edit in UI`,
           command: "continue.openSettingsUI",
-        })
+        }),
       );
     }
 
@@ -265,7 +265,7 @@ const actions: TutorialCodeLensItems[] = [
 class TutorialCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
-    _: vscode.CancellationToken
+    _: vscode.CancellationToken,
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     const codeLenses: vscode.CodeLens[] = [];
 
@@ -277,7 +277,7 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
 
     for (const action of actions) {
       const lineOfAction = lines.findIndex((line) =>
-        line.includes(action.lineIncludes)
+        line.includes(action.lineIncludes),
       );
 
       if (lineOfAction >= 0) {
@@ -289,7 +289,7 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     const lineOf11 = lines.findIndex((line) =>
-      line.includes("Step 1: Highlight the function below")
+      line.includes("Step 1: Highlight the function below"),
     );
     if (lineOf11 >= 0) {
       const range = new vscode.Range(lineOf11, 0, lineOf11 + 1, 0);
@@ -298,11 +298,11 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
           title: "Highlight the function",
           command: "continue.selectRange",
           arguments: [lineOf11 + 3, lineOf11 + 11],
-        })
+        }),
       );
     }
     const lineOf21 = lines.findIndex((line) =>
-      line.includes("Step 1: Highlight this code")
+      line.includes("Step 1: Highlight this code"),
     );
     if (lineOf21 >= 0) {
       const range = new vscode.Range(lineOf21, 0, lineOf21 + 1, 0);
@@ -311,7 +311,7 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
           title: "Highlight the function",
           command: "continue.selectRange",
           arguments: [lineOf21 + 3, lineOf21 + 14],
-        })
+        }),
       );
     }
 
@@ -333,7 +333,7 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
           title: `Begin Section`,
           command: "continue.foldAndUnfold",
           arguments: [linesToFold, [lineOfRegion, lineOfRegion + 1]],
-        })
+        }),
       );
     }
 
@@ -350,7 +350,7 @@ let tutorialCodeLensDisposable: vscode.Disposable | undefined = undefined;
 export function registerAllCodeLensProviders(
   context: vscode.ExtensionContext,
   diffManager: DiffManager,
-  editorToVerticalDiffCodeLens: Map<string, VerticalDiffCodeLens[]>
+  editorToVerticalDiffCodeLens: Map<string, VerticalDiffCodeLens[]>,
 ) {
   if (verticalPerLineCodeLensProvider) {
     verticalPerLineCodeLensProvider.dispose();
@@ -370,23 +370,23 @@ export function registerAllCodeLensProviders(
 
   verticalPerLineCodeLensProvider = vscode.languages.registerCodeLensProvider(
     "*",
-    new VerticalPerLineCodeLensProvider(editorToVerticalDiffCodeLens)
+    new VerticalPerLineCodeLensProvider(editorToVerticalDiffCodeLens),
   );
   suggestionsCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",
-    new SuggestionsCodeLensProvider()
+    new SuggestionsCodeLensProvider(),
   );
   diffsCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",
-    new DiffViewerCodeLensProvider(diffManager)
+    new DiffViewerCodeLensProvider(diffManager),
   );
   configPyCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",
-    new ConfigPyCodeLensProvider()
+    new ConfigPyCodeLensProvider(),
   );
   tutorialCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",
-    new TutorialCodeLensProvider()
+    new TutorialCodeLensProvider(),
   );
   context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);

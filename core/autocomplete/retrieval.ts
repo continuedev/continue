@@ -5,7 +5,7 @@ import { IndexTag } from "../indexing/types";
 export async function fullTextRetrieve(
   prefix: string,
   suffix: string,
-  indexTag: IndexTag
+  indexTag: IndexTag,
 ): Promise<Chunk[]> {
   const index = new FullTextSearchCodebaseIndex();
   const searchStrings = prefix.split("\n").slice(-3);
@@ -16,7 +16,7 @@ export async function fullTextRetrieve(
       searchString,
       3,
       undefined,
-      undefined
+      undefined,
     );
     results.push(...chunks);
   });

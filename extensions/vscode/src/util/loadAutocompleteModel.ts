@@ -34,14 +34,14 @@ export class TabAutocompleteModel {
             .showWarningMessage(
               `Your local Ollama instance doesn't yet have ${this.defaultTagName}. To download this model, run \`ollama run ${this.defaultTag}\` (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs`,
               "Documentation",
-              "Copy Command"
+              "Copy Command",
             )
             .then((value) => {
               if (value === "Documentation") {
                 vscode.env.openExternal(
                   vscode.Uri.parse(
-                    "https://continue.dev/docs/walkthroughs/tab-autocomplete"
-                  )
+                    "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+                  ),
                 );
               } else if (value === "Copy Command") {
                 vscode.env.clipboard.writeText(`ollama run ${this.defaultTag}`);
@@ -56,14 +56,14 @@ export class TabAutocompleteModel {
         vscode.window
           .showWarningMessage(
             "Continue failed to connect to Ollama, which is used by default for tab-autocomplete. If you haven't downloaded it yet, you can do so at https://ollama.ai (recommended). If you'd like to use a custom model for tab autocomplete, learn more in the docs",
-            "Documentation"
+            "Documentation",
           )
           .then((value) => {
             if (value === "Documentation") {
               vscode.env.openExternal(
                 vscode.Uri.parse(
-                  "https://continue.dev/docs/walkthroughs/tab-autocomplete"
-                )
+                  "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+                ),
               );
             }
           });

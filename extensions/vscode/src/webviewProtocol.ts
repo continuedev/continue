@@ -33,8 +33,8 @@ export class VsCodeWebviewProtocol {
   on<T extends keyof WebviewProtocol>(
     messageType: T,
     handler: (
-      message: Message<WebviewProtocol[T][0]>
-    ) => Promise<WebviewProtocol[T][1]> | WebviewProtocol[T][1]
+      message: Message<WebviewProtocol[T][0]>,
+    ) => Promise<WebviewProtocol[T][1]> | WebviewProtocol[T][1],
   ): void {
     if (!this.listeners.has(messageType)) {
       this.listeners.set(messageType, []);
@@ -79,7 +79,7 @@ export class VsCodeWebviewProtocol {
         } catch (e: any) {
           console.error(
             "Error handling webview message: " +
-              JSON.stringify({ msg }, null, 2)
+              JSON.stringify({ msg }, null, 2),
           );
 
           let message = `Continue error: ${e.message}`;
@@ -98,11 +98,11 @@ export class VsCodeWebviewProtocol {
             .then((selection) => {
               if (selection === "Show Logs") {
                 vscode.commands.executeCommand(
-                  "workbench.action.toggleDevTools"
+                  "workbench.action.toggleDevTools",
                 );
               } else if (selection === "Troubleshooting") {
                 vscode.env.openExternal(
-                  vscode.Uri.parse("https://continue.dev/docs/troubleshooting")
+                  vscode.Uri.parse("https://continue.dev/docs/troubleshooting"),
                 );
               }
             });
@@ -114,7 +114,7 @@ export class VsCodeWebviewProtocol {
   constructor(
     private readonly ide: IDE,
     private readonly configHandler: ConfigHandler,
-    private readonly verticalDiffManager: VerticalPerLineDiffManager
+    private readonly verticalDiffManager: VerticalPerLineDiffManager,
   ) {
     this.on("abort", (msg) => {
       this.abortedMessageIds.add(msg.messageId);
@@ -214,7 +214,7 @@ export class VsCodeWebviewProtocol {
       return await ide.showDiff(
         msg.data.filepath,
         msg.data.newContents,
-        msg.data.stepIndex
+        msg.data.stepIndex,
       );
     });
 
@@ -277,12 +277,12 @@ export class VsCodeWebviewProtocol {
         this.ide.showLines(
           getConfigJsonPath(),
           startLine,
-          endLine
+          endLine,
           // "#fff1"
         );
       }
       vscode.window.showInformationMessage(
-        "🎉 Your model has been successfully added to config.json. You can use this file to further edit its configuration."
+        "🎉 Your model has been successfully added to config.json. You can use this file to further edit its configuration.",
       );
     });
     this.on("config/deleteModel", (msg) => {
@@ -296,12 +296,12 @@ export class VsCodeWebviewProtocol {
 
     async function* llmStreamComplete(
       protocol: VsCodeWebviewProtocol,
-      msg: Message<WebviewProtocol["llm/streamComplete"][0]>
+      msg: Message<WebviewProtocol["llm/streamComplete"][0]>,
     ) {
       const model = await protocol.configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamComplete(
         msg.data.prompt,
-        msg.data.completionOptions
+        msg.data.completionOptions,
       );
       let next = await gen.next();
       while (!next.done) {
@@ -320,12 +320,12 @@ export class VsCodeWebviewProtocol {
 
     async function* llmStreamChat(
       protocol: VsCodeWebviewProtocol,
-      msg: Message<WebviewProtocol["llm/streamChat"][0]>
+      msg: Message<WebviewProtocol["llm/streamChat"][0]>,
     ) {
       const model = await protocol.configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamChat(
         msg.data.messages,
-        msg.data.completionOptions
+        msg.data.completionOptions,
       );
       let next = await gen.next();
       while (!next.done) {
@@ -345,14 +345,14 @@ export class VsCodeWebviewProtocol {
       const model = await this.configHandler.llmFromTitle(msg.data.title);
       const completion = await model.complete(
         msg.data.prompt,
-        msg.data.completionOptions
+        msg.data.completionOptions,
       );
       return completion;
     });
 
     async function* runNodeJsSlashCommand(
       protocol: VsCodeWebviewProtocol,
-      msg: Message<WebviewProtocol["command/run"][0]>
+      msg: Message<WebviewProtocol["command/run"][0]>,
     ) {
       const {
         input,
@@ -368,7 +368,7 @@ export class VsCodeWebviewProtocol {
       const config = await protocol.configHandler.loadConfig();
       const llm = await protocol.configHandler.llmFromTitle(modelTitle);
       const slashCommand = config.slashCommands?.find(
-        (sc) => sc.name === slashCommandName
+        (sc) => sc.name === slashCommandName,
       );
       if (!slashCommand) {
         throw new Error(`Unknown slash command ${slashCommandName}`);
@@ -402,13 +402,13 @@ export class VsCodeWebviewProtocol {
       const { title } = msg.data;
       const config = await this.configHandler.loadConfig();
       const provider = config.contextProviders?.find(
-        (p) => p.description.title === title
+        (p) => p.description.title === title,
       );
       if (!provider) {
         vscode.window.showErrorMessage(
           `Unknown provider ${title}. Existing providers: ${config.contextProviders
             ?.map((p) => p.description.title)
-            .join(", ")}`
+            .join(", ")}`,
         );
         return [];
       }
@@ -418,7 +418,7 @@ export class VsCodeWebviewProtocol {
         return items;
       } catch (e) {
         vscode.window.showErrorMessage(
-          `Error loading submenu items from ${title}: ${e}`
+          `Error loading submenu items from ${title}: ${e}`,
         );
         return [];
       }
@@ -429,13 +429,13 @@ export class VsCodeWebviewProtocol {
       const config = await this.configHandler.loadConfig();
       const llm = await this.configHandler.llmFromTitle();
       const provider = config.contextProviders?.find(
-        (p) => p.description.title === name
+        (p) => p.description.title === name,
       );
       if (!provider) {
         vscode.window.showErrorMessage(
           `Unknown provider ${name}. Existing providers: ${config.contextProviders
             ?.map((p) => p.description.title)
-            .join(", ")}`
+            .join(", ")}`,
         );
         return [];
       }
@@ -455,7 +455,7 @@ export class VsCodeWebviewProtocol {
         return items.map((item) => ({ ...item, id }));
       } catch (e) {
         vscode.window.showErrorMessage(
-          `Error getting context items from ${name}: ${e}`
+          `Error getting context items from ${name}: ${e}`,
         );
         return [];
       }
@@ -473,7 +473,7 @@ export class VsCodeWebviewProtocol {
           for await (const update of indexDocs(
             title,
             new URL(url),
-            embeddingsProvider
+            embeddingsProvider,
           )) {
             progress.report({
               increment: update.progress,
@@ -482,11 +482,11 @@ export class VsCodeWebviewProtocol {
           }
 
           vscode.window.showInformationMessage(
-            `🎉 Successfully indexed ${title}`
+            `🎉 Successfully indexed ${title}`,
           );
 
           this.request("refreshSubmenuItems", undefined);
-        }
+        },
       );
     });
     this.on("applyToCurrentFile", (msg) => {
@@ -500,12 +500,12 @@ export class VsCodeWebviewProtocol {
       const start = new vscode.Position(0, 0);
       const end = new vscode.Position(
         document.lineCount - 1,
-        document.lineAt(document.lineCount - 1).text.length
+        document.lineAt(document.lineCount - 1).text.length,
       );
       editor.selection = new vscode.Selection(start, end);
 
       this.verticalDiffManager.streamEdit(
-        `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`
+        `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`,
       );
     });
     this.on("showTutorial", (msg) => {
@@ -519,7 +519,7 @@ export class VsCodeWebviewProtocol {
 
   public request<T extends keyof ReverseWebviewProtocol>(
     messageType: T,
-    data: ReverseWebviewProtocol[T][0]
+    data: ReverseWebviewProtocol[T][0],
   ): Promise<ReverseWebviewProtocol[T][1]> {
     const messageId = uuidv4();
     return new Promise((resolve) => {

@@ -44,7 +44,7 @@ export async function getTabCompletion(
   token: vscode.CancellationToken,
   options: TabAutocompleteOptions,
   tabAutocompleteModel: TabAutocompleteModel,
-  ide: IDE
+  ide: IDE,
 ): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
@@ -59,7 +59,7 @@ export async function getTabCompletion(
 
   try {
     // Model
-    const llm = await tabAutocompleteModel.get()
+    const llm = await tabAutocompleteModel.get();
     if (llm instanceof OpenAI) {
       llm.useLegacyCompletionsEndpoint = true;
     }
@@ -67,31 +67,36 @@ export async function getTabCompletion(
 
     // Prompt
     const fullPrefix = document.getText(
-      new vscode.Range(new vscode.Position(0, 0), pos)
+      new vscode.Range(new vscode.Position(0, 0), pos),
     );
     const fullSuffix = document.getText(
       new vscode.Range(
         pos,
-        new vscode.Position(document.lineCount, Number.MAX_SAFE_INTEGER)
-      )
+        new vscode.Position(document.lineCount, Number.MAX_SAFE_INTEGER),
+      ),
     );
     const lineBelowCursor = document.lineAt(
-      Math.min(pos.line + 1, document.lineCount - 1)
+      Math.min(pos.line + 1, document.lineCount - 1),
     ).text;
     const clipboardText = await vscode.env.clipboard.readText();
 
     let extrasSnippets = (await Promise.race([
-      getDefinitionsFromLsp(document.uri.fsPath, fullPrefix + fullSuffix, fullPrefix.length, ide),
+      getDefinitionsFromLsp(
+        document.uri.fsPath,
+        fullPrefix + fullSuffix,
+        fullPrefix.length,
+        ide,
+      ),
       new Promise((resolve) => {
         setTimeout(() => resolve([]), 100);
-      })
-    ])) as AutocompleteSnippet[]
+      }),
+    ])) as AutocompleteSnippet[];
 
     const workspaceDirs = await ide.getWorkspaceDirs();
     if (options.onlyMyCode) {
       extrasSnippets = extrasSnippets.filter((snippet) => {
         return workspaceDirs.some((dir) => snippet.filepath.startsWith(dir));
-      })
+      });
     }
 
     const { prefix, suffix, completeMultiline } =
@@ -106,7 +111,7 @@ export async function getTabCompletion(
         await recentlyEditedTracker.getRecentlyEditedRanges(),
         await recentlyEditedTracker.getRecentlyEditedDocuments(),
         llm.model,
-        extrasSnippets
+        extrasSnippets,
       );
 
     const { template, completionOptions } = options.template
@@ -120,7 +125,9 @@ export async function getTabCompletion(
     let completion = "";
 
     const cache = await autocompleteCache;
-    const cachedCompletion = options.useCache ? await cache.get(prompt) : undefined;
+    const cachedCompletion = options.useCache
+      ? await cache.get(prompt)
+      : undefined;
     let cacheHit = false;
     if (cachedCompletion) {
       // Cache
@@ -148,7 +155,7 @@ export async function getTabCompletion(
           temperature: 0,
           raw: true,
           stop,
-        })
+        }),
       );
 
       // LLM
@@ -165,9 +172,11 @@ export async function getTabCompletion(
       };
       const gen2 = onlyWhitespaceAfterEndOfLine(
         generatorWithCancellation(),
-        lang.endOfLine
+        lang.endOfLine,
       );
-      const lineGenerator = streamWithNewLines(avoidPathLine(stopAtLines(streamLines(gen2)), lang.comment));
+      const lineGenerator = streamWithNewLines(
+        avoidPathLine(stopAtLines(streamLines(gen2)), lang.comment),
+      );
       const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
       for await (const update of finalGenerator) {
         completion += update;
@@ -204,8 +213,8 @@ export async function getTabCompletion(
         if (val === "Documentation") {
           vscode.env.openExternal(
             vscode.Uri.parse(
-              "https://continue.dev/docs/walkthroughs/tab-autocomplete"
-            )
+              "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+            ),
           );
         }
       });
