@@ -16,13 +16,13 @@ import { VsCodeWebviewProtocol } from "./webviewProtocol";
 function getFullScreenTab() {
   const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
   return tabs.find(
-    (tab) => (tab.input as any).viewType?.endsWith("continue.continueGUIView")
+    (tab) => (tab.input as any)?.viewType?.endsWith("continue.continueGUIView"),
   );
 }
 
 function addHighlightedCodeToContext(
   edit: boolean,
-  webviewProtocol: VsCodeWebviewProtocol | undefined
+  webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
   const editor = vscode.window.activeTextEditor;
   if (editor) {
@@ -54,7 +54,7 @@ function addHighlightedCodeToContext(
 async function addEntireFileToContext(
   filepath: vscode.Uri,
   edit: boolean,
-  webviewProtocol: VsCodeWebviewProtocol | undefined
+  webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
   // If a directory, add all files in the directory
   const stat = await vscode.workspace.fs.stat(filepath);
@@ -65,7 +65,7 @@ async function addEntireFileToContext(
         addEntireFileToContext(
           vscode.Uri.joinPath(filepath, filename),
           edit,
-          webviewProtocol
+          webviewProtocol,
         );
       }
     }
@@ -101,14 +101,14 @@ const commandsMap: (
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
   diffManager: DiffManager,
-  verticalDiffManager: VerticalPerLineDiffManager
+  verticalDiffManager: VerticalPerLineDiffManager,
 ) => { [command: string]: (...args: any) => any } = (
   ide,
   extensionContext,
   sidebar,
   configHandler,
   diffManager,
-  verticalDiffManager
+  verticalDiffManager,
 ) => ({
   "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
     if (newFilepath instanceof vscode.Uri) {
@@ -154,7 +154,7 @@ const commandsMap: (
     }
     sidebar.webviewProtocol?.request(
       "focusContinueInputWithoutClear",
-      undefined
+      undefined,
     );
     addHighlightedCodeToContext(true, sidebar.webviewProtocol);
   },
@@ -200,7 +200,7 @@ const commandsMap: (
         {
           title: "Add Context",
           canPickMany: true,
-        }
+        },
       );
 
       let text = await vscode.window.showInputBox({
@@ -217,7 +217,7 @@ const commandsMap: (
             selectedProviders?.map((providerTitle) => {
               const provider = config.contextProviders?.find(
                 (provider) =>
-                  provider.description.title === providerTitle.description
+                  provider.description.title === providerTitle.description,
               );
               if (!provider) {
                 return [];
@@ -230,7 +230,7 @@ const commandsMap: (
                 fullInput: text || "",
                 selectedCode: [],
               });
-            }) || []
+            }) || [],
           )
         ).flat();
 
@@ -245,12 +245,12 @@ const commandsMap: (
   },
   "continue.writeCommentsForCode": async () => {
     await verticalDiffManager.streamEdit(
-      "Write comments for this code. Do not change anything about the code itself."
+      "Write comments for this code. Do not change anything about the code itself.",
     );
   },
   "continue.writeDocstringForCode": async () => {
     await verticalDiffManager.streamEdit(
-      "Write a docstring for this code. Do not change anything about the code itself."
+      "Write a docstring for this code. Do not change anything about the code itself.",
     );
   },
   "continue.fixCode": async () => {
@@ -261,7 +261,7 @@ const commandsMap: (
   },
   "continue.fixGrammar": async () => {
     await verticalDiffManager.streamEdit(
-      "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing."
+      "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
     );
   },
   "continue.viewLogs": async () => {
@@ -312,12 +312,12 @@ const commandsMap: (
       startLine,
       0,
       endLine,
-      0
+      0,
     );
   },
   "continue.foldAndUnfold": (
     foldSelectionLines: number[],
-    unfoldSelectionLines: number[]
+    unfoldSelectionLines: number[],
   ) => {
     vscode.commands.executeCommand("editor.unfold", {
       selectionLines: unfoldSelectionLines,
@@ -357,7 +357,7 @@ const commandsMap: (
       vscode.commands.executeCommand(
         "vscode.open",
         (fullScreenTab.input as any).uri,
-        openOptions
+        openOptions,
       );
       return;
     }
@@ -369,7 +369,7 @@ const commandsMap: (
     const panel = vscode.window.createWebviewPanel(
       "continue.continueGUIView",
       "Continue",
-      vscode.ViewColumn.One
+      vscode.ViewColumn.One,
     );
     panel.webview.html = sidebar.getSidebarContent(
       extensionContext,
@@ -379,12 +379,12 @@ const commandsMap: (
       verticalDiffManager,
       undefined,
       undefined,
-      true
+      true,
     );
   },
   "continue.selectFilesAsContext": (
     firstUri: vscode.Uri,
-    uris: vscode.Uri[]
+    uris: vscode.Uri[],
   ) => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
 
@@ -400,12 +400,12 @@ const commandsMap: (
     }
     const position = editor.selection.active;
     sidebar.sendMainUserInput(
-      `/references ${filepath.fsPath} ${position.line} ${position.character}`
+      `/references ${filepath.fsPath} ${position.line} ${position.character}`,
     );
   },
   "continue.logAutocompleteOutcome": (
     outcome: AutocompleteOutcome,
-    logRejectionTimeout: NodeJS.Timeout
+    logRejectionTimeout: NodeJS.Timeout,
   ) => {
     clearTimeout(logRejectionTimeout);
     outcome.accepted = true;
@@ -415,8 +415,8 @@ const commandsMap: (
       modelName: outcome.modelName,
       modelProvider: outcome.modelProvider,
       time: outcome.time,
-      cacheHit: outcome.cacheHit
-    })
+      cacheHit: outcome.cacheHit,
+    });
   },
   "continue.toggleTabAutocompleteEnabled": () => {
     const config = vscode.workspace.getConfiguration("continue");
@@ -424,7 +424,7 @@ const commandsMap: (
     config.update(
       "enableTabAutocomplete",
       !enabled,
-      vscode.ConfigurationTarget.Global
+      vscode.ConfigurationTarget.Global,
     );
   },
 });
@@ -436,7 +436,7 @@ export function registerAllCommands(
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
   diffManager: DiffManager,
-  verticalDiffManager: VerticalPerLineDiffManager
+  verticalDiffManager: VerticalPerLineDiffManager,
 ) {
   for (const [command, callback] of Object.entries(
     commandsMap(
@@ -445,11 +445,11 @@ export function registerAllCommands(
       sidebar,
       configHandler,
       diffManager,
-      verticalDiffManager
-    )
+      verticalDiffManager,
+    ),
   )) {
     context.subscriptions.push(
-      vscode.commands.registerCommand(command, callback)
+      vscode.commands.registerCommand(command, callback),
     );
   }
 }
