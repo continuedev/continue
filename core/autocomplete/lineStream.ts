@@ -223,3 +223,24 @@ export async function* filterLeadingAndTrailingNewLineInsertion(
     }
   }
 }
+
+export async function* stopAtRepeatingLines(lines: LineStream): LineStream {
+  const repeatedLines: string[] = [];
+  for await (const line of lines) {
+    if (repeatedLines.length === 0) {
+      repeatedLines.push(line);
+    } else if (repeatedLines.length < 3) {
+      if (repeatedLines[repeatedLines.length - 1] === line) {
+        repeatedLines.push(line);
+      } else {
+        while (repeatedLines.length > 0) {
+          yield repeatedLines.shift()!;
+        }
+        yield line;
+      }
+    } else {
+      yield repeatedLines[0];
+      return;
+    }
+  }
+}

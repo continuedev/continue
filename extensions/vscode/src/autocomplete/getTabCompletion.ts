@@ -8,6 +8,7 @@ import {
 import {
   avoidPathLine,
   stopAtLines,
+  stopAtRepeatingLines,
   stopAtSimilarLine,
   streamWithNewLines,
 } from "core/autocomplete/lineStream";
@@ -175,7 +176,10 @@ export async function getTabCompletion(
         lang.endOfLine,
       );
       const lineGenerator = streamWithNewLines(
-        avoidPathLine(stopAtLines(streamLines(gen2)), lang.comment),
+        avoidPathLine(
+          stopAtRepeatingLines(stopAtLines(streamLines(gen2))),
+          lang.comment,
+        ),
       );
       const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
       for await (const update of finalGenerator) {
