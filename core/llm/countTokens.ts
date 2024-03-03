@@ -44,7 +44,7 @@ function countTokens(
     return content.reduce((acc, part) => {
       return acc + part.type === "imageUrl"
         ? countImageTokens(part)
-        : encoding.encode(part.text || "", "all", []).length;
+        : encoding.encode(part.text ?? "", "all", []).length;
     }, 0);
   } else {
     return encoding.encode(content, "all", []).length;
