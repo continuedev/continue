@@ -56,8 +56,8 @@
     {
       "label": "vscode-extension:continue-ui:build",
       "type": "shell",
-      "command": "proxychains",
-      "args": ["-q", "node", "${workspaceFolder}/extensions/vscode/scripts/prepackage.js"],
+      "command": "node",
+      "args": ["${workspaceFolder}/extensions/vscode/scripts/prepackage.js"],
       "problemMatcher": ["$tsc"],
       "presentation": {
         "revealProblems": "onProblem",
