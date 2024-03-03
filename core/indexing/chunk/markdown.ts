@@ -17,7 +17,7 @@ function cleanFragment(fragment: string | undefined): string | undefined {
   }
 
   // Remove all special characters except alphanumeric, hyphen, space, and underscore
-  fragment = fragment.replace(/[^\w\d-\s]/g, "").trim();
+  fragment = fragment.replace(/[^\w-\s]/g, "").trim();
 
   // Convert to lowercase
   fragment = fragment.toLowerCase();
@@ -43,7 +43,7 @@ function cleanHeader(header: string | undefined): string | undefined {
   }
 
   // Remove all special characters except alphanumeric, hyphen, space, and underscore
-  header = header.replace(/[^\w\d-\s]/g, "").trim();
+  header = header.replace(/[^\w-\s]/g, "").trim();
 
   return header;
 }
