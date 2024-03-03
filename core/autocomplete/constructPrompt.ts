@@ -80,7 +80,7 @@ async function shouldCompleteMultiline(
   try {
     const ast = await getAst(filepath, fullPrefix + fullSuffix);
     if (!ast) {
-      throw new Error(`AST undefined for ${filepath}`);
+      return true;
     }
 
     treePath = await getTreePathAtCursor(ast, fullPrefix.length);

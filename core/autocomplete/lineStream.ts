@@ -243,4 +243,8 @@ export async function* stopAtRepeatingLines(lines: LineStream): LineStream {
       return;
     }
   }
+
+  while (repeatedLines.length > 0) {
+    yield repeatedLines.shift()!;
+  }
 }
