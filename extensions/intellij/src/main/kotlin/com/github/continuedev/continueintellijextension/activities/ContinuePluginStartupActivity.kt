@@ -229,6 +229,10 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
                 // Copy targetPath / node_sqlite3.node to core / node_sqlite3.node
                 val nodeSqlite3Path = Paths.get(targetPath, "node_sqlite3.node")
+
+                // Create the build/Release path first
+                File(Paths.get(corePath, "build", "Release").toString()).mkdirs()
+
                 val coreNodeSqlite3Path = Paths.get(corePath, "build", "Release", "node_sqlite3.node")
                 if (!File(coreNodeSqlite3Path.toString()).exists()) {
                     Files.copy(nodeSqlite3Path, coreNodeSqlite3Path)
