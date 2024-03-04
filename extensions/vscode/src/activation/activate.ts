@@ -7,6 +7,7 @@ import { VsCodeExtension } from "../extension/vscodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
+import { ManualTokenAuthProvider } from "./auth";
 import { setupInlineTips } from "./inlineTips";
 
 export async function showTutorial() {
@@ -67,6 +68,17 @@ function showRefactorMigrationMessage(
 }
 
 export async function activateExtension(context: vscode.ExtensionContext) {
+  const authProvider = vscode.authentication.registerAuthenticationProvider(
+    "manualToken",
+    "Continue Manual Token",
+    new ManualTokenAuthProvider(() => {
+      return new vscode.Disposable(() => {});
+    }, context),
+  );
+  const session = await vscode.authentication.getSession("manualToken", [], {
+    createIfNone: true,
+  });
+
   // Add necessary files
   getTsConfigPath();
 
