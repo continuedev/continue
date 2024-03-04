@@ -62,7 +62,7 @@ export function getConfigTsPath(): string {
       p,
       `export function modifyConfig(config: Config): Config {
   return config;
-}`
+}`,
     );
   }
 
@@ -83,7 +83,7 @@ export function getConfigTsPath(): string {
         version: "1.0.0",
         description: "My Continue Configuration",
         main: "config.js",
-      })
+      }),
     );
   }
 
@@ -123,8 +123,8 @@ export function getTsConfigPath(): string {
           include: ["./config.ts"],
         },
         null,
-        2
-      )
+        2,
+      ),
     );
   }
   return tsConfigPath;
@@ -143,7 +143,7 @@ export function getDevDataFilePath(fileName: string): string {
 }
 
 export function editConfigJson(
-  callback: (config: SerializedContinueConfig) => SerializedContinueConfig
+  callback: (config: SerializedContinueConfig) => SerializedContinueConfig,
 ) {
   const config = fs.readFileSync(getConfigJsonPath(), "utf8");
   let configJson = JSON.parse(config);
@@ -196,7 +196,7 @@ export function getRemoteConfigsFolderPath(): string {
 export function getPathToRemoteConfig(remoteConfigServerUrl: URL): string {
   const dir = path.join(
     getRemoteConfigsFolderPath(),
-    remoteConfigServerUrl.hostname
+    remoteConfigServerUrl.hostname,
   );
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);

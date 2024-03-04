@@ -43,7 +43,7 @@ export function jaccardSimilarity(a: string, b: string): number {
  */
 export function rankSnippets(
   ranges: RangeInFileWithContents[],
-  windowAroundCursor: string
+  windowAroundCursor: string,
 ): AutocompleteSnippet[] {
   const snippets = ranges.map((snippet) => ({
     score: jaccardSimilarity(snippet.contents, windowAroundCursor),
@@ -57,7 +57,7 @@ export function rankSnippets(
  * Deduplicate code snippets by merging overlapping ranges into a single range.
  */
 export function deduplicateSnippets(
-  snippets: AutocompleteSnippet[]
+  snippets: AutocompleteSnippet[],
 ): AutocompleteSnippet[] {
   // Group by file
   const fileGroups: { [key: string]: AutocompleteSnippet[] } = {};
@@ -77,14 +77,14 @@ export function deduplicateSnippets(
 }
 
 function mergeSnippetsByRange(
-  snippets: AutocompleteSnippet[]
+  snippets: AutocompleteSnippet[],
 ): AutocompleteSnippet[] {
   if (snippets.length === 0) {
     return snippets;
   }
 
   const sorted = snippets.sort(
-    (a, b) => a.range.start.line - b.range.start.line
+    (a, b) => a.range.start.line - b.range.start.line,
   );
   const merged: AutocompleteSnippet[] = [];
 
@@ -94,7 +94,11 @@ function mergeSnippetsByRange(
     if (merged.length > 0 && last.range.end.line >= next.range.start.line) {
       // Merge with previous snippet
       last.score = Math.max(last.score, next.score);
-      last.range.end = next.range.end;
+      try {
+        last.range.end = next.range.end;
+      } catch (e) {
+        console.log("Error merging ranges", e);
+      }
       last.contents = mergeOverlappingRangeContents(last, next);
     } else {
       merged.push(next);
@@ -106,23 +110,26 @@ function mergeSnippetsByRange(
 
 function mergeOverlappingRangeContents(
   first: RangeInFileWithContents,
-  second: RangeInFileWithContents
+  second: RangeInFileWithContents,
 ): string {
   const firstLines = first.contents.split("\n");
   const numOverlapping = first.range.end.line - second.range.start.line;
   return firstLines.slice(-numOverlapping).join("\n") + "\n" + second.contents;
 }
 
-
 /**
  * Fill the allowed space with snippets
  */
-export function fillPromptWithSnippets(snippets: AutocompleteSnippet[], maxSnippetTokens: number, modelName: string): AutocompleteSnippet[] {
+export function fillPromptWithSnippets(
+  snippets: AutocompleteSnippet[],
+  maxSnippetTokens: number,
+  modelName: string,
+): AutocompleteSnippet[] {
   let tokensRemaining = maxSnippetTokens;
-  const keptSnippets: AutocompleteSnippet[] = []
+  const keptSnippets: AutocompleteSnippet[] = [];
   for (let i = 0; i < snippets.length; i++) {
     const snippet = snippets[i];
-    const tokenCount = countTokens(snippet.contents, modelName)
+    const tokenCount = countTokens(snippet.contents, modelName);
     if (tokensRemaining - tokenCount >= 0) {
       tokensRemaining -= tokenCount;
       keptSnippets.push(snippet);
@@ -132,24 +139,24 @@ export function fillPromptWithSnippets(snippets: AutocompleteSnippet[], maxSnipp
   }
 
   return keptSnippets;
-};
+}
 
 function rangeIntersectionByLines(a: Range, b: Range): Range | null {
   const startLine = Math.max(a.start.line, b.start.line);
   const endLine = Math.min(a.end.line, b.end.line);
-  if  (startLine >= endLine) {
+  if (startLine >= endLine) {
     return null;
   } else {
     return {
       start: {
         line: startLine,
-        character: 0
+        character: 0,
       },
       end: {
         line: endLine,
-        character: 0
-      }
-    }
+        character: 0,
+      },
+    };
   }
 }
 
@@ -157,37 +164,60 @@ function rangeIntersectionByLines(a: Range, b: Range): Range | null {
  * Remove one range from another range, which may lead to returning two disjoint ranges
  */
 function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
-  if (orig.start.line >= remove.start.line && orig.end.line <= remove.end.line) {
+  if (
+    orig.start.line >= remove.start.line &&
+    orig.end.line <= remove.end.line
+  ) {
     // / | | /
     return [];
-  } else if (orig.start.line <= remove.start.line && orig.end.line >= remove.end.line) {
+  } else if (
+    orig.start.line <= remove.start.line &&
+    orig.end.line >= remove.end.line
+  ) {
     // | / / |
     // Splits the range
-    return [{
-      start: orig.start,
-      end: remove.start
-    }, {
-      start: remove.end,
-      end: orig.end
-    }]
-  } else if (orig.start.line >= remove.start.line && orig.end.line >= remove.end.line) {
+    return [
+      {
+        start: orig.start,
+        end: remove.start,
+      },
+      {
+        start: remove.end,
+        end: orig.end,
+      },
+    ];
+  } else if (
+    orig.start.line >= remove.start.line &&
+    orig.end.line >= remove.end.line
+  ) {
     // \ | / |
-    return [{
-      start: remove.end,
-      end: orig.end
-    }]
-  } else if (orig.start.line <= remove.start.line && orig.end.line <= remove.end.line) {
+    return [
+      {
+        start: remove.end,
+        end: orig.end,
+      },
+    ];
+  } else if (
+    orig.start.line <= remove.start.line &&
+    orig.end.line <= remove.end.line
+  ) {
     // | / | /
-    return [{
-      start: orig.start,
-      end: remove.start
-    }]
+    return [
+      {
+        start: orig.start,
+        end: remove.start,
+      },
+    ];
   } else {
-    return [orig]
+    return [orig];
   }
 }
 
-export function removeRangeFromSnippets(snippets: AutocompleteSnippet[], filepath: string, range: Range): AutocompleteSnippet[] {
+export function removeRangeFromSnippets(
+  snippets: AutocompleteSnippet[],
+  filepath: string,
+  range: Range,
+): AutocompleteSnippet[] {
   const finalSnippets: AutocompleteSnippet[] = [];
   for (let snippet of snippets) {
     if (snippet.filepath !== filepath) {
@@ -199,7 +229,12 @@ export function removeRangeFromSnippets(snippets: AutocompleteSnippet[], filepat
     if (!intersection) {
       finalSnippets.push(snippet);
     } else {
-      finalSnippets.push(...rangeDifferenceByLines(snippet.range, intersection).map(range => ({...snippet, range})));
+      finalSnippets.push(
+        ...rangeDifferenceByLines(snippet.range, intersection).map((range) => ({
+          ...snippet,
+          range,
+        })),
+      );
     }
   }
 

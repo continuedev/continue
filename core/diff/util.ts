@@ -28,7 +28,7 @@ function linesMatch(lineA: string, lineB: string): boolean {
 export function matchLine(
   newLine: string,
   oldLines: string[],
-  permissiveAboutIndentation: boolean = false
+  permissiveAboutIndentation: boolean = false,
 ): [number, boolean, string] {
   // Only match empty lines if it's the next one:
   if (newLine.trim() === "" && oldLines[0]?.trim() === "") {
@@ -57,7 +57,7 @@ export function matchLine(
  * Convert a stream of arbitrary chunks to a stream of lines
  */
 export async function* streamLines(
-  streamCompletion: AsyncGenerator<string>
+  streamCompletion: AsyncGenerator<string>,
 ): LineStream {
   let buffer = "";
   for await (const chunk of streamCompletion) {

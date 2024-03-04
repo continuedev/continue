@@ -19,11 +19,11 @@ class GooglePalm extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     for await (const message of this._streamChat(
       [{ content: prompt, role: "user" }],
-      options
+      options,
     )) {
       yield stripImages(message.content);
     }
@@ -45,20 +45,20 @@ class GooglePalm extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     let convertedMsgs = this.removeSystemMessage(messages);
     if (options.model.includes("gemini")) {
       for await (const message of this.streamChatGemini(
         convertedMsgs,
-        options
+        options,
       )) {
         yield message;
       }
     } else {
       for await (const message of this.streamChatBison(
         convertedMsgs,
-        options
+        options,
       )) {
         yield message;
       }
@@ -80,7 +80,7 @@ class GooglePalm extends BaseLLM {
 
   private async *streamChatGemini(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const apiURL = `${this.apiBase}/v1/models/${options.model}:streamGenerateContent?key=${this.apiKey}`;
     const body = {
@@ -150,7 +150,7 @@ class GooglePalm extends BaseLLM {
   }
   private async *streamChatBison(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const msgList = [];
     for (const message of messages) {

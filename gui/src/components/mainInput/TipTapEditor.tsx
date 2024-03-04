@@ -10,6 +10,7 @@ import {
   ContextProviderDescription,
   RangeInFile,
 } from "core";
+import { modelSupportsImages } from "core/llm/autodetect";
 import { getBasename } from "core/util";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -27,6 +28,7 @@ import { SubmenuContextProvidersContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
@@ -102,7 +104,7 @@ function getDataUrlForFile(file: File, img): string {
   const targetHeight = 512;
   const scaleFactor = Math.min(
     targetWidth / img.width,
-    targetHeight / img.height
+    targetHeight / img.height,
   );
 
   const canvas = document.createElement("canvas");
@@ -131,7 +133,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
 
   const historyLength = useSelector(
-    (store: RootState) => store.state.history.length
+    (store: RootState) => store.state.history.length,
   );
 
   const [inputFocused, setInputFocused] = useState(false);
@@ -172,21 +174,23 @@ function TipTapEditor(props: TipTapEditorProps) {
   };
 
   const contextItems = useSelector(
-    (store: RootState) => store.state.contextItems
+    (store: RootState) => store.state.contextItems,
   );
+
+  const defaultModel = useSelector(defaultModelSelector);
 
   const getSubmenuContextItemsRef = useUpdatingRef(getSubmenuContextItems);
   const availableContextProvidersRef = useUpdatingRef(
-    props.availableContextProviders
+    props.availableContextProviders,
   );
 
   const historyLengthRef = useUpdatingRef(historyLength);
   const availableSlashCommandsRef = useUpdatingRef(
-    props.availableSlashCommands
+    props.availableSlashCommands,
   );
 
   async function handleImageFile(
-    file: File
+    file: File,
   ): Promise<[HTMLImageElement, string] | undefined> {
     let filesize = file.size / 1024 / 1024; // filesize in MB
     // check image type and size
@@ -279,7 +283,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           enterSubmenu,
           onClose,
           onOpen,
-          inSubmenuRef
+          inSubmenuRef,
         ),
         renderHTML: (props) => {
           return `@${props.node.attrs.label || props.node.attrs.id}`;
@@ -292,7 +296,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         suggestion: getCommandSuggestion(
           availableSlashCommandsRef,
           onClose,
-          onOpen
+          onOpen,
         ),
         renderText: (props) => {
           return props.node.attrs.label;
@@ -336,7 +340,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           ) {
             // Update context items
             dispatch(
-              setEditingContextItemAtIndex({ item: codeBlock.attrs.item })
+              setEditingContextItemAtIndex({ item: codeBlock.attrs.item }),
             );
             return;
           }
@@ -346,13 +350,13 @@ function TipTapEditor(props: TipTapEditorProps) {
   });
 
   const onEnterRef = useUpdatingRef(() => {
-    const json = editor.getJSON()
+    const json = editor.getJSON();
 
     // Don't do anything if input box is empty
-    if (!json.content?.some(c => c.content)) {
-      return
+    if (!json.content?.some((c) => c.content)) {
+      return;
     }
-    
+
     props.onEnter(json);
 
     if (props.isMainInput) {
@@ -391,7 +395,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     if (editor && !active && props.isMainInput) {
       editor.commands.focus();
     }
-  }, [props.isMainInput, active,editor])
+  }, [props.isMainInput, active, editor]);
 
   // IDE event listeners
   useWebviewListener(
@@ -403,7 +407,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       editor?.commands.insertContent(data.input);
       onEnterRef.current();
     },
-    [editor, onEnterRef.current, props.isMainInput]
+    [editor, onEnterRef.current, props.isMainInput],
   );
 
   useWebviewListener(
@@ -419,7 +423,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         editor?.commands.focus("end");
       }, 20);
     },
-    [historyLength, saveSession, editor, props.isMainInput]
+    [historyLength, saveSession, editor, props.isMainInput],
   );
 
   useWebviewListener(
@@ -432,7 +436,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput]
+    [editor, props.isMainInput],
   );
 
   useWebviewListener(
@@ -446,7 +450,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         editor?.commands.focus("end");
       }, 20);
     },
-    [editor, props.isMainInput]
+    [editor, props.isMainInput],
   );
 
   useWebviewListener(
@@ -500,7 +504,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       historyLength,
       ignoreHighlightedCode,
       props.isMainInput,
-    ]
+    ],
   );
 
   useEffect(() => {
@@ -560,6 +564,9 @@ function TipTapEditor(props: TipTapEditorProps) {
         setShowDragOverMsg(true);
       }}
       onDrop={(event) => {
+        if (!modelSupportsImages(defaultModel.provider, defaultModel.model)) {
+          return;
+        }
         setShowDragOverMsg(false);
         let file = event.dataTransfer.files[0];
         handleImageFile(file).then(([img, dataUrl]) => {
@@ -606,12 +613,13 @@ function TipTapEditor(props: TipTapEditorProps) {
           });
         }}
       />
-      {showDragOverMsg && (
-        <>
-          <HoverDiv></HoverDiv>
-          <HoverTextDiv>Hold ⇧ to drop image</HoverTextDiv>
-        </>
-      )}
+      {showDragOverMsg &&
+        modelSupportsImages(defaultModel.provider, defaultModel.model) && (
+          <>
+            <HoverDiv></HoverDiv>
+            <HoverTextDiv>Hold ⇧ to drop image</HoverTextDiv>
+          </>
+        )}
     </InputBoxDiv>
   );
 }

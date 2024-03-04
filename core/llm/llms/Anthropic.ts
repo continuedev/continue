@@ -36,7 +36,7 @@ class Anthropic extends BaseLLM {
 
   protected async _complete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): Promise<string> {
     const response = await this.fetch(this.apiBase + "/complete", {
       method: "POST",
@@ -57,7 +57,7 @@ class Anthropic extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const response = await this.fetch(this.apiBase + "/complete", {
       method: "POST",

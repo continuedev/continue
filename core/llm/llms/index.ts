@@ -38,7 +38,7 @@ function convertToLetter(num: number): string {
 }
 
 const getHandlebarsVars = (
-  value: string
+  value: string,
 ): [string, { [key: string]: string }] => {
   const ast = Handlebars.parse(value);
 
@@ -50,7 +50,7 @@ const getHandlebarsVars = (
       keysToFilepath[letter] = (ast.body[i] as any).path.original;
       value = value.replace(
         new RegExp("{{\\s*" + (ast.body[i] as any).path.original + "\\s*}}"),
-        `{{${letter}}}`
+        `{{${letter}}}`,
       );
       keyIndex++;
     }
@@ -60,7 +60,7 @@ const getHandlebarsVars = (
 
 async function renderTemplatedString(
   template: string,
-  readFile: (filepath: string) => Promise<string>
+  readFile: (filepath: string) => Promise<string>,
 ): Promise<string> {
   const [newTemplate, vars] = getHandlebarsVars(template);
   template = newTemplate;
@@ -100,7 +100,7 @@ export async function llmFromDescription(
   desc: ModelDescription,
   readFile: (filepath: string) => Promise<string>,
   completionOptions?: BaseCompletionOptions,
-  systemMessage?: string
+  systemMessage?: string,
 ): Promise<BaseLLM | undefined> {
   const cls = LLMs.find((llm) => llm.providerName === desc.provider);
 
@@ -136,7 +136,7 @@ export async function llmFromDescription(
 
 export function llmFromProviderAndOptions(
   providerName: string,
-  llmOptions: LLMOptions
+  llmOptions: LLMOptions,
 ): ILLM {
   const cls = LLMs.find((llm) => llm.providerName === providerName);
 

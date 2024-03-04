@@ -36,9 +36,9 @@ export class VerticalPerLineDiffHandler {
     >,
     private readonly clearForFilepath: (
       filepath: string | undefined,
-      accept: boolean
+      accept: boolean,
     ) => void,
-    input?: string
+    input?: string,
   ) {
     this.currentLineIndex = startLine;
     this.startLine = startLine;
@@ -48,11 +48,11 @@ export class VerticalPerLineDiffHandler {
 
     this.redDecorationManager = new DecorationTypeRangeManager(
       redDecorationType,
-      this.editor
+      this.editor,
     );
     this.greenDecorationManager = new DecorationTypeRangeManager(
       greenDecorationType,
-      this.editor
+      this.editor,
     );
   }
 
@@ -93,16 +93,16 @@ export class VerticalPerLineDiffHandler {
     // Insert the block of deleted lines
     await this.insertTextAboveLine(
       this.currentLineIndex - this.insertedInCurrentBlock,
-      totalDeletedContent
+      totalDeletedContent,
     );
     this.redDecorationManager.addLines(
       this.currentLineIndex - this.insertedInCurrentBlock,
-      this.deletionBuffer.length
+      this.deletionBuffer.length,
     );
     // Shift green decorations downward
     this.greenDecorationManager.shiftDownAfterLine(
       this.currentLineIndex - this.insertedInCurrentBlock,
-      this.deletionBuffer.length
+      this.deletionBuffer.length,
     );
 
     // Update line index, clear buffer
@@ -128,9 +128,9 @@ export class VerticalPerLineDiffHandler {
         editBuilder.insert(
           new vscode.Position(
             lineCount,
-            this.editor.document.lineAt(lineCount - 1).text.length
+            this.editor.document.lineAt(lineCount - 1).text.length,
           ),
-          "\n" + text
+          "\n" + text,
         );
       } else {
         editBuilder.insert(new vscode.Position(index, 0), text + "\n");
@@ -148,7 +148,7 @@ export class VerticalPerLineDiffHandler {
     const startLine = new vscode.Position(index, 0);
     await this.editor.edit((editBuilder) => {
       editBuilder.delete(
-        new vscode.Range(startLine, startLine.translate(numLines))
+        new vscode.Range(startLine, startLine.translate(numLines)),
       );
     });
   }
@@ -164,7 +164,7 @@ export class VerticalPerLineDiffHandler {
       this.editor.setDecorations(indexDecorationType, [
         new vscode.Range(
           start,
-          new vscode.Position(start.line, Number.MAX_SAFE_INTEGER)
+          new vscode.Position(start.line, Number.MAX_SAFE_INTEGER),
         ),
       ]);
       const end = new vscode.Position(this.endLine, 0);
@@ -183,7 +183,7 @@ export class VerticalPerLineDiffHandler {
     vscode.commands.executeCommand(
       "setContext",
       "continue.streamingDiff",
-      false
+      false,
     );
     const rangesToDelete = accept
       ? this.redDecorationManager.getRanges()
@@ -200,8 +200,8 @@ export class VerticalPerLineDiffHandler {
         editBuilder.delete(
           new vscode.Range(
             range.start,
-            new vscode.Position(range.end.line + 1, 0)
-          )
+            new vscode.Position(range.end.line + 1, 0),
+          ),
         );
       }
     });
@@ -265,7 +265,7 @@ export class VerticalPerLineDiffHandler {
     accept: boolean,
     startLine: number,
     numGreen: number,
-    numRed: number
+    numRed: number,
   ) {
     if (numGreen > 0) {
       // Delete the editor decoration

@@ -10,7 +10,7 @@ export interface RangeInFileWithContents {
 }
 
 export function contextItemToRangeInFileWithContents(
-  item: ContextItemWithId
+  item: ContextItemWithId,
 ): RangeInFileWithContents {
   const lines = item.name.split("(")[1].split(")")[0].split("-");
 

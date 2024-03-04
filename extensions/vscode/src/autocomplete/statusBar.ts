@@ -17,7 +17,7 @@ export function stopStatusBarLoading() {
 
 export function setupStatusBar(
   enabled: boolean | undefined,
-  loading?: boolean
+  loading?: boolean,
 ) {
   if (loading !== false) {
     clearTimeout(statusBarFalseTimeout);
@@ -25,7 +25,7 @@ export function setupStatusBar(
   }
 
   const statusBarItem = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Right
+    vscode.StatusBarAlignment.Right,
   );
   statusBarItem.text = loading
     ? "$(loading~spin) Continue"

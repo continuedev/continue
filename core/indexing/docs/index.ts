@@ -13,7 +13,7 @@ import { convertURLToMarkdown } from "./urlToMarkdown";
 export async function* indexDocs(
   title: string,
   baseUrl: URL,
-  embeddingsProvider: EmbeddingsProvider
+  embeddingsProvider: EmbeddingsProvider,
 ): AsyncGenerator<IndexingProgressUpdate> {
   const existingDocs = await listDocs();
   if (existingDocs.find((doc) => doc.baseUrl === baseUrl.toString())) {
@@ -50,7 +50,7 @@ export async function* indexDocs(
   const embeddings: number[][] = [];
 
   let markdownForSubpaths = await Promise.all(
-    subpaths.map((subpath) => convertURLToMarkdown(new URL(subpath, baseUrl)))
+    subpaths.map((subpath) => convertURLToMarkdown(new URL(subpath, baseUrl))),
   );
 
   // Filter out undefineds
@@ -79,7 +79,7 @@ export async function* indexDocs(
     }
 
     const subpathEmbeddings = await embeddingsProvider.embed(
-      markdownChunks.map((chunk) => chunk.content)
+      markdownChunks.map((chunk) => chunk.content),
     );
 
     markdownChunks.forEach((chunk, index) => {

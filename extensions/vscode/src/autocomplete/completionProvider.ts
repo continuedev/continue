@@ -20,13 +20,17 @@ export class ContinueCompletionProvider
 
   public static errorsShown: Set<string> = new Set();
 
-  constructor(private readonly configHandler: ConfigHandler, private readonly ide: IDE, private readonly tabAutocompleteModel: TabAutocompleteModel) {}
+  constructor(
+    private readonly configHandler: ConfigHandler,
+    private readonly ide: IDE,
+    private readonly tabAutocompleteModel: TabAutocompleteModel,
+  ) {}
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
     context: vscode.InlineCompletionContext,
-    token: vscode.CancellationToken
+    token: vscode.CancellationToken,
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
     // Debounce
@@ -44,7 +48,7 @@ export class ContinueCompletionProvider
       const lastUUID = await new Promise((resolve) =>
         setTimeout(() => {
           resolve(ContinueCompletionProvider.lastUUID);
-        }, options.debounceDelay)
+        }, options.debounceDelay),
       );
       if (uuid !== lastUUID) {
         return [];
@@ -71,7 +75,7 @@ export class ContinueCompletionProvider
         token,
         options,
         this.tabAutocompleteModel,
-        this.ide
+        this.ide,
       );
       const completion = outcome?.completion;
 
@@ -84,7 +88,7 @@ export class ContinueCompletionProvider
         if (!outcome.cacheHit) {
           (await ContinueCompletionProvider.autocompleteCache).put(
             outcome.prompt,
-            completion
+            completion,
           );
         }
       }, 100);
@@ -103,7 +107,7 @@ export class ContinueCompletionProvider
             title: "Log Autocomplete Outcome",
             command: "continue.logAutocompleteOutcome",
             arguments: [outcome, logRejectionTimeout],
-          }
+          },
         ),
       ];
     } catch (e: any) {

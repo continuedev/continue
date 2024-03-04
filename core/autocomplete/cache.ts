@@ -32,14 +32,14 @@ export class AutocompleteLruCache {
   async get(key: string): Promise<string | undefined> {
     const result = await this.db.get(
       "SELECT value FROM cache WHERE key = ?",
-      key
+      key,
     );
 
     if (result) {
       await this.db.run(
         "UPDATE cache SET timestamp = ? WHERE key = ?",
         Date.now(),
-        key
+        key,
       );
       return result.value;
     }
@@ -50,7 +50,7 @@ export class AutocompleteLruCache {
   async put(key: string, value: string) {
     const result = await this.db.get(
       "SELECT key FROM cache WHERE key = ?",
-      key
+      key,
     );
 
     if (result) {
@@ -58,14 +58,14 @@ export class AutocompleteLruCache {
         "UPDATE cache SET value = ?, timestamp = ? WHERE key = ?",
         value,
         Date.now(),
-        key
+        key,
       );
     } else {
       const count = await this.db.get("SELECT COUNT(*) as count FROM cache");
 
       if (count.count >= AutocompleteLruCache.capacity) {
         await this.db.run(
-          "DELETE FROM cache WHERE key = (SELECT key FROM cache ORDER BY timestamp ASC LIMIT 1)"
+          "DELETE FROM cache WHERE key = (SELECT key FROM cache ORDER BY timestamp ASC LIMIT 1)",
         );
       }
 
@@ -73,7 +73,7 @@ export class AutocompleteLruCache {
         "INSERT INTO cache (key, value, timestamp) VALUES (?, ?, ?)",
         key,
         value,
-        Date.now()
+        Date.now(),
       );
     }
   }

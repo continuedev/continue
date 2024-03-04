@@ -164,7 +164,7 @@ export class CapturedTerminal {
 
   constructor(
     options: { name: string } & Partial<vscode.ExtensionTerminalOptions>,
-    onCommandOutput?: (output: string) => void
+    onCommandOutput?: (output: string) => void,
   ) {
     this.onCommandOutput = onCommandOutput;
 
@@ -205,7 +205,7 @@ export class CapturedTerminal {
               (line) =>
                 line.trim().length > 0 &&
                 line.trim() !== "%" &&
-                line.trim() !== "⏎"
+                line.trim() !== "⏎",
             );
           const lastLine = strippedLines[strippedLines.length - 1] || "";
           const lines = lastLine
@@ -214,7 +214,7 @@ export class CapturedTerminal {
               (line) =>
                 line.trim().length > 0 &&
                 line.trim() !== "%" &&
-                line.trim() !== "⏎"
+                line.trim() !== "⏎",
             );
           const commandPromptString = (lines[lines.length - 1] || "").trim();
           if (
@@ -225,7 +225,7 @@ export class CapturedTerminal {
             this.seenClear = false;
             this.commandPromptString = commandPromptString;
             console.log(
-              "Found command prompt string: " + this.commandPromptString
+              "Found command prompt string: " + this.commandPromptString,
             );
             if (this.resolveMeWhenCommandPromptStringFound) {
               this.resolveMeWhenCommandPromptStringFound(undefined);

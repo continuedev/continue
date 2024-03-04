@@ -64,7 +64,7 @@ export const defaultConfig: SerializedContinueConfig = {
     title: "Starcoder 3b",
     provider: "ollama",
     model: "starcoder-3b",
-  }
+  },
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {

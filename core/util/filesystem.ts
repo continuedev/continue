@@ -45,7 +45,7 @@ class FileSystemIde implements IDE {
   showLines(
     filepath: string,
     startLine: number,
-    endLine: number
+    endLine: number,
   ): Promise<void> {
     return Promise.resolve();
   }
@@ -110,7 +110,7 @@ class FileSystemIde implements IDE {
   showDiff(
     filepath: string,
     newContents: string,
-    stepIndex: number
+    stepIndex: number,
   ): Promise<void> {
     return Promise.resolve();
   }

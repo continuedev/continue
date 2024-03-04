@@ -2,9 +2,7 @@ import { ConfigHandler } from "core/config/handler";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import {
-  ContinueCompletionProvider,
-} from "../autocomplete/completionProvider";
+import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
 import { setupStatusBar } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
@@ -38,7 +36,7 @@ export class VsCodeExtension {
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
-      "Continue - LLM Prompt/Completion"
+      "Continue - LLM Prompt/Completion",
     );
     this.configHandler = new ConfigHandler(
       this.ide,
@@ -47,19 +45,19 @@ export class VsCodeExtension {
         : new URL(remoteUrl),
       async (log: string) => {
         outputChannel.appendLine(
-          "=========================================================================="
+          "==========================================================================",
         );
         outputChannel.appendLine(
-          "=========================================================================="
+          "==========================================================================",
         );
         outputChannel.append(log);
       },
-      () => this.webviewProtocol?.request("configUpdate", undefined)
+      () => this.webviewProtocol?.request("configUpdate", undefined),
     );
 
     this.configHandler.reloadConfig();
     this.verticalDiffManager = new VerticalPerLineDiffManager(
-      this.configHandler
+      this.configHandler,
     );
     this.extensionContext = context;
     this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
@@ -69,11 +67,11 @@ export class VsCodeExtension {
       this.ide,
       this.windowId,
       this.extensionContext,
-      this.verticalDiffManager
+      this.verticalDiffManager,
     );
     try {
       const configSync = new RemoteConfigSync(
-        this.configHandler.reloadConfig.bind(this.configHandler)
+        this.configHandler.reloadConfig.bind(this.configHandler),
       );
       configSync.setup();
     } catch (e) {
@@ -87,14 +85,14 @@ export class VsCodeExtension {
         this.sidebar,
         {
           webviewOptions: { retainContextWhenHidden: true },
-        }
-      )
+        },
+      ),
     );
     this.webviewProtocol = this.sidebar.webviewProtocol;
 
     // Indexing + pause token
     const indexingPauseToken = new PauseToken(
-      context.globalState.get<boolean>("continue.indexingPaused") === true
+      context.globalState.get<boolean>("continue.indexingPaused") === true,
     );
     this.webviewProtocol.on("index/setPaused", (msg) => {
       context.globalState.update("continue.indexingPaused", msg.data);
@@ -105,14 +103,14 @@ export class VsCodeExtension {
     this.indexer = new CodebaseIndexer(
       this.configHandler,
       this.ide,
-      indexingPauseToken
+      indexingPauseToken,
     );
 
     // CodeLens
     registerAllCodeLensProviders(
       context,
       this.diffManager,
-      this.verticalDiffManager.editorToVerticalDiffCodeLens
+      this.verticalDiffManager.editorToVerticalDiffCodeLens,
     );
 
     // Tab autocomplete
@@ -131,9 +129,9 @@ export class VsCodeExtension {
           new ContinueCompletionProvider(
             this.configHandler,
             this.ide,
-            this.tabAutocompleteModel
-          )
-        )
+            this.tabAutocompleteModel,
+          ),
+        ),
       );
     }
 
@@ -145,7 +143,7 @@ export class VsCodeExtension {
       this.sidebar,
       this.configHandler,
       this.diffManager,
-      this.verticalDiffManager
+      this.verticalDiffManager,
     );
 
     registerDebugTracker(this.webviewProtocol);
@@ -196,7 +194,7 @@ export class VsCodeExtension {
             }
           });
         }
-      })
+      }),
     );
 
     // Register a content provider for the readonly virtual documents
@@ -214,8 +212,8 @@ export class VsCodeExtension {
     context.subscriptions.push(
       vscode.workspace.registerTextDocumentContentProvider(
         VsCodeExtension.continueVirtualDocumentScheme,
-        documentContentProvider
-      )
+        documentContentProvider,
+      ),
     );
   }
 

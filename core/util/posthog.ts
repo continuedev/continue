@@ -26,7 +26,7 @@ export class Telemetry {
             "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs",
             {
               host: "https://app.posthog.com",
-            }
+            },
           );
         }
       } catch (e) {

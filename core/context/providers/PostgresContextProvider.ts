@@ -3,8 +3,8 @@ import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-  LoadSubmenuItemsArgs,
   ContextSubmenuItem,
+  LoadSubmenuItemsArgs,
 } from "../..";
 
 class PostgresContextProvider extends BaseContextProvider {
@@ -51,13 +51,13 @@ FROM information_schema.tables`;
     }
     const { rows: tablesInfo } = await pool.query(tablesInfoQuery);
     return tablesInfo.map(
-      (tableInfo: any) => `${tableInfo.table_schema}.${tableInfo.table_name}`
+      (tableInfo: any) => `${tableInfo.table_schema}.${tableInfo.table_name}`,
     );
   }
 
   async getContextItems(
     query: string = "",
-    _: ContextProviderExtras = {} as ContextProviderExtras
+    _: ContextProviderExtras = {} as ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const pool = await this.getPool();
 
@@ -75,7 +75,7 @@ FROM information_schema.tables`;
         // Get the table schema
         if (!tableName.includes(".")) {
           throw new Error(
-            `Table name must be in format schema.table_name, got ${tableName}`
+            `Table name must be in format schema.table_name, got ${tableName}`,
           );
         }
         var schemaQuery = `
@@ -115,7 +115,7 @@ LIMIT ${sampleRows}`);
   }
 
   async loadSubmenuItems(
-    _: LoadSubmenuItemsArgs
+    _: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const pool = await this.getPool();
 

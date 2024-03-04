@@ -120,7 +120,7 @@ class Flowise extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const message: ChatMessage = { role: "user", content: prompt };
     for await (const chunk of this._streamChat([message], options)) {
@@ -130,7 +130,7 @@ class Flowise extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const requestBody = this._getRequestBody(messages, options);
     const { socket, socketInfo } = await this._initializeSocket();
@@ -156,7 +156,7 @@ class Flowise extends BaseLLM {
 
   protected _getRequestBody(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): any {
     const lastMessage = messages[messages.length - 1];
     const history = messages
@@ -200,7 +200,7 @@ class Flowise extends BaseLLM {
             socketInfo.internal.hasNextTokenPromiseResolve =
               hasNextTokenResolve;
             socketInfo.internal.hasNextTokenPromiseReject = hasNextTokenReject;
-          }
+          },
         );
       };
       const resetTimeout = () => {

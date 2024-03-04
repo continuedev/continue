@@ -17,7 +17,7 @@ class CodebaseContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     return retrieveContextItemsFromEmbeddings(extras, this.options, undefined);
   }

@@ -8,7 +8,11 @@ import { ContinueRcJson, IDE, IdeInfo, Problem, Range } from "core";
 import { DiffManager } from "./diff/horizontal";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { traverseDirectory } from "./util/traverseDirectory";
-import { getExtensionUri, openEditorAndRevealRange } from "./util/vscode";
+import {
+  getExtensionUri,
+  openEditorAndRevealRange,
+  uriFromFilePath,
+} from "./util/vscode";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
@@ -40,11 +44,7 @@ class VsCodeIde implements IDE {
     const pathToLastModified: { [path: string]: number } = {};
     await Promise.all(
       files.map(async (file) => {
-        const uri = vscode.Uri.from({
-          scheme: scheme ? scheme : "file",
-          path: file,
-        });
-        let stat = await vscode.workspace.fs.stat(uri);
+        let stat = await vscode.workspace.fs.stat(uriFromFilePath(file));
         pathToLastModified[file] = stat.mtime;
       }),
     );

@@ -60,7 +60,7 @@ export function getTheme() {
       const filename = builtinThemes[colorTheme] + ".json";
       currentTheme = fs
         .readFileSync(
-          path.join(getExtensionUri().fsPath, "builtin-themes", filename)
+          path.join(getExtensionUri().fsPath, "builtin-themes", filename),
         )
         .toString();
     }
@@ -71,7 +71,7 @@ export function getTheme() {
     if (parsed.include) {
       const includeThemeString = fs
         .readFileSync(
-          path.join(getExtensionUri().fsPath, "builtin-themes", parsed.include)
+          path.join(getExtensionUri().fsPath, "builtin-themes", parsed.include),
         )
         .toString();
       const includeTheme = parseThemeString(includeThemeString);

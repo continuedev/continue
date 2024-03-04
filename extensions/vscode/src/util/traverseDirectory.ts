@@ -98,10 +98,10 @@ export async function* traverseDirectory(
   directory: string,
   gitIgnorePatterns: string[],
   returnFiles: boolean = true,
-  onlyThisDirectory: string[] | undefined
+  onlyThisDirectory: string[] | undefined,
 ): AsyncGenerator<string> {
   const nodes = await vscode.workspace.fs.readDirectory(
-    uriFromFilePath(directory)
+    uriFromFilePath(directory),
   );
   const files: string[] = [];
   const dirs: string[] = [];
@@ -118,13 +118,13 @@ export async function* traverseDirectory(
           if (isIgnoreFilepath(name)) {
             // Make sure you are respecting windows with linux dev container
             const bytes = await vscode.workspace.fs.readFile(
-              uriFromFilePath(path.join(directory, name))
+              uriFromFilePath(path.join(directory, name)),
             );
             const contents = new TextDecoder().decode(bytes);
             ignorePatterns.push(
               ...contents
                 .split("\n")
-                .filter((p) => p.trim() !== "" && p[0] !== "#")
+                .filter((p) => p.trim() !== "" && p[0] !== "#"),
             );
           } else {
             files.push(name);
@@ -144,7 +144,7 @@ export async function* traverseDirectory(
         return "**/" + pattern;
       }
       return pattern;
-    }
+    },
   );
   const ig = ignore().add(allIgnorePatterns);
 
@@ -192,7 +192,7 @@ export async function* traverseDirectory(
         returnFiles,
         onlyThisDirectory && onlyThisDirectory.length > 1
           ? onlyThisDirectory.slice(1)
-          : undefined
+          : undefined,
       )) {
         yield file;
       }

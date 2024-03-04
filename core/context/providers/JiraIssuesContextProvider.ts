@@ -59,7 +59,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const issueId = query;
 
@@ -89,7 +89,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
           const commentText = convert(comment.body).result;
 
           return `### ${comment.author.displayName} on ${comment.created}\n\n${commentText}`;
-        })
+        }),
       );
     }
 
@@ -105,7 +105,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
   }
 
   async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const api = await this.createApi();
 

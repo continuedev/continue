@@ -3,7 +3,7 @@ import { AutocompleteSnippet, jaccardSimilarity } from "./ranking";
 
 function* slidingWindow(
   content: string,
-  windowSize: number
+  windowSize: number,
 ): Generator<string> {
   const lines = content.split("\n");
 
@@ -35,7 +35,7 @@ export async function slidingWindowMatcher(
   recentDocuments: RangeInFileWithContents[],
   windowAroundCursor: string,
   topN: number,
-  windowSize: number
+  windowSize: number,
 ): Promise<AutocompleteSnippet[]> {
   // Sorted lowest similarity to highest
   const topMatches: AutocompleteSnippet[] = [];

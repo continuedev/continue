@@ -15,7 +15,7 @@ class TerminalContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const content = await extras.ide.getTerminalContents();
     return [

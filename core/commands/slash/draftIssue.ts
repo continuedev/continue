@@ -4,7 +4,7 @@ import { removeQuotesAndEscapes } from "../../util";
 
 const PROMPT = (
   input: string,
-  title: string
+  title: string,
 ) => `You will be asked to generate the body of a GitHub issue given a user request. You should follow these rules:
 - Be descriptive but do not make up details
 - If the the user request includes any code snippets that are relevant, reference them in code blocks
@@ -31,7 +31,7 @@ const DraftIssueCommand: SlashCommand = {
     }
     let title = await llm.complete(
       `Generate a title for the GitHub issue requested in this user input: '${input}'. Use no more than 20 words and output nothing other than the title. Do not surround it with quotes. The title is: `,
-      { maxTokens: 20 }
+      { maxTokens: 20 },
     );
 
     title = removeQuotesAndEscapes(title.trim()) + "\n\n";
@@ -49,7 +49,7 @@ const DraftIssueCommand: SlashCommand = {
     }
 
     const url = `${params.repositoryUrl}/issues/new?title=${encodeURIComponent(
-      title
+      title,
     )}&body=${encodeURIComponent(body)}`;
     yield `\n\n[Link to draft of issue](${url})`;
   },
