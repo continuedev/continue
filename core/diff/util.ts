@@ -1,4 +1,6 @@
 import { distance } from "fastest-levenshtein";
+import { ChatMessage } from "..";
+import { stripImages } from "../llm/countTokens";
 
 export type LineStream = AsyncGenerator<string>;
 
@@ -57,10 +59,12 @@ export function matchLine(
  * Convert a stream of arbitrary chunks to a stream of lines
  */
 export async function* streamLines(
-  streamCompletion: AsyncGenerator<string>,
+  streamCompletion: AsyncGenerator<string | ChatMessage>,
 ): LineStream {
   let buffer = "";
-  for await (const chunk of streamCompletion) {
+  for await (const update of streamCompletion) {
+    const chunk =
+      typeof update === "string" ? update : stripImages(update.content);
     buffer += chunk;
     const lines = buffer.split("\n");
     buffer = lines.pop() ?? "";

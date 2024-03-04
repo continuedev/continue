@@ -493,7 +493,13 @@
               "model": {
                 "anyOf": [
                   {
-                    "enum": ["claude-2", "claude-instant-1"]
+                    "enum": [
+                      "claude-2",
+                      "claude-instant-1",
+                      "claude-3-opus-20240229",
+                      "claude-3-sonnet-20240229",
+                      "claude-2.1"
+                    ]
                   },
                   {
                     "type": "string"
@@ -837,6 +843,10 @@
                       "deepseek-7b",
                       "deepseek-33b",
                       "claude-2",
+                      "claude-instant-1",
+                      "claude-3-opus-20240229",
+                      "claude-3-sonnet-20240229",
+                      "claude-2.1",
                       "chat-bison-001",
                       "gemini-pro",
                       "mistral-tiny",

@@ -526,12 +526,54 @@ const gpt35turbo: ModelPackage = {
 };
 
 const claude2: ModelPackage = {
-  title: "Claude-2",
+  title: "Claude 2",
   description: "A highly capable model with a 100k context length",
   params: {
+    model: "claude-2.1",
+    contextLength: 100_000,
+    title: "Claude 2",
+    apiKey: "",
+  },
+  providerOptions: ["anthropic"],
+  icon: "anthropic.png",
+};
+
+const claude3Opus: ModelPackage = {
+  title: "Claude 3 Opus",
+  description:
+    "Anthropic's most capable model, beating GPT-4 on many benchmarks",
+  params: {
+    model: "claude-3-opus-20240229",
+    contextLength: 200_000,
+    title: "Claude 3 Opus",
+    apiKey: "",
+  },
+  providerOptions: ["anthropic"],
+  icon: "anthropic.png",
+};
+
+const claude3Sonnet: ModelPackage = {
+  title: "Claude 3 Sonnet",
+  description:
+    "The second most capable model in the Claude 3 series: ideal balance of intelligence and speed",
+  params: {
+    model: "claude-3-sonnet-20240229",
+    contextLength: 200_000,
+    title: "Claude 3 Sonnet",
+    apiKey: "",
+  },
+  providerOptions: ["anthropic"],
+  icon: "anthropic.png",
+};
+
+const claude3Haiku: ModelPackage = {
+  title: "Claude 3 Haiku",
+  description:
+    "The third most capable model in the Claude 3 series: fastest and most compact model for near-instant responsiveness",
+  params: {
     model: "claude-2",
-    contextLength: 100000,
-    title: "Claude-2",
+    contextLength: 200_000,
+    title: "Claude 3 Haiku",
     apiKey: "",
   },
   providerOptions: ["anthropic"],
@@ -567,6 +609,8 @@ export const MODEL_INFO: ModelPackage[] = [
   gpt4,
   gpt35turbo,
   geminiPro,
+  claude3Opus,
+  claude3Sonnet,
   claude2,
   deepseek,
   mistral,
@@ -616,7 +660,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     provider: "anthropic",
     refPage: "anthropicllm",
     description:
-      "Claude-2 is a highly capable model with a 100k context length",
+      "Anthropic builds state-of-the-art models with large context length and high recall",
     icon: "anthropic.png",
     tags: [ModelProviderTag["Requires API Key"]],
     longDescription:
@@ -635,17 +679,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         defaultValue: 100_000,
       },
     ],
-    packages: [
-      {
-        title: "Claude-2",
-        description: "A highly capable model with a 100k context length",
-        params: {
-          model: "claude-2",
-          contextLength: 100000,
-          title: "Claude-2",
-        },
-      },
-    ],
+    packages: [claude3Opus, claude3Sonnet, claude2],
   },
   ollama: {
     title: "Ollama",
