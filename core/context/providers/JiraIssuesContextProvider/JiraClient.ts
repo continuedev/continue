@@ -1,5 +1,6 @@
 
 import type { AxiosInstance } from "axios";
+const { convert: adf2md } = require("adf-to-md");
 
 interface JiraClientOptions {
   domain: string;
@@ -102,20 +103,18 @@ export class JiraClient {
     
     result.key = issue.key;
     result.summary = issue.fields.summary;
-    
-    // @ts-ignore
-    const adf2md = await import("adf2md/dist/adf2md.min.js");
+
     
     if (typeof issue.fields.description === 'string') {
       result.description = issue.fields.description;
     } else if(issue.fields.description) {
-      result.description = adf2md.convert(issue.fields.description).result;
+      result.description = adf2md(issue.fields.description).result;
     } else {
       result.description = "";
     }
 
     result.comments = issue.fields.comment?.comments?.map((comment) => {
-      const body = typeof comment.body === 'string' ? comment.body : adf2md.convert(comment.body).result;
+      const body = typeof comment.body === 'string' ? comment.body : adf2md(comment.body).result;
 
       return {
         body,

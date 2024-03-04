@@ -129,6 +129,18 @@ Type '@jira' to reference the conversation in a Jira issue. Make sure to include
 }
 ```
 
+#### Jira Datacenter Support
+
+This context provider supports both Jira API version 2 and 3. It will use version 3 by default since
+that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need
+to set the API Version to 2 using the `apiVersion` property.
+
+```json
+  "params": {
+    "apiVersion": "2",
+    ...
+  }
+
 #### Issue Query
 
 By default, the following query will be used to find issues:

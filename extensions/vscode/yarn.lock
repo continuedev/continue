@@ -2314,7 +2314,7 @@ core-util-is@1.0.2:
     "@octokit/rest" "^20.0.2"
     "@types/node-fetch" "^2.6.11"
     "@xenova/transformers" "^2.14.0"
-    adf2md "^2.0.0"
+    adf-to-md "^1.1.0"
     axios "^1.6.7"
     cheerio "^1.0.0-rc.12"
     dotenv "^16.3.1"
