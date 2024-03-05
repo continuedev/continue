@@ -179,7 +179,7 @@ function autodetectTemplateFunction(
     return null;
   }
 
-  const templateType = explicitTemplate || autodetectTemplateType(model);
+  const templateType = explicitTemplate ?? autodetectTemplateType(model);
 
   if (templateType) {
     const mapping: Record<TemplateType, any> = {
@@ -209,7 +209,7 @@ function autodetectPromptTemplates(
   model: string,
   explicitTemplate: TemplateType | undefined = undefined,
 ) {
-  const templateType = explicitTemplate || autodetectTemplateType(model);
+  const templateType = explicitTemplate ?? autodetectTemplateType(model);
   const templates: Record<string, any> = {};
 
   let editTemplate = null;

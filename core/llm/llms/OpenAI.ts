@@ -139,7 +139,7 @@ class OpenAI extends BaseLLM {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey || "", // For Azure
+        "api-key": this.apiKey ?? "", // For Azure
       },
       body: JSON.stringify({
         ...args,
@@ -189,7 +189,7 @@ class OpenAI extends BaseLLM {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey || "", // For Azure
+        "api-key": this.apiKey ?? "", // For Azure
       },
       body: JSON.stringify(body),
     });
@@ -206,7 +206,7 @@ class OpenAI extends BaseLLM {
       method: "GET",
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey || "", // For Azure
+        "api-key": this.apiKey ?? "", // For Azure
       },
     });
 
