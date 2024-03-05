@@ -17,11 +17,25 @@ export class ContinueCompletionProvider
   private static debouncing: boolean = false;
   private static lastUUID: string | undefined = undefined;
 
-  private generatorReuseManager = new GeneratorReuseManager((err: any) => {
-    vscode.window.showErrorMessage(
-      `Error generating autocomplete response: ${err}`,
-    );
-  });
+  private onError(e: any) {
+    console.warn("Error generating autocompletion: ", e);
+    if (!this.errorsShown.has(e.message)) {
+      this.errorsShown.add(e.message);
+      vscode.window.showErrorMessage(e.message, "Documentation").then((val) => {
+        if (val === "Documentation") {
+          vscode.env.openExternal(
+            vscode.Uri.parse(
+              "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+            ),
+          );
+        }
+      });
+    }
+  }
+
+  private generatorReuseManager = new GeneratorReuseManager(
+    this.onError.bind(this),
+  );
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
 
@@ -114,21 +128,7 @@ export class ContinueCompletionProvider
         ),
       ];
     } catch (e: any) {
-      console.warn("Error generating autocompletion: ", e);
-      if (!this.errorsShown.has(e.message)) {
-        this.errorsShown.add(e.message);
-        vscode.window
-          .showErrorMessage(e.message, "Documentation")
-          .then((val) => {
-            if (val === "Documentation") {
-              vscode.env.openExternal(
-                vscode.Uri.parse(
-                  "https://continue.dev/docs/walkthroughs/tab-autocomplete",
-                ),
-              );
-            }
-          });
-      }
+      this.onError(e);
     } finally {
       stopStatusBarLoading();
     }
