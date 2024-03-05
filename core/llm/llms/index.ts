@@ -124,11 +124,11 @@ export async function llmFromDescription(
       ...finalCompletionOptions,
       model: (desc.model || cls.defaultOptions?.model) ?? "codellama-7b",
       maxTokens: (
-          finalCompletionOptions.maxTokens ??
-          cls.defaultOptions?.completionOptions?.maxTokens
+        finalCompletionOptions.maxTokens ??
+        cls.defaultOptions?.completionOptions?.maxTokens
       ) ?? DEFAULT_MAX_TOKENS,
     },
-  systemMessage,
+    systemMessage,
 };
 
   return new cls(options);
