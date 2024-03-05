@@ -23,7 +23,7 @@ export class ConfigHandler {
     ide: IDE,
     remoteConfigServerUrl: URL | undefined,
     writeLog: (text: string) => void,
-    onConfigUpdate: () => void
+    onConfigUpdate: () => void,
   ) {
     this.ide = ide;
     this.remoteConfigServerUrl = remoteConfigServerUrl;
@@ -40,7 +40,7 @@ export class ConfigHandler {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
     this.loadConfig();
-    this.onConfigUpdate()
+    this.onConfigUpdate();
   }
 
   async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
@@ -69,7 +69,7 @@ export class ConfigHandler {
         this.ide.readFile,
         workspaceConfigs,
         this.remoteConfigServerUrl,
-        ideInfo.ideType
+        ideInfo.ideType,
       );
       this.savedConfig.allowAnonymousTelemetry =
         this.savedConfig.allowAnonymousTelemetry &&
@@ -78,7 +78,7 @@ export class ConfigHandler {
       // Setup telemetry only after (and if) we know it is enabled
       await Telemetry.setup(
         this.savedConfig.allowAnonymousTelemetry ?? true,
-        await this.ide.getUniqueId()
+        await this.ide.getUniqueId(),
       );
 
       return this.savedConfig;
@@ -98,7 +98,7 @@ export class ConfigHandler {
         : llm.requestOptions?.caBundlePath;
     if (customCerts) {
       ca.push(
-        ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8"))
+        ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8")),
       );
     }
 
@@ -174,7 +174,7 @@ export class ConfigHandler {
           }
         }
         throw new Error(
-          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`
+          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
         );
       }
 

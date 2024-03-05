@@ -8,7 +8,7 @@ import { codeChunker } from "./code";
 async function* chunkDocumentWithoutId(
   filepath: string,
   contents: string,
-  maxChunkSize: number
+  maxChunkSize: number,
 ): AsyncGenerator<ChunkWithoutID> {
   if (contents.trim() === "") {
     return;
@@ -35,19 +35,19 @@ export async function* chunkDocument(
   filepath: string,
   contents: string,
   maxChunkSize: number,
-  digest: string
+  digest: string,
 ): AsyncGenerator<Chunk> {
   let index = 0;
   for await (let chunkWithoutId of chunkDocumentWithoutId(
     filepath,
     contents,
-    maxChunkSize
+    maxChunkSize,
   )) {
     if (countTokens(chunkWithoutId.content) > MAX_CHUNK_SIZE) {
       console.warn(
         `Chunk with more than ${maxChunkSize} tokens constructed: `,
         filepath,
-        countTokens(chunkWithoutId.content)
+        countTokens(chunkWithoutId.content),
       );
       continue;
     }

@@ -98,7 +98,7 @@ We also support other methods of generating embeddings, which can be configured 
 
 OpenAI's [embeddings](https://platform.openai.com/docs/guides/embeddings) are high dimensional embeddings that give great performance on both text and code.
 
-Configuration for text-embedding-3-small Model
+Configuration for text-embedding-3-small Model. This is default. 
 The text-embedding-3-small model offers an outstanding balance between performance and efficiency, suitable for a versatile range of applications.
 
 ```json title="~/.continue/config.json"

@@ -33,7 +33,7 @@ export class SqliteDb {
             path STRING NOT NULL,
             cacheKey STRING NOT NULL,
             lastUpdated INTEGER NOT NULL
-        )`
+        )`,
     );
 
     await db.exec(
@@ -43,7 +43,7 @@ export class SqliteDb {
             dir STRING NOT NULL,
             branch STRING NOT NULL,
             artifactId STRING NOT NULL
-        )`
+        )`,
     );
   }
 
@@ -67,7 +67,7 @@ export class SqliteDb {
 }
 
 async function getSavedItemsForTag(
-  tag: IndexTag
+  tag: IndexTag,
 ): Promise<{ path: string; cacheKey: string; lastUpdated: number }[]> {
   const db = await SqliteDb.get();
   const stmt = await db.prepare(
@@ -75,7 +75,7 @@ async function getSavedItemsForTag(
     WHERE dir = ? AND branch = ? AND artifactId = ?`,
     tag.directory,
     tag.branch,
-    tag.artifactId
+    tag.artifactId,
   );
   const rows = await stmt.all();
   return rows;
@@ -96,7 +96,7 @@ enum AddRemoveResultType {
 async function getAddRemoveForTag(
   tag: IndexTag,
   currentFiles: LastModifiedMap,
-  readFile: (path: string) => Promise<string>
+  readFile: (path: string) => Promise<string>,
 ): Promise<[PathAndCacheKey[], PathAndCacheKey[], MarkCompleteCallback]> {
   const newLastUpdatedTimestamp = Date.now();
 
@@ -137,8 +137,8 @@ async function getAddRemoveForTag(
       Object.keys(currentFiles).map(async (path) => {
         const fileContents = await readFile(path);
         return { path, cacheKey: calculateHash(fileContents) };
-      })
-    ))
+      }),
+    )),
   );
 
   // Create the markComplete callback function
@@ -159,7 +159,7 @@ async function getAddRemoveForTag(
             newLastUpdatedTimestamp,
             tag.directory,
             tag.branch,
-            tag.artifactId
+            tag.artifactId,
           );
           break;
         case AddRemoveResultType.Remove:
@@ -175,7 +175,7 @@ async function getAddRemoveForTag(
             path,
             tag.directory,
             tag.branch,
-            tag.artifactId
+            tag.artifactId,
           );
           break;
         case AddRemoveResultType.UpdateNewVersion:
@@ -194,7 +194,7 @@ async function getAddRemoveForTag(
             path,
             tag.directory,
             tag.branch,
-            tag.artifactId
+            tag.artifactId,
           );
           break;
         case AddRemoveResultType.UpdateOldVersion:
@@ -235,11 +235,11 @@ async function getAddRemoveForTag(
  */
 async function getTagsFromGlobalCache(
   cacheKey: string,
-  artifactId: string
+  artifactId: string,
 ): Promise<IndexTag[]> {
   const db = await SqliteDb.get();
   const stmt = await db.prepare(
-    `SELECT dir, branch, artifactId FROM global_cache WHERE cacheKey = ? AND artifactId = ?`
+    `SELECT dir, branch, artifactId FROM global_cache WHERE cacheKey = ? AND artifactId = ?`,
   );
   const rows = await stmt.all(cacheKey, artifactId);
   return rows;
@@ -254,12 +254,12 @@ function calculateHash(fileContents: string): string {
 export async function getComputeDeleteAddRemove(
   tag: IndexTag,
   currentFiles: LastModifiedMap,
-  readFile: (path: string) => Promise<string>
+  readFile: (path: string) => Promise<string>,
 ): Promise<[RefreshIndexResults, MarkCompleteCallback]> {
   const [add, remove, markComplete] = await getAddRemoveForTag(
     tag,
     currentFiles,
-    readFile
+    readFile,
   );
 
   const compute: PathAndCacheKey[] = [];
@@ -333,7 +333,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
   async *update(
     tag: IndexTag,
     results: RefreshIndexResults,
-    _: MarkCompleteCallback
+    _: MarkCompleteCallback,
   ): AsyncGenerator<IndexingProgressUpdate> {
     const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];
@@ -350,26 +350,26 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
 
   private async computeOrAddTag(
     cacheKey: string,
-    tag: IndexTag
+    tag: IndexTag,
   ): Promise<void> {
     await this.db.run(
       "INSERT INTO global_cache (cacheKey, dir, branch, artifactId) VALUES (?, ?, ?, ?)",
       cacheKey,
       tag.directory,
       tag.branch,
-      tag.artifactId
+      tag.artifactId,
     );
   }
   private async deleteOrRemoveTag(
     cacheKey: string,
-    tag: IndexTag
+    tag: IndexTag,
   ): Promise<void> {
     await this.db.run(
       "DELETE FROM global_cache WHERE cacheKey = ? AND dir = ? AND branch = ? AND artifactId = ?",
       cacheKey,
       tag.directory,
       tag.branch,
-      tag.artifactId
+      tag.artifactId,
     );
   }
 }

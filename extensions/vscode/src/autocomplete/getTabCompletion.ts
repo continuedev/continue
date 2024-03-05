@@ -8,6 +8,7 @@ import {
 import {
   avoidPathLine,
   stopAtLines,
+  stopAtRepeatingLines,
   stopAtSimilarLine,
   streamWithNewLines,
 } from "core/autocomplete/lineStream";
@@ -19,7 +20,6 @@ import OpenAI from "core/llm/llms/OpenAI";
 import Handlebars from "handlebars";
 import * as vscode from "vscode";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
-import { ContinueCompletionProvider } from "./completionProvider";
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
 import { setupStatusBar, stopStatusBarLoading } from "./statusBar";
@@ -44,7 +44,8 @@ export async function getTabCompletion(
   token: vscode.CancellationToken,
   options: TabAutocompleteOptions,
   tabAutocompleteModel: TabAutocompleteModel,
-  ide: IDE
+  ide: IDE,
+  generatorReuseManager: GeneratorReuseManager,
 ): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
@@ -57,159 +58,156 @@ export async function getTabCompletion(
     }
   }
 
-  try {
-    // Model
-    const llm = await tabAutocompleteModel.get()
-    if (llm instanceof OpenAI) {
-      llm.useLegacyCompletionsEndpoint = true;
-    }
-    if (!llm) return;
+  // Model
+  const llm = await tabAutocompleteModel.get();
+  if (llm instanceof OpenAI) {
+    llm.useLegacyCompletionsEndpoint = true;
+  }
+  if (!llm) return;
 
-    // Prompt
-    const fullPrefix = document.getText(
-      new vscode.Range(new vscode.Position(0, 0), pos)
+  // Prompt
+  const fullPrefix = document.getText(
+    new vscode.Range(new vscode.Position(0, 0), pos),
+  );
+  const fullSuffix = document.getText(
+    new vscode.Range(
+      pos,
+      new vscode.Position(document.lineCount, Number.MAX_SAFE_INTEGER),
+    ),
+  );
+  const lineBelowCursor = document.lineAt(
+    Math.min(pos.line + 1, document.lineCount - 1),
+  ).text;
+  const clipboardText = await vscode.env.clipboard.readText();
+
+  let extrasSnippets = (await Promise.race([
+    getDefinitionsFromLsp(
+      document.uri.fsPath,
+      fullPrefix + fullSuffix,
+      fullPrefix.length,
+      ide,
+    ),
+    new Promise((resolve) => {
+      setTimeout(() => resolve([]), 100);
+    }),
+  ])) as AutocompleteSnippet[];
+
+  const workspaceDirs = await ide.getWorkspaceDirs();
+  if (options.onlyMyCode) {
+    extrasSnippets = extrasSnippets.filter((snippet) => {
+      return workspaceDirs.some((dir) => snippet.filepath.startsWith(dir));
+    });
+  }
+
+  const { prefix, suffix, completeMultiline } =
+    await constructAutocompletePrompt(
+      document.uri.toString(),
+      pos.line,
+      fullPrefix,
+      fullSuffix,
+      clipboardText,
+      lang,
+      options,
+      await recentlyEditedTracker.getRecentlyEditedRanges(),
+      await recentlyEditedTracker.getRecentlyEditedDocuments(),
+      llm.model,
+      extrasSnippets,
     );
-    const fullSuffix = document.getText(
-      new vscode.Range(
-        pos,
-        new vscode.Position(document.lineCount, Number.MAX_SAFE_INTEGER)
-      )
-    );
-    const lineBelowCursor = document.lineAt(
-      Math.min(pos.line + 1, document.lineCount - 1)
-    ).text;
-    const clipboardText = await vscode.env.clipboard.readText();
 
-    let extrasSnippets = (await Promise.race([
-      getDefinitionsFromLsp(document.uri.fsPath, fullPrefix + fullSuffix, fullPrefix.length, ide),
-      new Promise((resolve) => {
-        setTimeout(() => resolve([]), 100);
-      })
-    ])) as AutocompleteSnippet[]
+  const { template, completionOptions } = options.template
+    ? { template: options.template, completionOptions: {} }
+    : getTemplateForModel(llm.model);
 
-    const workspaceDirs = await ide.getWorkspaceDirs();
-    if (options.onlyMyCode) {
-      extrasSnippets = extrasSnippets.filter((snippet) => {
-        return workspaceDirs.some((dir) => snippet.filepath.startsWith(dir));
-      })
-    }
+  const compiledTemplate = Handlebars.compile(template);
+  const prompt = compiledTemplate({ prefix, suffix });
 
-    const { prefix, suffix, completeMultiline } =
-      await constructAutocompletePrompt(
-        document.uri.toString(),
-        pos.line,
-        fullPrefix,
-        fullSuffix,
-        clipboardText,
-        lang,
-        options,
-        await recentlyEditedTracker.getRecentlyEditedRanges(),
-        await recentlyEditedTracker.getRecentlyEditedDocuments(),
-        llm.model,
-        extrasSnippets
-      );
+  // Completion
+  let completion = "";
 
-    const { template, completionOptions } = options.template
-      ? { template: options.template, completionOptions: {} }
-      : getTemplateForModel(llm.model);
+  const cache = await autocompleteCache;
+  const cachedCompletion = options.useCache
+    ? await cache.get(prompt)
+    : undefined;
+  let cacheHit = false;
+  if (cachedCompletion) {
+    // Cache
+    cacheHit = true;
+    completion = cachedCompletion;
+  } else {
+    setupStatusBar(true, true);
 
-    const compiledTemplate = Handlebars.compile(template);
-    const prompt = compiledTemplate({ prefix, suffix });
+    // Try to reuse pending requests if what the user typed matches start of completion
+    let stop = [
+      ...(completionOptions?.stop || []),
+      "\n\n",
+      "```",
+      ...lang.stopWords,
+    ];
 
-    // Completion
-    let completion = "";
+    const multiline =
+      options.multilineCompletions !== "never" &&
+      (options.multilineCompletions === "always" || completeMultiline);
 
-    const cache = await autocompleteCache;
-    const cachedCompletion = options.useCache ? await cache.get(prompt) : undefined;
-    let cacheHit = false;
-    if (cachedCompletion) {
-      // Cache
-      cacheHit = true;
-      completion = cachedCompletion;
-    } else {
-      setupStatusBar(true, true);
-
-      // Try to reuse pending requests if what the user typed matches start of completion
-      let stop = [
-        ...(completionOptions?.stop || []),
-        "\n\n",
-        "```",
-        ...lang.stopWords,
-      ];
-      if (
-        options.multilineCompletions !== "always" &&
-        (options.multilineCompletions === "never" || !completeMultiline)
-      ) {
-        stop.unshift("\n");
-      }
-      let generator = GeneratorReuseManager.getGenerator(prefix, () =>
+    let generator = generatorReuseManager.getGenerator(
+      prefix,
+      () =>
         llm.streamComplete(prompt, {
           ...completionOptions,
           temperature: 0,
           raw: true,
           stop,
-        })
-      );
+        }),
+      multiline,
+    );
 
-      // LLM
-      let cancelled = false;
-      const generatorWithCancellation = async function* () {
-        for await (const update of generator) {
-          if (token.isCancellationRequested) {
-            stopStatusBarLoading();
-            cancelled = true;
-            return undefined;
-          }
-          yield update;
+    // LLM
+    let cancelled = false;
+    const generatorWithCancellation = async function* () {
+      for await (const update of generator) {
+        if (token.isCancellationRequested) {
+          stopStatusBarLoading();
+          cancelled = true;
+          return undefined;
         }
-      };
-      const gen2 = onlyWhitespaceAfterEndOfLine(
-        generatorWithCancellation(),
-        lang.endOfLine
-      );
-      const lineGenerator = streamWithNewLines(avoidPathLine(stopAtLines(streamLines(gen2)), lang.comment));
-      const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
-      for await (const update of finalGenerator) {
-        completion += update;
+        yield update;
       }
-
-      if (cancelled) {
-        return undefined;
-      }
-
-      // Don't return empty
-      if (completion.trim().length <= 0) {
-        return undefined;
-      }
-
-      // Post-processing
-      completion = completion.trimEnd();
-    }
-
-    const time = Date.now() - startTime;
-    return {
-      time,
-      completion,
-      prompt,
-      modelProvider: llm.providerName,
-      modelName: llm.model,
-      completionOptions,
-      cacheHit,
     };
-  } catch (e: any) {
-    console.warn("Error generating autocompletion: ", e);
-    if (!ContinueCompletionProvider.errorsShown.has(e.message)) {
-      ContinueCompletionProvider.errorsShown.add(e.message);
-      vscode.window.showErrorMessage(e.message, "Documentation").then((val) => {
-        if (val === "Documentation") {
-          vscode.env.openExternal(
-            vscode.Uri.parse(
-              "https://continue.dev/docs/walkthroughs/tab-autocomplete"
-            )
-          );
-        }
-      });
+    const gen2 = onlyWhitespaceAfterEndOfLine(
+      generatorWithCancellation(),
+      lang.endOfLine,
+    );
+    const lineGenerator = streamWithNewLines(
+      avoidPathLine(
+        stopAtRepeatingLines(stopAtLines(streamLines(gen2))),
+        lang.comment,
+      ),
+    );
+    const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
+    for await (const update of finalGenerator) {
+      completion += update;
     }
-    return undefined;
+
+    if (cancelled) {
+      return undefined;
+    }
+
+    // Don't return empty
+    if (completion.trim().length <= 0) {
+      return undefined;
+    }
+
+    // Post-processing
+    completion = completion.trimEnd();
   }
+
+  const time = Date.now() - startTime;
+  return {
+    time,
+    completion,
+    prompt,
+    modelProvider: llm.providerName,
+    modelName: llm.model,
+    completionOptions,
+    cacheHit,
+  };
 }

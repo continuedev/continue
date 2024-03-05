@@ -15,7 +15,7 @@ class SearchContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const results = await extras.ide.getSearchResults(query);
     return [

@@ -3,7 +3,7 @@ import { pruneStringFromBottom, stripImages } from "../../llm/countTokens";
 
 const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
 const PROMPT = (
-  input: string
+  input: string,
 ) => `The above sources are excerpts from related StackOverflow questions. Use them to help answer the below question from our user. Provide links to the sources in markdown whenever possible:
 
 ${input}
@@ -82,7 +82,7 @@ const StackOverflowSlashCommand: SlashCommand = {
         sources[sources.length - 1] = pruneStringFromBottom(
           llm.model,
           contextLength - (totalTokens - newTokens),
-          sources[sources.length - 1]
+          sources[sources.length - 1],
         );
         shouldBreak = true;
       }

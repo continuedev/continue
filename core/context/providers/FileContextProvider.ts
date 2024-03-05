@@ -18,7 +18,7 @@ class FileContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     // Assume the query is a filepath
     query = query.trim();
@@ -33,13 +33,13 @@ class FileContextProvider extends BaseContextProvider {
   }
 
   async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const workspaceDirs = await args.ide.getWorkspaceDirs();
     const results = await Promise.all(
       workspaceDirs.map((dir) => {
         return args.ide.listWorkspaceContents(dir);
-      })
+      }),
     );
     const files = results.flat();
     return files.map((file) => {

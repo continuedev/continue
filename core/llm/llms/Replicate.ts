@@ -34,7 +34,7 @@ class Replicate extends BaseLLM {
 
   private _convertArgs(
     options: CompletionOptions,
-    prompt: string
+    prompt: string,
   ): [`${string}/${string}:${string}`, { input: any }] {
     return [
       Replicate.MODEL_IDS[options.model] || (options.model as any),
@@ -51,7 +51,7 @@ class Replicate extends BaseLLM {
 
   protected async _complete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): Promise<string> {
     const [model, args] = this._convertArgs(options, prompt);
     const response = await this._replicate.run(model, args);
@@ -61,7 +61,7 @@ class Replicate extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const [model, args] = this._convertArgs(options, prompt);
     for await (const event of this._replicate.stream(model, args)) {

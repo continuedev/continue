@@ -45,7 +45,7 @@ function shouldFilterPath(pathname: string, baseUrl: URL): boolean {
 async function* crawlLinks(
   path: string,
   baseUrl: URL,
-  visited: Set<string>
+  visited: Set<string>,
 ): AsyncGenerator<number> {
   if (visited.has(path) || shouldFilterPath(path, baseUrl)) {
     return;
@@ -78,7 +78,7 @@ async function* crawlLinks(
     children.map(async (child) => {
       for await (const _ of crawlLinks(child, baseUrl, visited)) {
       }
-    })
+    }),
   );
   yield visited.size;
 }
@@ -105,12 +105,12 @@ async function crawlGithubRepo(baseUrl: URL) {
         "X-GitHub-Api-Version": "2022-11-28",
       },
       recursive: "true",
-    }
+    },
   );
 
   const paths = tree.data.tree
     .filter(
-      (file) => file.type === "blob" && file.path?.endsWith(".md")
+      (file) => file.type === "blob" && file.path?.endsWith(".md"),
       // ||
       // file.path?.endsWith(".rst") ||
       // file.path?.split("/").includes("documentation") ||
@@ -125,7 +125,7 @@ async function crawlGithubRepo(baseUrl: URL) {
 }
 
 export async function* crawlSubpages(
-  baseUrl: URL
+  baseUrl: URL,
 ): AsyncGenerator<number, string[]> {
   // Special case for GitHub repos
   if (baseUrl.hostname === "github.com") {
@@ -158,7 +158,7 @@ export async function* crawlSubpages(
   for await (const count of crawlLinks(
     realBaseUrl.pathname || "/",
     realBaseUrl,
-    visited
+    visited,
   )) {
     yield count;
   }

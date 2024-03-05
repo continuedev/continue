@@ -12,7 +12,7 @@ import { setupInlineTips } from "./inlineTips";
 export async function showTutorial() {
   const tutorialPath = path.join(
     getExtensionUri().fsPath,
-    "continue_tutorial.py"
+    "continue_tutorial.py",
   );
   // Ensure keyboard shortcuts match OS
   if (process.platform !== "darwin") {
@@ -22,7 +22,7 @@ export async function showTutorial() {
   }
 
   const doc = await vscode.workspace.openTextDocument(
-    vscode.Uri.file(tutorialPath)
+    vscode.Uri.file(tutorialPath),
   );
   await vscode.window.showTextDocument(doc);
 }
@@ -35,7 +35,7 @@ async function openTutorialFirstTime(context: vscode.ExtensionContext) {
 }
 
 function showRefactorMigrationMessage(
-  extensionContext: vscode.ExtensionContext
+  extensionContext: vscode.ExtensionContext,
 ) {
   // Only if the vscode setting continue.manuallyRunningSserver is true
   const manuallyRunningServer =
@@ -45,21 +45,21 @@ function showRefactorMigrationMessage(
   if (
     manuallyRunningServer &&
     extensionContext?.globalState.get<boolean>(
-      "continue.showRefactorMigrationMessage"
+      "continue.showRefactorMigrationMessage",
     ) !== false
   ) {
     vscode.window
       .showInformationMessage(
         "The Continue server protocol was recently updated in a way that requires the latest server version to work properly. Since you are manually running the server, please be sure to upgrade with `pip install --upgrade continuedev`.",
         "Got it",
-        "Don't show again"
+        "Don't show again",
       )
       .then((selection) => {
         if (selection === "Don't show again") {
           // Get the global state
           extensionContext?.globalState.update(
             "continue.showRefactorMigrationMessage",
-            false
+            false,
           );
         }
       });
@@ -82,8 +82,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
     vscode.commands.executeCommand(
       "markdown.showPreview",
       vscode.Uri.file(
-        path.join(getExtensionUri().fsPath, "media", "welcome.md")
-      )
+        path.join(getExtensionUri().fsPath, "media", "welcome.md"),
+      ),
     );
   });
 

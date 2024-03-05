@@ -1,6 +1,7 @@
 import { IDE } from "core";
 import AutocompleteLruCache from "core/autocomplete/cache";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
+import { GeneratorReuseManager } from "core/autocomplete/util";
 import { ConfigHandler } from "core/config/handler";
 import { logDevData } from "core/util/devdata";
 import { v4 as uuidv4 } from "uuid";
@@ -16,17 +17,25 @@ export class ContinueCompletionProvider
   private static debouncing: boolean = false;
   private static lastUUID: string | undefined = undefined;
 
-  private static autocompleteCache = AutocompleteLruCache.get();
+  private generatorReuseManager = new GeneratorReuseManager((err: any) => {
+    vscode.window.showErrorMessage(
+      `Error generating autocomplete response: ${err}`,
+    );
+  });
+  private autocompleteCache = AutocompleteLruCache.get();
+  public errorsShown: Set<string> = new Set();
 
-  public static errorsShown: Set<string> = new Set();
-
-  constructor(private readonly configHandler: ConfigHandler, private readonly ide: IDE, private readonly tabAutocompleteModel: TabAutocompleteModel) {}
+  constructor(
+    private readonly configHandler: ConfigHandler,
+    private readonly ide: IDE,
+    private readonly tabAutocompleteModel: TabAutocompleteModel,
+  ) {}
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
     position: vscode.Position,
     context: vscode.InlineCompletionContext,
-    token: vscode.CancellationToken
+    token: vscode.CancellationToken,
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
     // Debounce
@@ -44,7 +53,7 @@ export class ContinueCompletionProvider
       const lastUUID = await new Promise((resolve) =>
         setTimeout(() => {
           resolve(ContinueCompletionProvider.lastUUID);
-        }, options.debounceDelay)
+        }, options.debounceDelay),
       );
       if (uuid !== lastUUID) {
         return [];
@@ -71,7 +80,8 @@ export class ContinueCompletionProvider
         token,
         options,
         this.tabAutocompleteModel,
-        this.ide
+        this.ide,
+        this.generatorReuseManager,
       );
       const completion = outcome?.completion;
 
@@ -82,10 +92,7 @@ export class ContinueCompletionProvider
       // Do some stuff later so as not to block return. Latency matters
       setTimeout(async () => {
         if (!outcome.cacheHit) {
-          (await ContinueCompletionProvider.autocompleteCache).put(
-            outcome.prompt,
-            completion
-          );
+          (await this.autocompleteCache).put(outcome.prompt, completion);
         }
       }, 100);
 
@@ -103,11 +110,25 @@ export class ContinueCompletionProvider
             title: "Log Autocomplete Outcome",
             command: "continue.logAutocompleteOutcome",
             arguments: [outcome, logRejectionTimeout],
-          }
+          },
         ),
       ];
     } catch (e: any) {
-      console.warn("Error getting autocompletion: ", e.message);
+      console.warn("Error generating autocompletion: ", e);
+      if (!this.errorsShown.has(e.message)) {
+        this.errorsShown.add(e.message);
+        vscode.window
+          .showErrorMessage(e.message, "Documentation")
+          .then((val) => {
+            if (val === "Documentation") {
+              vscode.env.openExternal(
+                vscode.Uri.parse(
+                  "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+                ),
+              );
+            }
+          });
+      }
     } finally {
       stopStatusBarLoading();
     }

@@ -27,6 +27,7 @@ import TransformersJsEmbeddingsProvider from "../indexing/embeddings/Transformer
 import { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
+import { copyOf } from "../util";
 import mergeJson from "../util/merge";
 import {
   getConfigJsPath,
@@ -51,7 +52,7 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
     config.env.forEach((envVar) => {
       content = content.replaceAll(
         new RegExp(`"${envVar}"`, "g"),
-        `"${env[envVar]}"`
+        `"${env[envVar]}"`,
       );
     });
   }
@@ -60,16 +61,16 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
 }
 
 const configMergeKeys = {
-  "models": (a: any, b: any) => a.title === b.title,
-  "contextProviders": (a: any, b: any) => a.name === b.name,
-  "slashCommands": (a: any, b: any) => a.name === b.name,
-  "customCommands": (a: any, b: any) => a.name === b.name,
-}
+  models: (a: any, b: any) => a.title === b.title,
+  contextProviders: (a: any, b: any) => a.name === b.name,
+  slashCommands: (a: any, b: any) => a.name === b.name,
+  customCommands: (a: any, b: any) => a.name === b.name,
+};
 
 function loadSerializedConfig(
   workspaceConfigs: ContinueRcJson[],
   remoteConfigServerUrl: URL | undefined,
-  ideType: IdeType
+  ideType: IdeType,
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath(ideType);
   let config = resolveSerializedConfig(configPath);
@@ -133,20 +134,25 @@ function loadSerializedConfig(
 
   if (remoteConfigServerUrl) {
     const remoteConfigJson = resolveSerializedConfig(
-      getConfigJsonPathForRemote(remoteConfigServerUrl)
+      getConfigJsonPathForRemote(remoteConfigServerUrl),
     );
     config = mergeJson(config, remoteConfigJson, "merge", configMergeKeys);
   }
 
   for (const workspaceConfig of workspaceConfigs) {
-    config = mergeJson(config, workspaceConfig, workspaceConfig.mergeBehavior, configMergeKeys);
+    config = mergeJson(
+      config,
+      workspaceConfig,
+      workspaceConfig.mergeBehavior,
+      configMergeKeys,
+    );
   }
 
   return config;
 }
 
 function serializedToIntermediateConfig(
-  initial: SerializedContinueConfig
+  initial: SerializedContinueConfig,
 ): Config {
   const slashCommands: SlashCommand[] = [];
   for (const command of initial.slashCommands || []) {
@@ -169,13 +175,13 @@ function serializedToIntermediateConfig(
 }
 
 function isModelDescription(
-  llm: ModelDescription | CustomLLM
+  llm: ModelDescription | CustomLLM,
 ): llm is ModelDescription {
   return (llm as ModelDescription).title !== undefined;
 }
 
 function isContextProviderWithParams(
-  contextProvider: CustomContextProvider | ContextProviderWithParams
+  contextProvider: CustomContextProvider | ContextProviderWithParams,
 ): contextProvider is ContextProviderWithParams {
   return (contextProvider as ContextProviderWithParams).name !== undefined;
 }
@@ -183,7 +189,7 @@ function isContextProviderWithParams(
 /** Only difference between intermediate and final configs is the `models` array */
 async function intermediateToFinalConfig(
   config: Config,
-  readFile: (filepath: string) => Promise<string>
+  readFile: (filepath: string) => Promise<string>,
 ): Promise<ContinueConfig> {
   const models: BaseLLM[] = [];
   for (const desc of config.models) {
@@ -192,7 +198,7 @@ async function intermediateToFinalConfig(
         desc,
         readFile,
         config.completionOptions,
-        config.systemMessage
+        config.systemMessage,
       );
       if (!llm) continue;
 
@@ -208,15 +214,15 @@ async function intermediateToFinalConfig(
                   title: llm.title + " - " + modelName,
                 },
                 readFile,
-                config.completionOptions,
-                config.systemMessage
+                copyOf(config.completionOptions),
+                config.systemMessage,
               );
-            })
+            }),
           );
           models.push(
             ...(detectedModels.filter(
-              (x) => typeof x !== "undefined"
-            ) as BaseLLM[])
+              (x) => typeof x !== "undefined",
+            ) as BaseLLM[]),
           );
         } catch (e) {
           console.warn("Error listing models: ", e);
@@ -234,7 +240,7 @@ async function intermediateToFinalConfig(
               new CustomLLMClass({
                 ...desc,
                 options: { ...desc.options, model: modelName },
-              })
+              }),
           );
 
           models.push(...models);
@@ -254,7 +260,7 @@ async function intermediateToFinalConfig(
         config.tabAutocompleteModel,
         readFile,
         config.completionOptions,
-        config.systemMessage
+        config.systemMessage,
       );
     } else {
       autocompleteLlm = new CustomLLMClass(config.tabAutocompleteModel);
@@ -298,7 +304,7 @@ async function intermediateToFinalConfig(
 }
 
 function finalToBrowserConfig(
-  final: ContinueConfig
+  final: ContinueConfig,
 ): BrowserSerializedContinueConfig {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
@@ -375,10 +381,10 @@ async function buildConfigTs() {
           `/esbuild${
             getTarget().startsWith("win32") ? ".exe" : ""
           } ${escapeSpacesInPath(
-            getConfigTsPath()
+            getConfigTsPath(),
           )} --bundle --outfile=${escapeSpacesInPath(
-            getConfigJsPath()
-          )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`
+            getConfigJsPath(),
+          )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`,
       );
     } else {
       // Dynamic import esbuild so potentially disastrous errors can be caught
@@ -396,7 +402,7 @@ async function buildConfigTs() {
     }
   } catch (e) {
     console.log(
-      "Build error. Please check your ~/.continue/config.ts file: " + e
+      "Build error. Please check your ~/.continue/config.ts file: " + e,
     );
     return undefined;
   }
@@ -411,12 +417,12 @@ async function loadFullConfigNode(
   readFile: (filepath: string) => Promise<string>,
   workspaceConfigs: ContinueRcJson[],
   remoteConfigServerUrl: URL | undefined,
-  ideType: IdeType
+  ideType: IdeType,
 ): Promise<ContinueConfig> {
   let serialized = loadSerializedConfig(
     workspaceConfigs,
     remoteConfigServerUrl,
-    ideType
+    ideType,
   );
   let intermediate = serializedToIntermediateConfig(serialized);
 
@@ -440,7 +446,7 @@ async function loadFullConfigNode(
   if (remoteConfigServerUrl) {
     try {
       const configJsPathForRemote = getConfigJsPathForRemote(
-        remoteConfigServerUrl
+        remoteConfigServerUrl,
       );
       const module = await require(configJsPathForRemote);
       delete require.cache[require.resolve(configJsPathForRemote)];
@@ -462,5 +468,5 @@ export {
   intermediateToFinalConfig,
   loadFullConfigNode,
   serializedToIntermediateConfig,
-  type BrowserSerializedContinueConfig
+  type BrowserSerializedContinueConfig,
 };

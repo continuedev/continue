@@ -1,5 +1,11 @@
+import ReactDOM from "react-dom";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscForeground } from "..";
+import {
+  StyledTooltip,
+  defaultBorderRadius,
+  lightGray,
+  vscForeground,
+} from "..";
 import { getPlatform } from "../../util";
 
 const GridDiv = styled.div`
@@ -13,7 +19,7 @@ const GridDiv = styled.div`
   border-top: 0.5px solid ${lightGray};
 `;
 
-const KeyDiv = styled.div`
+const StyledKeyDiv = styled.div`
   border: 0.5px solid ${lightGray};
   border-radius: ${defaultBorderRadius};
   padding: 4px;
@@ -26,6 +32,34 @@ const KeyDiv = styled.div`
   justify-content: center;
   align-items: center;
 `;
+
+const keyToName = {
+  "⌘": "Cmd",
+  "⌃": "Ctrl",
+  "⇧": "Shift",
+  "⏎": "Enter",
+  "⌫": "Backspace",
+  "⌥": "Option",
+};
+
+function KeyDiv({ text }: { text: string }) {
+  const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
+
+  return (
+    <>
+      <StyledKeyDiv data-tooltip-id={`header_button_${text}`}>
+        {text}
+      </StyledKeyDiv>
+      {tooltipPortalDiv &&
+        ReactDOM.createPortal(
+          <StyledTooltip id={`header_button_${text}`} place="bottom">
+            {keyToName[text]}
+          </StyledTooltip>,
+          tooltipPortalDiv,
+        )}
+    </>
+  );
+}
 
 interface KeyboardShortcutProps {
   mac: string;
@@ -46,7 +80,7 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
       </span>
       <div className="flex gap-2 float-right">
         {shortcut.split(" ").map((key) => {
-          return <KeyDiv>{key}</KeyDiv>;
+          return <KeyDiv text={key}></KeyDiv>;
         })}
       </div>
     </div>

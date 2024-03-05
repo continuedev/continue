@@ -1,4 +1,0 @@
-project: extensions/vscode
-kind: Changed
-body: config.ts only runs in NodeJS, not browser
-time: 2024-02-03T16:33:43.006333-08:00

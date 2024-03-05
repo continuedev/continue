@@ -3,7 +3,7 @@ import { stripImages } from "../llm/countTokens";
 import SlashCommands from "./slash";
 
 export function slashFromCustomCommand(
-  customCommand: CustomCommand
+  customCommand: CustomCommand,
 ): SlashCommand {
   return {
     name: customCommand.name,
@@ -30,7 +30,7 @@ export function slashFromCustomCommand(
 }
 
 export function slashCommandFromDescription(
-  desc: SlashCommandDescription
+  desc: SlashCommandDescription,
 ): SlashCommand | undefined {
   const cmd = SlashCommands.find((cmd) => cmd.name === desc.name);
   if (!cmd) {

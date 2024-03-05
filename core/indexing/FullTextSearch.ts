@@ -31,7 +31,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   async *update(
     tag: IndexTag,
     results: RefreshIndexResults,
-    markComplete: MarkCompleteCallback
+    markComplete: MarkCompleteCallback,
   ): AsyncGenerator<IndexingProgressUpdate, any, unknown> {
     const db = await SqliteDb.get();
     await this._createTables(db);
@@ -42,17 +42,17 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
       // Insert chunks
       const chunks = await db.all(
         `SELECT * FROM chunks WHERE path = ? AND cacheKey = ?`,
-        [item.path, item.cacheKey]
+        [item.path, item.cacheKey],
       );
 
       for (let chunk of chunks) {
         const { lastID } = await db.run(
           `INSERT INTO fts (path, content) VALUES (?, ?)`,
-          [item.path, chunk.content]
+          [item.path, chunk.content],
         );
         await db.run(
           `INSERT INTO fts_metadata (id, path, cacheKey, chunkId) VALUES (?, ?, ?, ?)`,
-          [lastID, item.path, item.cacheKey, chunk.id]
+          [lastID, item.path, item.cacheKey, chunk.id],
         );
       }
 
@@ -77,7 +77,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     for (const item of results.del) {
       const { lastID } = await db.run(
         `DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?`,
-        [item.path, item.cacheKey]
+        [item.path, item.cacheKey],
       );
       await db.run(`DELETE FROM fts WHERE rowid = ?`, [lastID]);
 
@@ -90,7 +90,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     text: string,
     n: number,
     directory: string | undefined,
-    filterPaths: string[] | undefined
+    filterPaths: string[] | undefined,
   ): Promise<Chunk[]> {
     const db = await SqliteDb.get();
     const tagStrings = tags.map(tagToString);
@@ -101,7 +101,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     JOIN chunk_tags ON fts_metadata.chunkId = chunk_tags.chunkId
     WHERE fts MATCH '${text.replace(
       /\?/g,
-      ""
+      "",
     )}' AND chunk_tags.tag IN (${tagStrings.map(() => "?").join(",")})
       ${
         filterPaths
@@ -119,7 +119,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
     const chunks = await db.all(
       `SELECT * FROM chunks WHERE id IN (${results.map(() => "?").join(",")})`,
-      results.map((result) => result.chunkId)
+      results.map((result) => result.chunkId),
     );
 
     return chunks.map((chunk) => {

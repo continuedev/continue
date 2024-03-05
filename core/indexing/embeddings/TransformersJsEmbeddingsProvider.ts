@@ -58,7 +58,7 @@ class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
     ) {
       let chunkGroup = chunks.slice(
         i,
-        i + TransformersJsEmbeddingsProvider.MaxGroupSize
+        i + TransformersJsEmbeddingsProvider.MaxGroupSize,
       );
       let output = await extractor(chunkGroup, {
         pooling: "mean",

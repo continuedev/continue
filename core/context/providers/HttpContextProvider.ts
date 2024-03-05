@@ -26,7 +26,7 @@ class HttpContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const response = await fetch(this.options.url, {
       method: "POST",

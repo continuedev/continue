@@ -16,7 +16,7 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
       .showInformationMessage(
         "Error activating the Continue extension.",
         "View Logs",
-        "Retry"
+        "Retry",
       )
       .then((selection) => {
         if (selection === "View Logs") {

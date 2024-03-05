@@ -42,7 +42,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   async *update(
     tag: IndexTag,
     results: RefreshIndexResults,
-    markComplete: MarkCompleteCallback
+    markComplete: MarkCompleteCallback,
   ): AsyncGenerator<IndexingProgressUpdate, any, unknown> {
     const db = await SqliteDb.get();
     await this._createTables(db);
@@ -50,7 +50,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     // Compute chunks for new files
     const contents = await Promise.all(
-      results.compute.map(({ path }) => this.readFile(path))
+      results.compute.map(({ path }) => this.readFile(path)),
     );
     for (let i = 0; i < results.compute.length; i++) {
       const item = results.compute[i];
@@ -60,7 +60,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         item.path,
         contents[i],
         MAX_CHUNK_SIZE,
-        item.cacheKey
+        item.cacheKey,
       )) {
         const { lastID } = await db.run(
           `INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)`,
@@ -71,7 +71,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
             chunk.startLine,
             chunk.endLine,
             chunk.content,
-          ]
+          ],
         );
 
         await db.run(`INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)`, [
@@ -91,7 +91,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     for (const item of results.addTag) {
       const chunksWithPath = await db.all(
         `SELECT * FROM chunks WHERE cacheKey = ?`,
-        [item.cacheKey]
+        [item.cacheKey],
       );
 
       for (const chunk of chunksWithPath) {

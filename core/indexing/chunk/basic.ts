@@ -3,7 +3,7 @@ import { countTokens } from "../../llm/countTokens";
 
 export function* basicChunker(
   contents: string,
-  maxChunkSize: number
+  maxChunkSize: number,
 ): Generator<ChunkWithoutID> {
   let chunkContent = "";
   let chunkTokens = 0;

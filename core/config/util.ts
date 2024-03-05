@@ -11,7 +11,7 @@ export function addModel(model: ModelDescription) {
     (key, value) => {
       return value === null ? undefined : value;
     },
-    2
+    2,
   );
   writeFileSync(getConfigJsonPath(), newConfigString);
   return newConfigString;

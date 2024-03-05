@@ -18,7 +18,7 @@ type DiffEvent = LineUpdate | DiffBlock;
  * Returns a stream of characters, but with "undefined" inserted into the stream whenever there is a new line
  */
 async function* streamWithLineBreaks(
-  completionStream: AsyncGenerator<string>
+  completionStream: AsyncGenerator<string>,
 ): AsyncGenerator<string | undefined> {
   for await (const chunk of completionStream) {
     if (chunk.includes("\n")) {
@@ -37,7 +37,7 @@ async function* streamWithLineBreaks(
 
 async function* streamDiffEvents(
   completionStream: AsyncGenerator<string>,
-  oldCode: string
+  oldCode: string,
 ): AsyncGenerator<DiffEvent> {
   let remainingLines = oldCode.split("\n");
   let i = 0;

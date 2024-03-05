@@ -4,7 +4,7 @@ import { getParserForFile } from "../util/treeSitter";
 
 export async function getAst(
   filepath: string,
-  fileContents: string
+  fileContents: string,
 ): Promise<Parser.Tree | undefined> {
   const parser = await getParserForFile(filepath);
 
@@ -18,7 +18,7 @@ export async function getAst(
 
 export async function getTreePathAtCursor(
   ast: Parser.Tree,
-  cursorIndex: number
+  cursorIndex: number,
 ): Promise<Parser.SyntaxNode[] | undefined> {
   const path = [ast.rootNode];
   while (path[path.length - 1].childCount > 0) {
@@ -40,7 +40,7 @@ export async function getTreePathAtCursor(
 }
 
 export async function getScopeAroundRange(
-  range: RangeInFileWithContents
+  range: RangeInFileWithContents,
 ): Promise<RangeInFileWithContents | undefined> {
   const ast = await getAst(range.filepath, range.contents);
   if (!ast) {
@@ -51,10 +51,10 @@ export async function getScopeAroundRange(
   const lines = range.contents.split("\n");
   const startIndex =
     lines.slice(0, s.line).join("\n").length +
-      (lines[s.line]?.slice(s.character).length ?? 0);
+    (lines[s.line]?.slice(s.character).length ?? 0);
   const endIndex =
     lines.slice(0, e.line).join("\n").length +
-      (lines[e.line]?.slice(0, e.character).length ?? 0);
+    (lines[e.line]?.slice(0, e.character).length ?? 0);
 
   let node = ast.rootNode;
   while (node.childCount > 0) {
@@ -79,11 +79,11 @@ export async function getScopeAroundRange(
       start: {
         line: node.startPosition.row,
         character: node.startPosition.column,
-      }, 
+      },
       end: {
         line: node.endPosition.row,
         character: node.endPosition.column,
-      }
+      },
     },
-  }
+  };
 }

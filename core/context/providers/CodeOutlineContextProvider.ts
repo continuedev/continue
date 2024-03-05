@@ -18,7 +18,7 @@ class CodeOutlineContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const ide = extras.ide;
     const openFiles = await ide.getOpenFiles();
@@ -30,7 +30,7 @@ class CodeOutlineContextProvider extends BaseContextProvider {
             absPath: filepath,
             content: `${await ide.readFile(filepath)}`,
           };
-        })
+        }),
       );
     // const outlines = await getOutlines(
     //   allFiles
@@ -49,7 +49,7 @@ class CodeOutlineContextProvider extends BaseContextProvider {
     //     description: "Definition lines only (from open files)",
     //   },
     // ];
-    return []
+    return [];
   }
 
   async load(): Promise<void> {}

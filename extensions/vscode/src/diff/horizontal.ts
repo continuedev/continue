@@ -78,7 +78,7 @@ export class DiffManager {
       vscode.workspace.fs.createDirectory(uriFromFilePath(this.remoteTmpDir));
       return path.join(
         this.remoteTmpDir,
-        this.escapeFilepath(originalFilepath)
+        this.escapeFilepath(originalFilepath),
       );
     }
     return path.join(DIFF_DIRECTORY, this.escapeFilepath(originalFilepath));
@@ -86,7 +86,7 @@ export class DiffManager {
 
   private async openDiffEditor(
     originalFilepath: string,
-    newFilepath: string
+    newFilepath: string,
   ): Promise<vscode.TextEditor | undefined> {
     // If the file doesn't yet exist or the basename is a single digit number (vscode terminal), don't open the diff editor
     try {
@@ -116,21 +116,21 @@ export class DiffManager {
 
     if (
       this.extensionContext.globalState.get<boolean>(
-        "continue.showDiffInfoMessage"
+        "continue.showDiffInfoMessage",
       ) !== false
     ) {
       vscode.window
         .showInformationMessage(
           `Accept (${getMetaKeyLabel()}⇧↩) or reject (${getMetaKeyLabel()}⇧⌫) at the top of the file.`,
           "Got it",
-          "Don't show again"
+          "Don't show again",
         )
         .then((selection) => {
           if (selection === "Don't show again") {
             // Get the global state
             this.extensionContext.globalState.update(
               "continue.showDiffInfoMessage",
-              false
+              false,
             );
           }
         });
@@ -153,7 +153,7 @@ export class DiffManager {
   async writeDiff(
     originalFilepath: string,
     newContent: string,
-    step_index: number
+    step_index: number,
   ): Promise<string> {
     await this.setupDirectory();
 
@@ -181,7 +181,7 @@ export class DiffManager {
     if (diffInfo && !diffInfo?.editor) {
       diffInfo.editor = await this.openDiffEditor(
         originalFilepath,
-        newFilepath
+        newFilepath,
       );
       this.diffs.set(newFilepath, diffInfo);
     }
@@ -192,7 +192,7 @@ export class DiffManager {
       // Flashes too much on mac with it
       vscode.commands.executeCommand(
         "workbench.action.files.revert",
-        uriFromFilePath(newFilepath)
+        uriFromFilePath(newFilepath),
       );
     }
 
@@ -218,7 +218,7 @@ export class DiffManager {
       return activeEditorPath;
     }
     const visibleEditors = vscode.window.visibleTextEditors.map(
-      (editor) => editor.document.uri.fsPath
+      (editor) => editor.document.uri.fsPath,
     );
     for (const editorPath of visibleEditors) {
       if (path.dirname(editorPath) === DIFF_DIRECTORY) {
@@ -262,7 +262,7 @@ export class DiffManager {
       .then(async () => {
         await writeFile(
           uriFromFilePath(diffInfo.originalFilepath),
-          await readFile(diffInfo.newFilepath)
+          await readFile(diffInfo.newFilepath),
         );
         this.cleanUpDiff(diffInfo);
       });
@@ -278,7 +278,7 @@ export class DiffManager {
     if (!newFilepath) {
       console.log(
         "No newFilepath provided to reject the diff, diffs.size was",
-        this.diffs.size
+        this.diffs.size,
       );
       return;
     }
@@ -328,6 +328,6 @@ async function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
   // Write the updated suggestions back to the file
   await writeFile(
     vscode.Uri.file(suggestionsPath),
-    JSON.stringify(suggestions, null, 4)
+    JSON.stringify(suggestions, null, 4),
   );
 }
