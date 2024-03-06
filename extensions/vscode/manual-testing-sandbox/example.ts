@@ -10,4 +10,3 @@ console.log(d);
 
 let e = factorial(3);
 console.log(e);
-
