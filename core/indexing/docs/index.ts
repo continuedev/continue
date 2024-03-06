@@ -1,14 +1,12 @@
 import {
   Chunk,
-  ChunkWithoutID,
   EmbeddingsProvider,
   IndexingProgressUpdate,
 } from "../..";
-import { MAX_CHUNK_SIZE } from "../../llm/constants";
-import { markdownChunker } from "../chunk/markdown";
+
 import { crawlSubpages } from "./crawl";
 import { addDocs, listDocs } from "./db";
-import { convertURLToMarkdown } from "./urlToMarkdown";
+import { urlToArticle, chunkArticle } from "./article";
 
 export async function* indexDocs(
   title: string,
@@ -31,6 +29,7 @@ export async function* indexDocs(
 
   const subpathGenerator = crawlSubpages(baseUrl);
   let { value, done } = await subpathGenerator.next();
+  
   while (true) {
     if (done) {
       break;
@@ -49,52 +48,26 @@ export async function* indexDocs(
   const chunks: Chunk[] = [];
   const embeddings: number[][] = [];
 
-  let markdownForSubpaths = await Promise.all(
-    subpaths.map((subpath) => convertURLToMarkdown(new URL(subpath, baseUrl))),
+  let articles = await Promise.all(
+    subpaths.map(subpath => urlToArticle(subpath, baseUrl)),
   );
 
-  // Filter out undefineds
-  let filteredSubpaths: string[] = [];
-  let filteredMarkdown: string[] = [];
-  for (let i = 0; i < subpaths.length; i++) {
-    if (markdownForSubpaths[i]) {
-      filteredSubpaths.push(subpaths[i]);
-      filteredMarkdown.push(markdownForSubpaths[i]!);
-    }
-  }
-  subpaths = filteredSubpaths;
-  markdownForSubpaths = filteredMarkdown;
+  for (const article of articles) {
+    if (!article) continue; 
 
-  for (let i = 0; i < subpaths.length; i++) {
-    const subpath = subpaths[i];
     yield {
       progress: Math.max(1, Math.floor(100 / (subpaths.length + 1))),
-      desc: `${subpath}`,
+      desc: `${article.subpath}`,
     };
 
-    const markdown = markdownForSubpaths[i]!;
-    const markdownChunks: ChunkWithoutID[] = [];
-    for await (const chunk of markdownChunker(markdown, MAX_CHUNK_SIZE, 0)) {
-      markdownChunks.push(chunk);
-    }
-
     const subpathEmbeddings = await embeddingsProvider.embed(
-      markdownChunks.map((chunk) => chunk.content),
+      chunkArticle(article).map(chunk => {
+        chunks.push(chunk);
+
+        return chunk.content;
+      })
     );
 
-    markdownChunks.forEach((chunk, index) => {
-      chunks.push({
-        ...chunk,
-        filepath:
-          subpath +
-          (chunk.otherMetadata?.fragment
-            ? `#${chunk.otherMetadata.fragment}`
-            : ""),
-        otherMetadata: chunk.otherMetadata,
-        index,
-        digest: subpath,
-      });
-    });
     embeddings.push(...subpathEmbeddings);
   }
 
