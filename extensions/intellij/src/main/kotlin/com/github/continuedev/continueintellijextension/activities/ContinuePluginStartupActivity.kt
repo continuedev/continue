@@ -223,7 +223,20 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 }
                 val target = "$os-$arch"
 
-                val continueCorePath = Paths.get(pluginPath.toString(), "core", target, "pkg").toString()
+                val corePath = Paths.get(pluginPath.toString(), "core").toString()
+                val targetPath = Paths.get(corePath, target).toString()
+                val continueCorePath = Paths.get(targetPath, "pkg" + (if (os == "win32") ".exe" else "")).toString()
+
+                // Copy targetPath / node_sqlite3.node to core / node_sqlite3.node
+                val nodeSqlite3Path = Paths.get(targetPath, "node_sqlite3.node")
+
+                // Create the build/Release path first
+                File(Paths.get(corePath, "build", "Release").toString()).mkdirs()
+
+                val coreNodeSqlite3Path = Paths.get(corePath, "build", "Release", "node_sqlite3.node")
+                if (!File(coreNodeSqlite3Path.toString()).exists()) {
+                    Files.copy(nodeSqlite3Path, coreNodeSqlite3Path)
+                }
 
                 val coreMessenger = CoreMessenger(continueCorePath, ideProtocolClient);
                 continuePluginService.coreMessenger = coreMessenger

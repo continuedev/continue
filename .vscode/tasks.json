@@ -22,8 +22,9 @@
     {
       "label": "vscode-extension:esbuild",
       "type": "npm",
-      "script": "esbuild",
+      "script": "esbuild-watch",
       "path": "extensions/vscode",
+      "isBackground": true,
       "problemMatcher": [
         {
           "pattern": [
@@ -35,7 +36,12 @@
               "severity": 4,
               "message": 5
             }
-          ]
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ">",
+            "endsPattern": ">"
+          }
         }
       ]
     },

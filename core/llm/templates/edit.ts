@@ -1,3 +1,6 @@
+import { ChatMessage } from "../..";
+import { PromptTemplate } from "../../util";
+
 const simplifiedEditPrompt = `Consider the following code:
 \`\`\`{{{language}}}
 {{{codeToEdit}}}
@@ -144,8 +147,33 @@ const codeLlama70bEditPrompt = `<s>Source: system\n\n You are an expert programm
 {{{codeToEdit}}}
 \`\`\` <step> Source: assistant\nDestination: user\n\n `;
 
+const claudeEditPrompt: PromptTemplate = (
+  history: ChatMessage[],
+  otherData: Record<string, string>,
+) => [
+  {
+    role: "user",
+    content: `\
+\`\`\`${otherData.language}
+${otherData.codeToEdit}
+\`\`\`
+
+You are an expert programmer. You will rewrite the above code to do the following:
+
+${otherData.userInput}
+
+Output only a code block with the rewritten code:
+`,
+  },
+  {
+    role: "assistant",
+    content: `Sure! Here is the rewritten code:
+\`\`\`${otherData.language}`,
+  },
+];
 export {
   alpacaEditPrompt,
+  claudeEditPrompt,
   codeLlama70bEditPrompt,
   codellamaEditPrompt,
   codellamaInfillEditPrompt,

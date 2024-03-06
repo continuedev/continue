@@ -4,7 +4,10 @@ export class ListenableGenerator<T> {
   private _listeners: Set<(value: T) => void> = new Set();
   private _isEnded: boolean = false;
 
-  constructor(source: AsyncGenerator<T>) {
+  constructor(
+    source: AsyncGenerator<T>,
+    private readonly onError: (e: any) => void,
+  ) {
     this._source = source;
     this._start();
   }
@@ -24,6 +27,8 @@ export class ListenableGenerator<T> {
           listener(value);
         }
       }
+    } catch (e) {
+      this.onError(e);
     } finally {
       this._isEnded = true;
       for (const listener of this._listeners) {
@@ -65,27 +70,27 @@ export class ListenableGenerator<T> {
 }
 
 export class GeneratorReuseManager {
-  static currentGenerator: ListenableGenerator<string> | undefined;
-  static pendingGeneratorPrefix: string | undefined;
-  static pendingCompletion: string = "";
+  currentGenerator: ListenableGenerator<string> | undefined;
+  pendingGeneratorPrefix: string | undefined;
+  pendingCompletion: string = "";
 
-  private static _createListenableGenerator(
+  constructor(private readonly onError: (err: any) => void) {}
+
+  private _createListenableGenerator(
     gen: AsyncGenerator<string>,
     prefix: string,
   ) {
-    GeneratorReuseManager.currentGenerator?.cancel();
+    this.currentGenerator?.cancel();
 
-    const listenableGen = new ListenableGenerator(gen);
-    listenableGen.listen(
-      (chunk) => (GeneratorReuseManager.pendingCompletion += chunk ?? ""),
-    );
+    const listenableGen = new ListenableGenerator(gen, this.onError);
+    listenableGen.listen((chunk) => (this.pendingCompletion += chunk ?? ""));
 
-    GeneratorReuseManager.pendingGeneratorPrefix = prefix;
-    GeneratorReuseManager.pendingCompletion = "";
-    GeneratorReuseManager.currentGenerator = listenableGen;
+    this.pendingGeneratorPrefix = prefix;
+    this.pendingCompletion = "";
+    this.currentGenerator = listenableGen;
   }
 
-  static async *getGenerator(
+  async *getGenerator(
     prefix: string,
     newGenerator: () => AsyncGenerator<string>,
     multiline: boolean,
@@ -93,23 +98,21 @@ export class GeneratorReuseManager {
     // Check if current can be reused
     if (
       !(
-        GeneratorReuseManager.currentGenerator &&
-        GeneratorReuseManager.pendingGeneratorPrefix &&
-        (
-          GeneratorReuseManager.pendingGeneratorPrefix +
-          GeneratorReuseManager.pendingCompletion
-        ).startsWith(prefix) &&
+        this.currentGenerator &&
+        this.pendingGeneratorPrefix &&
+        (this.pendingGeneratorPrefix + this.pendingCompletion).startsWith(
+          prefix,
+        ) &&
         // for e.g. backspace
-        GeneratorReuseManager.pendingGeneratorPrefix?.length <= prefix?.length
+        this.pendingGeneratorPrefix?.length <= prefix?.length
       )
     ) {
       // Create a wrapper over the current generator to fix the prompt
-      GeneratorReuseManager._createListenableGenerator(newGenerator(), prefix);
+      this._createListenableGenerator(newGenerator(), prefix);
     }
 
-    let alreadyTyped =
-      prefix.slice(GeneratorReuseManager.pendingGeneratorPrefix?.length) || "";
-    for await (let chunk of GeneratorReuseManager.currentGenerator!.tee()) {
+    let alreadyTyped = prefix.slice(this.pendingGeneratorPrefix?.length) || "";
+    for await (let chunk of this.currentGenerator!.tee()) {
       if (!chunk) {
         continue;
       }

@@ -92,7 +92,7 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
-type PromptTemplate =
+export type PromptTemplate =
   | string
   | ((
       history: ChatMessage[],
