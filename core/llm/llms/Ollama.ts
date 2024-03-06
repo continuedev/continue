@@ -88,7 +88,7 @@ class Ollama extends BaseLLM {
         "deepseek-33b": "deepseek-coder:33b",
         "neural-chat-7b": "neural-chat:7b-v3.3",
         "starcoder-1b": "starcoder:1b",
-        "starcoder-3b": "starcoder:3b",
+        "starcoder-3b": "starcoder2:3b",
         "stable-code-3b": "stable-code:3b",
       }[this.model] || this.model
     );
