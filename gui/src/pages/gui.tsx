@@ -30,15 +30,15 @@ import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
+import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession, setInactive } from "../redux/slices/stateSlice";
 import {
   setDialogEntryOn,
   setDialogMessage,
-  setDisplayBottomMessageOnBottom,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
 import { isJetBrains } from "../util/ide";
 
@@ -141,11 +141,11 @@ function GUI(props: GUIProps) {
   // #endregion
 
   // #region Selectors
-  const sessionState = useSelector((state: RootStore) => state.state);
+  const sessionState = useSelector((state: RootState) => state.state);
 
   const defaultModel = useSelector(defaultModelSelector);
 
-  const active = useSelector((state: RootStore) => state.state.active);
+  const active = useSelector((state: RootState) => state.state.active);
 
   // #endregion
 
@@ -165,26 +165,10 @@ function GUI(props: GUIProps) {
   const topGuiDivRef = useRef<HTMLDivElement>(null);
 
   // #region Effects
-
-  // Set displayBottomMessageOnBottom
-  const aboveComboBoxDivRef = useRef<HTMLDivElement>(null);
-  const bottomMessage = useSelector(
-    (state: RootStore) => state.uiState.bottomMessage
-  );
-  useEffect(() => {
-    if (!aboveComboBoxDivRef.current) return;
-    dispatch(
-      setDisplayBottomMessageOnBottom(
-        aboveComboBoxDivRef.current.getBoundingClientRect().top <
-          window.innerHeight / 2
-      )
-    );
-  }, [bottomMessage, aboveComboBoxDivRef.current]);
-
   const [userScrolledAwayFromBottom, setUserScrolledAwayFromBottom] =
     useState<boolean>(false);
 
-  const state = useSelector((state: RootStore) => state.state);
+  const state = useSelector((state: RootState) => state.state);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -241,10 +225,7 @@ function GUI(props: GUIProps) {
 
   const sendInput = useCallback(
     (editorState: JSONContent) => {
-      if (
-        defaultModel?.provider === "free-trial" &&
-        defaultModel?.apiKey === ""
-      ) {
+      if (defaultModel?.provider === "free-trial") {
         const ftc = localStorage.getItem("ftc");
         if (ftc) {
           const u = parseInt(ftc);
@@ -269,7 +250,7 @@ function GUI(props: GUIProps) {
         let currentCount = parseInt(counter);
         localStorage.setItem(
           "mainTextEntryCounter",
-          (currentCount + 1).toString()
+          (currentCount + 1).toString(),
         );
         if (currentCount === 300) {
           dispatch(
@@ -292,8 +273,8 @@ function GUI(props: GUIProps) {
                       setDialogMessage(
                         <div className="text-center p-4">
                           Thanks! We'll be in touch soon.
-                        </div>
-                      )
+                        </div>,
+                      ),
                     );
                   }}
                   style={{
@@ -327,8 +308,8 @@ function GUI(props: GUIProps) {
                     Submit
                   </button>
                 </form>
-              </div>
-            )
+              </div>,
+            ),
           );
           dispatch(setDialogEntryOn(false));
           dispatch(setShowDialog(true));
@@ -343,23 +324,19 @@ function GUI(props: GUIProps) {
       defaultModel,
       state,
       streamResponse,
-    ]
+    ],
   );
 
   const { saveSession } = useHistory(dispatch);
 
-  useEffect(() => {
-    const handler = (event: any) => {
-      if (event.data.type === "newSession") {
-        saveSession();
-        mainTextInputRef.current?.focus?.();
-      }
-    };
-    window.addEventListener("message", handler);
-    return () => {
-      window.removeEventListener("message", handler);
-    };
-  }, [saveSession]);
+  useWebviewListener(
+    "newSession",
+    async () => {
+      saveSession();
+      mainTextInputRef.current?.focus?.();
+    },
+    [saveSession],
+  );
 
   const isLastUserInput = useCallback(
     (index: number): boolean => {
@@ -372,7 +349,7 @@ function GUI(props: GUIProps) {
       }
       return !foundLaterUserInput;
     },
-    [state.history]
+    [state.history],
   );
 
   return (
@@ -451,14 +428,13 @@ function GUI(props: GUIProps) {
             })}
           </StepsDiv>
 
-          <div ref={aboveComboBoxDivRef} />
-          {active || (
-            <ContinueInputBox
-              onEnter={sendInput}
-              isLastUserInput={false}
-              isMainInput={true}
-            ></ContinueInputBox>
-          )}
+          <ContinueInputBox
+            onEnter={sendInput}
+            isLastUserInput={false}
+            isMainInput={true}
+            hidden={active}
+          ></ContinueInputBox>
+
           {active ? (
             <>
               <br />
@@ -471,7 +447,7 @@ function GUI(props: GUIProps) {
               }}
               className="mr-auto"
             >
-              New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "M"})
+              New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
             </NewSessionButton>
           ) : null}
         </div>

@@ -1,4 +1,0 @@
-project: extensions/intellij
-kind: Fixed
-body: Fix a few context providers / slash commands
-time: 2024-01-03T01:52:17.592331-05:00

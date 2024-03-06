@@ -1,10 +1,8 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
+import com.github.continuedev.continueintellijextension.activities.showTutorial
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
-import com.github.continuedev.continueintellijextension.`continue`.Position
-import com.github.continuedev.continueintellijextension.`continue`.Range
-import com.github.continuedev.continueintellijextension.`continue`.RangeInFile
-import com.github.continuedev.continueintellijextension.`continue`.getMachineUniqueID
+import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
@@ -55,12 +53,34 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
     class ContinuePluginWindow(toolWindow: ToolWindow, project: Project) {
 
+        val PASS_THROUGH_TO_CORE = listOf(
+                    "abort",
+                    "getContinueDir",
+                    "history/list",
+                    "history/save",
+                    "history/delete",
+                    "history/load",
+                    "devdata/log",
+                    "config/addModel",
+                    "config/deleteModel",
+                    "config/addOpenAIKey",
+                    "llm/streamComplete",
+                    "llm/streamChat",
+                    "llm/complete",
+                    "command/run",
+                    "context/loadSubmenuItems",
+                    "context/getContextItems",
+                    "context/addDocs",
+                    "config/getBrowserSerialized",
+        )
+
         init {
             System.setProperty("ide.browser.jcef.jsQueryPoolSize", JS_QUERY_POOL_SIZE)
+            System.setProperty("ide.browser.jcef.osr.enabled", "false")
         }
 
         val webView: JBCefBrowser by lazy {
-            val browser = JBCefBrowser()
+            val browser = JBCefBrowser.createBuilder().setOffScreenRendering(false).build()
             browser.jbCefClient.setProperty(
                     JBCefClient.Properties.JS_QUERY_POOL_SIZE,
                     JS_QUERY_POOL_SIZE
@@ -68,6 +88,8 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
             registerAppSchemeHandler()
 
             browser.loadURL("http://continue/index.html")
+//            browser.loadHTML("<html><body><input type='text'/></body></html>")
+//            browser.loadURL("http://localhost:5173/index.html")
             Disposer.register(project, browser)
 
             val continuePluginService = ServiceManager.getService(
@@ -81,58 +103,46 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
             myJSQueryOpenInBrowser.addHandler { msg: String? ->
                 val parser = JsonParser()
                 val json: JsonObject = parser.parse(msg).asJsonObject
-                val type = json.get("type").asString
-                val data = json.get("data").asJsonObject
+                val messageType = json.get("messageType").asString
+                val data = json.get("data")
+                val messageId = json.get("messageId")?.asString
 
                 val ide = continuePluginService.ideProtocolClient;
 
-                when (type) {
+                val respond = fun(data: Any?) {
+                    val jsonData = mutableMapOf(
+                        "messageId" to messageId,
+                        "data" to data,
+                        "messageType" to messageType
+                    )
+                    val jsonString = Gson().toJson(jsonData)
+                    continuePluginService.sendToWebview(messageType, data, messageId ?: uuid())
+                }
+
+                if (PASS_THROUGH_TO_CORE.contains(messageType)) {
+                    continuePluginService.coreMessenger?.request(messageType, data, messageId, respond)
+                    return@addHandler null
+                }
+
+                when (messageType) {
                     "onLoad" -> {
                         GlobalScope.launch {
                             // Set the colors to match Intellij theme
-                            val globalScheme = EditorColorsManager.getInstance().globalScheme
-                            val defaultBackground = globalScheme.defaultBackground
-                            val defaultForeground = globalScheme.defaultForeground
-                            val defaultBackgroundHex = String.format("#%02x%02x%02x", defaultBackground.red, defaultBackground.green, defaultBackground.blue)
-                            val defaultForegroundHex = String.format("#%02x%02x%02x", defaultForeground.red, defaultForeground.green, defaultForeground.blue)
-
-                            val grayscale = (defaultBackground.red * 0.3 + defaultBackground.green * 0.59 + defaultBackground.blue * 0.11).toInt()
-
-                            val adjustedRed: Int
-                            val adjustedGreen: Int
-                            val adjustedBlue: Int
-
-                            val tint: Int = 20
-                            if (grayscale > 128) { // if closer to white
-                                adjustedRed = max(0, defaultBackground.red - tint)
-                                adjustedGreen = max(0, defaultBackground.green - tint)
-                                adjustedBlue = max(0, defaultBackground.blue - tint)
-                            } else { // if closer to black
-                                adjustedRed = min(255, defaultBackground.red + tint)
-                                adjustedGreen = min(255, defaultBackground.green + tint)
-                                adjustedBlue = min(255, defaultBackground.blue + tint)
-                            }
-
-                            val secondaryDarkHex = String.format("#%02x%02x%02x", adjustedRed, adjustedGreen, adjustedBlue)
-
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-editor-foreground\", \"$defaultForegroundHex\");")
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-sideBar-background\", \"$defaultBackgroundHex\");")
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-input-background\", \"$secondaryDarkHex\");")
-                            browser.executeJavaScriptAsync("document.body.style.setProperty(\"--vscode-editor-background\", \"$defaultBackgroundHex\");")
+                            val colors = GetTheme().getTheme();
+                            continuePluginService.sendToWebview("setColors", colors)
 
                             val jsonData = mutableMapOf(
-                                    "type" to "onLoad",
                                     "windowId" to continuePluginService.windowId,
                                     "workspacePaths" to continuePluginService.workspacePaths,
                                     "vscMachineId" to getMachineUniqueID(),
                                     "vscMediaUrl" to "http://continue",
                             )
-                            val jsonString = Gson().toJson(jsonData)
-                            browser.executeJavaScriptAsync("""window.postMessage($jsonString, "*");""")
+                            respond(jsonData)
                         }
 
                     }
                     "showLines" -> {
+                        val data = data.asJsonObject
                         ide?.highlightCode(RangeInFile(
                                 data.get("filepath").asString,
                                 Range(Position(
@@ -145,10 +155,15 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
                         ),"#00ff0022")
                     }
+                    "showTutorial" -> {
+                        showTutorial(project)
+                    }
                     "showVirtualFile" -> {
+                        val data = data.asJsonObject
                         ide?.showVirtualFile(data.get("name").asString, data.get("content").asString)
                     }
                     "showFile" -> {
+                        val data = data.asJsonObject
                         ide?.setFileOpen(data.get("filepath").asString)
                     }
                     "reloadWindow" -> {}
@@ -156,6 +171,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                         ide?.setFileOpen(getConfigJsonPath())
                     }
                     "readRangeInFile" -> {
+                        val data = data.asJsonObject
                         ide?.readRangeInFile(RangeInFile(
                                 data.get("filepath").asString,
                                 Range(Position(
@@ -172,7 +188,7 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
                     // IDE //
                     else -> {
                         if (msg != null) {
-                            ide?.handleWebsocketMessage(msg)
+                            ide?.handleMessage(msg, respond)
                         }
                     }
                 }
@@ -201,8 +217,8 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
         fun executeJavaScript(browser: CefBrowser?, myJSQueryOpenInBrowser: JBCefJSQuery) {
             // Execute JavaScript - you might want to handle potential exceptions here
-            val script = """window.postIntellijMessage = function(type, data) {
-                const msg = JSON.stringify({type, data});
+            val script = """window.postIntellijMessage = function(messageType, data, messageId) {
+                const msg = JSON.stringify({messageType, data, messageId});
                 ${myJSQueryOpenInBrowser.inject("msg")}
             }""".trimIndent()
 

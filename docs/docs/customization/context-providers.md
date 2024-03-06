@@ -139,7 +139,6 @@ assignee = currentUser() AND resolution = Unresolved order by updated DESC
 
 You can override this query by setting the `issueQuery` parameter.
 
-
 ### Code Outline
 
 Type '@outline' to reference the outline of all currently open files. The outline of a files consists of only the function and class definitions in the file. Supported file extensions are '.js', '.mjs', '.go', '.c', '.cc', '.cs', '.cpp', '.el', '.ex', '.elm', '.java', '.ml', '.php', '.ql', '.rb', '.rs', '.ts'
@@ -154,6 +153,63 @@ Type '@highlights' to reference the 'highlights' from all currently open files. 
 
 ```json
 { "name": "highlights" }
+```
+
+### PostgreSQL
+
+Type `@postgres` to reference the schema of a table, and some sample rows. A dropdown will appear, allowing you to select a specific table, or all tables.
+
+The only required settings are those for creating the database connection: `host`, `port`, `user`, `password`, and `database`.
+
+By default, the `schema` filter is set to `public`, and the `sampleRows` is set to 3. You may unset the schema if you want to include tables from all schemas.
+
+[Here is a short demo.](https://github.com/continuedev/continue/pull/859)
+
+```json
+{
+  "name": "postgres",
+  "params": {
+    "host": "localhost",
+    "port": 5436,
+    "user": "myuser",
+    "password": "catsarecool",
+    "database": "animals",
+    "schema": "public",
+    "sampleRows": 3
+  }
+}
+```
+
+### Database Tables
+
+Type `@database` to reference table schemas you can use the drop-down or start typeing table names based off of your configuration. Configuration supports multiple databases, allowing you to specify various connection details for PostgreSQL, MySQL, SQLite. Each connection should include a unique name, the connection_type (e.g., postgres, sqlite), and the necessary connection parameters specific to each database type.
+
+```json
+{
+  "name": "database",
+  "params": {
+    "connections": [
+      {
+        "name": "examplePostgres",
+        "connection_type": "postgres",
+        "connection": {
+          "user": "username",
+          "host": "localhost",
+          "database": "exampleDB",
+          "password": "yourPassword",
+          "port": 5432
+        }
+      },
+      {
+        "name": "exampleSqlite",
+        "connection_type": "sqlite",
+        "connection": {
+          "filename": "/path/to/your/sqlite/database.db"
+        }
+      }
+    ]
+  }
+}
 ```
 
 ### Requesting Context Providers

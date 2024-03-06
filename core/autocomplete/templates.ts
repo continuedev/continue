@@ -17,7 +17,7 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
 
 const codeLlamaFimTemplate: AutocompleteTemplate = {
   template: "<PRE> {{{prefix}}} <SUF>{{{suffix}}} <MID>",
-  completionOptions: { stop: ["<PRE>", "<SUF>", "<MID>"] },
+  completionOptions: { stop: ["<PRE>", "<SUF>", "<MID>", "<EOT>"] },
 };
 
 // https://huggingface.co/deepseek-ai/deepseek-coder-1.3b-base

@@ -19,14 +19,18 @@ export class Telemetry {
     if (!allow) {
       Telemetry.client = undefined;
     } else {
-      if (!Telemetry.client) {
-        const { PostHog } = await import("posthog-node");
-        Telemetry.client = new PostHog(
-          "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs",
-          {
-            host: "https://app.posthog.com",
-          }
-        );
+      try {
+        if (!Telemetry.client) {
+          const { PostHog } = await import("posthog-node");
+          Telemetry.client = new PostHog(
+            "phc_JS6XFROuNbhJtVCEdTSYk6gl5ArRrTNMpCcguAXlSPs",
+            {
+              host: "https://app.posthog.com",
+            },
+          );
+        }
+      } catch (e) {
+        console.error(`Failed to setup telemetry: ${e}`);
       }
     }
   }

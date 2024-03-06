@@ -1,7 +1,8 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { JSONContent } from "@tiptap/react";
 import {
   ChatHistory,
+  ChatHistoryItem,
   ChatMessage,
   ContextItemId,
   ContextItemWithId,
@@ -10,7 +11,6 @@ import {
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { stripImages } from "core/llm/countTokens";
 import { v4 } from "uuid";
-import { RootStore } from "../store";
 
 const TEST_CONTEXT_ITEMS: ContextItemWithId[] = [
   {
@@ -82,7 +82,17 @@ fn bubble_sort<T: Ord>(values: &mut[T]) {
   },
 ];
 
-const initialState: RootStore["state"] = {
+type State = {
+  history: ChatHistory;
+  contextItems: ContextItemWithId[];
+  active: boolean;
+  config: BrowserSerializedContinueConfig;
+  title: string;
+  sessionId: string;
+  defaultModelTitle: string;
+};
+
+const initialState: State = {
   history: [],
   contextItems: [],
   active: false,
@@ -130,123 +140,95 @@ export const stateSlice = createSlice({
   reducers: {
     setConfig: (
       state,
-      { payload }: { payload: BrowserSerializedContinueConfig }
+      { payload: config }: PayloadAction<BrowserSerializedContinueConfig>
     ) => {
-      const config = payload;
-      const defaultModelTitle = config.models.find(
-        (model) => model.title === state.defaultModelTitle
-      )
-        ? state.defaultModelTitle
-        : config.models[0].title;
-      return {
-        ...state,
-        config,
-        defaultModelTitle,
-      };
+      const defaultModelTitle =
+        config.models.find((model) => model.title === state.defaultModelTitle)
+          ?.title || config.models[0].title;
+      state.config = config;
+      state.defaultModelTitle = defaultModelTitle;
     },
-    addLogs: (state, { payload }: { payload: [string, string][] }) => {
-      if (state.history.length === 0) {
+    addLogs: (state, { payload }: PayloadAction<[string, string][]>) => {
+      if (!state.history.length) {
         return;
       }
+      const lastHistory = state.history[state.history.length - 1];
 
-      if (state.history[state.history.length - 1].promptLogs) {
-        state.history[state.history.length - 1].promptLogs.push(...payload);
-      } else {
-        state.history[state.history.length - 1].promptLogs = payload;
-      }
+      lastHistory.promptLogs = lastHistory.promptLogs
+        ? lastHistory.promptLogs.concat(payload)
+        : payload;
     },
     setActive: (state) => {
-      return {
-        ...state,
-        active: true,
-      };
+      state.active = true;
     },
-    setContextItemsAtIndex: (state, action) => {
-      if (action.payload.index < state.history.length) {
-        return {
-          ...state,
-          history: state.history.map((historyItem, i) => {
-            if (i === action.payload.index) {
-              return {
-                ...historyItem,
-                contextItems: action.payload.contextItems,
-              };
-            }
-            return historyItem;
-          }),
-        };
+    setContextItemsAtIndex: (
+      state,
+      {
+        payload: { index, contextItems },
+      }: PayloadAction<{
+        index: number;
+        contextItems: ChatHistoryItem["contextItems"];
+      }>
+    ) => {
+      if (state.history[index]) {
+        state.history[index].contextItems = contextItems;
       }
     },
     setEditingContextItemAtIndex: (
       state,
       {
         payload: { index, item },
-      }: {
-        payload: { index?: number; item: ContextItemWithId };
-      }
+      }: PayloadAction<{ index?: number; item: ContextItemWithId }>
     ) => {
       if (index === undefined) {
-        if (state.contextItems[0]?.id.itemId === item.id.itemId) {
-          return {
-            ...state,
-            contextItems: [],
-          };
-        } else {
-          return {
-            ...state,
-            contextItems: [{ ...item, editing: true }],
-          };
-        }
-      } else {
-        // TODO
+        const isFirstContextItem =
+          state.contextItems[0]?.id.itemId === item.id.itemId;
+
+        state.contextItems = isFirstContextItem
+          ? []
+          : [{ ...item, editing: true }];
+        return;
       }
+      // TODO
     },
-    addContextItems: (state, action) => {
-      return {
-        ...state,
-        contextItems: [...state.contextItems, ...action.payload],
-      };
+    addContextItems: (state, action: PayloadAction<ContextItemWithId[]>) => {
+      state.contextItems = state.contextItems.concat(action.payload);
     },
     resubmitAtIndex: (
       state,
       {
         payload,
-      }: {
-        payload: {
-          index: number;
-          editorState: JSONContent;
-        };
-      }
+      }: PayloadAction<{
+        index: number;
+        editorState: JSONContent;
+      }>
     ) => {
-      if (payload.index < state.history.length) {
-        state.history[payload.index].message.content = "";
-        state.history[payload.index].editorState = payload.editorState;
-
-        // Cut off history after the resubmitted message
-        state.history = [
-          ...state.history.slice(0, payload.index + 1),
-          {
-            message: {
-              role: "assistant",
-              content: "",
-            },
-            contextItems: [],
-          },
-        ];
-
-        state.contextItems = [];
-        state.active = true;
+      const historyItem = state.history[payload.index];
+      if (!historyItem) {
+        return;
       }
+      historyItem.message.content = "";
+      historyItem.editorState = payload.editorState;
+
+      // Cut off history after the resubmitted message
+      state.history = state.history.slice(0, payload.index + 1).concat({
+        message: {
+          role: "assistant",
+          content: "",
+        },
+        contextItems: [],
+      });
+
+      state.contextItems = [];
+      state.active = true;
     },
     initNewActiveMessage: (
       state,
       {
         payload,
-      }: {
-        payload: {
-          editorState: JSONContent;
-        };
-      }
+      }: PayloadAction<{
+        editorState: JSONContent;
+      }>
     ) => {
       state.history.push({
         message: { role: "user", content: "" },
@@ -267,13 +249,11 @@ export const stateSlice = createSlice({
       state,
       {
         payload,
-      }: {
-        payload: {
-          message: ChatMessage;
-          index: number;
-          contextItems?: ContextItemWithId[];
-        };
-      }
+      }: PayloadAction<{
+        message: ChatMessage;
+        index: number;
+        contextItems?: ContextItemWithId[];
+      }>
     ) => {
       if (payload.index >= state.history.length) {
         state.history.push({
@@ -298,91 +278,66 @@ export const stateSlice = createSlice({
       state,
       {
         payload,
-      }: {
-        payload: {
-          index: number;
-          contextItems: ContextItemWithId[];
-        };
-      }
+      }: PayloadAction<{
+        index: number;
+        contextItems: ContextItemWithId[];
+      }>
     ) => {
-      if (payload.index < state.history.length) {
-        state.history[payload.index].contextItems.push(...payload.contextItems);
+      const historyItem = state.history[payload.index];
+      if (!historyItem) {
+        return;
       }
+      historyItem.contextItems.push(...payload.contextItems);
     },
     setInactive: (state) => {
-      return {
-        ...state,
-        active: false,
-      };
+      state.active = false;
     },
-    streamUpdate: (state, action) => {
-      if (state.history.length > 0) {
+    streamUpdate: (state, action: PayloadAction<string>) => {
+      if (state.history.length) {
         state.history[state.history.length - 1].message.content +=
           action.payload;
       }
     },
     newSession: (
       state,
-      { payload }: { payload: PersistedSessionInfo | undefined }
+      { payload }: PayloadAction<PersistedSessionInfo | undefined>
     ) => {
       if (payload) {
-        return {
-          ...state,
-          history: payload.history,
-          title: payload.title,
-          sessionId: payload.sessionId,
-        };
+        state.history = payload.history;
+        state.title = payload.title;
+        state.sessionId = payload.sessionId;
+      } else {
+        state.history = [];
+        state.contextItems = [];
+        state.active = false;
+        state.title = "New Session";
+        state.sessionId = v4();
       }
-      return {
-        ...state,
-        history: [],
-        contextItems: [],
-        active: false,
-        title: "New Session",
-        sessionId: v4(),
-      };
     },
     deleteContextWithIds: (
       state,
       {
         payload,
-      }: { payload: { ids: ContextItemId[]; index: number | undefined } }
+      }: PayloadAction<{ ids: ContextItemId[]; index: number | undefined }>
     ) => {
-      const ids = payload.ids.map((id) => `${id.providerTitle}-${id.itemId}`);
-      if (typeof payload.index === "undefined") {
-        return {
-          ...state,
-          contextItems: state.contextItems.filter(
-            (item) =>
-              !ids.includes(`${item.id.providerTitle}-${item.id.itemId}`)
-          ),
-        };
-      } else {
-        return {
-          ...state,
-          history: state.history.map((historyItem, i) => {
-            if (i === payload.index) {
-              return {
-                ...historyItem,
+      const getKey = (id: ContextItemId) => `${id.providerTitle}-${id.itemId}`;
+      const ids = new Set(payload.ids.map(getKey));
 
-                contextItems: historyItem.contextItems.filter(
-                  (item) =>
-                    !ids.includes(`${item.id.providerTitle}-${item.id.itemId}`)
-                ),
-              };
-            }
-            return historyItem;
-          }),
-        };
+      if (payload.index === undefined) {
+        state.contextItems = state.contextItems.filter(
+          (item) => !ids.has(getKey(item.id))
+        );
+      } else {
+        state.history[payload.index].contextItems = state.history[
+          payload.index
+        ].contextItems.filter((item) => !ids.has(getKey(item.id)));
       }
     },
     addHighlightedCode: (
       state,
       {
         payload,
-      }: {
-        payload: { rangeInFileWithContents: any; edit: boolean };
-      }
+      }: PayloadAction<{ rangeInFileWithContents: any; edit: boolean }>
     ) => {
       let contextItems = [...state.contextItems].map((item) => {
         return { ...item, editing: false };
@@ -445,7 +400,7 @@ export const stateSlice = createSlice({
       state,
       {
         payload,
-      }: { payload: { ids: ContextItemId[]; index: number | undefined } }
+      }: PayloadAction<{ ids: ContextItemId[]; index: number | undefined }>
     ) => {
       const ids = payload.ids.map((id) => id.itemId);
 
@@ -479,7 +434,7 @@ export const stateSlice = createSlice({
         };
       }
     },
-    setDefaultModel: (state, { payload }: { payload: string }) => {
+    setDefaultModel: (state, { payload }: PayloadAction<string>) => {
       const model = state.config.models.find(
         (model) => model.title === payload
       );

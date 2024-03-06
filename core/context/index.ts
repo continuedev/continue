@@ -22,11 +22,11 @@ export abstract class BaseContextProvider implements IContextProvider {
   // Maybe just include the chat message in here. Should never have to go back to the context provider once you have the information.
   abstract getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
 
   async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     return [];
   }

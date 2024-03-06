@@ -2,11 +2,11 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 import React, { PropsWithChildren, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 
 const CustomPostHogProvider = ({ children }: PropsWithChildren) => {
   const allowAnonymousTelemetry = useSelector(
-    (store: RootStore) => store?.state?.config.allowAnonymousTelemetry
+    (store: RootState) => store?.state?.config.allowAnonymousTelemetry
   );
 
   const [client, setClient] = React.useState<any>(undefined);

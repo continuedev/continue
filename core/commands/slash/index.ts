@@ -6,7 +6,6 @@ import EditSlashCommand from "./edit";
 import HttpSlashCommand from "./http";
 import ShareSlashCommand from "./share";
 import StackOverflowSlashCommand from "./stackOverflow";
-import VerticalEditSlashCommand from "./verticalEdit";
 
 export default [
   DraftIssueCommand,
@@ -17,5 +16,4 @@ export default [
   CommentSlashCommand,
   HttpSlashCommand,
   CommitMessageCommand,
-  VerticalEditSlashCommand,
 ];

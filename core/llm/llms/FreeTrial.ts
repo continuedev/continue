@@ -3,7 +3,7 @@ import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
 import { streamResponse } from "../stream";
 
 // const SERVER_URL = "http://localhost:3000";
-const SERVER_URL = "https://node-proxy-server-blue-l6vsfbzhba-uw.a.run.app";
+const SERVER_URL = "https://node-proxy-server-green-l6vsfbzhba-uw.a.run.app";
 
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
@@ -29,7 +29,7 @@ class FreeTrial extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args = this._convertArgs(this.collectArgs(options));
 
@@ -67,7 +67,7 @@ class FreeTrial extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(this.collectArgs(options));
 

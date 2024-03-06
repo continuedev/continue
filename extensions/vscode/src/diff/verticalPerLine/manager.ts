@@ -1,18 +1,28 @@
-import { streamDiffLines } from "core/commands/slash/verticalEdit";
+import { ConfigHandler } from "core/config/handler";
 import { getMarkdownLanguageTagForFile } from "core/util";
+import { streamDiffLines } from "core/util/verticalEdit";
 import * as vscode from "vscode";
-import { llmFromTitle } from "../../loadConfig";
 import { VerticalPerLineDiffHandler } from "./handler";
 
-class VerticalPerLineDiffManager {
+export interface VerticalDiffCodeLens {
+  start: number;
+  numRed: number;
+  numGreen: number;
+}
+
+export class VerticalPerLineDiffManager {
   private filepathToEditorMap: Map<string, VerticalPerLineDiffHandler> =
     new Map();
+
+  editorToVerticalDiffCodeLens: Map<string, VerticalDiffCodeLens[]> = new Map();
+
+  constructor(private readonly configHandler: ConfigHandler) {}
 
   createVerticalPerLineDiffHandler(
     filepath: string,
     startLine: number,
     endLine: number,
-    input: string
+    input: string,
   ) {
     if (this.filepathToEditorMap.has(filepath)) {
       this.filepathToEditorMap.get(filepath)?.clear(false);
@@ -24,7 +34,9 @@ class VerticalPerLineDiffManager {
         startLine,
         endLine,
         editor,
-        input
+        this.editorToVerticalDiffCodeLens,
+        this.clearForFilepath.bind(this),
+        input,
       );
       this.filepathToEditorMap.set(filepath, handler);
       return handler;
@@ -36,7 +48,7 @@ class VerticalPerLineDiffManager {
   getOrCreateVerticalPerLineDiffHandler(
     filepath: string,
     startLine: number,
-    endLine: number
+    endLine: number,
   ) {
     if (this.filepathToEditorMap.has(filepath)) {
       return this.filepathToEditorMap.get(filepath)!;
@@ -46,7 +58,9 @@ class VerticalPerLineDiffManager {
         const handler = new VerticalPerLineDiffHandler(
           startLine,
           endLine,
-          editor
+          editor,
+          this.editorToVerticalDiffCodeLens,
+          this.clearForFilepath.bind(this),
         );
         this.filepathToEditorMap.set(filepath, handler);
         return handler;
@@ -75,78 +89,115 @@ class VerticalPerLineDiffManager {
       this.filepathToEditorMap.delete(filepath);
     }
   }
-}
 
-export const verticalPerLineDiffManager = new VerticalPerLineDiffManager();
+  acceptRejectVerticalDiffBlock(
+    accept: boolean,
+    filepath?: string,
+    index?: number,
+  ) {
+    if (!filepath) {
+      const activeEditor = vscode.window.activeTextEditor;
+      if (!activeEditor) {
+        return;
+      }
+      filepath = activeEditor.document.uri.fsPath;
+    }
 
-export async function streamEdit(input: string) {
-  const editor = vscode.window.activeTextEditor;
-  if (!editor) {
-    return;
+    if (typeof index === "undefined") {
+      index = 0;
+    }
+
+    let blocks = this.editorToVerticalDiffCodeLens.get(filepath);
+    const block = blocks?.[index];
+    if (!blocks || !block) {
+      return;
+    }
+
+    const handler = this.getHandlerForFile(filepath);
+    if (!handler) {
+      return;
+    }
+
+    // CodeLens object removed from editorToVerticalDiffCodeLens here
+    handler.acceptRejectBlock(
+      accept,
+      block.start,
+      block.numGreen,
+      block.numRed,
+    );
   }
 
-  const filepath = editor.document.uri.fsPath;
-  const startLine = editor.selection.start.line;
-  const endLine = editor.selection.end.line;
+  async streamEdit(input: string, modelTitle: string | undefined) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      return;
+    }
 
-  const existingHandler =
-    verticalPerLineDiffManager.getHandlerForFile(filepath);
-  existingHandler?.clear(false);
-  await new Promise((resolve) => {
-    setTimeout(resolve, 200);
-  });
-  const diffHandler =
-    verticalPerLineDiffManager.createVerticalPerLineDiffHandler(
+    const filepath = editor.document.uri.fsPath;
+    const startLine = editor.selection.start.line;
+    const endLine = editor.selection.end.line;
+
+    const existingHandler = this.getHandlerForFile(filepath);
+    existingHandler?.clear(false);
+    await new Promise((resolve) => {
+      setTimeout(resolve, 200);
+    });
+    const diffHandler = this.createVerticalPerLineDiffHandler(
       filepath,
       existingHandler?.range.start.line ?? startLine,
       existingHandler?.range.end.line ?? endLine,
-      input
+      input,
     );
-  if (!diffHandler) {
-    return;
-  }
+    if (!diffHandler) {
+      return;
+    }
 
-  const selectedRange =
-    existingHandler?.range ??
-    new vscode.Range(
-      editor.selection.start.with(undefined, 0),
-      editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER)
+    const selectedRange =
+      existingHandler?.range ??
+      new vscode.Range(
+        editor.selection.start.with(undefined, 0),
+        editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER),
+      );
+    const rangeContent = editor.document.getText(selectedRange);
+    const llm = await this.configHandler.llmFromTitle(modelTitle);
+
+    // Unselect the range
+    editor.selection = new vscode.Selection(
+      editor.selection.active,
+      editor.selection.active,
     );
-  const rangeContent = editor.document.getText(selectedRange);
-  const llm = await llmFromTitle();
 
-  // Unselect the range
-  editor.selection = new vscode.Selection(
-    editor.selection.active,
-    editor.selection.active
-  );
+    vscode.commands.executeCommand(
+      "setContext",
+      "continue.streamingDiff",
+      true,
+    );
 
-  vscode.commands.executeCommand("setContext", "continue.streamingDiff", true);
-
-  if (existingHandler?.input) {
-    if (existingHandler.input.startsWith("Original request: ")) {
-      existingHandler.input = existingHandler.input.substring(
-        "Original request: ".length
+    if (existingHandler?.input) {
+      if (existingHandler.input.startsWith("Original request: ")) {
+        existingHandler.input = existingHandler.input.substring(
+          "Original request: ".length,
+        );
+      }
+      input = `Original request: ${existingHandler.input}\nUpdated request: ${input}`;
+    }
+    try {
+      await diffHandler.run(
+        streamDiffLines(
+          rangeContent,
+          llm,
+          input,
+          getMarkdownLanguageTagForFile(filepath),
+        ),
+      );
+    } catch (e) {
+      console.error("Error streaming diff:", e);
+    } finally {
+      vscode.commands.executeCommand(
+        "setContext",
+        "continue.streamingDiff",
+        false,
       );
     }
-    input = `Original request: ${existingHandler.input}\nUpdated request: ${input}`;
   }
-
-  await diffHandler.run(
-    streamDiffLines(
-      rangeContent,
-      llm,
-      input,
-      getMarkdownLanguageTagForFile(filepath)
-    )
-  );
 }
-
-export interface VerticalDiffCodeLens {
-  start: number;
-  numRed: number;
-  numGreen: number;
-}
-
-export const editorToVerticalDiffCodeLens: Map<string, VerticalDiffCodeLens[]> =
-  new Map();

@@ -54,7 +54,7 @@ export async function getPromptParts(
   fullFileContents: string,
   model: ILLM,
   input: string,
-  tokenLimit: number | undefined
+  tokenLimit: number | undefined,
 ) {
   let maxTokens = Math.floor(model.contextLength / 2);
 
@@ -119,7 +119,7 @@ export async function getPromptParts(
       fileSuffix = lastLine + fileSuffix;
       rif.contents = rif.contents.substring(
         0,
-        rif.contents.length - lastLine.length
+        rif.contents.length - lastLine.length,
       );
       lines = rif.contents.split(/\r?\n/);
       lastLine = lines[lines.length - 1] || null;
@@ -141,7 +141,7 @@ function compilePrompt(
   filePrefix: string,
   contents: string,
   fileSuffix: string,
-  input: string
+  input: string,
 ): string {
   if (contents.trim() == "") {
     // Separate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
@@ -216,11 +216,11 @@ const EditSlashCommand: SlashCommand = {
   run: async function* ({ ide, llm, input, history, contextItems, params }) {
     let contextItemToEdit = contextItems.find(
       (item: ContextItemWithId) =>
-        item.editing && item.id.providerTitle === "code"
+        item.editing && item.id.providerTitle === "code",
     );
     if (!contextItemToEdit) {
       contextItemToEdit = contextItems.find(
-        (item: ContextItemWithId) => item.id.providerTitle === "code"
+        (item: ContextItemWithId) => item.id.providerTitle === "code",
       );
     }
 
@@ -230,13 +230,18 @@ const EditSlashCommand: SlashCommand = {
     }
 
     // Strip unecessary parts of the input (the fact that you have to do this is suboptimal, should be refactored away)
-    input = input.replace(
-      `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,
-      ""
-    );
-    if (input.startsWith("/edit")) {
-      input = input.replace("/edit", "").trimStart();
+    let content = history[history.length - 1].content;
+    if (typeof content !== "string") {
+      content.forEach((part) => {
+        if (part.text && part.text.startsWith("/edit")) {
+          part.text = part.text.replace("/edit", "").trimStart();
+        }
+      });
     }
+    let userInput = stripImages(content).replace(
+      `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,
+      "",
+    );
 
     const rif: RangeInFileWithContents =
       contextItemToRangeInFileWithContents(contextItemToEdit);
@@ -248,18 +253,18 @@ const EditSlashCommand: SlashCommand = {
       rif,
       fullFileContents,
       llm,
-      input,
-      params?.tokenLimit
+      userInput,
+      params?.tokenLimit,
     );
     const [dedentedContents, commonWhitespace] =
       dedentAndGetCommonWhitespace(contents);
     contents = dedentedContents;
 
-    let prompt = compilePrompt(filePrefix, contents, fileSuffix, input);
+    let prompt = compilePrompt(filePrefix, contents, fileSuffix, userInput);
     let fullFileContentsLines = fullFileContents.split("\n");
     let fullPrefixLines = fullFileContentsLines.slice(
       0,
-      Math.max(0, rif.range.start.line - 1)
+      Math.max(0, rif.range.start.line - 1),
     );
     let fullSuffixLines = fullFileContentsLines.slice(rif.range.end.line);
 
@@ -421,14 +426,14 @@ const EditSlashCommand: SlashCommand = {
 
       // Make sure they are sorted by index
       indicesOfLastMatchedLines = indicesOfLastMatchedLines.sort(
-        (a, b) => a[0] - b[0]
+        (a, b) => a[0] - b[0],
       );
 
       currentBlockLines.push(line);
     }
 
     let messages = history;
-    messages.push({ role: "user", content: prompt });
+    messages[messages.length - 1] = { role: "user", content: prompt };
 
     let linesOfPrefixCopied = 0;
     let lines = [];
@@ -447,12 +452,12 @@ const EditSlashCommand: SlashCommand = {
         messages.slice(0, messages.length - 1),
         {
           codeToEdit: rif.contents,
-          userInput: input,
+          userInput,
           filePrefix: filePrefix,
           fileSuffix: fileSuffix,
           systemMessage: llm.systemMessage || "",
           // "contextItems": (await sdk.getContextItemChatMessages()).map(x => x.content || "").join("\n\n"),
-        }
+        },
       );
       if (typeof rendered === "string") {
         messages = [
@@ -476,7 +481,7 @@ const EditSlashCommand: SlashCommand = {
       lineStream = filterEnglishLinesAtEnd(filterCodeBlockLines(lineStream));
 
       generator = streamWithNewLines(
-        fixCodeLlamaFirstLineIndentation(lineStream)
+        fixCodeLlamaFirstLineIndentation(lineStream),
       );
     } else {
       async function* gen() {
@@ -485,7 +490,7 @@ const EditSlashCommand: SlashCommand = {
           maxTokens: Math.min(
             maxTokens,
             Math.floor(llm.contextLength / 2),
-            4096
+            4096,
           ),
         })) {
           yield stripImages(chunk.content);
@@ -562,7 +567,7 @@ const EditSlashCommand: SlashCommand = {
           unfinishedLine?.startsWith("<")
             ? commonWhitespace
             : commonWhitespace + unfinishedLine,
-        ])
+        ]),
       );
     }
 

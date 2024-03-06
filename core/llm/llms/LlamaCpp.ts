@@ -22,7 +22,7 @@ class LlamaCpp extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const headers = {
       "Content-Type": "application/json",

@@ -39,7 +39,7 @@ class Together extends OpenAI {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     for await (const chunk of this._legacystreamComplete(prompt, options)) {
       yield chunk;

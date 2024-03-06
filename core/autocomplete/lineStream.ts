@@ -2,6 +2,20 @@ import { distance } from "fastest-levenshtein";
 import { DiffLine } from "..";
 import { LineStream } from "../diff/util";
 
+export async function* avoidPathLine(
+  stream: LineStream,
+  comment: string,
+): LineStream {
+  // Snippets are inserted as comments with a line at the start '// Path: <PATH>'.
+  // Sometimes the model with copy this pattern, which is unwanted
+  for await (const line of stream) {
+    if (line.startsWith(comment + " Path: ")) {
+      continue;
+    }
+    yield line;
+  }
+}
+
 export async function* streamWithNewLines(stream: LineStream): LineStream {
   let firstLine = true;
   for await (const nextLine of stream) {
@@ -18,7 +32,7 @@ const bracketsReverse = [")", "]", "}", "`", '"""'];
 
 export async function* stopAtSimilarLine(
   stream: LineStream,
-  line: string
+  line: string,
 ): AsyncGenerator<string> {
   line = line.trim();
   for await (const nextLine of stream) {
@@ -36,6 +50,17 @@ export async function* stopAtSimilarLine(
       break;
     }
     yield nextLine;
+  }
+}
+
+const LINES_TO_STOP_AT = ["# End of file."];
+
+export async function* stopAtLines(stream: LineStream): LineStream {
+  for await (const line of stream) {
+    if (LINES_TO_STOP_AT.includes(line)) {
+      break;
+    }
+    yield line;
   }
 }
 
@@ -171,7 +196,7 @@ function isUselessLine(line: string): boolean {
 }
 
 export async function* filterLeadingAndTrailingNewLineInsertion(
-  diffLines: AsyncGenerator<DiffLine>
+  diffLines: AsyncGenerator<DiffLine>,
 ): AsyncGenerator<DiffLine> {
   let isFirst = true;
   let buffer: DiffLine[] = [];
@@ -196,5 +221,30 @@ export async function* filterLeadingAndTrailingNewLineInsertion(
       }
       yield diffLine;
     }
+  }
+}
+
+export async function* stopAtRepeatingLines(lines: LineStream): LineStream {
+  const repeatedLines: string[] = [];
+  for await (const line of lines) {
+    if (repeatedLines.length === 0) {
+      repeatedLines.push(line);
+    } else if (repeatedLines.length < 3) {
+      if (repeatedLines[repeatedLines.length - 1] === line) {
+        repeatedLines.push(line);
+      } else {
+        while (repeatedLines.length > 0) {
+          yield repeatedLines.shift()!;
+        }
+        yield line;
+      }
+    } else {
+      yield repeatedLines[0];
+      return;
+    }
+  }
+
+  while (repeatedLines.length > 0) {
+    yield repeatedLines.shift()!;
   }
 }

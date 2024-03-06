@@ -17,7 +17,7 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const issueId = query;
     const { Octokit } = await import("@octokit/rest");
@@ -58,7 +58,7 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
   }
 
   async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const { Octokit } = await import("@octokit/rest");
 
@@ -83,7 +83,7 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
             repo: repo.repo,
             issue_number: issue.number,
           }),
-        }))
+        })),
       );
     }
 

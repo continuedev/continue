@@ -6,8 +6,7 @@ import {
 } from "../..";
 import { getBasename } from "../../util";
 
-import { getHighlightsThatFit, ILLMContextSizer } from "llm-code-highlighter/dist/index.continue";
-import { countTokens } from "../../llm/countTokens";
+// import { getHighlightsThatFit, ILLMContextSizer } from "llm-code-highlighter/dist/index.continue";
 
 const HIGHLIGHTS_TOKEN_BUDGET = 2000;
 
@@ -21,7 +20,7 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const ide = extras.ide;
     const openFiles = await ide.getOpenFiles();
@@ -33,32 +32,33 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
             absPath: filepath,
             content: `${await ide.readFile(filepath)}`,
           };
-        })
+        }),
       );
-    const contextSizer =  {
-      fits(content: string): boolean {
-        return countTokens(content, "") < HIGHLIGHTS_TOKEN_BUDGET;
-      }
-    } as ILLMContextSizer
-    const repoMap = await getHighlightsThatFit(
-      contextSizer,
-      [],
-      allFiles
-        .filter((file) => file.content.length > 0)
-        .map((file) => {
-          return {
-            relPath: file.name,
-            code: file.content,
-          };
-        })
-    );
-    return [
-      {
-        content: repoMap ? repoMap : "",
-        name: "Code Highlights",
-        description: "Code highlights from open files",
-      },
-    ];
+    // const contextSizer =  {
+    //   fits(content: string): boolean {
+    //     return countTokens(content, "") < HIGHLIGHTS_TOKEN_BUDGET;
+    //   }
+    // } as ILLMContextSizer
+    // const repoMap = await getHighlightsThatFit(
+    //   contextSizer,
+    //   [],
+    //   allFiles
+    //     .filter((file) => file.content.length > 0)
+    //     .map((file) => {
+    //       return {
+    //         relPath: file.name,
+    //         code: file.content,
+    //       };
+    //     })
+    // );
+    // return [
+    //   {
+    //     content: repoMap ? repoMap : "",
+    //     name: "Code Highlights",
+    //     description: "Code highlights from open files",
+    //   },
+    // ];
+    return [];
   }
 
   async load(): Promise<void> {}

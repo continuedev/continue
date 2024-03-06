@@ -5,10 +5,10 @@ import {
   MessagePart,
   RangeInFile,
 } from "core";
-import { ExtensionIde } from "core/ide";
-import { ideRequest } from "core/ide/messaging";
 import { stripImages } from "core/llm/countTokens";
 import { getBasename } from "core/util";
+import { ideRequest } from "../../util/ide";
+import { WebviewIde } from "../../util/webviewIde";
 
 interface MentionAttrs {
   label: string;
@@ -26,7 +26,7 @@ interface MentionAttrs {
 
 async function resolveEditorContent(
   editorState: JSONContent
-): Promise<[ContextItemWithId[], MessageContent]> {
+): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
   const selectedCode: RangeInFile[] = [];
@@ -34,6 +34,8 @@ async function resolveEditorContent(
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
       const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
+      
+      // Only take the first slash command
       if (foundSlashCommand && typeof slashCommand === "undefined") {
         slashCommand = foundSlashCommand;
       }
@@ -87,13 +89,14 @@ async function resolveEditorContent(
 
   let contextItemsText = "";
   let contextItems: ContextItemWithId[] = [];
-  const ide = new ExtensionIde();
+  const ide = new WebviewIde();
   for (const item of contextItemAttrs) {
     if (item.itemType === "file") {
       // This is a quick way to resolve @file references
       const basename = getBasename(item.id);
-      const content = await ide.readFile(item.id);
-      contextItemsText += `\`\`\`title="${basename}"\n${content}\n\`\`\`\n`;
+      const rawContent = await ide.readFile(item.id);
+      const content = `\`\`\`title="${basename}"\n${rawContent}\n\`\`\`\n`;
+      contextItemsText += content
       contextItems.push({
         name: basename,
         description: item.id,
@@ -110,10 +113,7 @@ async function resolveEditorContent(
         fullInput: stripImages(parts),
         selectedCode,
       };
-      const { items: resolvedItems } = await ideRequest(
-        "getContextItems",
-        data
-      );
+      const resolvedItems = await ideRequest("context/getContextItems", data);
       contextItems.push(...resolvedItems);
       for (const resolvedItem of resolvedItems) {
         contextItemsText += resolvedItem.content + "\n\n";
@@ -127,10 +127,15 @@ async function resolveEditorContent(
 
   if (slashCommand) {
     let lastTextIndex = findLastIndex(parts, (part) => part.type === "text");
-    parts[lastTextIndex].text = `${slashCommand} ${parts[lastTextIndex].text}`;
+    const lastPart = `${slashCommand} ${parts[lastTextIndex]?.text || ""}`;
+    if (parts.length > 0) {
+      parts[lastTextIndex].text = lastPart;
+    } else {
+      parts = [{ type: "text", text: lastPart }];
+    }
   }
 
-  return [contextItems, parts];
+  return [contextItems, selectedCode, parts];
 }
 
 function findLastIndex<T>(
@@ -151,11 +156,12 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
   let slashCommand = undefined;
   for (const child of p.content || []) {
     if (child.type === "text") {
-      text += child.text;
+      text += text === "" ? child.text.trimStart() : child.text;
     } else if (child.type === "mention") {
-      if (!["codebase"].includes(child.attrs.id)) {
-        text += child.attrs.label;
-      }
+      text +=
+        typeof child.attrs.renderInlineAs === "string"
+          ? child.attrs.renderInlineAs
+          : child.attrs.label;
       contextItems.push(child.attrs);
     } else if (child.type === "slashcommand") {
       if (typeof slashCommand === "undefined") {

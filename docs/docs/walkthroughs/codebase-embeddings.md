@@ -96,13 +96,42 @@ We also support other methods of generating embeddings, which can be configured 
 
 ### OpenAI
 
-OpenAI's [ada-002 embeddings](https://platform.openai.com/docs/guides/embeddings) are high dimensional embeddings that give great performance on both text and code.
+OpenAI's [embeddings](https://platform.openai.com/docs/guides/embeddings) are high dimensional embeddings that give great performance on both text and code.
+
+Configuration for text-embedding-3-small Model. This is default. 
+The text-embedding-3-small model offers an outstanding balance between performance and efficiency, suitable for a versatile range of applications.
 
 ```json title="~/.continue/config.json"
 {
   "embeddingsProvider": {
     "provider": "openai",
-    "model": "text-embedding-ada-002", // optional, defaults to "text-embedding-ada-002"
+    "model": "text-embedding-3-small",
+    "apiBase": "<your custom OpenAI-compatible endpoint>" // optional, defaults to OpenAI's API
+  }
+}
+```
+
+Configuration for text-embedding-3-large Model
+For those requiring the highest level of embedding detail and precision, the text-embedding-3-large model is the better choice.
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "provider": "openai",
+    "model": "text-embedding-3-large",
+    "apiBase": "<your custom OpenAI-compatible endpoint>" // optional, defaults to OpenAI's API
+  }
+}
+```
+
+Legacy Model Configuration
+For certain scenarios, you may still find the text-embedding-ada-002 model relevant. Below is the configuration example:
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "provider": "openai",
+    "model": "text-embedding-ada-002",
     "apiBase": "<your custom OpenAI-compatible endpoint>" // optional, defaults to OpenAI's API
   }
 }

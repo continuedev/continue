@@ -12,7 +12,7 @@ export const greenDecorationType = vscode.window.createTextEditorDecorationType(
     isWholeLine: true,
     backgroundColor: "rgba(0, 255, 0, 0.2)",
     rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
-  }
+  },
 );
 
 export const indexDecorationType = vscode.window.createTextEditorDecorationType(
@@ -20,7 +20,7 @@ export const indexDecorationType = vscode.window.createTextEditorDecorationType(
     isWholeLine: true,
     backgroundColor: "rgba(255, 255, 255, 0.2)",
     rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
-  }
+  },
 );
 export const belowIndexDecorationType =
   vscode.window.createTextEditorDecorationType({
@@ -35,7 +35,7 @@ export class DecorationTypeRangeManager {
 
   constructor(
     decorationType: vscode.TextEditorDecorationType,
-    editor: vscode.TextEditor
+    editor: vscode.TextEditor,
   ) {
     this.decorationType = decorationType;
     this.editor = editor;
@@ -48,7 +48,7 @@ export class DecorationTypeRangeManager {
     if (lastRange && lastRange.end.line === startIndex - 1) {
       this.ranges[this.ranges.length - 1] = lastRange.with(
         undefined,
-        lastRange.end.translate(numLines)
+        lastRange.end.translate(numLines),
       );
     } else {
       this.ranges.push(
@@ -56,8 +56,8 @@ export class DecorationTypeRangeManager {
           startIndex,
           0,
           startIndex + numLines - 1,
-          Number.MAX_SAFE_INTEGER
-        )
+          Number.MAX_SAFE_INTEGER,
+        ),
       );
     }
 
@@ -79,11 +79,11 @@ export class DecorationTypeRangeManager {
 
   private translateRange(
     range: vscode.Range,
-    lineOffset: number
+    lineOffset: number,
   ): vscode.Range {
     return new vscode.Range(
       range.start.translate(lineOffset),
-      range.end.translate(lineOffset)
+      range.end.translate(lineOffset),
     );
   }
 

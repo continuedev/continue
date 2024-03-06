@@ -106,6 +106,20 @@ export const Mention = Node.create<MentionOptions>({
         },
       },
 
+      renderInlineAs: {
+        default: null,
+        parseHTML: (element) => element.getAttribute("data-renderInlineAs"),
+        renderHTML: (attributes) => {
+          if (!attributes.renderInlineAs) {
+            return {};
+          }
+
+          return {
+            "data-renderInlineAs": attributes.renderInlineAs,
+          };
+        },
+      },
+
       query: {
         default: null,
         parseHTML: (element) => element.getAttribute("data-query"),
