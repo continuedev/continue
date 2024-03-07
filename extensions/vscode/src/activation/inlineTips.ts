@@ -10,6 +10,12 @@ const inlineTipDecoration = vscode.window.createTextEditorDecorationType({
   },
 });
 
+function showInlineTip() {
+  return vscode.workspace
+    .getConfiguration("continue")
+    .get<boolean>("showInlineTip");
+}
+
 function handleSelectionChange(e: vscode.TextEditorSelectionChangeEvent) {
   const selection = e.selections[0];
   const editor = e.textEditor;
@@ -18,12 +24,7 @@ function handleSelectionChange(e: vscode.TextEditorSelectionChangeEvent) {
     return;
   }
 
-  if (
-    selection.isEmpty ||
-    vscode.workspace
-      .getConfiguration("continue")
-      .get<boolean>("showInlineTip") === false
-  ) {
+  if (selection.isEmpty || showInlineTip() === false) {
     editor.setDecorations(inlineTipDecoration, []);
     return;
   }
@@ -73,7 +74,7 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
 
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor?.document.getText() === "") {
+      if (editor?.document.getText() === "" && showInlineTip() === true) {
         if (
           editor.document.uri.toString().startsWith("output:") ||
           editor.document.uri.scheme === "comment"
@@ -98,7 +99,7 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
       if (e.document.uri.toString().startsWith("vscode://inline-chat")) {
         return;
       }
-      if (e.document.getText() === "") {
+      if (e.document.getText() === "" && showInlineTip() === true) {
         vscode.window.visibleTextEditors.forEach((editor) => {
           editor.setDecorations(emptyFileTooltipDecoration, [
             {
