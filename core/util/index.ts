@@ -187,5 +187,6 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
 }
 
 export function copyOf(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
   return JSON.parse(JSON.stringify(obj));
 }
