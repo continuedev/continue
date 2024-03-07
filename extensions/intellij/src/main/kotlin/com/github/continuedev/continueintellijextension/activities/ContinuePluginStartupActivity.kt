@@ -223,6 +223,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 }
                 val target = "$os-$arch"
 
+                println("Identified OS: $os, Arch: $arch")
+
                 val corePath = Paths.get(pluginPath.toString(), "core").toString()
                 val targetPath = Paths.get(corePath, target).toString()
                 val continueCorePath = Paths.get(targetPath, "pkg" + (if (os == "win32") ".exe" else "")).toString()
@@ -238,7 +240,10 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                     Files.copy(nodeSqlite3Path, coreNodeSqlite3Path)
                 }
 
-                val coreMessenger = CoreMessenger(continueCorePath, ideProtocolClient);
+                // esbuild needs permissions
+                val esbuildPath = Paths.get(targetPath, "esbuild"+ (if (os == "win32") ".exe" else "")).toString()
+
+                val coreMessenger = CoreMessenger(esbuildPath, continueCorePath, ideProtocolClient);
                 continuePluginService.coreMessenger = coreMessenger
             }
         }

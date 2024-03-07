@@ -38,6 +38,7 @@ import {
   getContinueDotEnv,
   migrate,
 } from "../util/paths";
+import { defaultConfig } from "./default";
 const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -73,7 +74,14 @@ function loadSerializedConfig(
   ideType: IdeType,
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath(ideType);
-  let config = resolveSerializedConfig(configPath);
+  let config: SerializedContinueConfig;
+  try {
+    config = resolveSerializedConfig(configPath);
+  } catch (e) {
+    console.log("config.json is invalid. Falling back to default.");
+    config = defaultConfig;
+  }
+
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
   }
