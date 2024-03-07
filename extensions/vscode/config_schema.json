@@ -54,6 +54,11 @@
           "title": "Number of threads",
           "description": "The number of threads used in the generation process. Only available for Ollama (this is the num_thread parameter)",
           "type": "integer"
+        },
+        "keepAlive": {
+          "title": "Ollama keep_alive",
+          "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",
+          "type": "integer"
         }
       }
     },

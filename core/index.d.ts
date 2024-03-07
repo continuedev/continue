@@ -547,6 +547,7 @@ interface BaseCompletionOptions {
   stop?: string[];
   maxTokens?: number;
   numThreads?: number;
+  keepAlive?: number;
 }
 
 export interface ModelDescription {
