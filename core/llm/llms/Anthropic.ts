@@ -50,7 +50,7 @@ class Anthropic extends BaseLLM {
       },
       body: JSON.stringify({
         ...this._convertArgs(options),
-        messages,
+        messages: messages.filter((m) => m.role !== "system"),
         system: this.systemMessage,
         stream: true,
       }),

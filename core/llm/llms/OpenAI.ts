@@ -148,7 +148,7 @@ class OpenAI extends BaseLLM {
     });
 
     for await (const value of streamSse(response)) {
-      if (value.choices?.[0]?.text) {
+      if (value.choices?.[0]?.text && value.finish_reason !== "eos") {
         yield value.choices[0].text;
       }
     }

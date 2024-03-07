@@ -4,6 +4,7 @@ import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
 import { GeneratorReuseManager } from "core/autocomplete/util";
 import { ConfigHandler } from "core/config/handler";
 import { logDevData } from "core/util/devdata";
+import { Telemetry } from "core/util/posthog";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
@@ -58,8 +59,8 @@ export class ContinueCompletionProvider
 
     const config = await this.configHandler.loadConfig();
     const options = {
-      ...config.tabAutocompleteOptions,
       ...DEFAULT_AUTOCOMPLETE_OPTS,
+      ...config.tabAutocompleteOptions,
     };
 
     if (ContinueCompletionProvider.debouncing) {
@@ -114,6 +115,13 @@ export class ContinueCompletionProvider
         // Wait 10 seconds, then assume it wasn't accepted
         outcome.accepted = false;
         logDevData("autocomplete", outcome);
+        Telemetry.capture("autocomplete", {
+          accepted: outcome.accepted,
+          modelName: outcome.modelName,
+          modelProvider: outcome.modelProvider,
+          time: outcome.time,
+          cacheHit: outcome.cacheHit,
+        });
       }, 10_000);
 
       return [

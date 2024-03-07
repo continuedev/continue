@@ -1,13 +1,12 @@
 import Parser from "web-tree-sitter";
 import { TabAutocompleteOptions } from "..";
 import { RangeInFileWithContents } from "../commands/util";
+
 import {
   countTokens,
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../llm/countTokens";
-import { getBasename } from "../util";
-
 import { getAst, getTreePathAtCursor } from "./ast";
 import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
 import {
@@ -22,23 +21,6 @@ export function languageForFilepath(
   filepath: string,
 ): AutocompleteLanguageInfo {
   return LANGUAGES[filepath.split(".").slice(-1)[0]] || Typescript;
-}
-
-function formatExternalSnippet(
-  filepath: string,
-  snippet: string,
-  language: AutocompleteLanguageInfo,
-) {
-  const comment = language.comment;
-  const lines = [
-    comment + " Path: " + getBasename(filepath),
-    ...snippet
-      .trim()
-      .split("\n")
-      .map((line) => comment + " " + line),
-    comment,
-  ];
-  return lines.join("\n");
 }
 
 const BLOCK_TYPES = ["body", "statement_block"];
@@ -113,43 +95,8 @@ export async function constructAutocompletePrompt(
   suffix: string;
   useFim: boolean;
   completeMultiline: boolean;
+  snippets: AutocompleteSnippet[];
 }> {
-  // Find external snippets
-  let snippets: RangeInFileWithContents[] = extraSnippets;
-
-  const windowAroundCursor =
-    fullPrefix.slice(
-      -options.slidingWindowSize * options.slidingWindowPrefixPercentage,
-    ) +
-    fullSuffix.slice(
-      options.slidingWindowSize * (1 - options.slidingWindowPrefixPercentage),
-    );
-
-  const slidingWindowMatches = await slidingWindowMatcher(
-    recentlyEditedDocuments,
-    windowAroundCursor,
-    3,
-    options.slidingWindowSize,
-  );
-  snippets.push(...slidingWindowMatches);
-
-  const recentlyEdited = (
-    await Promise.all(
-      recentlyEditedRanges.map(async (r) => {
-        return r;
-        // return await getScopeAroundRange(r);
-      }),
-    )
-  ).filter((s) => !!s);
-  snippets.push(...(recentlyEdited as any));
-
-  // Rank / order the snippets
-  const scoredSnippets = rankSnippets(snippets, windowAroundCursor);
-
-  // Fill maxSnippetTokens with snippets
-  const maxSnippetTokens =
-    options.maxPromptTokens * options.maxSnippetPercentage;
-
   // Construct basic prefix
   const maxPrefixTokens = options.maxPromptTokens * options.prefixPercentage;
   let prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens, modelName);
@@ -161,44 +108,82 @@ export async function constructAutocompletePrompt(
   );
   let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
 
-  // Remove prefix range from snippets
-  const prefixLines = prefix.split("\n").length;
-  const suffixLines = suffix.split("\n").length;
-  const buffer = 8;
-  const prefixSuffixRangeWithBuffer = {
-    start: {
-      line: cursorLine - prefixLines - buffer,
-      character: 0,
-    },
-    end: {
-      line: cursorLine + suffixLines + buffer,
-      character: 0,
-    },
-  };
-  let finalSnippets = removeRangeFromSnippets(
-    scoredSnippets,
-    filepath.split("://").slice(-1)[0],
-    prefixSuffixRangeWithBuffer,
-  );
+  // Find external snippets
+  let snippets: AutocompleteSnippet[] = [];
 
-  // Filter snippets for those with best scores (must be above threshold)
-  finalSnippets = finalSnippets.filter(
-    (snippet) => snippet.score >= options.recentlyEditedSimilarityThreshold,
-  );
-  finalSnippets = fillPromptWithSnippets(
-    scoredSnippets,
-    maxSnippetTokens,
-    modelName,
-  );
+  if (options.useOtherFiles) {
+    snippets.push(...extraSnippets);
 
-  // Format snippets as comments and prepend to prefix
-  const formattedSnippets = finalSnippets
-    .map((snippet) =>
-      formatExternalSnippet(snippet.filepath, snippet.contents, language),
-    )
-    .join("\n");
-  if (formattedSnippets.length > 0) {
-    prefix = formattedSnippets + "\n\n" + prefix;
+    const windowAroundCursor =
+      fullPrefix.slice(
+        -options.slidingWindowSize * options.slidingWindowPrefixPercentage,
+      ) +
+      fullSuffix.slice(
+        options.slidingWindowSize * (1 - options.slidingWindowPrefixPercentage),
+      );
+
+    const slidingWindowMatches = await slidingWindowMatcher(
+      recentlyEditedDocuments,
+      windowAroundCursor,
+      3,
+      options.slidingWindowSize,
+    );
+    snippets.push(...slidingWindowMatches);
+
+    const recentlyEdited = (
+      await Promise.all(
+        recentlyEditedRanges.map(async (r) => {
+          return r;
+          // return await getScopeAroundRange(r);
+        }),
+      )
+    ).filter((s) => !!s);
+    snippets.push(...(recentlyEdited as any));
+    // Filter out empty snippets
+    snippets = snippets.filter(
+      (s) =>
+        s.contents.trim() !== "" &&
+        !(prefix + suffix).includes(s.contents.trim()),
+    );
+
+    // Rank / order the snippets
+    const scoredSnippets = rankSnippets(snippets, windowAroundCursor);
+
+    // Fill maxSnippetTokens with snippets
+    const maxSnippetTokens =
+      options.maxPromptTokens * options.maxSnippetPercentage;
+
+    // Remove prefix range from snippets
+    const prefixLines = prefix.split("\n").length;
+    const suffixLines = suffix.split("\n").length;
+    const buffer = 8;
+    const prefixSuffixRangeWithBuffer = {
+      start: {
+        line: cursorLine - prefixLines - buffer,
+        character: 0,
+      },
+      end: {
+        line: cursorLine + suffixLines + buffer,
+        character: 0,
+      },
+    };
+    let finalSnippets = removeRangeFromSnippets(
+      scoredSnippets,
+      filepath.split("://").slice(-1)[0],
+      prefixSuffixRangeWithBuffer,
+    );
+
+    // Filter snippets for those with best scores (must be above threshold)
+    finalSnippets = finalSnippets.filter(
+      (snippet) => snippet.score >= options.recentlyEditedSimilarityThreshold,
+    );
+    finalSnippets = fillPromptWithSnippets(
+      scoredSnippets,
+      maxSnippetTokens,
+      modelName,
+    );
+
+    snippets = finalSnippets;
   }
 
   return {
@@ -210,5 +195,6 @@ export async function constructAutocompletePrompt(
       fullPrefix,
       fullSuffix,
     ),
+    snippets,
   };
 }

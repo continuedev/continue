@@ -41,7 +41,7 @@ If you haven't already installed Continue, you can do that [here](https://market
     {
       "title": "Code Llama",
       "provider": "ollama",
-      "model": "codellama-7b"
+      "model": "codellama:7b"
     }
   ]
 }

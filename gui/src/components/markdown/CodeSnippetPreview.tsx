@@ -93,7 +93,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
             new WebviewIde().showLines(
               props.item.description,
               parseInt(lines[0]) - 1,
-              parseInt(lines[1]) - 1
+              parseInt(lines[1]) - 1,
             );
           } else {
             postToIde("showVirtualFile", {
@@ -144,7 +144,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
           height: collapsed
             ? `${Math.min(
                 MAX_PREVIEW_HEIGHT,
-                codeBlockRef.current?.scrollHeight
+                codeBlockRef.current?.scrollHeight,
               )}px`
             : undefined,
           overflow: collapsed ? "hidden" : "auto",
@@ -152,7 +152,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       >
         <StyledMarkdownPreview
           source={`${fence}${getMarkdownLanguageTagForFile(
-            props.item.description
+            props.item.description,
           )}\n${props.item.content.trim()}\n${fence}`}
           showCodeBorder={false}
         />

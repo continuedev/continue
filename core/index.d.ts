@@ -554,6 +554,7 @@ interface BaseCompletionOptions {
   stop?: string[];
   maxTokens?: number;
   numThreads?: number;
+  keepAlive?: number;
 }
 
 export interface ModelDescription {
@@ -602,6 +603,7 @@ export interface TabAutocompleteOptions {
   recentlyEditedSimilarityThreshold: number;
   useCache: boolean;
   onlyMyCode: boolean;
+  useOtherFiles: boolean;
 }
 
 export interface SerializedContinueConfig {
