@@ -50,6 +50,7 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     lowerCaseModel.includes("starcoder") ||
     lowerCaseModel.includes("star-coder") ||
     lowerCaseModel.includes("starchat") ||
+    lowerCaseModel.includes("octocoder") ||
     lowerCaseModel.includes("stable")
   ) {
     return stableCodeFimTemplate;
