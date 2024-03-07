@@ -1,7 +1,6 @@
 // Fill in the middle prompts
 
 import { CompletionOptions } from "..";
-import { getBasename } from "../util";
 import { AutocompleteSnippet } from "./ranking";
 
 interface AutocompleteTemplate {
@@ -40,12 +39,13 @@ const starcoder2FimTemplate: AutocompleteTemplate = {
         : "<file_sep>" +
           snippets
             .map((snippet) => {
-              return `${getBasename(snippet.filepath)}\n${snippet.contents}`;
+              return snippet.contents;
+              // return `${getBasename(snippet.filepath)}\n${snippet.contents}`;
             })
             .join("<file_sep>") +
           "<file_sep>";
 
-    let prompt = `<repo_name>${reponame}${otherFiles}<fim_prefix>${filename}\n${prefix}<fim_suffix>${suffix}<fim_middle>`;
+    let prompt = `${otherFiles}<fim_prefix>${prefix}<fim_suffix>${suffix}<fim_middle>`;
     return prompt;
   },
   completionOptions: {
