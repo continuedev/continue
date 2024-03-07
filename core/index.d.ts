@@ -596,6 +596,7 @@ export interface TabAutocompleteOptions {
   recentlyEditedSimilarityThreshold: number;
   useCache: boolean;
   onlyMyCode: boolean;
+  useOtherFiles: boolean;
 }
 
 export interface SerializedContinueConfig {

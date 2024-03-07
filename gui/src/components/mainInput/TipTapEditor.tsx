@@ -420,6 +420,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         saveSession();
       }
       setTimeout(() => {
+        editor?.commands.blur();
         editor?.commands.focus("end");
       }, 20);
     },
@@ -493,8 +494,9 @@ function TipTapEditor(props: TipTapEditorProps) {
           })
           .run();
         setTimeout(() => {
+          editor.commands.blur();
           editor.commands.focus("end");
-        }, 200);
+        }, 20);
       }
       setIgnoreHighlightedCode(false);
     },

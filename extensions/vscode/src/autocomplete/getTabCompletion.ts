@@ -1,10 +1,14 @@
 import { IDE, TabAutocompleteOptions } from "core";
 import { AutocompleteLruCache } from "core/autocomplete/cache";
-import { onlyWhitespaceAfterEndOfLine } from "core/autocomplete/charStream";
+import {
+  noFirstCharNewline,
+  onlyWhitespaceAfterEndOfLine,
+} from "core/autocomplete/charStream";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
 } from "core/autocomplete/constructPrompt";
+import { AutocompleteLanguageInfo } from "core/autocomplete/languages";
 import {
   avoidPathLine,
   stopAtLines,
@@ -17,6 +21,7 @@ import { getTemplateForModel } from "core/autocomplete/templates";
 import { GeneratorReuseManager } from "core/autocomplete/util";
 import { streamLines } from "core/diff/util";
 import OpenAI from "core/llm/llms/OpenAI";
+import { getBasename } from "core/util";
 import Handlebars from "handlebars";
 import * as vscode from "vscode";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
@@ -37,6 +42,23 @@ export interface AutocompleteOutcome {
 
 const autocompleteCache = AutocompleteLruCache.get();
 const recentlyEditedTracker = new RecentlyEditedTracker();
+
+function formatExternalSnippet(
+  filepath: string,
+  snippet: string,
+  language: AutocompleteLanguageInfo,
+) {
+  const comment = language.comment;
+  const lines = [
+    comment + " Path: " + getBasename(filepath),
+    ...snippet
+      .trim()
+      .split("\n")
+      .map((line) => comment + " " + line),
+    comment,
+  ];
+  return lines.join("\n");
+}
 
 export async function getTabCompletion(
   document: vscode.TextDocument,
@@ -99,7 +121,7 @@ export async function getTabCompletion(
     });
   }
 
-  const { prefix, suffix, completeMultiline } =
+  let { prefix, suffix, completeMultiline, snippets } =
     await constructAutocompletePrompt(
       document.uri.toString(),
       pos.line,
@@ -114,12 +136,37 @@ export async function getTabCompletion(
       extrasSnippets,
     );
 
+  // Template prompt
   const { template, completionOptions } = options.template
     ? { template: options.template, completionOptions: {} }
     : getTemplateForModel(llm.model);
 
-  const compiledTemplate = Handlebars.compile(template);
-  const prompt = compiledTemplate({ prefix, suffix });
+  let prompt: string;
+  const filename = getBasename(document.uri.fsPath);
+  const reponame = getBasename(workspaceDirs[0] ?? "myproject");
+  if (typeof template === "string") {
+    const compiledTemplate = Handlebars.compile(template);
+
+    // Format snippets as comments and prepend to prefix
+    const formattedSnippets = snippets
+      .map((snippet) =>
+        formatExternalSnippet(snippet.filepath, snippet.contents, lang),
+      )
+      .join("\n");
+    if (formattedSnippets.length > 0) {
+      prefix = formattedSnippets + "\n\n" + prefix;
+    }
+
+    prompt = compiledTemplate({
+      prefix,
+      suffix,
+      filename,
+      reponame,
+    });
+  } else {
+    // Let the template function format snippets
+    prompt = template(prefix, suffix, filename, reponame, snippets);
+  }
 
   // Completion
   let completion = "";
@@ -172,8 +219,9 @@ export async function getTabCompletion(
         yield update;
       }
     };
+    let chars = generatorWithCancellation();
     const gen2 = onlyWhitespaceAfterEndOfLine(
-      generatorWithCancellation(),
+      noFirstCharNewline(chars),
       lang.endOfLine,
     );
     const lineGenerator = streamWithNewLines(

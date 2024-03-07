@@ -58,8 +58,8 @@ export class ContinueCompletionProvider
 
     const config = await this.configHandler.loadConfig();
     const options = {
-      ...config.tabAutocompleteOptions,
       ...DEFAULT_AUTOCOMPLETE_OPTS,
+      ...config.tabAutocompleteOptions,
     };
 
     if (ContinueCompletionProvider.debouncing) {

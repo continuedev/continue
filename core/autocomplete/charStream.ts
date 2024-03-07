@@ -24,3 +24,14 @@ export async function* onlyWhitespaceAfterEndOfLine(
   }
   yield pending;
 }
+
+export async function* noFirstCharNewline(stream: AsyncGenerator<string>) {
+  let first = true;
+  for await (let char of stream) {
+    if (first) {
+      first = false;
+      if (char === "\n") return;
+    }
+    yield char;
+  }
+}
