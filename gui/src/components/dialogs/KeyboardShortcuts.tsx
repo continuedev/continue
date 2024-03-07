@@ -174,7 +174,7 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ ⌫",
     windows: "⌃ ⌫",
-    description: "Cancel respoonse",
+    description: "Cancel response",
   },
   {
     mac: "⌘ '",
