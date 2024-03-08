@@ -47,6 +47,7 @@
     "pg": "^8.11.3",
     "posthog-node": "^3.6.2",
     "replicate": "^0.26.0",
+    "request": "^2.88.2",
     "socket.io-client": "^4.7.3",
     "sqlite": "^5.1.1",
     "sqlite3": "^5.1.7",

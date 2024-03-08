@@ -66,7 +66,8 @@ function breakdownArticleComponent(
     });
   }
 
-  return chunks.filter((c) => c.content.trim() !== "");
+  // Don't use small chunks. Probably they're a mistake. Definitely they'll confuse the embeddings model.
+  return chunks.filter((c) => c.content.trim().length > 20);
 }
 
 export function chunkArticle(articleResult: Article): Chunk[] {
@@ -104,19 +105,11 @@ function extractTitlesAndBodies(html: string): ArticleComponent[] {
   return result;
 }
 
-export async function urlToArticle(
+export async function stringToArticle(
+  htmlContent: string,
   subpath: string,
-  baseUrl: URL,
 ): Promise<Article | undefined> {
-  const url = new URL(subpath, baseUrl);
   try {
-    const response = await fetch(url.toString());
-
-    if (!response.ok) {
-      return undefined;
-    }
-
-    const htmlContent = await response.text();
     const dom = new JSDOM(htmlContent);
     let reader = new Readability(dom.window.document);
     let article = reader.parse();
@@ -131,6 +124,26 @@ export async function urlToArticle(
       title: article.title,
       article_components,
     };
+  } catch (err) {
+    console.error("Error converting URL to article components", err);
+    return undefined;
+  }
+}
+
+export async function urlToArticle(
+  subpath: string,
+  baseUrl: URL,
+): Promise<Article | undefined> {
+  const url = new URL(subpath, baseUrl);
+  try {
+    const response = await fetch(url.toString());
+
+    if (!response.ok) {
+      return undefined;
+    }
+
+    const htmlContent = await response.text();
+    return stringToArticle(htmlContent, subpath);
   } catch (err) {
     console.error("Error converting URL to article components", err);
     return undefined;

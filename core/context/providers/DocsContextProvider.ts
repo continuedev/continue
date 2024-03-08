@@ -6,6 +6,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../..";
+import configs from "../../indexing/docs/preIndexedDocs";
 import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider";
 
 class DocsContextProvider extends BaseContextProvider {
@@ -29,9 +30,8 @@ class DocsContextProvider extends BaseContextProvider {
       query,
       vector,
       this.options?.nRetrieve || 15,
+      embeddingsProvider.id,
     );
-
-    console.log(chunks);
 
     return [
       ...chunks
@@ -63,11 +63,25 @@ class DocsContextProvider extends BaseContextProvider {
   ): Promise<ContextSubmenuItem[]> {
     const { listDocs } = await import("../../indexing/docs/db");
     const docs = await listDocs();
-    return docs.map((doc) => ({
+    const submenuItems = docs.map((doc) => ({
       title: doc.title,
       description: new URL(doc.baseUrl).hostname,
       id: doc.baseUrl,
     }));
+
+    submenuItems.push(
+      ...configs
+        // After it's actually downloaded, we don't want to show twice
+        .filter(
+          (config) => !submenuItems.some((item) => item.id === config.startUrl),
+        )
+        .map((config) => ({
+          title: config.title,
+          description: new URL(config.startUrl).hostname,
+          id: config.startUrl,
+        })),
+    );
+    return submenuItems;
   }
 }
 

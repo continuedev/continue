@@ -2,6 +2,9 @@ import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { Chunk } from "../..";
 import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths";
+import { SqliteDb } from "../refreshIndex";
+import { downloadPreIndexedDocs } from "./preIndexed";
+import configs from "./preIndexedDocs";
 
 const DOCS_TABLE_NAME = "docs";
 
@@ -29,15 +32,46 @@ export async function retrieveDocs(
   baseUrl: string,
   vector: number[],
   nRetrieve: number,
+  embeddingsProviderId: string,
+  nested: boolean = false,
 ): Promise<Chunk[]> {
   const lancedb = await import("vectordb");
+  const db = await SqliteDb.get();
+  await createDocsTable(db);
   const lance = await lancedb.connect(getLanceDbPath());
+
+  const downloadDocs = async () => {
+    const config = configs.find((config) => config.startUrl === baseUrl);
+    if (config) {
+      await downloadPreIndexedDocs(config.title, embeddingsProviderId);
+      return await retrieveDocs(
+        baseUrl,
+        vector,
+        nRetrieve,
+        embeddingsProviderId,
+        true,
+      );
+    }
+    return undefined;
+  };
+
+  const tableNames = await lance.tableNames();
+  if (!tableNames.includes(DOCS_TABLE_NAME)) {
+    const downloaded = await downloadDocs();
+    if (downloaded) return downloaded;
+  }
+
   const table = await lance.openTable(DOCS_TABLE_NAME);
   const docs: LanceDbDocsRow[] = await table
     .search(vector)
     .limit(nRetrieve)
     .where(`baseUrl = '${baseUrl}'`)
     .execute();
+
+  if ((!docs || docs.length === 0) && !nested) {
+    const downloaded = await downloadDocs();
+    if (downloaded) return downloaded;
+  }
 
   return docs.map((doc) => ({
     digest: doc.path,
