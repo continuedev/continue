@@ -34,7 +34,7 @@ function breakdownArticleComponent(
       endLine = i;
     } else {
       chunks.push({
-        content: content,
+        content: content.trim(),
         startLine: startLine,
         endLine: endLine,
         otherMetadata: {
@@ -54,7 +54,7 @@ function breakdownArticleComponent(
   // Push the last chunk
   if (content) {
     chunks.push({
-      content: content,
+      content: content.trim(),
       startLine: startLine,
       endLine: endLine,
       otherMetadata: {
@@ -66,7 +66,7 @@ function breakdownArticleComponent(
     });
   }
 
-  return chunks;
+  return chunks.filter((c) => c.content.trim() !== "");
 }
 
 export function chunkArticle(articleResult: Article): Chunk[] {
