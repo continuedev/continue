@@ -313,7 +313,7 @@ if (args[2] === "--target") {
   });
 
   // Copy node_modules for pre-built binaries
-  const NODE_MODULES_TO_COPY = ["esbuild", "@esbuild", "@lancedb"];
+  const NODE_MODULES_TO_COPY = ["esbuild", "@esbuild", "@lancedb", "jsdom"];
   fs.mkdirSync("out/node_modules", { recursive: true });
 
   await Promise.all(
