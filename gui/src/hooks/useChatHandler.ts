@@ -34,11 +34,11 @@ function useChatHandler(dispatch: Dispatch) {
   const defaultModel = useSelector(defaultModelSelector);
 
   const slashCommands = useSelector(
-    (store: RootState) => store.state.config.slashCommands || []
+    (store: RootState) => store.state.config.slashCommands || [],
   );
 
   const contextItems = useSelector(
-    (state: RootState) => state.state.contextItems
+    (state: RootState) => state.state.contextItems,
   );
 
   const history = useSelector((store: RootState) => store.state.history);
@@ -70,7 +70,7 @@ function useChatHandler(dispatch: Dispatch) {
   }
 
   const getSlashCommandForInput = (
-    input: MessageContent
+    input: MessageContent,
   ): [SlashCommandDescription, string] | undefined => {
     let slashCommand: SlashCommandDescription | undefined;
     let slashCommandName: string | undefined;
@@ -83,7 +83,7 @@ function useChatHandler(dispatch: Dispatch) {
     if (lastText.startsWith("/")) {
       slashCommandName = lastText.split(" ")[0].substring(1);
       slashCommand = slashCommands.find(
-        (command) => command.name === slashCommandName
+        (command) => command.name === slashCommandName,
       );
     }
     if (!slashCommand || !slashCommandName) {
@@ -99,7 +99,7 @@ function useChatHandler(dispatch: Dispatch) {
     slashCommand: SlashCommandDescription,
     input: string,
     historyIndex: number,
-    selectedCode: RangeInFile[]
+    selectedCode: RangeInFile[],
   ) {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
@@ -117,7 +117,7 @@ function useChatHandler(dispatch: Dispatch) {
         historyIndex,
         selectedCode,
       },
-      cancelToken
+      cancelToken,
     )) {
       if (!activeRef.current) {
         abortController.abort();
@@ -161,7 +161,7 @@ function useChatHandler(dispatch: Dispatch) {
           message,
           index: historyIndex,
           contextItems,
-        })
+        }),
       );
 
       // TODO: hacky way to allow rerender
@@ -169,13 +169,9 @@ function useChatHandler(dispatch: Dispatch) {
 
       posthog.capture("step run", {
         step_name: "User Input",
-        params: {
-          user_input: content,
-        },
+        params: {},
       });
-      posthog.capture("userInput", {
-        input: content,
-      });
+      posthog.capture("userInput", {});
 
       const messages = constructMessages(newHistory);
 
@@ -188,16 +184,14 @@ function useChatHandler(dispatch: Dispatch) {
         const [slashCommand, commandInput] = commandAndInput;
         posthog.capture("step run", {
           step_name: slashCommand.name,
-          params: {
-            user_input: commandInput,
-          },
+          params: {},
         });
         await _streamSlashCommand(
           messages,
           slashCommand,
           commandInput,
           historyIndex,
-          selectedCode
+          selectedCode,
         );
       }
     } catch (e) {
