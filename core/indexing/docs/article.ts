@@ -1,7 +1,8 @@
-import { JSDOM } from 'jsdom';
-import { Readability } from '@mozilla/readability';
-import { MAX_CHUNK_SIZE } from "../../llm/constants";
+import { Readability } from "@mozilla/readability";
+import { JSDOM } from "jsdom";
 import { Chunk } from "../..";
+import { MAX_CHUNK_SIZE } from "../../llm/constants";
+import { cleanFragment, cleanHeader } from "../chunk/markdown";
 
 type ArticleComponent = {
   title: string;
@@ -14,19 +15,22 @@ type Article = {
   article_components: ArticleComponent[];
 };
 
-function breakdownArticleComponent(article: ArticleComponent, subpath: string): Chunk[] {
+function breakdownArticleComponent(
+  article: ArticleComponent,
+  subpath: string,
+): Chunk[] {
   let chunks: Chunk[] = [];
 
-  let lines = article.body.split('\n');
+  let lines = article.body.split("\n");
   let startLine = 0;
   let endLine = 0;
-  let content = '';
+  let content = "";
   let index = 0;
-  
+
   for (let i = 0; i < lines.length; i++) {
     let line = lines[i];
     if (content.length + line.length <= MAX_CHUNK_SIZE) {
-      content += line + '\n';
+      content += line + "\n";
       endLine = i;
     } else {
       chunks.push({
@@ -34,13 +38,13 @@ function breakdownArticleComponent(article: ArticleComponent, subpath: string): 
         startLine: startLine,
         endLine: endLine,
         otherMetadata: {
-          title: article.title
+          title: cleanHeader(article.title),
         },
         index: index,
-        filepath: subpath,
-        digest: subpath
+        filepath: subpath + `#${cleanFragment(article.title)}`,
+        digest: subpath,
       });
-      content = line + '\n';
+      content = line + "\n";
       startLine = i;
       endLine = i;
       index += 1;
@@ -54,11 +58,11 @@ function breakdownArticleComponent(article: ArticleComponent, subpath: string): 
       startLine: startLine,
       endLine: endLine,
       otherMetadata: {
-        title: article.title
+        title: cleanHeader(article.title),
       },
-        index: index,
-        filepath: subpath,
-        digest: subpath
+      index: index,
+      filepath: subpath + `#${cleanFragment(article.title)}`,
+      digest: subpath,
     });
   }
 
@@ -67,9 +71,12 @@ function breakdownArticleComponent(article: ArticleComponent, subpath: string): 
 
 export function chunkArticle(articleResult: Article): Chunk[] {
   let chunks: Chunk[] = [];
-  
+
   for (let article of articleResult.article_components) {
-    let articleChunks = breakdownArticleComponent(article, articleResult.subpath);
+    let articleChunks = breakdownArticleComponent(
+      article,
+      articleResult.subpath,
+    );
     chunks = [...chunks, ...articleChunks];
   }
 
@@ -77,24 +84,24 @@ export function chunkArticle(articleResult: Article): Chunk[] {
 }
 
 function extractTitlesAndBodies(html: string): ArticleComponent[] {
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
+  const dom = new JSDOM(html);
+  const document = dom.window.document;
 
-    const titles = Array.from(document.querySelectorAll('h2'));
-    const result = titles.map((titleElement) => {
-        const title = titleElement.textContent || '';
-        let body = '';
-        let nextSibling = titleElement.nextElementSibling;
+  const titles = Array.from(document.querySelectorAll("h2"));
+  const result = titles.map((titleElement) => {
+    const title = titleElement.textContent || "";
+    let body = "";
+    let nextSibling = titleElement.nextElementSibling;
 
-        while (nextSibling && nextSibling.tagName !== 'H2') {
-            body += nextSibling.textContent || '';
-            nextSibling = nextSibling.nextElementSibling;
-        }
+    while (nextSibling && nextSibling.tagName !== "H2") {
+      body += nextSibling.textContent || "";
+      nextSibling = nextSibling.nextElementSibling;
+    }
 
-        return { title, body };
-    });
+    return { title, body };
+  });
 
-    return result;
+  return result;
 }
 
 export async function urlToArticle(
