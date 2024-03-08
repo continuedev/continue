@@ -9,7 +9,7 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
   };
 
   get id(): string {
-    return "openai::" + this.options.model;
+    return this.options.model ?? "openai";
   }
 
   async embed(chunks: string[]) {

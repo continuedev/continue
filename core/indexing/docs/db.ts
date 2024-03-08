@@ -43,7 +43,7 @@ export async function retrieveDocs(
   const downloadDocs = async () => {
     const config = configs.find((config) => config.startUrl === baseUrl);
     if (config) {
-      await downloadPreIndexedDocs(config.title, embeddingsProviderId);
+      await downloadPreIndexedDocs(embeddingsProviderId, config.title);
       return await retrieveDocs(
         baseUrl,
         vector,
@@ -62,11 +62,13 @@ export async function retrieveDocs(
   }
 
   const table = await lance.openTable(DOCS_TABLE_NAME);
-  const docs: LanceDbDocsRow[] = await table
+  let docs: LanceDbDocsRow[] = await table
     .search(vector)
     .limit(nRetrieve)
     .where(`baseUrl = '${baseUrl}'`)
     .execute();
+
+  docs = docs.filter((doc) => doc.baseUrl === baseUrl);
 
   if ((!docs || docs.length === 0) && !nested) {
     const downloaded = await downloadDocs();

@@ -8,7 +8,7 @@ class DeepInfraEmbeddingsProvider extends BaseEmbeddingsProvider {
   };
 
   get id(): string {
-    return "deepinfra::" + this.options.model;
+    return this.options.model ?? "deepinfra";
   }
 
   async embed(chunks: string[]) {
