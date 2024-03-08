@@ -6,7 +6,7 @@ const esbuild = require("esbuild");
     entryPoints: ["src/extension.ts"],
     bundle: true,
     outfile: "out/extension.js",
-    external: ["vscode", "esbuild"],
+    external: ["vscode", "esbuild", "jsdom"],
     format: "cjs",
     platform: "node",
     sourcemap: true,
