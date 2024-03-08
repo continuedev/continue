@@ -56,6 +56,161 @@ const configs: SiteIndexingConfig[] = [
     startUrl: "https://axios-http.com/docs/intro",
     rootUrl: "https://axios-http.com/docs",
   },
+  {
+    title: "Redwood JS",
+    startUrl: "https://redwoodjs.com/docs/introduction",
+    rootUrl: "https://redwoodjs.com/docs",
+  },
+  {
+    title: "GraphQL",
+    startUrl: "https://graphql.org/learn/",
+    rootUrl: "https://graphql.org/learn/",
+  },
+  {
+    title: "Typescript",
+    startUrl: "https://www.typescriptlang.org/docs/",
+    rootUrl: "https://www.typescriptlang.org/docs/",
+  },
+  {
+    title: "Jest",
+    startUrl: "https://jestjs.io/docs/getting-started",
+    rootUrl: "https://jestjs.io/docs",
+  },
+  {
+    title: "Tailwind CSS",
+    startUrl: "https://tailwindcss.com/docs/installation",
+    rootUrl: "https://tailwindcss.com/docs",
+  },
+  {
+    title: "Vue.js",
+    startUrl: "https://vuejs.org/guide/introduction.html",
+    rootUrl: "https://vuejs.org",
+  },
+  {
+    title: "Svelte",
+    startUrl: "https://svelte.dev/docs/introduction",
+    rootUrl: "https://svelte.dev/docs",
+  },
+  {
+    title: "GitHub Actions",
+    startUrl: "https://docs.github.com/en/actions",
+    rootUrl: "https://docs.github.com/en/actions",
+  },
+  {
+    title: "NodeJS",
+    startUrl: "https://nodejs.org/docs/latest/api/",
+    rootUrl: "https://nodejs.org/docs/latest/api/",
+  },
+  {
+    title: "Socket.io",
+    startUrl: "https://socket.io/docs/v4/",
+    rootUrl: "https://socket.io/docs/v4/",
+  },
+  {
+    title: "Gradle",
+    startUrl: "https://docs.gradle.org/current/userguide/userguide.html",
+    rootUrl: "https://docs.gradle.org/current",
+  },
+  {
+    title: "Redux Toolkit",
+    startUrl: "https://redux-toolkit.js.org/introduction/getting-started",
+    rootUrl: "https://redux-toolkit.js.org",
+  },
+  {
+    title: "Chroma",
+    startUrl: "https://docs.trychroma.com/",
+    rootUrl: "https://docs.trychroma.com/",
+  },
+  {
+    title: "SQLite",
+    startUrl: "https://www.sqlite.org/docs.html",
+    rootUrl: "https://www.sqlite.org",
+  },
+  {
+    title: "Redux",
+    startUrl: "https://redux.js.org/introduction/getting-started",
+    rootUrl: "https://redux.js.org",
+  },
+  {
+    title: "Prettier",
+    startUrl: "https://prettier.io/docs/en/",
+    rootUrl: "https://prettier.io/docs/en/",
+  },
+  {
+    title: "VS Code Extension API",
+    startUrl: "https://code.visualstudio.com/api",
+    rootUrl: "https://code.visualstudio.com/api",
+  },
+  {
+    title: "Continue",
+    startUrl: "https://continue.dev/docs/intro",
+    rootUrl: "https://continue.dev/docs",
+  },
+  {
+    title: "jQuery",
+    startUrl: "https://api.jquery.com/",
+    rootUrl: "https://api.jquery.com/",
+  },
+  {
+    title: "Python",
+    startUrl: "https://docs.python.org/3/",
+    rootUrl: "https://docs.python.org/3/",
+  },
+  {
+    title: "Rust",
+    startUrl: "https://doc.rust-lang.org/book/",
+    rootUrl: "https://doc.rust-lang.org/book/",
+  },
+  {
+    title: "IntelliJ Platform SDK",
+    startUrl: "https://plugins.jetbrains.com/docs/intellij/welcome.html",
+    rootUrl: "https://plugins.jetbrains.com/docs/intellij",
+  },
+  {
+    title: "Docker",
+    startUrl: "https://docs.docker.com/",
+    rootUrl: "https://docs.docker.com/",
+  },
+  {
+    title: "NPM",
+    startUrl: "https://docs.npmjs.com/",
+    rootUrl: "https://docs.npmjs.com/",
+  },
+  {
+    title: "TipTap",
+    startUrl: "https://tiptap.dev/docs/editor/introduction",
+    rootUrl: "https://tiptap.dev/docs",
+  },
+  {
+    title: "esbuild",
+    startUrl: "https://esbuild.github.io/",
+    rootUrl: "https://esbuild.github.io/",
+  },
+  {
+    title: "Tree Sitter",
+    startUrl: "https://tree-sitter.github.io/tree-sitter/",
+    rootUrl: "https://tree-sitter.github.io/tree-sitter/",
+  },
+  {
+    title: "Netlify",
+    startUrl: "https://docs.netlify.com/",
+    rootUrl: "https://docs.netlify.com/",
+  },
+  {
+    title: "Replicate",
+    startUrl: "https://replicate.com/docs",
+    rootUrl: "https://replicate.com/docs",
+  },
+  {
+    title: "HTML",
+    startUrl: "https://www.w3schools.com/html/default.asp",
+    rootUrl: "https://www.w3schools.com/html",
+  },
+  {
+    title: "CSS",
+    startUrl: "https://www.w3schools.com/css/default.asp",
+    rootUrl: "https://www.w3schools.com/css",
+  },
 ];
 
 export default configs;
