@@ -5,10 +5,7 @@ import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths";
 import { SqliteDb } from "../refreshIndex";
 
 import { downloadPreIndexedDocs } from "./preIndexed";
-import {
-  default as configs,
-  default as preIndexedDocs,
-} from "./preIndexedDocs";
+import { default as configs } from "./preIndexedDocs";
 
 const DOCS_TABLE_NAME = "docs";
 
@@ -60,10 +57,7 @@ export async function retrieveDocs(
   };
 
   const tableNames = await lance.tableNames();
-  if (
-    !tableNames.includes(DOCS_TABLE_NAME) &&
-    preIndexedDocs.includes(baseUrl)
-  ) {
+  if (!tableNames.includes(DOCS_TABLE_NAME)) {
     const downloaded = await downloadDocs();
     if (downloaded) return downloaded;
   }
@@ -77,11 +71,7 @@ export async function retrieveDocs(
 
   docs = docs.filter((doc) => doc.baseUrl === baseUrl);
 
-  if (
-    (!docs || docs.length === 0) &&
-    !nested &&
-    preIndexedDocs.includes(baseUrl)
-  ) {
+  if ((!docs || docs.length === 0) && !nested) {
     const downloaded = await downloadDocs();
     if (downloaded) return downloaded;
   }
