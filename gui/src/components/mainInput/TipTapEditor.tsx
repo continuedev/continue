@@ -420,6 +420,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         saveSession();
       }
       setTimeout(() => {
+        editor?.commands.blur();
         editor?.commands.focus("end");
       }, 20);
     },
@@ -493,8 +494,9 @@ function TipTapEditor(props: TipTapEditorProps) {
           })
           .run();
         setTimeout(() => {
+          editor.commands.blur();
           editor.commands.focus("end");
-        }, 200);
+        }, 20);
       }
       setIgnoreHighlightedCode(false);
     },
@@ -507,15 +509,16 @@ function TipTapEditor(props: TipTapEditorProps) {
     ],
   );
 
-  useEffect(() => {
-    if (props.isMainInput && editor && document.hasFocus()) {
-      editor.commands.focus();
-      // setTimeout(() => {
-      //   // https://github.com/continuedev/continue/pull/881
-      //   editor.commands.blur();
-      // }, 0);
-    }
-  }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
+  // On linux+jetbrains only was stealing focus
+  // useEffect(() => {
+  //   if (props.isMainInput && editor && document.hasFocus()) {
+  //     editor.commands.focus();
+  //     // setTimeout(() => {
+  //     //   // https://github.com/continuedev/continue/pull/881
+  //     //   editor.commands.blur();
+  //     // }, 0);
+  //   }
+  // }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 

@@ -90,7 +90,7 @@ class Ollama extends BaseLLM {
         "starcoder-1b": "starcoder:1b",
         "starcoder-3b": "starcoder:3b",
         "stable-code-3b": "stable-code:3b",
-      }[this.model] || this.model
+      }[this.model] ?? this.model
     );
   }
 
@@ -115,7 +115,7 @@ class Ollama extends BaseLLM {
     const finalOptions: any = {
       model: this._getModel(),
       raw: true,
-      keep_alive: 60 * 30, // 30 minutes
+      keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       options: {
         temperature: options.temperature,
         top_p: options.topP,

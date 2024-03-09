@@ -23,7 +23,7 @@ class OllamaEmbeddingsProvider extends BaseEmbeddingsProvider {
   };
 
   get id(): string {
-    return "ollama::" + this.options.model;
+    return this.options.model ?? "ollama";
   }
 
   async embed(chunks: string[]) {

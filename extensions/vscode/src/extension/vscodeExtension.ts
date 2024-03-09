@@ -116,23 +116,18 @@ export class VsCodeExtension {
     const config = vscode.workspace.getConfiguration("continue");
     const enabled = config.get<boolean>("enableTabAutocomplete");
 
-    // Register inline completion provider (odd versions are pre-release)
-    if (
-      parseInt(context.extension.packageJSON.version.split(".")[1]) % 2 !==
-      0
-    ) {
-      setupStatusBar(enabled);
-      context.subscriptions.push(
-        vscode.languages.registerInlineCompletionItemProvider(
-          [{ pattern: "**" }],
-          new ContinueCompletionProvider(
-            this.configHandler,
-            this.ide,
-            this.tabAutocompleteModel,
-          ),
+    // Register inline completion provider
+    setupStatusBar(enabled);
+    context.subscriptions.push(
+      vscode.languages.registerInlineCompletionItemProvider(
+        [{ pattern: "**" }],
+        new ContinueCompletionProvider(
+          this.configHandler,
+          this.ide,
+          this.tabAutocompleteModel,
         ),
-      );
-    }
+      ),
+    );
 
     // Commands
     registerAllCommands(

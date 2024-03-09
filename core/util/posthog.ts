@@ -16,6 +16,7 @@ export class Telemetry {
   }
 
   static async setup(allow: boolean, uniqueId: string) {
+    Telemetry.uniqueId = uniqueId;
     if (!allow) {
       Telemetry.client = undefined;
     } else {

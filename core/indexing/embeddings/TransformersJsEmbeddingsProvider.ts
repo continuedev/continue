@@ -36,7 +36,7 @@ class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   get id(): string {
-    return "transformers-js";
+    return "sentence-transformers/all-MiniLM-L6-v2";
   }
 
   async embed(chunks: string[]) {

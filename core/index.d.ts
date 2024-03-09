@@ -495,6 +495,9 @@ export type ModelName =
   | "neural-chat-7b"
   // Anthropic
   | "claude-2"
+  | "claude-3-opus-20240229"
+  | "claude-3-sonnet-20240229"
+  | "claude-2.1"
   // Google PaLM
   | "chat-bison-001"
   // Gemini
@@ -551,6 +554,7 @@ interface BaseCompletionOptions {
   stop?: string[];
   maxTokens?: number;
   numThreads?: number;
+  keepAlive?: number;
 }
 
 export interface ModelDescription {
@@ -599,6 +603,7 @@ export interface TabAutocompleteOptions {
   recentlyEditedSimilarityThreshold: number;
   useCache: boolean;
   onlyMyCode: boolean;
+  useOtherFiles: boolean;
 }
 
 export interface SerializedContinueConfig {

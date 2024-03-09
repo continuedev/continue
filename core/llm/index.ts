@@ -79,22 +79,22 @@ export abstract class BaseLLM implements ILLM {
     };
 
     const templateType =
-      options.template || autodetectTemplateType(options.model);
+      options.template ?? autodetectTemplateType(options.model);
 
     this.title = options.title;
-    this.uniqueId = options.uniqueId || "None";
+    this.uniqueId = options.uniqueId ?? "None";
     this.model = options.model;
     this.systemMessage = options.systemMessage;
-    this.contextLength = options.contextLength || DEFAULT_CONTEXT_LENGTH;
+    this.contextLength = options.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",
-      maxTokens: options.completionOptions?.maxTokens || DEFAULT_MAX_TOKENS,
+      maxTokens: options.completionOptions?.maxTokens ?? DEFAULT_MAX_TOKENS,
     };
     if (CompletionOptionsForModels[options.model as ModelName]) {
       this.completionOptions = mergeJson(
         this.completionOptions,
-        CompletionOptionsForModels[options.model as ModelName] || {},
+        CompletionOptionsForModels[options.model as ModelName] ?? {},
       );
     }
     this.requestOptions = options.requestOptions;
@@ -103,7 +103,7 @@ export abstract class BaseLLM implements ILLM {
       ...options.promptTemplates,
     };
     this.templateMessages =
-      options.templateMessages ||
+      options.templateMessages ??
       autodetectTemplateFunction(
         options.model,
         this.providerName,
@@ -146,7 +146,7 @@ export abstract class BaseLLM implements ILLM {
       options.model,
       messages,
       contextLength,
-      options.maxTokens || DEFAULT_MAX_TOKENS,
+      options.maxTokens ?? DEFAULT_MAX_TOKENS,
       this.supportsImages(),
       undefined,
       functions,
@@ -219,7 +219,7 @@ ${prompt}`;
     // Most of the requestOptions aren't available in the browser
     const headers = new Headers(init?.headers);
     for (const [key, value] of Object.entries(
-      this.requestOptions?.headers || {},
+      this.requestOptions?.headers ?? {},
     )) {
       headers.append(key, value as string);
     }
@@ -263,7 +263,7 @@ ${prompt}`;
       completionOptions.model,
       this.contextLength,
       prompt,
-      completionOptions.maxTokens || DEFAULT_MAX_TOKENS,
+      completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
     );
 
     if (!raw) {
@@ -302,7 +302,7 @@ ${prompt}`;
       completionOptions.model,
       this.contextLength,
       prompt,
-      completionOptions.maxTokens || DEFAULT_MAX_TOKENS,
+      completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
     );
 
     if (!raw) {

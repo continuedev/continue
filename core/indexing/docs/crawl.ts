@@ -43,17 +43,17 @@ function shouldFilterPath(pathname: string, baseUrl: URL): boolean {
 }
 
 async function* crawlLinks(
-  path: string,
+  pathname: string,
   baseUrl: URL,
   visited: Set<string>,
 ): AsyncGenerator<number> {
-  if (visited.has(path) || shouldFilterPath(path, baseUrl)) {
+  if (visited.has(pathname) || shouldFilterPath(pathname, baseUrl)) {
     return;
   }
-  visited.add(path);
+  visited.add(pathname);
   yield visited.size;
 
-  const response = await fetch(new URL(path, baseUrl));
+  const response = await fetch(new URL(pathname, baseUrl));
   const text = await response.text();
   const $ = cheerio.load(text);
 
@@ -67,8 +67,8 @@ async function* crawlLinks(
     const parsedUrl = new URL(href, baseUrl);
     if (
       parsedUrl.hostname === baseUrl.hostname &&
-      !visited.has(parsedUrl.pathname) &&
-      parsedUrl.pathname.startsWith(baseUrl.pathname)
+      !visited.has(parsedUrl.pathname)
+      // parsedUrl.pathname.startsWith(baseUrl.pathname)
     ) {
       children.push(parsedUrl.pathname);
     }

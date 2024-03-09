@@ -68,7 +68,7 @@ interface KeyboardShortcutProps {
 }
 
 function KeyboardShortcut(props: KeyboardShortcutProps) {
-  const shortcut = getPlatform() === "windows" ? props.windows : props.mac;
+  const shortcut = getPlatform() === "mac" ? props.mac : props.windows;
   return (
     <div className="flex justify-between w-full items-center">
       <span
@@ -174,7 +174,7 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   {
     mac: "⌘ ⌫",
     windows: "⌃ ⌫",
-    description: "Cancel respoonse",
+    description: "Cancel response",
   },
   {
     mac: "⌘ '",
