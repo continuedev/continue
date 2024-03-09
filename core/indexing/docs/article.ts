@@ -10,12 +10,14 @@ type ArticleComponent = {
 };
 
 type Article = {
+  url: string;
   subpath: string;
   title: string;
   article_components: ArticleComponent[];
 };
 
 function breakdownArticleComponent(
+  url: string,
   article: ArticleComponent,
   subpath: string,
 ): Chunk[] {
@@ -41,7 +43,10 @@ function breakdownArticleComponent(
           title: cleanHeader(article.title),
         },
         index: index,
-        filepath: subpath + `#${cleanFragment(article.title)}`,
+        filepath: new URL(
+          subpath + `#${cleanFragment(article.title)}`,
+          url,
+        ).toString(),
         digest: subpath,
       });
       content = line + "\n";
@@ -61,7 +66,10 @@ function breakdownArticleComponent(
         title: cleanHeader(article.title),
       },
       index: index,
-      filepath: subpath + `#${cleanFragment(article.title)}`,
+      filepath: new URL(
+        subpath + `#${cleanFragment(article.title)}`,
+        url,
+      ).toString(),
       digest: subpath,
     });
   }
@@ -75,6 +83,7 @@ export function chunkArticle(articleResult: Article): Chunk[] {
 
   for (let article of articleResult.article_components) {
     let articleChunks = breakdownArticleComponent(
+      articleResult.url,
       article,
       articleResult.subpath,
     );
@@ -106,6 +115,7 @@ function extractTitlesAndBodies(html: string): ArticleComponent[] {
 }
 
 export async function stringToArticle(
+  url: string,
   htmlContent: string,
   subpath: string,
 ): Promise<Article | undefined> {
@@ -120,6 +130,7 @@ export async function stringToArticle(
 
     let article_components = extractTitlesAndBodies(article.content);
     return {
+      url,
       subpath,
       title: article.title,
       article_components,
@@ -143,7 +154,7 @@ export async function urlToArticle(
     }
 
     const htmlContent = await response.text();
-    return stringToArticle(htmlContent, subpath);
+    return stringToArticle(baseUrl.toString(), htmlContent, subpath);
   } catch (err) {
     console.error("Error converting URL to article components", err);
     return undefined;

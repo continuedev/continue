@@ -34,7 +34,7 @@ export async function downloadFromS3(
   });
 }
 
-interface SiteIndexingResults {
+export interface SiteIndexingResults {
   chunks: (Chunk & { embedding: number[] })[];
   url: string;
   title: string;
