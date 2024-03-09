@@ -36,15 +36,15 @@ async function fetchData(url: string): Promise<string | undefined> {
   const doc = parser.parseFromString(htmlString, "text/html");
 
   const h1 = doc.querySelector("h1.fs-headline1");
-  const title = h1?.textContent?.trim() || "No Title";
+  const title = h1?.textContent?.trim() ?? "No Title";
 
   const bodies = doc.querySelectorAll("div.js-post-body");
   if (bodies.length < 2) {
     return undefined;
   }
 
-  const question = bodies[0].textContent || "";
-  const answer = bodies[1].textContent || "";
+  const question = bodies[0].textContent ?? "";
+  const answer = bodies[1].textContent ?? "";
 
   return `
   # Question: [${title}](${url})

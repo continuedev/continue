@@ -319,7 +319,7 @@ function finalToBrowserConfig(
     models: final.models.map((m) => ({
       provider: m.providerName,
       model: m.model,
-      title: m.title || m.model,
+      title: m.title ?? m.model,
       apiKey: m.apiKey,
       apiBase: m.apiBase,
       contextLength: m.contextLength,

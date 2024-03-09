@@ -16,9 +16,9 @@ class CustomContextProviderClass implements IContextProvider {
   get description(): ContextProviderDescription {
     return {
       title: this.custom.title,
-      displayTitle: this.custom.displayTitle || this.custom.title,
-      description: this.custom.description || "",
-      type: this.custom.type || "normal",
+      displayTitle: this.custom.displayTitle ?? this.custom.title,
+      description: this.custom.description ?? "",
+      type: this.custom.type ?? "normal",
       renderInlineAs: this.custom.renderInlineAs,
     };
   }
@@ -31,7 +31,7 @@ class CustomContextProviderClass implements IContextProvider {
   }
 
   async loadSubmenuItems(args: LoadSubmenuItemsArgs) {
-    return this.custom.loadSubmenuItems?.(args) || [];
+    return this.custom.loadSubmenuItems?.(args) ?? [];
   }
 }
 

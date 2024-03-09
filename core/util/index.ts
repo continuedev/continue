@@ -121,7 +121,7 @@ export function renderPromptTemplate(
 }
 
 export function getBasename(filepath: string, n: number = 1): string {
-  return filepath.split(/[\\/]/).pop() || "";
+  return filepath.split(/[\\/]/).pop() ?? "";
 }
 
 export function getLastNPathParts(filepath: string, n: number): string {
