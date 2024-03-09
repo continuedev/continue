@@ -79,10 +79,18 @@ export class JiraClient {
 
       this._api = Axios.create({
         baseURL: `https://${this.options.domain}/rest/api/${this.options.apiVersion}/`,
-        auth: {
-          username: this.options.username,
-          password: this.options.password,
-        },
+        ...(this.options.username
+          ? {
+              auth: {
+                username: this.options.username,
+                password: this.options.password,
+              },
+            }
+          : {
+              headers: {
+                Authorization: `Bearer ${this.options.password}`,
+              },
+            }),
       });
     }
 
