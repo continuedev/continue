@@ -2,10 +2,12 @@ import {
   ContextItemWithId,
   ContinueRcJson,
   DiffLine,
+  IndexTag,
   Problem,
   Range,
 } from "..";
 import { RangeInFileWithContents } from "../commands/util";
+
 import { Protocol } from "../protocol";
 
 export type IdeProtocol = {
@@ -45,6 +47,7 @@ export type IdeProtocol = {
   getTerminalContents: [undefined, string];
   isTelemetryEnabled: [undefined, boolean];
   getUniqueId: [undefined, string];
+  getTags: [string, IndexTag[]];
 };
 
 export type WebviewProtocol = Protocol &

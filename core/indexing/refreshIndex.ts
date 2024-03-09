@@ -2,12 +2,11 @@ import crypto from "crypto";
 import * as fs from "fs";
 import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { IndexingProgressUpdate } from "..";
+import { IndexTag, IndexingProgressUpdate } from "..";
 import { getIndexSqlitePath } from "../util/paths";
 import {
   CodebaseIndex,
   IndexResultType,
-  IndexTag,
   LastModifiedMap,
   MarkCompleteCallback,
   PathAndCacheKey,
