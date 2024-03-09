@@ -93,7 +93,7 @@ class AsyncFileSaveListener : AsyncFileListener {
                 return object : AsyncFileListener.ChangeApplier {
                     override fun afterVfsChange() {
                         val config = readConfigJson()
-                        ideProtocolClient.configUpdate(config)
+                        ideProtocolClient.configUpdate()
                     }
                 }
             }
@@ -389,7 +389,7 @@ class IdeProtocolClient (
                             it
                         }
 
-                        configUpdate(updatedConfig)
+                        configUpdate()
                         setFileOpen(getConfigJsonPath())
                     }
                     "deleteModel" -> {
@@ -401,7 +401,7 @@ class IdeProtocolClient (
                             config["models"] = models
                             config
                         }
-                        configUpdate(configJson)
+                        configUpdate()
                     }
                     "addOpenAIKey" -> {
                         val updatedConfig = editConfigJson { config ->
@@ -420,7 +420,7 @@ class IdeProtocolClient (
                             config["models"] = models
                             config
                         }
-                        configUpdate(updatedConfig)
+                        configUpdate()
                     }
 
 
@@ -435,9 +435,8 @@ class IdeProtocolClient (
         }
     }
 
-    fun configUpdate(config: Map<String, Any>) {
+    fun configUpdate() {
         continuePluginService.coreMessenger?.request("config/reload", null, null) { _ -> }
-        continuePluginService.sendToWebview("configUpdate", config)
     }
 
     private fun editConfigJson(callback: (config: MutableMap<String, Any>) -> Map<String, Any>): Map<String, Any> {

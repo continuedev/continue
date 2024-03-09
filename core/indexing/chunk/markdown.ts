@@ -2,7 +2,9 @@ import { ChunkWithoutID } from "../..";
 import { countTokens } from "../../llm/countTokens";
 import { basicChunker } from "./basic";
 
-function cleanFragment(fragment: string | undefined): string | undefined {
+export function cleanFragment(
+  fragment: string | undefined,
+): string | undefined {
   if (!fragment) {
     return undefined;
   }
@@ -28,7 +30,7 @@ function cleanFragment(fragment: string | undefined): string | undefined {
   return fragment;
 }
 
-function cleanHeader(header: string | undefined): string | undefined {
+export function cleanHeader(header: string | undefined): string | undefined {
   if (!header) {
     return undefined;
   }
@@ -43,7 +45,10 @@ function cleanHeader(header: string | undefined): string | undefined {
   }
 
   // Remove all special characters except alphanumeric, hyphen, space, and underscore
-  header = header.replace(/[^\w-\s]/g, "").trim();
+  header = header
+    .replace(/[^\w-\s]/g, "")
+    .replace("¶", "")
+    .trim();
 
   return header;
 }

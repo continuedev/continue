@@ -121,7 +121,7 @@ export function renderPromptTemplate(
 }
 
 export function getBasename(filepath: string, n: number = 1): string {
-  return filepath.split(/[\\/]/).pop() || "";
+  return filepath.split(/[\\/]/).pop() ?? "";
 }
 
 export function getLastNPathParts(filepath: string, n: number): string {
@@ -187,5 +187,6 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
 }
 
 export function copyOf(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
   return JSON.parse(JSON.stringify(obj));
 }

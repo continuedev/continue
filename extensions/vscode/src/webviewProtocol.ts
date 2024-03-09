@@ -21,7 +21,7 @@ export class VsCodeWebviewProtocol {
   abortedMessageIds: Set<string> = new Set();
 
   private send(messageType: string, data: any, messageId?: string): string {
-    const id = messageId || uuidv4();
+    const id = messageId ?? uuidv4();
     this.webview?.postMessage({
       messageType,
       data,

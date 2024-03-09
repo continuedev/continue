@@ -1393,12 +1393,13 @@
       "properties": {
         "allowAnonymousTelemetry": {
           "title": "Allow Anonymous Telemetry",
-          "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data.",
+          "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data. Learn more in [the docs](https://continue.dev/docs/telemetry).",
           "default": true,
           "type": "boolean"
         },
         "models": {
           "title": "Models",
+          "markdownDescription": "Learn about setting up models in [the documentation](https://continue.dev/docs/model-setup/overview).",
           "default": [
             {
               "title": "GPT-4 (trial)",
@@ -1437,7 +1438,7 @@
         },
         "slashCommands": {
           "title": "Slash Commands",
-          "description": "An array of slash commands that let you map custom Steps to a shortcut.",
+          "markdownDescription": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the [documentation](https://continue.dev/docs/customization/slash-commands).",
           "default": [],
           "type": "array",
           "items": {
@@ -1446,7 +1447,7 @@
         },
         "customCommands": {
           "title": "Custom Commands",
-          "description": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt.",
+          "markdownDescription": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt. Learn more in the [documentation](https://continue.dev/docs/customization/slash-commands#custom-commands-use-natural-language).",
           "default": [
             {
               "name": "test",
@@ -1461,7 +1462,7 @@
         },
         "contextProviders": {
           "title": "Context Providers",
-          "description": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in the documentation.",
+          "markdownDescription": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in [the documentation](https://continue.dev/docs/customization/context-providers).",
           "default": [],
           "type": "array",
           "items": {
@@ -1499,7 +1500,7 @@
         },
         "embeddingsProvider": {
           "title": "Embeddings Provider",
-          "description": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser.",
+          "markdownDescription": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options [here](https://continue.dev/docs/walkthroughs/codebase-embeddings#embeddings-providers).",
           "type": "object",
           "properties": {
             "provider": {
@@ -1545,6 +1546,7 @@
         "tabAutocompleteOptions": {
           "title": "TabAutocompleteOptions",
           "type": "object",
+          "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://continue.dev/docs/walkthroughs/tab-autocomplete#configuration-options).",
           "properties": {
             "useCopyBuffer": {
               "type": "boolean",

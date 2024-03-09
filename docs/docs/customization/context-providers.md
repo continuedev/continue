@@ -36,8 +36,6 @@ Type '@terminal' to reference the contents of your IDE's terminal.
 
 Type `@docs` to index and retrieve snippets from any documentation site. You can add any site by selecting "Add Docs" in the dropdown, then entering the root URL of the documentation site and a title to remember it by. After the site has been indexed, you can type `@docs`, select your documentation from the dropdown, and Continue will use similarity search to automatically find important sections when answering your question.
 
-> The crawler currently works only on static sites that don't require Javascript to load. An example of a page that won't be correctly indexed is [the OpenAI documentation](https://platform.openai.com/docs/overview)
-
 ```json
 { "name": "docs" }
 ```
@@ -120,7 +118,7 @@ Type '@jira' to reference the conversation in a Jira issue. Make sure to include
 
 ```json
 {
-  "name": "issue",
+  "name": "jira",
   "params": {
     "domain": "company.atlassian.net",
     "email": "someone@somewhere.com",
@@ -129,13 +127,25 @@ Type '@jira' to reference the conversation in a Jira issue. Make sure to include
 }
 ```
 
+#### Jira Datacenter Support
+
+This context provider supports both Jira API version 2 and 3. It will use version 3 by default since
+that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need
+to set the API Version to 2 using the `apiVersion` property.
+
+````json
+  "params": {
+    "apiVersion": "2",
+    ...
+  }
+
 #### Issue Query
 
 By default, the following query will be used to find issues:
 
 ```jql
 assignee = currentUser() AND resolution = Unresolved order by updated DESC
-```
+````
 
 You can override this query by setting the `issueQuery` parameter.
 
@@ -232,7 +242,7 @@ interface CustomContextProvider {
   description?: string;
   getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
 }
 ```
@@ -252,7 +262,7 @@ const RagContextProvider: CustomContextProvider = {
 
   getContextItems: async (
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> => {
     const response = await fetch("https://internal_rag_server.com/retrieve", {
       method: "POST",
@@ -301,7 +311,7 @@ const ReadMeContextProvider: CustomContextProvider = {
 
   getContextItems: async (
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> => {
     // 'query' is the filepath of the README selected from the dropdown
     const content = await extras.ide.readFile(query);
@@ -315,12 +325,12 @@ const ReadMeContextProvider: CustomContextProvider = {
   },
 
   loadSubmenuItems: async (
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> => {
     // Filter all workspace files for READMEs
     const allFiles = await args.ide.listWorkspaceContents();
     const readmes = allFiles.filter((filepath) =>
-      filepath.endsWith("README.md")
+      filepath.endsWith("README.md"),
     );
 
     // Return the items that will be shown in the dropdown

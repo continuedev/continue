@@ -270,7 +270,7 @@ export class VsCodeIdeUtils {
       }
     }
     for await (const file of traverseDirectory(
-      gitRoot || directory,
+      gitRoot ?? directory,
       [],
       true,
       gitRoot === directory ? undefined : onlyThisDirectory,

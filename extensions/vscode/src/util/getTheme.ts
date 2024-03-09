@@ -29,7 +29,7 @@ function parseThemeString(themeString: string | undefined): any {
       return !line.trim().startsWith("//");
     })
     .join("\n");
-  return JSON.parse(themeString || "{}");
+  return JSON.parse(themeString ?? "{}");
 }
 
 export function getTheme() {

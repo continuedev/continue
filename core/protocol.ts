@@ -34,6 +34,14 @@ export type Protocol = {
     { model: SerializedContinueConfig["models"][number] },
     void,
   ];
+  "config/updateRemoteConfigSettings": [
+    {
+      remoteConfigServerUrl: string;
+      remoteConfigSyncPeriod: number;
+      userToken: string;
+    },
+    void,
+  ];
   "config/getBrowserSerialized": [
     undefined,
     Promise<BrowserSerializedContinueConfig>,

@@ -21,7 +21,7 @@ function constructPrompt(
   return renderPromptTemplate(template, [], {
     userInput,
     codeToEdit,
-    language: language || "",
+    language: language ?? "",
   });
 }
 
