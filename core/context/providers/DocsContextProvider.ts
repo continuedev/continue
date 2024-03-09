@@ -45,7 +45,7 @@ class DocsContextProvider extends BaseContextProvider {
                 .slice(1)
                 .join("/")
             : chunk.otherMetadata?.title || chunk.filepath,
-          description: new URL(chunk.filepath, query).toString(),
+          description: chunk.filepath, // new URL(chunk.filepath, query).toString(),
           content: chunk.content,
         }))
         .reverse(),
