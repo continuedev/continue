@@ -25,7 +25,7 @@ class FileContextProvider extends BaseContextProvider {
     const content = await extras.ide.readFile(query);
     return [
       {
-        name: query.split(/[\\/]/).pop() || query,
+        name: query.split(/[\\/]/).pop() ?? query,
         description: query,
         content: `\`\`\`${query}\n${content}\n\`\`\``,
       },

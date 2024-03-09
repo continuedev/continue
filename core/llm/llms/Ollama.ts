@@ -90,7 +90,7 @@ class Ollama extends BaseLLM {
         "starcoder-1b": "starcoder:1b",
         "starcoder-3b": "starcoder:3b",
         "stable-code-3b": "stable-code:3b",
-      }[this.model] || this.model
+      }[this.model] ?? this.model
     );
   }
 

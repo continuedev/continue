@@ -102,7 +102,7 @@ export class ConfigHandler {
       );
     }
 
-    let timeout = (llm.requestOptions?.timeout || TIMEOUT) * 1000; // measured in ms
+    let timeout = (llm.requestOptions?.timeout ?? TIMEOUT) * 1000; // measured in ms
 
     const agentOptions = {
       ca,
