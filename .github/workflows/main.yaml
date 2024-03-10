@@ -140,7 +140,7 @@ jobs:
           npm install -f esbuild
 
       - name: Package the extension
-        run: cd extensions/vscode && npx vsce package --yarn --target ${{ env.target }}
+        run: cd extensions/vscode && npx vsce package --target ${{ env.target }}
 
       # 5. Upload the .vsix as an artifact
       - uses: actions/upload-artifact@v2
