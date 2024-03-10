@@ -21,7 +21,7 @@ class Ollama extends BaseLLM {
     if (options.model === "AUTODETECT") {
       return;
     }
-    this.fetch(`${this.apiBase}/api/show`, {
+    this.fetch(new URL("api/show", this.apiBase), {
       method: "POST",
       headers: {},
       body: JSON.stringify({ name: this._getModel() }),
@@ -141,7 +141,7 @@ class Ollama extends BaseLLM {
     prompt: string,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    const response = await this.fetch(`${this.apiBase}/api/generate`, {
+    const response = await this.fetch(new URL("api/generate", this.apiBase), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -180,7 +180,7 @@ class Ollama extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const response = await this.fetch(`${this.apiBase}/api/chat`, {
+    const response = await this.fetch(new URL("api/chat", this.apiBase), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -218,7 +218,7 @@ class Ollama extends BaseLLM {
   }
 
   async listModels(): Promise<string[]> {
-    const response = await this.fetch(`${this.apiBase}/api/tags`, {
+    const response = await this.fetch(new URL("api/tags", this.apiBase), {
       method: "GET",
     });
     const data = await response.json();
