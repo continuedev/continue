@@ -319,7 +319,8 @@ if (args[2] === "--target") {
   await Promise.all(
     NODE_MODULES_TO_COPY.map(
       (mod) =>
-        new Promise((resolve, reject) =>
+        new Promise((resolve, reject) => {
+          fs.mkdirSync(`out/node_modules/${mod}`, { recursive: true });
           ncp(
             `node_modules/${mod}`,
             `out/node_modules/${mod}`,
@@ -331,8 +332,8 @@ if (args[2] === "--target") {
                 resolve();
               }
             },
-          ),
-        ),
+          );
+        }),
     ),
   );
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
