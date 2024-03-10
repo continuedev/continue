@@ -22,14 +22,9 @@ class VsCodeIde implements IDE {
   async getTags(artifactId: string): Promise<IndexTag[]> {
     const workspaceDirs = await this.getWorkspaceDirs();
 
-    const branches = (await Promise.race([
-      Promise.all(workspaceDirs.map((dir) => this.getBranch(dir))),
-      new Promise((resolve) => {
-        setTimeout(() => {
-          resolve(["NONE"]);
-        }, 500);
-      }),
-    ])) as string[];
+    const branches = await Promise.all(
+      workspaceDirs.map((dir) => this.getBranch(dir)),
+    );
 
     const tags: IndexTag[] = workspaceDirs.map((directory, i) => ({
       directory,

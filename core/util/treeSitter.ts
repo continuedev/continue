@@ -90,12 +90,6 @@ export async function getLanguageForFile(
     const extension = path.extname(filepath).slice(1);
 
     if (!supportedLanguages[extension]) {
-      console.warn(
-        "Unable to load language for file",
-        extension,
-        "from path: ",
-        filepath,
-      );
       return undefined;
     }
 

@@ -33,6 +33,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         path TEXT NOT NULL,
         cacheKey TEXT NOT NULL,
         content TEXT NOT NULL,
+        title TEXT NOT NULL,
         startLine INTEGER NOT NULL,
         endLine INTEGER NOT NULL
     )`);
@@ -42,7 +43,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       tag TEXT NOT NULL,
       snippetId INTEGER NOT NULL,
       FOREIGN KEY (snippetId) REFERENCES code_snippets (id)
-  )`);
+    )`);
   }
 
   private getQuerySource(filepath: string) {
@@ -62,8 +63,11 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   async getSnippetsInFile(
     filepath: string,
     contents: string,
-  ): Promise<ChunkWithoutID[]> {
+  ): Promise<(ChunkWithoutID & { title: string })[]> {
     const lang = await getLanguageForFile(filepath);
+    if (!lang) {
+      return [];
+    }
     const parser = await getParserForFile(filepath);
     const ast = parser.parse(contents);
     const query = lang?.query(this.getQuerySource(filepath));
@@ -71,12 +75,14 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
     return (
       matches?.flatMap((match) => {
-        const nodes = match.captures.map((capture) => capture.node);
-        const results = nodes.map((node) => ({
+        const node = match.captures[0].node;
+        const title = match.captures[1].node.text;
+        const results = {
+          title,
           content: node.text,
           startLine: node.startPosition.row,
           endLine: node.endPosition.row,
-        }));
+        };
         return results;
       }) ?? []
     );
@@ -101,11 +107,12 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       // Add snippets to sqlite
       for (const snippet of snippets) {
         const { lastID } = await db.run(
-          `INSERT INTO code_snippets (path, cacheKey, content, startLine, endLine) VALUES (?, ?, ?, ?, ?)`,
+          `INSERT INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)`,
           [
             compute.path,
             compute.cacheKey,
             snippet.content,
+            snippet.title,
             snippet.startLine,
             snippet.endLine,
           ],
@@ -174,7 +181,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     const row = await db.get(`SELECT * FROM code_snippets WHERE id = ?`, [id]);
 
     return {
-      name: getBasename(row.path),
+      name: row.title,
       description: getBasename(row.path, 2),
       content: `\`\`\`${getBasename(row.path)}\n${row.content}\n\`\`\``,
     };
@@ -182,19 +189,24 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
   static async getAll(tag: IndexTag): Promise<ContextSubmenuItem[]> {
     const db = await SqliteDb.get();
-    const rows = await db.all(
-      `SELECT *
-      FROM code_snippets cs
-      JOIN code_snippets_tags cst ON cs.id = cst.snippetId
-      WHERE cst.tag = ?;
-      `,
-      [tagToString(tag)],
-    );
+    try {
+      const rows = await db.all(
+        `SELECT *
+        FROM code_snippets cs
+        JOIN code_snippets_tags cst ON cs.id = cst.snippetId
+        WHERE cst.tag = ?;
+        `,
+        [tagToString(tag)],
+      );
 
-    return rows.map((row) => ({
-      title: getBasename(row.path),
-      description: getBasename(row.path, 2),
-      id: row.id.toString(),
-    }));
+      return rows.map((row) => ({
+        title: row.title,
+        description: getBasename(row.path, 2),
+        id: row.id.toString(),
+      }));
+    } catch (e) {
+      console.warn("Error getting all code snippets: ", e);
+      return [];
+    }
   }
 }
