@@ -70,6 +70,9 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       return [];
     }
     const parser = await getParserForFile(filepath);
+    if (!parser) {
+      return [];
+    }
     const ast = parser.parse(contents);
     const query = lang?.query(this.getQuerySource(filepath));
     const matches = query?.matches(ast.rootNode);
