@@ -106,6 +106,10 @@ jobs:
         shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
 
+      - name: L S
+        run: |
+          ls core/node_modules/@mozilla/readability
+
       - name: Prepackage the extension
         run: |
           cd extensions/vscode
