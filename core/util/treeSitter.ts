@@ -87,6 +87,7 @@ export async function getLanguageForFile(
   filepath: string,
 ): Promise<Language | undefined> {
   try {
+    await Parser.init();
     const extension = path.extname(filepath).slice(1);
 
     if (!supportedLanguages[extension]) {

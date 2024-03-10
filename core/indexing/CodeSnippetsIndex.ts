@@ -51,7 +51,8 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     const sourcePath = path.join(
       __dirname,
       "..",
-      "tag-qry",
+      "tree-sitter",
+      "code-snippet-queries",
       `tree-sitter-${fullLangName}-tags.scm`,
     );
     if (!fs.existsSync(sourcePath)) {
