@@ -61,7 +61,6 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
 
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
-            listener(data)
             if (generatorTypes.contains(messageType)) {
                 val parsedData = gson.fromJson(data, Map::class.java)
                 val done = parsedData["done"] as Boolean?
@@ -106,7 +105,8 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
         "getProblems",
         "subprocess",
         "getBranch",
-        "getIdeInfo"
+        "getIdeInfo",
+        "getIdeSettings",
     )
 
     private fun setPermissions(destination: String) {

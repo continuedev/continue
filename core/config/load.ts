@@ -141,10 +141,14 @@ function loadSerializedConfig(
   });
 
   if (remoteConfigServerUrl) {
-    const remoteConfigJson = resolveSerializedConfig(
-      getConfigJsonPathForRemote(remoteConfigServerUrl),
-    );
-    config = mergeJson(config, remoteConfigJson, "merge", configMergeKeys);
+    try {
+      const remoteConfigJson = resolveSerializedConfig(
+        getConfigJsonPathForRemote(remoteConfigServerUrl),
+      );
+      config = mergeJson(config, remoteConfigJson, "merge", configMergeKeys);
+    } catch (e) {
+      console.warn("Error loading remote config: ", e);
+    }
   }
 
   for (const workspaceConfig of workspaceConfigs) {

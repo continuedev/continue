@@ -1,5 +1,6 @@
 import { ConfigHandler } from "core/config/handler";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
+import { IdeSettings } from "core/protocol";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
@@ -29,9 +30,20 @@ export class VsCodeExtension {
   constructor(context: vscode.ExtensionContext) {
     this.diffManager = new DiffManager(context);
     this.ide = new VsCodeIde(this.diffManager);
-    const remoteUrl = vscode.workspace
-      .getConfiguration("continue")
-      .get<string | undefined>("remoteConfigServerUrl", undefined);
+
+    const settings = vscode.workspace.getConfiguration("continue");
+    const remoteConfigServerUrl = settings.get<string | undefined>(
+      "remoteConfigServerUrl",
+      undefined,
+    );
+    const ideSettings: IdeSettings = {
+      remoteConfigServerUrl,
+      remoteConfigSyncPeriod: settings.get<number>(
+        "remoteConfigSyncPeriod",
+        60,
+      ),
+      userToken: settings.get<string>("userToken", ""),
+    };
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
@@ -39,9 +51,7 @@ export class VsCodeExtension {
     );
     this.configHandler = new ConfigHandler(
       this.ide,
-      typeof remoteUrl !== "string" || remoteUrl === ""
-        ? undefined
-        : new URL(remoteUrl),
+      Promise.resolve(ideSettings),
       async (log: string) => {
         outputChannel.appendLine(
           "==========================================================================",

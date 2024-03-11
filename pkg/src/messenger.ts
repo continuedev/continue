@@ -3,7 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import { getCoreLogsPath } from "core/util/paths";
 import * as fs from "fs";
 import { Message } from "../../core/util/messenger";
-import { Protocol } from "./protocol";
+import { Protocol, ReverseProtocol } from "./protocol";
 
 export class IpcMessenger {
   typeListeners = new Map<keyof Protocol, ((message: Message) => any)[]>();
@@ -96,7 +96,7 @@ export class IpcMessenger {
 
   on<T extends keyof Protocol>(
     messageType: T,
-    handler: (message: Message<Protocol[T][0]>) => Protocol[T][1]
+    handler: (message: Message<Protocol[T][0]>) => Protocol[T][1],
   ): void {
     if (!this.typeListeners.has(messageType)) {
       this.typeListeners.set(messageType, []);
@@ -106,7 +106,7 @@ export class IpcMessenger {
 
   invoke<T extends keyof Protocol>(
     messageType: T,
-    data: Protocol[T][0]
+    data: Protocol[T][0],
   ): Protocol[T][1] {
     return this.typeListeners.get(messageType)?.[0]?.({
       messageId: uuidv4(),
@@ -115,7 +115,10 @@ export class IpcMessenger {
     });
   }
 
-  request(messageType: string, data: any): Promise<any> {
+  request<T extends keyof ReverseProtocol>(
+    messageType: T,
+    data: ReverseProtocol[T][0],
+  ): Promise<ReverseProtocol[T][1]> {
     const messageId = uuidv4();
     return new Promise((resolve) => {
       const handler = (msg: Message) => {

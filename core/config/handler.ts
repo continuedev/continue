@@ -4,6 +4,7 @@ import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import fetch from "node-fetch";
 import { ContinueConfig, ContinueRcJson, IDE, ILLM } from "..";
+import { IdeSettings } from "../protocol";
 import { Telemetry } from "../util/posthog";
 import {
   BrowserSerializedContinueConfig,
@@ -16,17 +17,17 @@ export class ConfigHandler {
   private savedBrowserConfig?: BrowserSerializedContinueConfig;
 
   private readonly ide: IDE;
-  private readonly remoteConfigServerUrl: URL | undefined;
+  private ideSettingsPromise: Promise<IdeSettings>;
   private readonly writeLog: (text: string) => void;
   private readonly onConfigUpdate: () => void;
   constructor(
     ide: IDE,
-    remoteConfigServerUrl: URL | undefined,
+    ideSettingsPromise: Promise<IdeSettings>,
     writeLog: (text: string) => void,
     onConfigUpdate: () => void,
   ) {
     this.ide = ide;
-    this.remoteConfigServerUrl = remoteConfigServerUrl;
+    this.ideSettingsPromise = ideSettingsPromise;
     this.writeLog = writeLog;
     this.onConfigUpdate = onConfigUpdate;
     try {
@@ -34,6 +35,11 @@ export class ConfigHandler {
     } catch (e) {
       console.error("Failed to load config: ", e);
     }
+  }
+
+  updateIdeSettings(ideSettings: IdeSettings) {
+    this.ideSettingsPromise = Promise.resolve(ideSettings);
+    this.reloadConfig();
   }
 
   reloadConfig() {
@@ -65,10 +71,20 @@ export class ConfigHandler {
       }
 
       const ideInfo = await this.ide.getIdeInfo();
+      const ideSettings = await this.ideSettingsPromise;
+      let remoteConfigServerUrl = undefined;
+      try {
+        remoteConfigServerUrl =
+          typeof ideSettings.remoteConfigServerUrl !== "string" ||
+          ideSettings.remoteConfigServerUrl === ""
+            ? undefined
+            : new URL(ideSettings.remoteConfigServerUrl);
+      } catch (e) {}
+
       this.savedConfig = await loadFullConfigNode(
         this.ide.readFile,
         workspaceConfigs,
-        this.remoteConfigServerUrl,
+        remoteConfigServerUrl,
         ideInfo.ideType,
       );
       this.savedConfig.allowAnonymousTelemetry =

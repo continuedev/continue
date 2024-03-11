@@ -1,11 +1,13 @@
 package com.github.continuedev.continueintellijextension.services
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.DumbAware
+import com.intellij.util.messages.Topic
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import javax.swing.JCheckBox
@@ -79,6 +81,14 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
     }
 }
 
+interface SettingsListener {
+    fun settingsUpdated(settings: ContinueExtensionSettings.ContinueState)
+
+    companion object {
+        val TOPIC = Topic.create("SettingsUpdate", SettingsListener::class.java)
+    }
+}
+
 class ContinueExtensionConfigurable : Configurable {
     private var mySettingsComponent: ContinueSettingsComponent? = null
 
@@ -101,8 +111,7 @@ class ContinueExtensionConfigurable : Configurable {
         settings.continueState.remoteConfigSyncPeriod = mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() ?: 60
         settings.continueState.userToken = mySettingsComponent?.userToken?.text
 
-        val continuePluginService = ServiceManager.getService(ContinuePluginService::class.java)
-        continuePluginService.coreMessenger?.request("config/updateRemoteConfigSettings", settings.continueState, null) { _ -> }
+        ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC).settingsUpdated(settings.continueState)
     }
 
     override fun reset() {
