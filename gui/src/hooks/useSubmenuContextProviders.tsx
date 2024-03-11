@@ -42,7 +42,7 @@ function useSubmenuContextProviders() {
   }
 
   useWebviewListener("refreshSubmenuItems", async (data) => {
-    setLoaded(true);
+    setLoaded(false);
   });
 
   function addItem(providerTitle: string, item: ContextSubmenuItem) {

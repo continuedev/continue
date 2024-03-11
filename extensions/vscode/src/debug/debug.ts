@@ -9,7 +9,6 @@ export function registerDebugTracker(webviewProtocol: VsCodeWebviewProtocol) {
     createDebugAdapterTracker(session: vscode.DebugSession) {
       return {
         onDidSendMessage(message: any) {
-          console.log(message)
           if (message.type == "event") {
             switch (message.event) {
               case "continued":
