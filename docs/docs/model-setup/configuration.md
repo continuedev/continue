@@ -54,6 +54,21 @@ However, if neither of these are the case, you will need to wire up a new LLM ob
 
 ## Authentication
 
+Basic authentication can be done with any provider using the `apiKey` field:
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "title": "Ollama",
+      "provider": "ollama",
+      "model": "llama2-7b",
+      "apiKey": "xxx"
+    }
+  ]
+}
+```
+
 If you need to send custom headers for authentication, you may use the `requestOptions.headers` property like in this example with Ollama:
 
 ```json title="~/.continue/config.json"
@@ -65,7 +80,7 @@ If you need to send custom headers for authentication, you may use the `requestO
       "model": "llama2-7b",
       "requestOptions": {
         "headers": {
-          "Authorization": "Bearer xxx"
+          "X-Auth-Token": "xxx"
         }
       }
     }
@@ -104,7 +119,7 @@ It can then be used like this:
 ```typescript title="~/.continue/config.ts"
 function modifyConfig(config: Config): Config {
   const model = config.models.find(
-    (model) => model.title === "My Alpaca Model"
+    (model) => model.title === "My Alpaca Model",
   );
   if (model) {
     model.templateMessages = templateAlpacaMessages;
