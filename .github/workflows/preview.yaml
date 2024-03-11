@@ -1,9 +1,6 @@
 name: Publish Preview Extension
 
-on:
-  push:
-    branches:
-      - preview
+on: []
 
 jobs:
   build:

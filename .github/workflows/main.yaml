@@ -1,9 +1,6 @@
 name: Publish Extension
 
-on:
-  push:
-    branches:
-      - main
+on: []
 
 jobs:
   build:
