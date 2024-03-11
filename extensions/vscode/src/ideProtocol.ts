@@ -4,7 +4,7 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import * as child_process from "child_process";
-import { ContinueRcJson, IDE, IdeInfo, Problem, Range } from "core";
+import { ContinueRcJson, IDE, IdeInfo, Problem, Range, Thread } from "core";
 import { DiffManager } from "./diff/horizontal";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { traverseDirectory } from "./util/traverseDirectory";
@@ -33,8 +33,8 @@ class VsCodeIde implements IDE {
       filepath,
       new vscode.Range(
         new vscode.Position(range.start.line, range.start.character),
-        new vscode.Position(range.end.line, range.end.character),
-      ),
+        new vscode.Position(range.end.line, range.end.character)
+      )
     );
   }
 
@@ -46,7 +46,7 @@ class VsCodeIde implements IDE {
       files.map(async (file) => {
         let stat = await vscode.workspace.fs.stat(uriFromFilePath(file));
         pathToLastModified[file] = stat.mtime;
-      }),
+      })
     );
 
     return pathToLastModified;
@@ -79,10 +79,16 @@ class VsCodeIde implements IDE {
     return await this.ideUtils.getDebugLocals(threadIndex);
   }
 
-  async getTopLevelCallStackSources(threadIndex: number, stackDepth: number): Promise<string[]> {
-    return await this.ideUtils.getTopLevelCallStackSources(threadIndex, stackDepth);
+  async getTopLevelCallStackSources(
+    threadIndex: number,
+    stackDepth: number
+  ): Promise<string[]> {
+    return await this.ideUtils.getTopLevelCallStackSources(
+      threadIndex,
+      stackDepth
+    );
   }
-  async getAvailableThreads(): Promise<string[]> {
+  async getAvailableThreads(): Promise<Thread[]> {
     return await this.ideUtils.getAvailableThreads();
   }
 
@@ -93,7 +99,7 @@ class VsCodeIde implements IDE {
       const contents = await Promise.all(
         this.ideUtils
           .getWorkspaceDirectories()
-          .map((dir) => this.ideUtils.getDirectoryContents(dir, true)),
+          .map((dir) => this.ideUtils.getDirectoryContents(dir, true))
       );
       return contents.flat();
     }
@@ -108,7 +114,7 @@ class VsCodeIde implements IDE {
       for (const [filename, type] of files) {
         if (type === vscode.FileType.File && filename === ".continuerc.json") {
           const contents = await this.ideUtils.readFile(
-            vscode.Uri.joinPath(workspaceDir, filename).fsPath,
+            vscode.Uri.joinPath(workspaceDir, filename).fsPath
           );
           configs.push(JSON.parse(contents));
         }
@@ -126,7 +132,7 @@ class VsCodeIde implements IDE {
         directory,
         [],
         false,
-        undefined,
+        undefined
       )) {
         allDirs.push(dir);
       }
@@ -146,7 +152,7 @@ class VsCodeIde implements IDE {
   async writeFile(path: string, contents: string): Promise<void> {
     await vscode.workspace.fs.writeFile(
       vscode.Uri.file(path),
-      Buffer.from(contents),
+      Buffer.from(contents)
     );
   }
 
@@ -161,11 +167,11 @@ class VsCodeIde implements IDE {
   async showLines(
     filepath: string,
     startLine: number,
-    endLine: number,
+    endLine: number
   ): Promise<void> {
     const range = new vscode.Range(
       new vscode.Position(startLine, 0),
-      new vscode.Position(endLine, 0),
+      new vscode.Position(endLine, 0)
     );
     openEditorAndRevealRange(filepath, range).then(() => {
       // TODO: Highlight lines
@@ -199,7 +205,7 @@ class VsCodeIde implements IDE {
   async showDiff(
     filepath: string,
     newContents: string,
-    stepIndex: number,
+    stepIndex: number
   ): Promise<void> {
     await this.diffManager.writeDiff(filepath, newContents, stepIndex);
   }
@@ -224,10 +230,10 @@ class VsCodeIde implements IDE {
         "@vscode",
         "ripgrep",
         "bin",
-        "rg",
+        "rg"
       ),
       ["-i", "-C", "2", `"${query}"`, "."],
-      { cwd: dir },
+      { cwd: dir }
     );
     let output = "";
 

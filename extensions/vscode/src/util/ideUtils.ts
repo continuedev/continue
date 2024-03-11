@@ -1,4 +1,4 @@
-import { FileEdit, RangeInFile } from "core";
+import { FileEdit, RangeInFile, Thread } from "core";
 import path from "path";
 import * as vscode from "vscode";
 import { VsCodeExtension } from "../extension/vscodeExtension";
@@ -372,14 +372,12 @@ export class VsCodeIdeUtils {
     return threadsResponse;
   }
 
-  async getAvailableThreads(): Promise<string[]> {
+  async getAvailableThreads(): Promise<Thread[]> {
     const session = vscode.debug.activeDebugSession;
     if (!session) return [];
 
     const threadsResponse = await this._getThreads(session);
-    return threadsResponse.threads.map(
-      (thread: { id: number; name: string }) => `${thread.id}, ${thread.name}`
-    );
+    return threadsResponse.threads;
   }
 
   async getDebugLocals(threadIndex: number = 0): Promise<string> {
@@ -392,13 +390,11 @@ export class VsCodeIdeUtils {
       return "";
     }
 
-    const variablesResponse = await this._getThreads(session)
-      .then((threadsResponse) =>
-        session.customRequest("stackTrace", {
-          threadId: threadsResponse.threads[threadIndex].id,
-          startFrame: 0,
-        })
-      )
+    const variablesResponse = await session
+      .customRequest("stackTrace", {
+        threadId: threadIndex,
+        startFrame: 0,
+      })
       .then((traceResponse) =>
         session.customRequest("scopes", {
           frameId: traceResponse.stackFrames[0].id,
@@ -429,13 +425,11 @@ export class VsCodeIdeUtils {
     const session = vscode.debug.activeDebugSession;
     if (!session) return [];
 
-    const sourcesPromises = await this._getThreads(session)
-      .then((threadsResponse) =>
-        session.customRequest("stackTrace", {
-          threadId: threadsResponse.threads[threadIndex].id,
-          startFrame: 0,
-        })
-      )
+    const sourcesPromises = await session
+      .customRequest("stackTrace", {
+        threadId: threadIndex,
+        startFrame: 0,
+      })
       .then((traceResponse) =>
         traceResponse.stackFrames
           .slice(0, stackDepth)

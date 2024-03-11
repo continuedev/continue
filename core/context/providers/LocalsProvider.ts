@@ -22,7 +22,9 @@ class LocalsProvider extends BaseContextProvider {
     // Assuming that the query is a number
     const localVariables = await extras.ide.getDebugLocals(Number(query));
     const threadIndex = Number(query);
-    const thread = (await extras.ide.getAvailableThreads())[threadIndex];
+    const thread = (await extras.ide.getAvailableThreads()).find(
+      (thread) => thread.id == threadIndex
+    );
     const callStacksSources = await extras.ide.getTopLevelCallStackSources(
       threadIndex,
       this.options?.stackDepth || 3
@@ -36,7 +38,7 @@ class LocalsProvider extends BaseContextProvider {
       {
         description: "The value, name and possibly type of the local variables",
         content:
-          `This is a paused thread: ${thread.split(",")[1].trimStart()}\n` +
+          `This is a paused thread: ${thread?.name}` +
           `Current local variable contents:\n\n${localVariables}.\n` +
           `Current top level call stacks: \n\n${callStackContents}`,
         name: "Locals",
@@ -49,16 +51,11 @@ class LocalsProvider extends BaseContextProvider {
   ): Promise<ContextSubmenuItem[]> {
     const threads = await args.ide.getAvailableThreads();
 
-    return threads.map((thread, threadIndex) => {
-      const [threadId, threadName] = thread
-        .split(",")
-        .map((str) => str.trimStart());
-      return {
-        id: `${threadIndex}`,
-        title: threadName,
-        description: threadId,
-      };
-    });
+    return threads.map((thread) => ({
+      id: `${thread.id}`,
+      title: thread.name,
+      description: `${thread.id}`,
+    }));
   }
 }
 

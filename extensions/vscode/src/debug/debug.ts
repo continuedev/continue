@@ -12,6 +12,17 @@ export function registerDebugTracker(
   vscode.debug.registerDebugAdapterTrackerFactory("*", {
     createDebugAdapterTracker(session: vscode.DebugSession) {
       return {
+        async onWillStopSession() {
+          threadStopped.clear();
+          webviewProtocol?.request("updateSubmenuItems", {
+            provider: "locals",
+            submenuItems: (await ide.getAvailableThreads()).map((thread) => ({
+              id: `${thread.id}`,
+              title: thread.name,
+              description: `${thread.id}`,
+            })),
+          });
+        },
         async onDidSendMessage(message: any) {
           if (message.type == "event") {
             switch (message.event) {
@@ -36,16 +47,11 @@ export function registerDebugTracker(
                 webviewProtocol?.request("updateSubmenuItems", {
                   provider: "locals",
                   submenuItems: (await ide.getAvailableThreads()).map(
-                    (thread, threadIndex) => {
-                      const [threadId, threadName] = thread
-                        .split(",")
-                        .map((str) => str.trimStart());
-                      return {
-                        id: `${threadIndex}`,
-                        title: threadName,
-                        description: threadId,
-                      };
-                    }
+                    (thread) => ({
+                      id: `${thread.id}`,
+                      title: thread.name,
+                      description: `${thread.id}`,
+                    })
                   ),
                 });
                 break;

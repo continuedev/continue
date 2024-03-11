@@ -5,6 +5,7 @@ import {
   DiffLine,
   Problem,
   Range,
+  Thread,
 } from "..";
 import { RangeInFileWithContents } from "../commands/util";
 import { Protocol } from "../protocol";
@@ -49,7 +50,7 @@ export type IdeProtocol = {
     { threadIndex: number; stackDepth: number },
     string[]
   ];
-  getAvailableThreads: [undefined, string[]];
+  getAvailableThreads: [undefined, Thread[]];
   isTelemetryEnabled: [undefined, boolean];
   getUniqueId: [undefined, string];
 };
