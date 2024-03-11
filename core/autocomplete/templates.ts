@@ -1,9 +1,18 @@
 // Fill in the middle prompts
 
 import { CompletionOptions } from "..";
+import { AutocompleteSnippet } from "./ranking";
 
 interface AutocompleteTemplate {
-  template: string | ((prefix: string, suffix: string) => string);
+  template:
+    | string
+    | ((
+        prefix: string,
+        suffix: string,
+        filename: string,
+        reponame: string,
+        snippets: AutocompleteSnippet[],
+      ) => string);
   completionOptions?: Partial<CompletionOptions>;
 }
 
@@ -15,9 +24,44 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
   },
 };
 
+// https://arxiv.org/pdf/2402.19173.pdf section 5.1
+const starcoder2FimTemplate: AutocompleteTemplate = {
+  template: (
+    prefix: string,
+    suffix: string,
+    filename: string,
+    reponame: string,
+    snippets: AutocompleteSnippet[],
+  ): string => {
+    const otherFiles =
+      snippets.length === 0
+        ? ""
+        : "<file_sep>" +
+          snippets
+            .map((snippet) => {
+              return snippet.contents;
+              // return `${getBasename(snippet.filepath)}\n${snippet.contents}`;
+            })
+            .join("<file_sep>") +
+          "<file_sep>";
+
+    let prompt = `${otherFiles}<fim_prefix>${prefix}<fim_suffix>${suffix}<fim_middle>`;
+    return prompt;
+  },
+  completionOptions: {
+    stop: [
+      "<fim_prefix>",
+      "<fim_suffix>",
+      "<fim_middle>",
+      "<|endoftext|>",
+      "<file_sep>",
+    ],
+  },
+};
+
 const codeLlamaFimTemplate: AutocompleteTemplate = {
   template: "<PRE> {{{prefix}}} <SUF>{{{suffix}}} <MID>",
-  completionOptions: { stop: ["<PRE>", "<SUF>", "<MID>"] },
+  completionOptions: { stop: ["<PRE>", "<SUF>", "<MID>", "<EOT>"] },
 };
 
 // https://huggingface.co/deepseek-ai/deepseek-coder-1.3b-base
@@ -46,6 +90,11 @@ The last line is incomplete, and you should provide the rest of that line. If th
 
 export function getTemplateForModel(model: string): AutocompleteTemplate {
   const lowerCaseModel = model.toLowerCase();
+
+  if (lowerCaseModel.includes("starcoder2")) {
+    return starcoder2FimTemplate;
+  }
+
   if (
     lowerCaseModel.includes("starcoder") ||
     lowerCaseModel.includes("star-coder") ||

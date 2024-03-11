@@ -16,7 +16,7 @@ const nhm = new NodeHtmlMarkdown(
       },
     },
   },
-  undefined
+  undefined,
 );
 
 const STRIP_BEFORE = ["\n# "];
@@ -39,7 +39,7 @@ async function retrieveGitHubBlob(url: URL): Promise<string | undefined> {
 
   const content = Buffer.from(
     (response.data as any).content || "",
-    "base64"
+    "base64",
   ).toString();
 
   const fileExtension = url.pathname.split(".").slice(-1)[0];
@@ -51,7 +51,7 @@ async function retrieveGitHubBlob(url: URL): Promise<string | undefined> {
 }
 
 export async function convertURLToMarkdown(
-  url: URL
+  url: URL,
 ): Promise<string | undefined> {
   try {
     if (url.hostname === "github.com") {

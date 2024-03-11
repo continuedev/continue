@@ -25,40 +25,44 @@ class Ollama extends BaseLLM {
       method: "POST",
       headers: {},
       body: JSON.stringify({ name: this._getModel() }),
-    }).then(async (response) => {
-      if (response.status !== 200) {
-        console.warn(
-          "Error calling Ollama /api/show endpoint: ",
-          await response.text()
-        );
-        return;
-      }
-      const body = await response.json();
-      if (body.parameters) {
-        const params = [];
-        for (let line of body.parameters.split("\n")) {
-          let parts = line.split(" ");
-          if (parts.length < 2) {
-            continue;
-          }
-          let key = parts[0];
-          let value = parts[parts.length - 1];
-          switch (key) {
-            case "num_ctx":
-              this.contextLength = parseInt(value);
-              break;
-            case "stop":
-              if (!this.completionOptions.stop) {
-                this.completionOptions.stop = [];
-              }
-              this.completionOptions.stop.push(value);
-              break;
-            default:
-              break;
+    })
+      .then(async (response) => {
+        if (response.status !== 200) {
+          console.warn(
+            "Error calling Ollama /api/show endpoint: ",
+            await response.text(),
+          );
+          return;
+        }
+        const body = await response.json();
+        if (body.parameters) {
+          const params = [];
+          for (let line of body.parameters.split("\n")) {
+            let parts = line.split(" ");
+            if (parts.length < 2) {
+              continue;
+            }
+            let key = parts[0];
+            let value = parts[parts.length - 1];
+            switch (key) {
+              case "num_ctx":
+                this.contextLength = parseInt(value);
+                break;
+              case "stop":
+                if (!this.completionOptions.stop) {
+                  this.completionOptions.stop = [];
+                }
+                this.completionOptions.stop.push(value);
+                break;
+              default:
+                break;
+            }
           }
         }
-      }
-    });
+      })
+      .catch((e) => {
+        console.warn(`Error calling Ollama /api/show endpoint: ${e}`);
+      });
   }
 
   private _getModel() {
@@ -106,7 +110,7 @@ class Ollama extends BaseLLM {
 
   private _convertArgs(
     options: CompletionOptions,
-    prompt: string | ChatMessage[]
+    prompt: string | ChatMessage[],
   ) {
     const finalOptions: any = {
       model: this._getModel(),
@@ -135,7 +139,7 @@ class Ollama extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const response = await this.fetch(`${this.apiBase}/api/generate`, {
       method: "POST",
@@ -174,7 +178,7 @@ class Ollama extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const response = await this.fetch(`${this.apiBase}/api/chat`, {
       method: "POST",

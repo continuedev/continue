@@ -9,7 +9,7 @@ export enum IndexResultType {
 
 export type MarkCompleteCallback = (
   items: PathAndCacheKey[],
-  resultType: IndexResultType
+  resultType: IndexResultType,
 ) => void;
 
 export interface CodebaseIndex {
@@ -17,7 +17,7 @@ export interface CodebaseIndex {
   update(
     tag: IndexTag,
     results: RefreshIndexResults,
-    markComplete: MarkCompleteCallback
+    markComplete: MarkCompleteCallback,
   ): AsyncGenerator<IndexingProgressUpdate>;
 }
 

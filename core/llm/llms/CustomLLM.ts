@@ -5,13 +5,13 @@ class CustomLLMClass extends BaseLLM {
   private customStreamCompletion?: (
     prompt: string,
     options: CompletionOptions,
-    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;
 
   private customStreamChat?: (
     messages: ChatMessage[],
     options: CompletionOptions,
-    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
   ) => AsyncGenerator<string>;
 
   constructor(custom: CustomLLM) {
@@ -22,13 +22,13 @@ class CustomLLMClass extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     if (this.customStreamChat) {
       for await (const content of this.customStreamChat(
         messages,
         options,
-        (...args) => this.fetch(...args)
+        (...args) => this.fetch(...args),
       )) {
         yield { role: "assistant", content };
       }
@@ -41,13 +41,13 @@ class CustomLLMClass extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     if (this.customStreamCompletion) {
       for await (const content of this.customStreamCompletion(
         prompt,
         options,
-        (...args) => this.fetch(...args)
+        (...args) => this.fetch(...args),
       )) {
         yield content;
       }
@@ -55,13 +55,13 @@ class CustomLLMClass extends BaseLLM {
       for await (const content of this.customStreamChat(
         [{ role: "user", content: prompt }],
         options,
-        (...args) => this.fetch(...args)
+        (...args) => this.fetch(...args),
       )) {
         yield content;
       }
     } else {
       throw new Error(
-        "Either streamCompletion or streamChat must be defined in a custom LLM in config.ts"
+        "Either streamCompletion or streamChat must be defined in a custom LLM in config.ts",
       );
     }
   }

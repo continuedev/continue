@@ -3,7 +3,7 @@ import { countTokens } from "../../llm/countTokens";
 
 export function* basicChunker(
   contents: string,
-  maxChunkSize: number
+  maxChunkSize: number,
 ): Generator<ChunkWithoutID> {
   let chunkContent = "";
   let chunkTokens = 0;
@@ -11,7 +11,7 @@ export function* basicChunker(
   let currLine = 0;
 
   for (const line of contents.split("\n")) {
-    const lineTokens = countTokens(line, "gpt-4");
+    const lineTokens = countTokens(line);
     if (chunkTokens + lineTokens > maxChunkSize - 5) {
       yield { content: chunkContent, startLine, endLine: currLine - 1 };
       chunkContent = "";

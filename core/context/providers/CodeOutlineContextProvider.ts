@@ -6,7 +6,7 @@ import {
 } from "../..";
 import { getBasename } from "../../util";
 
-import { getFileOutlineHighlights } from "llm-code-highlighter/dist/index.continue";
+// import { getOutlines } from "llm-code-highlighter/dist/index.continue";
 
 class CodeOutlineContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -18,7 +18,7 @@ class CodeOutlineContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const ide = extras.ide;
     const openFiles = await ide.getOpenFiles();
@@ -30,25 +30,26 @@ class CodeOutlineContextProvider extends BaseContextProvider {
             absPath: filepath,
             content: `${await ide.readFile(filepath)}`,
           };
-        })
+        }),
       );
-    const outlines = await getFileOutlineHighlights(
-      allFiles
-        .filter((file) => file.content.length > 0)
-        .map((file) => {
-          return {
-            relPath: file.name,
-            code: file.content,
-          };
-        })
-    );
-    return [
-      {
-        content: outlines ? outlines : "",
-        name: "Code Outline",
-        description: "Definition lines only (from open files)",
-      },
-    ];
+    // const outlines = await getOutlines(
+    //   allFiles
+    //     .filter((file) => file.content.length > 0)
+    //     .map((file) => {
+    //       return {
+    //         relPath: file.name,
+    //         code: file.content,
+    //       };
+    //     })
+    // );
+    // return [
+    //   {
+    //     content: outlines ? outlines : "",
+    //     name: "Code Outline",
+    //     description: "Definition lines only (from open files)",
+    //   },
+    // ];
+    return [];
   }
 
   async load(): Promise<void> {}

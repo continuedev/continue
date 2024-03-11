@@ -1,8 +1,9 @@
+import dotenv from "dotenv";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { SerializedContinueConfig } from "..";
-import defaultConfig from "../config/default";
+import { IdeType, SerializedContinueConfig } from "..";
+import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
 
 export function getContinueGlobalPath(): string {
@@ -42,10 +43,14 @@ export function getSessionsListPath(): string {
   return filepath;
 }
 
-export function getConfigJsonPath(): string {
+export function getConfigJsonPath(ideType: IdeType = "vscode"): string {
   const p = path.join(getContinueGlobalPath(), "config.json");
   if (!fs.existsSync(p)) {
-    fs.writeFileSync(p, JSON.stringify(defaultConfig, null, 2));
+    if (ideType === "jetbrains") {
+      fs.writeFileSync(p, JSON.stringify(defaultConfigJetBrains, null, 2));
+    } else {
+      fs.writeFileSync(p, JSON.stringify(defaultConfig, null, 2));
+    }
   }
   return p;
 }
@@ -57,7 +62,7 @@ export function getConfigTsPath(): string {
       p,
       `export function modifyConfig(config: Config): Config {
   return config;
-}`
+}`,
     );
   }
 
@@ -78,7 +83,7 @@ export function getConfigTsPath(): string {
         version: "1.0.0",
         description: "My Continue Configuration",
         main: "config.js",
-      })
+      }),
     );
   }
 
@@ -86,13 +91,9 @@ export function getConfigTsPath(): string {
   return p;
 }
 
-export function getConfigJsPath(node: boolean): string {
+export function getConfigJsPath(): string {
   // Do not create automatically
-  return path.join(
-    getContinueGlobalPath(),
-    "out",
-    `config${node ? ".node" : ""}.js`
-  );
+  return path.join(getContinueGlobalPath(), "out", "config.js");
 }
 
 export function getTsConfigPath(): string {
@@ -122,8 +123,8 @@ export function getTsConfigPath(): string {
           include: ["./config.ts"],
         },
         null,
-        2
-      )
+        2,
+      ),
     );
   }
   return tsConfigPath;
@@ -142,7 +143,7 @@ export function getDevDataFilePath(fileName: string): string {
 }
 
 export function editConfigJson(
-  callback: (config: SerializedContinueConfig) => SerializedContinueConfig
+  callback: (config: SerializedContinueConfig) => SerializedContinueConfig,
 ) {
   const config = fs.readFileSync(getConfigJsonPath(), "utf8");
   let configJson = JSON.parse(config);
@@ -182,4 +183,44 @@ export function getTabAutocompleteCacheSqlitePath(): string {
 
 export function getDocsSqlitePath(): string {
   return path.join(getIndexFolderPath(), "docs.sqlite");
+}
+
+export function getRemoteConfigsFolderPath(): string {
+  const dir = path.join(getContinueGlobalPath(), ".configs");
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+  }
+  return dir;
+}
+
+export function getPathToRemoteConfig(remoteConfigServerUrl: URL): string {
+  const dir = path.join(
+    getRemoteConfigsFolderPath(),
+    remoteConfigServerUrl.hostname,
+  );
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir);
+  }
+  return dir;
+}
+
+export function getConfigJsonPathForRemote(remoteConfigServerUrl: URL): string {
+  return path.join(getPathToRemoteConfig(remoteConfigServerUrl), "config.json");
+}
+
+export function getConfigJsPathForRemote(remoteConfigServerUrl: URL): string {
+  return path.join(getPathToRemoteConfig(remoteConfigServerUrl), "config.js");
+}
+
+export function getContinueDotEnv(): { [key: string]: string } {
+  const filepath = path.join(getContinueGlobalPath(), ".env");
+  if (fs.existsSync(filepath)) {
+    return dotenv.parse(fs.readFileSync(filepath));
+  } else {
+    return {};
+  }
+}
+
+export function getCoreLogsPath(): string {
+  return path.join(getContinueGlobalPath(), "core.log");
 }

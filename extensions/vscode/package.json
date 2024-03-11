@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.8.14",
+  "version": "0.8.18",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -64,8 +64,23 @@
         },
         "continue.enableTabAutocomplete": {
           "type": "boolean",
-          "default": false,
-          "markdownDescription": "Enable Continue's experimental tab autocomplete feature (pre-release only). Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://continue.dev/docs/walkthroughs/tab-autocomplete)"
+          "default": true,
+          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://continue.dev/docs/walkthroughs/tab-autocomplete)"
+        },
+        "continue.remoteConfigServerUrl": {
+          "type": "string",
+          "default": null,
+          "markdownDescription": "If your team is set up to use shared configuration, enter the server URL here and your user token below to enable automatic syncing."
+        },
+        "continue.userToken": {
+          "type": "string",
+          "default": null,
+          "markdownDescription": "If your team is set up to use shared configuration, enter your user token here and your server URL above to enable automatic syncing."
+        },
+        "continue.remoteConfigSyncPeriod": {
+          "type": "number",
+          "default": 60,
+          "description": "The period of time in minutes between automatic syncs."
         }
       }
     },
@@ -180,13 +195,13 @@
     "keybindings": [
       {
         "command": "continue.focusContinueInput",
-        "mac": "cmd+m",
-        "key": "ctrl+m"
+        "mac": "cmd+l",
+        "key": "ctrl+l"
       },
       {
         "command": "continue.focusContinueInputWithoutClear",
-        "mac": "cmd+shift+m",
-        "key": "ctrl+shift+m"
+        "mac": "cmd+shift+l",
+        "key": "ctrl+shift+l"
       },
       {
         "command": "continue.acceptDiff",
@@ -206,13 +221,13 @@
       },
       {
         "command": "continue.quickEdit",
-        "mac": "cmd+shift+l",
-        "key": "ctrl+shift+l"
+        "mac": "cmd+i",
+        "key": "ctrl+i"
       },
       {
         "command": "continue.toggleAuxiliaryBar",
-        "mac": "alt+cmd+m",
-        "key": "alt+ctrl+m"
+        "mac": "alt+cmd+l",
+        "key": "alt+ctrl+l"
       },
       {
         "command": "continue.debugTerminal",
@@ -461,6 +476,7 @@
     "axios": "^1.2.5",
     "core": "file:../../core",
     "cors": "^2.8.5",
+    "dbinfoz": "^0.1.4",
     "downshift": "^7.6.0",
     "express": "^4.18.2",
     "fkill": "^8.1.0",

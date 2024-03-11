@@ -1,5 +1,28 @@
 const Types = `
 declare global {
+  declare global {
+    interface Window {
+      ide?: "vscode";
+      windowId: string;
+      serverUrl: string;
+      vscMachineId: string;
+      vscMediaUrl: string;
+      fullColorTheme?: {
+        rules?: {
+          token?: string;
+          foreground?: string;
+        }[];
+      };
+      colorThemeName?: string;
+      workspacePaths?: string[];
+      postIntellijMessage?: (
+        messageType: string,
+        data: any,
+        messageIde: string
+      ) => void;
+    }
+  }
+  
   export interface ChunkWithoutID {
     content: string;
     startLine: number;
@@ -68,6 +91,8 @@ declare global {
     countTokens(text: string): number;
   
     supportsImages(): boolean;
+  
+    listModels(): Promise<string[]>;
   }
   
   export type ContextProviderType = "normal" | "query" | "submenu";
@@ -76,6 +101,7 @@ declare global {
     title: string;
     displayTitle: string;
     description: string;
+    renderInlineAs?: string;
     type: ContextProviderType;
   }
   
@@ -95,6 +121,7 @@ declare global {
     title: string;
     displayTitle?: string;
     description?: string;
+    renderInlineAs?: string;
     type?: ContextProviderType;
     getContextItems(
       query: string,
@@ -264,6 +291,9 @@ declare global {
       options: CompletionOptions,
       fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
     ) => AsyncGenerator<string>;
+    listModels?: (
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+    ) => Promise<string[]>;
   }
   
   /**
@@ -287,14 +317,24 @@ declare global {
     message: string;
   }
   
+  export type IdeType = "vscode" | "jetbrains";
+  export interface IdeInfo {
+    ideType: IdeType;
+    name: string;
+    version: string;
+    remoteName: string;
+  }
+  
   export interface IDE {
-    getSerializedConfig(): Promise<SerializedContinueConfig>;
-    getConfigJsUrl(): Promise<string | undefined>;
+    getIdeInfo(): Promise<IdeInfo>;
     getDiff(): Promise<string>;
+    isTelemetryEnabled(): Promise<boolean>;
+    getUniqueId(): Promise<string>;
     getTerminalContents(): Promise<string>;
     listWorkspaceContents(directory?: string): Promise<string[]>;
     listFolders(): Promise<string[]>;
     getWorkspaceDirs(): Promise<string[]>;
+    getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
     writeFile(path: string, contents: string): Promise<void>;
     showVirtualFile(title: string, contents: string): Promise<void>;
     getContinueDir(): Promise<string>;
@@ -302,38 +342,24 @@ declare global {
     runCommand(command: string): Promise<void>;
     saveFile(filepath: string): Promise<void>;
     readFile(filepath: string): Promise<string>;
+    readRangeInFile(filepath: string, range: Range): Promise<string>;
+    showLines(
+      filepath: string,
+      startLine: number,
+      endLine: number
+    ): Promise<void>;
     showDiff(
       filepath: string,
       newContents: string,
       stepIndex: number
-    ): Promise<void>;
-    verticalDiffUpdate(
-      filepath: string,
-      startLine: number,
-      endLine: number,
-      diffLine: DiffLine
     ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
     getPinnedFiles(): Promise<string[]>;
     getSearchResults(query: string): Promise<string>;
     subprocess(command: string): Promise<[string, string]>;
     getProblems(filepath?: string | undefined): Promise<Problem[]>;
-  
-    // Embeddings
-    /**
-     * Returns list of [tag, filepath, hash of contents] that need to be embedded
-     */
-    getFilesToEmbed(providerId: string): Promise<[string, string, string][]>;
-    sendEmbeddingForChunk(
-      chunk: Chunk,
-      embedding: number[],
-      tags: string[]
-    ): void;
-    retrieveChunks(
-      text: string,
-      n: number,
-      directory: string | undefined
-    ): Promise<Chunk[]>;
+    getBranch(dir: string): Promise<string>;
+    getStats(directory: string): Promise<{ [path: string]: number }>;
   }
   
   // Slash Commands
@@ -346,6 +372,8 @@ declare global {
     input: string;
     params?: { [key: string]: any } | undefined;
     contextItems: ContextItemWithId[];
+    selectedCode: RangeInFile[];
+    config: ContinueConfig;
   }
   
   export interface SlashCommand {
@@ -399,7 +427,9 @@ declare global {
     | "openchat"
     | "deepseek"
     | "xwin-coder"
-    | "neural-chat";
+    | "neural-chat"
+    | "codellama-70b"
+    | "llava";
   
   type ModelProvider =
     | "openai"
@@ -423,6 +453,7 @@ declare global {
     | "msty";
   
   export type ModelName =
+    | "AUTODETECT"
     // OpenAI
     | "gpt-3.5-turbo"
     | "gpt-3.5-turbo-16k"
@@ -430,6 +461,7 @@ declare global {
     | "gpt-3.5-turbo-0613"
     | "gpt-4-32k"
     | "gpt-4-turbo-preview"
+    | "gpt-4-vision-preview"
     // Open Source
     | "mistral-7b"
     | "mistral-8x7b"
@@ -438,6 +470,7 @@ declare global {
     | "codellama-7b"
     | "codellama-13b"
     | "codellama-34b"
+    | "codellama-70b"
     | "phi2"
     | "phind-codellama-34b"
     | "wizardcoder-7b"
@@ -445,7 +478,6 @@ declare global {
     | "wizardcoder-34b"
     | "zephyr-7b"
     | "codeup-13b"
-    | "deepseek-1b"
     | "deepseek-7b"
     | "deepseek-33b"
     | "neural-chat-7b"
@@ -458,7 +490,12 @@ declare global {
     // Mistral
     | "mistral-tiny"
     | "mistral-small"
-    | "mistral-medium";
+    | "mistral-medium"
+    // Tab autocomplete
+    | "deepseek-1b"
+    | "starcoder-1b"
+    | "starcoder-3b"
+    | "stable-code-3b";
   
   export interface RequestOptions {
     timeout?: number;
@@ -466,6 +503,7 @@ declare global {
     caBundlePath?: string | string[];
     proxy?: string;
     headers?: { [key: string]: string };
+    extraBodyProperties?: { [key: string]: any };
   }
   
   export interface StepWithParams {
@@ -533,6 +571,17 @@ declare global {
     embed(chunks: string[]): Promise<number[][]>;
   }
   
+  export interface TabAutocompleteOptions {
+    useCopyBuffer: boolean;
+    useSuffix: boolean;
+    maxPromptTokens: number;
+    debounceDelay: number;
+    maxSuffixPercentage: number;
+    prefixPercentage: number;
+    template?: string;
+    disableMultiLineCompletions?: boolean;
+  }
+  
   export interface SerializedContinueConfig {
     allowAnonymousTelemetry?: boolean;
     models: ModelDescription[];
@@ -545,7 +594,15 @@ declare global {
     disableSessionTitles?: boolean;
     userToken?: string;
     embeddingsProvider?: EmbeddingsProviderDescription;
+    tabAutocompleteModel?: ModelDescription;
+    tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   }
+  
+  export type ConfigMergeType = "merge" | "overwrite";
+  
+  export type ContinueRcJson = Partial<SerializedContinueConfig> & {
+    mergeBehavior: ConfigMergeType;
+  };
   
   export interface Config {
     /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://continue.dev/docs/telemetry */
@@ -573,6 +630,10 @@ declare global {
     userToken?: string;
     /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
     embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
+    /** The model that Continue will use for tab autocompletions. */
+    tabAutocompleteModel?: CustomLLM | ModelDescription;
+    /** Options for tab autocomplete */
+    tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   }
   
   export interface ContinueConfig {
@@ -586,8 +647,22 @@ declare global {
     disableIndexing?: boolean;
     userToken?: string;
     embeddingsProvider: EmbeddingsProvider;
+    tabAutocompleteModel?: ILLM;
+    tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   }
-      
+  
+  export interface BrowserSerializedContinueConfig {
+    allowAnonymousTelemetry?: boolean;
+    models: ModelDescription[];
+    systemMessage?: string;
+    completionOptions?: BaseCompletionOptions;
+    slashCommands?: SlashCommandDescription[];
+    contextProviders?: ContextProviderDescription[];
+    disableIndexing?: boolean;
+    disableSessionTitles?: boolean;
+    userToken?: string;
+    embeddingsProvider?: string;
+  }  
 }
 
 export {};

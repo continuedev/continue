@@ -16,6 +16,7 @@ import {
 } from "./templates/chat";
 import {
   alpacaEditPrompt,
+  claudeEditPrompt,
   codeLlama70bEditPrompt,
   codellamaEditPrompt,
   deepseekEditPrompt,
@@ -35,6 +36,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "ollama",
   "together",
   "msty",
+  "anthropic",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -83,7 +85,7 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
 
 function llmCanGenerateInParallel(
   provider: ModelProvider,
-  model: string
+  model: string,
 ): boolean {
   if (provider === "openai") {
     return model.includes("gpt");
@@ -170,7 +172,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 function autodetectTemplateFunction(
   model: string,
   provider: ModelProvider,
-  explicitTemplate: TemplateType | undefined = undefined
+  explicitTemplate: TemplateType | undefined = undefined,
 ) {
   if (
     explicitTemplate === undefined &&
@@ -207,7 +209,7 @@ function autodetectTemplateFunction(
 
 function autodetectPromptTemplates(
   model: string,
-  explicitTemplate: TemplateType | undefined = undefined
+  explicitTemplate: TemplateType | undefined = undefined,
 ) {
   const templateType = explicitTemplate || autodetectTemplateType(model);
   const templates: Record<string, any> = {};
@@ -238,6 +240,8 @@ function autodetectPromptTemplates(
     editTemplate = neuralChatEditPrompt;
   } else if (templateType === "codellama-70b") {
     editTemplate = codeLlama70bEditPrompt;
+  } else if (templateType === "anthropic") {
+    editTemplate = claudeEditPrompt;
   } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }

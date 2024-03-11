@@ -18,7 +18,7 @@ class DocsContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const { retrieveDocs } = await import("../../indexing/docs/db");
 
@@ -28,7 +28,7 @@ class DocsContextProvider extends BaseContextProvider {
     const chunks = await retrieveDocs(
       query,
       vector,
-      this.options?.nRetrieve || 15
+      this.options?.nRetrieve || 15,
     );
 
     console.log(chunks);
@@ -59,7 +59,7 @@ class DocsContextProvider extends BaseContextProvider {
   }
 
   async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const { listDocs } = await import("../../indexing/docs/db");
     const docs = await listDocs();

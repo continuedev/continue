@@ -1,4 +1,0 @@
-project: extensions/vscode
-kind: Fixed
-body: Fixed proxy setting in config.json
-time: 2024-01-30T13:03:15.8294-08:00

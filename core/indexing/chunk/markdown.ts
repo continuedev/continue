@@ -17,7 +17,7 @@ function cleanFragment(fragment: string | undefined): string | undefined {
   }
 
   // Remove all special characters except alphanumeric, hyphen, space, and underscore
-  fragment = fragment.replace(/[^\w\d-\s]/g, "").trim();
+  fragment = fragment.replace(/[^\w-\s]/g, "").trim();
 
   // Convert to lowercase
   fragment = fragment.toLowerCase();
@@ -43,7 +43,7 @@ function cleanHeader(header: string | undefined): string | undefined {
   }
 
   // Remove all special characters except alphanumeric, hyphen, space, and underscore
-  header = header.replace(/[^\w\d-\s]/g, "").trim();
+  header = header.replace(/[^\w-\s]/g, "").trim();
 
   return header;
 }
@@ -55,9 +55,9 @@ function findHeader(lines: string[]): string | undefined {
 export async function* markdownChunker(
   content: string,
   maxChunkSize: number,
-  hLevel: number
+  hLevel: number,
 ): AsyncGenerator<ChunkWithoutID> {
-  if (countTokens(content, "gpt-4") <= maxChunkSize) {
+  if (countTokens(content) <= maxChunkSize) {
     const header = findHeader(content.split("\n"));
     yield {
       content,
@@ -122,9 +122,8 @@ export async function* markdownChunker(
   for (const section of sections) {
     for await (const chunk of markdownChunker(
       section.content,
-      maxChunkSize -
-        (section.header ? countTokens(section.header, "gpt-4") : 0),
-      hLevel + 1
+      maxChunkSize - (section.header ? countTokens(section.header) : 0),
+      hLevel + 1,
     )) {
       yield {
         content: section.header + "\n" + chunk.content,

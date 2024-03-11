@@ -17,7 +17,7 @@ class OpenAIFreeTrial extends BaseLLM {
 
   protected async _complete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): Promise<string> {
     const args = this.collectArgs(options);
 
@@ -35,7 +35,7 @@ class OpenAIFreeTrial extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args = this.collectArgs(options);
 
@@ -55,7 +55,7 @@ class OpenAIFreeTrial extends BaseLLM {
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this.collectArgs(options);
 

@@ -35,7 +35,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
   constructor(
     embeddingsProvider: EmbeddingsProvider,
-    readFile: (filepath: string) => Promise<string>
+    readFile: (filepath: string) => Promise<string>,
   ) {
     this.embeddingsProvider = embeddingsProvider;
     this.readFile = readFile;
@@ -61,7 +61,7 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private async *computeChunks(
-    items: PathAndCacheKey[]
+    items: PathAndCacheKey[],
   ): AsyncGenerator<
     | [
         number,
@@ -72,7 +72,7 @@ export class LanceDbIndex implements CodebaseIndex {
     | PathAndCacheKey
   > {
     const contents = await Promise.all(
-      items.map(({ path }) => this.readFile(path))
+      items.map(({ path }) => this.readFile(path)),
     );
 
     for (let i = 0; i < items.length; i++) {
@@ -84,7 +84,7 @@ export class LanceDbIndex implements CodebaseIndex {
         items[i].path,
         content,
         LanceDbIndex.MAX_CHUNK_SIZE,
-        items[i].cacheKey
+        items[i].cacheKey,
       )) {
         chunks.push(chunk);
       }
@@ -96,7 +96,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
       // Calculate embeddings
       const embeddings = await this.embeddingsProvider.embed(
-        chunks.map((c) => c.content)
+        chunks.map((c) => c.content),
       );
 
       // Create row format
@@ -130,8 +130,8 @@ export class LanceDbIndex implements CodebaseIndex {
     results: RefreshIndexResults,
     markComplete: (
       items: PathAndCacheKey[],
-      resultType: IndexResultType
-    ) => void
+      resultType: IndexResultType,
+    ) => void,
   ): AsyncGenerator<IndexingProgressUpdate> {
     const lancedb = await import("vectordb");
     const tableName = this.tableNameForTag(tag);
@@ -160,7 +160,7 @@ export class LanceDbIndex implements CodebaseIndex {
           JSON.stringify(row.vector),
           data.startLine,
           data.endLine,
-          data.contents
+          data.contents,
         );
 
         yield { progress, desc };
@@ -193,7 +193,7 @@ export class LanceDbIndex implements CodebaseIndex {
       const stmt = await sqlite.prepare(
         "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
         cacheKey,
-        path
+        path,
       );
       const cachedItems = await stmt.all();
 
@@ -230,7 +230,7 @@ export class LanceDbIndex implements CodebaseIndex {
       await sqlite.run(
         "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
         cacheKey,
-        path
+        path,
       );
     }
 
@@ -243,7 +243,7 @@ export class LanceDbIndex implements CodebaseIndex {
     n: number,
     directory: string | undefined,
     vector: number[],
-    db: any /// lancedb.Connection
+    db: any, /// lancedb.Connection
   ): Promise<LanceDbRow[]> {
     const tableName = this.tableNameForTag(tag);
     const tableNames = await db.tableNames();
@@ -267,7 +267,7 @@ export class LanceDbIndex implements CodebaseIndex {
     tags: IndexTag[],
     text: string,
     n: number,
-    directory: string | undefined
+    directory: string | undefined,
   ): Promise<Chunk[]> {
     const lancedb = await import("vectordb");
     if (!lancedb.connect) {
@@ -290,7 +290,7 @@ export class LanceDbIndex implements CodebaseIndex {
     const data = await sqliteDb.all(
       `SELECT * FROM lance_db_cache WHERE uuid in (${allResults
         .map((r) => `'${r.uuid}'`)
-        .join(",")})`
+        .join(",")})`,
     );
 
     return data.map((d) => {

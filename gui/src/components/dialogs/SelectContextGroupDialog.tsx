@@ -12,7 +12,7 @@ import {
   setDialogMessage,
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
-import { RootStore } from "../../redux/store";
+import { RootState } from "../../redux/store";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 
 const MiniPillSpan = styled.span`
@@ -50,7 +50,7 @@ const ContextGroupSelectDiv = styled.div`
 function SelectContextGroupDialog() {
   const dispatch = useDispatch();
   const savedContextGroups = useSelector(
-    (state: RootStore) => state.serverState.savedContextGroups
+    (state: RootState) => state.serverState.savedContextGroups
   );
 
   return (

@@ -1,6 +1,18 @@
 import { streamDiff } from "../diff/streamDiff";
 
 const oldCode = [
+  `A
+B`,
+  `A
+B
+C`,
+  `A
+B
+C
+A
+B
+B
+A`,
   `function mergeSortAlgorithm() {
     // TODO: implement
 }`,
@@ -10,6 +22,19 @@ const oldCode = [
 ];
 
 const newCode = [
+  `C
+D`,
+  `D
+E
+C
+F
+C`,
+  `C
+B
+A
+B
+A
+C`,
   `function mergeSortAlgorithm(arr: number[]): number[] {
   if (arr.length <= 1) {
     return arr;
@@ -113,7 +138,11 @@ describe("streamDiff", () => {
       // Check that there are no red lines immediately following green (they should always be above)
       for (let i = 1; i < diff.length; i++) {
         if (diff[i].type === "old" && diff[i - 1].type === "new") {
-          throw new Error("Found red immediately after green line");
+          throw new Error(
+            `Found red '${diff[i].line}' immediately after green line '${
+              diff[i - 1].line
+            }`
+          );
         }
       }
     });

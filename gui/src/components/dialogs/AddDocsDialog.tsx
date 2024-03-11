@@ -1,4 +1,3 @@
-import { postToIde } from "core/ide/messaging";
 import { usePostHog } from "posthog-js/react";
 import React, { useContext, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
@@ -6,6 +5,7 @@ import styled from "styled-components";
 import { Button, Input } from "..";
 import { SubmenuContextProvidersContext } from "../../App";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import { postToIde } from "../../util/ide";
 
 const GridDiv = styled.div`
   display: grid;
@@ -58,7 +58,7 @@ function AddDocsDialog() {
         disabled={!docsUrl || !urlValid}
         className="ml-auto"
         onClick={() => {
-          postToIde("addDocs", { url: docsUrl, title: docsTitle });
+          postToIde("context/addDocs", { url: docsUrl, title: docsTitle });
           setDocsTitle("");
           setDocsUrl("");
           dispatch(setShowDialog(false));

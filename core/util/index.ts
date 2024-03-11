@@ -92,17 +92,17 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
-type PromptTemplate =
+export type PromptTemplate =
   | string
   | ((
       history: ChatMessage[],
-      otherData: Record<string, string>
+      otherData: Record<string, string>,
     ) => string | ChatMessage[]);
 
 export function renderPromptTemplate(
   template: PromptTemplate,
   history: ChatMessage[],
-  otherData: Record<string, string>
+  otherData: Record<string, string>,
 ): string | ChatMessage[] {
   if (typeof template === "string") {
     let data: any = {
@@ -184,4 +184,9 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
     default:
       return "";
   }
+}
+
+export function copyOf(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  return JSON.parse(JSON.stringify(obj));
 }

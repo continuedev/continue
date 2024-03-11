@@ -17,6 +17,7 @@ You can run a model on your local computer using:
 - [Ollama](../reference/Model%20Providers/ollama.md)
 - [LM Studio](../reference/Model%20Providers/lmstudio.md)
 - [Llama.cpp](../reference/Model%20Providers/llamacpp.md)
+- [llamafile](../reference/Model%20Providers/llamafile) ((OpenAI compatible server)
 - [LocalAI](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [Text generation web UI](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [FastChat](../reference/Model%20Providers/openai.md) (OpenAI compatible server)

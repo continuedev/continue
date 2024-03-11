@@ -8,6 +8,18 @@
     {
       "type": "node",
       "request": "launch",
+      "name": "Core Binary",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/pkg/out/index.js",
+      "preLaunchTask": "pkg:esbuild",
+      "outFiles": ["${workspaceFolder}/pkg/out/**/*.js"],
+      "sourceMaps": true,
+      "smartStep": true,
+      "internalConsoleOptions": "openOnSessionStart"
+    },
+    {
+      "type": "node",
+      "request": "launch",
       "name": "Jest All",
       "program": "${workspaceFolder}/core/node_modules/.bin/jest",
       "args": ["--runInBand"],

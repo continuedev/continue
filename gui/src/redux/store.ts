@@ -5,14 +5,6 @@ import serverStateReducer from "./slices/serverStateReducer";
 import stateReducer from "./slices/stateSlice";
 import uiStateReducer from "./slices/uiStateSlice";
 
-import {
-  ChatHistory,
-  ContextItemWithId,
-  ContextProviderDescription,
-  ContinueConfig,
-  SlashCommandDescription,
-} from "core";
-import { BrowserSerializedContinueConfig } from "core/config/load";
 import { createTransform, persistReducer, persistStore } from "redux-persist";
 import { createFilter } from "redux-persist-transform-filter";
 import autoMergeLevel2 from "redux-persist/lib/stateReconciler/autoMergeLevel2";
@@ -23,43 +15,6 @@ export interface ChatMessage {
   content: string;
 }
 
-export interface RootStore {
-  state: {
-    history: ChatHistory;
-    contextItems: ContextItemWithId[];
-    active: boolean;
-    config: BrowserSerializedContinueConfig;
-    title: string;
-    sessionId: string;
-    defaultModelTitle: string;
-  };
-
-  config: {
-    vscMachineId: string | undefined;
-  };
-  misc: {
-    takenAction: boolean;
-    serverStatusMessage: string;
-  };
-  uiState: {
-    bottomMessage: JSX.Element | undefined;
-    bottomMessageCloseTimeout: NodeJS.Timeout | undefined;
-    displayBottomMessageOnBottom: boolean;
-    showDialog: boolean;
-    dialogMessage: string | JSX.Element;
-    dialogEntryOn: boolean;
-  };
-  serverState: {
-    meilisearchUrl: string | undefined;
-    slashCommands: SlashCommandDescription[];
-    selectedContextItems: any[];
-    config: ContinueConfig;
-    contextProviders: ContextProviderDescription[];
-    savedContextGroups: any[]; // TODO: Context groups
-    indexingProgress: number;
-  };
-}
-
 const rootReducer = combineReducers({
   state: stateReducer,
   config: configReducer,
@@ -67,6 +22,8 @@ const rootReducer = combineReducers({
   uiState: uiStateReducer,
   serverState: serverStateReducer,
 });
+
+export type RootState = ReturnType<typeof rootReducer>;
 
 const windowIDTransform = (windowID) =>
   createTransform(

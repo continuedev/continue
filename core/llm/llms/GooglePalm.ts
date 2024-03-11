@@ -13,31 +13,53 @@ class GooglePalm extends BaseLLM {
   static providerName: ModelProvider = "google-palm";
 
   static defaultOptions: Partial<LLMOptions> = {
-    model: "chat-bison-001",
+    model: "gemini-pro",
+    apiBase: "https://generativelanguage.googleapis.com",
   };
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     for await (const message of this._streamChat(
       [{ content: prompt, role: "user" }],
-      options
+      options,
     )) {
       yield stripImages(message.content);
     }
   }
 
+  private removeSystemMessage(messages: ChatMessage[]) {
+    const msgs = [...messages];
+
+    if (msgs[0]?.role === "system") {
+      let sysMsg = msgs.shift()!.content;
+      // @ts-ignore
+      if (msgs[0]?.role === "user") {
+        msgs[0].content = `System message - follow these instructions in every response: ${sysMsg}\n\n---\n\n${msgs[0].content}`;
+      }
+    }
+
+    return msgs;
+  }
+
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
+    let convertedMsgs = this.removeSystemMessage(messages);
     if (options.model.includes("gemini")) {
-      for await (const message of this.streamChatGemini(messages, options)) {
+      for await (const message of this.streamChatGemini(
+        convertedMsgs,
+        options,
+      )) {
         yield message;
       }
     } else {
-      for await (const message of this.streamChatBison(messages, options)) {
+      for await (const message of this.streamChatBison(
+        convertedMsgs,
+        options,
+      )) {
         yield message;
       }
     }
@@ -58,9 +80,9 @@ class GooglePalm extends BaseLLM {
 
   private async *streamChatGemini(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const apiURL = `https://generativelanguage.googleapis.com/v1/models/${options.model}:streamGenerateContent?key=${this.apiKey}`;
+    const apiURL = `${this.apiBase}/v1/models/${options.model}:streamGenerateContent?key=${this.apiKey}`;
     const body = {
       contents: messages.map((msg) => {
         return {
@@ -128,14 +150,14 @@ class GooglePalm extends BaseLLM {
   }
   private async *streamChatBison(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const msgList = [];
     for (const message of messages) {
       msgList.push({ content: message.content });
     }
 
-    const apiURL = `https://generativelanguage.googleapis.com/v1beta2/models/${options.model}:generateMessage?key=${this.apiKey}`;
+    const apiURL = `${this.apiBase}/v1beta2/models/${options.model}:generateMessage?key=${this.apiKey}`;
     const body = { prompt: { messages: msgList } };
     const response = await this.fetch(apiURL, {
       method: "POST",

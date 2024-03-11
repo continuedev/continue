@@ -17,7 +17,7 @@ class HuggingFaceTGI extends BaseLLM {
       if (response.status !== 200) {
         console.warn(
           "Error calling Hugging Face TGI /info endpoint: ",
-          await response.text()
+          await response.text(),
         );
         return;
       }
@@ -44,7 +44,7 @@ class HuggingFaceTGI extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args = this._convertArgs(options, prompt);
 

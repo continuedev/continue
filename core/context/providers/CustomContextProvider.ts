@@ -19,12 +19,13 @@ class CustomContextProviderClass implements IContextProvider {
       displayTitle: this.custom.displayTitle || this.custom.title,
       description: this.custom.description || "",
       type: this.custom.type || "normal",
+      renderInlineAs: this.custom.renderInlineAs,
     };
   }
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     return await this.custom.getContextItems(query, extras);
   }

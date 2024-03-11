@@ -44,7 +44,7 @@ class FileTreeContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const workspaceDirs = await extras.ide.getWorkspaceDirs();
     let trees = [];

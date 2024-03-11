@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 export const miscSlice = createSlice({
   name: "misc",
@@ -7,10 +7,10 @@ export const miscSlice = createSlice({
     serverStatusMessage: "Continue Server Starting",
   },
   reducers: {
-    setTakenActionTrue: (state: any, action) => {
+    setTakenActionTrue: (state) => {
       state.takenAction = true;
     },
-    setServerStatusMessage: (state: any, action) => {
+    setServerStatusMessage: (state, action: PayloadAction<string>) => {
       state.serverStatusMessage = action.payload;
     },
   },

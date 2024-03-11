@@ -3,11 +3,9 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
-import { extensionContext } from "../activation/activate";
-import { debugPanelWebview } from "../debugPanel";
 import { getMetaKeyLabel, getPlatform } from "../util/util";
 import { uriFromFilePath } from "../util/vscode";
-import { verticalPerLineDiffManager } from "./verticalPerLine/manager";
+import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -32,7 +30,7 @@ export const DIFF_DIRECTORY = path
   .join(os.homedir(), ".continue", "diffs")
   .replace(/^C:/, "c:");
 
-class DiffManager {
+export class DiffManager {
   // Create a temporary file in the global .continue directory which displays the updated version
   // Doing this because virtual files are read-only
   private diffs: Map<string, DiffInfo> = new Map();
@@ -50,7 +48,9 @@ class DiffManager {
     }
   }
 
-  constructor() {
+  webviewProtocol: VsCodeWebviewProtocol | undefined;
+
+  constructor(private readonly extensionContext: vscode.ExtensionContext) {
     this.setupDirectory();
 
     // Listen for file closes, and if it's a diff file, clean up
@@ -78,7 +78,7 @@ class DiffManager {
       vscode.workspace.fs.createDirectory(uriFromFilePath(this.remoteTmpDir));
       return path.join(
         this.remoteTmpDir,
-        this.escapeFilepath(originalFilepath)
+        this.escapeFilepath(originalFilepath),
       );
     }
     return path.join(DIFF_DIRECTORY, this.escapeFilepath(originalFilepath));
@@ -86,7 +86,7 @@ class DiffManager {
 
   private async openDiffEditor(
     originalFilepath: string,
-    newFilepath: string
+    newFilepath: string,
   ): Promise<vscode.TextEditor | undefined> {
     // If the file doesn't yet exist or the basename is a single digit number (vscode terminal), don't open the diff editor
     try {
@@ -115,22 +115,22 @@ class DiffManager {
       .update("codeLens", true, vscode.ConfigurationTarget.Global);
 
     if (
-      extensionContext?.globalState.get<boolean>(
-        "continue.showDiffInfoMessage"
+      this.extensionContext.globalState.get<boolean>(
+        "continue.showDiffInfoMessage",
       ) !== false
     ) {
       vscode.window
         .showInformationMessage(
           `Accept (${getMetaKeyLabel()}⇧↩) or reject (${getMetaKeyLabel()}⇧⌫) at the top of the file.`,
           "Got it",
-          "Don't show again"
+          "Don't show again",
         )
         .then((selection) => {
           if (selection === "Don't show again") {
             // Get the global state
-            extensionContext?.globalState.update(
+            this.extensionContext.globalState.update(
               "continue.showDiffInfoMessage",
-              false
+              false,
             );
           }
         });
@@ -153,7 +153,7 @@ class DiffManager {
   async writeDiff(
     originalFilepath: string,
     newContent: string,
-    step_index: number
+    step_index: number,
   ): Promise<string> {
     await this.setupDirectory();
 
@@ -181,7 +181,7 @@ class DiffManager {
     if (diffInfo && !diffInfo?.editor) {
       diffInfo.editor = await this.openDiffEditor(
         originalFilepath,
-        newFilepath
+        newFilepath,
       );
       this.diffs.set(newFilepath, diffInfo);
     }
@@ -192,7 +192,7 @@ class DiffManager {
       // Flashes too much on mac with it
       vscode.commands.executeCommand(
         "workbench.action.files.revert",
-        uriFromFilePath(newFilepath)
+        uriFromFilePath(newFilepath),
       );
     }
 
@@ -218,7 +218,7 @@ class DiffManager {
       return activeEditorPath;
     }
     const visibleEditors = vscode.window.visibleTextEditors.map(
-      (editor) => editor.document.uri.fsPath
+      (editor) => editor.document.uri.fsPath,
     );
     for (const editorPath of visibleEditors) {
       if (path.dirname(editorPath) === DIFF_DIRECTORY) {
@@ -262,7 +262,7 @@ class DiffManager {
       .then(async () => {
         await writeFile(
           uriFromFilePath(diffInfo.originalFilepath),
-          await readFile(diffInfo.newFilepath)
+          await readFile(diffInfo.newFilepath),
         );
         this.cleanUpDiff(diffInfo);
       });
@@ -278,7 +278,7 @@ class DiffManager {
     if (!newFilepath) {
       console.log(
         "No newFilepath provided to reject the diff, diffs.size was",
-        this.diffs.size
+        this.diffs.size,
       );
       return;
     }
@@ -289,7 +289,7 @@ class DiffManager {
     }
 
     // Stop the step at step_index in case it is still streaming
-    debugPanelWebview?.postMessage({ type: "setInactive" });
+    this.webviewProtocol?.request("setInactive", undefined);
 
     vscode.workspace.textDocuments
       .find((doc) => doc.uri.fsPath === newFilepath)
@@ -301,8 +301,6 @@ class DiffManager {
     await recordAcceptReject(false, diffInfo);
   }
 }
-
-export const diffManager = new DiffManager();
 
 async function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
   const devDataDir = devDataPath();
@@ -330,22 +328,6 @@ async function recordAcceptReject(accepted: boolean, diffInfo: DiffInfo) {
   // Write the updated suggestions back to the file
   await writeFile(
     vscode.Uri.file(suggestionsPath),
-    JSON.stringify(suggestions, null, 4)
+    JSON.stringify(suggestions, null, 4),
   );
-}
-
-export async function acceptDiffCommand(newFilepath?: string | vscode.Uri) {
-  if (newFilepath instanceof vscode.Uri) {
-    newFilepath = newFilepath.fsPath;
-  }
-  verticalPerLineDiffManager.clearForFilepath(newFilepath, true);
-  await diffManager.acceptDiff(newFilepath);
-}
-
-export async function rejectDiffCommand(newFilepath?: string | vscode.Uri) {
-  if (newFilepath instanceof vscode.Uri) {
-    newFilepath = newFilepath.fsPath;
-  }
-  verticalPerLineDiffManager.clearForFilepath(newFilepath, false);
-  await diffManager.rejectDiff(newFilepath);
 }

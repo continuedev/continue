@@ -12,11 +12,12 @@ class CodebaseContextProvider extends BaseContextProvider {
     displayTitle: "Codebase",
     description: "Automatically find relevant files",
     type: "normal",
+    renderInlineAs: "",
   };
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     return retrieveContextItemsFromEmbeddings(extras, this.options, undefined);
   }

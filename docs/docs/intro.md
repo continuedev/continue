@@ -14,7 +14,8 @@ Many developers have begun to use ChatGPT while coding; however, the experience 
 
 Some examples of what you can achieve are:
 
-- Use cmd/ctrl + shift + L to generate boilerplate code from natural language
+- Use cmd/ctrl + I to generate boilerplate code from natural language
+- Use our local tab-autocomplete to get inline suggestions and write boilerplate code quickly
 - Highlight code, describe how to refactor it, and have changes streamed into your editor
 - Ask high-level questions about your codebase, with Continue automatically finding relevant files
 - Quickly generate unit tests for any function or class

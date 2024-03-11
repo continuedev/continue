@@ -13,9 +13,9 @@ import {
   vscBackground,
   vscInputBackground,
 } from "..";
-import { RootStore } from "../../redux/store";
+import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
-import { logDevData } from "../../util/ide";
+import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 
@@ -62,7 +62,7 @@ const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
 function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const isUserInput = props.item.message.role === "user";
-  const active = useSelector((store: RootStore) => store.state.active);
+  const active = useSelector((store: RootState) => store.state.active);
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 
@@ -70,7 +70,10 @@ function StepContainer(props: StepContainerProps) {
     setFeedback(feedback);
     if (props.item.promptLogs?.length) {
       for (const [prompt, completion] of props.item.promptLogs) {
-        logDevData("chat", { prompt, completion, feedback });
+        postToIde("devdata/log", {
+          tableName: "chat",
+          data: { prompt, completion, feedback },
+        });
       }
     }
   };

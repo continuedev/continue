@@ -18,13 +18,13 @@ class FolderContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const { retrieveContextItemsFromEmbeddings } = await import("../retrieval");
     return retrieveContextItemsFromEmbeddings(extras, this.options, query);
   }
   async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const folders = await args.ide.listFolders();
     return folders.map((folder) => {

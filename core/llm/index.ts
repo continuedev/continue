@@ -94,7 +94,7 @@ export abstract class BaseLLM implements ILLM {
     if (CompletionOptionsForModels[options.model as ModelName]) {
       this.completionOptions = mergeJson(
         this.completionOptions,
-        CompletionOptionsForModels[options.model as ModelName] || {}
+        CompletionOptionsForModels[options.model as ModelName] || {},
       );
     }
     this.requestOptions = options.requestOptions;
@@ -107,7 +107,7 @@ export abstract class BaseLLM implements ILLM {
       autodetectTemplateFunction(
         options.model,
         this.providerName,
-        options.template
+        options.template,
       );
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
@@ -131,7 +131,7 @@ export abstract class BaseLLM implements ILLM {
   private _compileChatMessages(
     options: CompletionOptions,
     messages: ChatMessage[],
-    functions?: any[]
+    functions?: any[],
   ) {
     let contextLength = this.contextLength;
     if (
@@ -150,7 +150,7 @@ export abstract class BaseLLM implements ILLM {
       this.supportsImages(),
       undefined,
       functions,
-      this.systemMessage
+      this.systemMessage,
     );
   }
 
@@ -176,7 +176,7 @@ export abstract class BaseLLM implements ILLM {
 
   private _compileLogMessage(
     prompt: string,
-    completionOptions: CompletionOptions
+    completionOptions: CompletionOptions,
   ): string {
     const dict = { contextLength: this.contextLength, ...completionOptions };
     const settings = Object.entries(dict)
@@ -209,7 +209,7 @@ ${prompt}`;
 
   protected fetch(
     url: RequestInfo | URL,
-    init?: RequestInit
+    init?: RequestInit,
   ): Promise<Response> {
     if (this._fetch) {
       // Custom Node.js fetch
@@ -219,7 +219,7 @@ ${prompt}`;
     // Most of the requestOptions aren't available in the browser
     const headers = new Headers(init?.headers);
     for (const [key, value] of Object.entries(
-      this.requestOptions?.headers || {}
+      this.requestOptions?.headers || {},
     )) {
       headers.append(key, value as string);
     }
@@ -238,7 +238,7 @@ ${prompt}`;
 
     const completionOptions: CompletionOptions = mergeJson(
       this.completionOptions,
-      options
+      options,
     );
 
     return { completionOptions, log, raw };
@@ -254,7 +254,7 @@ ${prompt}`;
 
   async *streamComplete(
     prompt: string,
-    options: LLMFullCompletionOptions = {}
+    options: LLMFullCompletionOptions = {},
   ) {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
@@ -263,7 +263,7 @@ ${prompt}`;
       completionOptions.model,
       this.contextLength,
       prompt,
-      completionOptions.maxTokens || DEFAULT_MAX_TOKENS
+      completionOptions.maxTokens || DEFAULT_MAX_TOKENS,
     );
 
     if (!raw) {
@@ -302,7 +302,7 @@ ${prompt}`;
       completionOptions.model,
       this.contextLength,
       prompt,
-      completionOptions.maxTokens || DEFAULT_MAX_TOKENS
+      completionOptions.maxTokens || DEFAULT_MAX_TOKENS,
     );
 
     if (!raw) {
@@ -338,7 +338,7 @@ ${prompt}`;
 
   async *streamChat(
     messages: ChatMessage[],
-    options: LLMFullCompletionOptions = {}
+    options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<ChatMessage, LLMReturnValue> {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
@@ -363,7 +363,7 @@ ${prompt}`;
       if (this.templateMessages) {
         for await (const chunk of this._streamComplete(
           prompt,
-          completionOptions
+          completionOptions,
         )) {
           completion += chunk;
           yield { role: "assistant", content: chunk };
@@ -371,7 +371,7 @@ ${prompt}`;
       } else {
         for await (const chunk of this._streamChat(
           messages,
-          completionOptions
+          completionOptions,
         )) {
           completion += chunk.content;
           yield chunk;
@@ -392,24 +392,24 @@ ${prompt}`;
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     throw new Error("Not implemented");
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     if (!this.templateMessages) {
       throw new Error(
-        "You must either implement templateMessages or _streamChat"
+        "You must either implement templateMessages or _streamChat",
       );
     }
 
     for await (const chunk of this._streamComplete(
       this.templateMessages(messages),
-      options
+      options,
     )) {
       yield { role: "assistant", content: chunk };
     }

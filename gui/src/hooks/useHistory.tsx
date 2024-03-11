@@ -1,12 +1,13 @@
 import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
-import { ideRequest, llmStreamChat } from "core/ide/messaging";
+
 import { llmCanGenerateInParallel } from "core/llm/autodetect";
 import { stripImages } from "core/llm/countTokens";
 import { useSelector } from "react-redux";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
+import { ideRequest } from "../util/ide";
 
 function truncateText(text: string, maxLength: number) {
   if (text.length > maxLength) {
@@ -16,14 +17,14 @@ function truncateText(text: string, maxLength: number) {
 }
 
 function useHistory(dispatch: Dispatch) {
-  const state = useSelector((state: RootStore) => state.state);
+  const state = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
   const disableSessionTitles = useSelector(
-    (store: RootStore) => store.state.config.disableSessionTitles
+    (store: RootState) => store.state.config.disableSessionTitles
   );
 
   async function getHistory(): Promise<SessionInfo[]> {
-    return await ideRequest("history", {});
+    return await ideRequest("history/list", undefined);
   }
 
   async function saveSession() {
@@ -46,24 +47,23 @@ function useHistory(dispatch: Dispatch) {
       !disableSessionTitles &&
       llmCanGenerateInParallel(defaultModel.provider, defaultModel.model)
     ) {
-      let fullContent = "";
-      for await (const { content } of llmStreamChat(
-        defaultModel.title,
-        undefined,
-        [
-          ...stateCopy.history.map((item) => item.message),
-          {
-            role: "user",
-            content:
-              "Give a maximum 40 character title to describe this conversation so far. The title should help me recall the conversation if I look for it later. DO NOT PUT QUOTES AROUND THE TITLE",
-          },
-        ],
-        { maxTokens: 20 }
-      )) {
-        fullContent += content;
-      }
-
-      title = stripImages(fullContent);
+      // let fullContent = "";
+      // for await (const { content } of llmStreamChat(
+      //   defaultModel.title,
+      //   undefined,
+      //   [
+      //     ...stateCopy.history.map((item) => item.message),
+      //     {
+      //       role: "user",
+      //       content:
+      //         "Give a maximum 40 character title to describe this conversation so far. The title should help me recall the conversation if I look for it later. DO NOT PUT QUOTES AROUND THE TITLE",
+      //     },
+      //   ],
+      //   { maxTokens: 20 }
+      // )) {
+      //   fullContent += content;
+      // }
+      // title = stripImages(fullContent);
     }
 
     const sessionInfo: PersistedSessionInfo = {
@@ -72,15 +72,15 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
-    return await ideRequest("saveSession", sessionInfo);
+    return await ideRequest("history/save", sessionInfo);
   }
 
-  async function deleteSession(sessionId: string) {
-    return await ideRequest("deleteSession", sessionId);
+  async function deleteSession(id: string) {
+    return await ideRequest("history/delete", { id });
   }
 
-  async function loadSession(sessionId: string): Promise<PersistedSessionInfo> {
-    return await ideRequest("loadSession", sessionId);
+  async function loadSession(id: string): Promise<PersistedSessionInfo> {
+    return await ideRequest("history/load", { id });
   }
 
   return { getHistory, saveSession, deleteSession, loadSession };

@@ -28,7 +28,7 @@ async function createDocsTable(db: Database<sqlite3.Database>) {
 export async function retrieveDocs(
   baseUrl: string,
   vector: number[],
-  nRetrieve: number
+  nRetrieve: number,
 ): Promise<Chunk[]> {
   const lancedb = await import("vectordb");
   const lance = await lancedb.connect(getLanceDbPath());
@@ -56,7 +56,7 @@ export async function addDocs(
   title: string,
   baseUrl: URL,
   chunks: Chunk[],
-  embeddings: number[][]
+  embeddings: number[][],
 ) {
   const data: LanceDbDocsRow[] = chunks.map((chunk, i) => ({
     title: chunk.otherMetadata?.title || title,
@@ -87,7 +87,7 @@ export async function addDocs(
   await db.run(
     `INSERT INTO docs (title, baseUrl) VALUES (?, ?)`,
     title,
-    baseUrl.toString()
+    baseUrl.toString(),
   );
 }
 

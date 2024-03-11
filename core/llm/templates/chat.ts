@@ -1,6 +1,15 @@
 import { ChatMessage } from "../..";
 import { stripImages } from "../countTokens";
 
+/**
+ * @description Template for LLAMA2 messages:
+ *
+ * <s>[INST] <<SYS>>
+ * {{ system_prompt }}
+ * <</SYS>>
+ *
+ * {{ user_msg_1 }} [/INST] {{ model_answer_1 }} </s><s>[INST] {{ user_msg_2 }} [/INST] {{ model_answer_2 }} </s><s>[INST] {{ user_msg_3 }} [/INST]
+ */
 function llama2TemplateMessages(msgs: ChatMessage[]): string {
   if (msgs.length === 0) {
     return "";
@@ -21,14 +30,9 @@ function llama2TemplateMessages(msgs: ChatMessage[]): string {
   }
 
   if (hasSystem) {
-    const systemMessage = `
-          <<SYS>>
-          ${msgs[0].content}
-          <</SYS>>
-
-      `;
+    const systemMessage = `<<SYS>>\n ${msgs[0].content}\n<</SYS>>\n\n`;
     if (msgs.length > 1) {
-      prompt += `[INST] ${systemMessage}${msgs[1].content} [/INST]`;
+      prompt += `<s>[INST] ${systemMessage} ${msgs[1].content} [/INST]`;
     } else {
       prompt += `[INST] ${systemMessage} [/INST]`;
       return prompt;
@@ -39,7 +43,7 @@ function llama2TemplateMessages(msgs: ChatMessage[]): string {
     if (msgs[i].role === "user") {
       prompt += `[INST] ${msgs[i].content} [/INST]`;
     } else {
-      prompt += msgs[i].content + " ";
+      prompt += msgs[i].content + "</s>\n<s>";
     }
   }
 
@@ -126,6 +130,9 @@ function templateAlpacaMessages(msgs: ChatMessage[]): string {
   if (msgs[0].role === "system") {
     prompt += `${msgs[0].content}\n\n`;
     msgs.shift();
+  } else {
+    prompt +=
+      "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n";
   }
 
   for (const msg of msgs) {

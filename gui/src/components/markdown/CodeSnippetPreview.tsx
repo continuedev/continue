@@ -5,13 +5,13 @@ import {
   XMarkIcon,
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
-import { ExtensionIde } from "core/ide";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import React from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
 import { getFontSize } from "../../util";
 import { postToIde } from "../../util/ide";
+import { WebviewIde } from "../../util/webviewIde";
 import FileIcon from "../FileIcon";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
@@ -90,10 +90,10 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               .split("(")[1]
               .split(")")[0]
               .split("-");
-            new ExtensionIde().showLines(
+            new WebviewIde().showLines(
               props.item.description,
               parseInt(lines[0]) - 1,
-              parseInt(lines[1]) - 1
+              parseInt(lines[1]) - 1,
             );
           } else {
             postToIde("showVirtualFile", {
@@ -137,13 +137,14 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         </div>
       </PreviewMarkdownHeader>
       <div
+        contentEditable={false}
         className="m-0"
         ref={codeBlockRef}
         style={{
           height: collapsed
             ? `${Math.min(
                 MAX_PREVIEW_HEIGHT,
-                codeBlockRef.current?.scrollHeight
+                codeBlockRef.current?.scrollHeight,
               )}px`
             : undefined,
           overflow: collapsed ? "hidden" : "auto",
@@ -151,7 +152,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       >
         <StyledMarkdownPreview
           source={`${fence}${getMarkdownLanguageTagForFile(
-            props.item.description
+            props.item.description,
           )}\n${props.item.content.trim()}\n${fence}`}
           showCodeBorder={false}
         />

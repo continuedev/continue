@@ -1,19 +1,17 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import _ from "lodash";
 import React from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscBackground } from "../components";
 import ModelCard from "../components/modelSelection/ModelCard";
-
-import { postToIde } from "core/ide/messaging";
-import { useDispatch } from "react-redux";
 import Toggle from "../components/modelSelection/Toggle";
+import { useNavigationListener } from "../hooks/useNavigationListener";
 import { setDefaultModel } from "../redux/slices/stateSlice";
-import { addModel } from "../util/ide";
+import { postToIde } from "../util/ide";
 import { MODEL_INFO, PROVIDER_INFO } from "../util/modelData";
 import { CustomModelButton } from "./modelconfig";
-import { useNavigationListener } from "../hooks/useNavigationListener";
 
 const IntroDiv = styled.div`
   padding: 8px 12px;
@@ -75,10 +73,8 @@ function Models() {
           <li>a model (the LLM being run, e.g. GPT-4, CodeLlama).</li>
         </ul>
         To read more about the options, check out our{" "}
-        <a href="https://continue.dev/docs/model-setup/overview">
-          overview
-        </a>{" "}
-        in the docs.
+        <a href="https://continue.dev/docs/model-setup/overview">overview</a> in
+        the docs.
       </IntroDiv>
       {providersSelected ? (
         <GridDiv>
@@ -121,7 +117,7 @@ function Models() {
                   ),
                   provider: PROVIDER_INFO[selectedProvider].provider,
                 };
-                addModel(model);
+                postToIde("config/addModel", { model });
                 dispatch(setDefaultModel(model.title));
                 navigate("/");
               }}
@@ -138,7 +134,7 @@ function Models() {
         <CustomModelButton
           disabled={false}
           onClick={(e) => {
-            postToIde("openConfigJson", {});
+            postToIde("openConfigJson", undefined);
           }}
         >
           <h3 className="text-center my-2">Open config.json</h3>

@@ -16,7 +16,7 @@ class OpenFilesContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const ide = extras.ide;
     const openFiles = this.options?.onlyPinned
@@ -27,11 +27,11 @@ class OpenFilesContextProvider extends BaseContextProvider {
         return {
           description: filepath,
           content: `\`\`\`${getBasename(filepath)}\n${await ide.readFile(
-            filepath
+            filepath,
           )}\n\`\`\``,
           name: (filepath.split("/").pop() || "").split("\\").pop() || "",
         };
-      })
+      }),
     );
   }
 }
