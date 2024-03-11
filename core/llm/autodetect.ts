@@ -16,6 +16,7 @@ import {
 } from "./templates/chat";
 import {
   alpacaEditPrompt,
+  claudeEditPrompt,
   codeLlama70bEditPrompt,
   codellamaEditPrompt,
   deepseekEditPrompt,
@@ -34,6 +35,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "openai",
   "ollama",
   "together",
+  "anthropic",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -41,6 +43,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "ollama",
   "google-palm",
   "free-trial",
+  "anthropic",
 ];
 
 function modelSupportsImages(provider: ModelProvider, model: string): boolean {
@@ -49,6 +52,10 @@ function modelSupportsImages(provider: ModelProvider, model: string): boolean {
   }
 
   if (model.includes("llava")) {
+    return true;
+  }
+
+  if (model.includes("claude-3")) {
     return true;
   }
 
@@ -177,7 +184,7 @@ function autodetectTemplateFunction(
     return null;
   }
 
-  const templateType = explicitTemplate || autodetectTemplateType(model);
+  const templateType = explicitTemplate ?? autodetectTemplateType(model);
 
   if (templateType) {
     const mapping: Record<TemplateType, any> = {
@@ -207,7 +214,7 @@ function autodetectPromptTemplates(
   model: string,
   explicitTemplate: TemplateType | undefined = undefined,
 ) {
-  const templateType = explicitTemplate || autodetectTemplateType(model);
+  const templateType = explicitTemplate ?? autodetectTemplateType(model);
   const templates: Record<string, any> = {};
 
   let editTemplate = null;
@@ -236,6 +243,8 @@ function autodetectPromptTemplates(
     editTemplate = neuralChatEditPrompt;
   } else if (templateType === "codellama-70b") {
     editTemplate = codeLlama70bEditPrompt;
+  } else if (templateType === "anthropic") {
+    editTemplate = claudeEditPrompt;
   } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }

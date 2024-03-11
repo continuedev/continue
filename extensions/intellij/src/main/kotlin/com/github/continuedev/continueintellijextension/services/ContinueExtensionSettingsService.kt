@@ -1,11 +1,13 @@
 package com.github.continuedev.continueintellijextension.services
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.project.DumbAware
+import com.intellij.util.messages.Topic
 import java.awt.GridBagConstraints
 import java.awt.GridBagLayout
 import javax.swing.JCheckBox
@@ -16,6 +18,9 @@ import javax.swing.JTextField
 
 class ContinueSettingsComponent: DumbAware {
     val panel: JPanel = JPanel(GridBagLayout())
+    val remoteConfigServerUrl: JTextField = JTextField()
+    val remoteConfigSyncPeriod: JTextField = JTextField()
+    val userToken: JTextField = JTextField()
 
     init {
         val constraints = GridBagConstraints()
@@ -26,13 +31,25 @@ class ContinueSettingsComponent: DumbAware {
         constraints.gridx = 0
         constraints.gridy = GridBagConstraints.RELATIVE
 
+        panel.add(JLabel("Remote Config Server URL:"), constraints)
+        constraints.gridy++
+        constraints.gridy++
+        panel.add(remoteConfigServerUrl, constraints)
+        constraints.gridy++
+        panel.add(JLabel("Remote Config Sync Period (in minutes):"), constraints)
+        constraints.gridy++
+        panel.add(remoteConfigSyncPeriod, constraints)
+        constraints.gridy++
+        panel.add(JLabel("User Token:"), constraints)
+        constraints.gridy++
+        panel.add(userToken, constraints)
+        constraints.gridy++
+
         // Add a "filler" component that takes up all remaining vertical space
         constraints.weighty = 1.0
         val filler = JPanel()
         panel.add(filler, constraints)
-
     }
-
 }
 
 @State(
@@ -43,6 +60,9 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
 
     class ContinueState {
         var shownWelcomeDialog: Boolean = false
+        var remoteConfigServerUrl: String? = null
+        var remoteConfigSyncPeriod: Int = 60
+        var userToken: String? = null
     }
 
     var continueState: ContinueState = ContinueState()
@@ -61,6 +81,14 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
     }
 }
 
+interface SettingsListener {
+    fun settingsUpdated(settings: ContinueExtensionSettings.ContinueState)
+
+    companion object {
+        val TOPIC = Topic.create("SettingsUpdate", SettingsListener::class.java)
+    }
+}
+
 class ContinueExtensionConfigurable : Configurable {
     private var mySettingsComponent: ContinueSettingsComponent? = null
 
@@ -70,18 +98,27 @@ class ContinueExtensionConfigurable : Configurable {
     }
 
     override fun isModified(): Boolean {
-        val settings = ServiceManager.getService(ContinueExtensionSettings::class.java)
-        return false;
+        val settings = ContinueExtensionSettings.instance
+        val modified = mySettingsComponent?.remoteConfigServerUrl?.text != settings.continueState.remoteConfigServerUrl ||
+                mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() != settings.continueState.remoteConfigSyncPeriod ||
+                mySettingsComponent?.userToken?.text != settings.continueState.userToken
+        return modified;
     }
 
     override fun apply() {
-        val settings =
-            ServiceManager.getService(ContinueExtensionSettings::class.java)
+        val settings = ContinueExtensionSettings.instance
+        settings.continueState.remoteConfigServerUrl = mySettingsComponent?.remoteConfigServerUrl?.text
+        settings.continueState.remoteConfigSyncPeriod = mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() ?: 60
+        settings.continueState.userToken = mySettingsComponent?.userToken?.text
+
+        ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC).settingsUpdated(settings.continueState)
     }
 
     override fun reset() {
-        val settings =
-            ServiceManager.getService(ContinueExtensionSettings::class.java)
+        val settings = ContinueExtensionSettings.instance
+        mySettingsComponent?.remoteConfigServerUrl?.text = settings.continueState.remoteConfigServerUrl
+        mySettingsComponent?.remoteConfigSyncPeriod?.text = settings.continueState.remoteConfigSyncPeriod.toString()
+        mySettingsComponent?.userToken?.text = settings.continueState.userToken
     }
 
     override fun disposeUIResources() {

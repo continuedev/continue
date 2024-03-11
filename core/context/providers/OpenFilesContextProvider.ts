@@ -29,7 +29,7 @@ class OpenFilesContextProvider extends BaseContextProvider {
           content: `\`\`\`${getBasename(filepath)}\n${await ide.readFile(
             filepath,
           )}\n\`\`\``,
-          name: (filepath.split("/").pop() || "").split("\\").pop() || "",
+          name: (filepath.split("/").pop() ?? "").split("\\").pop() ?? "",
         };
       }),
     );

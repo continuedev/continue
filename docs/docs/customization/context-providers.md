@@ -118,7 +118,7 @@ Type '@jira' to reference the conversation in a Jira issue. Make sure to include
 
 ```json
 {
-  "name": "issue",
+  "name": "jira",
   "params": {
     "domain": "company.atlassian.net",
     "email": "someone@somewhere.com",
@@ -127,13 +127,25 @@ Type '@jira' to reference the conversation in a Jira issue. Make sure to include
 }
 ```
 
+#### Jira Datacenter Support
+
+This context provider supports both Jira API version 2 and 3. It will use version 3 by default since
+that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need
+to set the API Version to 2 using the `apiVersion` property.
+
+````json
+  "params": {
+    "apiVersion": "2",
+    ...
+  }
+
 #### Issue Query
 
 By default, the following query will be used to find issues:
 
 ```jql
 assignee = currentUser() AND resolution = Unresolved order by updated DESC
-```
+````
 
 You can override this query by setting the `issueQuery` parameter.
 
@@ -230,7 +242,7 @@ interface CustomContextProvider {
   description?: string;
   getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
 }
 ```
@@ -250,7 +262,7 @@ const RagContextProvider: CustomContextProvider = {
 
   getContextItems: async (
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> => {
     const response = await fetch("https://internal_rag_server.com/retrieve", {
       method: "POST",
@@ -299,7 +311,7 @@ const ReadMeContextProvider: CustomContextProvider = {
 
   getContextItems: async (
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> => {
     // 'query' is the filepath of the README selected from the dropdown
     const content = await extras.ide.readFile(query);
@@ -313,12 +325,12 @@ const ReadMeContextProvider: CustomContextProvider = {
   },
 
   loadSubmenuItems: async (
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> => {
     // Filter all workspace files for READMEs
     const allFiles = await args.ide.listWorkspaceContents();
     const readmes = allFiles.filter((filepath) =>
-      filepath.endsWith("README.md")
+      filepath.endsWith("README.md"),
     );
 
     // Return the items that will be shown in the dropdown

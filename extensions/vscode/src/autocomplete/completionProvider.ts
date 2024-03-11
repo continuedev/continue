@@ -4,6 +4,7 @@ import { DEFAULT_AUTOCOMPLETE_OPTS } from "core/autocomplete/parameters";
 import { GeneratorReuseManager } from "core/autocomplete/util";
 import { ConfigHandler } from "core/config/handler";
 import { logDevData } from "core/util/devdata";
+import { Telemetry } from "core/util/posthog";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
@@ -17,11 +18,25 @@ export class ContinueCompletionProvider
   private static debouncing: boolean = false;
   private static lastUUID: string | undefined = undefined;
 
-  private generatorReuseManager = new GeneratorReuseManager((err: any) => {
-    vscode.window.showErrorMessage(
-      `Error generating autocomplete response: ${err}`,
-    );
-  });
+  private onError(e: any) {
+    console.warn("Error generating autocompletion: ", e);
+    if (!this.errorsShown.has(e.message)) {
+      this.errorsShown.add(e.message);
+      vscode.window.showErrorMessage(e.message, "Documentation").then((val) => {
+        if (val === "Documentation") {
+          vscode.env.openExternal(
+            vscode.Uri.parse(
+              "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+            ),
+          );
+        }
+      });
+    }
+  }
+
+  private generatorReuseManager = new GeneratorReuseManager(
+    this.onError.bind(this),
+  );
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
 
@@ -44,8 +59,8 @@ export class ContinueCompletionProvider
 
     const config = await this.configHandler.loadConfig();
     const options = {
-      ...config.tabAutocompleteOptions,
       ...DEFAULT_AUTOCOMPLETE_OPTS,
+      ...config.tabAutocompleteOptions,
     };
 
     if (ContinueCompletionProvider.debouncing) {
@@ -100,6 +115,13 @@ export class ContinueCompletionProvider
         // Wait 10 seconds, then assume it wasn't accepted
         outcome.accepted = false;
         logDevData("autocomplete", outcome);
+        Telemetry.capture("autocomplete", {
+          accepted: outcome.accepted,
+          modelName: outcome.modelName,
+          modelProvider: outcome.modelProvider,
+          time: outcome.time,
+          cacheHit: outcome.cacheHit,
+        });
       }, 10_000);
 
       return [
@@ -114,21 +136,7 @@ export class ContinueCompletionProvider
         ),
       ];
     } catch (e: any) {
-      console.warn("Error generating autocompletion: ", e);
-      if (!this.errorsShown.has(e.message)) {
-        this.errorsShown.add(e.message);
-        vscode.window
-          .showErrorMessage(e.message, "Documentation")
-          .then((val) => {
-            if (val === "Documentation") {
-              vscode.env.openExternal(
-                vscode.Uri.parse(
-                  "https://continue.dev/docs/walkthroughs/tab-autocomplete",
-                ),
-              );
-            }
-          });
-      }
+      this.onError(e);
     } finally {
       stopStatusBarLoading();
     }

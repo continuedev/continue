@@ -217,6 +217,20 @@ const codellama70bTrial: ModelPackage = {
   providerOptions: ["freetrial"],
 };
 
+const mixtralTrial: ModelPackage = {
+  title: "Mixtral (Free Trial)",
+  description:
+    "Mixtral 8x7b is a mixture of experts model created by Mistral AI",
+  refUrl: "",
+  params: {
+    title: "Mixtral",
+    model: "mistral-8x7b",
+    contextLength: 4096,
+  },
+  icon: "mistral.png",
+  providerOptions: ["freetrial"],
+};
+
 const llama2Chat: ModelPackage = {
   title: "Llama2 Chat",
   description: "The latest Llama model from Meta, fine-tuned for chat",
@@ -526,12 +540,54 @@ const gpt35turbo: ModelPackage = {
 };
 
 const claude2: ModelPackage = {
-  title: "Claude-2",
+  title: "Claude 2",
   description: "A highly capable model with a 100k context length",
   params: {
+    model: "claude-2.1",
+    contextLength: 100_000,
+    title: "Claude 2",
+    apiKey: "",
+  },
+  providerOptions: ["anthropic"],
+  icon: "anthropic.png",
+};
+
+const claude3Opus: ModelPackage = {
+  title: "Claude 3 Opus",
+  description:
+    "Anthropic's most capable model, beating GPT-4 on many benchmarks",
+  params: {
+    model: "claude-3-opus-20240229",
+    contextLength: 200_000,
+    title: "Claude 3 Opus",
+    apiKey: "",
+  },
+  providerOptions: ["anthropic"],
+  icon: "anthropic.png",
+};
+
+const claude3Sonnet: ModelPackage = {
+  title: "Claude 3 Sonnet",
+  description:
+    "The second most capable model in the Claude 3 series: ideal balance of intelligence and speed",
+  params: {
+    model: "claude-3-sonnet-20240229",
+    contextLength: 200_000,
+    title: "Claude 3 Sonnet",
+    apiKey: "",
+  },
+  providerOptions: ["anthropic"],
+  icon: "anthropic.png",
+};
+
+const claude3Haiku: ModelPackage = {
+  title: "Claude 3 Haiku",
+  description:
+    "The third most capable model in the Claude 3 series: fastest and most compact model for near-instant responsiveness",
+  params: {
     model: "claude-2",
-    contextLength: 100000,
-    title: "Claude-2",
+    contextLength: 200_000,
+    title: "Claude 3 Haiku",
     apiKey: "",
   },
   providerOptions: ["anthropic"],
@@ -567,6 +623,8 @@ export const MODEL_INFO: ModelPackage[] = [
   gpt4,
   gpt35turbo,
   geminiPro,
+  claude3Opus,
+  claude3Sonnet,
   claude2,
   deepseek,
   mistral,
@@ -616,7 +674,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     provider: "anthropic",
     refPage: "anthropicllm",
     description:
-      "Claude-2 is a highly capable model with a 100k context length",
+      "Anthropic builds state-of-the-art models with large context length and high recall",
     icon: "anthropic.png",
     tags: [ModelProviderTag["Requires API Key"]],
     longDescription:
@@ -635,17 +693,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         defaultValue: 100_000,
       },
     ],
-    packages: [
-      {
-        title: "Claude-2",
-        description: "A highly capable model with a 100k context length",
-        params: {
-          model: "claude-2",
-          contextLength: 100000,
-          title: "Claude-2",
-        },
-      },
-    ],
+    packages: [claude3Opus, claude3Sonnet, claude2],
   },
   ollama: {
     title: "Ollama",
@@ -653,7 +701,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     description:
       "One of the fastest ways to get started with local models on Mac, Linux, or Windows",
     longDescription:
-      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama pull <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
+      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
     icon: "ollama.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     packages: [
@@ -880,11 +928,10 @@ After it's up and running, you can start using Continue.`,
     tags: [ModelProviderTag.Free],
     packages: [
       codellama70bTrial,
-      { ...gpt4, title: "GPT-4 (trial)" },
-      { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
-      { ...gpt4vision, title: "GPT-4 Vision (trial)" },
-      { ...phindCodeLlama, title: "Phind CodeLlama (trial)" },
+      mixtralTrial,
       { ...geminiPro, title: "Gemini Pro (trial)" },
+      { ...gpt4vision, title: "GPT-4 Vision (trial)" },
+      { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
       {
         ...AUTODETECT,
         params: {

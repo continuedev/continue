@@ -9,7 +9,8 @@ export async function* avoidPathLine(
   // Snippets are inserted as comments with a line at the start '// Path: <PATH>'.
   // Sometimes the model with copy this pattern, which is unwanted
   for await (const line of stream) {
-    if (line.startsWith(comment + " Path: ")) {
+    // Also filter lines that are empty comments
+    if (line.startsWith(comment + " Path: ") || line.trim() === comment) {
       continue;
     }
     yield line;

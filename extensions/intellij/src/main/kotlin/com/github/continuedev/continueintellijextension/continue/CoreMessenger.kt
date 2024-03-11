@@ -10,7 +10,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 
-class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
+class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
     private val writer: OutputStreamWriter
     private val reader: BufferedReader
     private val process: Process
@@ -106,7 +106,8 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
         "getProblems",
         "subprocess",
         "getBranch",
-        "getIdeInfo"
+        "getIdeInfo",
+        "getIdeSettings",
     )
 
     private fun setPermissions(destination: String) {
@@ -135,6 +136,7 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
     init {
         // Set proper permissions
         setPermissions(continueCorePath)
+        setPermissions(esbuildPath)
 
         // Start the subprocess
         val processBuilder = ProcessBuilder(continueCorePath)

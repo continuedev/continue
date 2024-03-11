@@ -21,7 +21,10 @@ class FreeTrial extends BaseLLM {
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
       max_tokens: options.maxTokens,
-      stop: options.stop?.slice(0, 4),
+      stop:
+        options.model === "starcoder2-15b"
+          ? options.stop
+          : options.stop?.slice(0, 2),
       temperature: options.temperature,
       top_p: options.topP,
     };

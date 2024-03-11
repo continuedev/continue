@@ -10,6 +10,7 @@ import {
   SerializedContinueConfig,
   SessionInfo,
 } from ".";
+import { IdeProtocol } from "./web/webviewProtocol";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -34,6 +35,7 @@ export type Protocol = {
     { model: SerializedContinueConfig["models"][number] },
     void,
   ];
+  "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getBrowserSerialized": [
     undefined,
     Promise<BrowserSerializedContinueConfig>,
@@ -95,4 +97,14 @@ export type Protocol = {
     },
     ProtocolGeneratorType<MessageContent>,
   ];
+};
+
+export interface IdeSettings {
+  remoteConfigServerUrl: string | undefined;
+  remoteConfigSyncPeriod: number;
+  userToken: string;
+}
+
+export type ReverseProtocol = IdeProtocol & {
+  getIdeSettings: [undefined, IdeSettings];
 };
