@@ -36,6 +36,35 @@ class Anthropic extends BaseLLM {
     return finalOptions;
   }
 
+  private _convertMessages(msgs: ChatMessage[]): any[] {
+    const messages = msgs
+      .filter((m) => m.role !== "system")
+      .map((message) => {
+        if (typeof message.content === "string") {
+          return message;
+        } else {
+          return {
+            ...message,
+            content: message.content.map((part) => {
+              if (part.type === "text") {
+                return part;
+              } else {
+                return {
+                  type: "image",
+                  source: {
+                    type: "base64",
+                    media_type: "image/jpeg",
+                    data: part.imageUrl?.url.split(",")[1],
+                  },
+                };
+              }
+            }),
+          };
+        }
+      });
+    return messages;
+  }
+
   protected async *_streamChat(
     messages: ChatMessage[],
     options: CompletionOptions,
@@ -50,7 +79,7 @@ class Anthropic extends BaseLLM {
       },
       body: JSON.stringify({
         ...this._convertArgs(options),
-        messages: messages.filter((m) => m.role !== "system"),
+        messages: this._convertMessages(messages),
         system: this.systemMessage,
         stream: true,
       }),
