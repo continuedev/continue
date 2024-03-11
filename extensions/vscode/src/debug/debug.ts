@@ -1,14 +1,18 @@
 import * as vscode from "vscode";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { VsCodeIde } from "../ideProtocol";
 
 export const threadStopped: Map<number, boolean> = new Map();
 // Arrays has better perf but you probably won't have thousands of threads in a single debug session
 
-export function registerDebugTracker(webviewProtocol: VsCodeWebviewProtocol) {
+export function registerDebugTracker(
+  webviewProtocol: VsCodeWebviewProtocol,
+  ide: VsCodeIde
+) {
   vscode.debug.registerDebugAdapterTrackerFactory("*", {
     createDebugAdapterTracker(session: vscode.DebugSession) {
       return {
-        onDidSendMessage(message: any) {
+        async onDidSendMessage(message: any) {
           if (message.type == "event") {
             switch (message.event) {
               case "continued":
@@ -29,7 +33,21 @@ export function registerDebugTracker(webviewProtocol: VsCodeWebviewProtocol) {
                     threadStopped.set(key, false)
                   );
 
-                webviewProtocol?.request("refreshSubmenuItems", undefined);
+                webviewProtocol?.request("updateSubmenuItems", {
+                  provider: "locals",
+                  submenuItems: (await ide.getAvailableThreads()).map(
+                    (thread, threadIndex) => {
+                      const [threadId, threadName] = thread
+                        .split(",")
+                        .map((str) => str.trimStart());
+                      return {
+                        id: `${threadIndex}`,
+                        title: threadName,
+                        description: threadId,
+                      };
+                    }
+                  ),
+                });
                 break;
 
               case "thread":
@@ -45,7 +63,7 @@ export function registerDebugTracker(webviewProtocol: VsCodeWebviewProtocol) {
                 break;
             }
           }
-        }
+        },
       };
     },
   });

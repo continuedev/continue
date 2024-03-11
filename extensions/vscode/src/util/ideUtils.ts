@@ -25,12 +25,12 @@ export class VsCodeIdeUtils {
 
   async gotoDefinition(
     filepath: string,
-    position: vscode.Position,
+    position: vscode.Position
   ): Promise<vscode.Location[]> {
     const locations: vscode.Location[] = await vscode.commands.executeCommand(
       "vscode.executeDefinitionProvider",
       uriFromFilePath(filepath),
-      position,
+      position
     );
     return locations;
   }
@@ -38,25 +38,25 @@ export class VsCodeIdeUtils {
   async documentSymbol(filepath: string): Promise<vscode.DocumentSymbol[]> {
     return await vscode.commands.executeCommand(
       "vscode.executeDocumentSymbolProvider",
-      uriFromFilePath(filepath),
+      uriFromFilePath(filepath)
     );
   }
 
   async references(
     filepath: string,
-    position: vscode.Position,
+    position: vscode.Position
   ): Promise<vscode.Location[]> {
     return await vscode.commands.executeCommand(
       "vscode.executeReferenceProvider",
       uriFromFilePath(filepath),
-      position,
+      position
     );
   }
 
   async foldingRanges(filepath: string): Promise<vscode.FoldingRange[]> {
     return await vscode.commands.executeCommand(
       "vscode.executeFoldingRangeProvider",
-      uriFromFilePath(filepath),
+      uriFromFilePath(filepath)
     );
   }
 
@@ -80,12 +80,12 @@ export class VsCodeIdeUtils {
       rangeInFile.range.start.line,
       rangeInFile.range.start.character,
       rangeInFile.range.end.line,
-      rangeInFile.range.end.character,
+      rangeInFile.range.end.character
     );
     const editor = await openEditorAndRevealRange(
       rangeInFile.filepath,
       range,
-      vscode.ViewColumn.One,
+      vscode.ViewColumn.One
     );
     if (editor) {
       const decorationType = vscode.window.createTextEditorDecorationType({
@@ -100,7 +100,7 @@ export class VsCodeIdeUtils {
             cursorDisposable.dispose();
             editor.setDecorations(decorationType, []);
           }
-        },
+        }
       );
 
       setTimeout(() => {
@@ -123,9 +123,9 @@ export class VsCodeIdeUtils {
         edit.range.start.line,
         edit.range.start.character,
         edit.range.end.line,
-        edit.range.end.character,
+        edit.range.end.character
       ),
-      edit.replacement,
+      edit.replacement
     );
   }
 
@@ -134,7 +134,7 @@ export class VsCodeIdeUtils {
     const panel = vscode.window.createWebviewPanel(
       "continue.continueGUIView",
       "Continue",
-      vscode.ViewColumn.One,
+      vscode.ViewColumn.One
     );
     // panel.webview.html = this.sidebar.getSidebarContent(
     //   extensionContext,
@@ -165,8 +165,8 @@ export class VsCodeIdeUtils {
         vscode.Uri.parse(
           `${
             VsCodeExtension.continueVirtualDocumentScheme
-          }:${encodeURIComponent(name)}?${encodeURIComponent(contents)}`,
-        ),
+          }:${encodeURIComponent(name)}?${encodeURIComponent(contents)}`
+        )
       )
       .then((doc) => {
         vscode.window.showTextDocument(doc, { preview: false });
@@ -248,7 +248,7 @@ export class VsCodeIdeUtils {
 
   async getDirectoryContents(
     directory: string,
-    recursive: boolean,
+    recursive: boolean
   ): Promise<string[]> {
     if (!recursive) {
       return (
@@ -273,7 +273,7 @@ export class VsCodeIdeUtils {
       gitRoot ?? directory,
       [],
       true,
-      gitRoot === directory ? undefined : onlyThisDirectory,
+      gitRoot === directory ? undefined : onlyThisDirectory
     )) {
       allFiles.push(file);
     }
@@ -297,14 +297,14 @@ export class VsCodeIdeUtils {
     if (typeof contents === "undefined") {
       try {
         const fileStats = await vscode.workspace.fs.stat(
-          uriFromFilePath(filepath),
+          uriFromFilePath(filepath)
         );
         if (fileStats.size > 10 * MAX_BYTES) {
           return "";
         }
 
         const bytes = await vscode.workspace.fs.readFile(
-          uriFromFilePath(filepath),
+          uriFromFilePath(filepath)
         );
 
         // Truncate the buffer to the first MAX_BYTES
@@ -319,10 +319,10 @@ export class VsCodeIdeUtils {
 
   async readRangeInFile(
     filepath: string,
-    range: vscode.Range,
+    range: vscode.Range
   ): Promise<string> {
     const contents = new TextDecoder().decode(
-      await vscode.workspace.fs.readFile(vscode.Uri.file(filepath)),
+      await vscode.workspace.fs.readFile(vscode.Uri.file(filepath))
     );
     const lines = contents.split("\n");
     return (
@@ -336,20 +336,20 @@ export class VsCodeIdeUtils {
     const tempCopyBuffer = await vscode.env.clipboard.readText();
     if (commands < 0) {
       await vscode.commands.executeCommand(
-        "workbench.action.terminal.selectAll",
+        "workbench.action.terminal.selectAll"
       );
     } else {
       for (let i = 0; i < commands; i++) {
         await vscode.commands.executeCommand(
-          "workbench.action.terminal.selectToPreviousCommand",
+          "workbench.action.terminal.selectToPreviousCommand"
         );
       }
     }
     await vscode.commands.executeCommand(
-      "workbench.action.terminal.copySelection",
+      "workbench.action.terminal.copySelection"
     );
     await vscode.commands.executeCommand(
-      "workbench.action.terminal.clearSelection",
+      "workbench.action.terminal.clearSelection"
     );
     const terminalContents = await vscode.env.clipboard.readText();
     await vscode.env.clipboard.writeText(tempCopyBuffer);
@@ -360,7 +360,6 @@ export class VsCodeIdeUtils {
     }
     return terminalContents;
   }
-
 
   private async _getThreads(session: vscode.DebugSession) {
     const threadsResponse = await session.customRequest("threads");
