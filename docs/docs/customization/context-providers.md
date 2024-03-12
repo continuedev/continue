@@ -230,6 +230,21 @@ Type `@database` to reference table schemas you can use the drop-down or start t
 }
 ```
 
+### Debugger Context
+
+#### LocalsProvider
+
+Type `@locals` to reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread. A dropdown will appear, allowing you to select a specific thread to see the local variables in that thread.
+```json
+{
+  "name": "locals",
+  "params": {
+    stackDepth: 3
+  }
+}
+```
+
+
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new ContextProvider.
