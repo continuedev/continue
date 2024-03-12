@@ -171,14 +171,18 @@ if (args[2] === "--target") {
   });
   if (target) {
     // If building for production, only need the binaries for current platform
-    if (!target.startsWith("darwin")) {
-      rimrafSync(path.join(__dirname, "../bin/napi-v3/darwin"));
-    }
-    if (!target.startsWith("linux")) {
-      rimrafSync(path.join(__dirname, "../bin/napi-v3/linux"));
-    }
-    if (!target.startsWith("win")) {
-      rimrafSync(path.join(__dirname, "../bin/napi-v3/win32"));
+    try {
+      if (!target.startsWith("darwin")) {
+        rimrafSync(path.join(__dirname, "../bin/napi-v3/darwin"));
+      }
+      if (!target.startsWith("linux")) {
+        rimrafSync(path.join(__dirname, "../bin/napi-v3/linux"));
+      }
+      if (!target.startsWith("win")) {
+        rimrafSync(path.join(__dirname, "../bin/napi-v3/win32"));
+      }
+    } catch (e) {
+      console.warn("[info] Error removing unused binaries", e);
     }
   }
   console.log("[info] Copied onnxruntime-node");
