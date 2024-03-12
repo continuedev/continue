@@ -56,7 +56,7 @@
       "properties": {
         "continue.telemetryEnabled": {
           "type": "boolean",
-          "default": true,
+          "default": false,
           "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://continue.dev/docs/telemetry)."
         },
         "continue.showInlineTip": {
@@ -381,8 +381,8 @@
       "activitybar": [
         {
           "id": "continue",
-          "title": "Continue",
-          "icon": "media/continue-dev-square.png"
+          "title": "Kindo",
+          "icon": "media/kindo_dev.png"
         }
       ]
     },
