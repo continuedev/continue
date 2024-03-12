@@ -5,6 +5,5 @@
   "python.autoComplete.extraPaths": [],
   "python.testing.pytestArgs": ["server"],
   "python.testing.unittestEnabled": false,
-  "python.testing.pytestEnabled": true,
-  "editor.tabSize": 2
+  "python.testing.pytestEnabled": true
 }
