@@ -51,10 +51,12 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
     };
 
     config.env.forEach((envVar) => {
-      content = content.replaceAll(
-        new RegExp(`"${envVar}"`, "g"),
-        `"${env[envVar]}"`,
-      );
+      if (envVar in env) {
+        content = content.replaceAll(
+          new RegExp(`"${envVar}"`, "g"),
+          `"${env[envVar]}"`,
+        );
+      }
     });
   }
 
