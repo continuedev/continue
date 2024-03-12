@@ -1,6 +1,11 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { v4 as uuidv4 } from "uuid";
-import { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "..";
+import {
+  Chunk,
+  EmbeddingsProvider,
+  IndexTag,
+  IndexingProgressUpdate,
+} from "..";
 import { MAX_CHUNK_SIZE } from "../llm/constants";
 import { getBasename } from "../util";
 import { getLanceDbPath } from "../util/paths";
@@ -9,7 +14,6 @@ import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
   CodebaseIndex,
   IndexResultType,
-  IndexTag,
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types";

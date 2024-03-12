@@ -1,10 +1,9 @@
+import * as child_process from "child_process";
 import { exec } from "child_process";
+import { ContinueRcJson, IDE, IdeInfo, IndexTag, Problem, Range } from "core";
 import { getContinueGlobalPath } from "core/util/paths";
 import * as path from "path";
 import * as vscode from "vscode";
-
-import * as child_process from "child_process";
-import { ContinueRcJson, IDE, IdeInfo, Problem, Range } from "core";
 import { DiffManager } from "./diff/horizontal";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { traverseDirectory } from "./util/traverseDirectory";
@@ -19,6 +18,21 @@ class VsCodeIde implements IDE {
 
   constructor(private readonly diffManager: DiffManager) {
     this.ideUtils = new VsCodeIdeUtils();
+  }
+  async getTags(artifactId: string): Promise<IndexTag[]> {
+    const workspaceDirs = await this.getWorkspaceDirs();
+
+    const branches = await Promise.all(
+      workspaceDirs.map((dir) => this.getBranch(dir)),
+    );
+
+    const tags: IndexTag[] = workspaceDirs.map((directory, i) => ({
+      directory,
+      branch: branches[i],
+      artifactId,
+    }));
+
+    return tags;
   }
   getIdeInfo(): Promise<IdeInfo> {
     return Promise.resolve({
