@@ -239,7 +239,7 @@ Type `@locals` to reference the contents of the local variables with top n level
 {
   "name": "locals",
   "params": {
-    stackDepth: 3
+    "stackDepth": 3
   }
 }
 ```
