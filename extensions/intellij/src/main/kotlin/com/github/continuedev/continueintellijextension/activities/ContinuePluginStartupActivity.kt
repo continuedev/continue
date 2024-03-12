@@ -29,7 +29,6 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import javax.swing.*
-import com.intellij.openapi.application.PathManager;
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.extensions.PluginId
 
@@ -176,7 +175,9 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
 
 
-            ApplicationManager.getApplication().messageBus.connect().subscribe(SettingsListener.TOPIC, object : SettingsListener {
+            // Listen to changes to settings so the core can reload remote configuration
+            val connection = ApplicationManager.getApplication().messageBus.connect()
+            connection.subscribe(SettingsListener.TOPIC, object : SettingsListener {
                 override fun settingsUpdated(settings: ContinueExtensionSettings.ContinueState) {
                     continuePluginService.coreMessenger?.request("config/ideSettingsUpdate", settings, null) { _ -> }
                 }
