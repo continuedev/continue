@@ -1,3 +1,8 @@
+import * as vscode from "vscode";
+
 export async function getUserToken(): Promise<string> {
-  return Promise.resolve("");
+  const session = await vscode.authentication.getSession("github", [], {
+    createIfNone: true,
+  });
+  return session.accessToken;
 }
