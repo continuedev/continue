@@ -11,7 +11,7 @@ import { streamResponse } from "../stream";
 class Ollama extends BaseLLM {
   static providerName: ModelProvider = "ollama";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://localhost:11434",
+    apiBase: "http://localhost:11434/",
     model: "codellama-7b",
   };
 

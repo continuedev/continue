@@ -113,8 +113,8 @@ export abstract class BaseLLM implements ILLM {
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
     this.apiBase = options.apiBase;
-    if (this.apiBase?.endsWith("/")) {
-      this.apiBase = this.apiBase.slice(0, -1);
+    if (this.apiBase && !this.apiBase.endsWith("/")) {
+      this.apiBase = this.apiBase + "/";
     }
 
     this.engine = options.engine;
