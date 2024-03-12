@@ -155,7 +155,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
       for (const snippet of snippetsWithPath) {
         await db.run(
-          `INSERT INTO code_snippet_tags (snippetId, tag) VALUES (?, ?)`,
+          `INSERT INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)`,
           [snippet.id, tagString],
         );
       }
@@ -195,7 +195,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     const db = await SqliteDb.get();
     try {
       const rows = await db.all(
-        `SELECT *
+        `SELECT cs.id, cs.path, cs.title
         FROM code_snippets cs
         JOIN code_snippets_tags cst ON cs.id = cst.snippetId
         WHERE cst.tag = ?;
