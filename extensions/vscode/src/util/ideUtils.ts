@@ -328,7 +328,9 @@ export class VsCodeIdeUtils {
     return (
       lines.slice(range.start.line, range.end.line).join("\n") +
       "\n" +
-      lines[range.end.line].slice(0, range.end.character)
+      lines[
+        range.end.line < lines.length - 1 ? range.end.line : lines.length - 1
+      ].slice(0, range.end.character)
     );
   }
 

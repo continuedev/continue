@@ -10,18 +10,22 @@ export function registerDebugTracker(
   ide: VsCodeIde
 ) {
   vscode.debug.registerDebugAdapterTrackerFactory("*", {
-    createDebugAdapterTracker(session: vscode.DebugSession) {
+    createDebugAdapterTracker(_session: vscode.DebugSession) {
+      const updateThreads = async () => {
+        webviewProtocol?.request("updateSubmenuItems", {
+          provider: "locals",
+          submenuItems: (await ide.getAvailableThreads()).map((thread) => ({
+            id: `${thread.id}`,
+            title: thread.name,
+            description: `${thread.id}`,
+          })),
+        });
+      };
+
       return {
         async onWillStopSession() {
           threadStopped.clear();
-          webviewProtocol?.request("updateSubmenuItems", {
-            provider: "locals",
-            submenuItems: (await ide.getAvailableThreads()).map((thread) => ({
-              id: `${thread.id}`,
-              title: thread.name,
-              description: `${thread.id}`,
-            })),
-          });
+          updateThreads();
         },
         async onDidSendMessage(message: any) {
           if (message.type == "event") {
@@ -44,16 +48,7 @@ export function registerDebugTracker(
                     threadStopped.set(key, false)
                   );
 
-                webviewProtocol?.request("updateSubmenuItems", {
-                  provider: "locals",
-                  submenuItems: (await ide.getAvailableThreads()).map(
-                    (thread) => ({
-                      id: `${thread.id}`,
-                      title: thread.name,
-                      description: `${thread.id}`,
-                    })
-                  ),
-                });
+                updateThreads();
                 break;
 
               case "thread":

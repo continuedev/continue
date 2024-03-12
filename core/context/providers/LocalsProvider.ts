@@ -38,9 +38,9 @@ class LocalsProvider extends BaseContextProvider {
       {
         description: "The value, name and possibly type of the local variables",
         content:
-          `This is a paused thread: ${thread?.name}` +
-          `Current local variable contents:\n\n${localVariables}.\n` +
-          `Current top level call stacks: \n\n${callStackContents}`,
+          `This is a paused thread: ${thread?.name}\n` +
+          `Current local variable contents: \n${localVariables}.\n` +
+          `Current top level call stacks: ${callStackContents}`,
         name: "Locals",
       },
     ];
