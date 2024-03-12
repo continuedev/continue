@@ -283,6 +283,10 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     },
   }));
 
+  const showFileIconForItem = (item: ComboBoxItem) => {
+    return ["file", "code"].includes(item.type);
+  };
+
   return (
     <ItemsDiv>
       {querySubmenuItem ? (
@@ -324,14 +328,14 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
               >
                 <span className="flex justify-between w-full items-center">
                   <div className="flex items-center justify-center">
-                    {item.type === "file" && (
+                    {showFileIconForItem(item) && (
                       <FileIcon
                         height="20px"
                         width="20px"
-                        filename={item.title}
+                        filename={item.description}
                       ></FileIcon>
                     )}
-                    {item.type !== "file" && (
+                    {!showFileIconForItem(item) && (
                       <>
                         <DropdownIcon item={item} className="mr-2" />
                       </>
