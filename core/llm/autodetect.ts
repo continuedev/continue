@@ -43,6 +43,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "ollama",
   "google-palm",
   "free-trial",
+  "anthropic",
 ];
 
 function modelSupportsImages(provider: ModelProvider, model: string): boolean {
@@ -51,6 +52,10 @@ function modelSupportsImages(provider: ModelProvider, model: string): boolean {
   }
 
   if (model.includes("llava")) {
+    return true;
+  }
+
+  if (model.includes("claude-3")) {
     return true;
   }
 

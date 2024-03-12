@@ -171,14 +171,18 @@ if (args[2] === "--target") {
   });
   if (target) {
     // If building for production, only need the binaries for current platform
-    if (!target.startsWith("darwin")) {
-      rimrafSync(path.join(__dirname, "../bin/napi-v3/darwin"));
-    }
-    if (!target.startsWith("linux")) {
-      rimrafSync(path.join(__dirname, "../bin/napi-v3/linux"));
-    }
-    if (!target.startsWith("win")) {
-      rimrafSync(path.join(__dirname, "../bin/napi-v3/win32"));
+    try {
+      if (!target.startsWith("darwin")) {
+        rimrafSync(path.join(__dirname, "../bin/napi-v3/darwin"));
+      }
+      if (!target.startsWith("linux")) {
+        rimrafSync(path.join(__dirname, "../bin/napi-v3/linux"));
+      }
+      if (!target.startsWith("win")) {
+        rimrafSync(path.join(__dirname, "../bin/napi-v3/win32"));
+      }
+    } catch (e) {
+      console.warn("[info] Error removing unused binaries", e);
     }
   }
   console.log("[info] Copied onnxruntime-node");
@@ -319,7 +323,8 @@ if (args[2] === "--target") {
   await Promise.all(
     NODE_MODULES_TO_COPY.map(
       (mod) =>
-        new Promise((resolve, reject) =>
+        new Promise((resolve, reject) => {
+          fs.mkdirSync(`out/node_modules/${mod}`, { recursive: true });
           ncp(
             `node_modules/${mod}`,
             `out/node_modules/${mod}`,
@@ -331,8 +336,8 @@ if (args[2] === "--target") {
                 resolve();
               }
             },
-          ),
-        ),
+          );
+        }),
     ),
   );
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);

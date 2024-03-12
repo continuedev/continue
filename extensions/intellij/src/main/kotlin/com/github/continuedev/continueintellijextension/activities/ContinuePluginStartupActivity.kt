@@ -5,6 +5,7 @@ import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.services.SettingsListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.KeyboardShortcut
 import com.intellij.openapi.application.ApplicationManager
@@ -172,6 +173,14 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             )
 
             continuePluginService.ideProtocolClient = ideProtocolClient
+
+
+
+            ApplicationManager.getApplication().messageBus.connect().subscribe(SettingsListener.TOPIC, object : SettingsListener {
+                override fun settingsUpdated(settings: ContinueExtensionSettings.ContinueState) {
+                    continuePluginService.coreMessenger?.request("config/ideSettingsUpdate", settings, null) { _ -> }
+                }
+            })
 
             GlobalScope.async(Dispatchers.IO) {
                 val listener =

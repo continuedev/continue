@@ -452,6 +452,7 @@
                   "gemini-pro",
                   "gpt-4-vision-preview",
                   "codellama-70b",
+                  "mistral-8x7b",
                   "AUTODETECT"
                 ]
               }

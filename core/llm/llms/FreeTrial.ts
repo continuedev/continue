@@ -3,7 +3,7 @@ import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
 import { streamResponse } from "../stream";
 
 // const SERVER_URL = "http://localhost:3000";
-const SERVER_URL = "https://node-proxy-server-blue-l6vsfbzhba-uw.a.run.app";
+const SERVER_URL = "https://node-proxy-server-green-l6vsfbzhba-uw.a.run.app";
 
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
@@ -21,7 +21,10 @@ class FreeTrial extends BaseLLM {
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
       max_tokens: options.maxTokens,
-      stop: options.stop?.slice(0, 2),
+      stop:
+        options.model === "starcoder2-15b"
+          ? options.stop
+          : options.stop?.slice(0, 2),
       temperature: options.temperature,
       top_p: options.topP,
     };

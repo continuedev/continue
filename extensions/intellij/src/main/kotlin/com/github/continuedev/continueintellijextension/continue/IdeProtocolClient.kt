@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.constants.*
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -8,6 +9,7 @@ import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -146,7 +148,15 @@ class IdeProtocolClient (
                     "uniqueId" -> respond(
                         mapOf("uniqueId" to uniqueId())
                     )
-
+                    "getIdeSettings" -> {
+                        val settings =
+                                ServiceManager.getService(ContinueExtensionSettings::class.java)
+                        respond(mapOf(
+                            "remoteConfigServerUrl" to settings.continueState.remoteConfigServerUrl,
+                            "remoteConfigSyncPeriod" to settings.continueState.remoteConfigSyncPeriod,
+                            "userToken" to settings.continueState.userToken
+                        ))
+                    }
                     "getIdeInfo" -> {
                         val applicationInfo = ApplicationInfo.getInstance()
                         val ideName: String = applicationInfo.fullApplicationName

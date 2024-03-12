@@ -51,10 +51,12 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
     };
 
     config.env.forEach((envVar) => {
-      content = content.replaceAll(
-        new RegExp(`"${envVar}"`, "g"),
-        `"${env[envVar]}"`,
-      );
+      if (envVar in env) {
+        content = content.replaceAll(
+          new RegExp(`"${envVar}"`, "g"),
+          `"${env[envVar]}"`,
+        );
+      }
     });
   }
 
@@ -86,36 +88,12 @@ function loadSerializedConfig(
     config.allowAnonymousTelemetry = true;
   }
 
-  migrate("codebaseContextProvider", () => {
-    if (
-      !config.contextProviders?.filter((cp) => cp.name === "codebase")?.length
-    ) {
+  migrate("codeContextProvider", () => {
+    if (!config.contextProviders?.filter((cp) => cp.name === "code")?.length) {
       config.contextProviders = [
         ...(config.contextProviders || []),
         {
-          name: "codebase",
-          params: {},
-        },
-      ];
-    }
-
-    if (!config.embeddingsProvider) {
-      config.embeddingsProvider = {
-        provider: "transformers.js",
-      };
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
-
-  migrate("problemsContextProvider", () => {
-    if (
-      !config.contextProviders?.filter((cp) => cp.name === "problems")?.length
-    ) {
-      config.contextProviders = [
-        ...(config.contextProviders || []),
-        {
-          name: "problems",
+          name: "code",
           params: {},
         },
       ];
@@ -124,14 +102,12 @@ function loadSerializedConfig(
     fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
   });
 
-  migrate("foldersContextProvider", () => {
-    if (
-      !config.contextProviders?.filter((cp) => cp.name === "folder")?.length
-    ) {
+  migrate("docsContextProvider1", () => {
+    if (!config.contextProviders?.filter((cp) => cp.name === "docs")?.length) {
       config.contextProviders = [
         ...(config.contextProviders || []),
         {
-          name: "folder",
+          name: "docs",
           params: {},
         },
       ];
@@ -141,10 +117,14 @@ function loadSerializedConfig(
   });
 
   if (remoteConfigServerUrl) {
-    const remoteConfigJson = resolveSerializedConfig(
-      getConfigJsonPathForRemote(remoteConfigServerUrl),
-    );
-    config = mergeJson(config, remoteConfigJson, "merge", configMergeKeys);
+    try {
+      const remoteConfigJson = resolveSerializedConfig(
+        getConfigJsonPathForRemote(remoteConfigServerUrl),
+      );
+      config = mergeJson(config, remoteConfigJson, "merge", configMergeKeys);
+    } catch (e) {
+      console.warn("Error loading remote config: ", e);
+    }
   }
 
   for (const workspaceConfig of workspaceConfigs) {

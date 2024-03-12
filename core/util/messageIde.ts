@@ -1,4 +1,4 @@
-import { ContinueRcJson, IDE, IdeInfo, Problem, Range, Thread } from "..";
+import { ContinueRcJson, IDE, IdeInfo, IndexTag, Problem, Range, Thread } from "..";
 
 export class MessageIde implements IDE {
   constructor(
@@ -18,6 +18,9 @@ export class MessageIde implements IDE {
   }
   getAvailableThreads(): Promise<Thread[]> {
     return this.request("getAvailableThreads", undefined);
+  }
+  getTags(artifactId: string): Promise<IndexTag[]> {
+    return this.request("getTags", artifactId);
   }
   getIdeInfo(): Promise<IdeInfo> {
     return this.request("getIdeInfo", undefined);

@@ -1,4 +1,4 @@
-import { IndexingProgressUpdate } from "..";
+import { IndexTag, IndexingProgressUpdate } from "..";
 
 export enum IndexResultType {
   Compute = "compute",
@@ -25,12 +25,6 @@ export type PathAndCacheKey = {
   path: string;
   cacheKey: string;
 };
-
-export interface IndexTag {
-  directory: string;
-  branch: string;
-  artifactId: string;
-}
 
 export type RefreshIndexResults = {
   compute: PathAndCacheKey[];

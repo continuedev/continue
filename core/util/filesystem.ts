@@ -1,8 +1,12 @@
 import * as fs from "fs";
-import { ContinueRcJson, IDE, IdeInfo, Problem, Range, Thread } from "..";
+import { ContinueRcJson, IDE, IdeInfo, IndexTag, Problem, Range, Thread } from "..";
+
 import { getContinueGlobalPath } from "./paths";
 
 class FileSystemIde implements IDE {
+  getTags(artifactId: string): Promise<IndexTag[]> {
+    return Promise.resolve([]);
+  }
   getIdeInfo(): Promise<IdeInfo> {
     return Promise.resolve({
       ideType: "vscode",

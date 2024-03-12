@@ -217,6 +217,20 @@ const codellama70bTrial: ModelPackage = {
   providerOptions: ["freetrial"],
 };
 
+const mixtralTrial: ModelPackage = {
+  title: "Mixtral (Free Trial)",
+  description:
+    "Mixtral 8x7b is a mixture of experts model created by Mistral AI",
+  refUrl: "",
+  params: {
+    title: "Mixtral",
+    model: "mistral-8x7b",
+    contextLength: 4096,
+  },
+  icon: "mistral.png",
+  providerOptions: ["freetrial"],
+};
+
 const llama2Chat: ModelPackage = {
   title: "Llama2 Chat",
   description: "The latest Llama model from Meta, fine-tuned for chat",
@@ -794,7 +808,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     icon: "lmstudio.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     params: {
-      apiBase: "http://localhost:1234/v1",
+      apiBase: "http://localhost:1234/v1/",
     },
     packages: [
       {
@@ -885,7 +899,7 @@ After it's up and running, you can start using Continue.`,
     collectInputFor: [
       {
         ...apiBaseInput,
-        defaultValue: "http://localhost:8000/v1",
+        defaultValue: "http://localhost:8000/v1/",
       },
       ...completionParamsInputs,
     ],
@@ -914,11 +928,10 @@ After it's up and running, you can start using Continue.`,
     tags: [ModelProviderTag.Free],
     packages: [
       codellama70bTrial,
-      { ...gpt4, title: "GPT-4 (trial)" },
-      { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
-      { ...gpt4vision, title: "GPT-4 Vision (trial)" },
-      { ...phindCodeLlama, title: "Phind CodeLlama (trial)" },
+      mixtralTrial,
       { ...geminiPro, title: "Gemini Pro (trial)" },
+      { ...gpt4vision, title: "GPT-4 Vision (trial)" },
+      { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
       {
         ...AUTODETECT,
         params: {

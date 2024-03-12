@@ -1,6 +1,5 @@
-import { Chunk } from "..";
+import { Chunk, IndexTag } from "..";
 import { FullTextSearchCodebaseIndex } from "../indexing/FullTextSearch";
-import { IndexTag } from "../indexing/types";
 
 export async function fullTextRetrieve(
   prefix: string,

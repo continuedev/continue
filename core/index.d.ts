@@ -333,6 +333,12 @@ export interface IdeInfo {
   remoteName: string;
 }
 
+export interface IndexTag {
+  directory: string;
+  branch: string;
+  artifactId: string;
+}
+
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getDiff(): Promise<string>;
@@ -374,6 +380,7 @@ export interface IDE {
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
   getBranch(dir: string): Promise<string>;
   getStats(directory: string): Promise<{ [path: string]: number }>;
+  getTags(artifactId: string): Promise<IndexTag[]>;
 }
 
 // Slash Commands
@@ -431,7 +438,9 @@ type ContextProviderName =
   | "folder"
   | "jira"
   | "postgres"
-  | "database";
+  | "database"
+  | "code"
+  | "docs";
 
 type TemplateType =
   | "llama2"

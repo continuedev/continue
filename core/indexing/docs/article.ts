@@ -1,5 +1,4 @@
 import { Readability } from "@mozilla/readability";
-import { JSDOM } from "jsdom";
 import { Chunk } from "../..";
 import { MAX_CHUNK_SIZE } from "../../llm/constants";
 import { cleanFragment, cleanHeader } from "../chunk/markdown";
@@ -93,7 +92,10 @@ export function chunkArticle(articleResult: Article): Chunk[] {
   return chunks;
 }
 
-function extractTitlesAndBodies(html: string): ArticleComponent[] {
+async function extractTitlesAndBodies(
+  html: string,
+): Promise<ArticleComponent[]> {
+  const { JSDOM } = await import("jsdom");
   const dom = new JSDOM(html);
   const document = dom.window.document;
 
@@ -120,6 +122,7 @@ export async function stringToArticle(
   subpath: string,
 ): Promise<Article | undefined> {
   try {
+    const { JSDOM } = await import("jsdom");
     const dom = new JSDOM(htmlContent);
     let reader = new Readability(dom.window.document);
     let article = reader.parse();
@@ -128,7 +131,7 @@ export async function stringToArticle(
       return undefined;
     }
 
-    let article_components = extractTitlesAndBodies(article.content);
+    let article_components = await extractTitlesAndBodies(article.content);
     return {
       url,
       subpath,

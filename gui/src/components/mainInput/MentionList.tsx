@@ -5,6 +5,7 @@ import {
   BeakerIcon,
   BookOpenIcon,
   ChevronDoubleRightIcon,
+  CodeBracketIcon,
   Cog6ToothIcon,
   CommandLineIcon,
   ExclamationCircleIcon,
@@ -47,6 +48,7 @@ import { ComboBoxItem } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
+  code: CodeBracketIcon,
   terminal: CommandLineIcon,
   diff: PlusIcon,
   search: MagnifyingGlassIcon,
@@ -163,7 +165,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [querySubmenuItem, setQuerySubmenuItem] = useState<
     ComboBoxItem | undefined
@@ -186,7 +188,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
           const text = tr.doc.textBetween(0, tr.selection.from);
           const start = text.lastIndexOf("@");
           props.editor.view.dispatch(
-            tr.delete(start, tr.selection.from).scrollIntoView()
+            tr.delete(start, tr.selection.from).scrollIntoView(),
           );
         },
         description: "Add a new documentation source",

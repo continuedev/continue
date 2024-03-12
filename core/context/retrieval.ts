@@ -1,7 +1,7 @@
-import { Chunk, ContextItem, ContextProviderExtras, ILLM } from "..";
+import { Chunk, ContextItem, ContextProviderExtras, ILLM, IndexTag } from "..";
 import { FullTextSearchCodebaseIndex } from "../indexing/FullTextSearch";
 import { LanceDbIndex } from "../indexing/LanceDbIndex";
-import { IndexTag } from "../indexing/types";
+
 import { llmCanGenerateInParallel } from "../llm/autodetect";
 import { getBasename } from "../util";
 

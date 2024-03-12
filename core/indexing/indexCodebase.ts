@@ -1,10 +1,11 @@
-import { IDE, IndexingProgressUpdate } from "..";
+import { IDE, IndexTag, IndexingProgressUpdate } from "..";
 import { ConfigHandler } from "../config/handler";
+import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearch";
 import { LanceDbIndex } from "./LanceDbIndex";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
 import { getComputeDeleteAddRemove } from "./refreshIndex";
-import { CodebaseIndex, IndexTag } from "./types";
+import { CodebaseIndex } from "./types";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -39,6 +40,7 @@ export class CodebaseIndexer {
         this.ide.readFile.bind(this.ide),
       ),
       new FullTextSearchCodebaseIndex(),
+      new CodeSnippetsCodebaseIndex(this.ide),
     ];
 
     return indexes;

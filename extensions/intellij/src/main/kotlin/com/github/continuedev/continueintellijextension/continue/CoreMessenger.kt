@@ -106,7 +106,8 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
         "getProblems",
         "subprocess",
         "getBranch",
-        "getIdeInfo"
+        "getIdeInfo",
+        "getIdeSettings",
     )
 
     private fun setPermissions(destination: String) {

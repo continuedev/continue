@@ -5,7 +5,7 @@ import { streamSse } from "../stream";
 class LlamaCpp extends BaseLLM {
   static providerName: ModelProvider = "llama.cpp";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://127.0.0.1:8080",
+    apiBase: "http://127.0.0.1:8080/",
   };
 
   private _convertArgs(options: CompletionOptions, prompt: string) {
@@ -30,7 +30,7 @@ class LlamaCpp extends BaseLLM {
       ...this.requestOptions?.headers,
     };
 
-    const resp = await this.fetch(`${this.apiBase}/completion`, {
+    const resp = await this.fetch(new URL("completion", this.apiBase), {
       method: "POST",
       headers,
       body: JSON.stringify({

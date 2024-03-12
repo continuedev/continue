@@ -1,9 +1,8 @@
-import { Chunk, IndexingProgressUpdate } from "..";
+import { Chunk, IndexTag, IndexingProgressUpdate } from "..";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
   CodebaseIndex,
   IndexResultType,
-  IndexTag,
   MarkCompleteCallback,
   RefreshIndexResults,
 } from "./types";

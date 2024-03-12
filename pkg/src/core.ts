@@ -32,9 +32,11 @@ export class Core {
   constructor(messenger: IpcMessenger, ide: IDE) {
     this.messenger = messenger;
     this.ide = ide;
+
+    const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     this.configHandler = new ConfigHandler(
       this.ide,
-      undefined,
+      ideSettingsPromise,
       (text: string) => {},
       () => {},
     );
@@ -96,7 +98,9 @@ export class Core {
       this.configHandler.reloadConfig();
       return this.configHandler.getSerializedConfig();
     });
-    on("config/updateRemoteConfigSettings", (msg) => {});
+    on("config/ideSettingsUpdate", (msg) => {
+      this.configHandler.updateIdeSettings(msg.data);
+    });
 
     // Context providers
     on("context/addDocs", async (msg) => {
