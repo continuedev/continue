@@ -218,9 +218,13 @@ class Ollama extends BaseLLM {
   }
 
   async listModels(): Promise<string[]> {
-    const response = await this.fetch(new URL("api/tags", this.apiBase), {
-      method: "GET",
-    });
+    const response = await this.fetch(
+      // localhost was causing fetch failed in pkg binary only for this Ollama endpoint
+      new URL("api/tags", this.apiBase?.replace("localhost", "127.0.0.1")),
+      {
+        method: "GET",
+      },
+    );
     const data = await response.json();
     return data.models.map((model: any) => model.name);
   }
