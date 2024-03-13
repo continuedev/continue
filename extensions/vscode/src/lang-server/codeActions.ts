@@ -18,7 +18,7 @@ class ContinueQuickFixProvider implements vscode.CodeActionProvider {
     const createQuickFix = (edit: boolean) => {
       const diagnostic = context.diagnostics[0];
       const quickFix = new vscode.CodeAction(
-        edit ? "Fix with Continue" : "Ask Continue",
+        edit ? "Fix with Kindo" : "Ask Kindo",
         vscode.CodeActionKind.QuickFix,
       );
       quickFix.isPreferred = false;
