@@ -27,12 +27,12 @@ function* slidingWindow(
 
 /**
  * Match by similarity over sliding windows of recent documents.
- * @param recentDocuments
+ * @param recentFiles
  * @param prefix
  * @param suffix
  */
 export async function slidingWindowMatcher(
-  recentDocuments: RangeInFileWithContents[],
+  recentFiles: RangeInFileWithContents[],
   windowAroundCursor: string,
   topN: number,
   windowSize: number,
@@ -40,7 +40,7 @@ export async function slidingWindowMatcher(
   // Sorted lowest similarity to highest
   const topMatches: AutocompleteSnippet[] = [];
 
-  for (const { filepath, contents, range } of recentDocuments) {
+  for (const { filepath, contents, range } of recentFiles) {
     for (const window of slidingWindow(contents, windowSize)) {
       const score = jaccardSimilarity(window, windowAroundCursor);
 

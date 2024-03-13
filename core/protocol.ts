@@ -60,6 +60,8 @@ export type Protocol = {
     { filepath: string; line: number; column: number },
     string[],
   ];
+  "autocomplete/cancel": [undefined, void];
+  "autocomplete/accept": [{ completionId: string }, void];
   "command/run": [
     {
       input: string;

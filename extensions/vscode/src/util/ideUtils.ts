@@ -287,32 +287,37 @@ export class VsCodeIdeUtils {
     }
   }
 
+  private static MAX_BYTES = 100000;
+
   async readFile(filepath: string): Promise<string> {
-    filepath = this.getAbsolutePath(filepath);
+    try {
+      filepath = this.getAbsolutePath(filepath);
+      const uri = uriFromFilePath(filepath);
 
-    const MAX_BYTES = 100000;
-    let contents: string | undefined;
-    if (typeof contents === "undefined") {
-      try {
-        const fileStats = await vscode.workspace.fs.stat(
-          uriFromFilePath(filepath),
-        );
-        if (fileStats.size > 10 * MAX_BYTES) {
-          return "";
-        }
-
-        const bytes = await vscode.workspace.fs.readFile(
-          uriFromFilePath(filepath),
-        );
-
-        // Truncate the buffer to the first MAX_BYTES
-        const truncatedBytes = bytes.slice(0, MAX_BYTES);
-        contents = new TextDecoder().decode(truncatedBytes);
-      } catch {
-        contents = "";
+      // Check first whether it's an open document
+      const openTextDocument = vscode.workspace.textDocuments.find(
+        (doc) => doc.uri.toString() === uri.toString(),
+      );
+      if (openTextDocument !== undefined) {
+        return openTextDocument.getText();
       }
+
+      const fileStats = await vscode.workspace.fs.stat(
+        uriFromFilePath(filepath),
+      );
+      if (fileStats.size > 10 * VsCodeIdeUtils.MAX_BYTES) {
+        return "";
+      }
+
+      const bytes = await vscode.workspace.fs.readFile(uri);
+
+      // Truncate the buffer to the first MAX_BYTES
+      const truncatedBytes = bytes.slice(0, VsCodeIdeUtils.MAX_BYTES);
+      const contents = new TextDecoder().decode(truncatedBytes);
+      return contents;
+    } catch {
+      return "";
     }
-    return contents;
   }
 
   async readRangeInFile(
