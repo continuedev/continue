@@ -352,15 +352,22 @@
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "gpt-3.5-turbo",
-                  "gpt-3.5-turbo-16k",
-                  "gpt-4",
-                  "gpt-3.5-turbo-0613",
-                  "gpt-4-32k",
-                  "gpt-4-0125-preview",
-                  "gpt-4-turbo-preview",
-                  "AUTODETECT"
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gpt-3.5-turbo",
+                      "gpt-3.5-turbo-16k",
+                      "gpt-4",
+                      "gpt-3.5-turbo-0613",
+                      "gpt-4-32k",
+                      "gpt-4-0125-preview",
+                      "gpt-4-turbo-preview",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
