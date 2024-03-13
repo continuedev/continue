@@ -1,10 +1,55 @@
-import type { AxiosInstance, AxiosError } from "axios";
+import { AxiosInstance, AxiosError } from "axios";
 import {BaseContextProvider} from "..";
 import { ContextProviderExtras, ContextItem, ContextProviderDescription } from "../..";
 
 interface RemoteBranchInfo {
   branch: string | null;
   project: string | null;
+}
+
+interface GitLabUser {
+  id: number;
+  username: string;
+  name: string;
+  state: "active";
+  locked: boolean;
+  avatar_url: string;
+  web_url: string;
+}
+
+interface GitLabMergeRequest {
+  iid: number;
+  project_id: number;
+  title: string;
+  description: string;
+}
+
+interface GitLabComment {
+  type: null | "DiffNote";
+  resolvable: boolean;
+  resolved?: boolean;
+  body: string;
+  created_at: string;
+  author: GitLabUser;
+  position?: {
+    new_path: string;
+    new_line: number;
+    head_sha: string;
+    line_range: {
+      start: {
+        line_code: string;
+        type: "new";
+        old_line: null;
+        new_line: number;
+      };
+      end: {
+        line_code: string;
+        type: "new";
+        old_line: null;
+        new_line: number;
+      };
+    };
+  };
 }
 
 const trimFirstElement = (args: Array<string>): string => {
@@ -31,7 +76,7 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     }
   
     return Axios.create({
-      baseURL: `https://${domain ?? "gitlab.com"}/api`,
+      baseURL: `https://${domain ?? "gitlab.com"}/api/v4`,
       headers: {
         "PRIVATE-TOKEN": token,
       },
@@ -82,18 +127,18 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     };
   };
 
-  async getContextItems(query: string, extras: ContextProviderExtras): Promise<ContextItem[]> {
-
-    const parts = [`# ${this.description.displayTitle}`];  
+  async getContextItems(query: string, extras: ContextProviderExtras): Promise<ContextItem[]> { 
 
     const { branch, project } = await this.getRemoteBranchName(extras);
   
     const api = await this.getApi();
+
+    const result = [] as Array<ContextItem>;
   
     try {
     const mergeRequests = await api
-      .get<Array<{ iid: number; project_id: number }>>(
-        `/v4/projects/${encodeURIComponent(project!)}/merge_requests`,
+      .get<Array<GitLabMergeRequest>>(
+        `/projects/${encodeURIComponent(project!)}/merge_requests`,
         {
           params: {
             source_branch: branch,
@@ -103,13 +148,17 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
       )
       .then((x) => x.data);
   
-      if (mergeRequests?.length) {
-        const mergeRequest = mergeRequests[0];
-  
-        parts.push(`Merge Request: ${mergeRequest.iid}`);
+      for (const mergeRequest of mergeRequests) {
+        const parts = [
+          `# ${mergeRequest.title}`
+        ];
+
+        if (mergeRequest?.description) {
+          parts.push(`## Description`, mergeRequest.description);
+        }
   
         const comments = await api.get<Array<GitLabComment>>(
-          `/v4/projects/${mergeRequest.project_id}/merge_requests/${mergeRequest.iid}/notes`,
+          `/projects/${mergeRequest.project_id}/merge_requests/${mergeRequest.iid}/notes`,
           {
             params: {
               sort: "asc",
@@ -117,12 +166,14 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
             },
           }
         );
+
+        const filteredComments = comments.data.filter(
+          (x) => x.type === "DiffNote"
+        );
   
         const locations = {} as Record<string, Array<GitLabComment>>;
   
-        for (const comment of comments.data.filter(
-          (x) => x.type === "DiffNote"
-        )) {
+        for (const comment of filteredComments) {
           const filename = comment.position?.new_path ?? "general";
   
           if (!locations[filename]) {
@@ -162,22 +213,32 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
   
           parts.push(...locationComments.map(commentFormatter));
         }
-      }
-  
+
+
       const content = parts.join("\n\n");
   
-      return [
+      result.push(
         {
-          name: `GitLab MR Comments`,
+          name: mergeRequest.title,
           content,
           description: `Comments from the Merge Request for this branch.`,
         },
-      ];
+      );
+      }
+  
     } catch(ex) {
       if(ex instanceof AxiosError) {
-
+        if (ex.response) {
+          throw ex.response?.data ?? new Error(`GitLab error ${ex.response.status}: ${ex.response.statusText}`);
+        } else {
+          throw new Error(`GitLab Request Error ${ex.request}`);
+        }
       }
+
+      throw ex;
     }
+
+    return result;
   }
 
 }
