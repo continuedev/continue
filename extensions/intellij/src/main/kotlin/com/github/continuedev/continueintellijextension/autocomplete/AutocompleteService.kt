@@ -3,6 +3,8 @@ package com.github.continuedev.continueintellijextension.autocomplete
 import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
@@ -45,14 +47,21 @@ class AutocompleteService(private val project: Project) {
             "clipboardText" to ""
         )
         project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/complete", input, null, ({ response ->
-            val completion = response;
-            renderCompletion(editor, offset, response)
-            pendingCompletion = pendingCompletion?.copy(text = completion)
+            val completions = Gson().fromJson(response, List::class.java)
+            if (completions.isNotEmpty()) {
+                val completion = completions[0].toString()
+                renderCompletion(editor, offset, completion)
+                pendingCompletion = pendingCompletion?.copy(text = completion)
+            }
         }))
     }
 
     private fun renderCompletion(editor: Editor, offset: Int, text: String) {
-        editor.inlayModel.addInlineElement(offset, true, ContinueCustomElementRenderer(editor, text))
+        ApplicationManager.getApplication().invokeLater {
+            WriteAction.run<Throwable> {
+                editor.inlayModel.addInlineElement(offset, true, ContinueCustomElementRenderer(editor, text))
+            }
+        }
     }
 
     fun accept() {
@@ -61,8 +70,12 @@ class AutocompleteService(private val project: Project) {
         val editor = completion.editor
         val offset = completion.offset
         editor.document.insertString(offset, text)
-        clearCompletions(editor)
+        editor.caretModel.moveToOffset(offset + text.length)
+
         project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/accept", completion.completionId, null, ({}))
+        invokeLater {
+            clearCompletions(editor)
+        }
     }
 
     private fun cancelCompletion(completion: PendingCompletion) {

@@ -160,7 +160,12 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
                 while (true) {
                     val line = reader.readLine()
                     if (line != null && line.isNotEmpty()) {
-                        handleMessage(line)
+                        try {
+                            handleMessage(line)
+                        } catch (e: Exception) {
+                            println("Error handling message: $line")
+                            println(e)
+                        }
                     } else {
                         Thread.sleep(100)
                     }
