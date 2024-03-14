@@ -2,10 +2,12 @@ package com.github.continuedev.continueintellijextension.autocomplete
 
 import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.google.gson.Gson
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 
 data class PendingCompletion (
@@ -30,12 +32,23 @@ class AutocompleteService(private val project: Project) {
         pendingCompletion = PendingCompletion(editor, offset, completionId, null)
 
         // Request a completion from the core
-        val completion = "Hello, World!"
-        pendingCompletion = pendingCompletion?.copy(text = completion)
-        renderCompletion(editor, offset, completion)
-//        service<ContinuePluginService>().coreMessenger?.request("autocomplete/complete", completionId, null, ({ response ->
-//            renderCompletion(editor, offset, response)
-//        }))
+        val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
+        val input = mapOf(
+            "completionId" to completionId,
+            "filepath" to virtualFile?.path,
+            "pos" to mapOf(
+                    "line" to editor.caretModel.primaryCaret.logicalPosition.line,
+                    "character" to editor.caretModel.primaryCaret.logicalPosition.column
+            ),
+            "recentlyEditedFiles" to emptyList<String>(),
+            "recentlyEditedRanges" to emptyList<String>(),
+            "clipboardText" to ""
+        )
+        project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/complete", input, null, ({ response ->
+            val completion = response;
+            renderCompletion(editor, offset, response)
+            pendingCompletion = pendingCompletion?.copy(text = completion)
+        }))
     }
 
     private fun renderCompletion(editor: Editor, offset: Int, text: String) {
@@ -49,11 +62,12 @@ class AutocompleteService(private val project: Project) {
         val offset = completion.offset
         editor.document.insertString(offset, text)
         clearCompletions(editor)
+        project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/accept", completion.completionId, null, ({}))
     }
 
     private fun cancelCompletion(completion: PendingCompletion) {
         // Send cancellation message to core
-        project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/cancel", completion.completionId,null, ({}))
+        project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/cancel", null,null, ({}))
     }
 
     fun clearCompletions(editor: Editor) {

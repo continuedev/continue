@@ -6,6 +6,7 @@ import {
 import { ConfigHandler } from "core/config/handler";
 import { logDevData } from "core/util/devdata";
 import { Telemetry } from "core/util/posthog";
+import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { getDefinitionsFromLsp } from "./lsp";
@@ -62,6 +63,7 @@ export class ContinueCompletionProvider
       const signal = abortController.signal;
       token.onCancellationRequested(() => abortController.abort());
       const input: AutocompleteInput = {
+        completionId: uuidv4(),
         filepath: document.uri.fsPath,
         pos: { line: position.line, character: position.character },
         recentlyEditedFiles: [],

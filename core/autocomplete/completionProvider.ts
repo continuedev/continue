@@ -29,6 +29,7 @@ import { getTemplateForModel } from "./templates";
 import { GeneratorReuseManager } from "./util";
 
 export interface AutocompleteInput {
+  completionId: string;
   filepath: string;
   pos: Position;
   recentlyEditedFiles: RangeInFileWithContents[];
@@ -309,67 +310,26 @@ export class CompletionProvider {
     }
   }
 
-  public async provideInlineCompletionItems(
-    input: AutocompleteInput,
-    token: AbortSignal,
-  ): Promise<AutocompleteOutcome | undefined> {
-    // Debounce
-    const uuid = uuidv4();
-    CompletionProvider.lastUUID = uuid;
+  public cancel() {
+    this._abortControllers.forEach((abortController, id) => {
+      abortController.abort();
+    });
+    this._abortControllers.clear();
+  }
 
-    const config = await this.configHandler.loadConfig();
-    const options = {
-      ...DEFAULT_AUTOCOMPLETE_OPTS,
-      ...config.tabAutocompleteOptions,
-    };
+  private _abortControllers = new Map<string, AbortController>();
+  private _logRejectionTimeouts = new Map<string, NodeJS.Timeout>();
+  private _outcomes = new Map<string, AutocompleteOutcome>();
 
-    if (CompletionProvider.debouncing) {
-      CompletionProvider.debounceTimeout?.refresh();
-      const lastUUID = await new Promise((resolve) =>
-        setTimeout(() => {
-          resolve(CompletionProvider.lastUUID);
-        }, options.debounceDelay),
-      );
-      if (uuid !== lastUUID) {
-        return undefined;
-      }
-    } else {
-      CompletionProvider.debouncing = true;
-      CompletionProvider.debounceTimeout = setTimeout(async () => {
-        CompletionProvider.debouncing = false;
-      }, options.debounceDelay);
+  public accept(completionId: string) {
+    if (this._logRejectionTimeouts.has(completionId)) {
+      clearTimeout(this._logRejectionTimeouts.get(completionId));
+      this._logRejectionTimeouts.delete(completionId);
     }
 
-    // Get completion
-    const llm = await this.getLlm();
-    if (!llm) {
-      return undefined;
-    }
-    const outcome = await getTabCompletion(
-      token,
-      options,
-      llm,
-      this.ide,
-      this.generatorReuseManager,
-      input,
-      this.getDefinitionsFromLsp,
-    );
-    const completion = outcome?.completion;
-
-    if (!completion) {
-      return undefined;
-    }
-
-    // Do some stuff later so as not to block return. Latency matters
-    setTimeout(async () => {
-      if (!outcome.cacheHit) {
-        (await this.autocompleteCache).put(outcome.prompt, completion);
-      }
-    }, 100);
-
-    const logRejectionTimeout = setTimeout(() => {
-      // Wait 10 seconds, then assume it wasn't accepted
-      outcome.accepted = false;
+    if (this._outcomes.has(completionId)) {
+      const outcome = this._outcomes.get(completionId)!;
+      outcome.accepted = true;
       logDevData("autocomplete", outcome);
       Telemetry.capture("autocomplete", {
         accepted: outcome.accepted,
@@ -378,8 +338,95 @@ export class CompletionProvider {
         time: outcome.time,
         cacheHit: outcome.cacheHit,
       });
-    }, 10_000);
+      this._outcomes.delete(completionId);
+    }
+  }
 
-    return outcome;
+  public async provideInlineCompletionItems(
+    input: AutocompleteInput,
+    token: AbortSignal | undefined,
+  ): Promise<AutocompleteOutcome | undefined> {
+    // Create abort signal if not given
+    if (!token) {
+      const controller = new AbortController();
+      token = controller.signal;
+      this._abortControllers.set(input.completionId, controller);
+    }
+
+    try {
+      // Debounce
+      const uuid = uuidv4();
+      CompletionProvider.lastUUID = uuid;
+
+      const config = await this.configHandler.loadConfig();
+      const options = {
+        ...DEFAULT_AUTOCOMPLETE_OPTS,
+        ...config.tabAutocompleteOptions,
+      };
+
+      if (CompletionProvider.debouncing) {
+        CompletionProvider.debounceTimeout?.refresh();
+        const lastUUID = await new Promise((resolve) =>
+          setTimeout(() => {
+            resolve(CompletionProvider.lastUUID);
+          }, options.debounceDelay),
+        );
+        if (uuid !== lastUUID) {
+          return undefined;
+        }
+      } else {
+        CompletionProvider.debouncing = true;
+        CompletionProvider.debounceTimeout = setTimeout(async () => {
+          CompletionProvider.debouncing = false;
+        }, options.debounceDelay);
+      }
+
+      // Get completion
+      const llm = await this.getLlm();
+      if (!llm) {
+        return undefined;
+      }
+      const outcome = await getTabCompletion(
+        token,
+        options,
+        llm,
+        this.ide,
+        this.generatorReuseManager,
+        input,
+        this.getDefinitionsFromLsp,
+      );
+      const completion = outcome?.completion;
+
+      if (!completion) {
+        return undefined;
+      }
+
+      // Do some stuff later so as not to block return. Latency matters
+      setTimeout(async () => {
+        if (!outcome.cacheHit) {
+          (await this.autocompleteCache).put(outcome.prompt, completion);
+        }
+      }, 100);
+
+      outcome.accepted = false;
+      const logRejectionTimeout = setTimeout(() => {
+        // Wait 10 seconds, then assume it wasn't accepted
+        logDevData("autocomplete", outcome);
+        Telemetry.capture("autocomplete", {
+          accepted: outcome.accepted,
+          modelName: outcome.modelName,
+          modelProvider: outcome.modelProvider,
+          time: outcome.time,
+          cacheHit: outcome.cacheHit,
+        });
+        this._logRejectionTimeouts.delete(input.completionId);
+      }, 10_000);
+      this._outcomes.set(input.completionId, outcome);
+      this._logRejectionTimeouts.set(input.completionId, logRejectionTimeout);
+
+      return outcome;
+    } finally {
+      this._abortControllers.delete(input.completionId);
+    }
   }
 }
