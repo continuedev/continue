@@ -21,6 +21,25 @@ interface LanceDbDocsRow {
   [key: string]: any;
 }
 
+let dbDocs:Database;
+
+async function getDBDocs() {
+  if (!dbDocs) {
+    dbDocs = await open({
+      filename: getDocsSqlitePath(),
+      driver: sqlite3.Database,
+    });
+    
+    dbDocs.exec(`CREATE TABLE IF NOT EXISTS docs (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        title STRING NOT NULL,
+        baseUrl STRING NOT NULL UNIQUE
+    )`);
+  }
+
+  return dbDocs;
+}
+
 async function createDocsTable(db: Database<sqlite3.Database>) {
   db.exec(`CREATE TABLE IF NOT EXISTS docs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -116,11 +135,7 @@ export async function addDocs(
   }
 
   // Only after add it to SQLite
-  const db = await open({
-    filename: getDocsSqlitePath(),
-    driver: sqlite3.Database,
-  });
-  await createDocsTable(db);
+  const db = await getDBDocs();
   await db.run(
     `INSERT INTO docs (title, baseUrl) VALUES (?, ?)`,
     title,
@@ -131,11 +146,7 @@ export async function addDocs(
 export async function listDocs(): Promise<
   { title: string; baseUrl: string }[]
 > {
-  const db = await open({
-    filename: getDocsSqlitePath(),
-    driver: sqlite3.Database,
-  });
-  await createDocsTable(db);
-  const docs = await db.all(`SELECT title, baseUrl FROM docs`);
+  const db = await getDBDocs();
+  const docs = db.all(`SELECT title, baseUrl FROM docs`);
   return docs;
 }
