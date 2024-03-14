@@ -40,14 +40,6 @@ async function getDBDocs() {
   return dbDocs;
 }
 
-async function createDocsTable(db: Database<sqlite3.Database>) {
-  db.exec(`CREATE TABLE IF NOT EXISTS docs (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title STRING NOT NULL,
-        baseUrl STRING NOT NULL UNIQUE
-    )`);
-}
-
 export async function retrieveDocs(
   baseUrl: string,
   vector: number[],
@@ -56,8 +48,7 @@ export async function retrieveDocs(
   nested: boolean = false,
 ): Promise<Chunk[]> {
   const lancedb = await import("vectordb");
-  const db = await SqliteDb.get();
-  await createDocsTable(db);
+  const db = await getDBDocs();
   const lance = await lancedb.connect(getLanceDbPath());
 
   const downloadDocs = async () => {
