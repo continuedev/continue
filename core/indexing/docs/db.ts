@@ -142,11 +142,7 @@ export async function listDocs(): Promise<
 }
 
 export async function hasDoc(baseUrl: string) {
-  const db = await open({
-    filename: getDocsSqlitePath(),
-    driver: sqlite3.Database,
-  });
-  await createDocsTable(db);
+  const db = await getDBDocs();
   const doc = await db.get(`SELECT title FROM docs WHERE baseUrl =?`, baseUrl);
   return!!doc;
 }
