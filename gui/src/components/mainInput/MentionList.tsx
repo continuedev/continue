@@ -175,7 +175,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
 
   useEffect(() => {
     const items = [...props.items];
-    if (subMenuTitle === "Search documentation") {
+    if (subMenuTitle === "Type to search docs") {
       items.push({
         title: "Add Docs",
         type: "action",
