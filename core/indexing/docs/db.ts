@@ -2,7 +2,6 @@ import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { Chunk } from "../..";
 import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths";
-import { SqliteDb } from "../refreshIndex";
 
 import { downloadPreIndexedDocs } from "./preIndexed";
 import { default as configs } from "./preIndexedDocs";
