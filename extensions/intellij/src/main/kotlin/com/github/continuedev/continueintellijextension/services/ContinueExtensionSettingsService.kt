@@ -21,6 +21,7 @@ class ContinueSettingsComponent: DumbAware {
     val remoteConfigServerUrl: JTextField = JTextField()
     val remoteConfigSyncPeriod: JTextField = JTextField()
     val userToken: JTextField = JTextField()
+    val enableTabAutocomplete: JCheckBox = JCheckBox("Enable Tab Autocomplete")
 
     init {
         val constraints = GridBagConstraints()
@@ -44,6 +45,8 @@ class ContinueSettingsComponent: DumbAware {
         constraints.gridy++
         panel.add(userToken, constraints)
         constraints.gridy++
+        panel.add(enableTabAutocomplete, constraints)
+        constraints.gridy++
 
         // Add a "filler" component that takes up all remaining vertical space
         constraints.weighty = 1.0
@@ -63,6 +66,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         var remoteConfigServerUrl: String? = null
         var remoteConfigSyncPeriod: Int = 60
         var userToken: String? = null
+        var enableTabAutocomplete: Boolean = false
     }
 
     var continueState: ContinueState = ContinueState()
@@ -101,7 +105,8 @@ class ContinueExtensionConfigurable : Configurable {
         val settings = ContinueExtensionSettings.instance
         val modified = mySettingsComponent?.remoteConfigServerUrl?.text != settings.continueState.remoteConfigServerUrl ||
                 mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() != settings.continueState.remoteConfigSyncPeriod ||
-                mySettingsComponent?.userToken?.text != settings.continueState.userToken
+                mySettingsComponent?.userToken?.text != settings.continueState.userToken ||
+                mySettingsComponent?.enableTabAutocomplete?.isSelected != settings.continueState.enableTabAutocomplete
         return modified;
     }
 
@@ -110,6 +115,7 @@ class ContinueExtensionConfigurable : Configurable {
         settings.continueState.remoteConfigServerUrl = mySettingsComponent?.remoteConfigServerUrl?.text
         settings.continueState.remoteConfigSyncPeriod = mySettingsComponent?.remoteConfigSyncPeriod?.text?.toInt() ?: 60
         settings.continueState.userToken = mySettingsComponent?.userToken?.text
+        settings.continueState.enableTabAutocomplete = mySettingsComponent?.enableTabAutocomplete?.isSelected ?: false
 
         ApplicationManager.getApplication().messageBus.syncPublisher(SettingsListener.TOPIC).settingsUpdated(settings.continueState)
     }
@@ -119,6 +125,7 @@ class ContinueExtensionConfigurable : Configurable {
         mySettingsComponent?.remoteConfigServerUrl?.text = settings.continueState.remoteConfigServerUrl
         mySettingsComponent?.remoteConfigSyncPeriod?.text = settings.continueState.remoteConfigSyncPeriod.toString()
         mySettingsComponent?.userToken?.text = settings.continueState.userToken
+        mySettingsComponent?.enableTabAutocomplete?.isSelected = settings.continueState.enableTabAutocomplete
     }
 
     override fun disposeUIResources() {
