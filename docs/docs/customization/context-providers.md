@@ -16,6 +16,14 @@ As an example, say you are working on solving a new GitHub Issue. You type '@iss
 
 To use any of the built-in context providers, open `~/.continue/config.json` and add it to the `contextProviders` list.
 
+### Code
+
+Type '@code' to reference specific functions or classes from throughout your project.
+
+`````json
+{ "name": "code" }
+```
+
 ### Git Diff
 
 Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
@@ -145,7 +153,7 @@ By default, the following query will be used to find issues:
 
 ```jql
 assignee = currentUser() AND resolution = Unresolved order by updated DESC
-````
+`````
 
 You can override this query by setting the `issueQuery` parameter.
 

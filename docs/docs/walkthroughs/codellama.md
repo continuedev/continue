@@ -78,7 +78,7 @@ If you haven't already installed Continue, you can do that [here](https://market
       "title": "Code Llama",
       "provider": "openai",
       "model": "codellama-7b",
-      "apiBase": "http://localhost:8000/v1"
+      "apiBase": "http://localhost:8000/v1/"
     }
   ]
 }

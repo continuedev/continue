@@ -10,7 +10,7 @@ import OpenAI from "./OpenAI";
 class Together extends OpenAI {
   static providerName: ModelProvider = "together";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.together.xyz/v1",
+    apiBase: "https://api.together.xyz/v1/",
   };
 
   private static MODEL_IDS: { [name: string]: string } = {

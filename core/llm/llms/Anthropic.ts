@@ -16,7 +16,7 @@ class Anthropic extends BaseLLM {
       model: "claude-3-opus-20240229",
       maxTokens: 4096,
     },
-    apiBase: "https://api.anthropic.com/v1",
+    apiBase: "https://api.anthropic.com/v1/",
   };
 
   constructor(options: LLMOptions) {
@@ -69,7 +69,7 @@ class Anthropic extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const response = await this.fetch(this.apiBase + "/messages", {
+    const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

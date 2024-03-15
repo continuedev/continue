@@ -11,8 +11,8 @@ import { DiffManager } from "../diff/horizontal";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { setupRemoteConfigSync } from "../stubs/activation";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
-import { RemoteConfigSync } from "../util/remoteConfig";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
@@ -78,14 +78,10 @@ export class VsCodeExtension {
       this.extensionContext,
       this.verticalDiffManager,
     );
-    try {
-      const configSync = new RemoteConfigSync(
-        this.configHandler.reloadConfig.bind(this.configHandler),
-      );
-      configSync.setup();
-    } catch (e) {
-      console.warn(`Failed to sync remote config: ${e}`);
-    }
+
+    setupRemoteConfigSync(
+      this.configHandler.reloadConfig.bind(this.configHandler),
+    );
 
     // Sidebar
     context.subscriptions.push(

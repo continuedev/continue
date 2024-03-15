@@ -17,7 +17,7 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - CodeLlama, GPT-4, and more",
+  "displayName": "Continue - Claude, CodeLlama, GPT-4, and more",
   "pricing": "Free",
   "description": "Open-source autopilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",

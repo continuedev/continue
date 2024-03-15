@@ -1,9 +1,12 @@
-import { ContinueRcJson, IDE, IdeInfo, Problem, Range } from "..";
+import { ContinueRcJson, IDE, IdeInfo, IndexTag, Problem, Range } from "..";
 
 export class MessageIde implements IDE {
   constructor(
     private readonly request: (messageType: string, data: any) => Promise<any>,
   ) {}
+  getTags(artifactId: string): Promise<IndexTag[]> {
+    return this.request("getTags", artifactId);
+  }
   getIdeInfo(): Promise<IdeInfo> {
     return this.request("getIdeInfo", undefined);
   }

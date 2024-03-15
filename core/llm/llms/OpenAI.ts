@@ -41,7 +41,7 @@ class OpenAI extends BaseLLM {
 
   static providerName: ModelProvider = "openai";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.openai.com/v1",
+    apiBase: "https://api.openai.com/v1/",
   };
 
   protected _convertMessage(message: ChatMessage) {
@@ -72,6 +72,7 @@ class OpenAI extends BaseLLM {
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
       stop:
+        // Jan + Azure OpenAI don't truncate and will throw an error
         this.apiBase?.includes(":1337") || this.apiType === "azure"
           ? options.stop?.slice(0, 4)
           : options.stop,
@@ -96,22 +97,21 @@ class OpenAI extends BaseLLM {
   }
 
   private _getEndpoint(
-    endpoint: "/chat/completions" | "/completions" | "/models",
+    endpoint: "chat/completions" | "completions" | "models",
   ) {
     if (this.apiType === "azure") {
-      return `${this.apiBase}/openai/deployments/${this.engine}${endpoint}?api-version=${this.apiVersion}`;
+      return new URL(
+        `openai/deployments/${this.engine}${endpoint}?api-version=${this.apiVersion}`,
+        this.apiBase,
+      );
     } else {
-      let url = this.apiBase;
-      if (!url) {
+      if (!this.apiBase) {
         throw new Error(
           "No API base URL provided. Please set the 'apiBase' option in config.json",
         );
       }
-      if (url.endsWith("/")) {
-        url = url.slice(0, -1);
-      }
 
-      return url + endpoint;
+      return new URL(endpoint, this.apiBase);
     }
   }
 
@@ -135,7 +135,7 @@ class OpenAI extends BaseLLM {
     args.prompt = prompt;
     delete args.messages;
 
-    const response = await this.fetch(this._getEndpoint("/completions"), {
+    const response = await this.fetch(this._getEndpoint("completions"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -185,7 +185,7 @@ class OpenAI extends BaseLLM {
       ...m,
       content: m.content === "" ? " " : m.content,
     })) as any;
-    const response = await this.fetch(this._getEndpoint("/chat/completions"), {
+    const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -203,7 +203,7 @@ class OpenAI extends BaseLLM {
   }
 
   async listModels(): Promise<string[]> {
-    const response = await this.fetch(this._getEndpoint("/models"), {
+    const response = await this.fetch(this._getEndpoint("models"), {
       method: "GET",
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
