@@ -71,9 +71,10 @@ class OpenAI extends BaseLLM {
       top_p: options.topP,
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
-      stop: this.apiBase?.includes(":1337")
-        ? options.stop?.slice(0, 4)
-        : options.stop,
+      stop:
+        this.apiBase?.includes(":1337") || this.apiType === "azure"
+          ? options.stop?.slice(0, 4)
+          : options.stop,
     };
 
     return finalOptions;
