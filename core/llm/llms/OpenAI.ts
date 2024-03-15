@@ -71,6 +71,7 @@ class OpenAI extends BaseLLM {
       top_p: options.topP,
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
+      // Jan doesn't truncate and will throw an error
       stop: this.apiBase?.includes(":1337")
         ? options.stop?.slice(0, 4)
         : options.stop,
