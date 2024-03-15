@@ -82,7 +82,7 @@ export interface ILLM extends LLMOptions {
   ): AsyncGenerator<ChatMessage, LLMReturnValue>;
 
   chat(
-    messages: ChatMessage[],
+    messages: ChatMessage[] | string,
     options?: LLMFullCompletionOptions,
   ): Promise<ChatMessage>;
 
@@ -610,6 +610,7 @@ export interface TabAutocompleteOptions {
 
 export interface CodeReviewOptions {
   prompt: string;
+  modelTitle: string;
 }
 
 export interface SerializedContinueConfig {

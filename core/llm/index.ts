@@ -328,7 +328,14 @@ ${prompt}`;
     return completion;
   }
 
-  async chat(messages: ChatMessage[], options: LLMFullCompletionOptions = {}) {
+  async chat(
+    messages: ChatMessage[] | string,
+    options: LLMFullCompletionOptions = {},
+  ) {
+    if (typeof messages === "string") {
+      messages = [{ role: "user", content: messages }];
+    }
+
     let completion = "";
     for await (const chunk of this.streamChat(messages, options)) {
       completion += chunk.content;
