@@ -105,7 +105,15 @@ class AutocompleteService(private val project: Project) {
             cancelCompletion(pendingCompletion!!)
             pendingCompletion = null
         }
-        editor.inlayModel.getInlineElementsInRange(0, editor.document.textLength).forEach { it.dispose() }
-        editor.inlayModel.getBlockElementsInRange(0, editor.document.textLength).forEach { it.dispose() }
+        editor.inlayModel.getInlineElementsInRange(0, editor.document.textLength).forEach {
+            if (it.renderer is ContinueCustomElementRenderer) {
+                it.dispose()
+            }
+        }
+        editor.inlayModel.getBlockElementsInRange(0, editor.document.textLength).forEach {
+            if (it.renderer is ContinueMultilineCustomElementRenderer) {
+                it.dispose()
+            }
+        }
     }
 }
