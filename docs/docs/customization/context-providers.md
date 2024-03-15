@@ -120,6 +120,37 @@ Type '@issue' to reference the conversation in a GitHub issue. Make sure to incl
 }
 ```
 
+### GitLab Merge Request
+
+Type `@gitlab-mr` to reference an open MR for this branch on GitLab. 
+
+#### Configuration
+
+You will need to create a [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with the `read_api` scope. then add the following to your configuration:
+
+```json
+{
+  "name": "gitlab-mr",
+  "params": {
+    "token": "..."
+  }
+}
+```
+
+#### Using Self-Hosted GitLab
+
+You can specify the domain to communicate with by setting the `domain` parameter in your configurtion. By default this is set to `gitlab.com`.
+
+```json
+{
+  "name": "gitlab-mr",
+  "params": {
+    "token": "...",
+    "domain": "gitlab.example.com"
+  }
+}
+```
+
 ### Jira Issues
 
 Type '@jira' to reference the conversation in a Jira issue. Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens).
