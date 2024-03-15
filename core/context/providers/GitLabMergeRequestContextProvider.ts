@@ -56,6 +56,17 @@ const trimFirstElement = (args: Array<string>): string => {
   return args[0].trim();
 };
 
+const getSubprocess = async (extras: ContextProviderExtras) => {
+  const workingDir = await extras.ide
+    .getWorkspaceDirs()
+    .then(trimFirstElement);
+
+  return (command: string) =>
+    extras.ide
+      .subprocess(`cd ${workingDir}; ${command}`)
+      .then(trimFirstElement);
+};
+
 
 class GitLabMergeRequestContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -86,14 +97,7 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
 
   private async getRemoteBranchName(extras: ContextProviderExtras): Promise<RemoteBranchInfo> {
 
-    const workingDir = await extras.ide
-    .getWorkspaceDirs()
-    .then(trimFirstElement);
-
-    const subprocess = (command: string) =>
-    extras.ide
-      .subprocess(`cd ${workingDir}; ${command}`)
-        .then(trimFirstElement);
+    const subprocess = await getSubprocess(extras);
     
     const branchName = await subprocess(`git branch --show-current`);
   
@@ -147,15 +151,15 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
         }
       )
       .then((x) => x.data);
+
+
+    const subprocess = await getSubprocess(extras);
   
       for (const mergeRequest of mergeRequests) {
         const parts = [
-          `# ${mergeRequest.title}`
+          `# GitLab Merge Request\ntitle: "${mergeRequest.title}"\ndescription: "${mergeRequest.description ?? 'None'}"`,
+          `## Comments`,
         ];
-
-        if (mergeRequest?.description) {
-          parts.push(`## Description`, mergeRequest.description);
-        }
   
         const comments = await api.get<Array<GitLabComment>>(
           `/projects/${mergeRequest.project_id}/merge_requests/${mergeRequest.iid}/notes`,
@@ -183,35 +187,43 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
           locations[filename].push(comment);
         }
   
-        const commentFormatter = (comment: GitLabComment) => {
-          const commentParts = [
-            `### ${comment.author.name} on ${comment.created_at}${
-              comment.resolved ? " (Resolved)" : ""
-            }`,
-          ];
+        const commentFormatter = async (comment: GitLabComment) => {
+          const commentLabel = comment.body.includes("```suggestion") ? 'Code Suggestion' : 'Comment';
+          let result = `#### ${commentLabel}\nauthor: "${comment.author.name}"\ndate: "${comment.created_at}"\nresolved: ${
+              comment.resolved ? "Yes" : "No"
+            }`;
   
           if (comment.position?.new_line) {
-            commentParts.push(
-              `line: ${comment.position.new_line}\ncommit: ${comment.position.head_sha}`
-            );
+            result += `\nline: ${comment.position.new_line}`;
+    
+            if (comment.position.head_sha) {
+              const sourceLines = await subprocess(`git show ${comment.position.head_sha}:${comment.position.new_path}`).then(result => result.split("\n")).catch(ex => []);
+
+              const line = comment.position.new_line <= sourceLines.length ? sourceLines[comment.position.new_line - 1] : null;
+
+              if (line) {
+                result += `\nsource: \`${line}\``;
+              }
+            }
           }
   
-          commentParts.push(comment.body);
+          result += `\n\n${comment.body}`;
   
-          return commentParts.join("\n\n");
+          return result;
         };
   
         for (const [filename, locationComments] of Object.entries(locations)) {
           if (filename !== "general") {
-            parts.push(`## File ${filename}`);
+            parts.push(`### File ${filename}`);
             locationComments.sort(
               (a, b) => a.position!.new_line - b.position!.new_line
             );
           } else {
-            parts.push("## Comments");
+            parts.push("### General");
           }
   
-          parts.push(...locationComments.map(commentFormatter));
+          const commentSections = await Promise.all(locationComments.map(commentFormatter));
+          parts.push(...commentSections);
         }
 
 
@@ -226,16 +238,28 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
       );
       }
   
-    } catch(ex) {
-      if(ex instanceof AxiosError) {
+    } catch (ex) {
+      let content = `# GitLab Merge Request\n\nError getting merge request. `;
+      if (ex instanceof AxiosError) {
         if (ex.response) {
-          throw ex.response?.data ?? new Error(`GitLab error ${ex.response.status}: ${ex.response.statusText}`);
+          const errorMessage = ex.response?.data ? ex.response.data.message ?? JSON.stringify(ex.response?.data) : `${ex.response.status}: ${ex.response.statusText}`;
+            content += `GitLab Error: ${errorMessage}`;
         } else {
-          throw new Error(`GitLab Request Error ${ex.request}`);
+          content += `GitLab Request Error ${ex.request}`;
         }
+      } else {
+        // @ts-ignore
+        content += `Unknown error: ${ex.message ?? JSON.stringify(ex)}`;
       }
 
-      throw ex;
+
+      result.push(
+        {
+          name: `GitLab Merge Request`,
+          content,
+          description: `Error getting the Merge Request for this branch.`,
+        },
+      );
     }
 
     return result;
