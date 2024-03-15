@@ -4,7 +4,6 @@ import {
   ClockIcon,
   XCircleIcon,
 } from "@heroicons/react/24/solid";
-import { getChangedFiles } from "core/review/parseDiff";
 import { ReviewResult } from "core/review/review";
 import { getBasename } from "core/util";
 import { useEffect, useState } from "react";
@@ -13,18 +12,22 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { WebviewIde } from "../util/webviewIde";
+import { ideRequest } from "../util/ide";
 
 const FileHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
-  padding: 0px;
+  padding: 5px;
   padding-left: 10px;
   padding-right: 10px;
   border-top: 0.5px solid #888;
   border-bottom: 0.5px solid #888;
   cursor: pointer;
+
+  &:hover {
+    background-color: #8883;
+  }
 `;
 
 interface FileHeaderProps {
@@ -40,11 +43,7 @@ function FileResult(props: FileHeaderProps) {
         {open ? (
           <ChevronDownIcon width="1.2em" height="1.2em" />
         ) : (
-          <ChevronRightIcon
-            width="1.2em"
-            height="1.2em"
-            onClick={() => setOpen(!open)}
-          />
+          <ChevronRightIcon width="1.2em" height="1.2em" />
         )}
 
         {props.result.status === "pending" ? (
@@ -55,7 +54,7 @@ function FileResult(props: FileHeaderProps) {
           <XCircleIcon width="1.2em" height="1.2em" color="red" />
         )}
 
-        <p> {getBasename(props.result.filepath, 2)} </p>
+        {getBasename(props.result.filepath, 2)}
       </FileHeader>
       {open && <p className="px-4"> {props.result.message} </p>}
     </div>
@@ -70,16 +69,8 @@ function Review() {
   const [reviewResults, setReviewResults] = useState<ReviewResult[]>([]);
 
   useEffect(() => {
-    const ide = new WebviewIde();
-    ide.getDiff().then((diff) => {
-      const changedFiles = getChangedFiles(diff);
-      setReviewResults(
-        changedFiles.map((filepath) => ({
-          filepath,
-          message: "Pending",
-          status: "pending",
-        })),
-      );
+    ideRequest("review/getResults", undefined).then((results) => {
+      setReviewResults(results);
     });
   }, []);
 

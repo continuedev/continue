@@ -224,3 +224,8 @@ export function getContinueDotEnv(): { [key: string]: string } {
 export function getCoreLogsPath(): string {
   return path.join(getContinueGlobalPath(), "core.log");
 }
+
+export function getReviewResultsFilepath(): string {
+  const filepath = path.join(getIndexFolderPath(), ".reviewResults.json");
+  return filepath;
+}

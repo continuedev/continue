@@ -146,6 +146,9 @@ export class VsCodeExtension {
       review.onReviewUpdate((result) =>
         this.webviewProtocol.request("review/update", [result]),
       );
+      this.webviewProtocol.on("review/getResults", (msg) => {
+        return review.currentResults;
+      });
     });
 
     // Commands

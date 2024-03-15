@@ -1,8 +1,8 @@
-import crypto from "crypto";
 import * as fs from "fs";
 import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { IndexTag, IndexingProgressUpdate } from "..";
+import { calculateHash } from "../util";
 import { getIndexSqlitePath } from "../util/paths";
 import {
   CodebaseIndex,
@@ -242,12 +242,6 @@ async function getTagsFromGlobalCache(
   );
   const rows = await stmt.all(cacheKey, artifactId);
   return rows;
-}
-
-function calculateHash(fileContents: string): string {
-  const hash = crypto.createHash("sha256");
-  hash.update(fileContents);
-  return hash.digest("hex");
 }
 
 export async function getComputeDeleteAddRemove(

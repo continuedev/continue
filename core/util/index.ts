@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import Handlebars from "handlebars";
 import { ChatMessage } from "..";
 
@@ -189,4 +190,10 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
 export function copyOf(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   return JSON.parse(JSON.stringify(obj));
+}
+
+export function calculateHash(fileContents: string): string {
+  const hash = crypto.createHash("sha256");
+  hash.update(fileContents);
+  return hash.digest("hex");
 }

@@ -10,6 +10,7 @@ import {
   SerializedContinueConfig,
   SessionInfo,
 } from ".";
+import { ReviewResult } from "./review/review";
 import { IdeProtocol } from "./web/webviewProtocol";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
@@ -98,6 +99,7 @@ export type Protocol = {
     },
     ProtocolGeneratorType<MessageContent>,
   ];
+  "review/getResults": [undefined, ReviewResult[]];
 };
 
 export interface IdeSettings {

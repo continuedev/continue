@@ -1,4 +1,7 @@
+import fs from "fs";
 import { CodeReviewOptions, IDE } from "..";
+import { calculateHash } from "../util";
+import { getReviewResultsFilepath } from "../util/paths";
 import { getChangedFiles, getDiffPerFile } from "./parseDiff";
 
 const initialWait = 5_000;
@@ -8,6 +11,7 @@ export interface ReviewResult {
   status: "good" | "bad" | "pending";
   filepath: string;
   message: string;
+  fileHash: string;
 }
 
 export class CodeReview {
@@ -15,10 +19,32 @@ export class CodeReview {
     private readonly options: CodeReviewOptions | undefined,
     private readonly ide: IDE,
   ) {
-    // On startup, review all files that are currently changed
+    // On startup, compare saved results and current diff
+    const resultsPath = getReviewResultsFilepath();
+    if (fs.existsSync(resultsPath)) {
+      try {
+        const savedResults = JSON.parse(
+          fs.readFileSync(getReviewResultsFilepath(), "utf8"),
+        );
+        this._currentResultsPerFile = savedResults;
+      } catch (e) {
+        console.error("Failed to parse saved results", e);
+      }
+    }
     ide.getDiff().then((diff) => {
       const filesChanged = getChangedFiles(diff);
-      filesChanged.forEach((filePath) => this.runReview(filePath));
+      filesChanged.forEach(async (filepath) => {
+        // If the existing result is from the same file hash, don't repeat
+        const existingResult = this._currentResultsPerFile[filepath];
+        if (existingResult) {
+          const fileContents = await ide.readFile(filepath);
+          const newHash = calculateHash(fileContents);
+          if (newHash === existingResult.fileHash) {
+            return;
+          }
+        }
+        this.runReview(filepath);
+      });
     });
   }
 
@@ -66,9 +92,20 @@ export class CodeReview {
     this._lastWaitForFile.set(filepath, nextWait);
   }
 
+  private _currentResultsPerFile: { [filepath: string]: ReviewResult } = {};
+  get currentResults(): ReviewResult[] {
+    return Object.values(this._currentResultsPerFile);
+  }
+
   private async runReview(filepath: string) {
     const reviewResult = await this.reviewFile(filepath);
     this._callbacks.forEach((cb) => cb(reviewResult));
+    this._currentResultsPerFile[filepath] = reviewResult;
+
+    // Persist the review results
+    const resultsFilepath = getReviewResultsFilepath();
+    const results = JSON.stringify(this._currentResultsPerFile, null, 2);
+    fs.writeFileSync(resultsFilepath, results);
   }
 
   private _callbacks: ((review: ReviewResult) => void)[] = [];
@@ -92,10 +129,13 @@ export class CodeReview {
     filepath: string,
     diff: string,
   ): Promise<ReviewResult> {
+    const contents = await this.ide.readFile(filepath);
+    const fileHash = calculateHash(contents);
     return Promise.resolve({
       filepath,
       message: "Looks good",
       status: "good",
+      fileHash,
     });
   }
 }
