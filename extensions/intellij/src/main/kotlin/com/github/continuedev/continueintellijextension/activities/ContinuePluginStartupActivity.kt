@@ -5,6 +5,7 @@ import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.services.SettingsListener
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.KeyboardShortcut
 import com.intellij.openapi.application.ApplicationManager
@@ -173,6 +174,14 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
             continuePluginService.ideProtocolClient = ideProtocolClient
 
+
+
+            ApplicationManager.getApplication().messageBus.connect().subscribe(SettingsListener.TOPIC, object : SettingsListener {
+                override fun settingsUpdated(settings: ContinueExtensionSettings.ContinueState) {
+                    continuePluginService.coreMessenger?.request("config/ideSettingsUpdate", settings, null) { _ -> }
+                }
+            })
+
             GlobalScope.async(Dispatchers.IO) {
                 val listener =
                         ContinuePluginSelectionListener(
@@ -223,6 +232,8 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 }
                 val target = "$os-$arch"
 
+                println("Identified OS: $os, Arch: $arch")
+
                 val corePath = Paths.get(pluginPath.toString(), "core").toString()
                 val targetPath = Paths.get(corePath, target).toString()
                 val continueCorePath = Paths.get(targetPath, "pkg" + (if (os == "win32") ".exe" else "")).toString()
@@ -238,7 +249,10 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                     Files.copy(nodeSqlite3Path, coreNodeSqlite3Path)
                 }
 
-                val coreMessenger = CoreMessenger(continueCorePath, ideProtocolClient);
+                // esbuild needs permissions
+                val esbuildPath = Paths.get(targetPath, "esbuild"+ (if (os == "win32") ".exe" else "")).toString()
+
+                val coreMessenger = CoreMessenger(esbuildPath, continueCorePath, ideProtocolClient);
                 continuePluginService.coreMessenger = coreMessenger
             }
         }

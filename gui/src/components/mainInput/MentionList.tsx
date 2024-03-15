@@ -5,6 +5,7 @@ import {
   BeakerIcon,
   BookOpenIcon,
   ChevronDoubleRightIcon,
+  CodeBracketIcon,
   Cog6ToothIcon,
   CommandLineIcon,
   ExclamationCircleIcon,
@@ -47,6 +48,7 @@ import { ComboBoxItem } from "./types";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
+  code: CodeBracketIcon,
   terminal: CommandLineIcon,
   diff: PlusIcon,
   search: MagnifyingGlassIcon,
@@ -163,7 +165,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
   const [subMenuTitle, setSubMenuTitle] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [querySubmenuItem, setQuerySubmenuItem] = useState<
     ComboBoxItem | undefined
@@ -173,7 +175,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
 
   useEffect(() => {
     const items = [...props.items];
-    if (subMenuTitle === "Search documentation") {
+    if (subMenuTitle === "Type to search docs") {
       items.push({
         title: "Add Docs",
         type: "action",
@@ -186,7 +188,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
           const text = tr.doc.textBetween(0, tr.selection.from);
           const start = text.lastIndexOf("@");
           props.editor.view.dispatch(
-            tr.delete(start, tr.selection.from).scrollIntoView()
+            tr.delete(start, tr.selection.from).scrollIntoView(),
           );
         },
         description: "Add a new documentation source",
@@ -281,6 +283,10 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     },
   }));
 
+  const showFileIconForItem = (item: ComboBoxItem) => {
+    return ["file", "code"].includes(item.type);
+  };
+
   return (
     <ItemsDiv>
       {querySubmenuItem ? (
@@ -322,14 +328,14 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
               >
                 <span className="flex justify-between w-full items-center">
                   <div className="flex items-center justify-center">
-                    {item.type === "file" && (
+                    {showFileIconForItem(item) && (
                       <FileIcon
                         height="20px"
                         width="20px"
-                        filename={item.title}
+                        filename={item.description}
                       ></FileIcon>
                     )}
-                    {item.type !== "file" && (
+                    {!showFileIconForItem(item) && (
                       <>
                         <DropdownIcon item={item} className="mr-2" />
                       </>

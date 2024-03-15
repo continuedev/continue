@@ -6,13 +6,14 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../..";
+import configs from "../../indexing/docs/preIndexedDocs";
 import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider";
 
 class DocsContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "docs",
     displayTitle: "Docs",
-    description: "Search documentation",
+    description: "Type to search docs",
     type: "submenu",
   };
 
@@ -29,9 +30,8 @@ class DocsContextProvider extends BaseContextProvider {
       query,
       vector,
       this.options?.nRetrieve || 15,
+      embeddingsProvider.id,
     );
-
-    console.log(chunks);
 
     return [
       ...chunks
@@ -45,7 +45,7 @@ class DocsContextProvider extends BaseContextProvider {
                 .slice(1)
                 .join("/")
             : chunk.otherMetadata?.title || chunk.filepath,
-          description: new URL(chunk.filepath, query).toString(),
+          description: chunk.filepath, // new URL(chunk.filepath, query).toString(),
           content: chunk.content,
         }))
         .reverse(),
@@ -53,7 +53,7 @@ class DocsContextProvider extends BaseContextProvider {
         name: "Instructions",
         description: "Instructions",
         content:
-          "Use the above documentation to answer the following question. You should not reference anything outside of what is shown, unless it is a commonly known concept. Reference URLs whenever possible. If there isn't enough information to answer the question, suggest where the user might look to learn more.",
+          "Use the above documentation to answer the following question. You should not reference anything outside of what is shown, unless it is a commonly known concept. Reference URLs whenever possible using markdown formatting. If there isn't enough information to answer the question, suggest where the user might look to learn more.",
       },
     ];
   }
@@ -63,11 +63,25 @@ class DocsContextProvider extends BaseContextProvider {
   ): Promise<ContextSubmenuItem[]> {
     const { listDocs } = await import("../../indexing/docs/db");
     const docs = await listDocs();
-    return docs.map((doc) => ({
+    const submenuItems = docs.map((doc) => ({
       title: doc.title,
       description: new URL(doc.baseUrl).hostname,
       id: doc.baseUrl,
     }));
+
+    submenuItems.push(
+      ...configs
+        // After it's actually downloaded, we don't want to show twice
+        .filter(
+          (config) => !submenuItems.some((item) => item.id === config.startUrl),
+        )
+        .map((config) => ({
+          title: config.title,
+          description: new URL(config.startUrl).hostname,
+          id: config.startUrl,
+        })),
+    );
+    return submenuItems;
   }
 }
 

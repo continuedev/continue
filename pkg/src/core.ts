@@ -3,7 +3,7 @@ import { ConfigHandler } from "core/config/handler";
 import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { CodebaseIndexer } from "core/indexing/indexCodebase";
+import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { logDevData } from "core/util/devdata";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
@@ -32,8 +32,19 @@ export class Core {
   constructor(messenger: IpcMessenger, ide: IDE) {
     this.messenger = messenger;
     this.ide = ide;
-    this.configHandler = new ConfigHandler(this.ide);
-    this.codebaseIndexer = new CodebaseIndexer(this.configHandler, this.ide);
+
+    const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
+    this.configHandler = new ConfigHandler(
+      this.ide,
+      ideSettingsPromise,
+      (text: string) => {},
+      () => {},
+    );
+    this.codebaseIndexer = new CodebaseIndexer(
+      this.configHandler,
+      this.ide,
+      new PauseToken(false),
+    );
 
     const on = this.messenger.on.bind(this.messenger);
 
@@ -87,13 +98,16 @@ export class Core {
       this.configHandler.reloadConfig();
       return this.configHandler.getSerializedConfig();
     });
+    on("config/ideSettingsUpdate", (msg) => {
+      this.configHandler.updateIdeSettings(msg.data);
+    });
 
     // Context providers
     on("context/addDocs", async (msg) => {
       for await (const _ of indexDocs(
         msg.data.title,
         new URL(msg.data.url),
-        new TransformersJsEmbeddingsProvider()
+        new TransformersJsEmbeddingsProvider(),
       )) {
       }
     });
@@ -108,7 +122,7 @@ export class Core {
       const config = await this.config();
       const llm = await this.getSelectedModel();
       const provider = config.contextProviders?.find(
-        (provider) => provider.description.title === msg.data.name
+        (provider) => provider.description.title === msg.data.name,
       );
       if (!provider) return [];
 
@@ -136,12 +150,12 @@ export class Core {
     async function* llmStreamChat(
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
-      msg: Message<Protocol["llm/streamChat"][0]>
+      msg: Message<Protocol["llm/streamChat"][0]>,
     ) {
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamChat(
         msg.data.messages,
-        msg.data.completionOptions
+        msg.data.completionOptions,
       );
       let next = await gen.next();
       while (!next.done) {
@@ -158,19 +172,19 @@ export class Core {
     }
 
     on("llm/streamChat", (msg) =>
-      llmStreamChat(this.configHandler, this.abortedMessageIds, msg)
+      llmStreamChat(this.configHandler, this.abortedMessageIds, msg),
     );
 
     async function* llmStreamComplete(
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
 
-      msg: Message<Protocol["llm/streamComplete"][0]>
+      msg: Message<Protocol["llm/streamComplete"][0]>,
     ) {
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamComplete(
         msg.data.prompt,
-        msg.data.completionOptions
+        msg.data.completionOptions,
       );
       let next = await gen.next();
       while (!next.done) {
@@ -187,13 +201,13 @@ export class Core {
     }
 
     on("llm/streamComplete", (msg) =>
-      llmStreamComplete(this.configHandler, this.abortedMessageIds, msg)
+      llmStreamComplete(this.configHandler, this.abortedMessageIds, msg),
     );
 
     async function* runNodeJsSlashCommand(
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
-      msg: Message<Protocol["command/run"][0]>
+      msg: Message<Protocol["command/run"][0]>,
     ) {
       const {
         input,
@@ -209,7 +223,7 @@ export class Core {
       const config = await configHandler.loadConfig();
       const llm = await configHandler.llmFromTitle(modelTitle);
       const slashCommand = config.slashCommands?.find(
-        (sc) => sc.name === slashCommandName
+        (sc) => sc.name === slashCommandName,
       );
       if (!slashCommand) {
         throw new Error(`Unknown slash command ${slashCommandName}`);
@@ -239,13 +253,13 @@ export class Core {
       yield { done: true, content: "" };
     }
     on("command/run", (msg) =>
-      runNodeJsSlashCommand(this.configHandler, this.abortedMessageIds, msg)
+      runNodeJsSlashCommand(this.configHandler, this.abortedMessageIds, msg),
     );
   }
 
   public invoke<T extends keyof Protocol>(
     method: keyof Protocol,
-    data: Protocol[T][0]
+    data: Protocol[T][0],
   ): Protocol[T][1] {
     const response = this.messenger.invoke(method, data);
     return response;

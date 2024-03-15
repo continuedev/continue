@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.constants.*
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
@@ -8,6 +9,7 @@ import com.google.gson.reflect.TypeToken
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
@@ -93,7 +95,7 @@ class AsyncFileSaveListener : AsyncFileListener {
                 return object : AsyncFileListener.ChangeApplier {
                     override fun afterVfsChange() {
                         val config = readConfigJson()
-                        ideProtocolClient.configUpdate(config)
+                        ideProtocolClient.configUpdate()
                     }
                 }
             }
@@ -146,7 +148,15 @@ class IdeProtocolClient (
                     "uniqueId" -> respond(
                         mapOf("uniqueId" to uniqueId())
                     )
-
+                    "getIdeSettings" -> {
+                        val settings =
+                                ServiceManager.getService(ContinueExtensionSettings::class.java)
+                        respond(mapOf(
+                            "remoteConfigServerUrl" to settings.continueState.remoteConfigServerUrl,
+                            "remoteConfigSyncPeriod" to settings.continueState.remoteConfigSyncPeriod,
+                            "userToken" to settings.continueState.userToken
+                        ))
+                    }
                     "getIdeInfo" -> {
                         val applicationInfo = ApplicationInfo.getInstance()
                         val ideName: String = applicationInfo.fullApplicationName
@@ -389,7 +399,7 @@ class IdeProtocolClient (
                             it
                         }
 
-                        configUpdate(updatedConfig)
+                        configUpdate()
                         setFileOpen(getConfigJsonPath())
                     }
                     "deleteModel" -> {
@@ -401,7 +411,7 @@ class IdeProtocolClient (
                             config["models"] = models
                             config
                         }
-                        configUpdate(configJson)
+                        configUpdate()
                     }
                     "addOpenAIKey" -> {
                         val updatedConfig = editConfigJson { config ->
@@ -420,7 +430,7 @@ class IdeProtocolClient (
                             config["models"] = models
                             config
                         }
-                        configUpdate(updatedConfig)
+                        configUpdate()
                     }
 
 
@@ -435,9 +445,8 @@ class IdeProtocolClient (
         }
     }
 
-    fun configUpdate(config: Map<String, Any>) {
+    fun configUpdate() {
         continuePluginService.coreMessenger?.request("config/reload", null, null) { _ -> }
-        continuePluginService.sendToWebview("configUpdate", config)
     }
 
     private fun editConfigJson(callback: (config: MutableMap<String, Any>) -> Map<String, Any>): Map<String, Any> {

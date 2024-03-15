@@ -287,11 +287,30 @@ function codeLlama70bTemplateMessages(msgs: ChatMessage[]): string {
   return prompt;
 }
 
+/**
+ <start_of_turn>user
+ What is Cramer's Rule?<end_of_turn>
+ <start_of_turn>model
+ */
+
+function gemmaTemplateMessage(msgs: ChatMessage[]): string {
+  let prompt = "";
+  for (const msg of msgs) {
+    prompt += `<start_of_turn>${
+      msg.role === "assistant" ? "model" : "user"
+    }\n${stripImages(msg.content).trim()}<end_of_turn>\n`;
+  }
+
+  prompt += "<start_of_turn>model\n";
+  return prompt;
+}
+
 export {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
   deepseekTemplateMessages,
+  gemmaTemplateMessage,
   llama2TemplateMessages,
   llavaTemplateMessages,
   neuralChatTemplateMessages,

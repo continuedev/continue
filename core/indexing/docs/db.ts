@@ -3,6 +3,9 @@ import sqlite3 from "sqlite3";
 import { Chunk } from "../..";
 import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths";
 
+import { downloadPreIndexedDocs } from "./preIndexed";
+import { default as configs } from "./preIndexedDocs";
+
 const DOCS_TABLE_NAME = "docs";
 
 interface LanceDbDocsRow {
@@ -17,27 +20,70 @@ interface LanceDbDocsRow {
   [key: string]: any;
 }
 
-async function createDocsTable(db: Database<sqlite3.Database>) {
-  db.exec(`CREATE TABLE IF NOT EXISTS docs (
+let dbDocs:Database;
+
+async function getDBDocs() {
+  if (!dbDocs) {
+    dbDocs = await open({
+      filename: getDocsSqlitePath(),
+      driver: sqlite3.Database,
+    });
+    
+    dbDocs.exec(`CREATE TABLE IF NOT EXISTS docs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title STRING NOT NULL,
         baseUrl STRING NOT NULL UNIQUE
     )`);
+  }
+
+  return dbDocs;
 }
 
 export async function retrieveDocs(
   baseUrl: string,
   vector: number[],
   nRetrieve: number,
+  embeddingsProviderId: string,
+  nested: boolean = false,
 ): Promise<Chunk[]> {
   const lancedb = await import("vectordb");
+  const db = await getDBDocs();
   const lance = await lancedb.connect(getLanceDbPath());
+
+  const downloadDocs = async () => {
+    const config = configs.find((config) => config.startUrl === baseUrl);
+    if (config) {
+      await downloadPreIndexedDocs(embeddingsProviderId, config.title);
+      return await retrieveDocs(
+        baseUrl,
+        vector,
+        nRetrieve,
+        embeddingsProviderId,
+        true,
+      );
+    }
+    return undefined;
+  };
+
+  const tableNames = await lance.tableNames();
+  if (!tableNames.includes(DOCS_TABLE_NAME)) {
+    const downloaded = await downloadDocs();
+    if (downloaded) return downloaded;
+  }
+
   const table = await lance.openTable(DOCS_TABLE_NAME);
-  const docs: LanceDbDocsRow[] = await table
+  let docs: LanceDbDocsRow[] = await table
     .search(vector)
     .limit(nRetrieve)
     .where(`baseUrl = '${baseUrl}'`)
     .execute();
+
+  docs = docs.filter((doc) => doc.baseUrl === baseUrl);
+
+  if ((!docs || docs.length === 0) && !nested) {
+    const downloaded = await downloadDocs();
+    if (downloaded) return downloaded;
+  }
 
   return docs.map((doc) => ({
     digest: doc.path,
@@ -79,11 +125,7 @@ export async function addDocs(
   }
 
   // Only after add it to SQLite
-  const db = await open({
-    filename: getDocsSqlitePath(),
-    driver: sqlite3.Database,
-  });
-  await createDocsTable(db);
+  const db = await getDBDocs();
   await db.run(
     `INSERT INTO docs (title, baseUrl) VALUES (?, ?)`,
     title,
@@ -94,11 +136,7 @@ export async function addDocs(
 export async function listDocs(): Promise<
   { title: string; baseUrl: string }[]
 > {
-  const db = await open({
-    filename: getDocsSqlitePath(),
-    driver: sqlite3.Database,
-  });
-  await createDocsTable(db);
-  const docs = await db.all(`SELECT title, baseUrl FROM docs`);
+  const db = await getDBDocs();
+  const docs = db.all(`SELECT title, baseUrl FROM docs`);
   return docs;
 }

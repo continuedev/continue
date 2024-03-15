@@ -91,14 +91,15 @@ The last line is incomplete, and you should provide the rest of that line. If th
 export function getTemplateForModel(model: string): AutocompleteTemplate {
   const lowerCaseModel = model.toLowerCase();
 
-  if (lowerCaseModel.includes("starcoder2")) {
-    return starcoder2FimTemplate;
-  }
+  // if (lowerCaseModel.includes("starcoder2")) {
+  //   return starcoder2FimTemplate;
+  // }
 
   if (
     lowerCaseModel.includes("starcoder") ||
     lowerCaseModel.includes("star-coder") ||
     lowerCaseModel.includes("starchat") ||
+    lowerCaseModel.includes("octocoder") ||
     lowerCaseModel.includes("stable")
   ) {
     return stableCodeFimTemplate;

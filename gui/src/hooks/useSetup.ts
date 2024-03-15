@@ -43,7 +43,7 @@ function useSetup(dispatch: Dispatch<any>) {
   const { streamResponse } = useChatHandler(dispatch);
 
   const defaultModelTitle = useSelector(
-    (store: RootState) => store.state.defaultModelTitle
+    (store: RootState) => store.state.defaultModelTitle,
   );
 
   // IDE event listeners
@@ -70,7 +70,7 @@ function useSetup(dispatch: Dispatch<any>) {
       addContextItemsAtIndex({
         index: data.historyIndex,
         contextItems: [data.item],
-      })
+      }),
     );
   });
 
@@ -79,7 +79,7 @@ function useSetup(dispatch: Dispatch<any>) {
     async () => {
       return defaultModelTitle;
     },
-    [defaultModelTitle]
+    [defaultModelTitle],
   );
 
   // Save theme colors to local storage for immediate loading in JetBrains
@@ -89,7 +89,7 @@ function useSetup(dispatch: Dispatch<any>) {
         if (document.body.style.getPropertyValue(colorVar)) {
           localStorage.setItem(
             colorVar,
-            document.body.style.getPropertyValue(colorVar)
+            document.body.style.getPropertyValue(colorVar),
           );
         }
       }

@@ -11,7 +11,7 @@ import { streamResponse } from "../stream";
 class Ollama extends BaseLLM {
   static providerName: ModelProvider = "ollama";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://localhost:11434",
+    apiBase: "http://localhost:11434/",
     model: "codellama-7b",
   };
 
@@ -21,7 +21,7 @@ class Ollama extends BaseLLM {
     if (options.model === "AUTODETECT") {
       return;
     }
-    this.fetch(`${this.apiBase}/api/show`, {
+    this.fetch(new URL("api/show", this.apiBase), {
       method: "POST",
       headers: {},
       body: JSON.stringify({ name: this._getModel() }),
@@ -90,7 +90,7 @@ class Ollama extends BaseLLM {
         "starcoder-1b": "starcoder:1b",
         "starcoder-3b": "starcoder:3b",
         "stable-code-3b": "stable-code:3b",
-      }[this.model] || this.model
+      }[this.model] ?? this.model
     );
   }
 
@@ -115,7 +115,7 @@ class Ollama extends BaseLLM {
     const finalOptions: any = {
       model: this._getModel(),
       raw: true,
-      keep_alive: 60 * 30, // 30 minutes
+      keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       options: {
         temperature: options.temperature,
         top_p: options.topP,
@@ -141,7 +141,7 @@ class Ollama extends BaseLLM {
     prompt: string,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    const response = await this.fetch(`${this.apiBase}/api/generate`, {
+    const response = await this.fetch(new URL("api/generate", this.apiBase), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -180,7 +180,7 @@ class Ollama extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const response = await this.fetch(`${this.apiBase}/api/chat`, {
+    const response = await this.fetch(new URL("api/chat", this.apiBase), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -218,9 +218,13 @@ class Ollama extends BaseLLM {
   }
 
   async listModels(): Promise<string[]> {
-    const response = await this.fetch(`${this.apiBase}/api/tags`, {
-      method: "GET",
-    });
+    const response = await this.fetch(
+      // localhost was causing fetch failed in pkg binary only for this Ollama endpoint
+      new URL("api/tags", this.apiBase?.replace("localhost", "127.0.0.1")),
+      {
+        method: "GET",
+      },
+    );
     const data = await response.json();
     return data.models.map((model: any) => model.name);
   }

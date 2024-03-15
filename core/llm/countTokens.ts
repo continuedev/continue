@@ -44,7 +44,7 @@ function countTokens(
     return content.reduce((acc, part) => {
       return acc + part.type === "imageUrl"
         ? countImageTokens(part)
-        : encoding.encode(part.text || "", "all", []).length;
+        : encoding.encode(part.text ?? "", "all", []).length;
     }, 0);
   } else {
     return encoding.encode(content, "all", []).length;
@@ -205,19 +205,15 @@ function pruneChatHistory(
   for (let i = 0; i < longerThanOneThird.length; i++) {
     // Prune line-by-line from the top
     const message = longerThanOneThird[i];
-    let lines = stripImages(message.content).split("\n");
-    let tokensRemoved = 0;
-    while (
-      tokensRemoved < distanceFromThird[i] &&
-      totalTokens > contextLength &&
-      lines.length > 0
-    ) {
-      const delta = countTokens("\n" + lines.shift()!, modelName);
-      tokensRemoved += delta;
-      totalTokens -= delta;
-    }
-
-    message.content = lines.join("\n");
+    let content = stripImages(message.content);
+    const deltaNeeded = totalTokens - contextLength;
+    const delta = Math.min(deltaNeeded, distanceFromThird[i]);
+    message.content = pruneStringFromTop(
+      modelName,
+      countTokens(message.content, modelName) - delta,
+      content,
+    );
+    totalTokens -= delta;
   }
 
   // 1. Replace beyond last 5 messages with summary

@@ -1,5 +1,6 @@
 import { BaseContextProvider } from "..";
 import { ContextProviderName } from "../..";
+import CodeContextProvider from "./CodeContextProvider";
 import CodebaseContextProvider from "./CodebaseContextProvider";
 import DatabaseContextProvider from "./DatabaseContextProvider";
 import DiffContextProvider from "./DiffContextProvider";
@@ -36,6 +37,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   JiraIssuesContextProvider,
   PostgresContextProvider,
   DatabaseContextProvider,
+  CodeContextProvider,
 ];
 
 export function contextProviderClassFromName(

@@ -16,7 +16,7 @@ if (args[2] === "--target") {
   // Copy config_schema.json to config.json in docs and intellij
   fs.copyFileSync(
     "config_schema.json",
-    path.join("..", "..", "docs", "static", "schemas", "config.json")
+    path.join("..", "..", "docs", "static", "schemas", "config.json"),
   );
   fs.copyFileSync(
     "config_schema.json",
@@ -26,8 +26,8 @@ if (args[2] === "--target") {
       "src",
       "main",
       "resources",
-      "config_schema.json"
-    )
+      "config_schema.json",
+    ),
   );
   // Modify and copy for .continuerc.json
   const schema = JSON.parse(fs.readFileSync("config_schema.json", "utf8"));
@@ -67,7 +67,7 @@ if (args[2] === "--target") {
     "src",
     "main",
     "resources",
-    "webview"
+    "webview",
   );
 
   const indexHtmlPath = path.join(intellijExtensionWebviewPath, "index.html");
@@ -80,7 +80,7 @@ if (args[2] === "--target") {
       if (error) {
         console.warn(
           "[error] Error copying React app build to Intellij extension: ",
-          error
+          error,
         );
         reject(error);
       }
@@ -98,7 +98,7 @@ if (args[2] === "--target") {
   // Copy over other misc. files
   fs.copyFileSync(
     "../extensions/vscode/gui/onigasm.wasm",
-    path.join(intellijExtensionWebviewPath, "onigasm.wasm")
+    path.join(intellijExtensionWebviewPath, "onigasm.wasm"),
   );
 
   console.log("[info] Copied gui build to Intellij extension");
@@ -166,19 +166,23 @@ if (args[2] === "--target") {
           reject(error);
         }
         resolve();
-      }
+      },
     );
   });
   if (target) {
     // If building for production, only need the binaries for current platform
-    if (!target.startsWith("darwin")) {
-      rimrafSync(path.join(__dirname, "../bin/napi-v3/darwin"));
-    }
-    if (!target.startsWith("linux")) {
-      rimrafSync(path.join(__dirname, "../bin/napi-v3/linux"));
-    }
-    if (!target.startsWith("win")) {
-      rimrafSync(path.join(__dirname, "../bin/napi-v3/win32"));
+    try {
+      if (!target.startsWith("darwin")) {
+        rimrafSync(path.join(__dirname, "../bin/napi-v3/darwin"));
+      }
+      if (!target.startsWith("linux")) {
+        rimrafSync(path.join(__dirname, "../bin/napi-v3/linux"));
+      }
+      if (!target.startsWith("win")) {
+        rimrafSync(path.join(__dirname, "../bin/napi-v3/win32"));
+      }
+    } catch (e) {
+      console.warn("[info] Error removing unused binaries", e);
     }
   }
   console.log("[info] Copied onnxruntime-node");
@@ -197,28 +201,28 @@ if (args[2] === "--target") {
         } else {
           resolve();
         }
-      }
+      },
     );
   });
 
   fs.copyFileSync(
     path.join(__dirname, "../../../core/vendor/tree-sitter.wasm"),
-    path.join(__dirname, "../out/tree-sitter.wasm")
+    path.join(__dirname, "../out/tree-sitter.wasm"),
   );
   console.log("[info] Copied tree-sitter wasms");
 
   // tree-sitter tag query files
-  ncp(
-    path.join(
-      __dirname,
-      "../../../core/node_modules/llm-code-highlighter/dist/tag-qry"
-    ),
-    path.join(__dirname, "../out/tag-qry"),
-    (error) => {
-      if (error)
-        console.warn("Error copying code-highlighter tag-qry files", error);
-    }
-  );
+  // ncp(
+  //   path.join(
+  //     __dirname,
+  //     "../../../core/node_modules/llm-code-highlighter/dist/tag-qry"
+  //   ),
+  //   path.join(__dirname, "../out/tag-qry"),
+  //   (error) => {
+  //     if (error)
+  //       console.warn("Error copying code-highlighter tag-qry files", error);
+  //   }
+  // );
 
   // textmate-syntaxes
   await new Promise((resolve, reject) => {
@@ -232,7 +236,7 @@ if (args[2] === "--target") {
         } else {
           resolve();
         }
-      }
+      },
     );
   });
 
@@ -271,7 +275,7 @@ if (args[2] === "--target") {
     rimrafSync("node_modules/@esbuild");
     fs.mkdirSync("node_modules/@esbuild", { recursive: true });
     execSync(
-      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`
+      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
     );
     execSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
@@ -290,7 +294,7 @@ if (args[2] === "--target") {
           "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
       }[target];
       execSync(
-        `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`
+        `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
       );
       execSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
       fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
@@ -308,18 +312,19 @@ if (args[2] === "--target") {
         } else {
           resolve();
         }
-      }
+      },
     );
   });
 
   // Copy node_modules for pre-built binaries
-  const NODE_MODULES_TO_COPY = ["esbuild", "@esbuild", "@lancedb"];
+  const NODE_MODULES_TO_COPY = ["esbuild", "@esbuild", "@lancedb", "jsdom"];
   fs.mkdirSync("out/node_modules", { recursive: true });
 
   await Promise.all(
     NODE_MODULES_TO_COPY.map(
       (mod) =>
-        new Promise((resolve, reject) =>
+        new Promise((resolve, reject) => {
+          fs.mkdirSync(`out/node_modules/${mod}`, { recursive: true });
           ncp(
             `node_modules/${mod}`,
             `out/node_modules/${mod}`,
@@ -330,10 +335,10 @@ if (args[2] === "--target") {
               } else {
                 resolve();
               }
-            }
-          )
-        )
-    )
+            },
+          );
+        }),
+    ),
   );
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
 })();

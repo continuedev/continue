@@ -54,6 +54,11 @@
           "title": "Number of threads",
           "description": "The number of threads used in the generation process. Only available for Ollama (this is the num_thread parameter)",
           "type": "integer"
+        },
+        "keepAlive": {
+          "title": "Ollama keep_alive",
+          "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",
+          "type": "integer"
         }
       }
     },
@@ -182,6 +187,7 @@
             "llama2",
             "alpaca",
             "zephyr",
+            "phi2",
             "phind",
             "anthropic",
             "chatml",
@@ -190,7 +196,9 @@
             "openchat",
             "xwin-coder",
             "neural-chat",
-            "codellama-70b"
+            "codellama-70b",
+            "llava",
+            "gemma"
           ],
           "type": "string"
         },
@@ -347,15 +355,22 @@
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "gpt-3.5-turbo",
-                  "gpt-3.5-turbo-16k",
-                  "gpt-4",
-                  "gpt-3.5-turbo-0613",
-                  "gpt-4-32k",
-                  "gpt-4-0125-preview",
-                  "gpt-4-turbo-preview",
-                  "AUTODETECT"
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gpt-3.5-turbo",
+                      "gpt-3.5-turbo-16k",
+                      "gpt-4",
+                      "gpt-3.5-turbo-0613",
+                      "gpt-4-32k",
+                      "gpt-4-0125-preview",
+                      "gpt-4-turbo-preview",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -411,6 +426,7 @@
                   "gemini-pro",
                   "gpt-4-vision-preview",
                   "codellama-70b",
+                  "mistral-8x7b",
                   "AUTODETECT"
                 ]
               }
@@ -1039,7 +1055,8 @@
                 "tree",
                 "highlights",
                 "outline",
-                "postgres"
+                "postgres",
+                "code"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1058,7 +1075,8 @@
                 "Include a repo map showing important code objects",
                 "Displays important snippets of code from the currently open files",
                 "Displays definition lines from the currently open files",
-                "References Postgres table schema and sample rows"
+                "References Postgres table schema and sample rows",
+                "Reference specific functions and classes from throughout your codebase"
               ],
               "type": "string"
             },
@@ -1253,6 +1271,10 @@
                   "issueQuery": {
                     "type": "string",
                     "description": "Customize the query used to find Jira issues"
+                  },
+                  "apiVersion": {
+                    "type": "integer",
+                    "markdownDescription": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property."
                   }
                 },
                 "required": ["domain", "email", "token"]
@@ -1387,12 +1409,13 @@
       "properties": {
         "allowAnonymousTelemetry": {
           "title": "Allow Anonymous Telemetry",
-          "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data.",
+          "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data. Learn more in [the docs](https://continue.dev/docs/telemetry).",
           "default": true,
           "type": "boolean"
         },
         "models": {
           "title": "Models",
+          "markdownDescription": "Learn about setting up models in [the documentation](https://continue.dev/docs/model-setup/overview).",
           "default": [
             {
               "title": "GPT-4 (trial)",
@@ -1431,7 +1454,7 @@
         },
         "slashCommands": {
           "title": "Slash Commands",
-          "description": "An array of slash commands that let you map custom Steps to a shortcut.",
+          "markdownDescription": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the [documentation](https://continue.dev/docs/customization/slash-commands).",
           "default": [],
           "type": "array",
           "items": {
@@ -1440,7 +1463,7 @@
         },
         "customCommands": {
           "title": "Custom Commands",
-          "description": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt.",
+          "markdownDescription": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt. Learn more in the [documentation](https://continue.dev/docs/customization/slash-commands#custom-commands-use-natural-language).",
           "default": [
             {
               "name": "test",
@@ -1455,7 +1478,7 @@
         },
         "contextProviders": {
           "title": "Context Providers",
-          "description": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in the documentation.",
+          "markdownDescription": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in [the documentation](https://continue.dev/docs/customization/context-providers).",
           "default": [],
           "type": "array",
           "items": {
@@ -1493,7 +1516,7 @@
         },
         "embeddingsProvider": {
           "title": "Embeddings Provider",
-          "description": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser.",
+          "markdownDescription": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options [here](https://continue.dev/docs/walkthroughs/codebase-embeddings#embeddings-providers).",
           "type": "object",
           "properties": {
             "provider": {
@@ -1539,6 +1562,7 @@
         "tabAutocompleteOptions": {
           "title": "TabAutocompleteOptions",
           "type": "object",
+          "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://continue.dev/docs/walkthroughs/tab-autocomplete#configuration-options).",
           "properties": {
             "useCopyBuffer": {
               "type": "boolean",

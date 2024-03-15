@@ -5,13 +5,13 @@ import { streamSse } from "../stream";
 class HuggingFaceTGI extends BaseLLM {
   static providerName: ModelProvider = "huggingface-tgi";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://localhost:8080",
+    apiBase: "http://localhost:8080/",
   };
 
   constructor(options: LLMOptions) {
     super(options);
 
-    this.fetch(`${this.apiBase}/info`, {
+    this.fetch(new URL("info", this.apiBase), {
       method: "GET",
     }).then(async (response) => {
       if (response.status !== 200) {
@@ -48,13 +48,16 @@ class HuggingFaceTGI extends BaseLLM {
   ): AsyncGenerator<string> {
     const args = this._convertArgs(options, prompt);
 
-    const response = await this.fetch(`${this.apiBase}/generate_stream`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await this.fetch(
+      new URL("generate_stream", this.apiBase),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ inputs: prompt, parameters: args }),
       },
-      body: JSON.stringify({ inputs: prompt, parameters: args }),
-    });
+    );
 
     for await (const value of streamSse(response)) {
       yield value.token.text;
