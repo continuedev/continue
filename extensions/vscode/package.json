@@ -138,7 +138,7 @@
       {
         "command": "continue.toggleCodeReview",
         "category": "Continue",
-        "title": "Toggle Code Review",
+        "title": "Code Review",
         "icon": "$(checklist)",
         "group": "Continue"
       },

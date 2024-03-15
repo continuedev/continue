@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { ideRequest } from "../util/ide";
@@ -56,7 +57,12 @@ function FileResult(props: FileHeaderProps) {
 
         {getBasename(props.result.filepath, 2)}
       </FileHeader>
-      {open && <p className="px-4"> {props.result.message} </p>}
+      {open && (
+        <StyledMarkdownPreview
+          showCodeBorder={true}
+          source={props.result.message}
+        ></StyledMarkdownPreview>
+      )}
     </div>
   );
 }
@@ -93,7 +99,7 @@ function Review() {
 
   return (
     <div>
-      <h1>Code Review</h1>
+      <h2>Code Review (beta)</h2>
 
       <div>
         {reviewResults.map((result, index) => {
