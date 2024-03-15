@@ -17,6 +17,7 @@ import ProblemsContextProvider from "./ProblemsContextProvider";
 import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import URLContextProvider from "./URLContextProvider";
+import GitLabMergeRequestContextProvider from "./GitLabMergeRequestContextProvider";
 
 const Providers: (typeof BaseContextProvider)[] = [
   DiffContextProvider,
@@ -32,6 +33,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   ProblemsContextProvider,
   FolderContextProvider,
   DocsContextProvider,
+  GitLabMergeRequestContextProvider,
   // CodeHighlightsContextProvider,
   // CodeOutlineContextProvider,
   JiraIssuesContextProvider,

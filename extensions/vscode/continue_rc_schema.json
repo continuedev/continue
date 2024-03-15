@@ -1395,6 +1395,39 @@
             "properties": {
               "name": {
                 "enum": [
+                  "gitlab-mr"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "description": "Your GitLab domain, will default to gitlab.com"
+                  },
+                  "token": {
+                    "type": "string",
+                    "description": "Your private access token."
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            },
+            "required": [
+              "params"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
                   "jira"
                 ]
               }

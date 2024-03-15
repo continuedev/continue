@@ -428,7 +428,8 @@ type ContextProviderName =
   | "postgres"
   | "database"
   | "code"
-  | "docs";
+  | "docs"
+  | "gitlab-mr";
 
 type TemplateType =
   | "llama2"
