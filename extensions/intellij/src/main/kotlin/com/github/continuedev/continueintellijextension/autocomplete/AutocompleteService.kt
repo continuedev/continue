@@ -1,14 +1,17 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
 import com.github.continuedev.continueintellijextension.`continue`.uuid
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.invokeLater
 import com.intellij.openapi.components.Service
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Editor
+import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
 
@@ -24,6 +27,12 @@ class AutocompleteService(private val project: Project) {
     var pendingCompletion: PendingCompletion? = null;
 
     fun triggerCompletion(editor: Editor) {
+        val settings =
+                ServiceManager.getService(ContinueExtensionSettings::class.java)
+        if (!settings.continueState.enableTabAutocomplete) {
+            return
+        }
+
         if (pendingCompletion != null) {
             clearCompletions(pendingCompletion!!.editor)
         }
@@ -59,7 +68,15 @@ class AutocompleteService(private val project: Project) {
     private fun renderCompletion(editor: Editor, offset: Int, text: String) {
         ApplicationManager.getApplication().invokeLater {
             WriteAction.run<Throwable> {
-                editor.inlayModel.addInlineElement(offset, true, ContinueCustomElementRenderer(editor, text))
+                val properties = InlayProperties()
+                properties.relatesToPrecedingText(true)
+                properties.disableSoftWrapping(true)
+
+                if (text.lines().size > 1) {
+                    editor.inlayModel.addBlockElement(offset, properties, ContinueMultilineCustomElementRenderer(editor, text))
+                } else {
+                    editor.inlayModel.addInlineElement(offset, properties, ContinueCustomElementRenderer(editor, text))
+                }
             }
         }
     }

@@ -7,6 +7,8 @@ import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.editor.impl.FontInfo
 import com.intellij.openapi.editor.markup.TextAttributes
+import com.intellij.ui.Gray
+import com.intellij.ui.JBColor
 import java.awt.Color
 import java.awt.Font
 import java.awt.Graphics
@@ -37,7 +39,8 @@ class ContinueCustomElementRenderer (
     }
 
     override fun paint(inlay: Inlay<*>, g: Graphics, targetRegion: Rectangle, textAttributes: TextAttributes) {
-        g.color = Color(128, 128, 128)
+        g.color = JBColor.GRAY
+        g.font = font
         g.drawString(this.text, targetRegion.x, targetRegion.y + offsetY())
     }
 }
