@@ -49,6 +49,17 @@ export class CodeReview {
         }
         this.runReview(filepath);
       });
+
+      // Remove existing results if the file isn't changed anymore
+      for (const filepath of Object.keys(this._currentResultsPerFile)) {
+        if (!filesChanged.includes(filepath)) {
+          delete this._currentResultsPerFile[filepath];
+        }
+      }
+      fs.writeFileSync(
+        getReviewResultsFilepath(),
+        JSON.stringify(this._currentResultsPerFile),
+      );
     });
   }
 
