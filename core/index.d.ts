@@ -444,7 +444,8 @@ type TemplateType =
   | "xwin-coder"
   | "neural-chat"
   | "codellama-70b"
-  | "llava";
+  | "llava"
+  | "gemma";
 
 type ModelProvider =
   | "openai"

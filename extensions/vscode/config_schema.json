@@ -187,6 +187,7 @@
             "llama2",
             "alpaca",
             "zephyr",
+            "phi2",
             "phind",
             "anthropic",
             "chatml",
@@ -195,7 +196,9 @@
             "openchat",
             "xwin-coder",
             "neural-chat",
-            "codellama-70b"
+            "codellama-70b",
+            "llava",
+            "gemma"
           ],
           "type": "string"
         },
