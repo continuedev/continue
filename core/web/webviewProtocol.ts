@@ -9,6 +9,7 @@ import {
 import { RangeInFileWithContents } from "../commands/util";
 
 import { Protocol } from "../protocol";
+import { ReviewResult } from "../review/review";
 
 export type IdeProtocol = {
   listWorkspaceContents: [undefined, string[]];
@@ -103,4 +104,6 @@ export type ReverseWebviewProtocol = {
   refreshSubmenuItems: [undefined, void];
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
+  "review/open": [undefined, void];
+  "review/update": [ReviewResult[], void];
 };

@@ -1607,6 +1607,15 @@
             }
           },
           "required": []
+        },
+        "reviewOptions": {
+          "type": "object",
+          "properties": {
+            "prompt": {
+              "type": "string"
+            }
+          },
+          "required": []
         }
       }
     }

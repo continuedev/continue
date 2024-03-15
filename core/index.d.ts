@@ -608,6 +608,10 @@ export interface TabAutocompleteOptions {
   useOtherFiles: boolean;
 }
 
+export interface CodeReviewOptions {
+  prompt: string;
+}
+
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
@@ -623,6 +627,7 @@ export interface SerializedContinueConfig {
   embeddingsProvider?: EmbeddingsProviderDescription;
   tabAutocompleteModel?: ModelDescription;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+  review?: CodeReviewOptions;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -661,6 +666,8 @@ export interface Config {
   tabAutocompleteModel?: CustomLLM | ModelDescription;
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+  /** Options for the code review feature */
+  review?: CodeReviewOptions;
 }
 
 export interface ContinueConfig {
@@ -676,6 +683,7 @@ export interface ContinueConfig {
   embeddingsProvider: EmbeddingsProvider;
   tabAutocompleteModel?: ILLM;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+  review?: CodeReviewOptions;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -689,4 +697,5 @@ export interface BrowserSerializedContinueConfig {
   disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider?: string;
+  review?: CodeReviewOptions;
 }

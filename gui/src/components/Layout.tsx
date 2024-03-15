@@ -172,6 +172,19 @@ const Layout = () => {
     [location, navigate],
   );
 
+  useWebviewListener(
+    "review/open",
+    async () => {
+      // Toggle the review page / main page
+      if (location.pathname === "/review") {
+        navigate("/");
+      } else {
+        navigate("/review");
+      }
+    },
+    [location, navigate],
+  );
+
   useWebviewListener("indexProgress", async (data) => {
     setIndexingProgress(data.progress);
     setIndexingTask(data.desc);

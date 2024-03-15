@@ -1,6 +1,7 @@
 import { ConfigHandler } from "core/config/handler";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { IdeSettings } from "core/protocol";
+import { CodeReview } from "core/review/review";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
@@ -134,6 +135,18 @@ export class VsCodeExtension {
         ),
       ),
     );
+
+    // Code review
+    this.configHandler.loadConfig().then((config) => {
+      const review = new CodeReview(config.review, this.ide);
+      vscode.workspace.onDidSaveTextDocument((event) => {
+        const filepath = event.fileName;
+        review.fileSaved(filepath);
+      });
+      review.onReviewUpdate((result) =>
+        this.webviewProtocol.request("review/update", [result]),
+      );
+    });
 
     // Commands
     registerAllCommands(

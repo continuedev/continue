@@ -1800,6 +1800,15 @@
           },
           "required": []
         },
+        "reviewOptions": {
+          "type": "object",
+          "properties": {
+            "prompt": {
+              "type": "string"
+            }
+          },
+          "required": []
+        },
         "mergeBehavior": {
           "type": "string",
           "enum": [

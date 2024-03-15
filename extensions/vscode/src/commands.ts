@@ -354,6 +354,9 @@ const commandsMap: (
   "continue.viewHistory": () => {
     sidebar.webviewProtocol?.request("viewHistory", undefined);
   },
+  "continue.toggleCodeReview": () => {
+    sidebar.webviewProtocol?.request("review/open", undefined);
+  },
   "continue.toggleFullScreen": () => {
     // Check if full screen is already open by checking open tabs
     const fullScreenTab = getFullScreenTab();

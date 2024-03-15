@@ -1,14 +1,26 @@
+import { CodeReviewOptions, IDE } from "..";
+import { getChangedFiles, getDiffPerFile } from "./parseDiff";
+
 const initialWait = 5_000;
 const maxWait = 60_000;
 
 export interface ReviewResult {
-  ok: boolean;
+  status: "good" | "bad" | "pending";
   filepath: string;
   message: string;
 }
 
-class CodeReview {
-  constructor(private readonly taskPrompt: string) {}
+export class CodeReview {
+  constructor(
+    private readonly options: CodeReviewOptions | undefined,
+    private readonly ide: IDE,
+  ) {
+    // On startup, review all files that are currently changed
+    ide.getDiff().then((diff) => {
+      const filesChanged = getChangedFiles(diff);
+      filesChanged.forEach((filePath) => this.runReview(filePath));
+    });
+  }
 
   private _lastWaitForFile = new Map<string, number>();
   private _timeoutForFile = new Map<string, NodeJS.Timeout>();
@@ -65,11 +77,25 @@ class CodeReview {
     this._callbacks.push(callback);
   }
 
-  private reviewFile(filepath: string): Promise<ReviewResult> {
+  private async reviewFile(filepath: string): Promise<ReviewResult> {
+    const fullDiff = await this.ide.getDiff();
+    const diffsPerFile = getDiffPerFile(fullDiff);
+    const diff = diffsPerFile[filepath];
+    if (diff === undefined) {
+      throw new Error(`No diff for ${filepath}.`);
+    }
+
+    return this.reviewDiff(filepath, diff);
+  }
+
+  private async reviewDiff(
+    filepath: string,
+    diff: string,
+  ): Promise<ReviewResult> {
     return Promise.resolve({
       filepath,
       message: "Looks good",
-      ok: true,
+      status: "good",
     });
   }
 }

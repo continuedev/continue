@@ -20,6 +20,7 @@ export type ProtocolGeneratorType<T> = AsyncGenerator<{
 export type Protocol = {
   // New
   "update/modelChange": [string, void];
+  "update/fileSave": [{ filepath: string }, void];
   // Special
   ping: [string, string];
   abort: [undefined, void];

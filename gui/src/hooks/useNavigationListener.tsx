@@ -27,11 +27,11 @@ export const useNavigationListener = () => {
               data,
               messageId: uuidv4(),
             },
-            "*"
+            "*",
           );
         }, 200);
       },
-      [navigate]
+      [navigate],
     );
   }
 
@@ -45,6 +45,19 @@ export const useNavigationListener = () => {
         navigate("/history");
       }
     },
-    [location, navigate]
+    [location, navigate],
+  );
+
+  useWebviewListener(
+    "review/open",
+    async () => {
+      // Toggle the review page / main page
+      if (location.pathname === "/review") {
+        navigate("/");
+      } else {
+        navigate("/review");
+      }
+    },
+    [location, navigate],
   );
 };

@@ -16,6 +16,7 @@ import SettingsPage from "./pages/settings";
 import { ContextSubmenuItem } from "core";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
+import Review from "./pages/review";
 
 const router = createMemoryRouter([
   {
@@ -30,6 +31,10 @@ const router = createMemoryRouter([
       {
         path: "/",
         element: <GUI />,
+      },
+      {
+        path: "/review",
+        element: <Review />,
       },
       {
         path: "/history",
@@ -70,7 +75,7 @@ const router = createMemoryRouter([
 export const SubmenuContextProvidersContext = createContext<{
   getSubmenuContextItems: (
     providerTitle: string | undefined,
-    query: string
+    query: string,
   ) => (ContextSubmenuItem & { providerTitle: string })[];
   addItem: (providerTitle: string, item: ContextSubmenuItem) => void;
 }>({
