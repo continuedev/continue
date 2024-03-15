@@ -1260,6 +1260,10 @@
                   "token": {
                     "type": "string",
                     "description": "Your private access token."
+                  },
+                  "filterComments": {
+                    "type": "boolean",
+                    "description": "If you have code selected, filters out comments that aren't related to the selection."
                   }
                 },
                 "required": ["token"]

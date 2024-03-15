@@ -151,6 +151,10 @@ You can specify the domain to communicate with by setting the `domain` parameter
 }
 ```
 
+#### Filtering Comments
+
+If you select some code to be edited, you can have the context provider filter out comments for other files. To enable this feature, set `filterComments` to `true`.
+
 ### Jira Issues
 
 Type '@jira' to reference the conversation in a Jira issue. Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens).

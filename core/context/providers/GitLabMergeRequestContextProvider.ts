@@ -186,6 +186,13 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
   
           locations[filename].push(comment);
         }
+
+        if (extras.selectedCode.length && this.options.filterComments) {
+          const toRemove = Object.keys(locations).filter(filename => !extras.selectedCode.find(selection => selection.filepath.endsWith(filename)) && filename !== "general");
+          for (const filepath of toRemove) {
+            delete locations[filepath];
+          }
+        }
   
         const commentFormatter = async (comment: GitLabComment) => {
           const commentLabel = comment.body.includes("```suggestion") ? 'Code Suggestion' : 'Comment';
