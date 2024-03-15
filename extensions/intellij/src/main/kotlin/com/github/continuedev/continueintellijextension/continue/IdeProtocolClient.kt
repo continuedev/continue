@@ -526,14 +526,17 @@ class IdeProtocolClient (
 
     fun readFile(filepath: String): String {
         try {
-            val virtualFile = LocalFileSystem.getInstance().findFileByPath(filepath)
-            if (virtualFile != null && FileDocumentManager.getInstance().isFileModified(virtualFile)) {
-                val document = FileDocumentManager.getInstance().getDocument(virtualFile)
-                if (document != null) {
-                    return document.text
+            val content = ApplicationManager.getApplication().runReadAction<String?> {
+                val virtualFile = LocalFileSystem.getInstance().findFileByPath(filepath)
+                if (virtualFile != null && FileDocumentManager.getInstance().isFileModified(virtualFile)) {
+                    return@runReadAction FileDocumentManager.getInstance().getDocument(virtualFile)?.text
                 }
+                return@runReadAction null
             }
 
+            if (content != null) {
+                return content
+            }
 
             val file = File(filepath)
             if (!file.exists()) return ""
