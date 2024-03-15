@@ -137,8 +137,20 @@ export class VsCodeExtension {
     );
 
     // Code review
-    this.configHandler.loadConfig().then((config) => {
-      const review = new CodeReview(config.review, this.ide);
+    this.configHandler.loadConfig().then(async (config) => {
+      let modelTitle = config.review?.modelTitle;
+      if (!modelTitle) {
+        modelTitle = await this.webviewProtocol.request(
+          "getDefaultModelTitle",
+          undefined,
+        );
+      }
+      const review = new CodeReview(
+        config.review,
+        this.ide,
+        config.models.find((model) => model.title === modelTitle) ??
+          config.models[0],
+      );
       vscode.workspace.onDidSaveTextDocument((event) => {
         const filepath = event.fileName;
         review.fileSaved(filepath);
