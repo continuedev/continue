@@ -5512,11 +5512,6 @@ tr46@~0.0.3:
   resolved "https://registry.npmjs.org/tr46/-/tr46-0.0.3.tgz"
   integrity sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==
 
-tree-sitter-cli@^0.21.0:
-  version "0.21.0"
-  resolved "https://registry.npmjs.org/tree-sitter-cli/-/tree-sitter-cli-0.21.0.tgz"
-  integrity sha512-wA7wT5724fNQW82XDH6zT6ZcYonjrAKLCHHuhLsPcAKULrhp3rNuMvlgBdB5FUBvmjHNhtTZF/qpHenMoRJPBw==
-
 tree-sitter-wasms@^0.1.6:
   version "0.1.7"
   resolved "https://registry.npmjs.org/tree-sitter-wasms/-/tree-sitter-wasms-0.1.7.tgz"
