@@ -1,8 +1,11 @@
 import fs from "fs";
-import { CodeReviewOptions, IDE } from "..";
+import Handlebars from "handlebars";
+import { CodeReviewOptions, IDE, ILLM } from "..";
+import { stripImages } from "../llm/countTokens";
 import { calculateHash } from "../util";
 import { getReviewResultsFilepath } from "../util/paths";
 import { getChangedFiles, getDiffPerFile } from "./parseDiff";
+import { reviewPrompt, reviewSystemMessage } from "./prompts";
 
 const initialWait = 5_000;
 const maxWait = 60_000;
@@ -18,6 +21,7 @@ export class CodeReview {
   constructor(
     private readonly options: CodeReviewOptions | undefined,
     private readonly ide: IDE,
+    private readonly llm: ILLM,
   ) {
     // On startup, compare saved results and current diff
     const resultsPath = getReviewResultsFilepath();
@@ -131,9 +135,21 @@ export class CodeReview {
   ): Promise<ReviewResult> {
     const contents = await this.ide.readFile(filepath);
     const fileHash = calculateHash(contents);
+
+    const prompt = Handlebars.compile(reviewPrompt)({
+      filepath,
+      diff,
+    });
+
+    const response = await this.llm.chat([
+      { role: "system", content: reviewSystemMessage },
+      { role: "user", content: prompt },
+    ]);
+    const completion = stripImages(response.content);
+
     return Promise.resolve({
       filepath,
-      message: "Looks good",
+      message: completion,
       status: "good",
       fileHash,
     });
