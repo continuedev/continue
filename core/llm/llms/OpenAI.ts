@@ -100,7 +100,7 @@ class OpenAI extends BaseLLM {
   ) {
     if (this.apiType === "azure") {
       return new URL(
-        `openai/deployments/${this.engine}${endpoint}?api-version=${this.apiVersion}`,
+        `openai/deployments/${this.engine}/${endpoint}?api-version=${this.apiVersion}`,
         this.apiBase,
       );
     } else {
