@@ -12,7 +12,7 @@ const initialWait = 5_000;
 const maxWait = 60_000;
 
 export interface ReviewResult {
-  status: "good" | "bad" | "pending";
+  status: "good" | "bad" | "pending" | "error";
   filepath: string;
   message: string;
   fileHash: string;
@@ -27,6 +27,10 @@ export class CodeReview {
     this._refresh();
   }
 
+  private _calculateHash(fileContents: string) {
+    return calculateHash(`${this.llm.model}::${fileContents}`);
+  }
+
   private _persistResults() {
     fs.writeFileSync(
       getReviewResultsFilepath(),
@@ -39,6 +43,16 @@ export class CodeReview {
   private _reduceWaitIntervalForFile = new Map<string, NodeJS.Timeout>();
 
   fileSaved(filepath: string) {
+    // Show file as pending
+    const prevResult = this._currentResultsPerFile[filepath];
+    this._emitResult({
+      message: "Waiting to review...",
+      filepath,
+      fileHash: "",
+      ...(prevResult as ReviewResult | undefined),
+      status: "pending",
+    });
+
     // Get wait time
     let wait = initialWait;
     if (this._lastWaitForFile.has(filepath)) {
@@ -83,17 +97,19 @@ export class CodeReview {
     return Object.values(this._currentResultsPerFile);
   }
 
+  private _emitResult(result: ReviewResult) {
+    this._callbacks.forEach((cb) => cb(result));
+  }
+
   private async runReview(filepath: string) {
-    this._callbacks.forEach((cb) => {
-      cb({
-        filepath,
-        fileHash: "",
-        message: "Pending",
-        status: "pending",
-      });
+    this._emitResult({
+      filepath,
+      fileHash: "",
+      message: "Pending",
+      status: "pending",
     });
     const reviewResult = await this.reviewFile(filepath);
-    this._callbacks.forEach((cb) => cb(reviewResult));
+    this._emitResult(reviewResult);
     this._currentResultsPerFile[filepath] = reviewResult;
 
     // Persist the review results
@@ -125,25 +141,34 @@ export class CodeReview {
     diff: string,
   ): Promise<ReviewResult> {
     const contents = await this.ide.readFile(filepath);
-    const fileHash = calculateHash(contents);
+    const fileHash = this._calculateHash(contents);
 
     const prompt = Handlebars.compile(reviewPrompt)({
       filepath,
       diff,
     });
 
-    const response = await this.llm.chat([
-      { role: "system", content: reviewSystemMessage },
-      { role: "user", content: prompt },
-    ]);
-    const completion = stripImages(response.content);
-
-    return Promise.resolve({
-      filepath,
-      message: completion,
-      status: "good",
-      fileHash,
-    });
+    try {
+      const response = await this.llm.chat([
+        { role: "system", content: reviewSystemMessage },
+        { role: "user", content: prompt },
+      ]);
+      const completion = stripImages(response.content);
+  
+      return Promise.resolve({
+        filepath,
+        message: completion,
+        status: "good",
+        fileHash,
+      });
+    } catch (e) {
+      return Promise.resolve({
+        filepath,
+        message: `Error while reviewing file: ${e}`,
+        status: "error",
+        fileHash
+      })
+    }
   }
 
   private _refresh() {
@@ -152,14 +177,14 @@ export class CodeReview {
     if (fs.existsSync(resultsPath)) {
       try {
         const savedResults = JSON.parse(
-          fs.readFileSync(getReviewResultsFilepath(), "utf8"),
+          fs.readFileSync(resultsPath, "utf8"),
         );
         this._currentResultsPerFile = savedResults;
       } catch (e) {
         console.error("Failed to parse saved results", e);
       }
     }
-    this.ide.getDiff().then((diffs) => {
+    this.ide.getDiff().then(async (diffs) => {
       const allChangedFiles: string[] = [];
       for (const repoRoot of Object.keys(diffs)) {
         const filesChanged = getChangedFiles(diffs[repoRoot]);
@@ -167,18 +192,18 @@ export class CodeReview {
           ...filesChanged.map((f) => path.join(repoRoot, f)),
         );
       }
-      allChangedFiles.forEach(async (filepath) => {
+      await Promise.all(allChangedFiles.map(async (filepath) => {
         // If the existing result is from the same file hash, don't repeat
         const existingResult = this._currentResultsPerFile[filepath];
         if (existingResult) {
           const fileContents = await this.ide.readFile(filepath);
-          const newHash = calculateHash(fileContents);
+          const newHash = this._calculateHash(fileContents);
           if (newHash === existingResult.fileHash) {
             return;
           }
         }
         this.runReview(filepath);
-      });
+      }));
 
       // Remove existing results if the file isn't changed anymore
       for (const filepath of Object.keys(this._currentResultsPerFile)) {

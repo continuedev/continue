@@ -2,6 +2,7 @@ import {
   ChevronDownIcon,
   ChevronRightIcon,
   ClockIcon,
+  ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { ReviewResult } from "core/review/review";
@@ -50,6 +51,12 @@ function FileResult(props: FileHeaderProps) {
           <ClockIcon width="1.2em" height="1.2em" color="yellow" />
         ) : props.result.status === "good" ? (
           <CheckCircleIcon width="1.2em" height="1.2em" color="lightgreen" />
+        ) : props.result.status === "error" ? (
+          <ExclamationTriangleIcon
+            width="1.2em"
+            height="1.2em"
+            color="orange"
+          />
         ) : (
           <XCircleIcon width="1.2em" height="1.2em" color="red" />
         )}
