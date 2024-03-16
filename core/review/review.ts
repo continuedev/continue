@@ -27,6 +27,10 @@ export class CodeReview {
     this._refresh();
   }
 
+  private _calculateHash(fileContents: string) {
+    return calculateHash(`${this.llm.model}::${fileContents}`);
+  }
+
   private _persistResults() {
     fs.writeFileSync(
       getReviewResultsFilepath(),
@@ -39,6 +43,16 @@ export class CodeReview {
   private _reduceWaitIntervalForFile = new Map<string, NodeJS.Timeout>();
 
   fileSaved(filepath: string) {
+    // Show file as pending
+    const prevResult = this._currentResultsPerFile[filepath];
+    this._emitResult({
+      message: "Waiting to review...",
+      filepath,
+      fileHash: "",
+      ...(prevResult as ReviewResult | undefined),
+      status: "pending",
+    });
+
     // Get wait time
     let wait = initialWait;
     if (this._lastWaitForFile.has(filepath)) {
@@ -83,17 +97,19 @@ export class CodeReview {
     return Object.values(this._currentResultsPerFile);
   }
 
+  private _emitResult(result: ReviewResult) {
+    this._callbacks.forEach((cb) => cb(result));
+  }
+
   private async runReview(filepath: string) {
-    this._callbacks.forEach((cb) => {
-      cb({
-        filepath,
-        fileHash: "",
-        message: "Pending",
-        status: "pending",
-      });
+    this._emitResult({
+      filepath,
+      fileHash: "",
+      message: "Pending",
+      status: "pending",
     });
     const reviewResult = await this.reviewFile(filepath);
-    this._callbacks.forEach((cb) => cb(reviewResult));
+    this._emitResult(reviewResult);
     this._currentResultsPerFile[filepath] = reviewResult;
 
     // Persist the review results
@@ -125,7 +141,7 @@ export class CodeReview {
     diff: string,
   ): Promise<ReviewResult> {
     const contents = await this.ide.readFile(filepath);
-    const fileHash = calculateHash(contents);
+    const fileHash = this._calculateHash(contents);
 
     const prompt = Handlebars.compile(reviewPrompt)({
       filepath,
@@ -172,7 +188,7 @@ export class CodeReview {
         const existingResult = this._currentResultsPerFile[filepath];
         if (existingResult) {
           const fileContents = await this.ide.readFile(filepath);
-          const newHash = calculateHash(fileContents);
+          const newHash = this._calculateHash(fileContents);
           if (newHash === existingResult.fileHash) {
             return;
           }
