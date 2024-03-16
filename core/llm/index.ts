@@ -29,6 +29,7 @@ import {
   compileChatMessages,
   countTokens,
   pruneRawPromptFromTop,
+  stripImages,
 } from "./countTokens";
 import CompletionOptionsForModels from "./templates/options";
 
@@ -245,8 +246,13 @@ ${prompt}`;
   }
 
   private _formatChatMessages(messages: ChatMessage[]): string {
+    const msgsCopy = messages ? messages.map((msg) => ({ ...msg })) : [];
     let formatted = "";
-    for (let msg of messages) {
+    for (let msg of msgsCopy) {
+      if ("content" in msg && Array.isArray(msg.content)) {
+        const content = stripImages(msg.content);
+        msg.content = content;
+      }
       formatted += `<${msg.role}>\n${msg.content || ""}\n\n`;
     }
     return formatted;
