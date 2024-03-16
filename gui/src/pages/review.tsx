@@ -1,15 +1,14 @@
-import { ChevronDownIcon, ChevronRightIcon } from "@heroicons/react/24/outline";
 import {
-  CheckCircleIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
   ClockIcon,
-  XCircleIcon,
-} from "@heroicons/react/24/solid";
+} from "@heroicons/react/24/outline";
+import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { ReviewResult } from "core/review/review";
 import { getBasename } from "core/util";
 import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { Button } from "../components";
 import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { useWebviewListener } from "../hooks/useWebviewListener";
@@ -69,9 +68,6 @@ function FileResult(props: FileHeaderProps) {
 
 function Review() {
   useNavigationListener();
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-
   const [reviewResults, setReviewResults] = useState<ReviewResult[]>([]);
 
   useEffect(() => {
@@ -98,13 +94,27 @@ function Review() {
   });
 
   return (
-    <div>
-      <h2>Code Review (beta)</h2>
+    <div className="px-2">
+      <h2>Code Review (experimental)</h2>
+      <Button
+        onClick={() => {
+          ideRequest("review/redoAll", undefined);
+        }}
+      >
+        Redo All
+      </Button>
 
       <div>
-        {reviewResults.map((result, index) => {
-          return <FileResult result={result} key={index} />;
-        })}
+        {reviewResults.length > 0 ? (
+          reviewResults.map((result, index) => {
+            return <FileResult result={result} key={index} />;
+          })
+        ) : (
+          <i>
+            Results will appear after you have changed files within this git
+            repository
+          </i>
+        )}
       </div>
     </div>
   );

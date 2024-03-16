@@ -158,8 +158,11 @@ export class VsCodeExtension {
       review.onReviewUpdate((result) =>
         this.webviewProtocol.request("review/update", [result]),
       );
-      this.webviewProtocol.on("review/getResults", (msg) => {
+      this.webviewProtocol.on("review/getResults", () => {
         return review.currentResults;
+      });
+      this.webviewProtocol.on("review/redoAll", () => {
+        review.redoAll();
       });
     });
 

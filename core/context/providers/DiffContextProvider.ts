@@ -17,7 +17,8 @@ class DiffContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const diff = await extras.ide.getDiff();
+    const diffs = await extras.ide.getDiff();
+    const diff = Object.values(diffs).join("\n");
     return [
       {
         description: "The current git diff",

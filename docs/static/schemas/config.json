@@ -1612,7 +1612,12 @@
           "type": "object",
           "properties": {
             "prompt": {
-              "type": "string"
+              "type": "string",
+              "description": "The prompt to use for code review"
+            },
+            "modelTitle": {
+              "type": "string",
+              "description": "The title of the model to be used for code review."
             }
           },
           "required": []

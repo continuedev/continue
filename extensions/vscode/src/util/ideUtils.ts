@@ -409,8 +409,8 @@ export class VsCodeIdeUtils {
     return repo?.state?.HEAD?.name || "NONE";
   }
 
-  async getDiff(): Promise<string> {
-    let diffs = [];
+  async getDiff(): Promise<{ [dir: string]: string }> {
+    let diffs: { [dir: string]: string } = {};
 
     for (const dir of this.getWorkspaceDirectories()) {
       const repo = await this.getRepo(vscode.Uri.file(dir));
@@ -418,10 +418,10 @@ export class VsCodeIdeUtils {
         continue;
       }
 
-      diffs.push((await repo.getDiff()).join("\n"));
+      diffs[repo.rootUri.fsPath] = (await repo.getDiff()).join("\n");
     }
 
-    return diffs.join("\n\n");
+    return diffs;
   }
 
   getHighlightedCode(): RangeInFile[] {

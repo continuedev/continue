@@ -31,8 +31,8 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
-  getDiff(): Promise<string> {
-    return Promise.resolve("");
+  getDiff(): Promise<{ [workspaceDir: string]: string }> {
+    return Promise.resolve({});
   }
   getTerminalContents(): Promise<string> {
     return Promise.resolve("");

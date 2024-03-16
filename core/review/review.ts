@@ -1,5 +1,6 @@
 import fs from "fs";
 import Handlebars from "handlebars";
+import path from "path";
 import { CodeReviewOptions, IDE, ILLM } from "..";
 import { stripImages } from "../llm/countTokens";
 import { calculateHash } from "../util";
@@ -23,44 +24,14 @@ export class CodeReview {
     private readonly ide: IDE,
     private readonly llm: ILLM,
   ) {
-    // On startup, compare saved results and current diff
-    const resultsPath = getReviewResultsFilepath();
-    if (fs.existsSync(resultsPath)) {
-      try {
-        const savedResults = JSON.parse(
-          fs.readFileSync(getReviewResultsFilepath(), "utf8"),
-        );
-        this._currentResultsPerFile = savedResults;
-      } catch (e) {
-        console.error("Failed to parse saved results", e);
-      }
-    }
-    ide.getDiff().then((diff) => {
-      const filesChanged = getChangedFiles(diff);
-      filesChanged.forEach(async (filepath) => {
-        // If the existing result is from the same file hash, don't repeat
-        const existingResult = this._currentResultsPerFile[filepath];
-        if (existingResult) {
-          const fileContents = await ide.readFile(filepath);
-          const newHash = calculateHash(fileContents);
-          if (newHash === existingResult.fileHash) {
-            return;
-          }
-        }
-        this.runReview(filepath);
-      });
+    this._refresh();
+  }
 
-      // Remove existing results if the file isn't changed anymore
-      for (const filepath of Object.keys(this._currentResultsPerFile)) {
-        if (!filesChanged.includes(filepath)) {
-          delete this._currentResultsPerFile[filepath];
-        }
-      }
-      fs.writeFileSync(
-        getReviewResultsFilepath(),
-        JSON.stringify(this._currentResultsPerFile),
-      );
-    });
+  private _persistResults() {
+    fs.writeFileSync(
+      getReviewResultsFilepath(),
+      JSON.stringify(this._currentResultsPerFile),
+    );
   }
 
   private _lastWaitForFile = new Map<string, number>();
@@ -113,14 +84,20 @@ export class CodeReview {
   }
 
   private async runReview(filepath: string) {
+    this._callbacks.forEach((cb) => {
+      cb({
+        filepath,
+        fileHash: "",
+        message: "Pending",
+        status: "pending",
+      });
+    });
     const reviewResult = await this.reviewFile(filepath);
     this._callbacks.forEach((cb) => cb(reviewResult));
     this._currentResultsPerFile[filepath] = reviewResult;
 
     // Persist the review results
-    const resultsFilepath = getReviewResultsFilepath();
-    const results = JSON.stringify(this._currentResultsPerFile, null, 2);
-    fs.writeFileSync(resultsFilepath, results);
+    this._persistResults();
   }
 
   private _callbacks: ((review: ReviewResult) => void)[] = [];
@@ -130,9 +107,12 @@ export class CodeReview {
   }
 
   private async reviewFile(filepath: string): Promise<ReviewResult> {
-    const fullDiff = await this.ide.getDiff();
+    const fullDiff = Object.values(await this.ide.getDiff()).join("\n");
     const diffsPerFile = getDiffPerFile(fullDiff);
-    const diff = diffsPerFile[filepath];
+    const diff =
+      diffsPerFile[
+        Object.keys(diffsPerFile).find((f) => filepath.endsWith(f)) ?? ""
+      ];
     if (diff === undefined) {
       throw new Error(`No diff for ${filepath}.`);
     }
@@ -164,5 +144,55 @@ export class CodeReview {
       status: "good",
       fileHash,
     });
+  }
+
+  private _refresh() {
+    // On startup, compare saved results and current diff
+    const resultsPath = getReviewResultsFilepath();
+    if (fs.existsSync(resultsPath)) {
+      try {
+        const savedResults = JSON.parse(
+          fs.readFileSync(getReviewResultsFilepath(), "utf8"),
+        );
+        this._currentResultsPerFile = savedResults;
+      } catch (e) {
+        console.error("Failed to parse saved results", e);
+      }
+    }
+    this.ide.getDiff().then((diffs) => {
+      const allChangedFiles: string[] = [];
+      for (const repoRoot of Object.keys(diffs)) {
+        const filesChanged = getChangedFiles(diffs[repoRoot]);
+        allChangedFiles.push(
+          ...filesChanged.map((f) => path.join(repoRoot, f)),
+        );
+      }
+      allChangedFiles.forEach(async (filepath) => {
+        // If the existing result is from the same file hash, don't repeat
+        const existingResult = this._currentResultsPerFile[filepath];
+        if (existingResult) {
+          const fileContents = await this.ide.readFile(filepath);
+          const newHash = calculateHash(fileContents);
+          if (newHash === existingResult.fileHash) {
+            return;
+          }
+        }
+        this.runReview(filepath);
+      });
+
+      // Remove existing results if the file isn't changed anymore
+      for (const filepath of Object.keys(this._currentResultsPerFile)) {
+        if (!allChangedFiles.includes(filepath)) {
+          delete this._currentResultsPerFile[filepath];
+        }
+      }
+      this._persistResults();
+    });
+  }
+
+  public redoAll(): void {
+    this._currentResultsPerFile = {};
+    this._persistResults();
+    this._refresh();
   }
 }

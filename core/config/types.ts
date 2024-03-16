@@ -327,7 +327,7 @@ declare global {
   
   export interface IDE {
     getIdeInfo(): Promise<IdeInfo>;
-    getDiff(): Promise<string>;
+    getDiff(): Promise<{ [workspaceDir: string]: string }>;
     isTelemetryEnabled(): Promise<boolean>;
     getUniqueId(): Promise<string>;
     getTerminalContents(): Promise<string>;

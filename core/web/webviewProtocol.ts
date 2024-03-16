@@ -43,7 +43,7 @@ export type IdeProtocol = {
   getPinnedFiles: [undefined, string[]];
   showLines: [{ filepath: string; startLine: number; endLine: number }, void];
   readRangeInFile: [{ filepath: string; range: Range }, string];
-  getDiff: [undefined, string];
+  getDiff: [undefined, { [dir: string]: string }];
   getWorkspaceConfigs: [undefined, ContinueRcJson[]];
   getTerminalContents: [undefined, string];
   isTelemetryEnabled: [undefined, boolean];
@@ -76,6 +76,7 @@ export type WebviewProtocol = Protocol &
     reloadWindow: [undefined, void];
     focusEditor: [undefined, void];
     toggleFullScreen: [undefined, void];
+    "review/redoAll": [undefined, void];
   };
 
 export type ReverseWebviewProtocol = {

@@ -336,7 +336,7 @@ export interface IndexTag {
 
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
-  getDiff(): Promise<string>;
+  getDiff(): Promise<{ [repoRoot: string]: string }>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
