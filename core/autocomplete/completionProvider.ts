@@ -217,7 +217,6 @@ export async function getTabCompletion(
       () =>
         llm.streamComplete(prompt, {
           ...completionOptions,
-          temperature: 0,
           raw: true,
           stop,
         }),
@@ -386,6 +385,12 @@ export class CompletionProvider {
       if (!llm) {
         return undefined;
       }
+
+      // Set temperature (but don't overrride)
+      if (llm.completionOptions.temperature === undefined) {
+        llm.completionOptions.temperature = 0.0;
+      }
+
       const outcome = await getTabCompletion(
         token,
         options,
