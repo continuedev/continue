@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import cheerio from "cheerio";
 import fetch from "node-fetch";
-import { URL } from 'url';
+import { URL } from "url";
 
 const IGNORE_PATHS_ENDING_IN = [
   "favicon.ico",
@@ -44,83 +44,89 @@ async function crawlGithubRepo(baseUrl: URL) {
   );
 
   const paths = tree.data.tree
-    .filter(
-      (file) => file.type === "blob" && file.path?.endsWith(".md"),
-    )
+    .filter((file) => file.type === "blob" && file.path?.endsWith(".md"))
     .map((file) => baseUrl.pathname + "/tree/main/" + file.path);
 
   return paths;
 }
 
 async function getLinksFromUrl(url: string, path: string) {
-    const location = new URL(path, url);
-    let response;
-    try {
-        response = await fetch(location.toString());
-    } catch (error: unknown) {
-        if (error instanceof Error && error.message.includes('maximum redirect')) {
-            console.error('Maximum redirect reached for: ', location.toString());
-            return {
-                html: '',
-                links: []
-            };
-        } else {
-            console.error(error);
-            return {
-                html: '',
-                links: []
-            };
-        }
-    }
-
-    const html = await response.text();
-    let links: string[] = [];
-
-    if (url.includes("github.com")) {
+  const baseUrl = new URL(url);
+  const location = new URL(path, url);
+  let response;
+  try {
+    response = await fetch(location.toString());
+  } catch (error: unknown) {
+    if (error instanceof Error && error.message.includes("maximum redirect")) {
+      console.error("Maximum redirect reached for: ", location.toString());
       return {
-        html,
-        links
+        html: "",
+        links: [],
+      };
+    } else {
+      console.error(error);
+      return {
+        html: "",
+        links: [],
       };
     }
+  }
 
-    const $ = cheerio.load(html);
+  const html = await response.text();
+  let links: string[] = [];
 
-    $('a').each((_, element) => {
-        const link = $(element).attr('href');
-        if (link) {
-            const fullUrl = new URL(link, url);
-
-            if (fullUrl.pathname.startsWith(path)) {
-                links.push(fullUrl.pathname);
-            }
-        }
-    });
-
-    links = [...new Set(links)].filter(link => {
-      return !link.includes('#') && !IGNORE_PATHS_ENDING_IN.some(ending => link.endsWith(ending));
-    });
-
+  if (url.includes("github.com")) {
     return {
-        html,
-        links
+      html,
+      links,
     };
+  }
+
+  const $ = cheerio.load(html);
+
+  $("a").each((_, element) => {
+    const href = $(element).attr("href");
+    if (!href) {
+      return;
+    }
+
+    const parsedUrl = new URL(href, url);
+    if (
+      parsedUrl.hostname === baseUrl.hostname
+      // parsedUrl.pathname.startsWith(baseUrl.pathname)
+    ) {
+      links.push(parsedUrl.pathname);
+    }
+  });
+
+  links = [...new Set(links)].filter((link) => {
+    return (
+      !link.includes("#") &&
+      !IGNORE_PATHS_ENDING_IN.some((ending) => link.endsWith(ending))
+    );
+  });
+
+  return {
+    html,
+    links,
+  };
 }
 
 function splitUrl(url: URL) {
-    const baseUrl = `${url.protocol}//${url.hostname}`;
-    const basePath = url.pathname;
-    return {
-        baseUrl,
-        basePath
-    };
+  const baseUrl = `${url.protocol}//${url.hostname}`;
+  const basePath = url.pathname;
+  return {
+    baseUrl,
+    basePath,
+  };
 }
 
 export type PageData = {
-    url: string;
-    path: string;
-    html: string;
+  url: string;
+  path: string;
+  html: string;
 };
- 
+
 export async function* crawlPage(url: URL): AsyncGenerator<PageData> {
   const { baseUrl, basePath } = splitUrl(url);
   let paths: string[] = [basePath];
@@ -133,16 +139,18 @@ export async function* crawlPage(url: URL): AsyncGenerator<PageData> {
   let index = 0;
 
   while (index < paths.length) {
-    const promises = paths.slice(index, index + 50).map(path => getLinksFromUrl(baseUrl, path));
+    const promises = paths
+      .slice(index, index + 50)
+      .map((path) => getLinksFromUrl(baseUrl, path));
 
     const results = await Promise.all(promises);
 
-    for (const {html, links} of results) {
-      if (html !== '') { 
+    for (const { html, links } of results) {
+      if (html !== "") {
         yield {
-          url: url.toString(),   
+          url: url.toString(),
           path: paths[index],
-          html: html
+          html: html,
         };
       }
 
@@ -155,6 +163,10 @@ export async function* crawlPage(url: URL): AsyncGenerator<PageData> {
       index++;
     }
 
-    paths = paths.filter(path => results.some(result => result.html !== '' && result.links.includes(path)));
+    paths = paths.filter((path) =>
+      results.some(
+        (result) => result.html !== "" && result.links.includes(path),
+      ),
+    );
   }
 }
