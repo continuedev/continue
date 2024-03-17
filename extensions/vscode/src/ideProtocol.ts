@@ -240,13 +240,15 @@ class VsCodeIde implements IDE {
     const p = child_process.spawn(
       path.join(
         getExtensionUri().fsPath,
+        "out",
         "node_modules",
         "@vscode",
         "ripgrep",
         "bin",
         "rg"
       ),
-      ["-i", "-C", "2", `"${query}"`, "."],
+      ["-i", "-C", "2", "--", `${query}`, "."], //no regex
+      //["-i", "-C", "2", "-e", `${query}`, "."], //use regex
       { cwd: dir }
     );
     let output = "";
