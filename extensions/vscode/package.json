@@ -22,8 +22,10 @@
   "description": "Open-source autopilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",
   "engines": {
-    "vscode": "^1.70.0"
+    "vscode": "^1.70.0",
+    "node": ">=20.11.0"
   },
+  "engine-strict": true,
   "galleryBanner": {
     "color": "#1E1E1E",
     "theme": "dark"
