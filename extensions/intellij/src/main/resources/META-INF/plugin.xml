@@ -11,6 +11,7 @@
     </extensions>
 
     <extensions defaultExtensionNs="com.intellij">
+        <editorFactoryListener implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteEditorListener"/>
         <toolWindow id="Continue" anchor="right" icon="/tool-window-icon.png"
                     factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
         <projectService id="ContinuePluginService"
@@ -114,6 +115,17 @@
             <reference ref="continue.viewHistory"/>
         </group>
 
+        <action id="com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction"
+                class="com.github.continuedev.continueintellijextension.autocomplete.AcceptAutocompleteAction"
+                text="Accept Autocomplete Suggestion" description="Accept Autocomplete Suggestion">
+            <keyboard-shortcut keymap="$default" first-keystroke="TAB"/>
+            <keyboard-shortcut keymap="Mac OS X" first-keystroke="TAB"/>
+        </action>
+        <action id="com.github.continuedev.continueintellijextension.autocomplete.CancelAutocompleteAction"
+                class="com.github.continuedev.continueintellijextension.autocomplete.CancelAutocompleteAction"
+                text="Cancel Autocomplete Suggestion" description="Cancel Autocomplete Suggestion">
+            <keyboard-shortcut keymap="$default" first-keystroke="ESCAPE"/>
+        </action>
     </actions>
 
 

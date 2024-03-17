@@ -1,5 +1,6 @@
 import { BaseContextProvider } from "..";
 import { ContextProviderName } from "../..";
+import CodeContextProvider from "./CodeContextProvider";
 import CodebaseContextProvider from "./CodebaseContextProvider";
 import DatabaseContextProvider from "./DatabaseContextProvider";
 import DiffContextProvider from "./DiffContextProvider";
@@ -15,7 +16,9 @@ import PostgresContextProvider from "./PostgresContextProvider";
 import ProblemsContextProvider from "./ProblemsContextProvider";
 import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
+import LocalsProvider from "./LocalsProvider";
 import URLContextProvider from "./URLContextProvider";
+import GitLabMergeRequestContextProvider from "./GitLabMergeRequestContextProvider";
 
 const Providers: (typeof BaseContextProvider)[] = [
   DiffContextProvider,
@@ -23,6 +26,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   GitHubIssuesContextProvider,
   GoogleContextProvider,
   TerminalContextProvider,
+  LocalsProvider,
   URLContextProvider,
   OpenFilesContextProvider,
   HttpContextProvider,
@@ -31,11 +35,13 @@ const Providers: (typeof BaseContextProvider)[] = [
   ProblemsContextProvider,
   FolderContextProvider,
   DocsContextProvider,
+  GitLabMergeRequestContextProvider,
   // CodeHighlightsContextProvider,
   // CodeOutlineContextProvider,
   JiraIssuesContextProvider,
   PostgresContextProvider,
   DatabaseContextProvider,
+  CodeContextProvider,
 ];
 
 export function contextProviderClassFromName(

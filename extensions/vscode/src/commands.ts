@@ -4,10 +4,10 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import { IDE } from "core";
+import { AutocompleteOutcome } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
 import { logDevData } from "core/util/devdata";
 import { Telemetry } from "core/util/posthog";
-import { AutocompleteOutcome } from "./autocomplete/getTabCompletion";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";

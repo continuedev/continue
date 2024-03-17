@@ -16,7 +16,7 @@ class Anthropic extends BaseLLM {
       model: "claude-3-opus-20240229",
       maxTokens: 4096,
     },
-    apiBase: "https://api.anthropic.com/v1",
+    apiBase: "https://api.anthropic.com/v1/",
   };
 
   constructor(options: LLMOptions) {
@@ -36,11 +36,40 @@ class Anthropic extends BaseLLM {
     return finalOptions;
   }
 
+  private _convertMessages(msgs: ChatMessage[]): any[] {
+    const messages = msgs
+      .filter((m) => m.role !== "system")
+      .map((message) => {
+        if (typeof message.content === "string") {
+          return message;
+        } else {
+          return {
+            ...message,
+            content: message.content.map((part) => {
+              if (part.type === "text") {
+                return part;
+              } else {
+                return {
+                  type: "image",
+                  source: {
+                    type: "base64",
+                    media_type: "image/jpeg",
+                    data: part.imageUrl?.url.split(",")[1],
+                  },
+                };
+              }
+            }),
+          };
+        }
+      });
+    return messages;
+  }
+
   protected async *_streamChat(
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const response = await this.fetch(this.apiBase + "/messages", {
+    const response = await this.fetch(new URL("messages", this.apiBase), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -50,7 +79,7 @@ class Anthropic extends BaseLLM {
       },
       body: JSON.stringify({
         ...this._convertArgs(options),
-        messages: messages.filter((m) => m.role !== "system"),
+        messages: this._convertMessages(messages),
         system: this.systemMessage,
         stream: true,
       }),

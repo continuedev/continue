@@ -10,7 +10,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 
-class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
+class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
     private val writer: OutputStreamWriter
     private val reader: BufferedReader
     private val process: Process
@@ -106,7 +106,8 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
         "getProblems",
         "subprocess",
         "getBranch",
-        "getIdeInfo"
+        "getIdeInfo",
+        "getIdeSettings",
     )
 
     private fun setPermissions(destination: String) {
@@ -135,9 +136,11 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
     init {
         // Set proper permissions
         setPermissions(continueCorePath)
+        setPermissions(esbuildPath)
 
         // Start the subprocess
         val processBuilder = ProcessBuilder(continueCorePath)
+                .directory(File(continueCorePath).parentFile)
         process = processBuilder.start()
 
         val outputStream = process.outputStream
@@ -147,7 +150,8 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
         reader = BufferedReader(InputStreamReader(inputStream))
 
         process.onExit().thenRun {
-            val err = process.errorStream.bufferedReader().readText()
+            val err = process.errorStream.bufferedReader().readText().trim()
+            println("Core process exited with output: $err")
             ideProtocolClient.showMessage("Core process exited with output: $err")
         }
 
@@ -156,7 +160,12 @@ class CoreMessenger(continueCorePath: String, ideProtocolClient: IdeProtocolClie
                 while (true) {
                     val line = reader.readLine()
                     if (line != null && line.isNotEmpty()) {
-                        handleMessage(line)
+                        try {
+                            handleMessage(line)
+                        } catch (e: Exception) {
+                            println("Error handling message: $line")
+                            println(e)
+                        }
                     } else {
                         Thread.sleep(100)
                     }

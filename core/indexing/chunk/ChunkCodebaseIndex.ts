@@ -1,11 +1,10 @@
-import { IndexingProgressUpdate } from "../..";
+import { IndexTag, IndexingProgressUpdate } from "../..";
 import { MAX_CHUNK_SIZE } from "../../llm/constants";
 import { getBasename } from "../../util";
 import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex";
 import {
   CodebaseIndex,
   IndexResultType,
-  IndexTag,
   MarkCompleteCallback,
   RefreshIndexResults,
 } from "../types";
@@ -106,7 +105,17 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     // Remove tag
     for (const item of results.removeTag) {
-      await db.run(`DELETE FROM chunk_tags WHERE tag = ?`, [tagString]);
+      await db.run(
+        `
+        DELETE FROM chunk_tags
+        WHERE tag = ?
+          AND chunkId IN (
+            SELECT id FROM chunks
+            WHERE cacheKey = ? AND path = ?
+          )
+      `,
+        [tagString, item.cacheKey, item.path],
+      );
       markComplete([item], IndexResultType.RemoveTag);
     }
 

@@ -1,8 +1,12 @@
 import * as fs from "fs";
-import { ContinueRcJson, IDE, IdeInfo, Problem, Range } from "..";
+import { ContinueRcJson, IDE, IdeInfo, IndexTag, Problem, Range, Thread } from "..";
+
 import { getContinueGlobalPath } from "./paths";
 
 class FileSystemIde implements IDE {
+  getTags(artifactId: string): Promise<IndexTag[]> {
+    return Promise.resolve([]);
+  }
   getIdeInfo(): Promise<IdeInfo> {
     return Promise.resolve({
       ideType: "vscode",
@@ -33,10 +37,22 @@ class FileSystemIde implements IDE {
   getTerminalContents(): Promise<string> {
     return Promise.resolve("");
   }
+  async getDebugLocals(threadIndex: number): Promise<string> {
+    return Promise.resolve("");
+  }
+  async getTopLevelCallStackSources(
+    threadIndex: number,
+    stackDepth: number
+  ): Promise<string[]> {
+    return Promise.resolve([]);
+  }
+  async getAvailableThreads(): Promise<Thread[]> {
+    return Promise.resolve([]);
+  }
   showLines(
     filepath: string,
     startLine: number,
-    endLine: number,
+    endLine: number
   ): Promise<void> {
     return Promise.resolve();
   }
@@ -101,7 +117,7 @@ class FileSystemIde implements IDE {
   showDiff(
     filepath: string,
     newContents: string,
-    stepIndex: number,
+    stepIndex: number
   ): Promise<void> {
     return Promise.resolve();
   }

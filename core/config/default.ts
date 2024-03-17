@@ -22,6 +22,11 @@ export const defaultConfig: SerializedContinueConfig = {
       provider: "free-trial",
       model: "codellama-70b",
     },
+    {
+      title: "Mixtral (Free Trial)",
+      provider: "free-trial",
+      model: "mistral-8x7b",
+    },
   ],
   slashCommands: [
     {
@@ -87,6 +92,11 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       title: "Codellama 70b (Free Trial)",
       provider: "free-trial",
       model: "codellama-70b",
+    },
+    {
+      title: "Mixtral (Free Trial)",
+      provider: "free-trial",
+      model: "mistral-8x7b",
     },
   ],
   slashCommands: [

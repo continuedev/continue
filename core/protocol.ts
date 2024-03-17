@@ -10,6 +10,8 @@ import {
   SerializedContinueConfig,
   SessionInfo,
 } from ".";
+import { AutocompleteInput } from "./autocomplete/completionProvider";
+import { IdeProtocol } from "./web/webviewProtocol";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -34,6 +36,7 @@ export type Protocol = {
     { model: SerializedContinueConfig["models"][number] },
     void,
   ];
+  "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getBrowserSerialized": [
     undefined,
     Promise<BrowserSerializedContinueConfig>,
@@ -54,10 +57,9 @@ export type Protocol = {
     Promise<ContextSubmenuItem[]>,
   ];
   "context/addDocs": [{ title: string; url: string }, void];
-  "autocomplete/complete": [
-    { filepath: string; line: number; column: number },
-    string[],
-  ];
+  "autocomplete/complete": [AutocompleteInput, Promise<string[]>];
+  "autocomplete/cancel": [undefined, void];
+  "autocomplete/accept": [{ completionId: string }, void];
   "command/run": [
     {
       input: string;
@@ -95,4 +97,14 @@ export type Protocol = {
     },
     ProtocolGeneratorType<MessageContent>,
   ];
+};
+
+export interface IdeSettings {
+  remoteConfigServerUrl: string | undefined;
+  remoteConfigSyncPeriod: number;
+  userToken: string;
+}
+
+export type ReverseProtocol = IdeProtocol & {
+  getIdeSettings: [undefined, IdeSettings];
 };

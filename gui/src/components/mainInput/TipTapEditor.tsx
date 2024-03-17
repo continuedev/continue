@@ -509,15 +509,16 @@ function TipTapEditor(props: TipTapEditorProps) {
     ],
   );
 
-  useEffect(() => {
-    if (props.isMainInput && editor && document.hasFocus()) {
-      editor.commands.focus();
-      // setTimeout(() => {
-      //   // https://github.com/continuedev/continue/pull/881
-      //   editor.commands.blur();
-      // }, 0);
-    }
-  }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
+  // On linux+jetbrains only was stealing focus
+  // useEffect(() => {
+  //   if (props.isMainInput && editor && document.hasFocus()) {
+  //     editor.commands.focus();
+  //     // setTimeout(() => {
+  //     //   // https://github.com/continuedev/continue/pull/881
+  //     //   editor.commands.blur();
+  //     // }, 0);
+  //   }
+  // }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 

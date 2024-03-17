@@ -184,6 +184,28 @@ export const Dart = {
   endOfLine: [";"],
 };
 
+// Solidity
+export const Solidity = {
+  stopWords: [
+    "contract",
+    "event",
+    "modifier",
+    "function",
+    "constructor",
+    "for",
+    "require",
+    "emit",
+    "interface",
+    "error",
+    "library",
+    "struct",
+    "enum",
+    "type",
+  ],
+  comment: "//",
+  endOfLine: [";"],
+};
+
 export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   ts: Typescript,
   js: Typescript,
@@ -219,4 +241,5 @@ export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   r: R,
   R: R,
   dart: Dart,
+  sol: Solidity,
 };

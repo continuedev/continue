@@ -1,5 +1,6 @@
 import { ConfigHandler } from "core/config/handler";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
+import { IdeSettings } from "core/protocol";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
@@ -10,9 +11,10 @@ import { DiffManager } from "../diff/horizontal";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { setupRemoteConfigSync } from "../stubs/activation";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
-import { RemoteConfigSync } from "../util/remoteConfig";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { registerDebugTracker } from "../debug/debug";
 
 export class VsCodeExtension {
   private configHandler: ConfigHandler;
@@ -29,34 +31,43 @@ export class VsCodeExtension {
   constructor(context: vscode.ExtensionContext) {
     this.diffManager = new DiffManager(context);
     this.ide = new VsCodeIde(this.diffManager);
-    const remoteUrl = vscode.workspace
-      .getConfiguration("continue")
-      .get<string | undefined>("remoteConfigServerUrl", undefined);
+
+    const settings = vscode.workspace.getConfiguration("continue");
+    const remoteConfigServerUrl = settings.get<string | undefined>(
+      "remoteConfigServerUrl",
+      undefined,
+    );
+    const ideSettings: IdeSettings = {
+      remoteConfigServerUrl,
+      remoteConfigSyncPeriod: settings.get<number>(
+        "remoteConfigSyncPeriod",
+        60,
+      ),
+      userToken: settings.get<string>("userToken", ""),
+    };
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
-      "Continue - LLM Prompt/Completion",
+      "Continue - LLM Prompt/Completion"
     );
     this.configHandler = new ConfigHandler(
       this.ide,
-      typeof remoteUrl !== "string" || remoteUrl === ""
-        ? undefined
-        : new URL(remoteUrl),
+      Promise.resolve(ideSettings),
       async (log: string) => {
         outputChannel.appendLine(
-          "==========================================================================",
+          "=========================================================================="
         );
         outputChannel.appendLine(
-          "==========================================================================",
+          "=========================================================================="
         );
         outputChannel.append(log);
       },
-      () => this.webviewProtocol?.request("configUpdate", undefined),
+      () => this.webviewProtocol?.request("configUpdate", undefined)
     );
 
     this.configHandler.reloadConfig();
     this.verticalDiffManager = new VerticalPerLineDiffManager(
-      this.configHandler,
+      this.configHandler
     );
     this.extensionContext = context;
     this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
@@ -66,16 +77,12 @@ export class VsCodeExtension {
       this.ide,
       this.windowId,
       this.extensionContext,
-      this.verticalDiffManager,
+      this.verticalDiffManager
     );
-    try {
-      const configSync = new RemoteConfigSync(
-        this.configHandler.reloadConfig.bind(this.configHandler),
-      );
-      configSync.setup();
-    } catch (e) {
-      console.warn(`Failed to sync remote config: ${e}`);
-    }
+
+    setupRemoteConfigSync(
+      this.configHandler.reloadConfig.bind(this.configHandler),
+    );
 
     // Sidebar
     context.subscriptions.push(
@@ -84,14 +91,14 @@ export class VsCodeExtension {
         this.sidebar,
         {
           webviewOptions: { retainContextWhenHidden: true },
-        },
-      ),
+        }
+      )
     );
     this.webviewProtocol = this.sidebar.webviewProtocol;
 
     // Indexing + pause token
     const indexingPauseToken = new PauseToken(
-      context.globalState.get<boolean>("continue.indexingPaused") === true,
+      context.globalState.get<boolean>("continue.indexingPaused") === true
     );
     this.webviewProtocol.on("index/setPaused", (msg) => {
       context.globalState.update("continue.indexingPaused", msg.data);
@@ -102,14 +109,14 @@ export class VsCodeExtension {
     this.indexer = new CodebaseIndexer(
       this.configHandler,
       this.ide,
-      indexingPauseToken,
+      indexingPauseToken
     );
 
     // CodeLens
     registerAllCodeLensProviders(
       context,
       this.diffManager,
-      this.verticalDiffManager.editorToVerticalDiffCodeLens,
+      this.verticalDiffManager.editorToVerticalDiffCodeLens
     );
 
     // Tab autocomplete
@@ -124,9 +131,9 @@ export class VsCodeExtension {
         new ContinueCompletionProvider(
           this.configHandler,
           this.ide,
-          this.tabAutocompleteModel,
-        ),
-      ),
+          this.tabAutocompleteModel
+        )
+      )
     );
 
     // Commands
@@ -137,8 +144,10 @@ export class VsCodeExtension {
       this.sidebar,
       this.configHandler,
       this.diffManager,
-      this.verticalDiffManager,
+      this.verticalDiffManager
     );
+
+    registerDebugTracker(this.webviewProtocol, this.ide);
 
     // Indexing
     this.ide.getWorkspaceDirs().then((dirs) => this.refreshCodebaseIndex(dirs));
@@ -186,7 +195,7 @@ export class VsCodeExtension {
             }
           });
         }
-      }),
+      })
     );
 
     // Register a content provider for the readonly virtual documents
@@ -204,8 +213,8 @@ export class VsCodeExtension {
     context.subscriptions.push(
       vscode.workspace.registerTextDocumentContentProvider(
         VsCodeExtension.continueVirtualDocumentScheme,
-        documentContentProvider,
-      ),
+        documentContentProvider
+      )
     );
   }
 

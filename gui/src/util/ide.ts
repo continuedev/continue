@@ -19,7 +19,7 @@ function _postToIde(messageType: string, data: any, messageId?: string) {
         console.log(
           "Unable to send message: postIntellijMessage is undefined. ",
           messageType,
-          data
+          data,
         );
         throw new Error("postIntellijMessage is undefined");
       }
@@ -30,7 +30,7 @@ function _postToIde(messageType: string, data: any, messageId?: string) {
       console.log(
         "Unable to send message: vscode is undefined. ",
         messageType,
-        data
+        data,
       );
       return;
     }
@@ -47,7 +47,7 @@ export function postToIde<T extends keyof WebviewProtocol>(
   messageType: T,
   data: WebviewProtocol[T][0],
   messageId?: string,
-  attempt: number = 0
+  attempt: number = 0,
 ) {
   try {
     _postToIde(messageType, data, messageId);
@@ -56,7 +56,7 @@ export function postToIde<T extends keyof WebviewProtocol>(
       console.log(`Attempt ${attempt} failed. Retrying...`);
       setTimeout(
         () => postToIde(messageType, data, messageId, attempt + 1),
-        Math.pow(2, attempt) * 1000
+        Math.pow(2, attempt) * 1000,
       );
     } else {
       console.error("Max attempts reached. Message could not be sent.", error);
@@ -67,7 +67,7 @@ export function postToIde<T extends keyof WebviewProtocol>(
 export function respondToIde<T extends keyof ReverseWebviewProtocol>(
   messageType: T,
   data: ReverseWebviewProtocol[T][1],
-  messageId: string
+  messageId: string,
 ) {
   _postToIde(messageType, data, messageId);
 }
@@ -82,7 +82,7 @@ function safeParseResponse(data: any) {
 
 export async function ideRequest<T extends keyof WebviewProtocol>(
   messageType: T,
-  data: WebviewProtocol[T][0]
+  data: WebviewProtocol[T][0],
 ): Promise<WebviewProtocol[T][1]> {
   const messageId = uuidv4();
 
@@ -102,7 +102,7 @@ export async function ideRequest<T extends keyof WebviewProtocol>(
 export async function* ideStreamRequest<T extends keyof WebviewProtocol>(
   messageType: T,
   data: WebviewProtocol[T][0],
-  cancelToken?: AbortSignal
+  cancelToken?: AbortSignal,
 ): WebviewProtocol[T][1] {
   const messageId = uuidv4();
 
@@ -153,7 +153,7 @@ export async function* llmStreamChat(
   modelTitle: string,
   cancelToken: AbortSignal | undefined,
   messages: ChatMessage[],
-  options: LLMFullCompletionOptions = {}
+  options: LLMFullCompletionOptions = {},
 ): AsyncGenerator<ChatMessage, LLMReturnValue> {
   const gen = ideStreamRequest(
     "llm/streamChat",
@@ -162,7 +162,7 @@ export async function* llmStreamChat(
       title: modelTitle,
       completionOptions: options,
     },
-    cancelToken
+    cancelToken,
   );
 
   let next = await gen.next();

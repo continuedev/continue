@@ -16,7 +16,7 @@ declare global {
     postIntellijMessage?: (
       messageType: string,
       data: any,
-      messageIde: string,
+      messageIde: string
     ) => void;
   }
 }
@@ -73,17 +73,17 @@ export interface ILLM extends LLMOptions {
 
   streamComplete(
     prompt: string,
-    options?: LLMFullCompletionOptions,
+    options?: LLMFullCompletionOptions
   ): AsyncGenerator<string, LLMReturnValue>;
 
   streamChat(
     messages: ChatMessage[],
-    options?: LLMFullCompletionOptions,
+    options?: LLMFullCompletionOptions
   ): AsyncGenerator<ChatMessage, LLMReturnValue>;
 
   chat(
     messages: ChatMessage[],
-    options?: LLMFullCompletionOptions,
+    options?: LLMFullCompletionOptions
   ): Promise<ChatMessage>;
 
   countTokens(text: string): number;
@@ -123,10 +123,10 @@ export interface CustomContextProvider {
   type?: ContextProviderType;
   getContextItems(
     query: string,
-    extras: ContextProviderExtras,
+    extras: ContextProviderExtras
   ): Promise<ContextItem[]>;
   loadSubmenuItems?: (
-    args: LoadSubmenuItemsArgs,
+    args: LoadSubmenuItemsArgs
   ) => Promise<ContextSubmenuItem[]>;
 }
 
@@ -141,7 +141,7 @@ export interface IContextProvider {
 
   getContextItems(
     query: string,
-    extras: ContextProviderExtras,
+    extras: ContextProviderExtras
   ): Promise<ContextItem[]>;
 
   loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
@@ -287,15 +287,15 @@ export interface CustomLLMWithOptionals {
   streamCompletion?: (
     prompt: string,
     options: CompletionOptions,
-    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
   ) => AsyncGenerator<string>;
   streamChat?: (
     messages: ChatMessage[],
     options: CompletionOptions,
-    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
   ) => AsyncGenerator<string>;
   listModels?: (
-    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+    fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
   ) => Promise<string[]>;
 }
 
@@ -320,6 +320,11 @@ export class Problem {
   message: string;
 }
 
+export class Thread {
+  name: string;
+  id: number;
+}
+
 export type IdeType = "vscode" | "jetbrains";
 export interface IdeInfo {
   ideType: IdeType;
@@ -328,12 +333,24 @@ export interface IdeInfo {
   remoteName: string;
 }
 
+export interface IndexTag {
+  directory: string;
+  branch: string;
+  artifactId: string;
+}
+
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getDiff(): Promise<string>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
+  getDebugLocals(threadIndex: number): Promise<string>;
+  getTopLevelCallStackSources(
+    threadIndex: number,
+    stackDepth: number
+  ): Promise<string[]>;
+  getAvailableThreads(): Promise<Thread[]>;
   listWorkspaceContents(directory?: string): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
@@ -349,12 +366,12 @@ export interface IDE {
   showLines(
     filepath: string,
     startLine: number,
-    endLine: number,
+    endLine: number
   ): Promise<void>;
   showDiff(
     filepath: string,
     newContents: string,
-    stepIndex: number,
+    stepIndex: number
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
   getPinnedFiles(): Promise<string[]>;
@@ -363,6 +380,7 @@ export interface IDE {
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
   getBranch(dir: string): Promise<string>;
   getStats(directory: string): Promise<{ [path: string]: number }>;
+  getTags(artifactId: string): Promise<IndexTag[]>;
 }
 
 // Slash Commands
@@ -408,6 +426,7 @@ type ContextProviderName =
   | "diff"
   | "github"
   | "terminal"
+  | "locals"
   | "open"
   | "google"
   | "search"
@@ -419,7 +438,10 @@ type ContextProviderName =
   | "folder"
   | "jira"
   | "postgres"
-  | "database";
+  | "database"
+  | "code"
+  | "docs"
+  | "gitlab-mr";
 
 type TemplateType =
   | "llama2"
@@ -435,7 +457,8 @@ type TemplateType =
   | "xwin-coder"
   | "neural-chat"
   | "codellama-70b"
-  | "llava";
+  | "llava"
+  | "gemma";
 
 type ModelProvider =
   | "openai"
@@ -548,6 +571,7 @@ interface BaseCompletionOptions {
   stop?: string[];
   maxTokens?: number;
   numThreads?: number;
+  keepAlive?: number;
 }
 
 export interface ModelDescription {

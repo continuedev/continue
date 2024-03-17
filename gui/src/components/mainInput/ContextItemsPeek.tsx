@@ -52,7 +52,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
         new WebviewIde().showLines(
           rif.filepath,
           rif.range.start.line,
-          rif.range.end.line
+          rif.range.end.line,
         );
       } else {
         new WebviewIde().openFile(contextItem.description);

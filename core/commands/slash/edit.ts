@@ -58,7 +58,7 @@ export async function getPromptParts(
 ) {
   let maxTokens = Math.floor(model.contextLength / 2);
 
-  const TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = tokenLimit || 1200;
+  const TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = tokenLimit ?? 1200;
   // if (model.countTokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE) {
   //   throw new Error(
   //     "\n\n**It looks like you've selected a large range to edit, which may take a while to complete. If you'd like to cancel, click the 'X' button above. If you highlight a more specific range, Continue will only edit within it.**"
@@ -455,7 +455,7 @@ const EditSlashCommand: SlashCommand = {
           userInput,
           filePrefix: filePrefix,
           fileSuffix: fileSuffix,
-          systemMessage: llm.systemMessage || "",
+          systemMessage: llm.systemMessage ?? "",
           // "contextItems": (await sdk.getContextItemChatMessages()).map(x => x.content || "").join("\n\n"),
         },
       );
@@ -516,7 +516,7 @@ const EditSlashCommand: SlashCommand = {
         unfinishedLine = "";
         chunkLines.pop(); // because this will be an empty string
       } else {
-        unfinishedLine = chunkLines.pop() || "";
+        unfinishedLine = chunkLines.pop() ?? "";
       }
 
       // Deal with newly accumulated lines

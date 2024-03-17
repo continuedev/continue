@@ -4,6 +4,7 @@ import {
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
   deepseekTemplateMessages,
+  gemmaTemplateMessage,
   llama2TemplateMessages,
   llavaTemplateMessages,
   neuralChatTemplateMessages,
@@ -20,6 +21,7 @@ import {
   codeLlama70bEditPrompt,
   codellamaEditPrompt,
   deepseekEditPrompt,
+  gemmaEditPrompt,
   mistralEditPrompt,
   neuralChatEditPrompt,
   openchatEditPrompt,
@@ -44,7 +46,8 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "ollama",
   "google-palm",
   "free-trial",
-  "msty"
+  "msty",
+  "anthropic",
 ];
 
 function modelSupportsImages(provider: ModelProvider, model: string): boolean {
@@ -53,6 +56,10 @@ function modelSupportsImages(provider: ModelProvider, model: string): boolean {
   }
 
   if (model.includes("llava")) {
+    return true;
+  }
+
+  if (model.includes("claude-3")) {
     return true;
   }
 
@@ -126,6 +133,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "chatml";
   }
 
+  if (lower.includes("gemma")) {
+    return "gemma";
+  }
+
   if (lower.includes("phi2")) {
     return "phi2";
   }
@@ -181,7 +192,7 @@ function autodetectTemplateFunction(
     return null;
   }
 
-  const templateType = explicitTemplate || autodetectTemplateType(model);
+  const templateType = explicitTemplate ?? autodetectTemplateType(model);
 
   if (templateType) {
     const mapping: Record<TemplateType, any> = {
@@ -198,6 +209,7 @@ function autodetectTemplateFunction(
       "neural-chat": neuralChatTemplateMessages,
       llava: llavaTemplateMessages,
       "codellama-70b": codeLlama70bTemplateMessages,
+      gemma: gemmaTemplateMessage,
       none: null,
     };
 
@@ -211,7 +223,7 @@ function autodetectPromptTemplates(
   model: string,
   explicitTemplate: TemplateType | undefined = undefined,
 ) {
-  const templateType = explicitTemplate || autodetectTemplateType(model);
+  const templateType = explicitTemplate ?? autodetectTemplateType(model);
   const templates: Record<string, any> = {};
 
   let editTemplate = null;
@@ -242,6 +254,8 @@ function autodetectPromptTemplates(
     editTemplate = codeLlama70bEditPrompt;
   } else if (templateType === "anthropic") {
     editTemplate = claudeEditPrompt;
+  } else if (templateType === "gemma") {
+    editTemplate = gemmaEditPrompt;
   } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }

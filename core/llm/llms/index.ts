@@ -115,7 +115,7 @@ export async function llmFromDescription(
     ...desc.completionOptions,
   };
 
-  systemMessage = desc.systemMessage || systemMessage;
+  systemMessage = desc.systemMessage ?? systemMessage;
   if (systemMessage !== undefined) {
     systemMessage = await renderTemplatedString(systemMessage, readFile);
   }
@@ -124,14 +124,14 @@ export async function llmFromDescription(
     ...desc,
     completionOptions: {
       ...finalCompletionOptions,
-      model: desc.model || cls.defaultOptions?.model || "codellama-7b", // TODO: Fix up all the ?'s
-      maxTokens:
-        finalCompletionOptions.maxTokens ||
-        cls.defaultOptions?.completionOptions?.maxTokens ||
-        DEFAULT_MAX_TOKENS,
+      model: (desc.model || cls.defaultOptions?.model) ?? "codellama-7b",
+      maxTokens: (
+        finalCompletionOptions.maxTokens ??
+        cls.defaultOptions?.completionOptions?.maxTokens
+      ) ?? DEFAULT_MAX_TOKENS,
     },
     systemMessage,
-  };
+};
 
   return new cls(options);
 }

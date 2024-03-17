@@ -53,7 +53,7 @@ class FileTreeContextProvider extends BaseContextProvider {
       const contents = await extras.ide.listWorkspaceContents(workspaceDir);
 
       const subDirTree: Directory = {
-        name: splitPath(workspaceDir).pop() || "",
+        name: splitPath(workspaceDir).pop() ?? "",
         files: [],
         directories: [],
       };

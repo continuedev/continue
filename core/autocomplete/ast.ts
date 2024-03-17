@@ -12,8 +12,12 @@ export async function getAst(
     return undefined;
   }
 
-  const ast = parser.parse(fileContents);
-  return ast;
+  try {
+    const ast = parser.parse(fileContents);
+    return ast;
+  } catch (e) {
+    return undefined;
+  }
 }
 
 export async function getTreePathAtCursor(

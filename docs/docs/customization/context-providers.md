@@ -16,6 +16,14 @@ As an example, say you are working on solving a new GitHub Issue. You type '@iss
 
 To use any of the built-in context providers, open `~/.continue/config.json` and add it to the `contextProviders` list.
 
+### Code
+
+Type '@code' to reference specific functions or classes from throughout your project.
+
+```json
+{ "name": "code" }
+```
+
 ### Git Diff
 
 Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
@@ -35,8 +43,6 @@ Type '@terminal' to reference the contents of your IDE's terminal.
 ### Documentation
 
 Type `@docs` to index and retrieve snippets from any documentation site. You can add any site by selecting "Add Docs" in the dropdown, then entering the root URL of the documentation site and a title to remember it by. After the site has been indexed, you can type `@docs`, select your documentation from the dropdown, and Continue will use similarity search to automatically find important sections when answering your question.
-
-> The crawler currently works only on static sites that don't require Javascript to load. An example of a page that won't be correctly indexed is [the OpenAI documentation](https://platform.openai.com/docs/overview)
 
 ```json
 { "name": "docs" }
@@ -114,19 +120,67 @@ Type '@issue' to reference the conversation in a GitHub issue. Make sure to incl
 }
 ```
 
+### GitLab Merge Request
+
+Type `@gitlab-mr` to reference an open MR for this branch on GitLab.
+
+#### Configuration
+
+You will need to create a [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with the `read_api` scope. then add the following to your configuration:
+
+```json
+{
+  "name": "gitlab-mr",
+  "params": {
+    "token": "..."
+  }
+}
+```
+
+#### Using Self-Hosted GitLab
+
+You can specify the domain to communicate with by setting the `domain` parameter in your configurtion. By default this is set to `gitlab.com`.
+
+```json
+{
+  "name": "gitlab-mr",
+  "params": {
+    "token": "...",
+    "domain": "gitlab.example.com"
+  }
+}
+```
+
+#### Filtering Comments
+
+If you select some code to be edited, you can have the context provider filter out comments for other files. To enable this feature, set `filterComments` to `true`.
+
 ### Jira Issues
 
 Type '@jira' to reference the conversation in a Jira issue. Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens).
 
 ```json
 {
-  "name": "issue",
+  "name": "jira",
   "params": {
     "domain": "company.atlassian.net",
     "email": "someone@somewhere.com",
     "token ": "ATATT..."
   }
 }
+```
+
+#### Jira Datacenter Support
+
+This context provider supports both Jira API version 2 and 3. It will use version 3 by default since
+that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need
+to set the API Version to 2 using the `apiVersion` property.
+
+```json
+  "params": {
+    "apiVersion": "2",
+    ...
+  }
 ```
 
 #### Issue Query
@@ -212,6 +266,19 @@ Type `@database` to reference table schemas you can use the drop-down or start t
 }
 ```
 
+### Debugger: Local Variables
+
+Type `@locals` to reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread. A dropdown will appear, allowing you to select a specific thread to see the local variables in that thread.
+
+```json
+{
+  "name": "locals",
+  "params": {
+    "stackDepth": 3
+  }
+}
+```
+
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new ContextProvider.
@@ -232,7 +299,7 @@ interface CustomContextProvider {
   description?: string;
   getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
 }
 ```
@@ -252,7 +319,7 @@ const RagContextProvider: CustomContextProvider = {
 
   getContextItems: async (
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> => {
     const response = await fetch("https://internal_rag_server.com/retrieve", {
       method: "POST",
@@ -301,7 +368,7 @@ const ReadMeContextProvider: CustomContextProvider = {
 
   getContextItems: async (
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> => {
     // 'query' is the filepath of the README selected from the dropdown
     const content = await extras.ide.readFile(query);
@@ -315,12 +382,12 @@ const ReadMeContextProvider: CustomContextProvider = {
   },
 
   loadSubmenuItems: async (
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> => {
     // Filter all workspace files for READMEs
     const allFiles = await args.ide.listWorkspaceContents();
     const readmes = allFiles.filter((filepath) =>
-      filepath.endsWith("README.md")
+      filepath.endsWith("README.md"),
     );
 
     // Return the items that will be shown in the dropdown

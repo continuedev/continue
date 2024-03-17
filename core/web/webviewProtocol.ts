@@ -1,11 +1,15 @@
 import {
   ContextItemWithId,
+  ContextSubmenuItem,
   ContinueRcJson,
   DiffLine,
+  IndexTag,
   Problem,
   Range,
+  Thread,
 } from "..";
 import { RangeInFileWithContents } from "../commands/util";
+
 import { Protocol } from "../protocol";
 
 export type IdeProtocol = {
@@ -23,7 +27,7 @@ export type IdeProtocol = {
   readFile: [{ filepath: string }, string];
   showDiff: [
     { filepath: string; newContents: string; stepIndex: number },
-    void,
+    void
   ];
   diffLine: [
     {
@@ -32,7 +36,7 @@ export type IdeProtocol = {
       startLine: number;
       endLine: number;
     },
-    void,
+    void
   ];
   getProblems: [{ filepath: string }, Problem[]];
   getBranch: [{ dir: string }, string];
@@ -43,8 +47,15 @@ export type IdeProtocol = {
   getDiff: [undefined, string];
   getWorkspaceConfigs: [undefined, ContinueRcJson[]];
   getTerminalContents: [undefined, string];
+  getDebugLocals: [{ threadIndex: Number }, string];
+  getTopLevelCallStackSources: [
+    { threadIndex: number; stackDepth: number },
+    string[]
+  ];
+  getAvailableThreads: [undefined, Thread[]];
   isTelemetryEnabled: [undefined, boolean];
   getUniqueId: [undefined, string];
+  getTags: [string, IndexTag[]];
 };
 
 export type WebviewProtocol = Protocol &
@@ -57,7 +68,7 @@ export type WebviewProtocol = Protocol &
         workspacePaths: string[];
         vscMachineId: string;
         vscMediaUrl: string;
-      },
+      }
     ];
 
     errorPopup: [{ message: string }, void];
@@ -83,7 +94,11 @@ export type ReverseWebviewProtocol = {
       historyIndex: number;
       item: ContextItemWithId;
     },
-    void,
+    void
+  ];
+  updateSubmenuItems: [
+    { provider: string; submenuItems: ContextSubmenuItem[] },
+    void
   ];
   getDefaultModelTitle: [undefined, string];
   newSessionWithPrompt: [{ prompt: string }, void];
