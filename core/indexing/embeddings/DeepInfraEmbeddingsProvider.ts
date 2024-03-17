@@ -1,6 +1,6 @@
 import { EmbedOptions } from "../..";
+import { withExponentialBackoff } from "../../util/withExponentialBackoff";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
-import { fetchWithExponentialBackoff } from "./util";
 
 class DeepInfraEmbeddingsProvider extends BaseEmbeddingsProvider {
   static defaultOptions: Partial<EmbedOptions> | undefined = {
@@ -12,16 +12,17 @@ class DeepInfraEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   async embed(chunks: string[]) {
-    const resp = await fetchWithExponentialBackoff(
-      `https://api.deepinfra.com/v1/inference/${this.options.model}`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `bearer ${this.options.apiKey}`,
-        },
-        body: JSON.stringify({ inputs: chunks }),
-      },
-    );
+    const fetchWithBackoff = () =>
+      withExponentialBackoff<Response>(() =>
+        fetch(`https://api.deepinfra.com/v1/inference/${this.options.model}`, {
+          method: "POST",
+          headers: {
+            Authorization: `bearer ${this.options.apiKey}`,
+          },
+          body: JSON.stringify({ inputs: chunks }),
+        }),
+      );
+    const resp = await fetchWithBackoff();
     const data = await resp.json();
     return data.embeddings;
   }
