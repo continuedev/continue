@@ -140,3 +140,9 @@ export async function listDocs(): Promise<
   const docs = db.all(`SELECT title, baseUrl FROM docs`);
   return docs;
 }
+
+export async function hasDoc(baseUrl: string) {
+  const db = await getDBDocs();
+  const doc = await db.get(`SELECT title FROM docs WHERE baseUrl =?`, baseUrl);
+  return!!doc;
+}
