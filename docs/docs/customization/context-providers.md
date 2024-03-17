@@ -20,7 +20,7 @@ To use any of the built-in context providers, open `~/.continue/config.json` and
 
 Type '@code' to reference specific functions or classes from throughout your project.
 
-`````json
+```json
 { "name": "code" }
 ```
 
@@ -120,6 +120,41 @@ Type '@issue' to reference the conversation in a GitHub issue. Make sure to incl
 }
 ```
 
+### GitLab Merge Request
+
+Type `@gitlab-mr` to reference an open MR for this branch on GitLab.
+
+#### Configuration
+
+You will need to create a [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with the `read_api` scope. then add the following to your configuration:
+
+```json
+{
+  "name": "gitlab-mr",
+  "params": {
+    "token": "..."
+  }
+}
+```
+
+#### Using Self-Hosted GitLab
+
+You can specify the domain to communicate with by setting the `domain` parameter in your configurtion. By default this is set to `gitlab.com`.
+
+```json
+{
+  "name": "gitlab-mr",
+  "params": {
+    "token": "...",
+    "domain": "gitlab.example.com"
+  }
+}
+```
+
+#### Filtering Comments
+
+If you select some code to be edited, you can have the context provider filter out comments for other files. To enable this feature, set `filterComments` to `true`.
+
 ### Jira Issues
 
 Type '@jira' to reference the conversation in a Jira issue. Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens).
@@ -141,11 +176,12 @@ This context provider supports both Jira API version 2 and 3. It will use versio
 that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need
 to set the API Version to 2 using the `apiVersion` property.
 
-````json
+```json
   "params": {
     "apiVersion": "2",
     ...
   }
+```
 
 #### Issue Query
 
@@ -153,7 +189,7 @@ By default, the following query will be used to find issues:
 
 ```jql
 assignee = currentUser() AND resolution = Unresolved order by updated DESC
-`````
+```
 
 You can override this query by setting the `issueQuery` parameter.
 
