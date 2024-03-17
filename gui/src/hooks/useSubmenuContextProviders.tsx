@@ -42,7 +42,28 @@ function useSubmenuContextProviders() {
   }
 
   useWebviewListener("refreshSubmenuItems", async (data) => {
-    setLoaded(true);
+    setLoaded(false);
+  });
+
+  useWebviewListener("updateSubmenuItems", async (data) => {
+    const minisearch = new MiniSearch<ContextSubmenuItem>({
+      fields: ["title", "description"],
+      storeFields: ["id", "title", "description"],
+    });
+
+    minisearch.addAll(data.submenuItems);
+
+    setMinisearches((prev) => ({ ...prev, [data.provider]: minisearch }));
+
+    if (data.provider === "file") {
+      const openFiles = await getOpenFileItems();
+      setFallbackResults((prev) => ({ ...prev, file: openFiles }));
+    } else {
+      setFallbackResults((prev) => ({
+        ...prev,
+        [data.provider]: data.submenuItems.slice(0, 6),
+      }));
+    }
   });
 
   function addItem(providerTitle: string, item: ContextSubmenuItem) {

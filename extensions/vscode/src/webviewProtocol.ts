@@ -161,6 +161,18 @@ export class VsCodeWebviewProtocol {
     this.on("getTerminalContents", async (msg) => {
       return await ide.getTerminalContents();
     });
+    this.on("getDebugLocals", async (msg) => {
+      return await ide.getDebugLocals(Number(msg.data.threadIndex));
+    });
+    this.on("getAvailableThreads", async (msg) => {
+      return await ide.getAvailableThreads();
+    });
+    this.on("getTopLevelCallStackSources", async (msg) => {
+      return await ide.getTopLevelCallStackSources(
+        msg.data.threadIndex,
+        msg.data.stackDepth
+      );
+    });
     this.on("listWorkspaceContents", async (msg) => {
       return await ide.listWorkspaceContents();
     });
