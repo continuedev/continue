@@ -63,7 +63,6 @@ export const defaultConfig: SerializedContinueConfig = {
     { name: "terminal", params: {} },
     { name: "problems", params: {} },
     { name: "codebase", params: {} },
-    { name: "locals", params: {} },
   ],
   tabAutocompleteModel: {
     title: "Starcoder 3b",

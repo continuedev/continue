@@ -230,11 +230,10 @@ Type `@database` to reference table schemas you can use the drop-down or start t
 }
 ```
 
-### Debugger Context
-
-#### LocalsProvider
+### Debugger: Local Variables
 
 Type `@locals` to reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread. A dropdown will appear, allowing you to select a specific thread to see the local variables in that thread.
+
 ```json
 {
   "name": "locals",
@@ -243,7 +242,6 @@ Type `@locals` to reference the contents of the local variables with top n level
   }
 }
 ```
-
 
 ### Requesting Context Providers
 
