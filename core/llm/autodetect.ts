@@ -4,6 +4,7 @@ import {
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
   deepseekTemplateMessages,
+  gemmaTemplateMessage,
   llama2TemplateMessages,
   llavaTemplateMessages,
   neuralChatTemplateMessages,
@@ -20,6 +21,7 @@ import {
   codeLlama70bEditPrompt,
   codellamaEditPrompt,
   deepseekEditPrompt,
+  gemmaEditPrompt,
   mistralEditPrompt,
   neuralChatEditPrompt,
   openchatEditPrompt,
@@ -129,6 +131,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "chatml";
   }
 
+  if (lower.includes("gemma")) {
+    return "gemma";
+  }
+
   if (lower.includes("phi2")) {
     return "phi2";
   }
@@ -201,6 +207,7 @@ function autodetectTemplateFunction(
       "neural-chat": neuralChatTemplateMessages,
       llava: llavaTemplateMessages,
       "codellama-70b": codeLlama70bTemplateMessages,
+      gemma: gemmaTemplateMessage,
       none: null,
     };
 
@@ -245,6 +252,8 @@ function autodetectPromptTemplates(
     editTemplate = codeLlama70bEditPrompt;
   } else if (templateType === "anthropic") {
     editTemplate = claudeEditPrompt;
+  } else if (templateType === "gemma") {
+    editTemplate = gemmaEditPrompt;
   } else if (templateType) {
     editTemplate = simplestEditPrompt;
   }

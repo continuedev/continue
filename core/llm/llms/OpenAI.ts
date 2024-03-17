@@ -71,9 +71,11 @@ class OpenAI extends BaseLLM {
       top_p: options.topP,
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
-      stop: this.apiBase?.includes(":1337")
-        ? options.stop?.slice(0, 4)
-        : options.stop,
+      stop:
+        // Jan + Azure OpenAI don't truncate and will throw an error
+        this.apiBase?.includes(":1337") || this.apiType === "azure"
+          ? options.stop?.slice(0, 4)
+          : options.stop,
     };
 
     return finalOptions;
@@ -99,7 +101,7 @@ class OpenAI extends BaseLLM {
   ) {
     if (this.apiType === "azure") {
       return new URL(
-        `openai/deployments/${this.engine}${endpoint}?api-version=${this.apiVersion}`,
+        `openai/deployments/${this.engine}/${endpoint}?api-version=${this.apiVersion}`,
         this.apiBase,
       );
     } else {

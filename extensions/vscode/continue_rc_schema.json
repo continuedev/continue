@@ -187,6 +187,7 @@
             "llama2",
             "alpaca",
             "zephyr",
+            "phi2",
             "phind",
             "anthropic",
             "chatml",
@@ -195,7 +196,9 @@
             "openchat",
             "xwin-coder",
             "neural-chat",
-            "codellama-70b"
+            "codellama-70b",
+            "llava",
+            "gemma"
           ],
           "type": "string"
         },
@@ -380,15 +383,22 @@
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "gpt-3.5-turbo",
-                  "gpt-3.5-turbo-16k",
-                  "gpt-4",
-                  "gpt-3.5-turbo-0613",
-                  "gpt-4-32k",
-                  "gpt-4-0125-preview",
-                  "gpt-4-turbo-preview",
-                  "AUTODETECT"
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gpt-3.5-turbo",
+                      "gpt-3.5-turbo-16k",
+                      "gpt-4",
+                      "gpt-3.5-turbo-0613",
+                      "gpt-4-32k",
+                      "gpt-4-0125-preview",
+                      "gpt-4-turbo-preview",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -1162,7 +1172,8 @@
                 "tree",
                 "highlights",
                 "outline",
-                "postgres"
+                "postgres",
+                "code"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1181,7 +1192,8 @@
                 "Include a repo map showing important code objects",
                 "Displays important snippets of code from the currently open files",
                 "Displays definition lines from the currently open files",
-                "References Postgres table schema and sample rows"
+                "References Postgres table schema and sample rows",
+                "Reference specific functions and classes from throughout your codebase"
               ],
               "type": "string"
             },
@@ -1411,6 +1423,10 @@
                   "issueQuery": {
                     "type": "string",
                     "description": "Customize the query used to find Jira issues"
+                  },
+                  "apiVersion": {
+                    "type": "integer",
+                    "markdownDescription": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property."
                   }
                 },
                 "required": [
