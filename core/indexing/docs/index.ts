@@ -4,17 +4,16 @@ import {
   IndexingProgressUpdate,
 } from "../..";
 
-import { crawlSubpages } from "./crawl";
-import { addDocs, listDocs } from "./db";
-import { urlToArticle, chunkArticle } from "./article";
+import { crawlPage } from "./crawl";
+import { addDocs, hasDoc } from "./db";
+import { pageToArticle, chunkArticle, Article } from "./article";
 
 export async function* indexDocs(
   title: string,
   baseUrl: URL,
   embeddingsProvider: EmbeddingsProvider,
 ): AsyncGenerator<IndexingProgressUpdate> {
-  const existingDocs = await listDocs();
-  if (existingDocs.find((doc) => doc.baseUrl === baseUrl.toString())) {
+  if (await hasDoc(baseUrl.toString())) {
     yield {
       progress: 1,
       desc: "Already indexed",
@@ -27,36 +26,26 @@ export async function* indexDocs(
     desc: "Finding subpages",
   };
 
-  const subpathGenerator = crawlSubpages(baseUrl);
-  let { value, done } = await subpathGenerator.next();
-  
-  while (true) {
-    if (done) {
-      break;
-    }
+  const articles: Article[] = [];
+
+  for await (const page of crawlPage(baseUrl)) {
+    const article = await pageToArticle(page);
+    if (!article) continue; 
+
+    articles.push(article);
+
     yield {
       progress: 0,
-      desc: `Finding subpages (${value})`,
+      desc: `Finding subpages (${page.path})`,
     };
-    const next = await subpathGenerator.next();
-    value = next.value;
-    done = next.done;
   }
-
-  let subpaths = value as string[];
 
   const chunks: Chunk[] = [];
   const embeddings: number[][] = [];
 
-  let articles = await Promise.all(
-    subpaths.map(subpath => urlToArticle(subpath, baseUrl)),
-  );
-
   for (const article of articles) {
-    if (!article) continue; 
-
     yield {
-      progress: Math.max(1, Math.floor(100 / (subpaths.length + 1))),
+      progress: Math.max(1, Math.floor(100 / (articles.length + 1))),
       desc: `${article.subpath}`,
     };
 
