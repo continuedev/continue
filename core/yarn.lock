@@ -602,8 +602,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@lancedb/vectordb-darwin-arm64@0.4.11":
-  version "0.4.11"
+"@lancedb/vectordb-darwin-arm64@0.4.12":
+  version "0.4.12"
+  resolved "https://registry.npmjs.org/@lancedb/vectordb-darwin-arm64/-/vectordb-darwin-arm64-0.4.12.tgz"
+  integrity sha512-38/rkJRlWXkPWXuj9onzvbrhnIWcIUQjgEp5G9v5ixPosBowm7A4j8e2Q8CJMsVSNcVX2JLqwWVldiWegZFuYw==
 
 "@mozilla/readability@^0.5.0":
   version "0.5.0"
@@ -5264,11 +5266,6 @@ tr46@~0.0.3:
   resolved "https://registry.npmjs.org/tr46/-/tr46-0.0.3.tgz"
   integrity sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==
 
-tree-sitter-cli@^0.21.0:
-  version "0.21.0"
-  resolved "https://registry.npmjs.org/tree-sitter-cli/-/tree-sitter-cli-0.21.0.tgz"
-  integrity sha512-wA7wT5724fNQW82XDH6zT6ZcYonjrAKLCHHuhLsPcAKULrhp3rNuMvlgBdB5FUBvmjHNhtTZF/qpHenMoRJPBw==
-
 tree-sitter-wasms@^0.1.6:
   version "0.1.6"
 
@@ -5471,19 +5468,19 @@ v8-to-istanbul@^9.0.1:
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^2.0.0"
 
-vectordb@^0.4.3:
-  version "0.4.11"
+vectordb@^0.4.12:
+  version "0.4.12"
+  resolved "https://registry.npmjs.org/vectordb/-/vectordb-0.4.12.tgz"
+  integrity sha512-H2mFwZ87d3BcuX4yGx5RoW06amRZQ3W5u/FRTNc86rwVINuEEa+Ivsqng1i8hURHXoTDbF/0Y9qwCshySkeznQ==
   dependencies:
-    "@apache-arrow/ts" "^14.0.2"
     "@neon-rs/load" "^0.0.74"
-    apache-arrow "^14.0.2"
     axios "^1.4.0"
   optionalDependencies:
-    "@lancedb/vectordb-darwin-arm64" "0.4.11"
-    "@lancedb/vectordb-darwin-x64" "0.4.11"
-    "@lancedb/vectordb-linux-arm64-gnu" "0.4.11"
-    "@lancedb/vectordb-linux-x64-gnu" "0.4.11"
-    "@lancedb/vectordb-win32-x64-msvc" "0.4.11"
+    "@lancedb/vectordb-darwin-arm64" "0.4.12"
+    "@lancedb/vectordb-darwin-x64" "0.4.12"
+    "@lancedb/vectordb-linux-arm64-gnu" "0.4.12"
+    "@lancedb/vectordb-linux-x64-gnu" "0.4.12"
+    "@lancedb/vectordb-win32-x64-msvc" "0.4.12"
 
 verror@1.10.0:
   version "1.10.0"
