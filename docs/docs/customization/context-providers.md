@@ -20,7 +20,7 @@ To use any of the built-in context providers, open `~/.continue/config.json` and
 
 Type '@code' to reference specific functions or classes from throughout your project.
 
-`````json
+```json
 { "name": "code" }
 ```
 
@@ -141,11 +141,12 @@ This context provider supports both Jira API version 2 and 3. It will use versio
 that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need
 to set the API Version to 2 using the `apiVersion` property.
 
-````json
+```json
   "params": {
     "apiVersion": "2",
     ...
   }
+```
 
 #### Issue Query
 
@@ -153,7 +154,7 @@ By default, the following query will be used to find issues:
 
 ```jql
 assignee = currentUser() AND resolution = Unresolved order by updated DESC
-`````
+```
 
 You can override this query by setting the `issueQuery` parameter.
 
