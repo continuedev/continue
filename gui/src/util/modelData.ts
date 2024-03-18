@@ -562,7 +562,7 @@ const claude3Opus: ModelPackage = {
     title: "Claude 3 Opus",
     apiKey: "",
   },
-  providerOptions: ["anthropic"],
+  providerOptions: ["anthropic", "freetrial"],
   icon: "anthropic.png",
 };
 
@@ -576,7 +576,7 @@ const claude3Sonnet: ModelPackage = {
     title: "Claude 3 Sonnet",
     apiKey: "",
   },
-  providerOptions: ["anthropic"],
+  providerOptions: ["anthropic", "freetrial"],
   icon: "anthropic.png",
 };
 
@@ -585,12 +585,12 @@ const claude3Haiku: ModelPackage = {
   description:
     "The third most capable model in the Claude 3 series: fastest and most compact model for near-instant responsiveness",
   params: {
-    model: "claude-2",
+    model: "claude-3-haiku-20240307",
     contextLength: 200_000,
     title: "Claude 3 Haiku",
     apiKey: "",
   },
-  providerOptions: ["anthropic"],
+  providerOptions: ["anthropic", "freetrial"],
   icon: "anthropic.png",
 };
 
@@ -625,6 +625,7 @@ export const MODEL_INFO: ModelPackage[] = [
   geminiPro,
   claude3Opus,
   claude3Sonnet,
+  claude3Haiku,
   claude2,
   deepseek,
   mistral,
@@ -693,7 +694,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         defaultValue: 100_000,
       },
     ],
-    packages: [claude3Opus, claude3Sonnet, claude2],
+    packages: [claude3Opus, claude3Sonnet, claude3Haiku, claude2],
   },
   ollama: {
     title: "Ollama",
@@ -929,6 +930,9 @@ After it's up and running, you can start using Continue.`,
     packages: [
       codellama70bTrial,
       mixtralTrial,
+      { ...claude3Opus, title: "Claude 3 Opus (trial)" },
+      { ...claude3Sonnet, title: "Claude 3 Sonnet (trial)" },
+      { ...claude3Haiku, title: "Claude 3 Haiku (trial)" },
       { ...geminiPro, title: "Gemini Pro (trial)" },
       { ...gpt4vision, title: "GPT-4 Vision (trial)" },
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },

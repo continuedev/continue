@@ -151,8 +151,9 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "zephyr";
   }
 
+  // Claude requests always sent through Messages API, so formatting not necessary
   if (lower.includes("claude")) {
-    return "anthropic";
+    return "none";
   }
 
   if (lower.includes("alpaca") || lower.includes("wizard")) {
