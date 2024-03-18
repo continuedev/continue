@@ -1,6 +1,6 @@
 import { getHeaders } from "../../continueServer/stubs/headers.js";
+import { constants } from "../../deploy/constants.js";
 import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
-import { SERVER_URL } from "../../util/parameters.js";
 import { Telemetry } from "../../util/posthog.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
@@ -56,7 +56,7 @@ class FreeTrial extends BaseLLM {
 
     await this._countTokens(prompt, args.model, true);
 
-    const response = await this.fetch(`${SERVER_URL}/stream_complete`, {
+    const response = await this.fetch(`${constants.a}/stream_complete`, {
       method: "POST",
       headers: await this._getHeaders(),
       body: JSON.stringify({
@@ -103,7 +103,7 @@ class FreeTrial extends BaseLLM {
       true,
     );
 
-    const response = await this.fetch(`${SERVER_URL}/stream_chat`, {
+    const response = await this.fetch(`${constants.a}/stream_chat`, {
       method: "POST",
       headers: await this._getHeaders(),
       body: JSON.stringify({
