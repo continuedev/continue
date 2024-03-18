@@ -1,7 +1,13 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { Button, lightGray, vscBackground, vscForeground } from "../components";
+import {
+  Button,
+  Hr,
+  lightGray,
+  vscBackground,
+  vscForeground,
+} from "../components";
 import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { postToIde } from "../util/ide";
@@ -75,6 +81,15 @@ function HelpPage() {
         </TutorialButton>
       </div>
 
+      <h3
+        className="my-0 py-3 mx-auto text-center cursor-pointer"
+        onClick={() => {
+          navigate("/stats");
+        }}
+      >
+        View My Usage
+      </h3>
+      <Hr className="my-0" />
       <h3 className="my-3 mx-auto text-center">Resources</h3>
       <ResourcesDiv className="border">
         <IconDiv backgroundColor="rgb(234, 51, 35)">
