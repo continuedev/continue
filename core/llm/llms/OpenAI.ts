@@ -50,11 +50,14 @@ class OpenAI extends BaseLLM {
     }
 
     const parts = message.content.map((part) => {
-      return {
+      const msg: any = {
         type: part.type,
         text: part.text,
-        image_url: { ...part.imageUrl, detail: "low" },
       };
+      if (part.type === "imageUrl") {
+        msg.image_url = { ...part.imageUrl, detail: "low" };
+      }
+      return msg;
     });
     return {
       ...message,
