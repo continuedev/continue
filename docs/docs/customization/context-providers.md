@@ -20,7 +20,7 @@ To use any of the built-in context providers, open `~/.continue/config.json` and
 
 Type '@code' to reference specific functions or classes from throughout your project.
 
-`````json
+```json
 { "name": "code" }
 ```
 
