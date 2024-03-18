@@ -318,7 +318,9 @@ const commandsMap: (
     sidebar.webviewProtocol?.request("openSettings", undefined);
   },
   "continue.sendMainUserInput": (text: string) => {
-    sidebar.sendMainUserInput(text);
+    sidebar.webviewProtocol?.request("userInput", {
+      input: text,
+    });
   },
   "continue.shareSession": () => {
     sidebar.sendMainUserInput("/share");
