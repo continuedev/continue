@@ -5,6 +5,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
+import { stripImages } from "../countTokens";
 import { streamSse } from "../stream";
 
 class Anthropic extends BaseLLM {
@@ -63,6 +64,16 @@ class Anthropic extends BaseLLM {
         }
       });
     return messages;
+  }
+
+  protected async *_streamComplete(
+    prompt: string,
+    options: CompletionOptions,
+  ): AsyncGenerator<string> {
+    const messages = [{ role: "user" as const, content: prompt }];
+    for await (const update of this._streamChat(messages, options)) {
+      yield stripImages(update.content);
+    }
   }
 
   protected async *_streamChat(

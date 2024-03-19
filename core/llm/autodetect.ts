@@ -22,11 +22,11 @@ import {
   codellamaEditPrompt,
   deepseekEditPrompt,
   gemmaEditPrompt,
+  gptEditPrompt,
   mistralEditPrompt,
   neuralChatEditPrompt,
   openchatEditPrompt,
   phindEditPrompt,
-  simplestEditPrompt,
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
@@ -256,7 +256,7 @@ function autodetectPromptTemplates(
   } else if (templateType === "gemma") {
     editTemplate = gemmaEditPrompt;
   } else if (templateType) {
-    editTemplate = simplestEditPrompt;
+    editTemplate = gptEditPrompt;
   }
 
   if (editTemplate !== null) {
