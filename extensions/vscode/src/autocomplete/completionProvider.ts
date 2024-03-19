@@ -37,7 +37,7 @@ export class ContinueCompletionProvider
     this.completionProvider = new CompletionProvider(
       this.configHandler,
       this.ide,
-      this.tabAutocompleteModel.get,
+      this.tabAutocompleteModel.get.bind(this.tabAutocompleteModel),
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );

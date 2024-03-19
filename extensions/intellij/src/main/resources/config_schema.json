@@ -1,4 +1,4 @@
-git st{
+{
   "title": "config.json",
   "$ref": "#/definitions/SerializedContinueConfig",
   "definitions": {
@@ -1063,7 +1063,7 @@ git st{
                 "outline",
                 "postgres",
                 "code",
-                "OS"
+                "system"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1084,7 +1084,7 @@ git st{
                 "Displays definition lines from the currently open files",
                 "References Postgres table schema and sample rows",
                 "Reference specific functions and classes from throughout your codebase",
-                "Reference your operating system with cpu"
+                "Reference your operating system and cpu"
               ],
               "type": "string"
             },
