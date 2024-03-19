@@ -67,7 +67,7 @@ if (typeof document !== "undefined") {
 
     // Remove alpha channel from colors
     const value = getComputedStyle(document.documentElement).getPropertyValue(
-      colorVar
+      colorVar,
     );
     if (colorVar.startsWith("#") && value.length > 7) {
       document.body.style.setProperty(colorVar, value.slice(0, 7));
@@ -97,7 +97,7 @@ export function parseHexColor(hexColor: string): {
 
 export function parseColorForHex(colorVar: string): string {
   const value = getComputedStyle(document.documentElement).getPropertyValue(
-    colorVar
+    colorVar,
   );
   if (value.startsWith("#")) {
     return value.slice(0, 7);
@@ -195,6 +195,10 @@ export const H3 = styled.h3`
   border-radius: ${defaultBorderRadius};
   padding: 4px 8px;
   width: fit-content;
+`;
+
+export const Hr = styled.hr`
+  border: 0.5px solid ${lightGray};
 `;
 
 export const Input = styled.input`

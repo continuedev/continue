@@ -27,7 +27,7 @@ export type IdeProtocol = {
   readFile: [{ filepath: string }, string];
   showDiff: [
     { filepath: string; newContents: string; stepIndex: number },
-    void
+    void,
   ];
   diffLine: [
     {
@@ -36,7 +36,7 @@ export type IdeProtocol = {
       startLine: number;
       endLine: number;
     },
-    void
+    void,
   ];
   getProblems: [{ filepath: string }, Problem[]];
   getBranch: [{ dir: string }, string];
@@ -50,7 +50,7 @@ export type IdeProtocol = {
   getDebugLocals: [{ threadIndex: Number }, string];
   getTopLevelCallStackSources: [
     { threadIndex: number; stackDepth: number },
-    string[]
+    string[],
   ];
   getAvailableThreads: [undefined, Thread[]];
   isTelemetryEnabled: [undefined, boolean];
@@ -68,7 +68,7 @@ export type WebviewProtocol = Protocol &
         workspacePaths: string[];
         vscMachineId: string;
         vscMediaUrl: string;
-      }
+      },
     ];
 
     errorPopup: [{ message: string }, void];
@@ -83,6 +83,8 @@ export type WebviewProtocol = Protocol &
     reloadWindow: [undefined, void];
     focusEditor: [undefined, void];
     toggleFullScreen: [undefined, void];
+    "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
+    "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
   };
 
 export type ReverseWebviewProtocol = {
@@ -94,11 +96,11 @@ export type ReverseWebviewProtocol = {
       historyIndex: number;
       item: ContextItemWithId;
     },
-    void
+    void,
   ];
   updateSubmenuItems: [
     { provider: string; submenuItems: ContextSubmenuItem[] },
-    void
+    void,
   ];
   getDefaultModelTitle: [undefined, string];
   newSessionWithPrompt: [{ prompt: string }, void];

@@ -11,6 +11,7 @@ import {
   RequestOptions,
   TemplateType,
 } from "..";
+import { DevDataSqliteDb } from "../util/devdataSqlite";
 import mergeJson from "../util/merge";
 import { Telemetry } from "../util/posthog";
 import {
@@ -203,6 +204,7 @@ ${prompt}`;
       provider: this.providerName,
       tokens: tokens,
     });
+    DevDataSqliteDb.logTokensGenerated(model, this.providerName, tokens);
   }
 
   _fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> =
