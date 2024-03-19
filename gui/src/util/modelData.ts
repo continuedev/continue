@@ -949,7 +949,7 @@ After it's up and running, you can start using Continue.`,
     title: "Msty",
     provider: "msty",
     description:
-        "The simplest to use local and online LLMs on Windows, Mac, and Linux",
+        "Simple to use GUI for local and online LLMs on Windows, Mac, and Linux.",
     longDescription:
         "Msty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'\n2. Go to Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.",
     icon: "msty.png",
