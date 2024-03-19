@@ -737,7 +737,7 @@
                   },
                   { "type": "string" }
                 ],
-                "markdownDescription": "Select a pre-defined option, or find the exact model tag for a model from Local AI Module page in Msty."
+                "markdownDescription": "Select a pre-defined option, or find the exact model tag for a model from the Local AI Module page in Msty."
               }
             }
           }
