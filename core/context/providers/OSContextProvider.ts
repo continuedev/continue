@@ -11,8 +11,8 @@ import os from "os";
 
 class OSContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
-    title: "system",
-    displayTitle: "System",
+    title: "OS",
+    displayTitle: "OS",
     description: "OS and CPU Information.",
     type: "normal",
   };
