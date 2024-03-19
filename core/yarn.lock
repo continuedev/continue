@@ -5720,7 +5720,7 @@ v8-to-istanbul@^9.0.1:
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^2.0.0"
 
-vectordb@^0.4.3:
+vectordb@^0.4.12:
   version "0.4.12"
   resolved "https://registry.npmjs.org/vectordb/-/vectordb-0.4.12.tgz"
   integrity sha512-H2mFwZ87d3BcuX4yGx5RoW06amRZQ3W5u/FRTNc86rwVINuEEa+Ivsqng1i8hURHXoTDbF/0Y9qwCshySkeznQ==
