@@ -16,7 +16,8 @@
     "jsx": "react-jsx",
     "noEmitOnError": false,
     "types": ["jest", "node"],
-    "outDir": "dist"
+    "outDir": "dist",
+    "declaration": true
   },
   "include": ["./**/*.ts", "indexing/embeddings/TransformersJsWorkerThread.js"]
 }
