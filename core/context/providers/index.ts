@@ -15,7 +15,7 @@ import OpenFilesContextProvider from "./OpenFilesContextProvider";
 import PostgresContextProvider from "./PostgresContextProvider";
 import ProblemsContextProvider from "./ProblemsContextProvider";
 import SearchContextProvider from "./SearchContextProvider";
-import SystemContextProvider from "./SystemContextProvider";
+import OSContextProvider from "./OSContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
 import LocalsProvider from "./LocalsProvider";
 import URLContextProvider from "./URLContextProvider";
@@ -32,7 +32,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   OpenFilesContextProvider,
   HttpContextProvider,
   SearchContextProvider,
-  SystemContextProvider,
+  OSContextProvider,
   CodebaseContextProvider,
   ProblemsContextProvider,
   FolderContextProvider,

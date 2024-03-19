@@ -9,7 +9,7 @@ import {
 } from "../..";
 import os from "os";
 
-class SystemContextProvider extends BaseContextProvider {
+class OSContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "system",
     displayTitle: "System",
@@ -26,11 +26,11 @@ class SystemContextProvider extends BaseContextProvider {
     return [
       {
         description: "Your OS and CPU",
-        content: `I am running a ${cpu} on ${platform}`,
-        name: "System Information",
+        content: `I am running ${platform} on ${cpu}.`,
+        name: "OS",
       },
     ];
   }
 }
 
-export default SystemContextProvider;
+export default OSContextProvider;
