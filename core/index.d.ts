@@ -441,7 +441,8 @@ type ContextProviderName =
   | "database"
   | "code"
   | "docs"
-  | "gitlab-mr";
+  | "gitlab-mr"
+  | "os";
 
 type TemplateType =
   | "llama2"
