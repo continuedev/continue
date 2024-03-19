@@ -87,7 +87,7 @@ If you haven't already installed Continue, you can do that [here](https://market
 ## Msty
 
 1. Download Msty [here](https://msty.app/) for your platform (Windows, Mac, or Linux)
-2. Open the app and click "Setup Local AI". Optionally, download any model you want with click of a button from Text Module page.
+2. Open the app and click "Setup Local AI". Optionally, download any model you want with just a click of a button from the Text Module page.
 3. Change your Continue config file like this:
 
 ```json title="~/.continue/config.json"
