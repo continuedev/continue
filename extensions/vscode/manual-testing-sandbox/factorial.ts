@@ -6,3 +6,6 @@ export function factorial(n) {
 export function repeat(n: number, a: string) {
     return a.repeat(n);
 }
+
+// call factorial
+console.log("Factorial of 5 is", factorial(5));

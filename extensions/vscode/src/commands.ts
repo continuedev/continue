@@ -133,9 +133,8 @@ const commandsMap: (
   },
   "continue.quickFix": async (message: string, code: string, edit: boolean) => {
     sidebar.webviewProtocol?.request("newSessionWithPrompt", {
-      prompt: `${
-        edit ? "/edit " : ""
-      }${code}\n\nHow do I fix this problem in the above code?: ${message}`,
+      prompt: `${edit ? "/edit " : ""
+        }${code}\n\nHow do I fix this problem in the above code?: ${message}`,
     });
 
     if (!edit) {
@@ -195,6 +194,7 @@ const commandsMap: (
       : "";
     const textInputOptions: vscode.InputBoxOptions = {
       placeHolder: selectionEmpty
+<<<<<<< HEAD
         ? `Type instructions to generate code${addContextMsg}`
         : `Describe how to edit the highlighted code${addContextMsg}`,
       title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
@@ -209,6 +209,12 @@ const commandsMap: (
     }
 
     let text = await vscode.window.showInputBox(textInputOptions);
+=======
+        ? "Describe the code you want to generate (or press enter to add context first)"
+        : "Describe how to edit the highlighted code (or press enter to add context first)",
+      title: "Kindo Quick Edit",
+    });
+>>>>>>> 039272f7 (my changes)
 
     if (text === undefined) {
       return;
@@ -230,7 +236,16 @@ const commandsMap: (
         },
       );
 
+<<<<<<< HEAD
       let text = await vscode.window.showInputBox(textInputOptions);
+=======
+      let text = await vscode.window.showInputBox({
+        placeHolder: selectionEmpty
+          ? "Describe the code you want to generate (or press enter to add context first)"
+          : "Describe how to edit the highlighted code (or press enter to add context first)",
+        title: "Kindo Quick Edit",
+      });
+>>>>>>> 039272f7 (my changes)
       if (text) {
         const llm = await configHandler.llmFromTitle();
         const config = await configHandler.loadConfig();
