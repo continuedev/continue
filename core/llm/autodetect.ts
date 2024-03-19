@@ -22,11 +22,11 @@ import {
   codellamaEditPrompt,
   deepseekEditPrompt,
   gemmaEditPrompt,
+  gptEditPrompt,
   mistralEditPrompt,
   neuralChatEditPrompt,
   openchatEditPrompt,
   phindEditPrompt,
-  simplestEditPrompt,
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
@@ -151,8 +151,9 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "zephyr";
   }
 
+  // Claude requests always sent through Messages API, so formatting not necessary
   if (lower.includes("claude")) {
-    return "anthropic";
+    return "none";
   }
 
   if (lower.includes("alpaca") || lower.includes("wizard")) {
@@ -255,7 +256,7 @@ function autodetectPromptTemplates(
   } else if (templateType === "gemma") {
     editTemplate = gemmaEditPrompt;
   } else if (templateType) {
-    editTemplate = simplestEditPrompt;
+    editTemplate = gptEditPrompt;
   }
 
   if (editTemplate !== null) {

@@ -1,10 +1,12 @@
 import {
   ContextItemWithId,
+  ContextSubmenuItem,
   ContinueRcJson,
   DiffLine,
   IndexTag,
   Problem,
   Range,
+  Thread,
 } from "..";
 import { RangeInFileWithContents } from "../commands/util";
 
@@ -45,6 +47,12 @@ export type IdeProtocol = {
   getDiff: [undefined, string];
   getWorkspaceConfigs: [undefined, ContinueRcJson[]];
   getTerminalContents: [undefined, string];
+  getDebugLocals: [{ threadIndex: Number }, string];
+  getTopLevelCallStackSources: [
+    { threadIndex: number; stackDepth: number },
+    string[],
+  ];
+  getAvailableThreads: [undefined, Thread[]];
   isTelemetryEnabled: [undefined, boolean];
   getUniqueId: [undefined, string];
   getTags: [string, IndexTag[]];
@@ -75,6 +83,8 @@ export type WebviewProtocol = Protocol &
     reloadWindow: [undefined, void];
     focusEditor: [undefined, void];
     toggleFullScreen: [undefined, void];
+    "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
+    "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
   };
 
 export type ReverseWebviewProtocol = {
@@ -86,6 +96,10 @@ export type ReverseWebviewProtocol = {
       historyIndex: number;
       item: ContextItemWithId;
     },
+    void,
+  ];
+  updateSubmenuItems: [
+    { provider: string; submenuItems: ContextSubmenuItem[] },
     void,
   ];
   getDefaultModelTitle: [undefined, string];

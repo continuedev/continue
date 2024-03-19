@@ -8,6 +8,14 @@ export const supportedLanguages: { [key: string]: string } = {
   cc: "cpp",
   cxx: "cpp",
   hxx: "cpp",
+  cp: "cpp",
+  hh: "cpp",
+  inc: "cpp",
+  // Depended on this PR: https://github.com/tree-sitter/tree-sitter-cpp/pull/173
+  // ccm: "cpp",
+  // c++m: "cpp",
+  // cppm: "cpp",
+  // cxxm: "cpp",
   cs: "c_sharp",
   c: "c",
   h: "c",
@@ -69,6 +77,9 @@ export const supportedLanguages: { [key: string]: string } = {
 };
 
 export async function getParserForFile(filepath: string) {
+  if (process.env.IS_BINARY) {
+    return undefined;
+  }
   try {
     await Parser.init();
     const parser = new Parser();

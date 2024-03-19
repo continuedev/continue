@@ -4,6 +4,7 @@ import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { logDevData } from "core/util/devdata";
+import { DevDataSqliteDb } from "core/util/devdataSqlite";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
 import { getConfigJsonPath } from "core/util/paths";
@@ -160,6 +161,18 @@ export class VsCodeWebviewProtocol {
     });
     this.on("getTerminalContents", async (msg) => {
       return await ide.getTerminalContents();
+    });
+    this.on("getDebugLocals", async (msg) => {
+      return await ide.getDebugLocals(Number(msg.data.threadIndex));
+    });
+    this.on("getAvailableThreads", async (msg) => {
+      return await ide.getAvailableThreads();
+    });
+    this.on("getTopLevelCallStackSources", async (msg) => {
+      return await ide.getTopLevelCallStackSources(
+        msg.data.threadIndex,
+        msg.data.stackDepth,
+      );
     });
     this.on("listWorkspaceContents", async (msg) => {
       return await ide.listWorkspaceContents();
@@ -515,6 +528,14 @@ export class VsCodeWebviewProtocol {
 
     this.on("openUrl", (msg) => {
       vscode.env.openExternal(vscode.Uri.parse(msg.data));
+    });
+    this.on("stats/getTokensPerDay", async (msg) => {
+      const rows = await DevDataSqliteDb.getTokensPerDay();
+      return rows;
+    });
+    this.on("stats/getTokensPerModel", async (msg) => {
+      const rows = await DevDataSqliteDb.getTokensPerModel();
+      return rows;
     });
   }
 

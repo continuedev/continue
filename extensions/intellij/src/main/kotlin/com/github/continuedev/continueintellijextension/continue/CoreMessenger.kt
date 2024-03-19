@@ -140,6 +140,7 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
 
         // Start the subprocess
         val processBuilder = ProcessBuilder(continueCorePath)
+                .directory(File(continueCorePath).parentFile)
         process = processBuilder.start()
 
         val outputStream = process.outputStream
@@ -149,7 +150,8 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
         reader = BufferedReader(InputStreamReader(inputStream))
 
         process.onExit().thenRun {
-            val err = process.errorStream.bufferedReader().readText()
+            val err = process.errorStream.bufferedReader().readText().trim()
+            println("Core process exited with output: $err")
             ideProtocolClient.showMessage("Core process exited with output: $err")
         }
 
@@ -158,7 +160,12 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
                 while (true) {
                     val line = reader.readLine()
                     if (line != null && line.isNotEmpty()) {
-                        handleMessage(line)
+                        try {
+                            handleMessage(line)
+                        } catch (e: Exception) {
+                            println("Error handling message: $line")
+                            println(e)
+                        }
                     } else {
                         Thread.sleep(100)
                     }

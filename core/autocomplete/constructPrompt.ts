@@ -87,7 +87,7 @@ export async function constructAutocompletePrompt(
   language: AutocompleteLanguageInfo,
   options: TabAutocompleteOptions,
   recentlyEditedRanges: RangeInFileWithContents[],
-  recentlyEditedDocuments: RangeInFileWithContents[],
+  recentlyEditedFiles: RangeInFileWithContents[],
   modelName: string,
   extraSnippets: AutocompleteSnippet[],
 ): Promise<{
@@ -123,7 +123,7 @@ export async function constructAutocompletePrompt(
       );
 
     const slidingWindowMatches = await slidingWindowMatcher(
-      recentlyEditedDocuments,
+      recentlyEditedFiles,
       windowAroundCursor,
       3,
       options.slidingWindowSize,

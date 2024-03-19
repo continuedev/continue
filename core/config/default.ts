@@ -27,6 +27,11 @@ export const defaultConfig: SerializedContinueConfig = {
       provider: "free-trial",
       model: "mistral-8x7b",
     },
+    {
+      title: "Claude 3 Sonnet (Free Trial)",
+      provider: "free-trial",
+      model: "claude-3-sonnet-20240229",
+    },
   ],
   slashCommands: [
     {
@@ -97,6 +102,11 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       title: "Mixtral (Free Trial)",
       provider: "free-trial",
       model: "mistral-8x7b",
+    },
+    {
+      title: "Claude 3 Sonnet (Free Trial)",
+      provider: "free-trial",
+      model: "claude-3-sonnet-20240229",
     },
   ],
   slashCommands: [

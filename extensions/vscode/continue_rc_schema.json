@@ -463,6 +463,9 @@
                   "gpt-4-vision-preview",
                   "codellama-70b",
                   "mistral-8x7b",
+                  "claude-3-opus-20240229",
+                  "claude-3-sonnet-20240229",
+                  "claude-3-haiku-20240307",
                   "AUTODETECT"
                 ]
               }
@@ -558,6 +561,7 @@
                       "claude-instant-1",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
+                      "claude-3-haiku-20240307",
                       "claude-2.1"
                     ]
                   },
@@ -961,6 +965,7 @@
                       "claude-instant-1",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
+                      "claude-3-haiku-20240307",
                       "claude-2.1",
                       "chat-bison-001",
                       "gemini-pro",
@@ -1159,6 +1164,7 @@
               "enum": [
                 "diff",
                 "terminal",
+                "locals",
                 "open",
                 "google",
                 "search",
@@ -1172,7 +1178,8 @@
                 "highlights",
                 "outline",
                 "postgres",
-                "code"
+                "code",
+                "system"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1192,7 +1199,8 @@
                 "Displays important snippets of code from the currently open files",
                 "Displays definition lines from the currently open files",
                 "References Postgres table schema and sample rows",
-                "Reference specific functions and classes from throughout your codebase"
+                "Reference specific functions and classes from throughout your codebase",
+                "Reference your operating system and cpu"
               ],
               "type": "string"
             },
@@ -1390,6 +1398,43 @@
             },
             "required": [
               "connections"
+            ]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "gitlab-mr"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "description": "Your GitLab domain, will default to gitlab.com"
+                  },
+                  "token": {
+                    "type": "string",
+                    "description": "Your private access token."
+                  },
+                  "filterComments": {
+                    "type": "boolean",
+                    "description": "If you have code selected, filters out comments that aren't related to the selection."
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            },
+            "required": [
+              "params"
             ]
           }
         },

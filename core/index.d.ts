@@ -320,6 +320,11 @@ export class Problem {
   message: string;
 }
 
+export class Thread {
+  name: string;
+  id: number;
+}
+
 export type IdeType = "vscode" | "jetbrains";
 export interface IdeInfo {
   ideType: IdeType;
@@ -340,6 +345,12 @@ export interface IDE {
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
+  getDebugLocals(threadIndex: number): Promise<string>;
+  getTopLevelCallStackSources(
+    threadIndex: number,
+    stackDepth: number,
+  ): Promise<string[]>;
+  getAvailableThreads(): Promise<Thread[]>;
   listWorkspaceContents(directory?: string): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
@@ -415,6 +426,7 @@ type ContextProviderName =
   | "diff"
   | "github"
   | "terminal"
+  | "locals"
   | "open"
   | "google"
   | "search"
@@ -428,7 +440,9 @@ type ContextProviderName =
   | "postgres"
   | "database"
   | "code"
-  | "docs";
+  | "docs"
+  | "gitlab-mr"
+  | "os";
 
 type TemplateType =
   | "llama2"
@@ -500,6 +514,7 @@ export type ModelName =
   | "claude-2"
   | "claude-3-opus-20240229"
   | "claude-3-sonnet-20240229"
+  | "claude-3-haiku-20240307"
   | "claude-2.1"
   // Google PaLM
   | "chat-bison-001"

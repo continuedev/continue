@@ -11,6 +11,7 @@ import {
   RequestOptions,
   TemplateType,
 } from "..";
+import { DevDataSqliteDb } from "../util/devdataSqlite";
 import mergeJson from "../util/merge";
 import { Telemetry } from "../util/posthog";
 import {
@@ -29,6 +30,7 @@ import {
   compileChatMessages,
   countTokens,
   pruneRawPromptFromTop,
+  stripImages,
 } from "./countTokens";
 import CompletionOptionsForModels from "./templates/options";
 
@@ -202,6 +204,7 @@ ${prompt}`;
       provider: this.providerName,
       tokens: tokens,
     });
+    DevDataSqliteDb.logTokensGenerated(model, this.providerName, tokens);
   }
 
   _fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> =
@@ -245,8 +248,13 @@ ${prompt}`;
   }
 
   private _formatChatMessages(messages: ChatMessage[]): string {
+    const msgsCopy = messages ? messages.map((msg) => ({ ...msg })) : [];
     let formatted = "";
-    for (let msg of messages) {
+    for (let msg of msgsCopy) {
+      if ("content" in msg && Array.isArray(msg.content)) {
+        const content = stripImages(msg.content);
+        msg.content = content;
+      }
       formatted += `<${msg.role}>\n${msg.content || ""}\n\n`;
     }
     return formatted;

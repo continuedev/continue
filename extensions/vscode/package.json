@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.8.18",
+  "version": "0.9.88",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -22,8 +22,10 @@
   "description": "Open-source autopilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",
   "engines": {
-    "vscode": "^1.70.0"
+    "vscode": "^1.70.0",
+    "node": ">=20.11.0"
   },
+  "engine-strict": true,
   "galleryBanner": {
     "color": "#1E1E1E",
     "theme": "dark"
