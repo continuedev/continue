@@ -48,20 +48,7 @@ class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
     return new Promise<number[][]>((resolve, reject) => {
       const desiredDirectory = path.join(__dirname, "worker.js");
       const worker = new Worker(desiredDirectory);
-
-      console.log(
-        "* * * STARTED ENCODER WORKER * * *",
-        worker.threadId,
-        worker,
-        __filename,
-        __dirname
-      );
       worker.on("message", (transcode_data) => {
-        console.info("%o", transcode_data);
-        console.log(
-          "* * * RECEIVED ENCODER WORKER MESSAGE * * *",
-          transcode_data
-        );
         resolve(transcode_data);
         worker.terminate();
       });
@@ -75,7 +62,6 @@ class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
         if (code !== 0) {
           reject(new Error(`Encoding stopped with exit code [ ${code} ]`));
         }
-        console.log("* * * EXITED ENCODER WORKER * * *");
       });
 
       worker.postMessage(chunks);
