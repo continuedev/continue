@@ -147,7 +147,12 @@ async function getAddRemoveForTag(
   } = {};
 
   async function markComplete(items: PathAndCacheKey[], _: IndexResultType) {
-    const actions = items.map((item) => itemToAction[JSON.stringify(item)]);
+    const actions = items.map(
+      (item) =>
+        itemToAction[
+          JSON.stringify({ path: item.path, cacheKey: item.cacheKey })
+        ],
+    );
     for (const [{ path, cacheKey }, resultType] of actions) {
       switch (resultType) {
         case AddRemoveResultType.Add:
