@@ -1,19 +1,19 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { v4 as uuidv4 } from "uuid";
 import { Table } from "vectordb";
-import { IContinueServerClient } from "../continueServer/interface.js";
 import {
   BranchAndDir,
   Chunk,
   EmbeddingsProvider,
   IndexTag,
   IndexingProgressUpdate,
-} from "../index.js";
-import { MAX_CHUNK_SIZE } from "../llm/constants.js";
-import { getBasename } from "../util/index.js";
-import { getLanceDbPath } from "../util/paths.js";
-import { chunkDocument } from "./chunk/chunk.js";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
+} from "..";
+import { ContinueServerClient } from "../continueServer/client";
+import { MAX_CHUNK_SIZE } from "../llm/constants";
+import { getBasename } from "../util";
+import { getLanceDbPath } from "../util/paths";
+import { chunkDocument } from "./chunk/chunk";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
   CodebaseIndex,
   IndexResultType,
@@ -40,7 +40,7 @@ export class LanceDbIndex implements CodebaseIndex {
   constructor(
     private readonly embeddingsProvider: EmbeddingsProvider,
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly continueServerClient?: IContinueServerClient,
+    private readonly continueServerClient?: ContinueServerClient,
   ) {}
 
   private tableNameForTag(tag: IndexTag) {
@@ -148,8 +148,8 @@ export class LanceDbIndex implements CodebaseIndex {
 
     // Compute
     let table: Table<number[]> | undefined = undefined;
+    let needToCreateTable = true;
     const existingTables = await db.tableNames();
-    let needToCreateTable = !existingTables.includes(tableName);
 
     const addComputedLanceDbRows = async (
       pathAndCacheKey: PathAndCacheKey,
@@ -176,13 +176,12 @@ export class LanceDbIndex implements CodebaseIndex {
     };
 
     // Check remote cache
-    if (this.continueServerClient?.connected) {
+    if (this.continueServerClient !== undefined) {
       try {
         const keys = results.compute.map(({ cacheKey }) => cacheKey);
         const resp = await this.continueServerClient.getFromIndexCache(
           keys,
-          "embeddings",
-          repoName,
+          "chunks",
         );
         for (const [cacheKey, chunks] of Object.entries(resp.files)) {
           // Get path for cacheKey

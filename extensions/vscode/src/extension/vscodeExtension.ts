@@ -17,6 +17,7 @@ import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
+import { getUserToken } from "../stubs/auth";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
@@ -108,19 +109,39 @@ export class VsCodeExtension {
       this.sidebar.webviewProtocol?.request("configUpdate", undefined);
     });
 
-    this.configHandler.reloadConfig();
-    this.verticalDiffManager = new VerticalPerLineDiffManager(
+    this.diffManager.webviewProtocol = this.webviewProtocol;
+
+    const userTokenPromise: Promise<string | undefined> = new Promise(
+      async (resolve) => {
+        if (
+          remoteConfigServerUrl === null ||
+          remoteConfigServerUrl === undefined ||
+          remoteConfigServerUrl.trim() === ""
+        ) {
+          resolve(undefined);
+          return;
+        }
+        const token = await getUserToken();
+        resolve(token);
+      },
+    );
+    this.indexer = new CodebaseIndexer(
       this.configHandler,
-    );
-    resolveVerticalDiffManager?.(this.verticalDiffManager);
-    this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
-
-    setupRemoteConfigSync(
-      this.configHandler.reloadConfig.bind(this.configHandler),
+      this.ide,
+      indexingPauseToken,
+      ideSettings.remoteConfigServerUrl,
+      userTokenPromise,
     );
 
-    // Indexing + pause token
-    this.diffManager.webviewProtocol = this.sidebar.webviewProtocol;
+    if (
+      !(
+        remoteConfigServerUrl === null ||
+        remoteConfigServerUrl === undefined ||
+        remoteConfigServerUrl.trim() === ""
+      )
+    ) {
+      getUserToken().then((token) => {});
+    }
 
     // CodeLens
     const verticalDiffCodeLens = registerAllCodeLensProviders(

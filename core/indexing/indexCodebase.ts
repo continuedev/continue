@@ -1,12 +1,12 @@
-import { ConfigHandler } from "../config/handler.js";
-import { IContinueServerClient } from "../continueServer/interface.js";
-import { IDE, IndexTag, IndexingProgressUpdate } from "../index.js";
-import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
-import { FullTextSearchCodebaseIndex } from "./FullTextSearch.js";
-import { LanceDbIndex } from "./LanceDbIndex.js";
-import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
-import { getComputeDeleteAddRemove } from "./refreshIndex.js";
-import { CodebaseIndex } from "./types.js";
+import { IDE, IndexTag, IndexingProgressUpdate } from "..";
+import { ConfigHandler } from "../config/handler";
+import { ContinueServerClient } from "../continueServer/client";
+import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex";
+import { FullTextSearchCodebaseIndex } from "./FullTextSearch";
+import { LanceDbIndex } from "./LanceDbIndex";
+import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
+import { getComputeDeleteAddRemove } from "./refreshIndex";
+import { CodebaseIndex } from "./types";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -21,12 +21,21 @@ export class PauseToken {
 }
 
 export class CodebaseIndexer {
+  private continueServerClient?: ContinueServerClient;
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly pauseToken: PauseToken,
-    private readonly continueServerClient: IContinueServerClient,
-  ) {}
+    private readonly continueServerUrl: string | undefined,
+    private readonly userToken: Promise<string | undefined>,
+  ) {
+    if (continueServerUrl) {
+      this.continueServerClient = new ContinueServerClient(
+        continueServerUrl,
+        userToken,
+      );
+    }
+  }
 
   private async getIndexesToBuild(): Promise<CodebaseIndex[]> {
     const config = await this.configHandler.loadConfig();
