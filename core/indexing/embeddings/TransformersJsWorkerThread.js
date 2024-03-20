@@ -1,8 +1,5 @@
 import path from "path";
-import {
-  env,
-  pipeline,
-} from "../../vendor/node_modules/@xenova/transformers/types/transformers";
+import { env, pipeline } from "core/node_modules/@xenova/transformers";
 import TransformersJsEmbeddingsProvider from "./TransformersJsEmbeddingsProvider";
 const { parentPort } = require("worker_threads");
 
@@ -43,7 +40,7 @@ parentPort.on("message", async (chunks) => {
     ) {
       let chunkGroup = chunks.slice(
         i,
-        i + TransformersJsEmbeddingsProvider.MaxGroupSize,
+        i + TransformersJsEmbeddingsProvider.MaxGroupSize
       );
       let output = await extractor(chunkGroup, {
         pooling: "mean",

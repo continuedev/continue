@@ -6,6 +6,7 @@ import {
 
 import path from "path";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
+import { Worker } from "worker_threads";
 
 env.allowLocalModels = true;
 env.allowRemoteModels = false;
@@ -39,34 +40,46 @@ class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
     return "sentence-transformers/all-MiniLM-L6-v2";
   }
 
+  async getInstance() {
+    return await EmbeddingsPipeline.getInstance();
+  }
+
   async embed(chunks: string[]) {
-    let extractor = await EmbeddingsPipeline.getInstance();
+    return new Promise<number[][]>((resolve, reject) => {
+      const desiredDirectory = path.join(__dirname, "worker.js");
+      const worker = new Worker(desiredDirectory);
 
-    if (!extractor) {
-      throw new Error("TransformerJS embeddings pipeline is not initialized");
-    }
-
-    if (chunks.length === 0) {
-      return [];
-    }
-
-    let outputs = [];
-    for (
-      let i = 0;
-      i < chunks.length;
-      i += TransformersJsEmbeddingsProvider.MaxGroupSize
-    ) {
-      let chunkGroup = chunks.slice(
-        i,
-        i + TransformersJsEmbeddingsProvider.MaxGroupSize,
+      console.log(
+        "* * * STARTED ENCODER WORKER * * *",
+        worker.threadId,
+        worker,
+        __filename,
+        __dirname
       );
-      let output = await extractor(chunkGroup, {
-        pooling: "mean",
-        normalize: true,
+      worker.on("message", (transcode_data) => {
+        console.info("%o", transcode_data);
+        console.log(
+          "* * * RECEIVED ENCODER WORKER MESSAGE * * *",
+          transcode_data
+        );
+        resolve(transcode_data);
+        worker.terminate();
       });
-      outputs.push(...output.tolist());
-    }
-    return outputs;
+
+      worker.on("error", (err) => {
+        console.error(err);
+        reject(err);
+      });
+
+      worker.on("exit", (code) => {
+        if (code !== 0) {
+          reject(new Error(`Encoding stopped with exit code [ ${code} ]`));
+        }
+        console.log("* * * EXITED ENCODER WORKER * * *");
+      });
+
+      worker.postMessage(chunks);
+    });
   }
 }
 
