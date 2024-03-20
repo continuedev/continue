@@ -94,11 +94,17 @@ export function chunkArticle(articleResult: Article): Chunk[] {
   return chunks;
 }
 
-async function extractTitlesAndBodies(
-  html: string,
-): Promise<ArticleComponent[]> {
+function htmlToJSDOM(html: string) {
+  // This project uses the CommonJS module system.
+  // Do not use inline `import` (of ES modules) here.
   const JSDOM = require("jsdom").JSDOM as typeof jsdom.JSDOM;
-  const dom = new JSDOM(html);
+  return new JSDOM(html);
+}
+
+function extractTitlesAndBodies(
+  html: string,
+): ArticleComponent[] {
+  const dom = htmlToJSDOM(html);
   const document = dom.window.document;
 
   const titles = Array.from(document.querySelectorAll("h2"));
@@ -118,14 +124,13 @@ async function extractTitlesAndBodies(
   return result;
 }
 
-export async function stringToArticle(
+export function stringToArticle(
   url: string,
-  htmlContent: string,
+  html: string,
   subpath: string,
-): Promise<Article | undefined> {
+): Article | undefined {
   try {
-    const JSDOM = require("jsdom").JSDOM as typeof jsdom.JSDOM;
-    const dom = new JSDOM(htmlContent);
+    const dom = htmlToJSDOM(html);
     let reader = new Readability(dom.window.document);
     let article = reader.parse();
 
@@ -133,7 +138,7 @@ export async function stringToArticle(
       return undefined;
     }
 
-    let article_components = await extractTitlesAndBodies(article.content);
+    let article_components = extractTitlesAndBodies(article.content);
 
     return {
       url,
@@ -147,9 +152,9 @@ export async function stringToArticle(
   }
 }
 
-export async function pageToArticle(
+export function pageToArticle(
   page: PageData
-): Promise<Article | undefined> {
+): Article | undefined {
   try {
     return stringToArticle(page.url, page.html, page.path);
   } catch (err) {
