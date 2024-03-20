@@ -225,7 +225,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     if (!contextItemToEdit) {
-      yield "Select (highlight and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) the code that you want to edit first";
+      yield "Select (highlight and press `cmd+shift+L` (MacOS) / `ctrl+shift+L` (Windows)) the code that you want to edit first";
       return;
     }
 
