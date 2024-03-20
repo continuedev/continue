@@ -17,7 +17,8 @@
     "noEmitOnError": false,
     "types": ["jest", "node"],
     "outDir": "dist",
-    "declaration": true
+    "declaration": true,
+    "declarationMap": true
   },
   "include": ["./**/*.ts", "indexing/embeddings/TransformersJsWorkerThread.js"]
 }
