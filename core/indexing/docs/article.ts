@@ -97,6 +97,7 @@ export function chunkArticle(articleResult: Article): Chunk[] {
 function htmlToJSDOM(html: string) {
   // This project uses the CommonJS module system.
   // Do not use inline `import` (of ES modules) here.
+  // See https://github.com/continuedev/continue/pull/999
   const JSDOM = require("jsdom").JSDOM as typeof jsdom.JSDOM;
   return new JSDOM(html);
 }
