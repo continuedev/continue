@@ -17,15 +17,6 @@ import {
   PathAndCacheKey,
   RefreshIndexResults,
 } from "./types";
-import TransformersJsEmbeddingsProvider from "./embeddings/TransformersJsEmbeddingsProvider";
-import {
-  Worker,
-  MessageChannel,
-  MessagePort,
-  isMainThread,
-  parentPort,
-} from "worker_threads";
-import path from "path";
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
@@ -107,87 +98,32 @@ export class LanceDbIndex implements CodebaseIndex {
         continue;
       }
 
-      // Calculate embeddings
-      // if (this.embeddingsProvider instanceof TransformersJsEmbeddingsProvider) {
-      if (false) {
-        console.log("TransformersJsEmbeddingsProvider", chunks.length, chunks);
-        const workerFilePath = path.join(
-          __dirname,
-          "tsc",
-          "src",
-          "core",
-          "indexing",
-          "embeddings",
-          "TransformersJsWorkerThread.js"
-        );
-        console.log("workerFilePath", workerFilePath);
-        const worker = new Worker(workerFilePath, {
-          workerData: chunks.map((c) => c.content),
-        });
-        console.info("worker", worker);
-        worker.on("message", (message: any) => {
-          console.info("message from worker", message);
-        });
-        worker.on("error", (err: any) => {
-          console.error(`Worker error: ${err}`);
-        });
-        worker.on("exit", (code: any) => {
-          if (code !== 0)
-            console.error(`Worker stopped with exit code ${code}`);
-        });
-      } else {
-        const embeddings = await this.embeddingsProvider.embed(
-          chunks.map((c) => c.content)
-        );
-        const workerFilePath = path.join(
-          __dirname,
-          "tsc",
-          "src",
-          "core",
-          "indexing",
-          "embeddings",
-          "TransformersJsWorkerThread.js"
-        );
-        console.log("workerFilePath", workerFilePath);
-        const worker = new Worker(workerFilePath, {
-          workerData: chunks.map((c) => c.content),
-        });
-        console.info("worker", worker);
-        worker.on("message", (message: any) => {
-          console.info("message from worker", message);
-        });
-        worker.on("error", (err: any) => {
-          console.error(`Worker error: ${err}`);
-        });
-        worker.on("exit", (code: any) => {
-          if (code !== 0)
-            console.error(`Worker stopped with exit code ${code}`);
-        });
-
-        // Create row format
-        for (let j = 0; j < chunks.length; j++) {
-          const progress = (i + j / chunks.length) / items.length;
-          const row = {
-            vector: embeddings[j],
-            path: items[i].path,
-            cachekey: items[i].cacheKey,
-            uuid: uuidv4(),
-          };
-          const chunk = chunks[j];
-          yield [
-            progress,
-            row,
-            {
-              contents: chunk.content,
-              startLine: chunk.startLine,
-              endLine: chunk.endLine,
-            },
-            `Indexing ${getBasename(chunks[j].filepath)}`,
-          ];
-        }
-
-        yield items[i];
+      const embeddings = await this.embeddingsProvider.embed(
+        chunks.map((c) => c.content)
+      );
+      // Create row format
+      for (let j = 0; j < chunks.length; j++) {
+        const progress = (i + j / chunks.length) / items.length;
+        const row = {
+          vector: embeddings[j],
+          path: items[i].path,
+          cachekey: items[i].cacheKey,
+          uuid: uuidv4(),
+        };
+        const chunk = chunks[j];
+        yield [
+          progress,
+          row,
+          {
+            contents: chunk.content,
+            startLine: chunk.startLine,
+            endLine: chunk.endLine,
+          },
+          `Indexing ${getBasename(chunks[j].filepath)}`,
+        ];
       }
+
+      yield items[i];
     }
   }
 
