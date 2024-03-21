@@ -109,6 +109,8 @@ export class ContinueCompletionProvider
           }
         ),
       ];
+    } catch (e: any) {
+      this.onError(e);
     } finally {
       stopStatusBarLoading();
     }
