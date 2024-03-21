@@ -13,7 +13,7 @@ popd
 echo "Installing GUI extension dependencies..."
 pushd gui
 npm install
-npm link core
+npm link @continuedev/core
 npm run build
 popd
 # VSCode Extension (will also package GUI)
@@ -22,5 +22,5 @@ pushd extensions/vscode
 
 # This does way too many things inline but is the common denominator between many of the scripts
 npm install
-npm link core
+npm link @continuedev/core
 npm run package
