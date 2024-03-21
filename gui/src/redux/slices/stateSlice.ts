@@ -117,6 +117,9 @@ const initialState: State = {
       },
     ],
     contextProviders: [],
+    ui: {
+      codeBlockToolbarPosition: 'top',
+    }
   },
   title: "New Session",
   sessionId: v4(),

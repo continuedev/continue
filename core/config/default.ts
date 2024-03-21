@@ -74,6 +74,9 @@ export const defaultConfig: SerializedContinueConfig = {
     provider: "ollama",
     model: "starcoder-3b",
   },
+  ui: {
+    codeBlockToolbarPosition: "top",
+  }
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
@@ -137,4 +140,7 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       params: {},
     },
   ],
+  ui: {
+    codeBlockToolbarPosition: "top",
+  }
 };

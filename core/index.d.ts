@@ -624,6 +624,10 @@ export interface TabAutocompleteOptions {
   useOtherFiles: boolean;
 }
 
+export interface ContinueUIConfig {
+  codeBlockToolbarPosition?: "top" | "bottom";
+}
+
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
@@ -639,6 +643,7 @@ export interface SerializedContinueConfig {
   embeddingsProvider?: EmbeddingsProviderDescription;
   tabAutocompleteModel?: ModelDescription;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+  ui?: ContinueUIConfig;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -677,6 +682,8 @@ export interface Config {
   tabAutocompleteModel?: CustomLLM | ModelDescription;
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+  /** UI styles customization */
+  ui?: ContinueUIConfig;
 }
 
 export interface ContinueConfig {
@@ -692,6 +699,7 @@ export interface ContinueConfig {
   embeddingsProvider: EmbeddingsProvider;
   tabAutocompleteModel?: ILLM;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+  ui?: ContinueUIConfig;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -705,4 +713,5 @@ export interface BrowserSerializedContinueConfig {
   disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider?: string;
+  ui?: ContinueUIConfig;
 }
