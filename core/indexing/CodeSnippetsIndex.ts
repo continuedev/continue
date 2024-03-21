@@ -27,7 +27,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
   constructor(private readonly ide: IDE) {}
 
-  private async _createTables(db: DatabaseConnection) {
+  private static async _createTables(db: DatabaseConnection) {
     await db.exec(`CREATE TABLE IF NOT EXISTS code_snippets (
         id INTEGER PRIMARY KEY,
         path TEXT NOT NULL,
@@ -98,7 +98,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     markComplete: MarkCompleteCallback,
   ): AsyncGenerator<IndexingProgressUpdate, any, unknown> {
     const db = await SqliteDb.get();
-    await this._createTables(db);
+    await CodeSnippetsCodebaseIndex._createTables(db);
     const tagString = tagToString(tag);
 
     for (let i = 0; i < results.compute.length; i++) {
@@ -193,6 +193,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
   static async getAll(tag: IndexTag): Promise<ContextSubmenuItem[]> {
     const db = await SqliteDb.get();
+    await CodeSnippetsCodebaseIndex._createTables(db);
     try {
       const rows = await db.all(
         `SELECT cs.id, cs.path, cs.title
