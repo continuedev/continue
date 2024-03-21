@@ -16,15 +16,11 @@ export class ConfigHandler {
   private savedConfig: ContinueConfig | undefined;
   private savedBrowserConfig?: BrowserSerializedContinueConfig;
 
-  private readonly ide: IDE;
-  private ideSettingsPromise: Promise<IdeSettings>;
-  private readonly writeLog: (text: string) => void;
-  private readonly onConfigUpdate: () => void;
   constructor(
-    ide: IDE,
-    ideSettingsPromise: Promise<IdeSettings>,
-    writeLog: (text: string) => void,
-    onConfigUpdate: () => void,
+    private readonly ide: IDE,
+    private ideSettingsPromise: Promise<IdeSettings>,
+    private readonly writeLog: (text: string) => void,
+    private readonly onConfigUpdate: () => void,
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
@@ -58,50 +54,45 @@ export class ConfigHandler {
   }
 
   async loadConfig(): Promise<ContinueConfig> {
-    try {
-      if (this.savedConfig) {
-        return this.savedConfig;
-      }
-
-      let workspaceConfigs: ContinueRcJson[] = [];
-      try {
-        workspaceConfigs = await this.ide.getWorkspaceConfigs();
-      } catch (e) {
-        console.warn("Failed to load workspace configs");
-      }
-
-      const ideInfo = await this.ide.getIdeInfo();
-      const ideSettings = await this.ideSettingsPromise;
-      let remoteConfigServerUrl = undefined;
-      try {
-        remoteConfigServerUrl =
-          typeof ideSettings.remoteConfigServerUrl !== "string" ||
-          ideSettings.remoteConfigServerUrl === ""
-            ? undefined
-            : new URL(ideSettings.remoteConfigServerUrl);
-      } catch (e) {}
-
-      this.savedConfig = await loadFullConfigNode(
-        this.ide.readFile,
-        workspaceConfigs,
-        remoteConfigServerUrl,
-        ideInfo.ideType,
-      );
-      this.savedConfig.allowAnonymousTelemetry =
-        this.savedConfig.allowAnonymousTelemetry &&
-        (await this.ide.isTelemetryEnabled());
-
-      // Setup telemetry only after (and if) we know it is enabled
-      await Telemetry.setup(
-        this.savedConfig.allowAnonymousTelemetry ?? true,
-        await this.ide.getUniqueId(),
-      );
-
+    if (this.savedConfig) {
       return this.savedConfig;
-    } catch (e: any) {
-      console.error("Failed to loadConfig: ", e.message);
-      throw new Error("Failed to loadConfig: " + e.message);
     }
+
+    let workspaceConfigs: ContinueRcJson[] = [];
+    try {
+      workspaceConfigs = await this.ide.getWorkspaceConfigs();
+    } catch (e) {
+      console.warn("Failed to load workspace configs");
+    }
+
+    const ideInfo = await this.ide.getIdeInfo();
+    const ideSettings = await this.ideSettingsPromise;
+    let remoteConfigServerUrl = undefined;
+    try {
+      remoteConfigServerUrl =
+        typeof ideSettings.remoteConfigServerUrl !== "string" ||
+        ideSettings.remoteConfigServerUrl === ""
+          ? undefined
+          : new URL(ideSettings.remoteConfigServerUrl);
+    } catch (e) {}
+
+    this.savedConfig = await loadFullConfigNode(
+      this.ide.readFile,
+      workspaceConfigs,
+      remoteConfigServerUrl,
+      ideInfo.ideType,
+    );
+    this.savedConfig.allowAnonymousTelemetry =
+      this.savedConfig.allowAnonymousTelemetry &&
+      (await this.ide.isTelemetryEnabled());
+
+    // Setup telemetry only after (and if) we know it is enabled
+    await Telemetry.setup(
+      this.savedConfig.allowAnonymousTelemetry ?? true,
+      await this.ide.getUniqueId(),
+    );
+
+    return this.savedConfig;
   }
 
   setupLlm(llm: ILLM): ILLM {

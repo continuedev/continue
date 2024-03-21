@@ -97,18 +97,7 @@ const initialState: State = {
   contextItems: [],
   active: false,
   config: {
-    models: [
-      {
-        title: "GPT-4 (Free Trial)",
-        model: "gpt-4",
-        provider: "free-trial",
-      },
-      {
-        title: "GPT-3.5-Turbo (Free Trial)",
-        model: "gpt-3.5-turbo",
-        provider: "free-trial",
-      },
-    ],
+    models: [],
     slashCommands: [
       {
         name: "edit",
@@ -140,7 +129,7 @@ export const stateSlice = createSlice({
   reducers: {
     setConfig: (
       state,
-      { payload: config }: PayloadAction<BrowserSerializedContinueConfig>
+      { payload: config }: PayloadAction<BrowserSerializedContinueConfig>,
     ) => {
       const defaultModelTitle =
         config.models.find((model) => model.title === state.defaultModelTitle)
@@ -168,7 +157,7 @@ export const stateSlice = createSlice({
       }: PayloadAction<{
         index: number;
         contextItems: ChatHistoryItem["contextItems"];
-      }>
+      }>,
     ) => {
       if (state.history[index]) {
         state.history[index].contextItems = contextItems;
@@ -178,7 +167,7 @@ export const stateSlice = createSlice({
       state,
       {
         payload: { index, item },
-      }: PayloadAction<{ index?: number; item: ContextItemWithId }>
+      }: PayloadAction<{ index?: number; item: ContextItemWithId }>,
     ) => {
       if (index === undefined) {
         const isFirstContextItem =
@@ -201,7 +190,7 @@ export const stateSlice = createSlice({
       }: PayloadAction<{
         index: number;
         editorState: JSONContent;
-      }>
+      }>,
     ) => {
       const historyItem = state.history[payload.index];
       if (!historyItem) {
@@ -228,7 +217,7 @@ export const stateSlice = createSlice({
         payload,
       }: PayloadAction<{
         editorState: JSONContent;
-      }>
+      }>,
     ) => {
       state.history.push({
         message: { role: "user", content: "" },
@@ -253,7 +242,7 @@ export const stateSlice = createSlice({
         message: ChatMessage;
         index: number;
         contextItems?: ContextItemWithId[];
-      }>
+      }>,
     ) => {
       if (payload.index >= state.history.length) {
         state.history.push({
@@ -281,7 +270,7 @@ export const stateSlice = createSlice({
       }: PayloadAction<{
         index: number;
         contextItems: ContextItemWithId[];
-      }>
+      }>,
     ) => {
       const historyItem = state.history[payload.index];
       if (!historyItem) {
@@ -300,7 +289,7 @@ export const stateSlice = createSlice({
     },
     newSession: (
       state,
-      { payload }: PayloadAction<PersistedSessionInfo | undefined>
+      { payload }: PayloadAction<PersistedSessionInfo | undefined>,
     ) => {
       if (payload) {
         state.history = payload.history;
@@ -318,14 +307,14 @@ export const stateSlice = createSlice({
       state,
       {
         payload,
-      }: PayloadAction<{ ids: ContextItemId[]; index: number | undefined }>
+      }: PayloadAction<{ ids: ContextItemId[]; index: number | undefined }>,
     ) => {
       const getKey = (id: ContextItemId) => `${id.providerTitle}-${id.itemId}`;
       const ids = new Set(payload.ids.map(getKey));
 
       if (payload.index === undefined) {
         state.contextItems = state.contextItems.filter(
-          (item) => !ids.has(getKey(item.id))
+          (item) => !ids.has(getKey(item.id)),
         );
       } else {
         state.history[payload.index].contextItems = state.history[
@@ -337,7 +326,7 @@ export const stateSlice = createSlice({
       state,
       {
         payload,
-      }: PayloadAction<{ rangeInFileWithContents: any; edit: boolean }>
+      }: PayloadAction<{ rangeInFileWithContents: any; edit: boolean }>,
     ) => {
       let contextItems = [...state.contextItems].map((item) => {
         return { ...item, editing: false };
@@ -400,7 +389,7 @@ export const stateSlice = createSlice({
       state,
       {
         payload,
-      }: PayloadAction<{ ids: ContextItemId[]; index: number | undefined }>
+      }: PayloadAction<{ ids: ContextItemId[]; index: number | undefined }>,
     ) => {
       const ids = payload.ids.map((id) => id.itemId);
 
@@ -436,7 +425,7 @@ export const stateSlice = createSlice({
     },
     setDefaultModel: (state, { payload }: PayloadAction<string>) => {
       const model = state.config.models.find(
-        (model) => model.title === payload
+        (model) => model.title === payload,
       );
       if (!model) return;
       return {
