@@ -51,6 +51,8 @@ const DEFAULT_IGNORE_FILETYPES = [
   "*.onnx",
   "*.parquet",
   "*.pqt",
+  "*.wav",
+  "*.webp",
 ];
 export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
 const DEFAULT_IGNORE_DIRS = [

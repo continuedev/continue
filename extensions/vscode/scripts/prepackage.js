@@ -317,13 +317,7 @@ if (args[2] === "--target") {
   });
 
   // Copy node_modules for pre-built binaries
-  const NODE_MODULES_TO_COPY = [
-    "esbuild",
-    "@esbuild",
-    "@lancedb",
-    "@vscode",
-    "jsdom",
-  ];
+  const NODE_MODULES_TO_COPY = ["esbuild", "@esbuild", "@lancedb", "@vscode"];
   fs.mkdirSync("out/node_modules", { recursive: true });
 
   await Promise.all(
@@ -346,5 +340,12 @@ if (args[2] === "--target") {
         }),
     ),
   );
+
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
+
+  // Copy over any worker files
+  fs.cpSync(
+    "node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
+    "out/xhr-sync-worker.js",
+  );
 })();

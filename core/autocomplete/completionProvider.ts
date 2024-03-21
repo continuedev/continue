@@ -105,6 +105,10 @@ export async function getTabCompletion(
   // Model
   if (llm instanceof OpenAI) {
     llm.useLegacyCompletionsEndpoint = true;
+  } else if (llm.providerName === "free-trial") {
+    throw new Error(
+      "Free trial is not supported for tab-autocomplete. We recommend using starcoder with Ollama, LM Studio, or another provider.",
+    );
   }
   if (!llm) return;
 
