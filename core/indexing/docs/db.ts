@@ -8,19 +8,20 @@ import { default as configs } from "./preIndexedDocs";
 
 const DOCS_TABLE_NAME = "docs";
 
+// Purposefully lowercase because lancedb converts
 interface LanceDbDocsRow {
   title: string;
-  baseUrl: string;
+  baseurl: string;
   // Chunk
   content: string;
   path: string;
-  startLine: number;
-  endLine: number;
+  startline: number;
+  endline: number;
   vector: number[];
   [key: string]: any;
 }
 
-let dbDocs:Database;
+let dbDocs: Database;
 
 async function getDBDocs() {
   if (!dbDocs) {
@@ -28,7 +29,7 @@ async function getDBDocs() {
       filename: getDocsSqlitePath(),
       driver: sqlite3.Database,
     });
-    
+
     dbDocs.exec(`CREATE TABLE IF NOT EXISTS docs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title STRING NOT NULL,
@@ -75,10 +76,10 @@ export async function retrieveDocs(
   let docs: LanceDbDocsRow[] = await table
     .search(vector)
     .limit(nRetrieve)
-    .where(`baseUrl = '${baseUrl}'`)
+    .where(`baseurl = '${baseUrl}'`)
     .execute();
 
-  docs = docs.filter((doc) => doc.baseUrl === baseUrl);
+  docs = docs.filter((doc) => doc.baseurl === baseUrl);
 
   if ((!docs || docs.length === 0) && !nested) {
     const downloaded = await downloadDocs();
@@ -88,8 +89,8 @@ export async function retrieveDocs(
   return docs.map((doc) => ({
     digest: doc.path,
     filepath: doc.path,
-    startLine: doc.startLine,
-    endLine: doc.endLine,
+    startLine: doc.startline,
+    endLine: doc.endline,
     index: 0,
     content: doc.content,
     otherMetadata: {
@@ -106,11 +107,11 @@ export async function addDocs(
 ) {
   const data: LanceDbDocsRow[] = chunks.map((chunk, i) => ({
     title: chunk.otherMetadata?.title || title,
-    baseUrl: baseUrl.toString(),
+    baseurl: baseUrl.toString(),
     content: chunk.content,
     path: chunk.filepath,
-    startLine: chunk.startLine,
-    endLine: chunk.endLine,
+    startline: chunk.startLine,
+    endline: chunk.endLine,
     vector: embeddings[i],
   }));
 
@@ -144,5 +145,5 @@ export async function listDocs(): Promise<
 export async function hasDoc(baseUrl: string) {
   const db = await getDBDocs();
   const doc = await db.get(`SELECT title FROM docs WHERE baseUrl =?`, baseUrl);
-  return!!doc;
+  return !!doc;
 }
