@@ -59,12 +59,11 @@ Continue is continuously improving, but a feature isn't complete until it is ref
 VS Code is assumed for development as Continue is primarily a VS Code tool at the moment. Most of the setup and running is automated through VS Code tasks and launch configurations.
 
 <!-- Pre-requisite: you will need `cargo` the rust package manager installed ([get it on rust-lang.org](https://www.rust-lang.org/tools/install)). -->
-Pre-requisite: you have Node.js version 20.11.0 (LTS) or higher installed. [Get it on nodejs.org](https://nodejs.org/en/download).
+Pre-requisite: you have Node.js version 20.11.0 (LTS) or higher installed.  [get it on https://nodejs.org](https://nodejs.org/en/download/
 Alternatively, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
 
 ```bash
 nvm use
-```
 
 1. Clone and open in VS Code the Continue repo `https://github.com/continuedev/continue`
 

@@ -114,8 +114,8 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Reject Diff",
   },
   {
-    mac: "⌥ ⌘ M",
-    windows: "⌥ ⌃ M",
+    mac: "⌥ ⌘ L",
+    windows: "⌥ ⌃ L",
     description: "Toggle Auxiliary Bar",
   },
   {
