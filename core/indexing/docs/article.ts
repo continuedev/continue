@@ -94,17 +94,9 @@ export function chunkArticle(articleResult: Article): Chunk[] {
   return chunks;
 }
 
-function htmlToJSDOM(html: string) {
-  // This project uses the CommonJS module system.
-  // Do not use inline `import` (of ES modules) here.
-  // See https://github.com/continuedev/continue/pull/999
-  const JSDOM = require("jsdom").JSDOM as typeof jsdom.JSDOM;
-  return new JSDOM(html);
-}
-
 function extractTitlesAndBodies(
   html: string,
-): Promise<ArticleComponent[]> {
+): ArticleComponent[] {
   const dom = new JSDOM(html);
   const document = dom.window.document;
 
@@ -131,7 +123,7 @@ export function stringToArticle(
   subpath: string,
 ): Article | undefined {
   try {
-    const dom = new JSDOM(htmlContent);
+    const dom = new JSDOM(html);
     let reader = new Readability(dom.window.document);
     let article = reader.parse();
 
@@ -139,7 +131,7 @@ export function stringToArticle(
       return undefined;
     }
 
-    let article_components = await extractTitlesAndBodies(article.content);
+    let article_components = extractTitlesAndBodies(article.content);
 
     return {
       url,
@@ -153,9 +145,9 @@ export function stringToArticle(
   }
 }
 
-export async function pageToArticle(
+export function pageToArticle(
   page: PageData,
-): Promise<Article | undefined> {
+): Article | undefined {
   try {
     return stringToArticle(page.url, page.html, page.path);
   } catch (err) {
