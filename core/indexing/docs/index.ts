@@ -29,7 +29,7 @@ export async function* indexDocs(
   const articles: Article[] = [];
 
   for await (const page of crawlPage(baseUrl)) {
-    const article = await pageToArticle(page);
+    const article = pageToArticle(page);
     if (!article) continue; 
 
     articles.push(article);
