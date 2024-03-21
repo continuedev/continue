@@ -56,19 +56,19 @@ Continue is continuously improving, but a feature isn't complete until it is ref
 
 ### Environment Setup
 
-VS Code is assumed for development as Continue is primarily a VS Code tool at the moment. Most of the setup and running is automated through VS Code tasks and launch configurations.
+#### VS Code
 
 <!-- Pre-requisite: you will need `cargo` the rust package manager installed ([get it on rust-lang.org](https://www.rust-lang.org/tools/install)). -->
-Pre-requisite: you have Node.js version 20.11.0 (LTS) or higher installed.  [get it on https://nodejs.org](https://nodejs.org/en/download/
-Alternatively, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
+
+Pre-requisite: You should have Node.js version 20.11.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
 
 ```bash
 nvm use
-
+```
 
 1. Clone and open in VS Code the Continue repo `https://github.com/continuedev/continue`
 
-2. Open VS Code command pallet (`cmd+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
+2. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
 
 3. Start debugging:
 
@@ -76,13 +76,24 @@ nvm use
    2. Select `Extension (VS Code)` from drop down
    3. Hit play button
    4. This will start the extension in debug mode and open a new VS Code window with it installed
-      1. I call the VS Code window with the extension the _Host VS Code_
+      1. The new VS Code window with the extension is referred to as the _Host VS Code_
       2. The window you started debugging from is referred to as the _Main VS Code_
 
-4. Try using breakpoints:
-   > Note: Breakpoints for the code inside of the `gui` folder are not currently supported while debugging the entire extension, but can be used with the "Vite" launch configuration and Google Chrome.
-   1. _In Main VS Code_: Search for `function addHighlightedCodeToContext` and set a breakpoint at the top of the function. This is the method invoked whenever code in the editor is selected to be used as context.
-   2. _In Host VS Code_: Select part of the `example.ts` file and use the keyboard shortcut cmd/ctrl+m to select the code and notice that your breakpoint should be hit.
+> Note: Breakpoints can be used in both the `core` and `extensions/vscode` folders while debugging, but are not currently supported inside of `gui` code. Hot-reloading is enabled with Vite, so if you make any changes to the `gui`, they should be automatically reflected without rebuilding. Similarly, any changes to `core` or `extensions/vscode` will be automatically included by just reloading the _Host VS Code_ window with cmd/ctrl+shift+p "Reload Window".
+
+#### JetBrains
+
+Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](https://www.jetbrains.com/idea/download). Either Ultimate or Community (free) will work.
+
+1. Clone the repository
+2. Run `install-dependencies.sh` or `install-dependencies.ps1` on Windows
+3. Run `cd extensions/vscode && node scripts/prepackage.js` (this will copy over the built React application to the proper JetBrains directory)
+4. Select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button
+5. To package the extension, choose the "Build Plugin" Gradle configuration
+
+> For changes to Typescript code, the binary/gui will currently need to be rebuilt. Changes to Kotlin code can often be hot-reloaded with "Run -> Debugging Actions -> Reload Changed Classes"
+
+Continue's JetBrains extension shares much of the code with the VS Code extension by utilizing shared code in the `core` directory and packaging it in a binary in the `pkg` directory. The Intellij extension (written in Kotlin) is then able to communicate over stdin/stdout in the [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt) file.
 
 ### Formatting
 

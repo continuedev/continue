@@ -94,3 +94,14 @@ npm link core
 npm run package
 
 Pop-Location
+
+
+Write-Output "`nInstalling pkg dependencies..." -ForegroundColor White
+Push-Location pkg
+
+npm install
+npm run build
+
+Pop-Location
+
+
