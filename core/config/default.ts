@@ -137,4 +137,7 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       params: {},
     },
   ],
+  ui: {
+    codeBlockToolbarPosition: "top",
+  }
 };
