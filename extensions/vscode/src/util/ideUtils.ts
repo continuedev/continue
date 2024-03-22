@@ -1,6 +1,7 @@
 import { FileEdit, RangeInFile, Thread } from "core";
 import path from "path";
 import * as vscode from "vscode";
+import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/vscodeExtension";
 import {
   SuggestionRanges,
@@ -15,7 +16,6 @@ import {
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./vscode";
-import { threadStopped } from "../debug/debug";
 
 const util = require("util");
 const asyncExec = util.promisify(require("child_process").exec);
@@ -298,7 +298,7 @@ export class VsCodeIdeUtils {
 
       // Check first whether it's an open document
       const openTextDocument = vscode.workspace.textDocuments.find(
-        (doc) => doc.uri.toString() === uri.toString(),
+        (doc) => doc.uri.fsPath === uri.fsPath,
       );
       if (openTextDocument !== undefined) {
         return openTextDocument.getText();
