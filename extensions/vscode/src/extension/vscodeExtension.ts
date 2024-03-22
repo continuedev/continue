@@ -15,7 +15,6 @@ import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { registerDebugTracker } from "../debug/debug";
 
 export class VsCodeExtension {
   private configHandler: ConfigHandler;
@@ -49,26 +48,26 @@ export class VsCodeExtension {
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
-      "Continue - LLM Prompt/Completion"
+      "Continue - LLM Prompt/Completion",
     );
     this.configHandler = new ConfigHandler(
       this.ide,
       Promise.resolve(ideSettings),
       async (log: string) => {
         outputChannel.appendLine(
-          "=========================================================================="
+          "==========================================================================",
         );
         outputChannel.appendLine(
-          "=========================================================================="
+          "==========================================================================",
         );
         outputChannel.append(log);
       },
-      () => this.webviewProtocol?.request("configUpdate", undefined)
+      () => this.webviewProtocol?.request("configUpdate", undefined),
     );
 
     this.configHandler.reloadConfig();
     this.verticalDiffManager = new VerticalPerLineDiffManager(
-      this.configHandler
+      this.configHandler,
     );
     this.extensionContext = context;
     this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
@@ -78,7 +77,7 @@ export class VsCodeExtension {
       this.ide,
       this.windowId,
       this.extensionContext,
-      this.verticalDiffManager
+      this.verticalDiffManager,
     );
 
     setupRemoteConfigSync(
@@ -92,14 +91,14 @@ export class VsCodeExtension {
         this.sidebar,
         {
           webviewOptions: { retainContextWhenHidden: true },
-        }
-      )
+        },
+      ),
     );
     this.webviewProtocol = this.sidebar.webviewProtocol;
 
     // Indexing + pause token
     const indexingPauseToken = new PauseToken(
-      context.globalState.get<boolean>("continue.indexingPaused") === true
+      context.globalState.get<boolean>("continue.indexingPaused") === true,
     );
     this.webviewProtocol.on("index/setPaused", (msg) => {
       context.globalState.update("continue.indexingPaused", msg.data);
@@ -110,14 +109,14 @@ export class VsCodeExtension {
     this.indexer = new CodebaseIndexer(
       this.configHandler,
       this.ide,
-      indexingPauseToken
+      indexingPauseToken,
     );
 
     // CodeLens
     registerAllCodeLensProviders(
       context,
       this.diffManager,
-      this.verticalDiffManager.editorToVerticalDiffCodeLens
+      this.verticalDiffManager.editorToVerticalDiffCodeLens,
     );
 
     // Tab autocomplete
@@ -132,9 +131,9 @@ export class VsCodeExtension {
         new ContinueCompletionProvider(
           this.configHandler,
           this.ide,
-          this.tabAutocompleteModel
-        )
-      )
+          this.tabAutocompleteModel,
+        ),
+      ),
     );
 
     // Commands
@@ -145,7 +144,7 @@ export class VsCodeExtension {
       this.sidebar,
       this.configHandler,
       this.diffManager,
-      this.verticalDiffManager
+      this.verticalDiffManager,
     );
 
     registerDebugTracker(this.webviewProtocol, this.ide);
@@ -196,7 +195,7 @@ export class VsCodeExtension {
             }
           });
         }
-      })
+      }),
     );
 
     // Register a content provider for the readonly virtual documents
@@ -214,8 +213,8 @@ export class VsCodeExtension {
     context.subscriptions.push(
       vscode.workspace.registerTextDocumentContentProvider(
         VsCodeExtension.continueVirtualDocumentScheme,
-        documentContentProvider
-      )
+        documentContentProvider,
+      ),
     );
   }
 
