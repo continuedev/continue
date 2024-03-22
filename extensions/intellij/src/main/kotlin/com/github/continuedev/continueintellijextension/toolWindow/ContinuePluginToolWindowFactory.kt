@@ -76,12 +76,11 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
         init {
             System.setProperty("ide.browser.jcef.jsQueryPoolSize", JS_QUERY_POOL_SIZE)
-            System.setProperty("ide.browser.jcef.osr.enabled", "false")
             System.setProperty("ide.browser.jcef.contextMenu.devTools.enabled", "true")
         }
 
         val webView: JBCefBrowser by lazy {
-            val browser = JBCefBrowser.createBuilder().setOffScreenRendering(false).build()
+            val browser = JBCefBrowser.createBuilder().setOffScreenRendering(true).build()
             browser.jbCefClient.setProperty(
                     JBCefClient.Properties.JS_QUERY_POOL_SIZE,
                     JS_QUERY_POOL_SIZE
