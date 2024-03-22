@@ -3,9 +3,9 @@ const esbuild = require("esbuild");
 const flags = process.argv.slice(2);
 
 const esbuildConfig = {
-  entryPoints: ["src/extension.ts"],
+  entryPoints: ["src/extension.ts", "src/worker.ts"],
   bundle: true,
-  outfile: "out/extension.js",
+  outdir: "out",
   external: ["vscode", "esbuild", "jsdom"],
   format: "cjs",
   platform: "node",
