@@ -14,7 +14,7 @@ Once it has been downloaded, you should begin to see completions in VS Code.
 
 ## Setting up a custom model
 
-All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this:
+All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this (note that it is not inside the models array):
 
 ```json title=~/.continue/config.json
 {
