@@ -19,9 +19,9 @@ const TopDiv = styled.div`
   z-index: 100;
 `;
 
-const SecondDiv = styled.div`
+const SecondDiv = styled.div<{ bottom: boolean; }>`
   position: absolute;
-  top: 4px;
+  ${(props) => props.bottom ? "bottom: 1.2rem;" : "top: 4px;"}
   right: 4px;
   display: flex;
   gap: 4px;
@@ -30,6 +30,7 @@ const SecondDiv = styled.div`
 
 interface CodeBlockToolBarProps {
   text: string;
+  bottom: boolean;
 }
 
 function CodeBlockToolBar(props: CodeBlockToolBarProps) {
@@ -38,7 +39,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
 
   return (
     <TopDiv>
-      <SecondDiv>
+      <SecondDiv bottom={props.bottom || false}>
         {isJetBrains() || (
           <HeaderButtonWithText
             text={applying ? "Applying..." : "Apply to current file"}

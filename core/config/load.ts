@@ -319,6 +319,7 @@ function finalToBrowserConfig(
     disableSessionTitles: final.disableSessionTitles,
     userToken: final.userToken,
     embeddingsProvider: final.embeddingsProvider?.id,
+    ui: final.ui,
   };
 }
 
