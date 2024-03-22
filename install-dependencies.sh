@@ -24,3 +24,10 @@ pushd extensions/vscode
 npm install
 npm link @continuedev/core
 npm run package
+
+popd
+
+echo "Installing pkg dependencies..."
+pushd pkg
+npm install
+npm run build

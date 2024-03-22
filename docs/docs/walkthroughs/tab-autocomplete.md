@@ -95,3 +95,19 @@ We are working on this! Right now Continue uses the Language Server Protocol to 
 ### Completions contain formatting errors
 
 If you're seeing a common pattern of mistake that might be helpful to report, please share in Discord. We will do our best to fix it as soon as possible.
+
+## How to turn off autocomplete
+
+### VS Code
+
+Click the "Continue" button in the status panel at the bottom right of the screen. The checkmark will become a "cancel" symbol and you will no longer see completions. You can click again to turn it back on.
+
+Alternatively, open VS Code settings, search for "Continue" and uncheck the box for "Enable Tab Autocomplete".
+
+### JetBrains
+
+Open Settings -> Tools -> Continue and uncheck the box for "Enable Tab Autocomplete".
+
+### Feedback
+
+If you're turning off autocomplete, we'd love to hear how we can improve! Please let us know in our [Discord](https://discord.gg/vapESyrFmJ) or file an issue on GitHub.

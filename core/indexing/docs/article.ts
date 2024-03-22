@@ -132,7 +132,6 @@ export async function stringToArticle(
     }
 
     let article_components = await extractTitlesAndBodies(article.content);
-
     return {
       url,
       subpath,
