@@ -80,7 +80,15 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
         }
 
         val webView: JBCefBrowser by lazy {
-            val browser = JBCefBrowser.createBuilder().setOffScreenRendering(true).build()
+            val osName = System.getProperty("os.name").toLowerCase()
+            val os = when {
+                osName.contains("mac") || osName.contains("darwin") -> "darwin"
+                osName.contains("win") -> "win32"
+                osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
+                else -> "linux"
+            }
+
+            val browser = JBCefBrowser.createBuilder().setOffScreenRendering(os == "linux").build()
             browser.jbCefClient.setProperty(
                     JBCefClient.Properties.JS_QUERY_POOL_SIZE,
                     JS_QUERY_POOL_SIZE
