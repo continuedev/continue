@@ -95,7 +95,12 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
             )
             registerAppSchemeHandler()
 
-            browser.loadURL("http://continue/index.html")
+            // Use to get hot-reloading in local development
+            if (false) {
+                browser.loadURL("http://localhost:5173/jetbrains_index.html");
+            } else {
+                browser.loadURL("http://continue/index.html")
+            }
 //            browser.loadHTML("<html><body><input type='text'/></body></html>")
 //            browser.loadURL("http://localhost:5173/index.html")
             Disposer.register(project, browser)
