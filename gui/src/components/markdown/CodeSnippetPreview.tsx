@@ -73,9 +73,9 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   const codeBlockRef = React.useRef<HTMLDivElement>(null);
   const codeBlockHeight = `${Math.min(
     MAX_PREVIEW_HEIGHT,
-    codeBlockRef.current?.scrollHeight
-      ? codeBlockRef.current?.scrollHeight
-      : Number.MAX_SAFE_INTEGER
+    codeBlockRef.current?.scrollHeight ??
+      // Best estimate of height I currently could find
+      props.item.content.split("\n").length * 18 + 36,
   )}px`;
 
   return (
@@ -100,7 +100,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
             new WebviewIde().showLines(
               props.item.description,
               parseInt(lines[0]) - 1,
-              parseInt(lines[1]) - 1
+              parseInt(lines[1]) - 1,
             );
           } else {
             postToIde("showVirtualFile", {
@@ -154,7 +154,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
       >
         <StyledMarkdownPreview
           source={`${fence}${getMarkdownLanguageTagForFile(
-            props.item.description
+            props.item.description,
           )}\n${props.item.content.trim()}\n${fence}`}
           showCodeBorder={false}
         />
