@@ -164,6 +164,7 @@ class Ollama extends BaseLLM {
       buffer += value;
       // Split the buffer into individual JSON chunks
       const chunks = buffer.split("\n");
+      buffer = chunks.pop() ?? "";
 
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
@@ -180,8 +181,6 @@ class Ollama extends BaseLLM {
           }
         }
       }
-      // Assign the last chunk to the buffer
-      buffer = chunks[chunks.length - 1];
     }
   }
 
