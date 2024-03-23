@@ -4,6 +4,11 @@ import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
+import com.intellij.codeInsight.AutoPopupController
+import com.intellij.codeInsight.lookup.LookupManager
+import com.intellij.codeInsight.lookup.impl.LookupImpl
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.invokeLater
@@ -44,23 +49,36 @@ class AutocompleteService(private val project: Project) {
 
         // Request a completion from the core
         val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
+        val column = editor.caretModel.primaryCaret.logicalPosition.column
         val input = mapOf(
             "completionId" to completionId,
             "filepath" to virtualFile?.path,
             "pos" to mapOf(
                     "line" to editor.caretModel.primaryCaret.logicalPosition.line,
-                    "character" to editor.caretModel.primaryCaret.logicalPosition.column
+                    "character" to column
             ),
             "recentlyEditedFiles" to emptyList<String>(),
             "recentlyEditedRanges" to emptyList<String>(),
             "clipboardText" to ""
         )
+
+        val lineStart = editor.document.getLineStartOffset(editor.caretModel.primaryCaret.logicalPosition.line)
+        val lineEnd = editor.document.getLineEndOffset(editor.caretModel.primaryCaret.logicalPosition.line)
+        val lineLength = lineEnd - lineStart
+
         project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/complete", input, null, ({ response ->
             val completions = Gson().fromJson(response, List::class.java)
             if (completions.isNotEmpty()) {
                 val completion = completions[0].toString()
-                renderCompletion(editor, offset, completion)
-                pendingCompletion = pendingCompletion?.copy(text = completion)
+
+                if (completion.lines().size === 1 || column >= lineLength) {
+                    // Do not render if completion is multi-line and caret is in middle of line
+                    renderCompletion(editor, offset, completion)
+                    pendingCompletion = pendingCompletion?.copy(text = completion)
+
+                    // Hide auto-popup
+//                    AutoPopupController.getInstance(project).cancelAllRequests()
+                }
             }
         }))
     }
