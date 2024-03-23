@@ -8,6 +8,7 @@ import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { logDevData } from "core/util/devdata";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
+import { Telemetry } from "core/util/posthog";
 import { v4 as uuidv4 } from "uuid";
 import { IpcMessenger } from "./messenger";
 import { Protocol } from "./protocol";
@@ -151,6 +152,11 @@ export class Core {
         ide,
         selectedCode: msg.data.selectedCode,
       });
+
+      Telemetry.capture("useContextProvider", {
+        name: provider.description.title,
+      });
+
       return items.map((item) => ({
         ...item,
         id,
@@ -242,6 +248,10 @@ export class Core {
       if (!slashCommand) {
         throw new Error(`Unknown slash command ${slashCommandName}`);
       }
+
+      Telemetry.capture("useSlashCommand", {
+        name: slashCommandName,
+      });
 
       for await (const content of slashCommand.run({
         input,

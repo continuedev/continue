@@ -8,6 +8,7 @@ import { DevDataSqliteDb } from "core/util/devdataSqlite";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
 import { getConfigJsonPath } from "core/util/paths";
+import { Telemetry } from "core/util/posthog";
 import {
   ReverseWebviewProtocol,
   WebviewProtocol,
@@ -387,6 +388,10 @@ export class VsCodeWebviewProtocol {
         throw new Error(`Unknown slash command ${slashCommandName}`);
       }
 
+      Telemetry.capture("useSlashCommand", {
+        name: slashCommandName,
+      });
+
       for await (const content of slashCommand.run({
         input,
         history,
@@ -465,6 +470,11 @@ export class VsCodeWebviewProtocol {
           ide,
           selectedCode,
         });
+
+        Telemetry.capture("useContextProvider", {
+          name: provider.description.title,
+        });
+
         return items.map((item) => ({ ...item, id }));
       } catch (e) {
         vscode.window.showErrorMessage(

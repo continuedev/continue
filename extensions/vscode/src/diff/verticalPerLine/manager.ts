@@ -1,5 +1,6 @@
 import { ConfigHandler } from "core/config/handler";
 import { getMarkdownLanguageTagForFile } from "core/util";
+import { Telemetry } from "core/util/posthog";
 import { streamDiffLines } from "core/util/verticalEdit";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffHandler } from "./handler";
@@ -182,6 +183,10 @@ export class VerticalPerLineDiffManager {
       input = `Original request: ${existingHandler.input}\nUpdated request: ${input}`;
     }
     try {
+      Telemetry.capture("inlineEdit", {
+        model: llm.model,
+        provider: llm.providerName,
+      });
       await diffHandler.run(
         streamDiffLines(
           rangeContent,
