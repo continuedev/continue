@@ -6,6 +6,7 @@ import java.io.OutputStreamWriter
 import java.io.*
 
 import com.google.gson.Gson
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
@@ -147,7 +148,7 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
         val inputStream = process.inputStream
 
         writer = OutputStreamWriter(outputStream)
-        reader = BufferedReader(InputStreamReader(inputStream))
+        reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
 
         process.onExit().thenRun {
             val err = process.errorStream.bufferedReader().readText().trim()
