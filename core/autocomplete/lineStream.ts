@@ -127,6 +127,7 @@ function isEnglishFirstLine(line: string) {
   }
   if (
     line.startsWith("here is") ||
+    line.startsWith("here's") ||
     line.startsWith("sure, here") ||
     line.startsWith("sure thing") ||
     line.startsWith("sure!")

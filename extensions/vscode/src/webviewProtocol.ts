@@ -8,6 +8,7 @@ import { DevDataSqliteDb } from "core/util/devdataSqlite";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
 import { getConfigJsonPath } from "core/util/paths";
+import { Telemetry } from "core/util/posthog";
 import {
   ReverseWebviewProtocol,
   WebviewProtocol,
@@ -83,7 +84,7 @@ export class VsCodeWebviewProtocol {
               JSON.stringify({ msg }, null, 2),
           );
 
-          let message = `Continue error: ${e.message}`;
+          let message = e.message;
           if (e.cause) {
             if (e.cause.name === "ConnectTimeoutError") {
               message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in config.json by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://continue.dev/docs/reference/config`;
@@ -387,6 +388,10 @@ export class VsCodeWebviewProtocol {
         throw new Error(`Unknown slash command ${slashCommandName}`);
       }
 
+      Telemetry.capture("useSlashCommand", {
+        name: slashCommandName,
+      });
+
       for await (const content of slashCommand.run({
         input,
         history,
@@ -465,6 +470,11 @@ export class VsCodeWebviewProtocol {
           ide,
           selectedCode,
         });
+
+        Telemetry.capture("useContextProvider", {
+          name: provider.description.title,
+        });
+
         return items.map((item) => ({ ...item, id }));
       } catch (e) {
         vscode.window.showErrorMessage(

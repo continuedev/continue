@@ -1,13 +1,10 @@
-import {
-  CheckIcon,
-  ClipboardIcon,
-  PlayIcon,
-} from "@heroicons/react/24/outline";
+import { CheckIcon, PlayIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import styled from "styled-components";
 import { vscEditorBackground } from "..";
 import { isJetBrains, postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
+import { CopyButton } from "./CopyButton";
 
 const TopDiv = styled.div`
   position: sticky;
@@ -19,9 +16,9 @@ const TopDiv = styled.div`
   z-index: 100;
 `;
 
-const SecondDiv = styled.div`
+const SecondDiv = styled.div<{ bottom: boolean }>`
   position: absolute;
-  top: 4px;
+  ${(props) => (props.bottom ? "bottom: 1.2rem;" : "top: 4px;")}
   right: 4px;
   display: flex;
   gap: 4px;
@@ -30,6 +27,7 @@ const SecondDiv = styled.div`
 
 interface CodeBlockToolBarProps {
   text: string;
+  bottom: boolean;
 }
 
 function CodeBlockToolBar(props: CodeBlockToolBarProps) {
@@ -38,7 +36,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
 
   return (
     <TopDiv>
-      <SecondDiv>
+      <SecondDiv bottom={props.bottom || false}>
         {isJetBrains() || (
           <HeaderButtonWithText
             text={applying ? "Applying..." : "Apply to current file"}
@@ -58,21 +56,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
             )}
           </HeaderButtonWithText>
         )}
-        <HeaderButtonWithText
-          text={copied ? "Copied!" : "Copy"}
-          style={{ backgroundColor: vscEditorBackground }}
-          onClick={(e) => {
-            navigator.clipboard.writeText(props.text);
-            setCopied(true);
-            setTimeout(() => setCopied(false), 2000);
-          }}
-        >
-          {copied ? (
-            <CheckIcon className="w-4 h-4 text-green-500" />
-          ) : (
-            <ClipboardIcon className="w-4 h-4" />
-          )}
-        </HeaderButtonWithText>
+        <CopyButton text={props.text} />
       </SecondDiv>
     </TopDiv>
   );

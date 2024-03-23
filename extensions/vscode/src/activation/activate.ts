@@ -17,7 +17,7 @@ export async function showTutorial() {
   // Ensure keyboard shortcuts match OS
   if (process.platform !== "darwin") {
     let tutorialContent = fs.readFileSync(tutorialPath, "utf8");
-    tutorialContent = tutorialContent.replace("⌘", "^");
+    tutorialContent = tutorialContent.replace("⌘", "^").replace("Cmd", "Ctrl");
     fs.writeFileSync(tutorialPath, tutorialContent);
   }
 

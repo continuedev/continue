@@ -211,6 +211,11 @@ const configs: SiteIndexingConfig[] = [
     startUrl: "https://www.w3schools.com/css/default.asp",
     rootUrl: "https://www.w3schools.com/css",
   },
+  {
+    title: "Langchain",
+    startUrl: "https://python.langchain.com/docs/get_started/introduction",
+    rootUrl: "https://python.langchain.com/docs",
+  },
 ];
 
 export default configs;

@@ -6,7 +6,7 @@ const esbuildConfig = {
   entryPoints: ["src/extension.ts"],
   bundle: true,
   outfile: "out/extension.js",
-  external: ["vscode", "esbuild", "jsdom"],
+  external: ["vscode", "esbuild"],
   format: "cjs",
   platform: "node",
   sourcemap: true,

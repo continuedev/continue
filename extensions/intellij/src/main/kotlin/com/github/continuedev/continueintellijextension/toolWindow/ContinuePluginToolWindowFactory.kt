@@ -76,19 +76,31 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
 
         init {
             System.setProperty("ide.browser.jcef.jsQueryPoolSize", JS_QUERY_POOL_SIZE)
-            System.setProperty("ide.browser.jcef.osr.enabled", "false")
             System.setProperty("ide.browser.jcef.contextMenu.devTools.enabled", "true")
         }
 
         val webView: JBCefBrowser by lazy {
-            val browser = JBCefBrowser.createBuilder().setOffScreenRendering(false).build()
+            val osName = System.getProperty("os.name").toLowerCase()
+            val os = when {
+                osName.contains("mac") || osName.contains("darwin") -> "darwin"
+                osName.contains("win") -> "win32"
+                osName.contains("nix") || osName.contains("nux") || osName.contains("aix") -> "linux"
+                else -> "linux"
+            }
+
+            val browser = JBCefBrowser.createBuilder().setOffScreenRendering(os == "linux").build()
             browser.jbCefClient.setProperty(
                     JBCefClient.Properties.JS_QUERY_POOL_SIZE,
                     JS_QUERY_POOL_SIZE
             )
             registerAppSchemeHandler()
 
-            browser.loadURL("http://continue/index.html")
+            // Use to get hot-reloading in local development
+            if (false) {
+                browser.loadURL("http://localhost:5173/jetbrains_index.html");
+            } else {
+                browser.loadURL("http://continue/index.html")
+            }
 //            browser.loadHTML("<html><body><input type='text'/></body></html>")
 //            browser.loadURL("http://localhost:5173/index.html")
             Disposer.register(project, browser)

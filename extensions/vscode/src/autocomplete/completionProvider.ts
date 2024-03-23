@@ -20,8 +20,8 @@ export class ContinueCompletionProvider
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
-            "https://continue.dev/docs/walkthroughs/tab-autocomplete",
-          ),
+            "https://continue.dev/docs/walkthroughs/tab-autocomplete"
+          )
         );
       }
     });
@@ -32,14 +32,14 @@ export class ContinueCompletionProvider
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
-    private readonly tabAutocompleteModel: TabAutocompleteModel,
+    private readonly tabAutocompleteModel: TabAutocompleteModel
   ) {
     this.completionProvider = new CompletionProvider(
       this.configHandler,
       this.ide,
       this.tabAutocompleteModel.get.bind(this.tabAutocompleteModel),
       this.onError.bind(this),
-      getDefinitionsFromLsp,
+      getDefinitionsFromLsp
     );
   }
 
@@ -47,7 +47,7 @@ export class ContinueCompletionProvider
     document: vscode.TextDocument,
     position: vscode.Position,
     context: vscode.InlineCompletionContext,
-    token: vscode.CancellationToken,
+    token: vscode.CancellationToken
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
     const enableTabAutocomplete =
@@ -75,7 +75,7 @@ export class ContinueCompletionProvider
       const outcome =
         await this.completionProvider.provideInlineCompletionItems(
           input,
-          signal,
+          signal
         );
 
       if (!outcome || !outcome.completion) {
@@ -100,17 +100,15 @@ export class ContinueCompletionProvider
           outcome.completion,
           new vscode.Range(
             position,
-            position.translate(0, outcome.completion.length),
+            position.translate(0, outcome.completion.length)
           ),
           {
             title: "Log Autocomplete Outcome",
             command: "continue.logAutocompleteOutcome",
             arguments: [outcome, logRejectionTimeout],
-          },
+          }
         ),
       ];
-    } catch (e: any) {
-      this.onError(e);
     } finally {
       stopStatusBarLoading();
     }

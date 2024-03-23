@@ -582,6 +582,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       }}
     >
       <EditorContent
+        spellCheck={false}
         editor={editor}
         onFocus={() => {
           setInputFocused(true);

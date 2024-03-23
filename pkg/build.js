@@ -7,7 +7,7 @@ const esbuildOutputFile = "out/index.js";
 const platforms = ["darwin", "linux", "win32"];
 const architectures = ["x64", "arm64"];
 let targets = platforms.flatMap((platform) =>
-  architectures.map((arch) => `${platform}-${arch}`)
+  architectures.map((arch) => `${platform}-${arch}`),
 );
 
 let esbuildOnly = false;
@@ -57,7 +57,7 @@ const targetToLanceDb = {
               } else {
                 resolve();
               }
-            }
+            },
           );
           ncp(
             `node_modules/${mod}`,
@@ -69,10 +69,10 @@ const targetToLanceDb = {
               } else {
                 resolve();
               }
-            }
+            },
           );
-        })
-    )
+        }),
+    ),
   );
   console.log(`[info] Copied ${DYNAMIC_IMPORTS.join(", ")}`);
 
@@ -105,6 +105,12 @@ const targetToLanceDb = {
     define: { "import.meta.url": "importMetaUrl" },
   });
 
+  // Copy over any worker files
+  fs.cpSync(
+    "../core/node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
+    "out/xhr-sync-worker.js",
+  );
+
   if (esbuildOnly) {
     return;
   }
@@ -114,7 +120,7 @@ const targetToLanceDb = {
     const targetDir = `bin/${target}`;
     console.log(`[info] Building ${target}...`);
     execSync(
-      `./node_modules/.bin/pkg --no-bytecode --public-packages "*" --public pkgJson/${target} --out-path ${targetDir}`
+      `npx pkg --no-bytecode --public-packages "*" --public pkgJson/${target} --out-path ${targetDir}`,
     );
 
     // Download and unzip prebuilt sqlite3 binary for the target
@@ -125,7 +131,7 @@ const targetToLanceDb = {
     execSync(`cd ${targetDir} && tar -xvzf build.tar.gz`);
     fs.copyFileSync(
       `${targetDir}/build/Release/node_sqlite3.node`,
-      `${targetDir}/node_sqlite3.node`
+      `${targetDir}/node_sqlite3.node`,
     );
     fs.unlinkSync(`${targetDir}/build.tar.gz`);
     fs.rmSync(`${targetDir}/build`, {
@@ -136,7 +142,7 @@ const targetToLanceDb = {
     // Download and unzip prebuilt esbuild binary for the target
     console.log(`[info] Downloading esbuild for ${target}...`);
     execSync(
-      `curl -o ${targetDir}/esbuild.tgz https://registry.npmjs.org/@esbuild/${target}/-/${target}-0.19.11.tgz`
+      `curl -o ${targetDir}/esbuild.tgz https://registry.npmjs.org/@esbuild/${target}/-/${target}-0.19.11.tgz`,
     );
     execSync(`tar -xzvf ${targetDir}/esbuild.tgz -C ${targetDir}`);
     if (target.startsWith("win32")) {
