@@ -241,7 +241,7 @@ if (args[2] === "--target") {
   });
 
   function ghAction() {
-    return target !== undefined;
+    return !!process.env.GITHUB_ACTIONS;
   }
 
   function isArm() {
