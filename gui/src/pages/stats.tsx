@@ -2,7 +2,9 @@ import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { table } from "table";
 import { lightGray, vscBackground, vscInputBackground } from "../components";
+import { CopyButton } from "../components/markdown/CopyButton";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { ideRequest } from "../util/ide";
 
@@ -26,6 +28,10 @@ const Td = styled.td`
   padding: 0.5rem;
   border: 1px solid ${vscInputBackground};
 `;
+
+function generateTable(data: unknown[][]) {
+  return table(data);
+}
 
 function Stats() {
   useNavigationListener();
@@ -65,7 +71,16 @@ function Stats() {
         <h3 className="text-lg font-bold m-2 inline-block">My Usage</h3>
       </div>
 
-      <h2 className="ml-2">Tokens per Day</h2>
+      <div className="flex gap-2 items-center">
+        <h2 className="ml-2">Tokens per Day</h2>
+        <CopyButton
+          text={generateTable(
+            ([["Day", "Tokens"]] as any).concat(
+              days.map((day) => [day.day, day.tokens]),
+            ),
+          )}
+        />
+      </div>
       <table className="w-full border-collapse">
         <thead>
           <Tr>
@@ -83,7 +98,16 @@ function Stats() {
         </tbody>
       </table>
 
-      <h2 className="ml-2">Tokens per Model</h2>
+      <div className="flex gap-2 items-center">
+        <h2 className="ml-2">Tokens per Model</h2>
+        <CopyButton
+          text={generateTable(
+            ([["Model", "Tokens"]] as any).concat(
+              models.map((model) => [model.model, model.tokens]),
+            ),
+          )}
+        />
+      </div>
       <table className="w-full border-collapse">
         <thead>
           <Tr>
