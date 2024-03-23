@@ -74,6 +74,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
 
   return (
     <PreviewMarkdownDiv
+      spellCheck={false}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       borderColor={props.borderColor}
