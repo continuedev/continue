@@ -4,6 +4,11 @@ import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
+import com.intellij.codeInsight.AutoPopupController
+import com.intellij.codeInsight.lookup.LookupManager
+import com.intellij.codeInsight.lookup.impl.LookupImpl
+import com.intellij.openapi.actionSystem.ActionManager
+import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.invokeLater
@@ -70,6 +75,9 @@ class AutocompleteService(private val project: Project) {
                     // Do not render if completion is multi-line and caret is in middle of line
                     renderCompletion(editor, offset, completion)
                     pendingCompletion = pendingCompletion?.copy(text = completion)
+
+                    // Hide auto-popup
+//                    AutoPopupController.getInstance(project).cancelAllRequests()
                 }
             }
         }))
