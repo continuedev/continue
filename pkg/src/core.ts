@@ -40,7 +40,7 @@ export class Core {
       this.ide,
       ideSettingsPromise,
       (text: string) => {},
-      () => {},
+      (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
     this.codebaseIndexer = new CodebaseIndexer(
       this.configHandler,

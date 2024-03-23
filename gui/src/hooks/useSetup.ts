@@ -1,5 +1,5 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { setVscMachineId } from "../redux/slices/configSlice";
@@ -14,15 +14,27 @@ import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
 
 function useSetup(dispatch: Dispatch<any>) {
+  const [configLoaded, setConfigLoaded] = useState<boolean>(false);
+
   const loadConfig = async () => {
     const config = await ideRequest("config/getBrowserSerialized", undefined);
     dispatch(setConfig(config));
+    setConfigLoaded(true);
   };
 
   // Load config from the IDE
   useEffect(() => {
     loadConfig();
-  }, []);
+    const interval = setInterval(() => {
+      if (configLoaded) {
+        clearInterval(interval);
+        return;
+      }
+      loadConfig();
+    }, 2_000);
+
+    return () => clearInterval(interval);
+  }, [configLoaded]);
 
   useEffect(() => {
     // Override persisted state
