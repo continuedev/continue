@@ -82,12 +82,12 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // Install node_modules //
-  execCmdSync("npm install");
+  execSync("npm install --no-save");
   console.log("[info] npm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execCmdSync("npm install");
+  execSync("npm install --no-save");
   console.log("[info] npm install in gui completed");
 
   if (ghAction()) {
