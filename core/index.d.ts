@@ -516,6 +516,7 @@ type TemplateType =
   | "phi2"
   | "phind"
   | "anthropic"
+  | "bedrock"
   | "chatml"
   | "none"
   | "openchat"
@@ -601,9 +602,12 @@ export type ModelName =
   | "claude-3-sonnet-20240229"
   | "claude-3-haiku-20240307"
   | "claude-2.1"
-  // Cohere
-  | "command-r"
-  | "command-r-plus"
+  // Bedrock Anthropic
+  | "anthropic.claude-3-sonnet-20240229-v1:0"
+  | "anthropic.claude-3-haiku-20240307-v1:0"
+  | "anthropic.claude-v2:1"
+  // Google PaLM
+  | "chat-bison-001"
   // Gemini
   | "gemini-pro"
   | "gemini-1.5-pro-latest"
