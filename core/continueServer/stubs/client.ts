@@ -29,10 +29,11 @@ export class ContinueServerClient implements IContinueServerClient {
   connected: boolean = false;
 
   public async getConfig(): Promise<{ configJson: string; configJs: string }> {
+    const userToken = await this.userToken;
     const response = await fetch(new URL("sync", this.serverUrl).href, {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${await this.userToken}`,
+        Authorization: `Bearer ${userToken}`,
       },
     });
     if (!response.ok) {
@@ -49,14 +50,21 @@ export class ContinueServerClient implements IContinueServerClient {
     artifactId: T,
     repoName: string | undefined,
   ): Promise<EmbeddingsCacheResponse<T>> {
+    if (keys.length === 0) {
+      return {
+        files: {},
+      };
+    }
     const url = new URL("indexing/cache", this.serverUrl);
-    url.searchParams.append("keys", keys.join(","));
-    url.searchParams.append("artifactId", artifactId);
     const response = await fetch(url, {
-      method: "GET",
+      method: "POST",
       headers: {
         Authorization: `Bearer ${await this.userToken}`,
       },
+      body: JSON.stringify({
+        keys,
+        artifactId,
+      }),
     });
 
     if (!response.ok) {
