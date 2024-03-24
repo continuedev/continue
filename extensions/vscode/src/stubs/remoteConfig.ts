@@ -1,3 +1,4 @@
+import { ContinueServerClient } from "core/continueServer/client";
 import {
   getConfigJsPathForRemote,
   getConfigJsonPathForRemote,
@@ -102,24 +103,11 @@ export class RemoteConfigSync {
 
   async sync(userToken: string, remoteConfigServerUrl: URL) {
     try {
-      const response = await fetch(
-        new URL("sync", remoteConfigServerUrl).href,
-        {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${userToken}`,
-          },
-        },
+      const client = new ContinueServerClient(
+        remoteConfigServerUrl.toString(),
+        Promise.resolve(userToken),
       );
-
-      if (!response.ok) {
-        vscode.window.showErrorMessage(
-          `Failed to sync remote config (HTTP ${response.status}): ${response.statusText}`,
-        );
-        return;
-      }
-
-      const { configJson, configJs } = await response.json();
+      const { configJson, configJs } = await client.getConfig();
 
       fs.writeFileSync(
         getConfigJsonPathForRemote(remoteConfigServerUrl),
