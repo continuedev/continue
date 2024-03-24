@@ -1,4 +1,4 @@
-import { ContinueServerClient } from "core/continueServer/client";
+import { ContinueServerClient } from "core/continueServer/stubs/client";
 import {
   getConfigJsPathForRemote,
   getConfigJsonPathForRemote,
@@ -22,7 +22,7 @@ export class RemoteConfigSync {
       remoteConfigServerUrl,
       remoteConfigSyncPeriod,
     } = this.loadVsCodeSettings();
-    this.userToken = settingsUserToken ?? userToken;
+    this.userToken = settingsUserToken || userToken;
     this.remoteConfigServerUrl = remoteConfigServerUrl;
     this.remoteConfigSyncPeriod = remoteConfigSyncPeriod;
 
