@@ -38,6 +38,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "ollama",
   "together",
   "anthropic",
+  "bedrock",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -46,6 +47,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "google-palm",
   "free-trial",
   "anthropic",
+  "bedrock",
 ];
 
 function modelSupportsImages(provider: ModelProvider, model: string): boolean {
@@ -201,6 +203,7 @@ function autodetectTemplateFunction(
       phind: phindTemplateMessages,
       zephyr: zephyrTemplateMessages,
       anthropic: anthropicTemplateMessages,
+      bedrock: anthropicTemplateMessages,
       chatml: chatmlTemplateMessages,
       deepseek: deepseekTemplateMessages,
       openchat: openchatTemplateMessages,
@@ -252,6 +255,8 @@ function autodetectPromptTemplates(
   } else if (templateType === "codellama-70b") {
     editTemplate = codeLlama70bEditPrompt;
   } else if (templateType === "anthropic") {
+    editTemplate = claudeEditPrompt;
+  } else if (templateType === "bedrock") {
     editTemplate = claudeEditPrompt;
   } else if (templateType === "gemma") {
     editTemplate = gemmaEditPrompt;

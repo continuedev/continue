@@ -594,6 +594,49 @@ const claude3Haiku: ModelPackage = {
   icon: "anthropic.png",
 };
 
+const bedrockClaude3Sonnet: ModelPackage = {
+  title: "Bedrock: Claude 3 Sonnet",
+  description:
+    "The second most capable model in the Claude 3 series: ideal balance of intelligence and speed",
+  params: {
+    model: "anthropic.claude-3-sonnet-20240229-v1:0",
+    contextLength: 200_000,
+    title: "Claude 3 Sonnet",
+    apiKey: "",
+  },
+  providerOptions: ["bedrock"],
+  icon: "anthropic.png",
+};
+
+const bedrockClaude3Haiku: ModelPackage = {
+  title: "Bedrock: Claude 3 Haiku",
+  description:
+    "The third most capable model in the Claude 3 series: fastest and most compact model for near-instant responsiveness",
+  params: {
+    model: "anthropic.claude-3-sonnet-20240229-v1:0",
+    contextLength: 200_000,
+    title: "Claude 3 Sonnet",
+    apiKey: "",
+  },
+  providerOptions: ["bedrock"],
+  icon: "anthropic.png",
+};
+
+const bedrockClaude2v1: ModelPackage = {
+  title: "Bedrock: Claude 2.1",
+  description:
+    "Claude 2.1 is a large language model (LLM) by Anthropic with a 200K token context window, reduced hallucination rates, and improved accuracy over long documents.",
+  params: {
+    model: "anthropic.claude-v2:1",
+    contextLength: 200_000,
+    title: "Claude 2.1",
+    apiKey: "",
+  },
+  providerOptions: ["bedrock"],
+  icon: "anthropic.png",
+
+}
+
 const chatBison: ModelPackage = {
   title: "chat-bison-001",
   description:
@@ -627,6 +670,9 @@ export const MODEL_INFO: ModelPackage[] = [
   claude3Sonnet,
   claude3Haiku,
   claude2,
+  bedrockClaude3Sonnet,
+  bedrockClaude3Haiku,
+  bedrockClaude2v1,
   deepseek,
   mistral,
   codellama70bTrial,
@@ -695,6 +741,14 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
     ],
     packages: [claude3Opus, claude3Sonnet, claude3Haiku, claude2],
+  },
+  bedrock: {
+    title: "Bedrock",
+    provider: "bedrock",
+    refPage: "amazon.com",
+    description: "Bedrock is Amazon's provider of multiple diverse language models.",
+    tags: [ModelProviderTag["Requires API Key"]],
+    packages: [bedrockClaude3Sonnet],
   },
   ollama: {
     title: "Ollama",
