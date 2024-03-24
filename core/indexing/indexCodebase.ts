@@ -1,6 +1,6 @@
 import { IDE, IndexTag, IndexingProgressUpdate } from "..";
 import { ConfigHandler } from "../config/handler";
-import { ContinueServerClient } from "../continueServer/client";
+import { ContinueServerClient } from "../continueServer/stubs/client";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearch";
 import { LanceDbIndex } from "./LanceDbIndex";
@@ -41,7 +41,10 @@ export class CodebaseIndexer {
     const config = await this.configHandler.loadConfig();
 
     const indexes = [
-      new ChunkCodebaseIndex(this.ide.readFile.bind(this.ide)), // Chunking must come first
+      new ChunkCodebaseIndex(
+        this.ide.readFile.bind(this.ide),
+        this.continueServerClient,
+      ), // Chunking must come first
       new LanceDbIndex(
         config.embeddingsProvider,
         this.ide.readFile.bind(this.ide),

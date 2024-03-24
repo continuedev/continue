@@ -1,13 +1,5 @@
-export interface EmbeddingsCacheChunk {
-  vector: number[];
-  startLine: number;
-  endLine: number;
-  contents: string;
-}
+import { ArtifactType, EmbeddingsCacheResponse } from "../interface";
 
-export interface EmbeddingsCacheResponse {
-  files: { [cacheKey: string]: EmbeddingsCacheChunk[] };
-}
 export class ContinueServerClient {
   constructor(
     private readonly serverUrl: string,
@@ -18,10 +10,10 @@ export class ContinueServerClient {
     throw new Error("Not Implemented");
   }
 
-  public async getFromIndexCache(
+  public async getFromIndexCache<T extends ArtifactType>(
     keys: string[],
-    artifactId: string,
-  ): Promise<EmbeddingsCacheResponse> {
+    artifactId: T,
+  ): Promise<EmbeddingsCacheResponse<T>> {
     return { files: {} };
   }
 }

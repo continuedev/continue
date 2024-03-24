@@ -7,7 +7,7 @@ import {
   IndexTag,
   IndexingProgressUpdate,
 } from "..";
-import { ContinueServerClient } from "../continueServer/client";
+import { ContinueServerClient } from "../continueServer/stubs/client";
 import { MAX_CHUNK_SIZE } from "../llm/constants";
 import { getBasename } from "../util";
 import { getLanceDbPath } from "../util/paths";
@@ -176,7 +176,7 @@ export class LanceDbIndex implements CodebaseIndex {
         const keys = results.compute.map(({ cacheKey }) => cacheKey);
         const resp = await this.continueServerClient.getFromIndexCache(
           keys,
-          "chunks",
+          "embeddings",
         );
         for (const [cacheKey, chunks] of Object.entries(resp.files)) {
           // Get path for cacheKey
