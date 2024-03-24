@@ -29,7 +29,19 @@ export class ContinueServerClient implements IContinueServerClient {
   connected: boolean = false;
 
   public async getConfig(): Promise<{ configJson: string; configJs: string }> {
-    throw new Error("Not Implemented");
+    const response = await fetch(new URL("sync", this.serverUrl).href, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${await this.userToken}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(
+        `Failed to sync remote config (HTTP ${response.status}): ${response.statusText}`,
+      );
+    }
+    const data = await response.json();
+    return data;
   }
 
   public async getFromIndexCache<T extends ArtifactType>(
@@ -37,6 +49,23 @@ export class ContinueServerClient implements IContinueServerClient {
     artifactId: T,
     repoName: string | undefined,
   ): Promise<EmbeddingsCacheResponse<T>> {
-    return { files: {} };
+    const url = new URL("indexing/cache", this.serverUrl);
+    url.searchParams.append("keys", keys.join(","));
+    url.searchParams.append("artifactId", artifactId);
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${await this.userToken}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `Failed to retrieve from remote cache (HTTP ${response.status}): ${response.statusText}`,
+      );
+    }
+
+    const data = await response.json();
+    return data;
   }
 }
