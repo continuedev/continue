@@ -13,6 +13,7 @@ import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
+import { getUserToken } from "../stubs/auth";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -108,11 +109,38 @@ export class VsCodeExtension {
     });
 
     this.diffManager.webviewProtocol = this.webviewProtocol;
+
+    const userTokenPromise: Promise<string | undefined> = new Promise(
+      async (resolve) => {
+        if (
+          remoteConfigServerUrl === null ||
+          remoteConfigServerUrl === undefined ||
+          remoteConfigServerUrl.trim() === ""
+        ) {
+          resolve(undefined);
+          return;
+        }
+        const token = await getUserToken();
+        resolve(token);
+      },
+    );
     this.indexer = new CodebaseIndexer(
       this.configHandler,
       this.ide,
       indexingPauseToken,
+      ideSettings.remoteConfigServerUrl,
+      userTokenPromise,
     );
+
+    if (
+      !(
+        remoteConfigServerUrl === null ||
+        remoteConfigServerUrl === undefined ||
+        remoteConfigServerUrl.trim() === ""
+      )
+    ) {
+      getUserToken().then((token) => {});
+    }
 
     // CodeLens
     registerAllCodeLensProviders(
