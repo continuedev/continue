@@ -1,8 +1,8 @@
-import { IContinueServerClient } from "../../continueServer/interface.js";
-import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
-import { MAX_CHUNK_SIZE } from "../../llm/constants.js";
-import { getBasename } from "../../util/index.js";
-import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex.js";
+import { Chunk, IndexTag, IndexingProgressUpdate } from "../..";
+import { ContinueServerClient } from "../../continueServer/stubs/client";
+import { MAX_CHUNK_SIZE } from "../../llm/constants";
+import { getBasename } from "../../util";
+import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex";
 import {
   IndexResultType,
   MarkCompleteCallback,
@@ -17,7 +17,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
   constructor(
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly continueServerClient: IContinueServerClient,
+    private readonly continueServerClient?: ContinueServerClient,
   ) {
     this.readFile = readFile;
   }
@@ -53,7 +53,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     async function handleChunk(chunk: Chunk) {
       const { lastID } = await db.run(
-        "INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)",
+        `INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)`,
         [
           chunk.digest,
           chunk.filepath,
@@ -64,20 +64,19 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         ],
       );
 
-      await db.run("INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)", [
+      await db.run(`INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)`, [
         lastID,
         tagString,
       ]);
     }
 
     // Check the remote cache
-    if (this.continueServerClient.connected) {
+    if (this.continueServerClient !== undefined) {
       try {
         const keys = results.compute.map(({ cacheKey }) => cacheKey);
         const resp = await this.continueServerClient.getFromIndexCache(
           keys,
           "chunks",
-          repoName,
         );
 
         for (const [cacheKey, chunks] of Object.entries(resp.files)) {

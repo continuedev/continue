@@ -1,6 +1,6 @@
 import { IDE, IndexTag, IndexingProgressUpdate } from "..";
 import { ConfigHandler } from "../config/handler";
-import { ContinueServerClient } from "../continueServer/client";
+import { ContinueServerClient } from "../continueServer/stubs/client";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearch";
 import { LanceDbIndex } from "./LanceDbIndex";

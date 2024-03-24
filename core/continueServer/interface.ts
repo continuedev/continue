@@ -1,4 +1,4 @@
-import { Chunk } from "../index.js";
+import { Chunk } from "..";
 
 export interface EmbeddingsCacheChunk {
   vector: number[];
@@ -19,13 +19,9 @@ export interface EmbeddingsCacheResponse<T extends ArtifactType> {
 }
 
 export interface IContinueServerClient {
-  connected: boolean;
-  url: URL | undefined;
-  getUserToken(): string | undefined;
   getConfig(): Promise<{ configJson: string; configJs: string }>;
   getFromIndexCache<T extends ArtifactType>(
     keys: string[],
     artifactId: T,
-    repoName: string | undefined,
   ): Promise<EmbeddingsCacheResponse<T>>;
 }
