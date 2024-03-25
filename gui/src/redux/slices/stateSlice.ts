@@ -168,7 +168,10 @@ export const stateSlice = createSlice({
       state.config = config;
       state.defaultModelTitle = defaultModelTitle;
     },
-    addLogs: (state, { payload }: PayloadAction<[string, string][]>) => {
+    addPromptCompletionPair: (
+      state,
+      { payload }: PayloadAction<[string, string][]>,
+    ) => {
       if (!state.history.length) {
         return;
       }
@@ -480,7 +483,7 @@ export const {
   setEditingAtIds,
   setDefaultModel,
   setConfig,
-  addLogs,
+  addPromptCompletionPair,
   setActive,
   setEditingContextItemAtIndex,
   initNewActiveMessage,
