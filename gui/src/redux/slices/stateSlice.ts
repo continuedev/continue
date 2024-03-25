@@ -226,8 +226,7 @@ export const stateSlice = createSlice({
         contextItems: [],
       });
 
-      // https://github.com/continuedev/continue/pull/1021
-      // state.contextItems = [];
+      state.contextItems = state.contextItems;
       state.active = true;
     },
     initNewActiveMessage: (
@@ -250,8 +249,7 @@ export const stateSlice = createSlice({
         },
         contextItems: [],
       });
-      // https://github.com/continuedev/continue/pull/1021
-      // state.contextItems = [];
+      state.contextItems = state.contextItems;
       state.active = true;
     },
     setMessageAtIndex: (
@@ -391,7 +389,7 @@ export const stateSlice = createSlice({
       const lineNums = `(${
         payload.rangeInFileWithContents.range.start.line + 1
       }-${payload.rangeInFileWithContents.range.end.line + 1})`;
-      contextItems.push({
+      contextItems = [{
         name: `${base} ${lineNums}`,
         description: payload.rangeInFileWithContents.filepath,
         id: {
@@ -401,7 +399,7 @@ export const stateSlice = createSlice({
         content: payload.rangeInFileWithContents.contents,
         editing: true,
         editable: true,
-      });
+      }];
 
       return { ...state, contextItems };
     },

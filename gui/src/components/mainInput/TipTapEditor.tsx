@@ -33,10 +33,7 @@ import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import {
-  consumeMainEditorContent,
-  setEditingContextItemAtIndex,
-} from "../../redux/slices/stateSlice";
+import { addHighlightedCode, setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import {
   getFontSize,
@@ -622,6 +619,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           editor.commands.blur();
           editor.commands.focus("end");
         }, 20);
+        dispatch(addHighlightedCode({rangeInFileWithContents: rif, edit: true}));
       }
       setIgnoreHighlightedCode(false);
     },
