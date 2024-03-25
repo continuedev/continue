@@ -143,7 +143,7 @@ export const stateSlice = createSlice({
     },
     addPromptCompletionPair: (
       state,
-      { payload }: PayloadAction<PromptLog[]>,
+      { payload }: PayloadAction<[string, string][]>,
     ) => {
       if (!state.history.length) {
         return;

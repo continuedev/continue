@@ -22,7 +22,6 @@ import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   addPromptCompletionPair,
-  clearLastResponse,
   initNewActiveMessage,
   resubmitAtIndex,
   setInactive,
@@ -74,13 +73,11 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         next = await gen.next();
       }
 
-      let returnVal = next.value as PromptLog;
-      if (returnVal) {
-        dispatch(addPromptCompletionPair([returnVal]));
-      }
-    } catch (e) {
-      // If there's an error, we should clear the response so there aren't two input boxes
-      dispatch(clearLastResponse());
+    let returnVal = next.value as LLMReturnValue;
+    if (returnVal) {
+      dispatch(
+        addPromptCompletionPair([[returnVal?.prompt, returnVal?.completion]]),
+      );
     }
   }
 
