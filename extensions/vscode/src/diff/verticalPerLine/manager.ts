@@ -114,7 +114,7 @@ export class VerticalPerLineDiffManager {
       index = 0;
     }
 
-    const blocks = this.filepathToCodeLens.get(filepath);
+    let blocks = this.filepathToCodeLens.get(filepath);
     const block = blocks?.[index];
     if (!blocks || !block) {
       return;
@@ -138,11 +138,7 @@ export class VerticalPerLineDiffManager {
     }
   }
 
-  async streamEdit(
-    input: string,
-    modelTitle: string | undefined,
-    onlyOneInsertion?: boolean,
-  ) {
+  async streamEdit(input: string, modelTitle: string | undefined) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
     const editor = vscode.window.activeTextEditor;
@@ -179,6 +175,16 @@ export class VerticalPerLineDiffManager {
       );
     }
 
+    const rangeContent = editor.document.getText(selectedRange);
+    const prefix = editor.document.getText(
+      new vscode.Range(new vscode.Position(0, 0), selectedRange.start),
+    );
+    const suffix = editor.document.getText(
+      new vscode.Range(
+        selectedRange.end,
+        new vscode.Position(editor.document.lineCount, 0),
+      ),
+    );
     const llm = await this.configHandler.llmFromTitle(modelTitle);
     const rangeContent = editor.document.getText(selectedRange);
     const prefix = pruneLinesFromTop(

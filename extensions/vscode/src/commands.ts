@@ -148,30 +148,158 @@ const commandsMap: (
   configHandler,
   diffManager,
   verticalDiffManager,
-) => {
-  async function streamInlineEdit(
-    promptName: keyof ContextMenuConfig,
-    fallbackPrompt: string,
-    onlyOneInsertion?: boolean,
-  ) {
+) => ({
+  "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
+    if (newFilepath instanceof vscode.Uri) {
+      newFilepath = newFilepath.fsPath;
+    }
+    verticalDiffManager.clearForFilepath(newFilepath, true);
+    await diffManager.acceptDiff(newFilepath);
+  },
+  "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
+    if (newFilepath instanceof vscode.Uri) {
+      newFilepath = newFilepath.fsPath;
+    }
+    verticalDiffManager.clearForFilepath(newFilepath, false);
+    await diffManager.rejectDiff(newFilepath);
+  },
+  "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
+    verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index);
+  },
+  "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number) => {
+    verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index);
+  },
+  "continue.quickFix": async (message: string, code: string, edit: boolean) => {
+    sidebar.webviewProtocol?.request("newSessionWithPrompt", {
+      prompt: `${
+        edit ? "/edit " : ""
+      }${code}\n\nHow do I fix this problem in the above code?: ${message}`,
+    });
+
+    if (!edit) {
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+    }
+  },
+  "continue.focusContinueInput": async () => {
+    if (!getFullScreenTab()) {
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+    }
+    sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+    addHighlightedCodeToContext(false, sidebar.webviewProtocol);
+  },
+  "continue.focusContinueInputWithoutClear": async () => {
+    if (!getFullScreenTab()) {
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+    }
+    sidebar.webviewProtocol?.request(
+      "focusContinueInputWithoutClear",
+      undefined,
+    );
+    addHighlightedCodeToContext(true, sidebar.webviewProtocol);
+  },
+  "continue.toggleAuxiliaryBar": () => {
+    vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
+  },
+  "continue.quickEdit": async () => {
+    const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
+
+    const editor = vscode.window.activeTextEditor;
+    const existingHandler = verticalDiffManager.getHandlerForFile(
+      editor?.document.uri.fsPath ?? "",
+    );
+    const previousInput = existingHandler?.input;
+
+    let defaultModelTitle = await sidebar.webviewProtocol.request(
+      "getDefaultModelTitle",
+      undefined,
+    );
     const config = await configHandler.loadConfig();
-    const modelTitle =
-      config.experimental?.modelRoles?.inlineEdit ??
-      (await sidebar.webviewProtocol.request(
+    if (!defaultModelTitle) {
+      defaultModelTitle = config.models[0]?.title!;
+    }
+    const quickPickItems =
+      config.contextProviders
+        ?.filter((provider) => provider.description.type === "normal")
+        .map((provider) => {
+          return {
+            label: provider.description.displayTitle,
+            description: provider.description.title,
+            detail: provider.description.description,
+          };
+        }) || [];
+
+    const addContextMsg = quickPickItems.length
+      ? " (or press enter to add context first)"
+      : "";
+    const textInputOptions: vscode.InputBoxOptions = {
+      placeHolder: selectionEmpty
+        ? `Type instructions to generate code${addContextMsg}`
+        : `Describe how to edit the highlighted code${addContextMsg}`,
+      title: "Continue Quick Edit",
+      prompt: `[${defaultModelTitle}]`,
+    };
+    if (previousInput) {
+      textInputOptions.value = previousInput + ", ";
+      textInputOptions.valueSelection = [
+        textInputOptions.value.length,
+        textInputOptions.value.length,
+      ];
+    }
+
+    let text = await vscode.window.showInputBox(textInputOptions);
+
+    if (text === undefined) {
+      return;
+    }
+
+    if (text.length > 0 || quickPickItems.length === 0) {
+      const modelName = await sidebar.webviewProtocol.request(
         "getDefaultModelTitle",
         undefined,
-      ));
-    sidebar.webviewProtocol.request("incrementFtc", undefined);
-    await verticalDiffManager.streamEdit(
-      config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
-      modelTitle,
-      onlyOneInsertion,
-    );
-  }
-  return {
-    "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
-      if (newFilepath instanceof vscode.Uri) {
-        newFilepath = newFilepath.fsPath;
+      );
+      await verticalDiffManager.streamEdit(text, modelName);
+    } else {
+      // Pick context first
+      const selectedProviders = await vscode.window.showQuickPick(
+        quickPickItems,
+        {
+          title: "Add Context",
+          canPickMany: true,
+        },
+      );
+
+      let text = await vscode.window.showInputBox(textInputOptions);
+      if (text) {
+        const llm = await configHandler.llmFromTitle();
+        const config = await configHandler.loadConfig();
+        const context = (
+          await Promise.all(
+            selectedProviders?.map((providerTitle) => {
+              const provider = config.contextProviders?.find(
+                (provider) =>
+                  provider.description.title === providerTitle.description,
+              );
+              if (!provider) {
+                return [];
+              }
+
+              return provider.getContextItems("", {
+                embeddingsProvider: config.embeddingsProvider,
+                ide,
+                llm,
+                fullInput: text || "",
+                selectedCode: [],
+              });
+            }) || [],
+          )
+        ).flat();
+
+        text =
+          context.map((item) => item.content).join("\n\n") +
+          "\n\n---\n\n" +
+          text;
+
+        await verticalDiffManager.streamEdit(text, defaultModelTitle);
       }
       verticalDiffManager.clearForFilepath(newFilepath, true);
       await diffManager.acceptDiff(newFilepath);

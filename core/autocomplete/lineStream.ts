@@ -221,7 +221,7 @@ function isEnglishFirstLine(line: string) {
 export async function* filterEnglishLinesAtStart(lines: LineStream) {
   let i = 0;
   let wasEnglishFirstLine = false;
-  for await (const line of lines) {
+  for await (let line of lines) {
     if (i === 0 && line.trim() === "") {
       continue;
     }

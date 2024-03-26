@@ -3,20 +3,12 @@ import {
   filterEnglishLinesAtEnd,
   filterEnglishLinesAtStart,
   filterLeadingAndTrailingNewLineInsertion,
-  skipLines,
-  stopAtLines,
-} from "../autocomplete/lineStream.js";
-import { streamDiff } from "../diff/streamDiff.js";
-import { streamLines } from "../diff/util.js";
-import {
-  ChatMessage,
-  DiffLine,
-  ILLM,
-  LLMFullCompletionOptions,
-  ModelProvider,
-} from "../index.js";
-import { gptEditPrompt } from "../llm/templates/edit.js";
-import { Telemetry } from "./posthog.js";
+  fixCodeLlamaFirstLineIndentation,
+} from "../autocomplete/lineStream";
+import { streamDiff } from "../diff/streamDiff";
+import { streamLines } from "../diff/util";
+import { gptEditPrompt } from "../llm/templates/edit";
+import { renderPromptTemplate } from "../util";
 
 function constructPrompt(
   prefix: string,

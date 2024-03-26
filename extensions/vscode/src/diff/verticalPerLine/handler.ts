@@ -56,7 +56,7 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
       this.editor,
     );
 
-    const disposable = vscode.window.onDidChangeActiveTextEditor((editor) => {
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
       // When we switch away and back to this editor, need to re-draw decorations
       if (editor?.document.uri.fsPath === this.filepath) {
         this.editor = editor;
@@ -69,7 +69,6 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
         this.queueDiffLine(undefined);
       }
     });
-    this.disposables.push(disposable);
   }
 
   private get filepath() {
@@ -149,10 +148,10 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
               lineCount,
               this.editor.document.lineAt(lineCount - 1).text.length,
             ),
-            `\n${text}`,
+            "\n" + text,
           );
         } else {
-          editBuilder.insert(new vscode.Position(index, 0), `${text}\n`);
+          editBuilder.insert(new vscode.Position(index, 0), text + "\n");
         }
       },
       {
@@ -244,13 +243,6 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
 
     this.cancelled = true;
     this.refreshCodeLens();
-    this.dispose();
-  }
-
-  disposables: vscode.Disposable[] = [];
-
-  dispose() {
-    this.disposables.forEach((disposable) => disposable.dispose());
   }
 
   get isCancelled() {

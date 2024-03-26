@@ -116,18 +116,18 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
   },
   {
     mac: "⌥ ⌘ Y",
-    windows: "Alt ⌃ Y",
+    windows: "⎇ ⌃ Y",
     description: "Accept Top Change in Diff",
   },
   {
     mac: "⌥ ⌘ N",
-    windows: "Alt ⌃ N",
+    windows: "⎇ ⌃ N",
     description: "Reject Top Change in Diff",
   },
   {
     mac: "⌥ ⌘ L",
-    windows: "Alt ⌃ L",
-    description: "Toggle Continue Sidebar",
+    windows: "⎇ ⌃ L",
+    description: "Toggle Auxiliary Bar",
   },
   {
     mac: "⌘ ⇧ R",
@@ -184,12 +184,12 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   },
   {
     mac: "⌥ ⇧ J",
-    windows: "Alt ⇧ J",
+    windows: "⎇ ⇧ J",
     description: "Quick Input",
   },
   {
     mac: "⌥ ⌘ J",
-    windows: "Alt ⌃ J",
+    windows: "⎇ ⌃ J",
     description: "Toggle Sidebar",
   },
   {
