@@ -62,6 +62,9 @@ export class VerticalPerLineDiffHandler {
         this.redDecorationManager.applyToNewEditor(editor);
         this.greenDecorationManager.applyToNewEditor(editor);
         this.updateIndexLineDecorations();
+
+        // Handle any lines received while editor was closed
+        this.queueDiffLine(undefined);
       }
     });
   }
@@ -223,7 +226,39 @@ export class VerticalPerLineDiffHandler {
     return this.cancelled;
   }
 
-  async handleDiffLine(diffLine: DiffLine) {
+  private _diffLinesQueue: DiffLine[] = [];
+  private _queueLock = false;
+
+  async queueDiffLine(diffLine: DiffLine | undefined) {
+    if (diffLine) {
+      this._diffLinesQueue.push(diffLine);
+    }
+
+    if (this._queueLock || this.editor !== vscode.window.activeTextEditor) {
+      return;
+    }
+
+    this._queueLock = true;
+
+    while (this._diffLinesQueue.length) {
+      const line = this._diffLinesQueue.shift();
+      if (!line) {
+        break;
+      }
+
+      try {
+        await this._handleDiffLine(line);
+      } catch (e) {
+        // If editor is switched between calling _handleDiffLine and the edit actually being executed
+        this._diffLinesQueue.push(line);
+        break;
+      }
+    }
+
+    this._queueLock = false;
+  }
+
+  private async _handleDiffLine(diffLine: DiffLine) {
     switch (diffLine.type) {
       case "same":
         await this.insertDeletionBuffer();
@@ -251,7 +286,7 @@ export class VerticalPerLineDiffHandler {
         if (this.isCancelled) {
           return;
         }
-        await this.handleDiffLine(diffLine);
+        await this.queueDiffLine(diffLine);
       }
 
       // Clear deletion buffer
