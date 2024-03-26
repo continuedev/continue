@@ -2,6 +2,22 @@ import { distance } from "fastest-levenshtein";
 import { DiffLine } from "..";
 import { LineStream } from "../diff/util";
 
+export async function* noTopLevelKeywordsMidline(
+  lines: LineStream,
+  topLevelKeywords: string[],
+): LineStream {
+  for await (const line of lines) {
+    for (const keyword of topLevelKeywords) {
+      const indexOf = line.indexOf(keyword + " ");
+      if (indexOf >= 0 && line.slice(indexOf - 1, indexOf).trim() !== "") {
+        yield line.slice(0, indexOf);
+        break;
+      }
+    }
+    yield line;
+  }
+}
+
 export async function* avoidPathLine(
   stream: LineStream,
   comment: string,

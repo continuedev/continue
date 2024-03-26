@@ -18,6 +18,7 @@ import {
 import { AutocompleteLanguageInfo } from "./languages";
 import {
   avoidPathLine,
+  noTopLevelKeywordsMidline,
   stopAtLines,
   stopAtRepeatingLines,
   stopAtSimilarLine,
@@ -53,7 +54,7 @@ const autocompleteCache = AutocompleteLruCache.get();
 function formatExternalSnippet(
   filepath: string,
   snippet: string,
-  language: AutocompleteLanguageInfo
+  language: AutocompleteLanguageInfo,
 ) {
   const comment = language.comment;
   const lines = [
@@ -78,8 +79,8 @@ export async function getTabCompletion(
     filepath: string,
     contents: string,
     cursorIndex: number,
-    ide: IDE
-  ) => Promise<AutocompleteSnippet[]>
+    ide: IDE,
+  ) => Promise<AutocompleteSnippet[]>,
 ): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
@@ -129,7 +130,7 @@ export async function getTabCompletion(
       filepath,
       fullPrefix + fullSuffix,
       fullPrefix.length,
-      ide
+      ide,
     ),
     new Promise((resolve) => {
       setTimeout(() => resolve([]), 100);
@@ -155,7 +156,7 @@ export async function getTabCompletion(
       recentlyEditedRanges,
       recentlyEditedFiles,
       llm.model,
-      extrasSnippets
+      extrasSnippets,
     );
 
   // Template prompt
@@ -172,7 +173,7 @@ export async function getTabCompletion(
     // Format snippets as comments and prepend to prefix
     const formattedSnippets = snippets
       .map((snippet) =>
-        formatExternalSnippet(snippet.filepath, snippet.contents, lang)
+        formatExternalSnippet(snippet.filepath, snippet.contents, lang),
       )
       .join("\n");
     if (formattedSnippets.length > 0) {
@@ -208,6 +209,7 @@ export async function getTabCompletion(
       ...(completionOptions?.stop || []),
       "\n\n",
       "/src/",
+      "#- coding: utf-8",
       "```",
       ...lang.stopWords,
     ];
@@ -224,7 +226,7 @@ export async function getTabCompletion(
           raw: true,
           stop,
         }),
-      multiline
+      multiline,
     );
 
     // LLM
@@ -241,14 +243,13 @@ export async function getTabCompletion(
     let chars = generatorWithCancellation();
     const gen2 = onlyWhitespaceAfterEndOfLine(
       noFirstCharNewline(chars),
-      lang.endOfLine
+      lang.endOfLine,
     );
-    const lineGenerator = streamWithNewLines(
-      avoidPathLine(
-        stopAtRepeatingLines(stopAtLines(streamLines(gen2))),
-        lang.comment
-      )
-    );
+    let lineGenerator = stopAtRepeatingLines(stopAtLines(streamLines(gen2)));
+    lineGenerator = avoidPathLine(lineGenerator, lang.comment);
+    lineGenerator = noTopLevelKeywordsMidline(lineGenerator, lang.stopWords);
+    lineGenerator = streamWithNewLines(lineGenerator);
+
     const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
     for await (const update of finalGenerator) {
       completion += update;
@@ -293,11 +294,11 @@ export class CompletionProvider {
       filepath: string,
       contents: string,
       cursorIndex: number,
-      ide: IDE
-    ) => Promise<AutocompleteSnippet[]>
+      ide: IDE,
+    ) => Promise<AutocompleteSnippet[]>,
   ) {
     this.generatorReuseManager = new GeneratorReuseManager(
-      this.onError.bind(this)
+      this.onError.bind(this),
     );
   }
 
@@ -347,7 +348,7 @@ export class CompletionProvider {
 
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
-    token: AbortSignal | undefined
+    token: AbortSignal | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
     // Create abort signal if not given
     if (!token) {
@@ -372,7 +373,7 @@ export class CompletionProvider {
         const lastUUID = await new Promise((resolve) =>
           setTimeout(() => {
             resolve(CompletionProvider.lastUUID);
-          }, options.debounceDelay)
+          }, options.debounceDelay),
         );
         if (uuid !== lastUUID) {
           return undefined;
@@ -402,7 +403,7 @@ export class CompletionProvider {
         this.ide,
         this.generatorReuseManager,
         input,
-        this.getDefinitionsFromLsp
+        this.getDefinitionsFromLsp,
       );
       const completion = outcome?.completion;
 
