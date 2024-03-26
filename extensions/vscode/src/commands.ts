@@ -164,12 +164,26 @@ const commandsMap: (
   "continue.quickEdit": async () => {
     const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
 
-    let text = await vscode.window.showInputBox({
+    const editor = vscode.window.activeTextEditor;
+    const existingHandler = verticalDiffManager.getHandlerForFile(
+      editor?.document.uri.fsPath ?? "",
+    );
+    const previousInput = existingHandler?.input;
+    const textInputOptions: vscode.InputBoxOptions = {
       placeHolder: selectionEmpty
         ? "Describe the code you want to generate (or press enter to add context first)"
         : "Describe how to edit the highlighted code (or press enter to add context first)",
       title: "Continue Quick Edit",
-    });
+    };
+    if (previousInput) {
+      textInputOptions.value = previousInput + ", ";
+      textInputOptions.valueSelection = [
+        textInputOptions.value.length,
+        textInputOptions.value.length,
+      ];
+    }
+
+    let text = await vscode.window.showInputBox(textInputOptions);
 
     if (text === undefined) {
       return;
@@ -207,12 +221,7 @@ const commandsMap: (
         },
       );
 
-      let text = await vscode.window.showInputBox({
-        placeHolder: selectionEmpty
-          ? "Describe the code you want to generate (or press enter to add context first)"
-          : "Describe how to edit the highlighted code (or press enter to add context first)",
-        title: "Continue Quick Edit",
-      });
+      let text = await vscode.window.showInputBox(textInputOptions);
       if (text) {
         const llm = await configHandler.llmFromTitle();
         const config = await configHandler.loadConfig();

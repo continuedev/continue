@@ -126,6 +126,10 @@ export class VerticalPerLineDiffManager {
       block.numGreen,
       block.numRed,
     );
+
+    if (blocks.length === 1) {
+      this.clearForFilepath(filepath, true);
+    }
   }
 
   async streamEdit(input: string, modelTitle: string | undefined) {
@@ -174,10 +178,6 @@ export class VerticalPerLineDiffManager {
       true,
     );
 
-    // Format follow-up requests
-    if (existingHandler?.input) {
-      input = `${existingHandler.input}, ${input}`;
-    }
     try {
       Telemetry.capture("inlineEdit", {
         model: llm.model,
