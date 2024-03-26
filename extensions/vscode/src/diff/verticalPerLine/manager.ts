@@ -89,6 +89,8 @@ export class VerticalPerLineDiffManager {
       handler.clear(accept);
       this.filepathToEditorMap.delete(filepath);
     }
+
+    vscode.commands.executeCommand("setContext", "continue.diffVisible", false);
   }
 
   acceptRejectVerticalDiffBlock(
@@ -133,6 +135,8 @@ export class VerticalPerLineDiffManager {
   }
 
   async streamEdit(input: string, modelTitle: string | undefined) {
+    vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
+
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       return;

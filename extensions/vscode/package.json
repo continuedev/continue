@@ -231,7 +231,7 @@
         "command": "continue.rejectDiff",
         "mac": "cmd+z",
         "key": "ctrl+z",
-        "when": "continue.streamingDiff"
+        "when": "continue.diffVisible"
       },
       {
         "command": "continue.acceptVerticalDiffBlock",
