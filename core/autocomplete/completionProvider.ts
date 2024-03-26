@@ -144,8 +144,12 @@ export async function getTabCompletion(
   ide: IDE,
   generatorReuseManager: GeneratorReuseManager,
   input: AutocompleteInput,
-  getDefinitionsFromLsp: GetLspDefinitionsFunction,
-  bracketMatchingService: BracketMatchingService,
+  getDefinitionsFromLsp: (
+    filepath: string,
+    contents: string,
+    cursorIndex: number,
+    ide: IDE,
+  ) => Promise<AutocompleteSnippet[]>,
 ): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
@@ -216,31 +220,17 @@ export async function getTabCompletion(
     end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
   });
 
-  // First non-whitespace line below the cursor
-  let lineBelowCursor = "";
-  let i = 1;
-  while (
-    lineBelowCursor.trim() === "" &&
-    pos.line + i <= fileLines.length - 1
-  ) {
-    lineBelowCursor = fileLines[Math.min(pos.line + i, fileLines.length - 1)];
-    i++;
-  }
-
-  let extrasSnippets = options.useOtherFiles
-    ? ((await Promise.race([
-        getDefinitionsFromLsp(
-          filepath,
-          fullPrefix + fullSuffix,
-          fullPrefix.length,
-          ide,
-          lang,
-        ),
-        new Promise((resolve) => {
-          setTimeout(() => resolve([]), 100);
-        }),
-      ])) as AutocompleteSnippet[])
-    : [];
+  let extrasSnippets = (await Promise.race([
+    getDefinitionsFromLsp(
+      filepath,
+      fullPrefix + fullSuffix,
+      fullPrefix.length,
+      ide,
+    ),
+    new Promise((resolve) => {
+      setTimeout(() => resolve([]), 100);
+    }),
+  ])) as AutocompleteSnippet[];
 
   const workspaceDirs = await ide.getWorkspaceDirs();
   if (options.onlyMyCode) {
@@ -347,8 +337,10 @@ export async function getTabCompletion(
     
     let stop = [
       ...(completionOptions?.stop || []),
-      ...multilineStops,
-      ...commonStops,
+      "\n\n",
+      "/src/",
+      "#- coding: utf-8",
+      "```",
       ...lang.stopWords,
     ];
 
@@ -361,16 +353,11 @@ export async function getTabCompletion(
     let generator = generatorReuseManager.getGenerator(
       prefix,
       () =>
-        llm.supportsFim()
-          ? llm.streamFim(prefix, suffix, {
-              ...completionOptions,
-              stop,
-            })
-          : llm.streamComplete(prompt, {
-              ...completionOptions,
-              raw: true,
-              stop,
-            }),
+        llm.streamComplete(prompt, {
+          ...completionOptions,
+          raw: true,
+          stop,
+        }),
       multiline,
     );
 
@@ -388,50 +375,19 @@ export async function getTabCompletion(
         yield update;
       }
     };
-    let charGenerator = generatorWithCancellation();
-    charGenerator = noFirstCharNewline(charGenerator);
-    charGenerator = onlyWhitespaceAfterEndOfLine(
-      charGenerator,
+    let chars = generatorWithCancellation();
+    const gen2 = onlyWhitespaceAfterEndOfLine(
+      noFirstCharNewline(chars),
       lang.endOfLine,
-      fullStop,
     );
-    charGenerator = bracketMatchingService.stopOnUnmatchedClosingBracket(
-      charGenerator,
-      suffix,
-      filepath,
-    );
-
-    let lineGenerator = streamLines(charGenerator);
-    lineGenerator = stopAtLines(lineGenerator, fullStop);
-    lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
-    lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
-    lineGenerator = noTopLevelKeywordsMidline(
-      lineGenerator,
-      lang.topLevelKeywords,
-      fullStop,
-    );
-
-    for (const lineFilter of lang.lineFilters ?? []) {
-      lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
-    }
-
+    let lineGenerator = stopAtRepeatingLines(stopAtLines(streamLines(gen2)));
+    lineGenerator = avoidPathLine(lineGenerator, lang.comment);
+    lineGenerator = noTopLevelKeywordsMidline(lineGenerator, lang.stopWords);
     lineGenerator = streamWithNewLines(lineGenerator);
 
-    const finalGenerator = stopAtSimilarLine(
-      lineGenerator,
-      lineBelowCursor,
-      fullStop,
-    );
-
-    try {
-      for await (const update of finalGenerator) {
-        completion += update;
-      }
-    } catch (e: any) {
-      if (ERRORS_TO_IGNORE.some((err) => e.includes(err))) {
-        return undefined;
-      }
-      throw e;
+    const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
+    for await (const update of finalGenerator) {
+      completion += update;
     }
 
     if (cancelled) {
@@ -480,7 +436,12 @@ export class CompletionProvider {
     private readonly ide: IDE,
     private readonly getLlm: () => Promise<ILLM | undefined>,
     private readonly _onError: (e: any) => void,
-    private readonly getDefinitionsFromLsp: GetLspDefinitionsFunction,
+    private readonly getDefinitionsFromLsp: (
+      filepath: string,
+      contents: string,
+      cursorIndex: number,
+      ide: IDE,
+    ) => Promise<AutocompleteSnippet[]>,
   ) {
     this.generatorReuseManager = new GeneratorReuseManager(
       this.onError.bind(this),
@@ -658,7 +619,6 @@ export class CompletionProvider {
         this.generatorReuseManager,
         input,
         this.getDefinitionsFromLsp,
-        this.bracketMatchingService,
       );
 
       if (!outcome?.completion) {
