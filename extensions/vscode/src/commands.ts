@@ -170,21 +170,21 @@ const commandsMap: (
     );
     const previousInput = existingHandler?.input;
 
-    const quickPickItems: vscode.QuickPickItem[] = await configHandler
-      .loadConfig()
-      .then((config) => {
-        return (
-          config.contextProviders
-            ?.filter((provider) => provider.description.type === "normal")
-            .map((provider) => {
-              return {
-                label: provider.description.displayTitle,
-                description: provider.description.title,
-                detail: provider.description.description,
-              };
-            }) || []
-        );
-      });
+    const defaultModelTitle = await sidebar.webviewProtocol.request(
+      "getDefaultModelTitle",
+      undefined,
+    );
+    const config = await configHandler.loadConfig();
+    const quickPickItems =
+      config.contextProviders
+        ?.filter((provider) => provider.description.type === "normal")
+        .map((provider) => {
+          return {
+            label: provider.description.displayTitle,
+            description: provider.description.title,
+            detail: provider.description.description,
+          };
+        }) || [];
 
     const addContextMsg = quickPickItems.length
       ? " (or press enter to add context first)"
@@ -194,6 +194,7 @@ const commandsMap: (
         ? `Type instructions to generate code${addContextMsg}`
         : `Describe how to edit the highlighted code${addContextMsg}`,
       title: "Continue Quick Edit",
+      prompt: `[${defaultModelTitle}]`,
     };
     if (previousInput) {
       textInputOptions.value = previousInput + ", ";
@@ -256,13 +257,7 @@ const commandsMap: (
           "\n\n---\n\n" +
           text;
 
-        await verticalDiffManager.streamEdit(
-          text,
-          await sidebar.webviewProtocol.request(
-            "getDefaultModelTitle",
-            undefined,
-          ),
-        );
+        await verticalDiffManager.streamEdit(text, defaultModelTitle);
       }
     }
   },
