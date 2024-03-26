@@ -208,7 +208,9 @@ export async function getTabCompletion(
     let stop = [
       ...(completionOptions?.stop || []),
       "\n\n",
+      // The following are commonly appended to completions by starcoder and other models
       "/src/",
+      ".t.",
       "#- coding: utf-8",
       "```",
       ...lang.stopWords,
