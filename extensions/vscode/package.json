@@ -101,6 +101,18 @@
         "icon": "$(stop)"
       },
       {
+        "command": "continue.acceptVerticalDiffBlock",
+        "category": "Continue",
+        "title": "Accept Vertical Diff Block",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.rejectVerticalDiffBlock",
+        "category": "Continue",
+        "title": "Reject Vertical Diff Block",
+        "group": "Continue"
+      },
+      {
         "command": "continue.quickEdit",
         "category": "Continue",
         "title": "Quick Edit",
@@ -220,6 +232,16 @@
         "mac": "cmd+z",
         "key": "ctrl+z",
         "when": "continue.streamingDiff"
+      },
+      {
+        "command": "continue.acceptVerticalDiffBlock",
+        "mac": "option+cmd+y",
+        "key": "alt+ctrl+y"
+      },
+      {
+        "command": "continue.rejectVerticalDiffBlock",
+        "mac": "option+cmd+n",
+        "key": "alt+ctrl+n"
       },
       {
         "command": "continue.quickEdit",
