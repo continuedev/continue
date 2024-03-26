@@ -143,11 +143,13 @@ export class VsCodeExtension {
     }
 
     // CodeLens
-    registerAllCodeLensProviders(
+    const verticalDiffCodeLens = registerAllCodeLensProviders(
       context,
       this.diffManager,
-      this.verticalDiffManager.editorToVerticalDiffCodeLens,
+      this.verticalDiffManager.filepathToCodeLens,
     );
+    this.verticalDiffManager.refreshCodeLens =
+      verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
 
     // Tab autocomplete
     const config = vscode.workspace.getConfiguration("continue");

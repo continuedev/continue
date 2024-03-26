@@ -27,7 +27,7 @@ async function writeFile(uri: vscode.Uri, contents: string) {
 
 // THIS IS LOCAL
 export const DIFF_DIRECTORY = path
-  .join(os.homedir(), ".continue", "diffs")
+  .join(os.homedir(), ".continue", ".diffs")
   .replace(/^C:/, "c:");
 
 export class DiffManager {

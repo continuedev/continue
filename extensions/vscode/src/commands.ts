@@ -164,18 +164,56 @@ const commandsMap: (
   "continue.quickEdit": async () => {
     const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
 
-    let text = await vscode.window.showInputBox({
+    const editor = vscode.window.activeTextEditor;
+    const existingHandler = verticalDiffManager.getHandlerForFile(
+      editor?.document.uri.fsPath ?? "",
+    );
+    const previousInput = existingHandler?.input;
+
+    let defaultModelTitle = await sidebar.webviewProtocol.request(
+      "getDefaultModelTitle",
+      undefined,
+    );
+    const config = await configHandler.loadConfig();
+    if (!defaultModelTitle) {
+      defaultModelTitle = config.models[0]?.title!;
+    }
+    const quickPickItems =
+      config.contextProviders
+        ?.filter((provider) => provider.description.type === "normal")
+        .map((provider) => {
+          return {
+            label: provider.description.displayTitle,
+            description: provider.description.title,
+            detail: provider.description.description,
+          };
+        }) || [];
+
+    const addContextMsg = quickPickItems.length
+      ? " (or press enter to add context first)"
+      : "";
+    const textInputOptions: vscode.InputBoxOptions = {
       placeHolder: selectionEmpty
-        ? "Describe the code you want to generate (or press enter to add context first)"
-        : "Describe how to edit the highlighted code (or press enter to add context first)",
+        ? `Type instructions to generate code${addContextMsg}`
+        : `Describe how to edit the highlighted code${addContextMsg}`,
       title: "Continue Quick Edit",
-    });
+      prompt: `[${defaultModelTitle}]`,
+    };
+    if (previousInput) {
+      textInputOptions.value = previousInput + ", ";
+      textInputOptions.valueSelection = [
+        textInputOptions.value.length,
+        textInputOptions.value.length,
+      ];
+    }
+
+    let text = await vscode.window.showInputBox(textInputOptions);
 
     if (text === undefined) {
       return;
     }
 
-    if (text.length > 0) {
+    if (text.length > 0 || quickPickItems.length === 0) {
       const modelName = await sidebar.webviewProtocol.request(
         "getDefaultModelTitle",
         undefined,
@@ -183,22 +221,6 @@ const commandsMap: (
       await verticalDiffManager.streamEdit(text, modelName);
     } else {
       // Pick context first
-      const quickPickItems: Promise<vscode.QuickPickItem[]> = configHandler
-        .loadConfig()
-        .then((config) => {
-          return (
-            config.contextProviders
-              ?.filter((provider) => provider.description.type === "normal")
-              .map((provider) => {
-                return {
-                  label: provider.description.displayTitle,
-                  description: provider.description.title,
-                  detail: provider.description.description,
-                };
-              }) || []
-          );
-        });
-
       const selectedProviders = await vscode.window.showQuickPick(
         quickPickItems,
         {
@@ -207,12 +229,7 @@ const commandsMap: (
         },
       );
 
-      let text = await vscode.window.showInputBox({
-        placeHolder: selectionEmpty
-          ? "Describe the code you want to generate (or press enter to add context first)"
-          : "Describe how to edit the highlighted code (or press enter to add context first)",
-        title: "Continue Quick Edit",
-      });
+      let text = await vscode.window.showInputBox(textInputOptions);
       if (text) {
         const llm = await configHandler.llmFromTitle();
         const config = await configHandler.loadConfig();
@@ -243,13 +260,7 @@ const commandsMap: (
           "\n\n---\n\n" +
           text;
 
-        await verticalDiffManager.streamEdit(
-          text,
-          await sidebar.webviewProtocol.request(
-            "getDefaultModelTitle",
-            undefined,
-          ),
-        );
+        await verticalDiffManager.streamEdit(text, defaultModelTitle);
       }
     }
   },
