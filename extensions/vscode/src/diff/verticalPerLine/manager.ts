@@ -161,12 +161,16 @@ export class VerticalPerLineDiffManager {
       return;
     }
 
-    const selectedRange =
-      existingHandler?.range ??
-      new vscode.Range(
+    let selectedRange = existingHandler?.range ?? editor.selection;
+
+    // Only if the selection is empty, use exact prefix/suffix instead of by line
+    if (!selectedRange.isEmpty) {
+      selectedRange = new vscode.Range(
         editor.selection.start.with(undefined, 0),
         editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER),
       );
+    }
+
     const rangeContent = editor.document.getText(selectedRange);
     const prefix = editor.document.getText(
       new vscode.Range(new vscode.Position(0, 0), selectedRange.start),

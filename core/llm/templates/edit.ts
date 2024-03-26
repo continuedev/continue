@@ -20,6 +20,17 @@ Here is the edit requested:
 Here is the code after editing:`;
 
 const gptEditPrompt: PromptTemplate = (_, otherData) => {
+  if (otherData?.codeToEdit?.trim().length === 0) {
+    return `\
+\`\`\`${otherData.language}
+${otherData.prefix}[BLANK]${otherData.codeToEdit}${otherData.suffix}
+\`\`\`
+
+Given the user's request: "${otherData.userInput}"
+
+Here is the code that should fill in the [BLANK]:`;
+  }
+
   const paragraphs = [
     "The user has requested a section of code in a file to be rewritten.",
   ];

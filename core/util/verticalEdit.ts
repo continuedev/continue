@@ -54,7 +54,17 @@ export async function* streamDiffLines(
   language: string | undefined,
 ): AsyncGenerator<DiffLine> {
   // Strip common indentation for the LLM, then add back after generation
-  const oldLines = highlighted.split("\n");
+  let oldLines =
+    highlighted.length > 0
+      ? highlighted.split("\n")
+      : // When highlighted is empty, we need to combine last line of prefix and first line of suffix to determine the line being edited
+        [(prefix + suffix).split("\n")[prefix.split("\n").length - 1]];
+
+  // But if that line is empty, we can assume we are insertion-only
+  if (oldLines.length === 1 && oldLines[0].trim() === "") {
+    oldLines = [];
+  }
+
   const prompt = constructPrompt(
     prefix,
     highlighted,
@@ -80,6 +90,11 @@ export async function* streamDiffLines(
 
   let diffLines = streamDiff(oldLines, lines);
   diffLines = filterLeadingAndTrailingNewLineInsertion(diffLines);
+  if (highlighted.length === 0) {
+    const line = prefix.split("\n").slice(-1)[0];
+    const indentation = line.slice(0, line.length - line.trimStart().length);
+    diffLines = addIndentation(diffLines, indentation);
+  }
 
   for await (let diffLine of diffLines) {
     yield diffLine;
