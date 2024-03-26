@@ -134,21 +134,27 @@ export class VerticalPerLineDiffHandler {
   private greenDecorationManager: DecorationTypeRangeManager;
 
   private async insertTextAboveLine(index: number, text: string) {
-    await this.editor.edit((editBuilder) => {
-      const lineCount = this.editor.document.lineCount;
-      if (index >= lineCount) {
-        // Append to end of file
-        editBuilder.insert(
-          new vscode.Position(
-            lineCount,
-            this.editor.document.lineAt(lineCount - 1).text.length,
-          ),
-          "\n" + text,
-        );
-      } else {
-        editBuilder.insert(new vscode.Position(index, 0), text + "\n");
-      }
-    });
+    await this.editor.edit(
+      (editBuilder) => {
+        const lineCount = this.editor.document.lineCount;
+        if (index >= lineCount) {
+          // Append to end of file
+          editBuilder.insert(
+            new vscode.Position(
+              lineCount,
+              this.editor.document.lineAt(lineCount - 1).text.length,
+            ),
+            "\n" + text,
+          );
+        } else {
+          editBuilder.insert(new vscode.Position(index, 0), text + "\n");
+        }
+      },
+      {
+        undoStopAfter: false,
+        undoStopBefore: false,
+      },
+    );
   }
 
   private async insertLineAboveIndex(index: number, line: string) {
@@ -159,11 +165,17 @@ export class VerticalPerLineDiffHandler {
 
   private async deleteLinesAt(index: number, numLines: number = 1) {
     const startLine = new vscode.Position(index, 0);
-    await this.editor.edit((editBuilder) => {
-      editBuilder.delete(
-        new vscode.Range(startLine, startLine.translate(numLines)),
-      );
-    });
+    await this.editor.edit(
+      (editBuilder) => {
+        editBuilder.delete(
+          new vscode.Range(startLine, startLine.translate(numLines)),
+        );
+      },
+      {
+        undoStopAfter: false,
+        undoStopBefore: false,
+      },
+    );
   }
 
   private updateIndexLineDecorations() {
@@ -208,16 +220,22 @@ export class VerticalPerLineDiffHandler {
 
     this.editorToVerticalDiffCodeLens.delete(this.filepath);
 
-    this.editor.edit((editBuilder) => {
-      for (const range of rangesToDelete) {
-        editBuilder.delete(
-          new vscode.Range(
-            range.start,
-            new vscode.Position(range.end.line + 1, 0),
-          ),
-        );
-      }
-    });
+    this.editor.edit(
+      (editBuilder) => {
+        for (const range of rangesToDelete) {
+          editBuilder.delete(
+            new vscode.Range(
+              range.start,
+              new vscode.Position(range.end.line + 1, 0),
+            ),
+          );
+        }
+      },
+      {
+        undoStopAfter: false,
+        undoStopBefore: false,
+      },
+    );
 
     this.cancelled = true;
   }
