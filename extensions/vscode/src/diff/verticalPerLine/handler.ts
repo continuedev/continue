@@ -54,6 +54,16 @@ export class VerticalPerLineDiffHandler {
       greenDecorationType,
       this.editor,
     );
+
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      // When we switch away and back to this editor, need to re-draw decorations
+      if (editor?.document.uri.fsPath === this.filepath) {
+        this.editor = editor;
+        this.redDecorationManager.applyToNewEditor(editor);
+        this.greenDecorationManager.applyToNewEditor(editor);
+        this.updateIndexLineDecorations();
+      }
+    });
   }
 
   private get filepath() {
