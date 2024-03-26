@@ -9,10 +9,12 @@ import {
 import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { gptEditPrompt } from "../llm/templates/edit";
-import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../util";
+import { renderPromptTemplate } from "../util";
 
 function constructPrompt(
-  codeToEdit: string,
+  prefix: string,
+  highlighted: string,
+  suffix: string,
   llm: ILLM,
   userInput: string,
   language: string | undefined,
@@ -20,7 +22,9 @@ function constructPrompt(
   const template = llm.promptTemplates?.edit ?? gptEditPrompt;
   return renderPromptTemplate(template, [], {
     userInput,
-    codeToEdit,
+    prefix,
+    codeToEdit: highlighted,
+    suffix,
     language: language ?? "",
   });
 }
@@ -42,17 +46,23 @@ function modelIsInept(model: string): boolean {
 }
 
 export async function* streamDiffLines(
-  oldCode: string,
+  prefix: string,
+  highlighted: string,
+  suffix: string,
   llm: ILLM,
   input: string,
   language: string | undefined,
 ): AsyncGenerator<DiffLine> {
   // Strip common indentation for the LLM, then add back after generation
-  const [withoutIndentation, commonIndentation] =
-    dedentAndGetCommonWhitespace(oldCode);
-  oldCode = withoutIndentation;
-  const oldLines = oldCode.split("\n");
-  const prompt = constructPrompt(oldCode, llm, input, language);
+  const oldLines = highlighted.split("\n");
+  const prompt = constructPrompt(
+    prefix,
+    highlighted,
+    suffix,
+    llm,
+    input,
+    language,
+  );
   const inept = modelIsInept(llm.model);
 
   const completion =
@@ -69,7 +79,6 @@ export async function* streamDiffLines(
   }
 
   let diffLines = streamDiff(oldLines, lines);
-  diffLines = addIndentation(diffLines, commonIndentation);
   diffLines = filterLeadingAndTrailingNewLineInsertion(diffLines);
 
   for await (let diffLine of diffLines) {

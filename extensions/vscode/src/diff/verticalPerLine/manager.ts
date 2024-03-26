@@ -168,6 +168,15 @@ export class VerticalPerLineDiffManager {
         editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER),
       );
     const rangeContent = editor.document.getText(selectedRange);
+    const prefix = editor.document.getText(
+      new vscode.Range(new vscode.Position(0, 0), selectedRange.start),
+    );
+    const suffix = editor.document.getText(
+      new vscode.Range(
+        selectedRange.end,
+        new vscode.Position(editor.document.lineCount, 0),
+      ),
+    );
     const llm = await this.configHandler.llmFromTitle(modelTitle);
 
     // Unselect the range
@@ -189,7 +198,9 @@ export class VerticalPerLineDiffManager {
       });
       await diffHandler.run(
         streamDiffLines(
+          prefix,
           rangeContent,
+          suffix,
           llm,
           input,
           getMarkdownLanguageTagForFile(filepath),

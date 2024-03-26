@@ -19,16 +19,35 @@ Here is the edit requested:
 
 Here is the code after editing:`;
 
-const gptEditPrompt = `\
-\`\`\`{{{language}}}
-{{{codeToEdit}}}
+const gptEditPrompt: PromptTemplate = (_, otherData) => {
+  const paragraphs = [
+    "The user has requested a section of code in a file to be rewritten.",
+  ];
+  if (otherData.prefix?.trim().length > 0) {
+    paragraphs.push(`This is the prefix of the file:
+\`\`\`${otherData.language}
+${otherData.prefix}
+\`\`\``);
+  }
+
+  if (otherData.suffix?.trim().length > 0) {
+    paragraphs.push(`This is the suffix of the file:
+\`\`\`${otherData.language}
+${otherData.suffix}
+\`\`\``);
+  }
+
+  paragraphs.push(`This is the code to rewrite:
+\`\`\`${otherData.language}
+${otherData.codeToEdit}
 \`\`\`
 
-You are an expert programmer. You will rewrite the above code to do the following:
+The user's request is: "${otherData.userInput}"
 
-{{{userInput}}}
+Here is the rewritten code:`);
 
-Output only a code block with the rewritten code:`;
+  return paragraphs.join("\n\n");
+};
 
 const codellamaInfillEditPrompt = "{{filePrefix}}<FILL>{{fileSuffix}}";
 
