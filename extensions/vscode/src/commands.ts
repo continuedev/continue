@@ -170,11 +170,14 @@ const commandsMap: (
     );
     const previousInput = existingHandler?.input;
 
-    const defaultModelTitle = await sidebar.webviewProtocol.request(
+    let defaultModelTitle = await sidebar.webviewProtocol.request(
       "getDefaultModelTitle",
       undefined,
     );
     const config = await configHandler.loadConfig();
+    if (!defaultModelTitle) {
+      defaultModelTitle = config.models[0]?.title!;
+    }
     const quickPickItems =
       config.contextProviders
         ?.filter((provider) => provider.description.type === "normal")
