@@ -146,7 +146,7 @@ export class VsCodeExtension {
     registerAllCodeLensProviders(
       context,
       this.diffManager,
-      this.verticalDiffManager.editorToVerticalDiffCodeLens,
+      this.verticalDiffManager.filepathToCodeLens,
     );
 
     // Tab autocomplete

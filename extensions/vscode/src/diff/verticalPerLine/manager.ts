@@ -12,10 +12,10 @@ export interface VerticalDiffCodeLens {
 }
 
 export class VerticalPerLineDiffManager {
-  private filepathToEditorMap: Map<string, VerticalPerLineDiffHandler> =
+  private filepathToHandler: Map<string, VerticalPerLineDiffHandler> =
     new Map();
 
-  editorToVerticalDiffCodeLens: Map<string, VerticalDiffCodeLens[]> = new Map();
+  filepathToCodeLens: Map<string, VerticalDiffCodeLens[]> = new Map();
 
   constructor(private readonly configHandler: ConfigHandler) {}
 
@@ -25,9 +25,9 @@ export class VerticalPerLineDiffManager {
     endLine: number,
     input: string,
   ) {
-    if (this.filepathToEditorMap.has(filepath)) {
-      this.filepathToEditorMap.get(filepath)?.clear(false);
-      this.filepathToEditorMap.delete(filepath);
+    if (this.filepathToHandler.has(filepath)) {
+      this.filepathToHandler.get(filepath)?.clear(false);
+      this.filepathToHandler.delete(filepath);
     }
     const editor = vscode.window.activeTextEditor; // TODO
     if (editor && editor.document.uri.fsPath === filepath) {
@@ -35,11 +35,11 @@ export class VerticalPerLineDiffManager {
         startLine,
         endLine,
         editor,
-        this.editorToVerticalDiffCodeLens,
+        this.filepathToCodeLens,
         this.clearForFilepath.bind(this),
         input,
       );
-      this.filepathToEditorMap.set(filepath, handler);
+      this.filepathToHandler.set(filepath, handler);
       return handler;
     } else {
       return undefined;
@@ -51,8 +51,8 @@ export class VerticalPerLineDiffManager {
     startLine: number,
     endLine: number,
   ) {
-    if (this.filepathToEditorMap.has(filepath)) {
-      return this.filepathToEditorMap.get(filepath)!;
+    if (this.filepathToHandler.has(filepath)) {
+      return this.filepathToHandler.get(filepath)!;
     } else {
       const editor = vscode.window.activeTextEditor; // TODO
       if (editor && editor.document.uri.fsPath === filepath) {
@@ -60,10 +60,10 @@ export class VerticalPerLineDiffManager {
           startLine,
           endLine,
           editor,
-          this.editorToVerticalDiffCodeLens,
+          this.filepathToCodeLens,
           this.clearForFilepath.bind(this),
         );
-        this.filepathToEditorMap.set(filepath, handler);
+        this.filepathToHandler.set(filepath, handler);
         return handler;
       } else {
         return undefined;
@@ -72,7 +72,7 @@ export class VerticalPerLineDiffManager {
   }
 
   getHandlerForFile(filepath: string) {
-    return this.filepathToEditorMap.get(filepath);
+    return this.filepathToHandler.get(filepath);
   }
 
   clearForFilepath(filepath: string | undefined, accept: boolean) {
@@ -84,10 +84,10 @@ export class VerticalPerLineDiffManager {
       filepath = activeEditor.document.uri.fsPath;
     }
 
-    const handler = this.filepathToEditorMap.get(filepath);
+    const handler = this.filepathToHandler.get(filepath);
     if (handler) {
       handler.clear(accept);
-      this.filepathToEditorMap.delete(filepath);
+      this.filepathToHandler.delete(filepath);
     }
 
     vscode.commands.executeCommand("setContext", "continue.diffVisible", false);
@@ -110,7 +110,7 @@ export class VerticalPerLineDiffManager {
       index = 0;
     }
 
-    let blocks = this.editorToVerticalDiffCodeLens.get(filepath);
+    let blocks = this.filepathToCodeLens.get(filepath);
     const block = blocks?.[index];
     if (!blocks || !block) {
       return;
