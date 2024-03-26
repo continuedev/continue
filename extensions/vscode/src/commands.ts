@@ -169,10 +169,30 @@ const commandsMap: (
       editor?.document.uri.fsPath ?? "",
     );
     const previousInput = existingHandler?.input;
+
+    const quickPickItems: vscode.QuickPickItem[] = await configHandler
+      .loadConfig()
+      .then((config) => {
+        return (
+          config.contextProviders
+            ?.filter((provider) => provider.description.type === "normal")
+            .map((provider) => {
+              return {
+                label: provider.description.displayTitle,
+                description: provider.description.title,
+                detail: provider.description.description,
+              };
+            }) || []
+        );
+      });
+
+    const addContextMsg = quickPickItems.length
+      ? " (or press enter to add context first)"
+      : "";
     const textInputOptions: vscode.InputBoxOptions = {
       placeHolder: selectionEmpty
-        ? "Describe the code you want to generate (or press enter to add context first)"
-        : "Describe how to edit the highlighted code (or press enter to add context first)",
+        ? `Type instructions to generate code${addContextMsg}`
+        : `Describe how to edit the highlighted code${addContextMsg}`,
       title: "Continue Quick Edit",
     };
     if (previousInput) {
@@ -189,7 +209,7 @@ const commandsMap: (
       return;
     }
 
-    if (text.length > 0) {
+    if (text.length > 0 || quickPickItems.length === 0) {
       const modelName = await sidebar.webviewProtocol.request(
         "getDefaultModelTitle",
         undefined,
@@ -197,22 +217,6 @@ const commandsMap: (
       await verticalDiffManager.streamEdit(text, modelName);
     } else {
       // Pick context first
-      const quickPickItems: Promise<vscode.QuickPickItem[]> = configHandler
-        .loadConfig()
-        .then((config) => {
-          return (
-            config.contextProviders
-              ?.filter((provider) => provider.description.type === "normal")
-              .map((provider) => {
-                return {
-                  label: provider.description.displayTitle,
-                  description: provider.description.title,
-                  detail: provider.description.description,
-                };
-              }) || []
-          );
-        });
-
       const selectedProviders = await vscode.window.showQuickPick(
         quickPickItems,
         {
