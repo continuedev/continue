@@ -235,12 +235,12 @@
       },
       {
         "command": "continue.acceptVerticalDiffBlock",
-        "mac": "option+cmd+y",
+        "mac": "alt+cmd+y",
         "key": "alt+ctrl+y"
       },
       {
         "command": "continue.rejectVerticalDiffBlock",
-        "mac": "option+cmd+n",
+        "mac": "alt+cmd+n",
         "key": "alt+ctrl+n"
       },
       {
