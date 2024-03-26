@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import { DIFF_DIRECTORY, DiffManager } from "../diff/horizontal";
 import { VerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
 import { editorSuggestionsLocked, editorToSuggestions } from "../suggestions";
-import { getMetaKeyLabel } from "../util/util";
+import { getAltOrOption, getMetaKeyLabel } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 
 class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
@@ -58,14 +58,18 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: `Accept${
-            codeLenses.length === 2 ? ` (⌥${getMetaKeyLabel()}Y)` : ""
+            codeLenses.length === 2
+              ? ` (${getAltOrOption()}${getMetaKeyLabel()}Y)`
+              : ""
           }`,
           command: "continue.acceptVerticalDiffBlock",
           arguments: [filepath, i],
         }),
         new vscode.CodeLens(range, {
           title: `Reject${
-            codeLenses.length === 2 ? ` (⌥${getMetaKeyLabel()}N)` : ""
+            codeLenses.length === 2
+              ? ` (${getAltOrOption()}${getMetaKeyLabel()}N)`
+              : ""
           }`,
           command: "continue.rejectVerticalDiffBlock",
           arguments: [filepath, i],
