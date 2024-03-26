@@ -8,16 +8,23 @@ function linesMatchPerfectly(lineA: string, lineB: string): boolean {
   return lineA === lineB && lineA !== "";
 }
 
-function linesMatch(lineA: string, lineB: string): boolean {
+const END_BRACKETS = ["}", "});", "})"];
+
+function linesMatch(
+  lineA: string,
+  lineB: string,
+  linesBetween: number = 0,
+): boolean {
   // Require a perfect (without padding) match for these lines
   // Otherwise they are edit distance 1 from empty lines and other single char lines (e.g. each other)
-  if (["}", "*"].includes(lineA.trim())) {
+  if (["}", "*", "});", "})"].includes(lineA.trim())) {
     return lineA.trim() === lineB.trim();
   }
 
   const d = distance(lineA, lineB);
   return (
-    (d / Math.max(lineA.length, lineB.length) < 0.5 ||
+    // Should be more unlikely for lines to fuzzy match if they are further away
+    (d / Math.max(lineA.length, lineB.length) < 0.5 - linesBetween * 0.05 ||
       lineA.trim() === lineB.trim()) &&
     lineA.trim() !== ""
   );
@@ -37,10 +44,16 @@ export function matchLine(
     return [0, true, newLine.trim()];
   }
 
+  const isEndBracket = END_BRACKETS.includes(newLine.trim());
   for (let i = 0; i < oldLines.length; i++) {
+    // Don't match end bracket lines if too far away
+    if (i > 4 && isEndBracket) {
+      return [-1, false, newLine];
+    }
+
     if (linesMatchPerfectly(newLine, oldLines[i])) {
       return [i, true, newLine];
-    } else if (linesMatch(newLine, oldLines[i])) {
+    } else if (linesMatch(newLine, oldLines[i], i)) {
       // This is a way to fix indentation, but only for sufficiently long lines to avoid matching whitespace or short lines
       if (
         newLine.trimStart() === oldLines[i].trimStart() &&
