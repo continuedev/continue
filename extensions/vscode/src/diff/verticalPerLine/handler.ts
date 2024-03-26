@@ -38,6 +38,7 @@ export class VerticalPerLineDiffHandler {
       filepath: string | undefined,
       accept: boolean,
     ) => void,
+    private readonly refreshCodeLens: () => void,
     input?: string,
   ) {
     this.currentLineIndex = startLine;
@@ -62,6 +63,7 @@ export class VerticalPerLineDiffHandler {
         this.redDecorationManager.applyToNewEditor(editor);
         this.greenDecorationManager.applyToNewEditor(editor);
         this.updateIndexLineDecorations();
+        this.refreshCodeLens();
 
         // Handle any lines received while editor was closed
         this.queueDiffLine(undefined);
@@ -366,5 +368,7 @@ export class VerticalPerLineDiffHandler {
           return x;
         }) || [];
     this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
+
+    this.refreshCodeLens();
   }
 }

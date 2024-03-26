@@ -8,6 +8,14 @@ import { getMetaKeyLabel } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 
 class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
+  private _eventEmitter: vscode.EventEmitter<void> =
+    new vscode.EventEmitter<void>();
+  onDidChangeCodeLenses: vscode.Event<void> = this._eventEmitter.event;
+
+  public refresh(): void {
+    this._eventEmitter.fire();
+  }
+
   constructor(
     private readonly editorToVerticalDiffCodeLens: Map<
       string,
@@ -359,7 +367,8 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
   }
 }
 
-let verticalPerLineCodeLensProvider: vscode.Disposable | undefined = undefined;
+export let verticalPerLineCodeLensProvider: vscode.Disposable | undefined =
+  undefined;
 let diffsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let suggestionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let configPyCodeLensDisposable: vscode.Disposable | undefined = undefined;
@@ -386,9 +395,12 @@ export function registerAllCodeLensProviders(
     tutorialCodeLensDisposable.dispose();
   }
 
+  const verticalDiffCodeLens = new VerticalPerLineCodeLensProvider(
+    editorToVerticalDiffCodeLens,
+  );
   verticalPerLineCodeLensProvider = vscode.languages.registerCodeLensProvider(
     "*",
-    new VerticalPerLineCodeLensProvider(editorToVerticalDiffCodeLens),
+    verticalDiffCodeLens,
   );
   suggestionsCodeLensDisposable = vscode.languages.registerCodeLensProvider(
     "*",
@@ -411,4 +423,6 @@ export function registerAllCodeLensProviders(
   context.subscriptions.push(diffsCodeLensDisposable);
   context.subscriptions.push(configPyCodeLensDisposable);
   context.subscriptions.push(tutorialCodeLensDisposable);
+
+  return verticalDiffCodeLens;
 }

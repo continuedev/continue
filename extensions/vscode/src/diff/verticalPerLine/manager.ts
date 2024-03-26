@@ -12,6 +12,8 @@ export interface VerticalDiffCodeLens {
 }
 
 export class VerticalPerLineDiffManager {
+  public refreshCodeLens: () => void = () => {};
+
   private filepathToHandler: Map<string, VerticalPerLineDiffHandler> =
     new Map();
 
@@ -37,6 +39,7 @@ export class VerticalPerLineDiffManager {
         editor,
         this.filepathToCodeLens,
         this.clearForFilepath.bind(this),
+        this.refreshCodeLens,
         input,
       );
       this.filepathToHandler.set(filepath, handler);
@@ -62,6 +65,7 @@ export class VerticalPerLineDiffManager {
           editor,
           this.filepathToCodeLens,
           this.clearForFilepath.bind(this),
+          this.refreshCodeLens,
         );
         this.filepathToHandler.set(filepath, handler);
         return handler;
