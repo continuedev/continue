@@ -62,9 +62,7 @@ export async function* streamDiffLines(
 
   let lines = streamLines(completion);
 
-  if (inept) {
-    lines = filterEnglishLinesAtStart(lines);
-  }
+  lines = filterEnglishLinesAtStart(lines);
   lines = filterCodeBlockLines(lines);
   if (inept) {
     lines = filterEnglishLinesAtEnd(fixCodeLlamaFirstLineIndentation(lines));
