@@ -240,6 +240,7 @@ export class VerticalPerLineDiffHandler {
     );
 
     this.cancelled = true;
+    this.refreshCodeLens();
   }
 
   get isCancelled() {
