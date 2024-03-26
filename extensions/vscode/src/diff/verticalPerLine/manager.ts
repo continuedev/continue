@@ -174,13 +174,9 @@ export class VerticalPerLineDiffManager {
       true,
     );
 
+    // Format follow-up requests
     if (existingHandler?.input) {
-      if (existingHandler.input.startsWith("Original request: ")) {
-        existingHandler.input = existingHandler.input.substring(
-          "Original request: ".length,
-        );
-      }
-      input = `Original request: ${existingHandler.input}\nUpdated request: ${input}`;
+      input = `${existingHandler.input}, ${input}`;
     }
     try {
       Telemetry.capture("inlineEdit", {

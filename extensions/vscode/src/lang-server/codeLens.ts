@@ -35,12 +35,12 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
       );
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: "Accept",
+          title: `Accept (${getMetaKeyLabel()}⇧↩)`,
           command: "continue.acceptVerticalDiffBlock",
           arguments: [filepath, i],
         }),
         new vscode.CodeLens(range, {
-          title: "Reject",
+          title: `Reject (${getMetaKeyLabel()}⇧⌫)`,
           command: "continue.rejectVerticalDiffBlock",
           arguments: [filepath, i],
         }),
@@ -48,7 +48,7 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
       if (codeLenses.length === 2) {
         codeLenses.push(
           new vscode.CodeLens(range, {
-            title: `(${getMetaKeyLabel()}⇧↩/${getMetaKeyLabel()}⇧⌫ to accept/reject all, ${getMetaKeyLabel()}I to retry)`,
+            title: `${getMetaKeyLabel()}I to add instructions)`,
             command: "",
           }),
         );
