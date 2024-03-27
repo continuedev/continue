@@ -5,14 +5,10 @@ import {
   fixCodeLlamaFirstLineIndentation,
   stopAtLines,
   streamWithNewLines,
-} from "../../autocomplete/lineStream.js";
-import { streamLines } from "../../diff/util.js";
-import { ContextItemWithId, ILLM, SlashCommand } from "../../index.js";
-import { stripImages } from "../../llm/countTokens.js";
-import {
-  dedentAndGetCommonWhitespace,
-  getMarkdownLanguageTagForFile,
-} from "../../util/index.js";
+} from "../../autocomplete/lineStream";
+import { streamLines } from "../../diff/util";
+import { stripImages } from "../../llm/countTokens";
+import { dedentAndGetCommonWhitespace } from "../../util";
 import {
   contextItemToRangeInFileWithContents,
   type RangeInFileWithContents,
@@ -448,7 +444,7 @@ const EditSlashCommand: SlashCommand = {
     const template = llm.promptTemplates?.edit;
     let generator: AsyncGenerator<string>;
     if (template) {
-      const rendered = llm.renderPromptTemplate(
+      let rendered = llm.renderPromptTemplate(
         template,
         // typeof template === 'string' ? template : template.prompt,
         messages.slice(0, messages.length - 1),

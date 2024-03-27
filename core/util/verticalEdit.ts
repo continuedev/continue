@@ -3,12 +3,11 @@ import {
   filterEnglishLinesAtEnd,
   filterEnglishLinesAtStart,
   filterLeadingAndTrailingNewLineInsertion,
-  fixCodeLlamaFirstLineIndentation,
+  stopAtLines,
 } from "../autocomplete/lineStream";
 import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { gptEditPrompt } from "../llm/templates/edit";
-import { renderPromptTemplate } from "../util";
 
 function constructPrompt(
   prefix: string,
@@ -97,8 +96,7 @@ export async function* streamDiffLines(
 
   lines = filterEnglishLinesAtStart(lines);
   lines = filterCodeBlockLines(lines);
-  lines = stopAtLines(lines, () => {});
-  lines = skipLines(lines);
+  lines = stopAtLines(lines);
   if (inept) {
     // lines = fixCodeLlamaFirstLineIndentation(lines);
     lines = filterEnglishLinesAtEnd(lines);

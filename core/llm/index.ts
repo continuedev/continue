@@ -8,7 +8,6 @@ import {
   LLMOptions,
   ModelName,
   ModelProvider,
-  PromptLog,
   PromptTemplate,
   RequestOptions,
   TemplateType,
@@ -76,6 +75,23 @@ export abstract class BaseLLM implements ILLM {
 
   supportsPrefill(): boolean {
     return ["ollama", "anthropic", "mistral"].includes(this.providerName);
+  }
+
+  supportsCompletions(): boolean {
+    if (this.providerName === "openai") {
+      if (
+        this.apiBase?.includes("api.groq.com") ||
+        this.apiBase?.includes(":1337")
+      ) {
+        // Jan + Groq don't support completions : (
+        return false;
+      }
+    }
+    return true;
+  }
+
+  supportsPrefill(): boolean {
+    return ["ollama", "anthropic"].includes(this.providerName);
   }
 
   uniqueId: string;
@@ -318,7 +334,7 @@ ${prompt}`;
   private _parseCompletionOptions(options: LLMFullCompletionOptions) {
     const log = options.log ?? true;
     const raw = options.raw ?? false;
-    options.log = undefined;
+    delete options.log;
 
     const completionOptions: CompletionOptions = mergeJson(
       this.completionOptions,
@@ -587,40 +603,41 @@ ${prompt}`;
     template: PromptTemplate,
     history: ChatMessage[],
     otherData: Record<string, string>,
-    canPutWordsInModelsMouth = false,
+    canPutWordsInModelsMouth: boolean = false,
   ): string | ChatMessage[] {
     if (typeof template === "string") {
-      const data: any = {
+      let data: any = {
         history: history,
         ...otherData,
       };
-      if (history.length > 0 && history[0].role === "system") {
-        data.system_message = history.shift()!.content;
+      if (history.length > 0 && history[0].role == "system") {
+        data["system_message"] = history.shift()!.content;
       }
 
       const compiledTemplate = Handlebars.compile(template);
       return compiledTemplate(data);
+    } else {
+      const rendered = template(history, {
+        ...otherData,
+        supportsCompletions: this.supportsCompletions() ? "true" : "false",
+        supportsPrefill: this.supportsPrefill() ? "true" : "false",
+      });
+      if (
+        typeof rendered !== "string" &&
+        rendered[rendered.length - 1]?.role === "assistant" &&
+        !canPutWordsInModelsMouth
+      ) {
+        // Some providers don't allow you to put words in the model's mouth
+        // So we have to manually compile the prompt template and use
+        // raw /completions, not /chat/completions
+        const templateMessages = autodetectTemplateFunction(
+          this.model,
+          this.providerName,
+          autodetectTemplateType(this.model),
+        );
+        return templateMessages(rendered);
+      }
+      return rendered;
     }
-    const rendered = template(history, {
-      ...otherData,
-      supportsCompletions: this.supportsCompletions() ? "true" : "false",
-      supportsPrefill: this.supportsPrefill() ? "true" : "false",
-    });
-    if (
-      typeof rendered !== "string" &&
-      rendered[rendered.length - 1]?.role === "assistant" &&
-      !canPutWordsInModelsMouth
-    ) {
-      // Some providers don't allow you to put words in the model's mouth
-      // So we have to manually compile the prompt template and use
-      // raw /completions, not /chat/completions
-      const templateMessages = autodetectTemplateFunction(
-        this.model,
-        this.providerName,
-        autodetectTemplateType(this.model),
-      );
-      return templateMessages(rendered);
-    }
-    return rendered;
   }
 }

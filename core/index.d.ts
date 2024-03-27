@@ -40,6 +40,11 @@ export interface IndexingProgressUpdate {
   status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
 }
 
+export interface LLMReturnValue {
+  prompt: string;
+  completion: string;
+}
+
 export type PromptTemplate =
   | string
   | ((
@@ -101,8 +106,6 @@ export interface ILLM extends LLMOptions {
   supportsCompletions(): boolean;
 
   supportsPrefill(): boolean;
-
-  supportsFim(): boolean;
 
   listModels(): Promise<string[]>;
 
@@ -668,7 +671,6 @@ interface BaseCompletionOptions {
   numThreads?: number;
   keepAlive?: number;
   raw?: boolean;
-  stream?: boolean;
 }
 
 export interface ModelDescription {

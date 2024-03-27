@@ -41,6 +41,46 @@ function templateFactory(
   };
 }
 
+function templateFactory(
+  systemMessage: (msg: ChatMessage) => string,
+  userPrompt: string,
+  assistantPrompt: string,
+  separator: string,
+  prefix?: string,
+  emptySystemMessage?: string,
+): (msgs: ChatMessage[]) => string {
+  return (msgs: ChatMessage[]) => {
+    let prompt = prefix ?? "";
+
+    // Skip assistant messages at the beginning
+    while (msgs.length > 0 && msgs[0].role === "assistant") {
+      msgs.shift();
+    }
+
+    if (msgs.length > 0 && msgs[0].role === "system") {
+      prompt += systemMessage(msgs.shift()!);
+    } else if (emptySystemMessage) {
+      prompt += emptySystemMessage;
+    }
+
+    for (let i = 0; i < msgs.length; i++) {
+      const msg = msgs[i];
+      prompt += msg.role === "user" ? userPrompt : assistantPrompt;
+      prompt += msg.content;
+      if (i < msgs.length - 1) {
+        prompt += separator;
+      }
+    }
+
+    if (msgs.length > 0 && msgs[msgs.length - 1].role === "user") {
+      prompt += separator;
+      prompt += assistantPrompt;
+    }
+
+    return prompt;
+  };
+}
+
 /**
  * @description Template for LLAMA2 messages:
  *

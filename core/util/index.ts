@@ -1,7 +1,3 @@
-import {
-    ContextProviderExtras,
-  } from "../index.js";
-
 export function removeQuotesAndEscapes(output: string): string {
   output = output.trim();
 
@@ -93,10 +89,8 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
-const SEP_REGEX = /[\\/]/;
-
-export function getBasename(filepath: string): string {
-  return filepath.split(SEP_REGEX).pop() ?? "";
+export function getBasename(filepath: string, n: number = 1): string {
+  return filepath.split(/[\\/]/).pop() ?? "";
 }
 
 export function getLastNPathParts(filepath: string, n: number): string {

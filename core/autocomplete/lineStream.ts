@@ -122,7 +122,6 @@ export async function* stopAtLines(
 ): LineStream {
   for await (const line of stream) {
     if (LINES_TO_STOP_AT.some((stopAt) => line.trim().includes(stopAt))) {
-      fullStop();
       break;
     }
     yield line;
@@ -148,7 +147,9 @@ const LINES_TO_REMOVE_BEFORE_START = [
 function shouldRemoveLineBeforeStart(line: string): boolean {
   return (
     line.trimStart().startsWith("```") ||
-    LINES_TO_REMOVE_BEFORE_START.some((l) => line.trim() === l)
+    line.trim() === "[CODE]" ||
+    line.trim() === "" ||
+    line.trim() === "<START EDITING HERE>"
   );
 }
 

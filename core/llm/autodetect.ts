@@ -256,7 +256,6 @@ const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
   "phind",
   "xwin-coder",
   "zephyr",
-  "llama3",
 ];
 
 function autodetectPromptTemplates(
