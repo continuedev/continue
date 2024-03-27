@@ -63,13 +63,14 @@ Here is the rewritten code:`);
 const codellamaInfillEditPrompt = "{{filePrefix}}<FILL>{{fileSuffix}}";
 
 const codellamaEditPrompt = `\`\`\`{{{language}}}
+{{{prefix}}}<START EDITING HERE>
 {{{codeToEdit}}}
 \`\`\`
-[INST] You are an expert programmer and personal assistant. Your task is to rewrite the above code with these instructions: "{{{userInput}}}"
-
-Your answer should be given inside of a code block. It should use the same kind of indentation as above.
-[/INST] Sure! Here's the rewritten code you requested:
-\`\`\`{{{language}}}`;
+[INST] Please rewrite the entire code block above, editing the portion below "<START EDITING HERE>" in order to satisfy the following request: "{{{userInput}}}"
+[/INST] Sure! Here's entire code block, including the rewritten portion:
+\`\`\`{{{language}}}
+{{{prefix}}}<START EDITING HERE>
+`;
 
 const mistralEditPrompt = `[INST] You are a helpful code assistant. Your task is to rewrite the following code with these instructions: "{{{userInput}}}"
 \`\`\`{{{language}}}
