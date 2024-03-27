@@ -1,5 +1,4 @@
-import { ChatMessage } from "../..";
-import { PromptTemplate } from "../../util";
+import { ChatMessage, PromptTemplate } from "../..";
 
 const simplifiedEditPrompt = `Consider the following code:
 \`\`\`{{{language}}}
@@ -62,24 +61,60 @@ Here is the rewritten code:`);
 
 const codellamaInfillEditPrompt = "{{filePrefix}}<FILL>{{fileSuffix}}";
 
+const START_TAG = "<START EDITING BELOW>";
 const osModelsEditPrompt: PromptTemplate = (history, otherData) => {
+  // "No sufix" means either there is no suffix OR
+  // it's a clean break at end of function or something
+  // (what we're trying to avoid is just the language model trying to complete the closing brackets of a function or something)
+  const firstCharOfFirstLine = otherData.suffix?.split("\n")[0]?.[0]?.trim();
+  const isSuffix =
+    otherData.suffix?.trim() !== "" &&
+    // First character of first line is whitespace
+    // Otherwise we assume it's a clean break
+    !firstCharOfFirstLine;
+  const suffixTag = isSuffix ? "<STOP EDITING HERE>" : "";
+  const suffixExplanation = isSuffix
+    ? ' When you get to "<STOP EDITING HERE>", end your response.'
+    : "";
+
+  // Use a different prompt when there's neither prefix nor suffix
+  if (otherData.prefix.trim() === "" && otherData.suffix.trim() === "") {
+    return [
+      {
+        role: "user",
+        content: `\`\`\`${otherData.language}
+${otherData.codeToEdit}
+${suffixTag}
+\`\`\`
+
+Please rewrite the entire code block above in order to satisfy the following request: "${otherData.userInput}".${suffixExplanation}`,
+      },
+      {
+        role: "assistant",
+        content: `Sure! Here's the entire rewritten code block:
+\`\`\`${otherData.language}
+`,
+      },
+    ];
+  }
+
   return [
     {
       role: "user",
-      content: `\`\`\`{{{language}}}
-${otherData.prefix}<START EDITING HERE>
+      content: `\`\`\`${otherData.language}
+${otherData.prefix}${START_TAG}
 ${otherData.codeToEdit}
-<STOP EDITING HERE>
+${suffixTag}
 \`\`\`
 
-Please rewrite the entire code block above, editing the portion below "<START EDITING HERE>" in order to satisfy the following request: "${otherData.userInput}". When you get to "<STOP EDITING HERE>", end your response.
+Please rewrite the entire code block above, editing the portion below "${START_TAG}" in order to satisfy the following request: "${otherData.userInput}".${suffixExplanation}
 `,
     },
     {
       role: "assistant",
-      content: `Sure! Here's entire code block, including the rewritten portion:
+      content: `Sure! Here's the entire code block, including the rewritten portion:
 \`\`\`${otherData.language}
-${otherData.prefix}<START EDITING HERE>
+${otherData.prefix}${START_TAG}
 `,
     },
   ];
