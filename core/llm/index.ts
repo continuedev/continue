@@ -47,6 +47,23 @@ export abstract class BaseLLM implements ILLM {
     return modelSupportsImages(this.providerName, this.model);
   }
 
+  supportsCompletions(): boolean {
+    if (this.providerName === "openai") {
+      if (
+        this.apiBase?.includes("api.groq.com") ||
+        this.apiBase?.includes(":1337")
+      ) {
+        // Jan + Groq don't support completions : (
+        return false;
+      }
+    }
+    return true;
+  }
+
+  supportsPrefill(): boolean {
+    return ["ollama", "anthropic"].includes(this.providerName);
+  }
+
   uniqueId: string;
   model: string;
 
@@ -238,7 +255,6 @@ ${prompt}`;
     const log = options.log ?? true;
     const raw = options.raw ?? false;
     delete options.log;
-    delete options.raw;
 
     const completionOptions: CompletionOptions = mergeJson(
       this.completionOptions,
@@ -462,7 +478,11 @@ ${prompt}`;
       const compiledTemplate = Handlebars.compile(template);
       return compiledTemplate(data);
     } else {
-      const rendered = template(history, otherData);
+      const rendered = template(history, {
+        ...otherData,
+        supportsCompletions: this.supportsCompletions() ? "true" : "false",
+        supportsPrefill: this.supportsPrefill() ? "true" : "false",
+      });
       if (
         typeof rendered !== "string" &&
         rendered[rendered.length - 1]?.role === "assistant" &&

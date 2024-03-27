@@ -98,6 +98,10 @@ export interface ILLM extends LLMOptions {
 
   supportsImages(): boolean;
 
+  supportsCompletions(): boolean;
+
+  supportsPrefill(): boolean;
+
   listModels(): Promise<string[]>;
 
   renderPromptTemplate(

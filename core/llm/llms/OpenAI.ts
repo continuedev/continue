@@ -164,6 +164,7 @@ class OpenAI extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     if (
       !CHAT_ONLY_MODELS.includes(options.model) &&
+      this.supportsCompletions() &&
       (NON_CHAT_MODELS.includes(options.model) ||
         this.useLegacyCompletionsEndpoint ||
         options.raw)

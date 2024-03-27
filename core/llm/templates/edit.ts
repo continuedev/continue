@@ -77,6 +77,14 @@ const osModelsEditPrompt: PromptTemplate = (history, otherData) => {
     ? ' When you get to "<STOP EDITING HERE>", end your response.'
     : "";
 
+  // If neither prefilling nor /v1/completions are supported, we have to use a chat prompt without putting words in the model's mouth
+  if (
+    otherData.supportsCompletions !== "true" &&
+    otherData.supportsPrefill !== "true"
+  ) {
+    return gptEditPrompt(history, otherData);
+  }
+
   // Use a different prompt when there's neither prefix nor suffix
   if (otherData.prefix.trim() === "" && otherData.suffix.trim() === "") {
     return [
