@@ -83,7 +83,10 @@ function llama2TemplateMessages(msgs: ChatMessage[]): string {
     if (msgs[i].role === "user") {
       prompt += `[INST] ${msgs[i].content} [/INST]`;
     } else {
-      prompt += msgs[i].content + "</s>\n<s>";
+      prompt += msgs[i].content;
+      if (i < msgs.length - 1) {
+        prompt += "</s>\n<s>";
+      }
     }
   }
 
