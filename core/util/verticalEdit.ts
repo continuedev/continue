@@ -4,7 +4,6 @@ import {
   filterEnglishLinesAtEnd,
   filterEnglishLinesAtStart,
   filterLeadingAndTrailingNewLineInsertion,
-  fixCodeLlamaFirstLineIndentation,
   stopAtLines,
 } from "../autocomplete/lineStream";
 import { streamDiff } from "../diff/streamDiff";
@@ -86,7 +85,8 @@ export async function* streamDiffLines(
   lines = filterCodeBlockLines(lines);
   lines = stopAtLines(lines);
   if (inept) {
-    lines = filterEnglishLinesAtEnd(fixCodeLlamaFirstLineIndentation(lines));
+    // lines = fixCodeLlamaFirstLineIndentation(lines);
+    lines = filterEnglishLinesAtEnd(lines);
   }
 
   let diffLines = streamDiff(oldLines, lines);

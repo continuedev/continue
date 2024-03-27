@@ -61,7 +61,7 @@ Here is the rewritten code:`);
 
 const codellamaInfillEditPrompt = "{{filePrefix}}<FILL>{{fileSuffix}}";
 
-const START_TAG = "<START EDITING BELOW>";
+const START_TAG = "<START EDITING HERE>";
 const osModelsEditPrompt: PromptTemplate = (history, otherData) => {
   // "No sufix" means either there is no suffix OR
   // it's a clean break at end of function or something
