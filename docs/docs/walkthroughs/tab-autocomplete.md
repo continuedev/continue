@@ -1,6 +1,6 @@
 # Tab Autocomplete (beta)
 
-Continue now provides support for tab autocomplete in [the VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) (make sure to download the pre-release). We will be greatly improving the experience over the next few releases, and it is always helpful to hear feedback. If you have any problems or suggestions, please let us know in our [Discord](https://discord.gg/vapESyrFmJ).
+Continue now provides support for tab autocomplete in [the VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue). We will be greatly improving the experience over the next few releases, and it is always helpful to hear feedback. If you have any problems or suggestions, please let us know in our [Discord](https://discord.gg/vapESyrFmJ).
 
 ## Setting up with Ollama (default)
 
