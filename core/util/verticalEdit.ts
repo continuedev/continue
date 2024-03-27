@@ -10,7 +10,6 @@ import {
 import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { gptEditPrompt } from "../llm/templates/edit";
-import { renderPromptTemplate } from "../util";
 
 function constructPrompt(
   prefix: string,
@@ -21,7 +20,7 @@ function constructPrompt(
   language: string | undefined,
 ): string | ChatMessage[] {
   const template = llm.promptTemplates?.edit ?? gptEditPrompt;
-  return renderPromptTemplate(template, [], {
+  return llm.renderPromptTemplate(template, [], {
     userInput,
     prefix,
     codeToEdit: highlighted,

@@ -8,6 +8,7 @@ import {
   LLMReturnValue,
   ModelName,
   ModelProvider,
+  PromptTemplate,
   RequestOptions,
   TemplateType,
 } from "..";
@@ -443,10 +444,41 @@ ${prompt}`;
     };
   }
 
-  private _shouldRequestDirectly() {
-    if (typeof window === "undefined") {
-      return true;
+  public renderPromptTemplate(
+    template: PromptTemplate,
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+    canPutWordsInModelsMouth: boolean = false,
+  ): string | ChatMessage[] {
+    if (typeof template === "string") {
+      let data: any = {
+        history: history,
+        ...otherData,
+      };
+      if (history.length > 0 && history[0].role == "system") {
+        data["system_message"] = history.shift()!.content;
+      }
+
+      const compiledTemplate = Handlebars.compile(template);
+      return compiledTemplate(data);
+    } else {
+      const rendered = template(history, otherData);
+      if (
+        typeof rendered !== "string" &&
+        rendered[rendered.length - 1]?.role === "assistant" &&
+        !canPutWordsInModelsMouth
+      ) {
+        // Some providers don't allow you to put words in the model's mouth
+        // So we have to manually compile the prompt template and use
+        // raw /completions, not /chat/completions
+        const templateMessages = autodetectTemplateFunction(
+          this.model,
+          this.providerName,
+          autodetectTemplateType(this.model),
+        );
+        return templateMessages(rendered);
+      }
+      return rendered;
     }
-    return window?.ide !== "vscode";
   }
 }

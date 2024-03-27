@@ -74,7 +74,7 @@ const LINES_TO_STOP_AT = ["# End of file.", "<STOP EDITING HERE>"];
 
 export async function* stopAtLines(stream: LineStream): LineStream {
   for await (const line of stream) {
-    if (LINES_TO_STOP_AT.includes(line.trim())) {
+    if (LINES_TO_STOP_AT.some((stopAt) => line.trim().includes(stopAt))) {
       break;
     }
     yield line;

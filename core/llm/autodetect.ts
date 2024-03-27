@@ -160,7 +160,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "alpaca";
   }
 
-  if (lower.includes("mistral")) {
+  if (lower.includes("mistral") || lower.includes("mixtral")) {
     return "llama2";
   }
 
