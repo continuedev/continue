@@ -62,15 +62,28 @@ Here is the rewritten code:`);
 
 const codellamaInfillEditPrompt = "{{filePrefix}}<FILL>{{fileSuffix}}";
 
-const codellamaEditPrompt = `\`\`\`{{{language}}}
-{{{prefix}}}<START EDITING HERE>
-{{{codeToEdit}}}
+const codellamaEditPrompt: PromptTemplate = (history, otherData) => {
+  return [
+    {
+      role: "user",
+      content: `\`\`\`{{{language}}}
+${otherData.prefix}<START EDITING HERE>
+${otherData.codeToEdit}
+<STOP EDITING HERE>
 \`\`\`
-[INST] Please rewrite the entire code block above, editing the portion below "<START EDITING HERE>" in order to satisfy the following request: "{{{userInput}}}"
-[/INST] Sure! Here's entire code block, including the rewritten portion:
-\`\`\`{{{language}}}
-{{{prefix}}}<START EDITING HERE>
-`;
+
+Please rewrite the entire code block above, editing the portion below "<START EDITING HERE>" in order to satisfy the following request: "${otherData.userInput}". When you get to "<STOP EDITING HERE>", end your response.
+`,
+    },
+    {
+      role: "assistant",
+      content: `Sure! Here's entire code block, including the rewritten portion:
+\`\`\`${otherData.language}
+${otherData.prefix}<START EDITING HERE>
+`,
+    },
+  ];
+};
 
 const mistralEditPrompt = `[INST] You are a helpful code assistant. Your task is to rewrite the following code with these instructions: "{{{userInput}}}"
 \`\`\`{{{language}}}
