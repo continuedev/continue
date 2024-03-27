@@ -11,6 +11,7 @@ import { Telemetry } from "core/util/posthog";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { getPlatform } from "./util/util";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 function getFullScreenTab() {
@@ -196,7 +197,7 @@ const commandsMap: (
       placeHolder: selectionEmpty
         ? `Type instructions to generate code${addContextMsg}`
         : `Describe how to edit the highlighted code${addContextMsg}`,
-      title: "Continue Quick Edit",
+      title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
       prompt: `[${defaultModelTitle}]`,
     };
     if (previousInput) {
