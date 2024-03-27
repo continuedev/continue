@@ -30,6 +30,16 @@ All of the configuration options available for chat models are available to use 
 
 If you aren't yet familiar with the available options, you can learn more in our [overview](../model-setup/overview.md).
 
+### What model should I use?
+
+If you are running the model locally, we recommend `starcoder:3b`.
+
+If you find it to be too slow, you should try `deepseek-coder:1.3b-base`.
+
+If you have a bit more compute, or are running a model in the cloud, you can upgrade to `deepseek-coder:6.7b-base`.
+
+Regardless of what you are willing to spend, we do not recommend using GPT or Claude for autocomplete. Learn why [below](#i-want-better-completions-should-i-use-gpt-4).
+
 ## Configuration Options
 
 The following can be configured in `config.json`:
