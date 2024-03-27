@@ -62,7 +62,7 @@ Here is the rewritten code:`);
 
 const codellamaInfillEditPrompt = "{{filePrefix}}<FILL>{{fileSuffix}}";
 
-const codellamaEditPrompt: PromptTemplate = (history, otherData) => {
+const osModelsEditPrompt: PromptTemplate = (history, otherData) => {
   return [
     {
       role: "user",
@@ -232,7 +232,6 @@ export {
   alpacaEditPrompt,
   claudeEditPrompt,
   codeLlama70bEditPrompt,
-  codellamaEditPrompt,
   codellamaInfillEditPrompt,
   deepseekEditPrompt,
   gemmaEditPrompt,
@@ -240,6 +239,7 @@ export {
   mistralEditPrompt,
   neuralChatEditPrompt,
   openchatEditPrompt,
+  osModelsEditPrompt,
   phindEditPrompt,
   simplestEditPrompt,
   simplifiedEditPrompt,
