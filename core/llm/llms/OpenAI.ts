@@ -165,7 +165,8 @@ class OpenAI extends BaseLLM {
     if (
       !CHAT_ONLY_MODELS.includes(options.model) &&
       (NON_CHAT_MODELS.includes(options.model) ||
-        this.useLegacyCompletionsEndpoint)
+        this.useLegacyCompletionsEndpoint ||
+        options.raw)
     ) {
       for await (const content of this._legacystreamComplete(
         stripImages(messages[messages.length - 1]?.content || ""),

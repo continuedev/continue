@@ -77,7 +77,7 @@ export async function* streamDiffLines(
 
   const completion =
     typeof prompt === "string"
-      ? llm.streamComplete(prompt)
+      ? llm.streamComplete(prompt, { raw: true })
       : llm.streamChat(prompt);
 
   let lines = streamLines(completion);

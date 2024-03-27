@@ -258,7 +258,6 @@ export type ChatHistory = ChatHistoryItem[];
 // LLM
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
-  raw?: boolean;
   log?: boolean;
 
   model?: string;
@@ -588,6 +587,7 @@ interface BaseCompletionOptions {
   maxTokens?: number;
   numThreads?: number;
   keepAlive?: number;
+  raw?: boolean;
 }
 
 export interface ModelDescription {
