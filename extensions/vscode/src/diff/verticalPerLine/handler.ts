@@ -126,6 +126,8 @@ export class VerticalPerLineDiffHandler {
     }
     this.deletionBuffer = [];
     this.insertedInCurrentBlock = 0;
+
+    this.refreshCodeLens();
   }
 
   private incrementCurrentLineIndex() {
@@ -313,6 +315,8 @@ export class VerticalPerLineDiffHandler {
       // Clear deletion buffer
       await this.insertDeletionBuffer();
       this.clearIndexLineDecorations();
+
+      this.refreshCodeLens();
 
       // Reject on user typing
       // const listener = vscode.workspace.onDidChangeTextDocument((e) => {

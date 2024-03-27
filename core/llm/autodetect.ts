@@ -19,13 +19,13 @@ import {
   alpacaEditPrompt,
   claudeEditPrompt,
   codeLlama70bEditPrompt,
-  codellamaEditPrompt,
   deepseekEditPrompt,
   gemmaEditPrompt,
   gptEditPrompt,
   mistralEditPrompt,
   neuralChatEditPrompt,
   openchatEditPrompt,
+  osModelsEditPrompt,
   phindEditPrompt,
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
@@ -160,7 +160,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "alpaca";
   }
 
-  if (lower.includes("mistral")) {
+  if (lower.includes("mistral") || lower.includes("mixtral")) {
     return "llama2";
   }
 
@@ -218,6 +218,22 @@ function autodetectTemplateFunction(
   return null;
 }
 
+const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
+  "alpaca",
+  "chatml",
+  // "codellama-70b", Doesn't respond well to this prompt
+  "deepseek",
+  "gemma",
+  "llama2",
+  "llava",
+  "neural-chat",
+  "openchat",
+  "phi2",
+  "phind",
+  "xwin-coder",
+  "zephyr",
+];
+
 function autodetectPromptTemplates(
   model: string,
   explicitTemplate: TemplateType | undefined = undefined,
@@ -227,7 +243,11 @@ function autodetectPromptTemplates(
 
   let editTemplate = null;
 
-  if (templateType === "phind") {
+  if (templateType && USES_OS_MODELS_EDIT_PROMPT.includes(templateType)) {
+    // This is overriding basically everything else
+    // Will probably delete the rest later, but for now it's easy to revert
+    editTemplate = osModelsEditPrompt;
+  } else if (templateType === "phind") {
     editTemplate = phindEditPrompt;
   } else if (templateType === "phi2") {
     editTemplate = simplifiedEditPrompt;
@@ -237,7 +257,7 @@ function autodetectPromptTemplates(
     if (model.includes("mistral")) {
       editTemplate = mistralEditPrompt;
     } else {
-      editTemplate = codellamaEditPrompt;
+      editTemplate = osModelsEditPrompt;
     }
   } else if (templateType === "alpaca") {
     editTemplate = alpacaEditPrompt;

@@ -1,4 +1,5 @@
 import { ConfigHandler } from "core/config/handler";
+import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import { Telemetry } from "core/util/posthog";
 import { streamDiffLines } from "core/util/verticalEdit";
@@ -175,17 +176,25 @@ export class VerticalPerLineDiffManager {
       );
     }
 
-    const rangeContent = editor.document.getText(selectedRange);
-    const prefix = editor.document.getText(
-      new vscode.Range(new vscode.Position(0, 0), selectedRange.start),
-    );
-    const suffix = editor.document.getText(
-      new vscode.Range(
-        selectedRange.end,
-        new vscode.Position(editor.document.lineCount, 0),
-      ),
-    );
     const llm = await this.configHandler.llmFromTitle(modelTitle);
+    const rangeContent = editor.document.getText(selectedRange);
+    const prefix = pruneLinesFromTop(
+      editor.document.getText(
+        new vscode.Range(new vscode.Position(0, 0), selectedRange.start),
+      ),
+      llm.contextLength / 4,
+      llm.model,
+    );
+    const suffix = pruneLinesFromBottom(
+      editor.document.getText(
+        new vscode.Range(
+          selectedRange.end,
+          new vscode.Position(editor.document.lineCount, 0),
+        ),
+      ),
+      llm.contextLength / 4,
+      llm.model,
+    );
 
     // Unselect the range
     editor.selection = new vscode.Selection(

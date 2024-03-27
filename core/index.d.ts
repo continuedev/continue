@@ -43,6 +43,14 @@ export interface LLMReturnValue {
   prompt: string;
   completion: string;
 }
+
+export type PromptTemplate =
+  | string
+  | ((
+      history: ChatMessage[],
+      otherData: Record<string, string>,
+    ) => string | ChatMessage[]);
+
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
 
@@ -90,7 +98,18 @@ export interface ILLM extends LLMOptions {
 
   supportsImages(): boolean;
 
+  supportsCompletions(): boolean;
+
+  supportsPrefill(): boolean;
+
   listModels(): Promise<string[]>;
+
+  renderPromptTemplate(
+    template: PromptTemplate,
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+    canPutWordsInModelsMouth?: boolean,
+  ): string | ChatMessage[];
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -243,7 +262,6 @@ export type ChatHistory = ChatHistoryItem[];
 // LLM
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
-  raw?: boolean;
   log?: boolean;
 
   model?: string;
@@ -573,6 +591,7 @@ interface BaseCompletionOptions {
   maxTokens?: number;
   numThreads?: number;
   keepAlive?: number;
+  raw?: boolean;
 }
 
 export interface ModelDescription {

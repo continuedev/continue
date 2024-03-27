@@ -164,8 +164,10 @@ class OpenAI extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     if (
       !CHAT_ONLY_MODELS.includes(options.model) &&
+      this.supportsCompletions() &&
       (NON_CHAT_MODELS.includes(options.model) ||
-        this.useLegacyCompletionsEndpoint)
+        this.useLegacyCompletionsEndpoint ||
+        options.raw)
     ) {
       for await (const content of this._legacystreamComplete(
         stripImages(messages[messages.length - 1]?.content || ""),

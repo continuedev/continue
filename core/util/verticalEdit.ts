@@ -4,12 +4,11 @@ import {
   filterEnglishLinesAtEnd,
   filterEnglishLinesAtStart,
   filterLeadingAndTrailingNewLineInsertion,
-  fixCodeLlamaFirstLineIndentation,
+  stopAtLines,
 } from "../autocomplete/lineStream";
 import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { gptEditPrompt } from "../llm/templates/edit";
-import { renderPromptTemplate } from "../util";
 
 function constructPrompt(
   prefix: string,
@@ -20,7 +19,7 @@ function constructPrompt(
   language: string | undefined,
 ): string | ChatMessage[] {
   const template = llm.promptTemplates?.edit ?? gptEditPrompt;
-  return renderPromptTemplate(template, [], {
+  return llm.renderPromptTemplate(template, [], {
     userInput,
     prefix,
     codeToEdit: highlighted,
@@ -77,15 +76,17 @@ export async function* streamDiffLines(
 
   const completion =
     typeof prompt === "string"
-      ? llm.streamComplete(prompt)
+      ? llm.streamComplete(prompt, { raw: true })
       : llm.streamChat(prompt);
 
   let lines = streamLines(completion);
 
   lines = filterEnglishLinesAtStart(lines);
   lines = filterCodeBlockLines(lines);
+  lines = stopAtLines(lines);
   if (inept) {
-    lines = filterEnglishLinesAtEnd(fixCodeLlamaFirstLineIndentation(lines));
+    // lines = fixCodeLlamaFirstLineIndentation(lines);
+    lines = filterEnglishLinesAtEnd(lines);
   }
 
   let diffLines = streamDiff(oldLines, lines);
