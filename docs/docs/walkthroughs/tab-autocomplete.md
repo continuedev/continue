@@ -1,6 +1,6 @@
 # Tab Autocomplete (beta)
 
-Continue now provides support for tab autocomplete in [the VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue) (make sure to download the pre-release). We will be greatly improving the experience over the next few releases, and it is always helpful to hear feedback. If you have any problems or suggestions, please let us know in our [Discord](https://discord.gg/vapESyrFmJ).
+Continue now provides support for tab autocomplete in [the VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue). We will be greatly improving the experience over the next few releases, and it is always helpful to hear feedback. If you have any problems or suggestions, please let us know in our [Discord](https://discord.gg/vapESyrFmJ).
 
 ## Setting up with Ollama (default)
 
@@ -14,7 +14,7 @@ Once it has been downloaded, you should begin to see completions in VS Code.
 
 ## Setting up a custom model
 
-All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this:
+All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this (note that it is not inside the models array):
 
 ```json title=~/.continue/config.json
 {
@@ -29,6 +29,16 @@ All of the configuration options available for chat models are available to use 
 ```
 
 If you aren't yet familiar with the available options, you can learn more in our [overview](../model-setup/overview.md).
+
+### What model should I use?
+
+If you are running the model locally, we recommend `starcoder:3b`.
+
+If you find it to be too slow, you should try `deepseek-coder:1.3b-base`.
+
+If you have a bit more compute, or are running a model in the cloud, you can upgrade to `deepseek-coder:6.7b-base`.
+
+Regardless of what you are willing to spend, we do not recommend using GPT or Claude for autocomplete. Learn why [below](#i-want-better-completions-should-i-use-gpt-4).
 
 ## Configuration Options
 
@@ -71,18 +81,21 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 
 ## Troubleshooting
 
+### I want better completions, should I use GPT-4?
+
+Perhaps surprisingly, the answer is no. The models that we suggest for autocomplete are trained with a highly specific prompt format, which allows them to respond to requests for completing code (see examples of these prompts [here](https://github.com/continuedev/continue/blob/d2bc6359e8ebf647892ec953e418042dc7f8a685/core/autocomplete/templates.ts)). Some of the best commercial models like GPT-4 or Claude are not trained with this prompt format, which means that they won't generate useful completions. Luckily, a huge model is not required for great autocomplete. Most of the state-of-the-art autocomplete models are no more than 10b parameters, and increasing beyond this does not significantly improve performance.
+
 ### I'm not seeing any completions
 
 Follow these steps to ensure that everything is set up correctly:
 
-1. Make sure you have the pre-release version of the extension installed.
-2. Make sure you have the "Enable Tab Autocomplete" setting checked (can toggle by clicking the "Continue" button in the status bar).
-3. Make sure you have downloaded Ollama.
-4. Run `ollama run starcoder:3b` to verify that the model is downloaded.
-5. Make sure that any other completion providers are disabled (e.g. Copilot), as they may interfere.
-6. Make sure that you aren't also using another Ollama model for chat. This will cause Ollama to constantly load and unload the models from memory, resulting in slow responses (or none at all) for both.
-7. Check the output of the logs to find any potential errors (cmd/ctrl+shift+p -> "Toggle Developer Tools" -> "Console" tab).
-8. If you are still having issues, please let us know in our [Discord](https://discord.gg/vapESyrFmJ) and we'll help as soon as possible.
+1. Make sure you have the "Enable Tab Autocomplete" setting checked (in VS Code, you can toggle by clicking the "Continue" button in the status bar).
+2. Make sure you have downloaded Ollama.
+3. Run `ollama run starcoder:3b` to verify that the model is downloaded.
+4. Make sure that any other completion providers are disabled (e.g. Copilot), as they may interfere.
+5. Make sure that you aren't also using another Ollama model for chat. This will cause Ollama to constantly load and unload the models from memory, resulting in slow responses (or none at all) for both.
+6. Check the output of the logs to find any potential errors (cmd/ctrl+shift+p -> "Toggle Developer Tools" -> "Console" tab in VS Code, ~/.continue/core.log in JetBrains).
+7. If you are still having issues, please let us know in our [Discord](https://discord.gg/vapESyrFmJ) and we'll help as soon as possible.
 
 ### Completions are slow
 

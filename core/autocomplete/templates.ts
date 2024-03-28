@@ -113,7 +113,7 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     return deepseekFimTemplate;
   }
 
-  if (lowerCaseModel.includes("gpt")) {
+  if (lowerCaseModel.includes("gpt") || lowerCaseModel.includes("davinci-002")) {
     return gptAutocompleteTemplate;
   }
 

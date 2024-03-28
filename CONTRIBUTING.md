@@ -77,6 +77,8 @@ nvm use
       1. The new VS Code window with the extension is referred to as the _Host VS Code_
       2. The window you started debugging from is referred to as the _Main VS Code_
 
+4. To package the extension, run `npm run package` in the `extensions/vscode` directory. This will generate `extensions/vscode/build/continue-patch.vsix`, which you can install by right-clicking and selecting "Install Extension VSIX".
+
 > Note: Breakpoints can be used in both the `core` and `extensions/vscode` folders while debugging, but are not currently supported inside of `gui` code. Hot-reloading is enabled with Vite, so if you make any changes to the `gui`, they should be automatically reflected without rebuilding. Similarly, any changes to `core` or `extensions/vscode` will be automatically included by just reloading the _Host VS Code_ window with cmd/ctrl+shift+p "Reload Window".
 
 #### JetBrains

@@ -69,6 +69,8 @@ Basic authentication can be done with any provider using the `apiKey` field:
 }
 ```
 
+This translates to the header `"Authorization": "Bearer xxx"`.
+
 If you need to send custom headers for authentication, you may use the `requestOptions.headers` property like in this example with Ollama:
 
 ```json title="~/.continue/config.json"
