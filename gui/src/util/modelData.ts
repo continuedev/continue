@@ -883,6 +883,15 @@ After it's up and running, you can start using Continue.`,
     packages: osModels,
     collectInputFor: [...completionParamsInputs],
   },
+  // bedrock: {
+  //   title: "Bedrock",
+  //   provider: "bedrock",
+  //   refPage: "amazon.com",
+  //   description:
+  //     "Bedrock is Amazon's provider of multiple diverse language models.",
+  //   tags: [ModelProviderTag["Requires API Key"]],
+  //   packages: [claude3Sonnet, claude3Haiku],
+  // },
   "openai-aiohttp": {
     title: "Other OpenAI-compatible API",
     provider: "openai",

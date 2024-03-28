@@ -99,6 +99,7 @@
             "free-trial",
             "openai-aiohttp",
             "anthropic",
+            "bedrock",
             "together",
             "ollama",
             "huggingface-tgi",
