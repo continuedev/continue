@@ -38,6 +38,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "ollama",
   "together",
   "anthropic",
+  "bedrock",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -46,6 +47,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "google-palm",
   "free-trial",
   "anthropic",
+  "bedrock",
 ];
 
 function modelSupportsImages(provider: ModelProvider, model: string): boolean {
