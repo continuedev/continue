@@ -8,15 +8,21 @@ keywords: [reload, delete, manually, logs, server, console]
 
 The Continue VS Code extension is currently in beta, and the Intellij extension is in Alpha. If you are having trouble, please follow the steps below.
 
-## Check the console logs (VS Code)
+## Check the logs
 
 To solve many problems, the first step is reading the logs to find the relevant error message. To do this, follow these steps:
+
+### VS Code
 
 1. `cmd+shift+p` (MacOS) / `ctrl+shift+p` (Windows)
 2. Search for and then select "Developer: Toggle Developer Tools"
 3. This will open the [Chrome DevTools window](https://developer.chrome.com/docs/devtools/)
 4. Select the `Console` tab
 5. Read the console logs
+
+### JetBrains
+
+Open `~/.continue/core.log`. The most recent logs are found at the bottom of the file.
 
 ## Configure Certificates
 
