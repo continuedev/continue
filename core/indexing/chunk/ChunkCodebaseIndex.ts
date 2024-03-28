@@ -45,6 +45,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,
+    repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate, any, unknown> {
     const db = await SqliteDb.get();
     await this._createTables(db);
@@ -76,6 +77,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         const resp = await this.continueServerClient.getFromIndexCache(
           keys,
           "chunks",
+          repoName,
         );
 
         for (const [cacheKey, chunks] of Object.entries(resp.files)) {

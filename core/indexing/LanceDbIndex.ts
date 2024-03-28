@@ -133,6 +133,7 @@ export class LanceDbIndex implements CodebaseIndex {
       items: PathAndCacheKey[],
       resultType: IndexResultType,
     ) => void,
+    repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
     const lancedb = await import("vectordb");
     const tableName = this.tableNameForTag(tag);
@@ -177,6 +178,7 @@ export class LanceDbIndex implements CodebaseIndex {
         const resp = await this.continueServerClient.getFromIndexCache(
           keys,
           "embeddings",
+          repoName,
         );
         for (const [cacheKey, chunks] of Object.entries(resp.files)) {
           // Get path for cacheKey

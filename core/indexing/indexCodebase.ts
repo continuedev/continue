@@ -77,10 +77,12 @@ export class CodebaseIndexer {
     for (let directory of workspaceDirs) {
       const stats = await this.ide.getStats(directory);
       const branch = await this.ide.getBranch(directory);
+      const repoName = await this.ide.getRepoName(directory);
       let completedIndexes = 0;
 
       try {
         for (let codebaseIndex of indexesToBuild) {
+          // TODO: IndexTag type should use repoName rather than directory
           const tag: IndexTag = {
             directory,
             branch,
@@ -90,12 +92,14 @@ export class CodebaseIndexer {
             tag,
             { ...stats },
             (filepath) => this.ide.readFile(filepath),
+            repoName,
           );
 
           for await (let { progress, desc } of codebaseIndex.update(
             tag,
             results,
             markComplete,
+            repoName,
           )) {
             // Handle pausing in this loop because it's the only one really taking time
             while (this.pauseToken.paused) {

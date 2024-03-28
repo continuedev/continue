@@ -399,6 +399,7 @@ export interface IDE {
   getBranch(dir: string): Promise<string>;
   getStats(directory: string): Promise<{ [path: string]: number }>;
   getTags(artifactId: string): Promise<IndexTag[]>;
+  getRepoName(dir: string): Promise<string | undefined>;
 }
 
 // Slash Commands
