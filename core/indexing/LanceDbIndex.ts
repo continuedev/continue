@@ -182,6 +182,7 @@ export class LanceDbIndex implements CodebaseIndex {
         const resp = await this.continueServerClient.getFromIndexCache(
           keys,
           "embeddings",
+          repoName,
         );
         for (const [cacheKey, chunks] of Object.entries(resp.files)) {
           // Get path for cacheKey

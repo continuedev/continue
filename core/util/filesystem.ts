@@ -1,50 +1,17 @@
-import * as fs from "node:fs";
+import * as fs from "fs";
 import {
   ContinueRcJson,
-  FileType,
   IDE,
   IdeInfo,
   IndexTag,
   Problem,
   Range,
   Thread,
-} from "../index.js";
+} from "..";
 
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
-  async getGitHubAuthToken(): Promise<string | undefined> {
-    return undefined;
-  }
-  getLastModified(files: string[]): Promise<{ [path: string]: number }> {
-    return new Promise((resolve) => {
-      resolve({
-        [files[0]]: 1234567890,
-      });
-    });
-  }
-  getGitRootPath(dir: string): Promise<string | undefined> {
-    return Promise.resolve(dir);
-  }
-  async listDir(dir: string): Promise<[string, FileType][]> {
-    const all: [string, FileType][] = fs
-      .readdirSync(dir, { withFileTypes: true })
-      .map((dirent: any) => [
-        dirent.path,
-        dirent.isDirectory()
-          ? FileType.Directory
-          : dirent.isSymbolicLink()
-            ? FileType.SymbolicLink
-            : FileType.File,
-      ]);
-    return Promise.resolve(all);
-  }
-  infoPopup(message: string): Promise<void> {
-    return Promise.resolve();
-  }
-  errorPopup(message: string): Promise<void> {
-    return Promise.resolve();
-  }
   getRepoName(dir: string): Promise<string | undefined> {
     return Promise.resolve(undefined);
   }
@@ -65,6 +32,10 @@ class FileSystemIde implements IDE {
 
   readRangeInFile(filepath: string, range: Range): Promise<string> {
     return Promise.resolve("");
+  }
+
+  getStats(directory: string): Promise<{ [path: string]: number }> {
+    return Promise.resolve({});
   }
 
   isTelemetryEnabled(): Promise<boolean> {
@@ -110,10 +81,7 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
-  listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]> {
+  listWorkspaceContents(): Promise<string[]> {
     return new Promise((resolve, reject) => {
       fs.readdir("/tmp/continue", (err, files) => {
         if (err) {

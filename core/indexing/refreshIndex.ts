@@ -317,7 +317,7 @@ export async function getComputeDeleteAddRemove(
         removeTag: [],
       };
       results[resultType] = items;
-      for await (const _ of globalCacheIndex.update(
+      for await (let _ of globalCacheIndex.update(
         tag,
         results,
         () => {},

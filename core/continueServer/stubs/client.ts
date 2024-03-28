@@ -13,6 +13,7 @@ export class ContinueServerClient {
   public async getFromIndexCache<T extends ArtifactType>(
     keys: string[],
     artifactId: T,
+    repoName: string | undefined,
   ): Promise<EmbeddingsCacheResponse<T>> {
     return { files: {} };
   }

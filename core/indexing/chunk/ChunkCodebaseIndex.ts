@@ -77,6 +77,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         const resp = await this.continueServerClient.getFromIndexCache(
           keys,
           "chunks",
+          repoName,
         );
 
         for (const [cacheKey, chunks] of Object.entries(resp.files)) {

@@ -110,19 +110,20 @@ export class CodebaseIndexer {
       const repoName = await this.ide.getRepoName(directory);
       let completedIndexes = 0;
 
-      for (const codebaseIndex of indexesToBuild) {
-        // TODO: IndexTag type should use repoName rather than directory
-        const tag: IndexTag = {
-          directory,
-          branch,
-          artifactId: codebaseIndex.artifactId,
-        };
-        const [results, markComplete] = await getComputeDeleteAddRemove(
-          tag,
-          { ...stats },
-          (filepath) => this.ide.readFile(filepath),
-          repoName,
-        );
+      try {
+        for (let codebaseIndex of indexesToBuild) {
+          // TODO: IndexTag type should use repoName rather than directory
+          const tag: IndexTag = {
+            directory,
+            branch,
+            artifactId: codebaseIndex.artifactId,
+          };
+          const [results, markComplete] = await getComputeDeleteAddRemove(
+            tag,
+            { ...stats },
+            (filepath) => this.ide.readFile(filepath),
+            repoName,
+          );
 
         try {
           for await (let { progress, desc } of codebaseIndex.update(
