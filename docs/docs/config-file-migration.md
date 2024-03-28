@@ -197,6 +197,20 @@ After the "Full example" these examples will only show the relevant portion of t
 }
 ```
 
+### Msty with CodeLlama 13B
+
+```json
+{
+  "models": [
+    {
+      "title": "Msty",
+      "provider": "msty",
+      "model": "codellama-13b"
+    }
+  ]
+}
+```
+
 ### OpenAI-compatible API
 
 This is an example of serving a model using an OpenAI-compatible API on http://localhost:8000.

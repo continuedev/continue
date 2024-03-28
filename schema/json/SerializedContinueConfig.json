@@ -109,7 +109,8 @@
             "text-gen-webui",
             "google-palm",
             "lmstudio",
-            "llamafile"
+            "llamafile",
+            "msty"
           ],
           "type": "string"
         },

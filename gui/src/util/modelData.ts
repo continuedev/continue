@@ -200,7 +200,7 @@ const codeLlamaInstruct: ModelPackage = {
       },
     },
   ],
-  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
+  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate", 'msty'],
 };
 
 const codellama70bTrial: ModelPackage = {
@@ -261,7 +261,7 @@ const llama2Chat: ModelPackage = {
       },
     },
   ],
-  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
+  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate", 'msty'],
 };
 
 const wizardCoder: ModelPackage = {
@@ -295,7 +295,7 @@ const wizardCoder: ModelPackage = {
       },
     },
   ],
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate", 'msty'],
 };
 
 const phindCodeLlama: ModelPackage = {
@@ -307,7 +307,7 @@ const phindCodeLlama: ModelPackage = {
     model: "phind-codellama-34b",
     contextLength: 4096,
   },
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate", "freetrial"],
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate", "freetrial", 'msty'],
 };
 
 const mistral: ModelPackage = {
@@ -336,7 +336,7 @@ const mistral: ModelPackage = {
     },
   ],
   icon: "mistral.png",
-  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
+  providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate", 'msty'],
 };
 
 const mistralTiny: ModelPackage = {
@@ -355,6 +355,7 @@ const mistralTiny: ModelPackage = {
     "llamacpp",
     "replicate",
     "mistral",
+    'msty'
   ],
 };
 const mistralSmall: ModelPackage = {
@@ -374,6 +375,7 @@ const mistralSmall: ModelPackage = {
     "llamacpp",
     "replicate",
     "mistral",
+    "msty"
   ],
 };
 const mistralMedium: ModelPackage = {
@@ -392,6 +394,7 @@ const mistralMedium: ModelPackage = {
     "llamacpp",
     "replicate",
     "mistral",
+    "msty"
   ],
 };
 
@@ -418,7 +421,7 @@ const zephyr: ModelPackage = {
     contextLength: 4096,
   },
   icon: "mistral.png",
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate", "msty"],
 };
 
 const deepseek: ModelPackage = {
@@ -451,7 +454,7 @@ const deepseek: ModelPackage = {
       },
     },
   ],
-  providerOptions: ["ollama", "lmstudio", "llamacpp"],
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "msty"],
 };
 
 const codeup: ModelPackage = {
@@ -462,7 +465,7 @@ const codeup: ModelPackage = {
     model: "codeup-13b",
     contextLength: 4096,
   },
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate", "msty"],
 };
 
 const neuralChat: ModelPackage = {
@@ -474,7 +477,7 @@ const neuralChat: ModelPackage = {
     model: "neural-chat-7b",
     contextLength: 4096,
   },
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
+  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate", "msty"],
 };
 
 const osModels = [
@@ -954,5 +957,29 @@ After it's up and running, you can start using Continue.`,
       },
     ],
     collectInputFor: [...completionParamsInputs],
+  },
+  msty: {
+    title: "Msty",
+    provider: "msty",
+    description:
+        "Simple to use GUI for local and online LLMs on Windows, Mac, and Linux.",
+    longDescription:
+        "Msty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'\n2. Go to Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.",
+    icon: "msty.png",
+    tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
+    packages: [
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "Msty",
+        },
+      },
+      ...osModels,
+    ],
+    collectInputFor: [
+      ...completionParamsInputs,
+      { ...apiBaseInput, defaultValue: "http://localhost:10000" },
+    ],
   },
 };

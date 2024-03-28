@@ -37,6 +37,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "openai",
   "ollama",
   "together",
+  "msty",
   "anthropic",
   "bedrock",
 ];
@@ -46,6 +47,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "ollama",
   "google-palm",
   "free-trial",
+  "msty",
   "anthropic",
   "bedrock",
 ];
