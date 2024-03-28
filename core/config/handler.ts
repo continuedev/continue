@@ -20,7 +20,7 @@ export class ConfigHandler {
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private readonly writeLog: (text: string) => void,
-    private readonly onConfigUpdate: () => void,
+    private readonly onConfigUpdate: () => void
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
@@ -80,7 +80,7 @@ export class ConfigHandler {
       this.ide.readFile,
       workspaceConfigs,
       remoteConfigServerUrl,
-      ideInfo.ideType,
+      ideInfo.ideType
     );
     this.savedConfig.allowAnonymousTelemetry =
       this.savedConfig.allowAnonymousTelemetry &&
@@ -89,13 +89,13 @@ export class ConfigHandler {
     // Setup telemetry only after (and if) we know it is enabled
     await Telemetry.setup(
       this.savedConfig.allowAnonymousTelemetry ?? true,
-      await this.ide.getUniqueId(),
+      await this.ide.getUniqueId()
     );
 
     return this.savedConfig;
   }
 
-  setupLlm(llm: ILLM): ILLM {
+  setupLlm(llm: ILLM, signal?: AbortSignal): ILLM {
     const TIMEOUT = 7200; // 7200 seconds = 2 hours
     // Since we know this is happening in Node.js, we can add requestOptions through a custom agent
     const ca = [...tls.rootCertificates];
@@ -105,7 +105,7 @@ export class ConfigHandler {
         : llm.requestOptions?.caBundlePath;
     if (customCerts) {
       ca.push(
-        ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8")),
+        ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8"))
       );
     }
 
@@ -164,7 +164,10 @@ export class ConfigHandler {
         body: updatedBody ?? init.body,
         headers,
         agent,
+        signal,
       });
+
+      console.log("HTTP response: ", resp.status, resp, signal?.aborted);
 
       if (!resp.ok) {
         let text = await resp.text();
@@ -181,7 +184,7 @@ export class ConfigHandler {
           }
         }
         throw new Error(
-          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
+          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`
         );
       }
 
@@ -194,7 +197,7 @@ export class ConfigHandler {
     return llm;
   }
 
-  async llmFromTitle(title?: string): Promise<ILLM> {
+  async llmFromTitle(title?: string, signal?: AbortSignal): Promise<ILLM> {
     const config = await this.loadConfig();
     const model =
       config.models.find((m) => m.title === title) || config.models[0];
@@ -202,6 +205,6 @@ export class ConfigHandler {
       throw new Error("No model found");
     }
 
-    return this.setupLlm(model);
+    return this.setupLlm(model, signal);
   }
 }
