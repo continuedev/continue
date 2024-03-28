@@ -2385,7 +2385,7 @@ core-util-is@1.0.2:
     sqlite3 "^5.1.7"
     tree-sitter-wasms "^0.1.6"
     uuid "^9.0.1"
-    vectordb "^0.4.12"
+    vectordb "0.4.12"
     web-tree-sitter "^0.21.0"
 
 cors@^2.8.5:
@@ -7759,7 +7759,7 @@ vary@^1, vary@~1.1.2:
   resolved "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
-vectordb@^0.4.3:
+vectordb@0.4.12:
   version "0.4.12"
   resolved "https://registry.npmjs.org/vectordb/-/vectordb-0.4.12.tgz"
   integrity sha512-H2mFwZ87d3BcuX4yGx5RoW06amRZQ3W5u/FRTNc86rwVINuEEa+Ivsqng1i8hURHXoTDbF/0Y9qwCshySkeznQ==
