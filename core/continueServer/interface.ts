@@ -23,5 +23,6 @@ export interface IContinueServerClient {
   getFromIndexCache<T extends ArtifactType>(
     keys: string[],
     artifactId: T,
+    repoName: string | undefined,
   ): Promise<EmbeddingsCacheResponse<T>>;
 }

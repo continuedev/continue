@@ -1,6 +1,10 @@
-import { ArtifactType, EmbeddingsCacheResponse } from "../interface";
+import {
+  ArtifactType,
+  EmbeddingsCacheResponse,
+  IContinueServerClient,
+} from "../interface";
 
-export class ContinueServerClient {
+export class ContinueServerClient implements IContinueServerClient {
   constructor(
     private readonly serverUrl: string,
     private readonly userToken: Promise<string | undefined>,
