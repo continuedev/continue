@@ -50,6 +50,12 @@ export class ContinueServerClient implements IContinueServerClient {
     artifactId: T,
     repoName: string | undefined,
   ): Promise<EmbeddingsCacheResponse<T>> {
+    if (repoName === undefined) {
+      console.warn(
+        "No repo name provided to getFromIndexCache, this may cause no results to be returned.",
+      );
+    }
+
     if (keys.length === 0) {
       return {
         files: {},
@@ -64,6 +70,7 @@ export class ContinueServerClient implements IContinueServerClient {
       body: JSON.stringify({
         keys,
         artifactId,
+        repo: repoName ?? "NONE",
       }),
     });
 
