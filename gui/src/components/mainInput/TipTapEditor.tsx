@@ -29,7 +29,7 @@ import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
+import { addHighlightedCode, setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
 import { isJetBrains, postToIde } from "../../util/ide";
@@ -497,6 +497,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           editor.commands.blur();
           editor.commands.focus("end");
         }, 20);
+        dispatch(addHighlightedCode({rangeInFileWithContents: rif, edit: true}));
       }
       setIgnoreHighlightedCode(false);
     },
