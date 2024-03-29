@@ -59,11 +59,12 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  tabAutocompleteModel: {
-    title: "Starcoder2 3b",
-    provider: "ollama",
-    model: "starcoder2:3b",
-  },
+  contextProviders: [
+    {
+      name: "open",
+      params: {},
+    },
+  ],
 };
 
 export const defaultSlashCommandsVscode: SlashCommandDescription[] = [

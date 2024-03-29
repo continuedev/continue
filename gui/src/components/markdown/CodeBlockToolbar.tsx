@@ -6,8 +6,7 @@ import {
 import { useContext, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, vscEditorBackground } from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { isJetBrains } from "../../util";
+import { isJetBrains, postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "./CopyButton";
 
@@ -23,12 +22,11 @@ const TopDiv = styled.div`
 
 const SecondDiv = styled.div<{ bottom: boolean }>`
   position: absolute;
-  ${(props) => (props.bottom ? "bottom: 3px;" : "top: -11px;")}
-  right: 10px;
+  ${(props) => (props.bottom ? "bottom: 5px;" : "top: -10px;")}
+  right: 4px;
   display: flex;
   padding: 1px 2px;
   gap: 4px;
-  border: 0.5px solid #8888;
   border-radius: ${defaultBorderRadius};
   background-color: ${vscEditorBackground};
 `;

@@ -2064,61 +2064,12 @@
           "type": "object",
           "properties": {
             "codeBlockToolbarPosition": {
-              "enum": ["top", "bottom"],
+              "enum": [
+                "top",
+                "bottom"
+              ],
               "default": "top",
               "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
-            },
-            "fontSize": {
-              "type": "number"
-            }
-          }
-        },
-        "experimental": {
-          "type": "object",
-          "title": "Experimental",
-          "description": "Experimental properties are subject to change.",
-          "properties": {
-            "defaultContext": {
-              "type": "array",
-              "items": {
-                "enum": ["activeFile"]
-              }
-            },
-            "modelRoles": {
-              "type": "object",
-              "properties": {
-                "inlineEdit": {
-                  "type": "string"
-                }
-              }
-            },
-            "promptPath": {
-              "type": "string"
-            },
-            "contextMenuPrompts": {
-              "type": "object",
-              "properties": {
-                "comment": {
-                  "type": "string",
-                  "default": "Write comments for this code. Do not change anything about the code itself."
-                },
-                "docstring": {
-                  "type": "string",
-                  "default": "Write a docstring for this code. Do not change anything about the code itself."
-                },
-                "fix": {
-                  "type": "string",
-                  "default": "Fix this code"
-                },
-                "optimize": {
-                  "type": "string",
-                  "default": "Optimize this code"
-                },
-                "fixGrammar": {
-                  "type": "string",
-                  "default": "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing."
-                }
-              }
             }
           }
         },
