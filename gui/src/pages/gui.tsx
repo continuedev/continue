@@ -436,22 +436,7 @@ function GUI(props: GUIProps) {
                           onRetry={() => {
                             streamResponse(
                               state.history[index - 1].editorState,
-                              state.history[index - 1].modifiers ??
-                                defaultInputModifiers,
-                              ideMessenger,
                               index - 1,
-                            );
-                          }}
-                          onContinueGeneration={() => {
-                            window.postMessage(
-                              {
-                                messageType: "userInput",
-                                data: {
-                                  input:
-                                    "Continue your response exactly where you left off:",
-                                },
-                              },
-                              "*",
                             );
                           }}
                           onDelete={() => {}}

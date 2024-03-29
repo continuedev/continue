@@ -1,6 +1,5 @@
 import {
   ArrowUturnLeftIcon,
-  BarsArrowDownIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
@@ -130,21 +129,6 @@ function StepContainer(props: StepContainerProps) {
             className="flex items-center gap-2 right-2 absolute -bottom-1"
             style={{ zIndex: 200 }}
           >
-            {truncatedEarly && (
-              <HeaderButtonWithText
-                text="Continue generation"
-                onClick={(e) => {
-                  props.onContinueGeneration();
-                }}
-              >
-                <BarsArrowDownIcon
-                  color={lightGray}
-                  width="1.2em"
-                  height="1.2em"
-                />
-              </HeaderButtonWithText>
-            )}
-
             <CopyButton
               text={stripImages(props.item.message.content)}
               color={lightGray}
