@@ -30,7 +30,14 @@ class VsCodeIde implements IDE {
 
   async getRepoName(dir: string): Promise<string | undefined> {
     const repo = await this.getRepo(vscode.Uri.file(dir));
-    return repo?.state.HEAD?.name;
+    const remote =
+      repo.repository.remotes.find((r: any) => r.name === "origin") ??
+      repo.repository.remotes[0];
+    const ownerAndRepo = remote.fetchUrl
+      .replace(".git", "")
+      .split("/")
+      .slice(-2);
+    return ownerAndRepo.join("/");
   }
 
   async getTags(artifactId: string): Promise<IndexTag[]> {
