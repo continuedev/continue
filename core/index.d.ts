@@ -449,7 +449,6 @@ type ContextProviderName =
   | "open"
   | "google"
   | "search"
-  | "url"
   | "tree"
   | "http"
   | "codebase"
