@@ -23,7 +23,7 @@ import {
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import { isJetBrains, postToIde } from "../util/ide";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
 import { ftl } from "./dialogs/FTCDialog";
@@ -252,42 +252,73 @@ const Layout = () => {
         <GridDiv>
           <Outlet />
           <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
-          {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
-            <Footer>
-              <div className="mr-auto flex gap-2 items-center">
-                <ModelSelect />
-                {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
-                  defaultModel?.provider === "free-trial" && (
-                    <ProgressBar
-                      completed={parseInt(localStorage.getItem("ftc") || "0")}
-                      total={ftl()}
-                    />
-                  )}
-                <IndexingProgressBar indexingState={indexingState} />
-              </div>
-              <HeaderButtonWithText
-                text="Help"
-                onClick={() => {
-                  if (location.pathname === "/help") {
-                    navigate("/");
-                  } else {
-                    navigate("/help");
-                  }
-                }}
-              >
-                <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-              <HeaderButtonWithText
-                onClick={() => {
-                  // navigate("/settings");
-                  ideMessenger.post("openConfigJson", undefined);
-                }}
-                text="Configure Continue"
-              >
-                <Cog6ToothIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-            </Footer>
-          )}
+          <Footer>
+            <div className="mr-auto flex gap-2 items-center">
+              {/* {localStorage.getItem("ide") === "jetbrains" ||
+                localStorage.getItem("hideFeature") === "true" || (
+                  <SparklesIcon
+                    className="cursor-pointer"
+                    onClick={() => {
+                      localStorage.setItem("hideFeature", "true");
+                    }}
+                    onMouseEnter={() => {
+                      dispatch(
+                        setBottomMessage(
+                          `🎁 New Feature: Use ${getMetaKeyLabel()}⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)`
+                        )
+                      );
+                    }}
+                    onMouseLeave={() => {
+                      dispatch(
+                        setBottomMessageCloseTimeout(
+                          setTimeout(() => {
+                            dispatch(setBottomMessage(undefined));
+                          }, 2000)
+                        )
+                      );
+                    }}
+                    width="1.3em"
+                    height="1.3em"
+                    color="yellow"
+                  />
+                )} */}
+              <ModelSelect />
+              {indexingProgress >= 1 && // Would take up too much space together with indexing progress
+                defaultModel?.provider === "free-trial" &&
+                (location.pathname === "/settings" ||
+                  parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
+                  <ProgressBar
+                    completed={parseInt(localStorage.getItem("ftc") || "0")}
+                    total={250}
+                  />
+                )}
+
+              {isJetBrains() || (
+                <IndexingProgressBar
+                  currentlyIndexing={indexingTask}
+                  completed={indexingProgress * 100}
+                  total={100}
+                />
+              )}
+            </div>
+            <HeaderButtonWithText
+              text="Help"
+              onClick={() => {
+                navigate("/help");
+              }}
+            >
+              <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
+            <HeaderButtonWithText
+              onClick={() => {
+                // navigate("/settings");
+                postToIde("openConfigJson", undefined);
+              }}
+              text="Config"
+            >
+              <Cog6ToothIcon width="1.4em" height="1.4em" />
+            </HeaderButtonWithText>
+          </Footer>
         </GridDiv>
 
         <BottomMessageDiv

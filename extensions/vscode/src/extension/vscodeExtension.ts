@@ -108,6 +108,11 @@ export class VsCodeExtension {
     this.configHandler.onConfigUpdate(() => {
       this.sidebar.webviewProtocol?.request("configUpdate", undefined);
     });
+    this.webviewProtocol.on("index/forceReIndex", (msg) => {
+      this.ide
+        .getWorkspaceDirs()
+        .then((dirs) => this.refreshCodebaseIndex(dirs));
+    });
 
     this.diffManager.webviewProtocol = this.webviewProtocol;
 

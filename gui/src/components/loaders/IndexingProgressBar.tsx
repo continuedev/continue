@@ -93,94 +93,26 @@ const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarPr
   return (
     <div
       onClick={() => {
-        if (
-          indexingState.status !== "failed" &&
-          indexingState.progress < 1 &&
-          indexingState.progress >= 0
-        ) {
-          setPaused((prev) => !prev);
+        if (completed < total) {
+          setExpanded((prev) => !prev);
         } else {
-          ideMessenger.post("index/forceReIndex", undefined);
+          postToIde("index/forceReIndex", undefined);
         }
       }}
       className="cursor-pointer"
     >
-      {indexingState.status === "loading" ? ( // ice-blue 'indexing loading' dot
-        <>
-          <CircleDiv
-            data-tooltip-id="indexingNotLoaded_dot"
-            color="#72aec2"
-          ></CircleDiv>
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id="indexingNotLoaded_dot" place="top">
-                Continue is initializing
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
-        </>
-      ) : indexingState.status === "failed" ? ( //red 'failed' dot
-        <>
-          <CircleDiv
-            data-tooltip-id="indexingFailed_dot"
-            color="#ff0000"
-          ></CircleDiv>
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id="indexingFailed_dot" place="top">
-                Error indexing codebase: {indexingState.desc}
-                <br />
-                Click to retry
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
-        </>
-      ) : indexingState.status === "done" ? ( //indexing complete green dot
+      {completed >= total ? (
         <>
           <CircleDiv data-tooltip-id="progress_dot" color="#090"></CircleDiv>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="progress_dot" place="top">
-                Index up to date. Click to force re-indexing
+                Index up-to-date. Click to force re-indexing
               </StyledTooltip>,
               tooltipPortalDiv,
             )}
         </>
-      ) : indexingState.status === "disabled" ? ( //gray disabled dot
-        <>
-          <CircleDiv
-            data-tooltip-id="progress_dot"
-            color={lightGray}
-          ></CircleDiv>
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id="progress_dot" place="top">
-                {indexingState.desc}
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
-        </>
-      ) : indexingState.status === "paused" ||
-        (paused && indexingState.status === "indexing") ? (
-        //yellow 'paused' dot
-        <>
-          <CircleDiv
-            data-tooltip-id="progress_dot"
-            color="#bb0"
-            onClick={(e) => {
-              ideMessenger.post("index/setPaused", false);
-            }}
-          ></CircleDiv>
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id="progress_dot" place="top">
-                Click to unpause indexing (
-                {Math.trunc(indexingState.progress * 100)}%)
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
-        </>
-      ) : indexingState.status === "indexing" ? ( //progress bar
+      ) : expanded ? (
         <>
           <GridDiv
             data-tooltip-id="usage_progress_bar"
@@ -207,7 +139,19 @@ const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarPr
               tooltipPortalDiv,
             )}
         </>
-      ) : null}
+      ) : (
+        <>
+          <CircleDiv data-tooltip-id="progress_dot" color="#bb0"></CircleDiv>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id="progress_dot" place="top">
+                Click to unpause indexing (
+                {Math.trunc((completed / total) * 100)}%)
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
+        </>
+      )}
     </div>
   );
 };
