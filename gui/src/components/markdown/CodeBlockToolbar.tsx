@@ -7,6 +7,7 @@ import { useContext, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, vscEditorBackground } from "..";
 import { isJetBrains, postToIde } from "../../util/ide";
+import { WebviewIde } from "../../util/webviewIde";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "./CopyButton";
 
@@ -22,11 +23,12 @@ const TopDiv = styled.div`
 
 const SecondDiv = styled.div<{ bottom: boolean }>`
   position: absolute;
-  ${(props) => (props.bottom ? "bottom: 5px;" : "top: -10px;")}
-  right: 4px;
+  ${(props) => (props.bottom ? "bottom: 3px;" : "top: -11px;")}
+  right: 10px;
   display: flex;
   padding: 1px 2px;
   gap: 4px;
+  border: 0.5px solid #8888;
   border-radius: ${defaultBorderRadius};
   background-color: ${vscEditorBackground};
 `;
@@ -38,35 +40,6 @@ interface CodeBlockToolBarProps {
 }
 
 const terminalLanguages = ["bash", "sh"];
-const commonTerminalCommands = [
-  "npm",
-  "pnpm",
-  "yarn",
-  "bun",
-  "deno",
-  "npx",
-  "cd",
-  "ls",
-  "pwd",
-  "pip",
-  "python",
-  "node",
-  "git",
-  "curl",
-  "wget",
-  "rbenv",
-  "gem",
-  "ruby",
-  "bundle",
-];
-function isTerminalCodeBlock(language: string | undefined, text: string) {
-  return (
-    terminalLanguages.includes(language) ||
-    (language?.length === 0 &&
-      (text.trim().split("\n").length === 1 ||
-        commonTerminalCommands.some((c) => text.trim().startsWith(c))))
-  );
-}
 
 function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -80,22 +53,21 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
         {isJetBrains() || (
           <HeaderButtonWithText
             text={
-              isTerminalCodeBlock(props.language, props.text)
+              terminalLanguages.includes(props.language)
                 ? "Run in terminal"
                 : applying
-                  ? "Applying..."
-                  : "Apply to current file"
+                ? "Applying..."
+                : "Apply to current file"
             }
             disabled={applying}
             style={{ backgroundColor: vscEditorBackground }}
-            onClick={() => {
+            onClick={(e) => {
               if (terminalLanguages.includes(props.language)) {
                 let text = props.text;
                 if (text.startsWith("$ ")) {
                   text = text.slice(2);
                 }
-                ideMessenger.ide.runCommand(text);
-                return;
+                new WebviewIde().runCommand(text);
               }
 
               if (applying) return;
