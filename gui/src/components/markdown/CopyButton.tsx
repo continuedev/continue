@@ -1,7 +1,5 @@
 import { CheckIcon, ClipboardIcon } from "@heroicons/react/24/outline";
-import { useContext, useState } from "react";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { isJetBrains } from "../../util";
+import { useState } from "react";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 
 interface CopyButtonProps {

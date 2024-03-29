@@ -5,7 +5,9 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 
 export function useWebviewListener<T extends keyof ToWebviewProtocol>(
   messageType: T,
-  handler: (data: ToWebviewProtocol[T][0]) => Promise<ToWebviewProtocol[T][1]>,
+  handler: (
+    data: ReverseWebviewProtocol[T][0],
+  ) => Promise<ReverseWebviewProtocol[T][1]>,
   dependencies?: any[],
 ) {
   const ideMessenger = useContext(IdeMessengerContext);

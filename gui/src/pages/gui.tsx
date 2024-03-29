@@ -439,6 +439,15 @@ function GUI(props: GUIProps) {
                               index - 1,
                             );
                           }}
+                          onContinueGeneration={() => {
+                            window.postMessage(
+                              {
+                                messageType: "userInput",
+                                data: { input: "Keep going" },
+                              },
+                              "*",
+                            );
+                          }}
                           onDelete={() => {}}
                         />
                       </TimelineItem>

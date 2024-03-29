@@ -107,7 +107,7 @@ const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarPr
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="progress_dot" place="top">
-                Index up-to-date. Click to force re-indexing
+                Index up to date. Click to force re-indexing
               </StyledTooltip>,
               tooltipPortalDiv,
             )}
