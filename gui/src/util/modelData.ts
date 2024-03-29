@@ -235,6 +235,19 @@ const mixtralTrial: ModelPackage = {
   providerOptions: ["freetrial", "groq"],
 };
 
+const llama270bChat: ModelPackage = {
+  title: "Llama2 70b Chat",
+  description: "The latest Llama model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama2-70b",
+    model: "llama2-70b",
+    contextLength: 4096,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
+};
+
 const llama38bChat: ModelPackage = {
   title: "Llama3 8b",
   description: "The latest Llama model from Meta, fine-tuned for chat",
@@ -975,7 +988,41 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       return p;
     }),
   },
-  gemini: {
+  groq: {
+    title: "Groq",
+    provider: "groq",
+    icon: "groq.png",
+    description:
+      "Groq is the fastest LLM provider by a wide margin, using 'LPUs' to serve open-source models at blazing speed.",
+    longDescription:
+      "To get started with Groq, obtain an API key from their website [here](https://wow.groq.com/).",
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Groq API key",
+        required: true,
+      },
+    ],
+    packages: [
+      { ...mixtralTrial, title: "Mixtral" },
+      llama270bChat,
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "Groq",
+        },
+      },
+      ,
+    ],
+  },
+  palm: {
     title: "Google Gemini API",
     provider: "gemini",
     refPage: "geminiapi",

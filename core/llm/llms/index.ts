@@ -4,32 +4,28 @@ import {
   ILLM,
   LLMOptions,
   ModelDescription,
-} from "../../index.js";
-import { IdeSettings } from "../../protocol/ideWebview.js";
-import { DEFAULT_MAX_TOKENS } from "../constants.js";
-import { BaseLLM } from "../index.js";
-import Anthropic from "./Anthropic.js";
-import Bedrock from "./Bedrock.js";
-import Cohere from "./Cohere.js";
-import DeepInfra from "./DeepInfra.js";
-import Fireworks from "./Fireworks.js";
-import Flowise from "./Flowise.js";
-import FreeTrial from "./FreeTrial.js";
-import Gemini from "./Gemini.js";
-import Groq from "./Groq.js";
-import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI.js";
-import HuggingFaceTGI from "./HuggingFaceTGI.js";
-import LMStudio from "./LMStudio.js";
-import LlamaCpp from "./LlamaCpp.js";
-import Llamafile from "./Llamafile.js";
-import Mistral from "./Mistral.js";
-import Ollama from "./Ollama.js";
-import OpenAI from "./OpenAI.js";
-import Replicate from "./Replicate.js";
-import TextGenWebUI from "./TextGenWebUI.js";
-import Together from "./Together.js";
-import ContinueProxy from "./stubs/ContinueProxy.js";
-import Cloudflare from "./Cloudflare";
+} from "../..";
+import { DEFAULT_MAX_TOKENS } from "../constants";
+import Anthropic from "./Anthropic";
+import Bedrock from "./Bedrock";
+import DeepInfra from "./DeepInfra";
+import Flowise from "./Flowise";
+import FreeTrial from "./FreeTrial";
+import Gemini from "./Gemini";
+import GooglePalm from "./GooglePalm";
+import Groq from "./Groq";
+import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
+import HuggingFaceTGI from "./HuggingFaceTGI";
+import LMStudio from "./LMStudio";
+import LlamaCpp from "./LlamaCpp";
+import Llamafile from "./Llamafile";
+import Mistral from "./Mistral";
+import Ollama from "./Ollama";
+import OpenAI from "./OpenAI";
+import OpenAIFreeTrial from "./OpenAIFreeTrial";
+import Replicate from "./Replicate";
+import TextGenWebUI from "./TextGenWebUI";
+import Together from "./Together";
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -98,9 +94,6 @@ const LLMs = [
   DeepInfra,
   Flowise,
   Groq,
-  Fireworks,
-  ContinueProxy,
-  Cloudflare,
 ];
 
 export async function llmFromDescription(
@@ -139,19 +132,7 @@ export async function llmFromDescription(
         DEFAULT_MAX_TOKENS,
     },
     systemMessage,
-    writeLog,
-    uniqueId,
   };
-
-  if (desc.provider === "continue-proxy") {
-    options.apiKey = ideSettings.userToken;
-    if (ideSettings.remoteConfigServerUrl) {
-      options.apiBase = new URL(
-        "/proxy/v1",
-        ideSettings.remoteConfigServerUrl,
-      ).toString();
-    }
-  }
 
   return new cls(options);
 }
