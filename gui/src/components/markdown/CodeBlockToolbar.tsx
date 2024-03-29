@@ -1,4 +1,8 @@
-import { CheckIcon, PlayIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowLeftEndOnRectangleIcon,
+  CheckIcon,
+  PlayIcon,
+} from "@heroicons/react/24/outline";
 import { useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, vscEditorBackground } from "..";
@@ -45,38 +49,50 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
     <TopDiv>
       <SecondDiv bottom={props.bottom || false}>
         {isJetBrains() || (
-          <HeaderButtonWithText
-            text={
-              terminalLanguages.includes(props.language)
-                ? "Run in terminal"
-                : applying
-                ? "Applying..."
-                : "Apply to current file"
-            }
-            disabled={applying}
-            style={{ backgroundColor: vscEditorBackground }}
-            onClick={(e) => {
-              if (terminalLanguages.includes(props.language)) {
-                let text = props.text;
-                if (text.startsWith("$ ")) {
-                  text = text.slice(2);
-                }
-                new WebviewIde().runCommand(text);
+          <>
+            <HeaderButtonWithText
+              text={
+                terminalLanguages.includes(props.language)
+                  ? "Run in terminal"
+                  : applying
+                  ? "Applying..."
+                  : "Apply to current file"
               }
+              disabled={applying}
+              style={{ backgroundColor: vscEditorBackground }}
+              onClick={() => {
+                if (terminalLanguages.includes(props.language)) {
+                  let text = props.text;
+                  if (text.startsWith("$ ")) {
+                    text = text.slice(2);
+                  }
+                  new WebviewIde().runCommand(text);
+                }
 
-              if (applying) return;
-              postToIde("applyToCurrentFile", { text: props.text });
-              setApplying(true);
-              setTimeout(() => setApplying(false), 2000);
-            }}
-          >
-            {applying ? (
-              <CheckIcon className="w-4 h-4 text-green-500" />
-            ) : (
-              <PlayIcon className="w-4 h-4" />
-            )}
-          </HeaderButtonWithText>
+                if (applying) return;
+                postToIde("applyToCurrentFile", { text: props.text });
+                setApplying(true);
+                setTimeout(() => setApplying(false), 2000);
+              }}
+            >
+              {applying ? (
+                <CheckIcon className="w-4 h-4 text-green-500" />
+              ) : (
+                <PlayIcon className="w-4 h-4" />
+              )}
+            </HeaderButtonWithText>
+            <HeaderButtonWithText
+              text="Insert at cursor"
+              style={{ backgroundColor: vscEditorBackground }}
+              onClick={() => {
+                postToIde("insertAtCursor", { text: props.text });
+              }}
+            >
+              <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
+            </HeaderButtonWithText>
+          </>
         )}
+
         <CopyButton text={props.text} />
       </SecondDiv>
     </TopDiv>

@@ -85,6 +85,7 @@ export type WebviewProtocol = Protocol &
     toggleFullScreen: [undefined, void];
     "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
     "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
+    insertAtCursor: [{ text: string }, void];
   };
 
 export type ReverseWebviewProtocol = {

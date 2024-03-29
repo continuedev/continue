@@ -549,6 +549,19 @@ export class VsCodeWebviewProtocol {
       const rows = await DevDataSqliteDb.getTokensPerModel();
       return rows;
     });
+    this.on("insertAtCursor", async (msg) => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor === undefined || !editor.selection) {
+        return;
+      }
+
+      editor.edit((editBuilder) => {
+        editBuilder.replace(
+          new vscode.Range(editor.selection.start, editor.selection.end),
+          msg.data.text,
+        );
+      });
+    });
   }
 
   public request<T extends keyof ReverseWebviewProtocol>(
