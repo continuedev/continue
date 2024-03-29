@@ -1,6 +1,6 @@
-import type { FileEdit, RangeInFile, Thread } from "core";
+import { FileEdit, RangeInFile, Thread } from "core";
 import { defaultIgnoreFile } from "core/indexing/ignore";
-import path from "node:path";
+import path from "path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/vscodeExtension";
@@ -260,7 +260,6 @@ export class VsCodeIdeUtils {
   async getDirectoryContents(
     directory: string,
     recursive: boolean,
-    useGitIgnore: boolean,
   ): Promise<string[]> {
     if (!recursive) {
       return (
@@ -286,7 +285,6 @@ export class VsCodeIdeUtils {
       [],
       true,
       gitRoot === directory ? undefined : onlyThisDirectory,
-      useGitIgnore,
     )) {
       allFiles.push(file);
     }
@@ -465,7 +463,7 @@ export class VsCodeIdeUtils {
 
   async getTopLevelCallStackSources(
     threadIndex: number,
-    stackDepth = 3,
+    stackDepth: number = 3,
   ): Promise<string[]> {
     const session = vscode.debug.activeDebugSession;
     if (!session) return [];
