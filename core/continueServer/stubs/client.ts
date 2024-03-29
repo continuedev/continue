@@ -75,8 +75,9 @@ export class ContinueServerClient implements IContinueServerClient {
     });
 
     if (!response.ok) {
+      const text = await response.text();
       throw new Error(
-        `Failed to retrieve from remote cache (HTTP ${response.status}): ${response.statusText}`,
+        `Failed to retrieve from remote cache (HTTP ${response.status}): ${text}`,
       );
     }
 
