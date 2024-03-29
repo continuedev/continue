@@ -65,11 +65,15 @@ class OpenAI extends BaseLLM {
     };
   }
 
+  protected _convertModelName(model: string): string {
+    return model;
+  }
+
   protected _convertArgs(options: any, messages: ChatMessage[]) {
     const url = new URL(this.apiBase!);
     const finalOptions = {
       messages: messages.map(this._convertMessage),
-      model: options.model,
+      model: this._convertModelName(options.model),
       max_tokens: options.maxTokens,
       temperature: options.temperature,
       top_p: options.topP,

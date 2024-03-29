@@ -497,7 +497,8 @@ type ModelProvider =
   | "mistral"
   | "bedrock"
   | "deepinfra"
-  | "flowise";
+  | "flowise"
+  | "groq";
 
 export type ModelName =
   | "AUTODETECT"
@@ -514,6 +515,7 @@ export type ModelName =
   | "mistral-8x7b"
   | "llama2-7b"
   | "llama2-13b"
+  | "llama2-70b"
   | "codellama-7b"
   | "codellama-13b"
   | "codellama-34b"

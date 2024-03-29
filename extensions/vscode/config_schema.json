@@ -140,7 +140,8 @@
             "llamafile",
             "mistral",
             "deepinfra",
-            "flowise"
+            "flowise",
+            "groq"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/openai)",
@@ -741,6 +742,23 @@
             "properties": {
               "model": {
                 "enum": ["mistral-tiny", "mistral-small", "mistral-medium"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["groq"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["llama2-70b", "mistral-8x7b", "gemma"]
               }
             }
           }
