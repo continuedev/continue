@@ -91,14 +91,11 @@ class OpenAI extends BaseLLM {
       presence_penalty: options.presencePenalty,
       stop:
         // Jan + Azure OpenAI don't truncate and will throw an error
-        this.maxStopWords !== undefined
-          ? options.stop?.slice(0, this.maxStopWords)
-          : url.port === "1337" ||
-              url.host === "api.openai.com" ||
-              url.host === "api.groq.com" ||
-              this.apiType === "azure"
-            ? options.stop?.slice(0, 4)
-            : options.stop,
+        url.port === "1337" ||
+        url.host === "api.openai.com" ||
+        this.apiType === "azure"
+          ? options.stop?.slice(0, 4)
+          : options.stop,
     };
 
     return finalOptions;
