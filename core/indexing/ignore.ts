@@ -25,7 +25,6 @@ const DEFAULT_IGNORE_FILETYPES = [
   "*.dll",
   "*.obj",
   "*.o",
-  "*.o.d",
   "*.a",
   "*.lib",
   "*.so",
@@ -53,15 +52,9 @@ const DEFAULT_IGNORE_FILETYPES = [
   "*.webp",
   "*.db",
   "*.sqlite",
-  "*.wasm",
-  "*.plist",
-  "*.profraw",
-  "*.gcda",
-  "*.gcno",
-  "go.sum",
 ];
 export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
-export const DEFAULT_IGNORE_DIRS = [
+const DEFAULT_IGNORE_DIRS = [
   ".git",
   ".vscode",
   ".idea",
@@ -80,9 +73,5 @@ export const DEFAULT_IGNORE_DIRS = [
   ".vscode-test",
   ".continue",
   "__pycache__",
-  "site-packages",
-  ".gradle",
-  ".cache",
-  "gems",
 ];
 export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
