@@ -71,10 +71,12 @@ export class VsCodeWebviewProtocol {
             response &&
             typeof response[Symbol.asyncIterator] === "function"
           ) {
-            for await (const update of response) {
-              respond(update);
+            let next = await response.next();
+            while (!next.done) {
+              respond(next.value);
+              next = await response.next();
             }
-            respond({ done: true });
+            respond({ done: true, content: next.value.content });
           } else {
             respond(response || {});
           }

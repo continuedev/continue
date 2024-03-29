@@ -170,7 +170,10 @@ export async function* llmStreamChat(
     yield { role: "user", content: next.value };
     next = await gen.next();
   }
-  return { prompt: next.value?.prompt, completion: next.value?.completion };
+  return {
+    prompt: next.value.content?.prompt,
+    completion: next.value.content?.completion,
+  };
 }
 
 export function appendText(text: string) {

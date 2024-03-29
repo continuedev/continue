@@ -2348,7 +2348,7 @@ core-util-is@1.0.2:
   integrity sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==
 
 "core@file:../../core":
-  version "1.0.4"
+  version "1.0.6"
   resolved "file:../../core"
   dependencies:
     "@mozilla/readability" "^0.5.0"
