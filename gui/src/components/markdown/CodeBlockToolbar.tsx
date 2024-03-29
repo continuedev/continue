@@ -1,7 +1,7 @@
 import { CheckIcon, PlayIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
 import styled from "styled-components";
-import { vscEditorBackground } from "..";
+import { defaultBorderRadius, vscEditorBackground } from "..";
 import { isJetBrains, postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "./CopyButton";
@@ -18,10 +18,11 @@ const TopDiv = styled.div`
 
 const SecondDiv = styled.div<{ bottom: boolean }>`
   position: absolute;
-  ${(props) => (props.bottom ? "bottom: 1.2rem;" : "top: 4px;")}
+  ${(props) => (props.bottom ? "bottom: 5px;" : "top: -10px;")}
   right: 4px;
   display: flex;
   gap: 4px;
+  border-radius: ${defaultBorderRadius};
   background-color: ${vscEditorBackground};
 `;
 
