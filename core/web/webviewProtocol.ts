@@ -73,6 +73,7 @@ export type WebviewProtocol = Protocol &
 
     errorPopup: [{ message: string }, void];
     "index/setPaused": [boolean, void];
+    "index/forceReIndex": [undefined, void];
     openUrl: [string, void];
     applyToCurrentFile: [{ text: string }, void];
     showTutorial: [undefined, void];

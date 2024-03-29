@@ -107,6 +107,11 @@ export class VsCodeExtension {
       context.globalState.update("continue.indexingPaused", msg.data);
       indexingPauseToken.paused = msg.data;
     });
+    this.webviewProtocol.on("index/forceReIndex", (msg) => {
+      this.ide
+        .getWorkspaceDirs()
+        .then((dirs) => this.refreshCodebaseIndex(dirs));
+    });
 
     this.diffManager.webviewProtocol = this.webviewProtocol;
 
