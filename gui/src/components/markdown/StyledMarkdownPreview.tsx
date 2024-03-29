@@ -110,7 +110,7 @@ const FadeInWords: React.FC = (props: any) => {
 };
 
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
-  props: StyledMarkdownPreviewProps
+  props: StyledMarkdownPreviewProps,
 ) {
   const [reactContent, setMarkdownSource] = useRemark({
     // remarkPlugins: [remarkMath],
@@ -139,8 +139,12 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
           );
         },
         pre: ({ node, ...preProps }) => {
+          const language = preProps?.children?.[0]?.props?.className
+            ?.split(" ")
+            .find((word) => word.startsWith("language-"))
+            ?.split("-")[1];
           return props.showCodeBorder ? (
-            <PreWithToolbar>
+            <PreWithToolbar language={language}>
               <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
             </PreWithToolbar>
           ) : (
