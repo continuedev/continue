@@ -5,6 +5,7 @@ import HeaderButtonWithText from "../HeaderButtonWithText";
 
 interface CopyButtonProps {
   text: string | (() => string);
+  color?: string;
 }
 
 export function CopyButton(props: CopyButtonProps) {
@@ -26,7 +27,7 @@ export function CopyButton(props: CopyButtonProps) {
         {copied ? (
           <CheckIcon className="w-4 h-4 text-green-500" />
         ) : (
-          <ClipboardIcon className="w-4 h-4" />
+          <ClipboardIcon className="w-4 h-4" color={props.color} />
         )}
       </HeaderButtonWithText>
     </>

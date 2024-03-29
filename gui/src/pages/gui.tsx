@@ -417,7 +417,12 @@ function GUI(props: GUIProps) {
                           onUserInput={(input: string) => {}}
                           item={item}
                           onReverse={() => {}}
-                          onRetry={() => {}}
+                          onRetry={() => {
+                            streamResponse(
+                              state.history[index - 1].editorState,
+                              index - 1,
+                            );
+                          }}
                           onDelete={() => {}}
                         />
                       </TimelineItem>

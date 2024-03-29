@@ -1,4 +1,5 @@
 import {
+  ArrowUturnLeftIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
@@ -17,6 +18,7 @@ import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
 import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
+import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 
 interface StepContainerProps {
@@ -98,11 +100,28 @@ function StepContainer(props: StepContainerProps) {
             showCodeBorder={true}
           />
         </ContentDiv>
+        <div className="h-2"></div>
         {(isHovered || typeof feedback !== "undefined") && !active && (
           <div
-            className="flex items-center gap-2 right-2 absolute -bottom-3"
+            className="flex items-center gap-2 right-2 absolute -bottom-1"
             style={{ zIndex: 200 }}
           >
+            <CopyButton
+              text={stripImages(props.item.message.content)}
+              color={lightGray}
+            />
+            <HeaderButtonWithText
+              text="Regenerate"
+              onClick={(e) => {
+                props.onRetry();
+              }}
+            >
+              <ArrowUturnLeftIcon
+                color={lightGray}
+                width="1.2em"
+                height="1.2em"
+              />
+            </HeaderButtonWithText>
             {feedback === false || (
               <HeaderButtonWithText text="Helpful">
                 <HandThumbUpIcon
