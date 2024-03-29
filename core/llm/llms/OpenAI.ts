@@ -66,6 +66,7 @@ class OpenAI extends BaseLLM {
   }
 
   protected _convertArgs(options: any, messages: ChatMessage[]) {
+    const url = new URL(this.apiBase!);
     const finalOptions = {
       messages: messages.map(this._convertMessage),
       model: options.model,
@@ -76,7 +77,9 @@ class OpenAI extends BaseLLM {
       presence_penalty: options.presencePenalty,
       stop:
         // Jan + Azure OpenAI don't truncate and will throw an error
-        this.apiBase?.includes(":1337") || this.apiType === "azure"
+        url.port === "1337" ||
+        url.host === "api.openai.com" ||
+        this.apiType === "azure"
           ? options.stop?.slice(0, 4)
           : options.stop,
     };
