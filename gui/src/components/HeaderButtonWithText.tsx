@@ -1,6 +1,8 @@
 import React, { useState } from "react";
-import { HeaderButton, StyledTooltip } from ".";
 import ReactDOM from "react-dom";
+import { HeaderButton, StyledTooltip } from ".";
+
+import { v4 as uuidv4 } from "uuid";
 
 interface HeaderButtonWithTextProps {
   text: string;
@@ -20,13 +22,14 @@ const HeaderButtonWithText = React.forwardRef<
   HeaderButtonWithTextProps
 >((props: HeaderButtonWithTextProps, ref) => {
   const [hover, setHover] = useState(false);
+  const id = uuidv4();
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
   return (
     <>
       <HeaderButton
-        data-tooltip-id={`header_button_${props.text}`}
+        data-tooltip-id={`header_button_${id}`}
         inverted={props.inverted}
         disabled={props.disabled}
         onMouseEnter={() => {
@@ -48,10 +51,10 @@ const HeaderButtonWithText = React.forwardRef<
       </HeaderButton>
       {tooltipPortalDiv &&
         ReactDOM.createPortal(
-          <StyledTooltip id={`header_button_${props.text}`} place="bottom">
+          <StyledTooltip id={`header_button_${id}`} place="bottom">
             {props.text}
           </StyledTooltip>,
-          tooltipPortalDiv
+          tooltipPortalDiv,
         )}
     </>
   );

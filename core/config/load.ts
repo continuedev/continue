@@ -38,7 +38,6 @@ import {
   getContinueDotEnv,
   migrate,
 } from "../util/paths";
-import { defaultConfig } from "./default";
 const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -80,8 +79,7 @@ function loadSerializedConfig(
   try {
     config = resolveSerializedConfig(configPath);
   } catch (e) {
-    console.log("config.json is invalid. Falling back to default.");
-    config = defaultConfig;
+    throw new Error(`Failed to parse config.json: ${e}`);
   }
 
   if (config.allowAnonymousTelemetry === undefined) {
@@ -321,6 +319,7 @@ function finalToBrowserConfig(
     disableSessionTitles: final.disableSessionTitles,
     userToken: final.userToken,
     embeddingsProvider: final.embeddingsProvider?.id,
+    ui: final.ui,
   };
 }
 

@@ -1,9 +1,10 @@
 {
-  "name": "core",
-  "version": "1.0.0",
+  "name": "@continuedev/core",
+  "version": "1.0.6",
   "description": "The Continue Core contains functionality that can be shared across web, VS Code, or Node.js server. It is written in TypeScript and contains much of the functionality that was previously inside of the legacy Continue Python Server.",
   "scripts": {
-    "test": "jest ./test/diff.test.ts"
+    "test": "jest ./test/diff.test.ts",
+    "build:npm": "tsc -p ./tsconfig.npm.json"
   },
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
@@ -36,6 +37,7 @@
     "handlebars": "^4.7.8",
     "http-proxy-agent": "^7.0.1",
     "https-proxy-agent": "^7.0.3",
+    "ignore": "^5.3.1",
     "js-tiktoken": "^1.0.8",
     "jsdom": "^24.0.0",
     "llama-tokenizer-js": "^1.1.3",
@@ -53,10 +55,14 @@
     "sqlite3": "^5.1.7",
     "tree-sitter-wasms": "^0.1.6",
     "uuid": "^9.0.1",
-    "vectordb": "^0.4.3",
+    "vectordb": "0.4.12",
     "web-tree-sitter": "^0.21.0"
   },
   "puppeteer": {
     "chromium_revision": "119.0.6045.105"
+  },
+  "engine-strict": true,
+  "engines": {
+    "node": ">=20.11.0"
   }
 }

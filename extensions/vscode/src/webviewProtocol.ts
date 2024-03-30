@@ -4,9 +4,11 @@ import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { logDevData } from "core/util/devdata";
+import { DevDataSqliteDb } from "core/util/devdataSqlite";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
 import { getConfigJsonPath } from "core/util/paths";
+import { Telemetry } from "core/util/posthog";
 import {
   ReverseWebviewProtocol,
   WebviewProtocol,
@@ -69,10 +71,12 @@ export class VsCodeWebviewProtocol {
             response &&
             typeof response[Symbol.asyncIterator] === "function"
           ) {
-            for await (const update of response) {
-              respond(update);
+            let next = await response.next();
+            while (!next.done) {
+              respond(next.value);
+              next = await response.next();
             }
-            respond({ done: true });
+            respond({ done: true, content: next.value.content });
           } else {
             respond(response || {});
           }
@@ -82,7 +86,7 @@ export class VsCodeWebviewProtocol {
               JSON.stringify({ msg }, null, 2),
           );
 
-          let message = `Continue error: ${e.message}`;
+          let message = e.message;
           if (e.cause) {
             if (e.cause.name === "ConnectTimeoutError") {
               message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in config.json by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://continue.dev/docs/reference/config`;
@@ -160,6 +164,18 @@ export class VsCodeWebviewProtocol {
     });
     this.on("getTerminalContents", async (msg) => {
       return await ide.getTerminalContents();
+    });
+    this.on("getDebugLocals", async (msg) => {
+      return await ide.getDebugLocals(Number(msg.data.threadIndex));
+    });
+    this.on("getAvailableThreads", async (msg) => {
+      return await ide.getAvailableThreads();
+    });
+    this.on("getTopLevelCallStackSources", async (msg) => {
+      return await ide.getTopLevelCallStackSources(
+        msg.data.threadIndex,
+        msg.data.stackDepth,
+      );
     });
     this.on("listWorkspaceContents", async (msg) => {
       return await ide.listWorkspaceContents();
@@ -374,6 +390,10 @@ export class VsCodeWebviewProtocol {
         throw new Error(`Unknown slash command ${slashCommandName}`);
       }
 
+      Telemetry.capture("useSlashCommand", {
+        name: slashCommandName,
+      });
+
       for await (const content of slashCommand.run({
         input,
         history,
@@ -452,6 +472,11 @@ export class VsCodeWebviewProtocol {
           ide,
           selectedCode,
         });
+
+        Telemetry.capture("useContextProvider", {
+          name: provider.description.title,
+        });
+
         return items.map((item) => ({ ...item, id }));
       } catch (e) {
         vscode.window.showErrorMessage(
@@ -515,6 +540,27 @@ export class VsCodeWebviewProtocol {
 
     this.on("openUrl", (msg) => {
       vscode.env.openExternal(vscode.Uri.parse(msg.data));
+    });
+    this.on("stats/getTokensPerDay", async (msg) => {
+      const rows = await DevDataSqliteDb.getTokensPerDay();
+      return rows;
+    });
+    this.on("stats/getTokensPerModel", async (msg) => {
+      const rows = await DevDataSqliteDb.getTokensPerModel();
+      return rows;
+    });
+    this.on("insertAtCursor", async (msg) => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor === undefined || !editor.selection) {
+        return;
+      }
+
+      editor.edit((editBuilder) => {
+        editBuilder.replace(
+          new vscode.Range(editor.selection.start, editor.selection.end),
+          msg.data.text,
+        );
+      });
     });
   }
 

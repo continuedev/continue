@@ -158,8 +158,8 @@ function ListBoxOption({
                     onConfirm={() => {
                       postToIde("config/deleteModel", { title: option.title });
                     }}
-                  />
-                )
+                  />,
+                ),
               );
               e.stopPropagation();
               e.preventDefault();
@@ -195,7 +195,7 @@ function ModelSelect(props: {}) {
   const dispatch = useDispatch();
   const defaultModel = useSelector(defaultModelSelector);
   const allModels = useSelector(
-    (state: RootState) => state.state.config.models
+    (state: RootState) => state.state.config.models,
   );
 
   const navigate = useNavigate();
@@ -209,7 +209,7 @@ function ModelSelect(props: {}) {
           value: model.title,
           title: modelSelectTitle(model),
         };
-      })
+      }),
     );
   }, [allModels]);
 
@@ -220,7 +220,7 @@ function ModelSelect(props: {}) {
       if (event.key === "'" && isMetaEquivalentKeyPressed(event)) {
         const direction = event.shiftKey ? -1 : 1;
         const currentIndex = options.findIndex(
-          (option) => option.value === defaultModel?.title
+          (option) => option.value === defaultModel?.title,
         );
         let nextIndex = (currentIndex + 1 * direction) % options.length;
         if (nextIndex < 0) nextIndex = options.length - 1;
@@ -274,12 +274,13 @@ function ModelSelect(props: {}) {
                         showDelete={options.length > 1}
                       />
                     ))}
+                    {options.length === 0 && <i>No models found</i>}
                     <i className="text-xs ml-2" style={{ color: lightGray }}>
                       {getMetaKeyLabel()}' to toggle
                     </i>
                   </StyledListboxOptions>
                 </Transition>,
-                topDiv
+                topDiv,
               )}
           </div>
         </StyledListbox>

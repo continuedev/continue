@@ -2,31 +2,42 @@ import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { Chunk } from "../..";
 import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths";
-import { SqliteDb } from "../refreshIndex";
 
 import { downloadPreIndexedDocs } from "./preIndexed";
 import { default as configs } from "./preIndexedDocs";
 
 const DOCS_TABLE_NAME = "docs";
 
+// Purposefully lowercase because lancedb converts
 interface LanceDbDocsRow {
   title: string;
-  baseUrl: string;
+  baseurl: string;
   // Chunk
   content: string;
   path: string;
-  startLine: number;
-  endLine: number;
+  startline: number;
+  endline: number;
   vector: number[];
   [key: string]: any;
 }
 
-async function createDocsTable(db: Database<sqlite3.Database>) {
-  db.exec(`CREATE TABLE IF NOT EXISTS docs (
+let dbDocs: Database;
+
+async function getDBDocs() {
+  if (!dbDocs) {
+    dbDocs = await open({
+      filename: getDocsSqlitePath(),
+      driver: sqlite3.Database,
+    });
+
+    dbDocs.exec(`CREATE TABLE IF NOT EXISTS docs (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         title STRING NOT NULL,
         baseUrl STRING NOT NULL UNIQUE
     )`);
+  }
+
+  return dbDocs;
 }
 
 export async function retrieveDocs(
@@ -37,8 +48,7 @@ export async function retrieveDocs(
   nested: boolean = false,
 ): Promise<Chunk[]> {
   const lancedb = await import("vectordb");
-  const db = await SqliteDb.get();
-  await createDocsTable(db);
+  const db = await getDBDocs();
   const lance = await lancedb.connect(getLanceDbPath());
 
   const downloadDocs = async () => {
@@ -66,10 +76,10 @@ export async function retrieveDocs(
   let docs: LanceDbDocsRow[] = await table
     .search(vector)
     .limit(nRetrieve)
-    .where(`baseUrl = '${baseUrl}'`)
+    .where(`baseurl = '${baseUrl}'`)
     .execute();
 
-  docs = docs.filter((doc) => doc.baseUrl === baseUrl);
+  docs = docs.filter((doc) => doc.baseurl === baseUrl);
 
   if ((!docs || docs.length === 0) && !nested) {
     const downloaded = await downloadDocs();
@@ -79,8 +89,8 @@ export async function retrieveDocs(
   return docs.map((doc) => ({
     digest: doc.path,
     filepath: doc.path,
-    startLine: doc.startLine,
-    endLine: doc.endLine,
+    startLine: doc.startline,
+    endLine: doc.endline,
     index: 0,
     content: doc.content,
     otherMetadata: {
@@ -97,11 +107,11 @@ export async function addDocs(
 ) {
   const data: LanceDbDocsRow[] = chunks.map((chunk, i) => ({
     title: chunk.otherMetadata?.title || title,
-    baseUrl: baseUrl.toString(),
+    baseurl: baseUrl.toString(),
     content: chunk.content,
     path: chunk.filepath,
-    startLine: chunk.startLine,
-    endLine: chunk.endLine,
+    startline: chunk.startLine,
+    endline: chunk.endLine,
     vector: embeddings[i],
   }));
 
@@ -116,11 +126,7 @@ export async function addDocs(
   }
 
   // Only after add it to SQLite
-  const db = await open({
-    filename: getDocsSqlitePath(),
-    driver: sqlite3.Database,
-  });
-  await createDocsTable(db);
+  const db = await getDBDocs();
   await db.run(
     `INSERT INTO docs (title, baseUrl) VALUES (?, ?)`,
     title,
@@ -131,11 +137,13 @@ export async function addDocs(
 export async function listDocs(): Promise<
   { title: string; baseUrl: string }[]
 > {
-  const db = await open({
-    filename: getDocsSqlitePath(),
-    driver: sqlite3.Database,
-  });
-  await createDocsTable(db);
-  const docs = await db.all(`SELECT title, baseUrl FROM docs`);
+  const db = await getDBDocs();
+  const docs = db.all(`SELECT title, baseUrl FROM docs`);
   return docs;
+}
+
+export async function hasDoc(baseUrl: string) {
+  const db = await getDBDocs();
+  const doc = await db.get(`SELECT title FROM docs WHERE baseUrl =?`, baseUrl);
+  return !!doc;
 }

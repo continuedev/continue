@@ -65,3 +65,5 @@ select the code"""
 accept [⌘ ⇧ ⏎] or reject [⌘ ⇧ ⌫] the edit"""
 
 # endregion
+
+# Ready to learn more? Check out the Continue documentation: https://continue.dev/docs

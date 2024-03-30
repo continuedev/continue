@@ -4,6 +4,7 @@ import {
   chatmlTemplateMessages,
   codeLlama70bTemplateMessages,
   deepseekTemplateMessages,
+  gemmaTemplateMessage,
   llama2TemplateMessages,
   llavaTemplateMessages,
   neuralChatTemplateMessages,
@@ -18,13 +19,14 @@ import {
   alpacaEditPrompt,
   claudeEditPrompt,
   codeLlama70bEditPrompt,
-  codellamaEditPrompt,
   deepseekEditPrompt,
+  gemmaEditPrompt,
+  gptEditPrompt,
   mistralEditPrompt,
   neuralChatEditPrompt,
   openchatEditPrompt,
+  osModelsEditPrompt,
   phindEditPrompt,
-  simplestEditPrompt,
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
@@ -36,6 +38,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "ollama",
   "together",
   "anthropic",
+  "bedrock",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -44,6 +47,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "google-palm",
   "free-trial",
   "anthropic",
+  "bedrock",
 ];
 
 function modelSupportsImages(provider: ModelProvider, model: string): boolean {
@@ -129,6 +133,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "chatml";
   }
 
+  if (lower.includes("gemma")) {
+    return "gemma";
+  }
+
   if (lower.includes("phi2")) {
     return "phi2";
   }
@@ -145,15 +153,16 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "zephyr";
   }
 
+  // Claude requests always sent through Messages API, so formatting not necessary
   if (lower.includes("claude")) {
-    return "anthropic";
+    return "none";
   }
 
   if (lower.includes("alpaca") || lower.includes("wizard")) {
     return "alpaca";
   }
 
-  if (lower.includes("mistral")) {
+  if (lower.includes("mistral") || lower.includes("mixtral")) {
     return "llama2";
   }
 
@@ -201,6 +210,7 @@ function autodetectTemplateFunction(
       "neural-chat": neuralChatTemplateMessages,
       llava: llavaTemplateMessages,
       "codellama-70b": codeLlama70bTemplateMessages,
+      gemma: gemmaTemplateMessage,
       none: null,
     };
 
@@ -209,6 +219,22 @@ function autodetectTemplateFunction(
 
   return null;
 }
+
+const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
+  "alpaca",
+  "chatml",
+  // "codellama-70b", Doesn't respond well to this prompt
+  "deepseek",
+  "gemma",
+  "llama2",
+  "llava",
+  "neural-chat",
+  "openchat",
+  "phi2",
+  "phind",
+  "xwin-coder",
+  "zephyr",
+];
 
 function autodetectPromptTemplates(
   model: string,
@@ -219,7 +245,11 @@ function autodetectPromptTemplates(
 
   let editTemplate = null;
 
-  if (templateType === "phind") {
+  if (templateType && USES_OS_MODELS_EDIT_PROMPT.includes(templateType)) {
+    // This is overriding basically everything else
+    // Will probably delete the rest later, but for now it's easy to revert
+    editTemplate = osModelsEditPrompt;
+  } else if (templateType === "phind") {
     editTemplate = phindEditPrompt;
   } else if (templateType === "phi2") {
     editTemplate = simplifiedEditPrompt;
@@ -229,7 +259,7 @@ function autodetectPromptTemplates(
     if (model.includes("mistral")) {
       editTemplate = mistralEditPrompt;
     } else {
-      editTemplate = codellamaEditPrompt;
+      editTemplate = osModelsEditPrompt;
     }
   } else if (templateType === "alpaca") {
     editTemplate = alpacaEditPrompt;
@@ -245,8 +275,10 @@ function autodetectPromptTemplates(
     editTemplate = codeLlama70bEditPrompt;
   } else if (templateType === "anthropic") {
     editTemplate = claudeEditPrompt;
+  } else if (templateType === "gemma") {
+    editTemplate = gemmaEditPrompt;
   } else if (templateType) {
-    editTemplate = simplestEditPrompt;
+    editTemplate = gptEditPrompt;
   }
 
   if (editTemplate !== null) {

@@ -128,6 +128,7 @@
             "openai",
             "free-trial",
             "anthropic",
+            "bedrock",
             "together",
             "ollama",
             "huggingface-tgi",
@@ -139,12 +140,14 @@
             "llamafile",
             "mistral",
             "deepinfra",
-            "flowise"
+            "flowise",
+            "groq"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/openai)",
             "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/freetrial)",
             "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/anthropicllm)",
+            "### Bedrock\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock/claude/)",
             "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/togetherllm)",
             "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/ollama)",
             "### Huggingface TGI\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/huggingfacetgi)",
@@ -187,6 +190,7 @@
             "llama2",
             "alpaca",
             "zephyr",
+            "phi2",
             "phind",
             "anthropic",
             "chatml",
@@ -195,7 +199,9 @@
             "openchat",
             "xwin-coder",
             "neural-chat",
-            "codellama-70b"
+            "codellama-70b",
+            "llava",
+            "gemma"
           ],
           "type": "string"
         },
@@ -250,10 +256,7 @@
         "apiType": {
           "title": "Api Type",
           "markdownDescription": "OpenAI API type, either `openai` or `azure`",
-          "enum": [
-            "openai",
-            "azure"
-          ]
+          "enum": ["openai", "azure"]
         },
         "apiVersion": {
           "title": "Api Version",
@@ -266,11 +269,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "title",
-        "provider",
-        "model"
-      ],
+      "required": ["title", "provider", "model"],
       "allOf": [
         {
           "if": {
@@ -280,9 +279,7 @@
               }
             },
             "not": {
-              "required": [
-                "provider"
-              ]
+              "required": ["provider"]
             }
           },
           "then": {
@@ -307,48 +304,33 @@
                 ]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
-            "required": [
-              "apiKey"
-            ]
+            "required": ["apiKey"]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "huggingface-tgi",
-                  "huggingface-inference-api"
-                ]
+                "enum": ["huggingface-tgi", "huggingface-inference-api"]
               }
             }
           },
           "then": {
-            "required": [
-              "apiBase"
-            ]
+            "required": ["apiBase"]
           },
-          "required": [
-            "provider"
-          ]
+          "required": ["provider"]
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -368,14 +350,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -405,14 +383,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "replicate"
-                ]
+                "enum": ["replicate"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -440,14 +414,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "free-trial"
-                ]
+                "enum": ["free-trial"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -460,6 +430,9 @@
                   "gpt-4-vision-preview",
                   "codellama-70b",
                   "mistral-8x7b",
+                  "claude-3-opus-20240229",
+                  "claude-3-sonnet-20240229",
+                  "claude-3-haiku-20240307",
                   "AUTODETECT"
                 ]
               }
@@ -470,9 +443,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               },
               "apiType": {
                 "not": {
@@ -480,9 +451,7 @@
                 }
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -536,14 +505,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "anthropic"
-                ]
+                "enum": ["anthropic"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -555,6 +520,7 @@
                       "claude-instant-1",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
+                      "claude-3-haiku-20240307",
                       "claude-2.1"
                     ]
                   },
@@ -570,21 +536,25 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "google-palm"
-                ]
+                "enum": ["bedrock"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "chat-bison-001",
-                  "gemini-pro"
+                "anyOf": [
+                  {
+                    "enum": [
+                      "claude-3-sonnet-20240229",
+                      "claude-3-haiku-20240307",
+                      "claude-2"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
                 ]
               }
             }
@@ -594,14 +564,27 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "together"
-                ]
+                "enum": ["google-palm"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["chat-bison-001", "gemini-pro"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["together"]
+              }
+            },
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -633,14 +616,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "deepinfra"
-                ]
+                "enum": ["deepinfra"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -663,9 +642,7 @@
                 ]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -708,14 +685,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "ollama"
-                ]
+                "enum": ["ollama"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -760,23 +733,32 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "mistral"
-                ]
+                "enum": ["mistral"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "mistral-tiny",
-                  "mistral-small",
-                  "mistral-medium"
-                ]
+                "enum": ["mistral-tiny", "mistral-small", "mistral-medium"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["groq"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["llama2-70b", "mistral-8x7b", "gemma"]
               }
             }
           }
@@ -788,30 +770,20 @@
                 "const": "azure"
               }
             },
-            "required": [
-              "apiType"
-            ]
+            "required": ["apiType"]
           },
           "then": {
-            "required": [
-              "engine",
-              "apiVersion",
-              "apiBase"
-            ]
+            "required": ["engine", "apiVersion", "apiBase"]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -828,9 +800,7 @@
                 "const": "llamafile"
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -844,14 +814,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "text-gen-webui"
-                ]
+                "enum": ["text-gen-webui"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -865,14 +831,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "flowise"
-                ]
+                "enum": ["flowise"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -899,10 +861,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "key",
-                    "value"
-                  ]
+                  "required": ["key", "value"]
                 }
               },
               "additionalFlowiseConfiguration": {
@@ -921,10 +880,7 @@
                       "description": "Configuration Property value"
                     }
                   },
-                  "required": [
-                    "key",
-                    "value"
-                  ]
+                  "required": ["key", "value"]
                 }
               },
               "model": {
@@ -958,6 +914,7 @@
                       "claude-instant-1",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
+                      "claude-3-haiku-20240307",
                       "claude-2.1",
                       "chat-bison-001",
                       "gemini-pro",
@@ -1005,9 +962,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "default"
-      ]
+      "required": ["default"]
     },
     "SlashCommand": {
       "title": "SlashCommand",
@@ -1064,9 +1019,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "issue"
-                ]
+                "enum": ["issue"]
               }
             }
           },
@@ -1079,23 +1032,17 @@
                     "description": "Enter the URL of the GitHub repository for which you want to generate the issue."
                   }
                 },
-                "required": [
-                  "repositoryUrl"
-                ]
+                "required": ["repositoryUrl"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "edit"
-                ]
+                "enum": ["edit"]
               }
             }
           },
@@ -1117,10 +1064,7 @@
           }
         }
       ],
-      "required": [
-        "name",
-        "description"
-      ]
+      "required": ["name", "description"]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -1139,11 +1083,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name",
-        "prompt",
-        "description"
-      ]
+      "required": ["name", "prompt", "description"]
     },
     "ContextProviderWithParams": {
       "title": "ContextProviderWithParams",
@@ -1156,6 +1096,7 @@
               "enum": [
                 "diff",
                 "terminal",
+                "locals",
                 "open",
                 "google",
                 "search",
@@ -1169,7 +1110,8 @@
                 "highlights",
                 "outline",
                 "postgres",
-                "code"
+                "code",
+                "system"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1189,7 +1131,8 @@
                 "Displays important snippets of code from the currently open files",
                 "Displays definition lines from the currently open files",
                 "References Postgres table schema and sample rows",
-                "Reference specific functions and classes from throughout your codebase"
+                "Reference specific functions and classes from throughout your codebase",
+                "Reference your operating system and cpu"
               ],
               "type": "string"
             },
@@ -1209,9 +1152,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "google"
-                ]
+                "enum": ["google"]
               }
             }
           },
@@ -1224,23 +1165,17 @@
                     "description": "Your API key for https://serper.dev in order to get Google search results"
                   }
                 },
-                "required": [
-                  "serperApiKey"
-                ]
+                "required": ["serperApiKey"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "open"
-                ]
+                "enum": ["open"]
               }
             }
           },
@@ -1262,9 +1197,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "issue"
-                ]
+                "enum": ["issue"]
               }
             }
           },
@@ -1293,37 +1226,24 @@
                         "type": {
                           "type": "string",
                           "description": "The type of issues to search for",
-                          "enum": [
-                            "open",
-                            "closed",
-                            "all"
-                          ]
+                          "enum": ["open", "closed", "all"]
                         }
                       },
-                      "required": [
-                        "owner",
-                        "repo"
-                      ]
+                      "required": ["owner", "repo"]
                     }
                   }
                 },
-                "required": [
-                  "repos"
-                ]
+                "required": ["repos"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "database"
-                ]
+                "enum": ["database"]
               }
             }
           },
@@ -1341,11 +1261,7 @@
                   "connection_type": {
                     "type": "string",
                     "description": "The type of database (e.g., 'postgres', 'mysql')",
-                    "enum": [
-                      "postgres",
-                      "mysql",
-                      "sqlite"
-                    ]
+                    "enum": ["postgres", "mysql", "sqlite"]
                   },
                   "connection": {
                     "type": "object",
@@ -1378,25 +1294,48 @@
                     "required": []
                   }
                 },
-                "required": [
-                  "name",
-                  "type",
-                  "connection"
-                ]
+                "required": ["name", "type", "connection"]
               }
             },
-            "required": [
-              "connections"
-            ]
+            "required": ["connections"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "jira"
-                ]
+                "enum": ["gitlab-mr"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "description": "Your GitLab domain, will default to gitlab.com"
+                  },
+                  "token": {
+                    "type": "string",
+                    "description": "Your private access token."
+                  },
+                  "filterComments": {
+                    "type": "boolean",
+                    "description": "If you have code selected, filters out comments that aren't related to the selection."
+                  }
+                },
+                "required": ["token"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["jira"]
               }
             }
           },
@@ -1425,25 +1364,17 @@
                     "markdownDescription": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property."
                   }
                 },
-                "required": [
-                  "domain",
-                  "email",
-                  "token"
-                ]
+                "required": ["domain", "email", "token"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "http"
-                ]
+                "enum": ["http"]
               }
             }
           },
@@ -1456,24 +1387,17 @@
                     "description": "The HTTP endpoint of your context provider server."
                   }
                 },
-                "required": [
-                  "url"
-                ]
+                "required": ["url"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "codebase",
-                  "folder"
-                ]
+                "enum": ["codebase", "folder"]
               }
             }
           },
@@ -1508,9 +1432,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "postgres"
-                ]
+                "enum": ["postgres"]
               }
             }
           },
@@ -1562,19 +1484,11 @@
                 }
               }
             },
-            "required": [
-              "host",
-              "port",
-              "user",
-              "password",
-              "database"
-            ]
+            "required": ["host", "port", "user", "password", "database"]
           }
         }
       ],
-      "required": [
-        "name"
-      ]
+      "required": ["name"]
     },
     "SerializedContinueConfig": {
       "title": "config.json",
@@ -1693,11 +1607,7 @@
           "type": "object",
           "properties": {
             "provider": {
-              "enum": [
-                "transformers.js",
-                "ollama",
-                "openai"
-              ]
+              "enum": ["transformers.js", "ollama", "openai"]
             },
             "model": {
               "type": "string"
@@ -1709,27 +1619,19 @@
               "type": "string"
             }
           },
-          "required": [
-            "provider"
-          ],
+          "required": ["provider"],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": [
-                      "ollama"
-                    ]
+                    "enum": ["ollama"]
                   }
                 },
-                "required": [
-                  "provider"
-                ]
+                "required": ["provider"]
               },
               "then": {
-                "required": [
-                  "model"
-                ]
+                "required": ["model"]
               }
             }
           ]
@@ -1778,11 +1680,7 @@
               "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
             },
             "multilineCompletions": {
-              "enum": [
-                "always",
-                "never",
-                "auto"
-              ],
+              "enum": ["always", "never", "auto"],
               "description": "If set to true, Continue will only complete a single line at a time."
             },
             "useCache": {
@@ -1814,12 +1712,19 @@
           },
           "required": []
         },
+        "ui": {
+          "type": "object",
+          "properties": {
+            "codeBlockToolbarPosition": {
+              "enum": ["top", "bottom"],
+              "default": "top",
+              "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
+            }
+          }
+        },
         "mergeBehavior": {
           "type": "string",
-          "enum": [
-            "merge",
-            "overwrite"
-          ],
+          "enum": ["merge", "overwrite"],
           "default": "merge",
           "title": "Merge behavior",
           "markdownDescription": "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json."

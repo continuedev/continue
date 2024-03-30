@@ -6,6 +6,7 @@ import java.io.OutputStreamWriter
 import java.io.*
 
 import com.google.gson.Gson
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
@@ -140,16 +141,18 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
 
         // Start the subprocess
         val processBuilder = ProcessBuilder(continueCorePath)
+                .directory(File(continueCorePath).parentFile)
         process = processBuilder.start()
 
         val outputStream = process.outputStream
         val inputStream = process.inputStream
 
         writer = OutputStreamWriter(outputStream)
-        reader = BufferedReader(InputStreamReader(inputStream))
+        reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
 
         process.onExit().thenRun {
-            val err = process.errorStream.bufferedReader().readText()
+            val err = process.errorStream.bufferedReader().readText().trim()
+            println("Core process exited with output: $err")
             ideProtocolClient.showMessage("Core process exited with output: $err")
         }
 
@@ -158,7 +161,12 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
                 while (true) {
                     val line = reader.readLine()
                     if (line != null && line.isNotEmpty()) {
-                        handleMessage(line)
+                        try {
+                            handleMessage(line)
+                        } catch (e: Exception) {
+                            println("Error handling message: $line")
+                            println(e)
+                        }
                     } else {
                         Thread.sleep(100)
                     }

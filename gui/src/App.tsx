@@ -17,6 +17,7 @@ import { ContextSubmenuItem } from "core";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
 import Review from "./pages/review";
+import Stats from "./pages/stats";
 
 const router = createMemoryRouter([
   {
@@ -39,6 +40,10 @@ const router = createMemoryRouter([
       {
         path: "/history",
         element: <History />,
+      },
+      {
+        path: "/stats",
+        element: <Stats />,
       },
       {
         path: "/help",

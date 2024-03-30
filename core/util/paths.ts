@@ -138,6 +138,10 @@ export function devDataPath(): string {
   return sPath;
 }
 
+export function getDevDataSqlitePath(): string {
+  return path.join(devDataPath(), "devdata.sqlite");
+}
+
 export function getDevDataFilePath(fileName: string): string {
   return path.join(devDataPath(), fileName + ".jsonl");
 }

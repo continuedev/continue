@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   Button,
+  Hr,
   NumberInput,
   TextArea,
   lightGray,
@@ -19,10 +20,6 @@ import Loader from "../components/loaders/Loader";
 import { RootState } from "../redux/store";
 import { getFontSize, getPlatform } from "../util";
 import { postToIde } from "../util/ide";
-
-const Hr = styled.hr`
-  border: 0.5px solid ${lightGray};
-`;
 
 const CancelButton = styled(Button)`
   background-color: transparent;
@@ -132,7 +129,7 @@ function Settings() {
     formMethods.setValue("systemMessage", config.systemMessage);
     formMethods.setValue(
       "completionOptions.temperature",
-      config.completionOptions?.temperature
+      config.completionOptions?.temperature,
     );
   }, [config]);
 

@@ -13,6 +13,7 @@
     - [Writing Context Providers](#writing-context-providers)
     - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
+    - [Adding Pre-indexed Documentation](#adding-pre-indexed-documentation)
 - [📐 Continue Architecture](#-continue-architecture)
   - [Continue VS Code Extension](#continue-vs-code-extension)
   - [Continue JetBrains Extension](#continue-jetbrains-extension)
@@ -55,13 +56,17 @@ Continue is continuously improving, but a feature isn't complete until it is ref
 
 ### Environment Setup
 
-VS Code is assumed for development as Continue is primarily a VS Code tool at the moment. Most of the setup and running is automated through VS Code tasks and launch configurations.
+#### VS Code
 
-<!-- Pre-requisite: you will need `cargo` the rust package manager installed ([get it on rust-lang.org](https://www.rust-lang.org/tools/install)). -->
+Pre-requisite: You should have Node.js version 20.11.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
+
+```bash
+nvm use
+```
 
 1. Clone and open in VS Code the Continue repo `https://github.com/continuedev/continue`
 
-2. Open VS Code command pallet (`cmd+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
+2. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
 
 3. Start debugging:
 
@@ -69,13 +74,26 @@ VS Code is assumed for development as Continue is primarily a VS Code tool at th
    2. Select `Extension (VS Code)` from drop down
    3. Hit play button
    4. This will start the extension in debug mode and open a new VS Code window with it installed
-      1. I call the VS Code window with the extension the _Host VS Code_
+      1. The new VS Code window with the extension is referred to as the _Host VS Code_
       2. The window you started debugging from is referred to as the _Main VS Code_
 
-4. Try using breakpoints:
-   > Note: Breakpoints for the code inside of the `gui` folder are not currently supported while debugging the entire extension, but can be used with the "Vite" launch configuration and Google Chrome.
-   1. _In Main VS Code_: Search for `function addHighlightedCodeToContext` and set a breakpoint at the top of the function. This is the method invoked whenever code in the editor is selected to be used as context.
-   2. _In Host VS Code_: Select part of the `example.ts` file and use the keyboard shortcut cmd/ctrl+m to select the code and notice that your breakpoint should be hit.
+4. To package the extension, run `npm run package` in the `extensions/vscode` directory. This will generate `extensions/vscode/build/continue-patch.vsix`, which you can install by right-clicking and selecting "Install Extension VSIX".
+
+> Note: Breakpoints can be used in both the `core` and `extensions/vscode` folders while debugging, but are not currently supported inside of `gui` code. Hot-reloading is enabled with Vite, so if you make any changes to the `gui`, they should be automatically reflected without rebuilding. Similarly, any changes to `core` or `extensions/vscode` will be automatically included by just reloading the _Host VS Code_ window with cmd/ctrl+shift+p "Reload Window".
+
+#### JetBrains
+
+Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](https://www.jetbrains.com/idea/download). Either Ultimate or Community (free) will work. Continue is built with JDK version 19.
+
+1. Clone the repository
+2. Run `install-dependencies.sh` or `install-dependencies.ps1` on Windows
+3. Run `cd extensions/vscode && node scripts/prepackage.js` (this will copy over the built React application to the proper JetBrains directory)
+4. Select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button
+5. To package the extension, choose the "Build Plugin" Gradle configuration
+
+> For changes to Typescript code, the binary/gui will currently need to be rebuilt. Changes to Kotlin code can often be hot-reloaded with "Run -> Debugging Actions -> Reload Changed Classes"
+
+Continue's JetBrains extension shares much of the code with the VS Code extension by utilizing shared code in the `core` directory and packaging it in a binary in the `pkg` directory. The Intellij extension (written in Kotlin) is then able to communicate over stdin/stdout in the [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt) file.
 
 ### Formatting
 
@@ -137,6 +155,10 @@ While any model that works with a supported provider can be used with Continue, 
 - [index.d.ts](./core/index.d.ts) - This file defines the TypeScript types used throughout Continue. You'll find a `ModelName` type. Be sure to add the name of your model to this.
 - LLM Providers: Since many providers use their own custom strings to identify models, you'll have to add the translation from Continue's model name (the one you added to `index.d.ts`) and the model string for each of these providers: [Ollama](./core/llm/llms/Ollama.ts), [Together](./core/llm/llms/Together.ts), and [Replicate](./core/llm/llms/Replicate.ts). You can find their full model lists here: [Ollama](https://ollama.ai/library), [Together](https://docs.together.ai/docs/inference-models), [Replicate](https://replicate.com/collections/streaming-language-models).
 - [Prompt Templates](./core/llm/index.ts) - In this file you'll find the `autodetectTemplateType` function. Make sure that for the model name you just added, this function returns the correct template type. This is assuming that the chat template for that model is already built in Continue. If not, you will have to add the template type and corresponding edit and chat templates.
+
+### Adding Pre-indexed Documentation
+
+Continue's @docs context provider lets you easily reference entire documentation sites and then uses embeddings to add the most relevant pages to context. To make the experience as smooth as possible, we pre-index many of the most popular documentation sites. If you'd like to add new documentation to this list, just add an object to the list in [preIndexedDocs.ts](./core/indexing/docs/preIndexedDocs.ts). `startUrl` is where the crawler will start and `rootUrl` will filter out any pages not on that site and under the path of `rootUrl`.
 
 ## 📐 Continue Architecture
 

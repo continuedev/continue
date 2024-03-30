@@ -50,11 +50,14 @@ class OpenAI extends BaseLLM {
     }
 
     const parts = message.content.map((part) => {
-      return {
+      const msg: any = {
         type: part.type,
         text: part.text,
-        image_url: { ...part.imageUrl, detail: "low" },
       };
+      if (part.type === "imageUrl") {
+        msg.image_url = { ...part.imageUrl, detail: "low" };
+      }
+      return msg;
     });
     return {
       ...message,
@@ -62,18 +65,27 @@ class OpenAI extends BaseLLM {
     };
   }
 
+  protected _convertModelName(model: string): string {
+    return model;
+  }
+
   protected _convertArgs(options: any, messages: ChatMessage[]) {
+    const url = new URL(this.apiBase!);
     const finalOptions = {
       messages: messages.map(this._convertMessage),
-      model: options.model,
+      model: this._convertModelName(options.model),
       max_tokens: options.maxTokens,
       temperature: options.temperature,
       top_p: options.topP,
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
-      stop: this.apiBase?.includes(":1337")
-        ? options.stop?.slice(0, 4)
-        : options.stop,
+      stop:
+        // Jan + Azure OpenAI don't truncate and will throw an error
+        url.port === "1337" ||
+        url.host === "api.openai.com" ||
+        this.apiType === "azure"
+          ? options.stop?.slice(0, 4)
+          : options.stop,
     };
 
     return finalOptions;
@@ -99,7 +111,7 @@ class OpenAI extends BaseLLM {
   ) {
     if (this.apiType === "azure") {
       return new URL(
-        `openai/deployments/${this.engine}${endpoint}?api-version=${this.apiVersion}`,
+        `openai/deployments/${this.engine}/${endpoint}?api-version=${this.apiVersion}`,
         this.apiBase,
       );
     } else {
@@ -159,8 +171,10 @@ class OpenAI extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     if (
       !CHAT_ONLY_MODELS.includes(options.model) &&
+      this.supportsCompletions() &&
       (NON_CHAT_MODELS.includes(options.model) ||
-        this.useLegacyCompletionsEndpoint)
+        this.useLegacyCompletionsEndpoint ||
+        options.raw)
     ) {
       for await (const content of this._legacystreamComplete(
         stripImages(messages[messages.length - 1]?.content || ""),

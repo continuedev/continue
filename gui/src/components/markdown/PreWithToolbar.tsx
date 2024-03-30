@@ -1,5 +1,6 @@
 import { debounce } from "lodash";
 import { useEffect, useState } from "react";
+import useUIConfig from "../../hooks/useUIConfig";
 import CodeBlockToolBar from "./CodeBlockToolbar";
 
 function childToText(child: any) {
@@ -18,7 +19,13 @@ function childrenToText(children: any) {
   return children.map((child: any) => childToText(child)).join("");
 }
 
-function PreWithToolbar(props: { children: any }) {
+function PreWithToolbar(props: {
+  children: any;
+  language: string | undefined;
+}) {
+  const uiConfig = useUIConfig();
+  const toolbarBottom = uiConfig?.codeBlockToolbarPosition == "bottom";
+
   const [hovering, setHovering] = useState(false);
 
   const [copyValue, setCopyValue] = useState("");
@@ -42,8 +49,21 @@ function PreWithToolbar(props: { children: any }) {
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {hovering && <CodeBlockToolBar text={copyValue}></CodeBlockToolBar>}
+      {!toolbarBottom && hovering && (
+        <CodeBlockToolBar
+          text={copyValue}
+          bottom={toolbarBottom}
+          language={props.language}
+        ></CodeBlockToolBar>
+      )}
       {props.children}
+      {toolbarBottom && hovering && (
+        <CodeBlockToolBar
+          text={copyValue}
+          bottom={toolbarBottom}
+          language={props.language}
+        ></CodeBlockToolBar>
+      )}
     </div>
   );
 }

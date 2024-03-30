@@ -28,7 +28,7 @@ class EmbeddingsPipeline {
   }
 }
 
-class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
+export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static MaxGroupSize: number = 4;
 
   constructor() {

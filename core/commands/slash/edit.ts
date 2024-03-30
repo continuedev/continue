@@ -8,7 +8,7 @@ import {
 } from "../../autocomplete/lineStream";
 import { streamLines } from "../../diff/util";
 import { stripImages } from "../../llm/countTokens";
-import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";
+import { dedentAndGetCommonWhitespace } from "../../util";
 import {
   RangeInFileWithContents,
   contextItemToRangeInFileWithContents,
@@ -225,7 +225,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     if (!contextItemToEdit) {
-      yield "Select (highlight and press `cmd+shift+M` (MacOS) / `ctrl+shift+M` (Windows)) the code that you want to edit first";
+      yield "Select (highlight and press `cmd+shift+L` (MacOS) / `ctrl+shift+L` (Windows)) the code that you want to edit first";
       return;
     }
 
@@ -446,7 +446,7 @@ const EditSlashCommand: SlashCommand = {
     const template = llm.promptTemplates?.edit;
     let generator: AsyncGenerator<string>;
     if (template) {
-      let rendered = renderPromptTemplate(
+      let rendered = llm.renderPromptTemplate(
         template,
         // typeof template === 'string' ? template : template.prompt,
         messages.slice(0, messages.length - 1),

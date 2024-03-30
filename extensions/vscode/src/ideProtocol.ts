@@ -1,6 +1,14 @@
 import * as child_process from "child_process";
 import { exec } from "child_process";
-import { ContinueRcJson, IDE, IdeInfo, IndexTag, Problem, Range } from "core";
+import {
+  ContinueRcJson,
+  IDE,
+  IdeInfo,
+  IndexTag,
+  Problem,
+  Range,
+  Thread,
+} from "core";
 import { getContinueGlobalPath } from "core/util/paths";
 import * as path from "path";
 import * as vscode from "vscode";
@@ -19,6 +27,19 @@ class VsCodeIde implements IDE {
   constructor(private readonly diffManager: DiffManager) {
     this.ideUtils = new VsCodeIdeUtils();
   }
+
+  async getRepoName(dir: string): Promise<string | undefined> {
+    const repo = await this.getRepo(vscode.Uri.file(dir));
+    const remote =
+      repo.repository.remotes.find((r: any) => r.name === "origin") ??
+      repo.repository.remotes[0];
+    const ownerAndRepo = remote.fetchUrl
+      .replace(".git", "")
+      .split("/")
+      .slice(-2);
+    return ownerAndRepo.join("/");
+  }
+
   async getTags(artifactId: string): Promise<IndexTag[]> {
     const workspaceDirs = await this.getWorkspaceDirs();
 
@@ -87,6 +108,23 @@ class VsCodeIde implements IDE {
 
   async getTerminalContents(): Promise<string> {
     return await this.ideUtils.getTerminalContents(1);
+  }
+
+  async getDebugLocals(threadIndex: number): Promise<string> {
+    return await this.ideUtils.getDebugLocals(threadIndex);
+  }
+
+  async getTopLevelCallStackSources(
+    threadIndex: number,
+    stackDepth: number,
+  ): Promise<string[]> {
+    return await this.ideUtils.getTopLevelCallStackSources(
+      threadIndex,
+      stackDepth,
+    );
+  }
+  async getAvailableThreads(): Promise<Thread[]> {
+    return await this.ideUtils.getAvailableThreads();
   }
 
   async listWorkspaceContents(directory?: string): Promise<string[]> {
@@ -223,13 +261,15 @@ class VsCodeIde implements IDE {
     const p = child_process.spawn(
       path.join(
         getExtensionUri().fsPath,
+        "out",
         "node_modules",
         "@vscode",
         "ripgrep",
         "bin",
         "rg",
       ),
-      ["-i", "-C", "2", `"${query}"`, "."],
+      ["-i", "-C", "2", "--", `${query}`, "."], //no regex
+      //["-i", "-C", "2", "-e", `${query}`, "."], //use regex
       { cwd: dir },
     );
     let output = "";

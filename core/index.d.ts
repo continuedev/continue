@@ -43,6 +43,14 @@ export interface LLMReturnValue {
   prompt: string;
   completion: string;
 }
+
+export type PromptTemplate =
+  | string
+  | ((
+      history: ChatMessage[],
+      otherData: Record<string, string>,
+    ) => string | ChatMessage[]);
+
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
 
@@ -90,7 +98,18 @@ export interface ILLM extends LLMOptions {
 
   supportsImages(): boolean;
 
+  supportsCompletions(): boolean;
+
+  supportsPrefill(): boolean;
+
   listModels(): Promise<string[]>;
+
+  renderPromptTemplate(
+    template: PromptTemplate,
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+    canPutWordsInModelsMouth?: boolean,
+  ): string | ChatMessage[];
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -243,7 +262,6 @@ export type ChatHistory = ChatHistoryItem[];
 // LLM
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
-  raw?: boolean;
   log?: boolean;
 
   model?: string;
@@ -320,6 +338,11 @@ export class Problem {
   message: string;
 }
 
+export class Thread {
+  name: string;
+  id: number;
+}
+
 export type IdeType = "vscode" | "jetbrains";
 export interface IdeInfo {
   ideType: IdeType;
@@ -340,6 +363,12 @@ export interface IDE {
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
+  getDebugLocals(threadIndex: number): Promise<string>;
+  getTopLevelCallStackSources(
+    threadIndex: number,
+    stackDepth: number,
+  ): Promise<string[]>;
+  getAvailableThreads(): Promise<Thread[]>;
   listWorkspaceContents(directory?: string): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
@@ -370,6 +399,7 @@ export interface IDE {
   getBranch(dir: string): Promise<string>;
   getStats(directory: string): Promise<{ [path: string]: number }>;
   getTags(artifactId: string): Promise<IndexTag[]>;
+  getRepoName(dir: string): Promise<string | undefined>;
 }
 
 // Slash Commands
@@ -415,10 +445,10 @@ type ContextProviderName =
   | "diff"
   | "github"
   | "terminal"
+  | "locals"
   | "open"
   | "google"
   | "search"
-  | "url"
   | "tree"
   | "http"
   | "codebase"
@@ -428,7 +458,9 @@ type ContextProviderName =
   | "postgres"
   | "database"
   | "code"
-  | "docs";
+  | "docs"
+  | "gitlab-mr"
+  | "os";
 
 type TemplateType =
   | "llama2"
@@ -444,7 +476,8 @@ type TemplateType =
   | "xwin-coder"
   | "neural-chat"
   | "codellama-70b"
-  | "llava";
+  | "llava"
+  | "gemma";
 
 type ModelProvider =
   | "openai"
@@ -464,7 +497,8 @@ type ModelProvider =
   | "mistral"
   | "bedrock"
   | "deepinfra"
-  | "flowise";
+  | "flowise"
+  | "groq";
 
 export type ModelName =
   | "AUTODETECT"
@@ -481,6 +515,7 @@ export type ModelName =
   | "mistral-8x7b"
   | "llama2-7b"
   | "llama2-13b"
+  | "llama2-70b"
   | "codellama-7b"
   | "codellama-13b"
   | "codellama-34b"
@@ -499,6 +534,7 @@ export type ModelName =
   | "claude-2"
   | "claude-3-opus-20240229"
   | "claude-3-sonnet-20240229"
+  | "claude-3-haiku-20240307"
   | "claude-2.1"
   // Google PaLM
   | "chat-bison-001"
@@ -557,6 +593,7 @@ interface BaseCompletionOptions {
   maxTokens?: number;
   numThreads?: number;
   keepAlive?: number;
+  raw?: boolean;
 }
 
 export interface ModelDescription {
@@ -613,6 +650,10 @@ export interface CodeReviewOptions {
   modelTitle: string;
 }
 
+export interface ContinueUIConfig {
+  codeBlockToolbarPosition?: "top" | "bottom";
+}
+
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
@@ -629,6 +670,7 @@ export interface SerializedContinueConfig {
   tabAutocompleteModel?: ModelDescription;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   review?: CodeReviewOptions;
+  ui?: ContinueUIConfig;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -669,6 +711,8 @@ export interface Config {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** Options for the code review feature */
   review?: CodeReviewOptions;
+  /** UI styles customization */
+  ui?: ContinueUIConfig;
 }
 
 export interface ContinueConfig {
@@ -685,6 +729,7 @@ export interface ContinueConfig {
   tabAutocompleteModel?: ILLM;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   review?: CodeReviewOptions;
+  ui?: ContinueUIConfig;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -699,4 +744,5 @@ export interface BrowserSerializedContinueConfig {
   userToken?: string;
   embeddingsProvider?: string;
   review?: CodeReviewOptions;
+  ui?: ContinueUIConfig;
 }

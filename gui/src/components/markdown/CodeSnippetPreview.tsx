@@ -71,9 +71,16 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
   }, [props.item.content]);
 
   const codeBlockRef = React.useRef<HTMLDivElement>(null);
+  const codeBlockHeight = `${Math.min(
+    MAX_PREVIEW_HEIGHT,
+    codeBlockRef.current?.scrollHeight ??
+      // Best estimate of height I currently could find
+      props.item.content.split("\n").length * 18 + 36,
+  )}px`;
 
   return (
     <PreviewMarkdownDiv
+      spellCheck={false}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       borderColor={props.borderColor}
@@ -141,12 +148,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         className="m-0"
         ref={codeBlockRef}
         style={{
-          height: collapsed
-            ? `${Math.min(
-                MAX_PREVIEW_HEIGHT,
-                codeBlockRef.current?.scrollHeight,
-              )}px`
-            : undefined,
+          height: collapsed ? codeBlockHeight : undefined,
           overflow: collapsed ? "hidden" : "auto",
         }}
       >

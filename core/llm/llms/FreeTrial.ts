@@ -3,7 +3,7 @@ import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
 import { streamResponse } from "../stream";
 
 // const SERVER_URL = "http://localhost:3000";
-const SERVER_URL = "https://node-proxy-server-green-l6vsfbzhba-uw.a.run.app";
+const SERVER_URL = "https://node-proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
@@ -98,6 +98,9 @@ class FreeTrial extends BaseLLM {
       "gemini-pro",
       "gpt-4-vision-preview",
       "codellama-70b",
+      "claude-3-opus-20240229",
+      "claude-3-sonnet-20240229",
+      "claude-3-haiku-20240307",
     ];
   }
 }

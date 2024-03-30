@@ -1,4 +1,5 @@
 import { ContextItemId, IDE } from "core";
+import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
 import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
 import { indexDocs } from "core/indexing/docs";
@@ -7,6 +8,7 @@ import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { logDevData } from "core/util/devdata";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
+import { Telemetry } from "core/util/posthog";
 import { v4 as uuidv4 } from "uuid";
 import { IpcMessenger } from "./messenger";
 import { Protocol } from "./protocol";
@@ -16,6 +18,7 @@ export class Core {
   private readonly ide: IDE;
   private readonly configHandler: ConfigHandler;
   private readonly codebaseIndexer: CodebaseIndexer;
+  private readonly completionProvider: CompletionProvider;
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -38,12 +41,24 @@ export class Core {
       this.ide,
       ideSettingsPromise,
       (text: string) => {},
-      () => {},
+      (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
     this.codebaseIndexer = new CodebaseIndexer(
       this.configHandler,
       this.ide,
       new PauseToken(false),
+    );
+
+    const getLlm = async () => {
+      const config = await this.configHandler.loadConfig();
+      return config.tabAutocompleteModel;
+    };
+    this.completionProvider = new CompletionProvider(
+      this.configHandler,
+      ide,
+      getLlm,
+      (e) => {},
+      (..._) => Promise.resolve([]),
     );
 
     const on = this.messenger.on.bind(this.messenger);
@@ -137,6 +152,11 @@ export class Core {
         ide,
         selectedCode: msg.data.selectedCode,
       });
+
+      Telemetry.capture("useContextProvider", {
+        name: provider.description.title,
+      });
+
       return items.map((item) => ({
         ...item,
         id,
@@ -229,6 +249,10 @@ export class Core {
         throw new Error(`Unknown slash command ${slashCommandName}`);
       }
 
+      Telemetry.capture("useSlashCommand", {
+        name: slashCommandName,
+      });
+
       for await (const content of slashCommand.run({
         input,
         history,
@@ -255,6 +279,20 @@ export class Core {
     on("command/run", (msg) =>
       runNodeJsSlashCommand(this.configHandler, this.abortedMessageIds, msg),
     );
+
+    // Autocomplete
+    on("autocomplete/complete", async (msg) => {
+      const outcome =
+        await this.completionProvider.provideInlineCompletionItems(
+          msg.data,
+          undefined,
+        );
+      return outcome ? [outcome.completion] : [];
+    });
+    on("autocomplete/accept", async (msg) => {});
+    on("autocomplete/cancel", async (msg) => {
+      this.completionProvider.cancel();
+    });
   }
 
   public invoke<T extends keyof Protocol>(

@@ -281,7 +281,9 @@ function compileChatMessages(
   functions: any[] | undefined = undefined,
   systemMessage: string | undefined = undefined,
 ): ChatMessage[] {
-  const msgsCopy = msgs ? msgs.map((msg) => ({ ...msg })) : [];
+  const msgsCopy = msgs
+    ? msgs.map((msg) => ({ ...msg })).filter((msg) => msg.content !== "")
+    : [];
 
   if (prompt) {
     const promptMsg: ChatMessage = {

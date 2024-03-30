@@ -10,6 +10,7 @@ import {
   SerializedContinueConfig,
   SessionInfo,
 } from ".";
+import { AutocompleteInput } from "./autocomplete/completionProvider";
 import { ReviewResult } from "./review/review";
 import { IdeProtocol } from "./web/webviewProtocol";
 
@@ -58,10 +59,9 @@ export type Protocol = {
     Promise<ContextSubmenuItem[]>,
   ];
   "context/addDocs": [{ title: string; url: string }, void];
-  "autocomplete/complete": [
-    { filepath: string; line: number; column: number },
-    string[],
-  ];
+  "autocomplete/complete": [AutocompleteInput, Promise<string[]>];
+  "autocomplete/cancel": [undefined, void];
+  "autocomplete/accept": [{ completionId: string }, void];
   "command/run": [
     {
       input: string;

@@ -14,6 +14,8 @@ export async function* streamDiff(
   newLines: LineStream,
 ): AsyncGenerator<DiffLine> {
   const mutatedOldLines = [...oldLines]; // be careful
+
+  // If one indentation mistake is made, others are likely. So we are more permissive about matching
   let seenIndentationMistake = false;
 
   let newLineResult = await newLines.next();

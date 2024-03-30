@@ -147,7 +147,12 @@ async function getAddRemoveForTag(
   } = {};
 
   async function markComplete(items: PathAndCacheKey[], _: IndexResultType) {
-    const actions = items.map((item) => itemToAction[JSON.stringify(item)]);
+    const actions = items.map(
+      (item) =>
+        itemToAction[
+          JSON.stringify({ path: item.path, cacheKey: item.cacheKey })
+        ],
+    );
     for (const [{ path, cacheKey }, resultType] of actions) {
       switch (resultType) {
         case AddRemoveResultType.Add:
@@ -248,6 +253,7 @@ export async function getComputeDeleteAddRemove(
   tag: IndexTag,
   currentFiles: LastModifiedMap,
   readFile: (path: string) => Promise<string>,
+  repoName: string | undefined,
 ): Promise<[RefreshIndexResults, MarkCompleteCallback]> {
   const [add, remove, markComplete] = await getAddRemoveForTag(
     tag,
@@ -305,7 +311,12 @@ export async function getComputeDeleteAddRemove(
         removeTag: [],
       };
       results[resultType] = items;
-      for await (let _ of globalCacheIndex.update(tag, results, () => {})) {
+      for await (let _ of globalCacheIndex.update(
+        tag,
+        results,
+        () => {},
+        repoName,
+      )) {
       }
     },
   ];
@@ -327,6 +338,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     tag: IndexTag,
     results: RefreshIndexResults,
     _: MarkCompleteCallback,
+    repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
     const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];

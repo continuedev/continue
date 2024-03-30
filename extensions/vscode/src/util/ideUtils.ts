@@ -1,6 +1,8 @@
-import { FileEdit, RangeInFile } from "core";
+import { FileEdit, RangeInFile, Thread } from "core";
+import { defaultIgnoreFile } from "core/indexing/ignore";
 import path from "path";
 import * as vscode from "vscode";
+import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/vscodeExtension";
 import {
   SuggestionRanges,
@@ -9,12 +11,13 @@ import {
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
 } from "../suggestions";
-import { defaultIgnoreFile, traverseDirectory } from "./traverseDirectory";
+import { traverseDirectory } from "./traverseDirectory";
 import {
   getUniqueId,
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./vscode";
+
 const util = require("util");
 const asyncExec = util.promisify(require("child_process").exec);
 
@@ -287,32 +290,37 @@ export class VsCodeIdeUtils {
     }
   }
 
+  private static MAX_BYTES = 100000;
+
   async readFile(filepath: string): Promise<string> {
-    filepath = this.getAbsolutePath(filepath);
+    try {
+      filepath = this.getAbsolutePath(filepath);
+      const uri = uriFromFilePath(filepath);
 
-    const MAX_BYTES = 100000;
-    let contents: string | undefined;
-    if (typeof contents === "undefined") {
-      try {
-        const fileStats = await vscode.workspace.fs.stat(
-          uriFromFilePath(filepath),
-        );
-        if (fileStats.size > 10 * MAX_BYTES) {
-          return "";
-        }
-
-        const bytes = await vscode.workspace.fs.readFile(
-          uriFromFilePath(filepath),
-        );
-
-        // Truncate the buffer to the first MAX_BYTES
-        const truncatedBytes = bytes.slice(0, MAX_BYTES);
-        contents = new TextDecoder().decode(truncatedBytes);
-      } catch {
-        contents = "";
+      // Check first whether it's an open document
+      const openTextDocument = vscode.workspace.textDocuments.find(
+        (doc) => doc.uri.fsPath === uri.fsPath,
+      );
+      if (openTextDocument !== undefined) {
+        return openTextDocument.getText();
       }
+
+      const fileStats = await vscode.workspace.fs.stat(
+        uriFromFilePath(filepath),
+      );
+      if (fileStats.size > 10 * VsCodeIdeUtils.MAX_BYTES) {
+        return "";
+      }
+
+      const bytes = await vscode.workspace.fs.readFile(uri);
+
+      // Truncate the buffer to the first MAX_BYTES
+      const truncatedBytes = bytes.slice(0, VsCodeIdeUtils.MAX_BYTES);
+      const contents = new TextDecoder().decode(truncatedBytes);
+      return contents;
+    } catch {
+      return "";
     }
-    return contents;
   }
 
   async readRangeInFile(
@@ -326,7 +334,9 @@ export class VsCodeIdeUtils {
     return (
       lines.slice(range.start.line, range.end.line).join("\n") +
       "\n" +
-      lines[range.end.line].slice(0, range.end.character)
+      lines[
+        range.end.line < lines.length - 1 ? range.end.line : lines.length - 1
+      ].slice(0, range.end.character)
     );
   }
 
@@ -357,6 +367,129 @@ export class VsCodeIdeUtils {
       return "";
     }
     return terminalContents;
+  }
+
+  private async _getThreads(session: vscode.DebugSession) {
+    const threadsResponse = await session.customRequest("threads");
+    const threads = threadsResponse.threads.filter((thread: any) =>
+      threadStopped.get(thread.id),
+    );
+    threads.sort((a: any, b: any) => a.id - b.id);
+    threadsResponse.threads = threads;
+
+    return threadsResponse;
+  }
+
+  async getAvailableThreads(): Promise<Thread[]> {
+    const session = vscode.debug.activeDebugSession;
+    if (!session) return [];
+
+    const threadsResponse = await this._getThreads(session);
+    return threadsResponse.threads;
+  }
+
+  async getDebugLocals(threadIndex: number = 0): Promise<string> {
+    const session = vscode.debug.activeDebugSession;
+
+    if (!session) {
+      vscode.window.showWarningMessage(
+        "No active debug session found, therefore no debug context will be provided for the llm.",
+      );
+      return "";
+    }
+
+    const variablesResponse = await session
+      .customRequest("stackTrace", {
+        threadId: threadIndex,
+        startFrame: 0,
+      })
+      .then((traceResponse) =>
+        session.customRequest("scopes", {
+          frameId: traceResponse.stackFrames[0].id,
+        }),
+      )
+      .then((scopesResponse) =>
+        session.customRequest("variables", {
+          variablesReference: scopesResponse.scopes[0].variablesReference,
+        }),
+      );
+
+    const variableContext = variablesResponse.variables
+      .filter((variable: any) => variable.type !== "global")
+      .reduce(
+        (acc: any, variable: any) =>
+          `${acc}\nname: ${variable.name}, type: ${variable.type}, ` +
+          `value: ${variable.value}`,
+        "",
+      );
+
+    return variableContext;
+  }
+
+  async getTopLevelCallStackSources(
+    threadIndex: number,
+    stackDepth: number = 3,
+  ): Promise<string[]> {
+    const session = vscode.debug.activeDebugSession;
+    if (!session) return [];
+
+    const sourcesPromises = await session
+      .customRequest("stackTrace", {
+        threadId: threadIndex,
+        startFrame: 0,
+      })
+      .then((traceResponse) =>
+        traceResponse.stackFrames
+          .slice(0, stackDepth)
+          .map(async (stackFrame: any) => {
+            const scopeResponse = await session.customRequest("scopes", {
+              frameId: stackFrame.id,
+            });
+
+            const scope = scopeResponse.scopes[0];
+
+            return await this.retrieveSource(scope.source ? scope : stackFrame);
+          }),
+      );
+
+    return Promise.all(sourcesPromises);
+  }
+
+  private async retrieveSource(sourceContainer: any): Promise<string> {
+    if (!sourceContainer.source) return "";
+
+    const sourceRef = sourceContainer.source.sourceReference;
+    if (sourceRef && sourceRef > 0) {
+      // according to the spec, source might be ony available in a debug session
+      // not yet able to test this branch
+      const sourceResponse =
+        await vscode.debug.activeDebugSession?.customRequest("source", {
+          source: sourceContainer.source,
+          sourceReference: sourceRef,
+        });
+      return sourceResponse.content;
+    } else if (sourceContainer.line && sourceContainer.endLine) {
+      return await this.readRangeInFile(
+        sourceContainer.source.path,
+        new vscode.Range(
+          sourceContainer.line - 1, // The line number from scope response starts from 1
+          sourceContainer.column,
+          sourceContainer.endLine - 1,
+          sourceContainer.endColumn,
+        ),
+      );
+    } else if (sourceContainer.line)
+      // fall back to 5 line of context
+      return await this.readRangeInFile(
+        sourceContainer.source.path,
+        new vscode.Range(
+          sourceContainer.line - 3,
+          0,
+          sourceContainer.line + 2,
+          0,
+        ),
+      );
+    else return "unavailable";
   }
 
   private async _getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {

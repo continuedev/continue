@@ -47,12 +47,12 @@ if (args[2] === "--target") {
   }
 
   // Install node_modules //
-  execSync("npm install");
+  execSync("npm install --no-save");
   console.log("[info] npm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execSync("npm install");
+  execSync("npm install --no-save");
   console.log("[info] npm install in gui completed");
 
   if (ghAction()) {
@@ -241,7 +241,7 @@ if (args[2] === "--target") {
   });
 
   function ghAction() {
-    return target !== undefined;
+    return !!process.env.GITHUB_ACTIONS;
   }
 
   function isArm() {
@@ -317,7 +317,7 @@ if (args[2] === "--target") {
   });
 
   // Copy node_modules for pre-built binaries
-  const NODE_MODULES_TO_COPY = ["esbuild", "@esbuild", "@lancedb", "jsdom"];
+  const NODE_MODULES_TO_COPY = ["esbuild", "@esbuild", "@lancedb", "@vscode"];
   fs.mkdirSync("out/node_modules", { recursive: true });
 
   await Promise.all(
@@ -340,5 +340,12 @@ if (args[2] === "--target") {
         }),
     ),
   );
+
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
+
+  // Copy over any worker files
+  fs.cpSync(
+    "node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
+    "out/xhr-sync-worker.js",
+  );
 })();

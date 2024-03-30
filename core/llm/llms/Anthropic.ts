@@ -5,6 +5,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
+import { stripImages } from "../countTokens";
 import { streamSse } from "../stream";
 
 class Anthropic extends BaseLLM {
@@ -30,7 +31,7 @@ class Anthropic extends BaseLLM {
       temperature: options.temperature,
       max_tokens: options.maxTokens ?? 2048,
       model: options.model === "claude-2" ? "claude-2.1" : options.model,
-      stop_sequences: options.stop,
+      stop_sequences: options.stop?.filter((x) => x.trim() !== ""),
     };
 
     return finalOptions;
@@ -63,6 +64,16 @@ class Anthropic extends BaseLLM {
         }
       });
     return messages;
+  }
+
+  protected async *_streamComplete(
+    prompt: string,
+    options: CompletionOptions,
+  ): AsyncGenerator<string> {
+    const messages = [{ role: "user" as const, content: prompt }];
+    for await (const update of this._streamChat(messages, options)) {
+      yield stripImages(update.content);
+    }
   }
 
   protected async *_streamChat(

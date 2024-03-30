@@ -34,8 +34,9 @@ async function resolveEditorContent(
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
       const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
-      
+
       // Only take the first slash command
+
       if (foundSlashCommand && typeof slashCommand === "undefined") {
         slashCommand = foundSlashCommand;
       }
@@ -89,14 +90,14 @@ async function resolveEditorContent(
 
   let contextItemsText = "";
   let contextItems: ContextItemWithId[] = [];
-  const ide = new WebviewIde();
   for (const item of contextItemAttrs) {
     if (item.itemType === "file") {
+      const ide = new WebviewIde();
       // This is a quick way to resolve @file references
       const basename = getBasename(item.id);
       const rawContent = await ide.readFile(item.id);
       const content = `\`\`\`title="${basename}"\n${rawContent}\n\`\`\`\n`;
-      contextItemsText += content
+      contextItemsText += content;
       contextItems.push({
         name: basename,
         description: item.id,

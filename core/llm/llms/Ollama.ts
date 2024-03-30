@@ -21,7 +21,7 @@ class Ollama extends BaseLLM {
     if (options.model === "AUTODETECT") {
       return;
     }
-    this.fetch(new URL("api/show", this.apiBase), {
+    this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
       headers: {},
       body: JSON.stringify({ name: this._getModel() }),
@@ -137,11 +137,20 @@ class Ollama extends BaseLLM {
     return finalOptions;
   }
 
+  private getEndpoint(endpoint: string): URL {
+    let base = this.apiBase;
+    if (process.env.IS_BINARY) {
+      base = base?.replace("localhost", "127.0.0.1");
+    }
+
+    return new URL(endpoint, base);
+  }
+
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    const response = await this.fetch(new URL("api/generate", this.apiBase), {
+    const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -155,6 +164,7 @@ class Ollama extends BaseLLM {
       buffer += value;
       // Split the buffer into individual JSON chunks
       const chunks = buffer.split("\n");
+      buffer = chunks.pop() ?? "";
 
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
@@ -171,8 +181,6 @@ class Ollama extends BaseLLM {
           }
         }
       }
-      // Assign the last chunk to the buffer
-      buffer = chunks[chunks.length - 1];
     }
   }
 
@@ -180,7 +188,7 @@ class Ollama extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const response = await this.fetch(new URL("api/chat", this.apiBase), {
+    const response = await this.fetch(this.getEndpoint("api/chat"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -220,7 +228,7 @@ class Ollama extends BaseLLM {
   async listModels(): Promise<string[]> {
     const response = await this.fetch(
       // localhost was causing fetch failed in pkg binary only for this Ollama endpoint
-      new URL("api/tags", this.apiBase?.replace("localhost", "127.0.0.1")),
+      this.getEndpoint("api/tags"),
       {
         method: "GET",
       },

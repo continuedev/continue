@@ -408,7 +408,6 @@ declare global {
     | "open"
     | "google"
     | "search"
-    | "url"
     | "tree"
     | "http"
     | "codebase"

@@ -1,4 +1,3 @@
-import { loadWASM } from "onigasm";
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
@@ -9,12 +8,6 @@ import "./index.css";
 import { persistor, store } from "./redux/store";
 
 (async () => {
-  // "" lets it pass through to the correct path for JetBrains
-  const onigPath = (window.vscMediaUrl ?? "") + "/onigasm.wasm";
-  const resp = await fetch(onigPath);
-  const onigWasm = await resp.arrayBuffer();
-  await loadWASM(onigWasm);
-
   ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
     <React.StrictMode>
       <Provider store={store}>
@@ -24,6 +17,6 @@ import { persistor, store } from "./redux/store";
           </CustomPostHogProvider>
         </PersistGate>
       </Provider>
-    </React.StrictMode>
+    </React.StrictMode>,
   );
 })();

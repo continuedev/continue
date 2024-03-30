@@ -8,9 +8,11 @@ import {
   LLMReturnValue,
   ModelName,
   ModelProvider,
+  PromptTemplate,
   RequestOptions,
   TemplateType,
 } from "..";
+import { DevDataSqliteDb } from "../util/devdataSqlite";
 import mergeJson from "../util/merge";
 import { Telemetry } from "../util/posthog";
 import {
@@ -29,6 +31,7 @@ import {
   compileChatMessages,
   countTokens,
   pruneRawPromptFromTop,
+  stripImages,
 } from "./countTokens";
 import CompletionOptionsForModels from "./templates/options";
 
@@ -42,6 +45,23 @@ export abstract class BaseLLM implements ILLM {
 
   supportsImages(): boolean {
     return modelSupportsImages(this.providerName, this.model);
+  }
+
+  supportsCompletions(): boolean {
+    if (this.providerName === "openai") {
+      if (
+        this.apiBase?.includes("api.groq.com") ||
+        this.apiBase?.includes(":1337")
+      ) {
+        // Jan + Groq don't support completions : (
+        return false;
+      }
+    }
+    return true;
+  }
+
+  supportsPrefill(): boolean {
+    return ["ollama", "anthropic"].includes(this.providerName);
   }
 
   uniqueId: string;
@@ -202,6 +222,7 @@ ${prompt}`;
       provider: this.providerName,
       tokens: tokens,
     });
+    DevDataSqliteDb.logTokensGenerated(model, this.providerName, tokens);
   }
 
   _fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> =
@@ -234,7 +255,6 @@ ${prompt}`;
     const log = options.log ?? true;
     const raw = options.raw ?? false;
     delete options.log;
-    delete options.raw;
 
     const completionOptions: CompletionOptions = mergeJson(
       this.completionOptions,
@@ -245,8 +265,13 @@ ${prompt}`;
   }
 
   private _formatChatMessages(messages: ChatMessage[]): string {
+    const msgsCopy = messages ? messages.map((msg) => ({ ...msg })) : [];
     let formatted = "";
-    for (let msg of messages) {
+    for (let msg of msgsCopy) {
+      if ("content" in msg && Array.isArray(msg.content)) {
+        const content = stripImages(msg.content);
+        msg.content = content;
+      }
       formatted += `<${msg.role}>\n${msg.content || ""}\n\n`;
     }
     return formatted;
@@ -442,10 +467,45 @@ ${prompt}`;
     };
   }
 
-  private _shouldRequestDirectly() {
-    if (typeof window === "undefined") {
-      return true;
+  public renderPromptTemplate(
+    template: PromptTemplate,
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+    canPutWordsInModelsMouth: boolean = false,
+  ): string | ChatMessage[] {
+    if (typeof template === "string") {
+      let data: any = {
+        history: history,
+        ...otherData,
+      };
+      if (history.length > 0 && history[0].role == "system") {
+        data["system_message"] = history.shift()!.content;
+      }
+
+      const compiledTemplate = Handlebars.compile(template);
+      return compiledTemplate(data);
+    } else {
+      const rendered = template(history, {
+        ...otherData,
+        supportsCompletions: this.supportsCompletions() ? "true" : "false",
+        supportsPrefill: this.supportsPrefill() ? "true" : "false",
+      });
+      if (
+        typeof rendered !== "string" &&
+        rendered[rendered.length - 1]?.role === "assistant" &&
+        !canPutWordsInModelsMouth
+      ) {
+        // Some providers don't allow you to put words in the model's mouth
+        // So we have to manually compile the prompt template and use
+        // raw /completions, not /chat/completions
+        const templateMessages = autodetectTemplateFunction(
+          this.model,
+          this.providerName,
+          autodetectTemplateType(this.model),
+        );
+        return templateMessages(rendered);
+      }
+      return rendered;
     }
-    return window?.ide !== "vscode";
   }
 }

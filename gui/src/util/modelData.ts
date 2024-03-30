@@ -228,7 +228,20 @@ const mixtralTrial: ModelPackage = {
     contextLength: 4096,
   },
   icon: "mistral.png",
-  providerOptions: ["freetrial"],
+  providerOptions: ["freetrial", "groq"],
+};
+
+const llama270bChat: ModelPackage = {
+  title: "Llama2 70b Chat",
+  description: "The latest Llama model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama2-70b",
+    model: "llama2-70b",
+    contextLength: 4096,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
 };
 
 const llama2Chat: ModelPackage = {
@@ -562,7 +575,7 @@ const claude3Opus: ModelPackage = {
     title: "Claude 3 Opus",
     apiKey: "",
   },
-  providerOptions: ["anthropic"],
+  providerOptions: ["anthropic", "freetrial"],
   icon: "anthropic.png",
 };
 
@@ -576,7 +589,7 @@ const claude3Sonnet: ModelPackage = {
     title: "Claude 3 Sonnet",
     apiKey: "",
   },
-  providerOptions: ["anthropic"],
+  providerOptions: ["anthropic", "freetrial"],
   icon: "anthropic.png",
 };
 
@@ -585,12 +598,12 @@ const claude3Haiku: ModelPackage = {
   description:
     "The third most capable model in the Claude 3 series: fastest and most compact model for near-instant responsiveness",
   params: {
-    model: "claude-2",
+    model: "claude-3-haiku-20240307",
     contextLength: 200_000,
     title: "Claude 3 Haiku",
     apiKey: "",
   },
-  providerOptions: ["anthropic"],
+  providerOptions: ["anthropic", "freetrial"],
   icon: "anthropic.png",
 };
 
@@ -625,6 +638,7 @@ export const MODEL_INFO: ModelPackage[] = [
   geminiPro,
   claude3Opus,
   claude3Sonnet,
+  claude3Haiku,
   claude2,
   deepseek,
   mistral,
@@ -693,7 +707,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         defaultValue: 100_000,
       },
     ],
-    packages: [claude3Opus, claude3Sonnet, claude2],
+    packages: [claude3Opus, claude3Sonnet, claude3Haiku, claude2],
   },
   ollama: {
     title: "Ollama",
@@ -748,6 +762,40 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       p.params.contextLength = 4096;
       return p;
     }),
+  },
+  groq: {
+    title: "Groq",
+    provider: "groq",
+    icon: "groq.png",
+    description:
+      "Groq is the fastest LLM provider by a wide margin, using 'LPUs' to serve open-source models at blazing speed.",
+    longDescription:
+      "To get started with Groq, obtain an API key from their website [here](https://wow.groq.com/).",
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Groq API key",
+        required: true,
+      },
+    ],
+    packages: [
+      { ...mixtralTrial, title: "Mixtral" },
+      llama270bChat,
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "Groq",
+        },
+      },
+      ,
+    ],
   },
   palm: {
     title: "Google Gemini API",
@@ -882,6 +930,15 @@ After it's up and running, you can start using Continue.`,
     packages: osModels,
     collectInputFor: [...completionParamsInputs],
   },
+  // bedrock: {
+  //   title: "Bedrock",
+  //   provider: "bedrock",
+  //   refPage: "amazon.com",
+  //   description:
+  //     "Bedrock is Amazon's provider of multiple diverse language models.",
+  //   tags: [ModelProviderTag["Requires API Key"]],
+  //   packages: [claude3Sonnet, claude3Haiku],
+  // },
   "openai-aiohttp": {
     title: "Other OpenAI-compatible API",
     provider: "openai",
@@ -929,6 +986,9 @@ After it's up and running, you can start using Continue.`,
     packages: [
       codellama70bTrial,
       mixtralTrial,
+      { ...claude3Opus, title: "Claude 3 Opus (trial)" },
+      { ...claude3Sonnet, title: "Claude 3 Sonnet (trial)" },
+      { ...claude3Haiku, title: "Claude 3 Haiku (trial)" },
       { ...geminiPro, title: "Gemini Pro (trial)" },
       { ...gpt4vision, title: "GPT-4 Vision (trial)" },
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
