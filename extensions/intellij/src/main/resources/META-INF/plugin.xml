@@ -33,6 +33,16 @@
     </extensions>
 
     <actions>
+        <action class="com.github.continuedev.continueintellijextension.editor.InlineEditAction"
+                id="continue.inlineEdit"
+                description="Inline Edit"
+                text="Inline Edit">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl I"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta I"/>
+        </action>
+
         <action id="continue.acceptDiff"
                 class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
                 text="Accept Diff" description="Accept Diff">
