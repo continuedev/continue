@@ -1,41 +1,20 @@
 package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.`continue`.GetTheme
-import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
-import com.github.continuedev.continueintellijextension.services.ContinuePluginService
-import com.github.continuedev.continueintellijextension.toolWindow.ContinueBrowser
-import com.github.continuedev.continueintellijextension.toolWindow.JS_QUERY_POOL_SIZE
-import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
-import com.intellij.openapi.components.ServiceManager
-import com.intellij.openapi.editor.EditorFactory
-import com.intellij.openapi.editor.actions.IncrementalFindAction
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
-import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.impl.EditorImpl
-import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileTypes.FileTypes
 import com.intellij.openapi.project.DumbAware
-import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.util.TextRange
-import com.intellij.ui.EditorTextField
-import com.intellij.ui.jcef.JBCefBrowser
-import com.intellij.ui.jcef.JBCefClient
 import com.intellij.util.ui.UIUtil
 import net.miginfocom.swing.MigLayout
-import org.cef.CefApp
-import org.cef.browser.CefBrowser
-import org.cef.handler.CefLoadHandlerAdapter
 import java.awt.*
-import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
-import javax.swing.BorderFactory
-import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.JTextArea
 import kotlin.math.max
@@ -74,6 +53,9 @@ class InlineEditAction : AnAction(), DumbAware {
         val startLineNum = editor.document.getLineNumber(start)
         val endLineNum = editor.document.getLineNumber(end)
         val lineNumber = max(0, startLineNum - 1)
+
+        // Un-highlight the selected text
+        selectionModel.removeSelection()
 
         // Get indentation width in pixels
         val indentationLineNum = lineNumber + 1
@@ -154,7 +136,7 @@ class InlineEditAction : AnAction(), DumbAware {
 //            }
 //        }
 
-        val panel = JPanel(MigLayout("wrap 1, insets 10 $leftInset 10 10, gap 0!, fillx")).apply {
+        val panel = JPanel(MigLayout("wrap 1, insets 10 $leftInset 4 4, gap 0!, fillx")).apply {
             // Transparent background
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
