@@ -53,8 +53,8 @@ class InlineEditAction : AnAction(), DumbAware {
         if (e.project == null) return
         if (this.preloadedBrowser == null) {
             this.preloadedBrowser = ContinueBrowser(e.project!!,
-                    "http://continue/editorInset/index.html", true)
-//                    "http://localhost:5173/jetbrains_editorInset_index.html")
+//                    "http://continue/editorInset/index.html", true)
+                    "http://localhost:5173/jetbrains_editorInset_index.html", true)
         }
 
         val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
@@ -102,22 +102,7 @@ class InlineEditAction : AnAction(), DumbAware {
         browser.component.preferredSize = browser.component.preferredSize.apply {
             height = 60
         }
-
-        val frame = JFrame("Text Area Example")
-        frame.defaultCloseOperation = JFrame.EXIT_ON_CLOSE
-        frame.setSize(400, 300)
-
-        val textArea = CustomTextArea()
-        textArea.background = Color(240, 240, 240)
-        textArea.border = BorderFactory.createCompoundBorder(
-                BorderFactory.createEmptyBorder(10, 10, 10, 10),
-                BorderFactory.createLineBorder(Color.GRAY, 2)
-        )
-        textArea.lineWrap = true
-        textArea.wrapStyleWord = true
-
-        frame.add(textArea)
-        frame.isVisible = true
+        browser.component.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
 
         val panel = JPanel(MigLayout("wrap 1, insets 0 $leftInset 0 0, gap 0!, fillx")).apply {
             // Transparent background
