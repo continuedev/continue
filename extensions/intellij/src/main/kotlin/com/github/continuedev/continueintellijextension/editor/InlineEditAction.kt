@@ -2,17 +2,20 @@ package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.toolWindow.ContinueBrowser
 import com.github.continuedev.continueintellijextension.toolWindow.JS_QUERY_POOL_SIZE
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.EditorFactory
 import com.intellij.openapi.editor.actions.IncrementalFindAction
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.ex.EditorEx
 import com.intellij.openapi.editor.impl.EditorImpl
+import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileTypes.FileTypes
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
@@ -35,6 +38,7 @@ import javax.swing.BorderFactory
 import javax.swing.JFrame
 import javax.swing.JPanel
 import javax.swing.JTextArea
+import kotlin.math.max
 
 /**
  * Adapted from https://github.com/cursive-ide/component-inlay-example/blob/master/src/main/kotlin/inlays/InlineEditAction.kt
@@ -45,43 +49,61 @@ class InlineEditAction : AnAction(), DumbAware {
         e.presentation.isVisible = true
     }
 
-    private var preloadedBrowser: ContinueBrowser? = null
+//    private var preloadedBrowser: ContinueBrowser? = null
 
     override fun actionPerformed(e: AnActionEvent) {
         if (e.project == null) return
-        if (this.preloadedBrowser == null) {
-            this.preloadedBrowser = ContinueBrowser(e.project!!,
-//                    "http://continue/editorInset/index.html", true)
-                    "http://localhost:5173/jetbrains_editorInset_index.html", true)
-        }
+//        if (this.preloadedBrowser == null) {
+//            this.preloadedBrowser = ContinueBrowser(e.project!!,
+////                    "http://continue/editorInset/index.html", true)
+//                    "http://localhost:5173/jetbrains_editorInset_index.html", true)
+//        }
 
         val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
         val project = e.getData(PlatformDataKeys.PROJECT) ?: return
         val manager = EditorComponentInlaysManager.from(editor)
-        val lineNumber = editor.document.getLineNumber(editor.caretModel.offset)
+
+        // Get highlighted range
+        val selectionModel = editor.selectionModel
+        val start = selectionModel.selectionStart
+        val end = selectionModel.selectionEnd
+        val prefix = editor.document.getText(TextRange(0, start))
+        val highlighted = editor.document.getText(TextRange(start, end))
+        val suffix = editor.document.getText(TextRange(end, editor.document.textLength))
+
+        val startLineNum = editor.document.getLineNumber(start)
+        val endLineNum = editor.document.getLineNumber(end)
+        val lineNumber = max(0, startLineNum - 1)
 
         // Get indentation width in pixels
-        val lineStart = editor.document.getLineStartOffset(lineNumber)
-        val lineEnd = editor.document.getLineEndOffset(lineNumber)
+        val indentationLineNum = lineNumber + 1
+        val lineStart = editor.document.getLineStartOffset(indentationLineNum)
+        val lineEnd = editor.document.getLineEndOffset(indentationLineNum)
         val text = editor.document.getText(TextRange(lineStart, lineEnd))
         val indentation = text.takeWhile { it == ' ' }.length
         val charWidth = editor.contentComponent.getFontMetrics(editor.colorsScheme.getFont(EditorFontType.PLAIN)).charWidth(' ')
         val leftInset = indentation * charWidth * 2 / 3
 
         val inlayRef = Ref<Disposable>()
-        val panel = makePanel(inlayRef, leftInset)
+        val textArea = makeTextArea(inlayRef) { input ->
+            val diffStreamHandler = DiffStreamHandler(project, editor, startLineNum, endLineNum)
+            diffStreamHandler.run(input, prefix, highlighted, suffix)
+        }
+        val panel = makePanel(textArea, inlayRef, leftInset)
         val inlay = manager.insertAfter(lineNumber, panel)
         panel.revalidate()
         inlayRef.set(inlay)
         val viewport = (editor as? EditorImpl)?.scrollPane?.viewport
         viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
 
-        // Set focus to the editor's browser component
-        preloadedBrowser?.browser?.component?.requestFocus()
+        textArea.requestFocus()
 
-        preloadedBrowser?.onHeightChange {
-            viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
-        }
+        // Set focus to the editor's browser component
+//        preloadedBrowser?.browser?.component?.requestFocus()
+//
+//        preloadedBrowser?.onHeightChange {
+//            viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
+//        }
 
 //        preloadedBrowser?.sendToWebview("jetbrains/editorInsetRefresh", null)
         // Set timeout
@@ -89,13 +111,31 @@ class InlineEditAction : AnAction(), DumbAware {
 //        preloadedBrowser?.sendToWebview("jetbrains/editorInsetRefresh", null)
     }
 
-    fun makePanel(inlayRef: Ref<Disposable>, leftInset: Int): JPanel {
-        val action = object : AnAction({ "Close" }, AllIcons.Actions.Close) {
-            override fun actionPerformed(e: AnActionEvent) {
-                inlayRef.get().dispose()
-            }
+    fun makeTextArea(inlayRef: Ref<Disposable>, onEnter: (input: String) -> Unit): JTextArea {
+        val textArea = CustomTextArea( 2, 40).apply {
+            lineWrap = true
+            wrapStyleWord = true
+            isOpaque = false
+            background = GetTheme().getSecondaryDark()
+            maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
+            margin = Insets(8, 8, 8, 8)
         }
+        textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
 
+        textArea.addKeyListener(object : KeyAdapter() {
+            override fun keyPressed(e: KeyEvent) {
+                if (e.keyCode == KeyEvent.VK_ESCAPE) {
+                    inlayRef.get().dispose()
+                } else if (e.keyCode == KeyEvent.VK_ENTER && e.modifiers == 0) {
+                    onEnter(textArea.text)
+                    e.consume()
+                }
+            }
+        })
+        return textArea
+    }
+
+    fun makePanel(textArea: JTextArea, inlayRef: Ref<Disposable>, leftInset: Int): JPanel {
 //        val browser = preloadedBrowser?.browser ?: return JPanel()
 //        browser.component.preferredSize = browser.component.preferredSize.apply {
 //            height = 60
@@ -114,16 +154,6 @@ class InlineEditAction : AnAction(), DumbAware {
 //            }
 //        }
 
-        val textArea = CustomTextArea( 2, 40).apply {
-            lineWrap = true
-            wrapStyleWord = true
-            isOpaque = false
-            background = GetTheme().getSecondaryDark()
-            maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
-            margin = Insets(8, 8, 8, 8)
-        }
-        textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
-
         val panel = JPanel(MigLayout("wrap 1, insets 10 $leftInset 10 10, gap 0!, fillx")).apply {
             // Transparent background
             val globalScheme = EditorColorsManager.getInstance().globalScheme
@@ -134,13 +164,6 @@ class InlineEditAction : AnAction(), DumbAware {
             putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
         }
         panel.isOpaque = false
-        panel.addKeyListener(object : KeyAdapter() {
-            override fun keyPressed(e: KeyEvent) {
-                if (e.keyCode == KeyEvent.VK_ESCAPE) {
-                    inlayRef.get().dispose()
-                }
-            }
-        })
 
         return panel
     }
@@ -179,7 +202,7 @@ class CustomTextArea(rows: Int, columns: Int) : JTextArea(rows, columns) {
         // Draw the rounded border
         val borderColor = Color(128, 128, 128, 128)
         val borderThickness = 1
-        val borderRadius = 16
+        val borderRadius = 8
 
         g2.color = borderColor
         g2.stroke = BasicStroke(borderThickness.toFloat())

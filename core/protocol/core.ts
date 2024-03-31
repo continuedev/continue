@@ -108,33 +108,17 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       suffix: string;
       input: string;
       language: string | undefined;
-      modelTitle: string | undefined;
     },
     ProtocolGeneratorType<DiffLine>,
   ];
-  "stats/getTokensPerDay": [
-    undefined,
-    { day: string; promptTokens: number; generatedTokens: number }[],
-  ];
-  "stats/getTokensPerModel": [
-    undefined,
-    { model: string; promptTokens: number; generatedTokens: number }[],
-  ];
-  "index/setPaused": [boolean, void];
-  "index/forceReIndex": [undefined | string, void];
-  "index/indexingProgressBarInitialized": [undefined, void];
-  completeOnboarding: [
-    {
-      mode:
-        | "local"
-        | "apiKeys"
-        | "custom"
-        | "freeTrial"
-        | "localExistingUser"
-        | "optimizedExistingUser"
-        | "localAfterFreeTrial";
-    },
-    void,
-  ];
-  addAutocompleteModel: [{ model: ModelDescription }, void];
+};
+
+export interface IdeSettings {
+  remoteConfigServerUrl: string | undefined;
+  remoteConfigSyncPeriod: number;
+  userToken: string;
+}
+
+export type ReverseProtocol = IdeProtocol & {
+  getIdeSettings: [undefined, IdeSettings];
 };
