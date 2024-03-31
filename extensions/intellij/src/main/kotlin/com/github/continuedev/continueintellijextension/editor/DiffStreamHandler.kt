@@ -113,7 +113,9 @@ class DiffStreamHandler(private val project: Project, private val editor: Editor
             val done = parsed["done"] as? Boolean
             if (done == true) {
                 ApplicationManager.getApplication().invokeLater {
-                    editor.markupModel.removeAllHighlighters()
+                    if (currentLineHighlighter != null) {
+                        editor.markupModel.removeHighlighter(currentLineHighlighter!!)
+                    }
                 }
                 return@request
             }
