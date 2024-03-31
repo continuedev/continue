@@ -16,6 +16,9 @@
                     factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
         <projectService id="ContinuePluginService"
                         serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>
+        <applicationService
+                id="DiffStreamService"
+                serviceImplementation="com.github.continuedev.continueintellijextension.editor.DiffStreamService"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>

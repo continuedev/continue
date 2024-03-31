@@ -12,11 +12,11 @@ import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileDocumentManager
-import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
+import java.awt.event.KeyEvent
 import javax.swing.JTextArea
 
 
@@ -29,7 +29,8 @@ class DiffStreamHandler(
         private val editor: Editor,
         private val textArea: JTextArea,
         private val startLine: Int,
-        private val endLine: Int
+        private val endLine: Int,
+        private val onClose: () -> Unit
 ) {
     private val greenKey = run {
         val attributes = TextAttributes().apply {
@@ -123,6 +124,17 @@ class DiffStreamHandler(
         }
     }
 
+    fun accept() {
+        // Accept the changes
+        editor.markupModel.removeAllHighlighters()
+    }
+
+    fun reject() {
+        // Reject the changes
+        resetState()
+        onClose()
+    }
+
     fun run(input : String, prefix : String, highlighted : String, suffix : String) {
         // Undo changes
         resetState()
@@ -157,6 +169,17 @@ class DiffStreamHandler(
                     textArea.document.insertString(textArea.caretPosition, ", ", null)
                     textArea.requestFocus()
                 }
+
+                editor.contentComponent.addKeyListener(object : java.awt.event.KeyAdapter() {
+                    override fun keyPressed(e: KeyEvent) {
+                        if (e.isMetaDown && e.isShiftDown && e.keyCode == KeyEvent.VK_ENTER) {
+                            accept()
+                        } else if (e.isMetaDown && e.isShiftDown && e.keyCode == KeyEvent.VK_BACK_SPACE) {
+                            reject()
+                        }
+                    }
+                })
+
                 return@request
             }
             val data = parsed["content"] as Map<*, *>
