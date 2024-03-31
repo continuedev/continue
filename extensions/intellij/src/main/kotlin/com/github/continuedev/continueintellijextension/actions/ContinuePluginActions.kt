@@ -8,7 +8,6 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
@@ -39,9 +38,8 @@ class AcceptDiffAction : AnAction() {
     }
 
     private fun acceptVerticalDiff(e: AnActionEvent) {
-        val project = e.project ?: return
-        val editor = e.getData(PlatformDataKeys.EDITOR) ?: FileEditorManager.getInstance(project).selectedTextEditor ?: return
-        val diffStreamService = project.service<DiffStreamService>()
+        val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
+        val diffStreamService = service<DiffStreamService>()
         diffStreamService.accept(editor)
     }
 }
@@ -58,9 +56,8 @@ class RejectDiffAction : AnAction() {
     }
 
     private fun rejectVerticalDiff(e: AnActionEvent) {
-        val project = e.project ?: return
-        val editor = e.getData(PlatformDataKeys.EDITOR) ?: FileEditorManager.getInstance(project).selectedTextEditor ?: return
-        val diffStreamService = project.service<DiffStreamService>()
+        val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
+        val diffStreamService = service<DiffStreamService>()
         diffStreamService.reject(editor)
     }
 }

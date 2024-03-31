@@ -5,6 +5,7 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformDataKeys
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.impl.EditorImpl
@@ -78,7 +79,14 @@ class InlineEditAction : AnAction(), DumbAware {
 
         // Create text area, attach key listener
         val textArea = makeTextArea()
-        val diffStreamHandler = DiffStreamHandler(project, editor, textArea, startLineNum, endLineNum)
+
+        // Create diff stream handler
+        val diffStreamHandler = DiffStreamHandler(project, editor, textArea, startLineNum, endLineNum) {
+            inlayRef.get().dispose()
+        }
+        val diffStreamService = service<DiffStreamService>()
+        diffStreamService.register(diffStreamHandler, editor)
+
         textArea.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 if (e.keyCode == KeyEvent.VK_ESCAPE) {
