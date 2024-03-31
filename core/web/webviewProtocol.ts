@@ -87,6 +87,7 @@ export type WebviewProtocol = Protocol &
     "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
     "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
     insertAtCursor: [{ text: string }, void];
+    "jetbrains/editorInsetHeight": [{ height: number }, void];
   };
 
 export type ReverseWebviewProtocol = {
@@ -119,4 +120,5 @@ export type ReverseWebviewProtocol = {
   refreshSubmenuItems: [undefined, void];
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
+  "jetbrains/editorInsetRefresh": [undefined, void];
 };
