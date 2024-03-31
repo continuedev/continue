@@ -25,10 +25,7 @@ import net.miginfocom.swing.MigLayout
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
-import java.awt.Color
-import java.awt.Graphics
-import java.awt.Graphics2D
-import java.awt.RenderingHints
+import java.awt.*
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.awt.event.KeyAdapter
@@ -98,24 +95,41 @@ class InlineEditAction : AnAction(), DumbAware {
             }
         }
 
-        val browser = preloadedBrowser?.browser ?: return JPanel()
-        browser.component.preferredSize = browser.component.preferredSize.apply {
-            height = 60
-        }
-        browser.component.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
+//        val browser = preloadedBrowser?.browser ?: return JPanel()
+//        browser.component.preferredSize = browser.component.preferredSize.apply {
+//            height = 60
+//        }
+//        browser.component.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
+//        preloadedBrowser?.onHeightChange { height ->
+//            browser.component.preferredSize = browser.component.preferredSize.apply {
+////                this.height = height
+//                // Refresh
+////                browser.component.revalidate()
+////                browser.component.repaint()
+////
+////                // Refresh the panel
+////                panel.revalidate()
+////                panel.repaint()
+//            }
+//        }
 
-        val panel = JPanel(MigLayout("wrap 1, insets 0 $leftInset 0 0, gap 0!, fillx")).apply {
+        val textArea = CustomTextArea("Text", 2, 40).apply {
+            lineWrap = true
+            wrapStyleWord = true
+            isOpaque = false
+            background = Color(0, 0, 0, 0)
+            maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
+            margin = Insets(10, 10, 10, 10)
+        }
+        textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
+
+        val panel = JPanel(MigLayout("wrap 1, insets 10 $leftInset 10 10, gap 0!, fillx, scrolly")).apply {
             // Transparent background
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
             background = defaultBackground
-//            add(textArea, "grow, gap 0!")
-            add(browser.component, "grow, gap 0!")
-            addComponentListener(object : ComponentAdapter() {
-                override fun componentShown(e: ComponentEvent?) {
-                    browser.component.requestFocus()
-                }
-            })
+            add(textArea, "grow, gap 0!")
+//            add(browser.component, "grow, gap 0!")
             putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
         }
         panel.isOpaque = false
@@ -127,29 +141,35 @@ class InlineEditAction : AnAction(), DumbAware {
             }
         })
 
-        preloadedBrowser?.onHeightChange { height ->
-            browser.component.preferredSize = browser.component.preferredSize.apply {
-//                this.height = height
-                // Refresh
-//                browser.component.revalidate()
-//                browser.component.repaint()
-//
-//                // Refresh the panel
-//                panel.revalidate()
-//                panel.repaint()
-            }
-        }
-
         return panel
     }
 }
 
-class CustomTextArea : JTextArea() {
+class CustomTextArea(text: String, rows: Int, columns: Int) : JTextArea(text, rows, columns) {
     override fun paintComponent(g: Graphics) {
         val g2 = g as Graphics2D
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+        // Fill the background with the desired color
         g2.color = background
         g2.fillRoundRect(0, 0, width - 1, height - 1, 15, 15)
+
+        // Draw the rounded border
+        val borderColor = Color.BLUE // Change this to your desired border color
+        val borderThickness = 1 // Change this to your desired border thickness
+        val borderRadius = 15 // Change this to your desired border radius
+
+        g2.color = borderColor
+        g2.stroke = BasicStroke(borderThickness.toFloat())
+        g2.drawRoundRect(
+                borderThickness / 2,
+                borderThickness / 2,
+                width - borderThickness - 1,
+                height - borderThickness - 1,
+                borderRadius,
+                borderRadius
+        )
+
         super.paintComponent(g)
     }
 }
