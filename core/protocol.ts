@@ -3,6 +3,7 @@ import {
   ChatMessage,
   ContextItemWithId,
   ContextSubmenuItem,
+  DiffLine,
   LLMFullCompletionOptions,
   MessageContent,
   PersistedSessionInfo,
@@ -96,6 +97,16 @@ export type Protocol = {
       title: string;
     },
     ProtocolGeneratorType<MessageContent>,
+  ];
+  streamDiffLines: [
+    {
+      prefix: string;
+      highlighted: string;
+      suffix: string;
+      input: string;
+      language: string | undefined;
+    },
+    ProtocolGeneratorType<DiffLine>,
   ];
 };
 

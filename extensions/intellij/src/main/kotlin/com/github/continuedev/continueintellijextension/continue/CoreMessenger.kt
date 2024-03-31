@@ -79,7 +79,8 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
     private val generatorTypes = listOf(
             "llm/streamComplete",
             "llm/streamChat",
-            "command/run"
+            "command/run",
+            "streamDiffLines"
     )
 
     private val ideMessageTypes = listOf(

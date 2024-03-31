@@ -9,6 +9,7 @@ import { logDevData } from "core/util/devdata";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
 import { Telemetry } from "core/util/posthog";
+import { streamDiffLines } from "core/util/verticalEdit";
 import { v4 as uuidv4 } from "uuid";
 import { IpcMessenger } from "./messenger";
 import { Protocol } from "./protocol";
@@ -47,6 +48,8 @@ export class Core {
       this.configHandler,
       this.ide,
       new PauseToken(false),
+      undefined, // TODO
+      Promise.resolve(undefined), // TODO
     );
 
     const getLlm = async () => {
@@ -293,6 +296,36 @@ export class Core {
     on("autocomplete/cancel", async (msg) => {
       this.completionProvider.cancel();
     });
+
+    async function* streamDiffLinesGenerator(
+      configHandler: ConfigHandler,
+      abortedMessageIds: Set<string>,
+      msg: Message<Protocol["streamDiffLines"][0]>,
+    ) {
+      const data = msg.data;
+      const llm = await configHandler.llmFromTitle();
+      for await (const diffLine of streamDiffLines(
+        data.prefix,
+        data.highlighted,
+        data.suffix,
+        llm,
+        data.input,
+        data.language,
+      )) {
+        if (abortedMessageIds.has(msg.messageId)) {
+          abortedMessageIds.delete(msg.messageId);
+          break;
+        }
+        console.log(diffLine);
+        yield { content: diffLine };
+      }
+
+      return { done: true };
+    }
+
+    on("streamDiffLines", (msg) =>
+      streamDiffLinesGenerator(this.configHandler, this.abortedMessageIds, msg),
+    );
   }
 
   public invoke<T extends keyof Protocol>(

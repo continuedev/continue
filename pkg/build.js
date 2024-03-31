@@ -90,7 +90,7 @@ const targetToLanceDb = {
     entryPoints: ["src/index.ts"],
     bundle: true,
     outfile: esbuildOutputFile,
-    external: ["esbuild", ...DYNAMIC_IMPORTS],
+    external: ["esbuild", ...DYNAMIC_IMPORTS, "./xhr-sync-worker.js"],
     format: "cjs",
     platform: "node",
     sourcemap: true,
