@@ -3,8 +3,8 @@ package com.github.continuedev.continueintellijextension.editor
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.runWriteAction
 import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.command.undo.UndoManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.colors.TextAttributesKey
@@ -12,16 +12,25 @@ import com.intellij.openapi.editor.markup.HighlighterLayer
 import com.intellij.openapi.editor.markup.RangeHighlighter
 import com.intellij.openapi.editor.markup.TextAttributes
 import com.intellij.openapi.fileEditor.FileDocumentManager
+import com.intellij.openapi.fileEditor.FileEditor
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
+import javax.swing.JTextArea
+
 
 enum class DiffLineType {
     SAME, NEW, OLD
 }
 
-class DiffStreamHandler(private val project: Project, private val editor: Editor, private val startLine: Int, private val endLine: Int) {
-    private var currentLine = startLine
-
+class DiffStreamHandler(
+        private val project: Project,
+        private val editor: Editor,
+        private val textArea: JTextArea,
+        private val startLine: Int,
+        private val endLine: Int
+) {
     private val greenKey = run {
         val attributes = TextAttributes().apply {
             backgroundColor = JBColor(0x4000FF00.toInt(), 0x4000FF00.toInt())
@@ -49,8 +58,10 @@ class DiffStreamHandler(private val project: Project, private val editor: Editor
         key
     }
 
+    private var currentLine = startLine
     private var currentLineHighlighter: RangeHighlighter? = null
     private val unfinishedHighlighters: MutableList<RangeHighlighter> = mutableListOf()
+    private var changeCount: Int = 0
 
     private fun handleDiffLine(type: DiffLineType, line: String) {
         when (type) {
@@ -66,12 +77,14 @@ class DiffStreamHandler(private val project: Project, private val editor: Editor
                 editor.markupModel.addLineHighlighter(greenKey, currentLine, HighlighterLayer.LAST)
 
                 currentLine++
+                changeCount++
             }
             DiffLineType.OLD -> {
                 // Remove old line
                 val startOffset = editor.document.getLineStartOffset(currentLine)
                 val endOffset = editor.document.getLineEndOffset(currentLine) + 1
                 editor.document.deleteString(startOffset, endOffset)
+                changeCount++
             }
         }
 
@@ -89,7 +102,31 @@ class DiffStreamHandler(private val project: Project, private val editor: Editor
         }
     }
 
+    private fun resetState() {
+        // Remove all highlighters
+        editor.markupModel.removeAllHighlighters()
+
+        // Undo changes just by using builtin undo
+        WriteCommandAction.runWriteCommandAction(project) {
+            val undoManager = UndoManager.getInstance(project)
+            val virtualFile = FileDocumentManager.getInstance().getFile(editor.document) ?: return@runWriteCommandAction
+            val fileEditor = FileEditorManager.getInstance(project).getSelectedEditor(virtualFile) as TextEditor?
+            if (undoManager.isUndoAvailable(fileEditor)) {
+                for (i in 0 until changeCount) {
+                    undoManager.undo(fileEditor)
+                }
+            }
+
+            // Reset state variables
+            currentLine = startLine
+            changeCount = 0
+        }
+    }
+
     fun run(input : String, prefix : String, highlighted : String, suffix : String) {
+        // Undo changes
+        resetState()
+
         // Highlight the range with unfinished color
         for (i in startLine..endLine) {
             val highlighter = editor.markupModel.addLineHighlighter(unfinishedKey, i, HighlighterLayer.FIRST)
@@ -116,6 +153,9 @@ class DiffStreamHandler(private val project: Project, private val editor: Editor
                     if (currentLineHighlighter != null) {
                         editor.markupModel.removeHighlighter(currentLineHighlighter!!)
                     }
+                    // Add ", " to the text area
+                    textArea.document.insertString(textArea.caretPosition, ", ", null)
+                    textArea.requestFocus()
                 }
                 return@request
             }
