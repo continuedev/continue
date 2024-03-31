@@ -71,18 +71,13 @@ export class VsCodeWebviewProtocol {
             response &&
             typeof response[Symbol.asyncIterator] === "function"
           ) {
-            console.log("assigning next")
             let next = await response.next();
-            console.log("next assigned: ", next)
             while (!next.done) {
-              console.log("begin loop next: ", next)
               respond(next.value);
               next = await response.next();
-              console.log("end loop next: ", next)
             }
             respond({ done: true, 
               content: next.value && next.value.content ? next.value.content : "" }); //if content exists, return it, otherwise return ""
-            console.log("response error-free")
           } else {
             respond(response || {});
           }
