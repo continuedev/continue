@@ -68,10 +68,25 @@ class InlineEditAction : AnAction(), DumbAware {
         val leftInset = indentation * charWidth * 2 / 3
 
         val inlayRef = Ref<Disposable>()
-        val textArea = makeTextArea(inlayRef) { input ->
-            val diffStreamHandler = DiffStreamHandler(project, editor, startLineNum, endLineNum)
-            diffStreamHandler.run(input, prefix, highlighted, suffix)
-        }
+
+        // Create text area, attach key listener
+        val textArea = makeTextArea()
+        val diffStreamHandler = DiffStreamHandler(project, editor, textArea, startLineNum, endLineNum)
+        textArea.addKeyListener(object : KeyAdapter() {
+            override fun keyPressed(e: KeyEvent) {
+                if (e.keyCode == KeyEvent.VK_ESCAPE) {
+                    inlayRef.get().dispose()
+                } else if (e.keyCode == KeyEvent.VK_ENTER) {
+                    if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
+                        textArea.document.insertString(textArea.caretPosition, "\n", null)
+                    } else if (e.modifiersEx == 0) {
+                        diffStreamHandler.run(textArea.text, prefix, highlighted, suffix)
+                        e.consume()
+                    }
+                }
+            }
+        })
+
         val panel = makePanel(textArea, inlayRef, leftInset)
         val inlay = manager.insertAfter(lineNumber, panel)
         panel.revalidate()
@@ -94,7 +109,7 @@ class InlineEditAction : AnAction(), DumbAware {
 //        preloadedBrowser?.sendToWebview("jetbrains/editorInsetRefresh", null)
     }
 
-    fun makeTextArea(inlayRef: Ref<Disposable>, onEnter: (input: String) -> Unit): JTextArea {
+    fun makeTextArea(): JTextArea {
         val textArea = CustomTextArea( 2, 40).apply {
             lineWrap = true
             wrapStyleWord = true
@@ -106,20 +121,6 @@ class InlineEditAction : AnAction(), DumbAware {
         }
         textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
 
-        textArea.addKeyListener(object : KeyAdapter() {
-            override fun keyPressed(e: KeyEvent) {
-                if (e.keyCode == KeyEvent.VK_ESCAPE) {
-                    inlayRef.get().dispose()
-                } else if (e.keyCode == KeyEvent.VK_ENTER) {
-                    if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
-                        textArea.document.insertString(textArea.caretPosition, "\n", null)
-                    } else if (e.modifiersEx == 0) {
-                        onEnter(textArea.text)
-                        e.consume()
-                    }
-                }
-            }
-        })
         return textArea
     }
 
