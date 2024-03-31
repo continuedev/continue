@@ -2,7 +2,9 @@ package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.intellij.openapi.Disposable
-import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.actionSystem.AnAction
+import com.intellij.openapi.actionSystem.AnActionEvent
+import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.impl.EditorImpl
@@ -11,6 +13,8 @@ import com.intellij.openapi.util.Ref
 import com.intellij.openapi.util.TextRange
 import com.intellij.util.ui.UIUtil
 import net.miginfocom.swing.MigLayout
+import org.jdesktop.swingx.JXTextArea
+import org.jdesktop.swingx.border.DropShadowBorder
 import java.awt.*
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
@@ -18,7 +22,10 @@ import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
 import javax.swing.JPanel
 import javax.swing.JTextArea
+import javax.swing.border.CompoundBorder
+import javax.swing.border.EmptyBorder
 import kotlin.math.max
+
 
 /**
  * Adapted from https://github.com/cursive-ide/component-inlay-example/blob/master/src/main/kotlin/inlays/InlineEditAction.kt
@@ -167,7 +174,23 @@ class InlineEditAction : AnAction(), DumbAware {
     }
 }
 
-class CustomTextArea(rows: Int, columns: Int) : JTextArea(rows, columns) {
+class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
+
+    init {
+        setRows(rows + 1)
+        setColumns(columns)
+
+        val shadow = DropShadowBorder()
+        shadow.shadowColor = Color.BLACK
+        shadow.isShowLeftShadow = true
+        shadow.isShowRightShadow = true
+        shadow.isShowBottomShadow = true
+        shadow.isShowTopShadow = true
+        shadow.cornerSize = 15
+        shadow.shadowSize = 5
+        // border = CompoundBorder(shadow, EmptyBorder(6, 6, 6, 6))
+    }
+
     override fun paintComponent(g: Graphics) {
         val g2 = g as Graphics2D
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
