@@ -12,6 +12,7 @@ import com.intellij.openapi.util.TextRange
 import com.intellij.util.ui.UIUtil
 import net.miginfocom.swing.MigLayout
 import java.awt.*
+import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
@@ -101,6 +102,7 @@ class InlineEditAction : AnAction(), DumbAware {
             background = GetTheme().getSecondaryDark()
             maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
             margin = Insets(8, 8, 8, 8)
+            font = Font("Arial", Font.PLAIN, 14)
         }
         textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
 
@@ -108,9 +110,13 @@ class InlineEditAction : AnAction(), DumbAware {
             override fun keyPressed(e: KeyEvent) {
                 if (e.keyCode == KeyEvent.VK_ESCAPE) {
                     inlayRef.get().dispose()
-                } else if (e.keyCode == KeyEvent.VK_ENTER && e.modifiers == 0) {
-                    onEnter(textArea.text)
-                    e.consume()
+                } else if (e.keyCode == KeyEvent.VK_ENTER) {
+                    if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
+                        textArea.document.insertString(textArea.caretPosition, "\n", null)
+                    } else if (e.modifiersEx == 0) {
+                        onEnter(textArea.text)
+                        e.consume()
+                    }
                 }
             }
         })
@@ -141,11 +147,20 @@ class InlineEditAction : AnAction(), DumbAware {
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
             background = defaultBackground
-            add(textArea, "grow, gap 0!")
+            add(textArea, "grow, gap 0!, height 100%")
 //            add(browser.component, "grow, gap 0!")
             putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
+            preferredSize = textArea.preferredSize
         }
         panel.isOpaque = false
+
+        textArea.addComponentListener(object : ComponentAdapter() {
+            override fun componentResized(e: ComponentEvent?) {
+                panel.revalidate()
+                panel.repaint()
+            }
+        })
+
 
         return panel
     }
