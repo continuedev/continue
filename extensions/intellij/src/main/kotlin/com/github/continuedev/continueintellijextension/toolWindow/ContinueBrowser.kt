@@ -1,32 +1,22 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
 import com.github.continuedev.continueintellijextension.activities.showTutorial
-import com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
-import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
-import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
-import com.intellij.openapi.util.io.StreamUtil
-import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.jcef.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
-import java.io.File
-import java.io.IOException
-import java.nio.charset.StandardCharsets
-import java.nio.file.Paths
 
 class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false) {
     private val heightChangeListeners = mutableListOf<(Int) -> Unit>()
@@ -35,38 +25,24 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
     }
 
     private val PASS_THROUGH_TO_CORE = listOf(
-        "update/modelChange",
-        "ping",
-        "abort",
-        "history/list",
-        "history/delete",
-        "history/load",
-        "history/save",
-        "devdata/log",
-        "config/addOpenAiKey",
-        "config/addModel",
-        "config/ideSettingsUpdate",
-        "config/getBrowserSerialized",
-        "config/deleteModel",
-        "config/reload",
-        "context/getContextItems",
-        "context/loadSubmenuItems",
-        "context/addDocs",
-        "autocomplete/complete",
-        "autocomplete/cancel",
-        "autocomplete/accept",
-        "command/run",
-        "llm/complete",
-        "llm/streamComplete",
-        "llm/streamChat",
-        "llm/listModels",
-        "streamDiffLines",
-        "stats/getTokensPerDay",
-        "stats/getTokensPerModel",
-        "index/setPaused",
-        "index/forceReIndex",
-        "completeOnboarding",
-        "addAutocompleteModel"
+            "abort",
+            "getContinueDir",
+            "history/list",
+            "history/save",
+            "history/delete",
+            "history/load",
+            "devdata/log",
+            "config/addModel",
+            "config/deleteModel",
+            "config/addOpenAIKey",
+            "llm/streamComplete",
+            "llm/streamChat",
+            "llm/complete",
+            "command/run",
+            "context/loadSubmenuItems",
+            "context/getContextItems",
+            "context/addDocs",
+            "config/getBrowserSerialized",
     )
 
     private fun registerAppSchemeHandler() {
