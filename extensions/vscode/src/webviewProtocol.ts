@@ -82,7 +82,7 @@ export class VsCodeWebviewProtocol {
           }
         } catch (e: any) {
           console.error(
-            "Error handling webview message: " +
+            "Error handling webview message: " + 
               JSON.stringify({ msg }, null, 2),
           );
 
