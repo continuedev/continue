@@ -76,8 +76,7 @@ export class VsCodeWebviewProtocol {
               respond(next.value);
               next = await response.next();
             }
-            respond({ done: true, 
-              content: next.value && next.value.content ? next.value.content : "" }); //if content exists, return it, otherwise return ""
+            respond({ done: true, content: next.value?.content });
           } else {
             respond(response || {});
           }
