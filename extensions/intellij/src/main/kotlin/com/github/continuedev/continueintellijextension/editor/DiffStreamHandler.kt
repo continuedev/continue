@@ -36,7 +36,7 @@ class DiffStreamHandler(
 ) {
     private val greenKey = run {
         val attributes = TextAttributes().apply {
-            backgroundColor = JBColor(0x4000FF00.toInt(), 0x4000FF00.toInt())
+            backgroundColor = JBColor(0x3000FF00.toInt(), 0x3000FF00.toInt())
         }
         val key = TextAttributesKey.createTextAttributesKey("CONTINUE_DIFF_NEW_LINE")
         key.let { editor.colorsScheme.setAttributes(it, attributes) }
@@ -159,7 +159,16 @@ class DiffStreamHandler(
         running = false
     }
 
-    fun run(input : String, prefix : String, highlighted : String, suffix : String) {
+    fun toggleFocus() {
+        if (textArea.hasFocus()) {
+            textArea.transferFocus()
+            editor.contentComponent.requestFocus()
+        } else {
+            textArea.requestFocus()
+        }
+    }
+
+    fun run(input : String, prefix : String, highlighted : String, suffix : String, modelTitle : String) {
         // Undo changes
         resetState()
 
@@ -185,6 +194,7 @@ class DiffStreamHandler(
                 "highlighted" to highlighted,
                 "suffix" to suffix,
                 "language" to virtualFile?.fileType?.name,
+                "modelTitle" to modelTitle
         ), null) { response ->
             if (!running) {
                 return@request

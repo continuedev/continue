@@ -8,6 +8,7 @@ import {
 import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { gptEditPrompt } from "../llm/templates/edit";
+import { Telemetry } from "./posthog";
 
 function constructPrompt(
   prefix: string,

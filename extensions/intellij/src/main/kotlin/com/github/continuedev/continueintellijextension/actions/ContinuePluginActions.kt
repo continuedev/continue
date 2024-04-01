@@ -41,7 +41,7 @@ class AcceptDiffAction : AnAction() {
     private fun acceptVerticalDiff(e: AnActionEvent) {
         val project = e.project ?: return
         val editor = e.getData(PlatformDataKeys.EDITOR) ?: FileEditorManager.getInstance(project).selectedTextEditor ?: return
-        val diffStreamService = service<DiffStreamService>()
+        val diffStreamService = project.service<DiffStreamService>()
         diffStreamService.accept(editor)
     }
 }
@@ -60,7 +60,7 @@ class RejectDiffAction : AnAction() {
     private fun rejectVerticalDiff(e: AnActionEvent) {
         val project = e.project ?: return
         val editor = e.getData(PlatformDataKeys.EDITOR) ?: FileEditorManager.getInstance(project).selectedTextEditor ?: return
-        val diffStreamService = service<DiffStreamService>()
+        val diffStreamService = project.service<DiffStreamService>()
         diffStreamService.reject(editor)
     }
 }
