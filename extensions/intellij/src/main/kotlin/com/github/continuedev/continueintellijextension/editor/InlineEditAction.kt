@@ -38,15 +38,8 @@ class InlineEditAction : AnAction(), DumbAware {
         e.presentation.isVisible = true
     }
 
-//    private var preloadedBrowser: ContinueBrowser? = null
-
     override fun actionPerformed(e: AnActionEvent) {
         if (e.project == null) return
-//        if (this.preloadedBrowser == null) {
-//            this.preloadedBrowser = ContinueBrowser(e.project!!,
-////                    "http://continue/editorInset/index.html", true)
-//                    "http://localhost:5173/jetbrains_editorInset_index.html", true)
-//        }
 
         val editor = e.getData(PlatformDataKeys.EDITOR) ?: return
         val project = e.getData(PlatformDataKeys.PROJECT) ?: return
@@ -77,6 +70,7 @@ class InlineEditAction : AnAction(), DumbAware {
         val leftInset = indentation * charWidth * 2 / 3
 
         val inlayRef = Ref<Disposable>()
+        val customPanelRef = Ref<CustomPanel>()
 
         // Create text area, attach key listener
         val textArea = makeTextArea()
@@ -88,6 +82,11 @@ class InlineEditAction : AnAction(), DumbAware {
         val diffStreamService = service<DiffStreamService>()
         diffStreamService.register(diffStreamHandler, editor)
 
+        fun onEnter() {
+            customPanelRef.get().enter()
+            diffStreamHandler.run(textArea.text, prefix, highlighted, suffix)
+        }
+
         textArea.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 if (e.keyCode == KeyEvent.VK_ESCAPE) {
@@ -96,14 +95,16 @@ class InlineEditAction : AnAction(), DumbAware {
                     if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
                         textArea.document.insertString(textArea.caretPosition, "\n", null)
                     } else if (e.modifiersEx == 0) {
-                        diffStreamHandler.run(textArea.text, prefix, highlighted, suffix)
+                        onEnter()
                         e.consume()
                     }
                 }
             }
         })
 
-        val panel = makePanel(textArea, inlayRef, leftInset, {
+        val panel = makePanel(customPanelRef, textArea, inlayRef, leftInset, {onEnter()}, {
+            inlayRef.get().dispose()
+        }, {
             diffStreamService.accept(editor)
             inlayRef.get().dispose()
         }, {
@@ -117,18 +118,6 @@ class InlineEditAction : AnAction(), DumbAware {
         viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
 
         textArea.requestFocus()
-
-        // Set focus to the editor's browser component
-//        preloadedBrowser?.browser?.component?.requestFocus()
-//
-//        preloadedBrowser?.onHeightChange {
-//            viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
-//        }
-
-//        preloadedBrowser?.sendToWebview("jetbrains/editorInsetRefresh", null)
-        // Set timeout
-//        Thread.sleep(3000)
-//        preloadedBrowser?.sendToWebview("jetbrains/editorInsetRefresh", null)
     }
 
     fun makeTextArea(): JTextArea {
@@ -146,71 +135,26 @@ class InlineEditAction : AnAction(), DumbAware {
         return textArea
     }
 
-    fun makePanel(textArea: JTextArea, inlayRef: Ref<Disposable>, leftInset: Int, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
-//        val browser = preloadedBrowser?.browser ?: return JPanel()
-//        browser.component.preferredSize = browser.component.preferredSize.apply {
-//            height = 60
-//        }
-//        browser.component.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
-//        preloadedBrowser?.onHeightChange { height ->
-//            browser.component.preferredSize = browser.component.preferredSize.apply {
-////                this.height = height
-//                // Refresh
-////                browser.component.revalidate()
-////                browser.component.repaint()
-////
-////                // Refresh the panel
-////                panel.revalidate()
-////                panel.repaint()
-//            }
-//        }
+    fun makePanel(customPanelRef: Ref<CustomPanel>, textArea: JTextArea, inlayRef: Ref<Disposable>, leftInset: Int, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
         val topPanel = JXPanel(MigLayout("wrap 1, insets 10 $leftInset 4 4, gap 0!")).apply {
-            // Transparent background
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
             background = defaultBackground
             isOpaque = false
         }
 
-        val panel = CustomPanel(MigLayout("wrap 1, insets 0, gap 0!, fillx")).apply {
-            // Transparent background
+        val panel = CustomPanel(MigLayout("wrap 1, insets 0, gap 0!, fillx"), onEnter, onCancel, onAccept, onReject).apply {
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
             background = defaultBackground
             add(textArea, "grow, gap 0!, height 100%")
 
-            // Create a subpanel with buttons
-            val subPanel = JPanel(MigLayout("insets 0, fillx")).apply {
-                val leftButton = JButton("Reject").apply {
-                    isOpaque = false
-                    cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-                    addActionListener {
-                        onReject()
-                    }
-                    isBorderPainted = false
-                }
-                val rightButton = JButton("Accept").apply {
-                    isOpaque = false
-                    cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-//                    background = GetTheme().getHighlight()
-                    background = JBColor.BLUE
-                    addActionListener {
-                        onAccept()
-                    }
-                    isBorderPainted = false
-                }
-
-                add(leftButton, "align left")
-                add(rightButton, "align right")
-                isOpaque = false
-            }
-
-            add(subPanel, "grow, gap 0!")
-
             putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
             preferredSize = textArea.preferredSize
             isOpaque = false
+            setup()
         }
+        customPanelRef.set(panel)
 
         textArea.addComponentListener(object : ComponentAdapter() {
             override fun componentResized(e: ComponentEvent?) {
@@ -225,25 +169,70 @@ class InlineEditAction : AnAction(), DumbAware {
     }
 }
 
-class CustomPanel(layout: MigLayout): JPanel(layout) {
+class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel(layout) {
+    private val subPanelA: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
+        val leftButton = JButton("Esc to cancel").apply {
+            isOpaque = false
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            addActionListener {
+                onCancel()
+            }
+            isBorderPainted = false
+        }
+        val rightButton = JButton("⏎ Enter").apply {
+            isOpaque = false
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            background = JBColor.BLUE
+            addActionListener {
+                onEnter()
+            }
+            isBorderPainted = false
+        }
+
+        add(leftButton, "align left")
+        add(rightButton, "align right")
+        isOpaque = false
+    }
+
+    private val subPanelB: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
+        val leftButton = JButton("Reject").apply {
+            isOpaque = false
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            addActionListener {
+                onReject()
+            }
+            isBorderPainted = false
+        }
+        val rightButton = JButton("Accept").apply {
+            isOpaque = false
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            background = JBColor.BLUE
+            addActionListener {
+                onAccept()
+            }
+            isBorderPainted = false
+        }
+
+        add(leftButton, "align left")
+        add(rightButton, "align right")
+        isOpaque = false
+    }
+
+    fun setup() {
+        add(subPanelA, "grow, gap 0!")
+    }
+
+    fun enter() {
+        // Switch to subPanelB
+        remove(subPanelA)
+        add(subPanelB, "grow, gap 0!")
+        revalidate()
+        repaint()
+    }
+
     override fun paintComponent(g: Graphics) {
         val g2 = g as Graphics2D
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-
-        // Draw the box shadow
-//        val shadowColor = Color(0, 0, 0, 100) // Change this to your desired shadow color and opacity
-//        val shadowOffset = 5 // Change this to your desired shadow offset
-//        val shadowSize = 10 // Change this to your desired shadow size
-//
-//        g2.color = shadowColor
-//        g2.fillRoundRect(
-//                shadowOffset,
-//                shadowOffset,
-//                width - shadowOffset * 2,
-//                height - shadowOffset * 2,
-//                15,
-//                15
-//        )
 
         // Draw the rounded border
         val borderColor = Color(128, 128, 128, 128)
