@@ -135,7 +135,6 @@ function TableRow({
             className="mr-2"
             text="Copy to Workspace"
             onClick={async () => {
-              // Implement the function to copy the session to the "sessions" directory
               copySessionToWorkspace(session.sessionId, workspaceDirectory)
             }}
           >
