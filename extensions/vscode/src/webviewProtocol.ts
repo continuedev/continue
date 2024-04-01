@@ -112,11 +112,8 @@ export class VsCodeWebviewProtocol
           respond({ done: true, error: e });
 
           console.error(
-            `Error handling webview message: ${JSON.stringify(
-              { msg },
-              null,
-              2,
-            )}\n\n${e}`,
+            "Error handling webview message: " + 
+              JSON.stringify({ msg }, null, 2),
           );
 
           let message = e.message;
