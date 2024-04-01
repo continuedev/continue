@@ -76,7 +76,7 @@ export class VsCodeWebviewProtocol {
               respond(next.value);
               next = await response.next();
             }
-            respond({ done: true, content: next.value.content });
+            respond({ done: true, content: next.value?.content });
           } else {
             respond(response || {});
           }
