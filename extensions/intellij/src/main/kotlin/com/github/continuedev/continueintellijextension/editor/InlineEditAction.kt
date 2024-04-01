@@ -94,7 +94,8 @@ class InlineEditAction : AnAction(), DumbAware {
         }
 
         val panel = makePanel(customPanelRef, textArea, inlayRef, leftInset, {onEnter()}, {
-            inlayRef.get().dispose()
+            diffStreamHandler.reject()
+            selectionModel.setSelection(start, end)
         }, {
             diffStreamService.accept(editor)
             inlayRef.get().dispose()
@@ -112,7 +113,10 @@ class InlineEditAction : AnAction(), DumbAware {
         textArea.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 if (e.keyCode == KeyEvent.VK_ESCAPE) {
-                    inlayRef.get().dispose()
+                    diffStreamHandler.reject()
+
+                    // Re-highlight the selected text
+                    selectionModel.setSelection(start, end)
                 } else if (e.keyCode == KeyEvent.VK_ENTER) {
                     if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
                         textArea.document.insertString(textArea.caretPosition, "\n", null)
@@ -186,7 +190,7 @@ class InlineEditAction : AnAction(), DumbAware {
             setup()
 
             val shadow = DropShadowBorder()
-            shadow.shadowColor = JBColor(0xb0b0b0, 0x808080)
+            shadow.shadowColor = JBColor(0xb0b0b0, 0x505050)
             shadow.isShowRightShadow = true
             shadow.isShowBottomShadow = true
             shadow.shadowSize = SHADOW_SIZE
@@ -216,7 +220,7 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
             foreground = Color(128, 128, 128, 200)
             background = defaultBackground
         }
-        val rightButton = CustomButton("⏎ Submit", {onEnter()}).apply {
+        val rightButton = CustomButton("Submit", {onEnter()}).apply {
             background = GetTheme().getHighlight()
             foreground = JBColor.WHITE
         }
@@ -236,11 +240,11 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
             font = Font("Arial", Font.PLAIN, 11)
         }
 
-        val leftButton = CustomButton("${getAltKeyLabel()}⇧Y", {onReject()}).apply {
+        val leftButton = CustomButton("${getAltKeyLabel()}⇧N", {onReject()}).apply {
             background = Color(255, 0, 0, 64)
         }
 
-        val rightButton = CustomButton("${getAltKeyLabel()}⇧N", {onAccept()}).apply {
+        val rightButton = CustomButton("${getAltKeyLabel()}⇧Y", {onAccept()}).apply {
             background = Color(0, 255, 0, 64)
         }
 
@@ -262,7 +266,6 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
     }
 
     fun enter() {
-        // Switch to subPanelB
         remove(subPanelA)
         add(subPanelB, "grow, gap 0!")
         revalidate()
