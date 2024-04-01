@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.`continue`.GetTheme
+import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -9,6 +10,7 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.impl.EditorImpl
+import com.intellij.openapi.editor.richcopy.model.FontNameRegistry
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.util.TextRange
@@ -19,15 +21,16 @@ import net.miginfocom.swing.MigLayout
 import org.jdesktop.swingx.JXPanel
 import org.jdesktop.swingx.JXTextArea
 import java.awt.*
-import java.awt.event.ComponentAdapter
-import java.awt.event.ComponentEvent
-import java.awt.event.KeyAdapter
-import java.awt.event.KeyEvent
-import javax.swing.JButton
+import java.awt.event.*
+import java.awt.geom.RoundRectangle2D
+import javax.swing.JComponent
+import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTextArea
+import javax.swing.border.EmptyBorder
+import javax.swing.event.DocumentEvent
+import javax.swing.event.DocumentListener
 import kotlin.math.max
-
 
 /**
  * Adapted from https://github.com/cursive-ide/component-inlay-example/blob/master/src/main/kotlin/inlays/InlineEditAction.kt
@@ -87,21 +90,6 @@ class InlineEditAction : AnAction(), DumbAware {
             diffStreamHandler.run(textArea.text, prefix, highlighted, suffix)
         }
 
-        textArea.addKeyListener(object : KeyAdapter() {
-            override fun keyPressed(e: KeyEvent) {
-                if (e.keyCode == KeyEvent.VK_ESCAPE) {
-                    inlayRef.get().dispose()
-                } else if (e.keyCode == KeyEvent.VK_ENTER) {
-                    if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
-                        textArea.document.insertString(textArea.caretPosition, "\n", null)
-                    } else if (e.modifiersEx == 0) {
-                        onEnter()
-                        e.consume()
-                    }
-                }
-            }
-        })
-
         val panel = makePanel(customPanelRef, textArea, inlayRef, leftInset, {onEnter()}, {
             inlayRef.get().dispose()
         }, {
@@ -117,6 +105,46 @@ class InlineEditAction : AnAction(), DumbAware {
         val viewport = (editor as? EditorImpl)?.scrollPane?.viewport
         viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
 
+        // Add key listener to text area
+        textArea.addKeyListener(object : KeyAdapter() {
+            override fun keyPressed(e: KeyEvent) {
+                if (e.keyCode == KeyEvent.VK_ESCAPE) {
+                    inlayRef.get().dispose()
+                } else if (e.keyCode == KeyEvent.VK_ENTER) {
+                    if (e.modifiersEx == KeyEvent.SHIFT_DOWN_MASK) {
+                        textArea.document.insertString(textArea.caretPosition, "\n", null)
+                    } else if (e.modifiersEx == 0) {
+                        onEnter()
+                        e.consume()
+                    }
+                }
+            }
+        })
+
+        // Listen for changes to textarea line count
+        textArea.document.addDocumentListener(object : DocumentListener {
+            private var lastNumLines: Int = 0
+            private fun updateSize() {
+                val numLines = textArea.text.lines().size
+                if (numLines != lastNumLines) {
+                    lastNumLines = numLines
+                    viewport?.dispatchEvent(ComponentEvent(viewport, ComponentEvent.COMPONENT_RESIZED))
+                }
+            }
+            override fun insertUpdate(e: DocumentEvent?) {
+                updateSize()
+            }
+
+            override fun removeUpdate(e: DocumentEvent?) {
+                updateSize()
+            }
+
+            override fun changedUpdate(e: DocumentEvent?) {
+                updateSize()
+            }
+        })
+
+
         textArea.requestFocus()
     }
 
@@ -128,7 +156,7 @@ class InlineEditAction : AnAction(), DumbAware {
             background = GetTheme().getSecondaryDark()
             maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
             margin = JBUI.insets(8)
-            font = Font("Arial", Font.PLAIN, 14)
+            font = Font("Arial", Font.PLAIN, 12)
         }
         textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
 
@@ -136,7 +164,7 @@ class InlineEditAction : AnAction(), DumbAware {
     }
 
     fun makePanel(customPanelRef: Ref<CustomPanel>, textArea: JTextArea, inlayRef: Ref<Disposable>, leftInset: Int, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
-        val topPanel = JXPanel(MigLayout("wrap 1, insets 10 $leftInset 4 4, gap 0!")).apply {
+        val topPanel = JXPanel(MigLayout("wrap 1, insets 10 $leftInset 8 8, gap 0!")).apply {
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
             background = defaultBackground
@@ -171,55 +199,56 @@ class InlineEditAction : AnAction(), DumbAware {
 
 class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel(layout) {
     private val subPanelA: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
-        val leftButton = JButton("Esc to cancel").apply {
-            isOpaque = false
-            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-            addActionListener {
-                onCancel()
-            }
-            isBorderPainted = false
+        val globalScheme = EditorColorsManager.getInstance().globalScheme
+        val defaultBackground = globalScheme.defaultBackground
+
+        val leftButton = CustomButton("Esc to cancel", {onCancel()}).apply {
+            foreground = Color(128, 128, 128, 200)
+            background = defaultBackground
         }
-        val rightButton = JButton("⏎ Enter").apply {
-            isOpaque = false
-            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-            background = JBColor.BLUE
-            addActionListener {
-                onEnter()
-            }
-            isBorderPainted = false
+        val rightButton = CustomButton("⏎ Submit", {onEnter()}).apply {
+            background = GetTheme().getHighlight()
+            foreground = JBColor.WHITE
         }
+
+        border = EmptyBorder(4, 8, 4, 8)
 
         add(leftButton, "align left")
         add(rightButton, "align right")
         isOpaque = false
+
+        cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
     }
 
     private val subPanelB: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
-        val leftButton = JButton("Reject").apply {
-            isOpaque = false
-            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-            addActionListener {
-                onReject()
-            }
-            isBorderPainted = false
-        }
-        val rightButton = JButton("Accept").apply {
-            isOpaque = false
-            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
-            background = JBColor.BLUE
-            addActionListener {
-                onAccept()
-            }
-            isBorderPainted = false
+        val leftLabel = JLabel("Enter follow-up instructions").apply {
+            foreground = Color(128, 128, 128, 200)
+            font = Font("Arial", Font.PLAIN, 11)
         }
 
-        add(leftButton, "align left")
-        add(rightButton, "align right")
+        val leftButton = CustomButton("${getMetaKeyLabel()}⇧⌫", {onReject()}).apply {
+            background = Color(255, 0, 0, 64)
+        }
+
+        val rightButton = CustomButton("${getMetaKeyLabel()}⇧⏎", {onAccept()}).apply {
+            background = Color(0, 255, 0, 64)
+        }
+
+        val rightPanel = JPanel().apply {
+            isOpaque = false
+            add(leftButton, "align right")
+            add(rightButton, "align right")
+            border = EmptyBorder(0, 0, 0, 0)
+        }
+
+        add(leftLabel, "align left")
+        add(rightPanel, "align right")
+        border = EmptyBorder(4, 8, 4, 8)
         isOpaque = false
     }
 
     fun setup() {
-        add(subPanelA, "grow, gap 0!")
+        add(subPanelB, "grow, gap 0!")
     }
 
     fun enter() {
@@ -237,7 +266,7 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
         // Draw the rounded border
         val borderColor = Color(128, 128, 128, 128)
         val borderThickness = 1
-        val borderRadius = 8
+        val borderRadius = 5
 
         g2.color = borderColor
         g2.stroke = BasicStroke(borderThickness.toFloat())
@@ -254,6 +283,52 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
     }
 }
 
+
+class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
+    private var isHovered = false
+
+    init {
+        isOpaque = false
+        cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseEntered(e: MouseEvent?) {
+                isHovered = true
+                repaint()
+            }
+
+            override fun mouseExited(e: MouseEvent?) {
+                isHovered = false
+                repaint()
+            }
+
+            override fun mouseClicked(e: MouseEvent?) {
+                onClick()
+            }
+        })
+
+        verticalAlignment = CENTER
+        font = Font("Arial", Font.PLAIN, 11)
+        border = EmptyBorder(2, 4, 2, 4)
+    }
+    override fun paintComponent(g: Graphics) {
+        val g2 = g as Graphics2D
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+
+        val cornerRadius = 8
+        val rect = Rectangle(0, 0, width, height)
+        val roundRect = RoundRectangle2D.Float(rect.x.toFloat(), rect.y.toFloat(), rect.width.toFloat(), rect.height.toFloat(), cornerRadius.toFloat(), cornerRadius.toFloat())
+        if (isHovered) {
+            g2.color = background.brighter()
+        } else {
+            g2.color = background
+        }
+        g2.fill(roundRect)
+        g2.color = foreground
+        g2.drawString(text, (width / 2 - g.fontMetrics.stringWidth(text) / 2).toFloat(),
+                (height / 2 + g.fontMetrics.ascent / 2).toFloat())
+    }
+}
+
 class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
     init {
         setRows(rows)
@@ -263,8 +338,9 @@ class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
     override fun paintComponent(g: Graphics) {
         // Draw placeholder
         if (text.isEmpty()) {
-            g.color = Color(128, 128, 128, 200)
-            g.drawString("Enter instructions to edit highlighted code", 8, 21)
+            g.color = Color(128, 128, 128, 255)
+            g.font = Font("Arial", Font.PLAIN, 12)
+            g.drawString("Enter instructions to edit highlighted code", 8, 19)
         }
 
         super.paintComponent(g)

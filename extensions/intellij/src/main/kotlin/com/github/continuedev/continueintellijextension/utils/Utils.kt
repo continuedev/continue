@@ -24,11 +24,3 @@ fun getMetaKeyLabel(): String {
         Os.LINUX -> "Ctrl"
     }
 }
-
-fun getAltKeyLabel(): String {
-    return when (getOs()) {
-        Os.MAC -> "⌥"
-        Os.WINDOWS -> "Alt"
-        Os.LINUX -> "Alt"
-    }
-}
