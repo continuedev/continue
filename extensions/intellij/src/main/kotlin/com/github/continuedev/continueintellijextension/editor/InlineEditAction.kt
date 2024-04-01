@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.`continue`.GetTheme
+import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
 import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.AnAction
@@ -32,6 +33,7 @@ import javax.swing.event.DocumentListener
 import kotlin.math.max
 
 const val SHADOW_SIZE = 7
+const val MAIN_FONT_SIZE = 13
 
 /**
  * Adapted from https://github.com/cursive-ide/component-inlay-example/blob/master/src/main/kotlin/inlays/InlineEditAction.kt
@@ -157,7 +159,7 @@ class InlineEditAction : AnAction(), DumbAware {
             background = GetTheme().getSecondaryDark()
             maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
             margin = JBUI.insets(8)
-            font = Font("Arial", Font.PLAIN, 12)
+            font = Font("Arial", Font.PLAIN, MAIN_FONT_SIZE)
         }
         textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
 
@@ -234,11 +236,11 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
             font = Font("Arial", Font.PLAIN, 11)
         }
 
-        val leftButton = CustomButton("${getMetaKeyLabel()}⇧⌫", {onReject()}).apply {
+        val leftButton = CustomButton("${getAltKeyLabel()}⇧Y", {onReject()}).apply {
             background = Color(255, 0, 0, 64)
         }
 
-        val rightButton = CustomButton("${getMetaKeyLabel()}⇧⏎", {onAccept()}).apply {
+        val rightButton = CustomButton("${getAltKeyLabel()}⇧N", {onAccept()}).apply {
             background = Color(0, 255, 0, 64)
         }
 
@@ -256,7 +258,7 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
     }
 
     fun setup() {
-        add(subPanelB, "grow, gap 0!")
+        add(subPanelA, "grow, gap 0!")
     }
 
     fun enter() {
@@ -274,7 +276,7 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
         // Draw the rounded border
         val borderColor = Color(128, 128, 128, 128)
         val borderThickness = 1
-        val borderRadius = 5
+        val borderRadius = 8
 
         g2.color = borderColor
         g2.stroke = BasicStroke(borderThickness.toFloat())
@@ -347,8 +349,8 @@ class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
         // Draw placeholder
         if (text.isEmpty()) {
             g.color = Color(128, 128, 128, 255)
-            g.font = Font("Arial", Font.PLAIN, 12)
-            g.drawString("Enter instructions to edit highlighted code", 8, 19)
+            g.font = Font("Arial", Font.PLAIN, MAIN_FONT_SIZE)
+            g.drawString("Enter instructions to edit highlighted code", 8, 20)
         }
 
         super.paintComponent(g)
