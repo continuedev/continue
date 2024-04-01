@@ -31,7 +31,8 @@ class DiffStreamHandler(
         private val textArea: JTextArea,
         private val startLine: Int,
         private val endLine: Int,
-        private val onClose: () -> Unit
+        private val onClose: () -> Unit,
+        private val onFinish: () -> Unit
 ) {
     private val greenKey = run {
         val attributes = TextAttributes().apply {
@@ -66,7 +67,7 @@ class DiffStreamHandler(
     private var changeCount: Int = 0
     private var running: Boolean = false
 
-    init {
+    fun setup() {
         // Highlight the range with unfinished color
         for (i in startLine..endLine) {
             val highlighter = editor.markupModel.addLineHighlighter(unfinishedKey, min(
@@ -192,6 +193,8 @@ class DiffStreamHandler(
             val parsed = Gson().fromJson(response, Map::class.java)
             val done = parsed["done"] as? Boolean
             if (done == true) {
+                onFinish()
+
                 ApplicationManager.getApplication().invokeLater {
                     // Clean up highlighters
                     if (currentLineHighlighter != null) {
@@ -203,16 +206,6 @@ class DiffStreamHandler(
                     textArea.document.insertString(textArea.caretPosition, ", ", null)
                     textArea.requestFocus()
                 }
-
-                editor.contentComponent.addKeyListener(object : java.awt.event.KeyAdapter() {
-                    override fun keyPressed(e: KeyEvent) {
-                        if (e.isMetaDown && e.isShiftDown && e.keyCode == KeyEvent.VK_ENTER) {
-                            accept()
-                        } else if (e.isMetaDown && e.isShiftDown && e.keyCode == KeyEvent.VK_BACK_SPACE) {
-                            reject()
-                        }
-                    }
-                })
 
                 return@request
             }
