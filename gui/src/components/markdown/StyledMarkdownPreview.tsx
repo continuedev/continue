@@ -1,8 +1,8 @@
 import React, { memo, useEffect } from "react";
 import { useRemark } from "react-remark";
-// import rehypeKatex from "rehype-katex";
-// import remarkMath from "remark-math";
 import rehypeHighlight from "rehype-highlight";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 import styled from "styled-components";
 import { visit } from "unist-util-visit";
 import {
@@ -14,6 +14,7 @@ import {
 import { getFontSize } from "../../util";
 import PreWithToolbar from "./PreWithToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
+import "./katex.css";
 import "./markdown.css";
 
 const StyledMarkdown = styled.div<{
@@ -113,9 +114,8 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
   props: StyledMarkdownPreviewProps,
 ) {
   const [reactContent, setMarkdownSource] = useRemark({
-    // remarkPlugins: [remarkMath],
-    // rehypePlugins: [rehypeKatex as any, {}],
     remarkPlugins: [
+      remarkMath,
       () => {
         return (tree) => {
           visit(tree, "code", (node: any) => {
@@ -128,7 +128,7 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         };
       },
     ],
-    rehypePlugins: [rehypeHighlight as any, {}],
+    rehypePlugins: [rehypeHighlight as any, {}, rehypeKatex as any, {}],
     rehypeReactOptions: {
       components: {
         a: ({ node, ...props }) => {
