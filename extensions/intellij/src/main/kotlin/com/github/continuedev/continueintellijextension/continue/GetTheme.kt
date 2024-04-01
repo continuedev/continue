@@ -34,6 +34,11 @@ class GetTheme {
         return Color(adjustedRed, adjustedGreen, adjustedBlue)
     }
 
+    fun getHighlight(): Color {
+        val globalScheme = EditorColorsManager.getInstance().globalScheme
+        return globalScheme.getColor(EditorColors.MODIFIED_TAB_ICON_COLOR) ?: globalScheme.defaultForeground
+    }
+
     fun getTheme(): Map<String, String> {
         try {
             val globalScheme = EditorColorsManager.getInstance().globalScheme

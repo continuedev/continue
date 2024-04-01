@@ -18,6 +18,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.ui.JBColor
 import java.awt.event.KeyEvent
 import javax.swing.JTextArea
+import kotlin.math.min
 
 
 enum class DiffLineType {
@@ -65,12 +66,17 @@ class DiffStreamHandler(
     private var changeCount: Int = 0
 
     private fun handleDiffLine(type: DiffLineType, line: String) {
+        println("DiffStreamHandler: handleDiffLine: $currentLine, $type, $line")
+        try {
         when (type) {
             DiffLineType.SAME -> {
                 currentLine++
             }
             DiffLineType.NEW -> {
                 // Insert new line
+                if (currentLine == editor.document.lineCount) {
+                    editor.document.insertString(editor.document.textLength, "\n")
+                }
                 val offset = editor.document.getLineStartOffset(currentLine)
                 editor.document.insertString(offset, line + "\n")
 
@@ -84,7 +90,7 @@ class DiffStreamHandler(
                 // Remove old line
                 val startOffset = editor.document.getLineStartOffset(currentLine)
                 val endOffset = editor.document.getLineEndOffset(currentLine) + 1
-                editor.document.deleteString(startOffset, endOffset)
+                editor.document.deleteString(startOffset, min(endOffset, editor.document.textLength))
                 changeCount++
             }
         }
@@ -93,13 +99,16 @@ class DiffStreamHandler(
         if (currentLineHighlighter != null) {
             editor.markupModel.removeHighlighter(currentLineHighlighter!!)
         }
-        currentLineHighlighter = editor.markupModel.addLineHighlighter(currentLineKey, currentLine, HighlighterLayer.LAST)
+        currentLineHighlighter = editor.markupModel.addLineHighlighter(currentLineKey, min(currentLine, editor.document.lineCount - 1), HighlighterLayer.LAST)
 
         // Remove the unfinished highlighter top line
         if (type != DiffLineType.OLD) {
             if (unfinishedHighlighters.isNotEmpty()) {
                 editor.markupModel.removeHighlighter(unfinishedHighlighters.removeAt(0))
             }
+        }
+        } catch (e: Exception) {
+            println("Error handling diff line: $currentLine, $type, $line, $e.message")
         }
     }
 
@@ -141,7 +150,9 @@ class DiffStreamHandler(
 
         // Highlight the range with unfinished color
         for (i in startLine..endLine) {
-            val highlighter = editor.markupModel.addLineHighlighter(unfinishedKey, i, HighlighterLayer.FIRST)
+            val highlighter = editor.markupModel.addLineHighlighter(unfinishedKey, min(
+                    i, editor.document.lineCount - 1
+            ), HighlighterLayer.FIRST)
             unfinishedHighlighters.add(highlighter)
         }
 
@@ -162,9 +173,12 @@ class DiffStreamHandler(
             val done = parsed["done"] as? Boolean
             if (done == true) {
                 ApplicationManager.getApplication().invokeLater {
+                    // Clean up highlighters
                     if (currentLineHighlighter != null) {
                         editor.markupModel.removeHighlighter(currentLineHighlighter!!)
                     }
+                    unfinishedHighlighters.forEach { editor.markupModel.removeHighlighter(it) }
+
                     // Add ", " to the text area
                     textArea.document.insertString(textArea.caretPosition, ", ", null)
                     textArea.requestFocus()
