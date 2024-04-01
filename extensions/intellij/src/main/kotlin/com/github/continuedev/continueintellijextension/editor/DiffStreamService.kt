@@ -8,6 +8,9 @@ class DiffStreamService {
     private val handlers = mutableMapOf<Editor, DiffStreamHandler>()
 
     fun register(handler: DiffStreamHandler, editor: Editor) {
+        if (handlers.containsKey(editor)) {
+            handlers[editor]?.reject()
+        }
         handlers[editor] = handler
     }
 

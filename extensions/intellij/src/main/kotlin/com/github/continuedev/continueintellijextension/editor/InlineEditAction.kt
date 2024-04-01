@@ -24,9 +24,7 @@ import org.jdesktop.swingx.border.DropShadowBorder
 import java.awt.*
 import java.awt.event.*
 import java.awt.geom.RoundRectangle2D
-import javax.swing.JLabel
-import javax.swing.JPanel
-import javax.swing.JTextArea
+import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
@@ -82,11 +80,15 @@ class InlineEditAction : AnAction(), DumbAware {
         val textArea = makeTextArea()
 
         // Create diff stream handler
-        val diffStreamHandler = DiffStreamHandler(project, editor, textArea, startLineNum, endLineNum) {
+        val diffStreamHandler = DiffStreamHandler(project, editor, textArea, startLineNum, endLineNum, {
             inlayRef.get().dispose()
-        }
+        }, {
+            customPanelRef.get().finish()
+        })
         val diffStreamService = service<DiffStreamService>()
         diffStreamService.register(diffStreamHandler, editor)
+
+        diffStreamHandler.setup()
 
         fun onEnter() {
             customPanelRef.get().enter()
@@ -94,7 +96,7 @@ class InlineEditAction : AnAction(), DumbAware {
         }
 
         val panel = makePanel(customPanelRef, textArea, inlayRef, leftInset, {onEnter()}, {
-            diffStreamHandler.reject()
+            diffStreamService.reject(editor)
             selectionModel.setSelection(start, end)
         }, {
             diffStreamService.accept(editor)
@@ -174,7 +176,8 @@ class InlineEditAction : AnAction(), DumbAware {
         val topPanel = ShadowPanel(MigLayout("wrap 1, insets 10 $leftInset 8 8, gap 0!")).apply {
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
-            background = defaultBackground
+//            background = defaultBackground
+            background =  JBColor(0x20888888.toInt(), 0x20888888.toInt())
             isOpaque = false
         }
 
@@ -235,6 +238,27 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
     }
 
     private val subPanelB: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
+        // Get the global color scheme and default background color
+        val globalScheme = EditorColorsManager.getInstance().globalScheme
+        val defaultBackground = globalScheme.defaultBackground
+
+        val leftButton = CustomButton("Esc to cancel", {onCancel()}).apply {
+            foreground = Color(128, 128, 128, 200)
+            background = defaultBackground
+        }
+
+        val progressBar = JProgressBar()
+        progressBar.isIndeterminate = true
+
+        border = EmptyBorder(4, 8, 4, 8)
+        add(leftButton, "align left")
+        add(progressBar, "align right")
+        isOpaque = false
+
+        cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
+    }
+
+    private val subPanelC: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
         val leftLabel = JLabel("Enter follow-up instructions").apply {
             foreground = Color(128, 128, 128, 200)
             font = Font("Arial", Font.PLAIN, 11)
@@ -268,6 +292,13 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
     fun enter() {
         remove(subPanelA)
         add(subPanelB, "grow, gap 0!")
+        revalidate()
+        repaint()
+    }
+
+    fun finish() {
+        remove(subPanelB)
+        add(subPanelC, "grow, gap 0!")
         revalidate()
         repaint()
     }
@@ -361,10 +392,6 @@ class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
 }
 
 class ShadowPanel(layout: LayoutManager) : JXPanel(layout) {
-
-    init {
-
-    }
     override fun getPreferredSize(): Dimension {
         val prefSize = super.getPreferredSize()
         val insets = getInsets()
