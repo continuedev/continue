@@ -27,6 +27,7 @@ export type Protocol = {
 
   // History
   "history/list": [undefined, SessionInfo[]];
+  "history/copy": [{ id: string; workspaceDirectory: string }, void];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, PersistedSessionInfo];
   "history/save": [PersistedSessionInfo, void];

@@ -15,8 +15,31 @@ export function getContinueGlobalPath(): string {
   return continuePath;
 }
 
+export function getContinueWorkspacePath(workspaceDirectory: string): string {
+  // Note: it might be cleaner to have a single getContinuePath() that accepts an
+  // argument indicating whether destination is global or local/workspace
+  const continuePath = path.join(workspaceDirectory, ".continue");
+  if (!fs.existsSync(continuePath)) {
+    fs.mkdirSync(continuePath);
+  }
+  return continuePath;
+}
+
 export function getSessionsFolderPath(): string {
   const sessionsPath = path.join(getContinueGlobalPath(), "sessions");
+  if (!fs.existsSync(sessionsPath)) {
+    fs.mkdirSync(sessionsPath);
+  }
+  return sessionsPath;
+}
+
+export function getWorkspaceSessionsFolderPath(
+  workspaceDirectory: string,
+): string {
+  const sessionsPath = path.join(
+    getContinueWorkspacePath(workspaceDirectory),
+    "sessions",
+  );
   if (!fs.existsSync(sessionsPath)) {
     fs.mkdirSync(sessionsPath);
   }
@@ -33,6 +56,16 @@ export function getIndexFolderPath(): string {
 
 export function getSessionFilePath(sessionId: string): string {
   return path.join(getSessionsFolderPath(), `${sessionId}.json`);
+}
+
+export function getWorkspaceSessionFilePath(
+  workspaceDirectory: string,
+  sessionId: string,
+): string {
+  return path.join(
+    getWorkspaceSessionsFolderPath(workspaceDirectory),
+    `${sessionId}.json`,
+  );
 }
 
 export function getSessionsListPath(): string {

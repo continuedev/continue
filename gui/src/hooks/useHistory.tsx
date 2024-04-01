@@ -75,6 +75,11 @@ function useHistory(dispatch: Dispatch) {
     return await ideRequest("history/save", sessionInfo);
   }
 
+  async function copySessionToWorkspace(id: string, workspaceDirectory: string) {
+
+    return await ideRequest("history/copy", { id, workspaceDirectory });
+  }
+
   async function deleteSession(id: string) {
     return await ideRequest("history/delete", { id });
   }
@@ -83,7 +88,7 @@ function useHistory(dispatch: Dispatch) {
     return await ideRequest("history/load", { id });
   }
 
-  return { getHistory, saveSession, deleteSession, loadSession };
+  return { getHistory, saveSession, copySessionToWorkspace, deleteSession, loadSession };
 }
 
 export default useHistory;

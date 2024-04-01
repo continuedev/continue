@@ -1,4 +1,4 @@
-import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftIcon, TrashIcon, DocumentDuplicateIcon } from "@heroicons/react/24/outline";
 import { PersistedSessionInfo, SessionInfo } from "core";
 import MiniSearch from "minisearch";
 import React, { Fragment, useEffect, useState } from "react";
@@ -91,9 +91,10 @@ function TableRow({
   const navigate = useNavigate();
   const apiUrl = window.serverUrl;
   const workspacePaths = window.workspacePaths || [""];
+  const workspaceDirectory = workspacePaths?.[0] || "";
   const [hovered, setHovered] = useState(false);
 
-  const { saveSession, deleteSession, loadSession } = useHistory(dispatch);
+  const { saveSession, copySessionToWorkspace, deleteSession, loadSession } = useHistory(dispatch);
 
   return (
     <td
@@ -129,6 +130,18 @@ function TableRow({
             {lastPartOfPath(session.workspaceDirectory || "")}/
           </div>
         </TdDiv>
+        {hovered && (
+          <HeaderButtonWithText
+            className="mr-2"
+            text="Copy to Workspace"
+            onClick={async () => {
+              // Implement the function to copy the session to the "sessions" directory
+              copySessionToWorkspace(session.sessionId, workspaceDirectory)
+            }}
+          >
+            <DocumentDuplicateIcon width="1.3em" height="1.3em" />
+          </HeaderButtonWithText>
+        )}
 
         {hovered && (
           <HeaderButtonWithText

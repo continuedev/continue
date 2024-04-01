@@ -214,6 +214,9 @@ export class VsCodeWebviewProtocol {
     this.on("history/save", (msg) => {
       historyManager.save(msg.data);
     });
+    this.on("history/copy", (msg) => {
+      historyManager.copy(msg.data.id, msg.data.workspaceDirectory);
+    });
     this.on("history/delete", (msg) => {
       historyManager.delete(msg.data.id);
     });

@@ -1,6 +1,10 @@
 import * as fs from "fs";
 import { PersistedSessionInfo, SessionInfo } from "..";
-import { getSessionFilePath, getSessionsListPath } from "./paths";
+import {
+  getWorkspaceSessionFilePath,
+  getSessionFilePath,
+  getSessionsListPath,
+} from "./paths";
 
 class HistoryManager {
   list(): SessionInfo[] {
@@ -122,6 +126,20 @@ class HistoryManager {
         );
       }
     }
+  }
+
+  copy(sessionId: string, workspaceDirectory: string) {
+    // Delete a session
+    // const sessionId = session.sessionId;
+    const sessionFile = getSessionFilePath(sessionId);
+    if (!fs.existsSync(sessionFile)) {
+      throw new Error(`Session file ${sessionFile} does not exist`);
+    }
+    // const workspaceDirectory = session.workspaceDirectory;
+    fs.copyFileSync(
+      sessionFile,
+      getWorkspaceSessionFilePath(workspaceDirectory, sessionId),
+    );
   }
 }
 
