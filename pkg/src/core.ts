@@ -303,7 +303,7 @@ export class Core {
       msg: Message<Protocol["streamDiffLines"][0]>,
     ) {
       const data = msg.data;
-      const llm = await configHandler.llmFromTitle();
+      const llm = await configHandler.llmFromTitle(msg.data.modelTitle);
       for await (const diffLine of streamDiffLines(
         data.prefix,
         data.highlighted,

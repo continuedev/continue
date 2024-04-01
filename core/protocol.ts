@@ -105,6 +105,7 @@ export type Protocol = {
       suffix: string;
       input: string;
       language: string | undefined;
+      modelTitle: string | undefined;
     },
     ProtocolGeneratorType<DiffLine>,
   ];

@@ -21,6 +21,13 @@ class ContinuePluginToolWindowFactory : ToolWindowFactory, DumbAware {
         toolWindow.contentManager.addContent(content)
         val titleActions = mutableListOf<AnAction>()
         createTitleActions(titleActions)
+
+        // Add MaximizeToolWindow action
+        val action = ActionManager.getInstance().getAction("MaximizeToolWindow")
+        if (action != null) {
+            titleActions.add(action)
+        }
+
         toolWindow.setTitleActions(titleActions)
     }
 

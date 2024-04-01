@@ -163,6 +163,16 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     description: "Select Code",
   },
   {
+    mac: "⌘ I",
+    windows: "⌃ I",
+    description: "Edit highlighted code",
+  },
+  {
+    mac: "⌘ ⇧ I",
+    windows: "⌃ ⇧ I",
+    description: "Toggle inline edit focus",
+  },
+  {
     mac: "⌘ ⇧ ⏎",
     windows: "⌃ ⇧ ⏎",
     description: "Accept Diff",

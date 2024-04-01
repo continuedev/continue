@@ -1,8 +1,11 @@
 package com.github.continuedev.continueintellijextension.editor
 
 import com.github.continuedev.continueintellijextension.`continue`.GetTheme
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
 import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
+import com.google.gson.Gson
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -12,6 +15,7 @@ import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.DumbAware
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.util.TextRange
 import com.intellij.ui.JBColor
@@ -49,6 +53,21 @@ class InlineEditAction : AnAction(), DumbAware {
         val project = e.getData(PlatformDataKeys.PROJECT) ?: return
         val manager = EditorComponentInlaysManager.from(editor)
 
+        // Get list of model titles
+        val continuePluginService = project.service<ContinuePluginService>()
+        val modelTitles = mutableListOf<String>()
+        continuePluginService.coreMessenger?.request("config/getBrowserSerialized", null, null) { response ->
+            val gson = Gson()
+            val config = gson.fromJson(response, Map::class.java)
+            val models = config["models"] as List<Map<String, Any>>
+            modelTitles.addAll(models.map { it["title"] as String })
+        }
+        val maxWaitTime = 200
+        val startTime = System.currentTimeMillis()
+        while (modelTitles.isEmpty() && System.currentTimeMillis() - startTime < maxWaitTime) {
+            Thread.sleep(20)
+        }
+
         // Get highlighted range
         val selectionModel = editor.selectionModel
         val start = selectionModel.selectionStart
@@ -85,17 +104,19 @@ class InlineEditAction : AnAction(), DumbAware {
         }, {
             customPanelRef.get().finish()
         })
-        val diffStreamService = service<DiffStreamService>()
+        val diffStreamService = project.service<DiffStreamService>()
         diffStreamService.register(diffStreamHandler, editor)
 
         diffStreamHandler.setup()
 
+        val comboBoxRef = Ref<JComboBox<String>>()
+
         fun onEnter() {
             customPanelRef.get().enter()
-            diffStreamHandler.run(textArea.text, prefix, highlighted, suffix)
+            diffStreamHandler.run(textArea.text, prefix, highlighted, suffix, comboBoxRef.get().selectedItem as String)
         }
 
-        val panel = makePanel(customPanelRef, textArea, inlayRef, leftInset, {onEnter()}, {
+        val panel = makePanel(project, customPanelRef, textArea, inlayRef, comboBoxRef, leftInset, modelTitles, {onEnter()}, {
             diffStreamService.reject(editor)
             selectionModel.setSelection(start, end)
         }, {
@@ -115,7 +136,7 @@ class InlineEditAction : AnAction(), DumbAware {
         textArea.addKeyListener(object : KeyAdapter() {
             override fun keyPressed(e: KeyEvent) {
                 if (e.keyCode == KeyEvent.VK_ESCAPE) {
-                    diffStreamHandler.reject()
+                    diffStreamService.reject(editor)
 
                     // Re-highlight the selected text
                     selectionModel.setSelection(start, end)
@@ -172,7 +193,7 @@ class InlineEditAction : AnAction(), DumbAware {
         return textArea
     }
 
-    fun makePanel(customPanelRef: Ref<CustomPanel>, textArea: JTextArea, inlayRef: Ref<Disposable>, leftInset: Int, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
+    fun makePanel(project: Project, customPanelRef: Ref<CustomPanel>, textArea: JTextArea, inlayRef: Ref<Disposable>, comboBoxRef: Ref<JComboBox<String>>, leftInset: Int, modelTitles: List<String>, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
         val topPanel = ShadowPanel(MigLayout("wrap 1, insets 10 $leftInset 8 8, gap 0!")).apply {
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
@@ -181,7 +202,7 @@ class InlineEditAction : AnAction(), DumbAware {
             isOpaque = false
         }
 
-        val panel = CustomPanel(MigLayout("wrap 1, insets 0, gap 0!, fillx"), onEnter, onCancel, onAccept, onReject).apply {
+        val panel = CustomPanel(MigLayout("wrap 1, insets 0, gap 0!, fillx"), project, modelTitles, comboBoxRef, onEnter, onCancel, onAccept, onReject).apply {
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
             background = defaultBackground
@@ -214,24 +235,56 @@ class InlineEditAction : AnAction(), DumbAware {
     }
 }
 
-class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel(layout) {
+class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>, comboBoxRef: Ref<JComboBox<String>>, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel(layout) {
     private val subPanelA: JPanel = JPanel(MigLayout("insets 0, fillx")).apply {
         val globalScheme = EditorColorsManager.getInstance().globalScheme
         val defaultBackground = globalScheme.defaultBackground
 
-        val leftButton = CustomButton("Esc to cancel", {onCancel()}).apply {
+        val leftButton = CustomButton("Esc to cancel") { onCancel() }.apply {
             foreground = Color(128, 128, 128, 200)
             background = defaultBackground
         }
-        val rightButton = CustomButton("Submit", {onEnter()}).apply {
-            background = GetTheme().getHighlight()
+
+        val continueSettingsService = service<ContinueExtensionSettings>()
+
+        val dropdown = JComboBox(modelTitles.toTypedArray()).apply {
+            isEditable = true
+            background = defaultBackground
+            foreground = Color(128, 128, 128, 200)
+            font = Font("Arial", Font.PLAIN, 11)
+            border = EmptyBorder(2, 4, 2, 4)
+            isOpaque = false
+            isEditable = false
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            renderer = DefaultListCellRenderer().apply {
+                horizontalAlignment = SwingConstants.RIGHT
+            }
+            selectedIndex = continueSettingsService.continueState.lastSelectedInlineEditModel?.let { modelTitles.indexOf(it) } ?: 0
+
+            addActionListener {
+                continueSettingsService.continueState.lastSelectedInlineEditModel = selectedItem as String
+            }
+        }
+
+        comboBoxRef.set(dropdown)
+
+        val rightButton = CustomButton("Submit") { onEnter() }.apply {
+//            background = GetTheme().getHighlight()
+            background = JBColor(0xe04573e8.toInt(), 0xe04573e8.toInt())
             foreground = JBColor.WHITE
+        }
+
+        val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {
+            isOpaque = false
+            border = EmptyBorder(0, 0, 0, 0)
+            add(dropdown, "align right")
+            add(rightButton, "align right")
         }
 
         border = EmptyBorder(4, 8, 4, 8)
 
         add(leftButton, "align left")
-        add(rightButton, "align right")
+        add(rightPanel, "align right")
         isOpaque = false
 
         cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
@@ -242,7 +295,7 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
         val globalScheme = EditorColorsManager.getInstance().globalScheme
         val defaultBackground = globalScheme.defaultBackground
 
-        val leftButton = CustomButton("Esc to cancel", {onCancel()}).apply {
+        val leftButton = CustomButton("Esc to cancel") { onCancel() }.apply {
             foreground = Color(128, 128, 128, 200)
             background = defaultBackground
         }
@@ -264,15 +317,15 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
             font = Font("Arial", Font.PLAIN, 11)
         }
 
-        val leftButton = CustomButton("${getAltKeyLabel()}⇧N", {onReject()}).apply {
+        val leftButton = CustomButton("${getAltKeyLabel()}⇧N") { onReject() }.apply {
             background = Color(255, 0, 0, 64)
         }
 
-        val rightButton = CustomButton("${getAltKeyLabel()}⇧Y", {onAccept()}).apply {
+        val rightButton = CustomButton("${getAltKeyLabel()}⇧Y") { onAccept() }.apply {
             background = Color(0, 255, 0, 64)
         }
 
-        val rightPanel = JPanel().apply {
+        val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {
             isOpaque = false
             add(leftButton, "align right")
             add(rightButton, "align right")
@@ -286,11 +339,14 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
     }
 
     fun setup() {
+        remove(subPanelB)
+        remove(subPanelC)
         add(subPanelA, "grow, gap 0!")
     }
 
     fun enter() {
         remove(subPanelA)
+        remove(subPanelC)
         add(subPanelB, "grow, gap 0!")
         revalidate()
         repaint()
@@ -350,7 +406,7 @@ class CustomButton(text: String, onClick: () -> Unit) : JLabel(text, CENTER) {
             }
         })
 
-        verticalAlignment = CENTER
+//        verticalAlignment = CENTER
         font = Font("Arial", Font.PLAIN, 11)
         border = EmptyBorder(2, 4, 2, 4)
     }

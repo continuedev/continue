@@ -9,6 +9,7 @@ import {
 import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { gptEditPrompt } from "../llm/templates/edit";
+import { Telemetry } from "./posthog";
 
 function constructPrompt(
   prefix: string,
@@ -52,6 +53,11 @@ export async function* streamDiffLines(
   input: string,
   language: string | undefined,
 ): AsyncGenerator<DiffLine> {
+  Telemetry.capture("inlineEdit", {
+    model: llm.model,
+    provider: llm.providerName,
+  });
+
   // Strip common indentation for the LLM, then add back after generation
   let oldLines =
     highlighted.length > 0

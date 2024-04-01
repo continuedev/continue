@@ -16,7 +16,7 @@
                     factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
         <projectService id="ContinuePluginService"
                         serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>
-        <applicationService
+        <projectService
                 id="DiffStreamService"
                 serviceImplementation="com.github.continuedev.continueintellijextension.editor.DiffStreamService"/>
     </extensions>
@@ -44,6 +44,16 @@
                                first-keystroke="ctrl I"/>
             <keyboard-shortcut keymap="Mac OS X"
                                first-keystroke="meta I"/>
+        </action>
+
+        <action class="com.github.continuedev.continueintellijextension.editor.ToggleInlineEditAction"
+                id="continue.toggleInlineEdit"
+                description="Toggle Inline Edit"
+                text="Toggle Inline Edit">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl shift I"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta shift I"/>
         </action>
 
         <action id="continue.acceptDiff"
