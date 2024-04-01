@@ -10,7 +10,6 @@ import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.impl.EditorImpl
-import com.intellij.openapi.editor.richcopy.model.FontNameRegistry
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.util.TextRange
@@ -20,10 +19,10 @@ import com.intellij.util.ui.UIUtil
 import net.miginfocom.swing.MigLayout
 import org.jdesktop.swingx.JXPanel
 import org.jdesktop.swingx.JXTextArea
+import org.jdesktop.swingx.border.DropShadowBorder
 import java.awt.*
 import java.awt.event.*
 import java.awt.geom.RoundRectangle2D
-import javax.swing.JComponent
 import javax.swing.JLabel
 import javax.swing.JPanel
 import javax.swing.JTextArea
@@ -31,6 +30,8 @@ import javax.swing.border.EmptyBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
 import kotlin.math.max
+
+const val SHADOW_SIZE = 7
 
 /**
  * Adapted from https://github.com/cursive-ide/component-inlay-example/blob/master/src/main/kotlin/inlays/InlineEditAction.kt
@@ -164,7 +165,7 @@ class InlineEditAction : AnAction(), DumbAware {
     }
 
     fun makePanel(customPanelRef: Ref<CustomPanel>, textArea: JTextArea, inlayRef: Ref<Disposable>, leftInset: Int, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
-        val topPanel = JXPanel(MigLayout("wrap 1, insets 10 $leftInset 8 8, gap 0!")).apply {
+        val topPanel = ShadowPanel(MigLayout("wrap 1, insets 10 $leftInset 8 8, gap 0!")).apply {
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
             background = defaultBackground
@@ -181,6 +182,13 @@ class InlineEditAction : AnAction(), DumbAware {
             preferredSize = textArea.preferredSize
             isOpaque = false
             setup()
+
+            val shadow = DropShadowBorder()
+            shadow.shadowColor = JBColor(0xb0b0b0, 0x808080)
+            shadow.isShowRightShadow = true
+            shadow.isShowBottomShadow = true
+            shadow.shadowSize = SHADOW_SIZE
+            border = shadow
         }
         customPanelRef.set(panel)
 
@@ -273,8 +281,8 @@ class CustomPanel(layout: MigLayout, onEnter: () -> Unit, onCancel: () -> Unit, 
         g2.drawRoundRect(
                 borderThickness / 2,
                 borderThickness / 2,
-                width - borderThickness - 1,
-                height - borderThickness - 1,
+                width - borderThickness - SHADOW_SIZE + 1,
+                height - borderThickness - SHADOW_SIZE + 1,
                 borderRadius,
                 borderRadius
         )
@@ -343,6 +351,24 @@ class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
             g.drawString("Enter instructions to edit highlighted code", 8, 19)
         }
 
+        super.paintComponent(g)
+    }
+}
+
+class ShadowPanel(layout: LayoutManager) : JXPanel(layout) {
+
+    init {
+
+    }
+    override fun getPreferredSize(): Dimension {
+        val prefSize = super.getPreferredSize()
+        val insets = getInsets()
+        prefSize.width += insets.left + insets.right
+        prefSize.height += insets.top + insets.bottom
+        return prefSize
+    }
+
+    override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
     }
 }
