@@ -44,7 +44,7 @@ class DiffStreamHandler(
 
     private val currentLineKey = run {
         val attributes = TextAttributes().apply {
-            backgroundColor = JBColor(0x20888888.toInt(), 0x20888888.toInt())
+            backgroundColor = JBColor(0x40888888.toInt(), 0x40888888.toInt())
         }
         val key = TextAttributesKey.createTextAttributesKey("CONTINUE_DIFF_CURRENT_LINE")
         key.let { editor.colorsScheme.setAttributes(it, attributes) }
@@ -53,7 +53,7 @@ class DiffStreamHandler(
 
     private val unfinishedKey = run {
         val attributes = TextAttributes().apply {
-            backgroundColor = JBColor(0x10888888.toInt(), 0x10888888.toInt())
+            backgroundColor = JBColor(0x20888888.toInt(), 0x20888888.toInt())
         }
         val key = TextAttributesKey.createTextAttributesKey("CONTINUE_DIFF_UNFINISHED_LINE")
         key.let { editor.colorsScheme.setAttributes(it, attributes) }
@@ -64,6 +64,17 @@ class DiffStreamHandler(
     private var currentLineHighlighter: RangeHighlighter? = null
     private val unfinishedHighlighters: MutableList<RangeHighlighter> = mutableListOf()
     private var changeCount: Int = 0
+    private var running: Boolean = false
+
+    init {
+        // Highlight the range with unfinished color
+        for (i in startLine..endLine) {
+            val highlighter = editor.markupModel.addLineHighlighter(unfinishedKey, min(
+                    i, editor.document.lineCount - 1
+            ), HighlighterLayer.FIRST)
+            unfinishedHighlighters.add(highlighter)
+        }
+    }
 
     private fun handleDiffLine(type: DiffLineType, line: String) {
         println("DiffStreamHandler: handleDiffLine: $currentLine, $type, $line")
@@ -136,17 +147,22 @@ class DiffStreamHandler(
     fun accept() {
         // Accept the changes
         editor.markupModel.removeAllHighlighters()
+        onClose()
+        running = false
     }
 
     fun reject() {
         // Reject the changes
         resetState()
         onClose()
+        running = false
     }
 
     fun run(input : String, prefix : String, highlighted : String, suffix : String) {
         // Undo changes
         resetState()
+
+        running = true
 
         // Highlight the range with unfinished color
         for (i in startLine..endLine) {
@@ -169,6 +185,10 @@ class DiffStreamHandler(
                 "suffix" to suffix,
                 "language" to virtualFile?.fileType?.name,
         ), null) { response ->
+            if (!running) {
+                return@request
+            }
+
             val parsed = Gson().fromJson(response, Map::class.java)
             val done = parsed["done"] as? Boolean
             if (done == true) {
