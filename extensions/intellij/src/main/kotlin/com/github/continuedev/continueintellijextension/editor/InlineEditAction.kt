@@ -12,19 +12,20 @@ import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.Ref
 import com.intellij.openapi.util.TextRange
+import com.intellij.ui.JBColor
+import com.intellij.util.ui.JBUI
 import com.intellij.util.ui.UIUtil
 import net.miginfocom.swing.MigLayout
+import org.jdesktop.swingx.JXPanel
 import org.jdesktop.swingx.JXTextArea
-import org.jdesktop.swingx.border.DropShadowBorder
 import java.awt.*
 import java.awt.event.ComponentAdapter
 import java.awt.event.ComponentEvent
 import java.awt.event.KeyAdapter
 import java.awt.event.KeyEvent
+import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.JTextArea
-import javax.swing.border.CompoundBorder
-import javax.swing.border.EmptyBorder
 import kotlin.math.max
 
 
@@ -102,7 +103,13 @@ class InlineEditAction : AnAction(), DumbAware {
             }
         })
 
-        val panel = makePanel(textArea, inlayRef, leftInset)
+        val panel = makePanel(textArea, inlayRef, leftInset, {
+            diffStreamService.accept(editor)
+            inlayRef.get().dispose()
+        }, {
+            diffStreamService.reject(editor)
+            inlayRef.get().dispose()
+        })
         val inlay = manager.insertAfter(lineNumber, panel)
         panel.revalidate()
         inlayRef.set(inlay)
@@ -131,7 +138,7 @@ class InlineEditAction : AnAction(), DumbAware {
             isOpaque = false
             background = GetTheme().getSecondaryDark()
             maximumSize = Dimension(400, Short.MAX_VALUE.toInt())
-            margin = Insets(8, 8, 8, 8)
+            margin = JBUI.insets(8)
             font = Font("Arial", Font.PLAIN, 14)
         }
         textArea.putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
@@ -139,7 +146,7 @@ class InlineEditAction : AnAction(), DumbAware {
         return textArea
     }
 
-    fun makePanel(textArea: JTextArea, inlayRef: Ref<Disposable>, leftInset: Int): JPanel {
+    fun makePanel(textArea: JTextArea, inlayRef: Ref<Disposable>, leftInset: Int, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
 //        val browser = preloadedBrowser?.browser ?: return JPanel()
 //        browser.component.preferredSize = browser.component.preferredSize.apply {
 //            height = 60
@@ -157,18 +164,53 @@ class InlineEditAction : AnAction(), DumbAware {
 ////                panel.repaint()
 //            }
 //        }
+        val topPanel = JXPanel(MigLayout("wrap 1, insets 10 $leftInset 4 4, gap 0!")).apply {
+            // Transparent background
+            val globalScheme = EditorColorsManager.getInstance().globalScheme
+            val defaultBackground = globalScheme.defaultBackground
+            background = defaultBackground
+            isOpaque = false
+        }
 
-        val panel = JPanel(MigLayout("wrap 1, insets 10 $leftInset 4 4, gap 0!, fillx")).apply {
+        val panel = CustomPanel(MigLayout("wrap 1, insets 0, gap 0!, fillx")).apply {
             // Transparent background
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
             background = defaultBackground
             add(textArea, "grow, gap 0!, height 100%")
-//            add(browser.component, "grow, gap 0!")
+
+            // Create a subpanel with buttons
+            val subPanel = JPanel(MigLayout("insets 0, fillx")).apply {
+                val leftButton = JButton("Reject").apply {
+                    isOpaque = false
+                    cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+                    addActionListener {
+                        onReject()
+                    }
+                    isBorderPainted = false
+                }
+                val rightButton = JButton("Accept").apply {
+                    isOpaque = false
+                    cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+//                    background = GetTheme().getHighlight()
+                    background = JBColor.BLUE
+                    addActionListener {
+                        onAccept()
+                    }
+                    isBorderPainted = false
+                }
+
+                add(leftButton, "align left")
+                add(rightButton, "align right")
+                isOpaque = false
+            }
+
+            add(subPanel, "grow, gap 0!")
+
             putClientProperty(UIUtil.HIDE_EDITOR_FROM_DATA_CONTEXT_PROPERTY, true)
             preferredSize = textArea.preferredSize
+            isOpaque = false
         }
-        panel.isOpaque = false
 
         textArea.addComponentListener(object : ComponentAdapter() {
             override fun componentResized(e: ComponentEvent?) {
@@ -177,35 +219,16 @@ class InlineEditAction : AnAction(), DumbAware {
             }
         })
 
+        topPanel.add(panel, "grow, gap 0!")
 
-        return panel
+        return topPanel
     }
 }
 
-class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
-
-    init {
-        setRows(rows + 1)
-        setColumns(columns)
-
-        val shadow = DropShadowBorder()
-        shadow.shadowColor = Color.BLACK
-        shadow.isShowLeftShadow = true
-        shadow.isShowRightShadow = true
-        shadow.isShowBottomShadow = true
-        shadow.isShowTopShadow = true
-        shadow.cornerSize = 15
-        shadow.shadowSize = 5
-        // border = CompoundBorder(shadow, EmptyBorder(6, 6, 6, 6))
-    }
-
+class CustomPanel(layout: MigLayout): JPanel(layout) {
     override fun paintComponent(g: Graphics) {
         val g2 = g as Graphics2D
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
-
-        // Fill the background with the desired color
-        g2.color = background
-        g2.fillRoundRect(0, 0, width - 1, height - 1, 15, 15)
 
         // Draw the box shadow
 //        val shadowColor = Color(0, 0, 0, 100) // Change this to your desired shadow color and opacity
@@ -222,12 +245,6 @@ class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
 //                15
 //        )
 
-        // Draw placeholder
-        if (getText().isEmpty()) {
-            g.setColor(Color(128, 128, 128, 200))
-            g.drawString("Enter instructions to edit highlighted code", 8, 21);
-        }
-
         // Draw the rounded border
         val borderColor = Color(128, 128, 128, 128)
         val borderThickness = 1
@@ -243,6 +260,23 @@ class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
                 borderRadius,
                 borderRadius
         )
+
+        super.paintComponent(g)
+    }
+}
+
+class CustomTextArea(rows: Int, columns: Int) : JXTextArea("") {
+    init {
+        setRows(rows)
+        setColumns(columns)
+    }
+
+    override fun paintComponent(g: Graphics) {
+        // Draw placeholder
+        if (text.isEmpty()) {
+            g.color = Color(128, 128, 128, 200)
+            g.drawString("Enter instructions to edit highlighted code", 8, 21)
+        }
 
         super.paintComponent(g)
     }
