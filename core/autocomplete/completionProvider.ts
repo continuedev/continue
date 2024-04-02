@@ -377,12 +377,13 @@ export async function getTabCompletion(
         yield update;
       }
     };
-    let chars = generatorWithCancellation();
-    const gen2 = onlyWhitespaceAfterEndOfLine(
-      noFirstCharNewline(chars),
-      lang.endOfLine,
-    );
-    let lineGenerator = stopAtRepeatingLines(stopAtLines(streamLines(gen2)));
+    let charGenerator = generatorWithCancellation();
+    charGenerator = noFirstCharNewline(charGenerator);
+    charGenerator = onlyWhitespaceAfterEndOfLine(charGenerator, lang.endOfLine);
+
+    let lineGenerator = streamLines(charGenerator);
+    lineGenerator = stopAtLines(lineGenerator);
+    lineGenerator = stopAtRepeatingLines(lineGenerator);
     lineGenerator = avoidPathLine(lineGenerator, lang.comment);
     lineGenerator = noTopLevelKeywordsMidline(lineGenerator, lang.stopWords);
     lineGenerator = streamWithNewLines(lineGenerator);

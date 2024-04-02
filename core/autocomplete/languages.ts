@@ -10,8 +10,8 @@ export interface AutocompleteLanguageInfo {
 
 // TypeScript
 export const Typescript = {
-  topLevelKeywords: ["function", "class", "module", "export", "import"],
-  singleLineComment: "//",
+  stopWords: ["function", "class", "module", "export", "import"],
+  comment: "//",
   endOfLine: [";"],
 };
 
