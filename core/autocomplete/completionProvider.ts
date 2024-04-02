@@ -337,13 +337,11 @@ export async function getTabCompletion(
   } else {
     const stop = [
       ...(completionOptions?.stop || []),
-      ...multilineStops,
-      ...commonStops,
-      ...(llm.model.toLowerCase().includes("starcoder2")
-        ? STARCODER2_T_ARTIFACTS
-        : []),
-      ...(lang.stopWords ?? []),
-      ...lang.topLevelKeywords.map((word) => `\n${word}`),
+      "\n\n",
+      "\r\n\r\n",
+      "/src/",
+      "```",
+      ...lang.stopWords,
     ];
 
     const multiline =
