@@ -27,7 +27,7 @@ npm run package
 
 popd
 
-echo "Installing pkg dependencies..."
-pushd pkg
+echo "Installing binary dependencies..."
+pushd binary
 npm install
 npm run build

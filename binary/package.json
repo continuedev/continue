@@ -1,5 +1,5 @@
 {
-  "name": "pkg",
+  "name": "binary",
   "version": "1.0.0",
   "description": "",
   "main": "out/index.js",

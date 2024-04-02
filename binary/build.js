@@ -118,6 +118,7 @@ const targetToLanceDb = {
   console.log("[info] Building binaries with pkg...");
   for (const target of targets) {
     const targetDir = `bin/${target}`;
+    fs.mkdirSync(targetDir, { recursive: true });
     console.log(`[info] Building ${target}...`);
     execSync(
       `npx pkg --no-bytecode --public-packages "*" --public pkgJson/${target} --out-path ${targetDir}`,

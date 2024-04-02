@@ -142,17 +142,17 @@
           }
         }
       ]
-    },  
+    },
     //
     // esbuild for the core binary
     {
-      "label": "pkg:esbuild",
+      "label": "binary:esbuild",
       "type": "shell",
       "command": "npm",
       "args": ["run", "esbuild"],
       "problemMatcher": [],
       "options": {
-        "cwd": "pkg"
+        "cwd": "binary"
       }
     }
   ]
