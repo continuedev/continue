@@ -141,6 +141,7 @@ const targetToLanceDb = {
 
     // Download and unzip prebuilt esbuild binary for the target
     console.log(`[info] Downloading esbuild for ${target}...`);
+    // Version is pinned to 0.19.11 in package.json to make sure that they match
     execSync(
       `curl -o ${targetDir}/esbuild.tgz https://registry.npmjs.org/@esbuild/${target}/-/${target}-0.19.11.tgz`,
     );
