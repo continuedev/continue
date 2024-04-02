@@ -1,5 +1,5 @@
-
-import type { AxiosInstance } from "axios";
+import { RequestOptions } from "../../..";
+import { fetchwithRequestOptions } from "../../../util/fetchWithOptions";
 const { convert: adf2md } = require("adf-to-md");
 
 interface JiraClientOptions {
@@ -8,6 +8,7 @@ interface JiraClientOptions {
   password: string;
   issueQuery?: string;
   apiVersion?: string;
+  requestOptions?: RequestOptions;
 }
 
 interface JiraComment {
@@ -63,95 +64,110 @@ export interface Issue {
 
 export class JiraClient {
   private readonly options: Required<JiraClientOptions>;
-  private _api: AxiosInstance | null = null;
+  private baseUrl: string;
+  private authHeader;
   constructor(options: JiraClientOptions) {
     this.options = {
       issueQuery: `assignee = currentUser() AND resolution = Unresolved order by updated DESC`,
-      apiVersion: '3',
-      ...options
+      apiVersion: "3",
+      requestOptions: {},
+      ...options,
     };
-  }
-
-  private async getApi() {
-    if (!this._api) {
-      
-    const { default: Axios } = await import("axios");
-
-      this._api = Axios.create({
-        baseURL: `https://${this.options.domain}/rest/api/${this.options.apiVersion}/`,
-        ...(this.options.username
-          ? {
-              auth: {
-                username: this.options.username,
-                password: this.options.password,
-              },
-            }
-          : {
-              headers: {
-                Authorization: `Bearer ${this.options.password}`,
-              },
-            }),
-      });
-    }
-
-    return this._api;
+    this.baseUrl = `https://${this.options.domain}/rest/api/${this.options.apiVersion}`;
+    this.authHeader = this.options.username
+      ? {
+          Authorization:
+            "Basic " +
+            btoa(this.options.username + ":" + this.options.password),
+        }
+      : {
+          Authorization: `Bearer ${this.options.password}`,
+        };
   }
 
   async issue(issueId: string): Promise<Issue> {
-    const api = await this.getApi();
     const result = {} as Issue;
 
-    const issue = await api
-      .get<JiraIssue>(`/issue/${issueId}`, {
-        params: {
-          fields: "description,comment,summary",
+    const response = await fetchwithRequestOptions(
+      new URL(
+        this.baseUrl + `/issue/${issueId}?fields=description,comment,summary`
+      ),
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...this.authHeader,
         },
-      })
-      .then((result) => result.data);
-    
+      },
+      this.options.requestOptions
+    );
+
+    const issue = (await response.json()) as any;
+
     result.key = issue.key;
     result.summary = issue.fields.summary;
 
-    
-    if (typeof issue.fields.description === 'string') {
+    if (typeof issue.fields.description === "string") {
       result.description = issue.fields.description;
-    } else if(issue.fields.description) {
+    } else if (issue.fields.description) {
       result.description = adf2md(issue.fields.description).result;
     } else {
       result.description = "";
     }
 
-    result.comments = issue.fields.comment?.comments?.map((comment) => {
-      const body = typeof comment.body === 'string' ? comment.body : adf2md(comment.body).result;
+    result.comments =
+      issue.fields.comment?.comments?.map((comment: any) => {
+        const body =
+          typeof comment.body === "string"
+            ? comment.body
+            : adf2md(comment.body).result;
 
-      return {
-        body,
-        author: comment.author,
-        created: comment.created,
-        updated: comment.updated,
-      };
-    }) ?? [];
-
+        return {
+          body,
+          author: comment.author,
+          created: comment.created,
+          updated: comment.updated,
+        };
+      }) ?? [];
 
     return result;
   }
 
   async listIssues(): Promise<Array<QueryResult>> {
-    const api = await this.getApi();
-
-    const results = await api.get<QueryResults>("/search", {
-      params: {
-        jql:
-          this.options.issueQuery ??
-          `assignee = currentUser() AND resolution = Unresolved order by updated DESC`,
-        fields: "summary",
+    const response = await fetchwithRequestOptions(
+      new URL(
+        this.baseUrl +
+          `/search?fields=summary&jql=${
+            this.options.issueQuery ??
+            `assignee = currentUser() AND resolution = Unresolved order by updated DESC`
+          }`
+      ),
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          ...this.authHeader,
+        },
       },
-    });
+      this.options.requestOptions
+    );
 
-    return results.data?.issues?.map((issue) => ({
-      id: issue.id,
-      key: issue.key,
-      summary: issue.fields.summary,
-    })) ?? [];
+    if (response.status != 200) {
+      console.warn(
+        "Unable to get jira tickets. Response code from API is",
+        response.status
+      );
+      return Promise.resolve([]);
+    }
+
+    const data = (await response.json()) as any;
+
+    return (
+      data.issues?.map((issue: any) => ({
+        id: issue.id,
+        key: issue.key,
+        summary: issue.fields.summary,
+      })) ?? []
+    );
   }
 }
