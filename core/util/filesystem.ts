@@ -26,6 +26,7 @@ class FileSystemIde implements IDE {
       name: "na",
       version: "0.1",
       remoteName: "na",
+      extensionVersion: "na",
     });
   }
 

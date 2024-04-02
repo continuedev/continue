@@ -6,11 +6,13 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
+import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.SelectionModel
+import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
@@ -168,11 +170,17 @@ class IdeProtocolClient (
                         if (sshClient != null || sshTty != null) {
                             remoteName = "ssh"
                         }
+
+                        val pluginId = "com.github.continuedev.continueintellijextension"
+                        val plugin = PluginManagerCore.getPlugin(PluginId.getId(pluginId))
+                        val extensionVersion = plugin?.version ?: "Unknown"
+
                         respond(mapOf(
                             "ideType" to "jetbrains",
                             "name" to ideName,
                             "version" to ideVersion,
-                            "remoteName" to remoteName
+                            "remoteName" to remoteName,
+                            "extensionVersion" to extensionVersion
                         ))
                     }
 

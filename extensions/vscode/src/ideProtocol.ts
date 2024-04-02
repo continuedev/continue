@@ -61,6 +61,9 @@ class VsCodeIde implements IDE {
       name: vscode.env.appName,
       version: vscode.version,
       remoteName: vscode.env.remoteName || "local",
+      extensionVersion:
+        vscode.extensions.getExtension("continue.continue")?.packageJSON
+          .version,
     });
   }
   readRangeInFile(filepath: string, range: Range): Promise<string> {

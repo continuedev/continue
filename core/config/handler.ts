@@ -90,6 +90,7 @@ export class ConfigHandler {
     await Telemetry.setup(
       this.savedConfig.allowAnonymousTelemetry ?? true,
       await this.ide.getUniqueId(),
+      ideInfo.extensionVersion,
     );
 
     return this.savedConfig;
