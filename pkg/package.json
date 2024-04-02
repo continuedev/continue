@@ -32,7 +32,7 @@
     "@types/follow-redirects": "^1.14.4",
     "@types/uuid": "^9.0.8",
     "@vercel/ncc": "^0.38.1",
-    "esbuild": "^0.19.11",
+    "esbuild": "0.19.11",
     "pkg": "^5.8.1",
     "typescript": "^5.3.3"
   },
