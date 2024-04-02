@@ -340,7 +340,7 @@ export async function getTabCompletion(
       "\n\n",
       // The following are commonly appended to completions by starcoder and other models
       "/src/",
-      ".t.",
+      "t.",
       "#- coding: utf-8",
       "```",
       ...lang.stopWords,
@@ -420,10 +420,6 @@ export async function getTabCompletion(
     modelName: llm.model,
     completionOptions,
     cacheHit,
-    filepath: input.filepath,
-    completionId: input.completionId,
-    gitRepo: await ide.getRepoName(input.filepath),
-    uniqueId: await ide.getUniqueId(),
     ...options,
   };
 }
@@ -639,6 +635,19 @@ export class CompletionProvider {
           (await this.autocompleteCache).put(outcome.prefix, completionToCache);
         }
       }, 100);
+
+      outcome.accepted = false;
+      const logRejectionTimeout = setTimeout(() => {
+        // Wait 10 seconds, then assume it wasn't accepted
+        logDevData("autocomplete", outcome);
+        const { prompt, completion, ...restOfOutcome } = outcome;
+        Telemetry.capture("autocomplete", {
+          ...restOfOutcome,
+        });
+        this._logRejectionTimeouts.delete(input.completionId);
+      }, 10_000);
+      this._outcomes.set(input.completionId, outcome);
+      this._logRejectionTimeouts.set(input.completionId, logRejectionTimeout);
 
       return outcome;
     } catch (e: any) {
