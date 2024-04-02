@@ -86,7 +86,7 @@ const osModelsEditPrompt: PromptTemplate = (history, otherData) => {
   }
 
   // Use a different prompt when there's neither prefix nor suffix
-  if (otherData.prefix.trim() === "" && otherData.suffix.trim() === "") {
+  if (otherData.prefix?.trim() === "" && otherData.suffix?.trim() === "") {
     return [
       {
         role: "user",
