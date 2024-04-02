@@ -207,6 +207,7 @@ export async function getTabCompletion(
     let stop = [
       ...(completionOptions?.stop || []),
       "\n\n",
+      "\r\n\r\n",
       "/src/",
       "```",
       ...lang.stopWords,
