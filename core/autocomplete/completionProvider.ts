@@ -38,7 +38,7 @@ export interface AutocompleteInput {
   clipboardText: string;
 }
 
-export interface AutocompleteOutcome {
+export interface AutocompleteOutcome extends TabAutocompleteOptions {
   accepted?: boolean;
   time: number;
   prompt: string;
@@ -210,7 +210,7 @@ export async function getTabCompletion(
       "\n\n",
       // The following are commonly appended to completions by starcoder and other models
       "/src/",
-      ".t.",
+      "t.",
       "#- coding: utf-8",
       "```",
       ...lang.stopWords,
@@ -279,6 +279,7 @@ export async function getTabCompletion(
     modelName: llm.model,
     completionOptions,
     cacheHit,
+    ...options,
   };
 }
 
@@ -424,12 +425,9 @@ export class CompletionProvider {
       const logRejectionTimeout = setTimeout(() => {
         // Wait 10 seconds, then assume it wasn't accepted
         logDevData("autocomplete", outcome);
+        const { prompt, completion, ...restOfOutcome } = outcome;
         Telemetry.capture("autocomplete", {
-          accepted: outcome.accepted,
-          modelName: outcome.modelName,
-          modelProvider: outcome.modelProvider,
-          time: outcome.time,
-          cacheHit: outcome.cacheHit,
+          ...restOfOutcome,
         });
         this._logRejectionTimeouts.delete(input.completionId);
       }, 10_000);
