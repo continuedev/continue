@@ -285,8 +285,6 @@ Not seeing what you want? Create an issue [here](https://github.com/continuedev/
 
 ## Building Your Own Context Provider
 
-> Currently custom context providers are only supported in VS Code, but are coming soon to JetBrains IDEs.
-
 ### Introductory Example
 
 To write your own context provider, you just have to implement the `CustomContextProvider`
