@@ -83,7 +83,6 @@ export async function constructAutocompletePrompt(
   cursorLine: number,
   fullPrefix: string,
   fullSuffix: string,
-  clipboardText: string,
   language: AutocompleteLanguageInfo,
   options: TabAutocompleteOptions,
   recentlyEditedRanges: RangeInFileWithContents[],

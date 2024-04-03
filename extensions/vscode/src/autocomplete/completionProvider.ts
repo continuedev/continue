@@ -68,7 +68,6 @@ export class ContinueCompletionProvider
         pos: { line: position.line, character: position.character },
         recentlyEditedFiles: [],
         recentlyEditedRanges: [],
-        clipboardText: await vscode.env.clipboard.readText(),
       };
 
       setupStatusBar(true, true);

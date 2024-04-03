@@ -59,7 +59,6 @@ class AutocompleteService(private val project: Project) {
             ),
             "recentlyEditedFiles" to emptyList<String>(),
             "recentlyEditedRanges" to emptyList<String>(),
-            "clipboardText" to ""
         )
 
         val lineStart = editor.document.getLineStartOffset(editor.caretModel.primaryCaret.logicalPosition.line)

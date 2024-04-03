@@ -34,7 +34,6 @@ export interface AutocompleteInput {
   pos: Position;
   recentlyEditedFiles: RangeInFileWithContents[];
   recentlyEditedRanges: RangeInFileWithContents[];
-  clipboardText: string;
 }
 
 export interface AutocompleteOutcome {
@@ -88,7 +87,6 @@ export async function getTabCompletion(
     pos,
     recentlyEditedFiles,
     recentlyEditedRanges,
-    clipboardText,
   } = input;
   const fileContents = await ide.readFile(filepath);
   const fileLines = fileContents.split("\n");
@@ -149,7 +147,6 @@ export async function getTabCompletion(
       pos.line,
       fullPrefix,
       fullSuffix,
-      clipboardText,
       lang,
       options,
       recentlyEditedRanges,
