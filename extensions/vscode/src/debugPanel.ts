@@ -33,6 +33,12 @@ export class ContinueGUIWebviewViewProvider
     return this._webview;
   }
 
+  public resetWebviewProtocolWebview(): void {
+    if (this._webview) { 
+      this.webviewProtocol.webview = this._webview;
+    }
+  }
+
   sendMainUserInput(input: string) {
     this.webview?.postMessage({
       type: "userInput",
