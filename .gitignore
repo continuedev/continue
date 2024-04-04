@@ -162,8 +162,3 @@ continue_server.dist
 
 Icon
 Icon?
-
-.continue
-
-# Sandbox env default file
-extensions/vscode/manual-testing-sandbox/example.ts
