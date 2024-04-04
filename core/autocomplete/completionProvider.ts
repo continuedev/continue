@@ -54,14 +54,15 @@ const autocompleteCache = AutocompleteLruCache.get();
 const DOUBLE_NEWLINE = "\n\n";
 const WINDOWS_DOUBLE_NEWLINE = "\r\n\r\n";
 const SRC_DIRECTORY = "/src/";
-const STARCODER2_T_ARTIFACT = "t.";
+// Starcoder2 tends to output artifacts starting with the letter "t"
+const STARCODER2_T_ARTIFACTS = ["t.", "\nt"];
 const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
 const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
 const commonStops = [
   SRC_DIRECTORY,
-  STARCODER2_T_ARTIFACT,
+  ...STARCODER2_T_ARTIFACTS,
   PYTHON_ENCODING,
   CODE_BLOCK_END,
 ];
