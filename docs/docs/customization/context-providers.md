@@ -445,3 +445,21 @@ Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.t
   - `extras.ide`: An instance of the `IDE` class, which lets you gather various sources of information from the IDE, including the contents of the terminal, the list of open files, or any warnings in the currently open file.
   - `query`: (not currently used) A string representing the query
 - `loadSubmenuItems` (optional): A function that returns a list of `ContextSubmenuItem`s to display in a submenu. It is given access to an `IDE`, the same that is passed to `getContextItems`.
+
+### Writing Context Providers in Other Languages
+
+If you'd like to write a context provider in a language other than TypeScript, you can use the "http" context provider to call a server that hosts your own code. Add the context provider to `config.json` like this:
+
+```json
+{
+  "name": "http",
+  "params": {
+    "url": "https://myserver.com/context-provider",
+    "title": "http",
+    "description": "Custom HTTP Context Provider",
+    "displayTitle": "My Custom Context"
+  }
+}
+```
+
+Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI.
