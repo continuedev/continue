@@ -242,7 +242,8 @@ export const stateSlice = createSlice({
         contextItems: [],
       });
 
-      state.contextItems = [];
+      // https://github.com/continuedev/continue/pull/1021
+      // state.contextItems = [];
       state.active = true;
     },
     initNewActiveMessage: (
@@ -265,7 +266,8 @@ export const stateSlice = createSlice({
         },
         contextItems: [],
       });
-      state.contextItems = [];
+      // https://github.com/continuedev/continue/pull/1021
+      // state.contextItems = [];
       state.active = true;
     },
     setMessageAtIndex: (
