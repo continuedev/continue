@@ -1,10 +1,10 @@
 import { CheckIcon, ClipboardIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
-import { vscEditorBackground } from "..";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 
 interface CopyButtonProps {
   text: string | (() => string);
+  color?: string;
 }
 
 export function CopyButton(props: CopyButtonProps) {
@@ -14,7 +14,6 @@ export function CopyButton(props: CopyButtonProps) {
     <>
       <HeaderButtonWithText
         text={copied ? "Copied!" : "Copy"}
-        style={{ backgroundColor: vscEditorBackground }}
         onClick={(e) => {
           navigator.clipboard.writeText(
             typeof props.text === "string" ? props.text : props.text(),
@@ -26,7 +25,7 @@ export function CopyButton(props: CopyButtonProps) {
         {copied ? (
           <CheckIcon className="w-4 h-4 text-green-500" />
         ) : (
-          <ClipboardIcon className="w-4 h-4" />
+          <ClipboardIcon className="w-4 h-4" color={props.color} />
         )}
       </HeaderButtonWithText>
     </>

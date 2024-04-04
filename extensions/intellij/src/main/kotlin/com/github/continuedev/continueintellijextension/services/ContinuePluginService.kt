@@ -3,6 +3,7 @@ package com.github.continuedev.continueintellijextension.services
 import com.github.continuedev.continueintellijextension.`continue`.CoreMessenger
 import com.github.continuedev.continueintellijextension.`continue`.IdeProtocolClient
 import com.github.continuedev.continueintellijextension.`continue`.uuid
+import com.github.continuedev.continueintellijextension.toolWindow.ContinueBrowser
 import com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory
 import com.google.gson.Gson
 import com.intellij.openapi.Disposable
@@ -41,25 +42,6 @@ class ContinuePluginService(project: Project) : Disposable, DumbAware {
         data: Any?,
         messageId: String = uuid()
     ) {
-        val jsonData = Gson().toJson(
-            mapOf(
-                "messageId" to messageId,
-                "messageType" to messageType,
-                "data" to data
-            )
-        )
-        val jsCode = buildJavaScript(jsonData)
-
-        try {
-            continuePluginWindow?.webView?.executeJavaScriptAsync(jsCode)
-        } catch (error: IllegalStateException) {
-            println("Webview not initialized yet $error")
-        }
+        continuePluginWindow?.browser?.sendToWebview(messageType, data, messageId)
     }
-
-    private fun buildJavaScript(jsonData: String): String {
-        return """window.postMessage($jsonData, "*");"""
-    }
-
-
 }

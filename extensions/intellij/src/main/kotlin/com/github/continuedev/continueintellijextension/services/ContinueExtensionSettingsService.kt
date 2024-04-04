@@ -62,6 +62,7 @@ class ContinueSettingsComponent: DumbAware {
 open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensionSettings.ContinueState> {
 
     class ContinueState {
+        var lastSelectedInlineEditModel: String? = null
         var shownWelcomeDialog: Boolean = false
         var remoteConfigServerUrl: String? = null
         var remoteConfigSyncPeriod: Int = 60

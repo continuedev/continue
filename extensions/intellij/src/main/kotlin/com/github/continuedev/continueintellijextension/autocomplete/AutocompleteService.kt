@@ -4,11 +4,6 @@ import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
-import com.intellij.codeInsight.AutoPopupController
-import com.intellij.codeInsight.lookup.LookupManager
-import com.intellij.codeInsight.lookup.impl.LookupImpl
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.invokeLater
@@ -95,6 +90,13 @@ class AutocompleteService(private val project: Project) {
                 } else {
                     editor.inlayModel.addInlineElement(offset, properties, ContinueCustomElementRenderer(editor, text))
                 }
+
+//                val attributes = TextAttributes().apply {
+//                    backgroundColor = JBColor.GREEN
+//                }
+//                val key = TextAttributesKey.createTextAttributesKey("CONTINUE_AUTOCOMPLETE")
+//                key.let { editor.colorsScheme.setAttributes(it, attributes) }
+//                editor.markupModel.addLineHighlighter(key, editor.caretModel.logicalPosition.line, HighlighterLayer.LAST)
             }
         }
     }

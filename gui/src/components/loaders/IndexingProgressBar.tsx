@@ -5,9 +5,9 @@ import { StyledTooltip, lightGray, vscForeground } from "..";
 import { postToIde } from "../../util/ide";
 
 const DIAMETER = 6;
-const CircleDiv = styled.div`
-  background-color: #bb0;
-  box-shadow: 0px 0px 2px 1px #bb0;
+const CircleDiv = styled.div<{ color: string }>`
+  background-color: ${(props) => props.color};
+  box-shadow: 0px 0px 2px 1px ${(props) => props.color};
   width: ${DIAMETER}px;
   height: ${DIAMETER}px;
   border-radius: ${DIAMETER / 2}px;
@@ -72,10 +72,27 @@ const IndexingProgressBar = ({
 
   return (
     <div
-      onClick={() => setExpanded((prev) => !prev)}
+      onClick={() => {
+        if (completed < total) {
+          setExpanded((prev) => !prev);
+        } else {
+          postToIde("index/forceReIndex", undefined);
+        }
+      }}
       className="cursor-pointer"
     >
-      {expanded ? (
+      {completed >= total ? (
+        <>
+          <CircleDiv data-tooltip-id="progress_dot" color="#090"></CircleDiv>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id="progress_dot" place="top">
+                Index up to date. Click to force re-indexing
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
+        </>
+      ) : expanded ? (
         <>
           <GridDiv
             data-tooltip-id="usage_progress_bar"
@@ -96,19 +113,19 @@ const IndexingProgressBar = ({
               <StyledTooltip id="usage_progress_bar" place="top">
                 {currentlyIndexing}
               </StyledTooltip>,
-              tooltipPortalDiv
+              tooltipPortalDiv,
             )}
         </>
       ) : (
         <>
-          <CircleDiv data-tooltip-id="progress_dot"></CircleDiv>
+          <CircleDiv data-tooltip-id="progress_dot" color="#bb0"></CircleDiv>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="progress_dot" place="top">
                 Click to unpause indexing (
                 {Math.trunc((completed / total) * 100)}%)
               </StyledTooltip>,
-              tooltipPortalDiv
+              tooltipPortalDiv,
             )}
         </>
       )}

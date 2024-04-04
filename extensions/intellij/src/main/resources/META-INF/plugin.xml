@@ -16,6 +16,9 @@
                     factoryClass="com.github.continuedev.continueintellijextension.toolWindow.ContinuePluginToolWindowFactory"/>
         <projectService id="ContinuePluginService"
                         serviceImplementation="com.github.continuedev.continueintellijextension.services.ContinuePluginService"/>
+        <projectService
+                id="DiffStreamService"
+                serviceImplementation="com.github.continuedev.continueintellijextension.editor.DiffStreamService"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
@@ -33,21 +36,41 @@
     </extensions>
 
     <actions>
+        <action class="com.github.continuedev.continueintellijextension.editor.InlineEditAction"
+                id="continue.inlineEdit"
+                description="Inline Edit"
+                text="Inline Edit">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl I"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta I"/>
+        </action>
+
+        <action class="com.github.continuedev.continueintellijextension.editor.ToggleInlineEditAction"
+                id="continue.toggleInlineEdit"
+                description="Toggle Inline Edit"
+                text="Toggle Inline Edit">
+            <keyboard-shortcut keymap="$default"
+                               first-keystroke="ctrl shift I"/>
+            <keyboard-shortcut keymap="Mac OS X"
+                               first-keystroke="meta shift I"/>
+        </action>
+
         <action id="continue.acceptDiff"
                 class="com.github.continuedev.continueintellijextension.actions.AcceptDiffAction"
                 text="Accept Diff" description="Accept Diff">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="shift ctrl ENTER"/>
+                               first-keystroke="alt shift Y"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="shift meta ENTER"/>
+                               first-keystroke="alt shift Y"/>
         </action>
         <action id="continue.rejectDiff"
                 class="com.github.continuedev.continueintellijextension.actions.RejectDiffAction"
                 text="Reject Diff" description="Reject Diff">
             <keyboard-shortcut keymap="$default"
-                               first-keystroke="shift ctrl BACK_SPACE"/>
+                               first-keystroke="alt shift N"/>
             <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="shift meta BACK_SPACE"/>
+                               first-keystroke="alt shift N"/>
         </action>
         <action id="continue.quickTextEntry"
                 class="com.github.continuedev.continueintellijextension.actions.QuickTextEntryAction"

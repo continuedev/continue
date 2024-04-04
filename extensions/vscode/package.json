@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.8.22",
+  "version": "0.9.92",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -99,6 +99,18 @@
         "title": "Reject Diff",
         "group": "Continue",
         "icon": "$(stop)"
+      },
+      {
+        "command": "continue.acceptVerticalDiffBlock",
+        "category": "Continue",
+        "title": "Accept Vertical Diff Block",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.rejectVerticalDiffBlock",
+        "category": "Continue",
+        "title": "Reject Vertical Diff Block",
+        "group": "Continue"
       },
       {
         "command": "continue.quickEdit",
@@ -219,7 +231,17 @@
         "command": "continue.rejectDiff",
         "mac": "cmd+z",
         "key": "ctrl+z",
-        "when": "continue.streamingDiff"
+        "when": "continue.diffVisible"
+      },
+      {
+        "command": "continue.acceptVerticalDiffBlock",
+        "mac": "alt+cmd+y",
+        "key": "alt+ctrl+y"
+      },
+      {
+        "command": "continue.rejectVerticalDiffBlock",
+        "mac": "alt+cmd+n",
+        "key": "alt+ctrl+n"
       },
       {
         "command": "continue.quickEdit",
@@ -508,7 +530,7 @@
     "tailwindcss": "^3.3.2",
     "undici": "^6.2.0",
     "uuidv4": "^6.2.13",
-    "vectordb": "^0.4.3",
+    "vectordb": "0.4.12",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"

@@ -71,10 +71,12 @@ export class VsCodeWebviewProtocol {
             response &&
             typeof response[Symbol.asyncIterator] === "function"
           ) {
-            for await (const update of response) {
-              respond(update);
+            let next = await response.next();
+            while (!next.done) {
+              respond(next.value);
+              next = await response.next();
             }
-            respond({ done: true });
+            respond({ done: true, content: next.value?.content });
           } else {
             respond(response || {});
           }
@@ -546,6 +548,19 @@ export class VsCodeWebviewProtocol {
     this.on("stats/getTokensPerModel", async (msg) => {
       const rows = await DevDataSqliteDb.getTokensPerModel();
       return rows;
+    });
+    this.on("insertAtCursor", async (msg) => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor === undefined || !editor.selection) {
+        return;
+      }
+
+      editor.edit((editBuilder) => {
+        editBuilder.replace(
+          new vscode.Range(editor.selection.start, editor.selection.end),
+          msg.data.text,
+        );
+      });
     });
   }
 

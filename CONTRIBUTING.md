@@ -93,7 +93,7 @@ Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](h
 
 > For changes to Typescript code, the binary/gui will currently need to be rebuilt. Changes to Kotlin code can often be hot-reloaded with "Run -> Debugging Actions -> Reload Changed Classes"
 
-Continue's JetBrains extension shares much of the code with the VS Code extension by utilizing shared code in the `core` directory and packaging it in a binary in the `pkg` directory. The Intellij extension (written in Kotlin) is then able to communicate over stdin/stdout in the [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt) file.
+Continue's JetBrains extension shares much of the code with the VS Code extension by utilizing shared code in the `core` directory and packaging it in a binary in the `binary` directory. The Intellij extension (written in Kotlin) is then able to communicate over stdin/stdout in the [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt) file.
 
 ### Formatting
 

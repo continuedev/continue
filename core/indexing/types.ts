@@ -18,6 +18,7 @@ export interface CodebaseIndex {
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,
+    repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate>;
 }
 

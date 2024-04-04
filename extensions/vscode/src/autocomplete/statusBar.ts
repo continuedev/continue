@@ -6,7 +6,7 @@ const statusBarItemText = (enabled: boolean | undefined) =>
 const statusBarItemTooltip = (enabled: boolean | undefined) =>
   enabled ? "Tab autocomplete is enabled" : "Click to enable tab autocomplete";
 
-let lastStatusBar: vscode.StatusBarItem | undefined = undefined;
+let statusBarItem: vscode.StatusBarItem | undefined = undefined;
 let statusBarFalseTimeout: NodeJS.Timeout | undefined = undefined;
 
 export function stopStatusBarLoading() {
@@ -24,27 +24,25 @@ export function setupStatusBar(
     statusBarFalseTimeout = undefined;
   }
 
-  const statusBarItem = vscode.window.createStatusBarItem(
-    vscode.StatusBarAlignment.Right,
-  );
+  // If statusBarItem hasn't been defined yet, create it
+  if (!statusBarItem) {
+    statusBarItem = vscode.window.createStatusBarItem(
+      vscode.StatusBarAlignment.Right,
+    );
+  }
+
   statusBarItem.text = loading
     ? "$(loading~spin) Continue"
     : statusBarItemText(enabled);
   statusBarItem.tooltip = statusBarItemTooltip(enabled);
   statusBarItem.command = "continue.toggleTabAutocompleteEnabled";
 
-  // Swap out with old status bar
-  if (lastStatusBar) {
-    lastStatusBar.dispose();
-  }
   statusBarItem.show();
-  lastStatusBar = statusBarItem;
 
   vscode.workspace.onDidChangeConfiguration((event) => {
     if (event.affectsConfiguration("continue")) {
       const config = vscode.workspace.getConfiguration("continue");
       const enabled = config.get<boolean>("enableTabAutocomplete");
-      statusBarItem.dispose();
       setupStatusBar(enabled);
     }
   });
