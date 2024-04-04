@@ -397,7 +397,7 @@ export class CompletionProvider {
 
       // Set temperature (but don't overrride)
       if (llm.completionOptions.temperature === undefined) {
-        llm.completionOptions.temperature = 0.0;
+        llm.completionOptions.temperature = 0.01;
       }
 
       const outcome = await getTabCompletion(
