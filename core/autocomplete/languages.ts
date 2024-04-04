@@ -6,7 +6,7 @@ export interface AutocompleteLanguageInfo {
 
 // TypeScript
 export const Typescript = {
-  stopWords: ["function", "class", "module", "export"],
+  stopWords: ["function", "class", "module", "export", "import"],
   comment: "//",
   endOfLine: [";"],
 };

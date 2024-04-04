@@ -10,9 +10,9 @@
       "request": "launch",
       "name": "Core Binary",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/pkg/out/index.js",
-      "preLaunchTask": "pkg:esbuild",
-      "outFiles": ["${workspaceFolder}/pkg/out/**/*.js"],
+      "program": "${workspaceFolder}/binary/out/index.js",
+      "preLaunchTask": "binary:esbuild",
+      "outFiles": ["${workspaceFolder}/binary/out/**/*.js"],
       "sourceMaps": true,
       "smartStep": true,
       "internalConsoleOptions": "openOnSessionStart"

@@ -90,6 +90,7 @@ export class ConfigHandler {
     await Telemetry.setup(
       this.savedConfig.allowAnonymousTelemetry ?? true,
       await this.ide.getUniqueId(),
+      ideInfo.extensionVersion,
     );
 
     return this.savedConfig;
@@ -123,6 +124,10 @@ export class ConfigHandler {
     const proxy = llm.requestOptions?.proxy;
 
     llm._fetch = async (input, init) => {
+      if (agentOptions.rejectUnauthorized === false) {
+        console.log("SSL verification is disabled");
+      }
+
       // Create agent
       const protocol = new URL(input).protocol === "https:" ? https : http;
       const agent = proxy

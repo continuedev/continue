@@ -6,9 +6,9 @@ import { respondToIde } from "../util/ide";
 export function useWebviewListener<T extends keyof ReverseWebviewProtocol>(
   messageType: T,
   handler: (
-    data: ReverseWebviewProtocol[T][0]
+    data: ReverseWebviewProtocol[T][0],
   ) => Promise<ReverseWebviewProtocol[T][1]>,
-  dependencies?: any[]
+  dependencies?: any[],
 ) {
   useEffect(() => {
     const listener = async (event: { data: Message }) => {

@@ -43,6 +43,14 @@ export interface LLMReturnValue {
   prompt: string;
   completion: string;
 }
+
+export type PromptTemplate =
+  | string
+  | ((
+      history: ChatMessage[],
+      otherData: Record<string, string>,
+    ) => string | ChatMessage[]);
+
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
 
@@ -90,7 +98,18 @@ export interface ILLM extends LLMOptions {
 
   supportsImages(): boolean;
 
+  supportsCompletions(): boolean;
+
+  supportsPrefill(): boolean;
+
   listModels(): Promise<string[]>;
+
+  renderPromptTemplate(
+    template: PromptTemplate,
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+    canPutWordsInModelsMouth?: boolean,
+  ): string | ChatMessage[];
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -243,7 +262,6 @@ export type ChatHistory = ChatHistoryItem[];
 // LLM
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
-  raw?: boolean;
   log?: boolean;
 
   model?: string;
@@ -331,6 +349,7 @@ export interface IdeInfo {
   name: string;
   version: string;
   remoteName: string;
+  extensionVersion: string;
 }
 
 export interface IndexTag {
@@ -381,6 +400,7 @@ export interface IDE {
   getBranch(dir: string): Promise<string>;
   getStats(directory: string): Promise<{ [path: string]: number }>;
   getTags(artifactId: string): Promise<IndexTag[]>;
+  getRepoName(dir: string): Promise<string | undefined>;
 }
 
 // Slash Commands
@@ -430,7 +450,6 @@ type ContextProviderName =
   | "open"
   | "google"
   | "search"
-  | "url"
   | "tree"
   | "http"
   | "codebase"
@@ -479,7 +498,8 @@ type ModelProvider =
   | "mistral"
   | "bedrock"
   | "deepinfra"
-  | "flowise";
+  | "flowise"
+  | "groq";
 
 export type ModelName =
   | "AUTODETECT"
@@ -496,6 +516,7 @@ export type ModelName =
   | "mistral-8x7b"
   | "llama2-7b"
   | "llama2-13b"
+  | "llama2-70b"
   | "codellama-7b"
   | "codellama-13b"
   | "codellama-34b"
@@ -573,6 +594,7 @@ interface BaseCompletionOptions {
   maxTokens?: number;
   numThreads?: number;
   keepAlive?: number;
+  raw?: boolean;
 }
 
 export interface ModelDescription {

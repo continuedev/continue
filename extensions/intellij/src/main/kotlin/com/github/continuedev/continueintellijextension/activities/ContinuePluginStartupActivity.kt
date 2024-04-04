@@ -237,7 +237,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
 
                 val corePath = Paths.get(pluginPath.toString(), "core").toString()
                 val targetPath = Paths.get(corePath, target).toString()
-                val continueCorePath = Paths.get(targetPath, "pkg" + (if (os == "win32") ".exe" else "")).toString()
+                val continueCorePath = Paths.get(targetPath, "continue-binary" + (if (os == "win32") ".exe" else "")).toString()
 
                 // Copy targetPath / node_sqlite3.node to core / node_sqlite3.node
                 val nodeSqlite3Path = Paths.get(targetPath, "node_sqlite3.node")

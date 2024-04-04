@@ -62,13 +62,20 @@ export class ContinueCompletionProvider
       const abortController = new AbortController();
       const signal = abortController.signal;
       token.onCancellationRequested(() => abortController.abort());
+
+      const config = await this.configHandler.loadConfig();
+      let clipboardText = "";
+      if (config.tabAutocompleteOptions?.useCopyBuffer === true) {
+        clipboardText = await vscode.env.clipboard.readText();
+      }
+
       const input: AutocompleteInput = {
         completionId: uuidv4(),
         filepath: document.uri.fsPath,
         pos: { line: position.line, character: position.character },
         recentlyEditedFiles: [],
         recentlyEditedRanges: [],
-        clipboardText: await vscode.env.clipboard.readText(),
+        clipboardText: clipboardText
       };
 
       setupStatusBar(true, true);

@@ -96,6 +96,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,
+    repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate, any, unknown> {
     const db = await SqliteDb.get();
     await CodeSnippetsCodebaseIndex._createTables(db);

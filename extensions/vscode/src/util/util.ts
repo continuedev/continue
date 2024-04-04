@@ -79,6 +79,14 @@ export function getPlatform(): Platform {
   }
 }
 
+export function getAltOrOption() {
+  if (getPlatform() === "mac") {
+    return "⌥";
+  } else {
+    return "⎇";
+  }
+}
+
 export function getMetaKeyLabel() {
   const platform = getPlatform();
   switch (platform) {

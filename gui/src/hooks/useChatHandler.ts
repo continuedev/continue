@@ -18,7 +18,7 @@ import { useSelector } from "react-redux";
 import resolveEditorContent from "../components/mainInput/resolveInput";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
-  addLogs,
+  addPromptCompletionPair,
   initNewActiveMessage,
   resubmitAtIndex,
   setInactive,
@@ -65,7 +65,9 @@ function useChatHandler(dispatch: Dispatch) {
 
     let returnVal = next.value as LLMReturnValue;
     if (returnVal) {
-      dispatch(addLogs([[returnVal?.prompt, returnVal?.completion]]));
+      dispatch(
+        addPromptCompletionPair([[returnVal?.prompt, returnVal?.completion]]),
+      );
     }
   }
 

@@ -4,23 +4,27 @@ import {
   filterEnglishLinesAtEnd,
   filterEnglishLinesAtStart,
   filterLeadingAndTrailingNewLineInsertion,
-  fixCodeLlamaFirstLineIndentation,
+  stopAtLines,
 } from "../autocomplete/lineStream";
 import { streamDiff } from "../diff/streamDiff";
 import { streamLines } from "../diff/util";
 import { gptEditPrompt } from "../llm/templates/edit";
-import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../util";
+import { Telemetry } from "./posthog";
 
 function constructPrompt(
-  codeToEdit: string,
+  prefix: string,
+  highlighted: string,
+  suffix: string,
   llm: ILLM,
   userInput: string,
   language: string | undefined,
 ): string | ChatMessage[] {
   const template = llm.promptTemplates?.edit ?? gptEditPrompt;
-  return renderPromptTemplate(template, [], {
+  return llm.renderPromptTemplate(template, [], {
     userInput,
-    codeToEdit,
+    prefix,
+    codeToEdit: highlighted,
+    suffix,
     language: language ?? "",
   });
 }
@@ -42,37 +46,62 @@ function modelIsInept(model: string): boolean {
 }
 
 export async function* streamDiffLines(
-  oldCode: string,
+  prefix: string,
+  highlighted: string,
+  suffix: string,
   llm: ILLM,
   input: string,
   language: string | undefined,
 ): AsyncGenerator<DiffLine> {
+  Telemetry.capture("inlineEdit", {
+    model: llm.model,
+    provider: llm.providerName,
+  });
+
   // Strip common indentation for the LLM, then add back after generation
-  const [withoutIndentation, commonIndentation] =
-    dedentAndGetCommonWhitespace(oldCode);
-  oldCode = withoutIndentation;
-  const oldLines = oldCode.split("\n");
-  const prompt = constructPrompt(oldCode, llm, input, language);
+  let oldLines =
+    highlighted.length > 0
+      ? highlighted.split("\n")
+      : // When highlighted is empty, we need to combine last line of prefix and first line of suffix to determine the line being edited
+        [(prefix + suffix).split("\n")[prefix.split("\n").length - 1]];
+
+  // But if that line is empty, we can assume we are insertion-only
+  if (oldLines.length === 1 && oldLines[0].trim() === "") {
+    oldLines = [];
+  }
+
+  const prompt = constructPrompt(
+    prefix,
+    highlighted,
+    suffix,
+    llm,
+    input,
+    language,
+  );
   const inept = modelIsInept(llm.model);
 
   const completion =
     typeof prompt === "string"
-      ? llm.streamComplete(prompt)
+      ? llm.streamComplete(prompt, { raw: true })
       : llm.streamChat(prompt);
 
   let lines = streamLines(completion);
 
-  if (inept) {
-    lines = filterEnglishLinesAtStart(lines);
-  }
+  lines = filterEnglishLinesAtStart(lines);
   lines = filterCodeBlockLines(lines);
+  lines = stopAtLines(lines);
   if (inept) {
-    lines = filterEnglishLinesAtEnd(fixCodeLlamaFirstLineIndentation(lines));
+    // lines = fixCodeLlamaFirstLineIndentation(lines);
+    lines = filterEnglishLinesAtEnd(lines);
   }
 
   let diffLines = streamDiff(oldLines, lines);
-  diffLines = addIndentation(diffLines, commonIndentation);
   diffLines = filterLeadingAndTrailingNewLineInsertion(diffLines);
+  if (highlighted.length === 0) {
+    const line = prefix.split("\n").slice(-1)[0];
+    const indentation = line.slice(0, line.length - line.trimStart().length);
+    diffLines = addIndentation(diffLines, indentation);
+  }
 
   for await (let diffLine of diffLines) {
     yield diffLine;
