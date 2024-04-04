@@ -328,24 +328,92 @@ const commandsMap: (
         }${code}\n\nHow do I fix this problem in the above code?: ${message}`,
       });
 
-      if (!edit) {
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      }
-    },
-    "continue.focusContinueInput": async () => {
-      if (!getFullScreenTab()) {
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      }
-      sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-      await addHighlightedCodeToContext(false, sidebar.webviewProtocol);
-    },
-    "continue.focusContinueInputWithoutClear": async () => {
-      if (!getFullScreenTab()) {
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      }
-      sidebar.webviewProtocol?.request(
-        "focusContinueInputWithoutClear",
-        undefined,
+    const uri = vscode.Uri.file(logFile);
+    await vscode.window.showTextDocument(uri);
+  },
+  "continue.debugTerminal": async () => {
+    const terminalContents = await ide.getTerminalContents();
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    sidebar.webviewProtocol?.request("userInput", {
+      input: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents.trim()}`,
+    });
+  },
+  "continue.hideInlineTip": () => {
+    vscode.workspace
+      .getConfiguration("continue")
+      .update("showInlineTip", false, vscode.ConfigurationTarget.Global);
+  },
+
+  // Commands without keyboard shortcuts
+  "continue.addModel": () => {
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    sidebar.webviewProtocol?.request("addModel", undefined);
+  },
+  "continue.openSettingsUI": () => {
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
+    sidebar.webviewProtocol?.request("openSettings", undefined);
+  },
+  "continue.sendMainUserInput": (text: string) => {
+    sidebar.webviewProtocol?.request("userInput", {
+      input: text,
+    });
+  },
+  "continue.shareSession": () => {
+    sidebar.sendMainUserInput("/share");
+  },
+  "continue.selectRange": (startLine: number, endLine: number) => {
+    if (!vscode.window.activeTextEditor) {
+      return;
+    }
+    vscode.window.activeTextEditor.selection = new vscode.Selection(
+      startLine,
+      0,
+      endLine,
+      0,
+    );
+  },
+  "continue.foldAndUnfold": (
+    foldSelectionLines: number[],
+    unfoldSelectionLines: number[],
+  ) => {
+    vscode.commands.executeCommand("editor.unfold", {
+      selectionLines: unfoldSelectionLines,
+    });
+    vscode.commands.executeCommand("editor.fold", {
+      selectionLines: foldSelectionLines,
+    });
+  },
+  "continue.sendToTerminal": (text: string) => {
+    ide.runCommand(text);
+  },
+  "continue.newSession": () => {
+    sidebar.webviewProtocol?.request("newSession", undefined);
+  },
+  "continue.viewHistory": () => {
+    sidebar.webviewProtocol?.request("viewHistory", undefined);
+  },
+  "continue.toggleFullScreen": () => {
+    // Check if full screen is already open by checking open tabs
+    const fullScreenTab = getFullScreenTab();
+
+    // Check if the active editor is the Continue GUI View
+    if (fullScreenTab && fullScreenTab.isActive) { //Full screen open and focused - close it
+      vscode.commands.executeCommand("workbench.action.closeActiveEditor"); //this will trigger the onDidDispose listener below
+      return;
+    }
+
+    if (fullScreenTab) { //Full screen open, but not focused - focus it
+      // Focus the tab
+      const openOptions = {
+        preserveFocus: true,
+        preview: fullScreenTab.isPreview,
+        viewColumn: fullScreenTab.group.viewColumn,
+      };
+
+      vscode.commands.executeCommand(
+        "vscode.open",
+        (fullScreenTab.input as any).uri,
+        openOptions,
       );
       await addHighlightedCodeToContext(true, sidebar.webviewProtocol);
     },
@@ -355,11 +423,44 @@ const commandsMap: (
     "continue.quickEdit": async (prompt?: string) => {
       const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
 
-      const editor = vscode.window.activeTextEditor;
-      const existingHandler = verticalDiffManager.getHandlerForFile(
-        editor?.document.uri.fsPath ?? "",
-      );
-      const previousInput = existingHandler?.input;
+    //Full screen not open - open it
+
+    // Close the sidebar.webviews
+    // vscode.commands.executeCommand("workbench.action.closeSidebar");
+    vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
+    // vscode.commands.executeCommand("workbench.action.toggleZenMode");
+
+    //create the full screen panel
+    let panel = vscode.window.createWebviewPanel(
+      "continue.continueGUIView",
+      "Continue",
+      vscode.ViewColumn.One,
+    );
+    
+    //Add content to the panel
+    panel.webview.html = sidebar.getSidebarContent(
+      extensionContext,
+      panel,
+      ide,
+      configHandler,
+      verticalDiffManager,
+      undefined,
+      undefined,
+      true,
+    );
+    
+    //When panel closes, reset the webview and focus
+    panel.onDidDispose(() => {
+      sidebar.resetWebviewProtocolWebview();
+      vscode.commands.executeCommand("continue.focusContinueInput");
+    }, null, extensionContext.subscriptions); 
+    
+  },
+  "continue.selectFilesAsContext": (
+    firstUri: vscode.Uri,
+    uris: vscode.Uri[],
+  ) => {
+    vscode.commands.executeCommand("continue.continueGUIView.focus");
 
       const config = await configHandler.loadConfig();
       let defaultModelTitle =

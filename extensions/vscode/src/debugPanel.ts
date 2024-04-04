@@ -31,10 +31,10 @@ export class ContinueGUIWebviewViewProvider
   }
 
   public resetWebviewProtocolWebview(): void {
-    if (this._webview) {
+    if (this._webview) { 
       this.webviewProtocol.webview = this._webview;
-    } else {
-      console.warn("no webview found during reset");
+    } else{
+      console.warn("no webview found during reset")
     }
   }
 
