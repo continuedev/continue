@@ -980,7 +980,8 @@
                 "edit",
                 "comment",
                 "http",
-                "commit"
+                "commit",
+                "review"
               ],
               "type": "string",
               "markdownEnumDescriptions": [
@@ -991,7 +992,8 @@
                 "Edit the highlighted code with given instructions",
                 "Add comments to the highlighted code",
                 "Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
-                "Generate a commit message for the current changes"
+                "Generate a commit message for the current changes",
+                "Review code and give feedback"
               ]
             },
             {
