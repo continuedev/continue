@@ -335,12 +335,20 @@ export async function getTabCompletion(
     cacheHit = true;
     completion = cachedCompletion;
   } else {
-    const stop = [
+    const DOUBLE_NEWLINE = "\n\n";
+    const WINDOWS_DOUBLE_NEWLINE = "\r\n\r\n";
+    const SRC_DIRECTORY = "/src/";
+    const T_FILE_EXTENSION = ".t.";
+    const PYTHON_ENCODING = "#- coding: utf-8";
+    const CODE_BLOCK_END = "```";
+    
+    const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
+    const commonStops = [SRC_DIRECTORY, T_FILE_EXTENSION, PYTHON_ENCODING, CODE_BLOCK_END];
+    
+    let stop = [
       ...(completionOptions?.stop || []),
-      "\n\n",
-      "\r\n\r\n",
-      "/src/",
-      "```",
+      ...multilineStops,
+      ...commonStops,
       ...lang.stopWords,
     ];
 
@@ -350,7 +358,7 @@ export async function getTabCompletion(
       (options.multilineCompletions === "always" || completeMultiline);
 
     // Try to reuse pending requests if what the user typed matches start of completion
-    const generator = generatorReuseManager.getGenerator(
+    let generator = generatorReuseManager.getGenerator(
       prefix,
       () =>
         llm.supportsFim()
