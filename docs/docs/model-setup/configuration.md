@@ -167,7 +167,7 @@ export function modifyConfig(config: Config): Config {
       title: "My Custom LLM",
       model: "mistral-7b",
     },
-    streamComplete: async function* (prompt, options) {
+    streamCompletion: async function* (prompt: string, options: CompletionOptions) {
       // Make the API call here
 
       // Then yield each part of the completion as it is streamed
@@ -178,5 +178,6 @@ export function modifyConfig(config: Config): Config {
       }
     },
   });
+  return config;
 }
 ```
