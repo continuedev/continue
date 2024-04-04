@@ -23,6 +23,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
       password: this.options.token,
       issueQuery: this.options.issueQuery,
       apiVersion: this.options.apiVersion,
+      requestOptions: this.options.requestOptions,
     });
   }
 

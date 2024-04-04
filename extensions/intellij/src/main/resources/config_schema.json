@@ -1362,9 +1362,26 @@
                   "apiVersion": {
                     "type": "integer",
                     "markdownDescription": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property."
+                  },
+                  "requestOptions": {
+                    "title": "Request Options",
+                    "description": "Options for the HTTPS request to Jira.",
+                    "default": {
+                      "timeout": 7200,
+                      "verifySsl": null,
+                      "caBundlePath": null,
+                      "proxy": null,
+                      "headers": null,
+                      "extraBodyProperties": null
+                    },
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/RequestOptions"
+                      }
+                    ]
                   }
                 },
-                "required": ["domain", "email", "token"]
+                "required": ["domain", "token"]
               }
             },
             "required": ["params"]
