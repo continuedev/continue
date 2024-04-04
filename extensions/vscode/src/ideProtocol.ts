@@ -98,6 +98,13 @@ class VsCodeIde implements IDE {
         .get("telemetryEnabled")) ?? true
     );
   }
+  async isHistoryMirroringEnabled(): Promise<boolean> {
+    return (
+      (await vscode.workspace
+        .getConfiguration("continue")
+        .get("mirrorHistoryToWorkspace")) ?? true
+    );
+  }
   getUniqueId(): Promise<string> {
     return Promise.resolve(vscode.env.machineId);
   }

@@ -54,6 +54,7 @@ export type IdeProtocol = {
   ];
   getAvailableThreads: [undefined, Thread[]];
   isTelemetryEnabled: [undefined, boolean];
+  isHistoryMirroringEnabled: [undefined, boolean];
   getUniqueId: [undefined, string];
   getTags: [string, IndexTag[]];
 };

@@ -27,7 +27,7 @@ function useHistory(dispatch: Dispatch) {
     return await ideRequest("history/list", undefined);
   }
 
-  async function saveSession() {
+  async function saveSession(mirrorHistoryToWorkspace: boolean = false) {
     if (state.history.length === 0) return;
 
     const stateCopy = { ...state };
@@ -72,7 +72,8 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
-    return await ideRequest("history/save", sessionInfo);
+    // const mirrorHistoryToWorkspace: boolean = true;
+    return await ideRequest("history/save", {sessionInfo, mirrorHistoryToWorkspace});
   }
 
   async function copySessionToWorkspace(id: string, workspaceDirectory: string) {

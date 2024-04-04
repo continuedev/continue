@@ -100,6 +100,12 @@ export function getMetaKeyLabel() {
   }
 }
 
+export function mirrorHistoryToWorkspace() {
+  return vscode.workspace
+    .getConfiguration("continue")
+    .get<boolean>("mirrorHistoryToWorkspace");
+}
+
 export function getExtensionVersion() {
   const extension = vscode.extensions.getExtension("continue.continue");
   return extension?.packageJSON.version || "";

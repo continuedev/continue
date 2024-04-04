@@ -212,7 +212,8 @@ export class VsCodeWebviewProtocol {
       return historyManager.list();
     });
     this.on("history/save", (msg) => {
-      historyManager.save(msg.data);
+      // const mirroringEnabled = await ide.isHistoryMirroringEnabled() || false;
+      historyManager.save(msg.data, true);
     });
     this.on("history/copy", (msg) => {
       historyManager.copy(msg.data.id, msg.data.workspaceDirectory);

@@ -361,6 +361,7 @@ export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getDiff(): Promise<string>;
   isTelemetryEnabled(): Promise<boolean>;
+  isHistoryMirroringEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
   getTerminalContents(): Promise<string>;
   getDebugLocals(threadIndex: number): Promise<string>;

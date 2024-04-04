@@ -41,6 +41,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve(false);
   }
 
+  isHistoryMirroringEnabled(): Promise<boolean> {
+    return Promise.resolve(false);
+  }
+
   getUniqueId(): Promise<string> {
     return Promise.resolve("NOT_UNIQUE");
   }

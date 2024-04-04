@@ -5,6 +5,7 @@ import {
   getSessionFilePath,
   getSessionsListPath,
 } from "./paths";
+import { IDE } from "..";
 
 class HistoryManager {
   list(): SessionInfo[] {
@@ -69,12 +70,23 @@ class HistoryManager {
     }
   }
 
-  save(session: PersistedSessionInfo) {
+  save(session: PersistedSessionInfo, mirrorToWorkspace: boolean = false) {
     // Save the main session json file
     fs.writeFileSync(
       getSessionFilePath(session.sessionId),
       JSON.stringify(session),
     );
+
+    if () {
+      fs.writeFileSync(
+        getWorkspaceSessionFilePath(
+          session.workspaceDirectory,
+          session.sessionId,
+        ),
+        // getSessionFilePath(session.sessionId),
+        JSON.stringify(session),
+      );
+    }
 
     // Read and update the sessions list
     const sessionsListFilePath = getSessionsListPath();
@@ -129,13 +141,10 @@ class HistoryManager {
   }
 
   copy(sessionId: string, workspaceDirectory: string) {
-    // Delete a session
-    // const sessionId = session.sessionId;
     const sessionFile = getSessionFilePath(sessionId);
     if (!fs.existsSync(sessionFile)) {
       throw new Error(`Session file ${sessionFile} does not exist`);
     }
-    // const workspaceDirectory = session.workspaceDirectory;
     fs.copyFileSync(
       sessionFile,
       getWorkspaceSessionFilePath(workspaceDirectory, sessionId),

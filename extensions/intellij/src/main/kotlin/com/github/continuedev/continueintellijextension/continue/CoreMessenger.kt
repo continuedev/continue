@@ -85,6 +85,7 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
     private val ideMessageTypes = listOf(
         "readRangeInFile",
         "isTelemetryEnabled",
+        "isHistoryMirroringEnabled",
         "getUniqueId",
         "getWorkspaceConfigs",
         "getDiff",

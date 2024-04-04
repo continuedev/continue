@@ -55,6 +55,10 @@ export class MessageIde implements IDE {
     return this.request("isTelemetryEnabled", undefined);
   }
 
+  isHistoryMirroringEnabled(): Promise<boolean> {
+    return this.request("isHistoryMirroringEnabled", undefined);
+  }
+
   getUniqueId(): Promise<string> {
     return this.request("getUniqueId", undefined);
   }

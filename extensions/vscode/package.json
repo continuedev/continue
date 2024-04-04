@@ -59,6 +59,11 @@
           "default": true,
           "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://continue.dev/docs/telemetry)."
         },
+        "continue.mirrorHistoryToWorkspace": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable saving of Continue session files to the active workspace, in addition to the default location (~/.continue/sessions). "
+        },
         "continue.showInlineTip": {
           "type": "boolean",
           "default": true,

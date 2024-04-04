@@ -30,7 +30,10 @@ export type Protocol = {
   "history/copy": [{ id: string; workspaceDirectory: string }, void];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, PersistedSessionInfo];
-  "history/save": [PersistedSessionInfo, void];
+  "history/save": [
+    { sessionInfo: PersistedSessionInfo; mirrorHistoryToWorkspace: boolean },
+    void,
+  ];
   "devdata/log": [{ tableName: string; data: any }, void];
   "config/addOpenAiKey": [string, void];
   "config/addModel": [
