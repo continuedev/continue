@@ -1,14 +1,12 @@
+import { ContinueConfig, ContinueRcJson, IDE, ILLM } from "..";
+import { IdeSettings } from "../protocol";
+import { Telemetry } from "../util/posthog";
 import {
   BrowserSerializedContinueConfig,
-  ContinueConfig,
-  ContinueRcJson,
-  IContextProvider,
-  IDE,
-  ILLM,
-} from "../index.js";
-import { IdeSettings } from "../protocol/ideWebview.js";
-import { Telemetry } from "../util/posthog.js";
-import { finalToBrowserConfig, loadFullConfigNode } from "./load.js";
+  finalToBrowserConfig,
+  loadFullConfigNode,
+} from "./load";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 
 export class ConfigHandler {
   private savedConfig: ContinueConfig | undefined;
@@ -18,7 +16,8 @@ export class ConfigHandler {
   constructor(
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
-    private readonly writeLog: (text: string) => Promise<void>,
+    private readonly writeLog: (text: string) => void,
+    private readonly onConfigUpdate: () => void
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
@@ -76,10 +75,8 @@ export class ConfigHandler {
     const newConfig = await loadFullConfigNode(
       this.ide,
       workspaceConfigs,
-      await this.ideSettingsPromise,
-      ideInfo.ideType,
-      uniqueId,
-      this.writeLog,
+      remoteConfigServerUrl,
+      ideInfo.ideType
     );
     newConfig.allowAnonymousTelemetry =
       newConfig.allowAnonymousTelemetry &&
@@ -89,85 +86,18 @@ export class ConfigHandler {
     await Telemetry.setup(
       newConfig.allowAnonymousTelemetry ?? true,
       await this.ide.getUniqueId(),
-      ideInfo.extensionVersion,
+      ideInfo.extensionVersion
     );
 
     (newConfig.contextProviders ?? []).push(...this.additionalContextProviders);
 
   setupLlm(llm: ILLM): ILLM {
-    const TIMEOUT = 7200; // 7200 seconds = 2 hours
-    // Since we know this is happening in Node.js, we can add requestOptions through a custom agent
-    const ca = [...tls.rootCertificates];
-    const customCerts =
-      typeof llm.requestOptions?.caBundlePath === "string"
-        ? [llm.requestOptions?.caBundlePath]
-        : llm.requestOptions?.caBundlePath;
-    if (customCerts) {
-      ca.push(
-        ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8")),
-      );
-    }
-
-    let timeout = (llm.requestOptions?.timeout ?? TIMEOUT) * 1000; // measured in ms
-
-    const agentOptions = {
-      ca,
-      rejectUnauthorized: llm.requestOptions?.verifySsl,
-      timeout,
-      sessionTimeout: timeout,
-      keepAlive: true,
-      keepAliveMsecs: timeout,
-    };
-
-    const proxy = llm.requestOptions?.proxy;
-
     llm._fetch = async (input, init) => {
-      if (agentOptions.rejectUnauthorized === false) {
-        console.log("SSL verification is disabled");
-      }
-
-      // Create agent
-      const protocol = new URL(input).protocol === "https:" ? https : http;
-      const agent = proxy
-        ? new URL(input).protocol === "https:"
-          ? new HttpsProxyAgent(proxy, agentOptions)
-          : new HttpProxyAgent(proxy, agentOptions)
-        : new protocol.Agent(agentOptions);
-
-      const headers: { [key: string]: string } =
-        llm!.requestOptions?.headers || {};
-      for (const [key, value] of Object.entries(init?.headers || {})) {
-        headers[key] = value as string;
-      }
-
-      // Replace localhost with 127.0.0.1
-      input = new URL(input);
-      if (input.hostname === "localhost") {
-        input.hostname = "127.0.0.1";
-      }
-
-      let updatedBody: string | undefined = undefined;
-      try {
-        if (
-          llm.requestOptions?.extraBodyProperties &&
-          typeof init.body === "string"
-        ) {
-          const parsedBody = JSON.parse(init.body);
-          updatedBody = JSON.stringify({
-            ...parsedBody,
-            ...llm.requestOptions.extraBodyProperties,
-          });
-        }
-      } catch (e) {
-        console.log("Unable to parse HTTP request body: ", e);
-      }
-
-      const resp = await fetch(input, {
-        ...init,
-        body: updatedBody ?? init.body,
-        headers,
-        agent,
-      });
+      const resp = await fetchwithRequestOptions(
+        new URL(input),
+        { ...init },
+        llm.requestOptions
+      );
 
       if (!resp.ok) {
         let text = await resp.text();
@@ -184,7 +114,7 @@ export class ConfigHandler {
           }
         }
         throw new Error(
-          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
+          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`
         );
       }
 
