@@ -89,19 +89,16 @@ const autocompleteCache = AutocompleteLruCache.get();
 const DOUBLE_NEWLINE = "\n\n";
 const WINDOWS_DOUBLE_NEWLINE = "\r\n\r\n";
 const SRC_DIRECTORY = "/src/";
-// Starcoder2 tends to output artifacts starting with the letter "t"
-const STARCODER2_T_ARTIFACTS = ["t.", "\nt", "<file_sep>"];
+const STARCODER2_T_ARTIFACT = "t.";
 const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
-const multilineStops: string[] = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
-const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
-
-// Errors that can be expected on occasion even during normal functioning should not be shown.
-// Not worth disrupting the user to tell them that a single autocomplete request didn't go through
-const ERRORS_TO_IGNORE = [
-  // From Ollama
-  "unexpected server status",
+const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
+const commonStops = [
+  SRC_DIRECTORY,
+  STARCODER2_T_ARTIFACT,
+  PYTHON_ENCODING,
+  CODE_BLOCK_END,
 ];
 
 function formatExternalSnippet(
@@ -325,16 +322,6 @@ export async function getTabCompletion(
     cacheHit = true;
     completion = cachedCompletion;
   } else {
-    const DOUBLE_NEWLINE = "\n\n";
-    const WINDOWS_DOUBLE_NEWLINE = "\r\n\r\n";
-    const SRC_DIRECTORY = "/src/";
-    const T_FILE_EXTENSION = ".t.";
-    const PYTHON_ENCODING = "#- coding: utf-8";
-    const CODE_BLOCK_END = "```";
-    
-    const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
-    const commonStops = [SRC_DIRECTORY, T_FILE_EXTENSION, PYTHON_ENCODING, CODE_BLOCK_END];
-    
     let stop = [
       ...(completionOptions?.stop || []),
       "\n\n",
