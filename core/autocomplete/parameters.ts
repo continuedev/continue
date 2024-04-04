@@ -1,7 +1,7 @@
 import { TabAutocompleteOptions } from "..";
 
 export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
-  useCopyBuffer: true,
+  useCopyBuffer: false,
   useSuffix: true,
   maxPromptTokens: 500,
   prefixPercentage: 0.85,
