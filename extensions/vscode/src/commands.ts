@@ -373,13 +373,12 @@ const commandsMap: (
     const fullScreenTab = getFullScreenTab();
 
     // Check if the active editor is the Continue GUI View
-    if (fullScreenTab && fullScreenTab.isActive) {
-      vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-      vscode.commands.executeCommand("continue.focusContinueInput");
+    if (fullScreenTab && fullScreenTab.isActive) { //Full screen open and focused - close it
+      vscode.commands.executeCommand("workbench.action.closeActiveEditor"); //this will trigger the onDidDispose listener below
       return;
     }
 
-    if (fullScreenTab) {
+    if (fullScreenTab) { //Full screen open, but not focused - focus it
       // Focus the tab
       const openOptions = {
         preserveFocus: true,
@@ -395,15 +394,21 @@ const commandsMap: (
       return;
     }
 
+    //Full screen not open - open it
+
     // Close the sidebar.webviews
     // vscode.commands.executeCommand("workbench.action.closeSidebar");
     vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     // vscode.commands.executeCommand("workbench.action.toggleZenMode");
-    const panel = vscode.window.createWebviewPanel(
+
+    //create the full screen panel
+    let panel = vscode.window.createWebviewPanel(
       "continue.continueGUIView",
       "Continue",
       vscode.ViewColumn.One,
     );
+    
+    //Add content to the panel
     panel.webview.html = sidebar.getSidebarContent(
       extensionContext,
       panel,
@@ -414,6 +419,13 @@ const commandsMap: (
       undefined,
       true,
     );
+    
+    //When panel closes, reset the webview and focus
+    panel.onDidDispose(() => {
+      sidebar.resetWebviewProtocolWebview();
+      vscode.commands.executeCommand("continue.focusContinueInput");
+    }, null, extensionContext.subscriptions); 
+    
   },
   "continue.selectFilesAsContext": (
     firstUri: vscode.Uri,

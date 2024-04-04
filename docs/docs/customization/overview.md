@@ -6,7 +6,7 @@ keywords: [custom, slash commands, models, context providers]
 
 # Overview
 
-Continue can be deeply customized by editing `~/.continue/config.json` (`%userprofile%\.continue\config.json` for Windows) and `config.ts` on your machine. These files are created the first time you run Continue.
+Continue can be deeply customized by editing `~/.continue/config.json` (`%userprofile%\.continue\config.json` for Windows) and `config.ts` on your machine. These files are created the first time you run Continue. To open `config.json`, click the gear icon in the bottom right corner of the Continue sidebar.
 
 Currently, you can customize the following:
 

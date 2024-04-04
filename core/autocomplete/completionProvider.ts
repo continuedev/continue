@@ -38,7 +38,7 @@ export interface AutocompleteInput {
   clipboardText: string;
 }
 
-export interface AutocompleteOutcome {
+export interface AutocompleteOutcome extends TabAutocompleteOptions {
   accepted?: boolean;
   time: number;
   prompt: string;
@@ -210,7 +210,7 @@ export async function getTabCompletion(
       "\n\n",
       // The following are commonly appended to completions by starcoder and other models
       "/src/",
-      ".t.",
+      "t.",
       "#- coding: utf-8",
       "```",
       ...lang.stopWords,
@@ -237,17 +237,18 @@ export async function getTabCompletion(
       for await (const update of generator) {
         if (token.aborted) {
           cancelled = true;
-          return undefined;
+          return;
         }
         yield update;
       }
     };
-    let chars = generatorWithCancellation();
-    const gen2 = onlyWhitespaceAfterEndOfLine(
-      noFirstCharNewline(chars),
-      lang.endOfLine,
-    );
-    let lineGenerator = stopAtRepeatingLines(stopAtLines(streamLines(gen2)));
+    let charGenerator = generatorWithCancellation();
+    charGenerator = noFirstCharNewline(charGenerator);
+    charGenerator = onlyWhitespaceAfterEndOfLine(charGenerator, lang.endOfLine);
+
+    let lineGenerator = streamLines(charGenerator);
+    lineGenerator = stopAtLines(lineGenerator);
+    lineGenerator = stopAtRepeatingLines(lineGenerator);
     lineGenerator = avoidPathLine(lineGenerator, lang.comment);
     lineGenerator = noTopLevelKeywordsMidline(lineGenerator, lang.stopWords);
     lineGenerator = streamWithNewLines(lineGenerator);
@@ -279,6 +280,7 @@ export async function getTabCompletion(
     modelName: llm.model,
     completionOptions,
     cacheHit,
+    ...options,
   };
 }
 
@@ -395,7 +397,7 @@ export class CompletionProvider {
 
       // Set temperature (but don't overrride)
       if (llm.completionOptions.temperature === undefined) {
-        llm.completionOptions.temperature = 0.0;
+        llm.completionOptions.temperature = 0.01;
       }
 
       const outcome = await getTabCompletion(
@@ -424,12 +426,9 @@ export class CompletionProvider {
       const logRejectionTimeout = setTimeout(() => {
         // Wait 10 seconds, then assume it wasn't accepted
         logDevData("autocomplete", outcome);
+        const { prompt, completion, ...restOfOutcome } = outcome;
         Telemetry.capture("autocomplete", {
-          accepted: outcome.accepted,
-          modelName: outcome.modelName,
-          modelProvider: outcome.modelProvider,
-          time: outcome.time,
-          cacheHit: outcome.cacheHit,
+          ...restOfOutcome,
         });
         this._logRejectionTimeouts.delete(input.completionId);
       }, 10_000);

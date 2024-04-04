@@ -349,6 +349,7 @@ export interface IdeInfo {
   name: string;
   version: string;
   remoteName: string;
+  extensionVersion: string;
 }
 
 export interface IndexTag {

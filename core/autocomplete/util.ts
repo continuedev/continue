@@ -50,6 +50,9 @@ export class ListenableGenerator<T> {
   async *tee(): AsyncGenerator<T> {
     try {
       let i = 0;
+      while (i < this._buffer.length) {
+        yield this._buffer[i++];
+      }
       while (!this._isEnded) {
         let resolve: (value: any) => void;
         let promise = new Promise<T>((res) => {

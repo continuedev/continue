@@ -85,7 +85,8 @@ export class ConfigHandler {
     // Setup telemetry only after (and if) we know it is enabled
     await Telemetry.setup(
       this.savedConfig.allowAnonymousTelemetry ?? true,
-      await this.ide.getUniqueId()
+      await this.ide.getUniqueId(),
+      ideInfo.extensionVersion
     );
 
     return this.savedConfig;

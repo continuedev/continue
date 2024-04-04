@@ -31,8 +31,11 @@ class VsCodeIde implements IDE {
   async getRepoName(dir: string): Promise<string | undefined> {
     const repo = await this.getRepo(vscode.Uri.file(dir));
     const remote =
-      repo.repository.remotes.find((r: any) => r.name === "origin") ??
-      repo.repository.remotes[0];
+      repo?.repository.remotes.find((r: any) => r.name === "origin") ??
+      repo?.repository.remotes[0];
+    if (!remote) {
+      return undefined;
+    }
     const ownerAndRepo = remote.fetchUrl
       .replace(".git", "")
       .split("/")
@@ -61,6 +64,9 @@ class VsCodeIde implements IDE {
       name: vscode.env.appName,
       version: vscode.version,
       remoteName: vscode.env.remoteName || "local",
+      extensionVersion:
+        vscode.extensions.getExtension("continue.continue")?.packageJSON
+          .version,
     });
   }
   readRangeInFile(filepath: string, range: Range): Promise<string> {
