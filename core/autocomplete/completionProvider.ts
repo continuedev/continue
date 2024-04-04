@@ -51,6 +51,21 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
 
 const autocompleteCache = AutocompleteLruCache.get();
 
+const DOUBLE_NEWLINE = "\n\n";
+const WINDOWS_DOUBLE_NEWLINE = "\r\n\r\n";
+const SRC_DIRECTORY = "/src/";
+const STARCODER2_T_ARTIFACT = "t.";
+const PYTHON_ENCODING = "#- coding: utf-8";
+const CODE_BLOCK_END = "```";
+
+const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
+const commonStops = [
+  SRC_DIRECTORY,
+  STARCODER2_T_ARTIFACT,
+  PYTHON_ENCODING,
+  CODE_BLOCK_END,
+];
+
 function formatExternalSnippet(
   filepath: string,
   snippet: string,
@@ -204,15 +219,10 @@ export async function getTabCompletion(
     cacheHit = true;
     completion = cachedCompletion;
   } else {
-    // Try to reuse pending requests if what the user typed matches start of completion
     let stop = [
       ...(completionOptions?.stop || []),
-      "\n\n",
-      // The following are commonly appended to completions by starcoder and other models
-      "/src/",
-      "t.",
-      "#- coding: utf-8",
-      "```",
+      ...multilineStops,
+      ...commonStops,
       ...lang.stopWords,
     ];
 
@@ -220,6 +230,7 @@ export async function getTabCompletion(
       options.multilineCompletions !== "never" &&
       (options.multilineCompletions === "always" || completeMultiline);
 
+    // Try to reuse pending requests if what the user typed matches start of completion
     let generator = generatorReuseManager.getGenerator(
       prefix,
       () =>
