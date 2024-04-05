@@ -4,7 +4,6 @@ import com.github.continuedev.continueintellijextension.`continue`.GetTheme
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
-import com.github.continuedev.continueintellijextension.utils.getMetaKeyLabel
 import com.google.gson.Gson
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.actionSystem.AnAction
@@ -32,7 +31,11 @@ import javax.swing.*
 import javax.swing.border.EmptyBorder
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
+import javax.swing.plaf.ComboBoxUI
+import javax.swing.plaf.basic.BasicArrowButton
+import javax.swing.plaf.basic.BasicComboBoxUI
 import kotlin.math.max
+
 
 const val SHADOW_SIZE = 7
 const val MAIN_FONT_SIZE = 13
@@ -194,7 +197,7 @@ class InlineEditAction : AnAction(), DumbAware {
     }
 
     fun makePanel(project: Project, customPanelRef: Ref<CustomPanel>, textArea: JTextArea, inlayRef: Ref<Disposable>, comboBoxRef: Ref<JComboBox<String>>, leftInset: Int, modelTitles: List<String>, onEnter: () -> Unit, onCancel: () -> Unit, onAccept: () -> Unit, onReject: () -> Unit): JPanel {
-        val topPanel = ShadowPanel(MigLayout("wrap 1, insets 10 $leftInset 8 8, gap 0!")).apply {
+        val topPanel = ShadowPanel(MigLayout("wrap 1, insets 4 $leftInset 2 2, gap 0!")).apply {
             val globalScheme = EditorColorsManager.getInstance().globalScheme
             val defaultBackground = globalScheme.defaultBackground
 //            background = defaultBackground
@@ -264,6 +267,8 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             addActionListener {
                 continueSettingsService.continueState.lastSelectedInlineEditModel = selectedItem as String
             }
+
+//            setUI(TransparentArrowButtonUI())
         }
 
         comboBoxRef.set(dropdown)
@@ -271,7 +276,7 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
         val rightButton = CustomButton("Submit") { onEnter() }.apply {
 //            background = GetTheme().getHighlight()
             background = JBColor(0xe04573e8.toInt(), 0xe04573e8.toInt())
-            foreground = JBColor.WHITE
+            foreground = JBColor(0xffffffff.toInt(), 0xffffffff.toInt())
         }
 
         val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {
@@ -300,12 +305,39 @@ class CustomPanel(layout: MigLayout, project: Project, modelTitles: List<String>
             background = defaultBackground
         }
 
+        val dropdown = JComboBox(modelTitles.toTypedArray()).apply {
+            isEditable = true
+            background = defaultBackground
+            foreground = Color(128, 128, 128, 200)
+            font = Font("Arial", Font.PLAIN, 11)
+            border = EmptyBorder(2, 4, 2, 4)
+            isOpaque = false
+            isEditable = false
+            cursor = Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
+            renderer = DefaultListCellRenderer().apply {
+                horizontalAlignment = SwingConstants.RIGHT
+            }
+
+            isVisible = false
+
+//            setUI(TransparentArrowButtonUI())
+        }
+
         val progressBar = JProgressBar()
         progressBar.isIndeterminate = true
 
+        val rightPanel = JPanel(MigLayout("insets 0, fillx")).apply {
+            isOpaque = false
+            border = EmptyBorder(0, 0, 0, 0)
+            add(dropdown, "align right")
+            add(progressBar, "align right")
+        }
+
+
+
         border = EmptyBorder(4, 8, 4, 8)
         add(leftButton, "align left")
-        add(progressBar, "align right")
+        add(rightPanel, "align right")
         isOpaque = false
 
         cursor = Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR)
@@ -458,5 +490,41 @@ class ShadowPanel(layout: LayoutManager) : JXPanel(layout) {
 
     override fun paintComponent(g: Graphics) {
         super.paintComponent(g)
+    }
+}
+
+class TransparentArrowButtonUI : BasicComboBoxUI() {
+    override fun createArrowButton() = object : JButton() {
+        override fun paintComponent(g: Graphics) {
+            val g2 = g as Graphics2D
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            val size = 6
+            val x = (width - size) / 2
+            val y = (height - size / 2) / 2
+            val triangle = Polygon(
+                    intArrayOf(x, x + size, x + size / 2),
+                    intArrayOf(y, y, (y + size / 1.16).toInt()),
+                    3
+            )
+            g2.color = Color.GRAY
+            g2.fill(triangle)
+        }
+    }.apply {
+        border = EmptyBorder(0, 0, 0, 0)
+//        background = Color(0, 0, 0, 0)
+        isOpaque = false
+    }
+
+    override fun getInsets(): Insets {
+        return JBUI.insets(0, 0, 0, 0)
+    }
+
+    override fun installUI(c: JComponent?) {
+        super.installUI(c)
+        comboBox.border = EmptyBorder(0, 0, 0, 0)
+        comboBox.isOpaque = false
+        val globalScheme = EditorColorsManager.getInstance().globalScheme
+        val defaultBackground = globalScheme.defaultBackground
+        comboBox.background = defaultBackground
     }
 }
