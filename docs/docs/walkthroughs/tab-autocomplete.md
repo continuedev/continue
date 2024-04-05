@@ -109,6 +109,10 @@ We are working on this! Right now Continue uses the Language Server Protocol to 
 
 If you're seeing a common pattern of mistake that might be helpful to report, please share in Discord. We will do our best to fix it as soon as possible.
 
+### Completions are only ever single-line
+
+To ensure that you receive multi-line completions, you can set `"multilineCompletions": "always"` in `tabAutocompleteOptions`. By default, it is `"auto"`. If you still find that you are only seeing single-line completions, this may be because some models tend to produce shorter completions when starting in the middle of a file. You can try temporarily moving text below your cursor out of your active file, or switching to a larger model.
+
 ## How to turn off autocomplete
 
 ### VS Code
