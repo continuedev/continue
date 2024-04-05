@@ -75,5 +75,6 @@ const DEFAULT_IGNORE_DIRS = [
   ".vscode-test",
   ".continue",
   "__pycache__",
+  "site-packages",
 ];
 export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
