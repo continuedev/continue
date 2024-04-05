@@ -33,7 +33,51 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
 ];
 
 export const defaultConfig: SerializedContinueConfig = {
-  models: [],
+  models: [
+    {
+      title: "Claude 3 Sonnet (Free Trial)",
+      provider: "free-trial",
+      model: "claude-3-sonnet-20240229",
+    },
+    {
+      title: "GPT-4 Vision (Free Trial)",
+      provider: "free-trial",
+      model: "gpt-4-vision-preview",
+    },
+    {
+      title: "GPT-3.5-Turbo (Free Trial)",
+      provider: "free-trial",
+      model: "gpt-3.5-turbo",
+    },
+    {
+      title: "Gemini Pro (Free Trial)",
+      provider: "free-trial",
+      model: "gemini-pro",
+    },
+    {
+      title: "Mixtral (Free Trial)",
+      provider: "free-trial",
+      model: "mistral-8x7b",
+    },
+  ],
+  slashCommands: [
+    {
+      name: "edit",
+      description: "Edit selected code",
+    },
+    {
+      name: "comment",
+      description: "Write comments for the selected code",
+    },
+    {
+      name: "share",
+      description: "Export this session as markdown",
+    },
+    {
+      name: "cmd",
+      description: "Generate a shell command",
+    },
+  ],
   customCommands: [
     {
       name: "test",
@@ -50,7 +94,47 @@ export const defaultConfig: SerializedContinueConfig = {
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
-  models: FREE_TRIAL_MODELS,
+  models: [
+    {
+      title: "Claude 3 Sonnet (Free Trial)",
+      provider: "free-trial",
+      model: "claude-3-sonnet-20240229",
+    },
+    {
+      title: "GPT-4 Vision (Free Trial)",
+      provider: "free-trial",
+      model: "gpt-4-vision-preview",
+    },
+    {
+      title: "GPT-3.5-Turbo (Free Trial)",
+      provider: "free-trial",
+      model: "gpt-3.5-turbo",
+    },
+    {
+      title: "Gemini Pro (Free Trial)",
+      provider: "free-trial",
+      model: "gemini-pro",
+    },
+    {
+      title: "Mixtral (Free Trial)",
+      provider: "free-trial",
+      model: "mistral-8x7b",
+    },
+  ],
+  slashCommands: [
+    {
+      name: "edit",
+      description: "Edit selected code",
+    },
+    {
+      name: "comment",
+      description: "Write comments for the selected code",
+    },
+    {
+      name: "share",
+      description: "Export this session as markdown",
+    },
+  ],
   customCommands: [
     {
       name: "test",
