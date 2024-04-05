@@ -60,6 +60,8 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 - `prefixPercentage`: The percentage of the input that should be dedicated to the prefix. (Number)
 - `template`: An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables. (String)
 - `multilineCompletions`: Whether to enable multiline completions ("always", "never", or "auto"). Defaults to "auto".
+- `useCache`: Whether to cache and reuse completions when the prompt is the same as a previous one. May be useful to disable for testing purposes.
+- `useOtherFiles`: Whether to include context from files outside of the current one. Turning this off should be expected to reduce the accuracy of completions, but might be good for testing.
 
 ### Full example
 
