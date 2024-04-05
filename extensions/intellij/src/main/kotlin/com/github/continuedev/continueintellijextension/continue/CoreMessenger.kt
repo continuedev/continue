@@ -148,7 +148,7 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
         val outputStream = process.outputStream
         val inputStream = process.inputStream
 
-        writer = OutputStreamWriter(outputStream)
+        writer = OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
         reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
 
         process.onExit().thenRun {
