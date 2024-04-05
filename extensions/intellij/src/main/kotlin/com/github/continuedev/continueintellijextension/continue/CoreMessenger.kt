@@ -177,7 +177,28 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
     }
 
     init {
-        if (useTcp) {
+        // Set proper permissions
+        setPermissions(continueCorePath)
+        setPermissions(esbuildPath)
+
+        // Start the subprocess
+        val processBuilder = ProcessBuilder(continueCorePath)
+                .directory(File(continueCorePath).parentFile)
+        process = processBuilder.start()
+
+        val outputStream = process.outputStream
+        val inputStream = process.inputStream
+
+        writer = OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
+        reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
+
+        process.onExit().thenRun {
+            val err = process.errorStream.bufferedReader().readText().trim()
+            println("Core process exited with output: $err")
+            ideProtocolClient.showMessage("Core process exited with output: $err")
+        }
+
+        Thread {
             try {
                 val socket = Socket("localhost", 3000)
                 val writer = PrintWriter(socket.getOutputStream(), true)
