@@ -124,7 +124,7 @@ export async function getTabCompletion(
     llm.useLegacyCompletionsEndpoint = true;
   } else if (llm.providerName === "free-trial") {
     throw new Error(
-      "Free trial is not supported for tab-autocomplete. We recommend using starcoder with Ollama, LM Studio, or another provider.",
+      "Free trial is not supported for tab-autocomplete. We recommend using starcoder2 with Ollama, LM Studio, or another provider.",
     );
   }
   if (!llm) return;

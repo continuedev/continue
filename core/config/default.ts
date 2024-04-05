@@ -67,7 +67,7 @@ export const defaultConfig: SerializedContinueConfig = {
   tabAutocompleteModel: {
     title: "Starcoder 3b",
     provider: "ollama",
-    model: "starcoder-3b",
+    model: "starcoder2:3b",
   },
 };
 

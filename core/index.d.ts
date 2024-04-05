@@ -549,6 +549,7 @@ export type ModelName =
   | "deepseek-1b"
   | "starcoder-1b"
   | "starcoder-3b"
+  | "starcoder2-3b"
   | "stable-code-3b";
 
 export interface RequestOptions {

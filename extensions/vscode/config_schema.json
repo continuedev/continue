@@ -487,6 +487,7 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
+                      "starcoder2-3b",
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",
@@ -670,7 +671,8 @@
                       "deepseek-1b",
                       "stable-code-3b",
                       "starcoder-1b",
-                      "starcoder-3b"
+                      "starcoder-3b",
+                      "starcoder2-3b"
                     ]
                   },
                   {
@@ -717,6 +719,7 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
+                      "starcoder2-3b",
                       "AUTODETECT"
                     ]
                   },
@@ -924,7 +927,8 @@
                       "deepseek-1b",
                       "stable-code-3b",
                       "starcoder-1b",
-                      "starcoder-3b"
+                      "starcoder-3b",
+                      "starcoder2-3b"
                     ]
                   },
                   {
@@ -1657,7 +1661,7 @@
         },
         "tabAutocompleteModel": {
           "title": "Tab Autocomplete Model",
-          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder:3b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder2:3b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
           "default": {
             "title": "Tab Autocomplete Model",
             "provider": "ollama",
