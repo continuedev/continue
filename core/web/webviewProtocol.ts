@@ -87,6 +87,7 @@ export type WebviewProtocol = Protocol &
     "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
     "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
     insertAtCursor: [{ text: string }, void];
+    copyText: [{ text: string }, void];
     "jetbrains/editorInsetHeight": [{ height: number }, void];
   };
 
