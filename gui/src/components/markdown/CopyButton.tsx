@@ -1,5 +1,6 @@
 import { CheckIcon, ClipboardIcon } from "@heroicons/react/24/outline";
 import { useState } from "react";
+import { ideRequest, isJetBrains } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 
 interface CopyButtonProps {
@@ -15,9 +16,14 @@ export function CopyButton(props: CopyButtonProps) {
       <HeaderButtonWithText
         text={copied ? "Copied!" : "Copy"}
         onClick={(e) => {
-          navigator.clipboard.writeText(
-            typeof props.text === "string" ? props.text : props.text(),
-          );
+          const text =
+            typeof props.text === "string" ? props.text : props.text();
+          if (isJetBrains()) {
+            ideRequest("copyText", { text });
+          } else {
+            navigator.clipboard.writeText(text);
+          }
+
           setCopied(true);
           setTimeout(() => setCopied(false), 2000);
         }}

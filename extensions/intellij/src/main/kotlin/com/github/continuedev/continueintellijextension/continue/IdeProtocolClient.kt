@@ -28,6 +28,8 @@ import com.intellij.openapi.wm.WindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import kotlinx.coroutines.*
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 import java.io.*
 import java.net.NetworkInterface
 import java.nio.charset.Charset
@@ -187,6 +189,14 @@ class IdeProtocolClient (
 
                     "getUniqueId" -> {
                         respond(uniqueId())
+                    }
+
+                    "copyText" -> {
+                        val data = data as Map<String, Any>
+                        val text = data["text"] as String
+                        val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+                        val stringSelection = StringSelection(text)
+                        clipboard.setContents(stringSelection, stringSelection)
                     }
 
                     "showDiff" -> {
