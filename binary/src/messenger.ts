@@ -35,6 +35,12 @@ export class IpcMessenger {
     });
   }
 
+  private _onErrorHandlers: ((error: Error) => void)[] = [];
+
+  onError(handler: (error: Error) => void) {
+    this._onErrorHandlers.push(handler);
+  }
+
   mock(data: any) {
     const d = JSON.stringify(data);
     this._handleData(Buffer.from(d));
@@ -63,8 +69,11 @@ export class IpcMessenger {
           } else {
             this.send(msg.messageType, response || {}, msg.messageId);
           }
-        } catch (e) {
+        } catch (e: any) {
           console.warn(`Error running handler for "${msg.messageType}": `, e);
+          this._onErrorHandlers.forEach((handler) => {
+            handler(e);
+          });
         }
       });
 
@@ -78,7 +87,7 @@ export class IpcMessenger {
 
   private _handleData(data: Buffer) {
     const d = data.toString();
-    const lines = d.split("\n").filter((line) => line.trim() !== "");
+    const lines = d.split(/\r\n|\r|\n/).filter((line) => line.trim() !== "");
     lines.forEach((line) => this._handleLine(line));
   }
 

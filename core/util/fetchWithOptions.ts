@@ -1,15 +1,15 @@
-import * as fs from "fs";
-import fetch, { RequestInit, Response } from "node-fetch";
 import { http, https } from "follow-redirects";
+import * as fs from "fs";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import { RequestOptions } from "..";
+import fetch, { RequestInit, Response } from "node-fetch";
 import tls from "tls";
+import { RequestOptions } from "..";
 
 export function fetchwithRequestOptions(
   url: URL,
   init: RequestInit,
-  requestOptions?: RequestOptions
+  requestOptions?: RequestOptions,
 ): Promise<Response> {
   const TIMEOUT = 7200; // 7200 seconds = 2 hours
 
@@ -20,7 +20,7 @@ export function fetchwithRequestOptions(
       : requestOptions?.caBundlePath;
   if (customCerts) {
     ca.push(
-      ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8"))
+      ...customCerts.map((customCert) => fs.readFileSync(customCert, "utf8")),
     );
   }
 

@@ -19,6 +19,7 @@ import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.vfs.*

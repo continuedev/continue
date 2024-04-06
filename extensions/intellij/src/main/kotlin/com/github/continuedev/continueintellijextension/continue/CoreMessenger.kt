@@ -1,4 +1,5 @@
 package com.github.continuedev.continueintellijextension.`continue`
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -6,12 +7,15 @@ import java.io.OutputStreamWriter
 import java.io.*
 
 import com.google.gson.Gson
+import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 
-class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
+class CoreMessenger(private val project: Project, esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
     private val writer: OutputStreamWriter
     private val reader: BufferedReader
     private val process: Process
@@ -58,6 +62,12 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
                 ))
                 write(message)
             };
+        }
+
+        // Forward to webview
+        if (forwardToWebview.contains(messageType)) {
+            val continuePluginService = project.service<ContinuePluginService>()
+            continuePluginService.sendToWebview(messageType, data, messageType)
         }
 
         // Responses for messageId
@@ -110,6 +120,11 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
         "getBranch",
         "getIdeInfo",
         "getIdeSettings",
+        "errorPopup"
+    )
+
+    private val forwardToWebview = listOf<String>(
+            "configUpdate"
     )
 
     private fun setPermissions(destination: String) {

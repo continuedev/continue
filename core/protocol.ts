@@ -119,4 +119,5 @@ export interface IdeSettings {
 
 export type ReverseProtocol = IdeProtocol & {
   getIdeSettings: [undefined, IdeSettings];
+  errorPopup: [{ message: string }, void];
 };
