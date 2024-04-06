@@ -190,7 +190,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 // esbuild needs permissions
                 val esbuildPath = Paths.get(targetPath, "esbuild"+ (if (os == "win32") ".exe" else "")).toString()
 
-                val coreMessenger = CoreMessenger(project, esbuildPath, continueCorePath, ideProtocolClient)
+                val coreMessenger = CoreMessenger(project, esbuildPath, continueCorePath, ideProtocolClient);
                 continuePluginService.coreMessenger = coreMessenger
             }
         }

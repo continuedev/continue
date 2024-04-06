@@ -66,6 +66,11 @@ export class Core {
 
     const on = this.messenger.on.bind(this.messenger);
 
+    this.messenger.onError((err) => {
+      console.error(err);
+      this.messenger.request("errorPopup", { message: err.message });
+    });
+
     // New
     on("update/modelChange", (msg) => {
       this.selectedModelTitle = msg.data;

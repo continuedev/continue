@@ -85,18 +85,7 @@ export class IpcMessenger<
   private _unfinishedLine: string | undefined = undefined;
   private _handleData(data: Buffer) {
     const d = data.toString();
-    const lines = d.split(/\r\n/).filter((line) => line.trim() !== "");
-    if (lines.length === 0) {
-      return;
-    }
-
-    if (this._unfinishedLine) {
-      lines[0] = this._unfinishedLine + lines[0];
-      this._unfinishedLine = undefined;
-    }
-    if (!d.endsWith("\r\n")) {
-      this._unfinishedLine = lines.pop();
-    }
+    const lines = d.split(/\r\n|\r|\n/).filter((line) => line.trim() !== "");
     lines.forEach((line) => this._handleLine(line));
   }
 
