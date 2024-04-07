@@ -12,60 +12,23 @@ ollama run starcoder:3b
 
 Once it has been downloaded, you should begin to see completions in VS Code.
 
-## Setting up with LM Studio
-
-You can also set up tab-autocomplete with a local LM Studio instance by following these steps:
-
-1. Download the latest version of LM Studio from [here](https://lmstudio.ai/)
-2. Download a model (e.g. search for `second-state/StarCoder2-3B-GGUF` and choose one of the options there)
-3. Go to the server section (button is on the left), select your model from the dropdown at the top, and click "Start Server"
-4. Go to the "My Models" section (button is on the left), find your selected model, and copy the name the path (example: `second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf`); this will be used as the "model" attribute in Continue
-5. Go to Continue and modify the configurations for a [custom model](#setting-up-a-custom-model)
-6. Set the "provider" to `lmstudio` and the "model" to the path copied earlier
-
-Example:
-
-```json title=~/.continue/config.json
-{
-  "tabAutocompleteModel": {
-      "title": "Starcoder2 3b",
-      "model": "second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf",
-      "provider": "lmstudio",
-  },
-  ...
-}
-```
-
 ## Setting up a custom model
 
-All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote vLLM instance you would edit your `config.json` like this (note that it is not inside the models array), filling in the correct model name and vLLM endpoint:
-
-```json title=~/.continue/config.json
-{
-    "tabAutocompleteModel": {
-        "title": "Tab Autocomplete Model",
-        "provider": "openai",
-        "model": "<MODEL_NAME>",
-        "apiBase": "<VLLM_ENDPOINT_URL>"
-    },
-    ...
-}
-```
-
-As another example, say you want to use a different model, `deepseek-coder:6.7b-base`, with Ollama:
+All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote Ollama instance you would edit your `config.json` like this (note that it is not inside the models array):
 
 ```json title=~/.continue/config.json
 {
     "tabAutocompleteModel": {
         "title": "Tab Autocomplete Model",
         "provider": "ollama",
-        "model": "deepseek-coder:6.7b-base"
+        "model": "starcoder:3b",
+        "apiBase": "https://<my endpoint>"
     },
     ...
 }
 ```
 
-If you aren't yet familiar with the available options, you can learn more in our [overview](../setup/overview.md).
+If you aren't yet familiar with the available options, you can learn more in our [overview](../model-setup/overview.md).
 
 ### What model should I use?
 

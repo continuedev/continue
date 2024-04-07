@@ -2,21 +2,6 @@
 
 Continue now provides support for tab autocomplete in [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains IDEs](https://plugins.jetbrains.com/plugin/22707-continue/edit). We will be greatly improving the experience over the next few releases, and it is always helpful to hear feedback. If you have any problems or suggestions, please let us know in our [Discord](https://discord.gg/vapESyrFmJ).
 
-## Setting up with Codestral (recommended)
-
-If you want to have the best autocomplete experience, we recommend using Codestral, which is available through the [Mistral API](https://console.mistral.ai/). To do this, obtain an API key and add it to your `config.json`:
-
-```json
-{
-  "tabAutocompleteModel": {
-    "title": "Codestral",
-    "provider": "mistral",
-    "model": "codestral-latest",
-    "apiKey": "YOUR_API_KEY"
-  }
-}
-```
-
 ## Setting up with Ollama (default)
 
 We recommend setting up tab-autocomplete with a local Ollama instance. To do this, first download the latest version of Ollama from [here](https://ollama.ai). Then, run the following command to download our recommended model:
@@ -102,7 +87,6 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 - `multilineCompletions`: Whether to enable multiline completions ("always", "never", or "auto"). Defaults to "auto".
 - `useCache`: Whether to cache and reuse completions when the prompt is the same as a previous one. May be useful to disable for testing purposes.
 - `useOtherFiles`: Whether to include context from files outside of the current one. Turning this off should be expected to reduce the accuracy of completions, but might be good for testing.
-- `disableInFiles`: A list of glob patterns for files in which you want to disable tab autocomplete.
 
 ### Full example
 
@@ -153,6 +137,10 @@ We are working on this! Right now Continue uses the Language Server Protocol to 
 If you're seeing a common pattern of mistake that might be helpful to report, please share in Discord. We will do our best to fix it as soon as possible.
 
 ### Completions are only ever single-line
+
+To ensure that you receive multi-line completions, you can set `"multilineCompletions": "always"` in `tabAutocompleteOptions`. By default, it is `"auto"`. If you still find that you are only seeing single-line completions, this may be because some models tend to produce shorter completions when starting in the middle of a file. You can try temporarily moving text below your cursor out of your active file, or switching to a larger model.
+
+## How to turn off autocomplete
 
 To ensure that you receive multi-line completions, you can set `"multilineCompletions": "always"` in `tabAutocompleteOptions`. By default, it is `"auto"`. If you still find that you are only seeing single-line completions, this may be because some models tend to produce shorter completions when starting in the middle of a file. You can try temporarily moving text below your cursor out of your active file, or switching to a larger model.
 
