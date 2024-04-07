@@ -37,11 +37,6 @@ const DraftIssueCommand: SlashCommand = {
   name: "issue",
   description: "Draft a GitHub issue",
   run: async function* ({ input, llm, history, params }) {
-    if (this?.params?.repositoryUrl === undefined || this?.params?.repositoryUrl === "") {
-      yield "This command requires a repository URL to be set in the config file.";
-      return;
-    }
-
     //get issue title
     let title = await llm.complete(
       `Generate a title for the GitHub issue requested in this user input: '${input}'. Use no more than 20 words and output nothing other than the title. Do not surround it with quotes. The title is: `,
@@ -64,12 +59,17 @@ const DraftIssueCommand: SlashCommand = {
     }
 
     //Create isssue in github via api
-    const response = await createGitHubIssue(title, body, {
-      repositoryUrl: this.params.repositoryUrl,
-      githubToken: this.params.githubToken || process.env.GITHUB_TOKEN
-    });
-
-    yield '\n\n'+response
+    if (this?.params?.repositoryUrl === undefined || this?.params?.repositoryUrl === "") {
+      yield "\n\n---\n\n ## Continue Message: No issue link generated: \n" +
+      "In order to automatically generate a github issue a repository URL needs to be set in the config file.\n";
+    } else {
+      const createIssueResponse = await createGitHubIssue(title, body, {
+        repositoryUrl: this?.params?.repositoryUrl,
+        githubToken: this?.params?.githubToken || process.env.GITHUB_TOKEN
+      });
+  
+      yield '\n\n'+createIssueResponse
+    }
   },
 };
 
