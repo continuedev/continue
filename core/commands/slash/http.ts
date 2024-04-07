@@ -7,6 +7,7 @@ const HttpSlashCommand: SlashCommand = {
   run: async function* ({ ide, llm, input, params }) {
     const url = params?.url;
     if (!url) {
+      yield "URL is not defined in params"
       throw new Error("URL is not defined in params");
     }
     const response = await fetch(url, {

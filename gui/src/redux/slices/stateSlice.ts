@@ -114,6 +114,18 @@ const initialState: State = {
         name: "cmd",
         description: "Generate a shell command",
       },
+      {
+        name:"issue",
+        description: "Draft a github issue"
+      },
+      {
+        name: "http",
+        description: "Do something custom"
+      },
+      {
+        name: "commit",
+        description: "Generate a commit message for the current changes"
+      }
     ],
     contextProviders: [],
     models: [

@@ -45,6 +45,24 @@ export const defaultConfig: SerializedContinueConfig = {
       name: "cmd",
       description: "Generate a shell command",
     },
+    {
+      name: "issue",
+      description: "Generate a link to a drafted GitHub issue",
+      params:{
+        "repositoryUrl": ""
+      }
+    },
+    {
+      name: "http",
+      description: "Does something custom",
+      params: { 
+        "repositoryUrl": ""
+      }
+    },
+    {
+      name: "commit",
+      description: "Generate a commit message for the current changes"
+    },
   ],
   customCommands: [
     {
@@ -111,6 +129,28 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
     {
       name: "share",
       description: "Export this session as markdown",
+    },
+    {
+      name: "cmd",
+      description: "Generate a shell command",
+    },
+    {
+      name: "issue",
+      description: "Draft a github issue",
+      params:{
+        "repositoryUrl": ""
+      }
+    },
+    {
+      name: "http",
+      description: "Do something custom",
+      params: { 
+        "repositoryUrl": ""
+      }
+    },
+    {
+      name: "commit",
+      description: "Generate a commit message for the current changes"
     },
   ],
   customCommands: [
