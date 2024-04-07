@@ -19,9 +19,12 @@ function childrenToText(children: any) {
   return children.map((child: any) => childToText(child)).join("");
 }
 
-function PreWithToolbar(props: { children: any }) {
-  const uiConfig = useUIConfig()
-  const toolbarBottom = uiConfig?.codeBlockToolbarPosition == 'bottom';
+function PreWithToolbar(props: {
+  children: any;
+  language: string | undefined;
+}) {
+  const uiConfig = useUIConfig();
+  const toolbarBottom = uiConfig?.codeBlockToolbarPosition == "bottom";
 
   const [hovering, setHovering] = useState(false);
 
@@ -46,9 +49,21 @@ function PreWithToolbar(props: { children: any }) {
       onMouseEnter={() => setHovering(true)}
       onMouseLeave={() => setHovering(false)}
     >
-      {!toolbarBottom && hovering && <CodeBlockToolBar text={copyValue} bottom={toolbarBottom}></CodeBlockToolBar>}
+      {!toolbarBottom && hovering && (
+        <CodeBlockToolBar
+          text={copyValue}
+          bottom={toolbarBottom}
+          language={props.language}
+        ></CodeBlockToolBar>
+      )}
       {props.children}
-      {toolbarBottom && hovering && <CodeBlockToolBar text={copyValue} bottom={toolbarBottom}></CodeBlockToolBar>}
+      {toolbarBottom && hovering && (
+        <CodeBlockToolBar
+          text={copyValue}
+          bottom={toolbarBottom}
+          language={props.language}
+        ></CodeBlockToolBar>
+      )}
     </div>
   );
 }

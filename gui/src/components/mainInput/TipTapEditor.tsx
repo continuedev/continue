@@ -410,6 +410,10 @@ function TipTapEditor(props: TipTapEditorProps) {
     [editor, onEnterRef.current, props.isMainInput],
   );
 
+  useWebviewListener("jetbrains/editorInsetRefresh", async () => {
+    editor?.chain().clearContent().focus().run();
+  });
+
   useWebviewListener(
     "focusContinueInput",
     async (data) => {

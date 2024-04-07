@@ -43,6 +43,11 @@ export class DecorationTypeRangeManager {
 
   private ranges: vscode.Range[] = [];
 
+  applyToNewEditor(newEditor: vscode.TextEditor) {
+    this.editor = newEditor;
+    this.editor.setDecorations(this.decorationType, this.ranges);
+  }
+
   addLines(startIndex: number, numLines: number) {
     const lastRange = this.ranges[this.ranges.length - 1];
     if (lastRange && lastRange.end.line === startIndex - 1) {

@@ -47,12 +47,12 @@ if (args[2] === "--target") {
   }
 
   // Install node_modules //
-  execSync("npm install");
+  execSync("npm install --no-save");
   console.log("[info] npm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execSync("npm install");
+  execSync("npm install --no-save");
   console.log("[info] npm install in gui completed");
 
   if (ghAction()) {

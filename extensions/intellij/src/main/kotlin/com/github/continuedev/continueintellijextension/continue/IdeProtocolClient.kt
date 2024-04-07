@@ -6,17 +6,20 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
+import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.editor.SelectionModel
+import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.vfs.*
@@ -25,6 +28,8 @@ import com.intellij.openapi.wm.WindowManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import kotlinx.coroutines.*
+import java.awt.Toolkit
+import java.awt.datatransfer.StringSelection
 import java.io.*
 import java.net.NetworkInterface
 import java.nio.charset.Charset
@@ -168,16 +173,30 @@ class IdeProtocolClient (
                         if (sshClient != null || sshTty != null) {
                             remoteName = "ssh"
                         }
+
+                        val pluginId = "com.github.continuedev.continueintellijextension"
+                        val plugin = PluginManagerCore.getPlugin(PluginId.getId(pluginId))
+                        val extensionVersion = plugin?.version ?: "Unknown"
+
                         respond(mapOf(
                             "ideType" to "jetbrains",
                             "name" to ideName,
                             "version" to ideVersion,
-                            "remoteName" to remoteName
+                            "remoteName" to remoteName,
+                            "extensionVersion" to extensionVersion
                         ))
                     }
 
                     "getUniqueId" -> {
                         respond(uniqueId())
+                    }
+
+                    "copyText" -> {
+                        val data = data as Map<String, Any>
+                        val text = data["text"] as String
+                        val clipboard = Toolkit.getDefaultToolkit().systemClipboard
+                        val stringSelection = StringSelection(text)
+                        clipboard.setContents(stringSelection, stringSelection)
                     }
 
                     "showDiff" -> {

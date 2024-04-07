@@ -8,18 +8,17 @@ import DocsContextProvider from "./DocsContextProvider";
 import FileTreeContextProvider from "./FileTreeContextProvider";
 import FolderContextProvider from "./FolderContextProvider";
 import GitHubIssuesContextProvider from "./GitHubIssuesContextProvider";
+import GitLabMergeRequestContextProvider from "./GitLabMergeRequestContextProvider";
 import GoogleContextProvider from "./GoogleContextProvider";
 import HttpContextProvider from "./HttpContextProvider";
 import JiraIssuesContextProvider from "./JiraIssuesContextProvider";
+import LocalsProvider from "./LocalsProvider";
+import OSContextProvider from "./OSContextProvider";
 import OpenFilesContextProvider from "./OpenFilesContextProvider";
 import PostgresContextProvider from "./PostgresContextProvider";
 import ProblemsContextProvider from "./ProblemsContextProvider";
 import SearchContextProvider from "./SearchContextProvider";
-import OSContextProvider from "./OSContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
-import LocalsProvider from "./LocalsProvider";
-import URLContextProvider from "./URLContextProvider";
-import GitLabMergeRequestContextProvider from "./GitLabMergeRequestContextProvider";
 
 const Providers: (typeof BaseContextProvider)[] = [
   DiffContextProvider,
@@ -28,7 +27,6 @@ const Providers: (typeof BaseContextProvider)[] = [
   GoogleContextProvider,
   TerminalContextProvider,
   LocalsProvider,
-  URLContextProvider,
   OpenFilesContextProvider,
   HttpContextProvider,
   SearchContextProvider,

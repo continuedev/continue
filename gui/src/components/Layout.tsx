@@ -21,7 +21,7 @@ import {
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
-import { postToIde } from "../util/ide";
+import { isJetBrains, postToIde } from "../util/ide";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
@@ -245,7 +245,7 @@ const Layout = () => {
                   />
                 )}
 
-              {indexingProgress < 1 && (
+              {isJetBrains() || (
                 <IndexingProgressBar
                   currentlyIndexing={indexingTask}
                   completed={indexingProgress * 100}

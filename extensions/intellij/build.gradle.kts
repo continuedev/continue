@@ -80,7 +80,7 @@ koverReport {
 
 tasks {
     prepareSandbox {
-        from("../../pkg/bin") {
+        from("../../binary/bin") {
             into("${intellij.pluginName.get()}/core/")
         }
     }

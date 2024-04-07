@@ -78,15 +78,16 @@ const StepsDiv = styled.div`
     position: relative;
   }
 
-  &::before {
-    content: "";
-    position: absolute;
-    height: calc(100% - 12px);
-    border-left: 2px solid ${lightGray};
-    left: 28px;
-    z-index: 0;
-    bottom: 12px;
-  }
+  // Gray, vertical line on the left ("thread")
+  // &::before {
+  //   content: "";
+  //   position: absolute;
+  //   height: calc(100% - 12px);
+  //   border-left: 2px solid ${lightGray};
+  //   left: 28px;
+  //   z-index: 0;
+  //   bottom: 12px;
+  // }
 `;
 
 const NewSessionButton = styled.div`
@@ -417,7 +418,21 @@ function GUI(props: GUIProps) {
                           onUserInput={(input: string) => {}}
                           item={item}
                           onReverse={() => {}}
-                          onRetry={() => {}}
+                          onRetry={() => {
+                            streamResponse(
+                              state.history[index - 1].editorState,
+                              index - 1,
+                            );
+                          }}
+                          onContinueGeneration={() => {
+                            window.postMessage(
+                              {
+                                messageType: "userInput",
+                                data: { input: "Keep going" },
+                              },
+                              "*",
+                            );
+                          }}
                           onDelete={() => {}}
                         />
                       </TimelineItem>

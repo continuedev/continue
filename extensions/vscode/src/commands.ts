@@ -11,6 +11,7 @@ import { Telemetry } from "core/util/posthog";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { getPlatform } from "./util/util";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 function getFullScreenTab() {
@@ -164,18 +165,56 @@ const commandsMap: (
   "continue.quickEdit": async () => {
     const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
 
-    let text = await vscode.window.showInputBox({
+    const editor = vscode.window.activeTextEditor;
+    const existingHandler = verticalDiffManager.getHandlerForFile(
+      editor?.document.uri.fsPath ?? "",
+    );
+    const previousInput = existingHandler?.input;
+
+    let defaultModelTitle = await sidebar.webviewProtocol.request(
+      "getDefaultModelTitle",
+      undefined,
+    );
+    const config = await configHandler.loadConfig();
+    if (!defaultModelTitle) {
+      defaultModelTitle = config.models[0]?.title!;
+    }
+    const quickPickItems =
+      config.contextProviders
+        ?.filter((provider) => provider.description.type === "normal")
+        .map((provider) => {
+          return {
+            label: provider.description.displayTitle,
+            description: provider.description.title,
+            detail: provider.description.description,
+          };
+        }) || [];
+
+    const addContextMsg = quickPickItems.length
+      ? " (or press enter to add context first)"
+      : "";
+    const textInputOptions: vscode.InputBoxOptions = {
       placeHolder: selectionEmpty
-        ? "Describe the code you want to generate (or press enter to add context first)"
-        : "Describe how to edit the highlighted code (or press enter to add context first)",
-      title: "Continue Quick Edit",
-    });
+        ? `Type instructions to generate code${addContextMsg}`
+        : `Describe how to edit the highlighted code${addContextMsg}`,
+      title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
+      prompt: `[${defaultModelTitle}]`,
+    };
+    if (previousInput) {
+      textInputOptions.value = previousInput + ", ";
+      textInputOptions.valueSelection = [
+        textInputOptions.value.length,
+        textInputOptions.value.length,
+      ];
+    }
+
+    let text = await vscode.window.showInputBox(textInputOptions);
 
     if (text === undefined) {
       return;
     }
 
-    if (text.length > 0) {
+    if (text.length > 0 || quickPickItems.length === 0) {
       const modelName = await sidebar.webviewProtocol.request(
         "getDefaultModelTitle",
         undefined,
@@ -183,22 +222,6 @@ const commandsMap: (
       await verticalDiffManager.streamEdit(text, modelName);
     } else {
       // Pick context first
-      const quickPickItems: Promise<vscode.QuickPickItem[]> = configHandler
-        .loadConfig()
-        .then((config) => {
-          return (
-            config.contextProviders
-              ?.filter((provider) => provider.description.type === "normal")
-              .map((provider) => {
-                return {
-                  label: provider.description.displayTitle,
-                  description: provider.description.title,
-                  detail: provider.description.description,
-                };
-              }) || []
-          );
-        });
-
       const selectedProviders = await vscode.window.showQuickPick(
         quickPickItems,
         {
@@ -207,12 +230,7 @@ const commandsMap: (
         },
       );
 
-      let text = await vscode.window.showInputBox({
-        placeHolder: selectionEmpty
-          ? "Describe the code you want to generate (or press enter to add context first)"
-          : "Describe how to edit the highlighted code (or press enter to add context first)",
-        title: "Continue Quick Edit",
-      });
+      let text = await vscode.window.showInputBox(textInputOptions);
       if (text) {
         const llm = await configHandler.llmFromTitle();
         const config = await configHandler.loadConfig();
@@ -243,13 +261,7 @@ const commandsMap: (
           "\n\n---\n\n" +
           text;
 
-        await verticalDiffManager.streamEdit(
-          text,
-          await sidebar.webviewProtocol.request(
-            "getDefaultModelTitle",
-            undefined,
-          ),
-        );
+        await verticalDiffManager.streamEdit(text, defaultModelTitle);
       }
     }
   },
@@ -361,13 +373,12 @@ const commandsMap: (
     const fullScreenTab = getFullScreenTab();
 
     // Check if the active editor is the Continue GUI View
-    if (fullScreenTab && fullScreenTab.isActive) {
-      vscode.commands.executeCommand("workbench.action.closeActiveEditor");
-      vscode.commands.executeCommand("continue.focusContinueInput");
+    if (fullScreenTab && fullScreenTab.isActive) { //Full screen open and focused - close it
+      vscode.commands.executeCommand("workbench.action.closeActiveEditor"); //this will trigger the onDidDispose listener below
       return;
     }
 
-    if (fullScreenTab) {
+    if (fullScreenTab) { //Full screen open, but not focused - focus it
       // Focus the tab
       const openOptions = {
         preserveFocus: true,
@@ -383,15 +394,21 @@ const commandsMap: (
       return;
     }
 
+    //Full screen not open - open it
+
     // Close the sidebar.webviews
     // vscode.commands.executeCommand("workbench.action.closeSidebar");
     vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
     // vscode.commands.executeCommand("workbench.action.toggleZenMode");
-    const panel = vscode.window.createWebviewPanel(
+
+    //create the full screen panel
+    let panel = vscode.window.createWebviewPanel(
       "continue.continueGUIView",
       "Continue",
       vscode.ViewColumn.One,
     );
+    
+    //Add content to the panel
     panel.webview.html = sidebar.getSidebarContent(
       extensionContext,
       panel,
@@ -402,6 +419,13 @@ const commandsMap: (
       undefined,
       true,
     );
+    
+    //When panel closes, reset the webview and focus
+    panel.onDidDispose(() => {
+      sidebar.resetWebviewProtocolWebview();
+      vscode.commands.executeCommand("continue.focusContinueInput");
+    }, null, extensionContext.subscriptions); 
+    
   },
   "continue.selectFilesAsContext": (
     firstUri: vscode.Uri,

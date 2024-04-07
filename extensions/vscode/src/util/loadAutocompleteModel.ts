@@ -5,8 +5,8 @@ import * as vscode from "vscode";
 
 export class TabAutocompleteModel {
   private _llm: ILLM | undefined;
-  private defaultTag: string = "starcoder:3b";
-  private defaultTagName: string = "Starcoder 3b";
+  private defaultTag: string = "starcoder2:3b";
+  private defaultTagName: string = "Starcoder2 3b";
 
   private shownOllamaWarning: boolean = false;
   private shownDeepseekWarning: boolean = false;

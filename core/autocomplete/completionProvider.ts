@@ -18,6 +18,7 @@ import {
 import { AutocompleteLanguageInfo } from "./languages";
 import {
   avoidPathLine,
+  noTopLevelKeywordsMidline,
   stopAtLines,
   stopAtRepeatingLines,
   stopAtSimilarLine,
@@ -37,7 +38,7 @@ export interface AutocompleteInput {
   clipboardText: string;
 }
 
-export interface AutocompleteOutcome {
+export interface AutocompleteOutcome extends TabAutocompleteOptions {
   accepted?: boolean;
   time: number;
   prompt: string;
@@ -50,10 +51,26 @@ export interface AutocompleteOutcome {
 
 const autocompleteCache = AutocompleteLruCache.get();
 
+const DOUBLE_NEWLINE = "\n\n";
+const WINDOWS_DOUBLE_NEWLINE = "\r\n\r\n";
+const SRC_DIRECTORY = "/src/";
+// Starcoder2 tends to output artifacts starting with the letter "t"
+const STARCODER2_T_ARTIFACTS = ["t.", "\nt"];
+const PYTHON_ENCODING = "#- coding: utf-8";
+const CODE_BLOCK_END = "```";
+
+const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
+const commonStops = [
+  SRC_DIRECTORY,
+  ...STARCODER2_T_ARTIFACTS,
+  PYTHON_ENCODING,
+  CODE_BLOCK_END,
+];
+
 function formatExternalSnippet(
   filepath: string,
   snippet: string,
-  language: AutocompleteLanguageInfo
+  language: AutocompleteLanguageInfo,
 ) {
   const comment = language.comment;
   const lines = [
@@ -78,8 +95,8 @@ export async function getTabCompletion(
     filepath: string,
     contents: string,
     cursorIndex: number,
-    ide: IDE
-  ) => Promise<AutocompleteSnippet[]>
+    ide: IDE,
+  ) => Promise<AutocompleteSnippet[]>,
 ): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
@@ -107,7 +124,7 @@ export async function getTabCompletion(
     llm.useLegacyCompletionsEndpoint = true;
   } else if (llm.providerName === "free-trial") {
     throw new Error(
-      "Free trial is not supported for tab-autocomplete. We recommend using starcoder with Ollama, LM Studio, or another provider.",
+      "Free trial is not supported for tab-autocomplete. We recommend using starcoder2 with Ollama, LM Studio, or another provider.",
     );
   }
   if (!llm) return;
@@ -129,7 +146,7 @@ export async function getTabCompletion(
       filepath,
       fullPrefix + fullSuffix,
       fullPrefix.length,
-      ide
+      ide,
     ),
     new Promise((resolve) => {
       setTimeout(() => resolve([]), 100);
@@ -155,7 +172,7 @@ export async function getTabCompletion(
       recentlyEditedRanges,
       recentlyEditedFiles,
       llm.model,
-      extrasSnippets
+      extrasSnippets,
     );
 
   // Template prompt
@@ -172,7 +189,7 @@ export async function getTabCompletion(
     // Format snippets as comments and prepend to prefix
     const formattedSnippets = snippets
       .map((snippet) =>
-        formatExternalSnippet(snippet.filepath, snippet.contents, lang)
+        formatExternalSnippet(snippet.filepath, snippet.contents, lang),
       )
       .join("\n");
     if (formattedSnippets.length > 0) {
@@ -203,12 +220,10 @@ export async function getTabCompletion(
     cacheHit = true;
     completion = cachedCompletion;
   } else {
-    // Try to reuse pending requests if what the user typed matches start of completion
     let stop = [
       ...(completionOptions?.stop || []),
-      "\n\n",
-      "/src/",
-      "```",
+      ...multilineStops,
+      ...commonStops,
       ...lang.stopWords,
     ];
 
@@ -216,6 +231,7 @@ export async function getTabCompletion(
       options.multilineCompletions !== "never" &&
       (options.multilineCompletions === "always" || completeMultiline);
 
+    // Try to reuse pending requests if what the user typed matches start of completion
     let generator = generatorReuseManager.getGenerator(
       prefix,
       () =>
@@ -224,7 +240,7 @@ export async function getTabCompletion(
           raw: true,
           stop,
         }),
-      multiline
+      multiline,
     );
 
     // LLM
@@ -233,22 +249,22 @@ export async function getTabCompletion(
       for await (const update of generator) {
         if (token.aborted) {
           cancelled = true;
-          return undefined;
+          return;
         }
         yield update;
       }
     };
-    let chars = generatorWithCancellation();
-    const gen2 = onlyWhitespaceAfterEndOfLine(
-      noFirstCharNewline(chars),
-      lang.endOfLine
-    );
-    const lineGenerator = streamWithNewLines(
-      avoidPathLine(
-        stopAtRepeatingLines(stopAtLines(streamLines(gen2))),
-        lang.comment
-      )
-    );
+    let charGenerator = generatorWithCancellation();
+    charGenerator = noFirstCharNewline(charGenerator);
+    charGenerator = onlyWhitespaceAfterEndOfLine(charGenerator, lang.endOfLine);
+
+    let lineGenerator = streamLines(charGenerator);
+    lineGenerator = stopAtLines(lineGenerator);
+    lineGenerator = stopAtRepeatingLines(lineGenerator);
+    lineGenerator = avoidPathLine(lineGenerator, lang.comment);
+    lineGenerator = noTopLevelKeywordsMidline(lineGenerator, lang.stopWords);
+    lineGenerator = streamWithNewLines(lineGenerator);
+
     const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
     for await (const update of finalGenerator) {
       completion += update;
@@ -276,6 +292,7 @@ export async function getTabCompletion(
     modelName: llm.model,
     completionOptions,
     cacheHit,
+    ...options,
   };
 }
 
@@ -293,11 +310,11 @@ export class CompletionProvider {
       filepath: string,
       contents: string,
       cursorIndex: number,
-      ide: IDE
-    ) => Promise<AutocompleteSnippet[]>
+      ide: IDE,
+    ) => Promise<AutocompleteSnippet[]>,
   ) {
     this.generatorReuseManager = new GeneratorReuseManager(
-      this.onError.bind(this)
+      this.onError.bind(this),
     );
   }
 
@@ -347,7 +364,7 @@ export class CompletionProvider {
 
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
-    token: AbortSignal | undefined
+    token: AbortSignal | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
     // Create abort signal if not given
     if (!token) {
@@ -372,7 +389,7 @@ export class CompletionProvider {
         const lastUUID = await new Promise((resolve) =>
           setTimeout(() => {
             resolve(CompletionProvider.lastUUID);
-          }, options.debounceDelay)
+          }, options.debounceDelay),
         );
         if (uuid !== lastUUID) {
           return undefined;
@@ -392,7 +409,7 @@ export class CompletionProvider {
 
       // Set temperature (but don't overrride)
       if (llm.completionOptions.temperature === undefined) {
-        llm.completionOptions.temperature = 0.0;
+        llm.completionOptions.temperature = 0.01;
       }
 
       const outcome = await getTabCompletion(
@@ -402,7 +419,7 @@ export class CompletionProvider {
         this.ide,
         this.generatorReuseManager,
         input,
-        this.getDefinitionsFromLsp
+        this.getDefinitionsFromLsp,
       );
       const completion = outcome?.completion;
 
@@ -421,12 +438,9 @@ export class CompletionProvider {
       const logRejectionTimeout = setTimeout(() => {
         // Wait 10 seconds, then assume it wasn't accepted
         logDevData("autocomplete", outcome);
+        const { prompt, completion, ...restOfOutcome } = outcome;
         Telemetry.capture("autocomplete", {
-          accepted: outcome.accepted,
-          modelName: outcome.modelName,
-          modelProvider: outcome.modelProvider,
-          time: outcome.time,
-          cacheHit: outcome.cacheHit,
+          ...restOfOutcome,
         });
         this._logRejectionTimeouts.delete(input.completionId);
       }, 10_000);

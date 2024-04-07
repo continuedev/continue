@@ -40,6 +40,7 @@ const keyToName = {
   "⏎": "Enter",
   "⌫": "Backspace",
   "⌥": "Option",
+  "⎇": "Alt",
 };
 
 function KeyDiv({ text }: { text: string }) {
@@ -114,8 +115,18 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
     description: "Reject Diff",
   },
   {
+    mac: "⌥ ⌘ Y",
+    windows: "⎇ ⌃ Y",
+    description: "Accept Top Change in Diff",
+  },
+  {
+    mac: "⌥ ⌘ N",
+    windows: "⎇ ⌃ N",
+    description: "Reject Top Change in Diff",
+  },
+  {
     mac: "⌥ ⌘ L",
-    windows: "⌥ ⌃ L",
+    windows: "⎇ ⌃ L",
     description: "Toggle Auxiliary Bar",
   },
   {
@@ -152,6 +163,16 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     description: "Select Code",
   },
   {
+    mac: "⌘ I",
+    windows: "⌃ I",
+    description: "Edit highlighted code",
+  },
+  {
+    mac: "⌘ ⇧ I",
+    windows: "⌃ ⇧ I",
+    description: "Toggle inline edit focus",
+  },
+  {
     mac: "⌘ ⇧ ⏎",
     windows: "⌃ ⇧ ⏎",
     description: "Accept Diff",
@@ -163,12 +184,12 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   },
   {
     mac: "⌥ ⇧ J",
-    windows: "⌥ ⇧ J",
+    windows: "⎇ ⇧ J",
     description: "Quick Input",
   },
   {
     mac: "⌥ ⌘ J",
-    windows: "⌥ ⌃ J",
+    windows: "⎇ ⌃ J",
     description: "Toggle Sidebar",
   },
   {
