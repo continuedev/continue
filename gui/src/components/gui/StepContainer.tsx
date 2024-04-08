@@ -97,6 +97,8 @@ function StepContainer(props: StepContainerProps) {
         )
       ) {
         setTruncatedEarly(true);
+      } else {
+        setTruncatedEarly(false);
       }
     }
   }, [props.item.message.content, active]);
