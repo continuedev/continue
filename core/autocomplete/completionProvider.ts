@@ -519,42 +519,11 @@ export class CompletionProvider {
         ...config.tabAutocompleteOptions,
       };
 
-      // Check whether autocomplete is disabled for this file
-      if (options.disableInFiles) {
-        // Relative path needed for `ignore`
-        const workspaceDirs = await this.ide.getWorkspaceDirs();
-        let filepath = input.filepath;
-        for (const workspaceDir of workspaceDirs) {
-          if (filepath.startsWith(workspaceDir)) {
-            filepath = path.relative(workspaceDir, filepath);
-            break;
-          }
-        }
-
-        // Worst case we can check filetype glob patterns
-        if (filepath === input.filepath) {
-          filepath = getBasename(filepath);
-        }
-
-        const pattern = ignore().add(options.disableInFiles);
-        if (pattern.ignores(filepath)) {
-          return undefined;
-        }
-      }
-
-      // Create abort signal if not given
-      if (!token) {
-        const controller = new AbortController();
-        token = controller.signal;
-        this._abortControllers.set(input.completionId, controller);
-      }
-
       // Allow disabling autocomplete from config.json
       if (options.disable) {
         return undefined;
       }
 
-      // Debounce
       if (CompletionProvider.debouncing) {
         CompletionProvider.debounceTimeout?.refresh();
         const lastUUID = await new Promise((resolve) =>
