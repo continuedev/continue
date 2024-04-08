@@ -384,6 +384,11 @@ export class CompletionProvider {
         ...config.tabAutocompleteOptions,
       };
 
+      // Allow disabling autocomplete from config.json
+      if (options.disable) {
+        return undefined;
+      }
+
       if (CompletionProvider.debouncing) {
         CompletionProvider.debounceTimeout?.refresh();
         const lastUUID = await new Promise((resolve) =>

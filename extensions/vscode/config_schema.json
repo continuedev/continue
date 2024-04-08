@@ -1674,6 +1674,11 @@
           "type": "object",
           "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://continue.dev/docs/walkthroughs/tab-autocomplete#configuration-options).",
           "properties": {
+            "disable": {
+              "type": "boolean",
+              "description": "Disable tab autocomplete. This can also be done from the IDE settings.",
+              "default": false
+            },
             "useCopyBuffer": {
               "type": "boolean",
               "description": "Determines whether the copy buffer will be considered when contructing the prompt."

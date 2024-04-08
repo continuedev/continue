@@ -630,6 +630,7 @@ export interface EmbeddingsProvider {
 }
 
 export interface TabAutocompleteOptions {
+  disable: boolean;
   useCopyBuffer: boolean;
   useSuffix: boolean;
   maxPromptTokens: number;
