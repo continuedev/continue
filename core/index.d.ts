@@ -596,6 +596,7 @@ interface BaseCompletionOptions {
   numThreads?: number;
   keepAlive?: number;
   raw?: boolean;
+  stream?: boolean;
 }
 
 export interface ModelDescription {

@@ -6,6 +6,12 @@
       "title": "BaseCompletionOptions",
       "type": "object",
       "properties": {
+        "stream": {
+          "title": "Stream",
+          "description": "Whether to stream the LLM response. Currently only respected by the 'anthropic' provider. Otherwise will always stream.",
+          "type": "boolean",
+          "default": true
+        },
         "temperature": {
           "title": "Temperature",
           "description": "The temperature of the completion.",
