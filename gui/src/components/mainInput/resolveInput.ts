@@ -1,6 +1,7 @@
 import { JSONContent } from "@tiptap/react";
 import {
   ContextItemWithId,
+  InputModifiers,
   MessageContent,
   MessagePart,
   RangeInFile,
@@ -25,7 +26,8 @@ interface MentionAttrs {
  */
 
 async function resolveEditorContent(
-  editorState: JSONContent
+  editorState: JSONContent,
+  modifiers: InputModifiers,
 ): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
@@ -122,6 +124,20 @@ async function resolveEditorContent(
     }
   }
 
+  // cmd+enter to use codebase
+  if (modifiers.useCodebase) {
+    const codebaseItems = await ideRequest("context/getContextItems", {
+      name: "codebase",
+      query: "",
+      fullInput: stripImages(parts),
+      selectedCode,
+    });
+    contextItems.push(...codebaseItems);
+    for (const codebaseItem of codebaseItems) {
+      contextItemsText += codebaseItem.content + "\n\n";
+    }
+  }
+
   if (contextItemsText !== "") {
     contextItemsText += "\n";
   }
@@ -141,7 +157,7 @@ async function resolveEditorContent(
 
 function findLastIndex<T>(
   array: T[],
-  predicate: (value: T, index: number, obj: T[]) => boolean
+  predicate: (value: T, index: number, obj: T[]) => boolean,
 ): number {
   for (let i = array.length - 1; i >= 0; i--) {
     if (predicate(array[i], i, array)) {

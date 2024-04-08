@@ -13,6 +13,9 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   async embed(chunks: string[]) {
+    if (!this.options.apiBase?.endsWith("/")) {
+      this.options.apiBase += "/";
+    }
     return await Promise.all(
       chunks.map(async (chunk) => {
         const fetchWithBackoff = () =>

@@ -1,5 +1,6 @@
 import { PhotoIcon as OutlinePhotoIcon } from "@heroicons/react/24/outline";
 import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
+import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -13,6 +14,7 @@ import {
   vscInputBackground,
 } from "..";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
   position: absolute;
@@ -55,8 +57,7 @@ const EnterButton = styled.div<{ offFocus: boolean }>`
 `;
 
 interface InputToolbarProps {
-  onEnter?: () => void;
-  useCodebase?: () => void;
+  onEnter?: (modifiers: InputModifiers) => void;
   usingCodebase?: boolean;
   onAddContextItem?: () => void;
 
@@ -127,18 +128,22 @@ function InputToolbar(props: InputToolbarProps) {
             </span>
           )}
       </span>
-      {/* <span
+      <span
         style={{
           color: props.usingCodebase ? vscBadgeBackground : lightGray,
           backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
           borderRadius: defaultBorderRadius,
           padding: "2px 4px",
         }}
-        onClick={props.useCodebase}
+        onClick={(e) => {
+          props.onEnter({
+            useCodebase: true,
+          });
+        }}
         className={"hover:underline cursor-pointer float-right"}
       >
         {getMetaKeyLabel()} ⏎ Use Codebase
-      </span> */}
+      </span>
 
       <EnterButton
         offFocus={props.usingCodebase}
@@ -147,7 +152,11 @@ function InputToolbar(props: InputToolbarProps) {
         //   (!(inputRef.current as any)?.value ||
         //     typeof client === "undefined")
         // }
-        onClick={props.onEnter}
+        onClick={(e) => {
+          props.onEnter({
+            useCodebase: isMetaEquivalentKeyPressed(e),
+          });
+        }}
       >
         ⏎ Enter
       </EnterButton>

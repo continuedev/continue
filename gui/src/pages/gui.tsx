@@ -4,6 +4,7 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { JSONContent } from "@tiptap/react";
+import { InputModifiers } from "core";
 import { usePostHog } from "posthog-js/react";
 import {
   Fragment,
@@ -28,6 +29,7 @@ import FTCDialog from "../components/dialogs/FTCDialog";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
+import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
 import { useWebviewListener } from "../hooks/useWebviewListener";
@@ -225,7 +227,7 @@ function GUI(props: GUIProps) {
   const { streamResponse } = useChatHandler(dispatch);
 
   const sendInput = useCallback(
-    (editorState: JSONContent) => {
+    (editorState: JSONContent, modifiers: InputModifiers) => {
       if (defaultModel?.provider === "free-trial") {
         const ftc = localStorage.getItem("ftc");
         if (ftc) {
@@ -243,7 +245,7 @@ function GUI(props: GUIProps) {
         }
       }
 
-      streamResponse(editorState);
+      streamResponse(editorState, modifiers);
 
       // Increment localstorage counter for popup
       const counter = localStorage.getItem("mainTextEntryCounter");
@@ -369,8 +371,8 @@ function GUI(props: GUIProps) {
                   >
                     {item.message.role === "user" ? (
                       <ContinueInputBox
-                        onEnter={async (editorState) => {
-                          streamResponse(editorState, index);
+                        onEnter={async (editorState, modifiers) => {
+                          streamResponse(editorState, modifiers, index);
                         }}
                         isLastUserInput={isLastUserInput(index)}
                         isMainInput={false}
@@ -421,6 +423,8 @@ function GUI(props: GUIProps) {
                           onRetry={() => {
                             streamResponse(
                               state.history[index - 1].editorState,
+                              state.history[index - 1].modifiers ??
+                                defaultInputModifiers,
                               index - 1,
                             );
                           }}
@@ -444,7 +448,9 @@ function GUI(props: GUIProps) {
           </StepsDiv>
 
           <ContinueInputBox
-            onEnter={sendInput}
+            onEnter={(editorContent, modifiers) => {
+              sendInput(editorContent, modifiers);
+            }}
             isLastUserInput={false}
             isMainInput={true}
             hidden={active}

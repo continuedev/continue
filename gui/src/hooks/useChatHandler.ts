@@ -5,6 +5,7 @@ import {
   ChatHistory,
   ChatHistoryItem,
   ChatMessage,
+  InputModifiers,
   LLMReturnValue,
   MessageContent,
   RangeInFile,
@@ -131,7 +132,11 @@ function useChatHandler(dispatch: Dispatch) {
     }
   }
 
-  async function streamResponse(editorState: JSONContent, index?: number) {
+  async function streamResponse(
+    editorState: JSONContent,
+    modifiers: InputModifiers,
+    index?: number,
+  ) {
     try {
       if (typeof index === "number") {
         dispatch(resubmitAtIndex({ index, editorState }));
@@ -140,8 +145,10 @@ function useChatHandler(dispatch: Dispatch) {
       }
 
       // Resolve context providers and construct new history
-      const [contextItems, selectedCode, content] =
-        await resolveEditorContent(editorState);
+      const [contextItems, selectedCode, content] = await resolveEditorContent(
+        editorState,
+        modifiers,
+      );
 
       const message: ChatMessage = {
         role: "user",
