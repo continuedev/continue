@@ -24,6 +24,13 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
   },
 };
 
+const codegemmaFimTemplate: AutocompleteTemplate = {
+  template: "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
+  completionOptions: {
+    stop: ["<|fim_prefix|>", "<|fim_suffix|>", "<|fim_middle|>", "<|file_separator|>", "<end_of_turn>", "<eos>"],
+  },
+};
+
 // https://arxiv.org/pdf/2402.19173.pdf section 5.1
 const starcoder2FimTemplate: AutocompleteTemplate = {
   template: (
@@ -102,6 +109,10 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     lowerCaseModel.includes("stable")
   ) {
     return stableCodeFimTemplate;
+  }
+
+  if (lowerCaseModel.includes("codegemma")) {
+    return codegemmaFimTemplate;
   }
 
   if (lowerCaseModel.includes("codellama")) {
