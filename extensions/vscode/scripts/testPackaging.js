@@ -86,7 +86,9 @@ const pathsToVerify = [
   // out/node_modules (to be accessed by extension.js)
   `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
   `out/node_modules/@esbuild/${target}/bin/esbuild${exe}`,
-  `out/node_modules/@lancedb/vectordb-${target}/index.node`,
+  `out/node_modules/@lancedb/vectordb-${target}${
+    os === "linux" ? "-gnu" : ""
+  }/index.node`,
   `out/node_modules/esbuild/lib/main.js`,
   `out/node_modules/esbuild/bin/esbuild${exe}`,
 ];
