@@ -621,7 +621,11 @@ export interface ModelDescription {
   promptTemplates?: { [key: string]: string };
 }
 
-export type EmbeddingsProviderName = "transformers.js" | "ollama" | "openai";
+export type EmbeddingsProviderName =
+  | "transformers.js"
+  | "ollama"
+  | "openai"
+  | "free-trial";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -638,11 +642,11 @@ export interface EmbeddingsProvider {
   embed(chunks: string[]): Promise<number[][]>;
 }
 
-export type RerankerName = "voyage" | "llm";
+export type RerankerName = "voyage" | "llm" | "free-trial";
 
 export interface RerankerDescription {
   name: RerankerName;
-  params: { [key: string]: any };
+  params?: { [key: string]: any };
 }
 
 export interface Reranker {

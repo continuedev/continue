@@ -23,3 +23,7 @@ export const RETRIEVAL_PARAMS = {
   nRetrieve: 20,
   bm25Threshold: -2.5,
 };
+
+// export const SERVER_URL = "http://localhost:3000";
+export const SERVER_URL =
+  "https://node-proxy-server-blue-l6vsfbzhba-uw.a.run.app";
