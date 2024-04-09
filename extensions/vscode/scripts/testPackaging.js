@@ -75,7 +75,7 @@ const pathsToVerify = [
   `node_modules/@vscode/ripgrep/bin/rg${exe}`,
 
   // out directory (where the extension.js lives)
-  "out/extension.js",
+  // "out/extension.js", This is generated afterward by vsce
   // web-tree-sitter
   "out/tree-sitter.wasm",
   // Worker required by jsdom
@@ -98,6 +98,7 @@ for (const path of pathsToVerify) {
   if (!fs.existsSync(path)) {
     const parentFolder = path.split("/").slice(0, -1).join("/");
     const grandparentFolder = path.split("/").slice(0, -2).join("/");
+    const grandGrandparentFolder = path.split("/").slice(0, -3).join("/");
 
     console.error(`File ${path} does not exist`);
     if (!fs.existsSync(parentFolder)) {
@@ -107,6 +108,16 @@ for (const path of pathsToVerify) {
     }
     if (!fs.existsSync(grandparentFolder)) {
       console.error(`Grandparent folder ${grandparentFolder} does not exist`);
+      if (!fs.existsSync(grandGrandparentFolder)) {
+        console.error(
+          `Grandgrandparent folder ${grandGrandparentFolder} does not exist`,
+        );
+      } else {
+        console.error(
+          "Contents of grandgrandparent folder:",
+          fs.readdirSync(grandGrandparentFolder),
+        );
+      }
     } else {
       console.error(
         "Contents of grandparent folder:",
