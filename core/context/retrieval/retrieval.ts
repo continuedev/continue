@@ -1,21 +1,9 @@
 import { BranchAndDir, Chunk, ContextItem, ContextProviderExtras } from "../..";
 import { LanceDbIndex } from "../../indexing/LanceDbIndex";
 
-import { getBasename } from "../../util";
+import { deduplicateArray, getBasename } from "../../util";
 import { RETRIEVAL_PARAMS } from "../../util/parameters";
 import { retrieveFts } from "./fullTextSearch";
-
-function deduplicateArray<T>(array: T[], equal: (a: T, b: T) => boolean): T[] {
-  const result: T[] = [];
-
-  for (const item of array) {
-    if (!result.some((existingItem) => equal(existingItem, item))) {
-      result.push(item);
-    }
-  }
-
-  return result;
-}
 
 function deduplicateChunks(chunks: Chunk[]): Chunk[] {
   return deduplicateArray(chunks, (a, b) => {
@@ -75,8 +63,30 @@ export async function retrieveContextItemsFromEmbeddings(
   );
   retrievalResults.push(...ftsResults);
 
-  // Source: Code Graph
+  // Source: expansion with code graph
+  // consider doing this after reranking? Or just having a lower reranking threshold
+  // This is VS Code only until we use PSI for JetBrains or build our own general solution
+  if ((await extras.ide.getIdeInfo()).ideType === "vscode") {
+    const { expandSnippet } = await import(
+      "../../../extensions/vscode/src/util/expandSnippet"
+    );
+    let expansionResults = (
+      await Promise.all(
+        extras.selectedCode.map(async (rif) => {
+          return expandSnippet(
+            rif.filepath,
+            rif.range.start.line,
+            rif.range.end.line,
+            extras.ide,
+          );
+        }),
+      )
+    ).flat() as Chunk[];
+    retrievalResults.push(...expansionResults);
+  }
+
   // Source: Open file exact match
+  // Source: Class/function name exact match
 
   // Source: Embeddings
   const lanceDbIndex = new LanceDbIndex(extras.embeddingsProvider, (path) =>
@@ -98,15 +108,6 @@ export async function retrieveContextItemsFromEmbeddings(
     let scores: number[] = await extras.reranker.rerank(
       extras.fullInput,
       results,
-    );
-    console.log(
-      "Reranking results",
-      scores.toSorted((a, b) => b - a),
-      results
-        .toSorted(
-          (a, b) => scores[results.indexOf(b)] - scores[results.indexOf(a)],
-        )
-        .map((result) => getBasename(result.filepath, 2)),
     );
 
     // Filter out low-scoring results

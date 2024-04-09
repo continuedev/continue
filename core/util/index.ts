@@ -159,3 +159,18 @@ export function copyOf(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   return JSON.parse(JSON.stringify(obj));
 }
+
+export function deduplicateArray<T>(
+  array: T[],
+  equal: (a: T, b: T) => boolean,
+): T[] {
+  const result: T[] = [];
+
+  for (const item of array) {
+    if (!result.some((existingItem) => equal(existingItem, item))) {
+      result.push(item);
+    }
+  }
+
+  return result;
+}
