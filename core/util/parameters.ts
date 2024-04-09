@@ -16,3 +16,10 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   onlyMyCode: true,
   useOtherFiles: false,
 };
+
+export const RETRIEVAL_PARAMS = {
+  rerankThreshold: 0.5,
+  nFinal: 10,
+  nRetrieve: 20,
+  bm25Threshold: -2.5,
+};

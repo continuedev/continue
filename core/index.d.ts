@@ -358,9 +358,12 @@ export interface IdeInfo {
   extensionVersion: string;
 }
 
-export interface IndexTag {
-  directory: string;
+export interface BranchAndDir {
   branch: string;
+  directory: string;
+}
+
+export interface IndexTag extends BranchAndDir {
   artifactId: string;
 }
 

@@ -7,6 +7,7 @@ import { streamLines } from "../diff/util";
 import OpenAI from "../llm/llms/OpenAI";
 import { getBasename } from "../util";
 import { logDevData } from "../util/devdata";
+import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters";
 import { Telemetry } from "../util/posthog";
 import { getRangeInString } from "../util/ranges";
 import AutocompleteLruCache from "./cache";
@@ -24,7 +25,6 @@ import {
   stopAtSimilarLine,
   streamWithNewLines,
 } from "./lineStream";
-import { DEFAULT_AUTOCOMPLETE_OPTS } from "./parameters";
 import { AutocompleteSnippet } from "./ranking";
 import { getTemplateForModel } from "./templates";
 import { GeneratorReuseManager } from "./util";
