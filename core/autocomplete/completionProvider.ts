@@ -60,12 +60,7 @@ const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
 const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
-const commonStops = [
-  SRC_DIRECTORY,
-  ...STARCODER2_T_ARTIFACTS,
-  PYTHON_ENCODING,
-  CODE_BLOCK_END,
-];
+const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
 
 function formatExternalSnippet(
   filepath: string,
@@ -224,6 +219,9 @@ export async function getTabCompletion(
       ...(completionOptions?.stop || []),
       ...multilineStops,
       ...commonStops,
+      ...(llm.model.toLowerCase().includes("starcoder2")
+        ? STARCODER2_T_ARTIFACTS
+        : []),
       ...lang.stopWords,
     ];
 
