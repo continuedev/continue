@@ -49,7 +49,9 @@ const pathsToVerify = [
 
   // onnx runtime bindngs
   `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
-  `bin/napi-v3/${os}/${arch}/libonnxruntime.1.14.0.dylib`,
+  `bin/napi-v3/${os}/${arch}/libonnxruntime${
+    os === "darwin" ? ".1.14.0.dylib" : os === "linux" ? ".so.1.14.0" : ""
+  }`,
   "builtin-themes/dark_modern.json",
 
   // Code/styling for the sidebar
@@ -89,6 +91,7 @@ const pathsToVerify = [
   `out/node_modules/esbuild/bin/esbuild${exe}`,
 ];
 
+let missingFiles = [];
 for (const path of pathsToVerify) {
   if (!fs.existsSync(path)) {
     const parentFolder = path.split("/").slice(0, -1).join("/");
@@ -109,8 +112,14 @@ for (const path of pathsToVerify) {
       );
     }
 
-    throw new Error(`File ${path} does not exist`);
+    missingFiles.push(path);
   }
 }
 
-console.log("All paths exist");
+if (missingFiles.length > 0) {
+  throw new Error(
+    `The following files were missing:\n- ${missingFiles.join("\n- ")}`,
+  );
+} else {
+  console.log("All paths exist");
+}
