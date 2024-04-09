@@ -91,6 +91,24 @@ const pathsToVerify = [
 
 for (const path of pathsToVerify) {
   if (!fs.existsSync(path)) {
+    const parentFolder = path.split("/").slice(0, -1).join("/");
+    const grandparentFolder = path.split("/").slice(0, -2).join("/");
+
+    console.error(`File ${path} does not exist`);
+    if (!fs.existsSync(parentFolder)) {
+      console.error(`Parent folder ${parentFolder} does not exist`);
+    } else {
+      console.error("Contents of parent folder:", fs.readdirSync(parentFolder));
+    }
+    if (!fs.existsSync(grandparentFolder)) {
+      console.error(`Grandparent folder ${grandparentFolder} does not exist`);
+    } else {
+      console.error(
+        "Contents of grandparent folder:",
+        fs.readdirSync(grandparentFolder),
+      );
+    }
+
     throw new Error(`File ${path} does not exist`);
   }
 }
