@@ -74,7 +74,7 @@ function useSetup(dispatch: Dispatch<any>) {
   });
 
   useWebviewListener("submitMessage", async (data) => {
-    streamResponse(data.message);
+    streamResponse(data.message, { useCodebase: false });
   });
 
   useWebviewListener("addContextItem", async (data) => {
