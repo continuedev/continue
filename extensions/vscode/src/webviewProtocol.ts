@@ -1,5 +1,6 @@
 import { ContextItemId, IDE } from "core";
 import { ConfigHandler } from "core/config/handler";
+import { setupLocalMode, setupOptimizedMode } from "core/config/onboarding";
 import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
@@ -7,7 +8,7 @@ import { logDevData } from "core/util/devdata";
 import { DevDataSqliteDb } from "core/util/devdataSqlite";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
-import { getConfigJsonPath } from "core/util/paths";
+import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import {
   ReverseWebviewProtocol,
@@ -537,6 +538,14 @@ export class VsCodeWebviewProtocol {
     });
     this.on("showTutorial", (msg) => {
       showTutorial();
+    });
+
+    this.on("completeOnboarding", (msg) => {
+      const mode = msg.data.mode;
+      if (mode === "custom") {
+        return;
+      }
+      editConfigJson(mode === "local" ? setupLocalMode : setupOptimizedMode);
     });
 
     this.on("openUrl", (msg) => {

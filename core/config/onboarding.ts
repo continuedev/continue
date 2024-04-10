@@ -1,6 +1,6 @@
 import { SerializedContinueConfig } from "..";
 
-export function setupFreeTrialMode(
+export function setupOptimizedMode(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {
   return {
@@ -46,7 +46,7 @@ export function setupFreeTrialMode(
   };
 }
 
-export function setupLocalModel(
+export function setupLocalMode(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {
   return {
