@@ -290,9 +290,9 @@ async function intermediateToFinalConfig(
     const rerankerClass = AllRerankers[name];
 
     if (name === "llm") {
-      const llm = models.find((model) => model.title === params.modelTitle);
+      const llm = models.find((model) => model.title === params?.modelTitle);
       if (!llm) {
-        console.warn(`Unknown model ${params.modelTitle}`);
+        console.warn(`Unknown model ${params?.modelTitle}`);
       } else {
         config.reranker = new LLMReranker(llm);
       }

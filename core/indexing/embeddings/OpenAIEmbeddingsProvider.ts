@@ -3,6 +3,10 @@ import { withExponentialBackoff } from "../../util/withExponentialBackoff";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
 class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
+  // https://platform.openai.com/docs/api-reference/embeddings/create is 2048
+  // but Voyage is 128
+  static maxBatchSize = 128;
+
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     apiBase: "https://api.openai.com/v1/",
     model: "text-embedding-3-small",
@@ -16,27 +20,42 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
     if (!this.options.apiBase?.endsWith("/")) {
       this.options.apiBase += "/";
     }
-    return await Promise.all(
-      chunks.map(async (chunk) => {
-        const fetchWithBackoff = () =>
-          withExponentialBackoff<Response>(() =>
-            fetch(new URL("embeddings", this.options.apiBase).toString(), {
-              method: "POST",
-              body: JSON.stringify({
-                input: chunk,
-                model: this.options.model,
+
+    const batchedChunks = [];
+    for (
+      let i = 0;
+      i < chunks.length;
+      i += OpenAIEmbeddingsProvider.maxBatchSize
+    ) {
+      batchedChunks.push(
+        chunks.slice(i, i + OpenAIEmbeddingsProvider.maxBatchSize),
+      );
+    }
+    return (
+      await Promise.all(
+        batchedChunks.map(async (batch) => {
+          const fetchWithBackoff = () =>
+            withExponentialBackoff<Response>(() =>
+              fetch(new URL("embeddings", this.options.apiBase).toString(), {
+                method: "POST",
+                body: JSON.stringify({
+                  input: batch,
+                  model: this.options.model,
+                }),
+                headers: {
+                  Authorization: `Bearer ${this.options.apiKey}`,
+                  "Content-Type": "application/json",
+                },
               }),
-              headers: {
-                Authorization: `Bearer ${this.options.apiKey}`,
-                "Content-Type": "application/json",
-              },
-            }),
+            );
+          const resp = await fetchWithBackoff();
+          const data = await resp.json();
+          return data.data.map(
+            (result: { embedding: number[] }) => result.embedding,
           );
-        const resp = await fetchWithBackoff();
-        const data = await resp.json();
-        return data.data[0].embedding;
-      }),
-    );
+        }),
+      )
+    ).flat();
   }
 }
 
