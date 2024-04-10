@@ -7,15 +7,20 @@ import {
   greenButtonColor,
   lightGray,
   vscButtonBackground,
-  vscButtonForeground,
+  vscForeground,
 } from "../components";
 import { postToIde } from "../util/ide";
 import { setLocalStorage } from "../util/localStorage";
 
 const StyledButton = styled(Button)`
   margin-left: auto;
-  background-color: ${vscButtonBackground};
-  color: ${vscButtonForeground};
+  background-color: transparent;
+  color: ${vscForeground};
+  border: 0.5px solid ${lightGray};
+
+  &:hover {
+    box-shadow: 0 0 2px 1px ${vscButtonBackground};
+  }
 `;
 
 const Div = styled.div<{
@@ -61,11 +66,9 @@ function Onboarding() {
 
   return (
     <div className="p-2 max-w-96 mt-16 mx-auto">
-      <h1 className="text-center">Welcome to Continue!</h1>
-      <p>
-        Before getting started, let's find the setup that works best for you! If
-        you're not sure, don't worry—you can always make changes by clicking the
-        gear icon in the bottom right.
+      <h1 className="text-center">Welcome to Continue</h1>
+      <p className="text-center pb-2">
+        Let's find the setup that works best for you
       </p>
       <Div
         color={greenButtonColor}
@@ -78,7 +81,7 @@ function Onboarding() {
         onMouseEnter={() => setHovered1(true)}
         onMouseLeave={() => setHovered1(false)}
       >
-        <h3>🔒 Fully Local</h3>
+        <h3>🔒 Fully local</h3>
         <p>
           No code will leave your computer, but less powerful models are used.
           Works with Ollama, LM Studio and others.
@@ -110,8 +113,8 @@ function Onboarding() {
       >
         <h3>✨ Optimized</h3>
         <p>
-          Use the best models available to index code and answer questions. Code
-          is still only ever stored locally.
+          Use the best available commercial models to index code and answer
+          questions. Code is still only ever stored locally.
         </p>
       </Div>
       {selected === 1 && (
@@ -126,14 +129,12 @@ function Onboarding() {
         </p>
       )}
       <br></br>
-      <p>
-        Want more control?{" "}
+      {/* <p>
         <a href="https://continue.dev/docs/customization/overview">
-          Read the documentation
+          Read the docs
         </a>{" "}
-        to learn more and fully customize Continue to meet your needs by opening
-        config.json.
-      </p>
+        to learn more and fully customize Continue by opening config.json.
+      </p> */}
       <Div
         color={"#1b84be"}
         disabled={false}
@@ -148,7 +149,11 @@ function Onboarding() {
       >
         <h3>⚙️ Custom</h3>
         <p>
-          Using the config.json file you can customize every aspect of Continue.
+          <a href="https://continue.dev/docs/customization/overview">
+            Read the docs
+          </a>{" "}
+          to learn more and fully customize Continue by opening config.json.
+          This can always be done later.
         </p>
       </Div>
 
