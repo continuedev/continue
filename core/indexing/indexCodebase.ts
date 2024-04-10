@@ -70,7 +70,7 @@ export class CodebaseIndexer {
     let completedDirs = 0;
 
     yield {
-      progress: 0.01,
+      progress: 0,
       desc: "Starting indexing...",
     };
 
