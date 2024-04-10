@@ -1861,14 +1861,7 @@
           "type": "object",
           "properties": {
             "provider": {
-              "enum": [
-                "transformers.js",
-                "ollama",
-                "openai",
-                "cohere",
-                "free-trial",
-                "gemini"
-              ]
+              "enum": ["transformers.js", "ollama", "openai", "free-trial"]
             },
             "model": {
               "type": "string"
@@ -2020,7 +2013,7 @@
           "type": "object",
           "properties": {
             "name": {
-              "enum": ["voyage", "llm"]
+              "enum": ["voyage", "llm", "free-trial"]
             },
             "params": {
               "type": "object"

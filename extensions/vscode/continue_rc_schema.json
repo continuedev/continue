@@ -1841,9 +1841,7 @@
                 "transformers.js",
                 "ollama",
                 "openai",
-                "cohere",
-                "free-trial",
-                "gemini"
+                "free-trial"
               ]
             },
             "model": {
@@ -1998,7 +1996,8 @@
             "name": {
               "enum": [
                 "voyage",
-                "llm"
+                "llm",
+                "free-trial"
               ]
             },
             "params": {

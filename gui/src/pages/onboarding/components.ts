@@ -7,7 +7,7 @@ import {
   vscForeground,
 } from "../../components";
 
-export const StyledButton = styled(Button)<{ blurColor?: string }>`
+export const StyledButton = styled(Button)`
   margin-left: auto;
   background-color: transparent;
   color: ${vscForeground};
@@ -15,8 +15,7 @@ export const StyledButton = styled(Button)<{ blurColor?: string }>`
 
   &:hover {
     ${(props) =>
-      !props.disabled &&
-      `box-shadow: 0 0 4px 4px ${props.blurColor ?? vscButtonBackground};`}
+      !props.disabled && `box-shadow: 0 0 4px 4px ${vscButtonBackground};`}
   }
 `;
 

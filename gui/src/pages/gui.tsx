@@ -47,12 +47,8 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
-import {
-  getFontSize,
-  getMetaKeyLabel,
-  isJetBrains,
-  isMetaEquivalentKeyPressed,
-} from "../util";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
+import { isJetBrains } from "../util/ide";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 const TopGuiDiv = styled.div`

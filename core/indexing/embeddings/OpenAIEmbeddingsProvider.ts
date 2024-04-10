@@ -46,6 +46,11 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
               }),
             );
           const resp = await fetchWithBackoff();
+
+          if (!resp.ok) {
+            throw new Error(await resp.text());
+          }
+
           const data = (await resp.json()) as any;
           return data.data.map(
             (result: { embedding: number[] }) => result.embedding,

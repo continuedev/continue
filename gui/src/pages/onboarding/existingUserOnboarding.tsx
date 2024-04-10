@@ -1,10 +1,9 @@
-import { TRIAL_FIM_MODEL } from "core/config/onboarding";
-import { useContext, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { greenButtonColor } from "../../components";
 import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { postToIde } from "../../util/ide";
 import { setLocalStorage } from "../../util/localStorage";
 import { Div, StyledButton } from "./components";
 
@@ -23,7 +22,6 @@ const TopDiv = styled.div`
 
 function ExistingUserOnboarding() {
   const navigate = useNavigate();
-  const ideMessenger = useContext(IdeMessengerContext);
 
   const [hovered1, setHovered1] = useState(false);
   const [hovered2, setHovered2] = useState(false);
@@ -35,8 +33,8 @@ function ExistingUserOnboarding() {
       <div className="m-auto p-2 max-w-96 mt-16 overflow-y-scroll">
         <h1 className="text-center">Use Improved Models?</h1>
         <p className="text-center pb-2">
-          Continue now integrates with higher quality cloud models for
-          autocomplete and codebase retrieval.
+          Continue now integrates with higher quality models for autocomplete
+          and codebase retrieval.
         </p>
         <Div
           color={greenButtonColor}
@@ -67,7 +65,7 @@ function ExistingUserOnboarding() {
           onMouseEnter={() => setHovered2(true)}
           onMouseLeave={() => setHovered2(false)}
         >
-          <h3>✨ Use cloud models</h3>
+          <h3>✨ Use optimized models</h3>
           <p>
             Continue's autocomplete and codebase retrieval will feel
             significantly improved. API calls are made to Fireworks/Voyage, but
@@ -84,7 +82,7 @@ function ExistingUserOnboarding() {
   "tabAutocompleteModel": {
     "title": "Tab Autocomplete",
     "provider": "free-trial",
-    "model": "${TRIAL_FIM_MODEL}"
+    "model": "starcoder-7b"
   },
   // Voyage AI's voyage-code-2
   "embeddingsProvider": {
@@ -101,10 +99,11 @@ Alternatively, you can enter your own API keys:
 \`\`\`json
 {
   "tabAutocompleteModel": {
-    "title": "Codestral",
-    "provider": "mistral",
-    "model": "codestral-latest",
-    "apiKey": "MISTRAL_API_KEY"
+    "title": "Starcoder 2",
+    "provider": "openai",
+    "model": "accounts/fireworks/models/starcoder-7b",
+    "apiBase": "https://api.fireworks.ai/inference/v1",
+    "apiKey": "FIREWORKS_API_KEY"
   }
   "embeddingsProvider": {
     "provider": "openai",
@@ -128,14 +127,11 @@ Alternatively, you can enter your own API keys:
           <StyledButton
             disabled={selected < 0}
             onClick={() => {
-              ideMessenger.post("completeOnboarding", {
-                mode: ["localExistingUser", "optimizedExistingUser"][
-                  selected
-                ] as any,
+              postToIde("completeOnboarding", {
+                mode: ["local", "optimizedExistingUser"][selected] as any,
               });
-              ideMessenger.post("openConfigJson", undefined);
+              postToIde("openConfigJson", undefined);
               setLocalStorage("onboardingComplete", true);
-              ideMessenger.post("index/forceReIndex", undefined);
               navigate("/");
             }}
           >

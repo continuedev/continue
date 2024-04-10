@@ -89,7 +89,10 @@ export type WebviewProtocol = Protocol &
     insertAtCursor: [{ text: string }, void];
     copyText: [{ text: string }, void];
     "jetbrains/editorInsetHeight": [{ height: number }, void];
-    completeOnboarding: [{ mode: "local" | "optimized" | "custom" }, void];
+    completeOnboarding: [
+      { mode: "local" | "optimized" | "custom" | "optimizedExistingUser" },
+      void,
+    ];
   };
 
 export type ReverseWebviewProtocol = {
