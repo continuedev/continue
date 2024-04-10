@@ -138,7 +138,7 @@ jobs:
       - name: Test that all necessary files are present
         run: |
           cd extensions/vscode
-          node scripts/testPackaging.js
+          node scripts/testPackaging.js --target ${{ env.target }}
 
       # 6. Package the extension
       - name: Package the extension
