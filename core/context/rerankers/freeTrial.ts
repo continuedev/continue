@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
-import { getHeaders } from "../../continueServer/stubs/headers.js";
-import { Chunk, Reranker } from "../../index.js";
-import { SERVER_URL } from "../../util/parameters.js";
+import { Chunk, Reranker } from "../..";
+import { getHeaders } from "../../continueServer/stubs/headers";
+import { SERVER_URL } from "../../util/parameters";
 
 export class FreeTrialReranker implements Reranker {
   name = "free-trial";
@@ -11,7 +11,7 @@ export class FreeTrialReranker implements Reranker {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...(await getHeaders()),
+        ...getHeaders(),
       },
       body: JSON.stringify({
         query,

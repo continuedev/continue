@@ -6,6 +6,7 @@ import {
   ChatHistoryItem,
   ChatMessage,
   InputModifiers,
+  LLMReturnValue,
   MessageContent,
   PromptLog,
   RangeInFile,
@@ -144,7 +145,6 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   async function streamResponse(
     editorState: JSONContent,
     modifiers: InputModifiers,
-    ideMessenger: IIdeMessenger,
     index?: number,
   ) {
     try {
@@ -158,37 +158,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       const [contextItems, selectedCode, content] = await resolveEditorContent(
         editorState,
         modifiers,
-        ideMessenger,
       );
-
-      // Automatically use currently open file
-      if (!modifiers.noContext && (history.length === 0 || index === 0)) {
-        const usingFreeTrial = defaultModel.provider === "free-trial";
-
-        const currentFilePath = await ideMessenger.ide.getCurrentFile();
-        if (typeof currentFilePath === "string") {
-          let currentFileContents =
-            await ideMessenger.ide.readFile(currentFilePath);
-          if (usingFreeTrial) {
-            currentFileContents = currentFileContents
-              .split("\n")
-              .slice(0, 1000)
-              .join("\n");
-          }
-          contextItems.unshift({
-            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getRelativePath(
-              currentFilePath,
-              await ideMessenger.ide.getWorkspaceDirs(),
-            )}\n${currentFileContents}\n\`\`\``,
-            name: `Active file: ${getBasename(currentFilePath)}`,
-            description: currentFilePath,
-            id: {
-              itemId: currentFilePath,
-              providerTitle: "file",
-            },
-          });
-        }
-      }
 
       const message: ChatMessage = {
         role: "user",

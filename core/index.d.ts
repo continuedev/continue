@@ -269,13 +269,6 @@ export interface ContextItemWithId {
 
 export interface InputModifiers {
   useCodebase: boolean;
-  noContext: boolean;
-}
-
-export interface PromptLog {
-  completionOptions: CompletionOptions;
-  prompt: string;
-  completion: string;
 }
 
 export interface ChatHistoryItem {
@@ -685,9 +678,7 @@ export type EmbeddingsProviderName =
   | "transformers.js"
   | "ollama"
   | "openai"
-  | "cohere"
-  | "free-trial"
-  | "gemini";
+  | "free-trial";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -705,7 +696,7 @@ export interface EmbeddingsProvider {
   embed(chunks: string[]): Promise<number[][]>;
 }
 
-export type RerankerName = "cohere" | "voyage" | "llm" | "free-trial";
+export type RerankerName = "voyage" | "llm" | "free-trial";
 
 export interface RerankerDescription {
   name: RerankerName;
@@ -781,7 +772,6 @@ export interface SerializedContinueConfig {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
-  experimental?: ExperimentalConfig;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -826,8 +816,6 @@ export interface Config {
   ui?: ContinueUIConfig;
   /** Options for the reranker */
   reranker?: RerankerDescription | Reranker;
-  /** Experimental configuration */
-  experimental?: ExperimentalConfig;
 }
 
 export interface ContinueConfig {
@@ -846,7 +834,6 @@ export interface ContinueConfig {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: Reranker;
-  experimental?: ExperimentalConfig;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -863,5 +850,4 @@ export interface BrowserSerializedContinueConfig {
   embeddingsProvider?: string;
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
-  experimental?: ExperimentalConfig;
 }

@@ -1,5 +1,5 @@
-import { Chunk, ILLM, Reranker } from "../../index.js";
-import { getBasename } from "../../util/index.js";
+import { Chunk, ILLM, Reranker } from "../..";
+import { getBasename } from "../../util";
 
 const RERANK_PROMPT = (
   query: string,
@@ -64,7 +64,7 @@ export class LLMReranker implements Reranker {
       return 0.0;
     }
 
-    const answer = completion
+    let answer = completion
       .trim()
       .toLowerCase()
       .replace(/"/g, "")
@@ -72,14 +72,14 @@ export class LLMReranker implements Reranker {
 
     if (answer === "yes") {
       return 1.0;
-    }
-    if (answer === "no") {
+    } else if (answer === "no") {
+      return 0.0;
+    } else {
+      console.warn(
+        `Unexpected response from single token reranker: "${answer}". Expected "yes" or "no".`,
+      );
       return 0.0;
     }
-    console.warn(
-      `Unexpected response from single token reranker: "${answer}". Expected "yes" or "no".`,
-    );
-    return 0.0;
   }
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {

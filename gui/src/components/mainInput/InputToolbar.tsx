@@ -15,12 +15,7 @@ import {
 } from "..";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import {
-  getAltKeyLabel,
-  getFontSize,
-  getMetaKeyLabel,
-  isMetaEquivalentKeyPressed,
-} from "../../util";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
   position: absolute;
@@ -140,37 +135,23 @@ function InputToolbar(props: InputToolbarProps) {
             </span>
           )}
       </span>
-      {props.showNoContext ? (
-        <span
-          style={{
-            color: props.usingCodebase ? vscBadgeBackground : lightGray,
-            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
-            borderRadius: defaultBorderRadius,
-            padding: "2px 4px",
-          }}
-        >
-          {getAltKeyLabel()} ⏎{" "}
-          {useActiveFile ? "No context" : "Use active file"}
-        </span>
-      ) : (
-        <span
-          style={{
-            color: props.usingCodebase ? vscBadgeBackground : lightGray,
-            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
-            borderRadius: defaultBorderRadius,
-            padding: "2px 4px",
-          }}
-          onClick={(e) => {
-            props.onEnter({
-              useCodebase: true,
-              noContext: !useActiveFile,
-            });
-          }}
-          className={"hover:underline cursor-pointer float-right"}
-        >
-          {getMetaKeyLabel()} ⏎ Use codebase
-        </span>
-      )}
+      <span
+        style={{
+          color: props.usingCodebase ? vscBadgeBackground : lightGray,
+          backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
+          borderRadius: defaultBorderRadius,
+          padding: "2px 4px",
+        }}
+        onClick={(e) => {
+          props.onEnter({
+            useCodebase: true,
+          });
+        }}
+        className={"hover:underline cursor-pointer float-right"}
+      >
+        {getMetaKeyLabel()} ⏎ Use Codebase
+      </span>
+
       <EnterButton
         offFocus={props.usingCodebase}
         // disabled={
@@ -181,7 +162,6 @@ function InputToolbar(props: InputToolbarProps) {
         onClick={(e) => {
           props.onEnter({
             useCodebase: isMetaEquivalentKeyPressed(e),
-            noContext: useActiveFile ? e.altKey : !e.altKey,
           });
         }}
       >

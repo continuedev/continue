@@ -1,64 +1,62 @@
-import { SerializedContinueConfig } from "../index.js";
-import { FREE_TRIAL_MODELS } from "./default.js";
+import { SerializedContinueConfig } from "..";
 
-export const TRIAL_FIM_MODEL = "codestral-latest";
-
-export function setupApiKeysMode(
-  config: SerializedContinueConfig,
-): SerializedContinueConfig {
-  return {
-    ...config,
-    models: config.models.filter((model) => model.provider !== "free-trial"),
-    tabAutocompleteModel: {
-      title: "Tab Autocomplete",
-      provider: "free-trial",
-      model: TRIAL_FIM_MODEL,
-    },
-    embeddingsProvider: {
-      provider: "free-trial",
-    },
-    reranker: {
-      name: "free-trial",
-    },
-  };
-}
-
-export function setupOptimizedExistingUserMode(
-  config: SerializedContinueConfig,
-): SerializedContinueConfig {
-  return {
-    ...config,
-    tabAutocompleteModel: {
-      title: "Tab Autocomplete",
-      provider: "free-trial",
-      model: TRIAL_FIM_MODEL,
-    },
-    embeddingsProvider: {
-      provider: "free-trial",
-    },
-    reranker: {
-      name: "free-trial",
-    },
-  };
-}
-
-export function setupLocalMode(
+export function setupFreeTrialMode(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {
   return {
     ...config,
     models: [
       {
-        title: "Llama 3",
-        provider: "ollama",
-        model: "llama3",
+        title: "Claude 3 Sonnet (Free Trial)",
+        provider: "free-trial",
+        model: "claude-3-sonnet-20240229",
       },
+      {
+        title: "GPT-4 Vision (Free Trial)",
+        provider: "free-trial",
+        model: "gpt-4-vision-preview",
+      },
+      {
+        title: "GPT-3.5-Turbo (Free Trial)",
+        provider: "free-trial",
+        model: "gpt-3.5-turbo",
+      },
+      {
+        title: "Gemini Pro (Free Trial)",
+        provider: "free-trial",
+        model: "gemini-pro",
+      },
+      {
+        title: "Mixtral (Free Trial)",
+        provider: "free-trial",
+        model: "mistral-8x7b",
+      },
+    ],
+    tabAutocompleteModel: {
+      title: "Tab Autocomplete",
+      provider: "free-trial",
+      model: "starcoder2-7b",
+    },
+    embeddingsProvider: {
+      provider: "free-trial",
+    },
+    reranker: {
+      name: "free-trial",
+    },
+  };
+}
+
+export function setupLocalModel(
+  config: SerializedContinueConfig,
+): SerializedContinueConfig {
+  return {
+    ...config,
+    models: [
       {
         title: "Ollama",
         provider: "ollama",
         model: "AUTODETECT",
       },
-      ...config.models.filter((model) => model.provider !== "free-trial"),
     ],
     tabAutocompleteModel: {
       title: "Starcoder 3b",
@@ -69,49 +67,5 @@ export function setupLocalMode(
       provider: "transformers.js",
     },
     reranker: undefined,
-  };
-}
-
-export function setupFreeTrialMode(
-  config: SerializedContinueConfig,
-): SerializedContinueConfig {
-  return {
-    ...config,
-    models: [
-      ...FREE_TRIAL_MODELS,
-      ...config.models.filter((model) => model.provider !== "free-trial"),
-    ],
-    tabAutocompleteModel: {
-      title: "Tab Autocomplete",
-      provider: "free-trial",
-      model: TRIAL_FIM_MODEL,
-    },
-    embeddingsProvider: {
-      provider: "free-trial",
-    },
-    reranker: {
-      name: "free-trial",
-    },
-  };
-}
-
-export function setupLocalAfterFreeTrial(
-  config: SerializedContinueConfig,
-): SerializedContinueConfig {
-  return {
-    ...config,
-    models: [
-      {
-        title: "Llama 3",
-        provider: "ollama",
-        model: "llama3",
-      },
-      {
-        title: "Ollama",
-        provider: "ollama",
-        model: "AUTODETECT",
-      },
-      ...config.models.filter((model) => model.provider !== "free-trial"),
-    ],
   };
 }

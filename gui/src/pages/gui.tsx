@@ -32,7 +32,6 @@ import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
-import { IdeMessengerContext } from "../context/IdeMessenger";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
 import { useWebviewListener } from "../hooks/useWebviewListener";
@@ -256,7 +255,7 @@ function GUI(props: GUIProps) {
         }
       }
 
-      streamResponse(editorState, modifiers, ideMessenger);
+      streamResponse(editorState, modifiers);
 
       // Increment localstorage counter for popup
       const currentCount = getLocalStorage("mainTextEntryCounter");
@@ -380,12 +379,7 @@ function GUI(props: GUIProps) {
                     {item.message.role === "user" ? (
                       <ContinueInputBox
                         onEnter={async (editorState, modifiers) => {
-                          streamResponse(
-                            editorState,
-                            modifiers,
-                            ideMessenger,
-                            index,
-                          );
+                          streamResponse(editorState, modifiers, index);
                         }}
                         isLastUserInput={isLastUserInput(index)}
                         isMainInput={false}
@@ -436,6 +430,8 @@ function GUI(props: GUIProps) {
                           onRetry={() => {
                             streamResponse(
                               state.history[index - 1].editorState,
+                              state.history[index - 1].modifiers ??
+                                defaultInputModifiers,
                               index - 1,
                             );
                           }}

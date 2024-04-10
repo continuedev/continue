@@ -1,3 +1,7 @@
+import { BranchAndDir, Chunk, IndexTag, IndexingProgressUpdate } from "..";
+import { RETRIEVAL_PARAMS } from "../util/parameters";
+import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
   BranchAndDir,
   Chunk,

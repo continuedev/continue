@@ -267,18 +267,12 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return false;
               }
 
-              onEnterRef.current({
-                useCodebase: false,
-                noContext: !useActiveFile,
-              });
+              onEnterRef.current({ useCodebase: false });
               return true;
             },
 
             "Cmd-Enter": () => {
-              onEnterRef.current({
-                useCodebase: true,
-                noContext: !useActiveFile,
-              });
+              onEnterRef.current({ useCodebase: true });
               return true;
             },
             "Alt-Enter": () => {
@@ -423,46 +417,6 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
   });
 
-  const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
-
-  useEffect(() => {
-    if (isJetBrains()) {
-      // This is only for VS Code .ipynb files
-      return;
-    }
-
-    const handleKeyDown = async (event: KeyboardEvent) => {
-      if (!editor || !editorFocusedRef.current) return;
-
-      if (event.metaKey && event.key === "x") {
-        document.execCommand("cut");
-        event.stopPropagation();
-        event.preventDefault();
-      } else if (event.metaKey && event.key === "v") {
-        document.execCommand("paste");
-        event.stopPropagation();
-        event.preventDefault();
-      } else if (event.metaKey && event.key === "c") {
-        document.execCommand("copy");
-        event.stopPropagation();
-        event.preventDefault();
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [editor, editorFocusedRef]);
-
-  useEffect(() => {
-    if (mainEditorContent && editor) {
-      editor.commands.setContent(mainEditorContent);
-      dispatch(consumeMainEditorContent());
-    }
-  }, [mainEditorContent, editor]);
-
   const onEnterRef = useUpdatingRef(
     (modifiers: InputModifiers) => {
       const json = editor.getJSON();
@@ -475,8 +429,6 @@ function TipTapEditor(props: TipTapEditorProps) {
       props.onEnter(json, modifiers);
 
       if (props.isMainInput) {
-        const content = editor.state.toJSON().doc;
-        addRef.current(content);
         editor.commands.clearContent(true);
       }
     },
@@ -523,7 +475,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
       editor?.commands.insertContent(data.input);
-      onEnterRef.current({ useCodebase: false, noContext: true });
+      onEnterRef.current({ useCodebase: false });
     },
     [editor, onEnterRef.current, props.isMainInput],
   );

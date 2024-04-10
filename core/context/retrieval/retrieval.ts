@@ -1,14 +1,9 @@
-import {
-  BranchAndDir,
-  Chunk,
-  ContextItem,
-  ContextProviderExtras,
-} from "../../index.js";
-import { LanceDbIndex } from "../../indexing/LanceDbIndex.js";
+import { BranchAndDir, Chunk, ContextItem, ContextProviderExtras } from "../..";
+import { LanceDbIndex } from "../../indexing/LanceDbIndex";
 
-import { deduplicateArray, getRelativePath } from "../../util/index.js";
-import { RETRIEVAL_PARAMS } from "../../util/parameters.js";
-import { retrieveFts } from "./fullTextSearch.js";
+import { deduplicateArray, getBasename } from "../../util";
+import { RETRIEVAL_PARAMS } from "../../util/parameters";
+import { retrieveFts } from "./fullTextSearch";
 
 function deduplicateChunks(chunks: Chunk[]): Chunk[] {
   return deduplicateArray(chunks, (a, b) => {
@@ -27,16 +22,6 @@ export async function retrieveContextItemsFromEmbeddings(
 ): Promise<ContextItem[]> {
   if (!extras.embeddingsProvider) {
     return [];
-  }
-
-  // transformers.js not supported in JetBrains IDEs right now
-  if (
-    extras.embeddingsProvider.id === "all-MiniLM-L6-v2" &&
-    (await extras.ide.getIdeInfo()).ideType === "jetbrains"
-  ) {
-    throw new Error(
-      "The transformers.js context provider is not currently supported in JetBrains. For now, you can use Ollama to set up local embeddings, or use our 'free-trial' embeddings provider. See here to learn more: https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
-    );
   }
 
   const nFinal = options?.nFinal || RETRIEVAL_PARAMS.nFinal;
@@ -70,7 +55,7 @@ export async function retrieveContextItemsFromEmbeddings(
   const retrievalResults: Chunk[] = [];
 
   // Source: Full-text search
-  const ftsResults = await retrieveFts(
+  let ftsResults = await retrieveFts(
     extras.fullInput,
     nRetrieve / 2,
     tags,
@@ -81,26 +66,24 @@ export async function retrieveContextItemsFromEmbeddings(
   // Source: expansion with code graph
   // consider doing this after reranking? Or just having a lower reranking threshold
   // This is VS Code only until we use PSI for JetBrains or build our own general solution
-  // TODO: Need to pass in the expandSnippet function as a function argument
-  // because this import causes `tsc` to fail
-  // if ((await extras.ide.getIdeInfo()).ideType === "vscode") {
-  //   const { expandSnippet } = await import(
-  //     "../../../extensions/vscode/src/util/expandSnippet"
-  //   );
-  //   let expansionResults = (
-  //     await Promise.all(
-  //       extras.selectedCode.map(async (rif) => {
-  //         return expandSnippet(
-  //           rif.filepath,
-  //           rif.range.start.line,
-  //           rif.range.end.line,
-  //           extras.ide,
-  //         );
-  //       }),
-  //     )
-  //   ).flat() as Chunk[];
-  //   retrievalResults.push(...expansionResults);
-  // }
+  if ((await extras.ide.getIdeInfo()).ideType === "vscode") {
+    const { expandSnippet } = await import(
+      "../../../extensions/vscode/src/util/expandSnippet"
+    );
+    let expansionResults = (
+      await Promise.all(
+        extras.selectedCode.map(async (rif) => {
+          return expandSnippet(
+            rif.filepath,
+            rif.range.start.line,
+            rif.range.end.line,
+            extras.ide,
+          );
+        }),
+      )
+    ).flat() as Chunk[];
+    retrievalResults.push(...expansionResults);
+  }
 
   // Source: Open file exact match
   // Source: Class/function name exact match
@@ -109,7 +92,7 @@ export async function retrieveContextItemsFromEmbeddings(
   const lanceDbIndex = new LanceDbIndex(extras.embeddingsProvider, (path) =>
     extras.ide.readFile(path),
   );
-  const vecResults = await lanceDbIndex.retrieve(
+  let vecResults = await lanceDbIndex.retrieve(
     extras.fullInput,
     nRetrieve,
     tags,
@@ -136,9 +119,9 @@ export async function retrieveContextItemsFromEmbeddings(
     );
 
     results.sort(
-      (a, b) => scores[results.indexOf(a)] - scores[results.indexOf(b)],
+      (a, b) => scores[results.indexOf(b)] - scores[results.indexOf(a)],
     );
-    results = results.slice(-nFinal);
+    results = results.slice(0, nFinal);
   }
 
   if (results.length === 0) {
@@ -149,7 +132,7 @@ export async function retrieveContextItemsFromEmbeddings(
 
   return [
     ...results.map((r) => {
-      const name = `${getRelativePath(r.filepath, workspaceDirs)} (${r.startLine}-${r.endLine})`;
+      const name = `${getBasename(r.filepath)} (${r.startLine}-${r.endLine})`;
       const description = `${r.filepath} (${r.startLine}-${r.endLine})`;
       return {
         name,

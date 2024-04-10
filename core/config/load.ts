@@ -22,21 +22,26 @@ import {
   IDE,
   IdeType,
   ModelDescription,
-  Reranker,
   RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
-} from "../index.js";
-import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
-import { allEmbeddingsProviders } from "../indexing/embeddings/index.js";
-import { BaseLLM } from "../llm/index.js";
-import CustomLLMClass from "../llm/llms/CustomLLM.js";
-import FreeTrial from "../llm/llms/FreeTrial.js";
-import { llmFromDescription } from "../llm/llms/index.js";
-import { IdeSettings } from "../protocol/ideWebview.js";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
-import { copyOf } from "../util/index.js";
-import mergeJson from "../util/merge.js";
+} from "..";
+import {
+  slashCommandFromDescription,
+  slashFromCustomCommand,
+} from "../commands";
+import { contextProviderClassFromName } from "../context/providers";
+import CustomContextProviderClass from "../context/providers/CustomContextProvider";
+import FileContextProvider from "../context/providers/FileContextProvider";
+import { AllRerankers } from "../context/rerankers";
+import { LLMReranker } from "../context/rerankers/llm";
+import { AllEmbeddingsProviders } from "../indexing/embeddings";
+import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { BaseLLM } from "../llm";
+import { llmFromDescription } from "../llm/llms";
+import CustomLLMClass from "../llm/llms/CustomLLM";
+import { copyOf } from "../util";
+import mergeJson from "../util/merge";
 import {
   getConfigJsPath,
   getConfigJsPathForRemote,
@@ -331,28 +336,13 @@ async function intermediateToFinalConfig(
   }
 
   // Embeddings Provider
-  const embeddingsProviderDescription = config.embeddingsProvider as
-    | EmbeddingsProviderDescription
-    | undefined;
-  if (embeddingsProviderDescription?.provider) {
-    const { provider, ...options } = embeddingsProviderDescription;
-    const embeddingsProviderClass = allEmbeddingsProviders[provider];
-    if (embeddingsProviderClass) {
-      if (
-        embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
-      ) {
-        config.embeddingsProvider = new embeddingsProviderClass();
-      } else {
-        config.embeddingsProvider = new embeddingsProviderClass(
-          options,
-          (url: string | URL, init: any) =>
-            fetchwithRequestOptions(url, init, {
-              ...config.requestOptions,
-              ...options.requestOptions,
-            }),
-        );
-      }
-    }
+  if (
+    (config.embeddingsProvider as EmbeddingsProviderDescription | undefined)
+      ?.provider
+  ) {
+    const { provider, ...options } =
+      config.embeddingsProvider as EmbeddingsProviderDescription;
+    config.embeddingsProvider = new AllEmbeddingsProviders[provider](options);
   }
 
   if (!config.embeddingsProvider) {
@@ -360,7 +350,7 @@ async function intermediateToFinalConfig(
   }
 
   // Reranker
-  if (config.reranker && !(config.reranker as Reranker | undefined)?.rerank) {
+  if ((config.reranker as RerankerDescription | undefined)?.params) {
     const { name, params } = config.reranker as RerankerDescription;
     const rerankerClass = AllRerankers[name];
 

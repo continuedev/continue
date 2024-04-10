@@ -1,10 +1,10 @@
-import { TabAutocompleteOptions } from "../index.js";
+import { TabAutocompleteOptions } from "..";
 
 export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   disable: false,
   useCopyBuffer: false,
   useSuffix: true,
-  maxPromptTokens: 1024,
+  maxPromptTokens: 500,
   prefixPercentage: 0.85,
   maxSuffixPercentage: 0.25,
   debounceDelay: 350,
@@ -15,21 +15,16 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   recentlyEditedSimilarityThreshold: 0.3,
   useCache: true,
   onlyMyCode: true,
-  useOtherFiles: true,
-  useRecentlyEdited: true,
-  recentLinePrefixMatchMinLength: 7,
-  disableInFiles: undefined,
+  useOtherFiles: false,
 };
 
-export const COUNT_COMPLETION_REJECTED_AFTER = 10_000;
-export const DO_NOT_COUNT_REJECTED_BEFORE = 250;
-
 export const RETRIEVAL_PARAMS = {
-  rerankThreshold: 0.3,
+  rerankThreshold: 0.5,
   nFinal: 10,
   nRetrieve: 20,
   bm25Threshold: -2.5,
 };
 
 // export const SERVER_URL = "http://localhost:3000";
-export const SERVER_URL = "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app";
+export const SERVER_URL =
+  "https://node-proxy-server-blue-l6vsfbzhba-uw.a.run.app";

@@ -1,10 +1,8 @@
-import { TRIAL_FIM_MODEL } from "../../config/onboarding.js";
-import { getHeaders } from "../../continueServer/stubs/headers.js";
-import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
-import { SERVER_URL } from "../../util/parameters.js";
-import { Telemetry } from "../../util/posthog.js";
-import { BaseLLM } from "../index.js";
-import { streamResponse } from "../stream.js";
+import { BaseLLM } from "..";
+import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
+import { getHeaders } from "../../continueServer/stubs/headers";
+import { SERVER_URL } from "../../util/parameters";
+import { streamResponse } from "../stream";
 
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
@@ -23,8 +21,7 @@ class FreeTrial extends BaseLLM {
     }
     return {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${this.ghAuthToken}`,
-      ...(await getHeaders()),
+      ...getHeaders(),
     };
   }
 
@@ -50,7 +47,7 @@ class FreeTrial extends BaseLLM {
       presence_penalty: options.presencePenalty,
       max_tokens: options.maxTokens,
       stop:
-        options.model === TRIAL_FIM_MODEL
+        options.model === "starcoder2-7b"
           ? options.stop
           : options.stop?.slice(0, 2),
       temperature: options.temperature,

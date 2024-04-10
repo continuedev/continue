@@ -149,6 +149,11 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       params: {},
     },
   ],
+  tabAutocompleteModel: {
+    title: "Starcoder2 3b",
+    provider: "ollama",
+    model: "starcoder2:3b",
+  },
 };
 
 export const defaultSlashCommandsVscode: SlashCommandDescription[] = [

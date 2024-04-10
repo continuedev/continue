@@ -8,18 +8,8 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
-// Clear folders that will be packaged to ensure clean slate
-rimrafSync(path.join(__dirname, "..", "bin"));
-rimrafSync(path.join(__dirname, "..", "out"));
-fs.mkdirSync(path.join(__dirname, "..", "out", "node_modules"), {
-  recursive: true,
-});
-const guiDist = path.join(__dirname, "..", "..", "..", "gui", "dist");
-if (!fs.existsSync(guiDist)) {
-  fs.mkdirSync(guiDist, { recursive: true });
-}
-
 // Get the target to package for
+
 let target = undefined;
 const args = process.argv;
 if (args[2] === "--target") {
@@ -29,9 +19,29 @@ if (args[2] === "--target") {
 let os;
 let arch;
 if (!target) {
-  [os, arch] = autodetectPlatformAndArch();
-} else {
-  [os, arch] = target.split("-");
+  os = {
+    aix: "linux",
+    darwin: "darwin",
+    freebsd: "linux",
+    linux: "linux",
+    openbsd: "linux",
+    sunos: "linux",
+    win32: "win32",
+  }[process.platform];
+  arch = {
+    arm: "arm64",
+    arm64: "arm64",
+    ia32: "x64",
+    loong64: "arm64",
+    mips: "arm64",
+    mipsel: "arm64",
+    ppc: "x64",
+    ppc64: "x64",
+    riscv64: "arm64",
+    s390: "x64",
+    s390x: "x64",
+    x64: "x64",
+  }[process.arch];
 }
 
 if (os === "alpine") {
@@ -468,7 +478,14 @@ const exe = os === "win32" ? ".exe" : "";
   );
 
   // Validate the all of the necessary files are present
-  validateFilesPresent([
+  validateFilesPresent();
+})();
+
+function validateFilesPresent() {
+  // This script verifies after pacakging that necessary files are in the correct locations
+  // In many cases just taking a sample file from the folder when they are all roughly the same thing
+
+  const pathsToVerify = [
     // Queries used to create the index for @code context provider
     "tree-sitter/code-snippet-queries/tree-sitter-c_sharp-tags.scm",
 
@@ -481,8 +498,8 @@ const exe = os === "win32" ? ".exe" : "";
       os === "darwin"
         ? "libonnxruntime.1.14.0.dylib"
         : os === "linux"
-          ? "libonnxruntime.so.1.14.0"
-          : "onnxruntime.dll"
+        ? "libonnxruntime.so.1.14.0"
+        : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -521,8 +538,8 @@ const exe = os === "win32" ? ".exe" : "";
       target === "win32-arm64"
         ? "esbuild.exe"
         : target === "win32-x64"
-          ? "win32-x64/esbuild.exe"
-          : `${target}/bin/esbuild`
+        ? "win32-x64/esbuild.exe"
+        : `${target}/bin/esbuild`
     }`,
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"
@@ -531,5 +548,52 @@ const exe = os === "win32" ? ".exe" : "";
     }/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
     `out/node_modules/esbuild/bin/esbuild`,
-  ]);
-})();
+  ];
+
+  let missingFiles = [];
+  for (const path of pathsToVerify) {
+    if (!fs.existsSync(path)) {
+      const parentFolder = path.split("/").slice(0, -1).join("/");
+      const grandparentFolder = path.split("/").slice(0, -2).join("/");
+      const grandGrandparentFolder = path.split("/").slice(0, -3).join("/");
+
+      console.error(`File ${path} does not exist`);
+      if (!fs.existsSync(parentFolder)) {
+        console.error(`Parent folder ${parentFolder} does not exist`);
+      } else {
+        console.error(
+          "Contents of parent folder:",
+          fs.readdirSync(parentFolder),
+        );
+      }
+      if (!fs.existsSync(grandparentFolder)) {
+        console.error(`Grandparent folder ${grandparentFolder} does not exist`);
+        if (!fs.existsSync(grandGrandparentFolder)) {
+          console.error(
+            `Grandgrandparent folder ${grandGrandparentFolder} does not exist`,
+          );
+        } else {
+          console.error(
+            "Contents of grandgrandparent folder:",
+            fs.readdirSync(grandGrandparentFolder),
+          );
+        }
+      } else {
+        console.error(
+          "Contents of grandparent folder:",
+          fs.readdirSync(grandparentFolder),
+        );
+      }
+
+      missingFiles.push(path);
+    }
+  }
+
+  if (missingFiles.length > 0) {
+    throw new Error(
+      `The following files were missing:\n- ${missingFiles.join("\n- ")}`,
+    );
+  } else {
+    console.log("All paths exist");
+  }
+}

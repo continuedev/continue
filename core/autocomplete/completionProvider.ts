@@ -2,33 +2,18 @@ import Handlebars from "handlebars";
 import ignore from "ignore";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { RangeInFileWithContents } from "../commands/util.js";
-import { ConfigHandler } from "../config/handler.js";
-import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
-import { streamLines } from "../diff/util.js";
-import {
-  IDE,
-  ILLM,
-  ModelProvider,
-  Position,
-  Range,
-  TabAutocompleteOptions,
-} from "../index.js";
-import OpenAI from "../llm/llms/OpenAI.js";
-import { logDevData } from "../util/devdata.js";
-import { getBasename, getLastNPathParts } from "../util/index.js";
-import {
-  COUNT_COMPLETION_REJECTED_AFTER,
-  DEFAULT_AUTOCOMPLETE_OPTS,
-} from "../util/parameters.js";
-import { Telemetry } from "../util/posthog.js";
-import { getRangeInString } from "../util/ranges.js";
-import { BracketMatchingService } from "./brackets.js";
-import AutocompleteLruCache from "./cache.js";
-import {
-  noFirstCharNewline,
-  onlyWhitespaceAfterEndOfLine,
-} from "./charStream.js";
+import { IDE, ILLM, Position, TabAutocompleteOptions } from "..";
+import { RangeInFileWithContents } from "../commands/util";
+import { ConfigHandler } from "../config/handler";
+import { streamLines } from "../diff/util";
+import OpenAI from "../llm/llms/OpenAI";
+import { getBasename } from "../util";
+import { logDevData } from "../util/devdata";
+import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters";
+import { Telemetry } from "../util/posthog";
+import { getRangeInString } from "../util/ranges";
+import AutocompleteLruCache from "./cache";
+import { noFirstCharNewline, onlyWhitespaceAfterEndOfLine } from "./charStream";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
@@ -42,12 +27,10 @@ import {
   stopAtRepeatingLines,
   stopAtSimilarLine,
   streamWithNewLines,
-} from "./lineStream.js";
-import { postprocessCompletion } from "./postprocessing.js";
-import { AutocompleteSnippet } from "./ranking.js";
-import { RecentlyEditedRange } from "./recentlyEdited.js";
-import { getTemplateForModel } from "./templates.js";
-import { GeneratorReuseManager } from "./util.js";
+} from "./lineStream";
+import { AutocompleteSnippet } from "./ranking";
+import { getTemplateForModel } from "./templates";
+import { GeneratorReuseManager } from "./util";
 
 export interface AutocompleteInput {
   completionId: string;
@@ -95,12 +78,7 @@ const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
 const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
-const commonStops = [
-  SRC_DIRECTORY,
-  ...STARCODER2_T_ARTIFACTS,
-  PYTHON_ENCODING,
-  CODE_BLOCK_END,
-];
+const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
 
 function formatExternalSnippet(
   filepath: string,
@@ -181,19 +159,10 @@ export async function getTabCompletion(
     llm.useLegacyCompletionsEndpoint = true;
   } else if (
     llm.providerName === "free-trial" &&
-    llm.model !== TRIAL_FIM_MODEL
+    llm.model !== "starcoder2-7b"
   ) {
-    llm.model = TRIAL_FIM_MODEL;
-  }
-
-  if (
-    !shownGptClaudeWarning &&
-    nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
-    !llm.model.includes("deepseek")
-  ) {
-    shownGptClaudeWarning = true;
     throw new Error(
-      "Free trial is not supported for tab-autocomplete. We recommend using starcoder2 with Ollama, LM Studio, or another provider.",
+      "The only free trial model supported for tab-autocomplete is starcoder2-7b.",
     );
   }
 
@@ -325,12 +294,11 @@ export async function getTabCompletion(
   } else {
     let stop = [
       ...(completionOptions?.stop || []),
-      "\n\n",
-      // The following are commonly appended to completions by starcoder and other models
-      "/src/",
-      "t.",
-      "#- coding: utf-8",
-      "```",
+      ...multilineStops,
+      ...commonStops,
+      ...(llm.model.toLowerCase().includes("starcoder2")
+        ? STARCODER2_T_ARTIFACTS
+        : []),
       ...lang.stopWords,
     ];
 
