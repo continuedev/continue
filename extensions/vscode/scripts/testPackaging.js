@@ -8,8 +8,10 @@ if (args[2] === "--target") {
   target = args[3];
 }
 
+let os;
+let arch;
 if (!target) {
-  const os = {
+  os = {
     aix: "linux",
     darwin: "darwin",
     freebsd: "linux",
@@ -18,7 +20,7 @@ if (!target) {
     sunos: "linux",
     win32: "win32",
   }[process.platform];
-  const arch = {
+  arch = {
     arm: "arm64",
     arm64: "arm64",
     ia32: "x64",
@@ -32,12 +34,18 @@ if (!target) {
     s390x: "x64",
     x64: "x64",
   }[process.arch];
-
-  target = `${os}-${arch}`;
-  console.log("[info] Detected target: ", target);
 }
 
-const [os, arch] = target.split("-");
+[os, arch] = target.split("-");
+if (os === "alpine") {
+  os = "linux";
+}
+if (arch === "armhf") {
+  arch = "arm64";
+}
+target = `${os}-${arch}`;
+console.log("[info] Using target: ", target);
+
 const exe = os === "win32" ? ".exe" : "";
 
 const pathsToVerify = [
