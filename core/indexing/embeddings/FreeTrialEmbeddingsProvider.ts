@@ -1,3 +1,4 @@
+import fetch, { Response } from "node-fetch";
 import { EmbedOptions } from "../..";
 import { getHeaders } from "../../continueServer/stubs/headers";
 import { SERVER_URL } from "../../util/parameters";
@@ -5,6 +6,7 @@ import { withExponentialBackoff } from "../../util/withExponentialBackoff";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
 class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
+  static maxBatchSize = 128;
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     model: "voyage-code-2",
   };
@@ -14,27 +16,39 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   async embed(chunks: string[]) {
-    return await Promise.all(
-      chunks.map(async (chunk) => {
-        const fetchWithBackoff = () =>
-          withExponentialBackoff<Response>(() =>
-            fetch(new URL("embeddings", SERVER_URL).toString(), {
-              method: "POST",
-              body: JSON.stringify({
-                input: chunk,
-                model: this.options.model,
+    const batchedChunks = [];
+    for (
+      let i = 0;
+      i < chunks.length;
+      i += FreeTrialEmbeddingsProvider.maxBatchSize
+    ) {
+      batchedChunks.push(
+        chunks.slice(i, i + FreeTrialEmbeddingsProvider.maxBatchSize),
+      );
+    }
+    return (
+      await Promise.all(
+        batchedChunks.map(async (batch) => {
+          const fetchWithBackoff = () =>
+            withExponentialBackoff<Response>(() =>
+              fetch(new URL("embeddings", SERVER_URL), {
+                method: "POST",
+                body: JSON.stringify({
+                  input: batch,
+                  model: this.options.model,
+                }),
+                headers: {
+                  "Content-Type": "application/json",
+                  ...getHeaders(),
+                },
               }),
-              headers: {
-                "Content-Type": "application/json",
-                ...getHeaders(),
-              },
-            }),
-          );
-        const resp = await fetchWithBackoff();
-        const data = await resp.json();
-        return data.embedding;
-      }),
-    );
+            );
+          const resp = await fetchWithBackoff();
+          const data = (await resp.json()) as any;
+          return data.embeddings;
+        }),
+      )
+    ).flat();
   }
 }
 

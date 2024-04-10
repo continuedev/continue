@@ -40,7 +40,6 @@ if (!target) {
   }[process.arch];
 }
 
-[os, arch] = target.split("-");
 if (os === "alpine") {
   os = "linux";
 }

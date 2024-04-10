@@ -1,3 +1,4 @@
+import fetch from "node-fetch";
 import { Chunk, Reranker } from "../..";
 import { getHeaders } from "../../continueServer/stubs/headers";
 import { SERVER_URL } from "../../util/parameters";
@@ -17,8 +18,13 @@ export class FreeTrialReranker implements Reranker {
         documents: chunks.map((chunk) => chunk.content),
       }),
     });
-    const data = await resp.json();
-    const results = data.data.sort((a: any, b: any) => a.index - b.index);
+
+    if (!resp.ok) {
+      throw new Error(await resp.text());
+    }
+
+    const data = (await resp.json()) as any;
+    const results = data.sort((a: any, b: any) => a.index - b.index);
     return results.map((result: any) => result.relevance_score);
   }
 }

@@ -1,3 +1,4 @@
+import fetch, { Response } from "node-fetch";
 import { EmbedOptions } from "../..";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
@@ -36,7 +37,7 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
         batchedChunks.map(async (batch) => {
           const fetchWithBackoff = () =>
             withExponentialBackoff<Response>(() =>
-              fetch(new URL("embeddings", this.options.apiBase).toString(), {
+              fetch(new URL("embeddings", this.options.apiBase), {
                 method: "POST",
                 body: JSON.stringify({
                   input: batch,
@@ -49,7 +50,7 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
               }),
             );
           const resp = await fetchWithBackoff();
-          const data = await resp.json();
+          const data = (await resp.json()) as any;
           return data.data.map(
             (result: { embedding: number[] }) => result.embedding,
           );
