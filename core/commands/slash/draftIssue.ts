@@ -59,13 +59,13 @@ const DraftIssueCommand: SlashCommand = {
     }
 
     //Create isssue in github via api
-    if (this?.params?.repositoryUrl === undefined || this?.params?.repositoryUrl === "") {
+    if (params?.repositoryUrl === undefined || params?.repositoryUrl === "") {
       yield "\n\n---\n\n ## Continue Message: No issue link generated: \n" +
       "In order to automatically generate a github issue a repository URL needs to be set in the config file.\n";
     } else {
       const createIssueResponse = await createGitHubIssue(title, body, {
-        repositoryUrl: this?.params?.repositoryUrl,
-        githubToken: this?.params?.githubToken || process.env.GITHUB_TOKEN
+        repositoryUrl: params?.repositoryUrl,//this?.params?.repositoryUrl,
+        githubToken: params?.githubToken || process.env.GITHUB_TOKEN
       });
   
       yield '\n\n'+createIssueResponse
