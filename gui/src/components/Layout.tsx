@@ -24,6 +24,7 @@ import {
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { isJetBrains, postToIde } from "../util/ide";
+import { getLocalStorage } from "../util/localStorage";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
 import { ftl } from "./dialogs/FTCDialog";
@@ -172,61 +173,15 @@ const Layout = () => {
     setIndexingState(data);
   });
 
-  useWebviewListener(
-    "addApiKey",
-    async () => {
-      navigate("/apiKeyOnboarding");
-    },
-    [navigate],
-  );
-
-  useWebviewListener(
-    "openOnboarding",
-    async () => {
-      navigate("/onboarding");
-    },
-    [navigate],
-  );
-
-  useWebviewListener(
-    "incrementFtc",
-    async () => {
-      const u = getLocalStorage("ftc");
-      if (u) {
-        setLocalStorage("ftc", u + 1);
-      } else {
-        setLocalStorage("ftc", 1);
-      }
-    },
-    [],
-  );
-
-  useWebviewListener(
-    "setupLocalModel",
-    async () => {
-      ideMessenger.post("completeOnboarding", {
-        mode: "localAfterFreeTrial",
-      });
-      navigate("/localOnboarding");
-    },
-    [navigate],
-  );
-
   useEffect(() => {
     const onboardingComplete = getLocalStorage("onboardingComplete");
-    if (
-      !onboardingComplete &&
-      (location.pathname === "/" || location.pathname === "/index.html")
-    ) {
+    if (!onboardingComplete) {
       navigate("/onboarding");
     }
-  }, [location]);
+  }, []);
 
-  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
-    desc: "Loading indexing config",
-    progress: 0.0,
-    status: "loading",
-  });
+  const [indexingProgress, setIndexingProgress] = useState(1);
+  const [indexingTask, setIndexingTask] = useState("Indexing Codebase");
 
   return (
     <LayoutTopDiv>
@@ -314,7 +269,7 @@ const Layout = () => {
                 // navigate("/settings");
                 postToIde("openConfigJson", undefined);
               }}
-              text="Config"
+              text="Configure Continue"
             >
               <Cog6ToothIcon width="1.4em" height="1.4em" />
             </HeaderButtonWithText>
