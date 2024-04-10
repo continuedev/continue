@@ -209,20 +209,10 @@ const exe = os === "win32" ? ".exe" : "";
   if (target) {
     // If building for production, only need the binaries for current platform
     try {
-      if (target.startsWith("linux")) {
-        fs.readdirSync(
-          path.join(
-            __dirname,
-            "../../../core/node_modules/onnxruntime-node/bin/napi-v3",
-          ),
-        );
-      }
-
       if (!target.startsWith("darwin")) {
         rimrafSync(path.join(__dirname, "../bin/napi-v3/darwin"));
       }
       if (!target.startsWith("linux")) {
-        console.log("REMOVING NAPI LINUX");
         rimrafSync(path.join(__dirname, "../bin/napi-v3/linux"));
       }
       if (!target.startsWith("win")) {
