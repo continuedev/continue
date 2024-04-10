@@ -4,6 +4,7 @@ import {
   filterEnglishLinesAtEnd,
   filterEnglishLinesAtStart,
   fixCodeLlamaFirstLineIndentation,
+  stopAtLines,
   streamWithNewLines,
 } from "../../autocomplete/lineStream";
 import { streamLines } from "../../diff/util";
@@ -479,6 +480,7 @@ const EditSlashCommand: SlashCommand = {
       lineStream = filterEnglishLinesAtStart(lineStream);
 
       lineStream = filterEnglishLinesAtEnd(filterCodeBlockLines(lineStream));
+      lineStream = stopAtLines(lineStream);
 
       generator = streamWithNewLines(
         fixCodeLlamaFirstLineIndentation(lineStream),
