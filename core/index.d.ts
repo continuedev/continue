@@ -125,6 +125,7 @@ export interface ContextProviderDescription {
 export interface ContextProviderExtras {
   fullInput: string;
   embeddingsProvider: EmbeddingsProvider;
+  reranker: Reranker | undefined;
   llm: ILLM;
   ide: IDE;
   selectedCode: RangeInFile[];
@@ -250,9 +251,14 @@ export interface ContextItemWithId {
   editable?: boolean;
 }
 
+export interface InputModifiers {
+  useCodebase: boolean;
+}
+
 export interface ChatHistoryItem {
   message: ChatMessage;
   editorState?: any;
+  modifiers?: InputModifiers;
   contextItems: ContextItemWithId[];
   promptLogs?: [string, string][]; // [prompt, completion]
 }
@@ -352,9 +358,12 @@ export interface IdeInfo {
   extensionVersion: string;
 }
 
-export interface IndexTag {
-  directory: string;
+export interface BranchAndDir {
   branch: string;
+  directory: string;
+}
+
+export interface IndexTag extends BranchAndDir {
   artifactId: string;
 }
 
@@ -613,7 +622,11 @@ export interface ModelDescription {
   promptTemplates?: { [key: string]: string };
 }
 
-export type EmbeddingsProviderName = "transformers.js" | "ollama" | "openai";
+export type EmbeddingsProviderName =
+  | "transformers.js"
+  | "ollama"
+  | "openai"
+  | "free-trial";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -628,6 +641,18 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 export interface EmbeddingsProvider {
   id: string;
   embed(chunks: string[]): Promise<number[][]>;
+}
+
+export type RerankerName = "voyage" | "llm" | "free-trial";
+
+export interface RerankerDescription {
+  name: RerankerName;
+  params?: { [key: string]: any };
+}
+
+export interface Reranker {
+  name: string;
+  rerank(query: string, chunks: Chunk[]): Promise<number[]>;
 }
 
 export interface TabAutocompleteOptions {
@@ -669,6 +694,7 @@ export interface SerializedContinueConfig {
   tabAutocompleteModel?: ModelDescription;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
+  reranker?: RerankerDescription;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -709,6 +735,8 @@ export interface Config {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
   ui?: ContinueUIConfig;
+  /** Options for the reranker */
+  reranker?: RerankerDescription | Reranker;
 }
 
 export interface ContinueConfig {
@@ -725,6 +753,7 @@ export interface ContinueConfig {
   tabAutocompleteModel?: ILLM;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
+  reranker?: Reranker;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -739,4 +768,5 @@ export interface BrowserSerializedContinueConfig {
   userToken?: string;
   embeddingsProvider?: string;
   ui?: ContinueUIConfig;
+  reranker?: RerankerDescription;
 }

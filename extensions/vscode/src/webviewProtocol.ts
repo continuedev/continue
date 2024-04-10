@@ -468,6 +468,7 @@ export class VsCodeWebviewProtocol {
         const items = await provider.getContextItems(query, {
           llm,
           embeddingsProvider: config.embeddingsProvider,
+          reranker: config.reranker,
           fullInput,
           ide,
           selectedCode,

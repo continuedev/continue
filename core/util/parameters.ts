@@ -17,3 +17,14 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   onlyMyCode: true,
   useOtherFiles: false,
 };
+
+export const RETRIEVAL_PARAMS = {
+  rerankThreshold: 0.5,
+  nFinal: 10,
+  nRetrieve: 20,
+  bm25Threshold: -2.5,
+};
+
+// export const SERVER_URL = "http://localhost:3000";
+export const SERVER_URL =
+  "https://node-proxy-server-blue-l6vsfbzhba-uw.a.run.app";

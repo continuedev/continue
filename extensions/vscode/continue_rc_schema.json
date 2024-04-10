@@ -475,6 +475,7 @@
                   "claude-3-opus-20240229",
                   "claude-3-sonnet-20240229",
                   "claude-3-haiku-20240307",
+                  "starcoder2-7b",
                   "AUTODETECT"
                 ]
               }
@@ -1866,6 +1867,90 @@
                 "required": [
                   "model"
                 ]
+              }
+            }
+          ]
+        },
+        "reranker": {
+          "title": "Reranker",
+          "markdownDescription": "The reranker is responsible for selecting the final results when retrieving snippets from your codebase.",
+          "type": "object",
+          "properties": {
+            "name": {
+              "enum": [
+                "voyage",
+                "llm"
+              ]
+            },
+            "params": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "name"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": [
+                      "llm"
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "modelTitle": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "modelTitle"
+                    ]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": [
+                      "voyage"
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "apiKey": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "enum": [
+                          "rerank-lite-1"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "apiKey"
+                    ]
+                  }
+                }
               }
             }
           ]

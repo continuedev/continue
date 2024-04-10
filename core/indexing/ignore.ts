@@ -56,7 +56,7 @@ const DEFAULT_IGNORE_FILETYPES = [
   "*.plist",
 ];
 export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
-const DEFAULT_IGNORE_DIRS = [
+export const DEFAULT_IGNORE_DIRS = [
   ".git",
   ".vscode",
   ".idea",

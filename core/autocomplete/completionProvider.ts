@@ -7,6 +7,7 @@ import { streamLines } from "../diff/util";
 import OpenAI from "../llm/llms/OpenAI";
 import { getBasename } from "../util";
 import { logDevData } from "../util/devdata";
+import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters";
 import { Telemetry } from "../util/posthog";
 import { getRangeInString } from "../util/ranges";
 import AutocompleteLruCache from "./cache";
@@ -24,7 +25,6 @@ import {
   stopAtSimilarLine,
   streamWithNewLines,
 } from "./lineStream";
-import { DEFAULT_AUTOCOMPLETE_OPTS } from "./parameters";
 import { AutocompleteSnippet } from "./ranking";
 import { getTemplateForModel } from "./templates";
 import { GeneratorReuseManager } from "./util";
@@ -60,12 +60,7 @@ const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
 const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
-const commonStops = [
-  SRC_DIRECTORY,
-  ...STARCODER2_T_ARTIFACTS,
-  PYTHON_ENCODING,
-  CODE_BLOCK_END,
-];
+const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
 
 function formatExternalSnippet(
   filepath: string,
@@ -122,9 +117,12 @@ export async function getTabCompletion(
   // Model
   if (llm instanceof OpenAI) {
     llm.useLegacyCompletionsEndpoint = true;
-  } else if (llm.providerName === "free-trial") {
+  } else if (
+    llm.providerName === "free-trial" &&
+    llm.model !== "starcoder2-7b"
+  ) {
     throw new Error(
-      "Free trial is not supported for tab-autocomplete. We recommend using starcoder2 with Ollama, LM Studio, or another provider.",
+      "The only free trial model supported for tab-autocomplete is starcoder2-7b.",
     );
   }
   if (!llm) return;
@@ -224,6 +222,9 @@ export async function getTabCompletion(
       ...(completionOptions?.stop || []),
       ...multilineStops,
       ...commonStops,
+      ...(llm.model.toLowerCase().includes("starcoder2")
+        ? STARCODER2_T_ARTIFACTS
+        : []),
       ...lang.stopWords,
     ];
 

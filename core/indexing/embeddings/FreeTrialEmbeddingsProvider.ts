@@ -1,35 +1,29 @@
 import fetch, { Response } from "node-fetch";
 import { EmbedOptions } from "../..";
+import { getHeaders } from "../../continueServer/stubs/headers";
+import { SERVER_URL } from "../../util/parameters";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
-class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
-  // https://platform.openai.com/docs/api-reference/embeddings/create is 2048
-  // but Voyage is 128
+class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
   static maxBatchSize = 128;
-
   static defaultOptions: Partial<EmbedOptions> | undefined = {
-    apiBase: "https://api.openai.com/v1/",
-    model: "text-embedding-3-small",
+    model: "voyage-code-2",
   };
 
   get id(): string {
-    return this.options.model ?? "openai";
+    return FreeTrialEmbeddingsProvider.defaultOptions!.model!;
   }
 
   async embed(chunks: string[]) {
-    if (!this.options.apiBase?.endsWith("/")) {
-      this.options.apiBase += "/";
-    }
-
     const batchedChunks = [];
     for (
       let i = 0;
       i < chunks.length;
-      i += OpenAIEmbeddingsProvider.maxBatchSize
+      i += FreeTrialEmbeddingsProvider.maxBatchSize
     ) {
       batchedChunks.push(
-        chunks.slice(i, i + OpenAIEmbeddingsProvider.maxBatchSize),
+        chunks.slice(i, i + FreeTrialEmbeddingsProvider.maxBatchSize),
       );
     }
     return (
@@ -37,27 +31,25 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
         batchedChunks.map(async (batch) => {
           const fetchWithBackoff = () =>
             withExponentialBackoff<Response>(() =>
-              fetch(new URL("embeddings", this.options.apiBase), {
+              fetch(new URL("embeddings", SERVER_URL), {
                 method: "POST",
                 body: JSON.stringify({
                   input: batch,
                   model: this.options.model,
                 }),
                 headers: {
-                  Authorization: `Bearer ${this.options.apiKey}`,
                   "Content-Type": "application/json",
+                  ...getHeaders(),
                 },
               }),
             );
           const resp = await fetchWithBackoff();
           const data = (await resp.json()) as any;
-          return data.data.map(
-            (result: { embedding: number[] }) => result.embedding,
-          );
+          return data.embeddings;
         }),
       )
     ).flat();
   }
 }
 
-export default OpenAIEmbeddingsProvider;
+export default FreeTrialEmbeddingsProvider;

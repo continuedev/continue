@@ -2,6 +2,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { Table } from "vectordb";
 import {
+  BranchAndDir,
   Chunk,
   EmbeddingsProvider,
   IndexTag,
@@ -329,21 +330,27 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   async retrieve(
-    tags: IndexTag[],
-    text: string,
+    query: string,
     n: number,
-    directory: string | undefined,
+    tags: BranchAndDir[],
+    filterDirectory: string | undefined,
   ): Promise<Chunk[]> {
     const lancedb = await import("vectordb");
     if (!lancedb.connect) {
       throw new Error("LanceDB failed to load a native module");
     }
-    const [vector] = await this.embeddingsProvider.embed([text]);
+    const [vector] = await this.embeddingsProvider.embed([query]);
     const db = await lancedb.connect(getLanceDbPath());
 
     let allResults = [];
     for (const tag of tags) {
-      const results = await this._retrieveForTag(tag, n, directory, vector, db);
+      const results = await this._retrieveForTag(
+        { ...tag, artifactId: this.artifactId },
+        n,
+        filterDirectory,
+        vector,
+        db,
+      );
       allResults.push(...results);
     }
 

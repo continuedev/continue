@@ -1,10 +1,10 @@
-import { Chunk, IndexTag } from "..";
+import { BranchAndDir, Chunk } from "..";
 import { FullTextSearchCodebaseIndex } from "../indexing/FullTextSearch";
 
 export async function fullTextRetrieve(
   prefix: string,
   suffix: string,
-  indexTag: IndexTag,
+  indexTag: BranchAndDir,
 ): Promise<Chunk[]> {
   const index = new FullTextSearchCodebaseIndex();
   const searchStrings = prefix.split("\n").slice(-3);
