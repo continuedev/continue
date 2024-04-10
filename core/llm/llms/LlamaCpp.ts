@@ -15,6 +15,7 @@ class LlamaCpp extends BaseLLM {
       presence_penalty: options.presencePenalty,
       min_p: options.minP,
       mirostat: options.mirostat,
+      stop: options.stop,
     };
 
     return finalOptions;

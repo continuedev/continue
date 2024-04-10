@@ -605,6 +605,7 @@ interface BaseCompletionOptions {
   numThreads?: number;
   keepAlive?: number;
   raw?: boolean;
+  stream?: boolean;
 }
 
 export interface ModelDescription {
@@ -655,6 +656,7 @@ export interface Reranker {
 }
 
 export interface TabAutocompleteOptions {
+  disable: boolean;
   useCopyBuffer: boolean;
   useSuffix: boolean;
   maxPromptTokens: number;
