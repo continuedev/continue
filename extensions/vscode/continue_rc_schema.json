@@ -1833,7 +1833,8 @@
               "enum": [
                 "transformers.js",
                 "ollama",
-                "openai"
+                "openai",
+                "free-trial"
               ]
             },
             "model": {
@@ -1879,7 +1880,8 @@
             "name": {
               "enum": [
                 "voyage",
-                "llm"
+                "llm",
+                "free-trial"
               ]
             },
             "params": {

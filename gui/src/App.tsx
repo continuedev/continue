@@ -16,7 +16,8 @@ import { ContextSubmenuItem } from "core";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
 import GUI from "./pages/gui";
-import Onboarding from "./pages/onboarding";
+import ExistingUserOnboarding from "./pages/onboarding/existingUserOnboarding";
+import Onboarding from "./pages/onboarding/onboarding";
 import Stats from "./pages/stats";
 
 const router = createMemoryRouter([
@@ -68,6 +69,10 @@ const router = createMemoryRouter([
       {
         path: "/onboarding",
         element: <Onboarding />,
+      },
+      {
+        path: "/existingUserOnboarding",
+        element: <ExistingUserOnboarding />,
       },
       {
         path: "/migration",

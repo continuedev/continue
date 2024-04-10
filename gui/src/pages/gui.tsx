@@ -43,6 +43,7 @@ import {
 import { RootState } from "../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
 import { isJetBrains } from "../util/ide";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -248,13 +249,9 @@ function GUI(props: GUIProps) {
       streamResponse(editorState, modifiers);
 
       // Increment localstorage counter for popup
-      const counter = localStorage.getItem("mainTextEntryCounter");
-      if (counter) {
-        let currentCount = parseInt(counter);
-        localStorage.setItem(
-          "mainTextEntryCounter",
-          (currentCount + 1).toString(),
-        );
+      const currentCount = getLocalStorage("mainTextEntryCounter");
+      if (currentCount) {
+        setLocalStorage("mainTextEntryCounter", currentCount + 1);
         if (currentCount === 300) {
           dispatch(
             setDialogMessage(
@@ -318,7 +315,7 @@ function GUI(props: GUIProps) {
           dispatch(setShowDialog(true));
         }
       } else {
-        localStorage.setItem("mainTextEntryCounter", "1");
+        setLocalStorage("mainTextEntryCounter", 1);
       }
     },
     [

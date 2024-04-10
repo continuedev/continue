@@ -1,6 +1,10 @@
 import { ContextItemId, IDE } from "core";
 import { ConfigHandler } from "core/config/handler";
-import { setupLocalMode, setupOptimizedMode } from "core/config/onboarding";
+import {
+  setupLocalMode,
+  setupOptimizedExistingUserMode,
+  setupOptimizedMode,
+} from "core/config/onboarding";
 import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
@@ -561,13 +565,17 @@ export class VsCodeWebviewProtocol {
     });
 
     this.on("completeOnboarding", (msg) => {
-      showTutorial();
-
       const mode = msg.data.mode;
       if (mode === "custom") {
         return;
       }
-      editConfigJson(mode === "local" ? setupLocalMode : setupOptimizedMode);
+      editConfigJson(
+        mode === "local"
+          ? setupLocalMode
+          : mode === "optimized"
+          ? setupOptimizedMode
+          : setupOptimizedExistingUserMode,
+      );
     });
 
     this.on("openUrl", (msg) => {

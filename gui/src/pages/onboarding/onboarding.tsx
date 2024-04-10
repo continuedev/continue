@@ -1,59 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
-import {
-  Button,
-  defaultBorderRadius,
-  greenButtonColor,
-  lightGray,
-  vscButtonBackground,
-  vscForeground,
-} from "../components";
-import { postToIde } from "../util/ide";
-import { setLocalStorage } from "../util/localStorage";
-
-const StyledButton = styled(Button)`
-  margin-left: auto;
-  background-color: transparent;
-  color: ${vscForeground};
-  border: 0.5px solid ${lightGray};
-
-  &:hover {
-    box-shadow: 0 0 2px 1px ${vscButtonBackground};
-  }
-`;
-
-const Div = styled.div<{
-  color: string;
-  disabled: boolean;
-  hovered: boolean;
-  selected: boolean;
-}>`
-  border: 1px solid ${lightGray};
-  border-radius: ${defaultBorderRadius};
-  transition: all 0.5s;
-  padding-left: 16px;
-  padding-right: 16px;
-
-  ${(props) =>
-    props.disabled
-      ? `
-    opacity: 0.5;
-    `
-      : props.hovered || props.selected
-      ? `
-    border: 1px solid ${props.color};
-    background-color: ${props.color}22;
-    cursor: pointer;`
-      : ""}
-
-  ${(props) =>
-    props.selected
-      ? `
-    box-shadow: 0 0 4px 0px ${props.color};
-    `
-      : ""}
-`;
+import { greenButtonColor } from "../../components";
+import { postToIde } from "../../util/ide";
+import { setLocalStorage } from "../../util/localStorage";
+import { Div, StyledButton } from "./components";
 
 function Onboarding() {
   const navigate = useNavigate();
@@ -89,10 +39,10 @@ function Onboarding() {
       </Div>
       {selected === 0 && (
         <p className="px-3">
-          <b>Embeddings:</b> Local transformers.js model
+          <b>Embeddings:</b> Local sentence-transformers model
           <br />
           <br />
-          <b>Autocomplete:</b> Starcoder2-3b (manual setup with Ollama, LM
+          <b>Autocomplete:</b> Starcoder2 3b (manual setup with Ollama, LM
           Studio, etc.)
           <br />
           <br />
@@ -162,6 +112,7 @@ function Onboarding() {
         <StyledButton
           disabled={selected < 0}
           onClick={() => {
+            postToIde("showTutorial", undefined);
             postToIde("completeOnboarding", {
               mode: ["local", "optimized", "custom"][selected] as any,
             });
@@ -169,7 +120,7 @@ function Onboarding() {
             navigate("/");
           }}
         >
-          Get Started
+          Continue
         </StyledButton>
       </div>
     </div>

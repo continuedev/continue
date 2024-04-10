@@ -180,8 +180,16 @@ const Layout = () => {
 
   useEffect(() => {
     const onboardingComplete = getLocalStorage("onboardingComplete");
-    if (!onboardingComplete && !location.pathname.startsWith("/onboarding")) {
-      navigate("/onboarding");
+    if (
+      !onboardingComplete &&
+      !location.pathname.startsWith("/onboarding") &&
+      !location.pathname.startsWith("/existingUserOnboarding")
+    ) {
+      if (getLocalStorage("mainTextEntryCounter")) {
+        navigate("/existingUserOnboarding");
+      } else {
+        navigate("/onboarding");
+      }
     }
   }, [location]);
 
