@@ -180,10 +180,10 @@ const Layout = () => {
 
   useEffect(() => {
     const onboardingComplete = getLocalStorage("onboardingComplete");
-    if (!onboardingComplete) {
+    if (!onboardingComplete && !location.pathname.startsWith("/onboarding")) {
       navigate("/onboarding");
     }
-  }, []);
+  }, [location]);
 
   const [indexingProgress, setIndexingProgress] = useState(1);
   const [indexingTask, setIndexingTask] = useState("Indexing Codebase");

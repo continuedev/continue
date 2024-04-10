@@ -14,10 +14,30 @@ import {
   ReverseWebviewProtocol,
   WebviewProtocol,
 } from "core/web/webviewProtocol";
+import fs from "fs";
+import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import { showTutorial } from "./activation/activate";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { getExtensionUri } from "./util/vscode";
+
+async function showTutorial() {
+  const tutorialPath = path.join(
+    getExtensionUri().fsPath,
+    "continue_tutorial.py",
+  );
+  // Ensure keyboard shortcuts match OS
+  if (process.platform !== "darwin") {
+    let tutorialContent = fs.readFileSync(tutorialPath, "utf8");
+    tutorialContent = tutorialContent.replace("⌘", "^").replace("Cmd", "Ctrl");
+    fs.writeFileSync(tutorialPath, tutorialContent);
+  }
+
+  const doc = await vscode.workspace.openTextDocument(
+    vscode.Uri.file(tutorialPath),
+  );
+  await vscode.window.showTextDocument(doc);
+}
 
 export class VsCodeWebviewProtocol {
   listeners = new Map<keyof WebviewProtocol, ((message: Message) => any)[]>();
@@ -541,6 +561,8 @@ export class VsCodeWebviewProtocol {
     });
 
     this.on("completeOnboarding", (msg) => {
+      showTutorial();
+
       const mode = msg.data.mode;
       if (mode === "custom") {
         return;
