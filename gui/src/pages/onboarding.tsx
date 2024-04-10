@@ -60,7 +60,7 @@ function Onboarding() {
   const [selected, setSelected] = useState(-1);
 
   return (
-    <div className="p-2 max-w-96 mt-16">
+    <div className="p-2 max-w-96 mt-16 mx-auto">
       <h1 className="text-center">Welcome to Continue!</h1>
       <p>
         Before getting started, let's find the setup that works best for you! If

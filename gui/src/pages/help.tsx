@@ -76,7 +76,7 @@ function HelpPage() {
         <h3 className="text-lg font-bold m-2 inline-block">Help Center</h3>
         <TutorialButton
           onClick={() => {
-            ideMessenger.post("showTutorial", undefined);
+            postToIde("showTutorial", undefined);
             navigate("/onboarding");
           }}
         >
