@@ -258,9 +258,17 @@ export class VsCodeExtension {
   static continueVirtualDocumentScheme = "continue";
 
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
+  private indexingCancellationController: AbortController | undefined;
 
   private async refreshCodebaseIndex(dirs: string[]) {
-    for await (const update of this.indexer.refresh(dirs)) {
+    if (this.indexingCancellationController) {
+      this.indexingCancellationController.abort();
+    }
+    this.indexingCancellationController = new AbortController();
+    for await (const update of this.indexer.refresh(
+      dirs,
+      this.indexingCancellationController.signal,
+    )) {
       this.webviewProtocol.request("indexProgress", update);
     }
   }

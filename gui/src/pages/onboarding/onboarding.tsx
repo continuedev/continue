@@ -117,6 +117,7 @@ function Onboarding() {
               mode: ["local", "optimized", "custom"][selected] as any,
             });
             setLocalStorage("onboardingComplete", true);
+            postToIde("index/forceReIndex", undefined);
             navigate("/");
           }}
         >

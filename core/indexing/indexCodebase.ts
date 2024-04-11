@@ -59,6 +59,7 @@ export class CodebaseIndexer {
 
   async *refresh(
     workspaceDirs: string[],
+    abortSignal: AbortSignal,
   ): AsyncGenerator<IndexingProgressUpdate> {
     const config = await this.configHandler.loadConfig();
     if (config.disableIndexing) {
@@ -102,6 +103,13 @@ export class CodebaseIndexer {
             repoName,
           )) {
             // Handle pausing in this loop because it's the only one really taking time
+            if (abortSignal.aborted) {
+              yield {
+                progress: 1,
+                desc: "Indexing cancelled",
+              };
+              return;
+            }
             while (this.pauseToken.paused) {
               await new Promise((resolve) => setTimeout(resolve, 100));
             }
