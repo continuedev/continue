@@ -268,31 +268,39 @@ const commandsMap: (
   },
   "continue.writeCommentsForCode": async () => {
     await verticalDiffManager.streamEdit(
-      "Write comments for this code. Do not change anything about the code itself.",
+      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
+        ?.comment ||
+        "Write comments for this code. Do not change anything about the code itself.",
       await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
     );
   },
   "continue.writeDocstringForCode": async () => {
     await verticalDiffManager.streamEdit(
-      "Write a docstring for this code. Do not change anything about the code itself.",
+      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
+        ?.docstring ||
+        "Write a docstring for this code. Do not change anything about the code itself.",
       await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
     );
   },
   "continue.fixCode": async () => {
     await verticalDiffManager.streamEdit(
-      "Fix this code",
+      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
+        ?.fix || "Fix this code",
       await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
     );
   },
   "continue.optimizeCode": async () => {
     await verticalDiffManager.streamEdit(
-      "Optimize this code",
+      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
+        ?.optimize || "Optimize this code",
       await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
     );
   },
   "continue.fixGrammar": async () => {
     await verticalDiffManager.streamEdit(
-      "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
+      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
+        ?.fixGrammar ||
+        "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
       await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
     );
   },
