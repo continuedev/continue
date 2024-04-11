@@ -368,8 +368,8 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-  if (ghAction() && isArm()) {
-    // sqlite3
+  if (isArm()) {
+    // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
     if (!isWin()) {
       // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
 
