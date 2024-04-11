@@ -12,6 +12,7 @@ import {
   IContextProvider,
   IdeType,
   ModelDescription,
+  Reranker,
   RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
@@ -285,7 +286,7 @@ async function intermediateToFinalConfig(
   }
 
   // Reranker
-  if ((config.reranker as RerankerDescription | undefined)?.params) {
+  if (!(config.reranker as Reranker | undefined)?.rerank) {
     const { name, params } = config.reranker as RerankerDescription;
     const rerankerClass = AllRerankers[name];
 

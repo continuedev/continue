@@ -19,7 +19,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
 };
 
 export const RETRIEVAL_PARAMS = {
-  rerankThreshold: 0.5,
+  rerankThreshold: 0.3,
   nFinal: 10,
   nRetrieve: 20,
   bm25Threshold: -2.5,
