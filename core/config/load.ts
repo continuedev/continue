@@ -351,7 +351,7 @@ async function intermediateToFinalConfig(
   }
 
   // Reranker
-  if (!(config.reranker as Reranker | undefined)?.rerank) {
+  if (config.reranker && !(config.reranker as Reranker | undefined)?.rerank) {
     const { name, params } = config.reranker as RerankerDescription;
     const rerankerClass = AllRerankers[name];
 
