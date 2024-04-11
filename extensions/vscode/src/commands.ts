@@ -302,32 +302,54 @@ const commandsMap: (
 
         await verticalDiffManager.streamEdit(text, defaultModelTitle);
       }
-      verticalDiffManager.clearForFilepath(newFilepath, true);
-      await diffManager.acceptDiff(newFilepath);
-    },
-    "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
-      if (newFilepath instanceof vscode.Uri) {
-        newFilepath = newFilepath.fsPath;
-      }
-      verticalDiffManager.clearForFilepath(newFilepath, false);
-      await diffManager.rejectDiff(newFilepath);
-    },
-    "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
-      verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index);
-    },
-    "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number) => {
-      verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index);
-    },
-    "continue.quickFix": async (
-      message: string,
-      code: string,
-      edit: boolean,
-    ) => {
-      sidebar.webviewProtocol?.request("newSessionWithPrompt", {
-        prompt: `${
-          edit ? "/edit " : ""
-        }${code}\n\nHow do I fix this problem in the above code?: ${message}`,
-      });
+    }
+  },
+  "continue.writeCommentsForCode": async () => {
+    await verticalDiffManager.streamEdit(
+      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
+        ?.comment ||
+        "Write comments for this code. Do not change anything about the code itself.",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+    );
+  },
+  "continue.writeDocstringForCode": async () => {
+    await verticalDiffManager.streamEdit(
+      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
+        ?.docstring ||
+        "Write a docstring for this code. Do not change anything about the code itself.",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+    );
+  },
+  "continue.fixCode": async () => {
+    await verticalDiffManager.streamEdit(
+      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
+        ?.fix || "Fix this code",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+    );
+  },
+  "continue.optimizeCode": async () => {
+    await verticalDiffManager.streamEdit(
+      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
+        ?.optimize || "Optimize this code",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+    );
+  },
+  "continue.fixGrammar": async () => {
+    await verticalDiffManager.streamEdit(
+      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
+        ?.fixGrammar ||
+        "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+    );
+  },
+  "continue.viewLogs": async () => {
+    // Open ~/.continue/continue.log
+    const logFile = path.join(os.homedir(), ".continue", "continue.log");
+    // Make sure the file/directory exist
+    if (!fs.existsSync(logFile)) {
+      fs.mkdirSync(path.dirname(logFile), { recursive: true });
+      fs.writeFileSync(logFile, "");
+    }
 
     const uri = vscode.Uri.file(logFile);
     await vscode.window.showTextDocument(uri);

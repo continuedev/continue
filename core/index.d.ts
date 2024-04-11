@@ -754,6 +754,17 @@ interface ExperimentalConfig {
   promptPath?: string;
 }
 
+interface ContextMenuConfig {
+  comment?: string;
+  docstring?: string;
+  fix?: string;
+  optimize?: string;
+  fixGrammar?: string;
+}
+interface ExperimantalConfig {
+  contextMenuPrompts?: ContextMenuConfig;
+}
+
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
@@ -772,6 +783,7 @@ export interface SerializedContinueConfig {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
+  experimental?: ExperimantalConfig;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -816,6 +828,8 @@ export interface Config {
   ui?: ContinueUIConfig;
   /** Options for the reranker */
   reranker?: RerankerDescription | Reranker;
+  /** Experimental configuration */
+  experimental?: ExperimantalConfig;
 }
 
 export interface ContinueConfig {
@@ -834,6 +848,7 @@ export interface ContinueConfig {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: Reranker;
+  experimental?: ExperimantalConfig;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -850,4 +865,5 @@ export interface BrowserSerializedContinueConfig {
   embeddingsProvider?: string;
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
+  experimental?: ExperimantalConfig;
 }
