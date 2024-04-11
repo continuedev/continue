@@ -39,6 +39,12 @@ const CHAT_ONLY_MODELS = [
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint = false;
 
+  constructor(options: LLMOptions) {
+    super(options);
+    this.useLegacyCompletionsEndpoint =
+      options.useLegacyCompletionsEndpoint ?? false;
+  }
+
   static providerName: ModelProvider = "openai";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.openai.com/v1/",
