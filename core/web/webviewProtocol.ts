@@ -90,7 +90,14 @@ export type WebviewProtocol = Protocol &
     copyText: [{ text: string }, void];
     "jetbrains/editorInsetHeight": [{ height: number }, void];
     completeOnboarding: [
-      { mode: "local" | "optimized" | "custom" | "optimizedExistingUser" },
+      {
+        mode:
+          | "local"
+          | "optimized"
+          | "custom"
+          | "localExistingUser"
+          | "optimizedExistingUser";
+      },
       void,
     ];
   };

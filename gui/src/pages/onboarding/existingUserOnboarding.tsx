@@ -128,7 +128,9 @@ Alternatively, you can enter your own API keys:
             disabled={selected < 0}
             onClick={() => {
               postToIde("completeOnboarding", {
-                mode: ["local", "optimizedExistingUser"][selected] as any,
+                mode: ["localExistingUser", "optimizedExistingUser"][
+                  selected
+                ] as any,
               });
               postToIde("openConfigJson", undefined);
               setLocalStorage("onboardingComplete", true);

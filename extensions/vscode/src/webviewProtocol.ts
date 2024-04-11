@@ -566,7 +566,7 @@ export class VsCodeWebviewProtocol {
 
     this.on("completeOnboarding", (msg) => {
       const mode = msg.data.mode;
-      if (mode === "custom") {
+      if (mode === "custom" || mode === "localExistingUser") {
         return;
       }
       editConfigJson(
