@@ -308,9 +308,6 @@ export interface LLMOptions {
 
   useLegacyCompletionsEndpoint?: boolean;
 
-  // Cloudflare options
-  accountId?: string;
-
   // Azure options
   engine?: string;
   apiVersion?: string;
