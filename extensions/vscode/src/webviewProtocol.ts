@@ -566,6 +566,9 @@ export class VsCodeWebviewProtocol {
 
     this.on("completeOnboarding", (msg) => {
       const mode = msg.data.mode;
+      Telemetry.capture("onboardingSelection", {
+        mode,
+      });
       if (mode === "custom" || mode === "localExistingUser") {
         return;
       }
