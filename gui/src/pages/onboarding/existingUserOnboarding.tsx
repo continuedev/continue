@@ -132,6 +132,7 @@ Alternatively, you can enter your own API keys:
               });
               postToIde("openConfigJson", undefined);
               setLocalStorage("onboardingComplete", true);
+              postToIde("index/forceReIndex", undefined);
               navigate("/");
             }}
           >

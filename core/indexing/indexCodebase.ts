@@ -137,20 +137,11 @@ export class CodebaseIndexer {
               yield {
                 progress: 1,
                 desc: "Indexing cancelled",
-                status: "disabled",
               };
               return;
             }
-
-            if (this.pauseToken.paused) {
-              yield {
-                progress: completedDirs / workspaceDirs.length,
-                desc: "Paused",
-                status: "paused",
-              };
-              while (this.pauseToken.paused) {
-                await new Promise((resolve) => setTimeout(resolve, 100));
-              }
+            while (this.pauseToken.paused) {
+              await new Promise((resolve) => setTimeout(resolve, 100));
             }
 
             yield {
