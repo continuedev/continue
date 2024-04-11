@@ -159,6 +159,7 @@ export class Core {
         fullInput: msg.data.fullInput,
         ide,
         selectedCode: msg.data.selectedCode,
+        reranker: config.reranker,
       });
 
       Telemetry.capture("useContextProvider", {
