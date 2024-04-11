@@ -119,10 +119,10 @@ export async function getTabCompletion(
     llm.useLegacyCompletionsEndpoint = true;
   } else if (
     llm.providerName === "free-trial" &&
-    llm.model !== "starcoder2-7b"
+    llm.model !== "starcoder-7b"
   ) {
     throw new Error(
-      "The only free trial model supported for tab-autocomplete is starcoder2-7b.",
+      "The only free trial model supported for tab-autocomplete is starcoder-7b.",
     );
   }
   if (!llm) return;
