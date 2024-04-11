@@ -475,7 +475,7 @@
                   "claude-3-opus-20240229",
                   "claude-3-sonnet-20240229",
                   "claude-3-haiku-20240307",
-                  "starcoder2-7b",
+                  "starcoder-7b",
                   "AUTODETECT"
                 ]
               }
