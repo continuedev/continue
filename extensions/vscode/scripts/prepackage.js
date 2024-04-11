@@ -8,8 +8,11 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
-// Get the target to package for
+// Clear folders that will be packaged to ensure clean slate
+rimrafSync(path.join(__dirname, "bin"));
+rimrafSync(path.join(__dirname, "out"));
 
+// Get the target to package for
 let target = undefined;
 const args = process.argv;
 if (args[2] === "--target") {
