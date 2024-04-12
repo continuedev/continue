@@ -552,6 +552,7 @@ export type ModelName =
   | "chat-bison-001"
   // Gemini
   | "gemini-pro"
+  | "gemini-1.5-pro-latest"
   // Mistral
   | "mistral-tiny"
   | "mistral-small"
