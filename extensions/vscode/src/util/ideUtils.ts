@@ -507,13 +507,18 @@ export class VsCodeIdeUtils {
     return git.getRepository(forDirectory);
   }
 
+  private _repoWasNone: boolean = false;
   async getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
     let repo = await this._getRepo(forDirectory);
+
     let i = 0;
     while (!repo?.state?.HEAD?.name) {
+      if (this._repoWasNone) return undefined;
+
       await new Promise((resolve) => setTimeout(resolve, 1000));
       i++;
       if (i >= 20) {
+        this._repoWasNone = true;
         return undefined;
       }
       repo = await this._getRepo(forDirectory);
