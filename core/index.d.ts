@@ -510,7 +510,8 @@ type ModelProvider =
   | "bedrock"
   | "deepinfra"
   | "flowise"
-  | "groq";
+  | "groq"
+  | "continue-proxy";
 
 export type ModelName =
   | "AUTODETECT"

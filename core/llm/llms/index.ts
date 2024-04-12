@@ -27,6 +27,7 @@ import OpenAIFreeTrial from "./OpenAIFreeTrial";
 import Replicate from "./Replicate";
 import TextGenWebUI from "./TextGenWebUI";
 import Together from "./Together";
+import ContinueProxy from "./stubs/ContinueProxy";
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -96,6 +97,7 @@ const LLMs = [
   OpenAIFreeTrial,
   Flowise,
   Groq,
+  ContinueProxy,
 ];
 
 export async function llmFromDescription(

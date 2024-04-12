@@ -39,6 +39,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "together",
   "anthropic",
   "bedrock",
+  "continue-proxy",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -48,6 +49,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "free-trial",
   "anthropic",
   "bedrock",
+  "continue-proxy",
 ];
 
 function modelSupportsImages(provider: ModelProvider, model: string): boolean {

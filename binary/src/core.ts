@@ -2,6 +2,7 @@ import { ContextItemId, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
 import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
+import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
@@ -15,49 +16,46 @@ import { IpcMessenger } from "./messenger";
 import { Protocol } from "./protocol";
 
 export class Core {
-  private messenger: IpcMessenger;
-  private readonly ide: IDE;
-  private readonly configHandler: ConfigHandler;
-  private readonly codebaseIndexer: CodebaseIndexer;
-  private readonly completionProvider: CompletionProvider;
+  constructor(
+    private readonly messenger: IpcMessenger,
+    ide: IDE,
+  ) {
+    this.messenger = messenger;
+    this.setup(ide);
+  }
 
   private abortedMessageIds: Set<string> = new Set();
 
   private selectedModelTitle: string | undefined;
 
-  private async config() {
-    return this.configHandler.loadConfig();
-  }
-
-  private async getSelectedModel() {
-    return await this.configHandler.llmFromTitle(this.selectedModelTitle);
-  }
-
-  constructor(messenger: IpcMessenger, ide: IDE) {
-    this.messenger = messenger;
-    this.ide = ide;
-
-    const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
-    this.configHandler = new ConfigHandler(
-      this.ide,
-      ideSettingsPromise,
+  private async setup(ide: IDE) {
+    const ideSettings = await this.messenger.request(
+      "getIdeSettings",
+      undefined,
+    );
+    const continueServerClient = new ContinueServerClient(
+      ideSettings.remoteConfigServerUrl,
+      Promise.resolve(ideSettings.userToken),
+    );
+    const configHandler = new ConfigHandler(
+      ide,
       (text: string) => {},
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
+      continueServerClient,
     );
-    this.codebaseIndexer = new CodebaseIndexer(
-      this.configHandler,
-      this.ide,
+    const codebaseIndexer = new CodebaseIndexer(
+      configHandler,
+      ide,
       new PauseToken(false),
-      undefined, // TODO
-      Promise.resolve(undefined), // TODO
+      continueServerClient,
     );
 
     const getLlm = async () => {
-      const config = await this.configHandler.loadConfig();
+      const config = await configHandler.loadConfig();
       return config.tabAutocompleteModel;
     };
-    this.completionProvider = new CompletionProvider(
-      this.configHandler,
+    const completionProvider = new CompletionProvider(
+      configHandler,
       ide,
       getLlm,
       (e) => {},
@@ -118,11 +116,11 @@ export class Core {
       deleteModel(msg.data.title);
     });
     on("config/reload", (msg) => {
-      this.configHandler.reloadConfig();
-      return this.configHandler.getSerializedConfig();
+      configHandler.reloadConfig();
+      return configHandler.getSerializedConfig();
     });
     on("config/ideSettingsUpdate", (msg) => {
-      this.configHandler.updateIdeSettings(msg.data);
+      configHandler.updateIdeSettings(msg.data);
     });
 
     // Context providers
@@ -135,15 +133,15 @@ export class Core {
       }
     });
     on("context/loadSubmenuItems", async (msg) => {
-      const config = await this.config();
+      const config = await configHandler.loadConfig();
       const items = config.contextProviders
         ?.find((provider) => provider.description.title === msg.data.title)
-        ?.loadSubmenuItems({ ide: this.ide });
+        ?.loadSubmenuItems({ ide });
       return items || [];
     });
     on("context/getContextItems", async (msg) => {
-      const config = await this.config();
-      const llm = await this.getSelectedModel();
+      const config = await configHandler.loadConfig();
+      const llm = await configHandler.llmFromTitle(this.selectedModelTitle);
       const provider = config.contextProviders?.find(
         (provider) => provider.description.title === msg.data.name,
       );
@@ -173,7 +171,7 @@ export class Core {
     });
 
     on("config/getBrowserSerialized", (msg) => {
-      return this.configHandler.getSerializedConfig();
+      return configHandler.getSerializedConfig();
     });
 
     async function* llmStreamChat(
@@ -201,7 +199,7 @@ export class Core {
     }
 
     on("llm/streamChat", (msg) =>
-      llmStreamChat(this.configHandler, this.abortedMessageIds, msg),
+      llmStreamChat(configHandler, this.abortedMessageIds, msg),
     );
 
     async function* llmStreamComplete(
@@ -230,7 +228,7 @@ export class Core {
     }
 
     on("llm/streamComplete", (msg) =>
-      llmStreamComplete(this.configHandler, this.abortedMessageIds, msg),
+      llmStreamComplete(configHandler, this.abortedMessageIds, msg),
     );
 
     async function* runNodeJsSlashCommand(
@@ -286,21 +284,20 @@ export class Core {
       yield { done: true, content: "" };
     }
     on("command/run", (msg) =>
-      runNodeJsSlashCommand(this.configHandler, this.abortedMessageIds, msg),
+      runNodeJsSlashCommand(configHandler, this.abortedMessageIds, msg),
     );
 
     // Autocomplete
     on("autocomplete/complete", async (msg) => {
-      const outcome =
-        await this.completionProvider.provideInlineCompletionItems(
-          msg.data,
-          undefined,
-        );
+      const outcome = await completionProvider.provideInlineCompletionItems(
+        msg.data,
+        undefined,
+      );
       return outcome ? [outcome.completion] : [];
     });
     on("autocomplete/accept", async (msg) => {});
     on("autocomplete/cancel", async (msg) => {
-      this.completionProvider.cancel();
+      completionProvider.cancel();
     });
 
     async function* streamDiffLinesGenerator(
@@ -330,7 +327,7 @@ export class Core {
     }
 
     on("streamDiffLines", (msg) =>
-      streamDiffLinesGenerator(this.configHandler, this.abortedMessageIds, msg),
+      streamDiffLinesGenerator(configHandler, this.abortedMessageIds, msg),
     );
   }
 

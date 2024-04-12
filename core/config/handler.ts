@@ -1,12 +1,13 @@
 import { ContinueConfig, ContinueRcJson, IDE, ILLM } from "..";
+import { IContinueServerClient } from "../continueServer/interface";
 import { IdeSettings } from "../protocol";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 import { Telemetry } from "../util/posthog";
 import {
   BrowserSerializedContinueConfig,
   finalToBrowserConfig,
   loadFullConfigNode,
 } from "./load";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 
 export class ConfigHandler {
   private savedConfig: ContinueConfig | undefined;
@@ -14,12 +15,11 @@ export class ConfigHandler {
 
   constructor(
     private readonly ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
     private readonly writeLog: (text: string) => void,
-    private readonly onConfigUpdate: () => void
+    private readonly onConfigUpdate: () => void,
+    private readonly continueServerClient: IContinueServerClient,
   ) {
     this.ide = ide;
-    this.ideSettingsPromise = ideSettingsPromise;
     this.writeLog = writeLog;
     this.onConfigUpdate = onConfigUpdate;
     try {
@@ -30,7 +30,6 @@ export class ConfigHandler {
   }
 
   updateIdeSettings(ideSettings: IdeSettings) {
-    this.ideSettingsPromise = Promise.resolve(ideSettings);
     this.reloadConfig();
   }
 
@@ -62,31 +61,31 @@ export class ConfigHandler {
     }
 
     const ideInfo = await this.ide.getIdeInfo();
-    const ideSettings = await this.ideSettingsPromise;
-    let remoteConfigServerUrl = undefined;
-    try {
-      remoteConfigServerUrl =
-        typeof ideSettings.remoteConfigServerUrl !== "string" ||
-        ideSettings.remoteConfigServerUrl === ""
-          ? undefined
-          : new URL(ideSettings.remoteConfigServerUrl);
-    } catch (e) {}
 
     this.savedConfig = await loadFullConfigNode(
       this.ide.readFile,
       workspaceConfigs,
-      remoteConfigServerUrl,
-      ideInfo.ideType
+      this.continueServerClient.url,
+      ideInfo.ideType,
     );
+
+    // Final modifications
+    const userToken = await this.continueServerClient.getUserToken();
+    this.savedConfig.models.forEach((model) => {
+      if (model.providerName === "continue-proxy") {
+        model.apiKey = userToken;
+      }
+    });
+
+    // Setup telemetry only after (and if) we know it is enabled
     this.savedConfig.allowAnonymousTelemetry =
       this.savedConfig.allowAnonymousTelemetry &&
       (await this.ide.isTelemetryEnabled());
 
-    // Setup telemetry only after (and if) we know it is enabled
     await Telemetry.setup(
       this.savedConfig.allowAnonymousTelemetry ?? true,
       await this.ide.getUniqueId(),
-      ideInfo.extensionVersion
+      ideInfo.extensionVersion,
     );
 
     return this.savedConfig;
@@ -97,7 +96,7 @@ export class ConfigHandler {
       const resp = await fetchwithRequestOptions(
         new URL(input),
         { ...init },
-        llm.requestOptions
+        llm.requestOptions,
       );
 
       if (!resp.ok) {
@@ -115,7 +114,7 @@ export class ConfigHandler {
           }
         }
         throw new Error(
-          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`
+          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
         );
       }
 

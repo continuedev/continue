@@ -8,7 +8,7 @@ import {
   IndexTag,
   IndexingProgressUpdate,
 } from "..";
-import { ContinueServerClient } from "../continueServer/stubs/client";
+import { IContinueServerClient } from "../continueServer/interface";
 import { MAX_CHUNK_SIZE } from "../llm/constants";
 import { getBasename } from "../util";
 import { getLanceDbPath } from "../util/paths";
@@ -40,7 +40,7 @@ export class LanceDbIndex implements CodebaseIndex {
   constructor(
     private readonly embeddingsProvider: EmbeddingsProvider,
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly continueServerClient?: ContinueServerClient,
+    private readonly continueServerClient: IContinueServerClient,
   ) {}
 
   private tableNameForTag(tag: IndexTag) {
@@ -173,7 +173,7 @@ export class LanceDbIndex implements CodebaseIndex {
     };
 
     // Check remote cache
-    if (this.continueServerClient !== undefined) {
+    if (this.continueServerClient.connected) {
       try {
         const keys = results.compute.map(({ cacheKey }) => cacheKey);
         const resp = await this.continueServerClient.getFromIndexCache(
