@@ -1,27 +1,44 @@
-import { ContinueRcJson, IDE, IdeInfo, IndexTag, Problem, Range, Thread } from "..";
+import {
+  ContinueRcJson,
+  IDE,
+  IdeInfo,
+  IndexTag,
+  Problem,
+  Range,
+  Thread,
+} from "..";
 
 export class MessageIde implements IDE {
   constructor(
-    private readonly request: (messageType: string, data: any) => Promise<any>
+    private readonly request: (messageType: string, data: any) => Promise<any>,
   ) {}
+
+  getRepoName(dir: string): Promise<string | undefined> {
+    return this.request("getRepoName", { dir });
+  }
+
   getDebugLocals(threadIndex: number): Promise<string> {
     return this.request("getDebugLocals", { threadIndex });
   }
+
   getTopLevelCallStackSources(
     threadIndex: number,
-    stackDepth: number
+    stackDepth: number,
   ): Promise<string[]> {
     return this.request("getTopLevelCallStackSources", {
       threadIndex,
       stackDepth,
     });
   }
+
   getAvailableThreads(): Promise<Thread[]> {
     return this.request("getAvailableThreads", undefined);
   }
+
   getTags(artifactId: string): Promise<IndexTag[]> {
     return this.request("getTags", artifactId);
   }
+
   getIdeInfo(): Promise<IdeInfo> {
     return this.request("getIdeInfo", undefined);
   }
@@ -29,9 +46,11 @@ export class MessageIde implements IDE {
   readRangeInFile(filepath: string, range: Range): Promise<string> {
     return this.request("readRangeInFile", { filepath, range });
   }
+
   getStats(directory: string): Promise<{ [path: string]: number }> {
     throw new Error("Method not implemented.");
   }
+
   isTelemetryEnabled(): Promise<boolean> {
     return this.request("isTelemetryEnabled", undefined);
   }
@@ -63,7 +82,7 @@ export class MessageIde implements IDE {
   async showLines(
     filepath: string,
     startLine: number,
-    endLine: number
+    endLine: number,
   ): Promise<void> {
     return await this.request("showLines", { filepath, startLine, endLine });
   }
@@ -108,7 +127,7 @@ export class MessageIde implements IDE {
   async showDiff(
     filepath: string,
     newContents: string,
-    stepIndex: number
+    stepIndex: number,
   ): Promise<void> {
     await this.request("showDiff", { filepath, newContents, stepIndex });
   }

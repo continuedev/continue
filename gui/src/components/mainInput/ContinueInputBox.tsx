@@ -1,5 +1,5 @@
 import { JSONContent } from "@tiptap/react";
-import { ContextItemWithId } from "core";
+import { ContextItemWithId, InputModifiers } from "core";
 import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
@@ -53,7 +53,7 @@ const GradientBorder = styled.div<{
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;
-  onEnter: (editorState: JSONContent) => void;
+  onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
 
   editorState?: JSONContent;
   contextItems?: ContextItemWithId[];
@@ -66,7 +66,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
   const active = useSelector((store: RootState) => store.state.active);
   const availableSlashCommands = useSelector(selectSlashCommands);
   const availableContextProviders = useSelector(
-    (store: RootState) => store.state.config.contextProviders
+    (store: RootState) => store.state.config.contextProviders,
   );
 
   useWebviewListener(
@@ -78,11 +78,11 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
           setMessageAtIndex({
             message: { role: "user", content: data.prompt },
             index: 0,
-          })
+          }),
         );
       }
     },
-    [props.isMainInput]
+    [props.isMainInput],
   );
 
   return (

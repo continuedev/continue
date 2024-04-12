@@ -1,5 +1,10 @@
 import { ContextItemId, IDE } from "core";
 import { ConfigHandler } from "core/config/handler";
+import {
+  setupLocalMode,
+  setupOptimizedExistingUserMode,
+  setupOptimizedMode,
+} from "core/config/onboarding";
 import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
@@ -7,16 +12,36 @@ import { logDevData } from "core/util/devdata";
 import { DevDataSqliteDb } from "core/util/devdataSqlite";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
-import { getConfigJsonPath } from "core/util/paths";
+import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import {
   ReverseWebviewProtocol,
   WebviewProtocol,
 } from "core/web/webviewProtocol";
+import fs from "fs";
+import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import { showTutorial } from "./activation/activate";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { getExtensionUri } from "./util/vscode";
+
+async function showTutorial() {
+  const tutorialPath = path.join(
+    getExtensionUri().fsPath,
+    "continue_tutorial.py",
+  );
+  // Ensure keyboard shortcuts match OS
+  if (process.platform !== "darwin") {
+    let tutorialContent = fs.readFileSync(tutorialPath, "utf8");
+    tutorialContent = tutorialContent.replace("⌘", "^").replace("Cmd", "Ctrl");
+    fs.writeFileSync(tutorialPath, tutorialContent);
+  }
+
+  const doc = await vscode.workspace.openTextDocument(
+    vscode.Uri.file(tutorialPath),
+  );
+  await vscode.window.showTextDocument(doc);
+}
 
 export class VsCodeWebviewProtocol {
   listeners = new Map<keyof WebviewProtocol, ((message: Message) => any)[]>();
@@ -71,10 +96,12 @@ export class VsCodeWebviewProtocol {
             response &&
             typeof response[Symbol.asyncIterator] === "function"
           ) {
-            for await (const update of response) {
-              respond(update);
+            let next = await response.next();
+            while (!next.done) {
+              respond(next.value);
+              next = await response.next();
             }
-            respond({ done: true });
+            respond({ done: true, content: next.value?.content });
           } else {
             respond(response || {});
           }
@@ -466,6 +493,7 @@ export class VsCodeWebviewProtocol {
         const items = await provider.getContextItems(query, {
           llm,
           embeddingsProvider: config.embeddingsProvider,
+          reranker: config.reranker,
           fullInput,
           ide,
           selectedCode,
@@ -536,6 +564,23 @@ export class VsCodeWebviewProtocol {
       showTutorial();
     });
 
+    this.on("completeOnboarding", (msg) => {
+      const mode = msg.data.mode;
+      Telemetry.capture("onboardingSelection", {
+        mode,
+      });
+      if (mode === "custom" || mode === "localExistingUser") {
+        return;
+      }
+      editConfigJson(
+        mode === "local"
+          ? setupLocalMode
+          : mode === "optimized"
+          ? setupOptimizedMode
+          : setupOptimizedExistingUserMode,
+      );
+    });
+
     this.on("openUrl", (msg) => {
       vscode.env.openExternal(vscode.Uri.parse(msg.data));
     });
@@ -546,6 +591,19 @@ export class VsCodeWebviewProtocol {
     this.on("stats/getTokensPerModel", async (msg) => {
       const rows = await DevDataSqliteDb.getTokensPerModel();
       return rows;
+    });
+    this.on("insertAtCursor", async (msg) => {
+      const editor = vscode.window.activeTextEditor;
+      if (editor === undefined || !editor.selection) {
+        return;
+      }
+
+      editor.edit((editBuilder) => {
+        editBuilder.replace(
+          new vscode.Range(editor.selection.start, editor.selection.end),
+          msg.data.text,
+        );
+      });
     });
   }
 

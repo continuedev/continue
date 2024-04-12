@@ -14,7 +14,7 @@ class GooglePalm extends BaseLLM {
 
   static defaultOptions: Partial<LLMOptions> = {
     model: "gemini-pro",
-    apiBase: "https://generativelanguage.googleapis.com/",
+    apiBase: "https://generativelanguage.googleapis.com/v1beta/",
   };
 
   protected async *_streamComplete(
@@ -83,7 +83,7 @@ class GooglePalm extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const apiURL = new URL(
-      `v1/models/${options.model}:streamGenerateContent?key=${this.apiKey}`,
+      `models/${options.model}:streamGenerateContent?key=${this.apiKey}`,
       this.apiBase,
     );
     const body = {
@@ -161,7 +161,7 @@ class GooglePalm extends BaseLLM {
     }
 
     const apiURL = new URL(
-      `v1beta2/models/${options.model}:generateMessage?key=${this.apiKey}`,
+      `models/${options.model}:generateMessage?key=${this.apiKey}`,
       this.apiBase,
     );
     const body = { prompt: { messages: msgList } };

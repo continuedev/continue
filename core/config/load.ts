@@ -12,6 +12,8 @@ import {
   IContextProvider,
   IdeType,
   ModelDescription,
+  Reranker,
+  RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
 } from "..";
@@ -22,6 +24,8 @@ import {
 import { contextProviderClassFromName } from "../context/providers";
 import CustomContextProviderClass from "../context/providers/CustomContextProvider";
 import FileContextProvider from "../context/providers/FileContextProvider";
+import { AllRerankers } from "../context/rerankers";
+import { LLMReranker } from "../context/rerankers/llm";
 import { AllEmbeddingsProviders } from "../indexing/embeddings";
 import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { BaseLLM } from "../llm";
@@ -267,6 +271,7 @@ async function intermediateToFinalConfig(
     }
   }
 
+  // Embeddings Provider
   if (
     (config.embeddingsProvider as EmbeddingsProviderDescription | undefined)
       ?.provider
@@ -280,12 +285,30 @@ async function intermediateToFinalConfig(
     config.embeddingsProvider = new TransformersJsEmbeddingsProvider();
   }
 
+  // Reranker
+  if (config.reranker && !(config.reranker as Reranker | undefined)?.rerank) {
+    const { name, params } = config.reranker as RerankerDescription;
+    const rerankerClass = AllRerankers[name];
+
+    if (name === "llm") {
+      const llm = models.find((model) => model.title === params?.modelTitle);
+      if (!llm) {
+        console.warn(`Unknown model ${params?.modelTitle}`);
+      } else {
+        config.reranker = new LLMReranker(llm);
+      }
+    } else if (rerankerClass) {
+      config.reranker = new rerankerClass(params);
+    }
+  }
+
   return {
     ...config,
     contextProviders,
     models,
     embeddingsProvider: config.embeddingsProvider as any,
     tabAutocompleteModel: autocompleteLlm,
+    reranker: config.reranker as any,
   };
 }
 

@@ -1,4 +1,5 @@
 import { FileEdit, RangeInFile, Thread } from "core";
+import { defaultIgnoreFile } from "core/indexing/ignore";
 import path from "path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
@@ -10,7 +11,7 @@ import {
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
 } from "../suggestions";
-import { defaultIgnoreFile, traverseDirectory } from "./traverseDirectory";
+import { traverseDirectory } from "./traverseDirectory";
 import {
   getUniqueId,
   openEditorAndRevealRange,
@@ -25,12 +26,12 @@ export class VsCodeIdeUtils {
 
   async gotoDefinition(
     filepath: string,
-    position: vscode.Position
+    position: vscode.Position,
   ): Promise<vscode.Location[]> {
     const locations: vscode.Location[] = await vscode.commands.executeCommand(
       "vscode.executeDefinitionProvider",
       uriFromFilePath(filepath),
-      position
+      position,
     );
     return locations;
   }
@@ -38,25 +39,25 @@ export class VsCodeIdeUtils {
   async documentSymbol(filepath: string): Promise<vscode.DocumentSymbol[]> {
     return await vscode.commands.executeCommand(
       "vscode.executeDocumentSymbolProvider",
-      uriFromFilePath(filepath)
+      uriFromFilePath(filepath),
     );
   }
 
   async references(
     filepath: string,
-    position: vscode.Position
+    position: vscode.Position,
   ): Promise<vscode.Location[]> {
     return await vscode.commands.executeCommand(
       "vscode.executeReferenceProvider",
       uriFromFilePath(filepath),
-      position
+      position,
     );
   }
 
   async foldingRanges(filepath: string): Promise<vscode.FoldingRange[]> {
     return await vscode.commands.executeCommand(
       "vscode.executeFoldingRangeProvider",
-      uriFromFilePath(filepath)
+      uriFromFilePath(filepath),
     );
   }
 
@@ -80,12 +81,12 @@ export class VsCodeIdeUtils {
       rangeInFile.range.start.line,
       rangeInFile.range.start.character,
       rangeInFile.range.end.line,
-      rangeInFile.range.end.character
+      rangeInFile.range.end.character,
     );
     const editor = await openEditorAndRevealRange(
       rangeInFile.filepath,
       range,
-      vscode.ViewColumn.One
+      vscode.ViewColumn.One,
     );
     if (editor) {
       const decorationType = vscode.window.createTextEditorDecorationType({
@@ -100,7 +101,7 @@ export class VsCodeIdeUtils {
             cursorDisposable.dispose();
             editor.setDecorations(decorationType, []);
           }
-        }
+        },
       );
 
       setTimeout(() => {
@@ -123,9 +124,9 @@ export class VsCodeIdeUtils {
         edit.range.start.line,
         edit.range.start.character,
         edit.range.end.line,
-        edit.range.end.character
+        edit.range.end.character,
       ),
-      edit.replacement
+      edit.replacement,
     );
   }
 
@@ -134,7 +135,7 @@ export class VsCodeIdeUtils {
     const panel = vscode.window.createWebviewPanel(
       "continue.continueGUIView",
       "Continue",
-      vscode.ViewColumn.One
+      vscode.ViewColumn.One,
     );
     // panel.webview.html = this.sidebar.getSidebarContent(
     //   extensionContext,
@@ -165,8 +166,8 @@ export class VsCodeIdeUtils {
         vscode.Uri.parse(
           `${
             VsCodeExtension.continueVirtualDocumentScheme
-          }:${encodeURIComponent(name)}?${encodeURIComponent(contents)}`
-        )
+          }:${encodeURIComponent(name)}?${encodeURIComponent(contents)}`,
+        ),
       )
       .then((doc) => {
         vscode.window.showTextDocument(doc, { preview: false });
@@ -248,7 +249,7 @@ export class VsCodeIdeUtils {
 
   async getDirectoryContents(
     directory: string,
-    recursive: boolean
+    recursive: boolean,
   ): Promise<string[]> {
     if (!recursive) {
       return (
@@ -273,7 +274,7 @@ export class VsCodeIdeUtils {
       gitRoot ?? directory,
       [],
       true,
-      gitRoot === directory ? undefined : onlyThisDirectory
+      gitRoot === directory ? undefined : onlyThisDirectory,
     )) {
       allFiles.push(file);
     }
@@ -324,10 +325,10 @@ export class VsCodeIdeUtils {
 
   async readRangeInFile(
     filepath: string,
-    range: vscode.Range
+    range: vscode.Range,
   ): Promise<string> {
     const contents = new TextDecoder().decode(
-      await vscode.workspace.fs.readFile(vscode.Uri.file(filepath))
+      await vscode.workspace.fs.readFile(vscode.Uri.file(filepath)),
     );
     const lines = contents.split("\n");
     return (
@@ -343,20 +344,20 @@ export class VsCodeIdeUtils {
     const tempCopyBuffer = await vscode.env.clipboard.readText();
     if (commands < 0) {
       await vscode.commands.executeCommand(
-        "workbench.action.terminal.selectAll"
+        "workbench.action.terminal.selectAll",
       );
     } else {
       for (let i = 0; i < commands; i++) {
         await vscode.commands.executeCommand(
-          "workbench.action.terminal.selectToPreviousCommand"
+          "workbench.action.terminal.selectToPreviousCommand",
         );
       }
     }
     await vscode.commands.executeCommand(
-      "workbench.action.terminal.copySelection"
+      "workbench.action.terminal.copySelection",
     );
     await vscode.commands.executeCommand(
-      "workbench.action.terminal.clearSelection"
+      "workbench.action.terminal.clearSelection",
     );
     const terminalContents = await vscode.env.clipboard.readText();
     await vscode.env.clipboard.writeText(tempCopyBuffer);
@@ -371,7 +372,7 @@ export class VsCodeIdeUtils {
   private async _getThreads(session: vscode.DebugSession) {
     const threadsResponse = await session.customRequest("threads");
     const threads = threadsResponse.threads.filter((thread: any) =>
-      threadStopped.get(thread.id)
+      threadStopped.get(thread.id),
     );
     threads.sort((a: any, b: any) => a.id - b.id);
     threadsResponse.threads = threads;
@@ -392,7 +393,7 @@ export class VsCodeIdeUtils {
 
     if (!session) {
       vscode.window.showWarningMessage(
-        "No active debug session found, therefore no debug context will be provided for the llm."
+        "No active debug session found, therefore no debug context will be provided for the llm.",
       );
       return "";
     }
@@ -405,12 +406,12 @@ export class VsCodeIdeUtils {
       .then((traceResponse) =>
         session.customRequest("scopes", {
           frameId: traceResponse.stackFrames[0].id,
-        })
+        }),
       )
       .then((scopesResponse) =>
         session.customRequest("variables", {
           variablesReference: scopesResponse.scopes[0].variablesReference,
-        })
+        }),
       );
 
     const variableContext = variablesResponse.variables
@@ -419,7 +420,7 @@ export class VsCodeIdeUtils {
         (acc: any, variable: any) =>
           `${acc}\nname: ${variable.name}, type: ${variable.type}, ` +
           `value: ${variable.value}`,
-        ""
+        "",
       );
 
     return variableContext;
@@ -427,7 +428,7 @@ export class VsCodeIdeUtils {
 
   async getTopLevelCallStackSources(
     threadIndex: number,
-    stackDepth: number = 3
+    stackDepth: number = 3,
   ): Promise<string[]> {
     const session = vscode.debug.activeDebugSession;
     if (!session) return [];
@@ -448,7 +449,7 @@ export class VsCodeIdeUtils {
             const scope = scopeResponse.scopes[0];
 
             return await this.retrieveSource(scope.source ? scope : stackFrame);
-          })
+          }),
       );
 
     return Promise.all(sourcesPromises);
@@ -474,8 +475,8 @@ export class VsCodeIdeUtils {
           sourceContainer.line - 1, // The line number from scope response starts from 1
           sourceContainer.column,
           sourceContainer.endLine - 1,
-          sourceContainer.endColumn
-        )
+          sourceContainer.endColumn,
+        ),
       );
     } else if (sourceContainer.line)
       // fall back to 5 line of context
@@ -485,8 +486,8 @@ export class VsCodeIdeUtils {
           sourceContainer.line - 3,
           0,
           sourceContainer.line + 2,
-          0
-        )
+          0,
+        ),
       );
     else return "unavailable";
   }
@@ -502,17 +503,28 @@ export class VsCodeIdeUtils {
       return undefined;
     }
 
-    const git = extension.exports.getAPI(1);
-    return git.getRepository(forDirectory);
+    try {
+      const git = extension.exports.getAPI(1);
+      return git.getRepository(forDirectory);
+    } catch (e) {
+      this._repoWasNone = true;
+      console.warn("Git not found: ", e);
+      return undefined;
+    }
   }
 
+  private _repoWasNone: boolean = false;
   async getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
     let repo = await this._getRepo(forDirectory);
+
     let i = 0;
     while (!repo?.state?.HEAD?.name) {
+      if (this._repoWasNone) return undefined;
+
       await new Promise((resolve) => setTimeout(resolve, 1000));
       i++;
       if (i >= 20) {
+        this._repoWasNone = true;
         return undefined;
       }
       repo = await this._getRepo(forDirectory);

@@ -1,4 +1,5 @@
 package com.github.continuedev.continueintellijextension.`continue`
+import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
@@ -6,12 +7,15 @@ import java.io.OutputStreamWriter
 import java.io.*
 
 import com.google.gson.Gson
+import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.components.service
+import com.intellij.openapi.project.Project
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 
-class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
+class CoreMessenger(private val project: Project, esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
     private val writer: OutputStreamWriter
     private val reader: BufferedReader
     private val process: Process
@@ -60,6 +64,12 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
             };
         }
 
+        // Forward to webview
+        if (forwardToWebview.contains(messageType)) {
+            val continuePluginService = project.service<ContinuePluginService>()
+            continuePluginService.sendToWebview(messageType, data, messageType)
+        }
+
         // Responses for messageId
         responseListeners[messageId]?.let { listener ->
             listener(data)
@@ -79,7 +89,8 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
     private val generatorTypes = listOf(
             "llm/streamComplete",
             "llm/streamChat",
-            "command/run"
+            "command/run",
+            "streamDiffLines"
     )
 
     private val ideMessageTypes = listOf(
@@ -109,6 +120,11 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
         "getBranch",
         "getIdeInfo",
         "getIdeSettings",
+        "errorPopup"
+    )
+
+    private val forwardToWebview = listOf<String>(
+            "configUpdate"
     )
 
     private fun setPermissions(destination: String) {
@@ -147,7 +163,7 @@ class CoreMessenger(esbuildPath: String, continueCorePath: String, ideProtocolCl
         val outputStream = process.outputStream
         val inputStream = process.inputStream
 
-        writer = OutputStreamWriter(outputStream)
+        writer = OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
         reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
 
         process.onExit().thenRun {

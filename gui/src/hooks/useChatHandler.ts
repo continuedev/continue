@@ -5,6 +5,7 @@ import {
   ChatHistory,
   ChatHistoryItem,
   ChatMessage,
+  InputModifiers,
   LLMReturnValue,
   MessageContent,
   RangeInFile,
@@ -18,7 +19,7 @@ import { useSelector } from "react-redux";
 import resolveEditorContent from "../components/mainInput/resolveInput";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
-  addLogs,
+  addPromptCompletionPair,
   initNewActiveMessage,
   resubmitAtIndex,
   setInactive,
@@ -65,7 +66,9 @@ function useChatHandler(dispatch: Dispatch) {
 
     let returnVal = next.value as LLMReturnValue;
     if (returnVal) {
-      dispatch(addLogs([[returnVal?.prompt, returnVal?.completion]]));
+      dispatch(
+        addPromptCompletionPair([[returnVal?.prompt, returnVal?.completion]]),
+      );
     }
   }
 
@@ -129,7 +132,11 @@ function useChatHandler(dispatch: Dispatch) {
     }
   }
 
-  async function streamResponse(editorState: JSONContent, index?: number) {
+  async function streamResponse(
+    editorState: JSONContent,
+    modifiers: InputModifiers,
+    index?: number,
+  ) {
     try {
       if (typeof index === "number") {
         dispatch(resubmitAtIndex({ index, editorState }));
@@ -138,8 +145,10 @@ function useChatHandler(dispatch: Dispatch) {
       }
 
       // Resolve context providers and construct new history
-      const [contextItems, selectedCode, content] =
-        await resolveEditorContent(editorState);
+      const [contextItems, selectedCode, content] = await resolveEditorContent(
+        editorState,
+        modifiers,
+      );
 
       const message: ChatMessage = {
         role: "user",

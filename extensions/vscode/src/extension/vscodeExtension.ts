@@ -13,6 +13,7 @@ import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
+import { getUserToken } from "../stubs/auth";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -106,20 +107,54 @@ export class VsCodeExtension {
       context.globalState.update("continue.indexingPaused", msg.data);
       indexingPauseToken.paused = msg.data;
     });
+    this.webviewProtocol.on("index/forceReIndex", (msg) => {
+      this.ide
+        .getWorkspaceDirs()
+        .then((dirs) => this.refreshCodebaseIndex(dirs));
+    });
 
     this.diffManager.webviewProtocol = this.webviewProtocol;
+
+    const userTokenPromise: Promise<string | undefined> = new Promise(
+      async (resolve) => {
+        if (
+          remoteConfigServerUrl === null ||
+          remoteConfigServerUrl === undefined ||
+          remoteConfigServerUrl.trim() === ""
+        ) {
+          resolve(undefined);
+          return;
+        }
+        const token = await getUserToken();
+        resolve(token);
+      },
+    );
     this.indexer = new CodebaseIndexer(
       this.configHandler,
       this.ide,
       indexingPauseToken,
+      ideSettings.remoteConfigServerUrl,
+      userTokenPromise,
     );
 
+    if (
+      !(
+        remoteConfigServerUrl === null ||
+        remoteConfigServerUrl === undefined ||
+        remoteConfigServerUrl.trim() === ""
+      )
+    ) {
+      getUserToken().then((token) => {});
+    }
+
     // CodeLens
-    registerAllCodeLensProviders(
+    const verticalDiffCodeLens = registerAllCodeLensProviders(
       context,
       this.diffManager,
-      this.verticalDiffManager.editorToVerticalDiffCodeLens,
+      this.verticalDiffManager.filepathToCodeLens,
     );
+    this.verticalDiffManager.refreshCodeLens =
+      verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
 
     // Tab autocomplete
     const config = vscode.workspace.getConfiguration("continue");
@@ -223,9 +258,17 @@ export class VsCodeExtension {
   static continueVirtualDocumentScheme = "continue";
 
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
+  private indexingCancellationController: AbortController | undefined;
 
   private async refreshCodebaseIndex(dirs: string[]) {
-    for await (const update of this.indexer.refresh(dirs)) {
+    if (this.indexingCancellationController) {
+      this.indexingCancellationController.abort();
+    }
+    this.indexingCancellationController = new AbortController();
+    for await (const update of this.indexer.refresh(
+      dirs,
+      this.indexingCancellationController.signal,
+    )) {
       this.webviewProtocol.request("indexProgress", update);
     }
   }

@@ -1,32 +1,51 @@
 import * as fs from "fs";
-import { ContinueRcJson, IDE, IdeInfo, IndexTag, Problem, Range, Thread } from "..";
+import {
+  ContinueRcJson,
+  IDE,
+  IdeInfo,
+  IndexTag,
+  Problem,
+  Range,
+  Thread,
+} from "..";
 
 import { getContinueGlobalPath } from "./paths";
 
 class FileSystemIde implements IDE {
+  getRepoName(dir: string): Promise<string | undefined> {
+    return Promise.resolve(undefined);
+  }
+
   getTags(artifactId: string): Promise<IndexTag[]> {
     return Promise.resolve([]);
   }
+
   getIdeInfo(): Promise<IdeInfo> {
     return Promise.resolve({
       ideType: "vscode",
       name: "na",
       version: "0.1",
       remoteName: "na",
+      extensionVersion: "na",
     });
   }
+
   readRangeInFile(filepath: string, range: Range): Promise<string> {
     return Promise.resolve("");
   }
+
   getStats(directory: string): Promise<{ [path: string]: number }> {
     return Promise.resolve({});
   }
+
   isTelemetryEnabled(): Promise<boolean> {
     return Promise.resolve(false);
   }
+
   getUniqueId(): Promise<string> {
     return Promise.resolve("NOT_UNIQUE");
   }
+
   getWorkspaceConfigs(): Promise<ContinueRcJson[]> {
     return Promise.resolve([]);
   }
@@ -34,28 +53,34 @@ class FileSystemIde implements IDE {
   getDiff(): Promise<string> {
     return Promise.resolve("");
   }
+
   getTerminalContents(): Promise<string> {
     return Promise.resolve("");
   }
+
   async getDebugLocals(threadIndex: number): Promise<string> {
     return Promise.resolve("");
   }
+
   async getTopLevelCallStackSources(
     threadIndex: number,
-    stackDepth: number
+    stackDepth: number,
   ): Promise<string[]> {
     return Promise.resolve([]);
   }
+
   async getAvailableThreads(): Promise<Thread[]> {
     return Promise.resolve([]);
   }
+
   showLines(
     filepath: string,
     startLine: number,
-    endLine: number
+    endLine: number,
   ): Promise<void> {
     return Promise.resolve();
   }
+
   listWorkspaceContents(): Promise<string[]> {
     return new Promise((resolve, reject) => {
       fs.readdir("/tmp/continue", (err, files) => {
@@ -66,6 +91,7 @@ class FileSystemIde implements IDE {
       });
     });
   }
+
   getWorkspaceDirs(): Promise<string[]> {
     return new Promise((resolve, reject) => {
       fs.mkdtemp("/tmp/continue", (err, folder) => {
@@ -76,9 +102,11 @@ class FileSystemIde implements IDE {
       });
     });
   }
+
   listFolders(): Promise<string[]> {
     return Promise.resolve([]);
   }
+
   writeFile(path: string, contents: string): Promise<void> {
     return new Promise((resolve, reject) => {
       fs.writeFile(path, contents, (err) => {
@@ -89,21 +117,27 @@ class FileSystemIde implements IDE {
       });
     });
   }
+
   showVirtualFile(title: string, contents: string): Promise<void> {
     return Promise.resolve();
   }
+
   getContinueDir(): Promise<string> {
     return Promise.resolve(getContinueGlobalPath());
   }
+
   openFile(path: string): Promise<void> {
     return Promise.resolve();
   }
+
   runCommand(command: string): Promise<void> {
     return Promise.resolve();
   }
+
   saveFile(filepath: string): Promise<void> {
     return Promise.resolve();
   }
+
   readFile(filepath: string): Promise<string> {
     return new Promise((resolve, reject) => {
       fs.readFile(filepath, "utf8", (err, contents) => {
@@ -114,10 +148,11 @@ class FileSystemIde implements IDE {
       });
     });
   }
+
   showDiff(
     filepath: string,
     newContents: string,
-    stepIndex: number
+    stepIndex: number,
   ): Promise<void> {
     return Promise.resolve();
   }

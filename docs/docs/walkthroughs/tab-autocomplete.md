@@ -78,6 +78,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 - `multilineCompletions`: Whether to enable multiline completions ("always", "never", or "auto"). Defaults to "auto".
 - `useCache`: Whether to cache and reuse completions when the prompt is the same as a previous one. May be useful to disable for testing purposes.
 - `useOtherFiles`: Whether to include context from files outside of the current one. Turning this off should be expected to reduce the accuracy of completions, but might be good for testing.
+- `disable`: Disable autocomplete (can also be done from IDE settings)
 
 ### Full example
 

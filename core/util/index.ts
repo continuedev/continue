@@ -1,6 +1,3 @@
-import Handlebars from "handlebars";
-import { ChatMessage } from "..";
-
 export function removeQuotesAndEscapes(output: string): string {
   output = output.trim();
 
@@ -92,34 +89,6 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
-export type PromptTemplate =
-  | string
-  | ((
-      history: ChatMessage[],
-      otherData: Record<string, string>,
-    ) => string | ChatMessage[]);
-
-export function renderPromptTemplate(
-  template: PromptTemplate,
-  history: ChatMessage[],
-  otherData: Record<string, string>,
-): string | ChatMessage[] {
-  if (typeof template === "string") {
-    let data: any = {
-      history: history,
-      ...otherData,
-    };
-    if (history.length > 0 && history[0].role == "system") {
-      data["system_message"] = history.shift()!.content;
-    }
-
-    const compiledTemplate = Handlebars.compile(template);
-    return compiledTemplate(data);
-  } else {
-    return template(history, otherData);
-  }
-}
-
 export function getBasename(filepath: string, n: number = 1): string {
   return filepath.split(/[\\/]/).pop() ?? "";
 }
@@ -189,4 +158,19 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
 export function copyOf(obj: any): any {
   if (obj === null || obj === undefined) return obj;
   return JSON.parse(JSON.stringify(obj));
+}
+
+export function deduplicateArray<T>(
+  array: T[],
+  equal: (a: T, b: T) => boolean,
+): T[] {
+  const result: T[] = [];
+
+  for (const item of array) {
+    if (!result.some((existingItem) => equal(existingItem, item))) {
+      result.push(item);
+    }
+  }
+
+  return result;
 }

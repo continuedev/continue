@@ -43,6 +43,14 @@ export interface LLMReturnValue {
   prompt: string;
   completion: string;
 }
+
+export type PromptTemplate =
+  | string
+  | ((
+      history: ChatMessage[],
+      otherData: Record<string, string>,
+    ) => string | ChatMessage[]);
+
 export interface ILLM extends LLMOptions {
   get providerName(): ModelProvider;
 
@@ -90,7 +98,18 @@ export interface ILLM extends LLMOptions {
 
   supportsImages(): boolean;
 
+  supportsCompletions(): boolean;
+
+  supportsPrefill(): boolean;
+
   listModels(): Promise<string[]>;
+
+  renderPromptTemplate(
+    template: PromptTemplate,
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+    canPutWordsInModelsMouth?: boolean,
+  ): string | ChatMessage[];
 }
 
 export type ContextProviderType = "normal" | "query" | "submenu";
@@ -106,6 +125,7 @@ export interface ContextProviderDescription {
 export interface ContextProviderExtras {
   fullInput: string;
   embeddingsProvider: EmbeddingsProvider;
+  reranker: Reranker | undefined;
   llm: ILLM;
   ide: IDE;
   selectedCode: RangeInFile[];
@@ -231,9 +251,14 @@ export interface ContextItemWithId {
   editable?: boolean;
 }
 
+export interface InputModifiers {
+  useCodebase: boolean;
+}
+
 export interface ChatHistoryItem {
   message: ChatMessage;
   editorState?: any;
+  modifiers?: InputModifiers;
   contextItems: ContextItemWithId[];
   promptLogs?: [string, string][]; // [prompt, completion]
 }
@@ -243,7 +268,6 @@ export type ChatHistory = ChatHistoryItem[];
 // LLM
 
 export interface LLMFullCompletionOptions extends BaseCompletionOptions {
-  raw?: boolean;
   log?: boolean;
 
   model?: string;
@@ -264,6 +288,8 @@ export interface LLMOptions {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+
+  useLegacyCompletionsEndpoint?: boolean;
 
   // Azure options
   engine?: string;
@@ -331,11 +357,15 @@ export interface IdeInfo {
   name: string;
   version: string;
   remoteName: string;
+  extensionVersion: string;
 }
 
-export interface IndexTag {
-  directory: string;
+export interface BranchAndDir {
   branch: string;
+  directory: string;
+}
+
+export interface IndexTag extends BranchAndDir {
   artifactId: string;
 }
 
@@ -381,6 +411,7 @@ export interface IDE {
   getBranch(dir: string): Promise<string>;
   getStats(directory: string): Promise<{ [path: string]: number }>;
   getTags(artifactId: string): Promise<IndexTag[]>;
+  getRepoName(dir: string): Promise<string | undefined>;
 }
 
 // Slash Commands
@@ -430,7 +461,6 @@ type ContextProviderName =
   | "open"
   | "google"
   | "search"
-  | "url"
   | "tree"
   | "http"
   | "codebase"
@@ -479,7 +509,8 @@ type ModelProvider =
   | "mistral"
   | "bedrock"
   | "deepinfra"
-  | "flowise";
+  | "flowise"
+  | "groq";
 
 export type ModelName =
   | "AUTODETECT"
@@ -496,6 +527,7 @@ export type ModelName =
   | "mistral-8x7b"
   | "llama2-7b"
   | "llama2-13b"
+  | "llama2-70b"
   | "codellama-7b"
   | "codellama-13b"
   | "codellama-34b"
@@ -520,6 +552,7 @@ export type ModelName =
   | "chat-bison-001"
   // Gemini
   | "gemini-pro"
+  | "gemini-1.5-pro-latest"
   // Mistral
   | "mistral-tiny"
   | "mistral-small"
@@ -528,6 +561,7 @@ export type ModelName =
   | "deepseek-1b"
   | "starcoder-1b"
   | "starcoder-3b"
+  | "starcoder2-3b"
   | "stable-code-3b";
 
 export interface RequestOptions {
@@ -573,6 +607,8 @@ interface BaseCompletionOptions {
   maxTokens?: number;
   numThreads?: number;
   keepAlive?: number;
+  raw?: boolean;
+  stream?: boolean;
 }
 
 export interface ModelDescription {
@@ -589,7 +625,11 @@ export interface ModelDescription {
   promptTemplates?: { [key: string]: string };
 }
 
-export type EmbeddingsProviderName = "transformers.js" | "ollama" | "openai";
+export type EmbeddingsProviderName =
+  | "transformers.js"
+  | "ollama"
+  | "openai"
+  | "free-trial";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -606,7 +646,20 @@ export interface EmbeddingsProvider {
   embed(chunks: string[]): Promise<number[][]>;
 }
 
+export type RerankerName = "voyage" | "llm" | "free-trial";
+
+export interface RerankerDescription {
+  name: RerankerName;
+  params?: { [key: string]: any };
+}
+
+export interface Reranker {
+  name: string;
+  rerank(query: string, chunks: Chunk[]): Promise<number[]>;
+}
+
 export interface TabAutocompleteOptions {
+  disable: boolean;
   useCopyBuffer: boolean;
   useSuffix: boolean;
   maxPromptTokens: number;
@@ -628,6 +681,17 @@ export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
 }
 
+interface ContextMenuConfig {
+  comment?: string;
+  docstring?: string;
+  fix?: string;
+  optimize?: string;
+  fixGrammar?: string;
+}
+interface ExperimantalConfig {
+  contextMenuPrompts?: ContextMenuConfig;
+}
+
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
@@ -644,6 +708,8 @@ export interface SerializedContinueConfig {
   tabAutocompleteModel?: ModelDescription;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
+  reranker?: RerankerDescription;
+  experimental?: ExperimantalConfig;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -684,6 +750,10 @@ export interface Config {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
   ui?: ContinueUIConfig;
+  /** Options for the reranker */
+  reranker?: RerankerDescription | Reranker;
+  /** Experimental configuration */
+  experimental?: ExperimantalConfig;
 }
 
 export interface ContinueConfig {
@@ -700,6 +770,8 @@ export interface ContinueConfig {
   tabAutocompleteModel?: ILLM;
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
+  reranker?: Reranker;
+  experimental?: ExperimantalConfig;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -714,4 +786,6 @@ export interface BrowserSerializedContinueConfig {
   userToken?: string;
   embeddingsProvider?: string;
   ui?: ContinueUIConfig;
+  reranker?: RerankerDescription;
+  experimental?: ExperimantalConfig;
 }

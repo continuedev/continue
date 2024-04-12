@@ -24,6 +24,13 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
   },
 };
 
+const codegemmaFimTemplate: AutocompleteTemplate = {
+  template: "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
+  completionOptions: {
+    stop: ["<|fim_prefix|>", "<|fim_suffix|>", "<|fim_middle|>", "<|file_separator|>", "<end_of_turn>", "<eos>"],
+  },
+};
+
 // https://arxiv.org/pdf/2402.19173.pdf section 5.1
 const starcoder2FimTemplate: AutocompleteTemplate = {
   template: (
@@ -79,12 +86,11 @@ const deepseekFimTemplateWrongPipeChar: AutocompleteTemplate = {
 };
 
 const gptAutocompleteTemplate: AutocompleteTemplate = {
-  template: `Your task is to complete the line at the end of this code block:
-\`\`\`
-{{{prefix}}}
+  template: `\`\`\`
+{{{prefix}}}[BLANK]{{{suffix}}}
 \`\`\`
 
-The last line is incomplete, and you should provide the rest of that line. If the line is already complete, just return a new line. Otherwise, DO NOT provide explanation, a code block, or extra whitespace, just the code that should be added to the last line to complete it:`,
+Fill in the blank to complete the code block. Your response should include only the code to replace [BLANK], without surrounding backticks.`,
   completionOptions: { stop: ["\n"] },
 };
 
@@ -105,6 +111,10 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     return stableCodeFimTemplate;
   }
 
+  if (lowerCaseModel.includes("codegemma")) {
+    return codegemmaFimTemplate;
+  }
+
   if (lowerCaseModel.includes("codellama")) {
     return codeLlamaFimTemplate;
   }
@@ -113,7 +123,11 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     return deepseekFimTemplate;
   }
 
-  if (lowerCaseModel.includes("gpt") || lowerCaseModel.includes("davinci-002")) {
+  if (
+    lowerCaseModel.includes("gpt") ||
+    lowerCaseModel.includes("davinci-002") ||
+    lowerCaseModel.includes("claude")
+  ) {
     return gptAutocompleteTemplate;
   }
 

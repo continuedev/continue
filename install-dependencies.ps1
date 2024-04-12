@@ -96,8 +96,8 @@ npm run package
 Pop-Location
 
 
-Write-Output "`nInstalling pkg dependencies..." -ForegroundColor White
-Push-Location pkg
+Write-Output "`nInstalling binary dependencies..." -ForegroundColor White
+Push-Location binary
 
 npm install
 npm run build

@@ -31,7 +31,7 @@ async function executeGotoProvider(
     }));
 }
 
-async function getDefinitionsForNode(
+export async function getDefinitionsForNode(
   uri: string,
   node: Parser.SyntaxNode,
 ): Promise<RangeInFile[]> {

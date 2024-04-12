@@ -31,7 +31,8 @@ class Anthropic extends BaseLLM {
       temperature: options.temperature,
       max_tokens: options.maxTokens ?? 2048,
       model: options.model === "claude-2" ? "claude-2.1" : options.model,
-      stop_sequences: options.stop,
+      stop_sequences: options.stop?.filter((x) => x.trim() !== ""),
+      stream: options.stream ?? true,
     };
 
     return finalOptions;
@@ -92,9 +93,14 @@ class Anthropic extends BaseLLM {
         ...this._convertArgs(options),
         messages: this._convertMessages(messages),
         system: this.systemMessage,
-        stream: true,
       }),
     });
+
+    if (options.stream === false) {
+      const data = await response.json();
+      yield { role: "assistant", content: data.content[0].text };
+      return;
+    }
 
     for await (const value of streamSse(response)) {
       if (value.delta?.text) {

@@ -8,6 +8,7 @@ import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
 import {
   ContextItemWithId,
   ContextProviderDescription,
+  InputModifiers,
   RangeInFile,
 } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
@@ -122,7 +123,7 @@ interface TipTapEditorProps {
   availableContextProviders: ContextProviderDescription[];
   availableSlashCommands: ComboBoxItem[];
   isMainInput: boolean;
-  onEnter: (editorState: JSONContent) => void;
+  onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
 
   editorState?: JSONContent;
 }
@@ -249,12 +250,12 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return false;
               }
 
-              onEnterRef.current();
+              onEnterRef.current({ useCodebase: false });
               return true;
             },
 
             "Cmd-Enter": () => {
-              onEnterRef.current();
+              onEnterRef.current({ useCodebase: true });
               return true;
             },
 
@@ -349,20 +350,23 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
   });
 
-  const onEnterRef = useUpdatingRef(() => {
-    const json = editor.getJSON();
+  const onEnterRef = useUpdatingRef(
+    (modifiers: InputModifiers) => {
+      const json = editor.getJSON();
 
-    // Don't do anything if input box is empty
-    if (!json.content?.some((c) => c.content)) {
-      return;
-    }
+      // Don't do anything if input box is empty
+      if (!json.content?.some((c) => c.content)) {
+        return;
+      }
 
-    props.onEnter(json);
+      props.onEnter(json, modifiers);
 
-    if (props.isMainInput) {
-      editor.commands.clearContent(true);
-    }
-  }, [props.onEnter, editor, props.isMainInput]);
+      if (props.isMainInput) {
+        editor.commands.clearContent(true);
+      }
+    },
+    [props.onEnter, editor, props.isMainInput],
+  );
 
   // This is a mechanism for overriding the IDE keyboard shortcut when inside of the webview
   const [ignoreHighlightedCode, setIgnoreHighlightedCode] = useState(false);
@@ -392,7 +396,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   // Re-focus main input after done generating
   const active = useSelector((state: RootState) => state.state.active);
   useEffect(() => {
-    if (editor && !active && props.isMainInput) {
+    if (editor && !active && props.isMainInput && document.hasFocus()) {
       editor.commands.focus();
     }
   }, [props.isMainInput, active, editor]);
@@ -405,10 +409,14 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
       editor?.commands.insertContent(data.input);
-      onEnterRef.current();
+      onEnterRef.current({ useCodebase: false });
     },
     [editor, onEnterRef.current, props.isMainInput],
   );
+
+  useWebviewListener("jetbrains/editorInsetRefresh", async () => {
+    editor?.chain().clearContent().focus().run();
+  });
 
   useWebviewListener(
     "focusContinueInput",

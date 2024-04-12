@@ -75,6 +75,7 @@ function HelpPage() {
         <TutorialButton
           onClick={() => {
             postToIde("showTutorial", undefined);
+            // navigate("/onboarding");
           }}
         >
           Open tutorial

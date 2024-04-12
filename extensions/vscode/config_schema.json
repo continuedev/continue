@@ -6,6 +6,12 @@
       "title": "BaseCompletionOptions",
       "type": "object",
       "properties": {
+        "stream": {
+          "title": "Stream",
+          "description": "Whether to stream the LLM response. Currently only respected by the 'anthropic' provider. Otherwise will always stream.",
+          "type": "boolean",
+          "default": true
+        },
         "temperature": {
           "title": "Temperature",
           "description": "The temperature of the completion.",
@@ -128,6 +134,7 @@
             "openai",
             "free-trial",
             "anthropic",
+            "bedrock",
             "together",
             "ollama",
             "huggingface-tgi",
@@ -139,12 +146,14 @@
             "llamafile",
             "mistral",
             "deepinfra",
-            "flowise"
+            "flowise",
+            "groq"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/openai)",
             "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/freetrial)",
             "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/anthropicllm)",
+            "### Bedrock\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock/claude/)",
             "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/togetherllm)",
             "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/ollama)",
             "### Huggingface TGI\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/huggingfacetgi)",
@@ -430,6 +439,7 @@
                   "claude-3-opus-20240229",
                   "claude-3-sonnet-20240229",
                   "claude-3-haiku-20240307",
+                  "starcoder-7b",
                   "AUTODETECT"
                 ]
               }
@@ -484,6 +494,7 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
+                      "starcoder2-3b",
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",
@@ -533,6 +544,34 @@
           "if": {
             "properties": {
               "provider": {
+                "enum": ["bedrock"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "claude-3-sonnet-20240229",
+                      "claude-3-haiku-20240307",
+                      "claude-2"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
                 "enum": ["google-palm"]
               }
             },
@@ -541,7 +580,11 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["chat-bison-001", "gemini-pro"]
+                "enum": [
+                  "chat-bison-001",
+                  "gemini-pro",
+                  "gemini-1.5-pro-latest"
+                ]
               }
             }
           }
@@ -639,7 +682,8 @@
                       "deepseek-1b",
                       "stable-code-3b",
                       "starcoder-1b",
-                      "starcoder-3b"
+                      "starcoder-3b",
+                      "starcoder2-3b"
                     ]
                   },
                   {
@@ -686,6 +730,7 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
+                      "starcoder2-3b",
                       "AUTODETECT"
                     ]
                   },
@@ -711,6 +756,23 @@
             "properties": {
               "model": {
                 "enum": ["mistral-tiny", "mistral-small", "mistral-medium"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["groq"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["llama2-70b", "mistral-8x7b", "gemma"]
               }
             }
           }
@@ -870,13 +932,15 @@
                       "claude-2.1",
                       "chat-bison-001",
                       "gemini-pro",
+                      "gemini-1.5-pro-latest",
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",
                       "deepseek-1b",
                       "stable-code-3b",
                       "starcoder-1b",
-                      "starcoder-3b"
+                      "starcoder-3b",
+                      "starcoder2-3b"
                     ]
                   },
                   {
@@ -932,7 +996,8 @@
                 "edit",
                 "comment",
                 "http",
-                "commit"
+                "commit",
+                "review"
               ],
               "type": "string",
               "markdownEnumDescriptions": [
@@ -943,7 +1008,8 @@
                 "Edit the highlighted code with given instructions",
                 "Add comments to the highlighted code",
                 "Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
-                "Generate a commit message for the current changes"
+                "Generate a commit message for the current changes",
+                "Review code and give feedback"
               ]
             },
             {
@@ -1314,9 +1380,26 @@
                   "apiVersion": {
                     "type": "integer",
                     "markdownDescription": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property."
+                  },
+                  "requestOptions": {
+                    "title": "Request Options",
+                    "description": "Options for the HTTPS request to Jira.",
+                    "default": {
+                      "timeout": 7200,
+                      "verifySsl": null,
+                      "caBundlePath": null,
+                      "proxy": null,
+                      "headers": null,
+                      "extraBodyProperties": null
+                    },
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/RequestOptions"
+                      }
+                    ]
                   }
                 },
-                "required": ["domain", "email", "token"]
+                "required": ["domain", "token"]
               }
             },
             "required": ["params"]
@@ -1559,7 +1642,7 @@
           "type": "object",
           "properties": {
             "provider": {
-              "enum": ["transformers.js", "ollama", "openai"]
+              "enum": ["transformers.js", "ollama", "openai", "free-trial"]
             },
             "model": {
               "type": "string"
@@ -1588,9 +1671,74 @@
             }
           ]
         },
+        "reranker": {
+          "title": "Reranker",
+          "markdownDescription": "The reranker is responsible for selecting the final results when retrieving snippets from your codebase.",
+          "type": "object",
+          "properties": {
+            "name": {
+              "enum": ["voyage", "llm", "free-trial"]
+            },
+            "params": {
+              "type": "object"
+            }
+          },
+          "required": ["name"],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["llm"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "modelTitle": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["modelTitle"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["voyage"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "apiKey": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "enum": ["rerank-lite-1"]
+                      }
+                    },
+                    "required": ["apiKey"]
+                  }
+                }
+              }
+            }
+          ]
+        },
         "tabAutocompleteModel": {
           "title": "Tab Autocomplete Model",
-          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder:3b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder2:3b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
           "default": {
             "title": "Tab Autocomplete Model",
             "provider": "ollama",
@@ -1603,6 +1751,11 @@
           "type": "object",
           "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://continue.dev/docs/walkthroughs/tab-autocomplete#configuration-options).",
           "properties": {
+            "disable": {
+              "type": "boolean",
+              "description": "Disable tab autocomplete. This can also be done from the IDE settings.",
+              "default": false
+            },
             "useCopyBuffer": {
               "type": "boolean",
               "description": "Determines whether the copy buffer will be considered when contructing the prompt."
@@ -1649,6 +1802,48 @@
             }
           },
           "required": []
+        },
+        "ui": {
+          "type": "object",
+          "properties": {
+            "codeBlockToolbarPosition": {
+              "enum": ["top", "bottom"],
+              "default": "top",
+              "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
+            }
+          }
+        },
+        "experimental": {
+          "type": "object",
+          "title": "Experimental",
+          "description": "Experimental properties are subject to change.",
+          "properties": {
+            "contextMenuPrompts": {
+              "type": "object",
+              "properties": {
+                "comment": {
+                  "type": "string",
+                  "default": "Write comments for this code. Do not change anything about the code itself."
+                },
+                "docstring": {
+                  "type": "string",
+                  "default": "Write a docstring for this code. Do not change anything about the code itself."
+                },
+                "fix": {
+                  "type": "string",
+                  "default": "Fix this code"
+                },
+                "optimize": {
+                  "type": "string",
+                  "default": "Optimize this code"
+                },
+                "fixGrammar": {
+                  "type": "string",
+                  "default": "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing."
+                }
+              }
+            }
+          }
         }
       }
     }

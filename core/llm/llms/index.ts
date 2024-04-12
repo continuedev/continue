@@ -14,6 +14,7 @@ import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
 import GooglePalm from "./GooglePalm";
+import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
 import LMStudio from "./LMStudio";
@@ -94,6 +95,7 @@ const LLMs = [
   DeepInfra,
   OpenAIFreeTrial,
   Flowise,
+  Groq,
 ];
 
 export async function llmFromDescription(
@@ -123,13 +125,13 @@ export async function llmFromDescription(
     completionOptions: {
       ...finalCompletionOptions,
       model: (desc.model || cls.defaultOptions?.model) ?? "codellama-7b",
-      maxTokens: (
+      maxTokens:
         finalCompletionOptions.maxTokens ??
-        cls.defaultOptions?.completionOptions?.maxTokens
-      ) ?? DEFAULT_MAX_TOKENS,
+        cls.defaultOptions?.completionOptions?.maxTokens ??
+        DEFAULT_MAX_TOKENS,
     },
     systemMessage,
-};
+  };
 
   return new cls(options);
 }

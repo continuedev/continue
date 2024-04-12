@@ -39,6 +39,12 @@ const CHAT_ONLY_MODELS = [
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint = false;
 
+  constructor(options: LLMOptions) {
+    super(options);
+    this.useLegacyCompletionsEndpoint =
+      options.useLegacyCompletionsEndpoint ?? false;
+  }
+
   static providerName: ModelProvider = "openai";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.openai.com/v1/",
@@ -65,10 +71,15 @@ class OpenAI extends BaseLLM {
     };
   }
 
+  protected _convertModelName(model: string): string {
+    return model;
+  }
+
   protected _convertArgs(options: any, messages: ChatMessage[]) {
+    const url = new URL(this.apiBase!);
     const finalOptions = {
       messages: messages.map(this._convertMessage),
-      model: options.model,
+      model: this._convertModelName(options.model),
       max_tokens: options.maxTokens,
       temperature: options.temperature,
       top_p: options.topP,
@@ -76,7 +87,9 @@ class OpenAI extends BaseLLM {
       presence_penalty: options.presencePenalty,
       stop:
         // Jan + Azure OpenAI don't truncate and will throw an error
-        this.apiBase?.includes(":1337") || this.apiType === "azure"
+        url.port === "1337" ||
+        url.host === "api.openai.com" ||
+        this.apiType === "azure"
           ? options.stop?.slice(0, 4)
           : options.stop,
     };
@@ -164,8 +177,10 @@ class OpenAI extends BaseLLM {
   ): AsyncGenerator<ChatMessage> {
     if (
       !CHAT_ONLY_MODELS.includes(options.model) &&
+      this.supportsCompletions() &&
       (NON_CHAT_MODELS.includes(options.model) ||
-        this.useLegacyCompletionsEndpoint)
+        this.useLegacyCompletionsEndpoint ||
+        options.raw)
     ) {
       for await (const content of this._legacystreamComplete(
         stripImages(messages[messages.length - 1]?.content || ""),

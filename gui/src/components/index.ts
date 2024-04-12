@@ -7,6 +7,7 @@ export const VSC_INPUT_BACKGROUND_VAR = "--vscode-input-background";
 export const VSC_BACKGROUND_VAR = "--vscode-sideBar-background";
 export const VSC_FOREGROUND_VAR = "--vscode-editor-foreground";
 export const VSC_BUTTON_BACKGROUND_VAR = "--vscode-button-background";
+export const VSC_BUTTON_FOREGROUND_VAR = "--vscode-button-foreground";
 export const VSC_EDITOR_BACKGROUND_VAR = "--vscode-editor-background";
 export const VSC_LIST_SELECTION_BACKGROUND_VAR =
   "--vscode-list-activeSelectionBackground";
@@ -25,6 +26,7 @@ export const VSC_THEME_COLOR_VARS = [
   VSC_BACKGROUND_VAR,
   VSC_FOREGROUND_VAR,
   VSC_BUTTON_BACKGROUND_VAR,
+  VSC_BUTTON_FOREGROUND_VAR,
   VSC_EDITOR_BACKGROUND_VAR,
   VSC_LIST_SELECTION_BACKGROUND_VAR,
   VSC_FOCUS_BORDER,
@@ -46,6 +48,7 @@ export const vscQuickInputBackground = `var(${VSC_QUICK_INPUT_BACKGROUND_VAR}, $
 export const vscBackground = `var(${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
 export const vscForeground = `var(${VSC_FOREGROUND_VAR}, #fff)`;
 export const vscButtonBackground = `var(${VSC_BUTTON_BACKGROUND_VAR}, #1bbe84)`;
+export const vscButtonForeground = `var(${VSC_BUTTON_FOREGROUND_VAR}, #ffffff)`;
 export const vscEditorBackground = `var(${VSC_EDITOR_BACKGROUND_VAR}, ${VSC_BACKGROUND_VAR}, rgb(30 30 30))`;
 export const vscListActiveBackground = `var(${VSC_LIST_SELECTION_BACKGROUND_VAR}, #1bbe84)`;
 export const vscFocusBorder = `var(${VSC_FOCUS_BORDER}, #1bbe84)`;
@@ -132,6 +135,7 @@ export const Button = styled.button`
 
   &:hover:enabled {
     cursor: pointer;
+    filter: brightness(1.2);
   }
 `;
 

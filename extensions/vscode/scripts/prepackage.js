@@ -4,11 +4,55 @@ const ncp = require("ncp").ncp;
 const path = require("path");
 const { rimrafSync } = require("rimraf");
 
+// Clear folders that will be packaged to ensure clean slate
+rimrafSync(path.join(__dirname, "bin"));
+rimrafSync(path.join(__dirname, "out"));
+
+// Get the target to package for
 let target = undefined;
 const args = process.argv;
 if (args[2] === "--target") {
   target = args[3];
 }
+
+let os;
+let arch;
+if (!target) {
+  os = {
+    aix: "linux",
+    darwin: "darwin",
+    freebsd: "linux",
+    linux: "linux",
+    openbsd: "linux",
+    sunos: "linux",
+    win32: "win32",
+  }[process.platform];
+  arch = {
+    arm: "arm64",
+    arm64: "arm64",
+    ia32: "x64",
+    loong64: "arm64",
+    mips: "arm64",
+    mipsel: "arm64",
+    ppc: "x64",
+    ppc64: "x64",
+    riscv64: "arm64",
+    s390: "x64",
+    s390x: "x64",
+    x64: "x64",
+  }[process.arch];
+}
+
+if (os === "alpine") {
+  os = "linux";
+}
+if (arch === "armhf") {
+  arch = "arm64";
+}
+target = `${os}-${arch}`;
+console.log("[info] Using target: ", target);
+
+const exe = os === "win32" ? ".exe" : "";
 
 (async () => {
   console.log("[info] Packaging extension for target ", target);
@@ -47,12 +91,12 @@ if (args[2] === "--target") {
   }
 
   // Install node_modules //
-  execSync("npm install");
+  execSync("npm install --no-save");
   console.log("[info] npm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execSync("npm install");
+  execSync("npm install --no-save");
   console.log("[info] npm install in gui completed");
 
   if (ghAction()) {
@@ -124,35 +168,6 @@ if (args[2] === "--target") {
   // Copy over native / wasm modules //
   process.chdir("../extensions/vscode");
 
-  // If target doesn't exist, but the bin folder also doesn't, we want to download it once, to help set up the dev environment
-  if (!target) {
-    const os = {
-      aix: "linux",
-      darwin: "darwin",
-      freebsd: "linux",
-      linux: "linux",
-      openbsd: "linux",
-      sunos: "linux",
-      win32: "win32",
-    }[process.platform];
-    const arch = {
-      arm: "arm64",
-      arm64: "arm64",
-      ia32: "x64",
-      loong64: "arm64",
-      mips: "arm64",
-      mipsel: "arm64",
-      ppc: "x64",
-      ppc64: "x64",
-      riscv64: "arm64",
-      s390: "x64",
-      s390x: "x64",
-      x64: "x64",
-    }[process.arch];
-
-    target = `${os}-${arch}`;
-    console.log("[info] Detected target: ", target);
-  }
   fs.mkdirSync("bin", { recursive: true });
 
   // onnxruntime-node
@@ -257,7 +272,7 @@ if (args[2] === "--target") {
   }
 
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-  if (ghAction() && isArm()) {
+  if (isArm()) {
     // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
     if (!isWin()) {
       // lancedb binary
@@ -348,4 +363,124 @@ if (args[2] === "--target") {
     "node_modules/jsdom/lib/jsdom/living/xhr/xhr-sync-worker.js",
     "out/xhr-sync-worker.js",
   );
+
+  // Validate the all of the necessary files are present
+  validateFilesPresent();
 })();
+
+function validateFilesPresent() {
+  // This script verifies after pacakging that necessary files are in the correct locations
+  // In many cases just taking a sample file from the folder when they are all roughly the same thing
+
+  const pathsToVerify = [
+    // Queries used to create the index for @code context provider
+    "tree-sitter/code-snippet-queries/tree-sitter-c_sharp-tags.scm",
+
+    // Queries used for @outline and @highlights context providers
+    "tag-qry/tree-sitter-c_sharp-tags.scm",
+
+    // onnx runtime bindngs
+    `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
+    `bin/napi-v3/${os}/${arch}/${
+      os === "darwin"
+        ? "libonnxruntime.1.14.0.dylib"
+        : os === "linux"
+        ? "libonnxruntime.so.1.14.0"
+        : "onnxruntime.dll"
+    }`,
+    "builtin-themes/dark_modern.json",
+
+    // Code/styling for the sidebar
+    "gui/assets/index.js",
+    "gui/assets/index.css",
+
+    // Tutorial
+    "media/welcome.md",
+    "continue_tutorial.py",
+    "config_schema.json",
+
+    // Embeddings model
+    "models/all-MiniLM-L6-v2/config.json",
+    "models/all-MiniLM-L6-v2/special_tokens_map.json",
+    "models/all-MiniLM-L6-v2/tokenizer_config.json",
+    "models/all-MiniLM-L6-v2/tokenizer.json",
+    "models/all-MiniLM-L6-v2/vocab.txt",
+    "models/all-MiniLM-L6-v2/onnx/model_quantized.onnx",
+
+    // node_modules (it's a bit confusing why this is necessary)
+    `node_modules/@vscode/ripgrep/bin/rg${exe}`,
+
+    // out directory (where the extension.js lives)
+    // "out/extension.js", This is generated afterward by vsce
+    // web-tree-sitter
+    "out/tree-sitter.wasm",
+    // Worker required by jsdom
+    "out/xhr-sync-worker.js",
+    // SQLite3 Node native module
+    "out/build/Release/node_sqlite3.node",
+
+    // out/node_modules (to be accessed by extension.js)
+    `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
+    `out/node_modules/@esbuild/${
+      target === "win32-arm64"
+        ? "esbuild.exe"
+        : target === "win32-x64"
+        ? "win32-x64/esbuild.exe"
+        : `${target}/bin/esbuild`
+    }`,
+    `out/node_modules/@lancedb/vectordb-${
+      os === "win32"
+        ? "win32-x64-msvc"
+        : `${target}${os === "linux" ? "-gnu" : ""}`
+    }/index.node`,
+    `out/node_modules/esbuild/lib/main.js`,
+    `out/node_modules/esbuild/bin/esbuild`,
+  ];
+
+  let missingFiles = [];
+  for (const path of pathsToVerify) {
+    if (!fs.existsSync(path)) {
+      const parentFolder = path.split("/").slice(0, -1).join("/");
+      const grandparentFolder = path.split("/").slice(0, -2).join("/");
+      const grandGrandparentFolder = path.split("/").slice(0, -3).join("/");
+
+      console.error(`File ${path} does not exist`);
+      if (!fs.existsSync(parentFolder)) {
+        console.error(`Parent folder ${parentFolder} does not exist`);
+      } else {
+        console.error(
+          "Contents of parent folder:",
+          fs.readdirSync(parentFolder),
+        );
+      }
+      if (!fs.existsSync(grandparentFolder)) {
+        console.error(`Grandparent folder ${grandparentFolder} does not exist`);
+        if (!fs.existsSync(grandGrandparentFolder)) {
+          console.error(
+            `Grandgrandparent folder ${grandGrandparentFolder} does not exist`,
+          );
+        } else {
+          console.error(
+            "Contents of grandgrandparent folder:",
+            fs.readdirSync(grandGrandparentFolder),
+          );
+        }
+      } else {
+        console.error(
+          "Contents of grandparent folder:",
+          fs.readdirSync(grandparentFolder),
+        );
+      }
+
+      missingFiles.push(path);
+    }
+  }
+
+  if (missingFiles.length > 0) {
+    throw new Error(
+      `The following files were missing:\n- ${missingFiles.join("\n- ")}`,
+    );
+  } else {
+    console.log("All paths exist");
+  }
+}

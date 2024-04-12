@@ -3,6 +3,7 @@ import {
   ChatMessage,
   ContextItemWithId,
   ContextSubmenuItem,
+  DiffLine,
   LLMFullCompletionOptions,
   MessageContent,
   PersistedSessionInfo,
@@ -97,6 +98,17 @@ export type Protocol = {
     },
     ProtocolGeneratorType<MessageContent>,
   ];
+  streamDiffLines: [
+    {
+      prefix: string;
+      highlighted: string;
+      suffix: string;
+      input: string;
+      language: string | undefined;
+      modelTitle: string | undefined;
+    },
+    ProtocolGeneratorType<DiffLine>,
+  ];
 };
 
 export interface IdeSettings {
@@ -107,4 +119,5 @@ export interface IdeSettings {
 
 export type ReverseProtocol = IdeProtocol & {
   getIdeSettings: [undefined, IdeSettings];
+  errorPopup: [{ message: string }, void];
 };

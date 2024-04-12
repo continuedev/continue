@@ -1,4 +1,5 @@
-import { IndexTag, IndexingProgressUpdate } from "../..";
+import { Chunk, IndexTag, IndexingProgressUpdate } from "../..";
+import { ContinueServerClient } from "../../continueServer/stubs/client";
 import { MAX_CHUNK_SIZE } from "../../llm/constants";
 import { getBasename } from "../../util";
 import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex";
@@ -14,8 +15,10 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   static artifactId: string = "chunks";
   artifactId: string = ChunkCodebaseIndex.artifactId;
 
-  readFile: (filepath: string) => Promise<string>;
-  constructor(readFile: (filepath: string) => Promise<string>) {
+  constructor(
+    private readonly readFile: (filepath: string) => Promise<string>,
+    private readonly continueServerClient?: ContinueServerClient,
+  ) {
     this.readFile = readFile;
   }
 
@@ -42,10 +45,53 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,
+    repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate, any, unknown> {
     const db = await SqliteDb.get();
     await this._createTables(db);
     const tagString = tagToString(tag);
+
+    async function handleChunk(chunk: Chunk) {
+      const { lastID } = await db.run(
+        `INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          chunk.digest,
+          chunk.filepath,
+          chunk.index,
+          chunk.startLine,
+          chunk.endLine,
+          chunk.content,
+        ],
+      );
+
+      await db.run(`INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)`, [
+        lastID,
+        tagString,
+      ]);
+    }
+
+    // Check the remote cache
+    if (this.continueServerClient !== undefined) {
+      try {
+        const keys = results.compute.map(({ cacheKey }) => cacheKey);
+        const resp = await this.continueServerClient.getFromIndexCache(
+          keys,
+          "chunks",
+          repoName,
+        );
+
+        for (const [cacheKey, chunks] of Object.entries(resp.files)) {
+          for (const chunk of chunks) {
+            await handleChunk(chunk);
+          }
+        }
+        results.compute = results.compute.filter(
+          (item) => !resp.files[item.cacheKey],
+        );
+      } catch (e) {
+        console.error("Failed to fetch from remote cache: ", e);
+      }
+    }
 
     // Compute chunks for new files
     const contents = await Promise.all(
@@ -61,22 +107,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         MAX_CHUNK_SIZE,
         item.cacheKey,
       )) {
-        const { lastID } = await db.run(
-          `INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)`,
-          [
-            chunk.digest,
-            chunk.filepath,
-            chunk.index,
-            chunk.startLine,
-            chunk.endLine,
-            chunk.content,
-          ],
-        );
-
-        await db.run(`INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)`, [
-          lastID,
-          tagString,
-        ]);
+        handleChunk(chunk);
       }
 
       yield {

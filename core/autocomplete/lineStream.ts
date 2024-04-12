@@ -2,6 +2,22 @@ import { distance } from "fastest-levenshtein";
 import { DiffLine } from "..";
 import { LineStream } from "../diff/util";
 
+export async function* noTopLevelKeywordsMidline(
+  lines: LineStream,
+  topLevelKeywords: string[],
+): LineStream {
+  for await (const line of lines) {
+    for (const keyword of topLevelKeywords) {
+      const indexOf = line.indexOf(keyword + " ");
+      if (indexOf >= 0 && line.slice(indexOf - 1, indexOf).trim() !== "") {
+        yield line.slice(0, indexOf);
+        break;
+      }
+    }
+    yield line;
+  }
+}
+
 export async function* avoidPathLine(
   stream: LineStream,
   comment: string,
@@ -54,11 +70,11 @@ export async function* stopAtSimilarLine(
   }
 }
 
-const LINES_TO_STOP_AT = ["# End of file."];
+const LINES_TO_STOP_AT = ["# End of file.", "<STOP EDITING HERE"];
 
 export async function* stopAtLines(stream: LineStream): LineStream {
   for await (const line of stream) {
-    if (LINES_TO_STOP_AT.includes(line)) {
+    if (LINES_TO_STOP_AT.some((stopAt) => line.trim().includes(stopAt))) {
       break;
     }
     yield line;
@@ -69,7 +85,8 @@ function shouldRemoveLineBeforeStart(line: string): boolean {
   return (
     line.trimStart().startsWith("```") ||
     line.trim() === "[CODE]" ||
-    line.trim() === ""
+    line.trim() === "" ||
+    line.trim() === "<START EDITING HERE>"
   );
 }
 
@@ -142,6 +159,9 @@ export async function* filterEnglishLinesAtStart(lines: LineStream) {
   let i = 0;
   let wasEnglishFirstLine = false;
   for await (let line of lines) {
+    if (i === 0 && line.trim() === "") {
+      continue;
+    }
     if (i === 0) {
       if (isEnglishFirstLine(line)) {
         wasEnglishFirstLine = true;

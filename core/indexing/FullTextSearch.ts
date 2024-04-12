@@ -1,4 +1,6 @@
-import { Chunk, IndexTag, IndexingProgressUpdate } from "..";
+import { BranchAndDir, Chunk, IndexTag, IndexingProgressUpdate } from "..";
+import { RETRIEVAL_PARAMS } from "../util/parameters";
+import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
   CodebaseIndex,
@@ -31,6 +33,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,
+    repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate, any, unknown> {
     const db = await SqliteDb.get();
     await this._createTables(db);
@@ -85,14 +88,19 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   }
 
   async retrieve(
-    tags: IndexTag[],
+    tags: BranchAndDir[],
     text: string,
     n: number,
     directory: string | undefined,
     filterPaths: string[] | undefined,
+    bm25Threshold: number = RETRIEVAL_PARAMS.bm25Threshold,
   ): Promise<Chunk[]> {
     const db = await SqliteDb.get();
-    const tagStrings = tags.map(tagToString);
+
+    // Notice that the "chunks" artifactId is used because of linking between tables
+    const tagStrings = tags.map((tag) => {
+      return tagToString({ ...tag, artifactId: ChunkCodebaseIndex.artifactId });
+    });
 
     const query = `SELECT fts_metadata.chunkId, fts_metadata.path, fts.content, rank
     FROM fts
@@ -110,11 +118,13 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     ORDER BY rank
     LIMIT ?`;
 
-    const results = await db.all(query, [
+    let results = await db.all(query, [
       ...tagStrings,
       ...(filterPaths || []),
       n,
     ]);
+
+    results = results.filter((result) => result.rank <= bm25Threshold);
 
     const chunks = await db.all(
       `SELECT * FROM chunks WHERE id IN (${results.map(() => "?").join(",")})`,

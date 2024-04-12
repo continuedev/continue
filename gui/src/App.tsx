@@ -4,7 +4,6 @@ import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
 import useSetup from "./hooks/useSetup";
 import ErrorPage from "./pages/error";
-import GUI from "./pages/gui";
 import { default as Help, default as HelpPage } from "./pages/help";
 import History from "./pages/history";
 import MigrationPage from "./pages/migration";
@@ -16,6 +15,9 @@ import SettingsPage from "./pages/settings";
 import { ContextSubmenuItem } from "core";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
+import GUI from "./pages/gui";
+import ExistingUserOnboarding from "./pages/onboarding/existingUserOnboarding";
+import Onboarding from "./pages/onboarding/onboarding";
 import Stats from "./pages/stats";
 
 const router = createMemoryRouter([
@@ -63,6 +65,14 @@ const router = createMemoryRouter([
       {
         path: "/monaco",
         element: <MonacoPage />,
+      },
+      {
+        path: "/onboarding",
+        element: <Onboarding />,
+      },
+      {
+        path: "/existingUserOnboarding",
+        element: <ExistingUserOnboarding />,
       },
       {
         path: "/migration",

@@ -1,9 +1,8 @@
 import { BaseLLM } from "..";
 import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
+import { getHeaders } from "../../continueServer/stubs/headers";
+import { SERVER_URL } from "../../util/parameters";
 import { streamResponse } from "../stream";
-
-// const SERVER_URL = "http://localhost:3000";
-const SERVER_URL = "https://node-proxy-server-blue-l6vsfbzhba-uw.a.run.app";
 
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
@@ -12,6 +11,7 @@ class FreeTrial extends BaseLLM {
     return {
       uniqueId: this.uniqueId || "None",
       "Content-Type": "application/json",
+      ...getHeaders(),
     };
   }
 
@@ -22,7 +22,7 @@ class FreeTrial extends BaseLLM {
       presence_penalty: options.presencePenalty,
       max_tokens: options.maxTokens,
       stop:
-        options.model === "starcoder2-15b"
+        options.model === "starcoder-7b"
           ? options.stop
           : options.stop?.slice(0, 2),
       temperature: options.temperature,

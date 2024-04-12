@@ -4,7 +4,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import { retrieveContextItemsFromEmbeddings } from "../retrieval";
+import { retrieveContextItemsFromEmbeddings } from "../retrieval/retrieval";
 
 class CodebaseContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

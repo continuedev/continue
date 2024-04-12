@@ -73,6 +73,7 @@ export type WebviewProtocol = Protocol &
 
     errorPopup: [{ message: string }, void];
     "index/setPaused": [boolean, void];
+    "index/forceReIndex": [undefined, void];
     openUrl: [string, void];
     applyToCurrentFile: [{ text: string }, void];
     showTutorial: [undefined, void];
@@ -85,6 +86,20 @@ export type WebviewProtocol = Protocol &
     toggleFullScreen: [undefined, void];
     "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
     "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
+    insertAtCursor: [{ text: string }, void];
+    copyText: [{ text: string }, void];
+    "jetbrains/editorInsetHeight": [{ height: number }, void];
+    completeOnboarding: [
+      {
+        mode:
+          | "local"
+          | "optimized"
+          | "custom"
+          | "localExistingUser"
+          | "optimizedExistingUser";
+      },
+      void,
+    ];
   };
 
 export type ReverseWebviewProtocol = {
@@ -117,4 +132,5 @@ export type ReverseWebviewProtocol = {
   refreshSubmenuItems: [undefined, void];
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
+  "jetbrains/editorInsetRefresh": [undefined, void];
 };

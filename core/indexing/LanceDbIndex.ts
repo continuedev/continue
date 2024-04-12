@@ -1,11 +1,14 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { v4 as uuidv4 } from "uuid";
+import { Table } from "vectordb";
 import {
+  BranchAndDir,
   Chunk,
   EmbeddingsProvider,
   IndexTag,
   IndexingProgressUpdate,
 } from "..";
+import { ContinueServerClient } from "../continueServer/stubs/client";
 import { MAX_CHUNK_SIZE } from "../llm/constants";
 import { getBasename } from "../util";
 import { getLanceDbPath } from "../util/paths";
@@ -34,16 +37,11 @@ export class LanceDbIndex implements CodebaseIndex {
 
   static MAX_CHUNK_SIZE = MAX_CHUNK_SIZE;
 
-  embeddingsProvider: EmbeddingsProvider;
-  readFile: (filepath: string) => Promise<string>;
-
   constructor(
-    embeddingsProvider: EmbeddingsProvider,
-    readFile: (filepath: string) => Promise<string>,
-  ) {
-    this.embeddingsProvider = embeddingsProvider;
-    this.readFile = readFile;
-  }
+    private readonly embeddingsProvider: EmbeddingsProvider,
+    private readonly readFile: (filepath: string) => Promise<string>,
+    private readonly continueServerClient?: ContinueServerClient,
+  ) {}
 
   private tableNameForTag(tag: IndexTag) {
     return tagToString(tag)
@@ -136,6 +134,7 @@ export class LanceDbIndex implements CodebaseIndex {
       items: PathAndCacheKey[],
       resultType: IndexResultType,
     ) => void,
+    repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
     const lancedb = await import("vectordb");
     const tableName = this.tableNameForTag(tag);
@@ -145,11 +144,92 @@ export class LanceDbIndex implements CodebaseIndex {
     await this.createSqliteCacheTable(sqlite);
 
     // Compute
-    let table = undefined;
+    let table: Table<number[]> | undefined = undefined;
     let needToCreateTable = true;
     const existingTables = await db.tableNames();
-    let computedRows: LanceDbRow[] = [];
 
+    const addComputedLanceDbRows = async (
+      pathAndCacheKey: PathAndCacheKey,
+      computedRows: LanceDbRow[],
+    ) => {
+      // Create table if needed, add computed rows
+      if (table) {
+        if (computedRows.length > 0) {
+          await table.add(computedRows);
+        }
+      } else if (existingTables.includes(tableName)) {
+        table = await db.openTable(tableName);
+        needToCreateTable = false;
+        if (computedRows.length > 0) {
+          await table.add(computedRows);
+        }
+      } else if (computedRows.length > 0) {
+        table = await db.createTable(tableName, computedRows);
+        needToCreateTable = false;
+      }
+
+      // Mark item complete
+      markComplete([pathAndCacheKey], IndexResultType.Compute);
+    };
+
+    // Check remote cache
+    if (this.continueServerClient !== undefined) {
+      try {
+        const keys = results.compute.map(({ cacheKey }) => cacheKey);
+        const resp = await this.continueServerClient.getFromIndexCache(
+          keys,
+          "embeddings",
+          repoName,
+        );
+        for (const [cacheKey, chunks] of Object.entries(resp.files)) {
+          // Get path for cacheKey
+          const path = results.compute.find(
+            (item) => item.cacheKey === cacheKey,
+          )?.path;
+          if (!path) {
+            console.warn(
+              "Continue server sent a cacheKey that wasn't requested",
+              cacheKey,
+            );
+            continue;
+          }
+
+          // Build LanceDbRow objects
+          const rows: LanceDbRow[] = [];
+          for (const chunk of chunks) {
+            const row = {
+              path,
+              cachekey: cacheKey,
+              uuid: uuidv4(),
+              vector: chunk.vector,
+            };
+            rows.push(row);
+
+            await sqlite.run(
+              "INSERT INTO lance_db_cache (uuid, cacheKey, path, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              row.uuid,
+              row.cachekey,
+              row.path,
+              JSON.stringify(row.vector),
+              chunk.startLine,
+              chunk.endLine,
+              chunk.contents,
+            );
+          }
+
+          await addComputedLanceDbRows({ cacheKey, path }, rows);
+        }
+
+        // Remove items that don't need to be recomputed
+        results.compute = results.compute.filter(
+          (item) => !resp.files[item.cacheKey],
+        );
+      } catch (e) {
+        console.log("Error checking remote cache: ", e);
+      }
+    }
+
+    let computedRows: LanceDbRow[] = [];
     for await (const update of this.computeChunks(results.compute)) {
       if (Array.isArray(update)) {
         const [progress, row, data, desc] = update;
@@ -169,26 +249,8 @@ export class LanceDbIndex implements CodebaseIndex {
 
         yield { progress, desc };
       } else {
-        // Create table if needed, add computed rows
-        if (table) {
-          if (computedRows.length > 0) {
-            await table.add(computedRows);
-          }
-        } else if (existingTables.includes(tableName)) {
-          table = await db.openTable(tableName);
-          needToCreateTable = false;
-          if (computedRows.length > 0) {
-            await table.add(computedRows);
-          }
-        } else if (computedRows.length > 0) {
-          table = await db.createTable(tableName, computedRows);
-          needToCreateTable = false;
-        }
-
+        await addComputedLanceDbRows(update, computedRows);
         computedRows = [];
-
-        // Mark item complete
-        markComplete([update], IndexResultType.Compute);
       }
     }
 
@@ -268,21 +330,27 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   async retrieve(
-    tags: IndexTag[],
-    text: string,
+    query: string,
     n: number,
-    directory: string | undefined,
+    tags: BranchAndDir[],
+    filterDirectory: string | undefined,
   ): Promise<Chunk[]> {
     const lancedb = await import("vectordb");
     if (!lancedb.connect) {
       throw new Error("LanceDB failed to load a native module");
     }
-    const [vector] = await this.embeddingsProvider.embed([text]);
+    const [vector] = await this.embeddingsProvider.embed([query]);
     const db = await lancedb.connect(getLanceDbPath());
 
     let allResults = [];
     for (const tag of tags) {
-      const results = await this._retrieveForTag(tag, n, directory, vector, db);
+      const results = await this._retrieveForTag(
+        { ...tag, artifactId: this.artifactId },
+        n,
+        filterDirectory,
+        vector,
+        db,
+      );
       allResults.push(...results);
     }
 

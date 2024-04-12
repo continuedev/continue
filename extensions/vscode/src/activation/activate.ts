@@ -1,6 +1,5 @@
 import { getTsConfigPath, migrate } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
-import * as fs from "fs";
 import path from "path";
 import * as vscode from "vscode";
 import { VsCodeExtension } from "../extension/vscodeExtension";
@@ -8,31 +7,6 @@ import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
-
-export async function showTutorial() {
-  const tutorialPath = path.join(
-    getExtensionUri().fsPath,
-    "continue_tutorial.py",
-  );
-  // Ensure keyboard shortcuts match OS
-  if (process.platform !== "darwin") {
-    let tutorialContent = fs.readFileSync(tutorialPath, "utf8");
-    tutorialContent = tutorialContent.replace("⌘", "^").replace("Cmd", "Ctrl");
-    fs.writeFileSync(tutorialPath, tutorialContent);
-  }
-
-  const doc = await vscode.workspace.openTextDocument(
-    vscode.Uri.file(tutorialPath),
-  );
-  await vscode.window.showTextDocument(doc);
-}
-
-async function openTutorialFirstTime(context: vscode.ExtensionContext) {
-  if (context.globalState.get<boolean>("continue.tutorialShown") !== true) {
-    await showTutorial();
-    context.globalState.update("continue.tutorialShown", true);
-  }
-}
 
 function showRefactorMigrationMessage(
   extensionContext: vscode.ExtensionContext,
@@ -72,7 +46,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   // Register commands and providers
   registerQuickFixProvider();
-  await openTutorialFirstTime(context);
   setupInlineTips(context);
   showRefactorMigrationMessage(context);
 

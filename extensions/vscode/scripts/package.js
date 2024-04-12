@@ -14,5 +14,7 @@ const command = isPreRelease
 
 exec(command, (error) => {
   if (error) throw error;
-  console.log("vsce package completed");
+  console.log(
+    "vsce package completed - extension created at extensions/vscode/build/continue-patch.vsix",
+  );
 });

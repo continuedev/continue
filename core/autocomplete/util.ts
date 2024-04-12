@@ -49,8 +49,9 @@ export class ListenableGenerator<T> {
 
   async *tee(): AsyncGenerator<T> {
     try {
-      for (const value of this._buffer) {
-        yield value;
+      let i = 0;
+      while (i < this._buffer.length) {
+        yield this._buffer[i++];
       }
       while (!this._isEnded) {
         let resolve: (value: any) => void;
@@ -58,10 +59,14 @@ export class ListenableGenerator<T> {
           resolve = res;
           this._listeners.add(resolve!);
         });
-        const value = await promise;
+        await promise;
         this._listeners.delete(resolve!);
 
-        yield value;
+        // Possible timing caused something to slip in between
+        // timers so we iterate over the buffer
+        while (i < this._buffer.length) {
+          yield this._buffer[i++];
+        }
       }
     } finally {
       // this._listeners.delete(resolve!);

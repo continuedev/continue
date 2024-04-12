@@ -5,11 +5,40 @@ import com.intellij.openapi.editor.colors.EditorColors
 import com.intellij.openapi.editor.colors.EditorColorsManager
 import com.intellij.openapi.editor.colors.EditorColorsScheme
 import com.intellij.openapi.editor.colors.TextAttributesKey
+import java.awt.Color
 import kotlin.math.max
 import kotlin.math.min
 
 
 class GetTheme {
+    fun getSecondaryDark(): Color {
+        val globalScheme = EditorColorsManager.getInstance().globalScheme
+        val defaultBackground = globalScheme.defaultBackground
+        val grayscale = (defaultBackground.red * 0.3 + defaultBackground.green * 0.59 + defaultBackground.blue * 0.11).toInt()
+
+        val adjustedRed: Int
+        val adjustedGreen: Int
+        val adjustedBlue: Int
+
+        val tint: Int = 20
+        if (grayscale > 128) { // if closer to white
+            adjustedRed = max(0, defaultBackground.red - tint)
+            adjustedGreen = max(0, defaultBackground.green - tint)
+            adjustedBlue = max(0, defaultBackground.blue - tint)
+        } else { // if closer to black
+            adjustedRed = min(255, defaultBackground.red + tint)
+            adjustedGreen = min(255, defaultBackground.green + tint)
+            adjustedBlue = min(255, defaultBackground.blue + tint)
+        }
+
+        return Color(adjustedRed, adjustedGreen, adjustedBlue)
+    }
+
+    fun getHighlight(): Color {
+        val globalScheme = EditorColorsManager.getInstance().globalScheme
+        return globalScheme.getColor(EditorColors.MODIFIED_TAB_ICON_COLOR) ?: globalScheme.defaultForeground
+    }
+
     fun getTheme(): Map<String, String> {
         try {
             val globalScheme = EditorColorsManager.getInstance().globalScheme

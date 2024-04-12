@@ -1,6 +1,46 @@
 import { ChatMessage } from "../..";
 import { stripImages } from "../countTokens";
 
+function templateFactory(
+  systemMessage: (msg: ChatMessage) => string,
+  userPrompt: string,
+  assistantPrompt: string,
+  separator: string,
+  prefix?: string,
+  emptySystemMessage?: string,
+): (msgs: ChatMessage[]) => string {
+  return (msgs: ChatMessage[]) => {
+    let prompt = prefix ?? "";
+
+    // Skip assistant messages at the beginning
+    while (msgs.length > 0 && msgs[0].role === "assistant") {
+      msgs.shift();
+    }
+
+    if (msgs.length > 0 && msgs[0].role === "system") {
+      prompt += systemMessage(msgs.shift()!);
+    } else if (emptySystemMessage) {
+      prompt += emptySystemMessage;
+    }
+
+    for (let i = 0; i < msgs.length; i++) {
+      const msg = msgs[i];
+      prompt += msg.role === "user" ? userPrompt : assistantPrompt;
+      prompt += msg.content;
+      if (i < msgs.length - 1) {
+        prompt += separator;
+      }
+    }
+
+    if (msgs.length > 0 && msgs[msgs.length - 1].role === "user") {
+      prompt += separator;
+      prompt += assistantPrompt;
+    }
+
+    return prompt;
+  };
+}
+
 /**
  * @description Template for LLAMA2 messages:
  *
@@ -43,7 +83,10 @@ function llama2TemplateMessages(msgs: ChatMessage[]): string {
     if (msgs[i].role === "user") {
       prompt += `[INST] ${msgs[i].content} [/INST]`;
     } else {
-      prompt += msgs[i].content + "</s>\n<s>";
+      prompt += msgs[i].content;
+      if (i < msgs.length - 1) {
+        prompt += "</s>\n<s>";
+      }
     }
   }
 
@@ -73,77 +116,41 @@ function anthropicTemplateMessages(messages: ChatMessage[]): string {
   return prompt;
 }
 
-function llavaTemplateMessages(msgs: ChatMessage[]): string {
-  `A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.
+`A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.
 USER: <image>{prompt}
 ASSISTANT:`;
+const llavaTemplateMessages = templateFactory(
+  () => "",
+  "USER: <image>",
+  "ASSISTANT: ",
+  "\n",
+  "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.",
+);
 
-  let prompt =
-    "A chat between a curious user and an artificial intelligence assistant. The assistant gives helpful, detailed, and polite answers to the user's questions.";
+const zephyrTemplateMessages = templateFactory(
+  (msg) => `<|system|>${msg.content}</s>\n`,
+  "<|user|>\n",
+  "<|assistant|>\n",
+  "</s>\n",
+  undefined,
+  "<|system|> </s>\n",
+);
 
-  for (const msg of msgs) {
-    prompt += msg.role === "user" ? "USER: <image>" : "ASSISTANT: ";
-    prompt += msg.content;
+const chatmlTemplateMessages = templateFactory(
+  (msg) => `<|im_start|>${msg.role}\n${msg.content}<|im_end|>\n`,
+  "<|im_start|>user\n",
+  "<|im_start|>assistant\n",
+  "<|im_end|>\n",
+);
 
-    prompt += "\n";
-  }
-
-  prompt += "ASSISTANT: ";
-
-  return prompt;
-}
-
-function zephyrTemplateMessages(msgs: ChatMessage[]): string {
-  let prompt = "";
-
-  if (msgs[0].role === "system") {
-    prompt += `<|system|>${msgs[0].content}</s>\n`;
-    msgs.shift();
-  } else {
-    prompt += "<|system|> </s>\n";
-  }
-
-  for (const msg of msgs) {
-    prompt += msg.role === "user" ? "<|user|>\n" : "<|assistant|>\n";
-    prompt += `${msg.content}</s>\n`;
-  }
-
-  prompt += "<|assistant|>\n";
-
-  return prompt;
-}
-
-function chatmlTemplateMessages(messages: ChatMessage[]): string {
-  let prompt = "";
-
-  for (const msg of messages) {
-    prompt += `<|im_start|>${msg.role}\n${msg.content}<|im_end|>\n`;
-  }
-
-  prompt += "<|im_start|>assistant\n";
-  return prompt;
-}
-
-function templateAlpacaMessages(msgs: ChatMessage[]): string {
-  let prompt = "";
-
-  if (msgs[0].role === "system") {
-    prompt += `${msgs[0].content}\n\n`;
-    msgs.shift();
-  } else {
-    prompt +=
-      "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n";
-  }
-
-  for (const msg of msgs) {
-    prompt += msg.role === "user" ? "### Instruction:\n" : "### Response:\n";
-    prompt += `${msg.content}\n\n`;
-  }
-
-  prompt += "### Response:\n";
-
-  return prompt;
-}
+const templateAlpacaMessages = templateFactory(
+  (msg) => `${msg.content}\n\n`,
+  "### Instruction:\n",
+  "### Response:\n",
+  "\n\n",
+  undefined,
+  "Below is an instruction that describes a task. Write a response that appropriately completes the request.\n\n",
+);
 
 function deepseekTemplateMessages(msgs: ChatMessage[]): string {
   let prompt = "";
@@ -163,63 +170,45 @@ function deepseekTemplateMessages(msgs: ChatMessage[]): string {
     }
 
     prompt += `${msg.content}`;
-    prompt += msg.role === "user" ? "\n" : "<|EOT|>\n";
+
+    if (i < msgs.length - 1) {
+      prompt += msg.role === "user" ? "\n" : "<|EOT|>\n";
+    }
   }
 
-  return prompt + "### Response:\n";
+  if (msgs.length > 0 && msgs[msgs.length - 1].role === "user") {
+    prompt += "\n";
+    prompt += "### Response:\n";
+  }
+
+  return prompt;
 }
 
 // See https://huggingface.co/microsoft/phi-2#qa-format
-function phi2TemplateMessages(msgs: ChatMessage[]): string {
-  const HUMAN_PROMPT = "\n\nInstruct:";
-  const AI_PROMPT = "\n\nOutput:";
-  let prompt = "";
+const phi2TemplateMessages = templateFactory(
+  (msg) => `\n\nInstruct: ${msg.content} `,
+  "\n\nInstruct: ",
+  "\n\nOutput: ",
+  " ",
+);
 
-  for (const msg of msgs) {
-    prompt += `${
-      msg.role === "user" || msg.role === "system" ? HUMAN_PROMPT : AI_PROMPT
-    } ${msg.content} `;
-  }
-
-  prompt += AI_PROMPT;
-  return prompt;
-}
-
-function phindTemplateMessages(msgs: ChatMessage[]): string {
-  let prompt = "";
-
-  if (msgs[0].role === "system") {
-    prompt += `### System Prompt\n${msgs[0].content}\n\n`;
-    msgs.shift();
-  }
-
-  for (const msg of msgs) {
-    prompt += msg.role === "user" ? "### User Message\n" : "### Assistant\n";
-    prompt += `${msg.content}\n`;
-  }
-
-  prompt += "### Assistant\n";
-
-  return prompt;
-}
+const phindTemplateMessages = templateFactory(
+  (msg) => `### System Prompt\n${msg.content}\n\n`,
+  "### User Message\n",
+  "### Assistant\n",
+  "\n",
+);
 
 /**
  * OpenChat Template, used by CodeNinja
  * GPT4 Correct User: Hello<|end_of_turn|>GPT4 Correct Assistant: Hi<|end_of_turn|>GPT4 Correct User: How are you today?<|end_of_turn|>GPT4 Correct Assistant:
  */
-function openchatTemplateMessages(msgs: ChatMessage[]): string {
-  let prompt = "";
-
-  for (const msg of msgs) {
-    prompt +=
-      msg.role === "user" ? "GPT4 Correct User: " : "GPT4 Correct Assistant: ";
-    prompt += msg.content + "<|end_of_turn|>";
-  }
-
-  prompt += "GPT4 Correct Assistant: ";
-
-  return prompt;
-}
+const openchatTemplateMessages = templateFactory(
+  () => "",
+  "GPT4 Correct User: ",
+  "GPT4 Correct Assistant: ",
+  "<|end_of_turn|>",
+);
 
 /**
  * Chat template used by https://huggingface.co/TheBloke/XwinCoder-13B-GPTQ
@@ -229,47 +218,25 @@ function openchatTemplateMessages(msgs: ChatMessage[]): string {
 <user>: {prompt}
 <AI>:
  */
-function xWinCoderTemplateMessages(msgs: ChatMessage[]): string {
-  let prompt = "<system>: ";
-  if (msgs[0].role === "system") {
-    prompt += msgs.shift()!.content;
-  } else {
-    prompt +=
-      "You are an AI coding assistant that helps people with programming. Write a response that appropriately completes the user's request.";
-  }
-
-  for (let msg of msgs) {
-    prompt += "\n";
-    prompt += msg.role === "user" ? "<user>" : "<AI>";
-    prompt += ": " + msg.content;
-  }
-
-  prompt += "<AI>: ";
-
-  return prompt;
-}
+const xWinCoderTemplateMessages = templateFactory(
+  (msg) => `<system>: ${msg.content}`,
+  "\n<user>: ",
+  "\n<AI>: ",
+  "",
+  undefined,
+  "<system>: You are an AI coding assistant that helps people with programming. Write a response that appropriately completes the user's request.",
+);
 
 /**
  * NeuralChat Template
  * ### System:\n{system_input}\n### User:\n{user_input}\n### Assistant:\n
  */
-function neuralChatTemplateMessages(msgs: ChatMessage[]): string {
-  let prompt = "";
-
-  if (msgs[0].role === "system") {
-    prompt += `### System:\n${msgs[0].content}\n`;
-    msgs.shift();
-  }
-
-  for (const msg of msgs) {
-    prompt += msg.role === "user" ? "### User:\n" : "### Assistant:\n";
-    prompt += `${msg.content}\n`;
-  }
-
-  prompt += "### Assistant:\n";
-
-  return prompt;
-}
+const neuralChatTemplateMessages = templateFactory(
+  (msg) => `### System:\n${msg.content}\n`,
+  "### User:\n",
+  "### Assistant:\n",
+  "\n",
+);
 
 /**
 '<s>Source: system\n\n System prompt <step> Source: user\n\n First user query <step> Source: assistant\n\n Model response to first query <step> Source: user\n\n Second user query <step> Source: assistant\nDestination: user\n\n '
@@ -292,18 +259,12 @@ function codeLlama70bTemplateMessages(msgs: ChatMessage[]): string {
  What is Cramer's Rule?<end_of_turn>
  <start_of_turn>model
  */
-
-function gemmaTemplateMessage(msgs: ChatMessage[]): string {
-  let prompt = "";
-  for (const msg of msgs) {
-    prompt += `<start_of_turn>${
-      msg.role === "assistant" ? "model" : "user"
-    }\n${stripImages(msg.content).trim()}<end_of_turn>\n`;
-  }
-
-  prompt += "<start_of_turn>model\n";
-  return prompt;
-}
+const gemmaTemplateMessage = templateFactory(
+  () => "",
+  "<start_of_turn>user\n",
+  "<start_of_turn>model\n",
+  "<end_of_turn>\n",
+);
 
 export {
   anthropicTemplateMessages,

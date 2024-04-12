@@ -1,10 +1,12 @@
 import {
+  ArrowUturnLeftIcon,
+  BarsArrowDownIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/countTokens";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -17,6 +19,7 @@ import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
 import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
+import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 
 interface StepContainerProps {
@@ -24,6 +27,7 @@ interface StepContainerProps {
   onReverse: () => void;
   onUserInput: (input: string) => void;
   onRetry: () => void;
+  onContinueGeneration: () => void;
   onDelete: () => void;
   open: boolean;
   isFirst: boolean;
@@ -78,6 +82,27 @@ function StepContainer(props: StepContainerProps) {
     }
   };
 
+  const [truncatedEarly, setTruncatedEarly] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      const content = stripImages(props.item.message.content).trim();
+      const endingPunctuation = [".", "?", "!", "```"];
+
+      // If not ending in punctuation or emoji, we assume the response got truncated
+      if (
+        !(
+          endingPunctuation.some((p) => content.endsWith(p)) ||
+          /\p{Emoji}/u.test(content.slice(-2))
+        )
+      ) {
+        setTruncatedEarly(true);
+      } else {
+        setTruncatedEarly(false);
+      }
+    }
+  }, [props.item.message.content, active]);
+
   return (
     <div
       onMouseEnter={() => {
@@ -98,11 +123,43 @@ function StepContainer(props: StepContainerProps) {
             showCodeBorder={true}
           />
         </ContentDiv>
+        <div className="h-2"></div>
         {(isHovered || typeof feedback !== "undefined") && !active && (
           <div
-            className="flex items-center gap-2 right-2 absolute -bottom-3"
+            className="flex items-center gap-2 right-2 absolute -bottom-1"
             style={{ zIndex: 200 }}
           >
+            {truncatedEarly && (
+              <HeaderButtonWithText
+                text="Continue generation"
+                onClick={(e) => {
+                  props.onContinueGeneration();
+                }}
+              >
+                <BarsArrowDownIcon
+                  color={lightGray}
+                  width="1.2em"
+                  height="1.2em"
+                />
+              </HeaderButtonWithText>
+            )}
+
+            <CopyButton
+              text={stripImages(props.item.message.content)}
+              color={lightGray}
+            />
+            <HeaderButtonWithText
+              text="Regenerate"
+              onClick={(e) => {
+                props.onRetry();
+              }}
+            >
+              <ArrowUturnLeftIcon
+                color={lightGray}
+                width="1.2em"
+                height="1.2em"
+              />
+            </HeaderButtonWithText>
             {feedback === false || (
               <HeaderButtonWithText text="Helpful">
                 <HandThumbUpIcon

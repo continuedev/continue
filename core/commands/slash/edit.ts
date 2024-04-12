@@ -4,11 +4,12 @@ import {
   filterEnglishLinesAtEnd,
   filterEnglishLinesAtStart,
   fixCodeLlamaFirstLineIndentation,
+  stopAtLines,
   streamWithNewLines,
 } from "../../autocomplete/lineStream";
 import { streamLines } from "../../diff/util";
 import { stripImages } from "../../llm/countTokens";
-import { dedentAndGetCommonWhitespace, renderPromptTemplate } from "../../util";
+import { dedentAndGetCommonWhitespace } from "../../util";
 import {
   RangeInFileWithContents,
   contextItemToRangeInFileWithContents,
@@ -446,7 +447,7 @@ const EditSlashCommand: SlashCommand = {
     const template = llm.promptTemplates?.edit;
     let generator: AsyncGenerator<string>;
     if (template) {
-      let rendered = renderPromptTemplate(
+      let rendered = llm.renderPromptTemplate(
         template,
         // typeof template === 'string' ? template : template.prompt,
         messages.slice(0, messages.length - 1),
@@ -479,6 +480,7 @@ const EditSlashCommand: SlashCommand = {
       lineStream = filterEnglishLinesAtStart(lineStream);
 
       lineStream = filterEnglishLinesAtEnd(filterCodeBlockLines(lineStream));
+      lineStream = stopAtLines(lineStream);
 
       generator = streamWithNewLines(
         fixCodeLlamaFirstLineIndentation(lineStream),
