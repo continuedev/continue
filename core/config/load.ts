@@ -272,13 +272,15 @@ async function intermediateToFinalConfig(
   }
 
   // Embeddings Provider
-  if (
-    (config.embeddingsProvider as EmbeddingsProviderDescription | undefined)
-      ?.provider
-  ) {
-    const { provider, ...options } =
-      config.embeddingsProvider as EmbeddingsProviderDescription;
-    config.embeddingsProvider = new AllEmbeddingsProviders[provider](options);
+  const embeddingsProviderDescription = config.embeddingsProvider as
+    | EmbeddingsProviderDescription
+    | undefined;
+  if (embeddingsProviderDescription?.provider) {
+    const { provider, ...options } = embeddingsProviderDescription;
+    const embeddingsProviderClass = AllEmbeddingsProviders[provider];
+    if (embeddingsProviderClass) {
+      config.embeddingsProvider = new embeddingsProviderClass(options);
+    }
   }
 
   if (!config.embeddingsProvider) {
