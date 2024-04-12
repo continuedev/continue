@@ -543,7 +543,7 @@ export class VsCodeIdeUtils {
 
     try {
       const git = extension.exports.getAPI(1);
-      return git.getRepository(forDirectory) ?? undefined;
+      return git.getRepository(forDirectory);
     } catch (e) {
       this._repoWasNone = true;
       console.warn("Git not found: ", e);
