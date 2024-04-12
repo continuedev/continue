@@ -552,20 +552,7 @@ export class VsCodeIdeUtils {
   }
 
   private _repoWasNone: boolean = false;
-  private repoCache: Map<string, Repository> = new Map();
-  async getRepo(forDirectory: vscode.Uri): Promise<Repository | undefined> {
-    const workspaceDirs = this.getWorkspaceDirectories();
-    const parentDir = workspaceDirs.find((dir) =>
-      forDirectory.fsPath.startsWith(dir),
-    );
-    if (parentDir) {
-      // Check if the repository is already cached
-      const cachedRepo = this.repoCache.get(parentDir);
-      if (cachedRepo) {
-        return cachedRepo;
-      }
-    }
-
+  async getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
     let repo = await this._getRepo(forDirectory);
 
     let i = 0;
