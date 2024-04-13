@@ -6,6 +6,7 @@ import {
 } from "core/web/webviewProtocol";
 import { v4 as uuidv4 } from "uuid";
 import "vscode-webview";
+import { getLocalStorage } from "./localStorage";
 interface vscode {
   postMessage(message: any): vscode;
 }
@@ -14,7 +15,7 @@ declare const vscode: any;
 
 function _postToIde(messageType: string, data: any, messageId?: string) {
   if (typeof vscode === "undefined") {
-    if (localStorage.getItem("ide") === "jetbrains") {
+    if (isJetBrains()) {
       if (window.postIntellijMessage === undefined) {
         console.log(
           "Unable to send message: postIntellijMessage is undefined. ",
@@ -183,5 +184,5 @@ export function appendText(text: string) {
 }
 
 export function isJetBrains() {
-  return localStorage.getItem("ide") === "jetbrains";
+  return getLocalStorage("ide") === "jetbrains";
 }

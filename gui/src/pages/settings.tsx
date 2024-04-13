@@ -20,6 +20,7 @@ import Loader from "../components/loaders/Loader";
 import { RootState } from "../redux/store";
 import { getFontSize, getPlatform } from "../util";
 import { postToIde } from "../util/ide";
+import { setLocalStorage } from "../util/localStorage";
 
 const CancelButton = styled(Button)`
   background-color: transparent;
@@ -264,7 +265,7 @@ function Settings() {
             step="1"
             defaultValue={getFontSize()}
             onChange={(e) => {
-              localStorage.setItem("fontSize", e.target.value);
+              setLocalStorage("fontSize", parseInt(e.target.value));
             }}
           />
         </div>

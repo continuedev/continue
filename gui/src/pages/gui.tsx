@@ -230,19 +230,18 @@ function GUI(props: GUIProps) {
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
       if (defaultModel?.provider === "free-trial") {
-        const ftc = localStorage.getItem("ftc");
+        const ftc = getLocalStorage("ftc");
         if (ftc) {
-          const u = parseInt(ftc);
-          localStorage.setItem("ftc", (u + 1).toString());
+          setLocalStorage("ftc", ftc + 1);
 
-          if (u >= 250) {
+          if (ftc >= 250) {
             dispatch(setShowDialog(true));
             dispatch(setDialogMessage(<FTCDialog />));
             posthog?.capture("ftc_reached");
             return;
           }
         } else {
-          localStorage.setItem("ftc", "1");
+          setLocalStorage("ftc", 1);
         }
       }
 
