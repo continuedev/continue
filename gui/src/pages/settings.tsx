@@ -20,6 +20,7 @@ import Loader from "../components/loaders/Loader";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { RootState } from "../redux/store";
 import { getFontSize, getPlatform } from "../util";
+import { postToIde } from "../util/ide";
 import { setLocalStorage } from "../util/localStorage";
 
 const CancelButton = styled(Button)`

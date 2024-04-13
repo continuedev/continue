@@ -237,12 +237,13 @@ function GUI(props: GUIProps) {
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
       if (defaultModel?.provider === "free-trial") {
-        const u = getLocalStorage("ftc");
-        if (u) {
-          setLocalStorage("ftc", u + 1);
+        const ftc = getLocalStorage("ftc");
+        if (ftc) {
+          setLocalStorage("ftc", ftc + 1);
 
-          if (u >= ftl()) {
-            navigate("/onboarding");
+          if (ftc >= 250) {
+            dispatch(setShowDialog(true));
+            dispatch(setDialogMessage(<FTCDialog />));
             posthog?.capture("ftc_reached");
             return;
           }
