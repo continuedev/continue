@@ -30,9 +30,12 @@ class VsCodeIde implements IDE {
 
   async getRepoName(dir: string): Promise<string | undefined> {
     const repo = await this.getRepo(vscode.Uri.file(dir));
+    const remotes = repo?.repository?.remotes;
+    if (!remotes) {
+      return undefined;
+    }
     const remote =
-      repo?.repository.remotes.find((r: any) => r.name === "origin") ??
-      repo?.repository.remotes[0];
+      remotes?.find((r: any) => r.name === "origin") ?? remotes?.[0];
     if (!remote) {
       return undefined;
     }

@@ -1,39 +1,39 @@
 import * as esbuild from "esbuild";
 import glob from "glob";
 
-/** 
+/**
  * Bundles tests into multiple files, runTestOnVSCodeHost is then run using node runTestOnVSCodeHost.js
  * It downloads vscode, starts it and passes test file to run - mochaRunner.js
  * mochaRunner.js then runs tests using Mocha class
-*/
+ */
 
 // Bundles script to run tests on VSCode host + mocha runner that will be invoked from within VSCode host
 await esbuild.build({
-    entryPoints: [
-        // Runs mocha runner on VSCode host using runTests from @vscode/test-electron
-        "src/test-runner/runTestOnVSCodeHost.ts",
+  entryPoints: [
+    // Runs mocha runner on VSCode host using runTests from @vscode/test-electron
+    "src/test/runner/runTestOnVSCodeHost.ts",
 
-        // Runs the bundled tests using Mocha class
-        "src/test-runner/mochaRunner.ts",
-    ],
-    bundle: true,
-    outdir: "out/test-runner",
+    // Runs the bundled tests using Mocha class
+    "src/test/runner/mochaRunner.ts",
+  ],
+  bundle: true,
+  outdir: "out/test/runner",
 
-    external: [
-        "vscode",
+  external: [
+    "vscode",
 
-        // Its important to externalize mocha, otherwise mocha seems to be not initialized properly when running tests
-        // Example warning by esbuild when mocha is not externalized:
-        // [WARNING] "./reporters/parallel-buffered" should be marked as external for use with "require.resolve" [require-resolve-not-external]
-        "mocha",
-    ],
-    format: "cjs",
-    platform: "node",
-    sourcemap: true,
-    loader: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        ".node": "file",
-    },
+    // Its important to externalize mocha, otherwise mocha seems to be not initialized properly when running tests
+    // Example warning by esbuild when mocha is not externalized:
+    // [WARNING] "./reporters/parallel-buffered" should be marked as external for use with "require.resolve" [require-resolve-not-external]
+    "mocha",
+  ],
+  format: "cjs",
+  platform: "node",
+  sourcemap: true,
+  loader: {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    ".node": "file",
+  },
 });
 
 /**
@@ -41,21 +41,21 @@ await esbuild.build({
  * Rather than figuring out a combination of tsconfig.json that would work, I decided to bundle tests instead.
  */
 await esbuild.build({
-    // Tests can be added anywhere in src folder
-    entryPoints: glob.sync("src/**/*.test.ts"),
-    bundle: true,
-    outdir: "out/test-suites",
-    external: [
-        "vscode",
+  // Tests can be added anywhere in src folder
+  entryPoints: glob.sync("src/**/*.test.ts"),
+  bundle: true,
+  outdir: "out/test/test-suites",
+  external: [
+    "vscode",
 
-        // Its important to externalize mocha, otherwise mocha seems to be not initialized properly when running tests
-        "mocha",
-    ],
-    format: "cjs",
-    platform: "node",
-    sourcemap: true,
-    loader: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        ".node": "file",
-    },
+    // Its important to externalize mocha, otherwise mocha seems to be not initialized properly when running tests
+    "mocha",
+  ],
+  format: "cjs",
+  platform: "node",
+  sourcemap: true,
+  loader: {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    ".node": "file",
+  },
 });

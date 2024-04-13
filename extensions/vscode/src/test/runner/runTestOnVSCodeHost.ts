@@ -6,18 +6,25 @@ async function main() {
     // The folder containing the Extension Manifest package.json
     // Passed to `--extensionDevelopmentPath`
 
-    // Assumes this file is in out/test-runner/runTestOnVSCodeHost.js
-    const extensionDevelopmentPath = path.resolve(__dirname, "../../");
+    // Assumes this file is in out/test/runner/runTestOnVSCodeHost.js
+    const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
+    console.log("extensionDevelopmentPath", extensionDevelopmentPath);
 
     // The path to test runner
     // Passed to --extensionTestsPath
     const extensionTestsPath = path.resolve(
       extensionDevelopmentPath,
-      "out/test-runner/mochaRunner"
+      "out/test/runner/mochaRunner",
     );
 
+    const extensionTestsEnv = {};
+
     // Download VS Code, unzip it and run the integration test
-    await runTests({ extensionDevelopmentPath, extensionTestsPath });
+    await runTests({
+      extensionDevelopmentPath,
+      extensionTestsPath,
+      extensionTestsEnv,
+    });
   } catch (err) {
     console.error("Failed to run tests", err);
     process.exit(1);
