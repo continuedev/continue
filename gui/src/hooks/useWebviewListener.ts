@@ -1,7 +1,7 @@
 import { Message } from "core/util/messenger";
 import { ReverseWebviewProtocol } from "core/web/webviewProtocol";
-import { useEffect } from "react";
-import { respondToIde } from "../util/ide";
+import { useContext, useEffect } from "react";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 
 export function useWebviewListener<T extends keyof ReverseWebviewProtocol>(
   messageType: T,
@@ -10,11 +10,13 @@ export function useWebviewListener<T extends keyof ReverseWebviewProtocol>(
   ) => Promise<ReverseWebviewProtocol[T][1]>,
   dependencies?: any[],
 ) {
+  const ideMessenger = useContext(IdeMessengerContext);
+
   useEffect(() => {
     const listener = async (event: { data: Message }) => {
       if (event.data.messageType === messageType) {
         const result = await handler(event.data.data);
-        respondToIde(messageType, result, event.data.messageId);
+        ideMessenger.respond(messageType, result, event.data.messageId);
       }
     };
     window.addEventListener("message", listener);

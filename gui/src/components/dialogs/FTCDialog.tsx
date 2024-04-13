@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Button, Input } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
-import { postToIde } from "../../util/ide";
 
 const GridDiv = styled.div`
   display: grid;
@@ -18,6 +18,7 @@ function FTCDialog() {
   const navigate = useNavigate();
   const [apiKey, setApiKey] = React.useState("");
   const dispatch = useDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   return (
     <div className="p-4">
@@ -55,7 +56,7 @@ function FTCDialog() {
         <Button
           disabled={!apiKey}
           onClick={() => {
-            postToIde("config/addOpenAiKey", apiKey);
+            ideMessenger.post("config/addOpenAiKey", apiKey);
             dispatch(setShowDialog(false));
             dispatch(setDefaultModel("GPT-4"));
           }}

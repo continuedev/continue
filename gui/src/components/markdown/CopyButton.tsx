@@ -1,6 +1,7 @@
 import { CheckIcon, ClipboardIcon } from "@heroicons/react/24/outline";
-import { useState } from "react";
-import { ideRequest, isJetBrains } from "../../util/ide";
+import { useContext, useState } from "react";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { isJetBrains } from "../../util";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 
 interface CopyButtonProps {
@@ -11,6 +12,8 @@ interface CopyButtonProps {
 export function CopyButton(props: CopyButtonProps) {
   const [copied, setCopied] = useState<boolean>(false);
 
+  const ideMessenger = useContext(IdeMessengerContext);
+
   return (
     <>
       <HeaderButtonWithText
@@ -19,7 +22,7 @@ export function CopyButton(props: CopyButtonProps) {
           const text =
             typeof props.text === "string" ? props.text : props.text();
           if (isJetBrains()) {
-            ideRequest("copyText", { text });
+            ideMessenger.request("copyText", { text });
           } else {
             navigator.clipboard.writeText(text);
           }

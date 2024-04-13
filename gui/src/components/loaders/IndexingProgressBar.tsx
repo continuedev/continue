@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
-import { postToIde } from "../../util/ide";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 
 const DIAMETER = 6;
 const CircleDiv = styled.div<{ color: string }>`
@@ -59,6 +59,8 @@ const IndexingProgressBar = ({
   total,
   currentlyIndexing,
 }: ProgressBarProps) => {
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const fillPercentage = Math.min(100, Math.max(0, (completed / total) * 100));
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
@@ -67,7 +69,7 @@ const IndexingProgressBar = ({
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    postToIde("index/setPaused", !expanded);
+    ideMessenger.post("index/setPaused", !expanded);
   }, [expanded]);
 
   return (
@@ -76,7 +78,7 @@ const IndexingProgressBar = ({
         if (completed < total) {
           setExpanded((prev) => !prev);
         } else {
-          postToIde("index/forceReIndex", undefined);
+          ideMessenger.post("index/forceReIndex", undefined);
         }
       }}
       className="cursor-pointer"

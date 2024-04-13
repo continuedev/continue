@@ -2,7 +2,7 @@ import {
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -12,6 +12,7 @@ import {
   vscForeground,
   vscInputBackground,
 } from ".";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -20,8 +21,7 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
-import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
-import { isJetBrains, postToIde } from "../util/ide";
+import { getFontSize, isJetBrains, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage } from "../util/localStorage";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
@@ -107,6 +107,8 @@ const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const dialogMessage = useSelector(
     (state: RootState) => state.uiState.dialogMessage,
   );
@@ -157,7 +159,7 @@ const Layout = () => {
   );
 
   useWebviewListener("openSettings", async () => {
-    postToIde("openConfigJson", undefined);
+    ideMessenger.post("openConfigJson", undefined);
   });
 
   useWebviewListener(
@@ -252,7 +254,7 @@ const Layout = () => {
             <HeaderButtonWithText
               onClick={() => {
                 // navigate("/settings");
-                postToIde("openConfigJson", undefined);
+                ideMessenger.post("openConfigJson", undefined);
               }}
               text="Configure Continue"
             >

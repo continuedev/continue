@@ -1,12 +1,12 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { table } from "table";
 import { lightGray, vscBackground, vscInputBackground } from "../components";
 import { CopyButton } from "../components/markdown/CopyButton";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
-import { ideRequest } from "../util/ide";
 
 const Th = styled.th`
   padding: 0.5rem;
@@ -36,11 +36,12 @@ function generateTable(data: unknown[][]) {
 function Stats() {
   useNavigationListener();
   const navigate = useNavigate();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const [days, setDays] = useState<{ day: string; tokens: number }[]>([]);
 
   useEffect(() => {
-    ideRequest("stats/getTokensPerDay", undefined).then((days) => {
+    ideMessenger.request("stats/getTokensPerDay", undefined).then((days) => {
       setDays(days);
     });
   }, []);
@@ -48,9 +49,11 @@ function Stats() {
   const [models, setModels] = useState<{ model: string; tokens: number }[]>([]);
 
   useEffect(() => {
-    ideRequest("stats/getTokensPerModel", undefined).then((models) => {
-      setModels(models);
-    });
+    ideMessenger
+      .request("stats/getTokensPerModel", undefined)
+      .then((models) => {
+        setModels(models);
+      });
   }, []);
 
   return (

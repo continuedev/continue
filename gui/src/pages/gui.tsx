@@ -9,6 +9,7 @@ import { usePostHog } from "posthog-js/react";
 import {
   Fragment,
   useCallback,
+  useContext,
   useEffect,
   useLayoutEffect,
   useRef,
@@ -30,6 +31,7 @@ import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
 import { useWebviewListener } from "../hooks/useWebviewListener";
@@ -41,8 +43,11 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
-import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
-import { isJetBrains } from "../util/ide";
+import {
+  getMetaKeyLabel,
+  isJetBrains,
+  isMetaEquivalentKeyPressed,
+} from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 const TopGuiDiv = styled.div`
@@ -141,6 +146,7 @@ function GUI(props: GUIProps) {
   const posthog = usePostHog();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   // #endregion
 
@@ -225,7 +231,7 @@ function GUI(props: GUIProps) {
 
   // #endregion
 
-  const { streamResponse } = useChatHandler(dispatch);
+  const { streamResponse } = useChatHandler(dispatch, ideMessenger);
 
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
@@ -245,7 +251,7 @@ function GUI(props: GUIProps) {
         }
       }
 
-      streamResponse(editorState, modifiers);
+      streamResponse(editorState, modifiers, ideMessenger);
 
       // Increment localstorage counter for popup
       const currentCount = getLocalStorage("mainTextEntryCounter");
@@ -368,7 +374,12 @@ function GUI(props: GUIProps) {
                     {item.message.role === "user" ? (
                       <ContinueInputBox
                         onEnter={async (editorState, modifiers) => {
-                          streamResponse(editorState, modifiers, index);
+                          streamResponse(
+                            editorState,
+                            modifiers,
+                            ideMessenger,
+                            index,
+                          );
                         }}
                         isLastUserInput={isLastUserInput(index)}
                         isMainInput={false}
@@ -421,6 +432,7 @@ function GUI(props: GUIProps) {
                               state.history[index - 1].editorState,
                               state.history[index - 1].modifiers ??
                                 defaultInputModifiers,
+                              ideMessenger,
                               index - 1,
                             );
                           }}

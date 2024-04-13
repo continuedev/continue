@@ -25,6 +25,7 @@ import {
   vscInputBorder,
   vscInputBorderFocus,
 } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
@@ -32,8 +33,7 @@ import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
-import { isMetaEquivalentKeyPressed } from "../../util";
-import { isJetBrains, postToIde } from "../../util/ide";
+import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -131,6 +131,7 @@ interface TipTapEditorProps {
 function TipTapEditor(props: TipTapEditorProps) {
   const dispatch = useDispatch();
 
+  const ideMessenger = useContext(IdeMessengerContext);
   const { getSubmenuContextItems } = useContext(SubmenuContextProvidersContext);
 
   const historyLength = useSelector(
@@ -223,7 +224,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         };
       });
     } else {
-      postToIde("errorPopup", {
+      ideMessenger.post("errorPopup", {
         message:
           "Images need to be in jpg or png format and less than 10MB in size.",
       });
@@ -285,6 +286,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           onClose,
           onOpen,
           inSubmenuRef,
+          ideMessenger,
         ),
         renderHTML: (props) => {
           return `@${props.node.attrs.label || props.node.attrs.id}`;
@@ -382,7 +384,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           setIgnoreHighlightedCode(false);
         }, 100);
       } else if (event.key === "Escape") {
-        postToIde("focusEditor", undefined);
+        ideMessenger.post("focusEditor", undefined);
       }
     };
 

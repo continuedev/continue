@@ -4,7 +4,7 @@ import {
   PlusIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -18,6 +18,7 @@ import {
   vscListActiveBackground,
   vscListActiveForeground,
 } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import {
@@ -26,7 +27,6 @@ import {
 } from "../../redux/slices/uiStateSlice";
 import { RootState } from "../../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
-import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 
@@ -123,6 +123,8 @@ function ListBoxOption({
   idx: number;
   showDelete?: boolean;
 }) {
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 
@@ -156,7 +158,9 @@ function ListBoxOption({
                   <ConfirmationDialog
                     text={`Are you sure you want to delete this model? (${option.title})`}
                     onConfirm={() => {
-                      postToIde("config/deleteModel", { title: option.title });
+                      ideMessenger.post("config/deleteModel", {
+                        title: option.title,
+                      });
                     }}
                   />,
                 ),

@@ -1,7 +1,6 @@
 import { Tooltip } from "react-tooltip";
 import styled, { keyframes } from "styled-components";
-import { getFontSize } from "../util";
-import { isJetBrains } from "../util/ide";
+import { getFontSize, isJetBrains } from "../util";
 
 export const VSC_INPUT_BACKGROUND_VAR = "--vscode-input-background";
 export const VSC_BACKGROUND_VAR = "--vscode-sideBar-background";
