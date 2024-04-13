@@ -25,7 +25,7 @@ import {
   vscInputBorder,
   vscInputBorderFocus,
 } from "..";
-import { SubmenuContextProvidersContext } from "../../App";
+import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";

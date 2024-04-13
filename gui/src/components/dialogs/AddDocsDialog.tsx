@@ -3,7 +3,7 @@ import React, { useContext, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { Button, Input } from "..";
-import { SubmenuContextProvidersContext } from "../../App";
+import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
 import { postToIde } from "../../util/ide";
 
