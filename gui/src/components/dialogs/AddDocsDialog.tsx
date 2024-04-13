@@ -4,7 +4,6 @@ import React, { useContext, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { Button, Input } from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
 

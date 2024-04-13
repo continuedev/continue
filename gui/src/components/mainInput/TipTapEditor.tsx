@@ -25,7 +25,6 @@ import {
   vscInputBorder,
   vscInputBorderFocus,
 } from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
