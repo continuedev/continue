@@ -40,6 +40,30 @@ interface CodeBlockToolBarProps {
 }
 
 const terminalLanguages = ["bash", "sh"];
+const commonTerminalCommands = [
+  "npm",
+  "pnpm",
+  "yarn",
+  "bun",
+  "deno",
+  "npx",
+  "cd",
+  "ls",
+  "pwd",
+  "pip",
+  "python",
+  "node",
+  "git",
+  "curl",
+  "wget",
+];
+function isTerminalCodeBlock(language: string | undefined, text: string) {
+  return (
+    terminalLanguages.includes(language) ||
+    (text.trim().split("\n").length === 1 &&
+      commonTerminalCommands.some((c) => text.trim().startsWith(c)))
+  );
+}
 
 function CodeBlockToolBar(props: CodeBlockToolBarProps) {
   const [copied, setCopied] = useState(false);
@@ -52,7 +76,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
           <>
             <HeaderButtonWithText
               text={
-                terminalLanguages.includes(props.language)
+                isTerminalCodeBlock(props.language, props.text)
                   ? "Run in terminal"
                   : applying
                   ? "Applying..."
