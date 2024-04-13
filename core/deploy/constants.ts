@@ -1,5 +1,5 @@
 export const constants = {
-  a: "https://proxy-server-green-l6vsfbzhba-uw.a.run.app",
+  a: "https://proxy-server-blue-l6vsfbzhba-uw.a.run.app",
   b: "1710787199603",
   c: "NfZFVegMpdyT3P5UmAggr7T7Hb6PlcbB",
 };
