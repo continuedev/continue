@@ -547,7 +547,6 @@ export type ModelName =
   | "gpt-4"
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
-  | "gpt-4o"
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
@@ -588,12 +587,6 @@ export type ModelName =
   | "claude-3-sonnet-20240229"
   | "claude-3-haiku-20240307"
   | "claude-2.1"
-  // Bedrock Anthropic
-  | "anthropic.claude-3-sonnet-20240229-v1:0"
-  | "anthropic.claude-3-haiku-20240307-v1:0"
-  | "anthropic.claude-v2:1"
-  // Google PaLM
-  | "chat-bison-001"
   // Gemini
   | "gemini-pro"
   | "gemini-1.5-pro-latest"

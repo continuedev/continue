@@ -385,7 +385,7 @@ declare global {
       stackDepth: number,
     ): Promise<string[]>;
     getAvailableThreads(): Promise<Thread[]>;
-    listWorkspaceContents(directory?: string, useGitIgnore?: boolean): Promise<string[]>;
+    listWorkspaceContents(directory?: string): Promise<string[]>;
     listFolders(): Promise<string[]>;
     getWorkspaceDirs(): Promise<string[]>;
     getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
@@ -413,6 +413,7 @@ declare global {
     subprocess(command: string): Promise<[string, string]>;
     getProblems(filepath?: string | undefined): Promise<Problem[]>;
     getBranch(dir: string): Promise<string>;
+    getStats(directory: string): Promise<{ [path: string]: number }>;
     getTags(artifactId: string): Promise<IndexTag[]>;
     getRepoName(dir: string): Promise<string | undefined>;
   }
@@ -504,6 +505,7 @@ declare global {
     | "llama.cpp"
     | "replicate"
     | "text-gen-webui"
+    | "gemini"
     | "lmstudio"
     | "llamafile"
     | "gemini"
@@ -511,8 +513,7 @@ declare global {
     | "bedrock"
     | "deepinfra"
     | "flowise"
-    | "groq"
-    | "custom";
+    | "groq";
   
   export type ModelName =
     | "AUTODETECT"
@@ -553,12 +554,10 @@ declare global {
     | "neural-chat-7b"
     // Anthropic
     | "claude-2"
-    // Bedrock Anthropic
-    | "anthropic.claude-3-sonnet-20240229-v1:0"
-    | "anthropic.claude-3-haiku-20240307-v1:0"
-    | "anthropic.claude-v2:1"
-    // Google PaLM
-    | "chat-bison-001"
+    | "claude-3-opus-20240229"
+    | "claude-3-sonnet-20240229"
+    | "claude-3-haiku-20240307"
+    | "claude-2.1"
     // Gemini
     | "gemini-pro"
     | "gemini-1.5-pro-latest"
@@ -638,7 +637,6 @@ declare global {
     | "transformers.js"
     | "ollama"
     | "openai"
-    | "cohere"
     | "free-trial";
   
   export interface EmbedOptions {
@@ -657,7 +655,7 @@ declare global {
     embed(chunks: string[]): Promise<number[][]>;
   }
   
-  export type RerankerName = "cohere" | "voyage" | "llm" | "free-trial";
+  export type RerankerName = "voyage" | "llm" | "free-trial";
   
   export interface RerankerDescription {
     name: RerankerName;
@@ -686,7 +684,6 @@ declare global {
     useCache: boolean;
     onlyMyCode: boolean;
     useOtherFiles: boolean;
-    disableInFiles?: string[];
   }
   
   export interface ContinueUIConfig {
@@ -700,14 +697,8 @@ declare global {
     optimize?: string;
     fixGrammar?: string;
   }
-  
-  interface ModelRoles {
-    inlineEdit?: string;
-  }
-  
-  interface ExperimentalConfig {
+  interface ExperimantalConfig {
     contextMenuPrompts?: ContextMenuConfig;
-    modelRoles?: ModelRoles;
   }
   
   export interface SerializedContinueConfig {
@@ -728,7 +719,7 @@ declare global {
     tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
     ui?: ContinueUIConfig;
     reranker?: RerankerDescription;
-    experimental?: ExperimentalConfig;
+    experimental?: ExperimantalConfig;
   }
   
   export type ConfigMergeType = "merge" | "overwrite";
@@ -774,7 +765,7 @@ declare global {
     /** Options for the reranker */
     reranker?: RerankerDescription | Reranker;
     /** Experimental configuration */
-    experimental?: ExperimentalConfig;
+    experimental?: ExperimantalConfig;
   }
   
   export interface ContinueConfig {
@@ -793,7 +784,7 @@ declare global {
     tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
     ui?: ContinueUIConfig;
     reranker?: Reranker;
-    experimental?: ExperimentalConfig;
+    experimental?: ExperimantalConfig;
   }
   
   export interface BrowserSerializedContinueConfig {
@@ -810,7 +801,7 @@ declare global {
     embeddingsProvider?: string;
     ui?: ContinueUIConfig;
     reranker?: RerankerDescription;
-    experimental?: ExperimentalConfig;
+    experimental?: ExperimantalConfig;
   }  
 }
 

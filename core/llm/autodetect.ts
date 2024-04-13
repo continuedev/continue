@@ -75,11 +75,21 @@ function modelSupportsImages(
     return false;
   }
 
-  const lower = model.toLowerCase();
+  if (model.includes("llava")) {
+    return true;
+  }
+
+  if (model.includes("claude-3")) {
+    return true;
+  }
+
+  if (["gpt-4-vision-preview", "gpt-4-turbo"].includes(model)) {
+    return true;
+  }
+
   if (
-    MODEL_SUPPORTS_IMAGES.some(
-      (modelName) => lower.includes(modelName) || title?.includes(modelName),
-    )
+    (model === "gemini-ultra" || model === "gemini-1.5-pro-latest") &&
+    (provider === "gemini" || provider === "free-trial")
   ) {
     return true;
   }
@@ -90,6 +100,7 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "anthropic",
   "bedrock",
   "deepinfra",
+  "gemini",
   "gemini",
   "huggingface-inference-api",
   "huggingface-tgi",

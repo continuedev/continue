@@ -1,6 +1,6 @@
 ---
-title: Select providers
-description: Configure LLM providers
+title: Select a provider
+description: Swap out different LLM providers
 keywords: [openai, anthropic, gemini, ollama, ggml]
 ---
 
@@ -61,9 +61,8 @@ You can run open-source LLMs with cloud services like:
 You can use commercial LLMs via APIs using:
 
 - [Anthrophic API](../reference/Model%20Providers/anthropicllm.md)
-- [OpenAI API](../reference/Model%20Providers/openai.md)
-- [Azure OpenAI Service](../reference/Model%20Providers/openai.md)
-- [Google Gemini API](../reference/Model%20Providers/geminiapi.md)
+- [Google Gemini API](../reference/Model%20Providers/googlepalmapi.md)
+- [OpenAI free trial](../reference/Model%20Providers/freetrial.md)
 - [Mistral API](../reference/Model%20Providers/mistral.md)
 - [Voyage AI API](../walkthroughs/codebase-embeddings.md#openai)
 - [Cohere API](../reference/Model%20Providers/cohere.md)

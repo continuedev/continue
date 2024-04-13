@@ -488,6 +488,18 @@ const gemini15Pro: ModelPackage = {
   icon: "gemini.png",
   providerOptions: ["gemini", "freetrial"],
 };
+const gemini15Pro: ModelPackage = {
+  title: "Gemini 1.5 Pro",
+  description: "A newer Gemini model with 1M token context length",
+  params: {
+    title: "Gemini 1.5 Pro",
+    model: "gemini-1.5-pro-latest",
+    contextLength: 1_000_000,
+    apiKey: "<API_KEY>",
+  },
+  icon: "gemini.png",
+  providerOptions: ["gemini", "freetrial"],
+};
 const gemini15Flash: ModelPackage = {
   title: "Gemini 1.5 Flash",
   description:
@@ -593,21 +605,6 @@ const gpt4turbo: ModelPackage = {
     contextLength: 128_000,
     title: "GPT-4 Turbo",
   },
-  providerOptions: ["openai"],
-  icon: "openai.png",
-};
-
-const gpt4o: ModelPackage = {
-  title: "GPT-4o",
-  description:
-    "An even faster version of GPT-4 with stronger multi-modal capabilities.",
-  params: {
-    model: "gpt-4o",
-    contextLength: 128_000,
-    title: "GPT-4o",
-    systemMessage:
-      "You are an expert software developer. You give helpful and concise responses.",
-  },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
 };
@@ -680,63 +677,6 @@ const claude3Haiku: ModelPackage = {
   icon: "anthropic.png",
 };
 
-const bedrockClaude3Sonnet: ModelPackage = {
-  title: "Bedrock: Claude 3 Sonnet",
-  description:
-    "The second most capable model in the Claude 3 series: ideal balance of intelligence and speed",
-  params: {
-    model: "anthropic.claude-3-sonnet-20240229-v1:0",
-    contextLength: 200_000,
-    title: "Claude 3 Sonnet",
-    apiKey: "",
-  },
-  providerOptions: ["bedrock"],
-  icon: "anthropic.png",
-};
-
-const bedrockClaude3Haiku: ModelPackage = {
-  title: "Bedrock: Claude 3 Haiku",
-  description:
-    "The third most capable model in the Claude 3 series: fastest and most compact model for near-instant responsiveness",
-  params: {
-    model: "anthropic.claude-3-sonnet-20240229-v1:0",
-    contextLength: 200_000,
-    title: "Claude 3 Sonnet",
-    apiKey: "",
-  },
-  providerOptions: ["bedrock"],
-  icon: "anthropic.png",
-};
-
-const bedrockClaude2v1: ModelPackage = {
-  title: "Bedrock: Claude 2.1",
-  description:
-    "Claude 2.1 is a large language model (LLM) by Anthropic with a 200K token context window, reduced hallucination rates, and improved accuracy over long documents.",
-  params: {
-    model: "anthropic.claude-v2:1",
-    contextLength: 200_000,
-    title: "Claude 2.1",
-    apiKey: "",
-  },
-  providerOptions: ["bedrock"],
-  icon: "anthropic.png",
-
-}
-
-const chatBison: ModelPackage = {
-  title: "chat-bison-001",
-  description:
-    "Google PaLM's chat-bison-001 model, fine-tuned for chatting about code",
-  params: {
-    model: "chat-bison-001",
-    contextLength: 8000,
-    apiKey: "",
-    title: "Chat Bison",
-  },
-  providerOptions: ["palm"],
-  icon: "google-palm.png",
-};
-
 const AUTODETECT: ModelPackage = {
   title: "Autodetect",
   description:
@@ -752,10 +692,11 @@ export const MODEL_INFO: (ModelPackage | string)[] = [
   gpt4o,
   gpt4turbo,
   gpt35turbo,
-  "Anthropic",
   claude3Opus,
   claude3Sonnet,
   claude3Haiku,
+  gemini15Pro,
+  geminiPro,
   claude2,
   bedrockClaude3Sonnet,
   bedrockClaude3Haiku,
@@ -778,8 +719,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     packages: [
       gpt4o,
       gpt4turbo,
-      gpt35turbo,
-      // gpt4,
+      gpt4turbo,
       {
         ...AUTODETECT,
         params: {
@@ -1022,10 +962,10 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ,
     ],
   },
-  palm: {
+  gemini: {
     title: "Google Gemini API",
     provider: "gemini",
-    refPage: "geminiapi",
+    refPage: "googlepalmapi",
     description:
       "Try out Google's state-of-the-art Gemini model from their API.",
     longDescription: `To get started with Google Gemini API, obtain your API key from [here](https://ai.google.dev/tutorials/workspace_auth_quickstart) and paste it below.`,
@@ -1040,8 +980,36 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         required: true,
       },
     ],
-    packages: [gemini15Pro, geminiPro, gemini15Flash],
-    apiKeyUrl: "https://aistudio.google.com/app/apikey",
+    packages: [gemini15Pro, geminiPro],
+  },
+  mistral: {
+    title: "Mistral API",
+    provider: "mistral",
+    description:
+      "The Mistral API provides hosted access to their models, including Mistral-7b, Mixtral, and the very capable mistral-medium",
+    icon: "mistral.png",
+    longDescription: `To get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)`,
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Mistral API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
+    packages: [mistralTiny, mistralSmall, mistralMedium].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
   },
   lmstudio: {
     title: "LM Studio",
@@ -1190,8 +1158,9 @@ After it's up and running, you can start using Continue.`,
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
       { ...claude3Sonnet, title: "Claude 3 Sonnet (trial)" },
       { ...claude3Haiku, title: "Claude 3 Haiku (trial)" },
-      mixtralTrial,
       { ...gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
+      { ...gpt4turbo, title: "GPT-4 Turbo (trial)" },
+      { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
       {
         ...AUTODETECT,
         params: {

@@ -168,7 +168,7 @@
             "### Huggingface Inference API\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/huggingfaceinferenceapi)",
             "### Llama.cpp\nllama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:\n\n1. Clone the repository with `git clone https://github.com/ggerganov/llama.cpp`.\n2. `cd llama.cpp`\n3. Run `make` to build the server.\n4. Download the model you'd like to use and place it in the `llama.cpp/models` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))\n5. Run the llama.cpp server with the command below (replacing with the model you downloaded):\n\n```shell\n.\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf\n```\n\nAfter it's up and running, you can start using Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamacpp)",
             "### Replicate\nReplicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/replicatellm)",
-            "### Google PALM\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/googlepalmapi)",
+            "### Gemini API\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/googlepalmapi)",
             "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/lmstudio)",
             "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamafile)",
             "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
@@ -314,7 +314,6 @@
                 "enum": [
                   "openai",
                   "anthropic",
-                  "cohere",
                   "gemini",
                   "huggingface-inference-api",
                   "replicate",
@@ -361,67 +360,6 @@
               },
               "apiVersion": {
                 "type": "string"
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["cloudflare"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "accountId": {
-                "type": "string"
-              },
-              "aiGatewaySlug": {
-                "type": "string"
-              },
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "@cf/meta/llama-3-8b-instruct",
-                      "@hf/thebloke/deepseek-coder-6.7b-instruct-awq",
-                      "@cf/deepseek-ai/deepseek-math-7b-instruct",
-                      "@cf/thebloke/discolm-german-7b-v1-awq",
-                      "@cf/tiiuae/falcon-7b-instruct",
-                      "@cf/google/gemma-2b-it-lora",
-                      "@hf/google/gemma-7b-it",
-                      "@cf/google/gemma-7b-it-lora",
-                      "@hf/nousresearch/hermes-2-pro-mistral-7b",
-                      "@cf/meta/llama-2-7b-chat-fp16",
-                      "@cf/meta/llama-2-7b-chat-int8",
-                      "@cf/meta-llama/llama-2-7b-chat-hf-lora",
-                      "@hf/thebloke/llama-2-13b-chat-awq",
-                      "@hf/thebloke/llamaguard-7b-awq",
-                      "@cf/mistral/mistral-7b-instruct-v0.1",
-                      "@hf/mistral/mistral-7b-instruct-v0.2",
-                      "@cf/mistral/mistral-7b-instruct-v0.2-lora",
-                      "@hf/thebloke/neural-chat-7b-v3-1-awq",
-                      "@cf/openchat/openchat-3.5-0106",
-                      "@hf/thebloke/openhermes-2.5-mistral-7b-awq",
-                      "@cf/microsoft/phi-2",
-                      "@cf/qwen/qwen1.5-0.5b-chat",
-                      "@cf/qwen/qwen1.5-1.8b-chat",
-                      "@cf/qwen/qwen1.5-7b-chat-awq",
-                      "@cf/qwen/qwen1.5-14b-chat-awq",
-                      "@cf/defog/sqlcoder-7b-2",
-                      "@hf/nexusflow/starling-lm-7b-beta",
-                      "@cf/tinyllama/tinyllama-1.1b-chat-v1.0",
-                      "@hf/thebloke/zephyr-7b-beta-awq",
-                      "@hf/thebloke/deepseek-coder-6.7b-base-awq"
-                    ]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
               }
             }
           }
@@ -623,57 +561,6 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "bedrock"
-                ]
-              }
-            },
-            "required": [
-              "provider"
-            ]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "anyOf": [
-                  {
-                    "enum": [
-                      "anthropic.claude-3-sonnet-20240229-v1:0",
-                      "anthropic.claude-3-haiku-20240307-v1:0",
-                      "anthropic.claude-v2:1"
-                    ]
-                  },
-                  {
-                    "type": "string"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": [
-                  "google-palm"
-                ]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "enum": ["command-r", "command-r-plus"]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
                 "enum": ["bedrock"]
               }
             },
@@ -685,9 +572,9 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "claude-3-sonnet-20240229",
-                      "claude-3-haiku-20240307",
-                      "claude-2"
+                      "anthropic.claude-3-sonnet-20240229-v1:0",
+                      "anthropic.claude-3-haiku-20240307-v1:0",
+                      "anthropic.claude-v2:1"
                     ]
                   },
                   {
@@ -713,8 +600,7 @@
                 "enum": [
                   "chat-bison-001",
                   "gemini-pro",
-                  "gemini-1.5-pro-latest",
-                  "gemini-1.5-flash-latest"
+                  "gemini-1.5-pro-latest"
                 ]
               }
             }
@@ -892,14 +778,7 @@
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "codestral-latest",
-                  "open-mistral-7b",
-                  "open-mixtral-8x7b",
-                  "open-mixtral-8x22b",
-                  "mistral-small-latest",
-                  "mistral-large-latest"
-                ]
+                "enum": ["mistral-tiny", "mistral-small", "mistral-medium"]
               }
             }
           }
@@ -908,23 +787,15 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "groq"
-                ]
+                "enum": ["groq"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "llama2-70b",
-                  "mistral-8x7b",
-                  "gemma"
-                ]
+                "enum": ["llama2-70b", "mistral-8x7b", "gemma"]
               }
             }
           }
@@ -1090,7 +961,6 @@
                       "chat-bison-001",
                       "gemini-pro",
                       "gemini-1.5-pro-latest",
-                      "gemini-1.5-flash-latest",
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",
@@ -1582,10 +1452,7 @@
                     ]
                   }
                 },
-                "required": [
-                  "domain",
-                  "token"
-                ]
+                "required": ["domain", "token"]
               }
             },
             "required": ["params"]
@@ -1837,12 +1704,7 @@
           "type": "object",
           "properties": {
             "provider": {
-              "enum": [
-                "transformers.js",
-                "ollama",
-                "openai",
-                "free-trial"
-              ]
+              "enum": ["transformers.js", "ollama", "openai", "free-trial"]
             },
             "model": {
               "type": "string"
@@ -1865,26 +1727,13 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere"]
+                    "enum": ["ollama"]
                   }
                 },
                 "required": ["provider"]
               },
               "then": {
-                "required": ["apiKey"]
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "provider": {
-                    "enum": ["gemini"]
-                  }
-                },
-                "required": ["provider"]
-              },
-              "then": {
-                "required": ["apiKey"]
+                "required": ["model"]
               }
             }
           ]
@@ -1895,7 +1744,7 @@
           "type": "object",
           "properties": {
             "name": {
-              "enum": ["cohere", "voyage", "llm", "free-trial"]
+              "enum": ["voyage", "llm", "free-trial"]
             },
             "params": {
               "type": "object"
@@ -1903,40 +1752,6 @@
           },
           "required": ["name"],
           "allOf": [
-            {
-              "if": {
-                "properties": {
-                  "name": {
-                    "enum": ["cohere"]
-                  }
-                },
-                "required": ["name"]
-              },
-              "then": {
-                "properties": {
-                  "params": {
-                    "type": "object",
-                    "properties": {
-                      "model": {
-                        "enum": [
-                          "rerank-english-v3.0",
-                          "rerank-multilingual-v3.0",
-                          "rerank-english-v2.0",
-                          "rerank-multilingual-v2.0"
-                        ]
-                      },
-                      "apiBase": {
-                        "type": "string"
-                      },
-                      "apiKey": {
-                        "type": "string"
-                      }
-                    },
-                    "required": ["apiKey"]
-                  }
-                }
-              }
-            },
             {
               "if": {
                 "properties": {
@@ -1982,91 +1797,6 @@
                       }
                     },
                     "required": ["apiKey"]
-                  }
-                }
-              }
-            }
-          ]
-        },
-        "reranker": {
-          "title": "Reranker",
-          "markdownDescription": "The reranker is responsible for selecting the final results when retrieving snippets from your codebase.",
-          "type": "object",
-          "properties": {
-            "name": {
-              "enum": [
-                "voyage",
-                "llm",
-                "free-trial"
-              ]
-            },
-            "params": {
-              "type": "object"
-            }
-          },
-          "required": [
-            "name"
-          ],
-          "allOf": [
-            {
-              "if": {
-                "properties": {
-                  "name": {
-                    "enum": [
-                      "llm"
-                    ]
-                  }
-                },
-                "required": [
-                  "name"
-                ]
-              },
-              "then": {
-                "properties": {
-                  "params": {
-                    "type": "object",
-                    "properties": {
-                      "modelTitle": {
-                        "type": "string"
-                      }
-                    },
-                    "required": [
-                      "modelTitle"
-                    ]
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "name": {
-                    "enum": [
-                      "voyage"
-                    ]
-                  }
-                },
-                "required": [
-                  "name"
-                ]
-              },
-              "then": {
-                "properties": {
-                  "params": {
-                    "type": "object",
-                    "properties": {
-                      "apiKey": {
-                        "type": "string"
-                      },
-                      "model": {
-                        "enum": [
-                          "rerank-lite-1"
-                        ]
-                      }
-                    },
-                    "required": [
-                      "apiKey"
-                    ]
                   }
                 }
               }
@@ -2151,10 +1881,7 @@
           "type": "object",
           "properties": {
             "codeBlockToolbarPosition": {
-              "enum": [
-                "top",
-                "bottom"
-              ],
+              "enum": ["top", "bottom"],
               "default": "top",
               "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
             }

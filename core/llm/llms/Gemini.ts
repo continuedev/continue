@@ -4,10 +4,9 @@ import {
   LLMOptions,
   MessagePart,
   ModelProvider,
-} from "../../index.js";
-import { stripImages } from "../countTokens.js";
-import { BaseLLM } from "../index.js";
-import { streamResponse } from "../stream.js";
+} from "../..";
+import { stripImages } from "../countTokens";
+import { streamResponse } from "../stream";
 
 class Gemini extends BaseLLM {
   static providerName: ModelProvider = "gemini";
@@ -33,7 +32,7 @@ class Gemini extends BaseLLM {
     const msgs = [...messages];
 
     if (msgs[0]?.role === "system") {
-      const sysMsg = msgs.shift()?.content;
+      let sysMsg = msgs.shift()!.content;
       // @ts-ignore
       if (msgs[0]?.role === "user") {
         msgs[0].content = `System message - follow these instructions in every response: ${sysMsg}\n\n---\n\n${msgs[0].content}`;
@@ -47,7 +46,7 @@ class Gemini extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const convertedMsgs = this.removeSystemMessage(messages);
+    let convertedMsgs = this.removeSystemMessage(messages);
     if (options.model.includes("gemini")) {
       for await (const message of this.streamChatGemini(
         convertedMsgs,
@@ -133,13 +132,13 @@ class Gemini extends BaseLLM {
 
         // Incrementally stream the content to make it smoother
         const content = data.candidates[0].content.parts[0].text;
-        const words = content.split(/(\s+)/);
+        const words = content.split(" ");
         const delaySeconds = Math.min(4.0 / (words.length + 1), 0.1);
         while (words.length > 0) {
           const wordsToYield = Math.min(3, words.length);
           yield {
             role: "assistant",
-            content: words.splice(0, wordsToYield).join(""),
+            content: words.splice(0, wordsToYield).join(" ") + " ",
           };
           await delay(delaySeconds);
         }
