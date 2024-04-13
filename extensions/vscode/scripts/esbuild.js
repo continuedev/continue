@@ -17,7 +17,7 @@ const esbuildConfig = {
 
   // To allow import.meta.path for transformers.js
   // https://github.com/evanw/esbuild/issues/1492#issuecomment-893144483
-  inject: ["./importMetaUrl.js"],
+  inject: ["./scripts/importMetaUrl.js"],
   define: { "import.meta.url": "importMetaUrl" },
 };
 

@@ -447,7 +447,7 @@
     ]
   },
   "scripts": {
-    "esbuild-base": "node esbuild.js",
+    "esbuild-base": "node scripts/esbuild.js",
     "vscode:prepublish": "npm run esbuild-base -- --minify",
     "esbuild": "npm run esbuild-base -- --sourcemap",
     "esbuild-watch": "npm run esbuild-base -- --sourcemap --watch",
