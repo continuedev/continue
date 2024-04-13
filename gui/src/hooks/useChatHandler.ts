@@ -54,6 +54,12 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   async function _streamNormalInput(messages: ChatMessage[]) {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
+    const gen = ideMessenger.llmStreamChat(
+      defaultModel.title,
+      cancelToken,
+      messages,
+    );
+    let next = await gen.next();
 
     try {
       const gen = ideMessenger.llmStreamChat(
@@ -145,6 +151,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   async function streamResponse(
     editorState: JSONContent,
     modifiers: InputModifiers,
+    ideMessenger: IIdeMessenger,
     index?: number,
   ) {
     try {
@@ -158,6 +165,7 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       const [contextItems, selectedCode, content] = await resolveEditorContent(
         editorState,
         modifiers,
+        ideMessenger,
       );
 
       const message: ChatMessage = {

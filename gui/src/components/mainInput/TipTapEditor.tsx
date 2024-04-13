@@ -25,6 +25,7 @@ import {
   vscInputBorder,
   vscInputBorderFocus,
 } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
@@ -34,11 +35,7 @@ import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
-import {
-  getFontSize,
-  isJetBrains,
-  isMetaEquivalentKeyPressed,
-} from "../../util";
+import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";

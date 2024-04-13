@@ -166,7 +166,7 @@ function useSubmenuContextProviders() {
   function getSubmenuContextItems(
     providerTitle: string | undefined,
     query: string,
-    limit: number = MAX_LENGTH,
+    limit: number = 10,
   ): (ContextSubmenuItem & { providerTitle: string })[] {
     const results = getSubmenuSearchResults(providerTitle, query);
     if (results.length === 0) {

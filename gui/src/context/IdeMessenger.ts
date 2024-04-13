@@ -1,7 +1,15 @@
-import { ChatMessage, IDE, LLMFullCompletionOptions, PromptLog } from "core";
-import type { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
+import {
+  ChatMessage,
+  IDE,
+  LLMFullCompletionOptions,
+  LLMReturnValue,
+} from "core";
 import { MessageIde } from "core/util/messageIde";
 import { Message } from "core/util/messenger";
+import {
+  ReverseWebviewProtocol,
+  WebviewProtocol,
+} from "core/web/webviewProtocol";
 import { createContext } from "react";
 import { v4 as uuidv4 } from "uuid";
 import "vscode-webview";
@@ -13,49 +21,43 @@ interface vscode {
 
 declare const vscode: any;
 
-type ToIdeOrCoreProtocol = FromWebviewProtocol;
-
 export interface IIdeMessenger {
-  post<T extends keyof FromWebviewProtocol>(
+  post<T extends keyof WebviewProtocol>(
     messageType: T,
-    data: FromWebviewProtocol[T][0],
+    data: WebviewProtocol[T][0],
     messageId?: string,
     attempt?: number,
   ): void;
 
-  respond<T extends keyof ToWebviewProtocol>(
+  respond<T extends keyof ReverseWebviewProtocol>(
     messageType: T,
-    data: ToWebviewProtocol[T][1],
+    data: ReverseWebviewProtocol[T][1],
     messageId: string,
   ): void;
 
-  request<T extends keyof FromWebviewProtocol>(
+  request<T extends keyof WebviewProtocol>(
     messageType: T,
-    data: FromWebviewProtocol[T][0],
-  ): Promise<FromWebviewProtocol[T][1]>;
+    data: WebviewProtocol[T][0],
+  ): Promise<WebviewProtocol[T][1]>;
 
-  streamRequest<T extends keyof FromWebviewProtocol>(
+  streamRequest<T extends keyof WebviewProtocol>(
     messageType: T,
-    data: FromWebviewProtocol[T][0],
+    data: WebviewProtocol[T][0],
     cancelToken?: AbortSignal,
-  ): FromWebviewProtocol[T][1];
+  ): WebviewProtocol[T][1];
 
   llmStreamChat(
     modelTitle: string,
     cancelToken: AbortSignal | undefined,
     messages: ChatMessage[],
     options?: LLMFullCompletionOptions,
-  ): AsyncGenerator<ChatMessage, PromptLog, unknown>;
+  ): AsyncGenerator<ChatMessage, LLMReturnValue, unknown>;
 
   ide: IDE;
 }
 
 export class IdeMessenger implements IIdeMessenger {
-  ide: IDE;
-
-  constructor() {
-    this.ide = new MessageIde(this.request.bind(this));
-  }
+  ide = new MessageIde(this.request);
 
   private _postToIde(messageType: string, data: any, messageId?: string) {
     if (typeof vscode === "undefined") {
@@ -88,9 +90,9 @@ export class IdeMessenger implements IIdeMessenger {
     vscode.postMessage(msg);
   }
 
-  post<T extends keyof FromWebviewProtocol>(
+  post<T extends keyof WebviewProtocol>(
     messageType: T,
-    data: FromWebviewProtocol[T][0],
+    data: WebviewProtocol[T][0],
     messageId?: string,
     attempt: number = 0,
   ) {
@@ -112,16 +114,15 @@ export class IdeMessenger implements IIdeMessenger {
     }
   }
 
-  respond<T extends keyof ToWebviewProtocol>(
+  respond<T extends keyof ReverseWebviewProtocol>(
     messageType: T,
-    data: ToWebviewProtocol[T][1],
+    data: ReverseWebviewProtocol[T][1],
     messageId: string,
   ) {
     this._postToIde(messageType, data, messageId);
   }
 
   private _safeParseResponse(data: any) {
-    // This causes .json files to be parsed as objects instead of remaining strings
     let responseData = data ?? null;
     try {
       responseData = JSON.parse(responseData);
@@ -129,10 +130,10 @@ export class IdeMessenger implements IIdeMessenger {
     return responseData;
   }
 
-  request<T extends keyof FromWebviewProtocol>(
+  request<T extends keyof WebviewProtocol>(
     messageType: T,
-    data: FromWebviewProtocol[T][0],
-  ): Promise<FromWebviewProtocol[T][1]> {
+    data: WebviewProtocol[T][0],
+  ): Promise<WebviewProtocol[T][1]> {
     const messageId = uuidv4();
 
     return new Promise((resolve) => {
@@ -148,11 +149,11 @@ export class IdeMessenger implements IIdeMessenger {
     }) as any;
   }
 
-  async *streamRequest<T extends keyof FromWebviewProtocol>(
+  async *streamRequest<T extends keyof WebviewProtocol>(
     messageType: T,
-    data: FromWebviewProtocol[T][0],
+    data: WebviewProtocol[T][0],
     cancelToken?: AbortSignal,
-  ): FromWebviewProtocol[T][1] {
+  ): WebviewProtocol[T][1] {
     const messageId = uuidv4();
 
     this.post(messageType, data, messageId);
@@ -203,7 +204,7 @@ export class IdeMessenger implements IIdeMessenger {
     cancelToken: AbortSignal | undefined,
     messages: ChatMessage[],
     options: LLMFullCompletionOptions = {},
-  ): AsyncGenerator<ChatMessage, PromptLog> {
+  ): AsyncGenerator<ChatMessage, LLMReturnValue> {
     const gen = this.streamRequest(
       "llm/streamChat",
       {
@@ -219,15 +220,9 @@ export class IdeMessenger implements IIdeMessenger {
       yield { role: "user", content: next.value };
       next = await gen.next();
     }
-
-    if (next.value.error) {
-      throw new Error(next.value.error);
-    }
-
     return {
       prompt: next.value.content?.prompt,
       completion: next.value.content?.completion,
-      completionOptions: next.value.content?.completionOptions,
     };
   }
 }

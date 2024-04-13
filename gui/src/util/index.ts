@@ -47,3 +47,6 @@ export function getMetaKeyLabel(): string {
 export function getFontSize(): number {
   return getLocalStorage("fontSize") ?? 14;
 }
+export function isJetBrains() {
+  return getLocalStorage("ide") === "jetbrains";
+}

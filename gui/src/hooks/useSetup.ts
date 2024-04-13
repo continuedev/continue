@@ -10,9 +10,7 @@ import {
   setInactive,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
-
 import { isJetBrains } from "../util";
-import { setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
 
@@ -88,7 +86,7 @@ function useSetup(dispatch: Dispatch<any>) {
   });
 
   useWebviewListener("submitMessage", async (data) => {
-    streamResponse(data.message, { useCodebase: false });
+    streamResponse(data.message, { useCodebase: false }, ideMessenger);
   });
 
   useWebviewListener("addContextItem", async (data) => {

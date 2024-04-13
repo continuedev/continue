@@ -1,5 +1,6 @@
 import type { ToWebviewProtocol } from "core/protocol/index.js";
 import { Message } from "core/util/messenger";
+import { ReverseWebviewProtocol } from "core/web/webviewProtocol";
 import { useContext, useEffect } from "react";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 

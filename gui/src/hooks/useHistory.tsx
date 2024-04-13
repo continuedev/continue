@@ -9,7 +9,6 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 function truncateText(text: string, maxLength: number) {
   if (text.length > maxLength) {
@@ -26,11 +25,8 @@ function useHistory(dispatch: Dispatch) {
   );
   const ideMessenger = useContext(IdeMessengerContext);
 
-  async function getHistory(
-    offset?: number,
-    limit?: number,
-  ): Promise<SessionInfo[]> {
-    return await ideMessenger.request("history/list", { offset, limit });
+  async function getHistory(): Promise<SessionInfo[]> {
+    return await ideMessenger.request("history/list", undefined);
   }
 
   async function saveSession() {
@@ -78,19 +74,6 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
-    setLocalStorage("lastSessionId", stateCopy.sessionId);
-    return await ideMessenger.request("history/save", sessionInfo);
-  }
-
-  async function getSession(id: string): Promise<PersistedSessionInfo> {
-    const json: PersistedSessionInfo = await ideMessenger.request(
-      "history/load",
-      { id },
-    );
-    return json;
-  }
-
-  async function updateSession(sessionInfo: PersistedSessionInfo) {
     return await ideMessenger.request("history/save", sessionInfo);
   }
 
@@ -99,13 +82,7 @@ function useHistory(dispatch: Dispatch) {
   }
 
   async function loadSession(id: string): Promise<PersistedSessionInfo> {
-    setLocalStorage("lastSessionId", state.sessionId);
-    const json: PersistedSessionInfo = await ideMessenger.request(
-      "history/load",
-      { id },
-    );
-    dispatch(newSession(json));
-    return json;
+    return await ideMessenger.request("history/load", { id });
   }
 
   async function loadLastSession(): Promise<PersistedSessionInfo> {

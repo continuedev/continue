@@ -4,6 +4,7 @@ import React, { useContext, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { Button, Input } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
 
@@ -82,13 +83,10 @@ function AddDocsDialog() {
         disabled={!docsUrl || !urlValid}
         className="ml-auto"
         onClick={() => {
-          const siteIndexingConfig: SiteIndexingConfig = {
-            startUrl: docsUrl,
-            rootUrl: docsUrl,
+          ideMessenger.post("context/addDocs", {
+            url: docsUrl,
             title: docsTitle,
-            maxDepth: typeof maxDepth === "string" ? defaultMaxDepth : maxDepth, // Ensure maxDepth is a number
-          };
-          ideMessenger.post("context/addDocs", siteIndexingConfig);
+          });
           setDocsTitle("");
           setDocsUrl("");
           setMaxDepth("");

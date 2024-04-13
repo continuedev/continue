@@ -7,7 +7,7 @@ import {
   RangeInFile,
 } from "core";
 import { stripImages } from "core/llm/countTokens";
-import { getBasename, getRelativePath } from "core/util";
+import { getBasename } from "core/util";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 
 interface MentionAttrs {
@@ -27,6 +27,7 @@ interface MentionAttrs {
 async function resolveEditorContent(
   editorState: JSONContent,
   modifiers: InputModifiers,
+  ideMessenger: IIdeMessenger,
 ): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
@@ -95,9 +96,8 @@ async function resolveEditorContent(
     if (item.itemType === "file") {
       // This is a quick way to resolve @file references
       const basename = getBasename(item.id);
-      const relativeFilePath = getRelativePath(item.id, await ideMessenger.ide.getWorkspaceDirs());
       const rawContent = await ideMessenger.ide.readFile(item.id);
-      const content = `\`\`\`${relativeFilePath}\n${rawContent}\n\`\`\`\n`;
+      const content = `\`\`\`title="${basename}"\n${rawContent}\n\`\`\`\n`;
       contextItemsText += content;
       contextItems.push({
         name: basename,
@@ -128,12 +128,15 @@ async function resolveEditorContent(
 
   // cmd+enter to use codebase
   if (modifiers.useCodebase) {
-    const codebaseItems = await ideRequest("context/getContextItems", {
-      name: "codebase",
-      query: "",
-      fullInput: stripImages(parts),
-      selectedCode,
-    });
+    const codebaseItems = await ideMessenger.request(
+      "context/getContextItems",
+      {
+        name: "codebase",
+        query: "",
+        fullInput: stripImages(parts),
+        selectedCode,
+      },
+    );
     contextItems.push(...codebaseItems);
     for (const codebaseItem of codebaseItems) {
       contextItemsText += codebaseItem.content + "\n\n";

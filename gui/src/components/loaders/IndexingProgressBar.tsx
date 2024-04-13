@@ -1,10 +1,8 @@
-import { IndexingProgressUpdate } from "core";
 import { useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { getFontSize } from "../../util";
 
 const DIAMETER = 6;
 const CircleDiv = styled.div<{ color: string }>`
@@ -54,31 +52,14 @@ interface ProgressBarProps {
   indexingState?: IndexingProgressUpdate;
 }
 
-const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarProps) => {
-  // If sidebar is opened before extension initiates, define a default indexingState
-  const defaultIndexingState: IndexingProgressUpdate = {
-    status: 'loading', 
-    progress: 0, 
-    desc: ''
-  };
-  const indexingState = indexingStateProp || defaultIndexingState;
-
-  // If sidebar is opened after extension initializes, retrieve saved states.
-  let initialized = false
-  useEffect(() => {
-    if (!initialized) {
-      // Triggers retrieval for possible non-default states set prior to IndexingProgressBar initialization
-      ideMessenger.post("index/indexingProgressBarInitialized", undefined)
-      initialized = true
-    }
-  }, []);
-
-  const fillPercentage = Math.min(
-    100,
-    Math.max(0, indexingState.progress * 100),
-  );
-
+const IndexingProgressBar = ({
+  completed,
+  total,
+  currentlyIndexing,
+}: ProgressBarProps) => {
   const ideMessenger = useContext(IdeMessengerContext);
+
+  const fillPercentage = Math.min(100, Math.max(0, (completed / total) * 100));
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
@@ -86,9 +67,8 @@ const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarPr
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    if (paused === undefined) return;
-    ideMessenger.post("index/setPaused", paused);
-  }, [paused]);
+    ideMessenger.post("index/setPaused", !expanded);
+  }, [expanded]);
 
   return (
     <div
@@ -96,7 +76,7 @@ const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarPr
         if (completed < total) {
           setExpanded((prev) => !prev);
         } else {
-          postToIde("index/forceReIndex", undefined);
+          ideMessenger.post("index/forceReIndex", undefined);
         }
       }}
       className="cursor-pointer"

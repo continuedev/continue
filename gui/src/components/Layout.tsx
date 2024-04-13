@@ -2,7 +2,6 @@ import {
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
-import { IndexingProgressUpdate } from "core";
 import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -22,8 +21,7 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
-import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
-import { isJetBrains, postToIde } from "../util/ide";
+import { getFontSize, isJetBrains, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage } from "../util/localStorage";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
@@ -247,7 +245,7 @@ const Layout = () => {
             <HeaderButtonWithText
               onClick={() => {
                 // navigate("/settings");
-                postToIde("openConfigJson", undefined);
+                ideMessenger.post("openConfigJson", undefined);
               }}
               text="Configure Continue"
             >

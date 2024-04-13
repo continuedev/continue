@@ -3,11 +3,11 @@ import {
   CheckIcon,
   PlayIcon,
 } from "@heroicons/react/24/outline";
-import { useState } from "react";
+import { useContext, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, vscEditorBackground } from "..";
-import { isJetBrains, postToIde } from "../../util/ide";
-import { WebviewIde } from "../../util/webviewIde";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { isJetBrains } from "../../util";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "./CopyButton";
 
@@ -92,11 +92,13 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
                   if (text.startsWith("$ ")) {
                     text = text.slice(2);
                   }
-                  new WebviewIde().runCommand(text);
+                  ideMessenger.ide.runCommand(text);
                 }
 
                 if (applying) return;
-                postToIde("applyToCurrentFile", { text: props.text });
+                ideMessenger.post("applyToCurrentFile", {
+                  text: props.text,
+                });
                 setApplying(true);
                 setTimeout(() => setApplying(false), 2000);
               }}
@@ -111,7 +113,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
               text="Insert at cursor"
               style={{ backgroundColor: vscEditorBackground }}
               onClick={() => {
-                postToIde("insertAtCursor", { text: props.text });
+                ideMessenger.post("insertAtCursor", { text: props.text });
               }}
             >
               <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />

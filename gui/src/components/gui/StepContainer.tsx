@@ -6,7 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/countTokens";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -74,7 +74,7 @@ function StepContainer(props: StepContainerProps) {
   const sendFeedback = (feedback: boolean) => {
     setFeedback(feedback);
     if (props.item.promptLogs?.length) {
-      for (const promptLog of props.item.promptLogs) {
+      for (const [prompt, completion] of props.item.promptLogs) {
         ideMessenger.post("devdata/log", {
           tableName: "chat",
           data: { ...promptLog, feedback },

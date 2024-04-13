@@ -6,8 +6,7 @@ import {
   lightGray,
   vscForeground,
 } from "..";
-import { getPlatform } from "../../util";
-import { isJetBrains } from "../../util/ide";
+import { getPlatform, isJetBrains } from "../../util";
 
 const GridDiv = styled.div`
   display: grid;
