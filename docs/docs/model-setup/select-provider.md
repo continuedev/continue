@@ -1,7 +1,7 @@
 ---
 title: Select a provider
 description: Swap out different LLM providers
-keywords: [openai, anthropic, PaLM, ollama, ggml]
+keywords: [openai, anthropic, gemini, ollama, ggml]
 ---
 
 # Select a model provider
@@ -57,6 +57,6 @@ You can use commercial LLMs via APIs using:
 - [OpenAI API](../reference/Model%20Providers/openai.md)
 - [Azure OpenAI Service](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
 - [Anthrophic API](../reference/Model%20Providers/anthropicllm.md)
-- [Google PaLM API](../reference/Model%20Providers/googlepalmapi.md)
+- [Google Gemini API](../reference/Model%20Providers/googlepalmapi.md)
 - [OpenAI free trial](../reference/Model%20Providers/freetrial.md)
 - [Mistral API](../reference/Model%20Providers/mistral.md)

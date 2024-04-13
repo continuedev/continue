@@ -13,7 +13,6 @@ import DeepInfra from "./DeepInfra";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
-import GooglePalm from "./GooglePalm";
 import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
@@ -78,7 +77,7 @@ async function renderTemplatedString(
 const LLMs = [
   Anthropic,
   FreeTrial,
-  GooglePalm,
+  Gemini,
   Llamafile,
   Ollama,
   Replicate,
@@ -89,7 +88,6 @@ const LLMs = [
   LlamaCpp,
   OpenAI,
   LMStudio,
-  Gemini,
   Mistral,
   Bedrock,
   DeepInfra,

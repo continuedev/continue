@@ -73,8 +73,6 @@ Instead of writing something like `Ollama(model="phind-codellama:34b", ...)`, wh
     "neural-chat-7b"
     # Anthropic
     "claude-2",
-    # Google PaLM
-    "chat-bison-001",
 ```
 
 If you want to use a model not listed here, you can still do that by specifying whichever value of `model` you need. But if there's something you think we should add as a default, let us know!

@@ -418,7 +418,19 @@ const geminiPro: ModelPackage = {
     apiKey: "<API_KEY>",
   },
   icon: "gemini.png",
-  providerOptions: ["palm", "freetrial"],
+  providerOptions: ["gemini"],
+};
+const gemini15Pro: ModelPackage = {
+  title: "Gemini 1.5 Pro",
+  description: "A newer Gemini model with 1M token context length",
+  params: {
+    title: "Gemini 1.5 Pro",
+    model: "gemini-1.5-pro-latest",
+    contextLength: 1_000_000,
+    apiKey: "<API_KEY>",
+  },
+  icon: "gemini.png",
+  providerOptions: ["gemini", "freetrial"],
 };
 
 const zephyr: ModelPackage = {
@@ -501,19 +513,6 @@ const osModels = [
   neuralChat,
 ];
 
-const gpt4turbo: ModelPackage = {
-  title: "GPT-4 Turbo",
-  description:
-    "A faster, cheaper version of GPT-4 with a longer context length",
-  params: {
-    model: "gpt-4-turbo-preview",
-    contextLength: 128_000,
-    title: "gpt-4-turbo-preview",
-  },
-  providerOptions: ["openai", "freetrial"],
-  icon: "openai.png",
-};
-
 const gpt4: ModelPackage = {
   title: "GPT-4",
   description: "The most powerful model from OpenAI",
@@ -526,14 +525,14 @@ const gpt4: ModelPackage = {
   icon: "openai.png",
 };
 
-const gpt4vision: ModelPackage = {
-  title: "GPT-4 Vision",
+const gpt4turbo: ModelPackage = {
+  title: "GPT-4 Turbo",
   description:
-    "A faster version of GPT-4 with longer context length and image support",
+    "A faster and more capable version of GPT-4 with longer context length and image support",
   params: {
-    model: "gpt-4-vision-preview",
+    model: "gpt-4-turbo",
     contextLength: 128_000,
-    title: "GPT-4 Vision",
+    title: "GPT-4 Turbo",
   },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
@@ -607,20 +606,6 @@ const claude3Haiku: ModelPackage = {
   icon: "anthropic.png",
 };
 
-const chatBison: ModelPackage = {
-  title: "chat-bison-001",
-  description:
-    "Google PaLM's chat-bison-001 model, fine-tuned for chatting about code",
-  params: {
-    model: "chat-bison-001",
-    contextLength: 8000,
-    apiKey: "",
-    title: "Chat Bison",
-  },
-  providerOptions: ["palm"],
-  icon: "google-palm.png",
-};
-
 const AUTODETECT: ModelPackage = {
   title: "Autodetect",
   description:
@@ -635,10 +620,11 @@ export const MODEL_INFO: ModelPackage[] = [
   gpt4turbo,
   gpt4,
   gpt35turbo,
-  geminiPro,
   claude3Opus,
   claude3Sonnet,
   claude3Haiku,
+  gemini15Pro,
+  geminiPro,
   claude2,
   deepseek,
   mistral,
@@ -663,7 +649,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       gpt4,
       gpt35turbo,
       gpt4turbo,
-      gpt4vision,
+      gpt4turbo,
       {
         ...AUTODETECT,
         params: {
@@ -797,9 +783,9 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ,
     ],
   },
-  palm: {
+  gemini: {
     title: "Google Gemini API",
-    provider: "google-palm",
+    provider: "gemini",
     refPage: "googlepalmapi",
     description:
       "Try out Google's state-of-the-art Gemini model from their API.",
@@ -815,7 +801,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         required: true,
       },
     ],
-    packages: [geminiPro],
+    packages: [gemini15Pro, geminiPro],
   },
   mistral: {
     title: "Mistral API",
@@ -989,8 +975,8 @@ After it's up and running, you can start using Continue.`,
       { ...claude3Opus, title: "Claude 3 Opus (trial)" },
       { ...claude3Sonnet, title: "Claude 3 Sonnet (trial)" },
       { ...claude3Haiku, title: "Claude 3 Haiku (trial)" },
-      { ...geminiPro, title: "Gemini Pro (trial)" },
-      { ...gpt4vision, title: "GPT-4 Vision (trial)" },
+      { ...gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
+      { ...gpt4turbo, title: "GPT-4 Turbo (trial)" },
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
       {
         ...AUTODETECT,

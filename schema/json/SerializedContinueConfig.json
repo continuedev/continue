@@ -107,7 +107,7 @@
             "llama.cpp",
             "replicate",
             "text-gen-webui",
-            "google-palm",
+            "gemini",
             "lmstudio",
             "llamafile"
           ],

@@ -44,7 +44,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "openai",
   "ollama",
-  "google-palm",
+  "gemini",
   "free-trial",
   "anthropic",
   "bedrock",
@@ -63,13 +63,13 @@ function modelSupportsImages(provider: ModelProvider, model: string): boolean {
     return true;
   }
 
-  if (["gpt-4-vision-preview"].includes(model)) {
+  if (["gpt-4-vision-preview", "gpt-4-turbo"].includes(model)) {
     return true;
   }
 
   if (
-    model === "gemini-ultra" &&
-    (provider === "google-palm" || provider === "free-trial")
+    (model === "gemini-ultra" || model === "gemini-1.5-pro-latest") &&
+    (provider === "gemini" || provider === "free-trial")
   ) {
     return true;
   }
@@ -81,7 +81,7 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "bedrock",
   "deepinfra",
   "gemini",
-  "google-palm",
+  "gemini",
   "huggingface-inference-api",
   "huggingface-tgi",
   "mistral",
