@@ -1,5 +1,4 @@
 /** @type {import('tailwindcss').Config} */
-const colors = require("tailwindcss/colors");
 
 module.exports = {
   content: [
@@ -12,7 +11,6 @@ module.exports = {
     colors: {
       "vsc-background": "rgb(var(--vsc-background) / <alpha-value>)",
       "secondary-dark": "rgb(var(--secondary-dark) / <alpha-value>)",
-      ...colors,
     },
   },
   plugins: [],
