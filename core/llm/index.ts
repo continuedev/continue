@@ -15,6 +15,7 @@ import {
 import { DevDataSqliteDb } from "../util/devdataSqlite";
 import mergeJson from "../util/merge";
 import { Telemetry } from "../util/posthog";
+import { withExponentialBackoff } from "../util/withExponentialBackoff";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -234,7 +235,8 @@ ${prompt}`;
   ): Promise<Response> {
     if (this._fetch) {
       // Custom Node.js fetch
-      return this._fetch(url, init);
+      const customFetch = this._fetch;
+      return withExponentialBackoff<Response>(() => customFetch(url, init));
     }
 
     // Most of the requestOptions aren't available in the browser
@@ -245,10 +247,12 @@ ${prompt}`;
       headers.append(key, value as string);
     }
 
-    return fetch(url, {
-      ...init,
-      headers,
-    });
+    return withExponentialBackoff<Response>(() =>
+      fetch(url, {
+        ...init,
+        headers,
+      })
+    );
   }
 
   private _parseCompletionOptions(options: LLMFullCompletionOptions) {
