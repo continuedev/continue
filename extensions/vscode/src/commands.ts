@@ -25,45 +25,48 @@ async function addHighlightedCodeToContext(
   edit: boolean,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
-  // Capture highlighted terminal text
-  const activeTerminal = vscode.window.activeTerminal;
-  if (activeTerminal) {
-    // Copy selected text
-    const tempCopyBuffer = await vscode.env.clipboard.readText();
-    await vscode.commands.executeCommand(
-      "workbench.action.terminal.copySelection",
-    );
-    await vscode.commands.executeCommand(
-      "workbench.action.terminal.clearSelection",
-    );
-    const contents = (await vscode.env.clipboard.readText()).trim();
-    await vscode.env.clipboard.writeText(tempCopyBuffer);
-
-    // Add to context
-    const rangeInFileWithContents = {
-      filepath: activeTerminal.name,
-      contents,
-      range: {
-        start: {
-          line: 0,
-          character: 0,
-        },
-        end: {
-          line: contents.split("\n").length,
-          character: 0,
-        },
-      },
-    };
-
-    webviewProtocol?.request("highlightedCode", {
-      rangeInFileWithContents,
-    });
-  }
-
   const editor = vscode.window.activeTextEditor;
   if (editor) {
     const selection = editor.selection;
-    if (selection.isEmpty) return;
+    if (selection.isEmpty) {
+      // Capture highlighted terminal text
+      const activeTerminal = vscode.window.activeTerminal;
+      if (activeTerminal) {
+        // Copy selected text
+        const tempCopyBuffer = await vscode.env.clipboard.readText();
+        await vscode.commands.executeCommand(
+          "workbench.action.terminal.copySelection",
+        );
+        await vscode.commands.executeCommand(
+          "workbench.action.terminal.clearSelection",
+        );
+        const contents = (await vscode.env.clipboard.readText()).trim();
+        await vscode.env.clipboard.writeText(tempCopyBuffer);
+
+        // Add to context
+        const rangeInFileWithContents = {
+          filepath: activeTerminal.name,
+          contents,
+          range: {
+            start: {
+              line: 0,
+              character: 0,
+            },
+            end: {
+              line: contents.split("\n").length,
+              character: 0,
+            },
+          },
+        };
+
+        if (contents.trim() !== "") {
+          webviewProtocol?.request("highlightedCode", {
+            rangeInFileWithContents,
+          });
+        }
+      }
+      return;
+    }
     const range = new vscode.Range(selection.start, selection.end);
     const contents = editor.document.getText(range);
     const rangeInFileWithContents = {
