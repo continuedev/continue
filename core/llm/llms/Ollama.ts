@@ -52,7 +52,7 @@ class Ollama extends BaseLLM {
                 if (!this.completionOptions.stop) {
                   this.completionOptions.stop = [];
                 }
-                this.completionOptions.stop.push(value);
+                this.completionOptions.stop.push(JSON.parse(value));
                 break;
               default:
                 break;
