@@ -1,7 +1,7 @@
 process.env.IS_BINARY = "true";
+import fs from "fs";
 import { Command } from "commander";
 import { getCoreLogsPath } from "core/util/paths";
-import fs from "fs";
 import { IpcIde } from "./IpcIde";
 import { Core } from "./core";
 import { IpcMessenger } from "./messenger";

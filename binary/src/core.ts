@@ -1,4 +1,4 @@
-import { ContextItemId, IDE } from "core";
+import type { ContextItemId, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
 import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
@@ -7,12 +7,12 @@ import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/Transform
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { logDevData } from "core/util/devdata";
 import historyManager from "core/util/history";
-import { Message } from "core/util/messenger";
+import type { Message } from "core/util/messenger";
 import { Telemetry } from "core/util/posthog";
 import { streamDiffLines } from "core/util/verticalEdit";
 import { v4 as uuidv4 } from "uuid";
-import { IpcMessenger } from "./messenger";
-import { Protocol } from "./protocol";
+import type { IpcMessenger } from "./messenger";
+import type { Protocol } from "./protocol";
 
 export class Core {
   private messenger: IpcMessenger;

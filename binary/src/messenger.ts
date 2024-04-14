@@ -3,12 +3,13 @@ import { IMessenger, type Message } from "core/util/messenger";
 import * as fs from "node:fs";
 import { v4 as uuidv4 } from "uuid";
 
-export class IpcMessenger<
-  ToProtocol extends IProtocol,
-  FromProtocol extends IProtocol,
-> implements IMessenger<ToProtocol, FromProtocol>
-{
-  typeListeners = new Map<keyof ToProtocol, ((message: Message) => any)[]>();
+import * as fs from "fs";
+import { getCoreLogsPath } from "core/util/paths";
+import type { Message } from "../../core/util/messenger";
+import type { Protocol, ReverseProtocol } from "./protocol";
+
+export class IpcMessenger {
+  typeListeners = new Map<keyof Protocol, ((message: Message) => any)[]>();
   idListeners = new Map<string, (message: Message) => any>();
 
   constructor() {
