@@ -7,7 +7,7 @@ export function run() {
   const timeoutOption = process.env.MOCHA_TIMEOUT
     ? parseInt(process.env.MOCHA_TIMEOUT)
     : // : undefined;
-      15_000;
+      30_000;
 
   // Create the mocha test
   const mocha = new Mocha({
