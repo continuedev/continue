@@ -1,5 +1,5 @@
 import { MessageIde } from "core/util/messageIde";
-import { IpcMessenger } from "./messenger";
+import type { IpcMessenger } from "./messenger";
 
 export class IpcIde extends MessageIde {
   constructor(messenger: IpcMessenger) {

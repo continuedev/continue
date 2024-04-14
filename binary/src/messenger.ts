@@ -1,9 +1,9 @@
 import { v4 as uuidv4 } from "uuid";
 
-import { getCoreLogsPath } from "core/util/paths";
 import * as fs from "fs";
-import { Message } from "../../core/util/messenger";
-import { Protocol, ReverseProtocol } from "./protocol";
+import { getCoreLogsPath } from "core/util/paths";
+import type { Message } from "../../core/util/messenger";
+import type { Protocol, ReverseProtocol } from "./protocol";
 
 export class IpcMessenger {
   typeListeners = new Map<keyof Protocol, ((message: Message) => any)[]>();
