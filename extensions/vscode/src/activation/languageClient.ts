@@ -2,7 +2,7 @@
  * If we wanted to run or use another language server from our extension, this is how we would do it.
  */
 
-import * as path from "path";
+import * as path from "node:path";
 import { type ExtensionContext, extensions, workspace } from "vscode";
 
 import {

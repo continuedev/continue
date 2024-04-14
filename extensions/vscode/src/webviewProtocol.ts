@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import type { ContextItemId, IDE } from "core";
 import type { ConfigHandler } from "core/config/handler";
 import {
@@ -141,8 +141,11 @@ export class VsCodeWebviewProtocol
           respond({ done: true, error: e });
 
           console.error(
-            "Error handling webview message: " +
-              JSON.stringify({ msg }, null, 2),
+            `Error handling webview message: ${JSON.stringify(
+              { msg },
+              null,
+              2,
+            )}`,
           );
 
           let message = e.message;

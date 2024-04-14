@@ -1,6 +1,6 @@
-import * as path from "path";
 import { defaultIgnoreDir, defaultIgnoreFile } from "core/indexing/ignore";
 import ignore from "ignore";
+import * as path from "node:path";
 import * as vscode from "vscode";
 import { uriFromFilePath } from "./vscode";
 
@@ -108,7 +108,7 @@ export async function* traverseDirectory(
     }
 
     // Recurse if not ignored
-    if (!useGitIgnore || !(ig.ignores(`${dir}/`) || ig.ignores(dir))) {
+    if (!(ig.ignores(`${dir}/`) || ig.ignores(dir))) {
       // For patterns who can potentially match items of this subdir, strip the subdir from the start
       const keepPatterns = [...wildcardPatterns];
       for (const [startPattern, subDirPatterns] of entries) {

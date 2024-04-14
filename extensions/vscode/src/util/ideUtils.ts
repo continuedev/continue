@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 import type { FileEdit, RangeInFile, Thread } from "core";
 import { defaultIgnoreFile } from "core/indexing/ignore";
 import * as vscode from "vscode";
