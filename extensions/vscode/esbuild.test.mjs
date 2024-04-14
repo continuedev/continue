@@ -7,6 +7,8 @@ import glob from "glob";
  * mochaRunner.js then runs tests using Mocha class
  */
 
+console.log("Bundling tests...");
+
 // Bundles script to run tests on VSCode host + mocha runner that will be invoked from within VSCode host
 await esbuild.build({
   entryPoints: [
@@ -17,7 +19,7 @@ await esbuild.build({
     "src/test/runner/mochaRunner.ts",
   ],
   bundle: true,
-  outdir: "out/test/runner",
+  outdir: "out",
 
   external: [
     "vscode",
@@ -44,7 +46,7 @@ await esbuild.build({
   // Tests can be added anywhere in src folder
   entryPoints: glob.sync("src/**/*.test.ts"),
   bundle: true,
-  outdir: "out/test/test-suites",
+  outdir: "out",
   external: [
     "vscode",
 
@@ -58,4 +60,8 @@ await esbuild.build({
     // eslint-disable-next-line @typescript-eslint/naming-convention
     ".node": "file",
   },
+  // To allow import.meta.path for transformers.js
+  // https://github.com/evanw/esbuild/issues/1492#issuecomment-893144483
+  inject: ["./scripts/importMetaUrl.js"],
+  define: { "import.meta.url": "importMetaUrl" },
 });

@@ -40,6 +40,15 @@ function showRefactorMigrationMessage(
   }
 }
 
+// Ideally the only global variable
+// Used in test/test-suites
+let resolveVsCodeExtension: (value: VsCodeExtension) => void;
+export let vscodeExtensionPromise: Promise<VsCodeExtension> = new Promise(
+  (resolve) => {
+    resolveVsCodeExtension = resolve;
+  },
+);
+
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
   getTsConfigPath();
@@ -49,7 +58,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   setupInlineTips(context);
   showRefactorMigrationMessage(context);
 
-  const vscodeExtension = new VsCodeExtension(context);
+  resolveVsCodeExtension(new VsCodeExtension(context));
 
   migrate("showWelcome_1", () => {
     vscode.commands.executeCommand(

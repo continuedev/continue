@@ -456,7 +456,7 @@
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
     "build-test": "npm run esbuild && npm run prepackage && node esbuild.test.mjs",
-    "test": "npm run build-test && node ./out/test/runner/runTestOnVSCodeHost.js",
+    "test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "prepackage": "node scripts/prepackage.js",
     "package": "node scripts/package.js",
     "package:pre-release": "node scripts/package.js --pre-release",

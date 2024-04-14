@@ -57,7 +57,11 @@ export interface IIdeMessenger {
 }
 
 export class IdeMessenger implements IIdeMessenger {
-  ide = new MessageIde(this.request);
+  ide: IDE;
+
+  constructor() {
+    this.ide = new MessageIde(this.request.bind(this));
+  }
 
   private _postToIde(messageType: string, data: any, messageId?: string) {
     if (typeof vscode === "undefined") {

@@ -13,7 +13,11 @@ export function getLocalStorage<T extends keyof LocalStorageTypes>(
   if (value === null) {
     return undefined;
   }
-  return JSON.parse(value);
+  try {
+    return JSON.parse(value);
+  } catch (e) {
+    return undefined;
+  }
 }
 
 export function setLocalStorage<T extends keyof LocalStorageTypes>(

@@ -18,13 +18,17 @@ export function run() {
 
   // See esbuild.test.mjs for more details
   // Assumes this file is in out/test/runner/mochaRunner.js
-  const compiledTestSuitesDirectory = path.resolve(__dirname, "../test-suites");
+  const compiledTestSuitesDirectory = path.resolve(__dirname);
 
   glob
     .sync("**/**.test.js", { cwd: compiledTestSuitesDirectory })
     .forEach((file) => {
       mocha.addFile(path.resolve(compiledTestSuitesDirectory, file));
     });
+
+  console.log(
+    `Testing files in ${compiledTestSuitesDirectory}: ${mocha.files}`,
+  );
 
   return new Promise<void>((resolve, reject) => {
     try {

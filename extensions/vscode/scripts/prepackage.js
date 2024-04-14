@@ -321,7 +321,10 @@ const exe = os === "win32" ? ".exe" : "";
   await new Promise((resolve, reject) => {
     ncp(
       path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
-      path.join(__dirname, "../out/build"),
+      // sqlite will look for the binary at a number of paths relative the current working directory
+      // including build/Release, out/Release, and Release
+      // build/ from the node_module contains Release/...
+      path.join(__dirname, "../out"),
       (error) => {
         if (error) {
           console.warn("[error] Error copying sqlite3 files", error);
@@ -334,7 +337,12 @@ const exe = os === "win32" ? ".exe" : "";
   });
 
   // Copy node_modules for pre-built binaries
-  const NODE_MODULES_TO_COPY = ["esbuild", "@esbuild", "@lancedb", "@vscode"];
+  const NODE_MODULES_TO_COPY = [
+    "esbuild",
+    "@esbuild",
+    "@lancedb",
+    "@vscode/ripgrep",
+  ];
   fs.mkdirSync("out/node_modules", { recursive: true });
 
   await Promise.all(
@@ -419,7 +427,7 @@ function validateFilesPresent() {
     // Worker required by jsdom
     "out/xhr-sync-worker.js",
     // SQLite3 Node native module
-    "out/build/Release/node_sqlite3.node",
+    "out/Release/node_sqlite3.node",
 
     // out/node_modules (to be accessed by extension.js)
     `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
