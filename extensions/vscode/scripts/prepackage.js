@@ -152,12 +152,19 @@ const exe = os === "win32" ? ".exe" : "";
   // Then copy over the dist folder to the VSCode extension //
   const vscodeGuiPath = path.join("../extensions/vscode/gui");
   fs.mkdirSync(vscodeGuiPath, { recursive: true });
-  ncp("dist", vscodeGuiPath, (error) => {
-    if (error) {
-      console.log("Error copying React app build to VSCode extension: ", error);
-      throw error;
-    }
-    console.log("Copied gui build to VSCode extension");
+  await new Promise((resolve, reject) => {
+    ncp("dist", vscodeGuiPath, (error) => {
+      if (error) {
+        console.log(
+          "Error copying React app build to VSCode extension: ",
+          error,
+        );
+        reject(error);
+      } else {
+        console.log("Copied gui build to VSCode extension");
+        resolve();
+      }
+    });
   });
 
   if (!fs.existsSync(path.join("dist", "assets", "index.js"))) {
