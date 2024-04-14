@@ -110,6 +110,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 
   if (
     lower.includes("gpt") ||
+    lower.includes("command") ||
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
     lower.includes("gemini")
