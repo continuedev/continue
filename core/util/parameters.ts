@@ -1,4 +1,4 @@
-import { TabAutocompleteOptions } from "..";
+import type { TabAutocompleteOptions } from "..";
 
 export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   disable: false,

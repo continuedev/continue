@@ -1,5 +1,5 @@
 import { BaseContextProvider } from "..";
-import {
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
@@ -56,7 +56,7 @@ FROM information_schema.tables`;
   }
 
   async getContextItems(
-    query: string = "",
+    query = "",
     _: ContextProviderExtras = {} as ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const pool = await this.getPool();

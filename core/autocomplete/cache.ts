@@ -1,10 +1,10 @@
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { DatabaseConnection } from "../indexing/refreshIndex";
+import type { DatabaseConnection } from "../indexing/refreshIndex";
 import { getTabAutocompleteCacheSqlitePath } from "../util/paths";
 
 export class AutocompleteLruCache {
-  private static capacity: number = 1000;
+  private static capacity = 1000;
 
   db: DatabaseConnection;
 

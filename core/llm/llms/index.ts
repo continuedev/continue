@@ -1,6 +1,6 @@
 import Handlebars from "handlebars";
-import { BaseLLM } from "..";
-import {
+import type { BaseLLM } from "..";
+import type {
   BaseCompletionOptions,
   ILLM,
   LLMOptions,
@@ -42,9 +42,9 @@ const getHandlebarsVars = (
 ): [string, { [key: string]: string }] => {
   const ast = Handlebars.parse(value);
 
-  let keysToFilepath: { [key: string]: string } = {};
+  const keysToFilepath: { [key: string]: string } = {};
   let keyIndex = 1;
-  for (let i in ast.body) {
+  for (const i in ast.body) {
     if (ast.body[i].type === "MustacheStatement") {
       const letter = convertToLetter(keyIndex);
       keysToFilepath[letter] = (ast.body[i] as any).path.original;
@@ -64,13 +64,13 @@ async function renderTemplatedString(
 ): Promise<string> {
   const [newTemplate, vars] = getHandlebarsVars(template);
   template = newTemplate;
-  let data: any = {};
-  for (let key in vars) {
-    let fileContents = await readFile(vars[key]);
+  const data: any = {};
+  for (const key in vars) {
+    const fileContents = await readFile(vars[key]);
     data[key] = fileContents || vars[key];
   }
   const templateFn = Handlebars.compile(template);
-  let final = templateFn(data);
+  const final = templateFn(data);
   return final;
 }
 

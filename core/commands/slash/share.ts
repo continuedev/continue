@@ -1,4 +1,4 @@
-import { SlashCommand } from "../..";
+import type { SlashCommand } from "../..";
 import { stripImages } from "../../llm/countTokens";
 
 const ShareSlashCommand: SlashCommand = {

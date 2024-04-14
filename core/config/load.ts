@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import path from "path";
-import {
+import type {
   BrowserSerializedContinueConfig,
   Config,
   ContextProviderWithParams,
@@ -28,7 +28,7 @@ import { AllRerankers } from "../context/rerankers";
 import { LLMReranker } from "../context/rerankers/llm";
 import { AllEmbeddingsProviders } from "../indexing/embeddings";
 import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { BaseLLM } from "../llm";
+import type { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import { copyOf } from "../util";
@@ -46,7 +46,7 @@ const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
-  let config = JSON.parse(content) as SerializedContinueConfig;
+  const config = JSON.parse(content) as SerializedContinueConfig;
   if (config.env && Array.isArray(config.env)) {
     const env = {
       ...process.env,
@@ -431,7 +431,7 @@ async function loadFullConfigNode(
   remoteConfigServerUrl: URL | undefined,
   ideType: IdeType,
 ): Promise<ContinueConfig> {
-  let serialized = loadSerializedConfig(
+  const serialized = loadSerializedConfig(
     workspaceConfigs,
     remoteConfigServerUrl,
     ideType,

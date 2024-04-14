@@ -1,4 +1,4 @@
-import { ChatMessage } from "../..";
+import type { ChatMessage } from "../..";
 import { stripImages } from "../countTokens";
 
 function templateFactory(

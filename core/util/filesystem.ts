@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import {
+import type {
   ContinueRcJson,
   IDE,
   IdeInfo,

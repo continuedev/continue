@@ -1,4 +1,4 @@
-import { IndexTag, IndexingProgressUpdate } from "..";
+import type { IndexTag, IndexingProgressUpdate } from "..";
 
 export enum IndexResultType {
   Compute = "compute",

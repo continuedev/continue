@@ -1,5 +1,5 @@
 import { BaseLLM } from "..";
-import {
+import type {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
@@ -194,7 +194,7 @@ class OpenAI extends BaseLLM {
       return;
     }
 
-    let body = {
+    const body = {
       ...this._convertArgs(options, messages),
       stream: true,
     };

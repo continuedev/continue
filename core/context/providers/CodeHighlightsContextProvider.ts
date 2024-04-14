@@ -1,5 +1,5 @@
 import { BaseContextProvider } from "..";
-import {
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,

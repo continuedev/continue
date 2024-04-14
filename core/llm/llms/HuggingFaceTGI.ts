@@ -1,5 +1,5 @@
 import { BaseLLM } from "..";
-import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
+import type { CompletionOptions, LLMOptions, ModelProvider } from "../..";
 import { streamSse } from "../stream";
 
 class HuggingFaceTGI extends BaseLLM {
@@ -23,7 +23,7 @@ class HuggingFaceTGI extends BaseLLM {
       }
       const json = await response.json();
       this.model = json.model_id;
-      this.contextLength = parseInt(json.max_input_length);
+      this.contextLength = Number.parseInt(json.max_input_length);
     });
   }
 

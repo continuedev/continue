@@ -1,13 +1,13 @@
 //os.platform()
 //os.arch()
 
+import os from "os";
 import { BaseContextProvider } from "..";
-import {
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import os from "os";
 
 class OSContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

@@ -1,4 +1,4 @@
-import { EmbedOptions } from "../..";
+import type { EmbedOptions } from "../..";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 

@@ -1,6 +1,6 @@
-import { SlashCommand } from "../..";
+import type { SlashCommand } from "../..";
+import type { ChatMessage } from "../..";
 import { stripImages } from "../../llm/countTokens";
-import { ChatMessage } from "../..";
 
 const prompt = `
      Review the following code, focusing on Readability, Maintainability, Code Smells, Speed, and Memory Performance. Provide feedback with these guidelines:
@@ -10,7 +10,6 @@ const prompt = `
      Descriptive Feedback: Avoid referencing line numbers directly, as they may vary. Instead, describe the code sections or specific constructs that need attention, explaining the reasons clearly.
      Provide Examples: For each issue identified, offer an example of how the code could be improved or rewritten for better clarity, performance, or maintainability.
      Your response should be structured to first identify the issue, then explain why it’s a problem, and finally, offer a solution with example code.`;
-
 
 function getLastUserHistory(history: ChatMessage[]): string {
   const lastUserHistory = history
@@ -26,7 +25,7 @@ function getLastUserHistory(history: ChatMessage[]): string {
           ? acc + current.text
           : acc;
       },
-      ""
+      "",
     );
   }
 
@@ -39,8 +38,7 @@ const ReviewMessageCommand: SlashCommand = {
   name: "review",
   description: "Review code and give feedback",
   run: async function* ({ llm, history }) {
-    
-    let reviewText = getLastUserHistory(history).replace("\\review", "");
+    const reviewText = getLastUserHistory(history).replace("\\review", "");
 
     const content = `${prompt} \r\n ${reviewText}`;
 

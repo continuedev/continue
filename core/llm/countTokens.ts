@@ -1,7 +1,10 @@
-import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
+import {
+  type Tiktoken,
+  encodingForModel as _encodingForModel,
+} from "js-tiktoken";
 // @ts-ignore
 import llamaTokenizer from "llama-tokenizer-js";
-import { ChatMessage, MessageContent, MessagePart } from "..";
+import type { ChatMessage, MessageContent, MessagePart } from "..";
 import { autodetectTemplateType } from "./autodetect";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
 
@@ -37,7 +40,7 @@ function countImageTokens(content: MessagePart): number {
 function countTokens(
   content: MessageContent,
   // defaults to llama2 because the tokenizer tends to produce more tokens
-  modelName: string = "llama2",
+  modelName = "llama2",
 ): number {
   const encoding = encodingForModel(modelName);
   if (Array.isArray(content)) {
@@ -205,7 +208,7 @@ function pruneChatHistory(
   for (let i = 0; i < longerThanOneThird.length; i++) {
     // Prune line-by-line from the top
     const message = longerThanOneThird[i];
-    let content = stripImages(message.content);
+    const content = stripImages(message.content);
     const deltaNeeded = totalTokens - contextLength;
     const delta = Math.min(deltaNeeded, distanceFromThird[i]);
     message.content = pruneStringFromTop(

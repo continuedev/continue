@@ -1,5 +1,5 @@
 import { BaseContextProvider } from "..";
-import {
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
@@ -14,19 +14,19 @@ interface Directory {
 function splitPath(path: string, withRoot?: string): string[] {
   let parts = path.includes("/") ? path.split("/") : path.split("\\");
   if (withRoot !== undefined) {
-    let rootParts = splitPath(withRoot);
+    const rootParts = splitPath(withRoot);
     parts = parts.slice(rootParts.length - 1);
   }
   return parts;
 }
 
-function formatFileTree(tree: Directory, indentation: string = ""): string {
+function formatFileTree(tree: Directory, indentation = ""): string {
   let result = "";
-  for (let file of tree.files) {
+  for (const file of tree.files) {
     result += `${indentation}${file}\n`;
   }
 
-  for (let directory of tree.directories) {
+  for (const directory of tree.directories) {
     result += `${indentation}${directory.name}/\n`;
     result += formatFileTree(directory, indentation + "  ");
   }
@@ -47,9 +47,9 @@ class FileTreeContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const workspaceDirs = await extras.ide.getWorkspaceDirs();
-    let trees = [];
+    const trees = [];
 
-    for (let workspaceDir of workspaceDirs) {
+    for (const workspaceDir of workspaceDirs) {
       const contents = await extras.ide.listWorkspaceContents(workspaceDir);
 
       const subDirTree: Directory = {
@@ -58,11 +58,11 @@ class FileTreeContextProvider extends BaseContextProvider {
         directories: [],
       };
 
-      for (let file of contents) {
+      for (const file of contents) {
         const parts = splitPath(file, workspaceDir);
 
         let currentTree = subDirTree;
-        for (let part of parts.slice(0, -1)) {
+        for (const part of parts.slice(0, -1)) {
           if (!currentTree.directories.some((d) => d.name === part)) {
             currentTree.directories.push({
               name: part,

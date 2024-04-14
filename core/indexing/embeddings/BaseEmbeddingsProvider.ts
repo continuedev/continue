@@ -1,4 +1,4 @@
-import { EmbedOptions, EmbeddingsProvider } from "../..";
+import type { EmbedOptions, EmbeddingsProvider } from "../..";
 
 class BaseEmbeddingsProvider implements EmbeddingsProvider {
   options: EmbedOptions;

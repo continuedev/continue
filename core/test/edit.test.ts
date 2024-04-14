@@ -1,5 +1,5 @@
 import * as dotenv from "dotenv";
-import { ContinueSDK } from "..";
+import type { ContinueSDK } from "..";
 import EditSlashCommand, { getPromptParts } from "../commands/slash/edit";
 import { contextItemToRangeInFileWithContents } from "../commands/util";
 import FreeTrial from "../llm/llms/FreeTrial";
@@ -76,13 +76,13 @@ describe("/edit slash command", () => {
 
   test.skip("dedentAndGetCommonWhitespace", () => {
     // TODO
-    let [dedented, whitespace] = dedentAndGetCommonWhitespace(
+    const [dedented, whitespace] = dedentAndGetCommonWhitespace(
       `\
       ...
       ...
       ...
        ..
-          .  .`
+          .  .`,
     );
 
     expect(dedented).toEqual(`\
@@ -93,11 +93,11 @@ describe("/edit slash command", () => {
     .  .`);
     expect(whitespace).toEqual("      ");
 
-    let [dedented2, whitespace2] = dedentAndGetCommonWhitespace("");
+    const [dedented2, whitespace2] = dedentAndGetCommonWhitespace("");
     expect(dedented2).toEqual("");
     expect(whitespace2).toEqual("");
 
-    let [dedented3, whitespace3] = dedentAndGetCommonWhitespace(" \n\n  ");
+    const [dedented3, whitespace3] = dedentAndGetCommonWhitespace(" \n\n  ");
     expect(dedented3).toEqual(" \n\n  ");
     expect(whitespace3).toEqual("");
   });
@@ -110,7 +110,7 @@ describe("/edit slash command", () => {
         fullFile,
         new FreeTrial({ model: "gpt-3.5-turbo" }),
         "implement this function",
-        1200
+        1200,
       );
 
     expect(filePrefix).toEqual(`${f1}`);

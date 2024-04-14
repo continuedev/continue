@@ -1,5 +1,5 @@
-import { BaseContextProvider } from "..";
-import { ContextProviderName } from "../..";
+import type { BaseContextProvider } from "..";
+import type { ContextProviderName } from "../..";
 import CodeContextProvider from "./CodeContextProvider";
 import CodebaseContextProvider from "./CodebaseContextProvider";
 import DatabaseContextProvider from "./DatabaseContextProvider";

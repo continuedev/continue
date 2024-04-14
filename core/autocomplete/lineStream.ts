@@ -1,6 +1,6 @@
 import { distance } from "fastest-levenshtein";
-import { DiffLine } from "..";
-import { LineStream } from "../diff/util";
+import type { DiffLine } from "..";
+import type { LineStream } from "../diff/util";
 
 export async function* noTopLevelKeywordsMidline(
   lines: LineStream,
@@ -62,7 +62,7 @@ export async function* stopAtSimilarLine(
     }
 
     const dist = distance(nextLine.trim(), line);
-    let lineQualifies = nextLine.length > 4 && line.length > 4;
+    const lineQualifies = nextLine.length > 4 && line.length > 4;
     if (lineQualifies && dist / line.length < 0.1) {
       break;
     }
@@ -158,7 +158,7 @@ function isEnglishFirstLine(line: string) {
 export async function* filterEnglishLinesAtStart(lines: LineStream) {
   let i = 0;
   let wasEnglishFirstLine = false;
-  for await (let line of lines) {
+  for await (const line of lines) {
     if (i === 0 && line.trim() === "") {
       continue;
     }
@@ -189,7 +189,7 @@ function isEnglishPostExplanation(line: string): boolean {
 
 export async function* filterEnglishLinesAtEnd(lines: LineStream) {
   let finishedCodeBlock = false;
-  for await (let line of lines) {
+  for await (const line of lines) {
     if (line.trim() === "```") {
       finishedCodeBlock = true;
     }
@@ -202,7 +202,7 @@ export async function* filterEnglishLinesAtEnd(lines: LineStream) {
 
 export async function* fixCodeLlamaFirstLineIndentation(lines: LineStream) {
   let isFirstLine = true;
-  for await (let line of lines) {
+  for await (const line of lines) {
     if (isFirstLine && line.startsWith("  ")) {
       yield line.slice(2);
       isFirstLine = false;
@@ -222,8 +222,8 @@ export async function* filterLeadingAndTrailingNewLineInsertion(
 ): AsyncGenerator<DiffLine> {
   let isFirst = true;
   let buffer: DiffLine[] = [];
-  for await (let diffLine of diffLines) {
-    let isBlankLineInsertion =
+  for await (const diffLine of diffLines) {
+    const isBlankLineInsertion =
       diffLine.type === "new" && isUselessLine(diffLine.line);
     if (isFirst && isBlankLineInsertion) {
       isFirst = false;

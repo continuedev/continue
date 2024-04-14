@@ -1,4 +1,4 @@
-import { SlashCommand } from "../..";
+import type { SlashCommand } from "../..";
 import { removeQuotesAndEscapes } from "../../util";
 
 const HttpSlashCommand: SlashCommand = {

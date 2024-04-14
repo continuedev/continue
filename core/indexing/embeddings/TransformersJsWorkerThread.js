@@ -35,17 +35,17 @@ parentPort.on("message", async (chunks) => {
       throw new Error("TransformerJS embeddings pipeline is not initialized");
     }
 
-    let outputs = [];
+    const outputs = [];
     for (
       let i = 0;
       i < chunks.length;
       i += TransformersJsEmbeddingsProvider.MaxGroupSize
     ) {
-      let chunkGroup = chunks.slice(
+      const chunkGroup = chunks.slice(
         i,
         i + TransformersJsEmbeddingsProvider.MaxGroupSize,
       );
-      let output = await extractor(chunkGroup, {
+      const output = await extractor(chunkGroup, {
         pooling: "mean",
         normalize: true,
       });

@@ -1,5 +1,5 @@
 import { BaseContextProvider } from "..";
-import {
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
@@ -21,7 +21,9 @@ class CodeContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     // Assume the query is the id as returned by loadSubmenuItems
-    return [await CodeSnippetsCodebaseIndex.getForId(parseInt(query, 10))];
+    return [
+      await CodeSnippetsCodebaseIndex.getForId(Number.parseInt(query, 10)),
+    ];
   }
 
   async loadSubmenuItems(

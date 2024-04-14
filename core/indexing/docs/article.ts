@@ -1,9 +1,9 @@
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
-import { Chunk } from "../..";
+import type { Chunk } from "../..";
 import { MAX_CHUNK_SIZE } from "../../llm/constants";
 import { cleanFragment, cleanHeader } from "../chunk/markdown";
-import { PageData } from "./crawl";
+import type { PageData } from "./crawl";
 
 export type ArticleComponent = {
   title: string;
@@ -22,16 +22,16 @@ function breakdownArticleComponent(
   article: ArticleComponent,
   subpath: string,
 ): Chunk[] {
-  let chunks: Chunk[] = [];
+  const chunks: Chunk[] = [];
 
-  let lines = article.body.split("\n");
+  const lines = article.body.split("\n");
   let startLine = 0;
   let endLine = 0;
   let content = "";
   let index = 0;
 
   for (let i = 0; i < lines.length; i++) {
-    let line = lines[i];
+    const line = lines[i];
     if (content.length + line.length <= MAX_CHUNK_SIZE) {
       content += line + "\n";
       endLine = i;
@@ -82,8 +82,8 @@ function breakdownArticleComponent(
 export function chunkArticle(articleResult: Article): Chunk[] {
   let chunks: Chunk[] = [];
 
-  for (let article of articleResult.article_components) {
-    let articleChunks = breakdownArticleComponent(
+  for (const article of articleResult.article_components) {
+    const articleChunks = breakdownArticleComponent(
       articleResult.url,
       article,
       articleResult.subpath,
@@ -122,14 +122,14 @@ export function stringToArticle(
 ): Article | undefined {
   try {
     const dom = new JSDOM(html);
-    let reader = new Readability(dom.window.document);
-    let article = reader.parse();
+    const reader = new Readability(dom.window.document);
+    const article = reader.parse();
 
     if (!article) {
       return undefined;
     }
 
-    let article_components = extractTitlesAndBodies(article.content);
+    const article_components = extractTitlesAndBodies(article.content);
 
     return {
       url,

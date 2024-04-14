@@ -1,5 +1,5 @@
 import { BaseLLM } from "..";
-import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
+import type { ChatMessage, CompletionOptions, ModelProvider } from "../..";
 import { streamResponse } from "../stream";
 
 // const SERVER_URL = "http://localhost:8080";

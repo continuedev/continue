@@ -1,5 +1,5 @@
-import fetch, { Response } from "node-fetch";
-import { EmbedOptions } from "../..";
+import fetch, { type Response } from "node-fetch";
+import type { EmbedOptions } from "../..";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 

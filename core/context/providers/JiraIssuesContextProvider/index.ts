@@ -1,5 +1,5 @@
 import { BaseContextProvider } from "../..";
-import {
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
@@ -29,7 +29,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const issueId = query;
 
@@ -48,7 +48,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
       parts.push(
         ...issue.comments.map((comment) => {
           return `### ${comment.author.displayName} on ${comment.created}\n\n${comment.body}`;
-        })
+        }),
       );
     }
 
@@ -64,7 +64,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
   }
 
   async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const api = await this.getApi();
 

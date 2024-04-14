@@ -1,5 +1,5 @@
 import { BaseLLM } from "..";
-import {
+import type {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
@@ -37,16 +37,16 @@ class Ollama extends BaseLLM {
         const body = await response.json();
         if (body.parameters) {
           const params = [];
-          for (let line of body.parameters.split("\n")) {
-            let parts = line.split(" ");
+          for (const line of body.parameters.split("\n")) {
+            const parts = line.split(" ");
             if (parts.length < 2) {
               continue;
             }
-            let key = parts[0];
-            let value = parts[parts.length - 1];
+            const key = parts[0];
+            const value = parts[parts.length - 1];
             switch (key) {
               case "num_ctx":
-                this.contextLength = parseInt(value);
+                this.contextLength = Number.parseInt(value);
                 break;
               case "stop":
                 if (!this.completionOptions.stop) {

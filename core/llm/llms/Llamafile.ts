@@ -1,4 +1,4 @@
-import { ModelProvider } from "../..";
+import type { ModelProvider } from "../..";
 import LlamaCpp from "./LlamaCpp";
 
 class Llamafile extends LlamaCpp {

@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { Chunk, Reranker } from "../..";
+import type { Chunk, Reranker } from "../..";
 import { getHeaders } from "../../continueServer/stubs/headers";
 import { SERVER_URL } from "../../util/parameters";
 

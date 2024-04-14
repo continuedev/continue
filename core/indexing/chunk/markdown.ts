@@ -1,4 +1,4 @@
-import { ChunkWithoutID } from "../..";
+import type { ChunkWithoutID } from "../..";
 import { countTokens } from "../../llm/countTokens";
 import { basicChunker } from "./basic";
 

@@ -1,10 +1,10 @@
-import { http, https } from "follow-redirects";
 import * as fs from "fs";
+import tls from "tls";
+import { http, https } from "follow-redirects";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import fetch, { RequestInit, Response } from "node-fetch";
-import tls from "tls";
-import { RequestOptions } from "..";
+import fetch, { type RequestInit, type Response } from "node-fetch";
+import type { RequestOptions } from "..";
 
 export function fetchwithRequestOptions(
   url: URL,
@@ -24,7 +24,7 @@ export function fetchwithRequestOptions(
     );
   }
 
-  let timeout = (requestOptions?.timeout ?? TIMEOUT) * 1000; // measured in ms
+  const timeout = (requestOptions?.timeout ?? TIMEOUT) * 1000; // measured in ms
 
   const agentOptions = {
     ca,
@@ -70,7 +70,7 @@ export function fetchwithRequestOptions(
   }
 
   // fetch the request with the provided options
-  let resp = fetch(url, {
+  const resp = fetch(url, {
     ...init,
     body: updatedBody ?? init.body,
     headers: headers,

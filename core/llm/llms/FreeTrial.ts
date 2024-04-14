@@ -1,5 +1,5 @@
 import { BaseLLM } from "..";
-import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
+import type { ChatMessage, CompletionOptions, ModelProvider } from "../..";
 import { getHeaders } from "../../continueServer/stubs/headers";
 import { SERVER_URL } from "../../util/parameters";
 import { streamResponse } from "../stream";

@@ -1,5 +1,5 @@
-import { SyntaxNode } from "web-tree-sitter";
-import { ChunkWithoutID } from "../..";
+import type { SyntaxNode } from "web-tree-sitter";
+import type { ChunkWithoutID } from "../..";
 import { countTokens } from "../../llm/countTokens";
 import { getParserForFile } from "../../util/treeSitter";
 
@@ -200,7 +200,7 @@ export async function* codeChunker(
     return;
   }
 
-  let parser = await getParserForFile(filepath);
+  const parser = await getParserForFile(filepath);
   if (parser === undefined) {
     console.warn(`Failed to load parser for file ${filepath}: `);
     return;

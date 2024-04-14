@@ -1,4 +1,4 @@
-import { Chunk, ChunkWithoutID } from "../..";
+import type { Chunk, ChunkWithoutID } from "../..";
 import { MAX_CHUNK_SIZE } from "../../llm/constants";
 import { countTokens } from "../../llm/countTokens";
 import { supportedLanguages } from "../../util/treeSitter";
@@ -38,7 +38,7 @@ export async function* chunkDocument(
   digest: string,
 ): AsyncGenerator<Chunk> {
   let index = 0;
-  for await (let chunkWithoutId of chunkDocumentWithoutId(
+  for await (const chunkWithoutId of chunkDocumentWithoutId(
     filepath,
     contents,
     maxChunkSize,

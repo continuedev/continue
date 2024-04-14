@@ -1,4 +1,4 @@
-import { ConfigMergeType } from "..";
+import type { ConfigMergeType } from "..";
 
 type JsonObject = { [key: string]: any };
 
@@ -12,7 +12,7 @@ export function mergeJson(
 
   try {
     for (var key in second) {
-      let secondValue = second[key];
+      const secondValue = second[key];
 
       if (!(key in copyOfFirst) || mergeBehavior === "overwrite") {
         // New value
@@ -25,7 +25,7 @@ export function mergeJson(
         // Array
         if (mergeKeys?.[key]) {
           // Merge keys are used to determine whether an item form the second object should override one from the first
-          let keptFromFirst: any[] = [];
+          const keptFromFirst: any[] = [];
           firstValue.forEach((item: any) => {
             if (
               !secondValue.some((item2: any) => mergeKeys[key](item, item2))

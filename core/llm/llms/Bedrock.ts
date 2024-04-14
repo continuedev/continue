@@ -2,7 +2,7 @@ import * as fs from "fs";
 import { join as joinPath } from "path";
 import { promisify } from "util";
 import { BaseLLM } from "..";
-import {
+import type {
   ChatMessage,
   CompletionOptions,
   LLMOptions,

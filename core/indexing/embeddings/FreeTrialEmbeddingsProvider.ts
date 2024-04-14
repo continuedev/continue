@@ -1,5 +1,5 @@
-import fetch, { Response } from "node-fetch";
-import { EmbedOptions } from "../..";
+import fetch, { type Response } from "node-fetch";
+import type { EmbedOptions } from "../..";
 import { getHeaders } from "../../continueServer/stubs/headers";
 import { SERVER_URL } from "../../util/parameters";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff";

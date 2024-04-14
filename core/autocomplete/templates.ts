@@ -1,7 +1,7 @@
 // Fill in the middle prompts
 
-import { CompletionOptions } from "..";
-import { AutocompleteSnippet } from "./ranking";
+import type { CompletionOptions } from "..";
+import type { AutocompleteSnippet } from "./ranking";
 
 interface AutocompleteTemplate {
   template:
@@ -25,9 +25,17 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
 };
 
 const codegemmaFimTemplate: AutocompleteTemplate = {
-  template: "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
+  template:
+    "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
   completionOptions: {
-    stop: ["<|fim_prefix|>", "<|fim_suffix|>", "<|fim_middle|>", "<|file_separator|>", "<end_of_turn>", "<eos>"],
+    stop: [
+      "<|fim_prefix|>",
+      "<|fim_suffix|>",
+      "<|fim_middle|>",
+      "<|file_separator|>",
+      "<end_of_turn>",
+      "<eos>",
+    ],
   },
 };
 
@@ -52,7 +60,7 @@ const starcoder2FimTemplate: AutocompleteTemplate = {
             .join("<file_sep>") +
           "<file_sep>";
 
-    let prompt = `${otherFiles}<fim_prefix>${prefix}<fim_suffix>${suffix}<fim_middle>`;
+    const prompt = `${otherFiles}<fim_prefix>${prefix}<fim_suffix>${suffix}<fim_middle>`;
     return prompt;
   },
   completionOptions: {

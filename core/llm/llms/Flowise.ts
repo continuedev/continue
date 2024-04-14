@@ -1,6 +1,6 @@
-import socketIOClient, { Socket } from "socket.io-client";
+import socketIOClient, { type Socket } from "socket.io-client";
 import { BaseLLM } from "..";
-import {
+import type {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
@@ -67,7 +67,7 @@ class Flowise extends BaseLLM {
   };
 
   protected additionalFlowiseConfiguration: IFlowiseKeyValueProperty[] = [];
-  protected timeout: number = 5000;
+  protected timeout = 5000;
   protected additionalHeaders: IFlowiseKeyValueProperty[] = [];
 
   constructor(options: IFlowiseProviderLLMOptions) {

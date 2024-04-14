@@ -1,5 +1,5 @@
 import { BaseContextProvider } from "..";
-import {
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
@@ -27,7 +27,7 @@ class DatabaseContextProvider extends BaseContextProvider {
       return contextItems;
     }
 
-    let [connectionName, table] = query.split(".");
+    const [connectionName, table] = query.split(".");
 
     const getDatabaseAdapter = await require("dbinfoz");
 
@@ -45,7 +45,7 @@ class DatabaseContextProvider extends BaseContextProvider {
           let prompt = `Schema for all tables on ${connection.connection_type} is `;
           prompt += JSON.stringify(tablesAndSchemas);
 
-          let contextItem = {
+          const contextItem = {
             name: `${connectionName}-all-tables-schemas`,
             description: `Schema for all tables.`,
             content: prompt,
@@ -60,7 +60,7 @@ class DatabaseContextProvider extends BaseContextProvider {
               let prompt = `Schema for ${tableName} on ${connection.connection_type} is `;
               prompt += JSON.stringify(tablesAndSchemas[tableName]);
 
-              let contextItem = {
+              const contextItem = {
                 name: `${connectionName}-${tableName}-schema`,
                 description: `${tableName} Schema`,
                 content: prompt,
@@ -89,7 +89,7 @@ class DatabaseContextProvider extends BaseContextProvider {
     const getDatabaseAdapter = await require("dbinfoz");
 
     for (const connection of connections) {
-      let adapter = getDatabaseAdapter(
+      const adapter = getDatabaseAdapter(
         connection.connection_type,
         connection.connection,
       );
@@ -98,7 +98,7 @@ class DatabaseContextProvider extends BaseContextProvider {
       );
       const tables = Object.keys(tablesAndSchemas);
 
-      let contextItem = {
+      const contextItem = {
         id: `${connection.name}.all`,
         title: `${connection.name} all table schemas`,
         description: ``,
@@ -107,7 +107,7 @@ class DatabaseContextProvider extends BaseContextProvider {
       contextItems.push(contextItem);
 
       tables.forEach((tableName) => {
-        let contextItem = {
+        const contextItem = {
           id: `${connection.name}.${tableName}`,
           title: `${connection.name}.${tableName} schema`,
           description: ``,

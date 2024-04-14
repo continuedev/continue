@@ -1,4 +1,4 @@
-import { CustomCommand, SlashCommand, SlashCommandDescription } from "..";
+import type { CustomCommand, SlashCommand, SlashCommandDescription } from "..";
 import { stripImages } from "../llm/countTokens";
 import SlashCommands from "./slash";
 

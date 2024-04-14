@@ -1,5 +1,5 @@
 import * as fs from "fs";
-import { PersistedSessionInfo, SessionInfo } from "..";
+import type { PersistedSessionInfo, SessionInfo } from "..";
 import { getSessionFilePath, getSessionsListPath } from "./paths";
 
 class HistoryManager {

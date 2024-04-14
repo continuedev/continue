@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import {
+import type {
   ChunkWithoutID,
   ContextItem,
   ContextSubmenuItem,
@@ -14,12 +14,12 @@ import {
   getParserForFile,
   supportedLanguages,
 } from "../util/treeSitter";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+import { type DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
-  CodebaseIndex,
+  type CodebaseIndex,
   IndexResultType,
-  MarkCompleteCallback,
-  RefreshIndexResults,
+  type MarkCompleteCallback,
+  type RefreshIndexResults,
 } from "./types";
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {

@@ -1,4 +1,4 @@
-import { ModelProvider, TemplateType } from "..";
+import type { ModelProvider, TemplateType } from "..";
 import {
   anthropicTemplateMessages,
   chatmlTemplateMessages,

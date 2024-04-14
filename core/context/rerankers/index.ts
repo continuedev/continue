@@ -1,4 +1,4 @@
-import { RerankerName } from "../..";
+import type { RerankerName } from "../..";
 import { FreeTrialReranker } from "./freeTrial";
 import { LLMReranker } from "./llm";
 import { VoyageReranker } from "./voyage";

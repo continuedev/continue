@@ -1,5 +1,5 @@
-import { DiffLine } from "..";
-import { LineStream, matchLine } from "./util";
+import type { DiffLine } from "..";
+import { type LineStream, matchLine } from "./util";
 
 /**
  * https://blog.jcoglan.com/2017/02/12/the-myers-diff-algorithm-part-1/
@@ -53,7 +53,7 @@ export async function* streamDiff(
 
   // Once at the edge, only one choice
   if (newLineResult.done === true && oldLines.length > 0) {
-    for (let oldLine of oldLines) {
+    for (const oldLine of oldLines) {
       yield { type: "old", line: oldLine };
     }
   }

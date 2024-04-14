@@ -1,5 +1,5 @@
 import { BaseLLM } from "..";
-import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
+import type { CompletionOptions, LLMOptions, ModelProvider } from "../..";
 import { streamSse } from "../stream";
 
 class LlamaCpp extends BaseLLM {

@@ -1,5 +1,5 @@
 import { BaseLLM } from "..";
-import { ChatMessage, CompletionOptions, CustomLLM } from "../..";
+import type { ChatMessage, CompletionOptions, CustomLLM } from "../..";
 
 class CustomLLMClass extends BaseLLM {
   private customStreamCompletion?: (

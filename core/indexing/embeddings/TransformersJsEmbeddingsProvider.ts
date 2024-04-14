@@ -1,5 +1,5 @@
 import {
-  PipelineType,
+  type PipelineType,
   env,
   pipeline,
 } from "../../vendor/node_modules/@xenova/transformers";
@@ -29,7 +29,7 @@ class EmbeddingsPipeline {
 }
 
 export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static MaxGroupSize: number = 4;
+  static MaxGroupSize = 4;
 
   constructor() {
     super({ model: "all-MiniLM-L2-v6" });
@@ -40,7 +40,7 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   async embed(chunks: string[]) {
-    let extractor = await EmbeddingsPipeline.getInstance();
+    const extractor = await EmbeddingsPipeline.getInstance();
 
     if (!extractor) {
       throw new Error("TransformerJS embeddings pipeline is not initialized");
@@ -50,17 +50,17 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
       return [];
     }
 
-    let outputs = [];
+    const outputs = [];
     for (
       let i = 0;
       i < chunks.length;
       i += TransformersJsEmbeddingsProvider.MaxGroupSize
     ) {
-      let chunkGroup = chunks.slice(
+      const chunkGroup = chunks.slice(
         i,
         i + TransformersJsEmbeddingsProvider.MaxGroupSize,
       );
-      let output = await extractor(chunkGroup, {
+      const output = await extractor(chunkGroup, {
         pooling: "mean",
         normalize: true,
       });

@@ -1,4 +1,9 @@
-import { BranchAndDir, Chunk, ContextItem, ContextProviderExtras } from "../..";
+import type {
+  BranchAndDir,
+  Chunk,
+  ContextItem,
+  ContextProviderExtras,
+} from "../..";
 import { LanceDbIndex } from "../../indexing/LanceDbIndex";
 
 import { deduplicateArray, getBasename } from "../../util";
@@ -55,7 +60,7 @@ export async function retrieveContextItemsFromEmbeddings(
   const retrievalResults: Chunk[] = [];
 
   // Source: Full-text search
-  let ftsResults = await retrieveFts(
+  const ftsResults = await retrieveFts(
     extras.fullInput,
     nRetrieve / 2,
     tags,
@@ -70,7 +75,7 @@ export async function retrieveContextItemsFromEmbeddings(
     const { expandSnippet } = await import(
       "../../../extensions/vscode/src/util/expandSnippet"
     );
-    let expansionResults = (
+    const expansionResults = (
       await Promise.all(
         extras.selectedCode.map(async (rif) => {
           return expandSnippet(
@@ -92,7 +97,7 @@ export async function retrieveContextItemsFromEmbeddings(
   const lanceDbIndex = new LanceDbIndex(extras.embeddingsProvider, (path) =>
     extras.ide.readFile(path),
   );
-  let vecResults = await lanceDbIndex.retrieve(
+  const vecResults = await lanceDbIndex.retrieve(
     extras.fullInput,
     nRetrieve,
     tags,

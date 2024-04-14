@@ -1,11 +1,8 @@
-import { ChatMessage, SlashCommand } from "../..";
+import type { ChatMessage, SlashCommand } from "../..";
 import { stripImages } from "../../llm/countTokens";
 import { removeQuotesAndEscapes } from "../../util";
 
-const PROMPT = (
-  input: string,
-  title: string,
-) => `You will be asked to generate the body of a GitHub issue given a user request. You should follow these rules:
+const PROMPT = (input: string, title: string) => `You will be asked to generate the body of a GitHub issue given a user request. You should follow these rules:
 - Be descriptive but do not make up details
 - If the the user request includes any code snippets that are relevant, reference them in code blocks
 - Describe step by step how to reproduce the problem

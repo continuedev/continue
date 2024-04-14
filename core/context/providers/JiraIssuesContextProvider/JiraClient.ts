@@ -1,4 +1,4 @@
-import { RequestOptions } from "../../..";
+import type { RequestOptions } from "../../..";
 import { fetchwithRequestOptions } from "../../../util/fetchWithOptions";
 const { convert: adf2md } = require("adf-to-md");
 
@@ -90,7 +90,7 @@ export class JiraClient {
 
     const response = await fetchwithRequestOptions(
       new URL(
-        this.baseUrl + `/issue/${issueId}?fields=description,comment,summary`
+        this.baseUrl + `/issue/${issueId}?fields=description,comment,summary`,
       ),
       {
         method: "GET",
@@ -99,7 +99,7 @@ export class JiraClient {
           ...this.authHeader,
         },
       },
-      this.options.requestOptions
+      this.options.requestOptions,
     );
 
     const issue = (await response.json()) as any;
@@ -140,7 +140,7 @@ export class JiraClient {
           `/search?fields=summary&jql=${
             this.options.issueQuery ??
             `assignee = currentUser() AND resolution = Unresolved order by updated DESC`
-          }`
+          }`,
       ),
       {
         method: "GET",
@@ -149,13 +149,13 @@ export class JiraClient {
           ...this.authHeader,
         },
       },
-      this.options.requestOptions
+      this.options.requestOptions,
     );
 
     if (response.status != 200) {
       console.warn(
         "Unable to get jira tickets. Response code from API is",
-        response.status
+        response.status,
       );
       return Promise.resolve([]);
     }

@@ -1,8 +1,8 @@
 export const fetchWithExponentialBackoff = async (
   url: string,
   options: RequestInit,
-  retries: number = 5,
-  delay: number = 1000,
+  retries = 5,
+  delay = 1000,
 ): Promise<Response> => {
   try {
     const response = await fetch(url, options);

@@ -1,4 +1,4 @@
-import { Chunk } from "../..";
+import type { Chunk } from "../..";
 import { addDocs } from "./db";
 
 const request = require("request");

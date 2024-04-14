@@ -1,4 +1,4 @@
-import { EmbeddingsProviderName } from "../..";
+import type { EmbeddingsProviderName } from "../..";
 import FreeTrialEmbeddingsProvider from "./FreeTrialEmbeddingsProvider";
 import OllamaEmbeddingsProvider from "./OllamaEmbeddingsProvider";
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider";

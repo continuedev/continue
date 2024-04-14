@@ -1,5 +1,5 @@
 import { readFileSync, writeFileSync } from "fs";
-import { ModelDescription } from "..";
+import type { ModelDescription } from "..";
 import { editConfigJson, getConfigJsonPath } from "../util/paths";
 
 export function addModel(model: ModelDescription) {

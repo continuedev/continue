@@ -1,5 +1,5 @@
 import fs from "fs";
-import { DatabaseConnection } from "../indexing/refreshIndex";
+import type { DatabaseConnection } from "../indexing/refreshIndex";
 import { getDevDataSqlitePath } from "./paths";
 
 export class DevDataSqliteDb {

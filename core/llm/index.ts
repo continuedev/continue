@@ -1,4 +1,4 @@
-import {
+import type {
   ChatMessage,
   ChatMessageRole,
   CompletionOptions,
@@ -211,7 +211,7 @@ ${prompt}`;
   }
 
   private _logTokensGenerated(model: string, completion: string) {
-    let tokens = this.countTokens(completion);
+    const tokens = this.countTokens(completion);
     Telemetry.capture("tokens_generated", {
       model: model,
       provider: this.providerName,
@@ -267,7 +267,7 @@ ${prompt}`;
   private _formatChatMessages(messages: ChatMessage[]): string {
     const msgsCopy = messages ? messages.map((msg) => ({ ...msg })) : [];
     let formatted = "";
-    for (let msg of msgsCopy) {
+    for (const msg of msgsCopy) {
       if ("content" in msg && Array.isArray(msg.content)) {
         const content = stripImages(msg.content);
         msg.content = content;
@@ -464,10 +464,10 @@ ${prompt}`;
     template: PromptTemplate,
     history: ChatMessage[],
     otherData: Record<string, string>,
-    canPutWordsInModelsMouth: boolean = false,
+    canPutWordsInModelsMouth = false,
   ): string | ChatMessage[] {
     if (typeof template === "string") {
-      let data: any = {
+      const data: any = {
         history: history,
         ...otherData,
       };

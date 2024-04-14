@@ -1,10 +1,8 @@
-import { ChatMessageRole, SlashCommand } from "../..";
+import type { ChatMessageRole, SlashCommand } from "../..";
 import { pruneStringFromBottom, stripImages } from "../../llm/countTokens";
 
 const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
-const PROMPT = (
-  input: string,
-) => `The above sources are excerpts from related StackOverflow questions. Use them to help answer the below question from our user. Provide links to the sources in markdown whenever possible:
+const PROMPT = (input: string) => `The above sources are excerpts from related StackOverflow questions. Use them to help answer the below question from our user. Provide links to the sources in markdown whenever possible:
 
 ${input}
 `;

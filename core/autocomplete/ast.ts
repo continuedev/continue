@@ -1,5 +1,5 @@
-import Parser from "web-tree-sitter";
-import { RangeInFileWithContents } from "../commands/util";
+import type Parser from "web-tree-sitter";
+import type { RangeInFileWithContents } from "../commands/util";
 import { getParserForFile } from "../util/treeSitter";
 
 export async function getAst(
@@ -27,7 +27,7 @@ export async function getTreePathAtCursor(
   const path = [ast.rootNode];
   while (path[path.length - 1].childCount > 0) {
     let foundChild = false;
-    for (let child of path[path.length - 1].children) {
+    for (const child of path[path.length - 1].children) {
       if (child.startIndex <= cursorIndex && child.endIndex >= cursorIndex) {
         path.push(child);
         foundChild = true;
@@ -63,7 +63,7 @@ export async function getScopeAroundRange(
   let node = ast.rootNode;
   while (node.childCount > 0) {
     let foundChild = false;
-    for (let child of node.children) {
+    for (const child of node.children) {
       if (child.startIndex < startIndex && child.endIndex > endIndex) {
         node = child;
         foundChild = true;

@@ -1,6 +1,6 @@
-import { Database, open } from "sqlite";
+import { type Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { Chunk } from "../..";
+import type { Chunk } from "../..";
 import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths";
 
 import { downloadPreIndexedDocs } from "./preIndexed";
@@ -45,7 +45,7 @@ export async function retrieveDocs(
   vector: number[],
   nRetrieve: number,
   embeddingsProviderId: string,
-  nested: boolean = false,
+  nested = false,
 ): Promise<Chunk[]> {
   const lancedb = await import("vectordb");
   const db = await getDBDocs();

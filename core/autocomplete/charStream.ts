@@ -27,7 +27,7 @@ export async function* onlyWhitespaceAfterEndOfLine(
 
 export async function* noFirstCharNewline(stream: AsyncGenerator<string>) {
   let first = true;
-  for await (let char of stream) {
+  for await (const char of stream) {
     if (first) {
       first = false;
       if (char === "\n") return;

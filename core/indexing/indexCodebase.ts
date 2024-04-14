@@ -1,12 +1,12 @@
-import { IDE, IndexTag, IndexingProgressUpdate } from "..";
-import { ConfigHandler } from "../config/handler";
+import type { IDE, IndexTag, IndexingProgressUpdate } from "..";
+import type { ConfigHandler } from "../config/handler";
 import { ContinueServerClient } from "../continueServer/stubs/client";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearch";
 import { LanceDbIndex } from "./LanceDbIndex";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
 import { getComputeDeleteAddRemove } from "./refreshIndex";
-import { CodebaseIndex } from "./types";
+import type { CodebaseIndex } from "./types";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -80,14 +80,14 @@ export class CodebaseIndexer {
       desc: "Starting indexing...",
     };
 
-    for (let directory of workspaceDirs) {
+    for (const directory of workspaceDirs) {
       const stats = await this.ide.getStats(directory);
       const branch = await this.ide.getBranch(directory);
       const repoName = await this.ide.getRepoName(directory);
       let completedIndexes = 0;
 
       try {
-        for (let codebaseIndex of indexesToBuild) {
+        for (const codebaseIndex of indexesToBuild) {
           // TODO: IndexTag type should use repoName rather than directory
           const tag: IndexTag = {
             directory,
@@ -101,7 +101,7 @@ export class CodebaseIndexer {
             repoName,
           );
 
-          for await (let { progress, desc } of codebaseIndex.update(
+          for await (const { progress, desc } of codebaseIndex.update(
             tag,
             results,
             markComplete,

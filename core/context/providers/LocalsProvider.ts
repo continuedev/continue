@@ -1,5 +1,5 @@
 import { BaseContextProvider } from "..";
-import {
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
@@ -17,22 +17,22 @@ class LocalsProvider extends BaseContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     // Assuming that the query is a number
     const localVariables = await extras.ide.getDebugLocals(Number(query));
     const threadIndex = Number(query);
     const thread = (await extras.ide.getAvailableThreads()).find(
-      (thread) => thread.id == threadIndex
+      (thread) => thread.id == threadIndex,
     );
     const callStacksSources = await extras.ide.getTopLevelCallStackSources(
       threadIndex,
-      this.options?.stackDepth || 3
+      this.options?.stackDepth || 3,
     );
     const callStackContents = callStacksSources.reduce(
       (acc, source, index) =>
         acc + `\n\ncall stack ${index}\n` + "```\n" + source + "\n```",
-      ""
+      "",
     );
     return [
       {
@@ -47,7 +47,7 @@ class LocalsProvider extends BaseContextProvider {
   }
 
   async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const threads = await args.ide.getAvailableThreads();
 

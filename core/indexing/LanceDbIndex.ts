@@ -1,24 +1,24 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { v4 as uuidv4 } from "uuid";
-import { Table } from "vectordb";
-import {
+import type { Table } from "vectordb";
+import type {
   BranchAndDir,
   Chunk,
   EmbeddingsProvider,
   IndexTag,
   IndexingProgressUpdate,
 } from "..";
-import { ContinueServerClient } from "../continueServer/stubs/client";
+import type { ContinueServerClient } from "../continueServer/stubs/client";
 import { MAX_CHUNK_SIZE } from "../llm/constants";
 import { getBasename } from "../util";
 import { getLanceDbPath } from "../util/paths";
 import { chunkDocument } from "./chunk/chunk";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+import { type DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
-  CodebaseIndex,
+  type CodebaseIndex,
   IndexResultType,
-  PathAndCacheKey,
-  RefreshIndexResults,
+  type PathAndCacheKey,
+  type RefreshIndexResults,
 } from "./types";
 
 // LanceDB  converts to lowercase, so names must all be lowercase
@@ -82,7 +82,7 @@ export class LanceDbIndex implements CodebaseIndex {
       const content = contents[i];
       const chunks: Chunk[] = [];
 
-      for await (let chunk of chunkDocument(
+      for await (const chunk of chunkDocument(
         items[i].path,
         content,
         LanceDbIndex.MAX_CHUNK_SIZE,
@@ -255,7 +255,7 @@ export class LanceDbIndex implements CodebaseIndex {
     }
 
     // Add tag - retrieve the computed info from lance sqlite cache
-    for (let { path, cacheKey } of results.addTag) {
+    for (const { path, cacheKey } of results.addTag) {
       const stmt = await sqlite.prepare(
         "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
         cacheKey,
@@ -284,7 +284,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
     // Delete or remove tag - remove from lance table)
     if (!needToCreateTable) {
-      for (let { path, cacheKey } of [...results.removeTag, ...results.del]) {
+      for (const { path, cacheKey } of [...results.removeTag, ...results.del]) {
         // This is where the aforementioned lowercase conversion problem shows
         await table!.delete(`cachekey = '${cacheKey}' AND path = '${path}'`);
       }
@@ -292,7 +292,7 @@ export class LanceDbIndex implements CodebaseIndex {
     markComplete(results.removeTag, IndexResultType.RemoveTag);
 
     // Delete - also remove from sqlite cache
-    for (let { path, cacheKey } of results.del) {
+    for (const { path, cacheKey } of results.del) {
       await sqlite.run(
         "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
         cacheKey,

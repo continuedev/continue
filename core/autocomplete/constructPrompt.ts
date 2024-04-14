@@ -1,6 +1,6 @@
-import Parser from "web-tree-sitter";
-import { TabAutocompleteOptions } from "..";
-import { RangeInFileWithContents } from "../commands/util";
+import type Parser from "web-tree-sitter";
+import type { TabAutocompleteOptions } from "..";
+import type { RangeInFileWithContents } from "../commands/util";
 
 import {
   countTokens,
@@ -8,9 +8,13 @@ import {
   pruneLinesFromTop,
 } from "../llm/countTokens";
 import { getAst, getTreePathAtCursor } from "./ast";
-import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
 import {
-  AutocompleteSnippet,
+  type AutocompleteLanguageInfo,
+  LANGUAGES,
+  Typescript,
+} from "./languages";
+import {
+  type AutocompleteSnippet,
   fillPromptWithSnippets,
   rankSnippets,
   removeRangeFromSnippets,
@@ -72,7 +76,7 @@ async function shouldCompleteMultiline(
 
   let completeMultiline = false;
   if (treePath) {
-    let cursorLine = fullPrefix.split("\n").length - 1;
+    const cursorLine = fullPrefix.split("\n").length - 1;
     completeMultiline = shouldCompleteMultilineAst(treePath, cursorLine);
   }
   return completeMultiline;
@@ -99,14 +103,14 @@ export async function constructAutocompletePrompt(
 }> {
   // Construct basic prefix
   const maxPrefixTokens = options.maxPromptTokens * options.prefixPercentage;
-  let prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens, modelName);
+  const prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens, modelName);
 
   // Construct suffix
   const maxSuffixTokens = Math.min(
     options.maxPromptTokens - countTokens(prefix, modelName),
     options.maxSuffixPercentage * options.maxPromptTokens,
   );
-  let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
+  const suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
 
   // Find external snippets
   let snippets: AutocompleteSnippet[] = [];

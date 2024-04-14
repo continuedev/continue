@@ -1,12 +1,8 @@
-import {
-  Chunk,
-  EmbeddingsProvider,
-  IndexingProgressUpdate,
-} from "../..";
+import type { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "../..";
 
+import { type Article, chunkArticle, pageToArticle } from "./article";
 import { crawlPage } from "./crawl";
 import { addDocs, hasDoc } from "./db";
-import { pageToArticle, chunkArticle, Article } from "./article";
 
 export async function* indexDocs(
   title: string,
@@ -30,7 +26,7 @@ export async function* indexDocs(
 
   for await (const page of crawlPage(baseUrl)) {
     const article = pageToArticle(page);
-    if (!article) continue; 
+    if (!article) continue;
 
     articles.push(article);
 
@@ -50,11 +46,11 @@ export async function* indexDocs(
     };
 
     const subpathEmbeddings = await embeddingsProvider.embed(
-      chunkArticle(article).map(chunk => {
+      chunkArticle(article).map((chunk) => {
         chunks.push(chunk);
 
         return chunk.content;
-      })
+      }),
     );
 
     embeddings.push(...subpathEmbeddings);
