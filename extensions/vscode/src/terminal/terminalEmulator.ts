@@ -55,7 +55,7 @@ export class CapturedTerminal {
   private readonly ptyProcess: any;
 
   private shellPrompt: string | undefined = undefined;
-  private dataBuffer: string = "";
+  private dataBuffer = "";
 
   private onDataListeners: ((data: string) => void)[] = [];
 
@@ -68,7 +68,7 @@ export class CapturedTerminal {
   }
 
   private commandQueue: [string, (output: string) => void][] = [];
-  private hasRunCommand: boolean = false;
+  private hasRunCommand = false;
 
   private dataEndsInPrompt(strippedData: string): boolean {
     const lines = strippedData.split("\n");
@@ -128,7 +128,7 @@ export class CapturedTerminal {
 
   private readonly writeEmitter: vscode.EventEmitter<string>;
 
-  private splitByCommandsBuffer: string = "";
+  private splitByCommandsBuffer = "";
   private readonly onCommandOutput: ((output: string) => void) | undefined;
 
   splitByCommandsListener(data: string) {
@@ -144,8 +144,8 @@ export class CapturedTerminal {
     }
   }
 
-  private runningClearToGetPrompt: boolean = false;
-  private seenClear: boolean = false;
+  private runningClearToGetPrompt = false;
+  private seenClear = false;
   private commandPromptString: string | undefined = undefined;
   private resolveMeWhenCommandPromptStringFound:
     | ((_: unknown) => void)
@@ -240,7 +240,7 @@ export class CapturedTerminal {
       this.writeEmitter.fire(data);
 
       this.splitByCommandsListener(data);
-      for (let listener of this.onDataListeners) {
+      for (const listener of this.onDataListeners) {
         listener(data);
       }
     });

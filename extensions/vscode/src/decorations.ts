@@ -20,7 +20,7 @@ export function showAnswerInTextEditor(
         vscode.TextEditorRevealType.InCenter,
       );
 
-      let decorationType = vscode.window.createTextEditorDecorationType({
+      const decorationType = vscode.window.createTextEditorDecorationType({
         after: {
           contentText: answer + "\n",
           color: "rgb(0, 255, 0, 0.8)",
@@ -112,7 +112,7 @@ class DecorationManager {
   }
 
   deleteDecoration(key: DecorationKey) {
-    let decorationTypes = this.editorToDecorations.get(key.editorUri);
+    const decorationTypes = this.editorToDecorations.get(key.editorUri);
     if (!decorationTypes) {
       return;
     }
@@ -128,12 +128,12 @@ class DecorationManager {
   }
 
   deleteAllDecorations(editorUri: string) {
-    let decorationTypes = this.editorToDecorations.get(editorUri)?.keys();
+    const decorationTypes = this.editorToDecorations.get(editorUri)?.keys();
     if (!decorationTypes) {
       return;
     }
     this.editorToDecorations.delete(editorUri);
-    for (let decorationType of decorationTypes) {
+    for (const decorationType of decorationTypes) {
       this.rerenderDecorations(editorUri, decorationType);
     }
   }
@@ -198,7 +198,7 @@ export function showLintMessage(
 export function highlightCode(
   editor: vscode.TextEditor,
   range: vscode.Range,
-  removeOnClick: boolean = true,
+  removeOnClick = true,
 ): DecorationKey {
   const decorationType = vscode.window.createTextEditorDecorationType({
     backgroundColor: "rgb(255, 255, 0, 0.1)",

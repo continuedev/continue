@@ -1,6 +1,6 @@
+import * as path from "path";
 import { defaultIgnoreDir, defaultIgnoreFile } from "core/indexing/ignore";
 import ignore from "ignore";
-import * as path from "path";
 import * as vscode from "vscode";
 import { uriFromFilePath } from "./vscode";
 
@@ -26,7 +26,7 @@ function splitGlob(glob: string): [string | undefined, string, boolean] {
 export async function* traverseDirectory(
   directory: string,
   gitIgnorePatterns: string[],
-  returnFiles: boolean = true,
+  returnFiles = true,
   onlyThisDirectory: string[] | undefined,
 ): AsyncGenerator<string> {
   const nodes = await vscode.workspace.fs.readDirectory(

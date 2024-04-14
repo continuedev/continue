@@ -1,6 +1,6 @@
+import path from "path";
 import { getTsConfigPath, migrate } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
-import path from "path";
 import * as vscode from "vscode";
 import { VsCodeExtension } from "../extension/vscodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
@@ -43,7 +43,7 @@ function showRefactorMigrationMessage(
 // Ideally the only global variable
 // Used in test/test-suites
 let resolveVsCodeExtension: (value: VsCodeExtension) => void;
-export let vscodeExtensionPromise: Promise<VsCodeExtension> = new Promise(
+export const vscodeExtensionPromise: Promise<VsCodeExtension> = new Promise(
   (resolve) => {
     resolveVsCodeExtension = resolve;
   },

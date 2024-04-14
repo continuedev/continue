@@ -1,7 +1,7 @@
-import { FileEdit, IDE } from "core";
-import { ConfigHandler } from "core/config/handler";
+import type { FileEdit, IDE } from "core";
+import type { ConfigHandler } from "core/config/handler";
 import * as vscode from "vscode";
-import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import type { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getTheme } from "./util/getTheme";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
@@ -34,10 +34,10 @@ export class ContinueGUIWebviewViewProvider
   }
 
   public resetWebviewProtocolWebview(): void {
-    if (this._webview) { 
+    if (this._webview) {
       this.webviewProtocol.webview = this._webview;
-    } else{
-      console.warn("no webview found during reset")
+    } else {
+      console.warn("no webview found during reset");
     }
   }
 
@@ -70,12 +70,12 @@ export class ContinueGUIWebviewViewProvider
     verticalDiffManager: VerticalPerLineDiffManager,
     page: string | undefined = undefined,
     edits: FileEdit[] | undefined = undefined,
-    isFullScreen: boolean = false,
+    isFullScreen = false,
   ): string {
-    let extensionUri = getExtensionUri();
+    const extensionUri = getExtensionUri();
     let scriptUri: string;
     let styleMainUri: string;
-    let vscMediaUrl: string = panel.webview
+    const vscMediaUrl: string = panel.webview
       .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui"))
       .toString();
 

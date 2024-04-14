@@ -1,15 +1,15 @@
-import { ILLM } from "core";
-import { ConfigHandler } from "core/config/handler";
+import type { ILLM } from "core";
+import type { ConfigHandler } from "core/config/handler";
 import Ollama from "core/llm/llms/Ollama";
 import * as vscode from "vscode";
 
 export class TabAutocompleteModel {
   private _llm: ILLM | undefined;
-  private defaultTag: string = "starcoder2:3b";
-  private defaultTagName: string = "Starcoder2 3b";
+  private defaultTag = "starcoder2:3b";
+  private defaultTagName = "Starcoder2 3b";
 
-  private shownOllamaWarning: boolean = false;
-  private shownDeepseekWarning: boolean = false;
+  private shownOllamaWarning = false;
+  private shownDeepseekWarning = false;
 
   private configHandler: ConfigHandler;
 

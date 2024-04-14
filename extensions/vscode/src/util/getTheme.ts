@@ -1,7 +1,7 @@
-import mergeJson from "core/util/merge";
 import * as fs from "fs";
-import { convertTheme } from "monaco-vscode-textmate-theme-converter/lib/cjs";
 import * as path from "path";
+import mergeJson from "core/util/merge";
+import { convertTheme } from "monaco-vscode-textmate-theme-converter/lib/cjs";
 import * as vscode from "vscode";
 import { getExtensionUri } from "./vscode";
 
@@ -84,8 +84,8 @@ export function getTheme() {
       ["vs", "hc-black"].includes(converted.base)
         ? converted.base
         : colorTheme.includes("Light")
-        ? "vs"
-        : "vs-dark"
+          ? "vs"
+          : "vs-dark"
     ) as any;
 
     return converted;

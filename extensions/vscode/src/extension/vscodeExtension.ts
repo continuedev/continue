@@ -1,6 +1,6 @@
 import { ConfigHandler } from "core/config/handler";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
-import { IdeSettings } from "core/protocol";
+import type { IdeSettings } from "core/protocol";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
@@ -15,7 +15,7 @@ import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
 import { getUserToken } from "../stubs/auth";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
-import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)

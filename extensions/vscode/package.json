@@ -466,6 +466,7 @@
     "build-release:rust": "npm run build:rust -- --release"
   },
   "devDependencies": {
+    "@biomejs/biome": "1.6.4",
     "@nestjs/common": "^8.4.7",
     "@openapitools/openapi-generator-cli": "^2.5.2",
     "@types/cors": "^2.8.17",

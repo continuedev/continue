@@ -1,11 +1,11 @@
+import * as path from "path";
 import * as glob from "glob";
 import Mocha from "mocha";
-import * as path from "path";
 
 export function run() {
   // Avoid timing out when stopping on breakpoints during debugging in VSCode
   const timeoutOption = process.env.MOCHA_TIMEOUT
-    ? parseInt(process.env.MOCHA_TIMEOUT)
+    ? Number.parseInt(process.env.MOCHA_TIMEOUT)
     : // : undefined;
       30_000;
 

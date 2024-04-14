@@ -1,9 +1,9 @@
-import { IDE, RangeInFile } from "core";
+import type { IDE, RangeInFile } from "core";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/ast";
-import { AutocompleteSnippet } from "core/autocomplete/ranking";
-import { RangeInFileWithContents } from "core/commands/util";
+import type { AutocompleteSnippet } from "core/autocomplete/ranking";
+import type { RangeInFileWithContents } from "core/commands/util";
 import * as vscode from "vscode";
-import Parser from "web-tree-sitter";
+import type Parser from "web-tree-sitter";
 
 type GotoProviderName =
   | "vscode.executeDefinitionProvider"

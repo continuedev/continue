@@ -1,6 +1,7 @@
 import * as child_process from "child_process";
 import { exec } from "child_process";
-import {
+import * as path from "path";
+import type {
   ContinueRcJson,
   IDE,
   IdeInfo,
@@ -10,9 +11,8 @@ import {
   Thread,
 } from "core";
 import { getContinueGlobalPath } from "core/util/paths";
-import * as path from "path";
 import * as vscode from "vscode";
-import { DiffManager } from "./diff/horizontal";
+import type { DiffManager } from "./diff/horizontal";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { traverseDirectory } from "./util/traverseDirectory";
 import {
@@ -88,7 +88,7 @@ class VsCodeIde implements IDE {
     const pathToLastModified: { [path: string]: number } = {};
     await Promise.all(
       files.map(async (file) => {
-        let stat = await vscode.workspace.fs.stat(uriFromFilePath(file));
+        const stat = await vscode.workspace.fs.stat(uriFromFilePath(file));
         pathToLastModified[file] = stat.mtime;
       }),
     );
@@ -300,8 +300,8 @@ class VsCodeIde implements IDE {
   }
 
   async getSearchResults(query: string): Promise<string> {
-    let results = [];
-    for (let dir of await this.getWorkspaceDirs()) {
+    const results = [];
+    for (const dir of await this.getWorkspaceDirs()) {
       results.push(await this._searchDir(query, dir));
     }
 

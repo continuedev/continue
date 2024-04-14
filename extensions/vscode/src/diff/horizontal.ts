@@ -1,11 +1,11 @@
-import { devDataPath } from "core/util/paths";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { devDataPath } from "core/util/paths";
 import * as vscode from "vscode";
 import { getMetaKeyLabel, getPlatform } from "../util/util";
 import { uriFromFilePath } from "../util/vscode";
-import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -67,7 +67,7 @@ export class DiffManager {
     return filepath.replace(/\//g, "_f_").replace(/\\/g, "_b_");
   }
 
-  private remoteTmpDir: string = "/tmp/continue";
+  private remoteTmpDir = "/tmp/continue";
   private getNewFilepath(originalFilepath: string): string {
     if (vscode.env.remoteName) {
       // If we're in a remote, use the remote's temp directory
@@ -199,7 +199,7 @@ export class DiffManager {
     return newFilepath;
   }
 
-  cleanUpDiff(diffInfo: DiffInfo, hideEditor: boolean = true) {
+  cleanUpDiff(diffInfo: DiffInfo, hideEditor = true) {
     // Close the editor, remove the record, delete the file
     if (hideEditor && diffInfo.editor) {
       try {

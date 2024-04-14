@@ -1,11 +1,11 @@
-import { FileEdit, RangeInFile, Thread } from "core";
-import { defaultIgnoreFile } from "core/indexing/ignore";
 import path from "path";
+import type { FileEdit, RangeInFile, Thread } from "core";
+import { defaultIgnoreFile } from "core/indexing/ignore";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/vscodeExtension";
 import {
-  SuggestionRanges,
+  type SuggestionRanges,
   acceptSuggestionCommand,
   editorSuggestionsLocked,
   rejectSuggestionCommand,
@@ -340,7 +340,7 @@ export class VsCodeIdeUtils {
     );
   }
 
-  async getTerminalContents(commands: number = -1): Promise<string> {
+  async getTerminalContents(commands = -1): Promise<string> {
     const tempCopyBuffer = await vscode.env.clipboard.readText();
     if (commands < 0) {
       await vscode.commands.executeCommand(
@@ -388,7 +388,7 @@ export class VsCodeIdeUtils {
     return threadsResponse.threads;
   }
 
-  async getDebugLocals(threadIndex: number = 0): Promise<string> {
+  async getDebugLocals(threadIndex = 0): Promise<string> {
     const session = vscode.debug.activeDebugSession;
 
     if (!session) {
@@ -428,7 +428,7 @@ export class VsCodeIdeUtils {
 
   async getTopLevelCallStackSources(
     threadIndex: number,
-    stackDepth: number = 3,
+    stackDepth = 3,
   ): Promise<string[]> {
     const session = vscode.debug.activeDebugSession;
     if (!session) return [];
@@ -513,7 +513,7 @@ export class VsCodeIdeUtils {
     }
   }
 
-  private _repoWasNone: boolean = false;
+  private _repoWasNone = false;
   async getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
     let repo = await this._getRepo(forDirectory);
 
@@ -538,7 +538,7 @@ export class VsCodeIdeUtils {
   }
 
   async getBranch(forDirectory: vscode.Uri) {
-    let repo = await this.getRepo(forDirectory);
+    const repo = await this.getRepo(forDirectory);
     if (repo?.state?.HEAD?.name === undefined) {
       try {
         const { stdout } = await asyncExec("git rev-parse --abbrev-ref HEAD", {
@@ -554,7 +554,7 @@ export class VsCodeIdeUtils {
   }
 
   async getDiff(): Promise<string> {
-    let diffs = [];
+    const diffs = [];
 
     for (const dir of this.getWorkspaceDirectories()) {
       const repo = await this.getRepo(vscode.Uri.file(dir));
@@ -570,7 +570,7 @@ export class VsCodeIdeUtils {
 
   getHighlightedCode(): RangeInFile[] {
     // TODO
-    let rangeInFiles: RangeInFile[] = [];
+    const rangeInFiles: RangeInFile[] = [];
     vscode.window.visibleTextEditors
       .filter((editor) => this.documentIsCode(editor.document))
       .forEach((editor) => {

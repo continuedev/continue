@@ -1,4 +1,4 @@
-import { DiffLine } from "core";
+import type { DiffLine } from "core";
 import * as vscode from "vscode";
 import {
   DecorationTypeRangeManager,
@@ -7,14 +7,14 @@ import {
   indexDecorationType,
   redDecorationType,
 } from "./decorations";
-import { VerticalDiffCodeLens } from "./manager";
+import type { VerticalDiffCodeLens } from "./manager";
 
 export class VerticalPerLineDiffHandler {
   private editor: vscode.TextEditor;
   private startLine: number;
   private endLine: number;
   private currentLineIndex: number;
-  private cancelled: boolean = false;
+  private cancelled = false;
 
   public get range(): vscode.Range {
     const startLine = Math.min(this.startLine, this.endLine);
@@ -22,7 +22,7 @@ export class VerticalPerLineDiffHandler {
     return new vscode.Range(startLine, 0, endLine, Number.MAX_SAFE_INTEGER);
   }
 
-  private newLinesAdded: number = 0;
+  private newLinesAdded = 0;
 
   public input?: string;
 
@@ -167,7 +167,7 @@ export class VerticalPerLineDiffHandler {
     this.newLinesAdded++;
   }
 
-  private async deleteLinesAt(index: number, numLines: number = 1) {
+  private async deleteLinesAt(index: number, numLines = 1) {
     const startLine = new vscode.Position(index, 0);
     await this.editor.edit(
       (editBuilder) => {
@@ -305,7 +305,7 @@ export class VerticalPerLineDiffHandler {
       // As an indicator of loading
       this.updateIndexLineDecorations();
 
-      for await (let diffLine of diffLineGenerator) {
+      for await (const diffLine of diffLineGenerator) {
         if (this.isCancelled) {
           return;
         }

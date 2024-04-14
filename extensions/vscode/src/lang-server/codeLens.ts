@@ -1,8 +1,8 @@
 import * as os from "os";
 import * as path from "path";
 import * as vscode from "vscode";
-import { DIFF_DIRECTORY, DiffManager } from "../diff/horizontal";
-import { VerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
+import { DIFF_DIRECTORY, type DiffManager } from "../diff/horizontal";
+import type { VerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
 import { editorSuggestionsLocked, editorToSuggestions } from "../suggestions";
 import { getAltOrOption, getMetaKeyLabel } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
@@ -188,7 +188,9 @@ class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     const lines = document.getText().split(os.EOL);
-    let lineOfModels = lines.findIndex((line) => line.includes('"models": ['));
+    const lineOfModels = lines.findIndex((line) =>
+      line.includes('"models": ['),
+    );
 
     if (lineOfModels >= 0) {
       const range = new vscode.Range(lineOfModels, 0, lineOfModels + 1, 0);

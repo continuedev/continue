@@ -192,7 +192,7 @@ function selectSuggestion(
   }
   if (idx === undefined) return;
 
-  let [suggestion] = suggestions.splice(idx, 1);
+  const [suggestion] = suggestions.splice(idx, 1);
 
   var rangeToDelete: vscode.Range;
   switch (accept) {
@@ -217,8 +217,8 @@ function selectSuggestion(
   });
 
   // Shift the below suggestions up
-  let linesToShift = rangeToDelete.end.line - rangeToDelete.start.line;
-  for (let below of suggestions) {
+  const linesToShift = rangeToDelete.end.line - rangeToDelete.start.line;
+  for (const below of suggestions) {
     // Assumes there should be no crossover between suggestions. Might want to enforce this.
     if (
       below.oldRange.union(below.newRange).start.line >
@@ -302,15 +302,15 @@ export async function showSuggestion(
           if (success) {
             const suggestionLinesLength =
               suggestion === "" ? 0 : suggestion.split("\n").length;
-            let suggestionRange = new vscode.Range(
+            const suggestionRange = new vscode.Range(
               new vscode.Position(range.end.line, 0),
               new vscode.Position(range.end.line + suggestionLinesLength, 0),
             );
-            let content = editor!.document.getText(suggestionRange);
+            const content = editor!.document.getText(suggestionRange);
 
             const filename = editor!.document.uri.toString();
             if (editorToSuggestions.has(filename)) {
-              let suggestions = editorToSuggestions.get(filename)!;
+              const suggestions = editorToSuggestions.get(filename)!;
               suggestions.push({
                 oldRange: range,
                 newRange: suggestionRange,

@@ -53,6 +53,25 @@
     call-me-maybe "^1.0.1"
     js-yaml "^4.1.0"
 
+"@biomejs/biome@1.6.4":
+  version "1.6.4"
+  resolved "https://registry.npmjs.org/@biomejs/biome/-/biome-1.6.4.tgz"
+  integrity sha512-3groVd2oWsLC0ZU+XXgHSNbq31lUcOCBkCcA7sAQGBopHcmL+jmmdoWlY3S61zIh+f2mqQTQte1g6PZKb3JJjA==
+  optionalDependencies:
+    "@biomejs/cli-darwin-arm64" "1.6.4"
+    "@biomejs/cli-darwin-x64" "1.6.4"
+    "@biomejs/cli-linux-arm64" "1.6.4"
+    "@biomejs/cli-linux-arm64-musl" "1.6.4"
+    "@biomejs/cli-linux-x64" "1.6.4"
+    "@biomejs/cli-linux-x64-musl" "1.6.4"
+    "@biomejs/cli-win32-arm64" "1.6.4"
+    "@biomejs/cli-win32-x64" "1.6.4"
+
+"@biomejs/cli-darwin-arm64@1.6.4":
+  version "1.6.4"
+  resolved "https://registry.npmjs.org/@biomejs/cli-darwin-arm64/-/cli-darwin-arm64-1.6.4.tgz"
+  integrity sha512-2WZef8byI9NRzGajGj5RTrroW9BxtfbP9etigW1QGAtwu/6+cLkdPOWRAs7uFtaxBNiKFYA8j/BxV5zeAo5QOQ==
+
 "@electron/rebuild@^3.2.10":
   version "3.6.0"
   resolved "https://registry.npmjs.org/@electron/rebuild/-/rebuild-3.6.0.tgz"
@@ -187,11 +206,6 @@
   version "7.1.3"
   resolved "https://registry.npmjs.org/@jsdevtools/ono/-/ono-7.1.3.tgz"
   integrity sha512-4JQNk+3mVzK3xh2rqd6RB4J46qUR19azEHBneZyTZM+c456qOrbbM/5xcR8huNCCcbVt7+UmizG6GuUvPvKUYg==
-
-"@lancedb/vectordb-darwin-arm64@*":
-  version "0.4.16"
-  resolved "https://registry.npmjs.org/@lancedb/vectordb-darwin-arm64/-/vectordb-darwin-arm64-0.4.16.tgz"
-  integrity sha512-RtuizzrZIVDYQ4ZZIMQRHGuV0DvOV93lyvivJJBLP1zCORMHEtEduaVbFE/+H0OCo0oqPsKXEpbc0nUEXKQqRg==
 
 "@lancedb/vectordb-darwin-arm64@0.4.12":
   version "0.4.12"

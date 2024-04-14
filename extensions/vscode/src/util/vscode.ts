@@ -1,5 +1,5 @@
-import { machineIdSync } from "node-machine-id";
 import * as path from "path";
+import { machineIdSync } from "node-machine-id";
 import * as vscode from "vscode";
 
 export function translate(range: vscode.Range, lines: number): vscode.Range {
@@ -28,8 +28,8 @@ export function getExtensionUri(): vscode.Uri {
 export function getViewColumnOfFile(
   filepath: string,
 ): vscode.ViewColumn | undefined {
-  for (let tabGroup of vscode.window.tabGroups.all) {
-    for (let tab of tabGroup.tabs) {
+  for (const tabGroup of vscode.window.tabGroups.all) {
+    for (const tab of tabGroup.tabs) {
       if (
         (tab?.input as any)?.uri &&
         (tab.input as any).uri.fsPath === filepath
@@ -44,7 +44,7 @@ export function getViewColumnOfFile(
 export function getRightViewColumn(): vscode.ViewColumn {
   // When you want to place in the rightmost panel if there is already more than one, otherwise use Beside
   let column = vscode.ViewColumn.Beside;
-  let columnOrdering = [
+  const columnOrdering = [
     vscode.ViewColumn.One,
     vscode.ViewColumn.Beside,
     vscode.ViewColumn.Two,
@@ -56,7 +56,7 @@ export function getRightViewColumn(): vscode.ViewColumn {
     vscode.ViewColumn.Eight,
     vscode.ViewColumn.Nine,
   ];
-  for (let tabGroup of vscode.window.tabGroups.all) {
+  for (const tabGroup of vscode.window.tabGroups.all) {
     if (
       columnOrdering.indexOf(tabGroup.viewColumn) >
       columnOrdering.indexOf(column)

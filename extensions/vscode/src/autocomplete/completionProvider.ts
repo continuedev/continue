@@ -1,14 +1,14 @@
-import { IDE } from "core";
+import type { IDE } from "core";
 import {
-  AutocompleteInput,
+  type AutocompleteInput,
   CompletionProvider,
 } from "core/autocomplete/completionProvider";
-import { ConfigHandler } from "core/config/handler";
+import type { ConfigHandler } from "core/config/handler";
 import { logDevData } from "core/util/devdata";
 import { Telemetry } from "core/util/posthog";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { getDefinitionsFromLsp } from "./lsp";
 import { setupStatusBar, stopStatusBarLoading } from "./statusBar";
 
@@ -20,8 +20,8 @@ export class ContinueCompletionProvider
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
-            "https://continue.dev/docs/walkthroughs/tab-autocomplete"
-          )
+            "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+          ),
         );
       }
     });
@@ -32,14 +32,14 @@ export class ContinueCompletionProvider
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
-    private readonly tabAutocompleteModel: TabAutocompleteModel
+    private readonly tabAutocompleteModel: TabAutocompleteModel,
   ) {
     this.completionProvider = new CompletionProvider(
       this.configHandler,
       this.ide,
       this.tabAutocompleteModel.get.bind(this.tabAutocompleteModel),
       this.onError.bind(this),
-      getDefinitionsFromLsp
+      getDefinitionsFromLsp,
     );
   }
 
@@ -47,7 +47,7 @@ export class ContinueCompletionProvider
     document: vscode.TextDocument,
     position: vscode.Position,
     context: vscode.InlineCompletionContext,
-    token: vscode.CancellationToken
+    token: vscode.CancellationToken,
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
     const enableTabAutocomplete =
@@ -75,14 +75,14 @@ export class ContinueCompletionProvider
         pos: { line: position.line, character: position.character },
         recentlyEditedFiles: [],
         recentlyEditedRanges: [],
-        clipboardText: clipboardText
+        clipboardText: clipboardText,
       };
 
       setupStatusBar(true, true);
       const outcome =
         await this.completionProvider.provideInlineCompletionItems(
           input,
-          signal
+          signal,
         );
 
       if (!outcome || !outcome.completion) {
@@ -107,13 +107,13 @@ export class ContinueCompletionProvider
           outcome.completion,
           new vscode.Range(
             position,
-            position.translate(0, outcome.completion.length)
+            position.translate(0, outcome.completion.length),
           ),
           {
             title: "Log Autocomplete Outcome",
             command: "continue.logAutocompleteOutcome",
             arguments: [outcome, logRejectionTimeout],
-          }
+          },
         ),
       ];
     } finally {

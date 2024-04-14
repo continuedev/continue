@@ -1,5 +1,7 @@
-import { ContextItemId, IDE } from "core";
-import { ConfigHandler } from "core/config/handler";
+import fs from "fs";
+import path from "path";
+import type { ContextItemId, IDE } from "core";
+import type { ConfigHandler } from "core/config/handler";
 import {
   setupLocalMode,
   setupOptimizedExistingUserMode,
@@ -11,18 +13,16 @@ import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/Transform
 import { logDevData } from "core/util/devdata";
 import { DevDataSqliteDb } from "core/util/devdataSqlite";
 import historyManager from "core/util/history";
-import { Message } from "core/util/messenger";
+import type { Message } from "core/util/messenger";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
-import {
+import type {
   ReverseWebviewProtocol,
   WebviewProtocol,
 } from "core/web/webviewProtocol";
-import fs from "fs";
-import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import type { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getExtensionUri } from "./util/vscode";
 
 async function showTutorial() {
@@ -158,11 +158,11 @@ export class VsCodeWebviewProtocol {
       return await vscode.workspace
         .openTextDocument(msg.data.filepath)
         .then((document) => {
-          let start = new vscode.Position(0, 0);
-          let end = new vscode.Position(5, 0);
-          let range = new vscode.Range(start, end);
+          const start = new vscode.Position(0, 0);
+          const end = new vscode.Position(5, 0);
+          const range = new vscode.Range(start, end);
 
-          let contents = document.getText(range);
+          const contents = document.getText(range);
           return contents;
         });
     });
@@ -296,11 +296,11 @@ export class VsCodeWebviewProtocol {
       this.ide.openFile(getConfigJsonPath());
 
       // Find the range where it was added and highlight
-      let lines = newConfigString.split("\n");
+      const lines = newConfigString.split("\n");
       let startLine;
       let endLine;
       for (let i = 0; i < lines.length; i++) {
-        let line = lines[i];
+        const line = lines[i];
 
         if (!startLine) {
           if (line.trim() === `"title": "${model.title}",`) {
@@ -576,8 +576,8 @@ export class VsCodeWebviewProtocol {
         mode === "local"
           ? setupLocalMode
           : mode === "optimized"
-          ? setupOptimizedMode
-          : setupOptimizedExistingUserMode,
+            ? setupOptimizedMode
+            : setupOptimizedExistingUserMode,
       );
     });
 
