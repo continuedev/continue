@@ -57,7 +57,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     async function handleChunk(chunk: Chunk) {
       const { lastID } = await db.run(
-        `INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)`,
+        "INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)",
         [
           chunk.digest,
           chunk.filepath,
@@ -68,7 +68,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         ],
       );
 
-      await db.run(`INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)`, [
+      await db.run("INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)", [
         lastID,
         tagString,
       ]);

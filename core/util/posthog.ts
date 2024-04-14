@@ -1,4 +1,4 @@
-import os from "os";
+import os from "node:os";
 
 export class Telemetry {
   // Set to undefined whenever telemetry is disabled

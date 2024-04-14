@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import path from "path";
+import * as fs from "node:fs";
+import path from "node:path";
 import type {
   BrowserSerializedContinueConfig,
   Config,
@@ -41,16 +41,9 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
-  readAllGlobalPromptFiles,
-} from "../util/paths.js";
-import {
-  defaultContextProvidersJetBrains,
-  defaultContextProvidersVsCode,
-  defaultSlashCommandsJetBrains,
-  defaultSlashCommandsVscode,
-} from "./default.js";
-import { getPromptFiles, slashCommandFromPromptFile } from "./promptFile.js";
-const { execSync } = require("child_process");
+  migrate,
+} from "../util/paths";
+const { execSync } = require("node:child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");

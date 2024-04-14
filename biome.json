@@ -9,6 +9,10 @@
       "recommended": true,
       "suspicious": {
         "noExplicitAny": "off"
+      },
+      "style": {
+        "noUselessElse": "off",
+        "noNonNullAssertion": "off"
       }
     }
   },

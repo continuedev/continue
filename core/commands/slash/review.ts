@@ -18,7 +18,7 @@ function getLastUserHistory(history: ChatMessage[]): string {
 
   if (!lastUserHistory) return "";
 
-  if (lastUserHistory.content instanceof Array) {
+  if (Array.isArray(lastUserHistory.content)) {
     return lastUserHistory.content.reduce(
       (acc: string, current: { type: string; text?: string }) => {
         return current.type === "text" && current.text

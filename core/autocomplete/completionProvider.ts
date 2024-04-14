@@ -262,9 +262,6 @@ export async function getTabCompletion(
       .join("\n");
     if (formattedSnippets.length > 0) {
       prefix = `${formattedSnippets}\n\n${prefix}`;
-    } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
-      // If it's an empty file, include the file name as a comment
-      prefix = `${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n${prefix}`;
     }
 
     prompt = compiledTemplate({

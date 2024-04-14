@@ -1,8 +1,6 @@
-import { BaseLLM } from "..";
-import { ChatMessage, CompletionOptions, LLMOptions, ModelProvider } from "../..";
-import * as fs from "fs";
-import { join as joinPath } from "path";
-import { promisify } from "util";
+import * as fs from "node:fs";
+import { join as joinPath } from "node:path";
+import { promisify } from "node:util";
 import { BaseLLM } from "..";
 import type {
   ChatMessage,
@@ -65,25 +63,23 @@ class Bedrock extends BaseLLM {
       .map((message) => {
         if (typeof message.content === "string") {
           return message;
-        } else {
-          return {
-            ...message,
-            content: message.content.map((part) => {
-              if (part.type === "text") {
-                return part;
-              } else {
-                return {
-                  type: "image",
-                  source: {
-                    type: "base64",
-                    media_type: "image/jpeg",
-                    data: part.imageUrl?.url.split(",")[1],
-                  },
-                };
-              }
-            }),
-          };
         }
+        return {
+          ...message,
+          content: message.content.map((part) => {
+            if (part.type === "text") {
+              return part;
+            }
+            return {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: "image/jpeg",
+                data: part.imageUrl?.url.split(",")[1],
+              },
+            };
+          }),
+        };
       });
     return messages;
   }
@@ -137,7 +133,9 @@ class Bedrock extends BaseLLM {
       region: this.region,
     };
 
-    let accessKeyId: string, secretAccessKey: string, sessionToken: string;
+    let accessKeyId: string;
+    let secretAccessKey: string;
+    let sessionToken: string;
 
     try {
       const data = await readFile(joinPath(process.env.HOME!, ".aws", "credentials"), "utf8");
@@ -151,7 +149,8 @@ class Bedrock extends BaseLLM {
     }
     return await this.fetch(new URL(`${this.apiBase}${path}`), {
       method: "POST",
-      headers: aws4.sign(opts, {accessKeyId, secretAccessKey, sessionToken})["headers"],
+      headers: aws4.sign(opts, { accessKeyId, secretAccessKey, sessionToken })
+        .headers,
       body: body,
     });
   }

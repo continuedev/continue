@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import tls from "tls";
+import * as fs from "node:fs";
+import tls from "node:tls";
 import { http, https } from "follow-redirects";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { HttpsProxyAgent } from "https-proxy-agent";

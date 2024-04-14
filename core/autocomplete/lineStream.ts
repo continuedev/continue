@@ -8,7 +8,7 @@ export async function* noTopLevelKeywordsMidline(
 ): LineStream {
   for await (const line of lines) {
     for (const keyword of topLevelKeywords) {
-      const indexOf = line.indexOf(keyword + " ");
+      const indexOf = line.indexOf(`${keyword} `);
       if (indexOf >= 0 && line.slice(indexOf - 1, indexOf).trim() !== "") {
         yield line.slice(0, indexOf);
         break;

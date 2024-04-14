@@ -304,13 +304,9 @@ const EditSlashCommand: SlashCommand = {
         linesToDisplay = contentsLines.slice(rewrittenLines);
       }
 
-      const newFileContents =
-        fullPrefixLines.join("\n") +
-        "\n" +
-        completion +
-        "\n" +
-        (linesToDisplay.length > 0 ? linesToDisplay.join("\n") + "\n" : "") +
-        fullSuffixLines.join("\n");
+      const newFileContents = `${fullPrefixLines.join("\n")}\n${completion}\n${
+        linesToDisplay.length > 0 ? `${linesToDisplay.join("\n")}\n` : ""
+      }${fullSuffixLines.join("\n")}`;
 
       const stepIndex = history.length - 1;
 

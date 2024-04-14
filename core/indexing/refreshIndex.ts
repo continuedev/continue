@@ -1,5 +1,5 @@
-import crypto from "crypto";
-import * as fs from "fs";
+import crypto from "node:crypto";
+import * as fs from "node:fs";
 import { type Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
 import type { IndexTag, IndexingProgressUpdate } from "..";

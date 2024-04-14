@@ -11,7 +11,7 @@ export function mergeJson(
   const copyOfFirst = JSON.parse(JSON.stringify(first));
 
   try {
-    for (var key in second) {
+    for (const key in second) {
       const secondValue = second[key];
 
       if (!(key in copyOfFirst) || mergeBehavior === "overwrite") {
