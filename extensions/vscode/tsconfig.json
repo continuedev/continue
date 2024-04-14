@@ -15,5 +15,5 @@
     "resolveJsonModule": true /* Enable importing .json files */
   },
   "include": ["src/**/*", "../../core/**/*.ts"],
-  "exclude": ["../../core/dist/**/*"]
+  "exclude": ["../../core/dist/**/*", "../../core/test/**/*"]
 }
