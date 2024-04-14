@@ -33,8 +33,7 @@ export class VsCodeExtension {
   private windowId: string;
   private diffManager: DiffManager;
   private verticalDiffManager: VerticalPerLineDiffManager;
-  webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
-  private core: Core;
+  webviewProtocol: VsCodeWebviewProtocol;
 
   constructor(context: vscode.ExtensionContext) {
     let resolveWebviewProtocol: any = undefined;

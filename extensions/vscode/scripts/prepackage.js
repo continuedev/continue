@@ -429,8 +429,10 @@ const exe = os === "win32" ? ".exe" : "";
   await new Promise((resolve, reject) => {
     ncp(
       path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
-      path.join(__dirname, "../out/build"),
-      { dereference: true },
+      // sqlite will look for the binary at a number of paths relative the current working directory
+      // including build/Release, out/Release, and Release
+      // build/ from the node_module contains Release/...
+      path.join(__dirname, "../out"),
       (error) => {
         if (error) {
           console.warn("[error] Error copying sqlite3 files", error);
@@ -535,7 +537,7 @@ function validateFilesPresent() {
     // Worker required by jsdom
     "out/xhr-sync-worker.js",
     // SQLite3 Node native module
-    "out/build/Release/node_sqlite3.node",
+    "out/Release/node_sqlite3.node",
 
     // out/node_modules (to be accessed by extension.js)
     `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,

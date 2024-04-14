@@ -6,15 +6,15 @@ async function main() {
     // The folder containing the Extension Manifest package.json
     // Passed to `--extensionDevelopmentPath`
 
-    // Assumes this file is in out/test/runner/runTestOnVSCodeHost.js
-    const extensionDevelopmentPath = path.resolve(__dirname, "../../../");
+    // Assumes this file is in out/runTestOnVSCodeHost.js
+    const extensionDevelopmentPath = path.resolve(__dirname, "../");
     console.log("extensionDevelopmentPath", extensionDevelopmentPath);
 
     // The path to test runner
     // Passed to --extensionTestsPath
     const extensionTestsPath = path.resolve(
       extensionDevelopmentPath,
-      "out/test/runner/mochaRunner",
+      "out/mochaRunner",
     );
 
     const extensionTestsEnv = {};
