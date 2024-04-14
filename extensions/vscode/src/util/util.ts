@@ -51,7 +51,7 @@ export function convertSingleToDoubleQuoteJSON(json: string): string {
   return newJson;
 }
 
-export function debounced(delay: number, fn: Function) {
+export function debounced(delay: number, fn: (...args: any[]) => void) {
   let timerId: NodeJS.Timeout | null;
   return (...args: any[]) => {
     if (timerId) {

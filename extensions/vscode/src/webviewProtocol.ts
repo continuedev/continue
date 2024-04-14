@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 import type { ContextItemId, IDE } from "core";
 import type { ConfigHandler } from "core/config/handler";
 import {
@@ -20,6 +18,8 @@ import type {
   ReverseWebviewProtocol,
   WebviewProtocol,
 } from "core/web/webviewProtocol";
+import fs from "node:fs";
+import path from "node:path";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import type { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
@@ -300,8 +300,8 @@ export class VsCodeWebviewProtocol {
 
       // Find the range where it was added and highlight
       const lines = newConfigString.split("\n");
-      let startLine;
-      let endLine;
+      let startLine: number | undefined;
+      let endLine: number | undefined;
       for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
 
