@@ -57,7 +57,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     async function handleChunk(chunk: Chunk) {
       const { lastID } = await db.run(
-        `INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)`,
+        "INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)",
         [
           chunk.digest,
           chunk.filepath,
@@ -68,7 +68,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         ],
       );
 
-      await db.run(`INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)`, [
+      await db.run("INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)", [
         lastID,
         tagString,
       ]);
@@ -124,12 +124,12 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     // Add tag
     for (const item of results.addTag) {
       const chunksWithPath = await db.all(
-        `SELECT * FROM chunks WHERE cacheKey = ?`,
+        "SELECT * FROM chunks WHERE cacheKey = ?",
         [item.cacheKey],
       );
 
       for (const chunk of chunksWithPath) {
-        await db.run(`INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)`, [
+        await db.run("INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)", [
           chunk.id,
           tagString,
         ]);
@@ -156,12 +156,12 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     // Delete
     for (const item of results.del) {
-      const deleted = await db.run(`DELETE FROM chunks WHERE cacheKey = ?`, [
+      const deleted = await db.run("DELETE FROM chunks WHERE cacheKey = ?", [
         item.cacheKey,
       ]);
 
       // Delete from chunk_tags
-      await db.run(`DELETE FROM chunk_tags WHERE chunkId = ?`, [
+      await db.run("DELETE FROM chunk_tags WHERE chunkId = ?", [
         deleted.lastID,
       ]);
 

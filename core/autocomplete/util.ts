@@ -117,7 +117,7 @@ export class GeneratorReuseManager {
     }
 
     let alreadyTyped = prefix.slice(this.pendingGeneratorPrefix?.length) || "";
-    for await (let chunk of this.currentGenerator!.tee()) {
+    for await (let chunk of this.currentGenerator?.tee()) {
       if (!chunk) {
         continue;
       }

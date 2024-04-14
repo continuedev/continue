@@ -46,7 +46,7 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
       issue.data.body || "No description",
       ...comments.data.map((comment) => comment.body),
     ];
-    content += "\n\n" + parts.join("\n\n---\n\n");
+    content += `\n\n${parts.join("\n\n---\n\n")}`;
 
     return [
       {

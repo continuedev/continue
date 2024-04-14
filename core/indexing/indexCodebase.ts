@@ -132,7 +132,7 @@ export class CodebaseIndexer {
             progress:
               (completedDirs + completedIndexes / indexesToBuild.length) /
               workspaceDirs.length,
-            desc: "Completed indexing " + codebaseIndex.artifactId,
+            desc: `Completed indexing ${codebaseIndex.artifactId}`,
           };
         }
       } catch (e) {

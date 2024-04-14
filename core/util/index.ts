@@ -72,7 +72,7 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
     // Iterate through the leading whitespace characters of the current line
     for (let j = 0; j < lcp.length; j++) {
       // If it doesn't have the same whitespace as lcp, then update lcp
-      if (j >= lines[i].length || lcp[j] != lines[i][j]) {
+      if (j >= lines[i].length || lcp[j] !== lines[i][j]) {
         lcp = lcp.slice(0, j);
         if (lcp === "") {
           return [s, ""];

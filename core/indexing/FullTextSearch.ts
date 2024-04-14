@@ -43,17 +43,17 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
       // Insert chunks
       const chunks = await db.all(
-        `SELECT * FROM chunks WHERE path = ? AND cacheKey = ?`,
+        "SELECT * FROM chunks WHERE path = ? AND cacheKey = ?",
         [item.path, item.cacheKey],
       );
 
       for (const chunk of chunks) {
         const { lastID } = await db.run(
-          `INSERT INTO fts (path, content) VALUES (?, ?)`,
+          "INSERT INTO fts (path, content) VALUES (?, ?)",
           [item.path, chunk.content],
         );
         await db.run(
-          `INSERT INTO fts_metadata (id, path, cacheKey, chunkId) VALUES (?, ?, ?, ?)`,
+          "INSERT INTO fts_metadata (id, path, cacheKey, chunkId) VALUES (?, ?, ?, ?)",
           [lastID, item.path, item.cacheKey, chunk.id],
         );
       }
@@ -78,10 +78,10 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     // Delete
     for (const item of results.del) {
       const { lastID } = await db.run(
-        `DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?`,
+        "DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?",
         [item.path, item.cacheKey],
       );
-      await db.run(`DELETE FROM fts WHERE rowid = ?`, [lastID]);
+      await db.run("DELETE FROM fts WHERE rowid = ?", [lastID]);
 
       markComplete([item], IndexResultType.Delete);
     }

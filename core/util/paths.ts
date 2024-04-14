@@ -1,6 +1,6 @@
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import dotenv from "dotenv";
 import type { IdeType, SerializedContinueConfig } from "..";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
@@ -143,7 +143,7 @@ export function getDevDataSqlitePath(): string {
 }
 
 export function getDevDataFilePath(fileName: string): string {
-  return path.join(devDataPath(), fileName + ".jsonl");
+  return path.join(devDataPath(), `${fileName}.jsonl`);
 }
 
 export function editConfigJson(
@@ -220,9 +220,8 @@ export function getContinueDotEnv(): { [key: string]: string } {
   const filepath = path.join(getContinueGlobalPath(), ".env");
   if (fs.existsSync(filepath)) {
     return dotenv.parse(fs.readFileSync(filepath));
-  } else {
-    return {};
   }
+  return {};
 }
 
 export function getCoreLogsPath(): string {

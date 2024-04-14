@@ -69,11 +69,11 @@ function formatExternalSnippet(
 ) {
   const comment = language.comment;
   const lines = [
-    comment + " Path: " + getBasename(filepath),
+    `${comment} Path: ${getBasename(filepath)}`,
     ...snippet
       .trim()
       .split("\n")
-      .map((line) => comment + " " + line),
+      .map((line) => `${comment} ${line}`),
     comment,
   ];
   return lines.join("\n");
@@ -191,7 +191,7 @@ export async function getTabCompletion(
       )
       .join("\n");
     if (formattedSnippets.length > 0) {
-      prefix = formattedSnippets + "\n\n" + prefix;
+      prefix = `${formattedSnippets}\n\n${prefix}`;
     }
 
     prompt = compiledTemplate({

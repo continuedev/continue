@@ -1,7 +1,7 @@
 //os.platform()
 //os.arch()
 
-import os from "os";
+import os from "node:os";
 import { BaseContextProvider } from "..";
 import type {
   ContextItem,

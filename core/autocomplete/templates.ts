@@ -51,14 +51,12 @@ const starcoder2FimTemplate: AutocompleteTemplate = {
     const otherFiles =
       snippets.length === 0
         ? ""
-        : "<file_sep>" +
-          snippets
+        : `<file_sep>${snippets
             .map((snippet) => {
               return snippet.contents;
               // return `${getBasename(snippet.filepath)}\n${snippet.contents}`;
             })
-            .join("<file_sep>") +
-          "<file_sep>";
+            .join("<file_sep>")}<file_sep>`;
 
     const prompt = `${otherFiles}<fim_prefix>${prefix}<fim_suffix>${suffix}<fim_middle>`;
     return prompt;

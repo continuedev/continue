@@ -18,18 +18,6 @@ class PostgresContextProvider extends BaseContextProvider {
   static ALL_TABLES = "__all_tables";
   static DEFAULT_SAMPLE_ROWS = 3;
 
-  constructor(options: {
-    host: string;
-    port: number;
-    user: string;
-    password: string;
-    database: string;
-    schema?: string;
-    sampleRows?: number;
-  }) {
-    super(options);
-  }
-
   private async getPool() {
     const pg = await require("pg");
     return new pg.Pool({
@@ -43,7 +31,7 @@ class PostgresContextProvider extends BaseContextProvider {
 
   private async getTableNames(pool: any): Promise<string[]> {
     const schema = this.options.schema ?? "public";
-    var tablesInfoQuery = `
+    let tablesInfoQuery = `
 SELECT table_schema, table_name
 FROM information_schema.tables`;
     if (schema != null) {
@@ -78,7 +66,7 @@ FROM information_schema.tables`;
             `Table name must be in format schema.table_name, got ${tableName}`,
           );
         }
-        var schemaQuery = `
+        const schemaQuery = `
 SELECT column_name, data_type, character_maximum_length
 FROM INFORMATION_SCHEMA.COLUMNS
 WHERE table_schema = '${tableName.split(".")[0]}'
@@ -96,7 +84,7 @@ FROM ${tableName}
 LIMIT ${sampleRows}`);
 
         // Create prompt from the table schema and sample rows
-        var prompt = `Postgres schema for database ${this.options.database} table ${tableName}:\n`;
+        let prompt = `Postgres schema for database ${this.options.database} table ${tableName}:\n`;
         prompt += `${JSON.stringify(tableSchema, null, 2)}\n\n`;
         prompt += `Sample rows: ${JSON.stringify(sampleRowResults, null, 2)}`;
 

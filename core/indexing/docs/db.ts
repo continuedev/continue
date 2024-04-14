@@ -128,7 +128,7 @@ export async function addDocs(
   // Only after add it to SQLite
   const db = await getDBDocs();
   await db.run(
-    `INSERT INTO docs (title, baseUrl) VALUES (?, ?)`,
+    "INSERT INTO docs (title, baseUrl) VALUES (?, ?)",
     title,
     baseUrl.toString(),
   );
@@ -138,12 +138,12 @@ export async function listDocs(): Promise<
   { title: string; baseUrl: string }[]
 > {
   const db = await getDBDocs();
-  const docs = db.all(`SELECT title, baseUrl FROM docs`);
+  const docs = db.all("SELECT title, baseUrl FROM docs");
   return docs;
 }
 
 export async function hasDoc(baseUrl: string) {
   const db = await getDBDocs();
-  const doc = await db.get(`SELECT title FROM docs WHERE baseUrl =?`, baseUrl);
+  const doc = await db.get("SELECT title FROM docs WHERE baseUrl =?", baseUrl);
   return !!doc;
 }

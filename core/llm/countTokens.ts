@@ -32,9 +32,8 @@ function encodingForModel(modelName: string): Encoding {
 function countImageTokens(content: MessagePart): number {
   if (content.type === "imageUrl") {
     return 85;
-  } else {
-    throw new Error("Non-image content type");
   }
+  throw new Error("Non-image content type");
 }
 
 function countTokens(
@@ -49,9 +48,8 @@ function countTokens(
         ? countImageTokens(part)
         : encoding.encode(part.text ?? "", "all", []).length;
     }, 0);
-  } else {
-    return encoding.encode(content, "all", []).length;
   }
+  return encoding.encode(content, "all", []).length;
 }
 
 function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
@@ -62,7 +60,7 @@ function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
       flattened.length > 0 &&
       flattened[flattened.length - 1].role === msg.role
     ) {
-      flattened[flattened.length - 1].content += "\n\n" + (msg.content || "");
+      flattened[flattened.length - 1].content += `\n\n${msg.content || ""}`;
     } else {
       flattened.push(msg);
     }
@@ -76,9 +74,8 @@ export function stripImages(content: MessageContent): string {
       .filter((part) => part.type === "text")
       .map((part) => part.text)
       .join("\n");
-  } else {
-    return content;
   }
+  return content;
 }
 
 function countChatMessageTokens(
@@ -174,10 +171,9 @@ function pruneRawPromptFromBottom(
 
 function summarize(message: MessageContent): string {
   if (Array.isArray(message)) {
-    return stripImages(message).substring(0, 100) + "...";
-  } else {
-    return message.substring(0, 100) + "...";
+    return `${stripImages(message).substring(0, 100)}...`;
   }
+  return `${message.substring(0, 100)}...`;
 }
 
 function pruneChatHistory(
@@ -276,7 +272,7 @@ function pruneChatHistory(
 
 function compileChatMessages(
   modelName: string,
-  msgs: ChatMessage[] | undefined = undefined,
+  msgs: ChatMessage[] | undefined,
   contextLength: number,
   maxTokens: number,
   supportsImages: boolean,

@@ -131,7 +131,7 @@ export async function getPromptParts(
       rif.contents = rif.contents.substring(1);
     }
     while (rif.contents.endsWith("\n")) {
-      fileSuffix = "\n" + fileSuffix;
+      fileSuffix = `\n${fileSuffix}`;
       rif.contents = rif.contents.substring(0, rif.contents.length - 1);
     }
   }
@@ -144,7 +144,7 @@ function compilePrompt(
   fileSuffix: string,
   input: string,
 ): string {
-  if (contents.trim() == "") {
+  if (contents.trim() === "") {
     // Separate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
     return `\
 <file_prefix>
@@ -162,7 +162,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
   }
 
   let prompt = PROMPT;
-  if (filePrefix.trim() != "") {
+  if (filePrefix.trim() !== "") {
     prompt += `
 <file_prefix>
 ${filePrefix}
@@ -173,7 +173,7 @@ ${filePrefix}
 ${contents}
 </code_to_edit>`;
 
-  if (fileSuffix.trim() != "") {
+  if (fileSuffix.trim() !== "") {
     prompt += `
 <file_suffix>
 ${fileSuffix}
@@ -234,7 +234,7 @@ const EditSlashCommand: SlashCommand = {
     const content = history[history.length - 1].content;
     if (typeof content !== "string") {
       content.forEach((part) => {
-        if (part.text && part.text.startsWith("/edit")) {
+        if (part.text?.startsWith("/edit")) {
           part.text = part.text.replace("/edit", "").trimStart();
         }
       });
@@ -301,13 +301,9 @@ const EditSlashCommand: SlashCommand = {
         linesToDisplay = contentsLines.slice(rewrittenLines);
       }
 
-      const newFileContents =
-        fullPrefixLines.join("\n") +
-        "\n" +
-        completion +
-        "\n" +
-        (linesToDisplay.length > 0 ? linesToDisplay.join("\n") + "\n" : "") +
-        fullSuffixLines.join("\n");
+      const newFileContents = `${fullPrefixLines.join("\n")}\n${completion}\n${
+        linesToDisplay.length > 0 ? `${linesToDisplay.join("\n")}\n` : ""
+      }${fullSuffixLines.join("\n")}`;
 
       const stepIndex = history.length - 1;
 
@@ -532,11 +528,11 @@ const EditSlashCommand: SlashCommand = {
           break;
         }
         // Lines that should be ignored, like the <> tags
-        else if (lineToBeIgnored(chunkLines[i], completionLinesCovered === 0)) {
+        if (lineToBeIgnored(chunkLines[i], completionLinesCovered === 0)) {
           continue; // noice
         }
         // Check if we are currently just copying the prefix
-        else if (
+        if (
           (linesOfPrefixCopied > 0 || completionLinesCovered === 0) &&
           linesOfPrefixCopied < filePrefix.split("\n").length &&
           chunkLines[i] === fullPrefixLines[linesOfPrefixCopied]
@@ -547,7 +543,7 @@ const EditSlashCommand: SlashCommand = {
         }
         // Because really short lines might be expected to be repeated, this is only a !heuristic!
         // Stop when it starts copying the fileSuffix
-        else if (
+        if (
           chunkLines[i].trim() === lineBelowHighlightedRange.trim() &&
           chunkLines[i].trim().length > 4 &&
           !(

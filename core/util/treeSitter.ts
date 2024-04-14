@@ -1,4 +1,4 @@
-import * as path from "path";
+import * as path from "node:path";
 import type { Language } from "web-tree-sitter";
 const Parser = require("web-tree-sitter");
 

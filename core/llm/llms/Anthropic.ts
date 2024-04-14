@@ -20,10 +20,6 @@ class Anthropic extends BaseLLM {
     apiBase: "https://api.anthropic.com/v1/",
   };
 
-  constructor(options: LLMOptions) {
-    super(options);
-  }
-
   private _convertArgs(options: CompletionOptions) {
     const finalOptions = {
       top_k: options.topK,
@@ -44,25 +40,23 @@ class Anthropic extends BaseLLM {
       .map((message) => {
         if (typeof message.content === "string") {
           return message;
-        } else {
-          return {
-            ...message,
-            content: message.content.map((part) => {
-              if (part.type === "text") {
-                return part;
-              } else {
-                return {
-                  type: "image",
-                  source: {
-                    type: "base64",
-                    media_type: "image/jpeg",
-                    data: part.imageUrl?.url.split(",")[1],
-                  },
-                };
-              }
-            }),
-          };
         }
+        return {
+          ...message,
+          content: message.content.map((part) => {
+            if (part.type === "text") {
+              return part;
+            }
+            return {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: "image/jpeg",
+                data: part.imageUrl?.url.split(",")[1],
+              },
+            };
+          }),
+        };
       });
     return messages;
   }

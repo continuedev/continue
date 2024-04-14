@@ -49,7 +49,7 @@ const getHandlebarsVars = (
       const letter = convertToLetter(keyIndex);
       keysToFilepath[letter] = (ast.body[i] as any).path.original;
       value = value.replace(
-        new RegExp("{{\\s*" + (ast.body[i] as any).path.original + "\\s*}}"),
+        new RegExp(`{{\\s*${(ast.body[i] as any).path.original}\\s*}}`),
         `{{${letter}}}`,
       );
       keyIndex++;

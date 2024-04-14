@@ -120,15 +120,14 @@ class OpenAI extends BaseLLM {
         `openai/deployments/${this.engine}/${endpoint}?api-version=${this.apiVersion}`,
         this.apiBase,
       );
-    } else {
-      if (!this.apiBase) {
-        throw new Error(
-          "No API base URL provided. Please set the 'apiBase' option in config.json",
-        );
-      }
-
-      return new URL(endpoint, this.apiBase);
     }
+    if (!this.apiBase) {
+      throw new Error(
+        "No API base URL provided. Please set the 'apiBase' option in config.json",
+      );
+    }
+
+    return new URL(endpoint, this.apiBase);
   }
 
   protected async *_streamComplete(
@@ -149,7 +148,7 @@ class OpenAI extends BaseLLM {
   ): AsyncGenerator<string> {
     const args: any = this._convertArgs(options, []);
     args.prompt = prompt;
-    delete args.messages;
+    args.messages = undefined;
 
     const response = await this.fetch(this._getEndpoint("completions"), {
       method: "POST",

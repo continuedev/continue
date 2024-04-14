@@ -4,7 +4,7 @@ import {
   pipeline,
 } from "../../vendor/node_modules/@xenova/transformers";
 
-import path from "path";
+import path from "node:path";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
 env.allowLocalModels = true;
@@ -20,11 +20,14 @@ class EmbeddingsPipeline {
   static instance: any | null = null;
 
   static async getInstance() {
-    if (this.instance === null) {
-      this.instance = await pipeline(this.task, this.model);
+    if (EmbeddingsPipeline.instance === null) {
+      EmbeddingsPipeline.instance = await pipeline(
+        EmbeddingsPipeline.task,
+        EmbeddingsPipeline.model,
+      );
     }
 
-    return this.instance;
+    return EmbeddingsPipeline.instance;
   }
 }
 

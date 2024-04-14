@@ -114,7 +114,7 @@ function mergeOverlappingRangeContents(
 ): string {
   const firstLines = first.contents.split("\n");
   const numOverlapping = first.range.end.line - second.range.start.line;
-  return firstLines.slice(-numOverlapping).join("\n") + "\n" + second.contents;
+  return `${firstLines.slice(-numOverlapping).join("\n")}\n${second.contents}`;
 }
 
 /**
@@ -134,7 +134,6 @@ export function fillPromptWithSnippets(
       tokensRemaining -= tokenCount;
       keptSnippets.push(snippet);
     } else {
-      continue;
     }
   }
 
@@ -146,18 +145,17 @@ function rangeIntersectionByLines(a: Range, b: Range): Range | null {
   const endLine = Math.min(a.end.line, b.end.line);
   if (startLine >= endLine) {
     return null;
-  } else {
-    return {
-      start: {
-        line: startLine,
-        character: 0,
-      },
-      end: {
-        line: endLine,
-        character: 0,
-      },
-    };
   }
+  return {
+    start: {
+      line: startLine,
+      character: 0,
+    },
+    end: {
+      line: endLine,
+      character: 0,
+    },
+  };
 }
 
 /**
@@ -170,7 +168,8 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
   ) {
     // / | | /
     return [];
-  } else if (
+  }
+  if (
     orig.start.line <= remove.start.line &&
     orig.end.line >= remove.end.line
   ) {
@@ -186,7 +185,8 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
         end: orig.end,
       },
     ];
-  } else if (
+  }
+  if (
     orig.start.line >= remove.start.line &&
     orig.end.line >= remove.end.line
   ) {
@@ -197,7 +197,8 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
         end: orig.end,
       },
     ];
-  } else if (
+  }
+  if (
     orig.start.line <= remove.start.line &&
     orig.end.line <= remove.end.line
   ) {
@@ -208,9 +209,8 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
         end: remove.start,
       },
     ];
-  } else {
-    return [orig];
   }
+  return [orig];
 }
 
 export function removeRangeFromSnippets(

@@ -173,9 +173,9 @@ class Ollama extends BaseLLM {
           try {
             const j = JSON.parse(chunk);
             if ("response" in j) {
-              yield j["response"];
+              yield j.response;
             } else if ("error" in j) {
-              throw new Error(j["error"]);
+              throw new Error(j.error);
             }
           } catch (e) {
             throw new Error(`Error parsing Ollama response: ${e} ${chunk}`);

@@ -1,4 +1,4 @@
-import { URL } from "url";
+import { URL } from "node:url";
 import { Octokit } from "@octokit/rest";
 import cheerio from "cheerio";
 import fetch from "node-fetch";
@@ -45,7 +45,7 @@ async function crawlGithubRepo(baseUrl: URL) {
 
   const paths = tree.data.tree
     .filter((file) => file.type === "blob" && file.path?.endsWith(".md"))
-    .map((file) => baseUrl.pathname + "/tree/main/" + file.path);
+    .map((file) => `${baseUrl.pathname}/tree/main/${file.path}`);
 
   return paths;
 }
@@ -63,13 +63,12 @@ async function getLinksFromUrl(url: string, path: string) {
         html: "",
         links: [],
       };
-    } else {
-      console.error(error);
-      return {
-        html: "",
-        links: [],
-      };
     }
+    console.error(error);
+    return {
+      html: "",
+      links: [],
+    };
   }
 
   const html = await response.text();

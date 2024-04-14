@@ -33,7 +33,7 @@ function breakdownArticleComponent(
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     if (content.length + line.length <= MAX_CHUNK_SIZE) {
-      content += line + "\n";
+      content += `${line}\n`;
       endLine = i;
     } else {
       chunks.push({
@@ -45,12 +45,12 @@ function breakdownArticleComponent(
         },
         index: index,
         filepath: new URL(
-          subpath + `#${cleanFragment(article.title)}`,
+          `${subpath}#${cleanFragment(article.title)}`,
           url,
         ).toString(),
         digest: subpath,
       });
-      content = line + "\n";
+      content = `${line}\n`;
       startLine = i;
       endLine = i;
       index += 1;
@@ -68,7 +68,7 @@ function breakdownArticleComponent(
       },
       index: index,
       filepath: new URL(
-        subpath + `#${cleanFragment(article.title)}`,
+        `${subpath}#${cleanFragment(article.title)}`,
         url,
       ).toString(),
       digest: subpath,

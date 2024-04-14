@@ -1,4 +1,4 @@
-import * as fs from "fs";
+import * as fs from "node:fs";
 import type { PersistedSessionInfo, SessionInfo } from "..";
 import { getSessionFilePath, getSessionsListPath } from "./paths";
 
@@ -116,11 +116,10 @@ class HistoryManager {
         throw new Error(
           `It looks like there is a JSON formatting error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session.`,
         );
-      } else {
-        throw new Error(
-          `It looks like there is a validation error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session. Error: ${error}`,
-        );
       }
+      throw new Error(
+        `It looks like there is a validation error in your sessions.json file (${sessionsListFilePath}). Please fix this before creating a new session. Error: ${error}`,
+      );
     }
   }
 }

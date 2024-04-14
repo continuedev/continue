@@ -46,7 +46,7 @@ class ProblemsContextProvider extends BaseContextProvider {
       ? [
           {
             description: "Problems in current file",
-            content: `There are no problems found in the open file.`,
+            content: "There are no problems found in the open file.",
             name: "No problems found",
           },
         ]

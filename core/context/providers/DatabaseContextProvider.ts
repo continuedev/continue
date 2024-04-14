@@ -32,7 +32,7 @@ class DatabaseContextProvider extends BaseContextProvider {
     const getDatabaseAdapter = await require("dbinfoz");
 
     for (const connection of connections) {
-      if (connection.name == connectionName) {
+      if (connection.name === connectionName) {
         const adapter = getDatabaseAdapter(
           connection.connection_type,
           connection.connection,
@@ -47,7 +47,7 @@ class DatabaseContextProvider extends BaseContextProvider {
 
           const contextItem = {
             name: `${connectionName}-all-tables-schemas`,
-            description: `Schema for all tables.`,
+            description: "Schema for all tables.",
             content: prompt,
           };
 
@@ -101,7 +101,7 @@ class DatabaseContextProvider extends BaseContextProvider {
       const contextItem = {
         id: `${connection.name}.all`,
         title: `${connection.name} all table schemas`,
-        description: ``,
+        description: "",
       };
 
       contextItems.push(contextItem);
@@ -110,7 +110,7 @@ class DatabaseContextProvider extends BaseContextProvider {
         const contextItem = {
           id: `${connection.name}.${tableName}`,
           title: `${connection.name}.${tableName} schema`,
-          description: ``,
+          description: "",
         };
 
         contextItems.push(contextItem);

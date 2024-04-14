@@ -32,7 +32,7 @@ interface LanceDbRow {
 
 export class LanceDbIndex implements CodebaseIndex {
   get artifactId(): string {
-    return "vectordb::" + this.embeddingsProvider.id;
+    return `vectordb::${this.embeddingsProvider.id}`;
   }
 
   static MAX_CHUNK_SIZE = MAX_CHUNK_SIZE;
@@ -276,7 +276,7 @@ export class LanceDbIndex implements CodebaseIndex {
         table = await db.createTable(tableName, lanceRows);
         needToCreateTable = false;
       } else if (lanceRows.length > 0) {
-        await table!.add(lanceRows);
+        await table?.add(lanceRows);
       }
 
       markComplete([{ path, cacheKey }], IndexResultType.AddTag);
@@ -286,7 +286,7 @@ export class LanceDbIndex implements CodebaseIndex {
     if (!needToCreateTable) {
       for (const { path, cacheKey } of [...results.removeTag, ...results.del]) {
         // This is where the aforementioned lowercase conversion problem shows
-        await table!.delete(`cachekey = '${cacheKey}' AND path = '${path}'`);
+        await table?.delete(`cachekey = '${cacheKey}' AND path = '${path}'`);
       }
     }
     markComplete(results.removeTag, IndexResultType.RemoveTag);

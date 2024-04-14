@@ -84,7 +84,7 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     const token = this.options.token;
 
     if (!token) {
-      throw new Error(`GitLab Private Token is required!`);
+      throw new Error("GitLab Private Token is required!");
     }
 
     return Axios.create({
@@ -100,13 +100,13 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
   ): Promise<RemoteBranchInfo> {
     const subprocess = await getSubprocess(extras);
 
-    const branchName = await subprocess(`git branch --show-current`);
+    const branchName = await subprocess("git branch --show-current");
 
     const branchRemote = await subprocess(
       `git config branch.${branchName}.remote`,
     );
 
-    const branchInfo = await subprocess(`git branch -vv`);
+    const branchInfo = await subprocess("git branch -vv");
 
     const currentBranchInfo = branchInfo
       .split("\n")
@@ -118,13 +118,13 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
 
     console.dir({ remoteMatches });
 
-    const remoteBranch = remoteMatches?.groups?.["remote_branch"] ?? null;
+    const remoteBranch = remoteMatches?.groups?.remote_branch ?? null;
 
     const remoteUrl = await subprocess(`git remote get-url ${branchRemote}`);
 
     const urlMatches = /:(?<project>.*).git/.exec(remoteUrl);
 
-    const project = urlMatches?.groups?.["project"] ?? null;
+    const project = urlMatches?.groups?.project ?? null;
 
     return {
       branch: remoteBranch,
@@ -162,7 +162,7 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
           `# GitLab Merge Request\ntitle: "${
             mergeRequest.title
           }"\ndescription: "${mergeRequest.description ?? "None"}"`,
-          `## Comments`,
+          "## Comments",
         ];
 
         const comments = await api.get<Array<GitLabComment>>(
@@ -243,7 +243,7 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
           if (filename !== "general") {
             parts.push(`### File ${filename}`);
             locationComments.sort(
-              (a, b) => a.position!.new_line - b.position!.new_line,
+              (a, b) => a.position?.new_line - b.position?.new_line,
             );
           } else {
             parts.push("### General");
@@ -260,11 +260,11 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
         result.push({
           name: mergeRequest.title,
           content,
-          description: `Comments from the Merge Request for this branch.`,
+          description: "Comments from the Merge Request for this branch.",
         });
       }
     } catch (ex) {
-      let content = `# GitLab Merge Request\n\nError getting merge request. `;
+      let content = "# GitLab Merge Request\n\nError getting merge request. ";
       if (ex instanceof AxiosError) {
         if (ex.response) {
           const errorMessage = ex.response?.data
@@ -280,9 +280,9 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
       }
 
       result.push({
-        name: `GitLab Merge Request`,
+        name: "GitLab Merge Request",
         content,
-        description: `Error getting the Merge Request for this branch.`,
+        description: "Error getting the Merge Request for this branch.",
       });
     }
 

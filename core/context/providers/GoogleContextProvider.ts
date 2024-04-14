@@ -42,14 +42,14 @@ class GoogleContextProvider extends BaseContextProvider {
 
     const jsonResults = JSON.parse(results);
     let content = `Google Search: ${query}\n\n`;
-    const answerBox = jsonResults["answerBox"];
+    const answerBox = jsonResults.answerBox;
 
     if (answerBox) {
-      content += `Answer Box (${answerBox["title"]}): ${answerBox["answer"]}\n\n`;
+      content += `Answer Box (${answerBox.title}): ${answerBox.answer}\n\n`;
     }
 
-    for (const result of jsonResults["organic"]) {
-      content += `${result["title"]}\n${result["link"]}\n${result["snippet"]}\n\n`;
+    for (const result of jsonResults.organic) {
+      content += `${result.title}\n${result.link}\n${result.snippet}\n\n`;
     }
 
     return [

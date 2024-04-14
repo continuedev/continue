@@ -8,7 +8,7 @@ export async function* noTopLevelKeywordsMidline(
 ): LineStream {
   for await (const line of lines) {
     for (const keyword of topLevelKeywords) {
-      const indexOf = line.indexOf(keyword + " ");
+      const indexOf = line.indexOf(`${keyword} `);
       if (indexOf >= 0 && line.slice(indexOf - 1, indexOf).trim() !== "") {
         yield line.slice(0, indexOf);
         break;
@@ -26,7 +26,7 @@ export async function* avoidPathLine(
   // Sometimes the model with copy this pattern, which is unwanted
   for await (const line of stream) {
     // Also filter lines that are empty comments
-    if (line.startsWith(comment + " Path: ") || line.trim() === comment) {
+    if (line.startsWith(`${comment} Path: `) || line.trim() === comment) {
       continue;
     }
     yield line;
@@ -112,9 +112,8 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
     if (!seenValidLine) {
       if (shouldRemoveLineBeforeStart(line)) {
         continue;
-      } else {
-        seenValidLine = true;
       }
+      seenValidLine = true;
     }
 
     // Filter out ending ```

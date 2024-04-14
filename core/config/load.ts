@@ -1,5 +1,5 @@
-import * as fs from "fs";
-import path from "path";
+import * as fs from "node:fs";
+import path from "node:path";
 import type {
   BrowserSerializedContinueConfig,
   Config,
@@ -42,7 +42,7 @@ import {
   getContinueDotEnv,
   migrate,
 } from "../util/paths";
-const { execSync } = require("child_process");
+const { execSync } = require("node:child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -201,7 +201,7 @@ async function intermediateToFinalConfig(
                 {
                   ...desc,
                   model: modelName,
-                  title: llm.title + " - " + modelName,
+                  title: `${llm.title} - ${modelName}`,
                 },
                 readFile,
                 copyOf(config.completionOptions),
@@ -389,14 +389,13 @@ async function buildConfigTs() {
   try {
     if (process.env.IS_BINARY === "true") {
       execSync(
-        escapeSpacesInPath(path.dirname(process.execPath)) +
-          `/esbuild${
-            getTarget().startsWith("win32") ? ".exe" : ""
-          } ${escapeSpacesInPath(
-            getConfigTsPath(),
-          )} --bundle --outfile=${escapeSpacesInPath(
-            getConfigJsPath(),
-          )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`,
+        `${escapeSpacesInPath(path.dirname(process.execPath))}/esbuild${
+          getTarget().startsWith("win32") ? ".exe" : ""
+        } ${escapeSpacesInPath(
+          getConfigTsPath(),
+        )} --bundle --outfile=${escapeSpacesInPath(
+          getConfigJsPath(),
+        )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`,
       );
     } else {
       // Dynamic import esbuild so potentially disastrous errors can be caught
@@ -414,7 +413,7 @@ async function buildConfigTs() {
     }
   } catch (e) {
     console.log(
-      "Build error. Please check your ~/.continue/config.ts file: " + e,
+      `Build error. Please check your ~/.continue/config.ts file: ${e}`,
     );
     return undefined;
   }

@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from "fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import type { ModelDescription } from "..";
 import { editConfigJson, getConfigJsonPath } from "../util/paths";
 

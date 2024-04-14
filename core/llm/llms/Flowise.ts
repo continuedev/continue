@@ -92,7 +92,7 @@ class Flowise extends BaseLLM {
     };
 
     if (this.apiKey) {
-      headers["Authorization"] = `Bearer ${this.apiKey}`;
+      headers.Authorization = `Bearer ${this.apiKey}`;
     }
 
     for (const additionalHeader of this.additionalHeaders) {

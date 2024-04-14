@@ -15,7 +15,7 @@ async function embedOne(chunk: string, options: EmbedOptions) {
     );
   const resp = await fetchWithBackoff();
   if (!resp.ok) {
-    throw new Error("Failed to embed chunk: " + (await resp.text()));
+    throw new Error(`Failed to embed chunk: ${await resp.text()}`);
   }
 
   return (await resp.json()).embedding;

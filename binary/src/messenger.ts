@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 
-import * as fs from "fs";
+import * as fs from "node:fs";
 import { getCoreLogsPath } from "core/util/paths";
 import type { Message } from "../../core/util/messenger";
 import type { Protocol, ReverseProtocol } from "./protocol";
@@ -50,7 +50,7 @@ export class IpcMessenger {
     try {
       const msg: Message = JSON.parse(line);
       if (msg.messageType === undefined || msg.messageId === undefined) {
-        throw new Error("Invalid message sent: " + JSON.stringify(msg));
+        throw new Error(`Invalid message sent: ${JSON.stringify(msg)}`);
       }
 
       // Call handler and respond with return value
@@ -99,7 +99,7 @@ export class IpcMessenger {
       messageId,
     };
     // process.send?.(data);
-    process.stdout?.write(JSON.stringify(data) + "\r\n");
+    process.stdout?.write(`${JSON.stringify(data)}\r\n`);
     return messageId;
   }
 

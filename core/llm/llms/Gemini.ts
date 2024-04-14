@@ -33,7 +33,7 @@ class Gemini extends BaseLLM {
     const msgs = [...messages];
 
     if (msgs[0]?.role === "system") {
-      const sysMsg = msgs.shift()!.content;
+      const sysMsg = msgs.shift()?.content;
       // @ts-ignore
       if (msgs[0]?.role === "user") {
         msgs[0].content = `System message - follow these instructions in every response: ${sysMsg}\n\n---\n\n${msgs[0].content}`;
@@ -139,7 +139,7 @@ class Gemini extends BaseLLM {
           const wordsToYield = Math.min(3, words.length);
           yield {
             role: "assistant",
-            content: words.splice(0, wordsToYield).join(" ") + " ",
+            content: `${words.splice(0, wordsToYield).join(" ")} `,
           };
           await delay(delaySeconds);
         }

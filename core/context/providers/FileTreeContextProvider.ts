@@ -28,7 +28,7 @@ function formatFileTree(tree: Directory, indentation = ""): string {
 
   for (const directory of tree.directories) {
     result += `${indentation}${directory.name}/\n`;
-    result += formatFileTree(directory, indentation + "  ");
+    result += formatFileTree(directory, `${indentation}  `);
   }
 
   return result;
@@ -82,9 +82,9 @@ class FileTreeContextProvider extends BaseContextProvider {
 
     return [
       {
-        content:
-          "Here is a file tree of the current workspace:\n\n" +
-          trees.join("\n\n"),
+        content: `Here is a file tree of the current workspace:\n\n${trees.join(
+          "\n\n",
+        )}`,
         name: "File Tree",
         description: "File Tree",
       },
