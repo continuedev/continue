@@ -9,6 +9,7 @@
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@biomejs/biome": "1.6.4",
     "@types/follow-redirects": "^1.14.4",
     "@types/handlebars": "^4.1.0",
     "@types/jest": "^29.5.11",
