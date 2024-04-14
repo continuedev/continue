@@ -2,9 +2,9 @@ import Handlebars from "handlebars";
 import ignore from "ignore";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { IDE, ILLM, Position, TabAutocompleteOptions } from "..";
-import { RangeInFileWithContents } from "../commands/util";
-import { ConfigHandler } from "../config/handler";
+import type { IDE, ILLM, Position, TabAutocompleteOptions } from "..";
+import type { RangeInFileWithContents } from "../commands/util";
+import type { ConfigHandler } from "../config/handler";
 import { streamLines } from "../diff/util";
 import OpenAI from "../llm/llms/OpenAI";
 import { getBasename } from "../util";
@@ -17,9 +17,8 @@ import { noFirstCharNewline, onlyWhitespaceAfterEndOfLine } from "./charStream";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
-} from "./constructPrompt.js";
-import { isOnlyPunctuationAndWhitespace } from "./filter.js";
-import { AutocompleteLanguageInfo } from "./languages.js";
+} from "./constructPrompt";
+import type { AutocompleteLanguageInfo } from "./languages";
 import {
   avoidPathLine,
   noTopLevelKeywordsMidline,
@@ -28,7 +27,7 @@ import {
   stopAtSimilarLine,
   streamWithNewLines,
 } from "./lineStream";
-import { AutocompleteSnippet } from "./ranking";
+import type { AutocompleteSnippet } from "./ranking";
 import { getTemplateForModel } from "./templates";
 import { GeneratorReuseManager } from "./util";
 
@@ -292,7 +291,7 @@ export async function getTabCompletion(
     cacheHit = true;
     completion = cachedCompletion;
   } else {
-    let stop = [
+    const stop = [
       ...(completionOptions?.stop || []),
       ...multilineStops,
       ...commonStops,
@@ -308,7 +307,7 @@ export async function getTabCompletion(
       (options.multilineCompletions === "always" || completeMultiline);
 
     // Try to reuse pending requests if what the user typed matches start of completion
-    let generator = generatorReuseManager.getGenerator(
+    const generator = generatorReuseManager.getGenerator(
       prefix,
       () =>
         llm.streamComplete(prompt, {

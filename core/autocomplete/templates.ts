@@ -1,8 +1,7 @@
 // Fill in the middle prompts
 
-import { CompletionOptions } from "../index.js";
-import { getLastNPathParts, shortestRelativePaths } from "../util/index.js";
-import { AutocompleteSnippet } from "./ranking.js";
+import type { CompletionOptions } from "..";
+import type { AutocompleteSnippet } from "./ranking";
 
 interface AutocompleteTemplate {
   compilePrefixSuffix?: (
@@ -33,9 +32,17 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
 };
 
 const codegemmaFimTemplate: AutocompleteTemplate = {
-  template: "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
+  template:
+    "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
   completionOptions: {
-    stop: ["<|fim_prefix|>", "<|fim_suffix|>", "<|fim_middle|>", "<|file_separator|>", "<end_of_turn>", "<eos>"],
+    stop: [
+      "<|fim_prefix|>",
+      "<|fim_suffix|>",
+      "<|fim_middle|>",
+      "<|file_separator|>",
+      "<end_of_turn>",
+      "<eos>",
+    ],
   },
 };
 

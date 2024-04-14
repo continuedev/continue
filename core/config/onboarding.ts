@@ -1,4 +1,4 @@
-import { SerializedContinueConfig } from "..";
+import type { SerializedContinueConfig } from "..";
 
 export function setupOptimizedMode(
   config: SerializedContinueConfig,

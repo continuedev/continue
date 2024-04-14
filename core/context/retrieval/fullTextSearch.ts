@@ -1,4 +1,4 @@
-import { BranchAndDir, Chunk } from "../..";
+import type { BranchAndDir, Chunk } from "../..";
 import { FullTextSearchCodebaseIndex } from "../../indexing/FullTextSearch";
 export async function retrieveFts(
   query: string,

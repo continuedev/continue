@@ -1,5 +1,5 @@
-import { Chunk } from "../../index.js";
-import { addDocs } from "./db.js";
+import type { Chunk } from "../..";
+import { addDocs } from "./db";
 
 const request = require("request");
 

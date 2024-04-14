@@ -1,5 +1,6 @@
 import Handlebars from "handlebars";
-import {
+import type { BaseLLM } from "..";
+import type {
   BaseCompletionOptions,
   ILLM,
   LLMOptions,
@@ -63,12 +64,13 @@ export async function renderTemplatedString(
   inputData: any,
 ): Promise<string> {
   const [newTemplate, vars] = getHandlebarsVars(template);
-  const data: any = { ...inputData };
+  template = newTemplate;
+  const data: any = {};
   for (const key in vars) {
     const fileContents = await readFile(vars[key]);
-    data[key] = fileContents || (inputData[vars[key]] ?? vars[key]);
+    data[key] = fileContents || vars[key];
   }
-  const templateFn = Handlebars.compile(newTemplate);
+  const templateFn = Handlebars.compile(template);
   const final = templateFn(data);
   return final;
 }

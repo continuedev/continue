@@ -1,4 +1,5 @@
-import {
+import { BaseContextProvider } from "..";
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
@@ -10,6 +11,15 @@ interface Directory {
   name: string;
   files: string[];
   directories: Directory[];
+}
+
+function splitPath(path: string, withRoot?: string): string[] {
+  let parts = path.includes("/") ? path.split("/") : path.split("\\");
+  if (withRoot !== undefined) {
+    const rootParts = splitPath(withRoot);
+    parts = parts.slice(rootParts.length - 1);
+  }
+  return parts;
 }
 
 function formatFileTree(tree: Directory, indentation = ""): string {

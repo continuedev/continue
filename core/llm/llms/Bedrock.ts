@@ -3,6 +3,13 @@ import { ChatMessage, CompletionOptions, LLMOptions, ModelProvider } from "../..
 import * as fs from "fs";
 import { join as joinPath } from "path";
 import { promisify } from "util";
+import { BaseLLM } from "..";
+import type {
+  ChatMessage,
+  CompletionOptions,
+  LLMOptions,
+  ModelProvider,
+} from "../..";
 import { stripImages } from "../countTokens";
 
 const aws4 = require("aws4");

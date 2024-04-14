@@ -2,12 +2,12 @@
 //os.arch()
 
 import os from "os";
-import {
+import { BaseContextProvider } from "..";
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../../index.js";
-import { BaseContextProvider } from "../index.js";
+} from "../..";
 
 class OSContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

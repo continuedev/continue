@@ -1,3 +1,9 @@
+import {
+  type PipelineType,
+  env,
+  pipeline,
+} from "../../vendor/node_modules/@xenova/transformers";
+
 import path from "path";
 // @ts-ignore
 // prettier-ignore
@@ -37,7 +43,7 @@ class EmbeddingsPipeline {
 }
 
 export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static maxGroupSize: number = 4;
+  static MaxGroupSize = 4;
 
   constructor() {
     super({ model: "all-MiniLM-L2-v6" }, () => Promise.resolve(null));

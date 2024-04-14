@@ -1,4 +1,5 @@
-import {
+import { BaseLLM } from "..";
+import type {
   ChatMessage,
   CompletionOptions,
   LLMOptions,

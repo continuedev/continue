@@ -1,7 +1,7 @@
-import { open, type Database } from "sqlite";
+import { type Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { Chunk } from "../../index.js";
-import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths.js";
+import type { Chunk } from "../..";
+import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths";
 
 import { downloadPreIndexedDocs } from "./preIndexed.js";
 import { default as configs } from "./preIndexedDocs.js";

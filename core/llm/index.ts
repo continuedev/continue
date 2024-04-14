@@ -1,5 +1,4 @@
-import Handlebars from "handlebars";
-import {
+import type {
   ChatMessage,
   ChatMessageRole,
   CompletionOptions,
@@ -244,13 +243,8 @@ ${settings}
 ${prompt}`;
   }
 
-  private _logTokensGenerated(
-    model: string,
-    prompt: string,
-    completion: string,
-  ) {
-    let promptTokens = this.countTokens(prompt);
-    let generatedTokens = this.countTokens(completion);
+  private _logTokensGenerated(model: string, completion: string) {
+    const tokens = this.countTokens(completion);
     Telemetry.capture("tokens_generated", {
       model: model,
       provider: this.providerName,
@@ -603,10 +597,10 @@ ${prompt}`;
     template: PromptTemplate,
     history: ChatMessage[],
     otherData: Record<string, string>,
-    canPutWordsInModelsMouth: boolean = false,
+    canPutWordsInModelsMouth = false,
   ): string | ChatMessage[] {
     if (typeof template === "string") {
-      let data: any = {
+      const data: any = {
         history: history,
         ...otherData,
       };

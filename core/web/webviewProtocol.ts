@@ -1,4 +1,4 @@
-import {
+import type {
   ContextItemWithId,
   ContextSubmenuItem,
   ContinueRcJson,
@@ -8,9 +8,9 @@ import {
   Range,
   Thread,
 } from "..";
-import { RangeInFileWithContents } from "../commands/util";
+import type { RangeInFileWithContents } from "../commands/util";
 
-import { Protocol } from "../protocol";
+import type { Protocol } from "../protocol";
 
 export type IdeProtocol = {
   listWorkspaceContents: [undefined, string[]];
@@ -47,7 +47,7 @@ export type IdeProtocol = {
   getDiff: [undefined, string];
   getWorkspaceConfigs: [undefined, ContinueRcJson[]];
   getTerminalContents: [undefined, string];
-  getDebugLocals: [{ threadIndex: Number }, string];
+  getDebugLocals: [{ threadIndex: number }, string];
   getTopLevelCallStackSources: [
     { threadIndex: number; stackDepth: number },
     string[],

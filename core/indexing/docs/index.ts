@@ -1,13 +1,8 @@
-import {
-  Chunk,
-  EmbeddingsProvider,
-  IndexingProgressUpdate,
-} from "../../index.js";
+import type { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "../..";
 
-import { SiteIndexingConfig } from "../../index.js";
-import { Article, chunkArticle, pageToArticle } from "./article.js";
-import { crawlPage } from "./crawl.js";
-import { addDocs, hasDoc } from "./db.js";
+import { type Article, chunkArticle, pageToArticle } from "./article";
+import { crawlPage } from "./crawl";
+import { addDocs, hasDoc } from "./db";
 
 export async function* indexDocs(
   siteIndexingConfig: SiteIndexingConfig,
@@ -35,9 +30,8 @@ export async function* indexDocs(
   // Crawl pages and retrieve info as articles
   for await (const page of crawlPage(startUrl, siteIndexingConfig.maxDepth)) {
     const article = pageToArticle(page);
-    if (!article) {
-      continue;
-    }
+    if (!article) continue;
+
     articles.push(article);
 
     yield {
@@ -59,14 +53,13 @@ export async function* indexDocs(
       status: "indexing",
     };
 
-    try {
-      const subpathEmbeddings = await embeddingsProvider.embed(
-        chunkArticle(article).map((chunk) => {
-          chunks.push(chunk);
+    const subpathEmbeddings = await embeddingsProvider.embed(
+      chunkArticle(article).map((chunk) => {
+        chunks.push(chunk);
 
-          return chunk.content;
-        }),
-      );
+        return chunk.content;
+      }),
+    );
 
       embeddings.push(...subpathEmbeddings);
     } catch (e) {

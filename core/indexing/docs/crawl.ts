@@ -1,7 +1,7 @@
+import { URL } from "url";
 import { Octokit } from "@octokit/rest";
 import cheerio from "cheerio";
 import fetch from "node-fetch";
-import { URL } from "node:url";
 
 const IGNORE_PATHS_ENDING_IN = [
   "favicon.ico",
@@ -36,8 +36,10 @@ async function crawlGithubRepo(baseUrl: URL) {
 
   const [_, owner, repo] = baseUrl.pathname.split("/");
 
-  const branch = await getDefaultBranch(owner, repo);
-  console.log("Github repo detected. Crawling", branch, "branch");
+  const dirContentsConfig = {
+    owner: owner,
+    repo: repo,
+  };
 
   const tree = await octokit.request(
     "GET /repos/{owner}/{repo}/git/trees/{tree_sha}",
@@ -183,13 +185,9 @@ export async function* crawlPage(
           };
         }
 
-        // Ensure we only add links if within depth limit
-        if (depth < maxDepth) {
-          for (let link of linksArray) {
-            if (!paths.some((p) => p.path === link)) {
-              paths.push({ path: link, depth: depth + 1 }); // Increment depth for new paths
-            }
-          }
+      for (const link of links) {
+        if (!paths.includes(link)) {
+          paths.push(link);
         }
       }
     } catch (e) {

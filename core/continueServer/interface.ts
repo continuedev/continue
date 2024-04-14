@@ -1,4 +1,4 @@
-import { Chunk } from "..";
+import type { Chunk } from "..";
 
 export interface EmbeddingsCacheChunk {
   vector: number[];

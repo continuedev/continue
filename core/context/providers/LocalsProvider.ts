@@ -1,4 +1,5 @@
-import {
+import { BaseContextProvider } from "..";
+import type {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
@@ -23,7 +24,7 @@ class LocalsProvider extends BaseContextProvider {
     const localVariables = await extras.ide.getDebugLocals(Number(query));
     const threadIndex = Number(query);
     const thread = (await extras.ide.getAvailableThreads()).find(
-      (thread) => thread.id === threadIndex,
+      (thread) => thread.id == threadIndex,
     );
     const callStacksSources = await extras.ide.getTopLevelCallStackSources(
       threadIndex,
@@ -31,7 +32,7 @@ class LocalsProvider extends BaseContextProvider {
     );
     const callStackContents = callStacksSources.reduce(
       (acc, source, index) =>
-        `${acc}\n\ncall stack ${index}\n\`\`\`\n${source}\n\`\`\``,
+        acc + `\n\ncall stack ${index}\n` + "```\n" + source + "\n```",
       "",
     );
     return [

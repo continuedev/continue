@@ -1,3 +1,4 @@
+import type { ChatMessage, DiffLine, ILLM } from "..";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -111,7 +112,6 @@ export async function* streamDiffLines(
     diffLines = addIndentation(diffLines, indentation);
   }
 
-  let seenGreen = false;
   for await (const diffLine of diffLines) {
     yield diffLine;
     if (diffLine.type === "new") {

@@ -1,5 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
+import fs from "fs";
+import path from "path";
 import type {
   ChunkWithoutID,
   ContextItem,
@@ -13,14 +13,14 @@ import {
   getLanguageForFile,
   getParserForFile,
   supportedLanguages,
-} from "../util/treeSitter.js";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
+} from "../util/treeSitter";
+import { type DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
-  IndexResultType,
-  MarkCompleteCallback,
-  RefreshIndexResults,
   type CodebaseIndex,
-} from "./types.js";
+  IndexResultType,
+  type MarkCompleteCallback,
+  type RefreshIndexResults,
+} from "./types";
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   artifactId = "codeSnippets";

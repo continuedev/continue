@@ -1,15 +1,19 @@
-import { Chunk, IndexTag, IndexingProgressUpdate } from "../..";
-import { ContinueServerClient } from "../../continueServer/stubs/client";
+import type { Chunk, IndexTag, IndexingProgressUpdate } from "../..";
+import type { ContinueServerClient } from "../../continueServer/stubs/client";
 import { MAX_CHUNK_SIZE } from "../../llm/constants";
 import { getBasename } from "../../util";
-import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex";
 import {
-  IndexResultType,
-  MarkCompleteCallback,
-  RefreshIndexResults,
+  type DatabaseConnection,
+  SqliteDb,
+  tagToString,
+} from "../refreshIndex";
+import {
   type CodebaseIndex,
-} from "../types.js";
-import { chunkDocument } from "./chunk.js";
+  IndexResultType,
+  type MarkCompleteCallback,
+  type RefreshIndexResults,
+} from "../types";
+import { chunkDocument } from "./chunk";
 
 export class ChunkCodebaseIndex implements CodebaseIndex {
   static artifactId = "chunks";

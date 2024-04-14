@@ -1,5 +1,5 @@
-import { SlashCommand } from "../../index.js";
-import EditSlashCommand from "./edit.js";
+import type { SlashCommand } from "../..";
+import EditSlashCommand from "./edit";
 
 const CommentSlashCommand: SlashCommand = {
   name: "comment",

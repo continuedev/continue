@@ -4,9 +4,9 @@ import CommitMessageCommand from "./commit";
 import DraftIssueCommand from "./draftIssue";
 import EditSlashCommand from "./edit";
 import HttpSlashCommand from "./http";
+import ReviewMessageCommand from "./review";
 import ShareSlashCommand from "./share";
 import StackOverflowSlashCommand from "./stackOverflow";
-import ReviewMessageCommand from "./review";
 
 export default [
   DraftIssueCommand,

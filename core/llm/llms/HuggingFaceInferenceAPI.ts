@@ -1,6 +1,6 @@
-import { CompletionOptions, ModelProvider } from "../../index.js";
-import { BaseLLM } from "../index.js";
-import { streamSse } from "../stream.js";
+import { BaseLLM } from "..";
+import type { CompletionOptions, ModelProvider } from "../..";
+import { streamSse } from "../stream";
 
 class HuggingFaceInferenceAPI extends BaseLLM {
   static providerName: ModelProvider = "huggingface-inference-api";

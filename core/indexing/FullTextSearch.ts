@@ -1,22 +1,13 @@
-import { BranchAndDir, Chunk, IndexTag, IndexingProgressUpdate } from "..";
+import type { BranchAndDir, Chunk, IndexTag, IndexingProgressUpdate } from "..";
 import { RETRIEVAL_PARAMS } from "../util/parameters";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+import { type DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
-  BranchAndDir,
-  Chunk,
-  IndexTag,
-  IndexingProgressUpdate,
-} from "../index.js";
-import { RETRIEVAL_PARAMS } from "../util/parameters.js";
-import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
-import {
-  IndexResultType,
-  MarkCompleteCallback,
-  RefreshIndexResults,
   type CodebaseIndex,
-} from "./types.js";
+  IndexResultType,
+  type MarkCompleteCallback,
+  type RefreshIndexResults,
+} from "./types";
 
 export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   artifactId = "sqliteFts";

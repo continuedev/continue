@@ -1,4 +1,4 @@
-import { Chunk, Reranker } from "../..";
+import type { Chunk, Reranker } from "../..";
 
 export class VoyageReranker implements Reranker {
   name = "voyage";

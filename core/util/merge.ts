@@ -1,4 +1,4 @@
-import { ConfigMergeType } from "../index.js";
+import type { ConfigMergeType } from "..";
 
 type JsonObject = { [key: string]: any };
 
@@ -11,7 +11,7 @@ export function mergeJson(
   const copyOfFirst = JSON.parse(JSON.stringify(first));
 
   try {
-    for (const key in second) {
+    for (var key in second) {
       const secondValue = second[key];
 
       if (!(key in copyOfFirst) || mergeBehavior === "overwrite") {

@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 
-import { CompletionOptions } from "../index.js";
-import { BaseLLM } from "../llm/index.js";
+import type { CompletionOptions } from "..";
+import type { BaseLLM } from "../llm";
 
 jest.setTimeout(100_000);
 

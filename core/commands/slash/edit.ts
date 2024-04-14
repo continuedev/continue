@@ -1,3 +1,4 @@
+import type { ContextItemWithId, ILLM, SlashCommand } from "../..";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -10,6 +11,7 @@ import { streamLines } from "../../diff/util";
 import { stripImages } from "../../llm/countTokens";
 import { dedentAndGetCommonWhitespace } from "../../util";
 import {
+  type RangeInFileWithContents,
   contextItemToRangeInFileWithContents,
   type RangeInFileWithContents,
 } from "../util.js";
@@ -230,7 +232,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     // Strip unecessary parts of the input (the fact that you have to do this is suboptimal, should be refactored away)
-    let content = history[history.length - 1].content;
+    const content = history[history.length - 1].content;
     if (typeof content !== "string") {
       content.forEach((part) => {
         if (part.text?.startsWith("/edit")) {
@@ -302,9 +304,13 @@ const EditSlashCommand: SlashCommand = {
         linesToDisplay = contentsLines.slice(rewrittenLines);
       }
 
-      const newFileContents = `${fullPrefixLines.join("\n")}\n${completion}\n${
-        linesToDisplay.length > 0 ? `${linesToDisplay.join("\n")}\n` : ""
-      }${fullSuffixLines.join("\n")}`;
+      const newFileContents =
+        fullPrefixLines.join("\n") +
+        "\n" +
+        completion +
+        "\n" +
+        (linesToDisplay.length > 0 ? linesToDisplay.join("\n") + "\n" : "") +
+        fullSuffixLines.join("\n");
 
       const stepIndex = history.length - 1;
 
@@ -444,7 +450,7 @@ const EditSlashCommand: SlashCommand = {
     const template = llm.promptTemplates?.edit;
     let generator: AsyncGenerator<string>;
     if (template) {
-      let rendered = llm.renderPromptTemplate(
+      const rendered = llm.renderPromptTemplate(
         template,
         // typeof template === 'string' ? template : template.prompt,
         messages.slice(0, messages.length - 1),

@@ -1,39 +1,5 @@
-import * as fs from "node:fs";
-import { homedir } from "node:os";
-import path from "path";
-import { languageForFilepath } from "../../autocomplete/constructPrompt.js";
-import { SlashCommand } from "../../index.js";
-import { stripImages } from "../../llm/countTokens.js";
-
-// If useful elsewhere, helper funcs should move to core/util/index.ts or similar
-function getOffsetDatetime(date: Date): Date {
-  const offset = date.getTimezoneOffset();
-  const offsetHours = Math.floor(offset / 60);
-  const offsetMinutes = offset % 60;
-  date.setHours(date.getHours() - offsetHours);
-  date.setMinutes(date.getMinutes() - offsetMinutes);
-
-  return date;
-}
-
-function asBasicISOString(date: Date): string {
-  const isoString = date.toISOString();
-
-  return isoString.replace(/[-:]|(\.\d+Z)/g, "");
-}
-
-function reformatCodeBlocks(msgText: string): string {
-  const codeBlockFenceRegex = /```((.*?\.(\w+))\s*.*)\n/g;
-  msgText = msgText.replace(
-    codeBlockFenceRegex,
-    (match, metadata, filename, extension) => {
-      const lang = languageForFilepath(filename);
-      return `\`\`\`${extension}\n${lang.singleLineComment} ${metadata}\n`;
-    },
-  );
-  // Appease the markdown linter
-  return msgText.replace(/```\n```/g, "```\n\n```");
-}
+import type { SlashCommand } from "../..";
+import { stripImages } from "../../llm/countTokens";
 
 const ShareSlashCommand: SlashCommand = {
   name: "share",

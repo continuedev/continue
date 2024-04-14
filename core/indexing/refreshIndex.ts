@@ -1,10 +1,10 @@
-import crypto from "node:crypto";
-import * as fs from "node:fs";
-import { open, type Database } from "sqlite";
+import crypto from "crypto";
+import * as fs from "fs";
+import { type Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { IndexTag, IndexingProgressUpdate } from "../index.js";
-import { getIndexSqlitePath } from "../util/paths.js";
-import {
+import type { IndexTag, IndexingProgressUpdate } from "..";
+import { getIndexSqlitePath } from "../util/paths";
+import type {
   CodebaseIndex,
   IndexResultType,
   LastModifiedMap,
@@ -317,7 +317,7 @@ export async function getComputeDeleteAddRemove(
         removeTag: [],
       };
       results[resultType] = items;
-      for await (let _ of globalCacheIndex.update(
+      for await (const _ of globalCacheIndex.update(
         tag,
         results,
         () => {},

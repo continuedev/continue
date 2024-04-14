@@ -1,25 +1,25 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { v4 as uuidv4 } from "uuid";
-import { Table } from "vectordb";
-import {
+import type { Table } from "vectordb";
+import type {
   BranchAndDir,
   Chunk,
   EmbeddingsProvider,
   IndexTag,
   IndexingProgressUpdate,
 } from "..";
-import { ContinueServerClient } from "../continueServer/stubs/client";
+import type { ContinueServerClient } from "../continueServer/stubs/client";
 import { MAX_CHUNK_SIZE } from "../llm/constants";
 import { getBasename } from "../util";
 import { getLanceDbPath } from "../util/paths";
 import { chunkDocument } from "./chunk/chunk";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+import { type DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
-  CodebaseIndex,
+  type CodebaseIndex,
   IndexResultType,
-  PathAndCacheKey,
-  RefreshIndexResults,
-} from "./types.js";
+  type PathAndCacheKey,
+  type RefreshIndexResults,
+} from "./types";
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {

@@ -1,8 +1,4 @@
-import {
-  EmbedOptions,
-  EmbeddingsProvider,
-  FetchFunction,
-} from "../../index.js";
+import type { EmbedOptions, EmbeddingsProvider } from "../..";
 
 export interface IBaseEmbeddingsProvider extends EmbeddingsProvider {
   options: EmbedOptions;

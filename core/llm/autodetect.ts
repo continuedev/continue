@@ -1,4 +1,4 @@
-import { ModelProvider, TemplateType } from "../index.js";
+import type { ModelProvider, TemplateType } from "..";
 import {
   anthropicTemplateMessages,
   chatmlTemplateMessages,

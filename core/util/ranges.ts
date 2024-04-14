@@ -1,4 +1,4 @@
-import { Position, Range } from "../index.js";
+import type { Range } from "..";
 
 export function getRangeInString(content: string, range: Range): string {
   const lines = content.split("\n");

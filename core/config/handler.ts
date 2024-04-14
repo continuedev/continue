@@ -1,12 +1,12 @@
-import { ContinueConfig, ContinueRcJson, IDE, ILLM } from "..";
-import { IdeSettings } from "../protocol";
+import type { ContinueConfig, ContinueRcJson, IDE, ILLM } from "..";
+import type { IdeSettings } from "../protocol";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 import { Telemetry } from "../util/posthog";
 import {
-  BrowserSerializedContinueConfig,
+  type BrowserSerializedContinueConfig,
   finalToBrowserConfig,
   loadFullConfigNode,
 } from "./load";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 
 export class ConfigHandler {
   private savedConfig: ContinueConfig | undefined;
@@ -17,7 +17,7 @@ export class ConfigHandler {
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private readonly writeLog: (text: string) => void,
-    private readonly onConfigUpdate: () => void
+    private readonly onConfigUpdate: () => void,
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
@@ -76,7 +76,7 @@ export class ConfigHandler {
       this.ide,
       workspaceConfigs,
       remoteConfigServerUrl,
-      ideInfo.ideType
+      ideInfo.ideType,
     );
     newConfig.allowAnonymousTelemetry =
       newConfig.allowAnonymousTelemetry &&
@@ -86,7 +86,7 @@ export class ConfigHandler {
     await Telemetry.setup(
       newConfig.allowAnonymousTelemetry ?? true,
       await this.ide.getUniqueId(),
-      ideInfo.extensionVersion
+      ideInfo.extensionVersion,
     );
 
     (newConfig.contextProviders ?? []).push(...this.additionalContextProviders);
@@ -96,7 +96,7 @@ export class ConfigHandler {
       const resp = await fetchwithRequestOptions(
         new URL(input),
         { ...init },
-        llm.requestOptions
+        llm.requestOptions,
       );
 
       if (!resp.ok) {
@@ -114,7 +114,7 @@ export class ConfigHandler {
           }
         }
         throw new Error(
-          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`
+          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
         );
       }
 

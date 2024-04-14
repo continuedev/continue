@@ -1,12 +1,11 @@
 import * as dotenv from "dotenv";
-import fetch from "node-fetch";
-import { ContinueSDK } from "../index.js";
-import EditSlashCommand, { getPromptParts } from "../commands/slash/edit.js";
-import { contextItemToRangeInFileWithContents } from "../commands/util.js";
-import FreeTrial from "../llm/llms/FreeTrial.js";
-import Ollama from "../llm/llms/Ollama.js";
-import { dedentAndGetCommonWhitespace } from "../util/index.js";
-import FileSystemIde from "../util/filesystem.js";
+import type { ContinueSDK } from "..";
+import EditSlashCommand, { getPromptParts } from "../commands/slash/edit";
+import { contextItemToRangeInFileWithContents } from "../commands/util";
+import FreeTrial from "../llm/llms/FreeTrial";
+import Ollama from "../llm/llms/Ollama";
+import { dedentAndGetCommonWhitespace } from "../util";
+import FileSystemIde from "../util/filesystem";
 
 jest.setTimeout(100_000);
 

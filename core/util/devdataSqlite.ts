@@ -1,6 +1,6 @@
 import fs from "fs";
-import { DatabaseConnection } from "../indexing/refreshIndex.js";
-import { getDevDataSqlitePath } from "./paths.js";
+import type { DatabaseConnection } from "../indexing/refreshIndex";
+import { getDevDataSqlitePath } from "./paths";
 
 export class DevDataSqliteDb {
   static db: DatabaseConnection | null = null;

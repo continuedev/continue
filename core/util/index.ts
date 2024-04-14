@@ -89,7 +89,7 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
-export function getBasename(filepath: string, n: number = 1): string {
+export function getBasename(filepath: string, n = 1): string {
   return filepath.split(/[\\/]/).pop() ?? "";
 }
 

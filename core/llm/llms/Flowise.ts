@@ -1,5 +1,6 @@
-import socketIOClient, { Socket } from "socket.io-client";
-import {
+import socketIOClient, { type Socket } from "socket.io-client";
+import { BaseLLM } from "..";
+import type {
   ChatMessage,
   CompletionOptions,
   LLMOptions,

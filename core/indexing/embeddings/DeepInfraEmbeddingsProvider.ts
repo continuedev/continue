@@ -1,6 +1,6 @@
-import { EmbedOptions } from "../../index.js";
-import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
+import type { EmbedOptions } from "../..";
+import { withExponentialBackoff } from "../../util/withExponentialBackoff";
+import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
 class DeepInfraEmbeddingsProvider extends BaseEmbeddingsProvider {
   static defaultOptions: Partial<EmbedOptions> | undefined = {

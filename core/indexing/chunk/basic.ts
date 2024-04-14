@@ -1,5 +1,5 @@
-import { ChunkWithoutID } from "../../index.js";
-import { countTokens } from "../../llm/countTokens.js";
+import type { ChunkWithoutID } from "../..";
+import { countTokens } from "../../llm/countTokens";
 
 export function* basicChunker(
   contents: string,

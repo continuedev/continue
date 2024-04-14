@@ -1,15 +1,6 @@
 import * as fs from "fs";
 import path from "path";
-import {
-  slashCommandFromDescription,
-  slashFromCustomCommand,
-} from "../commands/index.js";
-import CustomContextProviderClass from "../context/providers/CustomContextProvider.js";
-import FileContextProvider from "../context/providers/FileContextProvider.js";
-import { contextProviderClassFromName } from "../context/providers/index.js";
-import { AllRerankers } from "../context/rerankers/index.js";
-import { LLMReranker } from "../context/rerankers/llm.js";
-import {
+import type {
   BrowserSerializedContinueConfig,
   Config,
   ContextProviderWithParams,
@@ -38,7 +29,7 @@ import { AllRerankers } from "../context/rerankers";
 import { LLMReranker } from "../context/rerankers/llm";
 import { AllEmbeddingsProviders } from "../indexing/embeddings";
 import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { BaseLLM } from "../llm";
+import type { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import { copyOf } from "../util";
@@ -498,8 +489,12 @@ async function loadFullConfigNode(
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
-  let serialized = loadSerializedConfig(workspaceConfigs, ideSettings, ideType);
-  let intermediate = await serializedToIntermediateConfig(serialized, ide);
+  const serialized = loadSerializedConfig(
+    workspaceConfigs,
+    remoteConfigServerUrl,
+    ideType,
+  );
+  let intermediate = serializedToIntermediateConfig(serialized);
 
   const configJsContents = await buildConfigTs();
   if (configJsContents) {

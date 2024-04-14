@@ -1,29 +1,6 @@
 import { distance } from "fastest-levenshtein";
-import { LineStream } from "../diff/util.js";
-import { DiffLine } from "../index.js";
-
-export type LineFilter = (args: {
-  lines: LineStream;
-  fullStop: () => void;
-}) => LineStream;
-
-export async function* noTopLevelKeywordsMidline(
-  lines: LineStream,
-  topLevelKeywords: string[],
-  fullStop: () => void,
-): LineStream {
-  for await (const line of lines) {
-    for (const keyword of topLevelKeywords) {
-      const indexOf = line.indexOf(`${keyword} `);
-      if (indexOf >= 0 && line.slice(indexOf - 1, indexOf).trim() !== "") {
-        yield line.slice(0, indexOf);
-        fullStop();
-        break;
-      }
-    }
-    yield line;
-  }
-}
+import type { DiffLine } from "..";
+import type { LineStream } from "../diff/util";
 
 export async function* noTopLevelKeywordsMidline(
   lines: LineStream,
@@ -101,13 +78,9 @@ export async function* stopAtSimilarLine(
       continue;
     }
 
-    let lineQualifies = nextLine.length > 4 && trimmedLine.length > 4;
-    if (
-      lineQualifies &&
-      (commonPrefixLength(nextLine.trim(), trimmedLine.trim()) > 12 ||
-        distance(nextLine.trim(), trimmedLine) / trimmedLine.length < 0.1)
-    ) {
-      fullStop();
+    const dist = distance(nextLine.trim(), line);
+    const lineQualifies = nextLine.length > 4 && line.length > 4;
+    if (lineQualifies && dist / line.length < 0.1) {
       break;
     }
     yield nextLine;
@@ -222,7 +195,7 @@ function isEnglishFirstLine(line: string) {
 export async function* filterEnglishLinesAtStart(lines: LineStream) {
   let i = 0;
   let wasEnglishFirstLine = false;
-  for await (let line of lines) {
+  for await (const line of lines) {
     if (i === 0 && line.trim() === "") {
       continue;
     }

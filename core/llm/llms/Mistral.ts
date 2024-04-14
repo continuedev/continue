@@ -1,12 +1,5 @@
-import {
-  ChatMessage,
-  CompletionOptions,
-  LLMOptions,
-  ModelProvider,
-} from "../../index.js";
-import { streamSse } from "../stream.js";
-import { gptEditPrompt } from "../templates/edit.js";
-import OpenAI from "./OpenAI.js";
+import type { LLMOptions, ModelProvider } from "../..";
+import OpenAI from "./OpenAI";
 
 class Mistral extends OpenAI {
   static providerName: ModelProvider = "mistral";
