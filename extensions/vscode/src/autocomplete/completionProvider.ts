@@ -1,10 +1,12 @@
 import type { IDE } from "core";
 import {
-  AutocompleteOutcome,
+  type AutocompleteInput,
   CompletionProvider,
   type AutocompleteInput,
 } from "core/autocomplete/completionProvider";
 import type { ConfigHandler } from "core/config/handler";
+import { logDevData } from "core/util/devdata";
+import { Telemetry } from "core/util/posthog";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
@@ -30,7 +32,7 @@ export class ContinueCompletionProvider
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
-            "https://docs.continue.dev/walkthroughs/tab-autocomplete",
+            "https://continue.dev/docs/walkthroughs/tab-autocomplete",
           ),
         );
       } else if (val === "Download Ollama") {
@@ -145,7 +147,7 @@ export class ContinueCompletionProvider
         pos,
         recentlyEditedFiles: [],
         recentlyEditedRanges: [],
-        clipboardText: clipboardText
+        clipboardText: clipboardText,
       };
 
       setupStatusBar(true, true);
@@ -185,28 +187,20 @@ export class ContinueCompletionProvider
         return null;
       }
 
-      // Mark displayed
-      this.completionProvider.markDisplayed(input.completionId, outcome);
-      this._lastShownCompletion = outcome;
-
-      // Construct the range/text to show
-      const startPos = selectedCompletionInfo?.range.start ?? position;
-      const completionRange = new vscode.Range(
-        startPos,
-        startPos.translate(0, outcome.completion.length),
-      );
-      const completionItem = new vscode.InlineCompletionItem(
-        outcome.completion,
-        completionRange,
-        {
-          title: "Log Autocomplete Outcome",
-          command: "continue.logAutocompleteOutcome",
-          arguments: [input.completionId, this.completionProvider],
-        },
-      );
-
-      (completionItem as any).completeBracketPairs = true;
-      return [completionItem];
+      return [
+        new vscode.InlineCompletionItem(
+          outcome.completion,
+          new vscode.Range(
+            position,
+            position.translate(0, outcome.completion.length),
+          ),
+          {
+            title: "Log Autocomplete Outcome",
+            command: "continue.logAutocompleteOutcome",
+            arguments: [outcome, logRejectionTimeout],
+          },
+        ),
+      ];
     } finally {
       stopStatusBarLoading();
     }

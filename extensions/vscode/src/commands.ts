@@ -3,16 +3,16 @@ import * as os from "node:os";
 import * as path from "node:path";
 import * as vscode from "vscode";
 
-import { ContextMenuConfig, IDE } from "core";
-import { CompletionProvider } from "core/autocomplete/completionProvider";
-import { ConfigHandler } from "core/config/handler";
-import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
-import { getConfigJsonPath } from "core/util/paths";
-import { ContinueGUIWebviewViewProvider } from "./debugPanel";
-import { DiffManager } from "./diff/horizontal";
-import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import type { IDE } from "core";
+import type { AutocompleteOutcome } from "core/autocomplete/completionProvider";
+import type { ConfigHandler } from "core/config/handler";
+import { logDevData } from "core/util/devdata";
+import { Telemetry } from "core/util/posthog";
+import type { ContinueGUIWebviewViewProvider } from "./debugPanel";
+import type { DiffManager } from "./diff/horizontal";
+import type { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getPlatform } from "./util/util";
-import { VsCodeWebviewProtocol } from "./webviewProtocol";
+import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 function getFullScreenTab() {
   const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
@@ -246,7 +246,7 @@ const commandsMap: (
       ];
     }
 
-    let text = await vscode.window.showInputBox(textInputOptions);
+    const text = await vscode.window.showInputBox(textInputOptions);
 
     if (text === undefined) {
       return;
@@ -456,7 +456,7 @@ const commandsMap: (
     // vscode.commands.executeCommand("workbench.action.toggleZenMode");
 
     //create the full screen panel
-    let panel = vscode.window.createWebviewPanel(
+    const panel = vscode.window.createWebviewPanel(
       "continue.continueGUIView",
       "Continue",
       vscode.ViewColumn.One,

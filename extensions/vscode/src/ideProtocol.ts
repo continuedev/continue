@@ -1,6 +1,7 @@
 import * as child_process from "child_process";
 import { exec } from "child_process";
-import {
+import * as path from "path";
+import type {
   ContinueRcJson,
   IDE,
   IdeInfo,
@@ -10,10 +11,8 @@ import {
   Thread,
 } from "core";
 import { getContinueGlobalPath } from "core/util/paths";
-import * as path from "path";
 import * as vscode from "vscode";
-import { DiffManager } from "./diff/horizontal";
-import { Repository } from "./otherExtensions/git";
+import type { DiffManager } from "./diff/horizontal";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { traverseDirectory } from "./util/traverseDirectory";
 import {

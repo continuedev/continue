@@ -1,10 +1,7 @@
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/handler";
-import { Core } from "core/core";
-import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
-import { InProcessMessenger } from "core/util/messenger";
-import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
-import fs from "fs";
+import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
+import type { IdeSettings } from "core/protocol";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
@@ -20,7 +17,6 @@ import { setupRemoteConfigSync } from "../stubs/activation";
 import { getUserToken } from "../stubs/auth";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { VsCodeMessenger } from "./VsCodeMessenger";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)

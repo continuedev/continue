@@ -1,6 +1,7 @@
-import type { FileEdit } from "core";
+import type { FileEdit, IDE } from "core";
 import type { ConfigHandler } from "core/config/handler";
 import * as vscode from "vscode";
+import type { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getTheme } from "./util/getTheme";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
@@ -31,10 +32,10 @@ export class ContinueGUIWebviewViewProvider
   }
 
   public resetWebviewProtocolWebview(): void {
-    if (this._webview) { 
+    if (this._webview) {
       this.webviewProtocol.webview = this._webview;
-    } else{
-      console.warn("no webview found during reset")
+    } else {
+      console.warn("no webview found during reset");
     }
   }
 

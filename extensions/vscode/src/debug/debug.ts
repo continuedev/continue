@@ -35,7 +35,7 @@ export function registerDebugTracker(
                 if (typeof message.body.threadId !== "undefined")
                   threadStopped.set(
                     Number(message.body.threadId),
-                    message.event === "stopped",
+                    message.event == "stopped",
                   );
 
                 if (message.body.allThreadsStopped)

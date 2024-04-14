@@ -1,6 +1,6 @@
+import * as path from "path";
 import { defaultIgnoreDir, defaultIgnoreFile } from "core/indexing/ignore";
 import ignore from "ignore";
-import * as path from "node:path";
 import * as vscode from "vscode";
 import { uriFromFilePath } from "./vscode";
 

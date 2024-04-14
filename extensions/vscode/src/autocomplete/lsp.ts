@@ -1,14 +1,7 @@
 import type { IDE, RangeInFile } from "core";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/ast";
-import { GetLspDefinitionsFunction } from "core/autocomplete/completionProvider";
-import { AutocompleteLanguageInfo } from "core/autocomplete/languages";
-import { AutocompleteSnippet } from "core/autocomplete/ranking";
-import { RangeInFileWithContents } from "core/commands/util";
-import {
-  FUNCTION_BLOCK_NODE_TYPES,
-  FUNCTION_DECLARATION_NODE_TYPEs,
-} from "core/indexing/chunk/code";
-import { intersection } from "core/util/ranges";
+import type { AutocompleteSnippet } from "core/autocomplete/ranking";
+import type { RangeInFileWithContents } from "core/commands/util";
 import * as vscode from "vscode";
 import type Parser from "web-tree-sitter";
 

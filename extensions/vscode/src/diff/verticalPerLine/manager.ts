@@ -1,4 +1,4 @@
-import { ConfigHandler } from "core/config/handler";
+import type { ConfigHandler } from "core/config/handler";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import { streamDiffLines } from "core/util/verticalEdit";
@@ -114,7 +114,7 @@ export class VerticalPerLineDiffManager {
       index = 0;
     }
 
-    let blocks = this.filepathToCodeLens.get(filepath);
+    const blocks = this.filepathToCodeLens.get(filepath);
     const block = blocks?.[index];
     if (!blocks || !block) {
       return;

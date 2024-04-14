@@ -1,12 +1,12 @@
-import { FileEdit, RangeInFile, Thread } from "core";
-import { defaultIgnoreFile } from "core/indexing/ignore";
 import path from "path";
+import type { FileEdit, RangeInFile, Thread } from "core";
+import { defaultIgnoreFile } from "core/indexing/ignore";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/vscodeExtension";
 import { GitExtension, Repository } from "../otherExtensions/git";
 import {
-  SuggestionRanges,
+  type SuggestionRanges,
   acceptSuggestionCommand,
   editorSuggestionsLocked,
   rejectSuggestionCommand,
@@ -463,7 +463,7 @@ export class VsCodeIdeUtils {
 
   async getTopLevelCallStackSources(
     threadIndex: number,
-    stackDepth: number = 3,
+    stackDepth = 3,
   ): Promise<string[]> {
     const session = vscode.debug.activeDebugSession;
     if (!session) return [];
@@ -551,7 +551,7 @@ export class VsCodeIdeUtils {
     }
   }
 
-  private _repoWasNone: boolean = false;
+  private _repoWasNone = false;
   async getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
     let repo = await this._getRepo(forDirectory);
 
@@ -598,8 +598,7 @@ export class VsCodeIdeUtils {
   }
 
   async getDiff(): Promise<string> {
-    let diffs: string[] = [];
-    let repos = [];
+    const diffs = [];
 
     for (const dir of this.getWorkspaceDirectories()) {
       const repo = await this.getRepo(vscode.Uri.file(dir));

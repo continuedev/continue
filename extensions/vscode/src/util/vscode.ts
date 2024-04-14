@@ -1,5 +1,5 @@
+import * as path from "path";
 import { machineIdSync } from "node-machine-id";
-import * as path from "node:path";
 import * as vscode from "vscode";
 
 export function translate(range: vscode.Range, lines: number): vscode.Range {
