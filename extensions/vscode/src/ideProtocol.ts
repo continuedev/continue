@@ -1,6 +1,7 @@
-import * as child_process from "child_process";
-import { exec } from "child_process";
-import * as path from "path";
+import * as child_process from "node:child_process";
+import { exec } from "node:child_process";
+import * as path from "node:path";
+
 import type {
   ContinueRcJson,
   IDE,
@@ -139,14 +140,13 @@ class VsCodeIde implements IDE {
   async listWorkspaceContents(directory?: string): Promise<string[]> {
     if (directory) {
       return await this.ideUtils.getDirectoryContents(directory, true);
-    } else {
-      const contents = await Promise.all(
-        this.ideUtils
-          .getWorkspaceDirectories()
-          .map((dir) => this.ideUtils.getDirectoryContents(dir, true)),
-      );
-      return contents.flat();
     }
+    const contents = await Promise.all(
+      this.ideUtils
+        .getWorkspaceDirectories()
+        .map((dir) => this.ideUtils.getDirectoryContents(dir, true)),
+    );
+    return contents.flat();
   }
 
   async getWorkspaceConfigs() {

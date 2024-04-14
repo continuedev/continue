@@ -1,6 +1,6 @@
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import * as vscode from "vscode";
 
 import type { IDE } from "core";
@@ -150,18 +150,16 @@ const commandsMap: (
   verticalDiffManager,
 ) => ({
   "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
-    if (newFilepath instanceof vscode.Uri) {
-      newFilepath = newFilepath.fsPath;
-    }
-    verticalDiffManager.clearForFilepath(newFilepath, true);
-    await diffManager.acceptDiff(newFilepath);
+    const filepath =
+      newFilepath instanceof vscode.Uri ? newFilepath.fsPath : newFilepath;
+    verticalDiffManager.clearForFilepath(filepath, true);
+    await diffManager.acceptDiff(filepath);
   },
   "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
-    if (newFilepath instanceof vscode.Uri) {
-      newFilepath = newFilepath.fsPath;
-    }
-    verticalDiffManager.clearForFilepath(newFilepath, false);
-    await diffManager.rejectDiff(newFilepath);
+    const filepath =
+      newFilepath instanceof vscode.Uri ? newFilepath.fsPath : newFilepath;
+    verticalDiffManager.clearForFilepath(filepath, false);
+    await diffManager.rejectDiff(filepath);
   },
   "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
     verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index);
@@ -215,7 +213,7 @@ const commandsMap: (
     );
     const config = await configHandler.loadConfig();
     if (!defaultModelTitle) {
-      defaultModelTitle = config.models[0]?.title!;
+      defaultModelTitle = config.models[0]?.title ?? "";
     }
     const quickPickItems =
       config.contextProviders
@@ -239,7 +237,7 @@ const commandsMap: (
       prompt: `[${defaultModelTitle}]`,
     };
     if (previousInput) {
-      textInputOptions.value = previousInput + ", ";
+      textInputOptions.value = `${previousInput}, `;
       textInputOptions.valueSelection = [
         textInputOptions.value.length,
         textInputOptions.value.length,
@@ -295,10 +293,9 @@ const commandsMap: (
           )
         ).flat();
 
-        text =
-          context.map((item) => item.content).join("\n\n") +
-          "\n\n---\n\n" +
-          text;
+        text = `${context
+          .map((item) => item.content)
+          .join("\n\n")}\n\n---\n\n${text}`;
 
         await verticalDiffManager.streamEdit(text, defaultModelTitle);
       }
@@ -420,7 +417,7 @@ const commandsMap: (
     const fullScreenTab = getFullScreenTab();
 
     // Check if the active editor is the Continue GUI View
-    if (fullScreenTab && fullScreenTab.isActive) {
+    if (fullScreenTab?.isActive) {
       //Full screen open and focused - close it
       vscode.commands.executeCommand("workbench.action.closeActiveEditor"); //this will trigger the onDidDispose listener below
       return;

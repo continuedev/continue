@@ -1,4 +1,4 @@
-import * as path from "path";
+import * as path from "node:path";
 import * as vscode from "vscode";
 import { uriFromFilePath } from "./util/vscode";
 
@@ -22,7 +22,7 @@ export function showAnswerInTextEditor(
 
       const decorationType = vscode.window.createTextEditorDecorationType({
         after: {
-          contentText: answer + "\n",
+          contentText: `${answer}\n`,
           color: "rgb(0, 255, 0, 0.8)",
         },
         backgroundColor: "rgb(0, 255, 0, 0.2)",

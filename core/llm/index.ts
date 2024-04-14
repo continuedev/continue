@@ -88,14 +88,14 @@ export abstract class BaseLLM implements ILLM {
 
   private _llmOptions: LLMOptions;
 
-  constructor(options: LLMOptions) {
-    this._llmOptions = options;
+  constructor(_options: LLMOptions) {
+    this._llmOptions = _options;
 
     // Set default options
-    options = {
+    const options = {
       title: (this.constructor as typeof BaseLLM).providerName,
       ...(this.constructor as typeof BaseLLM).defaultOptions,
-      ...options,
+      ..._options,
     };
 
     const templateType =
@@ -134,7 +134,7 @@ export abstract class BaseLLM implements ILLM {
     this.apiKey = options.apiKey;
     this.apiBase = options.apiBase;
     if (this.apiBase && !this.apiBase.endsWith("/")) {
-      this.apiBase = this.apiBase + "/";
+      this.apiBase = `${this.apiBase}/`;
     }
 
     this.engine = options.engine;
@@ -254,7 +254,7 @@ ${prompt}`;
   private _parseCompletionOptions(options: LLMFullCompletionOptions) {
     const log = options.log ?? true;
     const raw = options.raw ?? false;
-    delete options.log;
+    options.log = undefined;
 
     const completionOptions: CompletionOptions = mergeJson(
       this.completionOptions,
@@ -278,16 +278,16 @@ ${prompt}`;
   }
 
   async *streamComplete(
-    prompt: string,
+    _prompt: string,
     options: LLMFullCompletionOptions = {},
   ) {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
-    prompt = pruneRawPromptFromTop(
+    let prompt = pruneRawPromptFromTop(
       completionOptions.model,
       this.contextLength,
-      prompt,
+      _prompt,
       completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
     );
 
@@ -319,14 +319,14 @@ ${prompt}`;
     return { prompt, completion };
   }
 
-  async complete(prompt: string, options: LLMFullCompletionOptions = {}) {
+  async complete(_prompt: string, options: LLMFullCompletionOptions = {}) {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
-    prompt = pruneRawPromptFromTop(
+    let prompt = pruneRawPromptFromTop(
       completionOptions.model,
       this.contextLength,
-      prompt,
+      _prompt,
       completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
     );
 
@@ -362,13 +362,13 @@ ${prompt}`;
   }
 
   async *streamChat(
-    messages: ChatMessage[],
+    _messages: ChatMessage[],
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<ChatMessage, LLMReturnValue> {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
-    messages = this._compileChatMessages(completionOptions, messages);
+    const messages = this._compileChatMessages(completionOptions, _messages);
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)
@@ -415,6 +415,7 @@ ${prompt}`;
     return { prompt, completion };
   }
 
+  // biome-ignore lint/correctness/useYield: Purposefully not implemented
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions,
@@ -471,34 +472,33 @@ ${prompt}`;
         history: history,
         ...otherData,
       };
-      if (history.length > 0 && history[0].role == "system") {
-        data["system_message"] = history.shift()!.content;
+      if (history.length > 0 && history[0].role === "system") {
+        data.system_message = history.shift()!.content;
       }
 
       const compiledTemplate = Handlebars.compile(template);
       return compiledTemplate(data);
-    } else {
-      const rendered = template(history, {
-        ...otherData,
-        supportsCompletions: this.supportsCompletions() ? "true" : "false",
-        supportsPrefill: this.supportsPrefill() ? "true" : "false",
-      });
-      if (
-        typeof rendered !== "string" &&
-        rendered[rendered.length - 1]?.role === "assistant" &&
-        !canPutWordsInModelsMouth
-      ) {
-        // Some providers don't allow you to put words in the model's mouth
-        // So we have to manually compile the prompt template and use
-        // raw /completions, not /chat/completions
-        const templateMessages = autodetectTemplateFunction(
-          this.model,
-          this.providerName,
-          autodetectTemplateType(this.model),
-        );
-        return templateMessages(rendered);
-      }
-      return rendered;
     }
+    const rendered = template(history, {
+      ...otherData,
+      supportsCompletions: this.supportsCompletions() ? "true" : "false",
+      supportsPrefill: this.supportsPrefill() ? "true" : "false",
+    });
+    if (
+      typeof rendered !== "string" &&
+      rendered[rendered.length - 1]?.role === "assistant" &&
+      !canPutWordsInModelsMouth
+    ) {
+      // Some providers don't allow you to put words in the model's mouth
+      // So we have to manually compile the prompt template and use
+      // raw /completions, not /chat/completions
+      const templateMessages = autodetectTemplateFunction(
+        this.model,
+        this.providerName,
+        autodetectTemplateType(this.model),
+      );
+      return templateMessages(rendered);
+    }
+    return rendered;
   }
 }
