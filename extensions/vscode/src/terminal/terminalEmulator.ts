@@ -1,6 +1,6 @@
 /* Terminal emulator - commented because node-pty is causing problems. */
 
-import * as os from "os";
+import * as os from "node:os";
 import stripAnsi from "strip-ansi";
 import * as vscode from "vscode";
 import { longestCommonSubsequence } from "../util/lcs";
@@ -225,7 +225,7 @@ export class CapturedTerminal {
             this.seenClear = false;
             this.commandPromptString = commandPromptString;
             console.log(
-              "Found command prompt string: " + this.commandPromptString,
+              `Found command prompt string: ${this.commandPromptString}`,
             );
             if (this.resolveMeWhenCommandPromptStringFound) {
               this.resolveMeWhenCommandPromptStringFound(undefined);

@@ -1,4 +1,4 @@
-const os = require("os");
+const os = require("node:os");
 import * as vscode from "vscode";
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {

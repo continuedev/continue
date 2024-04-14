@@ -148,10 +148,10 @@ export class VerticalPerLineDiffHandler {
               lineCount,
               this.editor.document.lineAt(lineCount - 1).text.length,
             ),
-            "\n" + text,
+            `\n${text}`,
           );
         } else {
-          editBuilder.insert(new vscode.Position(index, 0), text + "\n");
+          editBuilder.insert(new vscode.Position(index, 0), `${text}\n`);
         }
       },
       {

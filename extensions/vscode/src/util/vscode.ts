@@ -1,4 +1,4 @@
-import * as path from "path";
+import * as path from "node:path";
 import { machineIdSync } from "node-machine-id";
 import * as vscode from "vscode";
 

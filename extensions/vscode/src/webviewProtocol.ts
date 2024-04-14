@@ -1,5 +1,5 @@
-import fs from "fs";
-import path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import type { ContextItemId, IDE } from "core";
 import type { ConfigHandler } from "core/config/handler";
 import {
@@ -82,7 +82,7 @@ export class VsCodeWebviewProtocol {
 
     this._webviewListener = this._webview.onDidReceiveMessage(async (msg) => {
       if (!msg.messageType || !msg.messageId) {
-        throw new Error("Invalid webview protocol msg: " + JSON.stringify(msg));
+        throw new Error(`Invalid webview protocol msg: ${JSON.stringify(msg)}`);
       }
 
       const respond = (message: any) =>
@@ -107,8 +107,11 @@ export class VsCodeWebviewProtocol {
           }
         } catch (e: any) {
           console.error(
-            "Error handling webview message: " +
-              JSON.stringify({ msg }, null, 2),
+            `Error handling webview message: ${JSON.stringify(
+              { msg },
+              null,
+              2,
+            )}`,
           );
 
           let message = e.message;

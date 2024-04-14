@@ -1,6 +1,6 @@
-import * as path from "path";
 import { defaultIgnoreDir, defaultIgnoreFile } from "core/indexing/ignore";
 import ignore from "ignore";
+import * as path from "node:path";
 import * as vscode from "vscode";
 import { uriFromFilePath } from "./vscode";
 
@@ -70,7 +70,7 @@ export async function* traverseDirectory(
   const allIgnorePatterns = [...gitIgnorePatterns, ...ignorePatterns].map(
     (pattern) => {
       if (!pattern.slice(0, -1).includes("/")) {
-        return "**/" + pattern;
+        return `**/${pattern}`;
       }
       return pattern;
     },
@@ -90,7 +90,7 @@ export async function* traverseDirectory(
   for (const ignorePattern of allIgnorePatterns) {
     const [first, rest, leadingWildcard] = splitGlob(ignorePattern);
     if (leadingWildcard) {
-      wildcardPatterns.push("**/" + first + (rest ? "/" + rest : ""));
+      wildcardPatterns.push(`**/${first}${rest ? `/${rest}` : ""}`);
     }
     if (first) {
       if (subDirIgnorePatterns[first] === undefined) {
@@ -107,7 +107,7 @@ export async function* traverseDirectory(
     }
 
     // Recurse if not ignored
-    if (!(ig.ignores(dir + "/") || ig.ignores(dir))) {
+    if (!(ig.ignores(`${dir}/`) || ig.ignores(dir))) {
       // For patterns who can potentially match items of this subdir, strip the subdir from the start
       const keepPatterns = [...wildcardPatterns];
       for (const [startPattern, subDirPatterns] of entries) {

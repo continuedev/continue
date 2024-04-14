@@ -90,7 +90,7 @@ export function rerenderDecorations(editorUri: string) {
   let newSels: vscode.Range[] = [];
   for (let i = 0; i < suggestions.length; i++) {
     const suggestion = suggestions[i];
-    if (typeof idx != "undefined" && idx === i) {
+    if (typeof idx !== "undefined" && idx === i) {
       if (suggestion.newSelected) {
         olds.push(suggestion.oldRange);
         newSels.push(suggestion.newRange);
@@ -194,7 +194,7 @@ function selectSuggestion(
 
   const [suggestion] = suggestions.splice(idx, 1);
 
-  var rangeToDelete: vscode.Range;
+  let rangeToDelete: vscode.Range;
   switch (accept) {
     case "old":
       rangeToDelete = suggestion.newRange;

@@ -1,4 +1,4 @@
-import path from "path";
+import path from "node:path";
 import type { FileEdit, RangeInFile, Thread } from "core";
 import { defaultIgnoreFile } from "core/indexing/ignore";
 import * as vscode from "vscode";
@@ -18,8 +18,8 @@ import {
   uriFromFilePath,
 } from "./vscode";
 
-const util = require("util");
-const asyncExec = util.promisify(require("child_process").exec);
+const util = require("node:util");
+const asyncExec = util.promisify(require("node:child_process").exec);
 
 export class VsCodeIdeUtils {
   visibleMessages: Set<string> = new Set();
@@ -331,13 +331,11 @@ export class VsCodeIdeUtils {
       await vscode.workspace.fs.readFile(vscode.Uri.file(filepath)),
     );
     const lines = contents.split("\n");
-    return (
-      lines.slice(range.start.line, range.end.line).join("\n") +
-      "\n" +
-      lines[
-        range.end.line < lines.length - 1 ? range.end.line : lines.length - 1
-      ].slice(0, range.end.character)
-    );
+    return `${lines
+      .slice(range.start.line, range.end.line)
+      .join("\n")}\n${lines[
+      range.end.line < lines.length - 1 ? range.end.line : lines.length - 1
+    ].slice(0, range.end.character)}`;
   }
 
   async getTerminalContents(commands = -1): Promise<string> {

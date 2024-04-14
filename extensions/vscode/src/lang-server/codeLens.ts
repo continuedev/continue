@@ -1,5 +1,5 @@
-import * as os from "os";
-import * as path from "path";
+import * as os from "node:os";
+import * as path from "node:path";
 import * as vscode from "vscode";
 import { DIFF_DIRECTORY, type DiffManager } from "../diff/horizontal";
 import type { VerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
@@ -215,7 +215,7 @@ class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
       );
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: `✏️ Edit in UI`,
+          title: "✏️ Edit in UI",
           command: "continue.openSettingsUI",
         }),
       );
@@ -234,7 +234,7 @@ const actions: TutorialCodeLensItems[] = [
     lineIncludes: "Step 2: Use the keyboard shortcut cmd/ctrl + M",
     commands: [
       {
-        title: `Do it for me`,
+        title: "Do it for me",
         command: "continue.focusContinueInput",
       },
     ],
@@ -276,9 +276,10 @@ const actions: TutorialCodeLensItems[] = [
         title: "Run the file",
         command: "continue.sendToTerminal",
         arguments: [
-          "python " +
-            path.join(getExtensionUri().fsPath, "continue_tutorial.py") +
-            "\n",
+          `python ${path.join(
+            getExtensionUri().fsPath,
+            "continue_tutorial.py",
+          )}\n`,
         ],
       },
     ],
@@ -362,7 +363,7 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
         });
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: `Begin Section`,
+          title: "Begin Section",
           command: "continue.foldAndUnfold",
           arguments: [linesToFold, [lineOfRegion, lineOfRegion + 1]],
         }),

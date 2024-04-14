@@ -37,7 +37,7 @@ export async function getDefinitionsForNode(
 ): Promise<RangeInFile[]> {
   const ranges: RangeInFile[] = [];
   switch (node.type) {
-    case "call_expression":
+    case "call_expression": {
       // function call -> function definition
       const defs = await executeGotoProvider(
         uri,
@@ -47,6 +47,7 @@ export async function getDefinitionsForNode(
       );
       ranges.push(...defs);
       break;
+    }
     case "variable_declarator":
       // variable assignment -> variable definition/type
       // usages of the var that appear after the declaration
