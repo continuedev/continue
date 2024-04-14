@@ -16,7 +16,7 @@ To use any of the built-in slash commands, open `~/.continue/config.json` and ad
 
 ### `/edit`
 
-Select code with ctrl/cmd + M (VS Code) or ctrl/cmd + J (JetBrains), and then type "/edit", followed by instructions for the edit. Continue will stream the changes into a side-by-side diff editor.
+Select code with ctrl/cmd + L (VS Code) or ctrl/cmd + J (JetBrains), and then type "/edit", followed by instructions for the edit. Continue will stream the changes into a side-by-side diff editor.
 
 ```json
 {
@@ -146,7 +146,7 @@ export function modifyConfig(config: Config): Config {
         `${diff}\n\nWrite a commit message for the above changes. Use no more than 20 tokens to give a brief description in the imperative mood (e.g. 'Add feature' not 'Added feature'):`,
         {
           maxTokens: 20,
-        }
+        },
       )) {
         yield message;
       }

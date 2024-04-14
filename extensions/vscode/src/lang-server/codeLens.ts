@@ -229,7 +229,7 @@ interface TutorialCodeLensItems {
 }
 const actions: TutorialCodeLensItems[] = [
   {
-    lineIncludes: "Step 2: Use the keyboard shortcut cmd/ctrl + M",
+    lineIncludes: "Step 2: Use the keyboard shortcut cmd/ctrl + L",
     commands: [
       {
         title: `Do it for me`,
