@@ -1,5 +1,5 @@
-import * as path from "node:path";
 import { machineIdSync } from "node-machine-id";
+import * as path from "node:path";
 import * as vscode from "vscode";
 
 export function translate(range: vscode.Range, lines: number): vscode.Range {
@@ -95,10 +95,7 @@ export function openEditorAndRevealRange(
         }
         showTextDocumentInProcess = true;
         vscode.window
-          .showTextDocument(doc, {
-            viewColumn: getViewColumnOfFile(editorFilename) || viewColumn,
-            preview,
-          })
+          .showTextDocument(doc, getViewColumnOfFile(filename) || viewColumn)
           .then((editor) => {
             if (range) {
               editor.revealRange(range);
