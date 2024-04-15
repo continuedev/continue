@@ -502,6 +502,34 @@ const neuralChat: ModelPackage = {
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
+const commandR: ModelPackage = {
+  title: "Command R",
+  description:
+    "Command R is a scalable generative model targeting RAG and Tool Use to enable production-scale AI for enterprise.",
+  params: {
+    model: "command-r",
+    contextLength: 128_000,
+    title: "Command R",
+    apiKey: "",
+  },
+  providerOptions: ["cohere"],
+  icon: "cohere.png",
+};
+
+const commandRPlus: ModelPackage = {
+  title: "Command R+",
+  description:
+    "Command R+ is a state-of-the-art RAG-optimized model designed to tackle enterprise-grade workloads",
+  params: {
+    model: "command-r-plus",
+    contextLength: 128_000,
+    title: "Command R+",
+    apiKey: "",
+  },
+  providerOptions: ["cohere"],
+  icon: "cohere.png",
+};
+
 const osModels = [
   deepseek,
   wizardCoder,
@@ -623,6 +651,8 @@ export const MODEL_INFO: ModelPackage[] = [
   claude3Opus,
   claude3Sonnet,
   claude3Haiku,
+  commandR,
+  commandRPlus,
   gemini15Pro,
   geminiPro,
   claude2,
@@ -694,6 +724,28 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
     ],
     packages: [claude3Opus, claude3Sonnet, claude3Haiku, claude2],
+  },
+  cohere: {
+    title: "Cohere",
+    provider: "cohere",
+    refPage: "cohere",
+    description:
+      "Optimized for enterprise generative AI, search and discovery, and advanced retrieval.",
+    icon: "cohere.png",
+    tags: [ModelProviderTag["Requires API Key"]],
+    longDescription:
+      "To use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.",
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Cohere API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
+    packages: [commandR, commandRPlus],
   },
   ollama: {
     title: "Ollama",
