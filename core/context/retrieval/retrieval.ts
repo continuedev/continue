@@ -71,24 +71,26 @@ export async function retrieveContextItemsFromEmbeddings(
   // Source: expansion with code graph
   // consider doing this after reranking? Or just having a lower reranking threshold
   // This is VS Code only until we use PSI for JetBrains or build our own general solution
-  if ((await extras.ide.getIdeInfo()).ideType === "vscode") {
-    const { expandSnippet } = await import(
-      "../../../extensions/vscode/src/util/expandSnippet"
-    );
-    const expansionResults = (
-      await Promise.all(
-        extras.selectedCode.map(async (rif) => {
-          return expandSnippet(
-            rif.filepath,
-            rif.range.start.line,
-            rif.range.end.line,
-            extras.ide,
-          );
-        }),
-      )
-    ).flat() as Chunk[];
-    retrievalResults.push(...expansionResults);
-  }
+  // TODO: Need to pass in the expandSnippet function as a function argument
+  // because this import causes `tsc` to fail
+  // if ((await extras.ide.getIdeInfo()).ideType === "vscode") {
+  //   const { expandSnippet } = await import(
+  //     "../../../extensions/vscode/src/util/expandSnippet"
+  //   );
+  //   let expansionResults = (
+  //     await Promise.all(
+  //       extras.selectedCode.map(async (rif) => {
+  //         return expandSnippet(
+  //           rif.filepath,
+  //           rif.range.start.line,
+  //           rif.range.end.line,
+  //           extras.ide,
+  //         );
+  //       }),
+  //     )
+  //   ).flat() as Chunk[];
+  //   retrievalResults.push(...expansionResults);
+  // }
 
   // Source: Open file exact match
   // Source: Class/function name exact match
