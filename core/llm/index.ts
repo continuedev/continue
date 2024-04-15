@@ -10,13 +10,11 @@ import type {
   PromptTemplate,
   RequestOptions,
   TemplateType,
-} from "../index.js";
-import { logDevData } from "../util/devdata.js";
-import { DevDataSqliteDb } from "../util/devdataSqlite.js";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
-import mergeJson from "../util/merge.js";
-import { Telemetry } from "../util/posthog.js";
-import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
+} from "..";
+import { DevDataSqliteDb } from "../util/devdataSqlite";
+import mergeJson from "../util/merge";
+import { Telemetry } from "../util/posthog";
+import { withExponentialBackoff } from "../util/withExponentialBackoff";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -275,31 +273,15 @@ ${prompt}`;
           { ...this.requestOptions },
         );
 
-        // Error mapping to be more helpful
-        if (!resp.ok) {
-          let text = await resp.text();
-          if (resp.status === 404 && !resp.url.includes("/v1")) {
-            if (text.includes("try pulling it first")) {
-              const model = JSON.parse(text).error.split(" ")[1].slice(1, -1);
-              text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
-            } else if (text.includes("/api/chat")) {
-              text =
-                "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
-            } else {
-              text =
-                "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
-            }
-          } else if (
-            resp.status === 404 &&
-            resp.url.includes("api.openai.com")
-          ) {
-            text =
-              "You may need to add pre-paid credits before using the OpenAI API.";
-          }
-          throw new Error(
-            `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
-          );
-        }
+  protected fetch(
+    url: RequestInfo | URL,
+    init?: RequestInit,
+  ): Promise<Response> {
+    if (this._fetch) {
+      // Custom Node.js fetch
+      const customFetch = this._fetch;
+      return withExponentialBackoff<Response>(() => customFetch(url, init));
+    }
 
         return resp;
       } catch (e: any) {
@@ -307,21 +289,11 @@ ${prompt}`;
           `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
         );
 
-        if (
-          e.code === "ECONNREFUSED" &&
-          e.message.includes("http://127.0.0.1:11434")
-        ) {
-          throw new Error(
-            "Failed to connect to local Ollama instance. To start Ollama, first download it at https://ollama.ai.",
-          );
-        }
-        throw new Error(e.message);
-      }
-    };
-    return withExponentialBackoff<Response>(
-      () => customFetch(url, init) as any,
-      5,
-      0.5,
+    return withExponentialBackoff<Response>(() =>
+      fetch(url, {
+        ...init,
+        headers,
+      })
     );
   }
 
