@@ -70,6 +70,7 @@ export const supportedLanguages: { [key: string]: string } = {
   rs: "rust",
   rdl: "systemrdl",
   toml: "toml",
+  sol: "solidity",
 
   // jl: "julia",
   // swift: "swift",
