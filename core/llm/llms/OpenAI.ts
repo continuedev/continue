@@ -28,7 +28,6 @@ const CHAT_ONLY_MODELS = [
   "gpt-3.5-turbo-16k",
   "gpt-4",
   "gpt-4-turbo",
-  "gpt-4o",
   "gpt-35-turbo-16k",
   "gpt-35-turbo-0613",
   "gpt-35-turbo",
