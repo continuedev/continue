@@ -593,6 +593,9 @@ export type ModelName =
   | "claude-3-sonnet-20240229"
   | "claude-3-haiku-20240307"
   | "claude-2.1"
+  // Cohere
+  |"command-r"
+  |"command-r-plus"
   // Gemini
   | "gemini-pro"
   | "gemini-1.5-pro-latest"
