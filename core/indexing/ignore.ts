@@ -25,6 +25,7 @@ const DEFAULT_IGNORE_FILETYPES = [
   "*.dll",
   "*.obj",
   "*.o",
+  "*.o.d",
   "*.a",
   "*.lib",
   "*.so",
@@ -54,6 +55,9 @@ const DEFAULT_IGNORE_FILETYPES = [
   "*.sqlite",
   "*.wasm",
   "*.plist",
+  "*.profraw",
+  "*.gcda",
+  "*.gcno",
 ];
 export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
 export const DEFAULT_IGNORE_DIRS = [
@@ -76,5 +80,6 @@ export const DEFAULT_IGNORE_DIRS = [
   ".continue",
   "__pycache__",
   "site-packages",
+  ".cache",
 ];
 export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
