@@ -34,7 +34,7 @@ export const supportedLanguages: { [key: string]: string } = {
   ts: "typescript",
   mts: "typescript",
   cts: "typescript",
-  tsx: "tsx",
+  tsx: "typescript",
   vue: "vue",
   // The .wasm file being used is faulty, and yaml is split line-by-line anyway for the most part
   // yaml: "yaml",
