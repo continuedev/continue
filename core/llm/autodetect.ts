@@ -310,8 +310,6 @@ function autodetectPromptTemplates(
     editTemplate = claudeEditPrompt;
   } else if (templateType === "gemma") {
     editTemplate = gemmaEditPrompt;
-  } else if (templateType === "llama3") {
-    editTemplate = llama3EditPrompt;
   } else if (templateType === "none") {
     editTemplate = null;
   } else if (templateType) {
