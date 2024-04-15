@@ -8,6 +8,7 @@ import {
 } from "../..";
 import { DEFAULT_MAX_TOKENS } from "../constants";
 import Anthropic from "./Anthropic";
+import Cohere from "./Cohere";
 import Bedrock from "./Bedrock";
 import DeepInfra from "./DeepInfra";
 import Flowise from "./Flowise";
@@ -76,6 +77,7 @@ export async function renderTemplatedString(
 
 const LLMs = [
 	Anthropic,
+	Cohere,
 	FreeTrial,
 	Gemini,
 	Llamafile,
