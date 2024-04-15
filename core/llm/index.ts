@@ -236,7 +236,11 @@ ${prompt}`;
     if (this._fetch) {
       // Custom Node.js fetch
       const customFetch = this._fetch;
-      return withExponentialBackoff<Response>(() => customFetch(url, init));
+      return withExponentialBackoff<Response>(
+        () => customFetch(url, init),
+        5,
+        0.5,
+      );
     }
 
     // Most of the requestOptions aren't available in the browser
@@ -251,7 +255,7 @@ ${prompt}`;
       fetch(url, {
         ...init,
         headers,
-      })
+      }),
     );
   }
 
