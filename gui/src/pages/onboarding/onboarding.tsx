@@ -106,10 +106,31 @@ function Onboarding() {
           This can always be done later.
         </p>
       </Div>
+      {selected === 2 && (
+        <p className="px-3">
+          Use <code>config.json</code> to configure your own{" "}
+          <a href="https://continue.dev/docs/model-setup/overview">models</a>,{" "}
+          <a href="https://continue.dev/docs/customization/context-providers">
+            context providers
+          </a>
+          ,{" "}
+          <a href="https://continue.dev/docs/customization/slash-commands">
+            slash commands
+          </a>
+          , and <a href="https://continue.dev/docs/reference/config">more</a>.
+        </p>
+      )}
 
       <br />
       <div className="flex">
         <StyledButton
+          blurColor={
+            selected === 0
+              ? greenButtonColor
+              : selected === 1
+              ? "#be841b"
+              : "#1b84be"
+          }
           disabled={selected < 0}
           onClick={() => {
             postToIde("showTutorial", undefined);

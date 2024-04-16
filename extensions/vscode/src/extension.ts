@@ -30,6 +30,7 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 }
 
 export function activate(context: vscode.ExtensionContext) {
+  // cleanSlate(context);
   dynamicImportAndActivate(context);
 }
 

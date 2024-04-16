@@ -579,6 +579,7 @@ export class VsCodeWebviewProtocol {
           ? setupOptimizedMode
           : setupOptimizedExistingUserMode,
       );
+      this.configHandler.reloadConfig();
     });
 
     this.on("openUrl", (msg) => {

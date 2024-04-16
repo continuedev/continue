@@ -98,6 +98,10 @@ export const VscThemeContext = createContext<any>(undefined);
 function App() {
   const dispatch = useDispatch();
 
+  // useEffect(() => {
+  //   localStorage.clear();
+  // });
+
   useSetup(dispatch);
 
   const vscTheme = useVscTheme();
