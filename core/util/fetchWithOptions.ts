@@ -2,6 +2,7 @@ import * as fs from "node:fs";
 import tls from "node:tls";
 import { http, https } from "follow-redirects";
 import { HttpProxyAgent } from "http-proxy-agent";
+import { globalAgent } from "https";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import fetch, { type RequestInit, type Response } from "node-fetch";
 import type { RequestOptions } from "..";
@@ -13,7 +14,15 @@ export function fetchwithRequestOptions(
 ): Promise<Response> {
   const TIMEOUT = 7200; // 7200 seconds = 2 hours
 
-  const ca = [...tls.rootCertificates];
+  let globalCerts: string[] = [];
+  if (process.env.IS_BINARY) {
+    if (Array.isArray(globalAgent.options.ca)) {
+      globalCerts = [...globalAgent.options.ca.map((cert) => cert.toString())];
+    } else if (typeof globalAgent.options.ca !== "undefined") {
+      globalCerts.push(globalAgent.options.ca.toString());
+    }
+  }
+  const ca = Array.from(new Set(...tls.rootCertificates, ...globalCerts));
   const customCerts =
     typeof requestOptions?.caBundlePath === "string"
       ? [requestOptions?.caBundlePath]
