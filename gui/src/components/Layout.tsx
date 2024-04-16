@@ -179,6 +179,9 @@ const Layout = () => {
   });
 
   useEffect(() => {
+    if (isJetBrains()) {
+      return;
+    }
     const onboardingComplete = getLocalStorage("onboardingComplete");
     if (
       !onboardingComplete &&
