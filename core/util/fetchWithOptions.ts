@@ -22,7 +22,7 @@ export function fetchwithRequestOptions(
       globalCerts.push(globalAgent.options.ca.toString());
     }
   }
-  const ca = Array.from(new Set(...tls.rootCertificates, ...globalCerts));
+  const ca = Array.from(new Set([...tls.rootCertificates, ...globalCerts]));
   const customCerts =
     typeof requestOptions?.caBundlePath === "string"
       ? [requestOptions?.caBundlePath]
