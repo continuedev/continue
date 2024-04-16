@@ -16,6 +16,7 @@ import {
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import { isJetBrains } from "../../util/ide";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
   position: absolute;
@@ -135,22 +136,25 @@ function InputToolbar(props: InputToolbarProps) {
             </span>
           )}
       </span>
-      <span
-        style={{
-          color: props.usingCodebase ? vscBadgeBackground : lightGray,
-          backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
-          borderRadius: defaultBorderRadius,
-          padding: "2px 4px",
-        }}
-        onClick={(e) => {
-          props.onEnter({
-            useCodebase: true,
-          });
-        }}
-        className={"hover:underline cursor-pointer float-right"}
-      >
-        {getMetaKeyLabel()} ⏎ Use Codebase
-      </span>
+
+      {isJetBrains() || (
+        <span
+          style={{
+            color: props.usingCodebase ? vscBadgeBackground : lightGray,
+            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
+            borderRadius: defaultBorderRadius,
+            padding: "2px 4px",
+          }}
+          onClick={(e) => {
+            props.onEnter({
+              useCodebase: true,
+            });
+          }}
+          className={"hover:underline cursor-pointer float-right"}
+        >
+          {getMetaKeyLabel()} ⏎ Use Codebase
+        </span>
+      )}
 
       <EnterButton
         offFocus={props.usingCodebase}
