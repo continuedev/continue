@@ -55,8 +55,7 @@ export class VerticalPerLineDiffManager {
     return this.filepathToHandler.get(filepath);
   }
 
-  //called by constructor
-  //Creates a listener for document changes
+  //Creates a listener for document changes (called by constructor)
   private setupDocumentChangeListener() {
     vscode.workspace.onDidChangeTextDocument((event) => {
       // Check if there is an active handler for the affected file
@@ -154,14 +153,12 @@ export class VerticalPerLineDiffManager {
     }
 
     const filepath = editor.document.uri.fsPath;
-    const startLine = editor.selection.start.line;
-    const endLine = editor.selection.end.line;
         
     //Check for existing diffs in the same file the new one will be created in
     const existingHandler = this.getHandlerForFile(filepath);
     if (existingHandler) {
       //reject the existing diff
-      console.log("New diff being created - rejecting previous diff in : ", filepath)
+      console.log("New diff being created - rejecting previous diff in: ", filepath)
       this.acceptRejectVerticalDiffBlock(false, filepath)
     }
 
@@ -170,6 +167,11 @@ export class VerticalPerLineDiffManager {
     await new Promise((resolve) => {
       setTimeout(resolve, 200);
     });
+
+    const startLine = editor.selection.start.line;
+    const endLine = editor.selection.end.line;
+
+    //Create new handler
     const diffHandler = this.createVerticalPerLineDiffHandler(
       filepath,
       startLine,
@@ -180,15 +182,15 @@ export class VerticalPerLineDiffManager {
       return;
     }
 
-    let selectedRange = existingHandler?.range ?? editor.selection;
+    let selectedRange = editor.selection;
 
     // Only if the selection is empty, use exact prefix/suffix instead of by line
-    if (!selectedRange.isEmpty) {
-      selectedRange = new vscode.Range(
-        editor.selection.start.with(undefined, 0),
-        editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER),
-      );
-    }
+    // if (!selectedRange.isEmpty) {
+    //   selectedRange = new vscode.Range(
+    //     editor.selection.start.with(undefined, 0),
+    //     editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER),
+    //   );
+    // }
 
     const llm = await this.configHandler.llmFromTitle(modelTitle);
     const rangeContent = editor.document.getText(selectedRange);

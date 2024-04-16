@@ -8,7 +8,6 @@ import {
   redDecorationType,
 } from "./decorations";
 import { VerticalDiffCodeLens } from "./manager";
-import { start } from "repl";
 
 export class VerticalPerLineDiffHandler {
   private editor: vscode.TextEditor;
