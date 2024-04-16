@@ -51,32 +51,6 @@ export class VerticalPerLineDiffManager {
     }
   }
 
-  getOrCreateVerticalPerLineDiffHandler(
-    filepath: string,
-    startLine: number,
-    endLine: number,
-  ) {
-    if (this.filepathToHandler.has(filepath)) {
-      return this.filepathToHandler.get(filepath)!;
-    } else {
-      const editor = vscode.window.activeTextEditor; // TODO
-      if (editor && editor.document.uri.fsPath === filepath) {
-        const handler = new VerticalPerLineDiffHandler(
-          startLine,
-          endLine,
-          editor,
-          this.filepathToCodeLens,
-          this.clearForFilepath.bind(this),
-          this.refreshCodeLens,
-        );
-        this.filepathToHandler.set(filepath, handler);
-        return handler;
-      } else {
-        return undefined;
-      }
-    }
-  }
-
   getHandlerForFile(filepath: string) {
     return this.filepathToHandler.get(filepath);
   }
@@ -84,7 +58,6 @@ export class VerticalPerLineDiffManager {
   //called by constructor
   //Creates a listener for document changes
   private setupDocumentChangeListener() {
-    console.log("setting up onDidChangeTextDocument listener")
     vscode.workspace.onDidChangeTextDocument((event) => {
       // Check if there is an active handler for the affected file
       const filepath = event.document.uri.fsPath;
@@ -101,7 +74,6 @@ export class VerticalPerLineDiffManager {
     handler: VerticalPerLineDiffHandler
   ) {
     // Loop through each change in the event
-    console.log("Handling doc change")
     event.contentChanges.forEach((change) => {
       // Calculate the number of lines added or removed
       const linesAdded = change.text.split('\n').length - 1;
@@ -175,10 +147,7 @@ export class VerticalPerLineDiffManager {
   async streamEdit(input: string, modelTitle: string | undefined) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
-    console.log("justin: in streamEdit")
-
     const editor = vscode.window.activeTextEditor;
-    console.log("justin: editor: ", editor)
 
     if (!editor) {
       return;
@@ -187,25 +156,27 @@ export class VerticalPerLineDiffManager {
     const filepath = editor.document.uri.fsPath;
     const startLine = editor.selection.start.line;
     const endLine = editor.selection.end.line;
-    
-    console.log("justin: start and end line: ", startLine, " | ", endLine)
-    
+        
+    //Check for existing diffs in the same file the new one will be created in
     const existingHandler = this.getHandlerForFile(filepath);
-    console.log("Justin: existingHandler before: ", existingHandler)
+    if (existingHandler) {
+      //reject the existing diff
+      console.log("New diff being created - rejecting previous diff in : ", filepath)
+      this.acceptRejectVerticalDiffBlock(false, filepath)
+    }
+
     existingHandler?.clear(false);
-    console.log("Justin: existingHandler after: ", existingHandler)
     
     await new Promise((resolve) => {
       setTimeout(resolve, 200);
     });
     const diffHandler = this.createVerticalPerLineDiffHandler(
       filepath,
-      existingHandler?.range.start.line ?? startLine,
-      existingHandler?.range.end.line ?? endLine,
+      startLine,
+      endLine,
       input,
     );
     if (!diffHandler) {
-      console.log("justin: no diff handler, returned")
       return;
     }
 
