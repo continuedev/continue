@@ -8,6 +8,7 @@ import {
   redDecorationType,
 } from "./decorations";
 import { VerticalDiffCodeLens } from "./manager";
+import { start } from "repl";
 
 export class VerticalPerLineDiffHandler {
   private editor: vscode.TextEditor;
@@ -337,6 +338,7 @@ export class VerticalPerLineDiffHandler {
     numGreen: number,
     numRed: number,
   ) {
+    console.log("AcceptRejectBlock. Startline: ", startLine, " NumGreen: ", numGreen, " NumRed: ", numRed)
     if (numGreen > 0) {
       // Delete the editor decoration
       this.greenDecorationManager.deleteRangeStartingAt(startLine + numRed);
@@ -374,6 +376,39 @@ export class VerticalPerLineDiffHandler {
         }) || [];
     this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
 
+    this.refreshCodeLens();
+  }
+
+  public updateLineDelta(filepath: string, startLine: number, lineDelta: number) {
+    console.log("updating diff")
+    // Retrieve the diff blocks for the given file
+    const blocks = this.editorToVerticalDiffCodeLens.get(filepath);
+    if (!blocks) {
+      return;
+    }
+
+    // Update the diff blocks based on the line delta
+    const updatedBlocks = blocks.map(block => {
+      // If the change occurs before the block, adjust the block's start line
+      console.log("startLine: ", startLine, " block.start: ", block.start)
+      if (startLine <= block.start) { 
+        block.start += lineDelta;
+      }
+      // If the change occurs within the block, adjust the number of lines
+      else if (startLine < block.start + block.numGreen) {
+        //ToDo: this may not be correct
+        block.numGreen += lineDelta
+        console.log("numGreen: ", block.numGreen, " numRed: ", block.numRed)
+      }
+      return block;
+    }).filter(block => block.numRed > 0 || block.numGreen > 0); // Remove blocks with no red or green lines
+    
+    console.log("before: ", blocks.length, " after: ", updatedBlocks.length)
+    // Update the map with the filtered blocks
+    this.editorToVerticalDiffCodeLens.set(filepath, updatedBlocks);
+
+    // Refresh the CodeLens display
+    console.log("refeshing code lens")
     this.refreshCodeLens();
   }
 }

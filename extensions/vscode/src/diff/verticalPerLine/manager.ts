@@ -19,7 +19,9 @@ export class VerticalPerLineDiffManager {
 
   filepathToCodeLens: Map<string, VerticalDiffCodeLens[]> = new Map();
 
-  constructor(private readonly configHandler: ConfigHandler) {}
+  constructor(private readonly configHandler: ConfigHandler) {
+    this.setupDocumentChangeListener();
+  }
 
   createVerticalPerLineDiffHandler(
     filepath: string,
@@ -77,6 +79,38 @@ export class VerticalPerLineDiffManager {
 
   getHandlerForFile(filepath: string) {
     return this.filepathToHandler.get(filepath);
+  }
+
+  //called by constructor
+  //Creates a listener for document changes
+  private setupDocumentChangeListener() {
+    console.log("setting up onDidChangeTextDocument listener")
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      // Check if there is an active handler for the affected file
+      const filepath = event.document.uri.fsPath;
+      const handler = this.getHandlerForFile(filepath);
+      if (handler) {
+        // If there is an active diff for that file, handle the document change
+        this.handleDocumentChange(event, handler);
+      }
+    });
+  }
+
+  private handleDocumentChange(
+    event: vscode.TextDocumentChangeEvent,
+    handler: VerticalPerLineDiffHandler
+  ) {
+    // Loop through each change in the event
+    console.log("Handling doc change")
+    event.contentChanges.forEach((change) => {
+      // Calculate the number of lines added or removed
+      const linesAdded = change.text.split('\n').length - 1;
+      const linesDeleted = change.range.end.line - change.range.start.line;
+      const lineDelta = linesAdded - linesDeleted;
+  
+      // Update the diff handler with the new line delta
+      handler.updateLineDelta(event.document.uri.fsPath, change.range.start.line, lineDelta);
+    });
   }
 
   clearForFilepath(filepath: string | undefined, accept: boolean) {
@@ -141,7 +175,11 @@ export class VerticalPerLineDiffManager {
   async streamEdit(input: string, modelTitle: string | undefined) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
+    console.log("justin: in streamEdit")
+
     const editor = vscode.window.activeTextEditor;
+    console.log("justin: editor: ", editor)
+
     if (!editor) {
       return;
     }
@@ -149,9 +187,14 @@ export class VerticalPerLineDiffManager {
     const filepath = editor.document.uri.fsPath;
     const startLine = editor.selection.start.line;
     const endLine = editor.selection.end.line;
-
+    
+    console.log("justin: start and end line: ", startLine, " | ", endLine)
+    
     const existingHandler = this.getHandlerForFile(filepath);
+    console.log("Justin: existingHandler before: ", existingHandler)
     existingHandler?.clear(false);
+    console.log("Justin: existingHandler after: ", existingHandler)
+    
     await new Promise((resolve) => {
       setTimeout(resolve, 200);
     });
@@ -162,6 +205,7 @@ export class VerticalPerLineDiffManager {
       input,
     );
     if (!diffHandler) {
+      console.log("justin: no diff handler, returned")
       return;
     }
 
