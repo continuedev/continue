@@ -150,6 +150,18 @@
         "group": "Continue"
       },
       {
+        "command": "continue.openConfigJson",
+        "category": "Continue",
+        "title": "Open config.json",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.toggleTabAutocompleteEnabled",
+        "category": "Continue",
+        "title": "Toggle Autocomplete Enabled",
+        "group": "Continue"
+      },
+      {
         "command": "continue.shareSession",
         "category": "Continue",
         "title": "Share Session",
@@ -263,6 +275,16 @@
         "mac": "cmd+k cmd+m",
         "key": "ctrl+k ctrl+m",
         "when": "!terminalFocus"
+      },
+      {
+        "command": "continue.toggleTabAutocompleteEnabled",
+        "mac": "cmd+k cmd+a",
+        "key": "ctrl+k ctrl+a"
+      },
+      {
+        "command": "continue.openConfigJson",
+        "mac": "cmd+k cmd+c",
+        "key": "ctrl+k ctrl+c"
       }
     ],
     "submenus": [
