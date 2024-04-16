@@ -184,14 +184,6 @@ export class VerticalPerLineDiffManager {
 
     let selectedRange = editor.selection;
 
-    // Only if the selection is empty, use exact prefix/suffix instead of by line
-    // if (!selectedRange.isEmpty) {
-    //   selectedRange = new vscode.Range(
-    //     editor.selection.start.with(undefined, 0),
-    //     editor.selection.end.with(undefined, Number.MAX_SAFE_INTEGER),
-    //   );
-    // }
-
     const llm = await this.configHandler.llmFromTitle(modelTitle);
     const rangeContent = editor.document.getText(selectedRange);
     const prefix = pruneLinesFromTop(
