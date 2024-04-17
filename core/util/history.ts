@@ -1,18 +1,26 @@
 import * as fs from "fs";
 import { PersistedSessionInfo, SessionInfo } from "..";
+import { ListHistoryOptions } from "../protocol";
 import { getSessionFilePath, getSessionsListPath } from "./paths";
 
 class HistoryManager {
-  list(): SessionInfo[] {
+  list(options: ListHistoryOptions): SessionInfo[] {
     const filepath = getSessionsListPath();
     if (!fs.existsSync(filepath)) {
       return [];
     }
     const content = fs.readFileSync(filepath, "utf8");
-    const sessions = JSON.parse(content).filter((session: any) => {
+    let sessions = JSON.parse(content).filter((session: any) => {
       // Filter out old format
       return typeof session.session_id !== "string";
     });
+
+    // Apply limit and offset
+    if (options.limit) {
+      const offset = options.offset || 0;
+      sessions = sessions.slice(offset, offset + options.limit);
+    }
+
     return sessions;
   }
 

@@ -234,7 +234,7 @@ export class VsCodeWebviewProtocol {
     });
     // History
     this.on("history/list", (msg) => {
-      return historyManager.list();
+      return historyManager.list(msg.data);
     });
     this.on("history/save", (msg) => {
       historyManager.save(msg.data);

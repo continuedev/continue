@@ -1,4 +1,5 @@
 import {
+  ArrowLeftIcon,
   ChatBubbleOvalLeftIcon,
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
@@ -102,7 +103,7 @@ const NewSessionButton = styled.div`
   font-size: 12px;
 
   border-radius: ${defaultBorderRadius};
-  padding: 2px 8px;
+  padding: 2px 6px;
   color: ${lightGray};
 
   &:hover {
@@ -327,7 +328,8 @@ function GUI(props: GUIProps) {
     ],
   );
 
-  const { saveSession } = useHistory(dispatch);
+  const { saveSession, getLastSessionId, loadLastSession } =
+    useHistory(dispatch);
 
   useWebviewListener(
     "newSession",
@@ -467,16 +469,17 @@ function GUI(props: GUIProps) {
             >
               New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
             </NewSessionButton>
-          ) : (
+          ) : getLastSessionId() ? (
             <NewSessionButton
-              onClick={() => {
-                saveSession();
+              onClick={async () => {
+                loadLastSession();
               }}
-              className="mr-auto"
+              className="mr-auto flex items-center gap-1"
             >
-              Previous Session
+              <ArrowLeftIcon width="11px" height="11px" />
+              Last Session
             </NewSessionButton>
-          )}
+          ) : null}
         </div>
       </TopGuiDiv>
       {active && (
