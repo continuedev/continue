@@ -55,42 +55,18 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
 const MODEL_SUPPORTS_IMAGES: string[] = [
   "llava",
   "gpt-4-turbo",
-  "gpt-4o",
   "gpt-4-vision",
   "claude-3",
   "gemini-ultra",
   "gemini-1.5-pro",
-  "gemini-1.5-flash",
-  "sonnet",
-  "opus",
-  "haiku",
 ];
 
-function modelSupportsImages(
-  provider: ModelProvider,
-  model: string,
-  title: string | undefined,
-): boolean {
+function modelSupportsImages(provider: ModelProvider, model: string): boolean {
   if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
     return false;
   }
 
-  if (model.includes("llava")) {
-    return true;
-  }
-
-  if (model.includes("claude-3")) {
-    return true;
-  }
-
-  if (model.startsWith("gpt-4-turbo") || model.startsWith("gpt-4-vision")) {
-    return true;
-  }
-
-  if (
-    (model === "gemini-ultra" || model === "gemini-1.5-pro-latest") &&
-    (provider === "gemini" || provider === "free-trial")
-  ) {
+  if (MODEL_SUPPORTS_IMAGES.includes(model)) {
     return true;
   }
 
