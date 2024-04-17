@@ -254,7 +254,7 @@ const commandsMap: (
 				"getDefaultModelTitle",
 				undefined,
 			);
-			await verticalDiffManager.streamEdit(text, modelName);
+			await verticalDiffManager.streamEdit(text, modelName, previousInput);
 		} else {
 			// Pick context first
 			const selectedProviders = await vscode.window.showQuickPick(
