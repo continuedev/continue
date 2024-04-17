@@ -1,4 +1,4 @@
-import { createContext } from "react";
+import { createContext, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -16,6 +16,7 @@ import { ContextSubmenuItem } from "core";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
 import GUI from "./pages/gui";
+import LocalOnboarding from "./pages/localOnboarding";
 import ExistingUserOnboarding from "./pages/onboarding/existingUserOnboarding";
 import Onboarding from "./pages/onboarding/onboarding";
 import Stats from "./pages/stats";
@@ -75,6 +76,10 @@ const router = createMemoryRouter([
         element: <ExistingUserOnboarding />,
       },
       {
+        path: "/localOnboarding",
+        element: <LocalOnboarding />,
+      },
+      {
         path: "/migration",
         element: <MigrationPage />,
       },
@@ -98,9 +103,9 @@ export const VscThemeContext = createContext<any>(undefined);
 function App() {
   const dispatch = useDispatch();
 
-  // useEffect(() => {
-  //   localStorage.clear();
-  // });
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
 
   useSetup(dispatch);
 

@@ -198,7 +198,7 @@ const commandsMap: (
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   },
-  "continue.quickEdit": async () => {
+  "continue.quickEdit": async (prompt?: string) => {
     const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
 
     const editor = vscode.window.activeTextEditor;
@@ -235,6 +235,7 @@ const commandsMap: (
         : `Describe how to edit the highlighted code${addContextMsg}`,
       title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
       prompt: `[${defaultModelTitle}]`,
+      value: prompt,
     };
     if (previousInput) {
       textInputOptions.value = previousInput + ", ";

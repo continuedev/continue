@@ -139,7 +139,12 @@ function Onboarding() {
             });
             setLocalStorage("onboardingComplete", true);
             postToIde("index/forceReIndex", undefined);
-            navigate("/");
+
+            if (selected === 0) {
+              navigate("/localOnboarding");
+            } else {
+              navigate("/");
+            }
           }}
         >
           Continue
