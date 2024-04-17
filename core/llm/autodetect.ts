@@ -50,27 +50,21 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "bedrock",
 ];
 
+const MODEL_SUPPORTS_IMAGES: string[] = [
+  "llava",
+  "gpt-4-turbo",
+  "gpt-4-vision",
+  "claude-3",
+  "gemini-ultra",
+  "gemini-1.5-pro",
+];
+
 function modelSupportsImages(provider: ModelProvider, model: string): boolean {
   if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
     return false;
   }
 
-  if (model.includes("llava")) {
-    return true;
-  }
-
-  if (model.includes("claude-3")) {
-    return true;
-  }
-
-  if (model.startsWith("gpt-4-turbo") || model.startsWith("gpt-4-vision")) {
-    return true;
-  }
-
-  if (
-    (model === "gemini-ultra" || model === "gemini-1.5-pro-latest") &&
-    (provider === "gemini" || provider === "free-trial")
-  ) {
+  if (MODEL_SUPPORTS_IMAGES.includes(model)) {
     return true;
   }
 
