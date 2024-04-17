@@ -7,8 +7,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
+  CustomScrollbarDiv,
   defaultBorderRadius,
-  vscBackground,
   vscForeground,
   vscInputBackground,
 } from ".";
@@ -32,26 +32,9 @@ import ModelSelect from "./modelSelection/ModelSelect";
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
 
-const LayoutTopDiv = styled.div`
+const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
   border-radius: ${defaultBorderRadius};
-  scrollbar-base-color: transparent;
-  scrollbar-width: thin;
-  background-color: ${vscBackground};
-
-  & * {
-    ::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    ::-webkit-scrollbar:horizontal {
-      height: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      border-radius: 2px;
-    }
-  }
 `;
 
 const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
