@@ -111,11 +111,7 @@ export class VsCodeWebviewProtocol {
             JSON.stringify({ msg }, null, 2),
           );
 
-<<<<<<< HEAD
           let message = e.message;
-=======
-          let message = `Kindo error: ${e.message}`;
->>>>>>> c1298636 (me)
           if (e.cause) {
             if (e.cause.name === "ConnectTimeoutError") {
               message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in config.json by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://continue.dev/docs/reference/config`;
@@ -580,8 +576,8 @@ export class VsCodeWebviewProtocol {
         mode === "local"
           ? setupLocalMode
           : mode === "optimized"
-          ? setupOptimizedMode
-          : setupOptimizedExistingUserMode,
+            ? setupOptimizedMode
+            : setupOptimizedExistingUserMode,
       );
     });
 

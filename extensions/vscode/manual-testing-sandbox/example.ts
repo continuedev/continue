@@ -11,12 +11,8 @@ function fib(n, mem = {}) {
 }
 
 // Using repeat function to repeat "a" 5 times
-let d = repeat(5, "a");
-console.log(d);
-
+console.log(repeat(5, "a"));
 // Using factorial function to calculate factorial of 3
 console.log(factorial(3));
 // define 2 vectors and get a dot product
-let v1 = new Vector2D(3, 4);
-let v2 = new Vector2D(-2, 5);
-console.log('dot product:', v1.dot(v2));
+const v1 = new Vector2D(4, 2);

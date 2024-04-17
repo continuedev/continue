@@ -634,7 +634,8 @@
               "model": {
                 "enum": [
                   "chat-bison-001",
-                  "gemini-pro"
+                  "gemini-pro",
+                  "gemini-1.5-pro-latest"
                 ]
               }
             }
@@ -1039,6 +1040,7 @@
                       "claude-2.1",
                       "chat-bison-001",
                       "gemini-pro",
+                      "gemini-1.5-pro-latest",
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",

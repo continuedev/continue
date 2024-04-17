@@ -194,7 +194,6 @@ const commandsMap: (
       : "";
     const textInputOptions: vscode.InputBoxOptions = {
       placeHolder: selectionEmpty
-<<<<<<< HEAD
         ? `Type instructions to generate code${addContextMsg}`
         : `Describe how to edit the highlighted code${addContextMsg}`,
       title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
@@ -209,12 +208,6 @@ const commandsMap: (
     }
 
     let text = await vscode.window.showInputBox(textInputOptions);
-=======
-        ? "Describe the code you want to generate (or press enter to add context first)"
-        : "Describe how to edit the highlighted code (or press enter to add context first)",
-      title: "Kindo Quick Edit",
-    });
->>>>>>> 039272f7 (my changes)
 
     if (text === undefined) {
       return;
@@ -236,16 +229,7 @@ const commandsMap: (
         },
       );
 
-<<<<<<< HEAD
       let text = await vscode.window.showInputBox(textInputOptions);
-=======
-      let text = await vscode.window.showInputBox({
-        placeHolder: selectionEmpty
-          ? "Describe the code you want to generate (or press enter to add context first)"
-          : "Describe how to edit the highlighted code (or press enter to add context first)",
-        title: "Kindo Quick Edit",
-      });
->>>>>>> 039272f7 (my changes)
       if (text) {
         const llm = await configHandler.llmFromTitle();
         const config = await configHandler.loadConfig();
@@ -285,7 +269,7 @@ const commandsMap: (
     await verticalDiffManager.streamEdit(
       (await configHandler.loadConfig()).experimental?.contextMenuPrompts
         ?.comment ||
-        "Write comments for this code. Do not change anything about the code itself.",
+      "Write comments for this code. Do not change anything about the code itself.",
       await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
     );
   },
@@ -293,7 +277,7 @@ const commandsMap: (
     await verticalDiffManager.streamEdit(
       (await configHandler.loadConfig()).experimental?.contextMenuPrompts
         ?.docstring ||
-        "Write a docstring for this code. Do not change anything about the code itself.",
+      "Write a docstring for this code. Do not change anything about the code itself.",
       await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
     );
   },
@@ -315,7 +299,7 @@ const commandsMap: (
     await verticalDiffManager.streamEdit(
       (await configHandler.loadConfig()).experimental?.contextMenuPrompts
         ?.fixGrammar ||
-        "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
+      "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
       await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
     );
   },
