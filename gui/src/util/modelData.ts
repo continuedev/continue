@@ -644,18 +644,23 @@ const AUTODETECT: ModelPackage = {
   providerOptions: [],
 };
 
-export const MODEL_INFO: ModelPackage[] = [
+export const MODEL_INFO: (ModelPackage | string)[] = [
+  "OpenAI",
   gpt4turbo,
   gpt4,
   gpt35turbo,
+  "Anthropic",
   claude3Opus,
   claude3Sonnet,
   claude3Haiku,
+  claude2,
+  "Cohere",
   commandR,
   commandRPlus,
+  "Gemini",
   gemini15Pro,
   geminiPro,
-  claude2,
+  "Open Source",
   deepseek,
   mistral,
   codellama70bTrial,
