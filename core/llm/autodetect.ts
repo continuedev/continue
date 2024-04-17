@@ -63,7 +63,7 @@ function modelSupportsImages(provider: ModelProvider, model: string): boolean {
     return true;
   }
 
-  if (["gpt-4-vision-preview", "gpt-4-turbo"].includes(model)) {
+  if (model.startsWith("gpt-4-turbo") || model.startsWith("gpt-4-vision")) {
     return true;
   }
 
