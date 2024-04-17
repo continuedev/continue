@@ -144,7 +144,7 @@ export class VerticalPerLineDiffManager {
     }
   }
 
-  async streamEdit(input: string, modelTitle: string | undefined, previousInput?: string) {
+  async streamEdit(input: string, modelTitle: string | undefined, quickEdit?: string) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
     const editor = vscode.window.activeTextEditor;
@@ -160,10 +160,10 @@ export class VerticalPerLineDiffManager {
 
     //initialize start/end line to existing handler if it exists and should reuse previousInput,
     // otherwise, use the editor selection
-    const startLine = (previousInput && existingHandler) ? existingHandler.range.start.line : editor.selection.start.line
-    const endLine = (previousInput && existingHandler) ? existingHandler.range.end.line : editor.selection.end.line
+    const startLine = (quickEdit && existingHandler) ? existingHandler.range.start.line : editor.selection.start.line
+    const endLine = (quickEdit && existingHandler) ? existingHandler.range.end.line : editor.selection.end.line
 
-    if (existingHandler && !previousInput) { //If there is an existing handler and should not reuse block
+    if (existingHandler && !quickEdit) { //If there is an existing handler and should not reuse block
       //reject the existing diff
       console.log("New diff being created - rejecting previous diff in: ", filepath)
       this.acceptRejectVerticalDiffBlock(false, filepath)
