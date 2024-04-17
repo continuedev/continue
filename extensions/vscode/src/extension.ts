@@ -4,12 +4,14 @@
 
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
+import { IVsCodeExtensionAPI } from "./extension/api";
 import { getExtensionVersion } from "./util/util";
 
-async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
+async function dynamicImportAndActivate(context: vscode.ExtensionContext): Promise<IVsCodeExtensionAPI | null> {
   const { activateExtension } = await import("./activation/activate");
   try {
-    await activateExtension(context);
+    const instance = await activateExtension(context);
+    return { instance };
   } catch (e) {
     console.log("Error activating extension: ", e);
     vscode.window
@@ -26,11 +28,12 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
           vscode.commands.executeCommand("workbench.action.reloadWindow");
         }
       });
+    return null;
   }
 }
 
-export function activate(context: vscode.ExtensionContext) {
-  dynamicImportAndActivate(context);
+export async function activate(context: vscode.ExtensionContext): Promise<IVsCodeExtensionAPI | null> {
+  return dynamicImportAndActivate(context);
 }
 
 export function deactivate() {

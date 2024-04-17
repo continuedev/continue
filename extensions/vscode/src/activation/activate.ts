@@ -40,7 +40,7 @@ function showRefactorMigrationMessage(
   }
 }
 
-export async function activateExtension(context: vscode.ExtensionContext) {
+export async function activateExtension(context: vscode.ExtensionContext): Promise<VsCodeExtension> {
   // Add necessary files
   getTsConfigPath();
 
@@ -67,4 +67,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       extensionVersion: getExtensionVersion(),
     });
   }
+
+  return vscodeExtension;
 }
