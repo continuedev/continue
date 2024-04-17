@@ -467,7 +467,16 @@ function GUI(props: GUIProps) {
             >
               New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
             </NewSessionButton>
-          ) : null}
+          ) : (
+            <NewSessionButton
+              onClick={() => {
+                saveSession();
+              }}
+              className="mr-auto"
+            >
+              Previous Session
+            </NewSessionButton>
+          )}
         </div>
       </TopGuiDiv>
       {active && (
