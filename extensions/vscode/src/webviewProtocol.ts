@@ -335,6 +335,17 @@ export class VsCodeWebviewProtocol {
       this.configHandler.reloadConfig();
     });
 
+    this.on("llm/listModels", async (msg) => {
+      const model = await this.configHandler.llmFromTitle(msg.data.title);
+      try {
+        const models = await model.listModels();
+        return models;
+      } catch (e) {
+        console.warn("Error listing models", e);
+        return undefined;
+      }
+    });
+
     async function* llmStreamComplete(
       protocol: VsCodeWebviewProtocol,
       msg: Message<WebviewProtocol["llm/streamComplete"][0]>,

@@ -86,7 +86,11 @@ const DropdownPortalDiv = styled.div`
 
 // #endregion
 
-const HIDE_FOOTER_ON_PAGES = ["/onboarding", "/existingUserOnboarding"];
+const HIDE_FOOTER_ON_PAGES = [
+  "/onboarding",
+  "/existingUserOnboarding",
+  "/localOnboarding",
+];
 
 const Layout = () => {
   const navigate = useNavigate();

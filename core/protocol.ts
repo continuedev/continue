@@ -87,6 +87,7 @@ export type Protocol = {
     },
     string,
   ];
+  "llm/listModels": [{ title: string }, string[] | undefined];
   "llm/streamComplete": [
     {
       prompt: string;
