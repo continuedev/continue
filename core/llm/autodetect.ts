@@ -57,6 +57,9 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "claude-3",
   "gemini-ultra",
   "gemini-1.5-pro",
+  "sonnet",
+  "opus",
+  "haiku",
 ];
 
 function modelSupportsImages(provider: ModelProvider, model: string): boolean {
@@ -64,7 +67,7 @@ function modelSupportsImages(provider: ModelProvider, model: string): boolean {
     return false;
   }
 
-  if (MODEL_SUPPORTS_IMAGES.includes(model)) {
+  if (MODEL_SUPPORTS_IMAGES.includes(model.toLowerCase())) {
     return true;
   }
 
