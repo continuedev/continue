@@ -2,7 +2,6 @@ import { BaseLLM } from "..";
 import {
   ChatMessage,
   CompletionOptions,
-  CompletionsEndpointType,
   LLMOptions,
   ModelProvider,
 } from "../..";
@@ -39,12 +38,12 @@ const CHAT_ONLY_MODELS = [
 ];
 
 class OpenAI extends BaseLLM {
-  public forceCompletionsEndpointType: CompletionsEndpointType | undefined =
-    undefined;
+  public useLegacyCompletionsEndpoint = false;
 
   constructor(options: LLMOptions) {
     super(options);
-    this.forceCompletionsEndpointType = options.forceCompletionsEndpointType;
+    this.useLegacyCompletionsEndpoint =
+      options.useLegacyCompletionsEndpoint ?? false;
   }
 
   static providerName: ModelProvider = "openai";
@@ -137,18 +136,11 @@ class OpenAI extends BaseLLM {
     prompt: string,
     options: CompletionOptions,
   ): AsyncGenerator<string> {
-    const completionsEndpointType = this._completionsEndpointType(options);
-    if (completionsEndpointType === "/completions") {
-      for await (const update of this._legacystreamComplete(prompt, options)) {
-        yield update;
-      }
-    } else {
-      for await (const chunk of this._streamChat(
-        [{ role: "user", content: prompt }],
-        options,
-      )) {
-        yield stripImages(chunk.content);
-      }
+    for await (const chunk of this._streamChat(
+      [{ role: "user", content: prompt }],
+      options,
+    )) {
+      yield stripImages(chunk.content);
     }
   }
 
@@ -180,31 +172,17 @@ class OpenAI extends BaseLLM {
     }
   }
 
-  private _completionsEndpointType(
-    options: CompletionOptions,
-  ): CompletionsEndpointType {
-    // If this is set, the user's choice overrides whatever other logic we may have
-    if (this.forceCompletionsEndpointType) {
-      return this.forceCompletionsEndpointType;
-    }
-
-    // Distinguish between models that require one endpoint or the other,
-    // check for providers that don't support the legacy /completions,
-    // and allow `"raw": true` to be used to call /completions
-    const shouldUseRawCompletions =
-      !CHAT_ONLY_MODELS.includes(options.model) &&
-      this.supportsCompletions() &&
-      (NON_CHAT_MODELS.includes(options.model) || options.raw);
-
-    return shouldUseRawCompletions ? "/completions" : "/chat/completions";
-  }
-
   protected async *_streamChat(
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    // Decision point for /completions vs. /chat/completions
-    if (this._completionsEndpointType(options) === "/completions") {
+    if (
+      !CHAT_ONLY_MODELS.includes(options.model) &&
+      this.supportsCompletions() &&
+      (NON_CHAT_MODELS.includes(options.model) ||
+        this.useLegacyCompletionsEndpoint ||
+        options.raw)
+    ) {
       for await (const content of this._legacystreamComplete(
         stripImages(messages[messages.length - 1]?.content || ""),
         options,
