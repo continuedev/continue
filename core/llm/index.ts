@@ -52,7 +52,8 @@ export abstract class BaseLLM implements ILLM {
     if (this.providerName === "openai") {
       if (
         this.apiBase?.includes("api.groq.com") ||
-        this.apiBase?.includes(":1337")
+        this.apiBase?.includes(":1337") ||
+        this._llmOptions.useLegacyCompletionsEndpoint?.valueOf() === false
       ) {
         // Jan + Groq don't support completions : (
         return false;
