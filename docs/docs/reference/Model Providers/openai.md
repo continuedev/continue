@@ -52,4 +52,10 @@ If you are [using an OpenAI compatible server / API](../../model-setup/select-pr
 }
 ```
 
+To force usage of `chat/completions` instead of `completions` endpoint you can set
+
+```json
+"useLegacyCompletionsEndpoint": false
+```
+
 [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/OpenAI.ts)
