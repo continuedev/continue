@@ -133,16 +133,18 @@ function Onboarding() {
           }
           disabled={selected < 0}
           onClick={() => {
-            postToIde("showTutorial", undefined);
             postToIde("completeOnboarding", {
               mode: ["local", "optimized", "custom"][selected] as any,
             });
             setLocalStorage("onboardingComplete", true);
-            postToIde("index/forceReIndex", undefined);
 
             if (selected === 0) {
               navigate("/localOnboarding");
             } else {
+              // Only needed when we switch from the default (local) embeddings provider
+              postToIde("index/forceReIndex", undefined);
+              // Don't show the tutorial above yet because there's another step to complete at /localOnboarding
+              postToIde("showTutorial", undefined);
               navigate("/");
             }
           }}

@@ -16,13 +16,19 @@ export class ContinueCompletionProvider
   implements vscode.InlineCompletionItemProvider
 {
   private onError(e: any) {
-    vscode.window.showErrorMessage(e.message, "Documentation").then((val) => {
+    const options = ["Documentation"];
+    if (e.message.includes("https://ollama.ai")) {
+      options.push("Download Ollama");
+    }
+    vscode.window.showErrorMessage(e.message, ...options).then((val) => {
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
-            "https://continue.dev/docs/walkthroughs/tab-autocomplete"
-          )
+            "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+          ),
         );
+      } else if (val === "Download Ollama") {
+        vscode.env.openExternal(vscode.Uri.parse("https://ollama.ai"));
       }
     });
   }
@@ -32,14 +38,14 @@ export class ContinueCompletionProvider
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
-    private readonly tabAutocompleteModel: TabAutocompleteModel
+    private readonly tabAutocompleteModel: TabAutocompleteModel,
   ) {
     this.completionProvider = new CompletionProvider(
       this.configHandler,
       this.ide,
       this.tabAutocompleteModel.get.bind(this.tabAutocompleteModel),
       this.onError.bind(this),
-      getDefinitionsFromLsp
+      getDefinitionsFromLsp,
     );
   }
 
@@ -47,7 +53,7 @@ export class ContinueCompletionProvider
     document: vscode.TextDocument,
     position: vscode.Position,
     context: vscode.InlineCompletionContext,
-    token: vscode.CancellationToken
+    token: vscode.CancellationToken,
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
     const enableTabAutocomplete =
@@ -75,14 +81,14 @@ export class ContinueCompletionProvider
         pos: { line: position.line, character: position.character },
         recentlyEditedFiles: [],
         recentlyEditedRanges: [],
-        clipboardText: clipboardText
+        clipboardText: clipboardText,
       };
 
       setupStatusBar(true, true);
       const outcome =
         await this.completionProvider.provideInlineCompletionItems(
           input,
-          signal
+          signal,
         );
 
       if (!outcome || !outcome.completion) {
@@ -107,13 +113,13 @@ export class ContinueCompletionProvider
           outcome.completion,
           new vscode.Range(
             position,
-            position.translate(0, outcome.completion.length)
+            position.translate(0, outcome.completion.length),
           ),
           {
             title: "Log Autocomplete Outcome",
             command: "continue.logAutocompleteOutcome",
             arguments: [outcome, logRejectionTimeout],
-          }
+          },
         ),
       ];
     } finally {
