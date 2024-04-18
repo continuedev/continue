@@ -4,7 +4,6 @@ import { IDE, ILLM, Position, TabAutocompleteOptions } from "..";
 import { RangeInFileWithContents } from "../commands/util";
 import { ConfigHandler } from "../config/handler";
 import { streamLines } from "../diff/util";
-import OpenAI from "../llm/llms/OpenAI";
 import { getBasename } from "../util";
 import { logDevData } from "../util/devdata";
 import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters";
@@ -115,12 +114,7 @@ export async function getTabCompletion(
   }
 
   // Model
-  if (llm instanceof OpenAI) {
-    llm.useLegacyCompletionsEndpoint = true;
-  } else if (
-    llm.providerName === "free-trial" &&
-    llm.model !== "starcoder-7b"
-  ) {
+  if (llm.providerName === "free-trial" && llm.model !== "starcoder-7b") {
     throw new Error(
       "The only free trial model supported for tab-autocomplete is starcoder-7b.",
     );

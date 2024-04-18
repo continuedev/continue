@@ -351,6 +351,11 @@
               },
               "apiVersion": {
                 "type": "string"
+              },
+              "forceCompletionsEndpointType": {
+                "enum": ["/completions", "/chat/completions"],
+                "title": "Force Completions Endpoint Type",
+                "markdownDescription": "Use this property only if your OpenAI-compatible API requires you to use either /completions or /chat/completions (see [this issue](https://github.com/continuedev/continue/issues/1132) for an example). In the majority of cases this can be left undefined, and Continue will automatically call the appropriate endpoint."
               }
             }
           }
@@ -808,23 +813,6 @@
           },
           "then": {
             "required": ["engine", "apiVersion", "apiBase"]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["openai"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "useLegacyCompletionsEndpoint": {
-                "type": "boolean"
-              }
-            }
           }
         },
         {

@@ -291,8 +291,6 @@ declare global {
     apiKey?: string;
     apiBase?: string;
   
-    useLegacyCompletionsEndpoint?: boolean;
-  
     // Azure options
     engine?: string;
     apiVersion?: string;
