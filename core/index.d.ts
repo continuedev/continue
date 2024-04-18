@@ -288,9 +288,6 @@ export interface LLMFullCompletionOptions extends BaseCompletionOptions {
 
   model?: string;
 }
-
-export type CompletionsEndpointType = "/completions" | "/chat/completions";
-
 export interface LLMOptions {
   model: string;
 
@@ -309,7 +306,7 @@ export interface LLMOptions {
   aiGatewaySlug?: string;
   apiBase?: string;
 
-  forceCompletionsEndpointType?: CompletionsEndpointType;
+  useLegacyCompletionsEndpoint?: boolean;
 
   // Azure options
   engine?: string;
@@ -597,8 +594,8 @@ export type ModelName =
   | "claude-3-haiku-20240307"
   | "claude-2.1"
   // Cohere
-  | "command-r"
-  | "command-r-plus"
+  |"command-r"
+  |"command-r-plus"
   // Gemini
   | "gemini-pro"
   | "gemini-1.5-pro-latest"
@@ -673,7 +670,6 @@ export interface ModelDescription {
   systemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
-  forceCompletionsEndpointType?: CompletionsEndpointType;
 }
 
 export type EmbeddingsProviderName =
