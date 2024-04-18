@@ -10,6 +10,12 @@ npm install
 npm link
 popd
 
+# https://github.com/continuedev/continue/issues/1100#issuecomment-2062447808
+# temporary workaround for the dependency between gui and extension
+pushd extensions/vscode
+npm link @continuedev/core
+popd
+
 echo "Installing GUI extension dependencies..."
 pushd gui
 npm install
