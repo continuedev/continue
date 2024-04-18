@@ -325,9 +325,14 @@ export const appear = keyframes`
     }
 `;
 
-export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
-  background-color: ${({ inverted }) =>
-    inverted ? vscForeground : "transparent"};
+export const HeaderButton = styled.button<{
+  inverted: boolean | undefined;
+  backgroundColor?: string;
+  hoverBackgroundColor?: string;
+}>`
+  background-color: ${({ inverted, backgroundColor }) => {
+    return backgroundColor ?? (inverted ? vscForeground : "transparent");
+  }};
   color: ${({ inverted }) => (inverted ? vscBackground : vscForeground)};
 
   border: none;
@@ -340,9 +345,9 @@ export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
   }
 
   &:hover {
-    background-color: ${({ inverted }) =>
+    background-color: ${({ inverted, hoverBackgroundColor }) =>
       typeof inverted === "undefined" || inverted
-        ? vscInputBackground
+        ? hoverBackgroundColor ?? vscInputBackground
         : "transparent"};
   }
   display: flex;
