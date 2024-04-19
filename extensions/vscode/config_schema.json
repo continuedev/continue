@@ -1207,7 +1207,9 @@
           "if": {
             "properties": {
               "name": {
-                "enum": ["share"]
+                "enum": [
+                  "share"
+                ]
               }
             }
           },
