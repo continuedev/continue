@@ -41,7 +41,7 @@ const val DEFAULT_CONFIG = """
     },
     {
       "name": "share",
-      "description": "Download and share this session",
+      "description": "Export the current chat session to markdown",
       "step": "ShareSessionStep"
     },
     {

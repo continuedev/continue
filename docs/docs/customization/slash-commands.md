@@ -43,7 +43,8 @@ Type "/share" to generate a shareable markdown transcript of your current chat h
 ```json
 {
   "name": "share",
-  "description": "Download and share this session"
+  "description": "Export the current chat session to markdown",
+  "params": { "ouputDir": "Directory in which to export this session" }
 }
 ```
 
