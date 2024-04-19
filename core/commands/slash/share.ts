@@ -23,7 +23,7 @@ function asBasicISOString(date: Date): string {
 }
 
 function reformatCodeBlocks(msgText: string): string {
-  const codeBlockRegex = /```(.*?\.(\w+)\s*.*)\n/g;
+  const codeBlockRegex = /```((.*?\.(\w+))\s*.*)\n/g;
 
   return msgText.replace(codeBlockRegex,
     (match, metadata, filename, extension) => {
