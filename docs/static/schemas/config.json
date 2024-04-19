@@ -1823,8 +1823,11 @@
               "description": "Defaults to true. If set to false, Continue will not attempt to include snippets from other files."
             },
             "disableInFiles": {
-              "type": "boolean",
-              "description": "A list of files / glob patterns in which to disable tab autocomplete. For example, *.csv if you'd like to disable autocomplete in .csv files."
+              "description": "A list of files / glob patterns in which to disable tab autocomplete. For example, *.csv if you'd like to disable autocomplete in .csv files.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "required": []
