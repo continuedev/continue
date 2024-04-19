@@ -62,12 +62,21 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "haiku",
 ];
 
-function modelSupportsImages(provider: ModelProvider, model: string): boolean {
+function modelSupportsImages(
+  provider: ModelProvider,
+  model: string,
+  title: string | undefined,
+): boolean {
   if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
     return false;
   }
 
-  if (MODEL_SUPPORTS_IMAGES.includes(model.toLowerCase())) {
+  const lower = model.toLowerCase();
+  if (
+    MODEL_SUPPORTS_IMAGES.some(
+      (modelName) => lower.includes(modelName) || title?.includes(modelName),
+    )
+  ) {
     return true;
   }
 
