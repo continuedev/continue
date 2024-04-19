@@ -29,24 +29,10 @@ const ShareSlashCommand: SlashCommand = {
 
     let content = `This is a session transcript from [Continue](https://continue.dev) on ${now.toLocaleString()}.`;
 
-    let content = `### [Continue](https://continue.dev) session transcript\n Exported: ${now.toLocaleString()}`;
-
-    // As currently implemented, the /share command is by definition the last
-    // message in the chat history, this will omit it
-    for (const msg of history.slice(0, history.length - 1)) {
-      let msgText = msg.content;
-      msgText = stripImages(msg.content);
-
-      if (msg.role === "user" && msgText.search("```") > -1) {
-        msgText = reformatCodeBlocks(msgText);
-      }
-
-      // format messages as blockquotes
-      msgText = msgText.replace(/^/gm, "> ");
-
-      content += `\n\n#### ${
-        msg.role === "user" ? "_User_" : "_Assistant_"
-      }\n\n${msgText}`;
+    for (const msg of history) {
+      content += `\n\n## ${
+        msg.role === "user" ? "User" : "Assistant"
+      }\n\n${stripImages(msg.content)}`;
     }
 
     let outputDir: string = params?.outputDir;
