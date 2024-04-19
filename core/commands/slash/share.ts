@@ -2,6 +2,7 @@ import path from "path";
 import * as fs from "fs";
 import { homedir } from "os";
 import { SlashCommand } from "../..";
+import { languageForFilepath } from "../../autocomplete/constructPrompt";
 import { stripImages } from "../../llm/countTokens";
 
 // If useful elsewhere, helper funcs should move to core/util/index.ts or similar
@@ -21,6 +22,16 @@ function asBasicISOString(date: Date): string {
   return isoString.replace(/[-:]|(\.\d+Z)/g, "");
 }
 
+function reformatCodeBlocks(msgText: string): string {
+  const codeBlockRegex = /```(.*?\.(\w+)\s*.*)\n/g;
+
+  return msgText.replace(codeBlockRegex, (match, metadata, extension) => {
+    const filename = metadata.split(" ")[0];
+    const lang = languageForFilepath(filename);
+    return `\`\`\`${extension}\n${lang.comment} ${metadata}\n`;
+  });
+}
+
 const ShareSlashCommand: SlashCommand = {
   name: "share",
   description: "Export the current chat session to markdown",
@@ -30,9 +41,17 @@ const ShareSlashCommand: SlashCommand = {
     let content = `This is a session transcript from [Continue](https://continue.dev) on ${now.toLocaleString()}.`;
 
     for (const msg of history) {
+      let msgText = msg.content;
+      msgText = stripImages(msg.content);
+
+      // if (msg.role === "user" && msgText.search("```") !== -1) {
+      if (msg.role === "user" && msgText.search("```") > -1) {
+        msgText = reformatCodeBlocks(msgText);
+      }
+
       content += `\n\n## ${
         msg.role === "user" ? "User" : "Assistant"
-      }\n\n${stripImages(msg.content)}`;
+      }\n\n${msgText}`;
     }
 
     let outputDir: string = params?.outputDir;
