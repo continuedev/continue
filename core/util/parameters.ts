@@ -16,6 +16,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   useCache: true,
   onlyMyCode: true,
   useOtherFiles: false,
+  disableInFiles: undefined,
 };
 
 export const RETRIEVAL_PARAMS = {
