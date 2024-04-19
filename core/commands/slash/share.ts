@@ -25,11 +25,12 @@ function asBasicISOString(date: Date): string {
 function reformatCodeBlocks(msgText: string): string {
   const codeBlockRegex = /```(.*?\.(\w+)\s*.*)\n/g;
 
-  return msgText.replace(codeBlockRegex, (match, metadata, extension) => {
-    const filename = metadata.split(" ")[0];
-    const lang = languageForFilepath(filename);
-    return `\`\`\`${extension}\n${lang.comment} ${metadata}\n`;
-  });
+  return msgText.replace(codeBlockRegex,
+    (match, metadata, filename, extension) => {
+      const lang = languageForFilepath(filename);
+      return `\`\`\`${extension}\n${lang.comment} ${metadata}\n`;
+    },
+  );
 }
 
 const ShareSlashCommand: SlashCommand = {
