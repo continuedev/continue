@@ -334,10 +334,10 @@ function finalToBrowserConfig(
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
-    slashCommands: final.slashCommands?.map((m) => ({
-      name: m.name,
-      description: m.description,
-      options: m.params,
+    slashCommands: final.slashCommands?.map((s) => ({
+      name: s.name,
+      description: s.description,
+      params: s.params, //PZTODO: is this why params aren't referenced properly by slash commands?
     })),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
