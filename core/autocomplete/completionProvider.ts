@@ -1,4 +1,6 @@
 import Handlebars from "handlebars";
+import ignore from "ignore";
+import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { IDE, ILLM, Position, TabAutocompleteOptions } from "..";
 import { RangeInFileWithContents } from "../commands/util";
@@ -367,13 +369,6 @@ export class CompletionProvider {
     input: AutocompleteInput,
     token: AbortSignal | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
-    // Create abort signal if not given
-    if (!token) {
-      const controller = new AbortController();
-      token = controller.signal;
-      this._abortControllers.set(input.completionId, controller);
-    }
-
     try {
       // Debounce
       const uuid = uuidv4();
@@ -384,6 +379,36 @@ export class CompletionProvider {
         ...DEFAULT_AUTOCOMPLETE_OPTS,
         ...config.tabAutocompleteOptions,
       };
+
+      // Check whether autocomplete is disabled for this file
+      if (options.disableInFiles) {
+        // Relative path needed for `ignore`
+        const workspaceDirs = await this.ide.getWorkspaceDirs();
+        let filepath = input.filepath;
+        for (const workspaceDir of workspaceDirs) {
+          if (filepath.startsWith(workspaceDir)) {
+            filepath = path.relative(workspaceDir, filepath);
+            break;
+          }
+        }
+
+        // Worst case we can check filetype glob patterns
+        if (filepath === input.filepath) {
+          filepath = getBasename(filepath);
+        }
+
+        const pattern = ignore().add(options.disableInFiles);
+        if (pattern.ignores(filepath)) {
+          return undefined;
+        }
+      }
+
+      // Create abort signal if not given
+      if (!token) {
+        const controller = new AbortController();
+        token = controller.signal;
+        this._abortControllers.set(input.completionId, controller);
+      }
 
       // Allow disabling autocomplete from config.json
       if (options.disable) {
