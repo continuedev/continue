@@ -22,8 +22,18 @@ const ShareSlashCommand: SlashCommand = {
     if (outputDir.startsWith("~")) {
       outputDir = outputDir.replace(/~/, homedir);
     }
+    const workspaceDirs = await ide.getWorkspaceDirs();
+    
+    // Although the most common situation is to have one directory open in a
+    // workspace it's also possible to have just a file open without an
+    // associated directory or to use multi-root workspaces in which multiple
+    // folders are included. We default to using the first item in the list, if
+    // it exists.
+    const workspaceDirectory = workspaceDirs?.[0] || "";
+    outputDir = outputDir.replace(/CURRENT_WORKSPACE/, workspaceDirectory);
+    const outPath = path.join(outputDir, `session.md`); //TODO: more flexible naming
 
-    const outPath = path.join(outputDir, `session.md`);
+
     await ide.writeFile(outPath, content);
     await ide.openFile(outPath);
 
