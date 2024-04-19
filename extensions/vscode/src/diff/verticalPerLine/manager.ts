@@ -107,6 +107,7 @@ export class VerticalPerLineDiffManager {
     accept: boolean,
     filepath?: string,
     index?: number,
+    all?:boolean
   ) {
     if (!filepath) {
       const activeEditor = vscode.window.activeTextEditor;
@@ -120,26 +121,38 @@ export class VerticalPerLineDiffManager {
       index = 0;
     }
 
-    let blocks = this.filepathToCodeLens.get(filepath);
-    const block = blocks?.[index];
-    if (!blocks || !block) {
-      return;
-    }
-
     const handler = this.getHandlerForFile(filepath);
     if (!handler) {
       return;
     }
 
-    // CodeLens object removed from editorToVerticalDiffCodeLens here
-    handler.acceptRejectBlock(
-      accept,
-      block.start,
-      block.numGreen,
-      block.numRed,
-    );
+    let blocks = this.filepathToCodeLens.get(filepath);
+    if (!blocks) {
+      return;
+    }
 
-    if (blocks.length === 1) {
+    let toHandle
+    //if all is specified, handle all blocks. Otherwise select specific one
+    if (!all) {
+      toHandle = blocks[index];
+      if (!toHandle){
+        return;
+      }
+    } else {
+      toHandle = blocks
+    }
+
+    for (const block of toHandle) {
+      // CodeLens object removed from editorToVerticalDiffCodeLens here
+      handler.acceptRejectBlock(
+        accept,
+        block.start,
+        block.numGreen,
+        block.numRed,
+      );
+    }
+
+    if (blocks.length === 1 || all) {
       this.clearForFilepath(filepath, true);
     }
   }
