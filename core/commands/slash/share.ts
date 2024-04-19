@@ -23,14 +23,15 @@ function asBasicISOString(date: Date): string {
 }
 
 function reformatCodeBlocks(msgText: string): string {
-  const codeBlockRegex = /```((.*?\.(\w+))\s*.*)\n/g;
-
-  return msgText.replace(codeBlockRegex,
+  const codeBlockFenceRegex = /```((.*?\.(\w+))\s*.*)\n/g;
+  msgText = msgText.replace(codeBlockFenceRegex,
     (match, metadata, filename, extension) => {
       const lang = languageForFilepath(filename);
       return `\`\`\`${extension}\n${lang.comment} ${metadata}\n`;
     },
   );
+  // Appease the markdown linter
+  return msgText.replace(/```\n```/g, '```\n\n```');
 }
 
 const ShareSlashCommand: SlashCommand = {
