@@ -31,7 +31,7 @@ const ShareSlashCommand: SlashCommand = {
 
     for (const msg of history) {
       content += `\n\n## ${
-        msg.role === "user" ? "User" : "Continue"
+        msg.role === "user" ? "User" : "Assistant"
       }\n\n${stripImages(msg.content)}`;
     }
 
