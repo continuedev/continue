@@ -1,4 +1,5 @@
 import path from "path";
+import * as fs from "fs";
 import { homedir } from "os";
 import { SlashCommand } from "../..";
 import { stripImages } from "../../llm/countTokens";
@@ -55,6 +56,9 @@ const ShareSlashCommand: SlashCommand = {
       const workspaceDirectory = workspaceDirs?.[0] || "";
       outputDir = outputDir.replace(/^./, workspaceDirectory);
     }
+
+    if (!fs.existsSync(outputDir)) {
+      fs.mkdirSync(outputDir, { recursive: true });
     }
 
     const dtString = asBasicISOString(getOffsetDatetime(now));
