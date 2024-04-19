@@ -18,7 +18,7 @@ function getOffsetDatetime(date: Date): Date {
 function asBasicISOString(date: Date): string {
   const isoString = date.toISOString();
 
-  return isoString.replace(/[-:]/g, "").replace(/\.\d+Z/, "");
+  return isoString.replace(/[-:]|(\.\d+Z)/g, "");
 }
 
 const ShareSlashCommand: SlashCommand = {
