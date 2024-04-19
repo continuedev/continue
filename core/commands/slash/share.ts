@@ -1,11 +1,12 @@
-import type { SlashCommand } from "../..";
+import path from "path";
+import { SlashCommand } from "../..";
 import { stripImages } from "../../llm/countTokens";
 
 const ShareSlashCommand: SlashCommand = {
   name: "share",
-  description: "Export the current chat session to markdown",
+  description: "Download and share this session",
   run: async function* ({ ide, history, params }) {
-    const now = new Date();
+    let content = `This is a session transcript from [Continue](https://continue.dev) on ${new Date().toLocaleString()}.`;
 
     let content = `### [Continue](https://continue.dev) session transcript\n Exported: ${now.toLocaleString()}`;
 
@@ -27,10 +28,14 @@ const ShareSlashCommand: SlashCommand = {
       }\n\n${msgText}`;
     }
 
-    let outputDir: string = params?.outputDir;
+    let outputDir = params?.outputDir;
     if (!outputDir) {
       outputDir = await ide.getContinueDir();
     }
+
+    const outPath = path.join(outputDir, `session.md`);
+    await ide.writeFile(outPath, content);
+    await ide.openFile(outPath);
 
     if (outputDir.startsWith("~")) {
       outputDir = outputDir.replace(/^~/, homedir);
