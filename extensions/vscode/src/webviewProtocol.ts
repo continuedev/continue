@@ -612,10 +612,16 @@ export class VsCodeWebviewProtocol {
     data: ReverseWebviewProtocol[T][0],
   ): Promise<ReverseWebviewProtocol[T][1]> {
     const messageId = uuidv4();
-    return new Promise((resolve) => {
-      if (!this.webview) {
-        resolve(undefined);
-        return;
+    return new Promise(async (resolve) => {
+      let i = 0;
+      while (!this.webview) {
+        if (i >= 10) {
+          resolve(undefined);
+          return;
+        } else {
+          await new Promise((res) => setTimeout(res, i >= 5 ? 1000 : 500));
+          i++;
+        }
       }
 
       this.send(messageType, data, messageId);

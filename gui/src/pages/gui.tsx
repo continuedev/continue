@@ -256,10 +256,10 @@ function GUI(props: GUIProps) {
           dispatch(
             setDialogMessage(
               <div className="text-center p-4">
-                👋 Thanks for using Continue. We are a beta product and love
-                working closely with our first users. If you're interested in
-                speaking, enter your name and email. We won't use this
-                information for anything other than reaching out.
+                👋 Thanks for using Continue. We are always trying to improve
+                and love hearing from users. If you're interested in speaking,
+                enter your name and email. We won't use this information for
+                anything other than reaching out.
                 <br />
                 <br />
                 <form
