@@ -51,10 +51,16 @@ const ShareSlashCommand: SlashCommand = {
     // folders are included. We default to using the first item in the list, if
     // it exists.
     const workspaceDirectory = workspaceDirs?.[0] || "";
-    outputDir = outputDir.replace(/CURRENT_WORKSPACE/, workspaceDirectory);
+    if (
+      outputDir.startsWith("./") ||
+      outputDir.startsWith(`.\\`) ||
+      outputDir === "."
+    ) {
+      outputDir = outputDir.replace(".", workspaceDirectory);
+    }
+
     const dtString = asBasicISOString(getOffsetDatetime(now));
-    const outPath = path.join(outputDir, `${dtString}_session.md`); //TODO: more flexible naming
-    //TODO: more flexible naming
+    const outPath = path.join(outputDir, `${dtString}_session.md`); //TODO: more flexible naming?
 
     await ide.writeFile(outPath, content);
     await ide.openFile(outPath);
