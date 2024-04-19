@@ -216,6 +216,16 @@ const configs: SiteIndexingConfig[] = [
     startUrl: "https://python.langchain.com/docs/get_started/introduction",
     rootUrl: "https://python.langchain.com/docs",
   },
+  {
+    title: "WooCommerce",
+    startUrl: "https://developer.woocommerce.com/docs/",
+    rootUrl: "https://developer.woocommerce.com/docs/",
+  },
+  {
+    title: "WordPress",
+    startUrl: "https://developer.wordpress.org/reference/",
+    rootUrl: "https://developer.wordpress.org/reference/",
+  },
 ];
 
 export default configs;
