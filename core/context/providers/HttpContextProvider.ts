@@ -4,6 +4,7 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
+import { fetchwithRequestOptions } from "../../util/fetchWithOptions";
 
 class HttpContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -28,18 +29,21 @@ class HttpContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const response = await fetch(this.options.url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: query || "",
-        fullInput: extras.fullInput,
-      }),
-    });
-
-    const json = await response.json();
+    const response = await fetchwithRequestOptions(
+      new URL(this.options.url),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: query || "",
+          fullInput: extras.fullInput,
+        }),
+      }
+    );
+    
+    const json: any = await response.json();
     return [
       {
         description: json.description || "HTTP Context Item",
