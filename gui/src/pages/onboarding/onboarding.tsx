@@ -42,11 +42,11 @@ function Onboarding() {
           <b>Embeddings:</b> Local sentence-transformers model
           <br />
           <br />
-          <b>Autocomplete:</b> Starcoder2 3b (manual setup with Ollama, LM
-          Studio, etc.)
+          <b>Autocomplete:</b> Starcoder2 3b (set up with Ollama, LM Studio,
+          etc.)
           <br />
           <br />
-          <b>Chat:</b> Manual setup with Ollama, LM Studio, etc.
+          <b>Chat:</b> Llama 3 with Ollama, LM Studio, etc.
         </p>
       )}
       <br></br>

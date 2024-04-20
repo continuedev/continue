@@ -4,7 +4,6 @@
 
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
-import { cleanSlate } from "./util/cleanSlate";
 import { getExtensionVersion } from "./util/util";
 
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
@@ -31,7 +30,6 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  cleanSlate(context);
   dynamicImportAndActivate(context);
 }
 

@@ -8,10 +8,6 @@
   ],
   "disableIndexing": true,
   "models": [
-    {
-      "title": "Ollama",
-      "provider": "ollama",
-      "model": "llama2-7b"
-    }
+
   ]
 }

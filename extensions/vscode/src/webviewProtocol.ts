@@ -336,8 +336,8 @@ export class VsCodeWebviewProtocol {
     });
 
     this.on("llm/listModels", async (msg) => {
-      const model = await this.configHandler.llmFromTitle(msg.data.title);
       try {
+        const model = await this.configHandler.llmFromTitle(msg.data.title);
         const models = await model.listModels();
         return models;
       } catch (e) {
@@ -616,6 +616,9 @@ export class VsCodeWebviewProtocol {
           msg.data.text,
         );
       });
+    });
+    this.on("copyText", async (msg) => {
+      await vscode.env.clipboard.writeText(msg.data.text);
     });
   }
 

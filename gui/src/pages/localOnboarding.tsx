@@ -44,6 +44,7 @@ function CheckMarkHeader(props: { children: string; complete: boolean }) {
           width="24px"
           height="24px"
           color="#0b0"
+          className="flex-none"
         ></CheckCircleIconSolid>
       ) : (
         <div
@@ -96,6 +97,7 @@ function RunInTerminalButton(props: { command: string }) {
             new WebviewIde().runCommand(props.command);
             setClicked(true);
             setTimeout(() => setClicked(false), 2000);
+            ideRequest("copyText", { text: props.command });
           }}
         >
           <pre>
@@ -135,6 +137,11 @@ function RunInTerminalButton(props: { command: string }) {
   );
 }
 
+// The "Ollama" title is assumed from core/config/onboarding.ts
+const assumedModelTitle = "Ollama";
+const recommendedChatModel = "llama3";
+const recommendedAutocompleteModel = "starcoder2:3b";
+
 function LocalOnboarding() {
   const navigate = useNavigate();
 
@@ -154,27 +161,41 @@ function LocalOnboarding() {
   );
 
   useEffect(() => {
-    if (ollamaModels?.some((model) => model.startsWith("llama3"))) {
+    if (ollamaModels?.some((model) => model.startsWith(recommendedChatModel))) {
       setStage2Done(true);
+
+      // Send an empty request to load the model
+      ideRequest("llm/complete", {
+        completionOptions: {},
+        prompt: "",
+        title: assumedModelTitle,
+      });
     }
   }, [ollamaModels]);
 
   useEffect(() => {
-    if (ollamaModels?.some((model) => model.startsWith("starcoder2:3b"))) {
+    if (
+      ollamaModels?.some((model) =>
+        model.startsWith(recommendedAutocompleteModel),
+      )
+    ) {
       setStage3Done(true);
     }
   }, [ollamaModels]);
 
   useEffect(() => {
-    const interval = setInterval(async () => {
-      // The "Ollama" title is assumed from core/config/onboarding.ts
-      const models = await ideRequest("llm/listModels", { title: "Ollama" });
+    const checkModels = async () => {
+      const models = await ideRequest("llm/listModels", {
+        title: assumedModelTitle,
+      });
       if (Array.isArray(models)) {
         setOllamaConnectionStatus("verified");
         setStage1Done(true);
         setOllamaModels(models);
       }
-    }, 1000);
+    };
+    checkModels();
+    const interval = setInterval(checkModels, 1000);
 
     return () => {
       clearInterval(interval);
@@ -189,7 +210,10 @@ function LocalOnboarding() {
       </CheckMarkHeader>
       {ollamaConnectionStatus === "verified" || (
         <>
-          <p>Click below to download Ollama from https://ollama.ai.</p>
+          <p>
+            Click below to download Ollama from https://ollama.ai. Once
+            downloaded, you only need to start the application.
+          </p>
           <div className="text-center">
             <a href="https://ollama.ai">
               <Button onClick={() => setOllamaConnectionStatus("downloading")}>
@@ -212,7 +236,9 @@ function LocalOnboarding() {
           We recommend using Llama 3, the latest open-source model trained by
           Meta.
           <br></br>
-          <RunInTerminalButton command="ollama run llama3"></RunInTerminalButton>
+          <RunInTerminalButton
+            command={`ollama run ${recommendedChatModel}`}
+          ></RunInTerminalButton>
         </>
       )}
       <br></br>
@@ -221,10 +247,12 @@ function LocalOnboarding() {
       </CheckMarkHeader>
       {stage1Done && (
         <>
-          We recommend using Llama 3, the latest open-source model trained by
-          Meta.
+          We recommend using Starcoder 2, a state-of-the-art 3b parameter
+          autocomplete model trained by Hugging Face.
           <br></br>
-          <RunInTerminalButton command="ollama run starcoder2:3b"></RunInTerminalButton>
+          <RunInTerminalButton
+            command={`ollama run ${recommendedAutocompleteModel}`}
+          ></RunInTerminalButton>
         </>
       )}
       {/* {ollamaModels?.length > 0 || (

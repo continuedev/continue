@@ -1,4 +1,4 @@
-import { createContext, useEffect } from "react";
+import { createContext } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -102,10 +102,6 @@ export const VscThemeContext = createContext<any>(undefined);
 
 function App() {
   const dispatch = useDispatch();
-
-  useEffect(() => {
-    localStorage.clear();
-  }, []);
 
   useSetup(dispatch);
 
