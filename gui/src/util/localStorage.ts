@@ -1,6 +1,7 @@
 type LocalStorageTypes = {
   onboardingComplete: boolean;
   mainTextEntryCounter: number;
+  lastSessionId: string | undefined;
 };
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(

@@ -234,7 +234,7 @@ export class VsCodeWebviewProtocol {
     });
     // History
     this.on("history/list", (msg) => {
-      return historyManager.list();
+      return historyManager.list(msg.data);
     });
     this.on("history/save", (msg) => {
       historyManager.save(msg.data);
@@ -333,6 +333,17 @@ export class VsCodeWebviewProtocol {
     this.on("config/addOpenAiKey", async (msg) => {
       addOpenAIKey(msg.data);
       this.configHandler.reloadConfig();
+    });
+
+    this.on("llm/listModels", async (msg) => {
+      try {
+        const model = await this.configHandler.llmFromTitle(msg.data.title);
+        const models = await model.listModels();
+        return models;
+      } catch (e) {
+        console.warn("Error listing models", e);
+        return undefined;
+      }
     });
 
     async function* llmStreamComplete(
@@ -579,6 +590,7 @@ export class VsCodeWebviewProtocol {
           ? setupOptimizedMode
           : setupOptimizedExistingUserMode,
       );
+      this.configHandler.reloadConfig();
     });
 
     this.on("openUrl", (msg) => {
@@ -604,6 +616,9 @@ export class VsCodeWebviewProtocol {
           msg.data.text,
         );
       });
+    });
+    this.on("copyText", async (msg) => {
+      await vscode.env.clipboard.writeText(msg.data.text);
     });
   }
 

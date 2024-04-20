@@ -10,7 +10,7 @@ function getSuggestion(
   items: (props: { query: string }) => Promise<ComboBoxItem[]>,
   enterSubmenu: (editor: Editor, providerId: string) => void = (editor) => {},
   onClose: () => void = () => {},
-  onOpen: () => void = () => {}
+  onOpen: () => void = () => {},
 ) {
   return {
     items,
@@ -82,19 +82,19 @@ export function getMentionSuggestion(
   getSubmenuContextItemsRef: MutableRefObject<
     (
       providerTitle: string | undefined,
-      query: string
+      query: string,
     ) => (ContextSubmenuItem & { providerTitle: string })[]
   >,
   enterSubmenu: (editor: Editor, providerId: string) => void,
   onClose: () => void,
   onOpen: () => void,
-  inSubmenu: MutableRefObject<string | undefined>
+  inSubmenu: MutableRefObject<string | undefined>,
 ) {
   const items = async ({ query }) => {
     if (inSubmenu.current) {
       const results = getSubmenuContextItemsRef.current(
         inSubmenu.current,
-        query
+        query,
       );
       return results.map((result) => {
         return {
@@ -111,7 +111,7 @@ export function getMentionSuggestion(
         ?.filter(
           (provider) =>
             provider.title.toLowerCase().startsWith(query.toLowerCase()) ||
-            provider.displayTitle.toLowerCase().startsWith(query.toLowerCase())
+            provider.displayTitle.toLowerCase().startsWith(query.toLowerCase()),
         )
         .map((provider) => ({
           name: provider.displayTitle,
@@ -144,7 +144,7 @@ export function getMentionSuggestion(
         action: () => {
           ideRequest(
             "openUrl",
-            "https://continue.dev/docs/customization/context-providers#built-in-context-providers"
+            "https://continue.dev/docs/customization/context-providers#built-in-context-providers",
           );
         },
         description: "",
@@ -159,7 +159,7 @@ export function getMentionSuggestion(
 export function getCommandSuggestion(
   availableSlashCommandsRef: MutableRefObject<ComboBoxItem[]>,
   onClose: () => void,
-  onOpen: () => void
+  onOpen: () => void,
 ) {
   const items = async ({ query }) => {
     return (

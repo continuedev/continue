@@ -231,8 +231,10 @@ class VsCodeIde implements IDE {
 
   async runCommand(command: string): Promise<void> {
     if (vscode.window.terminals.length) {
-      vscode.window.terminals[0].show();
-      vscode.window.terminals[0].sendText(command, false);
+      const terminal =
+        vscode.window.activeTerminal ?? vscode.window.terminals[0];
+      terminal.show();
+      terminal.sendText(command, false);
     } else {
       const terminal = vscode.window.createTerminal();
       terminal.show();

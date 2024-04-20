@@ -81,6 +81,8 @@ function formatExternalSnippet(
   return lines.join("\n");
 }
 
+let shownGptClaudeWarning = false;
+
 export async function getTabCompletion(
   token: AbortSignal,
   options: TabAutocompleteOptions,
@@ -117,6 +119,7 @@ export async function getTabCompletion(
   }
 
   // Model
+  if (!llm) return;
   if (llm instanceof OpenAI) {
     llm.useLegacyCompletionsEndpoint = true;
   } else if (
@@ -127,7 +130,16 @@ export async function getTabCompletion(
       "The only free trial model supported for tab-autocomplete is starcoder-7b.",
     );
   }
-  if (!llm) return;
+
+  if (
+    !shownGptClaudeWarning &&
+    (llm.model.includes("gpt") || llm.model.includes("claude"))
+  ) {
+    shownGptClaudeWarning = true;
+    throw new Error(
+      `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://continue.dev/docs/walkthroughs/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
+    );
+  }
 
   // Prompt
   const fullPrefix = getRangeInString(fileContents, {

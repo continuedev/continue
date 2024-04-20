@@ -164,7 +164,9 @@ export const stateSlice = createSlice({
     ) => {
       const defaultModelTitle =
         config.models.find((model) => model.title === state.defaultModelTitle)
-          ?.title || config.models[0].title;
+          ?.title ||
+        config.models[0]?.title ||
+        "";
       state.config = config;
       state.defaultModelTitle = defaultModelTitle;
     },

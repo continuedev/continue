@@ -1,12 +1,12 @@
 import { ContinueConfig, ContinueRcJson, IDE, ILLM } from "..";
 import { IdeSettings } from "../protocol";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 import { Telemetry } from "../util/posthog";
 import {
   BrowserSerializedContinueConfig,
   finalToBrowserConfig,
   loadFullConfigNode,
 } from "./load";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 
 export class ConfigHandler {
   private savedConfig: ContinueConfig | undefined;
@@ -16,7 +16,7 @@ export class ConfigHandler {
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private readonly writeLog: (text: string) => void,
-    private readonly onConfigUpdate: () => void
+    private readonly onConfigUpdate: () => void,
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
@@ -76,7 +76,7 @@ export class ConfigHandler {
       this.ide.readFile,
       workspaceConfigs,
       remoteConfigServerUrl,
-      ideInfo.ideType
+      ideInfo.ideType,
     );
     this.savedConfig.allowAnonymousTelemetry =
       this.savedConfig.allowAnonymousTelemetry &&
@@ -86,7 +86,7 @@ export class ConfigHandler {
     await Telemetry.setup(
       this.savedConfig.allowAnonymousTelemetry ?? true,
       await this.ide.getUniqueId(),
-      ideInfo.extensionVersion
+      ideInfo.extensionVersion,
     );
 
     return this.savedConfig;
@@ -94,32 +94,43 @@ export class ConfigHandler {
 
   setupLlm(llm: ILLM): ILLM {
     llm._fetch = async (input, init) => {
-      const resp = await fetchwithRequestOptions(
-        new URL(input),
-        { ...init },
-        llm.requestOptions
-      );
-
-      if (!resp.ok) {
-        let text = await resp.text();
-        if (resp.status === 404 && !resp.url.includes("/v1")) {
-          if (text.includes("try pulling it first")) {
-            const model = JSON.parse(text).error.split(" ")[1].slice(1, -1);
-            text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
-          } else if (text.includes("/api/chat")) {
-            text =
-              "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
-          } else {
-            text =
-              "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
-          }
-        }
-        throw new Error(
-          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`
+      try {
+        const resp = await fetchwithRequestOptions(
+          new URL(input),
+          { ...init },
+          llm.requestOptions,
         );
-      }
+        if (!resp.ok) {
+          let text = await resp.text();
+          if (resp.status === 404 && !resp.url.includes("/v1")) {
+            if (text.includes("try pulling it first")) {
+              const model = JSON.parse(text).error.split(" ")[1].slice(1, -1);
+              text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
+            } else if (text.includes("/api/chat")) {
+              text =
+                "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
+            } else {
+              text =
+                "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
+            }
+          }
+          throw new Error(
+            `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
+          );
+        }
 
-      return resp;
+        return resp;
+      } catch (e: any) {
+        if (
+          e.code === "ECONNREFUSED" &&
+          e.message.includes("http://127.0.0.1:11434")
+        ) {
+          throw new Error(
+            "Failed to connect to local Ollama instance. To start Ollama, first download it at https://ollama.ai.",
+          );
+        }
+        throw new Error(`${e}`);
+      }
     };
 
     llm.writeLog = async (log: string) => {

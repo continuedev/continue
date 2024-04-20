@@ -72,6 +72,11 @@ export function setupLocalMode(
     ...config,
     models: [
       {
+        title: "Llama 3",
+        provider: "ollama",
+        model: "llama3",
+      },
+      {
         title: "Ollama",
         provider: "ollama",
         model: "AUTODETECT",

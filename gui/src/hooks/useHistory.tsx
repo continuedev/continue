@@ -8,6 +8,7 @@ import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { ideRequest } from "../util/ide";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 function truncateText(text: string, maxLength: number) {
   if (text.length > maxLength) {
@@ -20,11 +21,14 @@ function useHistory(dispatch: Dispatch) {
   const state = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
   const disableSessionTitles = useSelector(
-    (store: RootState) => store.state.config.disableSessionTitles
+    (store: RootState) => store.state.config.disableSessionTitles,
   );
 
-  async function getHistory(): Promise<SessionInfo[]> {
-    return await ideRequest("history/list", undefined);
+  async function getHistory(
+    offset?: number,
+    limit?: number,
+  ): Promise<SessionInfo[]> {
+    return await ideRequest("history/list", { offset, limit });
   }
 
   async function saveSession() {
@@ -39,7 +43,7 @@ function useHistory(dispatch: Dispatch) {
         .split("\n")
         .filter((l) => l.trim() !== "")
         .slice(-1)[0] || "",
-      50
+      50,
     );
 
     if (
@@ -72,6 +76,7 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
+    setLocalStorage("lastSessionId", stateCopy.sessionId);
     return await ideRequest("history/save", sessionInfo);
   }
 
@@ -80,10 +85,31 @@ function useHistory(dispatch: Dispatch) {
   }
 
   async function loadSession(id: string): Promise<PersistedSessionInfo> {
-    return await ideRequest("history/load", { id });
+    setLocalStorage("lastSessionId", state.sessionId);
+    const json: PersistedSessionInfo = await ideRequest("history/load", { id });
+    dispatch(newSession(json));
+    return json;
   }
 
-  return { getHistory, saveSession, deleteSession, loadSession };
+  async function loadLastSession(): Promise<PersistedSessionInfo> {
+    const lastSessionId = getLocalStorage("lastSessionId");
+    if (lastSessionId) {
+      return await loadSession(lastSessionId);
+    }
+  }
+
+  function getLastSessionId(): string {
+    return getLocalStorage("lastSessionId");
+  }
+
+  return {
+    getHistory,
+    saveSession,
+    deleteSession,
+    loadSession,
+    loadLastSession,
+    getLastSessionId,
+  };
 }
 
 export default useHistory;
