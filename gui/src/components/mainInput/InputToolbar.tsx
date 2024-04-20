@@ -90,7 +90,11 @@ function InputToolbar(props: InputToolbarProps) {
           + Add Context
         </span>
         {defaultModel &&
-          modelSupportsImages(defaultModel.provider, defaultModel.model) && (
+          modelSupportsImages(
+            defaultModel.provider,
+            defaultModel.model,
+            defaultModel.title,
+          ) && (
             <span
               className="ml-1.5 mt-0.5"
               onMouseLeave={() => setFileSelectHovered(false)}
