@@ -20,7 +20,12 @@ export type ProtocolGeneratorType<T> = AsyncGenerator<{
   content: T;
 }>;
 
-export type ToCoreFromIdeOrWebviewProtocol = {
+export interface ListHistoryOptions {
+  offset?: number;
+  limit?: number;
+}
+
+export type Protocol = {
   // New
   "update/modelChange": [string, void];
 
@@ -28,7 +33,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ping: [string, string];
   abort: [undefined, void];
 
-  "history/list": [undefined, SessionInfo[]];
+  // History
+  "history/list": [ListHistoryOptions, SessionInfo[]];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, PersistedSessionInfo];
   "history/save": [PersistedSessionInfo, void];

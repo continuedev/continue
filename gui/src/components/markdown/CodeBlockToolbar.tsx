@@ -56,12 +56,17 @@ const commonTerminalCommands = [
   "git",
   "curl",
   "wget",
+  "rbenv",
+  "gem",
+  "ruby",
+  "bundle",
 ];
 function isTerminalCodeBlock(language: string | undefined, text: string) {
   return (
     terminalLanguages.includes(language) ||
-    (text.trim().split("\n").length === 1 &&
-      commonTerminalCommands.some((c) => text.trim().startsWith(c)))
+    (language.length === 0 &&
+      (text.trim().split("\n").length === 1 ||
+        commonTerminalCommands.some((c) => text.trim().startsWith(c))))
   );
 }
 

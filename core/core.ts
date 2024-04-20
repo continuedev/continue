@@ -118,7 +118,7 @@ export class Core {
 
     // History
     on("history/list", (msg) => {
-      return historyManager.list();
+      return historyManager.list(msg.data);
     });
     on("history/delete", (msg) => {
       historyManager.delete(msg.data.id);

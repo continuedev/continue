@@ -97,20 +97,6 @@ function formatExternalSnippet(
 }
 
 let shownGptClaudeWarning = false;
-const nonAutocompleteModels = [
-  // "gpt",
-  // "claude",
-  "mistral",
-  "instruct",
-];
-
-export type GetLspDefinitionsFunction = (
-  filepath: string,
-  contents: string,
-  cursorIndex: number,
-  ide: IDE,
-  lang: AutocompleteLanguageInfo,
-) => Promise<AutocompleteSnippet[]>;
 
 export async function getTabCompletion(
   token: AbortSignal,
@@ -151,6 +137,7 @@ export async function getTabCompletion(
   }
 
   // Model
+  if (!llm) return;
   if (llm instanceof OpenAI) {
     llm.useLegacyCompletionsEndpoint = true;
   } else if (
@@ -159,6 +146,16 @@ export async function getTabCompletion(
   ) {
     throw new Error(
       "The only free trial model supported for tab-autocomplete is starcoder-7b.",
+    );
+  }
+
+  if (
+    !shownGptClaudeWarning &&
+    (llm.model.includes("gpt") || llm.model.includes("claude"))
+  ) {
+    shownGptClaudeWarning = true;
+    throw new Error(
+      `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://continue.dev/docs/walkthroughs/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
     );
   }
 

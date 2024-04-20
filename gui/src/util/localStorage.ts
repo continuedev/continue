@@ -1,9 +1,7 @@
 type LocalStorageTypes = {
   onboardingComplete: boolean;
   mainTextEntryCounter: number;
-  ide: "vscode" | "jetbrains";
-  ftc: number;
-  fontSize: number;
+  lastSessionId: string | undefined;
 };
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(

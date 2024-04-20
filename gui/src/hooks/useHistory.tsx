@@ -9,6 +9,8 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
+import { ideRequest } from "../util/ide";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 function truncateText(text: string, maxLength: number) {
   if (text.length > maxLength) {
@@ -25,8 +27,11 @@ function useHistory(dispatch: Dispatch) {
   );
   const ideMessenger = useContext(IdeMessengerContext);
 
-  async function getHistory(): Promise<SessionInfo[]> {
-    return await ideMessenger.request("history/list", undefined);
+  async function getHistory(
+    offset?: number,
+    limit?: number,
+  ): Promise<SessionInfo[]> {
+    return await ideRequest("history/list", { offset, limit });
   }
 
   async function saveSession() {
@@ -74,7 +79,8 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
-    return await ideMessenger.request("history/save", sessionInfo);
+    setLocalStorage("lastSessionId", stateCopy.sessionId);
+    return await ideRequest("history/save", sessionInfo);
   }
 
   async function deleteSession(id: string) {
@@ -82,7 +88,10 @@ function useHistory(dispatch: Dispatch) {
   }
 
   async function loadSession(id: string): Promise<PersistedSessionInfo> {
-    return await ideMessenger.request("history/load", { id });
+    setLocalStorage("lastSessionId", state.sessionId);
+    const json: PersistedSessionInfo = await ideRequest("history/load", { id });
+    dispatch(newSession(json));
+    return json;
   }
 
   async function loadLastSession(): Promise<PersistedSessionInfo> {
@@ -103,8 +112,6 @@ function useHistory(dispatch: Dispatch) {
     loadSession,
     loadLastSession,
     getLastSessionId,
-    updateSession,
-    getSession,
   };
 }
 

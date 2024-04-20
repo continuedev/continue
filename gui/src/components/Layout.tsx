@@ -90,9 +90,7 @@ const DropdownPortalDiv = styled.div`
 const HIDE_FOOTER_ON_PAGES = [
   "/onboarding",
   "/existingUserOnboarding",
-  "/onboarding",
   "/localOnboarding",
-  "/apiKeyOnboarding",
 ];
 
 const Layout = () => {
@@ -216,43 +214,75 @@ const Layout = () => {
         <GridDiv>
           <Outlet />
           <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
-          <Footer>
-            <div className="mr-auto flex gap-2 items-center">
-              <ModelSelect />
-              {indexingProgress >= 1 && // Would take up too much space together with indexing progress
-                defaultModel?.provider === "free-trial" &&
-                (location.pathname === "/settings" ||
-                  (getLocalStorage("ftc") ?? 0) >= 125) && (
-                  <ProgressBar
-                    completed={getLocalStorage("ftc") ?? 0}
-                    total={250}
+          {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
+            <Footer>
+              <div className="mr-auto flex gap-2 items-center">
+                {/* {localStorage.getItem("ide") === "jetbrains" ||
+                localStorage.getItem("hideFeature") === "true" || (
+                  <SparklesIcon
+                    className="cursor-pointer"
+                    onClick={() => {
+                      localStorage.setItem("hideFeature", "true");
+                    }}
+                    onMouseEnter={() => {
+                      dispatch(
+                        setBottomMessage(
+                          `🎁 New Feature: Use ${getMetaKeyLabel()}⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)`
+                        )
+                      );
+                    }}
+                    onMouseLeave={() => {
+                      dispatch(
+                        setBottomMessageCloseTimeout(
+                          setTimeout(() => {
+                            dispatch(setBottomMessage(undefined));
+                          }, 2000)
+                        )
+                      );
+                    }}
+                    width="1.3em"
+                    height="1.3em"
+                    color="yellow"
+                  />
+                )} */}
+                <ModelSelect />
+                {indexingProgress >= 1 && // Would take up too much space together with indexing progress
+                  defaultModel?.provider === "free-trial" &&
+                  (location.pathname === "/settings" ||
+                    parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
+                    <ProgressBar
+                      completed={parseInt(localStorage.getItem("ftc") || "0")}
+                      total={250}
+                    />
+                  )}
+
+                {isJetBrains() || (
+                  <IndexingProgressBar
+                    currentlyIndexing={indexingTask}
+                    completed={indexingProgress * 100}
+                    total={100}
                   />
                 )}
-
-              <IndexingProgressBar
-                currentlyIndexing={indexingTask}
-                completed={indexingProgress * 100}
-                total={100}
-              />
-            </div>
-            <HeaderButtonWithText
-              text="Help"
-              onClick={() => {
-                navigate("/help");
-              }}
-            >
-              <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-            <HeaderButtonWithText
-              onClick={() => {
-                // navigate("/settings");
-                ideMessenger.post("openConfigJson", undefined);
-              }}
-              text="Configure Continue"
-            >
-              <Cog6ToothIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-          </Footer>
+              </div>
+              <HeaderButtonWithText
+                text="Help"
+                onClick={() => {
+                  navigate("/help");
+                }}
+              >
+                <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+              <HeaderButtonWithText
+                onClick={() => {
+                  // navigate("/settings");
+                  postToIde("openConfigJson", undefined);
+                }}
+                text="Configure Continue"
+              >
+                <Cog6ToothIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+            </Footer>
+          )}
         </GridDiv>
 
         <BottomMessageDiv

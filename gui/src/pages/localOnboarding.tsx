@@ -1,6 +1,6 @@
 import { CheckIcon, PlayIcon } from "@heroicons/react/24/outline";
 import { CheckCircleIcon as CheckCircleIconSolid } from "@heroicons/react/24/solid";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -13,7 +13,8 @@ import {
   vscButtonForeground,
   vscForeground,
 } from "../components";
-import { IdeMessengerContext } from "../context/IdeMessenger";
+import { ideRequest } from "../util/ide";
+import { WebviewIde } from "../util/webviewIde";
 import { StyledButton } from "./onboarding/components";
 
 const ModelPillDiv = styled.div<{ selected: boolean }>`
@@ -82,8 +83,6 @@ function RunInTerminalButton(props: { command: string }) {
   const id = `info-hover-${encodeURIComponent(props.command)}`;
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
-  const ideMessenger = useContext(IdeMessengerContext);
-
   return (
     <>
       <div
@@ -95,10 +94,10 @@ function RunInTerminalButton(props: { command: string }) {
           style={{ border: `0.5px solid ${lightGray}` }}
           className="grid-cols-2"
           onClick={() => {
-            ideMessenger.ide.runCommand(props.command);
+            new WebviewIde().runCommand(props.command);
             setClicked(true);
             setTimeout(() => setClicked(false), 2000);
-            ideMessenger.post("copyText", { text: props.command });
+            ideRequest("copyText", { text: props.command });
           }}
         >
           <pre>
@@ -161,14 +160,12 @@ function LocalOnboarding() {
     undefined,
   );
 
-  const ideMessenger = useContext(IdeMessengerContext);
-
   useEffect(() => {
     if (ollamaModels?.some((model) => model.startsWith(recommendedChatModel))) {
       setStage2Done(true);
 
       // Send an empty request to load the model
-      ideMessenger.post("llm/complete", {
+      ideRequest("llm/complete", {
         completionOptions: {},
         prompt: "",
         title: assumedModelTitle,
@@ -188,7 +185,7 @@ function LocalOnboarding() {
 
   useEffect(() => {
     const checkModels = async () => {
-      const models = await ideMessenger.request("llm/listModels", {
+      const models = await ideRequest("llm/listModels", {
         title: assumedModelTitle,
       });
       if (Array.isArray(models)) {

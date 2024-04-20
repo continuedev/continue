@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import { DIFF_DIRECTORY, type DiffManager } from "../diff/horizontal";
 import type { VerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
 import { editorSuggestionsLocked, editorToSuggestions } from "../suggestions";
-import { getAltOrOption, getMetaKeyLabel } from "../util/util";
+import { getAltOrOption, getMetaKeyLabel, getPlatform } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 
 class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
@@ -237,7 +237,7 @@ const actions: TutorialCodeLensItems[] = [
     lineIncludes: `Step 2: Use the keyboard shortcut [${cmdCtrl}+L]`,
     commands: [
       {
-        title: "Do it for me",
+        title: `${cmdCtrl}+L`,
         command: "continue.focusContinueInput",
       },
     ],
@@ -363,19 +363,19 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
     // for (const lineOfRegion of regionLines as number[]) {
     //   const range = new vscode.Range(lineOfRegion, 0, lineOfRegion + 1, 0);
 
-      const linesToFold = regionLines
-        .filter((i) => lineOfRegion !== i)
-        .flatMap((i) => {
-          return [i, (i as number) + 1];
-        });
-      codeLenses.push(
-        new vscode.CodeLens(range, {
-          title: "Begin Section",
-          command: "continue.foldAndUnfold",
-          arguments: [linesToFold, [lineOfRegion, lineOfRegion + 1]],
-        }),
-      );
-    }
+    //   const linesToFold = regionLines
+    //     .filter((i) => lineOfRegion !== i)
+    //     .flatMap((i) => {
+    //       return [i, (i as number) + 1];
+    //     });
+    //   codeLenses.push(
+    //     new vscode.CodeLens(range, {
+    //       title: `Begin Section`,
+    //       command: "continue.foldAndUnfold",
+    //       arguments: [linesToFold, [lineOfRegion, lineOfRegion + 1]],
+    //     }),
+    //   );
+    // }
 
     return codeLenses;
   }

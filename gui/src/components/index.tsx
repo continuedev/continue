@@ -138,25 +138,6 @@ export const Button = styled.button`
   }
 `;
 
-export const SecondaryButton = styled.button`
-  padding: 10px 12px;
-  margin: 8px 0;
-  border-radius: ${defaultBorderRadius};
-
-  border: 1px solid ${vscButtonBackground};
-  color: ${vscForeground};
-  background-color: ${vscBackground};
-
-  &:disabled {
-    color: gray;
-  }
-
-  &:hover:enabled {
-    cursor: pointer;
-    background-color: ${vscInputBackground};
-  }
-`;
-
 export const CustomScrollbarDiv = styled.div`
   scrollbar-base-color: transparent;
   scrollbar-width: thin;
@@ -178,15 +159,13 @@ export const CustomScrollbarDiv = styled.div`
 `;
 
 const TooltipStyles = {
-  fontSize: `${getFontSize() - 2}px`,
+  fontSize: "12px",
   backgroundColor: vscInputBackground,
   boxShadow: `0px 0px 2px 1px ${vscBadgeBackground}`,
   color: vscForeground,
   padding: "2px 6px",
   zIndex: 1000,
   maxWidth: "80vw",
-  textAlign: "center",
-  overflow: "hidden",
 };
 
 export function StyledTooltip(props) {

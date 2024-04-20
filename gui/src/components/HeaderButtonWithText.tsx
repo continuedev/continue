@@ -31,6 +31,8 @@ const HeaderButtonWithText = React.forwardRef<
   return (
     <>
       <HeaderButton
+        hoverBackgroundColor={props.hoverBackgroundColor}
+        backgroundColor={props.backgroundColor}
         data-tooltip-id={`header_button_${id}`}
         inverted={props.inverted}
         disabled={props.disabled}

@@ -1,5 +1,6 @@
-import * as fs from "node:fs";
-import type { PersistedSessionInfo, SessionInfo } from "..";
+import * as fs from "fs";
+import { PersistedSessionInfo, SessionInfo } from "..";
+import { ListHistoryOptions } from "../protocol";
 import { getSessionFilePath, getSessionsListPath } from "./paths";
 
 class HistoryManager {

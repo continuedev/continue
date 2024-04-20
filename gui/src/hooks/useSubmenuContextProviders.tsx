@@ -12,7 +12,7 @@ const MINISEARCH_OPTIONS = {
   fuzzy: 2,
 };
 
-const MAX_LENGTH = 70;
+const MAX_LENGTH = 10;
 
 function useSubmenuContextProviders() {
   // TODO: Refresh periodically
@@ -89,7 +89,7 @@ function useSubmenuContextProviders() {
       setFallbackResults((prev) => ({
         ...prev,
         file: deduplicateArray(
-          [...openFiles, ...(Array.isArray(prev.file) ? prev.file : [])],
+          [...openFiles, ...prev.file],
           (a, b) => a.id === b.id,
         ),
       }));
@@ -166,7 +166,7 @@ function useSubmenuContextProviders() {
   function getSubmenuContextItems(
     providerTitle: string | undefined,
     query: string,
-    limit: number = 10,
+    limit: number = MAX_LENGTH,
   ): (ContextSubmenuItem & { providerTitle: string })[] {
     const results = getSubmenuSearchResults(providerTitle, query);
     if (results.length === 0) {

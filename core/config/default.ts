@@ -54,6 +54,16 @@ export const defaultConfig: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
+  contextProviders: [
+    { name: "code", params: {} },
+    { name: "docs", params: {} },
+    { name: "diff", params: {} },
+    { name: "open", params: {} },
+    { name: "terminal", params: {} },
+    { name: "problems", params: {} },
+    { name: "folder", params: {} },
+    { name: "codebase", params: {} },
+  ],
   tabAutocompleteModel: {
     title: "Starcoder2 3b",
     provider: "ollama",
@@ -111,12 +121,7 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  contextProviders: [
-    {
-      name: "open",
-      params: {},
-    },
-  ],
+  contextProviders: [{ name: "open", params: {} }],
   tabAutocompleteModel: {
     title: "Starcoder2 3b",
     provider: "ollama",
