@@ -1,4 +1,5 @@
-import type { EmbeddingsProviderName } from "../..";
+import { EmbeddingsProviderName } from "../..";
+import CohereEmbeddingsProvider from "./CohereEmbeddingsProvider";
 import FreeTrialEmbeddingsProvider from "./FreeTrialEmbeddingsProvider";
 import OllamaEmbeddingsProvider from "./OllamaEmbeddingsProvider";
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider";
@@ -16,5 +17,6 @@ export const allEmbeddingsProviders: Record<
   // eslint-disable-next-line @typescript-eslint/naming-convention
   "transformers.js": TransformersJsEmbeddingsProvider,
   openai: OpenAIEmbeddingsProvider,
+  cohere: CohereEmbeddingsProvider,
   "free-trial": FreeTrialEmbeddingsProvider,
 };

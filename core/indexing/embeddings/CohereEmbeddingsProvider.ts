@@ -1,7 +1,7 @@
-import { Response } from "node-fetch";
-import { EmbedOptions } from "../../index.js";
-import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
+import fetch, { Response } from "node-fetch";
+import { EmbedOptions } from "../..";
+import { withExponentialBackoff } from "../../util/withExponentialBackoff";
+import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
 class CohereEmbeddingsProvider extends BaseEmbeddingsProvider {
   static maxBatchSize = 96;
@@ -10,6 +10,10 @@ class CohereEmbeddingsProvider extends BaseEmbeddingsProvider {
     apiBase: "https://api.cohere.ai/v1/",
     model: "embed-english-v3.0",
   };
+
+  get id(): string {
+    return this.options.model ?? "cohere";
+  }
 
   async embed(chunks: string[]) {
     if (!this.options.apiBase?.endsWith("/")) {
@@ -31,7 +35,7 @@ class CohereEmbeddingsProvider extends BaseEmbeddingsProvider {
         batchedChunks.map(async (batch) => {
           const fetchWithBackoff = () =>
             withExponentialBackoff<Response>(() =>
-              this.fetch(new URL("embed", this.options.apiBase), {
+              fetch(new URL("embed", this.options.apiBase), {
                 method: "POST",
                 body: JSON.stringify({
                   texts: batch,
