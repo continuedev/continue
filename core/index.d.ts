@@ -631,6 +631,7 @@ export type EmbeddingsProviderName =
   | "transformers.js"
   | "ollama"
   | "openai"
+  | "cohere"
   | "free-trial";
 
 export interface EmbedOptions {

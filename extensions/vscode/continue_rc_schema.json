@@ -1865,6 +1865,7 @@
                 "transformers.js",
                 "ollama",
                 "openai",
+                "cohere",
                 "free-trial"
               ]
             },
@@ -1898,6 +1899,25 @@
               "then": {
                 "required": [
                   "model"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": [
+                      "cohere"
+                    ]
+                  }
+                },
+                "required": [
+                  "provider"
+                ]
+              },
+              "then": {
+                "required": [
+                  "apiKey"
                 ]
               }
             }

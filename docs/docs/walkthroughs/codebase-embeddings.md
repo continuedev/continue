@@ -137,6 +137,22 @@ For certain scenarios, you may still find the text-embedding-ada-002 model relev
 }
 ```
 
+### Cohere
+
+Configuration for the `embed-english-v3.0` model. This is the default.
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "provider": "cohere",
+    "model": "embed-english-v3.0",
+    "apiKey": "YOUR_API_KEY"
+  }
+}
+```
+
+See Cohere's [embeddings](https://docs.cohere.com/docs/embed-2) for available models. Only embedding models v3 and higher are supported.
+
 ### Writing a custom `EmbeddingsProvider`
 
 If you have your own API capable of generating embeddings, Continue makes it easy to write a custom `EmbeddingsProvider`. All you have to do is write a function that converts strings to arrays of numbers, and add this to your config in `config.ts`. Here's an example:
