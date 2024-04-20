@@ -206,7 +206,7 @@ This is an example of serving a model using an OpenAI-compatible API on http://l
       "title": "OpenAI-compatible API",
       "provider": "openai",
       "model": "codellama-13b",
-      "api_base": "http://localhost:8000"
+      "api_base": "http://localhost:8000/v1"
     }
   ]
 }
