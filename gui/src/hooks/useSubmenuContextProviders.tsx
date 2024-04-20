@@ -88,7 +88,7 @@ function useSubmenuContextProviders() {
       setFallbackResults((prev) => ({
         ...prev,
         file: deduplicateArray(
-          [...openFiles, ...prev.file],
+          [...openFiles, ...(Array.isArray(prev.file) ? prev.file : [])],
           (a, b) => a.id === b.id,
         ),
       }));
