@@ -484,6 +484,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -628,6 +630,8 @@
                       "mistral-8x7b",
                       "llama2-7b",
                       "llama2-13b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -690,6 +694,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -736,6 +742,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -792,7 +800,13 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["llama2-70b", "mistral-8x7b", "gemma"]
+                "enum": [
+                  "llama2-70b",
+                  "mistral-8x7b",
+                  "gemma",
+                  "llama3-8b",
+                  "llama3-70b"
+                ]
               }
             }
           }
@@ -936,6 +950,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",

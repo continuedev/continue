@@ -523,9 +523,10 @@ export type ModelName =
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
-  // Open Source
+  // Mistral
   | "mistral-7b"
   | "mistral-8x7b"
+  // Llama 2
   | "llama2-7b"
   | "llama2-13b"
   | "llama2-70b"
@@ -533,6 +534,10 @@ export type ModelName =
   | "codellama-13b"
   | "codellama-34b"
   | "codellama-70b"
+  // Llama 3
+  | "llama3-8b"
+  | "llama3-70b"
+  // Other Open-source
   | "phi2"
   | "phind-codellama-34b"
   | "wizardcoder-7b"

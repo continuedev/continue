@@ -231,6 +231,32 @@ const mixtralTrial: ModelPackage = {
   providerOptions: ["freetrial", "groq"],
 };
 
+const llama38bChat: ModelPackage = {
+  title: "Llama3 8b",
+  description: "The latest Llama model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama3-8b",
+    model: "llama3-8b",
+    contextLength: 8192,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
+};
+
+const llama370bChat: ModelPackage = {
+  title: "Llama3 70b Chat",
+  description: "The latest Llama model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama3-70b",
+    model: "llama3-70b",
+    contextLength: 8192,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
+};
+
 const llama270bChat: ModelPackage = {
   title: "Llama2 70b Chat",
   description: "The latest Llama model from Meta, fine-tuned for chat",
@@ -244,14 +270,14 @@ const llama270bChat: ModelPackage = {
   providerOptions: ["groq"],
 };
 
-const llama2Chat: ModelPackage = {
-  title: "Llama2 Chat",
-  description: "The latest Llama model from Meta, fine-tuned for chat",
+const llama3Chat: ModelPackage = {
+  title: "Llama3 Chat",
+  description: "The latest model from Meta, fine-tuned for chat",
   refUrl: "",
   params: {
-    title: "Llama2-7b",
-    model: "llama2-7b",
-    contextLength: 4096,
+    title: "Llama3-8b",
+    model: "llama3-8b",
+    contextLength: 8192,
   },
   icon: "meta.png",
   dimensions: [
@@ -259,17 +285,13 @@ const llama2Chat: ModelPackage = {
       name: "Parameter Count",
       description: "The number of parameters in the model",
       options: {
-        "7b": {
-          model: "llama2-7b",
-          title: "Llama2-7b",
+        "8b": {
+          model: "llama3-8b",
+          title: "Llama3-8b",
         },
-        "13b": {
-          model: "llama2-13b",
-          title: "Llama2-13b",
-        },
-        "34b": {
-          model: "llama2-34b",
-          title: "Llama2-34b",
+        "70b": {
+          model: "llama3-70b",
+          title: "Llama3-70b",
         },
       },
     },
@@ -531,12 +553,12 @@ const commandRPlus: ModelPackage = {
 };
 
 const osModels = [
+  llama3Chat,
   deepseek,
   wizardCoder,
   codeLlamaInstruct,
   mistral,
   phindCodeLlama,
-  llama2Chat,
   zephyr,
   neuralChat,
 ];
@@ -661,13 +683,13 @@ export const MODEL_INFO: (ModelPackage | string)[] = [
   gemini15Pro,
   geminiPro,
   "Open Source",
+  llama3Chat,
   deepseek,
   mistral,
   codellama70bTrial,
   wizardCoder,
   codeLlamaInstruct,
   phindCodeLlama,
-  llama2Chat,
   zephyr,
 ];
 
@@ -801,7 +823,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
       ...completionParamsInputs,
     ],
-    packages: [llama2Chat, codeLlamaInstruct, mistral].map((p) => {
+    packages: [llama3Chat, codeLlamaInstruct, mistral].map((p) => {
       p.params.contextLength = 4096;
       return p;
     }),
@@ -828,6 +850,8 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
     ],
     packages: [
+      llama370bChat,
+      llama38bChat,
       { ...mixtralTrial, title: "Mixtral" },
       llama270bChat,
       {
@@ -948,7 +972,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [codeLlamaInstruct, llama2Chat, wizardCoder, mistral, zephyr],
+    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistral, zephyr],
   },
   llamacpp: {
     title: "llama.cpp",
