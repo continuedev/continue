@@ -557,12 +557,6 @@ export type ModelName =
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
   // Mistral
-  | "codestral-latest"
-  | "open-mistral-7b"
-  | "open-mixtral-8x7b"
-  | "open-mixtral-8x22b"
-  | "mistral-small-latest"
-  | "mistral-large-latest"
   | "mistral-7b"
   | "mistral-8x7b"
   // Llama 2

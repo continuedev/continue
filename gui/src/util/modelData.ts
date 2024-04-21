@@ -235,19 +235,6 @@ const mixtralTrial: ModelPackage = {
   providerOptions: ["freetrial", "groq"],
 };
 
-const llama270bChat: ModelPackage = {
-  title: "Llama2 70b Chat",
-  description: "The latest Llama model from Meta, fine-tuned for chat",
-  refUrl: "",
-  params: {
-    title: "Llama2-70b",
-    model: "llama2-70b",
-    contextLength: 4096,
-  },
-  icon: "meta.png",
-  providerOptions: ["groq"],
-};
-
 const llama38bChat: ModelPackage = {
   title: "Llama3 8b",
   description: "The latest Llama model from Meta, fine-tuned for chat",
@@ -282,6 +269,19 @@ const llama270bChat: ModelPackage = {
     title: "Llama2-70b",
     model: "llama2-70b",
     contextLength: 4096,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
+};
+
+const llama3Chat: ModelPackage = {
+  title: "Llama3 Chat",
+  description: "The latest model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama3-8b",
+    model: "llama3-8b",
+    contextLength: 8192,
   },
   icon: "meta.png",
   providerOptions: ["groq"],
@@ -610,6 +610,8 @@ const osModels = [
   codeLlamaInstruct,
   mistralOs,
   phindCodeLlama,
+  zephyr,
+  neuralChat,
 ];
 
 const gpt4: ModelPackage = {
@@ -731,10 +733,14 @@ export const MODEL_INFO: (ModelPackage | string)[] = [
   gemini15Pro,
   geminiPro,
   "Open Source",
+  llama3Chat,
   deepseek,
-  // wizardCoder,
-  // codeLlamaInstruct,
-  // phindCodeLlama,
+  mistral,
+  codellama70bTrial,
+  wizardCoder,
+  codeLlamaInstruct,
+  phindCodeLlama,
+  zephyr,
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -975,7 +981,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
       ...completionParamsInputs,
     ],
-    packages: [llama3Chat, codeLlamaInstruct, mistralOs].map((p) => {
+    packages: [llama3Chat, codeLlamaInstruct, mistral].map((p) => {
       p.params.contextLength = 4096;
       return p;
     }),
@@ -1002,6 +1008,8 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
     ],
     packages: [
+      llama370bChat,
+      llama38bChat,
       { ...mixtralTrial, title: "Mixtral" },
       llama270bChat,
       {
@@ -1125,8 +1133,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistralOs],
-    apiKeyUrl: "https://replicate.com/account/api-tokens",
+    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistral, zephyr],
   },
   llamacpp: {
     title: "llama.cpp",

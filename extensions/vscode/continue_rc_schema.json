@@ -903,7 +903,9 @@
                 "enum": [
                   "llama2-70b",
                   "mistral-8x7b",
-                  "gemma"
+                  "gemma",
+                  "llama3-8b",
+                  "llama3-70b"
                 ]
               }
             }
