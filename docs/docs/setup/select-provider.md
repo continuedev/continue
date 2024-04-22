@@ -1,16 +1,18 @@
 ---
-title: Select a provider
-description: Swap out different LLM providers
+title: Select providers
+description: Configure LLM providers
 keywords: [openai, anthropic, PaLM, ollama, ggml]
 ---
 
-# Select a model provider
+# Select providers
 
-Continue makes it easy to swap out different LLM providers. You can either click the "+" button next to the model dropdown to configure in the GUI or manually add them to your `config.json`. Once you've done this, you will be able to switch between them in the model selection dropdown.
+Continue makes it easy to use different providers for serving your chat, autocomplete, and embeddings models. 
 
-**In addition to selecting a model provider, you will need to figure out [what LLM to use](./select-model.md).**
+To select the ones you want to use, add them to your `config.json`.
 
-## Local
+## Self-hosted
+
+### Local
 
 You can run a model on your local computer using:
 
@@ -22,9 +24,7 @@ You can run a model on your local computer using:
 - [FastChat](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [llama-cpp-python](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 
-Once you have it running, you will need to configure it in the GUI or manually add it to your `config.json`.
-
-## Cloud
+### Remote
 
 You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-code-llm#aws), [GCP](https://github.com/continuedev/deploy-os-code-llm#gcp), [Azure](https://github.com/continuedev/deploy-os-code-llm#azure), or [other clouds](https://github.com/continuedev/deploy-os-code-llm#others-2) using:
 
@@ -33,11 +33,9 @@ You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-co
 - [SkyPilot](https://github.com/continuedev/deploy-os-code-llm#skypilot)
 - [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints) (OpenAI compatible API)
 
-If the API you use is OpenAI-compatible, you will be able to use the "openai" provider in `config.json` and change the `apiBase` to point to the server. Otherwise, you may need to wire up a new LLM object in `config.ts`. Learn how to do this [here](configuration.md#defining-a-custom-llm-provider)
-
 ## SaaS
 
-### Open-source LLMs
+### Open-source models
 
 You can deploy open-source LLMs on a service using:
 
@@ -46,14 +44,19 @@ You can deploy open-source LLMs on a service using:
 - [Anyscale Endpoints](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
 - [Replicate](../reference/Model%20Providers/replicatellm.md)
 - [Deepinfra](../reference/Model%20Providers/deepinfra.md)
+- [Groq](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
+- [AWS Bedrock](../reference/Model%20Providers/bedrock.md)
 
-### Commercial LLMs
+### Commercial models
 
 You can use commercial LLMs via APIs using:
 
+- [Anthrophic API](../reference/Model%20Providers/anthropicllm.md)
 - [OpenAI API](../reference/Model%20Providers/openai.md)
 - [Azure OpenAI Service](../reference/Model%20Providers/openai.md) (OpenAI compatible API)
-- [Anthrophic API](../reference/Model%20Providers/anthropicllm.md)
-- [Google PaLM API](../reference/Model%20Providers/googlepalmapi.md)
-- [OpenAI free trial](../reference/Model%20Providers/freetrial.md)
+- [Google Gemini API](../reference/Model%20Providers/googlepalmapi.md)
 - [Mistral API](../reference/Model%20Providers/mistral.md)
+- [Voyage AI API](../walkthroughs/codebase-embeddings.md#openai)
+- [Cohere API](../reference/Model%20Providers/cohere.md)
+
+**In addition to selecting providers, you will need to figure out [what models to use](./select-model.md).**
