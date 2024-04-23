@@ -64,7 +64,7 @@ const commonTerminalCommands = [
 function isTerminalCodeBlock(language: string | undefined, text: string) {
   return (
     terminalLanguages.includes(language) ||
-    (language.length === 0 &&
+    (language?.length === 0 &&
       (text.trim().split("\n").length === 1 ||
         commonTerminalCommands.some((c) => text.trim().startsWith(c))))
   );
