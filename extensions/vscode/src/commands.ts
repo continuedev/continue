@@ -8,6 +8,7 @@ import { AutocompleteOutcome } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
 import { logDevData } from "core/util/devdata";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
+import { getConfigJsonPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
@@ -198,7 +199,7 @@ const commandsMap: (
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   },
-  "continue.quickEdit": async () => {
+  "continue.quickEdit": async (prompt?: string) => {
     const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
 
     const editor = vscode.window.activeTextEditor;
@@ -235,6 +236,7 @@ const commandsMap: (
         : `Describe how to edit the highlighted code${addContextMsg}`,
       title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
       prompt: `[${defaultModelTitle}]`,
+      value: prompt,
     };
     if (previousInput) {
       textInputOptions.value = previousInput + ", ";
@@ -478,6 +480,9 @@ const commandsMap: (
       null,
       extensionContext.subscriptions,
     );
+  },
+  "continue.openConfigJson": () => {
+    ide.openFile(getConfigJsonPath());
   },
   "continue.selectFilesAsContext": (
     firstUri: vscode.Uri,

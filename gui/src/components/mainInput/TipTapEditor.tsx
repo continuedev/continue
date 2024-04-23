@@ -575,7 +575,13 @@ function TipTapEditor(props: TipTapEditorProps) {
         setShowDragOverMsg(true);
       }}
       onDrop={(event) => {
-        if (!modelSupportsImages(defaultModel.provider, defaultModel.model)) {
+        if (
+          !modelSupportsImages(
+            defaultModel.provider,
+            defaultModel.model,
+            defaultModel.title,
+          )
+        ) {
           return;
         }
         setShowDragOverMsg(false);
@@ -626,7 +632,11 @@ function TipTapEditor(props: TipTapEditorProps) {
         }}
       />
       {showDragOverMsg &&
-        modelSupportsImages(defaultModel.provider, defaultModel.model) && (
+        modelSupportsImages(
+          defaultModel.provider,
+          defaultModel.model,
+          defaultModel.title,
+        ) && (
           <>
             <HoverDiv></HoverDiv>
             <HoverTextDiv>Hold ⇧ to drop image</HoverTextDiv>

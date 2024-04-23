@@ -94,11 +94,27 @@ We also support other methods of generating embeddings, which can be configured 
 }
 ```
 
+### Voyage AI
+
+Voyage AI offers the best embeddings for code with their voyage-code-2 model. After obtaining an API key from [here](https://www.voyageai.com/), you can configure like this:
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "provider": "openai",
+    "model": "voyage-code-2",
+    "apiBase": "
+    https://api.voyageai.com/v1/",
+    "apiKey": "<VOYAGE_API_KEY>"
+  }
+}
+```
+
 ### OpenAI
 
 OpenAI's [embeddings](https://platform.openai.com/docs/guides/embeddings) are high dimensional embeddings that give great performance on both text and code.
 
-Configuration for text-embedding-3-small Model. This is default. 
+Configuration for text-embedding-3-small Model. This is default.
 The text-embedding-3-small model offers an outstanding balance between performance and efficiency, suitable for a versatile range of applications.
 
 ```json title="~/.continue/config.json"
@@ -106,7 +122,8 @@ The text-embedding-3-small model offers an outstanding balance between performan
   "embeddingsProvider": {
     "provider": "openai",
     "model": "text-embedding-3-small",
-    "apiBase": "<your custom OpenAI-compatible endpoint>" // optional, defaults to OpenAI's API
+    "apiBase": "<your custom OpenAI-compatible endpoint>", // optional, defaults to OpenAI's API
+    "apiKey": "<OPENAI_API_KEY>"
   }
 }
 ```
@@ -119,7 +136,8 @@ For those requiring the highest level of embedding detail and precision, the tex
   "embeddingsProvider": {
     "provider": "openai",
     "model": "text-embedding-3-large",
-    "apiBase": "<your custom OpenAI-compatible endpoint>" // optional, defaults to OpenAI's API
+    "apiBase": "<your custom OpenAI-compatible endpoint>", // optional, defaults to OpenAI's API
+    "apiKey": "<OPENAI_API_KEY>"
   }
 }
 ```
@@ -132,7 +150,8 @@ For certain scenarios, you may still find the text-embedding-ada-002 model relev
   "embeddingsProvider": {
     "provider": "openai",
     "model": "text-embedding-ada-002",
-    "apiBase": "<your custom OpenAI-compatible endpoint>" // optional, defaults to OpenAI's API
+    "apiBase": "<your custom OpenAI-compatible endpoint>", // optional, defaults to OpenAI's API
+    "apiKey": "<OPENAI_API_KEY>"
   }
 }
 ```
@@ -153,7 +172,7 @@ export function modifyConfig(config: Config): Config {
           });
           const data = await response.json();
           return data.embedding;
-        })
+        }),
       );
     },
   };

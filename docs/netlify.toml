@@ -2,3 +2,8 @@
   from = "/"
   to = "/docs/intro"
   force = true
+
+[[redirects]]
+  from = "/docs"
+  to = "/docs/intro"
+  force = true

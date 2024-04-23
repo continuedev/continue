@@ -107,7 +107,7 @@ const ItemsDiv = styled.div`
     0 0 0 1px rgba(0, 0, 0, 0.05),
     0px 10px 20px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
-  overflow: hidden;
+  overflow-x: hidden;
   padding: 0.2rem;
   position: relative;
 
@@ -315,6 +315,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
       ) : (
         <>
           {subMenuTitle && <ItemDiv className="mb-2">{subMenuTitle}</ItemDiv>}
+          {/* <CustomScrollbarDiv className="overflow-y-scroll max-h-96"> */}
           {allItems.length ? (
             allItems.map((item, index) => (
               <ItemDiv
@@ -369,6 +370,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
           ) : (
             <ItemDiv className="item">No results</ItemDiv>
           )}
+          {/* </CustomScrollbarDiv> */}
         </>
       )}
     </ItemsDiv>

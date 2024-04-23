@@ -24,6 +24,7 @@ The easiest way to find this information is from the chat playground in the Azur
 ### OpenAI compatible servers / APIs
 
 OpenAI compatible servers
+
 - [KoboldCpp](https://github.com/lostruins/koboldcpp)
 - [text-gen-webui](https://github.com/oobabooga/text-generation-webui/tree/main/extensions/openai#setup--installation)
 - [FastChat](https://github.com/lm-sys/FastChat/blob/main/docs/openai_api.md)
@@ -46,7 +47,7 @@ If you are [using an OpenAI compatible server / API](../../model-setup/select-pr
       "provider": "openai",
       "model": "MODEL_NAME",
       "apiKey": "EMPTY",
-      "apiBase": "http://localhost:8000"
+      "apiBase": "http://localhost:8000/v1"
     }
   ]
 }

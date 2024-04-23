@@ -1,6 +1,8 @@
 import { ConfigHandler } from "core/config/handler";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { IdeSettings } from "core/protocol";
+import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
+import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
@@ -189,17 +191,20 @@ export class VsCodeExtension {
     // Indexing
     this.ide.getWorkspaceDirs().then((dirs) => this.refreshCodebaseIndex(dirs));
 
-    // Listen for file saving
+    // Listen for file saving - use global file watcher so that changes
+    // from outside the window are also caught
+    fs.watchFile(getConfigJsonPath(), { interval: 1000 }, (stats) => {
+      this.configHandler.reloadConfig();
+    });
+    fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
+      this.configHandler.reloadConfig();
+    });
+
     vscode.workspace.onDidSaveTextDocument((event) => {
+      // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
 
-      if (
-        filepath.endsWith(".continue/config.json") ||
-        filepath.endsWith(".continue\\config.json") ||
-        filepath.endsWith(".continue/config.ts") ||
-        filepath.endsWith(".continue\\config.ts") ||
-        filepath.endsWith(".continuerc.json")
-      ) {
+      if (filepath.endsWith(".continuerc.json")) {
         this.configHandler.reloadConfig();
         this.tabAutocompleteModel.clearLlm();
       } else if (
