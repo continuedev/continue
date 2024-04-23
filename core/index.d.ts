@@ -495,6 +495,7 @@ type ModelProvider =
   | "openai"
   | "free-trial"
   | "anthropic"
+  | "cohere"
   | "together"
   | "ollama"
   | "huggingface-tgi"
@@ -502,7 +503,6 @@ type ModelProvider =
   | "llama.cpp"
   | "replicate"
   | "text-gen-webui"
-  | "google-palm"
   | "lmstudio"
   | "llamafile"
   | "gemini"
@@ -520,11 +520,13 @@ export type ModelName =
   | "gpt-4"
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
+  | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
-  // Open Source
+  // Mistral
   | "mistral-7b"
   | "mistral-8x7b"
+  // Llama 2
   | "llama2-7b"
   | "llama2-13b"
   | "llama2-70b"
@@ -532,6 +534,10 @@ export type ModelName =
   | "codellama-13b"
   | "codellama-34b"
   | "codellama-70b"
+  // Llama 3
+  | "llama3-8b"
+  | "llama3-70b"
+  // Other Open-source
   | "phi2"
   | "phind-codellama-34b"
   | "wizardcoder-7b"
@@ -548,8 +554,9 @@ export type ModelName =
   | "claude-3-sonnet-20240229"
   | "claude-3-haiku-20240307"
   | "claude-2.1"
-  // Google PaLM
-  | "chat-bison-001"
+  // Cohere
+  | "command-r"
+  | "command-r-plus"
   // Gemini
   | "gemini-pro"
   | "gemini-1.5-pro-latest"
@@ -675,6 +682,7 @@ export interface TabAutocompleteOptions {
   useCache: boolean;
   onlyMyCode: boolean;
   useOtherFiles: boolean;
+  disableInFiles?: string[];
 }
 
 export interface ContinueUIConfig {

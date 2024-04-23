@@ -19,6 +19,11 @@ export type ProtocolGeneratorType<T> = AsyncGenerator<{
   content: T;
 }>;
 
+export interface ListHistoryOptions {
+  offset?: number;
+  limit?: number;
+}
+
 export type Protocol = {
   // New
   "update/modelChange": [string, void];
@@ -27,7 +32,7 @@ export type Protocol = {
   abort: [undefined, void];
 
   // History
-  "history/list": [undefined, SessionInfo[]];
+  "history/list": [ListHistoryOptions, SessionInfo[]];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, PersistedSessionInfo];
   "history/save": [PersistedSessionInfo, void];
@@ -82,6 +87,7 @@ export type Protocol = {
     },
     string,
   ];
+  "llm/listModels": [{ title: string }, string[] | undefined];
   "llm/streamComplete": [
     {
       prompt: string;

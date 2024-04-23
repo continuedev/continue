@@ -231,6 +231,32 @@ const mixtralTrial: ModelPackage = {
   providerOptions: ["freetrial", "groq"],
 };
 
+const llama38bChat: ModelPackage = {
+  title: "Llama3 8b",
+  description: "The latest Llama model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama3-8b",
+    model: "llama3-8b",
+    contextLength: 8192,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
+};
+
+const llama370bChat: ModelPackage = {
+  title: "Llama3 70b Chat",
+  description: "The latest Llama model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama3-70b",
+    model: "llama3-70b",
+    contextLength: 8192,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
+};
+
 const llama270bChat: ModelPackage = {
   title: "Llama2 70b Chat",
   description: "The latest Llama model from Meta, fine-tuned for chat",
@@ -244,14 +270,14 @@ const llama270bChat: ModelPackage = {
   providerOptions: ["groq"],
 };
 
-const llama2Chat: ModelPackage = {
-  title: "Llama2 Chat",
-  description: "The latest Llama model from Meta, fine-tuned for chat",
+const llama3Chat: ModelPackage = {
+  title: "Llama3 Chat",
+  description: "The latest model from Meta, fine-tuned for chat",
   refUrl: "",
   params: {
-    title: "Llama2-7b",
-    model: "llama2-7b",
-    contextLength: 4096,
+    title: "Llama3-8b",
+    model: "llama3-8b",
+    contextLength: 8192,
   },
   icon: "meta.png",
   dimensions: [
@@ -259,17 +285,13 @@ const llama2Chat: ModelPackage = {
       name: "Parameter Count",
       description: "The number of parameters in the model",
       options: {
-        "7b": {
-          model: "llama2-7b",
-          title: "Llama2-7b",
+        "8b": {
+          model: "llama3-8b",
+          title: "Llama3-8b",
         },
-        "13b": {
-          model: "llama2-13b",
-          title: "Llama2-13b",
-        },
-        "34b": {
-          model: "llama2-34b",
-          title: "Llama2-34b",
+        "70b": {
+          model: "llama3-70b",
+          title: "Llama3-70b",
         },
       },
     },
@@ -418,7 +440,19 @@ const geminiPro: ModelPackage = {
     apiKey: "<API_KEY>",
   },
   icon: "gemini.png",
-  providerOptions: ["palm", "freetrial"],
+  providerOptions: ["gemini"],
+};
+const gemini15Pro: ModelPackage = {
+  title: "Gemini 1.5 Pro",
+  description: "A newer Gemini model with 1M token context length",
+  params: {
+    title: "Gemini 1.5 Pro",
+    model: "gemini-1.5-pro-latest",
+    contextLength: 1_000_000,
+    apiKey: "<API_KEY>",
+  },
+  icon: "gemini.png",
+  providerOptions: ["gemini", "freetrial"],
 };
 
 const zephyr: ModelPackage = {
@@ -490,29 +524,44 @@ const neuralChat: ModelPackage = {
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
+const commandR: ModelPackage = {
+  title: "Command R",
+  description:
+    "Command R is a scalable generative model targeting RAG and Tool Use to enable production-scale AI for enterprise.",
+  params: {
+    model: "command-r",
+    contextLength: 128_000,
+    title: "Command R",
+    apiKey: "",
+  },
+  providerOptions: ["cohere"],
+  icon: "cohere.png",
+};
+
+const commandRPlus: ModelPackage = {
+  title: "Command R+",
+  description:
+    "Command R+ is a state-of-the-art RAG-optimized model designed to tackle enterprise-grade workloads",
+  params: {
+    model: "command-r-plus",
+    contextLength: 128_000,
+    title: "Command R+",
+    apiKey: "",
+  },
+  providerOptions: ["cohere"],
+  icon: "cohere.png",
+};
+
 const osModels = [
+  llama3Chat,
   deepseek,
   wizardCoder,
   codeLlamaInstruct,
   mistral,
   phindCodeLlama,
-  llama2Chat,
   zephyr,
   neuralChat,
 ];
-
-const gpt4turbo: ModelPackage = {
-  title: "GPT-4 Turbo",
-  description:
-    "A faster, cheaper version of GPT-4 with a longer context length",
-  params: {
-    model: "gpt-4-turbo-preview",
-    contextLength: 128_000,
-    title: "gpt-4-turbo-preview",
-  },
-  providerOptions: ["openai", "freetrial"],
-  icon: "openai.png",
-};
 
 const gpt4: ModelPackage = {
   title: "GPT-4",
@@ -526,14 +575,14 @@ const gpt4: ModelPackage = {
   icon: "openai.png",
 };
 
-const gpt4vision: ModelPackage = {
-  title: "GPT-4 Vision",
+const gpt4turbo: ModelPackage = {
+  title: "GPT-4 Turbo",
   description:
-    "A faster version of GPT-4 with longer context length and image support",
+    "A faster and more capable version of GPT-4 with longer context length and image support",
   params: {
-    model: "gpt-4-vision-preview",
+    model: "gpt-4-turbo",
     contextLength: 128_000,
-    title: "GPT-4 Vision",
+    title: "GPT-4 Turbo",
   },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
@@ -607,20 +656,6 @@ const claude3Haiku: ModelPackage = {
   icon: "anthropic.png",
 };
 
-const chatBison: ModelPackage = {
-  title: "chat-bison-001",
-  description:
-    "Google PaLM's chat-bison-001 model, fine-tuned for chatting about code",
-  params: {
-    model: "chat-bison-001",
-    contextLength: 8000,
-    apiKey: "",
-    title: "Chat Bison",
-  },
-  providerOptions: ["palm"],
-  icon: "google-palm.png",
-};
-
 const AUTODETECT: ModelPackage = {
   title: "Autodetect",
   description:
@@ -631,22 +666,30 @@ const AUTODETECT: ModelPackage = {
   providerOptions: [],
 };
 
-export const MODEL_INFO: ModelPackage[] = [
+export const MODEL_INFO: (ModelPackage | string)[] = [
+  "OpenAI",
   gpt4turbo,
   gpt4,
   gpt35turbo,
-  geminiPro,
+  "Anthropic",
   claude3Opus,
   claude3Sonnet,
   claude3Haiku,
   claude2,
+  "Cohere",
+  commandR,
+  commandRPlus,
+  "Gemini",
+  gemini15Pro,
+  geminiPro,
+  "Open Source",
+  llama3Chat,
   deepseek,
   mistral,
   codellama70bTrial,
   wizardCoder,
   codeLlamaInstruct,
   phindCodeLlama,
-  llama2Chat,
   zephyr,
 ];
 
@@ -663,7 +706,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       gpt4,
       gpt35turbo,
       gpt4turbo,
-      gpt4vision,
+      gpt4turbo,
       {
         ...AUTODETECT,
         params: {
@@ -708,6 +751,28 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
     ],
     packages: [claude3Opus, claude3Sonnet, claude3Haiku, claude2],
+  },
+  cohere: {
+    title: "Cohere",
+    provider: "cohere",
+    refPage: "cohere",
+    description:
+      "Optimized for enterprise generative AI, search and discovery, and advanced retrieval.",
+    icon: "cohere.png",
+    tags: [ModelProviderTag["Requires API Key"]],
+    longDescription:
+      "To use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.",
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Cohere API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
+    packages: [commandR, commandRPlus],
   },
   ollama: {
     title: "Ollama",
@@ -758,7 +823,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
       ...completionParamsInputs,
     ],
-    packages: [llama2Chat, codeLlamaInstruct, mistral].map((p) => {
+    packages: [llama3Chat, codeLlamaInstruct, mistral].map((p) => {
       p.params.contextLength = 4096;
       return p;
     }),
@@ -785,6 +850,8 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
     ],
     packages: [
+      llama370bChat,
+      llama38bChat,
       { ...mixtralTrial, title: "Mixtral" },
       llama270bChat,
       {
@@ -797,9 +864,9 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ,
     ],
   },
-  palm: {
+  gemini: {
     title: "Google Gemini API",
-    provider: "google-palm",
+    provider: "gemini",
     refPage: "googlepalmapi",
     description:
       "Try out Google's state-of-the-art Gemini model from their API.",
@@ -815,7 +882,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         required: true,
       },
     ],
-    packages: [geminiPro],
+    packages: [gemini15Pro, geminiPro],
   },
   mistral: {
     title: "Mistral API",
@@ -905,7 +972,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [codeLlamaInstruct, llama2Chat, wizardCoder, mistral, zephyr],
+    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistral, zephyr],
   },
   llamacpp: {
     title: "llama.cpp",
@@ -989,8 +1056,8 @@ After it's up and running, you can start using Continue.`,
       { ...claude3Opus, title: "Claude 3 Opus (trial)" },
       { ...claude3Sonnet, title: "Claude 3 Sonnet (trial)" },
       { ...claude3Haiku, title: "Claude 3 Haiku (trial)" },
-      { ...geminiPro, title: "Gemini Pro (trial)" },
-      { ...gpt4vision, title: "GPT-4 Vision (trial)" },
+      { ...gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
+      { ...gpt4turbo, title: "GPT-4 Turbo (trial)" },
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
       {
         ...AUTODETECT,

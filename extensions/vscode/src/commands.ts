@@ -7,6 +7,7 @@ import { IDE } from "core";
 import { AutocompleteOutcome } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
 import { logDevData } from "core/util/devdata";
+import { getConfigJsonPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
@@ -21,10 +22,45 @@ function getFullScreenTab() {
   );
 }
 
-function addHighlightedCodeToContext(
+async function addHighlightedCodeToContext(
   edit: boolean,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
+  // Capture highlighted terminal text
+  // const activeTerminal = vscode.window.activeTerminal;
+  // if (activeTerminal) {
+  //   // Copy selected text
+  //   const tempCopyBuffer = await vscode.env.clipboard.readText();
+  //   await vscode.commands.executeCommand(
+  //     "workbench.action.terminal.copySelection",
+  //   );
+  //   await vscode.commands.executeCommand(
+  //     "workbench.action.terminal.clearSelection",
+  //   );
+  //   const contents = (await vscode.env.clipboard.readText()).trim();
+  //   await vscode.env.clipboard.writeText(tempCopyBuffer);
+
+  //   // Add to context
+  //   const rangeInFileWithContents = {
+  //     filepath: activeTerminal.name,
+  //     contents,
+  //     range: {
+  //       start: {
+  //         line: 0,
+  //         character: 0,
+  //       },
+  //       end: {
+  //         line: contents.split("\n").length,
+  //         character: 0,
+  //       },
+  //     },
+  //   };
+
+  //   webviewProtocol?.request("highlightedCode", {
+  //     rangeInFileWithContents,
+  //   });
+  // }
+
   const editor = vscode.window.activeTextEditor;
   if (editor) {
     const selection = editor.selection;
@@ -147,7 +183,7 @@ const commandsMap: (
       vscode.commands.executeCommand("continue.continueGUIView.focus");
     }
     sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-    addHighlightedCodeToContext(false, sidebar.webviewProtocol);
+    await addHighlightedCodeToContext(false, sidebar.webviewProtocol);
   },
   "continue.focusContinueInputWithoutClear": async () => {
     if (!getFullScreenTab()) {
@@ -157,12 +193,12 @@ const commandsMap: (
       "focusContinueInputWithoutClear",
       undefined,
     );
-    addHighlightedCodeToContext(true, sidebar.webviewProtocol);
+    await addHighlightedCodeToContext(true, sidebar.webviewProtocol);
   },
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   },
-  "continue.quickEdit": async () => {
+  "continue.quickEdit": async (prompt?: string) => {
     const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
 
     const editor = vscode.window.activeTextEditor;
@@ -199,6 +235,7 @@ const commandsMap: (
         : `Describe how to edit the highlighted code${addContextMsg}`,
       title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
       prompt: `[${defaultModelTitle}]`,
+      value: prompt,
     };
     if (previousInput) {
       textInputOptions.value = previousInput + ", ";
@@ -440,6 +477,9 @@ const commandsMap: (
       null,
       extensionContext.subscriptions,
     );
+  },
+  "continue.openConfigJson": () => {
+    ide.openFile(getConfigJsonPath());
   },
   "continue.selectFilesAsContext": (
     firstUri: vscode.Uri,

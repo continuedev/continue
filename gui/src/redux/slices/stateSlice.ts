@@ -118,9 +118,9 @@ const initialState: State = {
     contextProviders: [],
     models: [
       {
-        title: "GPT-4 Vision (Free Trial)",
+        title: "GPT-4 Turbo (Free Trial)",
         provider: "free-trial",
-        model: "gpt-4-vision-preview",
+        model: "gpt-4-turbo",
       },
       {
         title: "GPT-3.5-Turbo (Free Trial)",
@@ -164,7 +164,9 @@ export const stateSlice = createSlice({
     ) => {
       const defaultModelTitle =
         config.models.find((model) => model.title === state.defaultModelTitle)
-          ?.title || config.models[0].title;
+          ?.title ||
+        config.models[0]?.title ||
+        "";
       state.config = config;
       state.defaultModelTitle = defaultModelTitle;
     },

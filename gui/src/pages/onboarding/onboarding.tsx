@@ -42,11 +42,11 @@ function Onboarding() {
           <b>Embeddings:</b> Local sentence-transformers model
           <br />
           <br />
-          <b>Autocomplete:</b> Starcoder2 3b (manual setup with Ollama, LM
-          Studio, etc.)
+          <b>Autocomplete:</b> Starcoder2 3b (set up with Ollama, LM Studio,
+          etc.)
           <br />
           <br />
-          <b>Chat:</b> Manual setup with Ollama, LM Studio, etc.
+          <b>Chat:</b> Llama 3 with Ollama, LM Studio, etc.
         </p>
       )}
       <br></br>
@@ -106,19 +106,47 @@ function Onboarding() {
           This can always be done later.
         </p>
       </Div>
+      {selected === 2 && (
+        <p className="px-3">
+          Use <code>config.json</code> to configure your own{" "}
+          <a href="https://continue.dev/docs/model-setup/overview">models</a>,{" "}
+          <a href="https://continue.dev/docs/customization/context-providers">
+            context providers
+          </a>
+          ,{" "}
+          <a href="https://continue.dev/docs/customization/slash-commands">
+            slash commands
+          </a>
+          , and <a href="https://continue.dev/docs/reference/config">more</a>.
+        </p>
+      )}
 
       <br />
       <div className="flex">
         <StyledButton
+          blurColor={
+            selected === 0
+              ? greenButtonColor
+              : selected === 1
+              ? "#be841b"
+              : "#1b84be"
+          }
           disabled={selected < 0}
           onClick={() => {
-            postToIde("showTutorial", undefined);
             postToIde("completeOnboarding", {
               mode: ["local", "optimized", "custom"][selected] as any,
             });
             setLocalStorage("onboardingComplete", true);
-            postToIde("index/forceReIndex", undefined);
-            navigate("/");
+
+            if (selected === 0) {
+              navigate("/localOnboarding");
+            } else {
+              // Only needed when we switch from the default (local) embeddings provider
+              postToIde("index/forceReIndex", undefined);
+              // Don't show the tutorial above yet because there's another step to complete at /localOnboarding
+              postToIde("showTutorial", undefined);
+              navigate("/");
+            }
           }}
         >
           Continue

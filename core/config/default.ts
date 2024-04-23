@@ -8,9 +8,9 @@ export const defaultConfig: SerializedContinueConfig = {
       model: "claude-3-sonnet-20240229",
     },
     {
-      title: "GPT-4 Vision (Free Trial)",
+      title: "GPT-4 Turbo (Free Trial)",
       provider: "free-trial",
-      model: "gpt-4-vision-preview",
+      model: "gpt-4-turbo",
     },
     {
       title: "GPT-3.5-Turbo (Free Trial)",
@@ -55,13 +55,13 @@ export const defaultConfig: SerializedContinueConfig = {
     },
   ],
   contextProviders: [
+    { name: "code", params: {} },
+    { name: "docs", params: {} },
     { name: "diff", params: {} },
-    {
-      name: "open",
-      params: {},
-    },
+    { name: "open", params: {} },
     { name: "terminal", params: {} },
     { name: "problems", params: {} },
+    { name: "folder", params: {} },
     { name: "codebase", params: {} },
   ],
   tabAutocompleteModel: {
@@ -79,9 +79,9 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       model: "claude-3-sonnet-20240229",
     },
     {
-      title: "GPT-4 Vision (Free Trial)",
+      title: "GPT-4 Turbo (Free Trial)",
       provider: "free-trial",
-      model: "gpt-4-vision-preview",
+      model: "gpt-4-turbo",
     },
     {
       title: "GPT-3.5-Turbo (Free Trial)",
@@ -121,12 +121,7 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  contextProviders: [
-    {
-      name: "open",
-      params: {},
-    },
-  ],
+  contextProviders: [{ name: "open", params: {} }],
   tabAutocompleteModel: {
     title: "Starcoder2 3b",
     provider: "ollama",

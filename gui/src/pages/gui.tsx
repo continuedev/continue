@@ -1,4 +1,5 @@
 import {
+  ArrowLeftIcon,
   ChatBubbleOvalLeftIcon,
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
@@ -102,7 +103,7 @@ const NewSessionButton = styled.div`
   font-size: 12px;
 
   border-radius: ${defaultBorderRadius};
-  padding: 2px 8px;
+  padding: 2px 6px;
   color: ${lightGray};
 
   &:hover {
@@ -256,10 +257,10 @@ function GUI(props: GUIProps) {
           dispatch(
             setDialogMessage(
               <div className="text-center p-4">
-                👋 Thanks for using Continue. We are a beta product and love
-                working closely with our first users. If you're interested in
-                speaking, enter your name and email. We won't use this
-                information for anything other than reaching out.
+                👋 Thanks for using Continue. We are always trying to improve
+                and love hearing from users. If you're interested in speaking,
+                enter your name and email. We won't use this information for
+                anything other than reaching out.
                 <br />
                 <br />
                 <form
@@ -327,7 +328,8 @@ function GUI(props: GUIProps) {
     ],
   );
 
-  const { saveSession } = useHistory(dispatch);
+  const { saveSession, getLastSessionId, loadLastSession } =
+    useHistory(dispatch);
 
   useWebviewListener(
     "newSession",
@@ -466,6 +468,16 @@ function GUI(props: GUIProps) {
               className="mr-auto"
             >
               New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
+            </NewSessionButton>
+          ) : getLastSessionId() ? (
+            <NewSessionButton
+              onClick={async () => {
+                loadLastSession();
+              }}
+              className="mr-auto flex items-center gap-1"
+            >
+              <ArrowLeftIcon width="11px" height="11px" />
+              Last Session
             </NewSessionButton>
           ) : null}
         </div>

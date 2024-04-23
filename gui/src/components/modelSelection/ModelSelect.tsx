@@ -148,7 +148,7 @@ function ListBoxOption({
         <span>{option.title}</span>
         {hovered && showDelete && (
           <HeaderButtonWithText
-            text="Delete"
+            text={undefined}
             onClick={(e) => {
               dispatch(setShowDialog(true));
               dispatch(
@@ -164,7 +164,8 @@ function ListBoxOption({
               e.stopPropagation();
               e.preventDefault();
             }}
-            style={{ backgroundColor: vscInputBackground }}
+            backgroundColor={vscInputBackground}
+            hoverBackgroundColor={vscBackground}
             className="absolute right-0 p-1"
           >
             <TrashIcon width="1.2em" height="1.2em" />

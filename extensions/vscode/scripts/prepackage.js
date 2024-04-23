@@ -41,6 +41,8 @@ if (!target) {
     s390x: "x64",
     x64: "x64",
   }[process.arch];
+} else {
+  [os, arch] = target.split("-");
 }
 
 if (os === "alpine") {

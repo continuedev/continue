@@ -95,8 +95,8 @@ class FreeTrial extends BaseLLM {
     return [
       "gpt-3.5-turbo",
       "gpt-4",
-      "gemini-pro",
-      "gpt-4-vision-preview",
+      "gemini-1.5-pro-latest",
+      "gpt-4-turbo",
       "codellama-70b",
       "claude-3-opus-20240229",
       "claude-3-sonnet-20240229",

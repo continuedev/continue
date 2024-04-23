@@ -139,19 +139,39 @@ export const Button = styled.button`
   }
 `;
 
-export const StyledTooltip = styled(Tooltip)`
-  font-size: 12px;
-  background-color: ${vscEditorBackground};
-  color: ${vscForeground};
-  border-radius: ${defaultBorderRadius};
-  box-shadow: 0 0 1px 0 ${vscForeground};
-  padding: 2px;
-  padding-left: 4px;
-  padding-right: 4px;
-  z-index: 1000;
+export const CustomScrollbarDiv = styled.div`
+  scrollbar-base-color: transparent;
+  scrollbar-width: thin;
+  background-color: ${vscBackground};
 
-  max-width: 80vw;
+  & * {
+    ::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    ::-webkit-scrollbar:horizontal {
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      border-radius: 2px;
+    }
+  }
 `;
+
+const TooltipStyles = {
+  fontSize: "12px",
+  backgroundColor: vscInputBackground,
+  boxShadow: `0px 0px 2px 1px ${vscBadgeBackground}`,
+  color: vscForeground,
+  padding: "2px 6px",
+  zIndex: 1000,
+  maxWidth: "80vw",
+};
+
+export function StyledTooltip(props) {
+  return <Tooltip {...props} style={TooltipStyles} />;
+}
 
 export const TextArea = styled.textarea`
   padding: 8px;
@@ -305,9 +325,14 @@ export const appear = keyframes`
     }
 `;
 
-export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
-  background-color: ${({ inverted }) =>
-    inverted ? vscForeground : "transparent"};
+export const HeaderButton = styled.button<{
+  inverted: boolean | undefined;
+  backgroundColor?: string;
+  hoverBackgroundColor?: string;
+}>`
+  background-color: ${({ inverted, backgroundColor }) => {
+    return backgroundColor ?? (inverted ? vscForeground : "transparent");
+  }};
   color: ${({ inverted }) => (inverted ? vscBackground : vscForeground)};
 
   border: none;
@@ -320,9 +345,9 @@ export const HeaderButton = styled.button<{ inverted: boolean | undefined }>`
   }
 
   &:hover {
-    background-color: ${({ inverted }) =>
+    background-color: ${({ inverted, hoverBackgroundColor }) =>
       typeof inverted === "undefined" || inverted
-        ? vscInputBackground
+        ? hoverBackgroundColor ?? vscInputBackground
         : "transparent"};
   }
   display: flex;

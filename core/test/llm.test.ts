@@ -94,7 +94,7 @@ describe("LLM", () => {
   // testLLM(new HuggingFaceTGI({ model: "codellama-7b" }));
   // testLLM(new HuggingFaceInferenceAPI({ model: "codellama-7b" }));
   // testLLM(
-  //   new GooglePalm({
+  //   new Gemini({
   //     model: "gemini-pro",
   //     //   model: "chat-bison-001",
   //     apiKey: process.env.GOOGLE_PALM_API_KEY,

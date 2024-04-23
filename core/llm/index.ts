@@ -15,6 +15,7 @@ import {
 import { DevDataSqliteDb } from "../util/devdataSqlite";
 import mergeJson from "../util/merge";
 import { Telemetry } from "../util/posthog";
+import { withExponentialBackoff } from "../util/withExponentialBackoff";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
@@ -44,7 +45,25 @@ export abstract class BaseLLM implements ILLM {
   }
 
   supportsImages(): boolean {
-    return modelSupportsImages(this.providerName, this.model);
+    return modelSupportsImages(this.providerName, this.model, this.title);
+  }
+
+  supportsCompletions(): boolean {
+    if (this.providerName === "openai") {
+      if (
+        this.apiBase?.includes("api.groq.com") ||
+        this.apiBase?.includes(":1337") ||
+        this._llmOptions.useLegacyCompletionsEndpoint?.valueOf() === false
+      ) {
+        // Jan + Groq don't support completions : (
+        return false;
+      }
+    }
+    return true;
+  }
+
+  supportsPrefill(): boolean {
+    return ["ollama", "anthropic"].includes(this.providerName);
   }
 
   supportsCompletions(): boolean {
@@ -234,7 +253,12 @@ ${prompt}`;
   ): Promise<Response> {
     if (this._fetch) {
       // Custom Node.js fetch
-      return this._fetch(url, init);
+      const customFetch = this._fetch;
+      return withExponentialBackoff<Response>(
+        () => customFetch(url, init),
+        5,
+        0.5,
+      );
     }
 
     // Most of the requestOptions aren't available in the browser
@@ -245,10 +269,12 @@ ${prompt}`;
       headers.append(key, value as string);
     }
 
-    return fetch(url, {
-      ...init,
-      headers,
-    });
+    return withExponentialBackoff<Response>(() =>
+      fetch(url, {
+        ...init,
+        headers,
+      }),
+    );
   }
 
   private _parseCompletionOptions(options: LLMFullCompletionOptions) {

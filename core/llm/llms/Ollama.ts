@@ -52,7 +52,7 @@ class Ollama extends BaseLLM {
                 if (!this.completionOptions.stop) {
                   this.completionOptions.stop = [];
                 }
-                this.completionOptions.stop.push(value);
+                this.completionOptions.stop.push(JSON.parse(value));
                 break;
               default:
                 break;
@@ -76,6 +76,8 @@ class Ollama extends BaseLLM {
         "codellama-13b": "codellama:13b",
         "codellama-34b": "codellama:34b",
         "codellama-70b": "codellama:70b",
+        "llama3-8b": "llama3:8b",
+        "llama3-70b": "llama3:70b",
         "phi-2": "phi:2.7b",
         "phind-codellama-34b": "phind-codellama:34b-v2",
         "wizardcoder-7b": "wizardcoder:7b-python",

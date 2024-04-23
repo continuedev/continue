@@ -18,6 +18,8 @@ class Together extends OpenAI {
     "codellama-13b": "togethercomputer/CodeLlama-13b-Instruct",
     "codellama-34b": "togethercomputer/CodeLlama-34b-Instruct",
     "codellama-70b": "codellama/CodeLlama-70b-Instruct-hf",
+    "llama3-8b": "meta-llama/Llama-3-8b-chat-hf",
+    "llama3-70b": "meta-llama/Llama-3-70b-chat-hf",
     "llama2-7b": "togethercomputer/llama-2-7b-chat",
     "llama2-13b": "togethercomputer/llama-2-13b-chat",
     "llama2-70b": "togethercomputer/llama-2-70b-chat",

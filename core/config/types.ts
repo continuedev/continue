@@ -18,7 +18,7 @@ declare global {
       postIntellijMessage?: (
         messageType: string,
         data: any,
-        messageIde: string
+        messageIde: string,
       ) => void;
     }
   }
@@ -45,6 +45,14 @@ declare global {
     prompt: string;
     completion: string;
   }
+  
+  export type PromptTemplate =
+    | string
+    | ((
+        history: ChatMessage[],
+        otherData: Record<string, string>,
+      ) => string | ChatMessage[]);
+  
   export interface ILLM extends LLMOptions {
     get providerName(): ModelProvider;
   
@@ -75,24 +83,35 @@ declare global {
   
     streamComplete(
       prompt: string,
-      options?: LLMFullCompletionOptions
+      options?: LLMFullCompletionOptions,
     ): AsyncGenerator<string, LLMReturnValue>;
   
     streamChat(
       messages: ChatMessage[],
-      options?: LLMFullCompletionOptions
+      options?: LLMFullCompletionOptions,
     ): AsyncGenerator<ChatMessage, LLMReturnValue>;
   
     chat(
       messages: ChatMessage[],
-      options?: LLMFullCompletionOptions
+      options?: LLMFullCompletionOptions,
     ): Promise<ChatMessage>;
   
     countTokens(text: string): number;
   
     supportsImages(): boolean;
   
+    supportsCompletions(): boolean;
+  
+    supportsPrefill(): boolean;
+  
     listModels(): Promise<string[]>;
+  
+    renderPromptTemplate(
+      template: PromptTemplate,
+      history: ChatMessage[],
+      otherData: Record<string, string>,
+      canPutWordsInModelsMouth?: boolean,
+    ): string | ChatMessage[];
   }
   
   export type ContextProviderType = "normal" | "query" | "submenu";
@@ -108,6 +127,7 @@ declare global {
   export interface ContextProviderExtras {
     fullInput: string;
     embeddingsProvider: EmbeddingsProvider;
+    reranker: Reranker | undefined;
     llm: ILLM;
     ide: IDE;
     selectedCode: RangeInFile[];
@@ -125,10 +145,10 @@ declare global {
     type?: ContextProviderType;
     getContextItems(
       query: string,
-      extras: ContextProviderExtras
+      extras: ContextProviderExtras,
     ): Promise<ContextItem[]>;
     loadSubmenuItems?: (
-      args: LoadSubmenuItemsArgs
+      args: LoadSubmenuItemsArgs,
     ) => Promise<ContextSubmenuItem[]>;
   }
   
@@ -143,7 +163,7 @@ declare global {
   
     getContextItems(
       query: string,
-      extras: ContextProviderExtras
+      extras: ContextProviderExtras,
     ): Promise<ContextItem[]>;
   
     loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
@@ -166,6 +186,11 @@ declare global {
   export interface RangeInFile {
     filepath: string;
     range: Range;
+  }
+  
+  export interface FileWithContents {
+    filepath: string;
+    contents: string;
   }
   
   export interface Range {
@@ -228,9 +253,14 @@ declare global {
     editable?: boolean;
   }
   
+  export interface InputModifiers {
+    useCodebase: boolean;
+  }
+  
   export interface ChatHistoryItem {
     message: ChatMessage;
     editorState?: any;
+    modifiers?: InputModifiers;
     contextItems: ContextItemWithId[];
     promptLogs?: [string, string][]; // [prompt, completion]
   }
@@ -240,7 +270,6 @@ declare global {
   // LLM
   
   export interface LLMFullCompletionOptions extends BaseCompletionOptions {
-    raw?: boolean;
     log?: boolean;
   
     model?: string;
@@ -261,6 +290,8 @@ declare global {
     llmRequestHook?: (model: string, prompt: string) => any;
     apiKey?: string;
     apiBase?: string;
+  
+    useLegacyCompletionsEndpoint?: boolean;
   
     // Azure options
     engine?: string;
@@ -284,15 +315,15 @@ declare global {
     streamCompletion?: (
       prompt: string,
       options: CompletionOptions,
-      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
     ) => AsyncGenerator<string>;
     streamChat?: (
       messages: ChatMessage[],
       options: CompletionOptions,
-      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
     ) => AsyncGenerator<string>;
     listModels?: (
-      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
     ) => Promise<string[]>;
   }
   
@@ -317,12 +348,27 @@ declare global {
     message: string;
   }
   
+  export class Thread {
+    name: string;
+    id: number;
+  }
+  
   export type IdeType = "vscode" | "jetbrains";
   export interface IdeInfo {
     ideType: IdeType;
     name: string;
     version: string;
     remoteName: string;
+    extensionVersion: string;
+  }
+  
+  export interface BranchAndDir {
+    branch: string;
+    directory: string;
+  }
+  
+  export interface IndexTag extends BranchAndDir {
+    artifactId: string;
   }
   
   export interface IDE {
@@ -331,6 +377,12 @@ declare global {
     isTelemetryEnabled(): Promise<boolean>;
     getUniqueId(): Promise<string>;
     getTerminalContents(): Promise<string>;
+    getDebugLocals(threadIndex: number): Promise<string>;
+    getTopLevelCallStackSources(
+      threadIndex: number,
+      stackDepth: number,
+    ): Promise<string[]>;
+    getAvailableThreads(): Promise<Thread[]>;
     listWorkspaceContents(directory?: string): Promise<string[]>;
     listFolders(): Promise<string[]>;
     getWorkspaceDirs(): Promise<string[]>;
@@ -346,12 +398,12 @@ declare global {
     showLines(
       filepath: string,
       startLine: number,
-      endLine: number
+      endLine: number,
     ): Promise<void>;
     showDiff(
       filepath: string,
       newContents: string,
-      stepIndex: number
+      stepIndex: number,
     ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
     getPinnedFiles(): Promise<string[]>;
@@ -360,6 +412,8 @@ declare global {
     getProblems(filepath?: string | undefined): Promise<Problem[]>;
     getBranch(dir: string): Promise<string>;
     getStats(directory: string): Promise<{ [path: string]: number }>;
+    getTags(artifactId: string): Promise<IndexTag[]>;
+    getRepoName(dir: string): Promise<string | undefined>;
   }
   
   // Slash Commands
@@ -405,6 +459,7 @@ declare global {
     | "diff"
     | "github"
     | "terminal"
+    | "locals"
     | "open"
     | "google"
     | "search"
@@ -412,7 +467,14 @@ declare global {
     | "http"
     | "codebase"
     | "problems"
-    | "folder";
+    | "folder"
+    | "jira"
+    | "postgres"
+    | "database"
+    | "code"
+    | "docs"
+    | "gitlab-mr"
+    | "os";
   
   type TemplateType =
     | "llama2"
@@ -428,7 +490,8 @@ declare global {
     | "xwin-coder"
     | "neural-chat"
     | "codellama-70b"
-    | "llava";
+    | "llava"
+    | "gemma";
   
   type ModelProvider =
     | "openai"
@@ -441,14 +504,15 @@ declare global {
     | "llama.cpp"
     | "replicate"
     | "text-gen-webui"
-    | "google-palm"
+    | "gemini"
     | "lmstudio"
     | "llamafile"
     | "gemini"
     | "mistral"
     | "bedrock"
     | "deepinfra"
-    | "flowise";
+    | "flowise"
+    | "groq";
   
   export type ModelName =
     | "AUTODETECT"
@@ -465,6 +529,7 @@ declare global {
     | "mistral-8x7b"
     | "llama2-7b"
     | "llama2-13b"
+    | "llama2-70b"
     | "codellama-7b"
     | "codellama-13b"
     | "codellama-34b"
@@ -481,8 +546,10 @@ declare global {
     | "neural-chat-7b"
     // Anthropic
     | "claude-2"
-    // Google PaLM
-    | "chat-bison-001"
+    | "claude-3-opus-20240229"
+    | "claude-3-sonnet-20240229"
+    | "claude-3-haiku-20240307"
+    | "claude-2.1"
     // Gemini
     | "gemini-pro"
     | "gemini-1.5-pro-latest"
@@ -494,6 +561,7 @@ declare global {
     | "deepseek-1b"
     | "starcoder-1b"
     | "starcoder-3b"
+    | "starcoder2-3b"
     | "stable-code-3b";
   
   export interface RequestOptions {
@@ -537,6 +605,10 @@ declare global {
     mirostat?: number;
     stop?: string[];
     maxTokens?: number;
+    numThreads?: number;
+    keepAlive?: number;
+    raw?: boolean;
+    stream?: boolean;
   }
   
   export interface ModelDescription {
@@ -553,7 +625,11 @@ declare global {
     promptTemplates?: { [key: string]: string };
   }
   
-  export type EmbeddingsProviderName = "transformers.js" | "ollama" | "openai";
+  export type EmbeddingsProviderName =
+    | "transformers.js"
+    | "ollama"
+    | "openai"
+    | "free-trial";
   
   export interface EmbedOptions {
     apiBase?: string;
@@ -570,7 +646,20 @@ declare global {
     embed(chunks: string[]): Promise<number[][]>;
   }
   
+  export type RerankerName = "voyage" | "llm" | "free-trial";
+  
+  export interface RerankerDescription {
+    name: RerankerName;
+    params?: { [key: string]: any };
+  }
+  
+  export interface Reranker {
+    name: string;
+    rerank(query: string, chunks: Chunk[]): Promise<number[]>;
+  }
+  
   export interface TabAutocompleteOptions {
+    disable: boolean;
     useCopyBuffer: boolean;
     useSuffix: boolean;
     maxPromptTokens: number;
@@ -578,10 +667,33 @@ declare global {
     maxSuffixPercentage: number;
     prefixPercentage: number;
     template?: string;
-    disableMultiLineCompletions?: boolean;
+    multilineCompletions: "always" | "never" | "auto";
+    slidingWindowPrefixPercentage: number;
+    slidingWindowSize: number;
+    maxSnippetPercentage: number;
+    recentlyEditedSimilarityThreshold: number;
+    useCache: boolean;
+    onlyMyCode: boolean;
+    useOtherFiles: boolean;
+  }
+  
+  export interface ContinueUIConfig {
+    codeBlockToolbarPosition?: "top" | "bottom";
+  }
+  
+  interface ContextMenuConfig {
+    comment?: string;
+    docstring?: string;
+    fix?: string;
+    optimize?: string;
+    fixGrammar?: string;
+  }
+  interface ExperimantalConfig {
+    contextMenuPrompts?: ContextMenuConfig;
   }
   
   export interface SerializedContinueConfig {
+    env?: string[];
     allowAnonymousTelemetry?: boolean;
     models: ModelDescription[];
     systemMessage?: string;
@@ -595,6 +707,9 @@ declare global {
     embeddingsProvider?: EmbeddingsProviderDescription;
     tabAutocompleteModel?: ModelDescription;
     tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+    ui?: ContinueUIConfig;
+    reranker?: RerankerDescription;
+    experimental?: ExperimantalConfig;
   }
   
   export type ConfigMergeType = "merge" | "overwrite";
@@ -633,6 +748,12 @@ declare global {
     tabAutocompleteModel?: CustomLLM | ModelDescription;
     /** Options for tab autocomplete */
     tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+    /** UI styles customization */
+    ui?: ContinueUIConfig;
+    /** Options for the reranker */
+    reranker?: RerankerDescription | Reranker;
+    /** Experimental configuration */
+    experimental?: ExperimantalConfig;
   }
   
   export interface ContinueConfig {
@@ -648,6 +769,9 @@ declare global {
     embeddingsProvider: EmbeddingsProvider;
     tabAutocompleteModel?: ILLM;
     tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+    ui?: ContinueUIConfig;
+    reranker?: Reranker;
+    experimental?: ExperimantalConfig;
   }
   
   export interface BrowserSerializedContinueConfig {
@@ -661,6 +785,9 @@ declare global {
     disableSessionTitles?: boolean;
     userToken?: string;
     embeddingsProvider?: string;
+    ui?: ContinueUIConfig;
+    reranker?: RerankerDescription;
+    experimental?: ExperimantalConfig;
   }  
 }
 

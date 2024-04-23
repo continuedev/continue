@@ -134,6 +134,7 @@
             "openai",
             "free-trial",
             "anthropic",
+            "cohere",
             "bedrock",
             "together",
             "ollama",
@@ -141,7 +142,7 @@
             "huggingface-inference-api",
             "llama.cpp",
             "replicate",
-            "google-palm",
+            "gemini",
             "lmstudio",
             "llamafile",
             "mistral",
@@ -153,6 +154,7 @@
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/openai)",
             "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/freetrial)",
             "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/anthropicllm)",
+            "### Cohere\nTo use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/cohere)",
             "### Bedrock\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock/claude/)",
             "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/togetherllm)",
             "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/ollama)",
@@ -160,7 +162,7 @@
             "### Huggingface Inference API\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/huggingfaceinferenceapi)",
             "### Llama.cpp\nllama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:\n\n1. Clone the repository with `git clone https://github.com/ggerganov/llama.cpp`.\n2. `cd llama.cpp`\n3. Run `make` to build the server.\n4. Download the model you'd like to use and place it in the `llama.cpp/models` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))\n5. Run the llama.cpp server with the command below (replacing with the model you downloaded):\n\n```shell\n.\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf\n```\n\nAfter it's up and running, you can start using Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamacpp)",
             "### Replicate\nReplicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/replicatellm)",
-            "### Google PALM\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/googlepalmapi)",
+            "### Gemini API\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/googlepalmapi)",
             "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/lmstudio)",
             "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamafile)",
             "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
@@ -175,7 +177,7 @@
         },
         "apiKey": {
           "title": "Api Key",
-          "description": "OpenAI, Anthropic, Together, or other API key",
+          "description": "OpenAI, Anthropic, Cohere, Together, or other API key",
           "type": "string"
         },
         "apiBase": {
@@ -303,7 +305,8 @@
                 "enum": [
                   "openai",
                   "anthropic",
-                  "google-palm",
+                  "cohere",
+                  "gemini",
                   "huggingface-inference-api",
                   "replicate",
                   "together"
@@ -373,7 +376,7 @@
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
                       "gpt-4-0125-preview",
-                      "gpt-4-turbo-preview",
+                      "gpt-4-turbo",
                       "AUTODETECT"
                     ]
                   },
@@ -400,6 +403,8 @@
                 "anyOf": [
                   {
                     "enum": [
+                      "llama3-8b",
+                      "llama3-70b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -471,7 +476,7 @@
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
-                      "gpt-4-turbo-preview",
+                      "gpt-4-turbo",
                       "gpt-4-vision-preview",
                       "mistral-7b",
                       "mistral-8x7b",
@@ -481,6 +486,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -544,6 +551,23 @@
           "if": {
             "properties": {
               "provider": {
+                "enum": ["cohere"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["command-r", "command-r-plus"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
                 "enum": ["bedrock"]
               }
             },
@@ -572,7 +596,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["google-palm"]
+                "enum": ["gemini"]
               }
             },
             "required": ["provider"]
@@ -580,7 +604,11 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["chat-bison-001", "gemini-pro"]
+                "enum": [
+                  "chat-bison-001",
+                  "gemini-pro",
+                  "gemini-1.5-pro-latest"
+                ]
               }
             }
           }
@@ -604,6 +632,8 @@
                       "mistral-8x7b",
                       "llama2-7b",
                       "llama2-13b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -666,6 +696,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -712,6 +744,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -768,7 +802,13 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["llama2-70b", "mistral-8x7b", "gemma"]
+                "enum": [
+                  "llama2-70b",
+                  "mistral-8x7b",
+                  "gemma",
+                  "llama3-8b",
+                  "llama3-70b"
+                ]
               }
             }
           }
@@ -902,7 +942,7 @@
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
-                      "gpt-4-turbo-preview",
+                      "gpt-4-turbo",
                       "gpt-4-vision-preview",
                       "mistral-7b",
                       "mistral-8x7b",
@@ -912,6 +952,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -926,8 +968,11 @@
                       "claude-3-sonnet-20240229",
                       "claude-3-haiku-20240307",
                       "claude-2.1",
+                      "command-r",
+                      "command-r-plus",
                       "chat-bison-001",
                       "gemini-pro",
+                      "gemini-1.5-pro-latest",
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",
@@ -1585,7 +1630,7 @@
             {
               "name": "test",
               "prompt": "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
-              "description": "This is an example custom command. Use /config to edit it and create more"
+              "description": "This is an example custom command. Open config.json to edit it and create more"
             }
           ],
           "type": "array",
@@ -1794,6 +1839,13 @@
             "useOtherFiles": {
               "type": "boolean",
               "description": "Defaults to true. If set to false, Continue will not attempt to include snippets from other files."
+            },
+            "disableInFiles": {
+              "description": "A list of files / glob patterns in which to disable tab autocomplete. For example, *.csv if you'd like to disable autocomplete in .csv files.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "required": []
