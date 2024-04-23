@@ -405,7 +405,7 @@
         {
           "id": "continue",
           "title": "Continue",
-          "icon": "media/continue-dev-square.png"
+          "icon": "media/sidebar-icon.png"
         }
       ]
     },

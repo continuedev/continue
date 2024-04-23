@@ -403,6 +403,8 @@
                 "anyOf": [
                   {
                     "enum": [
+                      "llama3-8b",
+                      "llama3-70b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
