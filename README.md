@@ -1,10 +1,14 @@
-![Continue logo](media/c_d.png)
+<div align="center">
+
+![Continue logo](media/readme.png)
+
+</div>
 
 <h1 align="center">Continue</h1>
 
 <div align="center">
 
-**[Continue](https://continue.dev/docs) is an open-source autopilot for [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)—the easiest way to code with any LLM**
+**[Continue](https://continue.dev/docs) keeps developers in flow. Our open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions enable you to easily create your own modular AI software development system that you can improve.**
 
 </div>
 

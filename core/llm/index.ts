@@ -66,6 +66,23 @@ export abstract class BaseLLM implements ILLM {
     return ["ollama", "anthropic"].includes(this.providerName);
   }
 
+  supportsCompletions(): boolean {
+    if (this.providerName === "openai") {
+      if (
+        this.apiBase?.includes("api.groq.com") ||
+        this.apiBase?.includes(":1337")
+      ) {
+        // Jan + Groq don't support completions : (
+        return false;
+      }
+    }
+    return true;
+  }
+
+  supportsPrefill(): boolean {
+    return ["ollama", "anthropic"].includes(this.providerName);
+  }
+
   uniqueId: string;
   model: string;
 

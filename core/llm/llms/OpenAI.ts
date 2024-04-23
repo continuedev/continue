@@ -45,6 +45,12 @@ class OpenAI extends BaseLLM {
     this.useLegacyCompletionsEndpoint = options.useLegacyCompletionsEndpoint;
   }
 
+  constructor(options: LLMOptions) {
+    super(options);
+    this.useLegacyCompletionsEndpoint =
+      options.useLegacyCompletionsEndpoint ?? false;
+  }
+
   static providerName: ModelProvider = "openai";
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.openai.com/v1/",
