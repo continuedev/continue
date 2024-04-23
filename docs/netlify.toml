@@ -1,9 +1,9 @@
 [[redirects]]
   from = "/"
-  to = "/intro"
+  to = "/docs/intro"
   force = true
 
 [[redirects]]
   from = "/docs"
-  to = "/intro"
+  to = "/docs/intro"
   force = true
