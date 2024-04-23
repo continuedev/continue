@@ -61,7 +61,7 @@ You can run open-source LLMs with cloud services like:
 You can use commercial LLMs via APIs using:
 
 - [Anthrophic API](../reference/Model%20Providers/anthropicllm.md)
-- [Google Gemini API](../reference/Model%20Providers/googlegeminiapi.md)
+- [Google Gemini API](../reference/Model%20Providers/geminiapi.md)
 - [OpenAI free trial](../reference/Model%20Providers/freetrial.md)
 - [Mistral API](../reference/Model%20Providers/mistral.md)
 - [Voyage AI API](../walkthroughs/codebase-embeddings.md#openai)
