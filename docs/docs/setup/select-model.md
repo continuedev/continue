@@ -18,15 +18,13 @@ You likely want to use a model that is 30B+ parameters for chat.
 
 #### Llama 3 from Meta
 
-Unlimited GPU: s
-
-Limited GPU: 
-
-You should use `llama3-70b` right now. If it's not possible, you could try `llama3-8B` instead.
+- Unlimited GPU: `llama3-70b`
+- Limited GPU: `llama3-8B`
 
 #### DeepSeek Coder from DeepSeek
 
-You should use `deepseek-coder-33b` right now. If it's not possible, you could try `deepseek-coder-6.7b` instead.
+- Unlimited GPU: `deepseek-coder-33b`
+- Limited GPU: `deepseek-coder-6.7b`
 
 *You can also use other open-source chat models by adding them to your `config.json`.*
 
@@ -34,15 +32,18 @@ You should use `deepseek-coder-33b` right now. If it's not possible, you could t
 
 #### Claude 3 from Anthropic
 
-You should use `claude-3-opus-20240229` or `claude-3-sonnet-20240229` right now.
+- Unlimited budget: `claude-3-opus-20240229`
+- Limited budget: `claude-3-sonnet-20240229`
 
 #### GPT-4 Turbo from OpenAI
 
-You should use `gpt-4-turbo-2024-04-09` right now.
+- Unlimited budget: `gpt-4-turbo-2024-04-09`
+- Limited budget: `gpt-3.5-turbo-0125`
 
 #### Gemini Pro from Google
 
-You should use `gemini-pro-1.5-latest` right now.
+- Unlimited budget: `gemini-pro-1.5-latest`
+- Limited budget: `gemini-pro-1.0`
 
 *You can also use other commercial chat models by adding them to your `config.json`.*
 
@@ -56,11 +57,13 @@ You likely want to use a model that is 1-15B parameters for autocomplete.
 
 #### DeepSeek Coder from DeepSeek
 
-You should use `deepseek-coder-6.7b` right now. If it's not possible, you could try `deepseek-coder-1.3b` instead.
+- Unlimited GPU: `deepseek-coder-6.7b`
+- Limited GPU: `deepseek-coder-1.3b`
 
 #### StarCoder 2 from Hugging Face
 
-`starcoder-2-7b` is the best right now. If it's not possible, you could try `starcoder-2-3b` instead.
+- Unlimited GPU: `starcoder-2-7b`
+- Limited GPU: `starcoder-2-3b`
 
 *You can also use other autocomplete models by adding them to your `config.json`.*
 
@@ -70,11 +73,14 @@ You likely want to use an embeddings model that is made to vectorize code.
 
 ### Open-source models
 
-You should use `transformers.js` or `nomic-embed-text` right now.
+- `transformers.js`
+- `nomic-embed-text`
 
 ### Commercial models
 
-You should use `voyage-code-2` right now.
+- `voyage-code-2`
+
+
 
 *You can also use other embeddings models by adding them to your `config.json`.*
 

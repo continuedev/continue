@@ -8,60 +8,60 @@ keywords: [how to, edit, refactor, boilerplate, context]
 
 ## Easily understand code sections
 
+![understand](/img/understand.gif)
+
 - VS Code: `cmd+L` (MacOS) / `ctrl+L` (Windows)
 - JetBrains: `cmd+J` (MacOS) / `ctrl+J` (Windows)
 
-[Screenshot]
-
 ## Tab to autocomplete code suggestions
+
+![autocomplete](/img/autocomplete.gif)
 
 - VS Code: `tab` (MacOS) / `tab` (Windows)
 - JetBrains: `tab` (MacOS) / `tab` (Windows)
 
-[Screenshot]
-
 ## Refactor functions where you are coding
+
+![inline](/img/inline.gif)
 
 - VS Code: `cmd+I` (MacOS) / `ctrl+I` (Windows)
 - JetBrains: `cmd+I` (MacOS) / `ctrl+I` (Windows)
 
-[Screenshot]
-
 ## Ask questions about your codebase
+
+![codebase](/img/codebase.gif)
 
 - VS Code: `@codebase` (MacOS) / `@codebase` (Windows)
 - JetBrains: Support coming soon
 
-[Screenshot]
-
 ## Quickly use documentation as context
+
+![docs](/img/docs.gif)
 
 - VS Code: `@docs` (MacOS) / `@docs` (Windows)
 - JetBrains: `@docs` (MacOS) / `@docs` (Windows)
 
-[Screenshot]
-
 ## Kick off actions with slash commands
+
+![slash](/img/slash.gif)
 
 - VS Code: `/edit` (MacOS) / `/edit` (Windows)
 - JetBrains: `/edit` (MacOS) / `/edit` (Windows)
 
-[Screenshot]
+Learn more about slash commands [here](./customization/slash-commands.md)
 
-Learn more about slash commands here.
+## Add classes, files, and more to context
 
-## Add classes, files, and more to the context too
+![classes](/img/classes.gif)
 
 - VS Code: `@files` (MacOS) / `@files` (Windows)
 - JetBrains: `@files` (MacOS) / `@files` (Windows)
 
-[Screenshot]
-
-Learn more about context providers here.
+Learn more about context providers [here](./customization/context-providers.md).
 
 ## Understand terminal errors immediately
 
+![error](/img/error.gif)
+
 - VS Code: `cmd+shift+R` (MacOS) / `ctrl+shift+R` (Windows)
 - JetBrains: Support coming soon
-
-[Screenshot]
