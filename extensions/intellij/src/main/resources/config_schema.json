@@ -860,54 +860,13 @@
             "properties": {
               "model": {
                 "enum": [
-                  "codestral-latest",
                   "open-mistral-7b",
                   "open-mixtral-8x7b",
                   "open-mixtral-8x22b",
                   "mistral-small-latest",
+                  "mistral-medium-latest",
                   "mistral-large-latest"
                 ]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["groq"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "enum": [
-                  "llama2-70b",
-                  "mistral-8x7b",
-                  "gemma",
-                  "llama3-8b",
-                  "llama3-70b",
-                  "AUTODETECT"
-                ]
-              }
-            }
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "provider": {
-                "enum": ["fireworks"]
-              }
-            },
-            "required": ["provider"]
-          },
-          "then": {
-            "properties": {
-              "model": {
-                "enum": ["starcoder-7b"]
               }
             }
           }
