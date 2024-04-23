@@ -878,7 +878,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
   gemini: {
     title: "Google Gemini API",
     provider: "gemini",
-    refPage: "googlepalmapi",
+    refPage: "googlegeminiapi",
     description:
       "Try out Google's state-of-the-art Gemini model from their API.",
     longDescription: `To get started with Google Gemini API, obtain your API key from [here](https://ai.google.dev/tutorials/workspace_auth_quickstart) and paste it below.`,
