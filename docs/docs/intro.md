@@ -20,4 +20,4 @@ Some examples of what you can achieve are:
 - [Add classes, files, and more to the context too](how-to-use-continue.md#add-classes-files-and-more-to-the-context-too)
 - [Understand terminal errors immediately](how-to-use-continue.md#understand-terminal-errors-immediately)
 
-Continue lets you do all of this with any model, whether it's open-source or commercial, running local or remote, and used for chat, autocomplete, or embeddings. And we provide numerous points of configuration so that you can customize the extension to fit into your existing workflows.
+Continue enables you to use the right model for the job, whether it's open-source or commercial, running local or remote, and used for chat, autocomplete, or embeddings. And we provide numerous points of configuration, so that you can customize the extension to fit into your existing workflows.
