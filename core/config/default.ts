@@ -40,7 +40,6 @@ export const defaultConfig: SerializedContinueConfig = {
     {
       name: "share",
       description: "Export the current chat session to markdown",
-      params: { ouputDir: "Directory in which to export this session" },
     },
     {
       name: "cmd",
@@ -112,7 +111,6 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
     {
       name: "share",
       description: "Export the current chat session to markdown",
-      params: { ouputDir: "Directory in which to export this session" },
     },
   ],
   customCommands: [
