@@ -109,7 +109,6 @@ const initialState: State = {
       {
         name: "share",
         description: "Export the current chat session to markdown",
-        params: { ouputDir: "Directory in which to save this session" },
       },
       {
         name: "cmd",

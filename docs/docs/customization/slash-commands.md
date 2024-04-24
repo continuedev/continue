@@ -44,9 +44,11 @@ Type "/share" to generate a shareable markdown transcript of your current chat h
 {
   "name": "share",
   "description": "Export the current chat session to markdown",
-  "params": { "ouputDir": "Directory in which to export this session" }
+  "params": { "ouputDir": "~/.continue/session-transcripts" }
 }
 ```
+
+Use the `ouputDir` parameter to specify where you want to the markdown file to be saved.
 
 ### `/cmd`
 

@@ -132,7 +132,6 @@ After the "Full example" these examples will only show the relevant portion of t
     {
       "name": "share",
       "description": "Export the current chat session to markdown",
-      "params": { "ouputDir": "Directory in which to export this session" },
       "step": "ShareSessionStep"
     },
     {
