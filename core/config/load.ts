@@ -33,6 +33,7 @@ import type { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import { copyOf } from "../util";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 import mergeJson from "../util/merge";
 import {
   getConfigJsPath,
@@ -328,7 +329,11 @@ async function intermediateToFinalConfig(
     const { provider, ...options } = embeddingsProviderDescription;
     const embeddingsProviderClass = AllEmbeddingsProviders[provider];
     if (embeddingsProviderClass) {
-      config.embeddingsProvider = new embeddingsProviderClass(options);
+      config.embeddingsProvider = new embeddingsProviderClass(
+        options,
+        (url: string | URL, init: any) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
+      );
     }
   }
 

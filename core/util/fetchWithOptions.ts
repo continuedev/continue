@@ -8,10 +8,15 @@ import fetch, { type RequestInit, type Response } from "node-fetch";
 import type { RequestOptions } from "..";
 
 export function fetchwithRequestOptions(
-  url: URL,
+  url_: URL | string,
   init: RequestInit,
   requestOptions?: RequestOptions,
 ): Promise<Response> {
+  let url = url_;
+  if (typeof url === "string") {
+    url = new URL(url);
+  }
+
   const TIMEOUT = 7200; // 7200 seconds = 2 hours
 
   let globalCerts: string[] = [];

@@ -1,3 +1,16 @@
+import { ContextItemId, IDE } from "core";
+import { CompletionProvider } from "core/autocomplete/completionProvider";
+import { ConfigHandler } from "core/config/handler";
+import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
+import { indexDocs } from "core/indexing/docs";
+import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
+import { logDevData } from "core/util/devdata";
+import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
+import historyManager from "core/util/history";
+import { Message } from "core/util/messenger";
+import { Telemetry } from "core/util/posthog";
+import { streamDiffLines } from "core/util/verticalEdit";
 import { v4 as uuidv4 } from "uuid";
 import type { ContextItemId, IDE } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider";
@@ -198,26 +211,15 @@ export class Core {
       this.messenger.send("refreshSubmenuItems", undefined);
     });
     on("context/loadSubmenuItems", async (msg) => {
-      const { title } = msg.data;
-      const config = await this.configHandler.loadConfig();
-      const provider = config.contextProviders?.find(
-        (p) => p.description.title === title,
-      );
-      if (!provider) {
-        throw new Error(
-          `Unknown provider ${title}. Existing providers: ${config.contextProviders
-            ?.map((p) => p.description.title)
-            .join(", ")}`,
-        );
-      }
-
-      try {
-        const items = await provider.loadSubmenuItems({ ide });
-        return items;
-      } catch (e) {
-        this.ide.errorPopup(`Error loading submenu items from ${title}: ${e}`);
-        return [];
-      }
+      const config = await this.config();
+      const items = config.contextProviders
+        ?.find((provider) => provider.description.title === msg.data.title)
+        ?.loadSubmenuItems({
+          ide: this.ide,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
+        });
+      return items || [];
     });
     on("context/getContextItems", async (msg) => {
       const { name, query, fullInput, selectedCode } = msg.data;
@@ -228,19 +230,20 @@ export class Core {
       );
       if (!provider) return [];
 
-      try {
-        const id: ContextItemId = {
-          providerTitle: provider.description.title,
-          itemId: uuidv4(),
-        };
-        const items = await provider.getContextItems(query, {
-          llm,
-          embeddingsProvider: config.embeddingsProvider,
-          fullInput,
-          ide,
-          selectedCode,
-          reranker: config.reranker,
-        });
+      const id: ContextItemId = {
+        providerTitle: provider.description.title,
+        itemId: uuidv4(),
+      };
+      const items = await provider.getContextItems(msg.data.query, {
+        llm,
+        embeddingsProvider: config.embeddingsProvider,
+        fullInput: msg.data.fullInput,
+        ide,
+        selectedCode: msg.data.selectedCode,
+        reranker: config.reranker,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
+      });
 
         Telemetry.capture("useContextProvider", {
           name: provider.description.title,
