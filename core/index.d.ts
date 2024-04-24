@@ -122,6 +122,8 @@ export interface ContextProviderDescription {
   type: ContextProviderType;
 }
 
+export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
+
 export interface ContextProviderExtras {
   fullInput: string;
   embeddingsProvider: EmbeddingsProvider;
@@ -129,10 +131,12 @@ export interface ContextProviderExtras {
   llm: ILLM;
   ide: IDE;
   selectedCode: RangeInFile[];
+  fetch: FetchFunction;
 }
 
 export interface LoadSubmenuItemsArgs {
   ide: IDE;
+  fetch: FetchFunction;
 }
 
 export interface CustomContextProvider {
@@ -706,6 +710,7 @@ export interface SerializedContinueConfig {
   models: ModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
+  requestOptions?: RequestOptions;
   slashCommands?: SlashCommandDescription[];
   customCommands?: CustomCommand[];
   contextProviders?: ContextProviderWithParams[];
@@ -738,6 +743,8 @@ export interface Config {
   systemMessage?: string;
   /** The default completion options for all models */
   completionOptions?: BaseCompletionOptions;
+  /** Request options that will be applied to all models and context providers */
+  requestOptions?: RequestOptions;
   /** The list of slash commands that will be available in the sidebar */
   slashCommands?: SlashCommand[];
   /** Each entry in this array will originally be a ContextProviderWithParams, the same object from your config.json, but you may add CustomContextProviders.
@@ -769,6 +776,7 @@ export interface ContinueConfig {
   models: ILLM[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
+  requestOptions?: RequestOptions;
   slashCommands?: SlashCommand[];
   contextProviders?: IContextProvider[];
   disableSessionTitles?: boolean;
@@ -787,6 +795,7 @@ export interface BrowserSerializedContinueConfig {
   models: ModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
+  requestOptions?: RequestOptions;
   slashCommands?: SlashCommandDescription[];
   contextProviders?: ContextProviderDescription[];
   disableIndexing?: boolean;

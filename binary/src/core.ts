@@ -6,6 +6,7 @@ import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { logDevData } from "core/util/devdata";
+import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
 import { Telemetry } from "core/util/posthog";
@@ -138,7 +139,11 @@ export class Core {
       const config = await this.config();
       const items = config.contextProviders
         ?.find((provider) => provider.description.title === msg.data.title)
-        ?.loadSubmenuItems({ ide: this.ide });
+        ?.loadSubmenuItems({
+          ide: this.ide,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
+        });
       return items || [];
     });
     on("context/getContextItems", async (msg) => {
@@ -160,6 +165,8 @@ export class Core {
         ide,
         selectedCode: msg.data.selectedCode,
         reranker: config.reranker,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
       });
 
       Telemetry.capture("useContextProvider", {

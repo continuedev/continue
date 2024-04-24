@@ -10,6 +10,7 @@ import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { logDevData } from "core/util/devdata";
 import { DevDataSqliteDb } from "core/util/devdataSqlite";
+import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
@@ -470,7 +471,11 @@ export class VsCodeWebviewProtocol {
       }
 
       try {
-        const items = await provider.loadSubmenuItems({ ide });
+        const items = await provider.loadSubmenuItems({
+          ide,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
+        });
         return items;
       } catch (e) {
         vscode.window.showErrorMessage(
@@ -508,6 +513,8 @@ export class VsCodeWebviewProtocol {
           fullInput,
           ide,
           selectedCode,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
         });
 
         Telemetry.capture("useContextProvider", {

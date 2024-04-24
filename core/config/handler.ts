@@ -98,8 +98,9 @@ export class ConfigHandler {
         const resp = await fetchwithRequestOptions(
           new URL(input),
           { ...init },
-          llm.requestOptions,
+          { ...llm.requestOptions, ...this.savedConfig?.requestOptions },
         );
+
         if (!resp.ok) {
           let text = await resp.text();
           if (resp.status === 404 && !resp.url.includes("/v1")) {

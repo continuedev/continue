@@ -7,6 +7,7 @@ import { IDE } from "core";
 import { AutocompleteOutcome } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
 import { logDevData } from "core/util/devdata";
+import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import { getConfigJsonPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
@@ -289,6 +290,8 @@ const commandsMap: (
                 llm,
                 fullInput: text || "",
                 selectedCode: [],
+                fetch: (url, init) =>
+                  fetchwithRequestOptions(url, init, config.requestOptions),
               });
             }) || [],
           )

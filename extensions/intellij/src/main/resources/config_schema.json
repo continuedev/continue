@@ -1621,6 +1621,15 @@
             }
           ]
         },
+        "requestOptions": {
+          "title": "Request Options",
+          "description": "Default request options for all fetch requests from models and context providers. These will be overriden by any model-specific request options.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RequestOptions"
+            }
+          ]
+        },
         "slashCommands": {
           "title": "Slash Commands",
           "markdownDescription": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the [documentation](https://continue.dev/docs/customization/slash-commands).",
