@@ -1127,6 +1127,29 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "share"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "outputDir": {
+                    "type": "string",
+                    "markdownDescription": "If outputDir is set to `.` or begins with `./` or `.\\`, file will be saved to the current workspace or a subdirectory thereof, respectively. `~` can similarly be used to specify the user's home directory."
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "required": ["name", "description"]

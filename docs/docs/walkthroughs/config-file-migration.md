@@ -130,7 +130,8 @@ After the "Full example" these examples will only show the relevant portion of t
     },
     {
       "name": "share",
-      "description": "Download and share this session",
+      "description": "Export the current chat session to markdown",
+      "params": { "ouputDir": "Directory in which to save this session" },
       "step": "ShareSessionStep"
     },
     {
