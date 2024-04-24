@@ -658,7 +658,7 @@ export interface EmbeddingsProvider {
   embed(chunks: string[]): Promise<number[][]>;
 }
 
-export type RerankerName = "voyage" | "llm" | "free-trial";
+export type RerankerName = "cohere" | "voyage" | "llm" | "free-trial";
 
 export interface RerankerDescription {
   name: RerankerName;

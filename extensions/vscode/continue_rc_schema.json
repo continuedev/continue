@@ -1956,6 +1956,7 @@
           "properties": {
             "name": {
               "enum": [
+                "cohere",
                 "voyage",
                 "llm",
                 "free-trial"
@@ -1969,6 +1970,46 @@
             "name"
           ],
           "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": [
+                      "cohere"
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "enum": [
+                          "rerank-english-v3.0",
+                          "rerank-multilingual-v3.0",
+                          "rerank-english-v2.0",
+                          "rerank-multilingual-v2.0"
+                        ]
+                      },
+                      "apiBase": {
+                        "type": "string"
+                      },
+                      "apiKey": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "apiKey"
+                    ]
+                  }
+                }
+              }
+            },
             {
               "if": {
                 "properties": {
