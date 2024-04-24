@@ -131,16 +131,23 @@ export class VerticalPerLineDiffManager {
       return;
     }
 
-    let toHandle
-    //if all is specified, handle all blocks. Otherwise select specific one
-    if (!all) {
-      toHandle = blocks[index];
-      if (!toHandle){
+    //if 'all' is false, only handle the block at the specified index
+    let toHandle = []
+    if (!all && blocks.length > 1) {
+      if (!blocks || blocks.length <= index) {
         return;
       }
+      
+      //remove all entries except for entry at index
+      toHandle.push(blocks[index])
+      // Clear the array and push the item of interest
+      // blocks.length = 0; // This clears the array
+      // blocks.push(blockOfInterest);
     } else {
-      toHandle = blocks
+      toHandle = blocks.slice()
     }
+    console.log("blocks len: ", blocks.length)
+    console.log("toHandle len: ", toHandle.length)
 
     for (const block of toHandle) {
       // CodeLens object removed from editorToVerticalDiffCodeLens here
