@@ -14,6 +14,7 @@ import { DiffManager } from "../diff/horizontal";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { registerAllHoverProviders } from "../lang-server/hover";
 import { setupRemoteConfigSync } from "../stubs/activation";
 import { getUserToken } from "../stubs/auth";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
@@ -157,6 +158,9 @@ export class VsCodeExtension {
     );
     this.verticalDiffManager.refreshCodeLens =
       verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
+
+    // Hover
+    registerAllHoverProviders(context);
 
     // Tab autocomplete
     const config = vscode.workspace.getConfiguration("continue");

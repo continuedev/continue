@@ -138,14 +138,14 @@ const commandsMap: (
   sidebar: ContinueGUIWebviewViewProvider,
   configHandler: ConfigHandler,
   diffManager: DiffManager,
-  verticalDiffManager: VerticalPerLineDiffManager,
+  verticalDiffManager: VerticalPerLineDiffManager
 ) => { [command: string]: (...args: any) => any } = (
   ide,
   extensionContext,
   sidebar,
   configHandler,
   diffManager,
-  verticalDiffManager,
+  verticalDiffManager
 ) => ({
   "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
     if (newFilepath instanceof vscode.Uri) {
@@ -191,25 +191,39 @@ const commandsMap: (
     }
     sidebar.webviewProtocol?.request(
       "focusContinueInputWithoutClear",
-      undefined,
+      undefined
     );
     await addHighlightedCodeToContext(true, sidebar.webviewProtocol);
   },
   "continue.toggleAuxiliaryBar": () => {
     vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
   },
+  "continue.quickInsert": async (lineNumber: number, todoText: string) => {
+    const editor = vscode.window.activeTextEditor;
+    if (editor) {
+      const position = new vscode.Position(lineNumber, 0);
+      editor.selection = new vscode.Selection(position, position);
+    }
+
+    const modelName = await sidebar.webviewProtocol.request(
+      "getDefaultModelTitle",
+      undefined
+    );
+
+    await verticalDiffManager.streamEdit(todoText, modelName);
+  },
   "continue.quickEdit": async (prompt?: string) => {
     const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
 
     const editor = vscode.window.activeTextEditor;
     const existingHandler = verticalDiffManager.getHandlerForFile(
-      editor?.document.uri.fsPath ?? "",
+      editor?.document.uri.fsPath ?? ""
     );
     const previousInput = existingHandler?.input;
 
     let defaultModelTitle = await sidebar.webviewProtocol.request(
       "getDefaultModelTitle",
-      undefined,
+      undefined
     );
     const config = await configHandler.loadConfig();
     if (!defaultModelTitle) {
@@ -254,7 +268,7 @@ const commandsMap: (
     if (text.length > 0 || quickPickItems.length === 0) {
       const modelName = await sidebar.webviewProtocol.request(
         "getDefaultModelTitle",
-        undefined,
+        undefined
       );
       await verticalDiffManager.streamEdit(text, modelName);
     } else {
@@ -264,7 +278,7 @@ const commandsMap: (
         {
           title: "Add Context",
           canPickMany: true,
-        },
+        }
       );
 
       let text = await vscode.window.showInputBox(textInputOptions);
@@ -276,7 +290,7 @@ const commandsMap: (
             selectedProviders?.map((providerTitle) => {
               const provider = config.contextProviders?.find(
                 (provider) =>
-                  provider.description.title === providerTitle.description,
+                  provider.description.title === providerTitle.description
               );
               if (!provider) {
                 return [];
@@ -290,7 +304,7 @@ const commandsMap: (
                 fullInput: text || "",
                 selectedCode: [],
               });
-            }) || [],
+            }) || []
           )
         ).flat();
 
@@ -305,40 +319,45 @@ const commandsMap: (
   },
   "continue.writeCommentsForCode": async () => {
     await verticalDiffManager.streamEdit(
-      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
-        ?.comment ||
+      (
+        await configHandler.loadConfig()
+      ).experimental?.contextMenuPrompts?.comment ||
         "Write comments for this code. Do not change anything about the code itself.",
-      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined)
     );
   },
   "continue.writeDocstringForCode": async () => {
     await verticalDiffManager.streamEdit(
-      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
-        ?.docstring ||
+      (
+        await configHandler.loadConfig()
+      ).experimental?.contextMenuPrompts?.docstring ||
         "Write a docstring for this code. Do not change anything about the code itself.",
-      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined)
     );
   },
   "continue.fixCode": async () => {
     await verticalDiffManager.streamEdit(
-      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
-        ?.fix || "Fix this code",
-      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+      (
+        await configHandler.loadConfig()
+      ).experimental?.contextMenuPrompts?.fix || "Fix this code",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined)
     );
   },
   "continue.optimizeCode": async () => {
     await verticalDiffManager.streamEdit(
-      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
-        ?.optimize || "Optimize this code",
-      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+      (
+        await configHandler.loadConfig()
+      ).experimental?.contextMenuPrompts?.optimize || "Optimize this code",
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined)
     );
   },
   "continue.fixGrammar": async () => {
     await verticalDiffManager.streamEdit(
-      (await configHandler.loadConfig()).experimental?.contextMenuPrompts
-        ?.fixGrammar ||
+      (
+        await configHandler.loadConfig()
+      ).experimental?.contextMenuPrompts?.fixGrammar ||
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
-      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined),
+      await sidebar.webviewProtocol.request("getDefaultModelTitle", undefined)
     );
   },
   "continue.viewLogs": async () => {
@@ -391,12 +410,12 @@ const commandsMap: (
       startLine,
       0,
       endLine,
-      0,
+      0
     );
   },
   "continue.foldAndUnfold": (
     foldSelectionLines: number[],
-    unfoldSelectionLines: number[],
+    unfoldSelectionLines: number[]
   ) => {
     vscode.commands.executeCommand("editor.unfold", {
       selectionLines: unfoldSelectionLines,
@@ -437,7 +456,7 @@ const commandsMap: (
       vscode.commands.executeCommand(
         "vscode.open",
         (fullScreenTab.input as any).uri,
-        openOptions,
+        openOptions
       );
       return;
     }
@@ -453,7 +472,7 @@ const commandsMap: (
     let panel = vscode.window.createWebviewPanel(
       "continue.continueGUIView",
       "Continue",
-      vscode.ViewColumn.One,
+      vscode.ViewColumn.One
     );
 
     //Add content to the panel
@@ -465,7 +484,7 @@ const commandsMap: (
       verticalDiffManager,
       undefined,
       undefined,
-      true,
+      true
     );
 
     //When panel closes, reset the webview and focus
@@ -475,7 +494,7 @@ const commandsMap: (
         vscode.commands.executeCommand("continue.focusContinueInput");
       },
       null,
-      extensionContext.subscriptions,
+      extensionContext.subscriptions
     );
   },
   "continue.openConfigJson": () => {
@@ -483,7 +502,7 @@ const commandsMap: (
   },
   "continue.selectFilesAsContext": (
     firstUri: vscode.Uri,
-    uris: vscode.Uri[],
+    uris: vscode.Uri[]
   ) => {
     vscode.commands.executeCommand("continue.continueGUIView.focus");
 
@@ -499,12 +518,12 @@ const commandsMap: (
     }
     const position = editor.selection.active;
     sidebar.sendMainUserInput(
-      `/references ${filepath.fsPath} ${position.line} ${position.character}`,
+      `/references ${filepath.fsPath} ${position.line} ${position.character}`
     );
   },
   "continue.logAutocompleteOutcome": (
     outcome: AutocompleteOutcome,
-    logRejectionTimeout: NodeJS.Timeout,
+    logRejectionTimeout: NodeJS.Timeout
   ) => {
     clearTimeout(logRejectionTimeout);
     outcome.accepted = true;
@@ -523,7 +542,7 @@ const commandsMap: (
     config.update(
       "enableTabAutocomplete",
       !enabled,
-      vscode.ConfigurationTarget.Global,
+      vscode.ConfigurationTarget.Global
     );
   },
 });
