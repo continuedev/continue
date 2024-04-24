@@ -108,7 +108,7 @@ const initialState: State = {
       },
       {
         name: "share",
-        description: "Download and share this session",
+        description: "Export the current chat session to markdown",
       },
       {
         name: "cmd",
