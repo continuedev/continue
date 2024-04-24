@@ -32,7 +32,7 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static MaxGroupSize: number = 4;
 
   constructor() {
-    super({ model: "all-MiniLM-L2-v6" });
+    super({ model: "all-MiniLM-L2-v6" }, () => Promise.resolve(null));
   }
 
   get id(): string {
