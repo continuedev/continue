@@ -30,7 +30,10 @@ import useHistory from "../../hooks/useHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
+import {
+  consumeMainEditorContent,
+  setEditingContextItemAtIndex,
+} from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
 import { isJetBrains, postToIde } from "../../util/ide";
@@ -231,6 +234,10 @@ function TipTapEditor(props: TipTapEditorProps) {
     return undefined;
   }
 
+  const mainEditorContent = useSelector(
+    (store: RootState) => store.state.mainEditorContent,
+  );
+
   const editor: Editor = useEditor({
     extensions: [
       Document,
@@ -311,7 +318,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         style: "font-size: 14px;",
       },
     },
-    content: props.editorState || "",
+    content: props.editorState || mainEditorContent || "",
     onUpdate: ({ editor, transaction }) => {
       // If /edit is typed and no context items are selected, select the first
 
@@ -349,6 +356,13 @@ function TipTapEditor(props: TipTapEditorProps) {
       }
     },
   });
+
+  useEffect(() => {
+    if (mainEditorContent && editor) {
+      editor.commands.setContent(mainEditorContent);
+      dispatch(consumeMainEditorContent());
+    }
+  }, [mainEditorContent, editor]);
 
   const onEnterRef = useUpdatingRef(
     (modifiers: InputModifiers) => {
