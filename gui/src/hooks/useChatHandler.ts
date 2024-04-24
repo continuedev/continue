@@ -23,6 +23,7 @@ import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   addPromptCompletionPair,
+  clearLastResponse,
   initNewActiveMessage,
   resubmitAtIndex,
   setInactive,
@@ -54,19 +55,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   async function _streamNormalInput(messages: ChatMessage[]) {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
-    const gen = ideMessenger.llmStreamChat(
-      defaultModel.title,
-      cancelToken,
-      messages,
-    );
-    let next = await gen.next();
 
     try {
-      const gen = ideMessenger.llmStreamChat(
-        defaultModel.title,
-        cancelToken,
-        messages,
-      );
+      const gen = llmStreamChat(defaultModel.title, cancelToken, messages);
       let next = await gen.next();
 
       while (!next.done) {
@@ -80,11 +71,15 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         next = await gen.next();
       }
 
-    let returnVal = next.value as LLMReturnValue;
-    if (returnVal) {
-      dispatch(
-        addPromptCompletionPair([[returnVal?.prompt, returnVal?.completion]]),
-      );
+      let returnVal = next.value as LLMReturnValue;
+      if (returnVal) {
+        dispatch(
+          addPromptCompletionPair([[returnVal?.prompt, returnVal?.completion]]),
+        );
+      }
+    } catch (e) {
+      // If there's an error, we should clear the response so there aren't two input boxes
+      dispatch(clearLastResponse());
     }
   }
 
