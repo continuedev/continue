@@ -137,17 +137,10 @@ export class VerticalPerLineDiffManager {
       if (!blocks || blocks.length <= index) {
         return;
       }
-      
-      //remove all entries except for entry at index
       toHandle.push(blocks[index])
-      // Clear the array and push the item of interest
-      // blocks.length = 0; // This clears the array
-      // blocks.push(blockOfInterest);
     } else {
       toHandle = blocks.slice()
     }
-    console.log("blocks len: ", blocks.length)
-    console.log("toHandle len: ", toHandle.length)
 
     for (const block of toHandle) {
       // CodeLens object removed from editorToVerticalDiffCodeLens here
