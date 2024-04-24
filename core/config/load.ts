@@ -43,6 +43,12 @@ import {
   getContinueDotEnv,
   migrate,
 } from "../util/paths";
+import {
+  defaultContextProvidersJetBrains,
+  defaultContextProvidersVsCode,
+  defaultSlashCommandsJetBrains,
+  defaultSlashCommandsVscode,
+} from "./default";
 const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -139,6 +145,16 @@ function loadSerializedConfig(
     );
   }
 
+  // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
+  config.contextProviders ??=
+    ideType === "vscode"
+      ? defaultContextProvidersVsCode
+      : defaultContextProvidersJetBrains;
+  config.slashCommands ??=
+    ideType === "vscode"
+      ? defaultSlashCommandsVscode
+      : defaultSlashCommandsJetBrains;
+
   return config;
 }
 
@@ -182,6 +198,7 @@ async function intermediateToFinalConfig(
   config: Config,
   readFile: (filepath: string) => Promise<string>,
 ): Promise<ContinueConfig> {
+  // Auto-detect models
   const models: BaseLLM[] = [];
   for (const desc of config.models) {
     if (isModelDescription(desc)) {
@@ -244,6 +261,7 @@ async function intermediateToFinalConfig(
     }
   }
 
+  // Tab autocomplete model
   let autocompleteLlm: BaseLLM | undefined = undefined;
   if (config.tabAutocompleteModel) {
     if (isModelDescription(config.tabAutocompleteModel)) {
@@ -258,6 +276,7 @@ async function intermediateToFinalConfig(
     }
   }
 
+  // Context providers
   const contextProviders: IContextProvider[] = [new FileContextProvider({})];
   for (const provider of config.contextProviders || []) {
     if (isContextProviderWithParams(provider)) {

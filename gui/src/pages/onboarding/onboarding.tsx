@@ -33,9 +33,9 @@ function Onboarding() {
       >
         <h3>✨ Cloud models</h3>
         <p>
-          This is the best experience. Use the best available commercial models
-          to index code and answer questions. Code is still only ever stored
-          locally.
+          This is the best experience. Continue will use the strongest available
+          commercial models to index code and answer questions. Code is only
+          ever stored locally.
         </p>
       </Div>
       {selected === 0 && (

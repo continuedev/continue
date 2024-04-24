@@ -1,4 +1,4 @@
-import { SerializedContinueConfig } from "..";
+import { ContextProviderWithParams, SerializedContinueConfig } from "..";
 
 export const defaultConfig: SerializedContinueConfig = {
   models: [
@@ -28,24 +28,6 @@ export const defaultConfig: SerializedContinueConfig = {
       model: "mistral-8x7b",
     },
   ],
-  slashCommands: [
-    {
-      name: "edit",
-      description: "Edit selected code",
-    },
-    {
-      name: "comment",
-      description: "Write comments for the selected code",
-    },
-    {
-      name: "share",
-      description: "Export the current chat session to markdown",
-    },
-    {
-      name: "cmd",
-      description: "Generate a shell command",
-    },
-  ],
   customCommands: [
     {
       name: "test",
@@ -53,16 +35,6 @@ export const defaultConfig: SerializedContinueConfig = {
         "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
       description: "Write unit tests for highlighted code",
     },
-  ],
-  contextProviders: [
-    { name: "code", params: {} },
-    { name: "docs", params: {} },
-    { name: "diff", params: {} },
-    { name: "open", params: {} },
-    { name: "terminal", params: {} },
-    { name: "problems", params: {} },
-    { name: "folder", params: {} },
-    { name: "codebase", params: {} },
   ],
   tabAutocompleteModel: {
     title: "Starcoder2 3b",
@@ -99,20 +71,6 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       model: "mistral-8x7b",
     },
   ],
-  slashCommands: [
-    {
-      name: "edit",
-      description: "Edit selected code",
-    },
-    {
-      name: "comment",
-      description: "Write comments for the selected code",
-    },
-    {
-      name: "share",
-      description: "Export the current chat session to markdown",
-    },
-  ],
   customCommands: [
     {
       name: "test",
@@ -121,10 +79,58 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       description: "Write unit tests for highlighted code",
     },
   ],
-  contextProviders: [{ name: "open", params: {} }],
   tabAutocompleteModel: {
     title: "Starcoder2 3b",
     provider: "ollama",
     model: "starcoder2:3b",
   },
 };
+
+export const defaultSlashCommandsVscode = [
+  {
+    name: "edit",
+    description: "Edit selected code",
+  },
+  {
+    name: "comment",
+    description: "Write comments for the selected code",
+  },
+  {
+    name: "share",
+    description: "Export the current chat session to markdown",
+  },
+  {
+    name: "cmd",
+    description: "Generate a shell command",
+  },
+];
+
+export const defaultSlashCommandsJetBrains = [
+  {
+    name: "edit",
+    description: "Edit selected code",
+  },
+  {
+    name: "comment",
+    description: "Write comments for the selected code",
+  },
+  {
+    name: "share",
+    description: "Export the current chat session to markdown",
+  },
+];
+
+export const defaultContextProvidersVsCode: ContextProviderWithParams[] = [
+  { name: "code", params: {} },
+  { name: "docs", params: {} },
+  { name: "diff", params: {} },
+  { name: "open", params: {} },
+  { name: "terminal", params: {} },
+  { name: "problems", params: {} },
+  { name: "folder", params: {} },
+  { name: "codebase", params: {} },
+];
+
+export const defaultContextProvidersJetBrains: ContextProviderWithParams[] = [
+  { name: "open", params: {} },
+];

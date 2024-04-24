@@ -73,6 +73,7 @@ export function openEditorAndRevealRange(
   editorFilename: string,
   range?: vscode.Range,
   viewColumn?: vscode.ViewColumn,
+  preview?: boolean,
 ): Promise<vscode.TextEditor> {
   return new Promise((resolve, _) => {
     if (editorFilename.startsWith("~")) {
@@ -93,10 +94,10 @@ export function openEditorAndRevealRange(
         }
         showTextDocumentInProcess = true;
         vscode.window
-          .showTextDocument(
-            doc,
-            getViewColumnOfFile(editorFilename) || viewColumn,
-          )
+          .showTextDocument(doc, {
+            viewColumn: getViewColumnOfFile(editorFilename) || viewColumn,
+            preview,
+          })
           .then((editor) => {
             if (range) {
               editor.revealRange(range);

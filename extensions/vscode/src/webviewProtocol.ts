@@ -26,7 +26,7 @@ import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getExtensionUri } from "./util/vscode";
 
-async function showTutorial() {
+export async function showTutorial() {
   const tutorialPath = path.join(
     getExtensionUri().fsPath,
     "continue_tutorial.py",
@@ -41,7 +41,7 @@ async function showTutorial() {
   const doc = await vscode.workspace.openTextDocument(
     vscode.Uri.file(tutorialPath),
   );
-  await vscode.window.showTextDocument(doc);
+  await vscode.window.showTextDocument(doc, { preview: false });
 }
 
 export class VsCodeWebviewProtocol {
