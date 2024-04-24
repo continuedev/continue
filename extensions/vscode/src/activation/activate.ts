@@ -6,7 +6,6 @@ import { VsCodeExtension } from "../extension/vscodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
-import { showTutorial } from "../webviewProtocol";
 import { setupInlineTips } from "./inlineTips";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
@@ -19,12 +18,14 @@ export async function activateExtension(context: vscode.ExtensionContext) {
 
   const vscodeExtension = new VsCodeExtension(context);
 
-  showTutorial();
-  vscode.commands.executeCommand(
-    "markdown.showPreview",
-    vscode.Uri.file(path.join(getExtensionUri().fsPath, "media", "welcome.md")),
-  );
-  migrate("showWelcome_1", () => {});
+  migrate("showWelcome_1", () => {
+    vscode.commands.executeCommand(
+      "markdown.showPreview",
+      vscode.Uri.file(
+        path.join(getExtensionUri().fsPath, "media", "welcome.md"),
+      ),
+    );
+  });
 
   // Load Continue configuration
   if (!context.globalState.get("hasBeenInstalled")) {

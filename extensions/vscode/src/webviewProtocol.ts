@@ -107,6 +107,8 @@ export class VsCodeWebviewProtocol {
             respond(response || {});
           }
         } catch (e: any) {
+          respond({ done: true, error: e });
+
           console.error(
             "Error handling webview message: " +
               JSON.stringify({ msg }, null, 2),

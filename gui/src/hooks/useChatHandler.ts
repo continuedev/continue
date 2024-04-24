@@ -20,6 +20,7 @@ import resolveEditorContent from "../components/mainInput/resolveInput";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   addPromptCompletionPair,
+  clearLastResponse,
   initNewActiveMessage,
   resubmitAtIndex,
   setInactive,
@@ -52,23 +53,31 @@ function useChatHandler(dispatch: Dispatch) {
   async function _streamNormalInput(messages: ChatMessage[]) {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
-    const gen = llmStreamChat(defaultModel.title, cancelToken, messages);
-    let next = await gen.next();
 
-    while (!next.done) {
-      if (!activeRef.current) {
-        abortController.abort();
-        break;
+    try {
+      const gen = llmStreamChat(defaultModel.title, cancelToken, messages);
+      let next = await gen.next();
+
+      while (!next.done) {
+        if (!activeRef.current) {
+          abortController.abort();
+          break;
+        }
+        dispatch(
+          streamUpdate(stripImages((next.value as ChatMessage).content)),
+        );
+        next = await gen.next();
       }
-      dispatch(streamUpdate(stripImages((next.value as ChatMessage).content)));
-      next = await gen.next();
-    }
 
-    let returnVal = next.value as LLMReturnValue;
-    if (returnVal) {
-      dispatch(
-        addPromptCompletionPair([[returnVal?.prompt, returnVal?.completion]]),
-      );
+      let returnVal = next.value as LLMReturnValue;
+      if (returnVal) {
+        dispatch(
+          addPromptCompletionPair([[returnVal?.prompt, returnVal?.completion]]),
+        );
+      }
+    } catch (e) {
+      // If there's an error, we should clear the response so there aren't two input boxes
+      dispatch(clearLastResponse());
     }
   }
 

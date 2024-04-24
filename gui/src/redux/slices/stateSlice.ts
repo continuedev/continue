@@ -186,6 +186,9 @@ export const stateSlice = createSlice({
     setActive: (state) => {
       state.active = true;
     },
+    clearLastResponse: (state) => {
+      state.history = state.history.slice(0, -2);
+    },
     setContextItemsAtIndex: (
       state,
       {
@@ -492,5 +495,6 @@ export const {
   setEditingContextItemAtIndex,
   initNewActiveMessage,
   setMessageAtIndex,
+  clearLastResponse,
 } = stateSlice.actions;
 export default stateSlice.reducer;
