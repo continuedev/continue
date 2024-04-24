@@ -21,23 +21,29 @@ import { IMessenger, type Message } from "core/util/messenger";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 
-export type ToCoreOrIdeFromWebviewProtocol = ToCoreFromWebviewProtocol &
-  ToIdeFromWebviewProtocol;
-type FullToWebviewFromIdeOrCoreProtocol = ToWebviewFromIdeProtocol &
-  ToWebviewFromCoreProtocol;
-export class VsCodeWebviewProtocol
-  implements
-    IMessenger<
-      ToCoreOrIdeFromWebviewProtocol,
-      FullToWebviewFromIdeOrCoreProtocol
-    >
-{
-  listeners = new Map<
-    keyof ToCoreOrIdeFromWebviewProtocol,
-    ((message: Message) => any)[]
-  >();
+export async function showTutorial() {
+  const tutorialPath = path.join(
+    getExtensionUri().fsPath,
+    "continue_tutorial.py",
+  );
+  // Ensure keyboard shortcuts match OS
+  if (process.platform !== "darwin") {
+    let tutorialContent = fs.readFileSync(tutorialPath, "utf8");
+    tutorialContent = tutorialContent.replace("⌘", "^").replace("Cmd", "Ctrl");
+    fs.writeFileSync(tutorialPath, tutorialContent);
+  }
 
-  send(messageType: string, data: any, messageId?: string): string {
+  const doc = await vscode.workspace.openTextDocument(
+    vscode.Uri.file(tutorialPath),
+  );
+  await vscode.window.showTextDocument(doc, { preview: false });
+}
+
+export class VsCodeWebviewProtocol {
+  listeners = new Map<keyof WebviewProtocol, ((message: Message) => any)[]>();
+  abortedMessageIds: Set<string> = new Set();
+
+  private send(messageType: string, data: any, messageId?: string): string {
     const id = messageId ?? uuidv4();
     this.webview?.postMessage({
       messageType,

@@ -95,7 +95,10 @@ export function openEditorAndRevealRange(
         }
         showTextDocumentInProcess = true;
         vscode.window
-          .showTextDocument(doc, getViewColumnOfFile(filename) || viewColumn)
+          .showTextDocument(doc, {
+            viewColumn: getViewColumnOfFile(editorFilename) || viewColumn,
+            preview,
+          })
           .then((editor) => {
             if (range) {
               editor.revealRange(range);

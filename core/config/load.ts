@@ -44,7 +44,13 @@ import {
   getContinueDotEnv,
   migrate,
 } from "../util/paths";
-const { execSync } = require("node:child_process");
+import {
+  defaultContextProvidersJetBrains,
+  defaultContextProvidersVsCode,
+  defaultSlashCommandsJetBrains,
+  defaultSlashCommandsVscode,
+} from "./default";
+const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -261,25 +267,6 @@ async function intermediateToFinalConfig(
       } else {
         models.push(llm);
       }
-    }
-  }
-
-  // Prepare models
-  for (const model of models) {
-    model.requestOptions = {
-      ...model.requestOptions,
-      ...config.requestOptions,
-    };
-  }
-
-  // Obtain auth token (only if free trial being used)
-  const freeTrialModels = models.filter(
-    (model) => model.providerName === "free-trial",
-  );
-  if (freeTrialModels.length > 0) {
-    const ghAuthToken = await ide.getGitHubAuthToken();
-    for (const model of freeTrialModels) {
-      (model as FreeTrial).setupGhAuthToken(ghAuthToken);
     }
   }
 
