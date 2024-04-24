@@ -73,8 +73,8 @@ function Models() {
           <li>a model (the LLM being run, e.g. GPT-4, CodeLlama).</li>
         </ul>
         To read more about the options, check out our{" "}
-        <a href="https://continue.dev/docs/model-setup/overview">overview</a> in
-        the docs.
+        <a href="https://continue.dev/docs/setup/overview">overview</a> in the
+        docs.
       </IntroDiv>
       {providersSelected ? (
         <GridDiv>

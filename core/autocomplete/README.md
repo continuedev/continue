@@ -28,7 +28,7 @@ All of the configuration options available for chat models are available to use 
 }
 ```
 
-If you aren't yet familiar with the available options, you can learn more in our [overview](../model-setup/overview.md).
+If you aren't yet familiar with the available options, you can learn more in our [overview](../setup/overview.md).
 
 ### What model should I use?
 

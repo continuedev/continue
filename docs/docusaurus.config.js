@@ -166,6 +166,18 @@ const config = {
             from: "/getting-started",
             to: "/quickstart",
           },
+          {
+            from: "/model-setup/overview",
+            to: "/setup/overview",
+          },
+          {
+            from: "/model-setup/select-model",
+            to: "/setup/select-model",
+          },
+          {
+            from: "/model-setup/configuration",
+            to: "/setup/configuration",
+          },
         ],
       },
     ],

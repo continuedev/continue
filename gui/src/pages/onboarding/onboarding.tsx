@@ -109,7 +109,7 @@ function Onboarding() {
       {selected === 2 && (
         <p className="px-3">
           Use <code>config.json</code> to configure your own{" "}
-          <a href="https://continue.dev/docs/model-setup/overview">models</a>,{" "}
+          <a href="https://continue.dev/docs/setup/overview">models</a>,{" "}
           <a href="https://continue.dev/docs/customization/context-providers">
             context providers
           </a>

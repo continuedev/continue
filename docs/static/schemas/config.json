@@ -215,7 +215,7 @@
         },
         "promptTemplates": {
           "title": "Prompt Templates",
-          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://continue.dev/docs/model-setup/configuration#customizing-the-edit-prompt) for an example.",
+          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://continue.dev/docs/setup/configuration#customizing-the-edit-prompt) for an example.",
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -1577,7 +1577,7 @@
         },
         "models": {
           "title": "Models",
-          "markdownDescription": "Learn about setting up models in [the documentation](https://continue.dev/docs/model-setup/overview).",
+          "markdownDescription": "Learn about setting up models in [the documentation](https://continue.dev/docs/setup/overview).",
           "default": [
             {
               "title": "GPT-4 (trial)",
