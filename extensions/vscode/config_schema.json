@@ -1698,7 +1698,7 @@
           "type": "object",
           "properties": {
             "provider": {
-              "enum": ["transformers.js", "ollama", "openai", "free-trial"]
+              "enum": ["transformers.js", "ollama", "openai", "cohere", "free-trial"]
             },
             "model": {
               "type": "string"
@@ -1723,6 +1723,19 @@
               },
               "then": {
                 "required": ["model"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["cohere"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "required": ["apiKey"]
               }
             }
           ]
