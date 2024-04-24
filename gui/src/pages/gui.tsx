@@ -1,9 +1,11 @@
 import {
+  ArrowLeftIcon,
   ChatBubbleOvalLeftIcon,
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { JSONContent } from "@tiptap/react";
+import { InputModifiers } from "core";
 import { usePostHog } from "posthog-js/react";
 import {
   Fragment,
@@ -25,23 +27,24 @@ import {
   vscForeground,
 } from "../components";
 import FTCDialog from "../components/dialogs/FTCDialog";
-import ErrorStepContainer from "../components/gui/ErrorStepContainer";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
+import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
+import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession, setInactive } from "../redux/slices/stateSlice";
 import {
   setDialogEntryOn,
   setDialogMessage,
-  setDisplayBottomMessageOnBottom,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
 import { isJetBrains } from "../util/ide";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -79,15 +82,16 @@ const StepsDiv = styled.div`
     position: relative;
   }
 
-  &::before {
-    content: "";
-    position: absolute;
-    height: calc(100% - 12px);
-    border-left: 2px solid ${lightGray};
-    left: 28px;
-    z-index: 0;
-    bottom: 12px;
-  }
+  // Gray, vertical line on the left ("thread")
+  // &::before {
+  //   content: "";
+  //   position: absolute;
+  //   height: calc(100% - 12px);
+  //   border-left: 2px solid ${lightGray};
+  //   left: 28px;
+  //   z-index: 0;
+  //   bottom: 12px;
+  // }
 `;
 
 const NewSessionButton = styled.div`
@@ -99,7 +103,7 @@ const NewSessionButton = styled.div`
   font-size: 12px;
 
   border-radius: ${defaultBorderRadius};
-  padding: 2px 8px;
+  padding: 2px 6px;
   color: ${lightGray};
 
   &:hover {
@@ -142,14 +146,11 @@ function GUI(props: GUIProps) {
   // #endregion
 
   // #region Selectors
-  const sessionState = useSelector((state: RootStore) => state.state);
+  const sessionState = useSelector((state: RootState) => state.state);
 
   const defaultModel = useSelector(defaultModelSelector);
 
-  const active = useSelector((state: RootStore) => state.state.active);
-  const contextProviders = useSelector(
-    (state: RootStore) => state.state.config.contextProviders || []
-  );
+  const active = useSelector((state: RootState) => state.state.active);
 
   // #endregion
 
@@ -169,26 +170,10 @@ function GUI(props: GUIProps) {
   const topGuiDivRef = useRef<HTMLDivElement>(null);
 
   // #region Effects
-
-  // Set displayBottomMessageOnBottom
-  const aboveComboBoxDivRef = useRef<HTMLDivElement>(null);
-  const bottomMessage = useSelector(
-    (state: RootStore) => state.uiState.bottomMessage
-  );
-  useEffect(() => {
-    if (!aboveComboBoxDivRef.current) return;
-    dispatch(
-      setDisplayBottomMessageOnBottom(
-        aboveComboBoxDivRef.current.getBoundingClientRect().top <
-          window.innerHeight / 2
-      )
-    );
-  }, [bottomMessage, aboveComboBoxDivRef.current]);
-
   const [userScrolledAwayFromBottom, setUserScrolledAwayFromBottom] =
     useState<boolean>(false);
 
-  const state = useSelector((state: RootStore) => state.state);
+  const state = useSelector((state: RootState) => state.state);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -244,11 +229,8 @@ function GUI(props: GUIProps) {
   const { streamResponse } = useChatHandler(dispatch);
 
   const sendInput = useCallback(
-    (editorState: JSONContent) => {
-      if (
-        defaultModel.providerName === "free-trial" &&
-        defaultModel?.apiKey === ""
-      ) {
+    (editorState: JSONContent, modifiers: InputModifiers) => {
+      if (defaultModel?.provider === "free-trial") {
         const ftc = localStorage.getItem("ftc");
         if (ftc) {
           const u = parseInt(ftc);
@@ -265,24 +247,20 @@ function GUI(props: GUIProps) {
         }
       }
 
-      streamResponse(editorState);
+      streamResponse(editorState, modifiers);
 
       // Increment localstorage counter for popup
-      const counter = localStorage.getItem("mainTextEntryCounter");
-      if (counter) {
-        let currentCount = parseInt(counter);
-        localStorage.setItem(
-          "mainTextEntryCounter",
-          (currentCount + 1).toString()
-        );
+      const currentCount = getLocalStorage("mainTextEntryCounter");
+      if (currentCount) {
+        setLocalStorage("mainTextEntryCounter", currentCount + 1);
         if (currentCount === 300) {
           dispatch(
             setDialogMessage(
               <div className="text-center p-4">
-                👋 Thanks for using Continue. We are a beta product and love
-                working closely with our first users. If you're interested in
-                speaking, enter your name and email. We won't use this
-                information for anything other than reaching out.
+                👋 Thanks for using Continue. We are always trying to improve
+                and love hearing from users. If you're interested in speaking,
+                enter your name and email. We won't use this information for
+                anything other than reaching out.
                 <br />
                 <br />
                 <form
@@ -296,8 +274,8 @@ function GUI(props: GUIProps) {
                       setDialogMessage(
                         <div className="text-center p-4">
                           Thanks! We'll be in touch soon.
-                        </div>
-                      )
+                        </div>,
+                      ),
                     );
                   }}
                   style={{
@@ -331,14 +309,14 @@ function GUI(props: GUIProps) {
                     Submit
                   </button>
                 </form>
-              </div>
-            )
+              </div>,
+            ),
           );
           dispatch(setDialogEntryOn(false));
           dispatch(setShowDialog(true));
         }
       } else {
-        localStorage.setItem("mainTextEntryCounter", "1");
+        setLocalStorage("mainTextEntryCounter", 1);
       }
     },
     [
@@ -347,23 +325,20 @@ function GUI(props: GUIProps) {
       defaultModel,
       state,
       streamResponse,
-    ]
+    ],
   );
 
-  const { saveSession } = useHistory(dispatch);
+  const { saveSession, getLastSessionId, loadLastSession } =
+    useHistory(dispatch);
 
-  useEffect(() => {
-    const handler = (event: any) => {
-      if (event.data.type === "newSession") {
-        saveSession();
-        mainTextInputRef.current?.focus?.();
-      }
-    };
-    window.addEventListener("message", handler);
-    return () => {
-      window.removeEventListener("message", handler);
-    };
-  }, [saveSession]);
+  useWebviewListener(
+    "newSession",
+    async () => {
+      saveSession();
+      mainTextInputRef.current?.focus?.();
+    },
+    [saveSession],
+  );
 
   const isLastUserInput = useCallback(
     (index: number): boolean => {
@@ -376,7 +351,7 @@ function GUI(props: GUIProps) {
       }
       return !foundLaterUserInput;
     },
-    [state.history]
+    [state.history],
   );
 
   return (
@@ -395,13 +370,12 @@ function GUI(props: GUIProps) {
                   >
                     {item.message.role === "user" ? (
                       <ContinueInputBox
-                        onEnter={async (editorState) => {
-                          streamResponse(editorState, index);
+                        onEnter={async (editorState, modifiers) => {
+                          streamResponse(editorState, modifiers, index);
                         }}
                         isLastUserInput={isLastUserInput(index)}
                         isMainInput={false}
                         editorState={item.editorState}
-                        content={item.message.content}
                         contextItems={item.contextItems}
                       ></ContinueInputBox>
                     ) : (
@@ -432,30 +406,38 @@ function GUI(props: GUIProps) {
                         }
                         onToggle={() => {}}
                       >
-                        {false ? ( // Most of these falses were previously (step.error)
-                          <ErrorStepContainer
-                            onClose={() => {}}
-                            error={undefined}
-                            onDelete={() => {}}
-                          />
-                        ) : (
-                          <StepContainer
-                            index={index}
-                            isLast={index === sessionState.history.length - 1}
-                            isFirst={index === 0}
-                            open={
-                              typeof stepsOpen[index] === "undefined"
-                                ? true
-                                : stepsOpen[index]!
-                            }
-                            key={index}
-                            onUserInput={(input: string) => {}}
-                            item={item}
-                            onReverse={() => {}}
-                            onRetry={() => {}}
-                            onDelete={() => {}}
-                          />
-                        )}
+                        <StepContainer
+                          index={index}
+                          isLast={index === sessionState.history.length - 1}
+                          isFirst={index === 0}
+                          open={
+                            typeof stepsOpen[index] === "undefined"
+                              ? true
+                              : stepsOpen[index]!
+                          }
+                          key={index}
+                          onUserInput={(input: string) => {}}
+                          item={item}
+                          onReverse={() => {}}
+                          onRetry={() => {
+                            streamResponse(
+                              state.history[index - 1].editorState,
+                              state.history[index - 1].modifiers ??
+                                defaultInputModifiers,
+                              index - 1,
+                            );
+                          }}
+                          onContinueGeneration={() => {
+                            window.postMessage(
+                              {
+                                messageType: "userInput",
+                                data: { input: "Keep going" },
+                              },
+                              "*",
+                            );
+                          }}
+                          onDelete={() => {}}
+                        />
                       </TimelineItem>
                     )}
                   </ErrorBoundary>
@@ -464,14 +446,15 @@ function GUI(props: GUIProps) {
             })}
           </StepsDiv>
 
-          <div ref={aboveComboBoxDivRef} />
-          {active || (
-            <ContinueInputBox
-              onEnter={sendInput}
-              isLastUserInput={false}
-              isMainInput={true}
-            ></ContinueInputBox>
-          )}
+          <ContinueInputBox
+            onEnter={(editorContent, modifiers) => {
+              sendInput(editorContent, modifiers);
+            }}
+            isLastUserInput={false}
+            isMainInput={true}
+            hidden={active}
+          ></ContinueInputBox>
+
           {active ? (
             <>
               <br />
@@ -484,7 +467,17 @@ function GUI(props: GUIProps) {
               }}
               className="mr-auto"
             >
-              New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "M"})
+              New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
+            </NewSessionButton>
+          ) : getLastSessionId() ? (
+            <NewSessionButton
+              onClick={async () => {
+                loadLastSession();
+              }}
+              className="mr-auto flex items-center gap-1"
+            >
+              <ArrowLeftIcon width="11px" height="11px" />
+              Last Session
             </NewSessionButton>
           ) : null}
         </div>

@@ -20,10 +20,15 @@ import {
 } from "..";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
-import { RootStore } from "../../redux/store";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
+import { RootState } from "../../redux/store";
 import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
-import { deleteModel } from "../../util/ide";
+import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
+import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 
 const GridDiv = styled.div`
   display: grid;
@@ -32,24 +37,6 @@ const GridDiv = styled.div`
   border: 0.5px solid ${lightGray};
   border-radius: ${defaultBorderRadius};
   overflow: hidden;
-`;
-
-const Select = styled.select`
-  border: none;
-  max-width: 50vw;
-  background-color: ${vscBackground};
-  color: ${vscForeground};
-  padding: 6px;
-  max-height: 35vh;
-  overflow: scroll;
-  cursor: pointer;
-
-  &:focus {
-    outline: none;
-  }
-  &:hover {
-    background-color: ${vscInputBackground};
-  }
 `;
 
 const StyledPlusIcon = styled(PlusIcon)`
@@ -64,18 +51,6 @@ const StyledPlusIcon = styled(PlusIcon)`
     background-color: ${vscInputBackground};
   }
   border-left: 0.5px solid ${lightGray};
-`;
-
-const NewProviderDiv = styled.div`
-  cursor: pointer;
-  padding: 8px;
-  padding-left: 16px;
-  padding-right: 16px;
-  border-top: 0.5px solid ${lightGray};
-
-  &:hover {
-    background-color: ${vscInputBackground};
-  }
 `;
 
 const StyledListbox = styled(Listbox)`
@@ -121,9 +96,10 @@ const StyledListboxOptions = styled(Listbox.Options)`
   position: absolute;
   bottom: calc(100% - 16px);
   max-width: 100%;
+  max-height: 80vh;
 
   border-radius: ${defaultBorderRadius};
-  overflow: hidden;
+  overflow-y: scroll;
 `;
 
 const StyledListboxOption = styled(Listbox.Option)<{ selected: boolean }>`
@@ -147,6 +123,7 @@ function ListBoxOption({
   idx: number;
   showDelete?: boolean;
 }) {
+  const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -171,13 +148,24 @@ function ListBoxOption({
         <span>{option.title}</span>
         {hovered && showDelete && (
           <HeaderButtonWithText
-            text="Delete"
+            text={undefined}
             onClick={(e) => {
-              deleteModel(option.title);
+              dispatch(setShowDialog(true));
+              dispatch(
+                setDialogMessage(
+                  <ConfirmationDialog
+                    text={`Are you sure you want to delete this model? (${option.title})`}
+                    onConfirm={() => {
+                      postToIde("config/deleteModel", { title: option.title });
+                    }}
+                  />,
+                ),
+              );
               e.stopPropagation();
               e.preventDefault();
             }}
-            style={{ backgroundColor: vscInputBackground }}
+            backgroundColor={vscInputBackground}
+            hoverBackgroundColor={vscBackground}
             className="absolute right-0 p-1"
           >
             <TrashIcon width="1.2em" height="1.2em" />
@@ -208,7 +196,7 @@ function ModelSelect(props: {}) {
   const dispatch = useDispatch();
   const defaultModel = useSelector(defaultModelSelector);
   const allModels = useSelector(
-    (state: RootStore) => state.state.config.models
+    (state: RootState) => state.state.config.models,
   );
 
   const navigate = useNavigate();
@@ -222,7 +210,7 @@ function ModelSelect(props: {}) {
           value: model.title,
           title: modelSelectTitle(model),
         };
-      })
+      }),
     );
   }, [allModels]);
 
@@ -233,7 +221,7 @@ function ModelSelect(props: {}) {
       if (event.key === "'" && isMetaEquivalentKeyPressed(event)) {
         const direction = event.shiftKey ? -1 : 1;
         const currentIndex = options.findIndex(
-          (option) => option.value === defaultModel?.title
+          (option) => option.value === defaultModel?.title,
         );
         let nextIndex = (currentIndex + 1 * direction) % options.length;
         if (nextIndex < 0) nextIndex = options.length - 1;
@@ -287,12 +275,13 @@ function ModelSelect(props: {}) {
                         showDelete={options.length > 1}
                       />
                     ))}
+                    {options.length === 0 && <i>No models found</i>}
                     <i className="text-xs ml-2" style={{ color: lightGray }}>
                       {getMetaKeyLabel()}' to toggle
                     </i>
                   </StyledListboxOptions>
                 </Transition>,
-                topDiv
+                topDiv,
               )}
           </div>
         </StyledListbox>

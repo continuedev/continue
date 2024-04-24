@@ -1,11 +1,16 @@
 import { SerializedContinueConfig } from "..";
 
-const defaultConfig: SerializedContinueConfig = {
+export const defaultConfig: SerializedContinueConfig = {
   models: [
     {
-      title: "GPT-4 (Free Trial)",
+      title: "Claude 3 Sonnet (Free Trial)",
       provider: "free-trial",
-      model: "gpt-4",
+      model: "claude-3-sonnet-20240229",
+    },
+    {
+      title: "GPT-4 Turbo (Free Trial)",
+      provider: "free-trial",
+      model: "gpt-4-turbo",
     },
     {
       title: "GPT-3.5-Turbo (Free Trial)",
@@ -13,14 +18,14 @@ const defaultConfig: SerializedContinueConfig = {
       model: "gpt-3.5-turbo",
     },
     {
-      title: "Phind CodeLlama (Free Trial)",
-      provider: "free-trial",
-      model: "phind-codellama-34b",
-    },
-    {
       title: "Gemini Pro (Free Trial)",
       provider: "free-trial",
       model: "gemini-pro",
+    },
+    {
+      title: "Mixtral (Free Trial)",
+      provider: "free-trial",
+      model: "mistral-8x7b",
     },
   ],
   slashCommands: [
@@ -34,7 +39,7 @@ const defaultConfig: SerializedContinueConfig = {
     },
     {
       name: "share",
-      description: "Download and share this session",
+      description: "Export this session as markdown",
     },
     {
       name: "cmd",
@@ -50,14 +55,76 @@ const defaultConfig: SerializedContinueConfig = {
     },
   ],
   contextProviders: [
+    { name: "code", params: {} },
+    { name: "docs", params: {} },
     { name: "diff", params: {} },
-    {
-      name: "open",
-      params: {},
-    },
+    { name: "open", params: {} },
     { name: "terminal", params: {} },
     { name: "problems", params: {} },
+    { name: "folder", params: {} },
+    { name: "codebase", params: {} },
   ],
+  tabAutocompleteModel: {
+    title: "Starcoder2 3b",
+    provider: "ollama",
+    model: "starcoder2:3b",
+  },
 };
 
-export default defaultConfig;
+export const defaultConfigJetBrains: SerializedContinueConfig = {
+  models: [
+    {
+      title: "Claude 3 Sonnet (Free Trial)",
+      provider: "free-trial",
+      model: "claude-3-sonnet-20240229",
+    },
+    {
+      title: "GPT-4 Turbo (Free Trial)",
+      provider: "free-trial",
+      model: "gpt-4-turbo",
+    },
+    {
+      title: "GPT-3.5-Turbo (Free Trial)",
+      provider: "free-trial",
+      model: "gpt-3.5-turbo",
+    },
+    {
+      title: "Gemini Pro (Free Trial)",
+      provider: "free-trial",
+      model: "gemini-pro",
+    },
+    {
+      title: "Mixtral (Free Trial)",
+      provider: "free-trial",
+      model: "mistral-8x7b",
+    },
+  ],
+  slashCommands: [
+    {
+      name: "edit",
+      description: "Edit selected code",
+    },
+    {
+      name: "comment",
+      description: "Write comments for the selected code",
+    },
+    {
+      name: "share",
+      description: "Export this session as markdown",
+    },
+  ],
+  customCommands: [
+    {
+      name: "test",
+      prompt:
+        "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+      description: "Write unit tests for highlighted code",
+    },
+  ],
+  contextProviders: [{ name: "open", params: {} }],
+  tabAutocompleteModel: {
+    title: "Starcoder2 3b",
+    provider: "ollama",
+    model: "starcoder2:3b",
+  },
+};

@@ -4,14 +4,14 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
+import { fetchwithRequestOptions } from "../../util/fetchWithOptions";
 
 class HttpContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "http",
     displayTitle: "HTTP",
     description: "Retrieve a context item from a custom server",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   override get description(): ContextProviderDescription {
@@ -21,27 +21,29 @@ class HttpContextProvider extends BaseContextProvider {
       description:
         this.options.description ||
         "Retrieve a context item from a custom server",
-      dynamic: true,
-      requiresQuery: false,
+      type: "normal",
     };
   }
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const response = await fetch(this.options.url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        query: query || "",
-        fullInput: extras.fullInput,
-      }),
-    });
-
-    const json = await response.json();
+    const response = await fetchwithRequestOptions(
+      new URL(this.options.url),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          query: query || "",
+          fullInput: extras.fullInput,
+        }),
+      }
+    );
+    
+    const json: any = await response.json();
     return [
       {
         description: json.description || "HTTP Context Item",
@@ -50,7 +52,6 @@ class HttpContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
 }
 
 export default HttpContextProvider;

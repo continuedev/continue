@@ -27,3 +27,13 @@
 .gap-cursor {
   border-top: 1px solid white;
 }
+
+.tiptap img {
+  height: auto;
+  max-width: 96%;
+  border: 1px solid transparent;
+}
+
+.tiptap img.ProseMirror-selectednode {
+  border: 1px solid var(--vscode-badge-background, #bfe2b6);
+}

@@ -3,16 +3,15 @@
  */
 
 import * as path from "path";
-import { workspace, ExtensionContext, extensions } from "vscode";
+import { ExtensionContext, extensions, workspace } from "vscode";
 
 import {
-  DefinitionParams,
   LanguageClient,
   LanguageClientOptions,
   ServerOptions,
+  State,
   StateChangeEvent,
   TransportKind,
-  State,
 } from "vscode-languageclient/node";
 import { getExtensionUri } from "../util/vscode";
 
@@ -54,7 +53,7 @@ function startPythonLanguageServer(context: ExtensionContext): LanguageClient {
   let extensionPath = getExtensionUri().fsPath;
   const command = `cd ${path.join(
     extensionPath,
-    "scripts"
+    "scripts",
   )} && source env/bin/activate.fish && python -m pyls`;
   const serverOptions: ServerOptions = {
     command: command,
@@ -109,7 +108,7 @@ async function startPylance(context: ExtensionContext) {
     "languageServerExample",
     "Language Server Example",
     serverOptions,
-    clientOptions
+    clientOptions,
   );
   return client;
 }

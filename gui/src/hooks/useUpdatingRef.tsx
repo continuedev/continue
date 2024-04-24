@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-function useUpdatingRef(value: any, deps: any[] = []) {
+function useUpdatingRef<T>(value: T, deps: any[] = []) {
   const ref = useRef(value);
 
   useEffect(() => {

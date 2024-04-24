@@ -9,11 +9,12 @@ import {
 import { DEFAULT_MAX_TOKENS } from "../constants";
 import Anthropic from "./Anthropic";
 import Bedrock from "./Bedrock";
+import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
 import Gemini from "./Gemini";
-import GooglePalm from "./GooglePalm";
+import Groq from "./Groq";
 import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
 import HuggingFaceTGI from "./HuggingFaceTGI";
 import LMStudio from "./LMStudio";
@@ -38,7 +39,7 @@ function convertToLetter(num: number): string {
 }
 
 const getHandlebarsVars = (
-  value: string
+  value: string,
 ): [string, { [key: string]: string }] => {
   const ast = Handlebars.parse(value);
 
@@ -50,7 +51,7 @@ const getHandlebarsVars = (
       keysToFilepath[letter] = (ast.body[i] as any).path.original;
       value = value.replace(
         new RegExp("{{\\s*" + (ast.body[i] as any).path.original + "\\s*}}"),
-        `{{${letter}}}`
+        `{{${letter}}}`,
       );
       keyIndex++;
     }
@@ -58,26 +59,27 @@ const getHandlebarsVars = (
   return [value, keysToFilepath];
 };
 
-async function renderTemplatedString(
+export async function renderTemplatedString(
   template: string,
-  readFile: (filepath: string) => Promise<string>
+  readFile: (filepath: string) => Promise<string>,
+  inputData: any,
 ): Promise<string> {
   const [newTemplate, vars] = getHandlebarsVars(template);
-  template = newTemplate;
-  let data: any = {};
-  for (let key in vars) {
-    let fileContents = await readFile(vars[key]);
-    data[key] = fileContents || vars[key];
+  const data: any = { ...inputData };
+  for (const key in vars) {
+    const fileContents = await readFile(vars[key]);
+    data[key] = fileContents || (inputData[vars[key]] ?? vars[key]);
   }
-  const templateFn = Handlebars.compile(template);
-  let final = templateFn(data);
+  const templateFn = Handlebars.compile(newTemplate);
+  const final = templateFn(data);
   return final;
 }
 
 const LLMs = [
   Anthropic,
+  Cohere,
   FreeTrial,
-  GooglePalm,
+  Gemini,
   Llamafile,
   Ollama,
   Replicate,
@@ -88,19 +90,19 @@ const LLMs = [
   LlamaCpp,
   OpenAI,
   LMStudio,
-  Gemini,
   Mistral,
   Bedrock,
   DeepInfra,
   OpenAIFreeTrial,
   Flowise,
+  Groq,
 ];
 
 export async function llmFromDescription(
   desc: ModelDescription,
   readFile: (filepath: string) => Promise<string>,
   completionOptions?: BaseCompletionOptions,
-  systemMessage?: string
+  systemMessage?: string,
 ): Promise<BaseLLM | undefined> {
   const cls = LLMs.find((llm) => llm.providerName === desc.provider);
 
@@ -113,19 +115,19 @@ export async function llmFromDescription(
     ...desc.completionOptions,
   };
 
-  systemMessage = desc.systemMessage || systemMessage;
+  systemMessage = desc.systemMessage ?? systemMessage;
   if (systemMessage !== undefined) {
-    systemMessage = await renderTemplatedString(systemMessage, readFile);
+    systemMessage = await renderTemplatedString(systemMessage, readFile, {});
   }
 
   const options: LLMOptions = {
     ...desc,
     completionOptions: {
       ...finalCompletionOptions,
-      model: desc.model || cls.defaultOptions?.model || "codellama-7b", // TODO: Fix up all the ?'s
+      model: (desc.model || cls.defaultOptions?.model) ?? "codellama-7b",
       maxTokens:
-        finalCompletionOptions.maxTokens ||
-        cls.defaultOptions?.completionOptions?.maxTokens ||
+        finalCompletionOptions.maxTokens ??
+        cls.defaultOptions?.completionOptions?.maxTokens ??
         DEFAULT_MAX_TOKENS,
     },
     systemMessage,
@@ -136,7 +138,7 @@ export async function llmFromDescription(
 
 export function llmFromProviderAndOptions(
   providerName: string,
-  llmOptions: LLMOptions
+  llmOptions: LLMOptions,
 ): ILLM {
   const cls = LLMs.find((llm) => llm.providerName === providerName);
 

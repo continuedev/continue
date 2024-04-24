@@ -3,22 +3,28 @@ import { getMetaKeyLabel } from "../util/util";
 
 const inlineTipDecoration = vscode.window.createTextEditorDecorationType({
   after: {
-    contentText: `${getMetaKeyLabel()} M to select code, ${getMetaKeyLabel()} ⇧ L to edit`,
+    contentText: `${getMetaKeyLabel()} L to select code, ${getMetaKeyLabel()} I to edit`,
     color: "#888",
     margin: "0 0 0 6em",
     fontWeight: "bold",
   },
 });
 
+function showInlineTip() {
+  return vscode.workspace
+    .getConfiguration("continue")
+    .get<boolean>("showInlineTip");
+}
+
 function handleSelectionChange(e: vscode.TextEditorSelectionChangeEvent) {
   const selection = e.selections[0];
   const editor = e.textEditor;
-  if (
-    selection.isEmpty ||
-    vscode.workspace
-      .getConfiguration("continue")
-      .get<boolean>("showInlineTip") === false
-  ) {
+
+  if (editor.document.uri.toString().startsWith("output:")) {
+    return;
+  }
+
+  if (selection.isEmpty || showInlineTip() === false) {
     editor.setDecorations(inlineTipDecoration, []);
     return;
   }
@@ -26,7 +32,7 @@ function handleSelectionChange(e: vscode.TextEditorSelectionChangeEvent) {
   const line = Math.max(0, selection.start.line - 1);
 
   const hoverMarkdown = new vscode.MarkdownString(
-    `Use ${getMetaKeyLabel()} M to select code, or ${getMetaKeyLabel()} ⇧ L to edit highlighted code. Click [here](command:continue.hideInlineTip) if you don't want to see these inline suggestions.`
+    `Use ${getMetaKeyLabel()} L to select code, or ${getMetaKeyLabel()} I to edit highlighted code. Click [here](command:continue.hideInlineTip) if you don't want to see these inline suggestions.`,
   );
   hoverMarkdown.isTrusted = true;
   hoverMarkdown.supportHtml = true;
@@ -34,7 +40,7 @@ function handleSelectionChange(e: vscode.TextEditorSelectionChangeEvent) {
     {
       range: new vscode.Range(
         new vscode.Position(line, Number.MAX_VALUE),
-        new vscode.Position(line, Number.MAX_VALUE)
+        new vscode.Position(line, Number.MAX_VALUE),
       ),
       hoverMessage: [hoverMarkdown],
     },
@@ -44,12 +50,12 @@ function handleSelectionChange(e: vscode.TextEditorSelectionChangeEvent) {
 const emptyFileTooltipDecoration = vscode.window.createTextEditorDecorationType(
   {
     after: {
-      contentText: `Use ${getMetaKeyLabel()} ⇧ L to generate code`,
+      contentText: `Use ${getMetaKeyLabel()} I to generate code`,
       color: "#888",
       margin: "2em 0 0 0",
       fontStyle: "italic",
     },
-  }
+  },
 );
 
 let selectionChangeDebounceTimer: NodeJS.Timeout | undefined;
@@ -63,33 +69,43 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
       selectionChangeDebounceTimer = setTimeout(() => {
         handleSelectionChange(e);
       }, 200);
-    })
+    }),
   );
 
   context.subscriptions.push(
     vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor?.document.getText() === "") {
+      if (editor?.document.getText() === "" && showInlineTip() === true) {
+        if (
+          editor.document.uri.toString().startsWith("output:") ||
+          editor.document.uri.scheme === "comment"
+        ) {
+          return;
+        }
+
         editor.setDecorations(emptyFileTooltipDecoration, [
           {
             range: new vscode.Range(
               new vscode.Position(0, Number.MAX_VALUE),
-              new vscode.Position(0, Number.MAX_VALUE)
+              new vscode.Position(0, Number.MAX_VALUE),
             ),
           },
         ]);
       }
-    })
+    }),
   );
 
   context.subscriptions.push(
     vscode.workspace.onDidChangeTextDocument((e) => {
-      if (e.document.getText() === "") {
+      if (e.document.uri.toString().startsWith("vscode://inline-chat")) {
+        return;
+      }
+      if (e.document.getText() === "" && showInlineTip() === true) {
         vscode.window.visibleTextEditors.forEach((editor) => {
           editor.setDecorations(emptyFileTooltipDecoration, [
             {
               range: new vscode.Range(
                 new vscode.Position(0, Number.MAX_VALUE),
-                new vscode.Position(0, Number.MAX_VALUE)
+                new vscode.Position(0, Number.MAX_VALUE),
               ),
             },
           ]);
@@ -99,6 +115,6 @@ export function setupInlineTips(context: vscode.ExtensionContext) {
           editor.setDecorations(emptyFileTooltipDecoration, []);
         });
       }
-    })
+    }),
   );
 }

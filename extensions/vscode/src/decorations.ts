@@ -1,11 +1,11 @@
-import * as vscode from "vscode";
 import * as path from "path";
+import * as vscode from "vscode";
 import { uriFromFilePath } from "./util/vscode";
 
 export function showAnswerInTextEditor(
   filename: string,
   range: vscode.Range,
-  answer: string
+  answer: string,
 ) {
   vscode.workspace.openTextDocument(uriFromFilePath(filename)).then((doc) => {
     const editor = vscode.window.activeTextEditor;
@@ -17,7 +17,7 @@ export function showAnswerInTextEditor(
     vscode.window.showTextDocument(doc).then((new_editor) => {
       new_editor.revealRange(
         new vscode.Range(range.end, range.end),
-        vscode.TextEditorRevealType.InCenter
+        vscode.TextEditorRevealType.InCenter,
       );
 
       let decorationType = vscode.window.createTextEditorDecorationType({
@@ -67,7 +67,7 @@ class DecorationManager {
 
   private rerenderDecorations(
     editorUri: string,
-    decorationType: vscode.TextEditorDecorationType
+    decorationType: vscode.TextEditorDecorationType,
   ) {
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
@@ -144,7 +144,7 @@ export const decorationManager = new DecorationManager();
 function constructBaseKey(
   editor: vscode.TextEditor,
   lineno: number,
-  decorationType?: vscode.TextEditorDecorationType
+  decorationType?: vscode.TextEditorDecorationType,
 ): DecorationKey {
   return {
     editorUri: editor.document.uri.toString(),
@@ -159,14 +159,14 @@ function constructBaseKey(
 const gutterSpinnerDecorationType =
   vscode.window.createTextEditorDecorationType({
     gutterIconPath: vscode.Uri.file(
-      path.join(__dirname, "..", "media", "spinner.gif")
+      path.join(__dirname, "..", "media", "spinner.gif"),
     ),
     gutterIconSize: "contain",
   });
 
 export function showGutterSpinner(
   editor: vscode.TextEditor,
-  lineno: number
+  lineno: number,
 ): DecorationKey {
   const key = constructBaseKey(editor, lineno, gutterSpinnerDecorationType);
   decorationManager.addDecoration(key);
@@ -177,7 +177,7 @@ export function showGutterSpinner(
 export function showLintMessage(
   editor: vscode.TextEditor,
   lineno: number,
-  msg: string
+  msg: string,
 ): DecorationKey {
   const key = constructBaseKey(editor, lineno);
   key.decorationType = vscode.window.createTextEditorDecorationType({
@@ -186,7 +186,7 @@ export function showLintMessage(
       color: "rgb(255, 0, 0, 0.6)",
     },
     gutterIconPath: vscode.Uri.file(
-      path.join(__dirname, "..", "media", "error.png")
+      path.join(__dirname, "..", "media", "error.png"),
     ),
     gutterIconSize: "contain",
   });
@@ -198,7 +198,7 @@ export function showLintMessage(
 export function highlightCode(
   editor: vscode.TextEditor,
   range: vscode.Range,
-  removeOnClick: boolean = true
+  removeOnClick: boolean = true,
 ): DecorationKey {
   const decorationType = vscode.window.createTextEditorDecorationType({
     backgroundColor: "rgb(255, 255, 0, 0.1)",

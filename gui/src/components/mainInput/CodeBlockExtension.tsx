@@ -2,9 +2,9 @@ import { mergeAttributes, Node } from "@tiptap/core";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { ContextItemWithId } from "core";
 import { useDispatch, useSelector } from "react-redux";
-import { vscFocusBorder } from "..";
+import { vscBadgeBackground } from "..";
 import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
-import { RootStore } from "../../redux/store";
+import { RootState } from "../../redux/store";
 import CodeSnippetPreview from "../markdown/CodeSnippetPreview";
 
 const CodeBlockComponent = ({
@@ -18,16 +18,16 @@ const CodeBlockComponent = ({
   const item: ContextItemWithId = node.attrs.item;
 
   const contextItems = useSelector(
-    (state: RootStore) => state.state.contextItems
+    (state: RootState) => state.state.contextItems
   );
   return (
-    <NodeViewWrapper className="code-block-with-content">
+    <NodeViewWrapper className="code-block-with-content" as="p">
       <CodeSnippetPreview
         borderColor={
           item.id === contextItems[0]?.id
             ? "#d0d"
             : selected
-            ? vscFocusBorder
+            ? vscBadgeBackground
             : undefined
         }
         item={item}

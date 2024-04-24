@@ -1,6 +1,3 @@
-import Handlebars from "handlebars";
-import { ChatMessage } from "..";
-
 export function removeQuotesAndEscapes(output: string): string {
   output = output.trim();
 
@@ -16,10 +13,14 @@ export function removeQuotesAndEscapes(output: string): string {
   output = output.replace("\\n", "\n");
   output = output.replace("\\t", "\t");
   output = output.replace("\\\\", "\\");
-  if (
+  while (
     (output.startsWith('"') && output.endsWith('"')) ||
     (output.startsWith("'") && output.endsWith("'"))
   ) {
+    output = output.slice(1, -1);
+  }
+
+  while (output.startsWith("`") && output.endsWith("`")) {
     output = output.slice(1, -1);
   }
 
@@ -33,7 +34,7 @@ export function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
 
   if (!(url.startsWith("http://") || url.startsWith("https://"))) {
     // Relative URL
-    const fullUrl = `${(window as any).vscMediaUrl}/${url}`;
+    const fullUrl = `${window.vscMediaUrl}/${url}`;
     return (window as any)._fetch(fullUrl, init);
   }
 
@@ -63,6 +64,11 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
     if (lines[i].trim() === "") {
       continue; // hey that's us!
     }
+
+    if (lcp === undefined) {
+      lcp = lines[i].split(lines[i].trim())[0];
+    }
+
     // Iterate through the leading whitespace characters of the current line
     for (let j = 0; j < lcp.length; j++) {
       // If it doesn't have the same whitespace as lcp, then update lcp
@@ -76,39 +82,19 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
     }
   }
 
+  if (lcp === undefined) {
+    return [s, ""];
+  }
+
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
-type PromptTemplate =
-  | string
-  | ((
-      history: ChatMessage[],
-      otherData: Record<string, string>
-    ) => string | ChatMessage[]);
-
-export function renderPromptTemplate(
-  template: PromptTemplate,
-  history: ChatMessage[],
-  otherData: Record<string, string>
-): string | ChatMessage[] {
-  if (typeof template === "string") {
-    let data: any = {
-      history: history,
-      ...otherData,
-    };
-    if (history.length > 0 && history[0].role == "system") {
-      data["system_message"] = history.shift()!.content;
-    }
-
-    const compiledTemplate = Handlebars.compile(template);
-    return compiledTemplate(data);
-  } else {
-    return template(history, otherData);
-  }
+export function getBasename(filepath: string, n: number = 1): string {
+  return filepath.split(/[\\/]/).pop() ?? "";
 }
 
-export function getBasename(filepath: string): string {
-  return filepath.split(/[\\/]/).pop() || "";
+export function getLastNPathParts(filepath: string, n: number): string {
+  return filepath.split(/[\\/]/).slice(-n).join("/");
 }
 
 export function getMarkdownLanguageTagForFile(filepath: string): string {
@@ -118,6 +104,10 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
       return "python";
     case "js":
       return "javascript";
+    case "jsx":
+      return "jsx";
+    case "tsx":
+      return "tsx";
     case "ts":
       return "typescript";
     case "java":
@@ -163,4 +153,24 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
     default:
       return "";
   }
+}
+
+export function copyOf(obj: any): any {
+  if (obj === null || obj === undefined) return obj;
+  return JSON.parse(JSON.stringify(obj));
+}
+
+export function deduplicateArray<T>(
+  array: T[],
+  equal: (a: T, b: T) => boolean,
+): T[] {
+  const result: T[] = [];
+
+  for (const item of array) {
+    if (!result.some((existingItem) => equal(existingItem, item))) {
+      result.push(item);
+    }
+  }
+
+  return result;
 }

@@ -52,7 +52,7 @@ Instead of writing something like `Ollama(model="phind-codellama:34b", ...)`, wh
     "gpt-4",
     "gpt-3.5-turbo-0613",
     "gpt-4-32k",
-    "gpt-4-1106-preview",
+    "gpt-4-turbo-preview",
     # Open-Source
     "mistral-7b",
     "llama2-7b",
@@ -72,8 +72,6 @@ Instead of writing something like `Ollama(model="phind-codellama:34b", ...)`, wh
     "neural-chat-7b",
     # Anthropic
     "claude-2",
-    # Google PaLM
-    "chat-bison-001",
 ```
 
 If you want to use a model not listed here, you can still do that by specifying whichever value of `model` you need. But if there's something you think we should add as a default, let us know!
@@ -207,7 +205,7 @@ This is an example of serving a model using an OpenAI-compatible API on http://l
       "title": "OpenAI-compatible API",
       "provider": "openai",
       "model": "codellama-13b",
-      "api_base": "http://localhost:8000"
+      "api_base": "http://localhost:8000/v1"
     }
   ]
 }

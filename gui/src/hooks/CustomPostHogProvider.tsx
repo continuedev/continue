@@ -2,11 +2,11 @@ import posthog from "posthog-js";
 import { PostHogProvider } from "posthog-js/react";
 import React, { PropsWithChildren, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 
 const CustomPostHogProvider = ({ children }: PropsWithChildren) => {
   const allowAnonymousTelemetry = useSelector(
-    (store: RootStore) => store?.state?.config.allowAnonymousTelemetry
+    (store: RootState) => store?.state?.config.allowAnonymousTelemetry,
   );
 
   const [client, setClient] = React.useState<any>(undefined);
@@ -17,7 +17,7 @@ const CustomPostHogProvider = ({ children }: PropsWithChildren) => {
         api_host: "https://app.posthog.com",
         disable_session_recording: true,
       });
-      posthog.identify((window as any).vscMachineId);
+      posthog.identify(window.vscMachineId);
       posthog.opt_in_capturing();
       setClient(client);
     } else {

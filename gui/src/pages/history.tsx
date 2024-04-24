@@ -1,14 +1,39 @@
 import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { PersistedSessionInfo, SessionInfo } from "core";
+import { SessionInfo } from "core";
+import MiniSearch from "minisearch";
 import React, { Fragment, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { lightGray, vscBackground, vscInputBackground } from "../components";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscBackground,
+  vscBadgeBackground,
+  vscForeground,
+  vscInputBackground,
+} from "../components";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import useHistory from "../hooks/useHistory";
-import { newSession } from "../redux/slices/stateSlice";
+import { useNavigationListener } from "../hooks/useNavigationListener";
 import { getFontSize } from "../util";
+
+const SearchBar = styled.input`
+  padding: 4px 8px;
+  border-radius: ${defaultBorderRadius};
+  border: 0.5px solid #888;
+  outline: none;
+  width: 90vw;
+  max-width: 500px;
+  margin: 8px auto;
+  display: block;
+  background-color: ${vscInputBackground};
+  color: ${vscForeground};
+  &:focus {
+    border: 0.5px solid ${vscBadgeBackground};
+    outline: none;
+  }
+`;
 
 const Tr = styled.tr`
   &:hover {
@@ -63,8 +88,8 @@ function TableRow({
 }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const apiUrl = (window as any).serverUrl;
-  const workspacePaths = (window as any).workspacePaths || [""];
+  const apiUrl = window.serverUrl;
+  const workspacePaths = window.workspacePaths || [""];
   const [hovered, setHovered] = useState(false);
 
   const { saveSession, deleteSession, loadSession } = useHistory(dispatch);
@@ -80,14 +105,13 @@ function TableRow({
             // Save current session
             saveSession();
 
-            const json: PersistedSessionInfo = await loadSession(
-              session.sessionId
-            );
-            dispatch(newSession(json));
+            await loadSession(session.sessionId);
             navigate("/");
           }}
         >
-          <div className="text-md">{session.title}</div>
+          <div className="text-md">
+            {JSON.stringify(session.title).slice(1, -1)}
+          </div>
           <div className="text-gray-400">
             {date.toLocaleString("en-US", {
               year: "2-digit",
@@ -125,17 +149,19 @@ function lastPartOfPath(path: string): string {
 }
 
 function History() {
+  useNavigationListener();
   const navigate = useNavigate();
+
   const [sessions, setSessions] = useState<SessionInfo[]>([]);
   const [filteredAndSortedSessions, setFilteredAndSortedSessions] = useState<
     SessionInfo[]
   >([]);
-  const apiUrl = (window as any).serverUrl;
-  const workspacePaths = (window as any).workspacePaths || [];
+  const apiUrl = window.serverUrl;
+  const workspacePaths = window.workspacePaths || [];
 
   const deleteSessionInUI = async (sessionId: string) => {
     setSessions((prev) =>
-      prev.filter((session) => session.sessionId !== sessionId)
+      prev.filter((session) => session.sessionId !== sessionId),
     );
   };
 
@@ -146,15 +172,38 @@ function History() {
   const dispatch = useDispatch();
   const { getHistory } = useHistory(dispatch);
 
+  const [minisearch, setMinisearch] = useState<
+    MiniSearch<{ title: string; sessionId: string }>
+  >(
+    new MiniSearch({
+      fields: ["title"],
+      storeFields: ["title", "sessionId", "id"],
+    }),
+  );
+  const [searchTerm, setSearchTerm] = useState("");
+
   useEffect(() => {
     const fetchSessions = async () => {
       const sessions = await getHistory();
       setSessions(sessions);
+      minisearch.addAll(
+        sessions.map((session) => ({
+          title: session.title,
+          sessionId: session.sessionId,
+          id: session.sessionId,
+        })),
+      );
     };
     fetchSessions();
   }, []);
 
   useEffect(() => {
+    const sessionIds = minisearch
+      .search(searchTerm, {
+        fuzzy: 0.1,
+      })
+      .map((result) => result.id);
+
     setFilteredAndSortedSessions(
       sessions
         .filter((session) => {
@@ -167,13 +216,17 @@ function History() {
           }
           return workspacePaths.includes(session.workspaceDirectory);
         })
+        // Filter by search term
+        .filter((session) => {
+          return searchTerm === "" || sessionIds.includes(session.sessionId);
+        })
         .sort(
           (a, b) =>
             parseDate(b.dateCreated).getTime() -
-            parseDate(a.dateCreated).getTime()
-        )
+            parseDate(a.dateCreated).getTime(),
+        ),
     );
-  }, [filteringByWorkspace, sessions]);
+  }, [filteringByWorkspace, sessions, searchTerm, minisearch]);
 
   useEffect(() => {
     setHeaderHeight(stickyHistoryHeaderRef.current?.clientHeight || 100);
@@ -216,23 +269,20 @@ function History() {
         )} */}
       </div>
 
-      {sessions.filter((session) => {
-        if (
-          !filteringByWorkspace ||
-          typeof workspacePaths === "undefined" ||
-          typeof session.workspaceDirectory === "undefined"
-        ) {
-          return true;
-        }
-        return workspacePaths.includes(session.workspaceDirectory);
-      }).length === 0 && (
-        <div className="text-center m-4">
-          No past sessions found. To start a new session, either click the "+"
-          button or use the keyboard shortcut: <b>Option + Command + N</b>
-        </div>
-      )}
-
       <div>
+        <SearchBar
+          placeholder="Search past sessions"
+          type="text"
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+
+        {filteredAndSortedSessions.length === 0 && (
+          <div className="text-center m-4">
+            No past sessions found. To start a new session, either click the "+"
+            button or use the keyboard shortcut: <b>Option + Command + N</b>
+          </div>
+        )}
+
         <table className="w-full border-spacing-0 border-collapse">
           <tbody>
             {filteredAndSortedSessions.map((session, index) => {

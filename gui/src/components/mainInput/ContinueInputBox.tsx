@@ -1,12 +1,14 @@
 import { JSONContent } from "@tiptap/react";
-import { ContextItemWithId } from "core";
-import { useSelector } from "react-redux";
+import { ContextItemWithId, InputModifiers } from "core";
+import { useDispatch, useSelector } from "react-redux";
 import styled, { keyframes } from "styled-components";
 import { defaultBorderRadius, vscBackground } from "..";
-import { RootStore } from "../../redux/store";
+import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { selectSlashCommands } from "../../redux/selectors";
+import { newSession, setMessageAtIndex } from "../../redux/slices/stateSlice";
+import { RootState } from "../../redux/store";
 import ContextItemsPeek from "./ContextItemsPeek";
 import TipTapEditor from "./TipTapEditor";
-import { ComboBoxItemType } from "./types";
 
 const gradient = keyframes`
   0% {
@@ -22,7 +24,7 @@ const GradientBorder = styled.div<{
   borderColor?: string;
   isFirst: boolean;
   isLast: boolean;
-  loading: boolean;
+  loading: 0 | 1;
 }>`
   border-radius: ${(props) => props.borderRadius || "0"};
   padding: 1px;
@@ -51,27 +53,36 @@ const GradientBorder = styled.div<{
 interface ContinueInputBoxProps {
   isLastUserInput: boolean;
   isMainInput?: boolean;
-  onEnter: (editorState: JSONContent) => void;
+  onEnter: (editorState: JSONContent, modifiers: InputModifiers) => void;
 
   editorState?: JSONContent;
-  content?: string;
   contextItems?: ContextItemWithId[];
+  hidden?: boolean;
 }
 
 function ContinueInputBox(props: ContinueInputBoxProps) {
-  const active = useSelector((store: RootStore) => store.state.active);
-  const availableSlashCommands = useSelector(
-    (state: RootStore) =>
-      state.state.config.slashCommands?.map((cmd) => {
-        return {
-          title: `/${cmd.name}`,
-          description: cmd.description,
-          type: "slashCommand" as ComboBoxItemType,
-        };
-      }) || []
-  );
+  const dispatch = useDispatch();
+
+  const active = useSelector((store: RootState) => store.state.active);
+  const availableSlashCommands = useSelector(selectSlashCommands);
   const availableContextProviders = useSelector(
-    (store: RootStore) => store.state.config.contextProviders
+    (store: RootState) => store.state.config.contextProviders,
+  );
+
+  useWebviewListener(
+    "newSessionWithPrompt",
+    async (data) => {
+      if (props.isMainInput) {
+        dispatch(newSession());
+        dispatch(
+          setMessageAtIndex({
+            message: { role: "user", content: data.prompt },
+            index: 0,
+          }),
+        );
+      }
+    },
+    [props.isMainInput],
   );
 
   return (
@@ -79,6 +90,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
       style={{
         paddingTop: "4px",
         backgroundColor: vscBackground,
+        display: props.hidden ? "none" : "inherit",
       }}
     >
       <div
@@ -88,7 +100,7 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         }}
       >
         <GradientBorder
-          loading={active && props.isLastUserInput}
+          loading={active && props.isLastUserInput ? 1 : 0}
           isFirst={false}
           isLast={false}
           borderColor={
@@ -98,7 +110,6 @@ function ContinueInputBox(props: ContinueInputBoxProps) {
         >
           <TipTapEditor
             editorState={props.editorState}
-            content={props.content}
             onEnter={props.onEnter}
             isMainInput={props.isMainInput}
             availableContextProviders={availableContextProviders}

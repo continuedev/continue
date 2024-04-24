@@ -1,9 +1,12 @@
 import {
+  ArrowUturnLeftIcon,
+  BarsArrowDownIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
-import { useState } from "react";
+import { stripImages } from "core/llm/countTokens";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -12,10 +15,11 @@ import {
   vscBackground,
   vscInputBackground,
 } from "..";
-import { RootStore } from "../../redux/store";
+import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
-import { logDevData } from "../../util/ide";
+import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
+import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
 
 interface StepContainerProps {
@@ -23,6 +27,7 @@ interface StepContainerProps {
   onReverse: () => void;
   onUserInput: (input: string) => void;
   onRetry: () => void;
+  onContinueGeneration: () => void;
   onDelete: () => void;
   open: boolean;
   isFirst: boolean;
@@ -61,8 +66,7 @@ const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
 function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const isUserInput = props.item.message.role === "user";
-  const sessionHistory = useSelector((store: RootStore) => store.state.history);
-  const active = useSelector((store: RootStore) => store.state.active);
+  const active = useSelector((store: RootState) => store.state.active);
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 
@@ -70,10 +74,34 @@ function StepContainer(props: StepContainerProps) {
     setFeedback(feedback);
     if (props.item.promptLogs?.length) {
       for (const [prompt, completion] of props.item.promptLogs) {
-        logDevData("chat", { prompt, completion, feedback });
+        postToIde("devdata/log", {
+          tableName: "chat",
+          data: { prompt, completion, feedback },
+        });
       }
     }
   };
+
+  const [truncatedEarly, setTruncatedEarly] = useState(false);
+
+  useEffect(() => {
+    if (!active) {
+      const content = stripImages(props.item.message.content).trim();
+      const endingPunctuation = [".", "?", "!", "```"];
+
+      // If not ending in punctuation or emoji, we assume the response got truncated
+      if (
+        !(
+          endingPunctuation.some((p) => content.endsWith(p)) ||
+          /\p{Emoji}/u.test(content.slice(-2))
+        )
+      ) {
+        setTruncatedEarly(true);
+      } else {
+        setTruncatedEarly(false);
+      }
+    }
+  }, [props.item.message.content, active]);
 
   return (
     <div
@@ -91,15 +119,47 @@ function StepContainer(props: StepContainerProps) {
           fontSize={getFontSize()}
         >
           <StyledMarkdownPreview
-            source={props.item.message.content}
+            source={stripImages(props.item.message.content)}
             showCodeBorder={true}
           />
         </ContentDiv>
+        <div className="h-2"></div>
         {(isHovered || typeof feedback !== "undefined") && !active && (
           <div
-            className="flex items-center gap-2 right-2 absolute -bottom-3"
+            className="flex items-center gap-2 right-2 absolute -bottom-1"
             style={{ zIndex: 200 }}
           >
+            {truncatedEarly && (
+              <HeaderButtonWithText
+                text="Continue generation"
+                onClick={(e) => {
+                  props.onContinueGeneration();
+                }}
+              >
+                <BarsArrowDownIcon
+                  color={lightGray}
+                  width="1.2em"
+                  height="1.2em"
+                />
+              </HeaderButtonWithText>
+            )}
+
+            <CopyButton
+              text={stripImages(props.item.message.content)}
+              color={lightGray}
+            />
+            <HeaderButtonWithText
+              text="Regenerate"
+              onClick={(e) => {
+                props.onRetry();
+              }}
+            >
+              <ArrowUturnLeftIcon
+                color={lightGray}
+                width="1.2em"
+                height="1.2em"
+              />
+            </HeaderButtonWithText>
             {feedback === false || (
               <HeaderButtonWithText text="Helpful">
                 <HandThumbUpIcon

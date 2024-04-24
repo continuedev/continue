@@ -4,13 +4,14 @@ import {
   pipeline,
 } from "../../vendor/node_modules/@xenova/transformers";
 
+import path from "path";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
 
 env.allowLocalModels = true;
 env.allowRemoteModels = false;
 if (typeof window === "undefined") {
   // The embeddings provider should just never be called in the browser
-  env.localModelPath = `${__dirname}/../models`;
+  env.localModelPath = path.join(__dirname, "..", "models");
 }
 
 class EmbeddingsPipeline {
@@ -27,7 +28,7 @@ class EmbeddingsPipeline {
   }
 }
 
-class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
+export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static MaxGroupSize: number = 4;
 
   constructor() {
@@ -35,7 +36,7 @@ class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   get id(): string {
-    return "transformers-js";
+    return "sentence-transformers/all-MiniLM-L6-v2";
   }
 
   async embed(chunks: string[]) {
@@ -57,7 +58,7 @@ class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
     ) {
       let chunkGroup = chunks.slice(
         i,
-        i + TransformersJsEmbeddingsProvider.MaxGroupSize
+        i + TransformersJsEmbeddingsProvider.MaxGroupSize,
       );
       let output = await extractor(chunkGroup, {
         pooling: "mean",

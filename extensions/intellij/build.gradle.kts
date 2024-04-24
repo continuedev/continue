@@ -79,6 +79,12 @@ koverReport {
 }
 
 tasks {
+    prepareSandbox {
+        from("../../binary/bin") {
+            into("${intellij.pluginName.get()}/core/")
+        }
+    }
+
     wrapper {
         gradleVersion = properties("gradleVersion").get()
     }

@@ -39,13 +39,12 @@ class FileTreeContextProvider extends BaseContextProvider {
     title: "tree",
     displayTitle: "File Tree",
     description: "Attach a representation of the file tree",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const workspaceDirs = await extras.ide.getWorkspaceDirs();
     let trees = [];
@@ -54,7 +53,7 @@ class FileTreeContextProvider extends BaseContextProvider {
       const contents = await extras.ide.listWorkspaceContents(workspaceDir);
 
       const subDirTree: Directory = {
-        name: splitPath(workspaceDir).pop() || "",
+        name: splitPath(workspaceDir).pop() ?? "",
         files: [],
         directories: [],
       };
@@ -76,9 +75,9 @@ class FileTreeContextProvider extends BaseContextProvider {
         }
 
         currentTree.files.push(parts.pop()!);
-
-        trees.push(formatFileTree(subDirTree));
       }
+
+      trees.push(formatFileTree(subDirTree));
     }
 
     return [
@@ -91,7 +90,6 @@ class FileTreeContextProvider extends BaseContextProvider {
       },
     ];
   }
-  async load(): Promise<void> {}
 }
 
 export default FileTreeContextProvider;

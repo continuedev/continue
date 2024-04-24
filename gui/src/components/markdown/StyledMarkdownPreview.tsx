@@ -1,62 +1,63 @@
-import MarkdownPreview from "@uiw/react-markdown-preview";
+import React, { memo, useEffect } from "react";
+import { useRemark } from "react-remark";
+import rehypeHighlight from "rehype-highlight";
+import rehypeKatex from "rehype-katex";
+import remarkMath from "remark-math";
 import styled from "styled-components";
+import { visit } from "unist-util-visit";
 import {
   defaultBorderRadius,
-  lightGray,
   vscBackground,
   vscEditorBackground,
   vscForeground,
 } from "..";
 import { getFontSize } from "../../util";
-import LinkableCode from "./LinkableCode";
+import PreWithToolbar from "./PreWithToolbar";
+import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
+import "./katex.css";
+import "./markdown.css";
 
-const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
-  light?: boolean;
+const StyledMarkdown = styled.div<{
   fontSize?: number;
-  maxHeight?: number;
   showBorder?: boolean;
 }>`
   pre {
-    background-color: ${(props) =>
-      props.light ? vscBackground : vscEditorBackground};
+    background-color: ${vscEditorBackground};
     border-radius: ${defaultBorderRadius};
 
     max-width: calc(100vw - 24px);
-  }
+    overflow-x: scroll;
+    overflow-y: hidden;
 
-  code {
-    color: #f78383;
-    word-wrap: break-word;
-    border-radius: ${defaultBorderRadius};
-    background-color: ${vscEditorBackground};
-  }
-
-  pre > code {
-    background-color: ${vscEditorBackground};
-    color: ${vscForeground};
-    padding: ${(props) => (props.showBorder ? "12px" : "0px 2px")};
-
-    border-radius: ${defaultBorderRadius};
     ${(props) => {
       if (props.showBorder) {
         return `
-          border: 0.5px solid ${lightGray};
+          border: 0.5px solid #8888;
         `;
       }
     }}
-
-    ${(props) => {
-      if (props.maxHeight) {
-        return `
-          max-height: ${props.maxHeight}px;
-          overflow-y: auto;
-        `;
-      }
-    }}
+    padding: ${(props) => (props.showBorder ? "12px" : "0px 2px")};
   }
 
-  background-color: ${(props) => (props.light ? "transparent" : vscBackground)};
+  code {
+    span.line:empty {
+      display: none;
+    }
+    word-wrap: break-word;
+    border-radius: ${defaultBorderRadius};
+    background-color: ${vscEditorBackground};
+    font-size: 12px;
+    font-family: var(--vscode-editor-font-family);
+  }
+
+  code:not(pre > code) {
+    font-family: var(--vscode-editor-font-family);
+    color: #f78383;
+  }
+
+  background-color: ${vscBackground};
   font-family:
+    var(--vscode-font-family),
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
@@ -69,21 +70,67 @@ const StyledMarkdownPreviewComponent = styled(MarkdownPreview)<{
     "Helvetica Neue",
     sans-serif;
   font-size: ${(props) => props.fontSize || getFontSize()}px;
-  padding: 8px;
+  padding-left: 8px;
+  padding-right: 8px;
   color: ${vscForeground};
+
+  p,
+  li,
+  ol,
+  ul {
+    line-height: 1.5;
+  }
 `;
 
 interface StyledMarkdownPreviewProps {
   source?: string;
-  maxHeight?: number;
   className?: string;
   showCodeBorder?: boolean;
+  scrollLocked?: boolean;
 }
 
-function StyledMarkdownPreview(props: StyledMarkdownPreviewProps) {
-  return (
-    <StyledMarkdownPreviewComponent
-      components={{
+const FadeInWords: React.FC = (props: any) => {
+  const { children, ...otherProps } = props;
+
+  // Split the text into words
+  const words = children
+    .map((child) => {
+      if (typeof child === "string") {
+        return child.split(" ").map((word, index) => (
+          <span className="fade-in-span" key={index}>
+            {word}{" "}
+          </span>
+        ));
+      } else {
+        return <span className="fade-in-span">{child}</span>;
+      }
+    })
+    .flat();
+
+  return <p {...otherProps}>{words}</p>;
+};
+
+const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
+  props: StyledMarkdownPreviewProps,
+) {
+  const [reactContent, setMarkdownSource] = useRemark({
+    remarkPlugins: [
+      remarkMath,
+      () => {
+        return (tree) => {
+          visit(tree, "code", (node: any) => {
+            if (!node.lang) {
+              node.lang === "javascript";
+            } else if (node.lang.includes(".")) {
+              node.lang = node.lang.split(".").slice(-1)[0];
+            }
+          });
+        };
+      },
+    ],
+    rehypePlugins: [rehypeHighlight as any, {}, rehypeKatex as any, {}],
+    rehypeReactOptions: {
+      components: {
         a: ({ node, ...props }) => {
           return (
             <a {...props} target="_blank">
@@ -91,20 +138,57 @@ function StyledMarkdownPreview(props: StyledMarkdownPreviewProps) {
             </a>
           );
         },
-        code: ({ node, ...props }) => {
-          return <LinkableCode {...props}></LinkableCode>;
+        pre: ({ node, ...preProps }) => {
+          const language = preProps?.children?.[0]?.props?.className
+            ?.split(" ")
+            .find((word) => word.startsWith("language-"))
+            ?.split("-")[1];
+          return props.showCodeBorder ? (
+            <PreWithToolbar language={language}>
+              <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+            </PreWithToolbar>
+          ) : (
+            <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+          );
         },
-      }}
-      className={props.className}
-      maxHeight={props.maxHeight}
-      fontSize={getFontSize()}
-      source={props.source || ""}
-      wrapperElement={{
-        "data-color-mode": "dark",
-      }}
-      showBorder={props.showCodeBorder}
-    />
+        //   pre: ({ node, ...preProps }) => {
+        //     const codeString =
+        //       preProps.children?.[0]?.props?.children?.[0].trim() || "";
+        //     const monacoEditor = (
+        //       <MonacoCodeBlock
+        //         showBorder={props.showCodeBorder}
+        //         language={
+        //           preProps.children?.[0]?.props?.className?.split("-")[1] ||
+        //           "typescript"
+        //         }
+        //         preProps={preProps}
+        //         codeString={codeString}
+        //       />
+        //     );
+        //     return props.showCodeBorder ? (
+        //       <PreWithToolbar copyvalue={codeString}>
+        //         <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+        //       </PreWithToolbar>
+        //     ) : (
+        //       <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+        //     );
+        //   },
+        //   // p: ({ node, ...props }) => {
+        //   //   return <FadeInWords {...props}></FadeInWords>;
+        //   // },
+      },
+    },
+  });
+
+  useEffect(() => {
+    setMarkdownSource(props.source || "");
+  }, [props.source]);
+
+  return (
+    <StyledMarkdown fontSize={getFontSize()} showBorder={props.showCodeBorder}>
+      {reactContent}
+    </StyledMarkdown>
   );
-}
+});
 
 export default StyledMarkdownPreview;

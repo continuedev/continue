@@ -1,5 +1,5 @@
 export async function* streamResponse(
-  response: Response
+  response: Response,
 ): AsyncGenerator<string> {
   if (response.status !== 200) {
     throw new Error(await response.text());
@@ -9,20 +9,12 @@ export async function* streamResponse(
     throw new Error(`No response body returned.`);
   }
 
-  const stream = response.body;
+  const stream = response.body as any;
 
-  const reader = stream.getReader();
   const decoder = new TextDecoder("utf-8");
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) {
-      break;
-    }
 
-    if (value) {
-      // @ts-ignore
-      yield decoder.decode(value);
-    }
+  for await (const chunk of stream) {
+    yield decoder.decode(chunk);
   }
 }
 
@@ -78,6 +70,21 @@ export async function* streamSse(response: Response): AsyncGenerator<any> {
     const { done, data } = parseSseLine(buffer);
     if (!done && data) {
       yield data;
+    }
+  }
+}
+
+export async function* streamJSON(response: Response): AsyncGenerator<any> {
+  let buffer = "";
+  for await (const value of streamResponse(response)) {
+    buffer += value;
+
+    let position;
+    while ((position = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, position);
+      const data = JSON.parse(line);
+      yield data;
+      buffer = buffer.slice(position + 1);
     }
   }
 }

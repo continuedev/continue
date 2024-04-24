@@ -1,9 +1,10 @@
 import { ChatMessage, SlashCommand } from "../..";
+import { stripImages } from "../../llm/countTokens";
 import { removeQuotesAndEscapes } from "../../util";
 
 const PROMPT = (
   input: string,
-  title: string
+  title: string,
 ) => `You will be asked to generate the body of a GitHub issue given a user request. You should follow these rules:
 - Be descriptive but do not make up details
 - If the the user request includes any code snippets that are relevant, reference them in code blocks
@@ -28,12 +29,13 @@ const DraftIssueCommand: SlashCommand = {
       yield "This command requires a repository URL to be set in the config file.";
       return;
     }
-    const title = await llm.complete(
+    let title = await llm.complete(
       `Generate a title for the GitHub issue requested in this user input: '${input}'. Use no more than 20 words and output nothing other than the title. Do not surround it with quotes. The title is: `,
-      { maxTokens: 20 }
+      { maxTokens: 20 },
     );
 
-    yield removeQuotesAndEscapes(title) + "\n\n";
+    title = removeQuotesAndEscapes(title.trim()) + "\n\n";
+    yield title;
 
     let body = "";
     const messages: ChatMessage[] = [
@@ -43,11 +45,11 @@ const DraftIssueCommand: SlashCommand = {
 
     for await (const chunk of llm.streamChat(messages)) {
       body += chunk.content;
-      yield chunk.content;
+      yield stripImages(chunk.content);
     }
 
     const url = `${params.repositoryUrl}/issues/new?title=${encodeURIComponent(
-      title
+      title,
     )}&body=${encodeURIComponent(body)}`;
     yield `\n\n[Link to draft of issue](${url})`;
   },

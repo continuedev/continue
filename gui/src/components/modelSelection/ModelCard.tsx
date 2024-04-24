@@ -88,8 +88,6 @@ interface ModelCardProps {
 }
 
 function ModelCard(props: ModelCardProps) {
-  const vscMediaUrl = (window as any).vscMediaUrl;
-
   const [dimensionChoices, setDimensionChoices] = useState<string[]>(
     props.dimensions?.map((d) => Object.keys(d.options)[0]) || []
   );
@@ -129,9 +127,9 @@ function ModelCard(props: ModelCardProps) {
         }
       >
         <div style={{ display: "flex", alignItems: "center" }}>
-          {vscMediaUrl && props.icon && (
+          {window.vscMediaUrl && props.icon && (
             <img
-              src={`${vscMediaUrl}/logos/${props.icon}`}
+              src={`${window.vscMediaUrl}/logos/${props.icon}`}
               height="24px"
               style={{ marginRight: "10px" }}
             />
@@ -235,9 +233,9 @@ function ModelCard(props: ModelCardProps) {
                         setSelectedProvider(option);
                       }}
                     >
-                      {vscMediaUrl && info.icon && (
+                      {window.vscMediaUrl && info.icon && (
                         <img
-                          src={`${vscMediaUrl}/logos/${info.icon}`}
+                          src={`${window.vscMediaUrl}/logos/${info.icon}`}
                           height="24px"
                         />
                       )}

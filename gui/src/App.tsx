@@ -1,10 +1,9 @@
-import { createContext, useState } from "react";
+import { createContext } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
 import useSetup from "./hooks/useSetup";
 import ErrorPage from "./pages/error";
-import GUI from "./pages/gui";
 import { default as Help, default as HelpPage } from "./pages/help";
 import History from "./pages/history";
 import MigrationPage from "./pages/migration";
@@ -13,9 +12,14 @@ import Models from "./pages/models";
 import MonacoPage from "./pages/monaco";
 import SettingsPage from "./pages/settings";
 
-import { ExtensionIde } from "core/ide";
-import { getBasename } from "core/util";
-import MiniSearch from "minisearch";
+import { ContextSubmenuItem } from "core";
+import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
+import { useVscTheme } from "./hooks/useVscTheme";
+import GUI from "./pages/gui";
+import LocalOnboarding from "./pages/localOnboarding";
+import ExistingUserOnboarding from "./pages/onboarding/existingUserOnboarding";
+import Onboarding from "./pages/onboarding/onboarding";
+import Stats from "./pages/stats";
 
 const router = createMemoryRouter([
   {
@@ -34,6 +38,10 @@ const router = createMemoryRouter([
       {
         path: "/history",
         element: <History />,
+      },
+      {
+        path: "/stats",
+        element: <Stats />,
       },
       {
         path: "/help",
@@ -60,6 +68,18 @@ const router = createMemoryRouter([
         element: <MonacoPage />,
       },
       {
+        path: "/onboarding",
+        element: <Onboarding />,
+      },
+      {
+        path: "/existingUserOnboarding",
+        element: <ExistingUserOnboarding />,
+      },
+      {
+        path: "/localOnboarding",
+        element: <LocalOnboarding />,
+      },
+      {
         path: "/migration",
         element: <MigrationPage />,
       },
@@ -67,65 +87,35 @@ const router = createMemoryRouter([
   },
 ]);
 
-const filesMiniSearch = new MiniSearch({
-  fields: ["basename"],
-  storeFields: ["id", "basename"],
+export const SubmenuContextProvidersContext = createContext<{
+  getSubmenuContextItems: (
+    providerTitle: string | undefined,
+    query: string,
+  ) => (ContextSubmenuItem & { providerTitle: string })[];
+  addItem: (providerTitle: string, item: ContextSubmenuItem) => void;
+}>({
+  getSubmenuContextItems: () => [],
+  addItem: () => {},
 });
-export const FilesSearchContext = createContext<
-  [MiniSearch, MiniSearchResult[]]
->([filesMiniSearch, []]);
 
-const foldersMiniSearch = new MiniSearch({
-  fields: ["basename"],
-  storeFields: ["id", "basename"],
-});
-export const FoldersSearchContext = createContext<
-  [MiniSearch, MiniSearchResult[]]
->([foldersMiniSearch, []]);
-
-(async () => {
-  const files = await new ExtensionIde().listWorkspaceContents();
-  const results = files.map((filepath) => {
-    return { id: filepath, basename: getBasename(filepath) };
-  });
-  filesMiniSearch.addAll(results);
-})();
-
-(async () => {
-  const folders = await new ExtensionIde().listFolders();
-  const results = folders.map((path) => {
-    return { id: path, basename: getBasename(path) };
-  });
-  foldersMiniSearch.addAll(results);
-})();
-
-export interface MiniSearchResult {
-  id: string;
-  basename: string;
-}
+export const VscThemeContext = createContext<any>(undefined);
 
 function App() {
   const dispatch = useDispatch();
 
   useSetup(dispatch);
 
-  const [filesFirstResultsState, setFilesFirstResults] = useState<
-    MiniSearchResult[]
-  >([]);
-  const [foldersFirstResultsState, setFoldersFirstResults] = useState<
-    MiniSearchResult[]
-  >([]);
+  const vscTheme = useVscTheme();
+  const submenuContextProvidersMethods = useSubmenuContextProviders();
 
   return (
-    <FilesSearchContext.Provider
-      value={[filesMiniSearch, filesFirstResultsState]}
-    >
-      <FoldersSearchContext.Provider
-        value={[foldersMiniSearch, foldersFirstResultsState]}
+    <VscThemeContext.Provider value={vscTheme}>
+      <SubmenuContextProvidersContext.Provider
+        value={submenuContextProvidersMethods}
       >
         <RouterProvider router={router} />
-      </FoldersSearchContext.Provider>
-    </FilesSearchContext.Provider>
+      </SubmenuContextProvidersContext.Provider>
+    </VscThemeContext.Provider>
   );
 }
 

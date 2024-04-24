@@ -35,7 +35,7 @@ class CustomResourceHandler : CefResourceHandler, DumbAware {
     ): Boolean {
         val url = cefRequest.url
         return if (url != null) {
-            val pathToResource = url.replace("http://continue", "webview/")
+            val pathToResource = url.replace("http://continue", "webview/").replace("http://localhost:5173", "webview/")
             val newUrl = javaClass.classLoader.getResource(pathToResource)
             state = OpenedConnection(newUrl?.openConnection())
             currentUrl = url

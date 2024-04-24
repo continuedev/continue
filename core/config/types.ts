@@ -1,5 +1,28 @@
 const Types = `
 declare global {
+  declare global {
+    interface Window {
+      ide?: "vscode";
+      windowId: string;
+      serverUrl: string;
+      vscMachineId: string;
+      vscMediaUrl: string;
+      fullColorTheme?: {
+        rules?: {
+          token?: string;
+          foreground?: string;
+        }[];
+      };
+      colorThemeName?: string;
+      workspacePaths?: string[];
+      postIntellijMessage?: (
+        messageType: string,
+        data: any,
+        messageIde: string,
+      ) => void;
+    }
+  }
+  
   export interface ChunkWithoutID {
     content: string;
     startLine: number;
@@ -13,10 +36,23 @@ declare global {
     index: number; // Index of the chunk in the document at filepath
   }
   
+  export interface IndexingProgressUpdate {
+    progress: number;
+    desc: string;
+  }
+  
   export interface LLMReturnValue {
     prompt: string;
     completion: string;
   }
+  
+  export type PromptTemplate =
+    | string
+    | ((
+        history: ChatMessage[],
+        otherData: Record<string, string>,
+      ) => string | ChatMessage[]);
+  
   export interface ILLM extends LLMOptions {
     get providerName(): ModelProvider;
   
@@ -47,44 +83,79 @@ declare global {
   
     streamComplete(
       prompt: string,
-      options?: LLMFullCompletionOptions
+      options?: LLMFullCompletionOptions,
     ): AsyncGenerator<string, LLMReturnValue>;
   
     streamChat(
       messages: ChatMessage[],
-      options?: LLMFullCompletionOptions
+      options?: LLMFullCompletionOptions,
     ): AsyncGenerator<ChatMessage, LLMReturnValue>;
   
     chat(
       messages: ChatMessage[],
-      options?: LLMFullCompletionOptions
+      options?: LLMFullCompletionOptions,
     ): Promise<ChatMessage>;
   
     countTokens(text: string): number;
+  
+    supportsImages(): boolean;
+  
+    supportsCompletions(): boolean;
+  
+    supportsPrefill(): boolean;
+  
+    listModels(): Promise<string[]>;
+  
+    renderPromptTemplate(
+      template: PromptTemplate,
+      history: ChatMessage[],
+      otherData: Record<string, string>,
+      canPutWordsInModelsMouth?: boolean,
+    ): string | ChatMessage[];
   }
+  
+  export type ContextProviderType = "normal" | "query" | "submenu";
   
   export interface ContextProviderDescription {
     title: string;
     displayTitle: string;
     description: string;
-    dynamic: boolean;
-    requiresQuery: boolean;
+    renderInlineAs?: string;
+    type: ContextProviderType;
   }
   
-  interface ContextProviderExtras {
+  export interface ContextProviderExtras {
     fullInput: string;
-    embeddingsProvider?: EmbeddingsProvider;
+    embeddingsProvider: EmbeddingsProvider;
+    reranker: Reranker | undefined;
     llm: ILLM;
+    ide: IDE;
+    selectedCode: RangeInFile[];
+  }
+  
+  export interface LoadSubmenuItemsArgs {
+    ide: IDE;
   }
   
   export interface CustomContextProvider {
     title: string;
     displayTitle?: string;
     description?: string;
+    renderInlineAs?: string;
+    type?: ContextProviderType;
     getContextItems(
       query: string,
-      extras: ContextProviderExtras
+      extras: ContextProviderExtras,
     ): Promise<ContextItem[]>;
+    loadSubmenuItems?: (
+      args: LoadSubmenuItemsArgs,
+    ) => Promise<ContextSubmenuItem[]>;
+  }
+  
+  export interface ContextSubmenuItem {
+    id: string;
+    title: string;
+    description: string;
   }
   
   export interface IContextProvider {
@@ -92,8 +163,10 @@ declare global {
   
     getContextItems(
       query: string,
-      extras: ContextProviderExtras
+      extras: ContextProviderExtras,
     ): Promise<ContextItem[]>;
+  
+    loadSubmenuItems(args: LoadSubmenuItemsArgs): Promise<ContextSubmenuItem[]>;
   }
   
   export interface PersistedSessionInfo {
@@ -113,6 +186,11 @@ declare global {
   export interface RangeInFile {
     filepath: string;
     range: Range;
+  }
+  
+  export interface FileWithContents {
+    filepath: string;
+    contents: string;
   }
   
   export interface Range {
@@ -140,9 +218,17 @@ declare global {
   
   export type ChatMessageRole = "user" | "assistant" | "system";
   
+  export interface MessagePart {
+    type: "text" | "imageUrl";
+    text?: string;
+    imageUrl?: { url: string };
+  }
+  
+  export type MessageContent = string | MessagePart[];
+  
   export interface ChatMessage {
     role: ChatMessageRole;
-    content: string;
+    content: MessageContent;
   }
   
   export interface ContextItemId {
@@ -167,9 +253,14 @@ declare global {
     editable?: boolean;
   }
   
+  export interface InputModifiers {
+    useCodebase: boolean;
+  }
+  
   export interface ChatHistoryItem {
     message: ChatMessage;
     editorState?: any;
+    modifiers?: InputModifiers;
     contextItems: ContextItemWithId[];
     promptLogs?: [string, string][]; // [prompt, completion]
   }
@@ -179,7 +270,6 @@ declare global {
   // LLM
   
   export interface LLMFullCompletionOptions extends BaseCompletionOptions {
-    raw?: boolean;
     log?: boolean;
   
     model?: string;
@@ -200,6 +290,8 @@ declare global {
     llmRequestHook?: (model: string, prompt: string) => any;
     apiKey?: string;
     apiBase?: string;
+  
+    useLegacyCompletionsEndpoint?: boolean;
   
     // Azure options
     engine?: string;
@@ -223,13 +315,16 @@ declare global {
     streamCompletion?: (
       prompt: string,
       options: CompletionOptions,
-      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
     ) => AsyncGenerator<string>;
     streamChat?: (
       messages: ChatMessage[],
       options: CompletionOptions,
-      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
     ) => AsyncGenerator<string>;
+    listModels?: (
+      fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>,
+    ) => Promise<string[]>;
   }
   
   /**
@@ -253,14 +348,45 @@ declare global {
     message: string;
   }
   
+  export class Thread {
+    name: string;
+    id: number;
+  }
+  
+  export type IdeType = "vscode" | "jetbrains";
+  export interface IdeInfo {
+    ideType: IdeType;
+    name: string;
+    version: string;
+    remoteName: string;
+    extensionVersion: string;
+  }
+  
+  export interface BranchAndDir {
+    branch: string;
+    directory: string;
+  }
+  
+  export interface IndexTag extends BranchAndDir {
+    artifactId: string;
+  }
+  
   export interface IDE {
-    getSerializedConfig(): Promise<SerializedContinueConfig>;
-    getConfigJsUrl(): Promise<string | undefined>;
+    getIdeInfo(): Promise<IdeInfo>;
     getDiff(): Promise<string>;
+    isTelemetryEnabled(): Promise<boolean>;
+    getUniqueId(): Promise<string>;
     getTerminalContents(): Promise<string>;
+    getDebugLocals(threadIndex: number): Promise<string>;
+    getTopLevelCallStackSources(
+      threadIndex: number,
+      stackDepth: number,
+    ): Promise<string[]>;
+    getAvailableThreads(): Promise<Thread[]>;
     listWorkspaceContents(directory?: string): Promise<string[]>;
     listFolders(): Promise<string[]>;
     getWorkspaceDirs(): Promise<string[]>;
+    getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
     writeFile(path: string, contents: string): Promise<void>;
     showVirtualFile(title: string, contents: string): Promise<void>;
     getContinueDir(): Promise<string>;
@@ -268,37 +394,26 @@ declare global {
     runCommand(command: string): Promise<void>;
     saveFile(filepath: string): Promise<void>;
     readFile(filepath: string): Promise<string>;
-    showDiff(
-      filepath: string,
-      newContents: string,
-      stepIndex: number
-    ): Promise<void>;
-    verticalDiffUpdate(
+    readRangeInFile(filepath: string, range: Range): Promise<string>;
+    showLines(
       filepath: string,
       startLine: number,
       endLine: number,
-      diffLine: DiffLine
+    ): Promise<void>;
+    showDiff(
+      filepath: string,
+      newContents: string,
+      stepIndex: number,
     ): Promise<void>;
     getOpenFiles(): Promise<string[]>;
+    getPinnedFiles(): Promise<string[]>;
     getSearchResults(query: string): Promise<string>;
     subprocess(command: string): Promise<[string, string]>;
     getProblems(filepath?: string | undefined): Promise<Problem[]>;
-  
-    // Embeddings
-    /**
-     * Returns list of [tag, filepath, hash of contents] that need to be embedded
-     */
-    getFilesToEmbed(providerId: string): Promise<[string, string, string][]>;
-    sendEmbeddingForChunk(
-      chunk: Chunk,
-      embedding: number[],
-      tags: string[]
-    ): void;
-    retrieveChunks(
-      text: string,
-      n: number,
-      directory: string | undefined
-    ): Promise<Chunk[]>;
+    getBranch(dir: string): Promise<string>;
+    getStats(directory: string): Promise<{ [path: string]: number }>;
+    getTags(artifactId: string): Promise<IndexTag[]>;
+    getRepoName(dir: string): Promise<string | undefined>;
   }
   
   // Slash Commands
@@ -311,6 +426,8 @@ declare global {
     input: string;
     params?: { [key: string]: any } | undefined;
     contextItems: ContextItemWithId[];
+    selectedCode: RangeInFile[];
+    config: ContinueConfig;
   }
   
   export interface SlashCommand {
@@ -342,15 +459,22 @@ declare global {
     | "diff"
     | "github"
     | "terminal"
+    | "locals"
     | "open"
     | "google"
     | "search"
-    | "url"
     | "tree"
     | "http"
     | "codebase"
     | "problems"
-    | "folder";
+    | "folder"
+    | "jira"
+    | "postgres"
+    | "database"
+    | "code"
+    | "docs"
+    | "gitlab-mr"
+    | "os";
   
   type TemplateType =
     | "llama2"
@@ -364,7 +488,10 @@ declare global {
     | "openchat"
     | "deepseek"
     | "xwin-coder"
-    | "neural-chat";
+    | "neural-chat"
+    | "codellama-70b"
+    | "llava"
+    | "gemma";
   
   type ModelProvider =
     | "openai"
@@ -377,31 +504,36 @@ declare global {
     | "llama.cpp"
     | "replicate"
     | "text-gen-webui"
-    | "google-palm"
+    | "gemini"
     | "lmstudio"
     | "llamafile"
     | "gemini"
     | "mistral"
     | "bedrock"
     | "deepinfra"
-    | "flowise";
+    | "flowise"
+    | "groq";
   
   export type ModelName =
+    | "AUTODETECT"
     // OpenAI
     | "gpt-3.5-turbo"
     | "gpt-3.5-turbo-16k"
     | "gpt-4"
     | "gpt-3.5-turbo-0613"
     | "gpt-4-32k"
-    | "gpt-4-1106-preview"
+    | "gpt-4-turbo-preview"
+    | "gpt-4-vision-preview"
     // Open Source
     | "mistral-7b"
     | "mistral-8x7b"
     | "llama2-7b"
     | "llama2-13b"
+    | "llama2-70b"
     | "codellama-7b"
     | "codellama-13b"
     | "codellama-34b"
+    | "codellama-70b"
     | "phi2"
     | "phind-codellama-34b"
     | "wizardcoder-7b"
@@ -409,20 +541,28 @@ declare global {
     | "wizardcoder-34b"
     | "zephyr-7b"
     | "codeup-13b"
-    | "deepseek-1b"
     | "deepseek-7b"
     | "deepseek-33b"
     | "neural-chat-7b"
     // Anthropic
     | "claude-2"
-    // Google PaLM
-    | "chat-bison-001"
+    | "claude-3-opus-20240229"
+    | "claude-3-sonnet-20240229"
+    | "claude-3-haiku-20240307"
+    | "claude-2.1"
     // Gemini
     | "gemini-pro"
+    | "gemini-1.5-pro-latest"
     // Mistral
     | "mistral-tiny"
     | "mistral-small"
-    | "mistral-medium";
+    | "mistral-medium"
+    // Tab autocomplete
+    | "deepseek-1b"
+    | "starcoder-1b"
+    | "starcoder-3b"
+    | "starcoder2-3b"
+    | "stable-code-3b";
   
   export interface RequestOptions {
     timeout?: number;
@@ -430,6 +570,7 @@ declare global {
     caBundlePath?: string | string[];
     proxy?: string;
     headers?: { [key: string]: string };
+    extraBodyProperties?: { [key: string]: any };
   }
   
   export interface StepWithParams {
@@ -464,6 +605,10 @@ declare global {
     mirostat?: number;
     stop?: string[];
     maxTokens?: number;
+    numThreads?: number;
+    keepAlive?: number;
+    raw?: boolean;
+    stream?: boolean;
   }
   
   export interface ModelDescription {
@@ -480,7 +625,11 @@ declare global {
     promptTemplates?: { [key: string]: string };
   }
   
-  export type EmbeddingsProviderName = "transformers.js" | "ollama" | "openai";
+  export type EmbeddingsProviderName =
+    | "transformers.js"
+    | "ollama"
+    | "openai"
+    | "free-trial";
   
   export interface EmbedOptions {
     apiBase?: string;
@@ -497,8 +646,54 @@ declare global {
     embed(chunks: string[]): Promise<number[][]>;
   }
   
+  export type RerankerName = "voyage" | "llm" | "free-trial";
+  
+  export interface RerankerDescription {
+    name: RerankerName;
+    params?: { [key: string]: any };
+  }
+  
+  export interface Reranker {
+    name: string;
+    rerank(query: string, chunks: Chunk[]): Promise<number[]>;
+  }
+  
+  export interface TabAutocompleteOptions {
+    disable: boolean;
+    useCopyBuffer: boolean;
+    useSuffix: boolean;
+    maxPromptTokens: number;
+    debounceDelay: number;
+    maxSuffixPercentage: number;
+    prefixPercentage: number;
+    template?: string;
+    multilineCompletions: "always" | "never" | "auto";
+    slidingWindowPrefixPercentage: number;
+    slidingWindowSize: number;
+    maxSnippetPercentage: number;
+    recentlyEditedSimilarityThreshold: number;
+    useCache: boolean;
+    onlyMyCode: boolean;
+    useOtherFiles: boolean;
+  }
+  
+  export interface ContinueUIConfig {
+    codeBlockToolbarPosition?: "top" | "bottom";
+  }
+  
+  interface ContextMenuConfig {
+    comment?: string;
+    docstring?: string;
+    fix?: string;
+    optimize?: string;
+    fixGrammar?: string;
+  }
+  interface ExperimantalConfig {
+    contextMenuPrompts?: ContextMenuConfig;
+  }
+  
   export interface SerializedContinueConfig {
-    disallowedSteps?: string[];
+    env?: string[];
     allowAnonymousTelemetry?: boolean;
     models: ModelDescription[];
     systemMessage?: string;
@@ -510,7 +705,18 @@ declare global {
     disableSessionTitles?: boolean;
     userToken?: string;
     embeddingsProvider?: EmbeddingsProviderDescription;
+    tabAutocompleteModel?: ModelDescription;
+    tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+    ui?: ContinueUIConfig;
+    reranker?: RerankerDescription;
+    experimental?: ExperimantalConfig;
   }
+  
+  export type ConfigMergeType = "merge" | "overwrite";
+  
+  export type ContinueRcJson = Partial<SerializedContinueConfig> & {
+    mergeBehavior: ConfigMergeType;
+  };
   
   export interface Config {
     /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://continue.dev/docs/telemetry */
@@ -538,6 +744,16 @@ declare global {
     userToken?: string;
     /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
     embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
+    /** The model that Continue will use for tab autocompletions. */
+    tabAutocompleteModel?: CustomLLM | ModelDescription;
+    /** Options for tab autocomplete */
+    tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+    /** UI styles customization */
+    ui?: ContinueUIConfig;
+    /** Options for the reranker */
+    reranker?: RerankerDescription | Reranker;
+    /** Experimental configuration */
+    experimental?: ExperimantalConfig;
   }
   
   export interface ContinueConfig {
@@ -551,8 +767,28 @@ declare global {
     disableIndexing?: boolean;
     userToken?: string;
     embeddingsProvider: EmbeddingsProvider;
+    tabAutocompleteModel?: ILLM;
+    tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
+    ui?: ContinueUIConfig;
+    reranker?: Reranker;
+    experimental?: ExperimantalConfig;
   }
-    
+  
+  export interface BrowserSerializedContinueConfig {
+    allowAnonymousTelemetry?: boolean;
+    models: ModelDescription[];
+    systemMessage?: string;
+    completionOptions?: BaseCompletionOptions;
+    slashCommands?: SlashCommandDescription[];
+    contextProviders?: ContextProviderDescription[];
+    disableIndexing?: boolean;
+    disableSessionTitles?: boolean;
+    userToken?: string;
+    embeddingsProvider?: string;
+    ui?: ContinueUIConfig;
+    reranker?: RerankerDescription;
+    experimental?: ExperimantalConfig;
+  }  
 }
 
 export {};

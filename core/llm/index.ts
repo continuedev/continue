@@ -6,11 +6,22 @@ import {
   LLMFullCompletionOptions,
   LLMOptions,
   LLMReturnValue,
+  ModelName,
   ModelProvider,
+  PromptTemplate,
   RequestOptions,
   TemplateType,
 } from "..";
-import { ideRequest, ideStreamRequest } from "../ide/messaging";
+import { DevDataSqliteDb } from "../util/devdataSqlite";
+import mergeJson from "../util/merge";
+import { Telemetry } from "../util/posthog";
+import { withExponentialBackoff } from "../util/withExponentialBackoff";
+import {
+  autodetectPromptTemplates,
+  autodetectTemplateFunction,
+  autodetectTemplateType,
+  modelSupportsImages,
+} from "./autodetect";
 import {
   CONTEXT_LENGTH_FOR_MODEL,
   DEFAULT_ARGS,
@@ -21,180 +32,9 @@ import {
   compileChatMessages,
   countTokens,
   pruneRawPromptFromTop,
+  stripImages,
 } from "./countTokens";
-import {
-  anthropicTemplateMessages,
-  chatmlTemplateMessages,
-  deepseekTemplateMessages,
-  llama2TemplateMessages,
-  neuralChatTemplateMessages,
-  openchatTemplateMessages,
-  phi2TemplateMessages,
-  phindTemplateMessages,
-  templateAlpacaMessages,
-  xWinCoderTemplateMessages,
-  zephyrTemplateMessages,
-} from "./templates/chat";
-import {
-  alpacaEditPrompt,
-  codellamaEditPrompt,
-  deepseekEditPrompt,
-  mistralEditPrompt,
-  neuralChatEditPrompt,
-  openchatEditPrompt,
-  phindEditPrompt,
-  simplestEditPrompt,
-  simplifiedEditPrompt,
-  xWinCoderEditPrompt,
-  zephyrEditPrompt,
-} from "./templates/edit";
-
-const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
-  "lmstudio",
-  "openai",
-  "ollama",
-];
-
-function autodetectTemplateType(model: string): TemplateType | undefined {
-  const lower = model.toLowerCase();
-
-  if (
-    lower.includes("gpt") ||
-    lower.includes("chat-bison") ||
-    lower.includes("pplx") ||
-    lower.includes("gemini")
-  ) {
-    return undefined;
-  }
-
-  if (lower.includes("xwin")) {
-    return "xwin-coder";
-  }
-
-  if (lower.includes("dolphin")) {
-    return "chatml";
-  }
-
-  if (lower.includes("phi2")) {
-    return "phi2";
-  }
-
-  if (lower.includes("phind")) {
-    return "phind";
-  }
-
-  if (lower.includes("llama")) {
-    return "llama2";
-  }
-
-  if (lower.includes("zephyr")) {
-    return "zephyr";
-  }
-
-  if (lower.includes("claude")) {
-    return "anthropic";
-  }
-
-  if (lower.includes("alpaca") || lower.includes("wizard")) {
-    return "alpaca";
-  }
-
-  if (lower.includes("mistral")) {
-    return "llama2";
-  }
-
-  if (lower.includes("deepseek")) {
-    return "deepseek";
-  }
-
-  if (lower.includes("ninja") || lower.includes("openchat")) {
-    return "openchat";
-  }
-
-  if (lower.includes("neural-chat")) {
-    return "neural-chat";
-  }
-
-  return "chatml";
-}
-
-function autodetectTemplateFunction(
-  model: string,
-  provider: ModelProvider,
-  explicitTemplate: TemplateType | undefined = undefined
-) {
-  if (
-    explicitTemplate === undefined &&
-    PROVIDER_HANDLES_TEMPLATING.includes(provider)
-  ) {
-    return null;
-  }
-
-  const templateType = explicitTemplate || autodetectTemplateType(model);
-
-  if (templateType) {
-    const mapping: Record<TemplateType, any> = {
-      llama2: llama2TemplateMessages,
-      alpaca: templateAlpacaMessages,
-      phi2: phi2TemplateMessages,
-      phind: phindTemplateMessages,
-      zephyr: zephyrTemplateMessages,
-      anthropic: anthropicTemplateMessages,
-      chatml: chatmlTemplateMessages,
-      deepseek: deepseekTemplateMessages,
-      openchat: openchatTemplateMessages,
-      "xwin-coder": xWinCoderTemplateMessages,
-      "neural-chat": neuralChatTemplateMessages,
-      none: null,
-    };
-
-    return mapping[templateType];
-  }
-
-  return null;
-}
-
-function autodetectPromptTemplates(
-  model: string,
-  explicitTemplate: TemplateType | undefined = undefined
-) {
-  const templateType = explicitTemplate || autodetectTemplateType(model);
-  const templates: Record<string, any> = {};
-
-  let editTemplate = null;
-
-  if (templateType === "phind") {
-    editTemplate = phindEditPrompt;
-  } else if (templateType === "phi2") {
-    editTemplate = simplifiedEditPrompt;
-  } else if (templateType === "zephyr") {
-    editTemplate = zephyrEditPrompt;
-  } else if (templateType === "llama2") {
-    if (model.includes("mistral")) {
-      editTemplate = mistralEditPrompt;
-    } else {
-      editTemplate = codellamaEditPrompt;
-    }
-  } else if (templateType === "alpaca") {
-    editTemplate = alpacaEditPrompt;
-  } else if (templateType === "deepseek") {
-    editTemplate = deepseekEditPrompt;
-  } else if (templateType === "openchat") {
-    editTemplate = openchatEditPrompt;
-  } else if (templateType === "xwin-coder") {
-    editTemplate = xWinCoderEditPrompt;
-  } else if (templateType === "neural-chat") {
-    editTemplate = neuralChatEditPrompt;
-  } else if (templateType) {
-    editTemplate = simplestEditPrompt;
-  }
-
-  if (editTemplate !== null) {
-    templates["edit"] = editTemplate;
-  }
-
-  return templates;
-}
+import CompletionOptionsForModels from "./templates/options";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;
@@ -202,6 +42,28 @@ export abstract class BaseLLM implements ILLM {
 
   get providerName(): ModelProvider {
     return (this.constructor as typeof BaseLLM).providerName;
+  }
+
+  supportsImages(): boolean {
+    return modelSupportsImages(this.providerName, this.model, this.title);
+  }
+
+  supportsCompletions(): boolean {
+    if (this.providerName === "openai") {
+      if (
+        this.apiBase?.includes("api.groq.com") ||
+        this.apiBase?.includes(":1337") ||
+        this._llmOptions.useLegacyCompletionsEndpoint?.valueOf() === false
+      ) {
+        // Jan + Groq don't support completions : (
+        return false;
+      }
+    }
+    return true;
+  }
+
+  supportsPrefill(): boolean {
+    return ["ollama", "anthropic"].includes(this.providerName);
   }
 
   uniqueId: string;
@@ -239,36 +101,42 @@ export abstract class BaseLLM implements ILLM {
     };
 
     const templateType =
-      options.template || autodetectTemplateType(options.model);
+      options.template ?? autodetectTemplateType(options.model);
 
     this.title = options.title;
-    this.uniqueId = options.uniqueId || "None";
+    this.uniqueId = options.uniqueId ?? "None";
     this.model = options.model;
     this.systemMessage = options.systemMessage;
-    this.contextLength = options.contextLength || DEFAULT_CONTEXT_LENGTH;
+    this.contextLength = options.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",
-      maxTokens: options.completionOptions?.maxTokens || DEFAULT_MAX_TOKENS,
+      maxTokens: options.completionOptions?.maxTokens ?? DEFAULT_MAX_TOKENS,
     };
+    if (CompletionOptionsForModels[options.model as ModelName]) {
+      this.completionOptions = mergeJson(
+        this.completionOptions,
+        CompletionOptionsForModels[options.model as ModelName] ?? {},
+      );
+    }
     this.requestOptions = options.requestOptions;
     this.promptTemplates = {
       ...autodetectPromptTemplates(options.model, templateType),
       ...options.promptTemplates,
     };
     this.templateMessages =
-      options.templateMessages ||
+      options.templateMessages ??
       autodetectTemplateFunction(
         options.model,
         this.providerName,
-        options.template
+        options.template,
       );
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
     this.apiBase = options.apiBase;
-    if (this.apiBase?.endsWith("/")) {
-      this.apiBase = this.apiBase.slice(0, -1);
+    if (this.apiBase && !this.apiBase.endsWith("/")) {
+      this.apiBase = this.apiBase + "/";
     }
 
     this.engine = options.engine;
@@ -278,10 +146,14 @@ export abstract class BaseLLM implements ILLM {
     this.projectId = options.projectId;
   }
 
+  listModels(): Promise<string[]> {
+    return Promise.resolve([]);
+  }
+
   private _compileChatMessages(
     options: CompletionOptions,
     messages: ChatMessage[],
-    functions?: any[]
+    functions?: any[],
   ) {
     let contextLength = this.contextLength;
     if (
@@ -296,10 +168,11 @@ export abstract class BaseLLM implements ILLM {
       options.model,
       messages,
       contextLength,
-      options.maxTokens || DEFAULT_MAX_TOKENS,
+      options.maxTokens ?? DEFAULT_MAX_TOKENS,
+      this.supportsImages(),
       undefined,
       functions,
-      this.systemMessage
+      this.systemMessage,
     );
   }
 
@@ -325,28 +198,33 @@ export abstract class BaseLLM implements ILLM {
 
   private _compileLogMessage(
     prompt: string,
-    completionOptions: CompletionOptions
+    completionOptions: CompletionOptions,
   ): string {
     const dict = { contextLength: this.contextLength, ...completionOptions };
     const settings = Object.entries(dict)
       .map(([key, value]) => `${key}: ${value}`)
       .join("\n");
     return `Settings:
-  ${settings}
+${settings}
 
-  ############################################
+############################################
 
-  ${prompt}`;
+${prompt}`;
   }
 
   private _logTokensGenerated(model: string, completion: string) {
     let tokens = this.countTokens(completion);
-    // TODO
-    // posthogLogger.captureEvent("tokens_generated", {
-    //   model: model,
-    //   tokens: tokens,
-    //   model_class: this.constructor.name,
-    // });
+    Telemetry.capture("tokens_generated", {
+      model: model,
+      provider: this.providerName,
+      tokens: tokens,
+    });
+    Telemetry.capture("tokensGenerated", {
+      model: model,
+      provider: this.providerName,
+      tokens: tokens,
+    });
+    DevDataSqliteDb.logTokensGenerated(model, this.providerName, tokens);
   }
 
   _fetch?: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response> =
@@ -354,44 +232,55 @@ export abstract class BaseLLM implements ILLM {
 
   protected fetch(
     url: RequestInfo | URL,
-    init?: RequestInit
+    init?: RequestInit,
   ): Promise<Response> {
     if (this._fetch) {
       // Custom Node.js fetch
-      return this._fetch(url, init);
+      const customFetch = this._fetch;
+      return withExponentialBackoff<Response>(
+        () => customFetch(url, init),
+        5,
+        0.5,
+      );
     }
 
     // Most of the requestOptions aren't available in the browser
     const headers = new Headers(init?.headers);
     for (const [key, value] of Object.entries(
-      this.requestOptions?.headers || {}
+      this.requestOptions?.headers ?? {},
     )) {
       headers.append(key, value as string);
     }
 
-    return fetch(url, {
-      ...init,
-      headers,
-    });
+    return withExponentialBackoff<Response>(() =>
+      fetch(url, {
+        ...init,
+        headers,
+      }),
+    );
   }
 
   private _parseCompletionOptions(options: LLMFullCompletionOptions) {
     const log = options.log ?? true;
     const raw = options.raw ?? false;
     delete options.log;
-    delete options.raw;
 
-    const completionOptions: CompletionOptions = {
-      ...this.completionOptions,
-      ...options,
-    };
+    const completionOptions: CompletionOptions = mergeJson(
+      this.completionOptions,
+      options,
+    );
 
     return { completionOptions, log, raw };
   }
 
   private _formatChatMessages(messages: ChatMessage[]): string {
+    const msgsCopy = messages ? messages.map((msg) => ({ ...msg })) : [];
     let formatted = "";
-    for (let msg of messages) {
+    for (let msg of msgsCopy) {
+      if ("content" in msg && Array.isArray(msg.content)) {
+        const content = stripImages(msg.content);
+        msg.content = content;
+      }
       formatted += `<${msg.role}>\n${msg.content || ""}\n\n`;
     }
     return formatted;
@@ -399,27 +288,8 @@ export abstract class BaseLLM implements ILLM {
 
   async *streamComplete(
     prompt: string,
-    options: LLMFullCompletionOptions = {}
+    options: LLMFullCompletionOptions = {},
   ) {
-    if (!this._shouldRequestDirectly()) {
-      const gen = ideStreamRequest("llmStreamComplete", {
-        prompt,
-        title: this.title,
-        completionOptions: options,
-      });
-
-      let next = await gen.next();
-      while (!next.done) {
-        yield next.value;
-        next = await gen.next();
-      }
-
-      return {
-        prompt: next.value?.prompt,
-        completion: next.value?.completion,
-      };
-    }
-
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -427,7 +297,7 @@ export abstract class BaseLLM implements ILLM {
       completionOptions.model,
       this.contextLength,
       prompt,
-      completionOptions.maxTokens || DEFAULT_MAX_TOKENS
+      completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
     );
 
     if (!raw) {
@@ -451,20 +321,14 @@ export abstract class BaseLLM implements ILLM {
 
     this._logTokensGenerated(completionOptions.model, completion);
 
+    if (log && this.writeLog) {
+      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+    }
+
     return { prompt, completion };
   }
 
   async complete(prompt: string, options: LLMFullCompletionOptions = {}) {
-    if (!this._shouldRequestDirectly()) {
-      return (
-        await ideRequest("llmComplete", {
-          prompt,
-          title: this.title,
-          completionOptions: options,
-        })
-      ).content;
-    }
-
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -472,7 +336,7 @@ export abstract class BaseLLM implements ILLM {
       completionOptions.model,
       this.contextLength,
       prompt,
-      completionOptions.maxTokens || DEFAULT_MAX_TOKENS
+      completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
     );
 
     if (!raw) {
@@ -491,6 +355,10 @@ export abstract class BaseLLM implements ILLM {
     const completion = await this._complete(prompt, completionOptions);
 
     this._logTokensGenerated(completionOptions.model, completion);
+    if (log && this.writeLog) {
+      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+    }
+
     return completion;
   }
 
@@ -504,22 +372,8 @@ export abstract class BaseLLM implements ILLM {
 
   async *streamChat(
     messages: ChatMessage[],
-    options: LLMFullCompletionOptions = {}
+    options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<ChatMessage, LLMReturnValue> {
-    if (!this._shouldRequestDirectly()) {
-      const gen = ideStreamRequest("llmStreamChat", {
-        messages,
-        title: this.title,
-        completionOptions: options,
-      });
-      let next = await gen.next();
-      while (!next.done) {
-        yield { role: "user", content: next.value };
-        next = await gen.next();
-      }
-      return { prompt: next.value?.prompt, completion: next.value?.completion };
-    }
-
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -543,7 +397,7 @@ export abstract class BaseLLM implements ILLM {
       if (this.templateMessages) {
         for await (const chunk of this._streamComplete(
           prompt,
-          completionOptions
+          completionOptions,
         )) {
           completion += chunk;
           yield { role: "assistant", content: chunk };
@@ -551,7 +405,7 @@ export abstract class BaseLLM implements ILLM {
       } else {
         for await (const chunk of this._streamChat(
           messages,
-          completionOptions
+          completionOptions,
         )) {
           completion += chunk.content;
           yield chunk;
@@ -563,29 +417,33 @@ export abstract class BaseLLM implements ILLM {
     }
 
     this._logTokensGenerated(completionOptions.model, completion);
+    if (log && this.writeLog) {
+      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+    }
+
     return { prompt, completion };
   }
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     throw new Error("Not implemented");
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     if (!this.templateMessages) {
       throw new Error(
-        "You must either implement templateMessages or _streamChat"
+        "You must either implement templateMessages or _streamChat",
       );
     }
 
     for await (const chunk of this._streamComplete(
       this.templateMessages(messages),
-      options
+      options,
     )) {
       yield { role: "assistant", content: chunk };
     }
@@ -611,10 +469,45 @@ export abstract class BaseLLM implements ILLM {
     };
   }
 
-  private _shouldRequestDirectly() {
-    if (typeof window === "undefined") {
-      return true;
+  public renderPromptTemplate(
+    template: PromptTemplate,
+    history: ChatMessage[],
+    otherData: Record<string, string>,
+    canPutWordsInModelsMouth: boolean = false,
+  ): string | ChatMessage[] {
+    if (typeof template === "string") {
+      let data: any = {
+        history: history,
+        ...otherData,
+      };
+      if (history.length > 0 && history[0].role == "system") {
+        data["system_message"] = history.shift()!.content;
+      }
+
+      const compiledTemplate = Handlebars.compile(template);
+      return compiledTemplate(data);
+    } else {
+      const rendered = template(history, {
+        ...otherData,
+        supportsCompletions: this.supportsCompletions() ? "true" : "false",
+        supportsPrefill: this.supportsPrefill() ? "true" : "false",
+      });
+      if (
+        typeof rendered !== "string" &&
+        rendered[rendered.length - 1]?.role === "assistant" &&
+        !canPutWordsInModelsMouth
+      ) {
+        // Some providers don't allow you to put words in the model's mouth
+        // So we have to manually compile the prompt template and use
+        // raw /completions, not /chat/completions
+        const templateMessages = autodetectTemplateFunction(
+          this.model,
+          this.providerName,
+          autodetectTemplateType(this.model),
+        );
+        return templateMessages(rendered);
+      }
+      return rendered;
     }
-    return (window as any)?.ide !== "vscode";
   }
 }

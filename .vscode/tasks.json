@@ -10,7 +10,9 @@
         // To build the React app that is used in the extension
         "vscode-extension:continue-ui:build",
         // To bundle the code the same way we do for publishing
-        "vscode-extension:esbuild"
+        "vscode-extension:esbuild",
+        // Start the React app that is used in the extension
+        "gui:dev"
       ],
       "group": {
         "kind": "build",
@@ -20,8 +22,9 @@
     {
       "label": "vscode-extension:esbuild",
       "type": "npm",
-      "script": "esbuild",
+      "script": "esbuild-watch",
       "path": "extensions/vscode",
+      "isBackground": true,
       "problemMatcher": [
         {
           "pattern": [
@@ -33,7 +36,12 @@
               "severity": 4,
               "message": 5
             }
-          ]
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ">",
+            "endsPattern": ">"
+          }
         }
       ]
     },
@@ -102,8 +110,9 @@
     {
       "label": "install-all-dependencies",
       "type": "shell",
+      "windows": { "command": "./install-dependencies.ps1" },
       "command": "./install-dependencies.sh",
-      "problemMatcher": [] // Empty so users are not promted to select progress reporting
+      "problemMatcher": [] // Empty so users are not prompted to select progress reporting
     },
     //
     // Start the React App for debugging with Vite
@@ -112,11 +121,39 @@
       "type": "shell",
       "command": "npm",
       "options": {
-        "cwd": "gui"
+        "cwd": "${workspaceFolder}/gui"
       },
       "args": ["run", "dev"],
       "isBackground": true,
-      "problemMatcher": ["$tsc"]
+      "problemMatcher": [
+        {
+          "pattern": [
+            {
+              "regexp": ".",
+              "file": 1,
+              "location": 2,
+              "message": 3
+            }
+          ],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": ".",
+            "endsPattern": "."
+          }
+        }
+      ]
+    },
+    //
+    // esbuild for the core binary
+    {
+      "label": "binary:esbuild",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "esbuild"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "binary"
+      }
     }
   ]
 }

@@ -5,7 +5,8 @@ export type ComboBoxItemType =
   | "slashCommand"
   | "file"
   | "query"
-  | "folder";
+  | "folder"
+  | "action";
 
 export interface ComboBoxItem {
   title: string;
@@ -16,4 +17,5 @@ export interface ComboBoxItem {
   contextProvider?: ContextProviderDescription;
   query?: string;
   label?: string;
+  action?: () => void;
 }

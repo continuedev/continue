@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   Button,
+  Hr,
   NumberInput,
   TextArea,
   lightGray,
@@ -16,13 +17,9 @@ import {
 } from "../components";
 import InfoHover from "../components/InfoHover";
 import Loader from "../components/loaders/Loader";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 import { getFontSize, getPlatform } from "../util";
 import { postToIde } from "../util/ide";
-
-const Hr = styled.hr`
-  border: 0.5px solid ${lightGray};
-`;
 
 const CancelButton = styled(Button)`
   background-color: transparent;
@@ -99,7 +96,7 @@ function Settings() {
   const onSubmit = (data: ContinueConfig) => console.log(data);
 
   const navigate = useNavigate();
-  const config = useSelector((state: RootStore) => state.state.config);
+  const config = useSelector((state: RootState) => state.state.config);
   const dispatch = useDispatch();
 
   const submitChanges = () => {
@@ -132,7 +129,7 @@ function Settings() {
     formMethods.setValue("systemMessage", config.systemMessage);
     formMethods.setValue(
       "completionOptions.temperature",
-      config.completionOptions?.temperature
+      config.completionOptions?.temperature,
     );
   }, [config]);
 

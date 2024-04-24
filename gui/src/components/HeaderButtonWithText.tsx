@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { HeaderButton, StyledTooltip } from ".";
 import ReactDOM from "react-dom";
+import { HeaderButton, StyledTooltip } from ".";
+
+import { v4 as uuidv4 } from "uuid";
 
 interface HeaderButtonWithTextProps {
-  text: string;
+  text: string | undefined;
   onClick?: (e: any) => void;
   children: React.ReactNode;
   disabled?: boolean;
@@ -13,6 +15,8 @@ interface HeaderButtonWithTextProps {
   onKeyDown?: (e: any) => void;
   tabIndex?: number;
   style?: React.CSSProperties;
+  backgroundColor?: string;
+  hoverBackgroundColor?: string;
 }
 
 const HeaderButtonWithText = React.forwardRef<
@@ -20,13 +24,16 @@ const HeaderButtonWithText = React.forwardRef<
   HeaderButtonWithTextProps
 >((props: HeaderButtonWithTextProps, ref) => {
   const [hover, setHover] = useState(false);
+  const id = uuidv4();
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
   return (
     <>
       <HeaderButton
-        data-tooltip-id={`header_button_${props.text}`}
+        hoverBackgroundColor={props.hoverBackgroundColor}
+        backgroundColor={props.backgroundColor}
+        data-tooltip-id={`header_button_${id}`}
         inverted={props.inverted}
         disabled={props.disabled}
         onMouseEnter={() => {
@@ -46,12 +53,13 @@ const HeaderButtonWithText = React.forwardRef<
       >
         {props.children}
       </HeaderButton>
-      {tooltipPortalDiv &&
+      {props.text &&
+        tooltipPortalDiv &&
         ReactDOM.createPortal(
-          <StyledTooltip id={`header_button_${props.text}`} place="bottom">
+          <StyledTooltip id={`header_button_${id}`} place="bottom">
             {props.text}
           </StyledTooltip>,
-          tooltipPortalDiv
+          tooltipPortalDiv,
         )}
     </>
   );

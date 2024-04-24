@@ -1,13 +1,15 @@
 import { JSONContent } from "@tiptap/react";
 import {
   ContextItemWithId,
-  EmbeddingsProvider,
-  IContextProvider,
-  ILLM,
+  InputModifiers,
+  MessageContent,
+  MessagePart,
+  RangeInFile,
 } from "core";
-import { ExtensionIde } from "core/ide";
-import { ideRequest } from "core/ide/messaging";
+import { stripImages } from "core/llm/countTokens";
 import { getBasename } from "core/util";
+import { ideRequest } from "../../util/ide";
+import { WebviewIde } from "../../util/webviewIde";
 
 interface MentionAttrs {
   label: string;
@@ -25,30 +27,64 @@ interface MentionAttrs {
 
 async function resolveEditorContent(
   editorState: JSONContent,
-  contextProviders: IContextProvider[],
-  llm: ILLM,
-  embeddingsProvider?: EmbeddingsProvider
-): Promise<[ContextItemWithId[], string]> {
-  let paragraphs = [];
+  modifiers: InputModifiers,
+): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
+  let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
+  const selectedCode: RangeInFile[] = [];
   let slashCommand = undefined;
   for (const p of editorState?.content) {
     if (p.type === "paragraph") {
       const [text, ctxItems, foundSlashCommand] = resolveParagraph(p);
+
+      // Only take the first slash command
+
       if (foundSlashCommand && typeof slashCommand === "undefined") {
         slashCommand = foundSlashCommand;
       }
       if (text === "") {
         continue;
       }
-      paragraphs.push(text);
+
+      if (parts[parts.length - 1]?.type === "text") {
+        parts[parts.length - 1].text += "\n" + text;
+      } else {
+        parts.push({ type: "text", text });
+      }
       contextItemAttrs.push(...ctxItems);
     } else if (p.type === "codeBlock") {
       if (!p.attrs.item.editing) {
-        paragraphs.push(
-          "```" + p.attrs.item.name + "\n" + p.attrs.item.content + "\n```"
-        );
+        const text =
+          "```" + p.attrs.item.name + "\n" + p.attrs.item.content + "\n```";
+        if (parts[parts.length - 1]?.type === "text") {
+          parts[parts.length - 1].text += "\n" + text;
+        } else {
+          parts.push({
+            type: "text",
+            text,
+          });
+        }
       }
+
+      const name: string = p.attrs.item.name;
+      let lines = name.substring(name.lastIndexOf("(") + 1);
+      lines = lines.substring(0, lines.lastIndexOf(")"));
+      const [start, end] = lines.split("-");
+
+      selectedCode.push({
+        filepath: p.attrs.item.description,
+        range: {
+          start: { line: parseInt(start) - 1, character: 0 },
+          end: { line: parseInt(end) - 1, character: 0 },
+        },
+      });
+    } else if (p.type === "image") {
+      parts.push({
+        type: "imageUrl",
+        imageUrl: {
+          url: p.attrs.src,
+        },
+      });
     } else {
       console.warn("Unexpected content type", p.type);
     }
@@ -56,13 +92,14 @@ async function resolveEditorContent(
 
   let contextItemsText = "";
   let contextItems: ContextItemWithId[] = [];
-  const ide = new ExtensionIde();
   for (const item of contextItemAttrs) {
     if (item.itemType === "file") {
+      const ide = new WebviewIde();
       // This is a quick way to resolve @file references
       const basename = getBasename(item.id);
-      const content = await ide.readFile(item.id);
-      contextItemsText += `\`\`\`title="${basename}"\n${content}\n\`\`\`\n`;
+      const rawContent = await ide.readFile(item.id);
+      const content = `\`\`\`title="${basename}"\n${rawContent}\n\`\`\`\n`;
+      contextItemsText += content;
       contextItems.push({
         name: basename,
         description: item.id,
@@ -74,14 +111,12 @@ async function resolveEditorContent(
       });
     } else {
       const data = {
-        name: item.id,
+        name: item.itemType === "contextProvider" ? item.id : item.itemType,
         query: item.query,
-        fullInput: paragraphs.join("\n"),
+        fullInput: stripImages(parts),
+        selectedCode,
       };
-      const { items: resolvedItems } = await ideRequest(
-        "getContextItems",
-        data
-      );
+      const resolvedItems = await ideRequest("context/getContextItems", data);
       contextItems.push(...resolvedItems);
       for (const resolvedItem of resolvedItems) {
         contextItemsText += resolvedItem.content + "\n\n";
@@ -89,16 +124,47 @@ async function resolveEditorContent(
     }
   }
 
+  // cmd+enter to use codebase
+  if (modifiers.useCodebase) {
+    const codebaseItems = await ideRequest("context/getContextItems", {
+      name: "codebase",
+      query: "",
+      fullInput: stripImages(parts),
+      selectedCode,
+    });
+    contextItems.push(...codebaseItems);
+    for (const codebaseItem of codebaseItems) {
+      contextItemsText += codebaseItem.content + "\n\n";
+    }
+  }
+
   if (contextItemsText !== "") {
     contextItemsText += "\n";
   }
 
-  let finalText = paragraphs.join("\n").trim();
   if (slashCommand) {
-    finalText = `${slashCommand} ${finalText}`;
+    let lastTextIndex = findLastIndex(parts, (part) => part.type === "text");
+    const lastPart = `${slashCommand} ${parts[lastTextIndex]?.text || ""}`;
+    if (parts.length > 0) {
+      parts[lastTextIndex].text = lastPart;
+    } else {
+      parts = [{ type: "text", text: lastPart }];
+    }
   }
 
-  return [contextItems, finalText];
+  return [contextItems, selectedCode, parts];
+}
+
+function findLastIndex<T>(
+  array: T[],
+  predicate: (value: T, index: number, obj: T[]) => boolean,
+): number {
+  for (let i = array.length - 1; i >= 0; i--) {
+    if (predicate(array[i], i, array)) {
+      return i;
+    }
+  }
+  return -1; // if no element satisfies the predicate
 }
 
 function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
@@ -107,11 +173,12 @@ function resolveParagraph(p: JSONContent): [string, MentionAttrs[], string] {
   let slashCommand = undefined;
   for (const child of p.content || []) {
     if (child.type === "text") {
-      text += child.text;
+      text += text === "" ? child.text.trimStart() : child.text;
     } else if (child.type === "mention") {
-      if (!["codebase"].includes(child.attrs.id)) {
-        text += child.attrs.label;
-      }
+      text +=
+        typeof child.attrs.renderInlineAs === "string"
+          ? child.attrs.renderInlineAs
+          : child.attrs.label;
       contextItems.push(child.attrs);
     } else if (child.type === "slashcommand") {
       if (typeof slashCommand === "undefined") {

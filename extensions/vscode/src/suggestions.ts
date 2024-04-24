@@ -1,8 +1,5 @@
 import * as vscode from "vscode";
-import { openEditorAndRevealRange } from "./util/vscode";
-import { translate } from "./util/vscode";
-import { registerAllCodeLensProviders } from "./lang-server/codeLens";
-import { extensionContext, ideProtocolClient } from "./activation/activate";
+import { openEditorAndRevealRange, translate } from "./util/vscode";
 
 export interface SuggestionRanges {
   oldRange: vscode.Range;
@@ -58,7 +55,7 @@ export function rerenderDecorations(editorUri: string) {
   const suggestions = editorToSuggestions.get(editorUri);
   const idx = currentSuggestion.get(editorUri);
   const editor = vscode.window.visibleTextEditors.find(
-    (editor) => editor.document.uri.toString() === editorUri
+    (editor) => editor.document.uri.toString() === editorUri,
   );
   if (!suggestions || !editor) return;
 
@@ -80,8 +77,8 @@ export function rerenderDecorations(editorUri: string) {
           range.start.character,
           // Don't include the last line if it is empty
           range.end.line - (range.end.character === 0 ? 1 : 0),
-          range.end.character
-        )
+          range.end.character,
+        ),
       );
     }
     return newRanges;
@@ -122,12 +119,12 @@ export function rerenderDecorations(editorUri: string) {
   if (idx === undefined) return;
   editor.revealRange(
     suggestions[idx].newRange,
-    vscode.TextEditorRevealType.Default
+    vscode.TextEditorRevealType.Default,
   );
 
-  if (extensionContext) {
-    registerAllCodeLensProviders(extensionContext);
-  }
+  // if (extensionContext) {
+  //   registerAllCodeLensProviders(extensionContext);
+  // }
 }
 
 export function suggestionDownCommand() {
@@ -167,7 +164,7 @@ export function suggestionUpCommand() {
 type SuggestionSelectionOption = "old" | "new" | "selected";
 function selectSuggestion(
   accept: SuggestionSelectionOption,
-  key: SuggestionRanges | null = null
+  key: SuggestionRanges | null = null,
 ) {
   const editor = vscode.window.activeTextEditor;
   if (!editor) return;
@@ -213,7 +210,7 @@ function selectSuggestion(
 
   rangeToDelete = new vscode.Range(
     rangeToDelete.start,
-    new vscode.Position(rangeToDelete.end.line, 0)
+    new vscode.Position(rangeToDelete.end.line, 0),
   );
   editor.edit((edit) => {
     edit.delete(rangeToDelete);
@@ -267,7 +264,7 @@ export function rejectAllSuggestionsCommand() {
 }
 
 export async function rejectSuggestionCommand(
-  key: SuggestionRanges | null = null
+  key: SuggestionRanges | null = null,
 ) {
   selectSuggestion("old", key);
 }
@@ -275,7 +272,7 @@ export async function rejectSuggestionCommand(
 export async function showSuggestion(
   editorFilename: string,
   range: vscode.Range,
-  suggestion: string
+  suggestion: string,
 ): Promise<boolean> {
   // Check for empty suggestions:
   if (
@@ -295,10 +292,10 @@ export async function showSuggestion(
         (edit) => {
           edit.insert(
             new vscode.Position(range.end.line, 0),
-            suggestion + (suggestion === "" ? "" : "\n")
+            suggestion + (suggestion === "" ? "" : "\n"),
           );
         },
-        { undoStopBefore: false, undoStopAfter: false }
+        { undoStopBefore: false, undoStopAfter: false },
       )
       .then(
         (success) => {
@@ -307,7 +304,7 @@ export async function showSuggestion(
               suggestion === "" ? 0 : suggestion.split("\n").length;
             let suggestionRange = new vscode.Range(
               new vscode.Position(range.end.line, 0),
-              new vscode.Position(range.end.line + suggestionLinesLength, 0)
+              new vscode.Position(range.end.line + suggestionLinesLength, 0),
             );
             let content = editor!.document.getText(suggestionRange);
 
@@ -338,7 +335,7 @@ export async function showSuggestion(
           }
           resolve(success);
         },
-        (reason) => reject(reason)
+        (reason) => reject(reason),
       );
   });
 }

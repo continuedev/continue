@@ -1,16 +1,18 @@
 package com.github.continuedev.continueintellijextension.actions
 
+import com.github.continuedev.continueintellijextension.editor.DiffStreamService
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
-import com.intellij.openapi.actionSystem.impl.SimpleDataContext
+import com.intellij.openapi.actionSystem.PlatformDataKeys
 import com.intellij.openapi.components.ServiceManager
- import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.openapi.components.service
+import com.intellij.openapi.fileEditor.FileEditorManager
+import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.wm.ToolWindowManager
 import java.awt.Dimension
-import java.awt.GridLayout
 import javax.swing.*
 import javax.swing.event.DocumentEvent
 import javax.swing.event.DocumentListener
@@ -27,15 +29,39 @@ fun pluginServiceFromActionEvent(e: AnActionEvent): ContinuePluginService? {
 
 class AcceptDiffAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
+        acceptHorizontalDiff(e)
+        acceptVerticalDiff(e)
+    }
+
+    private fun acceptHorizontalDiff(e: AnActionEvent) {
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
         continuePluginService.ideProtocolClient?.diffManager?.acceptDiff(null)
+    }
+
+    private fun acceptVerticalDiff(e: AnActionEvent) {
+        val project = e.project ?: return
+        val editor = e.getData(PlatformDataKeys.EDITOR) ?: FileEditorManager.getInstance(project).selectedTextEditor ?: return
+        val diffStreamService = project.service<DiffStreamService>()
+        diffStreamService.accept(editor)
     }
 }
 
 class RejectDiffAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {
+        rejectHorizontalDiff(e)
+        rejectVerticalDiff(e)
+    }
+
+    private fun rejectHorizontalDiff(e: AnActionEvent) {
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
         continuePluginService.ideProtocolClient?.diffManager?.rejectDiff(null)
+    }
+
+    private fun rejectVerticalDiff(e: AnActionEvent) {
+        val project = e.project ?: return
+        val editor = e.getData(PlatformDataKeys.EDITOR) ?: FileEditorManager.getInstance(project).selectedTextEditor ?: return
+        val diffStreamService = project.service<DiffStreamService>()
+        diffStreamService.reject(editor)
     }
 }
 
@@ -130,7 +156,7 @@ class QuickTextEntryAction : AnAction() {
              }
 
              continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-             continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInput")))
+             continuePluginService.sendToWebview("focusContinueInput", null)
 
          }
     }
@@ -179,7 +205,7 @@ class FocusContinueInputWithoutClearAction : AnAction() {
 
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInputWithoutClear")))
+        continuePluginService.sendToWebview("focusContinueInputWithoutClear", null)
 
         continuePluginService.ideProtocolClient?.sendHighlightedCode()
     }
@@ -202,7 +228,7 @@ class FocusContinueInputAction : AnAction() {
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
 
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInput")))
+        continuePluginService.sendToWebview("focusContinueInput", null)
 
         continuePluginService.ideProtocolClient?.sendHighlightedCode()
     }
@@ -225,7 +251,7 @@ class NewContinueSessionAction : AnAction() {
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
 
         continuePluginService.continuePluginWindow?.content?.components?.get(0)?.requestFocus()
-        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "focusContinueInputWithNewSession")))
+        continuePluginService.sendToWebview("focusContinueInputWithNewSession", null)
     }
 }
 
@@ -239,6 +265,6 @@ class ViewHistoryAction : AnAction() {
 
         val continuePluginService = pluginServiceFromActionEvent(e) ?: return
 
-        continuePluginService.dispatchCustomEvent(Gson().toJson(mutableMapOf("type" to "viewHistory")))
+        continuePluginService.sendToWebview("viewHistory", null)
     }
 }

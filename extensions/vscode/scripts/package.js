@@ -9,10 +9,12 @@ if (!fs.existsSync("build")) {
 }
 
 const command = isPreRelease
-  ? "vsce package --out ./build patch --pre-release --yarn"
-  : "vsce package --out ./build patch --yarn";
+  ? "npx vsce package --out ./build patch --pre-release" // --yarn"
+  : "npx vsce package --out ./build patch"; // --yarn";
 
 exec(command, (error) => {
   if (error) throw error;
-  console.log("vsce package completed");
+  console.log(
+    "vsce package completed - extension created at extensions/vscode/build/continue-patch.vsix",
+  );
 });

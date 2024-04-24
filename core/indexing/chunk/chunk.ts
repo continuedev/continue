@@ -1,13 +1,14 @@
 import { Chunk, ChunkWithoutID } from "../..";
 import { MAX_CHUNK_SIZE } from "../../llm/constants";
 import { countTokens } from "../../llm/countTokens";
+import { supportedLanguages } from "../../util/treeSitter";
 import { basicChunker } from "./basic";
-import { codeChunker, supportedLanguages } from "./code";
+import { codeChunker } from "./code";
 
 async function* chunkDocumentWithoutId(
   filepath: string,
   contents: string,
-  maxChunkSize: number
+  maxChunkSize: number,
 ): AsyncGenerator<ChunkWithoutID> {
   if (contents.trim() === "") {
     return;
@@ -22,7 +23,7 @@ async function* chunkDocumentWithoutId(
       }
       return;
     } catch (e) {
-      console.error(`Failed to parse ${filepath}: `, e);
+      // console.error(`Failed to parse ${filepath}: `, e);
       // falls back to basicChunker
     }
   }
@@ -34,19 +35,19 @@ export async function* chunkDocument(
   filepath: string,
   contents: string,
   maxChunkSize: number,
-  digest: string
+  digest: string,
 ): AsyncGenerator<Chunk> {
   let index = 0;
   for await (let chunkWithoutId of chunkDocumentWithoutId(
     filepath,
     contents,
-    maxChunkSize
+    maxChunkSize,
   )) {
-    if (countTokens(chunkWithoutId.content, "gpt-4") > MAX_CHUNK_SIZE) {
+    if (countTokens(chunkWithoutId.content) > MAX_CHUNK_SIZE) {
       console.warn(
         `Chunk with more than ${maxChunkSize} tokens constructed: `,
         filepath,
-        countTokens(chunkWithoutId.content, "gpt-4")
+        countTokens(chunkWithoutId.content),
       );
       continue;
     }

@@ -1,111 +1,98 @@
 import { Dispatch } from "@reduxjs/toolkit";
-import { useEffect } from "react";
-import { setServerStatusMessage } from "../redux/slices/miscSlice";
-import { errorPopup, isJetBrains, postToIde } from "../util/ide";
-
-import {
-  intermediateToFinalConfig,
-  serializedToIntermediateConfig,
-} from "core/config/load";
-import { ExtensionIde } from "core/ide/index";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { VSC_THEME_COLOR_VARS } from "../components";
 import { setVscMachineId } from "../redux/slices/configSlice";
-import { setConfig, setInactive } from "../redux/slices/stateSlice";
-import { RootStore } from "../redux/store";
+import {
+  addContextItemsAtIndex,
+  setConfig,
+  setInactive,
+} from "../redux/slices/stateSlice";
+import { RootState } from "../redux/store";
+import { ideRequest, isJetBrains } from "../util/ide";
 import useChatHandler from "./useChatHandler";
+import { useWebviewListener } from "./useWebviewListener";
 
 function useSetup(dispatch: Dispatch<any>) {
+  const [configLoaded, setConfigLoaded] = useState<boolean>(false);
+
   const loadConfig = async () => {
-    try {
-      const ide = new ExtensionIde();
-      let serialized = await ide.getSerializedConfig();
-      let intermediate = serializedToIntermediateConfig(serialized);
-
-      const configJsUrl = await ide.getConfigJsUrl();
-      if (configJsUrl) {
-        try {
-          // Try config.ts first
-          const module = await import(configJsUrl);
-          if (!module.modifyConfig) {
-            throw new Error(
-              "config.ts does not export a modifyConfig function."
-            );
-          }
-          intermediate = module.modifyConfig(intermediate);
-        } catch (e) {
-          console.log("Error loading config.ts: ", e);
-          errorPopup(e.message);
-        }
-      }
-      const finalConfig = await intermediateToFinalConfig(
-        intermediate,
-        async (filepath) => {
-          return new ExtensionIde().readFile(filepath);
-        }
-      );
-
-      // Fall back to config.json
-      dispatch(setConfig(finalConfig));
-    } catch (e) {
-      console.log("Error loading config.json: ", e);
-      errorPopup(e.message);
-    }
+    const config = await ideRequest("config/getBrowserSerialized", undefined);
+    dispatch(setConfig(config));
+    setConfigLoaded(true);
   };
 
   // Load config from the IDE
   useEffect(() => {
     loadConfig();
-  }, []);
+    const interval = setInterval(() => {
+      if (configLoaded) {
+        clearInterval(interval);
+        return;
+      }
+      loadConfig();
+    }, 2_000);
+
+    return () => clearInterval(interval);
+  }, [configLoaded]);
 
   useEffect(() => {
     // Override persisted state
     dispatch(setInactive());
 
     // Tell JetBrains the webview is ready
-    postToIde("onLoad", {});
+    ideRequest("onLoad", undefined).then((msg) => {
+      (window as any).windowId = msg.windowId;
+      (window as any).serverUrl = msg.serverUrl;
+      (window as any).workspacePaths = msg.workspacePaths;
+      (window as any).vscMachineId = msg.vscMachineId;
+      (window as any).vscMediaUrl = msg.vscMediaUrl;
+      dispatch(setVscMachineId(msg.vscMachineId));
+      // dispatch(setVscMediaUrl(msg.vscMediaUrl));
+    });
   }, []);
 
   const { streamResponse } = useChatHandler(dispatch);
 
   const defaultModelTitle = useSelector(
-    (store: RootStore) => store.state.defaultModelTitle
+    (store: RootState) => store.state.defaultModelTitle,
   );
 
   // IDE event listeners
-  useEffect(() => {
-    const eventListener = (event: any) => {
-      switch (event.data.type) {
-        case "onLoad":
-          (window as any).windowId = event.data.windowId;
-          (window as any).serverUrl = event.data.serverUrl;
-          (window as any).workspacePaths = event.data.workspacePaths;
-          (window as any).vscMachineId = event.data.vscMachineId;
-          (window as any).vscMediaUrl = event.data.vscMediaUrl;
-          dispatch(setVscMachineId(event.data.vscMachineId));
-          // dispatch(setVscMediaUrl(event.data.vscMediaUrl));
+  useWebviewListener("setInactive", async () => {
+    dispatch(setInactive());
+  });
 
-          break;
-        case "serverStatus":
-          dispatch(setServerStatusMessage(event.data.message));
-          break;
-        case "setInactive":
-          dispatch(setInactive());
-          break;
-        case "configUpdate":
-          loadConfig();
-          break;
-        case "submitMessage":
-          streamResponse(event.data.message);
-          break;
-        case "getDefaultModelTitle":
-          postToIde("getDefaultModelTitle", { defaultModelTitle });
-          break;
-      }
-    };
-    window.addEventListener("message", eventListener);
-    return () => window.removeEventListener("message", eventListener);
-  }, [defaultModelTitle]);
+  useWebviewListener("setColors", async (colors) => {
+    Object.keys(colors).forEach((key) => {
+      document.body.style.setProperty(key, colors[key]);
+    });
+  });
+
+  useWebviewListener("configUpdate", async () => {
+    loadConfig();
+  });
+
+  useWebviewListener("submitMessage", async (data) => {
+    streamResponse(data.message, { useCodebase: false });
+  });
+
+  useWebviewListener("addContextItem", async (data) => {
+    dispatch(
+      addContextItemsAtIndex({
+        index: data.historyIndex,
+        contextItems: [data.item],
+      }),
+    );
+  });
+
+  useWebviewListener(
+    "getDefaultModelTitle",
+    async () => {
+      return defaultModelTitle;
+    },
+    [defaultModelTitle],
+  );
 
   // Save theme colors to local storage for immediate loading in JetBrains
   useEffect(() => {
@@ -114,7 +101,7 @@ function useSetup(dispatch: Dispatch<any>) {
         if (document.body.style.getPropertyValue(colorVar)) {
           localStorage.setItem(
             colorVar,
-            document.body.style.getPropertyValue(colorVar)
+            document.body.style.getPropertyValue(colorVar),
           );
         }
       }

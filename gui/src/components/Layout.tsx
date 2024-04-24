@@ -2,25 +2,27 @@ import {
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
-import { postToIde } from "core/ide/messaging";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
+  CustomScrollbarDiv,
   defaultBorderRadius,
-  vscBackground,
   vscForeground,
   vscInputBackground,
 } from ".";
+import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
   setBottomMessageCloseTimeout,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
-import { RootStore } from "../redux/store";
+import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
+import { isJetBrains, postToIde } from "../util/ide";
+import { getLocalStorage } from "../util/localStorage";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
@@ -30,26 +32,9 @@ import ModelSelect from "./modelSelection/ModelSelect";
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
 
-const LayoutTopDiv = styled.div`
+const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
   border-radius: ${defaultBorderRadius};
-  scrollbar-base-color: transparent;
-  scrollbar-width: thin;
-  background-color: ${vscBackground};
-
-  & * {
-    ::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    ::-webkit-scrollbar:horizontal {
-      height: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      border-radius: 2px;
-    }
-  }
 `;
 
 const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
@@ -101,28 +86,34 @@ const DropdownPortalDiv = styled.div`
 
 // #endregion
 
+const HIDE_FOOTER_ON_PAGES = [
+  "/onboarding",
+  "/existingUserOnboarding",
+  "/localOnboarding",
+];
+
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
   const dialogMessage = useSelector(
-    (state: RootStore) => state.uiState.dialogMessage
+    (state: RootState) => state.uiState.dialogMessage,
   );
   const showDialog = useSelector(
-    (state: RootStore) => state.uiState.showDialog
+    (state: RootState) => state.uiState.showDialog,
   );
 
   const defaultModel = useSelector(defaultModelSelector);
   // #region Selectors
 
   const bottomMessage = useSelector(
-    (state: RootStore) => state.uiState.bottomMessage
+    (state: RootState) => state.uiState.bottomMessage,
   );
   const displayBottomMessageOnBottom = useSelector(
-    (state: RootStore) => state.uiState.displayBottomMessageOnBottom
+    (state: RootState) => state.uiState.displayBottomMessageOnBottom,
   );
 
-  const timeline = useSelector((state: RootStore) => state.state.history);
+  const timeline = useSelector((state: RootState) => state.state.history);
 
   // #endregion
 
@@ -146,30 +137,53 @@ const Layout = () => {
     };
   }, [timeline]);
 
-  useEffect(() => {
-    const handler = (event: any) => {
-      if (event.data.type === "addModel") {
-        navigate("/models");
-      } else if (event.data.type === "openSettings") {
-        // navigate("/settings");
-        postToIde("openConfigJson", {});
-      } else if (event.data.type === "viewHistory") {
-        // Toggle the history page / main page
-        if (location.pathname === "/history") {
-          navigate("/");
-        } else {
-          navigate("/history");
-        }
-      } else if (event.data.type === "indexProgress") {
-        setIndexingProgress(event.data.progress);
-        setIndexingTask(event.data.desc);
+  useWebviewListener(
+    "addModel",
+    async () => {
+      navigate("/models");
+    },
+    [navigate],
+  );
+
+  useWebviewListener("openSettings", async () => {
+    postToIde("openConfigJson", undefined);
+  });
+
+  useWebviewListener(
+    "viewHistory",
+    async () => {
+      // Toggle the history page / main page
+      if (location.pathname === "/history") {
+        navigate("/");
+      } else {
+        navigate("/history");
       }
-    };
-    window.addEventListener("message", handler);
-    return () => {
-      window.removeEventListener("message", handler);
-    };
-  }, [location, navigate]);
+    },
+    [location, navigate],
+  );
+
+  useWebviewListener("indexProgress", async (data) => {
+    setIndexingProgress(data.progress);
+    setIndexingTask(data.desc);
+  });
+
+  useEffect(() => {
+    if (isJetBrains()) {
+      return;
+    }
+    const onboardingComplete = getLocalStorage("onboardingComplete");
+    if (
+      !onboardingComplete &&
+      !location.pathname.startsWith("/onboarding") &&
+      !location.pathname.startsWith("/existingUserOnboarding")
+    ) {
+      if (getLocalStorage("mainTextEntryCounter")) {
+        navigate("/existingUserOnboarding");
+      } else {
+        navigate("/onboarding");
+      }
+    }
+  }, [location]);
 
   const [indexingProgress, setIndexingProgress] = useState(1);
   const [indexingTask, setIndexingTask] = useState("Indexing Codebase");
@@ -198,9 +212,10 @@ const Layout = () => {
         <GridDiv>
           <Outlet />
           <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
-          <Footer>
-            <div className="mr-auto flex gap-2 items-center">
-              {/* {localStorage.getItem("ide") === "jetbrains" ||
+          {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
+            <Footer>
+              <div className="mr-auto flex gap-2 items-center">
+                {/* {localStorage.getItem("ide") === "jetbrains" ||
                 localStorage.getItem("hideFeature") === "true" || (
                   <SparklesIcon
                     className="cursor-pointer"
@@ -228,44 +243,44 @@ const Layout = () => {
                     color="yellow"
                   />
                 )} */}
-              <ModelSelect />
-              {indexingProgress >= 1 && // Would take up too much space together with indexing progress
-                defaultModel?.providerName === "free-trial" &&
-                defaultModel?.apiKey === "" &&
-                (location.pathname === "/settings" ||
-                  parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
-                  <ProgressBar
-                    completed={parseInt(localStorage.getItem("ftc") || "0")}
-                    total={250}
+                <ModelSelect />
+                {indexingProgress >= 1 && // Would take up too much space together with indexing progress
+                  defaultModel?.provider === "free-trial" &&
+                  (location.pathname === "/settings" ||
+                    parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
+                    <ProgressBar
+                      completed={parseInt(localStorage.getItem("ftc") || "0")}
+                      total={250}
+                    />
+                  )}
+
+                {isJetBrains() || (
+                  <IndexingProgressBar
+                    currentlyIndexing={indexingTask}
+                    completed={indexingProgress * 100}
+                    total={100}
                   />
                 )}
-
-              {indexingProgress < 1 && (
-                <IndexingProgressBar
-                  currentlyIndexing={indexingTask}
-                  completed={indexingProgress * 100}
-                  total={100}
-                />
-              )}
-            </div>
-            <HeaderButtonWithText
-              text="Help"
-              onClick={() => {
-                navigate("/help");
-              }}
-            >
-              <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-            <HeaderButtonWithText
-              onClick={() => {
-                // navigate("/settings");
-                postToIde("openConfigJson", {});
-              }}
-              text="Config"
-            >
-              <Cog6ToothIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-          </Footer>
+              </div>
+              <HeaderButtonWithText
+                text="Help"
+                onClick={() => {
+                  navigate("/help");
+                }}
+              >
+                <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+              <HeaderButtonWithText
+                onClick={() => {
+                  // navigate("/settings");
+                  postToIde("openConfigJson", undefined);
+                }}
+                text="Configure Continue"
+              >
+                <Cog6ToothIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+            </Footer>
+          )}
         </GridDiv>
 
         <BottomMessageDiv

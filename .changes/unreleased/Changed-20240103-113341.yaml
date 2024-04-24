@@ -1,4 +1,0 @@
-project: extensions/intellij
-kind: Changed
-body: Allow LLM servers to handle templating
-time: 2024-01-03T11:33:41.535094-05:00

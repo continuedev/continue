@@ -1,9 +1,15 @@
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
-import { ExtensionIde } from "core/ide";
+import { contextItemToRangeInFileWithContents } from "core/commands/util";
 import React from "react";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscBackground } from "..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscBackground,
+  vscForeground,
+} from "..";
+import { WebviewIde } from "../../util/webviewIde";
 import FileIcon from "../FileIcon";
 
 const ContextItemDiv = styled.div`
@@ -35,15 +41,24 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
   }
 
   function openContextItem(contextItem: ContextItemWithId) {
-    if (
+    if (contextItem.description.startsWith("http")) {
+      window.open(contextItem.description, "_blank");
+    } else if (
       contextItem.description.startsWith("/") ||
       contextItem.description.startsWith("\\")
     ) {
-      new ExtensionIde().openFile(
-        contextItem.description.split(" ").shift() || ""
-      );
+      if (contextItem.name.includes(" (") && contextItem.name.endsWith(")")) {
+        const rif = contextItemToRangeInFileWithContents(contextItem);
+        new WebviewIde().showLines(
+          rif.filepath,
+          rif.range.start.line,
+          rif.range.end.line,
+        );
+      } else {
+        new WebviewIde().openFile(contextItem.description);
+      }
     } else {
-      new ExtensionIde().showVirtualFile(contextItem.name, contextItem.content);
+      new WebviewIde().showVirtualFile(contextItem.name, contextItem.content);
     }
   }
 
@@ -87,9 +102,40 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
             paddingTop: "2px",
           }}
         >
-          {props.contextItems?.map((contextItem) => {
+          {props.contextItems?.map((contextItem, idx) => {
+            if (contextItem.description.startsWith("http")) {
+              return (
+                <a
+                  key={idx}
+                  href={contextItem.description}
+                  target="_blank"
+                  style={{ color: vscForeground, textDecoration: "none" }}
+                >
+                  <ContextItemDiv
+                    onClick={() => {
+                      openContextItem(contextItem);
+                    }}
+                  >
+                    <FileIcon
+                      filename={
+                        contextItem.description
+                          .split(" ")
+                          .shift()
+                          .split("#")
+                          .shift() || ""
+                      }
+                      height="1.6em"
+                      width="1.6em"
+                    ></FileIcon>
+                    {contextItem.name}
+                  </ContextItemDiv>
+                </a>
+              );
+            }
+
             return (
               <ContextItemDiv
+                key={idx}
                 onClick={() => {
                   openContextItem(contextItem);
                 }}

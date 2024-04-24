@@ -1,9 +1,8 @@
 import { BaseLLM } from "..";
 import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
+import { getHeaders } from "../../continueServer/stubs/headers";
+import { SERVER_URL } from "../../util/parameters";
 import { streamResponse } from "../stream";
-
-// const SERVER_URL = "http://localhost:3000";
-const SERVER_URL = "https://node-proxy-server-l6vsfbzhba-uw.a.run.app";
 
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
@@ -12,6 +11,7 @@ class FreeTrial extends BaseLLM {
     return {
       uniqueId: this.uniqueId || "None",
       "Content-Type": "application/json",
+      ...getHeaders(),
     };
   }
 
@@ -21,7 +21,10 @@ class FreeTrial extends BaseLLM {
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
       max_tokens: options.maxTokens,
-      stop: options.stop,
+      stop:
+        options.model === "starcoder-7b"
+          ? options.stop
+          : options.stop?.slice(0, 2),
       temperature: options.temperature,
       top_p: options.topP,
     };
@@ -29,7 +32,7 @@ class FreeTrial extends BaseLLM {
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const args = this._convertArgs(this.collectArgs(options));
 
@@ -47,9 +50,27 @@ class FreeTrial extends BaseLLM {
     }
   }
 
+  protected _convertMessage(message: ChatMessage) {
+    if (typeof message.content === "string") {
+      return message;
+    }
+
+    const parts = message.content.map((part) => {
+      return {
+        type: part.type,
+        text: part.text,
+        image_url: { ...part.imageUrl, detail: "low" },
+      };
+    });
+    return {
+      ...message,
+      content: parts,
+    };
+  }
+
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     const args = this._convertArgs(this.collectArgs(options));
 
@@ -57,7 +78,7 @@ class FreeTrial extends BaseLLM {
       method: "POST",
       headers: this._getHeaders(),
       body: JSON.stringify({
-        messages,
+        messages: messages.map(this._convertMessage),
         ...args,
       }),
     });
@@ -68,6 +89,19 @@ class FreeTrial extends BaseLLM {
         content: chunk,
       };
     }
+  }
+
+  async listModels(): Promise<string[]> {
+    return [
+      "gpt-3.5-turbo",
+      "gpt-4",
+      "gemini-1.5-pro-latest",
+      "gpt-4-turbo",
+      "codellama-70b",
+      "claude-3-opus-20240229",
+      "claude-3-sonnet-20240229",
+      "claude-3-haiku-20240307",
+    ];
   }
 }
 

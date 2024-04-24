@@ -4,20 +4,20 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../..";
-import { retrieveContextItemsFromEmbeddings } from "../retrieval";
+import { retrieveContextItemsFromEmbeddings } from "../retrieval/retrieval";
 
 class CodebaseContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "codebase",
     displayTitle: "Codebase",
     description: "Automatically find relevant files",
-    dynamic: false,
-    requiresQuery: false,
+    type: "normal",
+    renderInlineAs: "",
   };
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     return retrieveContextItemsFromEmbeddings(extras, this.options, undefined);
   }

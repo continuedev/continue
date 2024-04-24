@@ -11,29 +11,29 @@ class OpenFilesContextProvider extends BaseContextProvider {
     title: "open",
     displayTitle: "Open Files",
     description: "Reference the current open files",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const ide = extras.ide;
-    const openFiles = await ide.getOpenFiles();
+    const openFiles = this.options?.onlyPinned
+      ? await ide.getPinnedFiles()
+      : await ide.getOpenFiles();
     return await Promise.all(
       openFiles.map(async (filepath: string) => {
         return {
           description: filepath,
           content: `\`\`\`${getBasename(filepath)}\n${await ide.readFile(
-            filepath
+            filepath,
           )}\n\`\`\``,
-          name: (filepath.split("/").pop() || "").split("\\").pop() || "",
+          name: (filepath.split("/").pop() ?? "").split("\\").pop() ?? "",
         };
-      })
+      }),
     );
   }
-  async load(): Promise<void> {}
 }
 
 export default OpenFilesContextProvider;

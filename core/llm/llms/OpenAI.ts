@@ -1,4 +1,3 @@
-import { ChatCompletionCreateParamsBase } from "openai/resources/chat/completions";
 import { BaseLLM } from "..";
 import {
   ChatMessage,
@@ -6,6 +5,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
+import { stripImages } from "../countTokens";
 import { streamSse } from "../stream";
 
 const NON_CHAT_MODELS = [
@@ -21,25 +21,77 @@ const NON_CHAT_MODELS = [
   "ada",
 ];
 
+const CHAT_ONLY_MODELS = [
+  "gpt-3.5-turbo",
+  "gpt-3.5-turbo-0613",
+  "gpt-3.5-turbo-16k",
+  "gpt-4",
+  "gpt-4-turbo",
+  "gpt-35-turbo-16k",
+  "gpt-35-turbo-0613",
+  "gpt-35-turbo",
+  "gpt-4-32k",
+  "gpt-4-turbo-preview",
+  "gpt-4-vision",
+  "gpt-4-0125-preview",
+  "gpt-4-1106-preview",
+];
+
 class OpenAI extends BaseLLM {
+  public useLegacyCompletionsEndpoint: boolean | undefined = undefined;
+
+  constructor(options: LLMOptions) {
+    super(options);
+    this.useLegacyCompletionsEndpoint = options.useLegacyCompletionsEndpoint;
+  }
+
   static providerName: ModelProvider = "openai";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "https://api.openai.com",
+    apiBase: "https://api.openai.com/v1/",
   };
 
-  protected _convertArgs(
-    options: any,
-    messages: ChatMessage[]
-  ): ChatCompletionCreateParamsBase {
-    const finalOptions: ChatCompletionCreateParamsBase = {
-      messages,
-      model: options.model,
+  protected _convertMessage(message: ChatMessage) {
+    if (typeof message.content === "string") {
+      return message;
+    }
+
+    const parts = message.content.map((part) => {
+      const msg: any = {
+        type: part.type,
+        text: part.text,
+      };
+      if (part.type === "imageUrl") {
+        msg.image_url = { ...part.imageUrl, detail: "low" };
+      }
+      return msg;
+    });
+    return {
+      ...message,
+      content: parts,
+    };
+  }
+
+  protected _convertModelName(model: string): string {
+    return model;
+  }
+
+  protected _convertArgs(options: any, messages: ChatMessage[]) {
+    const url = new URL(this.apiBase!);
+    const finalOptions = {
+      messages: messages.map(this._convertMessage),
+      model: this._convertModelName(options.model),
       max_tokens: options.maxTokens,
       temperature: options.temperature,
       top_p: options.topP,
       frequency_penalty: options.frequencyPenalty,
       presence_penalty: options.presencePenalty,
-      stop: options.stop,
+      stop:
+        // Jan + Azure OpenAI don't truncate and will throw an error
+        url.port === "1337" ||
+        url.host === "api.openai.com" ||
+        this.apiType === "azure"
+          ? options.stop?.slice(0, 4)
+          : options.stop,
     };
 
     return finalOptions;
@@ -47,113 +99,92 @@ class OpenAI extends BaseLLM {
 
   protected async _complete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): Promise<string> {
     let completion = "";
     for await (const chunk of this._streamChat(
       [{ role: "user", content: prompt }],
-      options
+      options,
     )) {
       completion += chunk.content;
     }
 
     return completion;
   }
-  private _getCompletionUrl() {
+
+  private _getEndpoint(
+    endpoint: "chat/completions" | "completions" | "models",
+  ) {
     if (this.apiType === "azure") {
-      return `${this.apiBase}/openai/deployments/${this.engine}/completions?api-version=${this.apiVersion}`;
+      return new URL(
+        `openai/deployments/${this.engine}/${endpoint}?api-version=${this.apiVersion}`,
+        this.apiBase,
+      );
     } else {
-      let url = this.apiBase;
-      if (!url) {
+      if (!this.apiBase) {
         throw new Error(
-          "No API base URL provided. Please set the 'apiBase' option in config.json"
+          "No API base URL provided. Please set the 'apiBase' option in config.json",
         );
       }
-      if (url.endsWith("/")) {
-        url = url.slice(0, -1);
-      }
-      if (!url.endsWith("/v1") && !url.includes("api.perplexity.ai")) {
-        url += "/v1";
-      }
-      return url + "/completions";
+
+      return new URL(endpoint, this.apiBase);
     }
   }
 
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     for await (const chunk of this._streamChat(
       [{ role: "user", content: prompt }],
-      options
+      options,
     )) {
-      yield chunk.content;
+      yield stripImages(chunk.content);
     }
   }
 
   protected async *_legacystreamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
-    const response = await this.fetch(this._getCompletionUrl(), {
+    const args: any = this._convertArgs(options, []);
+    args.prompt = prompt;
+    delete args.messages;
+
+    const response = await this.fetch(this._getEndpoint("completions"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey || "", // For Azure
+        "api-key": this.apiKey ?? "", // For Azure
       },
       body: JSON.stringify({
-        ...{
-          prompt,
-          model: options.model,
-          max_tokens: options.maxTokens,
-          temperature: options.temperature,
-          top_p: options.topP,
-          frequency_penalty: options.frequencyPenalty,
-          presence_penalty: options.presencePenalty,
-          stop: options.stop,
-        },
+        ...args,
         stream: true,
       }),
     });
 
     for await (const value of streamSse(response)) {
-      if (value.choices?.[0]?.text) {
+      if (value.choices?.[0]?.text && value.finish_reason !== "eos") {
         yield value.choices[0].text;
       }
     }
   }
 
-  private _getChatUrl() {
-    if (this.apiType === "azure") {
-      return `${this.apiBase}/openai/deployments/${this.engine}/chat/completions?api-version=${this.apiVersion}`;
-    } else {
-      let url = this.apiBase;
-      if (!url) {
-        throw new Error(
-          "No API base URL provided. Please set the 'apiBase' option in config.json"
-        );
-      }
-      if (url.endsWith("/")) {
-        url = url.slice(0, -1);
-      }
-
-      if (!url.includes("/v1") && !url.includes("api.perplexity.ai")) {
-        // includes instead of endsWith becuase DeepInfra uses /v1/openai/chat/completions
-        url += "/v1";
-      }
-      return url + "/chat/completions";
-    }
-  }
-
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    if (NON_CHAT_MODELS.includes(options.model)) {
+    if (
+      !CHAT_ONLY_MODELS.includes(options.model) &&
+      this.supportsCompletions() &&
+      (NON_CHAT_MODELS.includes(options.model) ||
+        this.useLegacyCompletionsEndpoint ||
+        options.raw)
+    ) {
       for await (const content of this._legacystreamComplete(
-        messages[messages.length - 1]?.content || "",
-        options
+        stripImages(messages[messages.length - 1]?.content || ""),
+        options,
       )) {
         yield {
           role: "assistant",
@@ -163,17 +194,23 @@ class OpenAI extends BaseLLM {
       return;
     }
 
-    const response = await this.fetch(this._getChatUrl(), {
+    let body = {
+      ...this._convertArgs(options, messages),
+      stream: true,
+    };
+    // Empty messages cause an error in LM Studio
+    body.messages = body.messages.map((m) => ({
+      ...m,
+      content: m.content === "" ? " " : m.content,
+    })) as any;
+    const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey || "", // For Azure
+        "api-key": this.apiKey ?? "", // For Azure
       },
-      body: JSON.stringify({
-        ...this._convertArgs(options, messages),
-        stream: true,
-      }),
+      body: JSON.stringify(body),
     });
 
     for await (const value of streamSse(response)) {
@@ -181,6 +218,19 @@ class OpenAI extends BaseLLM {
         yield value.choices[0].delta;
       }
     }
+  }
+
+  async listModels(): Promise<string[]> {
+    const response = await this.fetch(this._getEndpoint("models"), {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+        "api-key": this.apiKey ?? "", // For Azure
+      },
+    });
+
+    const data = await response.json();
+    return data.data.map((m: any) => m.id);
   }
 }
 

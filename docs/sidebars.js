@@ -49,6 +49,7 @@ const sidebars = {
         // "walkthroughs/codellama",
         "walkthroughs/running-continue-without-internet",
         "walkthroughs/codebase-embeddings",
+        "walkthroughs/tab-autocomplete",
         // "walkthroughs/config-file-migration",
       ],
     },

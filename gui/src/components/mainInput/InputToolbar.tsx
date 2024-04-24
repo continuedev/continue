@@ -1,5 +1,21 @@
+import { PhotoIcon as OutlinePhotoIcon } from "@heroicons/react/24/outline";
+import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
+import { InputModifiers } from "core";
+import { modelSupportsImages } from "core/llm/autodetect";
+import { useRef, useState } from "react";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
-import { defaultBorderRadius, lightGray, vscInputBackground } from "..";
+import {
+  defaultBorderRadius,
+  lightGray,
+  vscBadgeBackground,
+  vscBadgeForeground,
+  vscForeground,
+  vscInputBackground,
+} from "..";
+import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import { isJetBrains } from "../../util/ide";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
   position: absolute;
@@ -31,55 +47,111 @@ const EnterButton = styled.div<{ offFocus: boolean }>`
   background-color: ${(props) =>
     props.offFocus ? undefined : lightGray + "33"};
   border-radius: ${defaultBorderRadius};
-  color: #fff8;
+  color: ${vscForeground};
 
   &:hover {
-    background-color: #cf313199;
-    color: white;
+    background-color: ${vscBadgeBackground};
+    color: ${vscBadgeForeground};
   }
 
   cursor: pointer;
 `;
 
 interface InputToolbarProps {
-  onEnter?: () => void;
-  useCodebase?: () => void;
+  onEnter?: (modifiers: InputModifiers) => void;
   usingCodebase?: boolean;
   onAddContextItem?: () => void;
 
   onClick?: () => void;
 
+  onImageFileSelected?: (file: File) => void;
+
   hidden?: boolean;
 }
 
 function InputToolbar(props: InputToolbarProps) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [fileSelectHovered, setFileSelectHovered] = useState(false);
+
+  const defaultModel = useSelector(defaultModelSelector);
+
   return (
     <StyledDiv hidden={props.hidden} onClick={props.onClick} id="input-toolbar">
-      <span
-        style={{
-          color: lightGray,
-        }}
-        onClick={(e) => {
-          props.onAddContextItem();
-        }}
-        className="hover:underline cursor-pointer mr-auto"
-      >
-        + Add Context
+      <span className="cursor-pointer mr-auto flex items-center">
+        <span
+          style={{
+            color: lightGray,
+          }}
+          onClick={(e) => {
+            props.onAddContextItem();
+          }}
+          className="hover:underline cursor-pointer"
+        >
+          + Add Context
+        </span>
+        {defaultModel &&
+          modelSupportsImages(
+            defaultModel.provider,
+            defaultModel.model,
+            defaultModel.title,
+          ) && (
+            <span
+              className="ml-1.5 mt-0.5"
+              onMouseLeave={() => setFileSelectHovered(false)}
+              onMouseEnter={() => setFileSelectHovered(true)}
+            >
+              <input
+                type="file"
+                ref={fileInputRef}
+                style={{ display: "none" }}
+                accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+                onChange={(e) => {
+                  for (const file of e.target.files) {
+                    props.onImageFileSelected(file);
+                  }
+                }}
+              />
+              {fileSelectHovered ? (
+                <SolidPhotoIcon
+                  width="1.4em"
+                  height="1.4em"
+                  color={lightGray}
+                  onClick={(e) => {
+                    fileInputRef.current?.click();
+                  }}
+                />
+              ) : (
+                <OutlinePhotoIcon
+                  width="1.4em"
+                  height="1.4em"
+                  color={lightGray}
+                  onClick={(e) => {
+                    fileInputRef.current?.click();
+                  }}
+                />
+              )}
+            </span>
+          )}
       </span>
-      <span
-        style={{
-          color: props.usingCodebase ? "#fff8" : lightGray,
-          backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
-          borderRadius: defaultBorderRadius,
-          padding: "2px 4px",
-        }}
-        onClick={props.useCodebase}
-        className={"hover:underline cursor-pointer float-right"}
-      >
-        {/* {downshiftProps.inputValue?.startsWith("/codebase")
-      ? "Using Codebase"
-      : `${getMetaKeyLabel()} ⏎ Use Codebase`} */}
-      </span>
+
+      {isJetBrains() || (
+        <span
+          style={{
+            color: props.usingCodebase ? vscBadgeBackground : lightGray,
+            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
+            borderRadius: defaultBorderRadius,
+            padding: "2px 4px",
+          }}
+          onClick={(e) => {
+            props.onEnter({
+              useCodebase: true,
+            });
+          }}
+          className={"hover:underline cursor-pointer float-right"}
+        >
+          {getMetaKeyLabel()} ⏎ Use Codebase
+        </span>
+      )}
 
       <EnterButton
         offFocus={props.usingCodebase}
@@ -88,7 +160,11 @@ function InputToolbar(props: InputToolbarProps) {
         //   (!(inputRef.current as any)?.value ||
         //     typeof client === "undefined")
         // }
-        onClick={props.onEnter}
+        onClick={(e) => {
+          props.onEnter({
+            useCodebase: isMetaEquivalentKeyPressed(e),
+          });
+        }}
       >
         ⏎ Enter
       </EnterButton>

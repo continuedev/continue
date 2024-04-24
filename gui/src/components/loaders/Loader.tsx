@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { RootStore } from "../../redux/store";
+import { RootState } from "../../redux/store";
 import styled from "styled-components";
 import { PlayIcon } from "@heroicons/react/24/outline";
 
@@ -24,7 +24,7 @@ const FlashingDiv = styled.div`
 `;
 
 function Loader(props: { size?: string }) {
-  const vscMediaUrl = (window as any).vscMediaUrl;
+  const vscMediaUrl = window.vscMediaUrl;
   return (
     <FlashingDiv>
       {vscMediaUrl ? (

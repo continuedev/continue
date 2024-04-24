@@ -16,7 +16,7 @@ const config = {
   url: "https://continue.dev",
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: "/docs",
+  baseUrl: "/",
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
@@ -165,6 +165,18 @@ const config = {
           {
             from: "/getting-started",
             to: "/quickstart",
+          },
+          {
+            from: "/model-setup/overview",
+            to: "/setup/overview",
+          },
+          {
+            from: "/model-setup/select-model",
+            to: "/setup/select-model",
+          },
+          {
+            from: "/model-setup/configuration",
+            to: "/setup/configuration",
           },
         ],
       },

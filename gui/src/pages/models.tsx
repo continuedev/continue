@@ -1,16 +1,15 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import _ from "lodash";
 import React from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscBackground } from "../components";
 import ModelCard from "../components/modelSelection/ModelCard";
-
-import { postToIde } from "core/ide/messaging";
-import { useDispatch } from "react-redux";
 import Toggle from "../components/modelSelection/Toggle";
+import { useNavigationListener } from "../hooks/useNavigationListener";
 import { setDefaultModel } from "../redux/slices/stateSlice";
-import { addModel } from "../util/ide";
+import { postToIde } from "../util/ide";
 import { MODEL_INFO, PROVIDER_INFO } from "../util/modelData";
 import { CustomModelButton } from "./modelconfig";
 
@@ -33,6 +32,7 @@ const GridDiv = styled.div`
 function Models() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  useNavigationListener();
 
   const [providersSelected, setProvidersSelected] = React.useState(true);
 
@@ -73,10 +73,8 @@ function Models() {
           <li>a model (the LLM being run, e.g. GPT-4, CodeLlama).</li>
         </ul>
         To read more about the options, check out our{" "}
-        <a href="https://continue.dev/docs/model-setup/overview">
-          overview
-        </a>{" "}
-        in the docs.
+        <a href="https://continue.dev/docs/setup/overview">overview</a> in the
+        docs.
       </IntroDiv>
       {providersSelected ? (
         <GridDiv>
@@ -97,34 +95,54 @@ function Models() {
         </GridDiv>
       ) : (
         <GridDiv>
-          {Object.entries(MODEL_INFO).map(([name, pkg]) => (
-            <ModelCard
-              title={pkg.title}
-              description={pkg.description}
-              tags={pkg.tags}
-              icon={pkg.icon}
-              dimensions={pkg.dimensions}
-              providerOptions={pkg.providerOptions}
-              onClick={(e, dimensionChoices, selectedProvider) => {
-                const model = {
-                  ...pkg.params,
-                  ..._.merge(
-                    {},
-                    ...(pkg.dimensions?.map((dimension, i) => {
-                      if (!dimensionChoices?.[i]) return {};
-                      return {
-                        ...dimension.options[dimensionChoices[i]],
-                      };
-                    }) || [])
-                  ),
-                  provider: PROVIDER_INFO[selectedProvider].provider,
-                };
-                addModel(model);
-                dispatch(setDefaultModel(model.title));
-                navigate("/");
-              }}
-            />
-          ))}
+          {MODEL_INFO.map((pkg) => {
+            if (typeof pkg === "string") {
+              return (
+                <div className="-my-8 grid grid-cols-[auto_1fr] w-full items-center">
+                  <h3 className="">{pkg}</h3>
+                  <hr
+                    className="ml-2"
+                    style={{
+                      height: "0px",
+                      width: "calc(100% - 16px)",
+                      color: lightGray,
+                      border: `1px solid ${lightGray}`,
+                      borderRadius: "2px",
+                    }}
+                  ></hr>
+                </div>
+              );
+            } else {
+              return (
+                <ModelCard
+                  title={pkg.title}
+                  description={pkg.description}
+                  tags={pkg.tags}
+                  icon={pkg.icon}
+                  dimensions={pkg.dimensions}
+                  providerOptions={pkg.providerOptions}
+                  onClick={(e, dimensionChoices, selectedProvider) => {
+                    const model = {
+                      ...pkg.params,
+                      ..._.merge(
+                        {},
+                        ...(pkg.dimensions?.map((dimension, i) => {
+                          if (!dimensionChoices?.[i]) return {};
+                          return {
+                            ...dimension.options[dimensionChoices[i]],
+                          };
+                        }) || []),
+                      ),
+                      provider: PROVIDER_INFO[selectedProvider].provider,
+                    };
+                    postToIde("config/addModel", { model });
+                    dispatch(setDefaultModel(model.title));
+                    navigate("/");
+                  }}
+                />
+              );
+            }
+          })}
         </GridDiv>
       )}
 
@@ -136,7 +154,7 @@ function Models() {
         <CustomModelButton
           disabled={false}
           onClick={(e) => {
-            postToIde("openConfigJson", {});
+            postToIde("openConfigJson", undefined);
           }}
         >
           <h3 className="text-center my-2">Open config.json</h3>

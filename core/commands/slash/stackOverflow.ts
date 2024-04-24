@@ -1,9 +1,9 @@
 import { ChatMessageRole, SlashCommand } from "../..";
-import { pruneStringFromBottom } from "../../llm/countTokens";
+import { pruneStringFromBottom, stripImages } from "../../llm/countTokens";
 
 const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
 const PROMPT = (
-  input: string
+  input: string,
 ) => `The above sources are excerpts from related StackOverflow questions. Use them to help answer the below question from our user. Provide links to the sources in markdown whenever possible:
 
 ${input}
@@ -36,15 +36,15 @@ async function fetchData(url: string): Promise<string | undefined> {
   const doc = parser.parseFromString(htmlString, "text/html");
 
   const h1 = doc.querySelector("h1.fs-headline1");
-  const title = h1?.textContent?.trim() || "No Title";
+  const title = h1?.textContent?.trim() ?? "No Title";
 
   const bodies = doc.querySelectorAll("div.js-post-body");
   if (bodies.length < 2) {
     return undefined;
   }
 
-  const question = bodies[0].textContent || "";
-  const answer = bodies[1].textContent || "";
+  const question = bodies[0].textContent ?? "";
+  const answer = bodies[1].textContent ?? "";
 
   return `
   # Question: [${title}](${url})
@@ -82,7 +82,7 @@ const StackOverflowSlashCommand: SlashCommand = {
         sources[sources.length - 1] = pruneStringFromBottom(
           llm.model,
           contextLength - (totalTokens - newTokens),
-          sources[sources.length - 1]
+          sources[sources.length - 1],
         );
         shouldBreak = true;
       }
@@ -114,7 +114,7 @@ const StackOverflowSlashCommand: SlashCommand = {
       })),
       { role: "user", content: PROMPT(input) },
     ])) {
-      yield chunk.content;
+      yield stripImages(chunk.content);
     }
   },
 };

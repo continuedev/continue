@@ -11,9 +11,11 @@ import { LineStream, matchLine } from "./util";
  */
 export async function* streamDiff(
   oldLines: string[],
-  newLines: LineStream
+  newLines: LineStream,
 ): AsyncGenerator<DiffLine> {
-  oldLines = [...oldLines]; // be careful
+  const mutatedOldLines = [...oldLines]; // be careful
+
+  // If one indentation mistake is made, others are likely. So we are more permissive about matching
   let seenIndentationMistake = false;
 
   let newLineResult = await newLines.next();
@@ -21,7 +23,7 @@ export async function* streamDiff(
     const [matchIndex, isPerfectMatch, newLine] = matchLine(
       newLineResult.value,
       oldLines,
-      seenIndentationMistake
+      seenIndentationMistake,
     );
     if (!seenIndentationMistake && newLineResult.value !== newLine) {
       seenIndentationMistake = true;

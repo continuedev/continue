@@ -1,3 +1,5 @@
+import { IndexTag, IndexingProgressUpdate } from "..";
+
 export enum IndexResultType {
   Compute = "compute",
   Delete = "del",
@@ -7,7 +9,7 @@ export enum IndexResultType {
 
 export type MarkCompleteCallback = (
   items: PathAndCacheKey[],
-  resultType: IndexResultType
+  resultType: IndexResultType,
 ) => void;
 
 export interface CodebaseIndex {
@@ -15,20 +17,15 @@ export interface CodebaseIndex {
   update(
     tag: IndexTag,
     results: RefreshIndexResults,
-    markComplete: MarkCompleteCallback
-  ): AsyncGenerator<{ progress: number; desc: string }>;
+    markComplete: MarkCompleteCallback,
+    repoName: string | undefined,
+  ): AsyncGenerator<IndexingProgressUpdate>;
 }
 
 export type PathAndCacheKey = {
   path: string;
   cacheKey: string;
 };
-
-export interface IndexTag {
-  directory: string;
-  branch: string;
-  artifactId: string;
-}
 
 export type RefreshIndexResults = {
   compute: PathAndCacheKey[];

@@ -55,7 +55,7 @@ const contextLengthInput: InputDescriptor = {
   inputType: CollectInputType.number,
   key: "contextLength",
   label: "Context Length",
-  defaultValue: 2048,
+  defaultValue: undefined,
   required: false,
 };
 const temperatureInput: InputDescriptor = {
@@ -173,7 +173,7 @@ const codeLlamaInstruct: ModelPackage = {
   params: {
     title: "CodeLlama-7b",
     model: "codellama-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   icon: "meta.png",
   dimensions: [
@@ -193,20 +193,91 @@ const codeLlamaInstruct: ModelPackage = {
           model: "codellama-34b",
           title: "CodeLlama-34b",
         },
+        "70b": {
+          model: "codellama-70b",
+          title: "Codellama-70b",
+        },
       },
     },
   ],
   providerOptions: ["ollama", "lmstudio", "together", "llamacpp", "replicate"],
 };
 
-const llama2Chat: ModelPackage = {
-  title: "Llama2 Chat",
+const codellama70bTrial: ModelPackage = {
+  title: "Codellama 70b (Free Trial)",
+  description:
+    "The best code model from Meta, fine-tuned for code generation and conversation",
+  refUrl: "",
+  params: {
+    title: "CodeLlama-70b",
+    model: "codellama-70b",
+    contextLength: 4096,
+  },
+  icon: "meta.png",
+  providerOptions: ["freetrial"],
+};
+
+const mixtralTrial: ModelPackage = {
+  title: "Mixtral (Free Trial)",
+  description:
+    "Mixtral 8x7b is a mixture of experts model created by Mistral AI",
+  refUrl: "",
+  params: {
+    title: "Mixtral",
+    model: "mistral-8x7b",
+    contextLength: 4096,
+  },
+  icon: "mistral.png",
+  providerOptions: ["freetrial", "groq"],
+};
+
+const llama38bChat: ModelPackage = {
+  title: "Llama3 8b",
   description: "The latest Llama model from Meta, fine-tuned for chat",
   refUrl: "",
   params: {
-    title: "Llama2-7b",
-    model: "llama2-7b",
-    contextLength: 2048,
+    title: "Llama3-8b",
+    model: "llama3-8b",
+    contextLength: 8192,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
+};
+
+const llama370bChat: ModelPackage = {
+  title: "Llama3 70b Chat",
+  description: "The latest Llama model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama3-70b",
+    model: "llama3-70b",
+    contextLength: 8192,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
+};
+
+const llama270bChat: ModelPackage = {
+  title: "Llama2 70b Chat",
+  description: "The latest Llama model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama2-70b",
+    model: "llama2-70b",
+    contextLength: 4096,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
+};
+
+const llama3Chat: ModelPackage = {
+  title: "Llama3 Chat",
+  description: "The latest model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama3-8b",
+    model: "llama3-8b",
+    contextLength: 8192,
   },
   icon: "meta.png",
   dimensions: [
@@ -214,17 +285,13 @@ const llama2Chat: ModelPackage = {
       name: "Parameter Count",
       description: "The number of parameters in the model",
       options: {
-        "7b": {
-          model: "llama2-7b",
-          title: "Llama2-7b",
+        "8b": {
+          model: "llama3-8b",
+          title: "Llama3-8b",
         },
-        "13b": {
-          model: "llama2-13b",
-          title: "Llama2-13b",
-        },
-        "34b": {
-          model: "llama2-34b",
-          title: "Llama2-34b",
+        "70b": {
+          model: "llama3-70b",
+          title: "Llama3-70b",
         },
       },
     },
@@ -240,7 +307,7 @@ const wizardCoder: ModelPackage = {
   params: {
     title: "WizardCoder-7b",
     model: "wizardcoder-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   icon: "wizardlm.png",
   dimensions: [
@@ -273,7 +340,7 @@ const phindCodeLlama: ModelPackage = {
   params: {
     title: "Phind CodeLlama",
     model: "phind-codellama-34b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate", "freetrial"],
 };
@@ -293,8 +360,8 @@ const mistral: ModelPackage = {
       description: "The number of parameters in the model",
       options: {
         "7b": {
-          model: "wizardcoder-7b",
-          title: "WizardCoder-7b",
+          model: "mistral-7b",
+          title: "Mistral-7b",
         },
         "8x7b (MoE)": {
           model: "mistral-8x7b",
@@ -363,7 +430,7 @@ const mistralMedium: ModelPackage = {
   ],
 };
 
-const gemini: ModelPackage = {
+const geminiPro: ModelPackage = {
   title: "Gemini Pro",
   description: "A highly capable model created by Google DeepMind",
   params: {
@@ -373,7 +440,19 @@ const gemini: ModelPackage = {
     apiKey: "<API_KEY>",
   },
   icon: "gemini.png",
-  providerOptions: ["palm", "freetrial"],
+  providerOptions: ["gemini"],
+};
+const gemini15Pro: ModelPackage = {
+  title: "Gemini 1.5 Pro",
+  description: "A newer Gemini model with 1M token context length",
+  params: {
+    title: "Gemini 1.5 Pro",
+    model: "gemini-1.5-pro-latest",
+    contextLength: 1_000_000,
+    apiKey: "<API_KEY>",
+  },
+  icon: "gemini.png",
+  providerOptions: ["gemini", "freetrial"],
 };
 
 const zephyr: ModelPackage = {
@@ -383,7 +462,7 @@ const zephyr: ModelPackage = {
   params: {
     title: "Zephyr",
     model: "zephyr-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   icon: "mistral.png",
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
@@ -394,11 +473,32 @@ const deepseek: ModelPackage = {
   description:
     "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
   params: {
-    title: "DeepSeek",
+    title: "DeepSeek-7b",
     model: "deepseek-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
-  providerOptions: ["lmstudio", "llamacpp"],
+  icon: "deepseek.png",
+  dimensions: [
+    {
+      name: "Parameter Count",
+      description: "The number of parameters in the model",
+      options: {
+        "1b": {
+          model: "deepseek-1b",
+          title: "DeepSeek-1b",
+        },
+        "7b": {
+          model: "deepseek-7b",
+          title: "DeepSeek-7b",
+        },
+        "33b": {
+          model: "deepseek-33b",
+          title: "DeepSeek-33b",
+        },
+      },
+    },
+  ],
+  providerOptions: ["ollama", "lmstudio", "llamacpp"],
 };
 
 const codeup: ModelPackage = {
@@ -407,7 +507,7 @@ const codeup: ModelPackage = {
   params: {
     title: "CodeUp",
     model: "codeup-13b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
@@ -419,35 +519,49 @@ const neuralChat: ModelPackage = {
   params: {
     title: "NeuralChat",
     model: "neural-chat-7b",
-    contextLength: 2048,
+    contextLength: 4096,
   },
   providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
+const commandR: ModelPackage = {
+  title: "Command R",
+  description:
+    "Command R is a scalable generative model targeting RAG and Tool Use to enable production-scale AI for enterprise.",
+  params: {
+    model: "command-r",
+    contextLength: 128_000,
+    title: "Command R",
+    apiKey: "",
+  },
+  providerOptions: ["cohere"],
+  icon: "cohere.png",
+};
+
+const commandRPlus: ModelPackage = {
+  title: "Command R+",
+  description:
+    "Command R+ is a state-of-the-art RAG-optimized model designed to tackle enterprise-grade workloads",
+  params: {
+    model: "command-r-plus",
+    contextLength: 128_000,
+    title: "Command R+",
+    apiKey: "",
+  },
+  providerOptions: ["cohere"],
+  icon: "cohere.png",
+};
+
 const osModels = [
-  codeLlamaInstruct,
-  llama2Chat,
+  llama3Chat,
+  deepseek,
   wizardCoder,
-  phindCodeLlama,
+  codeLlamaInstruct,
   mistral,
-  codeup,
+  phindCodeLlama,
   zephyr,
   neuralChat,
 ];
-
-const gpt4turbo: ModelPackage = {
-  title: "GPT-4 Turbo",
-  description:
-    "A faster, cheaper version of GPT-4 with a longer context length",
-  params: {
-    model: "gpt-4-1106-preview",
-    contextLength: 128_000,
-    title: "GPT-4 Turbo",
-    apiKey: "",
-  },
-  providerOptions: ["openai", "freetrial"],
-  icon: "openai.png",
-};
 
 const gpt4: ModelPackage = {
   title: "GPT-4",
@@ -455,8 +569,20 @@ const gpt4: ModelPackage = {
   params: {
     model: "gpt-4",
     contextLength: 8096,
-    apiKey: "",
     title: "GPT-4",
+  },
+  providerOptions: ["openai", "freetrial"],
+  icon: "openai.png",
+};
+
+const gpt4turbo: ModelPackage = {
+  title: "GPT-4 Turbo",
+  description:
+    "A faster and more capable version of GPT-4 with longer context length and image support",
+  params: {
+    model: "gpt-4-turbo",
+    contextLength: 128_000,
+    title: "GPT-4 Turbo",
   },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
@@ -470,54 +596,101 @@ const gpt35turbo: ModelPackage = {
     model: "gpt-3.5-turbo",
     contextLength: 8096,
     title: "GPT-3.5-Turbo",
-    apiKey: "",
   },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
 };
 
 const claude2: ModelPackage = {
-  title: "Claude-2",
+  title: "Claude 2",
   description: "A highly capable model with a 100k context length",
   params: {
-    model: "claude-2",
-    contextLength: 100000,
-    title: "Claude-2",
+    model: "claude-2.1",
+    contextLength: 100_000,
+    title: "Claude 2",
     apiKey: "",
   },
   providerOptions: ["anthropic"],
   icon: "anthropic.png",
 };
 
-const chatBison: ModelPackage = {
-  title: "chat-bison-001",
+const claude3Opus: ModelPackage = {
+  title: "Claude 3 Opus",
   description:
-    "Google PaLM's chat-bison-001 model, fine-tuned for chatting about code",
+    "Anthropic's most capable model, beating GPT-4 on many benchmarks",
   params: {
-    model: "chat-bison-001",
-    contextLength: 8000,
+    model: "claude-3-opus-20240229",
+    contextLength: 200_000,
+    title: "Claude 3 Opus",
     apiKey: "",
-    title: "Chat Bison",
   },
-  providerOptions: ["palm"],
-  icon: "google-palm.png",
+  providerOptions: ["anthropic", "freetrial"],
+  icon: "anthropic.png",
 };
 
-export const MODEL_INFO: ModelPackage[] = [
+const claude3Sonnet: ModelPackage = {
+  title: "Claude 3 Sonnet",
+  description:
+    "The second most capable model in the Claude 3 series: ideal balance of intelligence and speed",
+  params: {
+    model: "claude-3-sonnet-20240229",
+    contextLength: 200_000,
+    title: "Claude 3 Sonnet",
+    apiKey: "",
+  },
+  providerOptions: ["anthropic", "freetrial"],
+  icon: "anthropic.png",
+};
+
+const claude3Haiku: ModelPackage = {
+  title: "Claude 3 Haiku",
+  description:
+    "The third most capable model in the Claude 3 series: fastest and most compact model for near-instant responsiveness",
+  params: {
+    model: "claude-3-haiku-20240307",
+    contextLength: 200_000,
+    title: "Claude 3 Haiku",
+    apiKey: "",
+  },
+  providerOptions: ["anthropic", "freetrial"],
+  icon: "anthropic.png",
+};
+
+const AUTODETECT: ModelPackage = {
+  title: "Autodetect",
+  description:
+    "Automatically populate the model list by calling the /models endpoint of the server",
+  params: {
+    model: "AUTODETECT",
+  } as any,
+  providerOptions: [],
+};
+
+export const MODEL_INFO: (ModelPackage | string)[] = [
+  "OpenAI",
+  gpt4turbo,
   gpt4,
   gpt35turbo,
-  gpt4turbo,
-  gemini,
+  "Anthropic",
+  claude3Opus,
+  claude3Sonnet,
+  claude3Haiku,
   claude2,
-  mistral,
-  codeLlamaInstruct,
-  llama2Chat,
-  wizardCoder,
-  phindCodeLlama,
-  codeup,
-  chatBison,
-  zephyr,
+  "Cohere",
+  commandR,
+  commandRPlus,
+  "Gemini",
+  gemini15Pro,
+  geminiPro,
+  "Open Source",
+  llama3Chat,
   deepseek,
+  mistral,
+  codellama70bTrial,
+  wizardCoder,
+  codeLlamaInstruct,
+  phindCodeLlama,
+  zephyr,
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -529,7 +702,19 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
     icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
-    packages: [gpt4, gpt35turbo, gpt4turbo],
+    packages: [
+      gpt4,
+      gpt35turbo,
+      gpt4turbo,
+      gpt4turbo,
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "OpenAI",
+        },
+      },
+    ],
     collectInputFor: [
       {
         inputType: CollectInputType.text,
@@ -546,7 +731,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     provider: "anthropic",
     refPage: "anthropicllm",
     description:
-      "Claude-2 is a highly capable model with a 100k context length",
+      "Anthropic builds state-of-the-art models with large context length and high recall",
     icon: "anthropic.png",
     tags: [ModelProviderTag["Requires API Key"]],
     longDescription:
@@ -565,32 +750,139 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         defaultValue: 100_000,
       },
     ],
-    packages: [
+    packages: [claude3Opus, claude3Sonnet, claude3Haiku, claude2],
+  },
+  cohere: {
+    title: "Cohere",
+    provider: "cohere",
+    refPage: "cohere",
+    description:
+      "Optimized for enterprise generative AI, search and discovery, and advanced retrieval.",
+    icon: "cohere.png",
+    tags: [ModelProviderTag["Requires API Key"]],
+    longDescription:
+      "To use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.",
+    collectInputFor: [
       {
-        title: "Claude-2",
-        description: "A highly capable model with a 100k context length",
-        params: {
-          model: "claude-2",
-          contextLength: 100000,
-          title: "Claude-2",
-        },
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Cohere API key",
+        required: true,
       },
+      ...completionParamsInputs,
     ],
+    packages: [commandR, commandRPlus],
   },
   ollama: {
     title: "Ollama",
     provider: "ollama",
     description:
-      "One of the fastest ways to get started with local models on Mac or Linux",
+      "One of the fastest ways to get started with local models on Mac, Linux, or Windows",
     longDescription:
-      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama pull <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
+      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
     icon: "ollama.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
-    packages: osModels,
+    packages: [
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "Ollama",
+        },
+      },
+      ...osModels,
+    ],
     collectInputFor: [
       ...completionParamsInputs,
       { ...apiBaseInput, defaultValue: "http://localhost:11434" },
     ],
+  },
+  together: {
+    title: "TogetherAI",
+    provider: "together",
+    refPage: "togetherllm",
+    description:
+      "Use the TogetherAI API for extremely fast streaming of open-source models",
+    icon: "together.png",
+    longDescription: `Together is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset`,
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your TogetherAI API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
+    packages: [llama3Chat, codeLlamaInstruct, mistral].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
+  },
+  groq: {
+    title: "Groq",
+    provider: "groq",
+    icon: "groq.png",
+    description:
+      "Groq is the fastest LLM provider by a wide margin, using 'LPUs' to serve open-source models at blazing speed.",
+    longDescription:
+      "To get started with Groq, obtain an API key from their website [here](https://wow.groq.com/).",
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Groq API key",
+        required: true,
+      },
+    ],
+    packages: [
+      llama370bChat,
+      llama38bChat,
+      { ...mixtralTrial, title: "Mixtral" },
+      llama270bChat,
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "Groq",
+        },
+      },
+      ,
+    ],
+  },
+  gemini: {
+    title: "Google Gemini API",
+    provider: "gemini",
+    refPage: "googlepalmapi",
+    description:
+      "Try out Google's state-of-the-art Gemini model from their API.",
+    longDescription: `To get started with Google Gemini API, obtain your API key from [here](https://ai.google.dev/tutorials/workspace_auth_quickstart) and paste it below.`,
+    icon: "gemini.png",
+    tags: [ModelProviderTag["Requires API Key"]],
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Gemini API key",
+        required: true,
+      },
+    ],
+    packages: [gemini15Pro, geminiPro],
   },
   mistral: {
     title: "Mistral API",
@@ -621,47 +913,6 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       return p;
     }),
   },
-  llamafile: {
-    title: "llamafile",
-    provider: "llamafile",
-    icon: "llamafile.png",
-    description:
-      "llamafiles are a self-contained binary to run an open-source LLM",
-    longDescription: `To get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n\`\`\`shell\nchmod +x ./llamafile\n./llamafile\n\`\`\``,
-    tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
-    packages: osModels,
-    collectInputFor: [...completionParamsInputs],
-  },
-  together: {
-    title: "TogetherAI",
-    provider: "together",
-    refPage: "togetherllm",
-    description:
-      "Use the TogetherAI API for extremely fast streaming of open-source models",
-    icon: "together.png",
-    longDescription: `Together is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset`,
-    tags: [
-      ModelProviderTag["Requires API Key"],
-      ModelProviderTag["Open-Source"],
-    ],
-    params: {
-      apiKey: "",
-    },
-    collectInputFor: [
-      {
-        inputType: CollectInputType.text,
-        key: "apiKey",
-        label: "API Key",
-        placeholder: "Enter your TogetherAI API key",
-        required: true,
-      },
-      ...completionParamsInputs,
-    ],
-    packages: [llama2Chat, codeLlamaInstruct, mistral].map((p) => {
-      p.params.contextLength = 4096;
-      return p;
-    }),
-  },
   lmstudio: {
     title: "LM Studio",
     provider: "lmstudio",
@@ -672,9 +923,29 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     icon: "lmstudio.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     params: {
-      apiBase: "http://localhost:1234",
+      apiBase: "http://localhost:1234/v1/",
     },
-    packages: [...osModels, deepseek],
+    packages: [
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "LM Studio",
+        },
+      },
+      ...osModels,
+    ],
+    collectInputFor: [...completionParamsInputs],
+  },
+  llamafile: {
+    title: "llamafile",
+    provider: "llamafile",
+    icon: "llamafile.png",
+    description:
+      "llamafiles are a self-contained binary to run an open-source LLM",
+    longDescription: `To get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n\`\`\`shell\nchmod +x ./llamafile\n./llamafile\n\`\`\``,
+    tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
+    packages: osModels,
     collectInputFor: [...completionParamsInputs],
   },
   replicate: {
@@ -701,7 +972,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [codeLlamaInstruct, llama2Chat, wizardCoder, mistral, zephyr],
+    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistral, zephyr],
   },
   llamacpp: {
     title: "llama.cpp",
@@ -723,40 +994,18 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
 After it's up and running, you can start using Continue.`,
     icon: "llamacpp.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: [...osModels, deepseek],
+    packages: osModels,
     collectInputFor: [...completionParamsInputs],
   },
-  palm: {
-    title: "Google PaLM API",
-    provider: "google-palm",
-    refPage: "googlepalmapi",
-    description:
-      "Try out the Google PaLM API, which is currently in public preview, using an API key from Google Makersuite. Includes the Gemini Pro model",
-    longDescription: `To get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.`,
-    icon: "google-palm.png",
-    tags: [ModelProviderTag["Requires API Key"]],
-    collectInputFor: [
-      {
-        inputType: CollectInputType.text,
-        key: "apiKey",
-        label: "API Key",
-        placeholder: "Enter your MakerSpace API key",
-        required: true,
-      },
-    ],
-    packages: [
-      gemini,
-      {
-        title: "chat-bison-001",
-        description:
-          "Google PaLM's chat-bison-001 model, fine-tuned for chatting about code",
-        params: {
-          model: "chat-bison-001",
-          contextLength: 8000,
-        },
-      },
-    ],
-  },
+  // bedrock: {
+  //   title: "Bedrock",
+  //   provider: "bedrock",
+  //   refPage: "amazon.com",
+  //   description:
+  //     "Bedrock is Amazon's provider of multiple diverse language models.",
+  //   tags: [ModelProviderTag["Requires API Key"]],
+  //   packages: [claude3Sonnet, claude3Haiku],
+  // },
   "openai-aiohttp": {
     title: "Other OpenAI-compatible API",
     provider: "openai",
@@ -774,13 +1023,22 @@ After it's up and running, you can start using Continue.`,
     collectInputFor: [
       {
         ...apiBaseInput,
-        defaultValue: "http://localhost:8000",
+        defaultValue: "http://localhost:8000/v1/",
       },
       ...completionParamsInputs,
     ],
     icon: "openai.png",
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
-    packages: osModels,
+    packages: [
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "OpenAI",
+        },
+      },
+      ...osModels,
+    ],
   },
   freetrial: {
     title: "Continue limited free trial",
@@ -793,10 +1051,21 @@ After it's up and running, you can start using Continue.`,
     icon: "openai.png",
     tags: [ModelProviderTag.Free],
     packages: [
-      { ...gpt4, title: "GPT-4 (trial)" },
+      codellama70bTrial,
+      mixtralTrial,
+      { ...claude3Opus, title: "Claude 3 Opus (trial)" },
+      { ...claude3Sonnet, title: "Claude 3 Sonnet (trial)" },
+      { ...claude3Haiku, title: "Claude 3 Haiku (trial)" },
+      { ...gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
+      { ...gpt4turbo, title: "GPT-4 Turbo (trial)" },
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
-      { ...phindCodeLlama, title: "Phind CodeLlama (trial)" },
-      { ...gemini, title: "Gemini Pro (trial)" },
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "Free Trial",
+        },
+      },
     ],
     collectInputFor: [...completionParamsInputs],
   },

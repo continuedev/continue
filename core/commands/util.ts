@@ -10,15 +10,15 @@ export interface RangeInFileWithContents {
 }
 
 export function contextItemToRangeInFileWithContents(
-  item: ContextItemWithId
+  item: ContextItemWithId,
 ): RangeInFileWithContents {
   const lines = item.name.split("(")[1].split(")")[0].split("-");
 
   const rif: RangeInFileWithContents = {
-    filepath: item.description,
+    filepath: item.description.split(" (")[0],
     range: {
       start: {
-        line: parseInt(lines[0]) - 1,
+        line: parseInt(lines[0]),
         character: 0,
       },
       end: {

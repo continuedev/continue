@@ -11,13 +11,12 @@ class ProblemsContextProvider extends BaseContextProvider {
     title: "problems",
     displayTitle: "Problems",
     description: "Reference problems in the current file",
-    dynamic: true,
-    requiresQuery: false,
+    type: "normal",
   };
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const ide = extras.ide;
     const problems = await ide.getProblems();
@@ -29,23 +28,30 @@ class ProblemsContextProvider extends BaseContextProvider {
         const rangeContent = lines
           .slice(
             Math.max(0, problem.range.start.line - 2),
-            problem.range.end.line + 2
+            problem.range.end.line + 2,
           )
           .join("\n");
 
         return {
           description: "Problems in current file",
           content: `\`\`\`${getBasename(
-            problem.filepath
+            problem.filepath,
           )}\n${rangeContent}\n\`\`\`\n${problem.message}\n\n`,
           name: `Warning in ${getBasename(problem.filepath)}`,
         };
-      })
+      }),
     );
 
-    return items;
+    return items.length === 0
+      ? [
+          {
+            description: "Problems in current file",
+            content: `There are no problems found in the open file.`,
+            name: "No problems found",
+          },
+        ]
+      : items;
   }
-  async load(): Promise<void> {}
 }
 
 export default ProblemsContextProvider;

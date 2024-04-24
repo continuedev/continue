@@ -1,23 +1,27 @@
-![Continue logo](media/c_d.png)
+<div align="center">
+
+![Continue logo](media/readme.png)
+
+</div>
 
 <h1 align="center">Continue</h1>
 
 <div align="center">
 
-**[Continue](https://continue.dev/docs) is an open-source autopilot for [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)—the easiest way to code with any LLM**
+**[Continue](https://continue.dev/docs) keeps developers in flow. Our open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions enable you to easily create your own modular AI software development system that you can improve.**
 
 </div>
 
 <div align="center">
 
 <a target="_blank" href="https://opensource.org/licenses/Apache-2.0" style="background:none">
-    <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" style="height: 36px;" />
+    <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" style="height: 22px;" />
 </a>
 <a target="_blank" href="https://continue.dev/docs" style="background:none">
-    <img src="https://img.shields.io/badge/continue_docs-%23BE1B55" style="height: 36px;" />
+    <img src="https://img.shields.io/badge/continue_docs-%23BE1B55" style="height: 22px;" />
 </a>
 <a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
-    <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" style="height: 36px;" />
+    <img src="https://img.shields.io/badge/discord-join-continue.svg?labelColor=191937&color=6F6FF7&logo=discord" style="height: 22px;" />
 </a>
 
 <p></p>
@@ -68,7 +72,7 @@ JetBrains: `@docs` (MacOS) / `@docs` (Windows)
 
 ### Download for [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)
 
-You can try out Continue with our free trial models before configuring your setup. 
+You can try out Continue with our free trial models before configuring your setup.
 
 Learn more about the models and providers [here](https://continue.dev/docs/setup/overview).
 

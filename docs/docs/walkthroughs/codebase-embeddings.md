@@ -8,15 +8,30 @@ keywords: [talk, embeddings, codebase, experimental]
 
 Continue indexes your codebase so that it can later automatically pull in the most relevant context from throughout your workspace. This is done via a combination of embeddings-based retrieval and keyword search. By default, all embeddings are calculated locally with `all-MiniLM-L6-v2` and stored locally in `~/.continue/index`.
 
-<!-- ## How to use codebase retrieval -->
-
 Currently, the codebase retrieval feature is available as the "codebase" and "folder" context providers. You can use them by typing `@codebase` or `@folder` in the input box, and then asking a question. The contents of the input box will be compared with the embeddings from the rest of the codebase (or folder) to determine relevant files.
 
-<!-- Here are some common use cases where it can be useful:
+Here are some common use cases where it can be useful:
 
-### Asking high-level codebase questions
+- Asking high-level questions about your codebase
+  - "How do I add a new endpoint to the server?"
+  - "Do we use VS Code's CodeLens feature anywhere?"
+  - "Is there any code written already to convert HTML to markdown?"
+- Generate code using existing samples as reference
+  - "Generate a new React component with a date picker, using the same patterns as existing components"
+  - "Write a draft of a CLI application for this project using Python's argparse"
+  - "Implement the `foo` method in the `bar` class, following the patterns seen in other subclasses of `baz`.
+- Use `@folder` to ask questions about a specific folder, increasing the likelihood of relevant results
+  - "What is the main purpose of this folder?"
+  - "How do we use VS Code's CodeLens API?"
+  - Or any of the above examples, but with `@folder` instead of `@codebase`
 
--  -->
+Here are use cases where it is not useful:
+
+- When you need the LLM to see _literally every_ file in your codebase
+  - "Find everywhere where the `foo` function is called"
+  - "Review our codebase and find any spelling mistakes"
+- Refactoring
+  - "Add a new parameter to the `bar` function and update usages"
 
 ## Configuration
 
@@ -79,16 +94,64 @@ We also support other methods of generating embeddings, which can be configured 
 }
 ```
 
-### OpenAI
+### Voyage AI
 
-OpenAI's [ada-002 embeddings](https://platform.openai.com/docs/guides/embeddings) are high dimensional embeddings that give great performance on both text and code.
+Voyage AI offers the best embeddings for code with their voyage-code-2 model. After obtaining an API key from [here](https://www.voyageai.com/), you can configure like this:
 
 ```json title="~/.continue/config.json"
 {
   "embeddingsProvider": {
     "provider": "openai",
-    "model": "text-embedding-ada-002", // optional, defaults to "text-embedding-ada-002"
-    "apiBase": "<your custom OpenAI-compatible endpoint>" // optional, defaults to OpenAI's API
+    "model": "voyage-code-2",
+    "apiBase": "
+    https://api.voyageai.com/v1/",
+    "apiKey": "<VOYAGE_API_KEY>"
+  }
+}
+```
+
+### OpenAI
+
+OpenAI's [embeddings](https://platform.openai.com/docs/guides/embeddings) are high dimensional embeddings that give great performance on both text and code.
+
+Configuration for text-embedding-3-small Model. This is default.
+The text-embedding-3-small model offers an outstanding balance between performance and efficiency, suitable for a versatile range of applications.
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "provider": "openai",
+    "model": "text-embedding-3-small",
+    "apiBase": "<your custom OpenAI-compatible endpoint>", // optional, defaults to OpenAI's API
+    "apiKey": "<OPENAI_API_KEY>"
+  }
+}
+```
+
+Configuration for text-embedding-3-large Model
+For those requiring the highest level of embedding detail and precision, the text-embedding-3-large model is the better choice.
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "provider": "openai",
+    "model": "text-embedding-3-large",
+    "apiBase": "<your custom OpenAI-compatible endpoint>", // optional, defaults to OpenAI's API
+    "apiKey": "<OPENAI_API_KEY>"
+  }
+}
+```
+
+Legacy Model Configuration
+For certain scenarios, you may still find the text-embedding-ada-002 model relevant. Below is the configuration example:
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "provider": "openai",
+    "model": "text-embedding-ada-002",
+    "apiBase": "<your custom OpenAI-compatible endpoint>", // optional, defaults to OpenAI's API
+    "apiKey": "<OPENAI_API_KEY>"
   }
 }
 ```
@@ -109,7 +172,7 @@ export function modifyConfig(config: Config): Config {
           });
           const data = await response.json();
           return data.embedding;
-        })
+        }),
       );
     },
   };
@@ -121,3 +184,7 @@ export function modifyConfig(config: Config): Config {
 ## Customizing which files are indexed
 
 Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.continueignore` file, which follows the exact same rules as `.gitignore`.
+
+If you want to see exactly what files Continue has indexed, the metadata is stored in `~/.continue/index/index.sqlite`. You can use a tool like [DB Browser for SQLite](https://sqlitebrowser.org/) to view the `tags_catalog` table within this file.
+
+If you need to force a refresh of the index, reload the VS Code window with `cmd/ctrl + shift + p` + "Reload Window".

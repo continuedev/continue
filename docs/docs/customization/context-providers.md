@@ -16,6 +16,14 @@ As an example, say you are working on solving a new GitHub Issue. You type '@iss
 
 To use any of the built-in context providers, open `~/.continue/config.json` and add it to the `contextProviders` list.
 
+### Code
+
+Type '@code' to reference specific functions or classes from throughout your project.
+
+```json
+{ "name": "code" }
+```
+
 ### Git Diff
 
 Type '@diff' to reference all of the changes you've made to your current branch. This is useful if you want to summarize what you've done or ask for a general review of your work before committing.
@@ -30,6 +38,14 @@ Type '@terminal' to reference the contents of your IDE's terminal.
 
 ```json
 { "name": "terminal" }
+```
+
+### Documentation
+
+Type `@docs` to index and retrieve snippets from any documentation site. You can add any site by selecting "Add Docs" in the dropdown, then entering the root URL of the documentation site and a title to remember it by. After the site has been indexed, you can type `@docs`, select your documentation from the dropdown, and Continue will use similarity search to automatically find important sections when answering your question.
+
+```json
+{ "name": "docs" }
 ```
 
 ### Open Files
@@ -104,13 +120,170 @@ Type '@issue' to reference the conversation in a GitHub issue. Make sure to incl
 }
 ```
 
+### GitLab Merge Request
+
+Type `@gitlab-mr` to reference an open MR for this branch on GitLab.
+
+#### Configuration
+
+You will need to create a [personal access token](https://docs.gitlab.com/ee/user/profile/personal_access_tokens.html) with the `read_api` scope. then add the following to your configuration:
+
+```json
+{
+  "name": "gitlab-mr",
+  "params": {
+    "token": "..."
+  }
+}
+```
+
+#### Using Self-Hosted GitLab
+
+You can specify the domain to communicate with by setting the `domain` parameter in your configurtion. By default this is set to `gitlab.com`.
+
+```json
+{
+  "name": "gitlab-mr",
+  "params": {
+    "token": "...",
+    "domain": "gitlab.example.com"
+  }
+}
+```
+
+#### Filtering Comments
+
+If you select some code to be edited, you can have the context provider filter out comments for other files. To enable this feature, set `filterComments` to `true`.
+
+### Jira Issues
+
+Type '@jira' to reference the conversation in a Jira issue. Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens).
+
+```json
+{
+  "name": "jira",
+  "params": {
+    "domain": "company.atlassian.net",
+    "email": "someone@somewhere.com",
+    "token ": "ATATT..."
+  }
+}
+```
+
+#### Jira Datacenter Support
+
+This context provider supports both Jira API version 2 and 3. It will use version 3 by default since
+that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need
+to set the API Version to 2 using the `apiVersion` property.
+
+```json
+  "params": {
+    "apiVersion": "2",
+    ...
+  }
+```
+
+#### Issue Query
+
+By default, the following query will be used to find issues:
+
+```jql
+assignee = currentUser() AND resolution = Unresolved order by updated DESC
+```
+
+You can override this query by setting the `issueQuery` parameter.
+
+### Code Outline
+
+Type '@outline' to reference the outline of all currently open files. The outline of a files consists of only the function and class definitions in the file. Supported file extensions are '.js', '.mjs', '.go', '.c', '.cc', '.cs', '.cpp', '.el', '.ex', '.elm', '.java', '.ml', '.php', '.ql', '.rb', '.rs', '.ts'
+
+```json
+{ "name": "outline" }
+```
+
+### Code Highlights
+
+Type '@highlights' to reference the 'highlights' from all currently open files. The highlights are computed using Paul Gauthier's so-called ['repomap'](https://aider.chat/docs/repomap.html) technique in [Aider Chat](https://github.com/paul-gauthier/aider). Supported file extensions are the same as for '@Outline' (behind the scenes, we use the corresponding tree-sitter grammars for language parsing).
+
+```json
+{ "name": "highlights" }
+```
+
+### PostgreSQL
+
+Type `@postgres` to reference the schema of a table, and some sample rows. A dropdown will appear, allowing you to select a specific table, or all tables.
+
+The only required settings are those for creating the database connection: `host`, `port`, `user`, `password`, and `database`.
+
+By default, the `schema` filter is set to `public`, and the `sampleRows` is set to 3. You may unset the schema if you want to include tables from all schemas.
+
+[Here is a short demo.](https://github.com/continuedev/continue/pull/859)
+
+```json
+{
+  "name": "postgres",
+  "params": {
+    "host": "localhost",
+    "port": 5436,
+    "user": "myuser",
+    "password": "catsarecool",
+    "database": "animals",
+    "schema": "public",
+    "sampleRows": 3
+  }
+}
+```
+
+### Database Tables
+
+Type `@database` to reference table schemas you can use the drop-down or start typeing table names based off of your configuration. Configuration supports multiple databases, allowing you to specify various connection details for PostgreSQL, MySQL, SQLite. Each connection should include a unique name, the connection_type (e.g., postgres, sqlite), and the necessary connection parameters specific to each database type.
+
+```json
+{
+  "name": "database",
+  "params": {
+    "connections": [
+      {
+        "name": "examplePostgres",
+        "connection_type": "postgres",
+        "connection": {
+          "user": "username",
+          "host": "localhost",
+          "database": "exampleDB",
+          "password": "yourPassword",
+          "port": 5432
+        }
+      },
+      {
+        "name": "exampleSqlite",
+        "connection_type": "sqlite",
+        "connection": {
+          "filename": "/path/to/your/sqlite/database.db"
+        }
+      }
+    ]
+  }
+}
+```
+
+### Debugger: Local Variables
+
+Type `@locals` to reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread. A dropdown will appear, allowing you to select a specific thread to see the local variables in that thread.
+
+```json
+{
+  "name": "locals",
+  "params": {
+    "stackDepth": 3
+  }
+}
+```
+
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new ContextProvider.
 
 ## Building Your Own Context Provider
-
-> Currently custom context providers are only supported in VS Code, but are coming soon to JetBrains IDEs.
 
 ### Introductory Example
 
@@ -124,12 +297,16 @@ interface CustomContextProvider {
   description?: string;
   getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
 }
 ```
 
-As an example, let's say you have a set of internal documents that have been indexed in a vector database. You've set up a simple REST API that allows internal users to query and get back relevant snippets. This context provider will send the query to this server and return the results from the vector database.
+As an example, let's say you have a set of internal documents that have been indexed in a vector database. You've set up a simple REST API that allows internal users to query and get back relevant snippets. This context provider will send the query to this server and return the results from the vector database. The return type of `getContextItems` _must_ be an array of objects that have all of the following properties:
+
+- `name`: The name of the context item, which will be displayed as a title
+- `description`: A longer description of the context item
+- `content`: The actual content of the context item, which will be fed to the LLM as context
 
 ```typescript title="~/.continue/config.ts"
 const RagContextProvider: CustomContextProvider = {
@@ -140,7 +317,7 @@ const RagContextProvider: CustomContextProvider = {
 
   getContextItems: async (
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> => {
     const response = await fetch("https://internal_rag_server.com/retrieve", {
       method: "POST",
@@ -189,7 +366,7 @@ const ReadMeContextProvider: CustomContextProvider = {
 
   getContextItems: async (
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> => {
     // 'query' is the filepath of the README selected from the dropdown
     const content = await extras.ide.readFile(query);
@@ -203,12 +380,12 @@ const ReadMeContextProvider: CustomContextProvider = {
   },
 
   loadSubmenuItems: async (
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> => {
     // Filter all workspace files for READMEs
     const allFiles = await args.ide.listWorkspaceContents();
     const readmes = allFiles.filter((filepath) =>
-      filepath.endsWith("README.md")
+      filepath.endsWith("README.md"),
     );
 
     // Return the items that will be shown in the dropdown
@@ -251,8 +428,6 @@ The flow of information in the above example is as follows:
 
 ### Importing outside modules
 
-> Context providers run in a NodeJS environment, but for the time being the `modifyConfig` function will be called both from NodeJS _and_ the browser. This means that if you are importing packages requiring NodeJS, you should dynamically import them inside of the context provider (e.g. `const moduleA = await import('./moduleA');`).
-
 To include outside Node modules in your config.ts, run `npm install <module_name>` from the `~/.continue` directory, and then import them in config.ts.
 
 Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.ts` and any dependencies into a single Javascript file. The exact configuration used can be found [here](https://github.com/continuedev/continue/blob/5c9874400e223bbc9786a8823614a2e501fbdaf7/extensions/vscode/src/ideProtocol.ts#L45-L52).
@@ -270,3 +445,21 @@ Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.t
   - `extras.ide`: An instance of the `IDE` class, which lets you gather various sources of information from the IDE, including the contents of the terminal, the list of open files, or any warnings in the currently open file.
   - `query`: (not currently used) A string representing the query
 - `loadSubmenuItems` (optional): A function that returns a list of `ContextSubmenuItem`s to display in a submenu. It is given access to an `IDE`, the same that is passed to `getContextItems`.
+
+### Writing Context Providers in Other Languages
+
+If you'd like to write a context provider in a language other than TypeScript, you can use the "http" context provider to call a server that hosts your own code. Add the context provider to `config.json` like this:
+
+```json
+{
+  "name": "http",
+  "params": {
+    "url": "https://myserver.com/context-provider",
+    "title": "http",
+    "description": "Custom HTTP Context Provider",
+    "displayTitle": "My Custom Context"
+  }
+}
+```
+
+Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI.

@@ -1,12 +1,12 @@
 ---
 title: Select providers
 description: Configure LLM providers
-keywords: [openai, anthropic, PaLM, ollama, ggml]
+keywords: [openai, anthropic, gemini, ollama, ggml]
 ---
 
 # Select providers
 
-Continue makes it easy to use different providers for serving your chat, autocomplete, and embeddings models. 
+Continue makes it easy to use different providers for serving your chat, autocomplete, and embeddings models.
 
 To select the ones you want to use, add them to your `config.json`.
 
@@ -19,10 +19,13 @@ You can run a model on your local computer using:
 - [Ollama](../reference/Model%20Providers/ollama.md)
 - [LM Studio](../reference/Model%20Providers/lmstudio.md)
 - [Llama.cpp](../reference/Model%20Providers/llamacpp.md)
+- [KoboldCpp](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
+- [llamafile](../reference/Model%20Providers/llamafile) ((OpenAI compatible server)
 - [LocalAI](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [Text generation web UI](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [FastChat](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [llama-cpp-python](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
+- [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples) (OpenAI compatible server)
 
 ### Remote
 

@@ -5,55 +5,64 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../..";
+import { stripImages } from "../countTokens";
 import { streamResponse } from "../stream";
 
 class Ollama extends BaseLLM {
   static providerName: ModelProvider = "ollama";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase: "http://localhost:11434",
+    apiBase: "http://localhost:11434/",
     model: "codellama-7b",
   };
 
   constructor(options: LLMOptions) {
     super(options);
 
-    this.fetch(`${this.apiBase}/api/show`, {
+    if (options.model === "AUTODETECT") {
+      return;
+    }
+    this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
+      headers: {},
       body: JSON.stringify({ name: this._getModel() }),
-    }).then(async (response) => {
-      if (response.status !== 200) {
-        console.warn(
-          "Error calling Ollama /api/show endpoint: ",
-          await response.text()
-        );
-        return;
-      }
-      const body = await response.json();
-      if (body.parameters) {
-        const params = [];
-        for (let line of body.parameters.split("\n")) {
-          let parts = line.split(" ");
-          if (parts.length < 2) {
-            continue;
-          }
-          let key = parts[0];
-          let value = parts[parts.length - 1];
-          switch (key) {
-            case "num_ctx":
-              this.contextLength = parseInt(value);
-              break;
-            case "stop":
-              if (!this.completionOptions.stop) {
-                this.completionOptions.stop = [];
-              }
-              this.completionOptions.stop.push(value);
-              break;
-            default:
-              break;
+    })
+      .then(async (response) => {
+        if (response.status !== 200) {
+          console.warn(
+            "Error calling Ollama /api/show endpoint: ",
+            await response.text(),
+          );
+          return;
+        }
+        const body = await response.json();
+        if (body.parameters) {
+          const params = [];
+          for (let line of body.parameters.split("\n")) {
+            let parts = line.split(" ");
+            if (parts.length < 2) {
+              continue;
+            }
+            let key = parts[0];
+            let value = parts[parts.length - 1];
+            switch (key) {
+              case "num_ctx":
+                this.contextLength = parseInt(value);
+                break;
+              case "stop":
+                if (!this.completionOptions.stop) {
+                  this.completionOptions.stop = [];
+                }
+                this.completionOptions.stop.push(JSON.parse(value));
+                break;
+              default:
+                break;
+            }
           }
         }
-      }
-    });
+      })
+      .catch((e) => {
+        console.warn(`Error calling Ollama /api/show endpoint: ${e}`);
+      });
   }
 
   private _getModel() {
@@ -66,6 +75,9 @@ class Ollama extends BaseLLM {
         "codellama-7b": "codellama:7b",
         "codellama-13b": "codellama:13b",
         "codellama-34b": "codellama:34b",
+        "codellama-70b": "codellama:70b",
+        "llama3-8b": "llama3:8b",
+        "llama3-70b": "llama3:70b",
         "phi-2": "phi:2.7b",
         "phind-codellama-34b": "phind-codellama:34b-v2",
         "wizardcoder-7b": "wizardcoder:7b-python",
@@ -77,17 +89,36 @@ class Ollama extends BaseLLM {
         "deepseek-7b": "deepseek-coder:6.7b",
         "deepseek-33b": "deepseek-coder:33b",
         "neural-chat-7b": "neural-chat:7b-v3.3",
-      }[this.model] || this.model
+        "starcoder-1b": "starcoder:1b",
+        "starcoder-3b": "starcoder:3b",
+        "starcoder2-3b": "starcoder2:3b",
+        "stable-code-3b": "stable-code:3b",
+      }[this.model] ?? this.model
     );
+  }
+
+  private _convertMessage(message: ChatMessage) {
+    if (typeof message.content === "string") {
+      return message;
+    }
+
+    return {
+      role: message.role,
+      content: stripImages(message.content),
+      images: message.content
+        .filter((part) => part.type === "imageUrl")
+        .map((part) => part.imageUrl?.url.split(",").at(-1)),
+    };
   }
 
   private _convertArgs(
     options: CompletionOptions,
-    prompt: string | ChatMessage[]
+    prompt: string | ChatMessage[],
   ) {
     const finalOptions: any = {
       model: this._getModel(),
       raw: true,
+      keep_alive: options.keepAlive ?? 60 * 30, // 30 minutes
       options: {
         temperature: options.temperature,
         top_p: options.topP,
@@ -96,23 +127,33 @@ class Ollama extends BaseLLM {
         stop: options.stop,
         num_ctx: this.contextLength,
         mirostat: options.mirostat,
+        num_thread: options.numThreads,
       },
     };
 
     if (typeof prompt === "string") {
       finalOptions.prompt = prompt;
     } else {
-      finalOptions.messages = prompt;
+      finalOptions.messages = prompt.map(this._convertMessage);
     }
 
     return finalOptions;
   }
 
+  private getEndpoint(endpoint: string): URL {
+    let base = this.apiBase;
+    if (process.env.IS_BINARY) {
+      base = base?.replace("localhost", "127.0.0.1");
+    }
+
+    return new URL(endpoint, base);
+  }
+
   protected async *_streamComplete(
     prompt: string,
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
-    const response = await this.fetch(`${this.apiBase}/api/generate`, {
+    const response = await this.fetch(this.getEndpoint("api/generate"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -126,6 +167,7 @@ class Ollama extends BaseLLM {
       buffer += value;
       // Split the buffer into individual JSON chunks
       const chunks = buffer.split("\n");
+      buffer = chunks.pop() ?? "";
 
       for (let i = 0; i < chunks.length; i++) {
         const chunk = chunks[i];
@@ -142,16 +184,14 @@ class Ollama extends BaseLLM {
           }
         }
       }
-      // Assign the last chunk to the buffer
-      buffer = chunks[chunks.length - 1];
     }
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
-    options: CompletionOptions
+    options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const response = await this.fetch(`${this.apiBase}/api/chat`, {
+    const response = await this.fetch(this.getEndpoint("api/chat"), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -186,6 +226,18 @@ class Ollama extends BaseLLM {
         }
       }
     }
+  }
+
+  async listModels(): Promise<string[]> {
+    const response = await this.fetch(
+      // localhost was causing fetch failed in pkg binary only for this Ollama endpoint
+      this.getEndpoint("api/tags"),
+      {
+        method: "GET",
+      },
+    );
+    const data = await response.json();
+    return data.models.map((model: any) => model.name);
   }
 }
 
