@@ -189,7 +189,15 @@ export const stateSlice = createSlice({
       state.active = true;
     },
     clearLastResponse: (state) => {
+      if (state.history.length < 2) {
+        return;
+      }
+      state.mainEditorContent =
+        state.history[state.history.length - 2].editorState;
       state.history = state.history.slice(0, -2);
+    },
+    consumeMainEditorContent: (state) => {
+      state.mainEditorContent = undefined;
     },
     setContextItemsAtIndex: (
       state,
@@ -501,5 +509,6 @@ export const {
   initNewActiveMessage,
   setMessageAtIndex,
   clearLastResponse,
+  consumeMainEditorContent,
 } = stateSlice.actions;
 export default stateSlice.reducer;

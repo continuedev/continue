@@ -33,7 +33,10 @@ import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { setEditingContextItemAtIndex } from "../../redux/slices/stateSlice";
+import {
+  consumeMainEditorContent,
+  setEditingContextItemAtIndex,
+} from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
 import CodeBlockExtension from "./CodeBlockExtension";
@@ -242,8 +245,6 @@ function TipTapEditor(props: TipTapEditorProps) {
     (store: RootState) => store.state.mainEditorContent,
   );
 
-  const { prevRef, nextRef, addRef } = useInputHistory();
-
   const editor: Editor = useEditor({
     extensions: [
       Document,
@@ -412,6 +413,13 @@ function TipTapEditor(props: TipTapEditorProps) {
       }
     },
   });
+
+  useEffect(() => {
+    if (mainEditorContent && editor) {
+      editor.commands.setContent(mainEditorContent);
+      dispatch(consumeMainEditorContent());
+    }
+  }, [mainEditorContent, editor]);
 
   const onEnterRef = useUpdatingRef(
     (modifiers: InputModifiers) => {
