@@ -33,8 +33,8 @@ function ExistingUserOnboarding() {
       <div className="m-auto p-2 max-w-96 mt-16 overflow-y-scroll">
         <h1 className="text-center">Use Improved Models?</h1>
         <p className="text-center pb-2">
-          Continue now integrates with higher quality models for autocomplete
-          and codebase retrieval.
+          Continue now integrates with higher quality cloud models for
+          autocomplete and codebase retrieval.
         </p>
         <Div
           color={greenButtonColor}
@@ -65,7 +65,7 @@ function ExistingUserOnboarding() {
           onMouseEnter={() => setHovered2(true)}
           onMouseLeave={() => setHovered2(false)}
         >
-          <h3>✨ Use optimized models</h3>
+          <h3>✨ Use cloud models</h3>
           <p>
             Continue's autocomplete and codebase retrieval will feel
             significantly improved. API calls are made to Fireworks/Voyage, but

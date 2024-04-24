@@ -8,9 +8,9 @@ import { Div, StyledButton } from "./components";
 function Onboarding() {
   const navigate = useNavigate();
 
+  const [hovered0, setHovered0] = useState(false);
   const [hovered1, setHovered1] = useState(false);
   const [hovered2, setHovered2] = useState(false);
-  const [hovered3, setHovered3] = useState(false);
 
   const [selected, setSelected] = useState(-1);
 
@@ -21,23 +21,53 @@ function Onboarding() {
         Let's find the setup that works best for you
       </p>
       <Div
-        color={greenButtonColor}
+        color={"#be841b"}
         disabled={false}
         selected={selected === 0}
-        hovered={hovered1}
+        hovered={hovered0}
         onClick={() => {
           setSelected(0);
+        }}
+        onMouseEnter={() => setHovered0(true)}
+        onMouseLeave={() => setHovered0(false)}
+      >
+        <h3>✨ Cloud models</h3>
+        <p>
+          This is the best experience. Use the best available commercial models
+          to index code and answer questions. Code is still only ever stored
+          locally.
+        </p>
+      </Div>
+      {selected === 0 && (
+        <p className="px-3">
+          <b>Embeddings:</b> Voyage Code 2
+          <br />
+          <br />
+          <b>Autocomplete:</b> Starcoder 7b via Fireworks AI (free trial)
+          <br />
+          <br />
+          <b>Chat:</b> GPT-4, Claude 3, and others (free trial)
+        </p>
+      )}
+      <br></br>
+      <Div
+        color={greenButtonColor}
+        disabled={false}
+        selected={selected === 1}
+        hovered={hovered1}
+        onClick={() => {
+          setSelected(1);
         }}
         onMouseEnter={() => setHovered1(true)}
         onMouseLeave={() => setHovered1(false)}
       >
-        <h3>🔒 Fully local</h3>
+        <h3>🔒 Local models</h3>
         <p>
           No code will leave your computer, but less powerful models are used.
           Works with Ollama, LM Studio and others.
         </p>
       </Div>
-      {selected === 0 && (
+      {selected === 1 && (
         <p className="px-3">
           <b>Embeddings:</b> Local sentence-transformers model
           <br />
@@ -47,35 +77,6 @@ function Onboarding() {
           <br />
           <br />
           <b>Chat:</b> Llama 3 with Ollama, LM Studio, etc.
-        </p>
-      )}
-      <br></br>
-      <Div
-        color={"#be841b"}
-        disabled={false}
-        selected={selected === 1}
-        hovered={hovered2}
-        onClick={() => {
-          setSelected(1);
-        }}
-        onMouseEnter={() => setHovered2(true)}
-        onMouseLeave={() => setHovered2(false)}
-      >
-        <h3>✨ Optimized</h3>
-        <p>
-          Use the best available commercial models to index code and answer
-          questions. Code is still only ever stored locally.
-        </p>
-      </Div>
-      {selected === 1 && (
-        <p className="px-3">
-          <b>Embeddings:</b> Voyage Code 2
-          <br />
-          <br />
-          <b>Autocomplete:</b> Starcoder 7b via Fireworks AI (free trial)
-          <br />
-          <br />
-          <b>Chat:</b> GPT-4, Claude 3, and others (free trial)
         </p>
       )}
       <br></br>
@@ -89,21 +90,22 @@ function Onboarding() {
         color={"#1b84be"}
         disabled={false}
         selected={selected === 2}
-        hovered={hovered3}
-        onMouseEnter={() => setHovered3(true)}
-        onMouseLeave={() => setHovered3(false)}
+        hovered={hovered2}
+        onMouseEnter={() => setHovered2(true)}
+        onMouseLeave={() => setHovered2(false)}
         onClick={() => {
           setSelected(2);
           postToIde("openConfigJson", undefined);
         }}
       >
-        <h3>⚙️ Custom</h3>
+        <h3>⚙️ Your own models</h3>
         <p>
+          Continue lets you use your own API key or self-hosted LLMs.{" "}
           <a href="https://continue.dev/docs/customization/overview">
             Read the docs
           </a>{" "}
-          to learn more and fully customize Continue by opening config.json.
-          This can always be done later.
+          to learn more about using config.json to customize Continue. This can
+          always be done later.
         </p>
       </Div>
       {selected === 2 && (
@@ -126,19 +128,19 @@ function Onboarding() {
         <StyledButton
           blurColor={
             selected === 0
-              ? greenButtonColor
-              : selected === 1
               ? "#be841b"
+              : selected === 1
+              ? greenButtonColor
               : "#1b84be"
           }
           disabled={selected < 0}
           onClick={() => {
             postToIde("completeOnboarding", {
-              mode: ["local", "optimized", "custom"][selected] as any,
+              mode: ["optimized", "local", "custom"][selected] as any,
             });
             setLocalStorage("onboardingComplete", true);
 
-            if (selected === 0) {
+            if (selected === 1) {
               navigate("/localOnboarding");
             } else {
               // Only needed when we switch from the default (local) embeddings provider

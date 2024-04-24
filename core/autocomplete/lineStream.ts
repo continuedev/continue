@@ -129,7 +129,7 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
       return;
     }
 
-    if (line === "```") {
+    if (line.startsWith("```")) {
       waitingToSeeIfLineIsLast = line;
     } else {
       yield line;
