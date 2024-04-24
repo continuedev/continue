@@ -61,6 +61,10 @@ export class CodebaseIndexer {
     workspaceDirs: string[],
     abortSignal: AbortSignal,
   ): AsyncGenerator<IndexingProgressUpdate> {
+    if (workspaceDirs.length === 0) {
+      return;
+    }
+
     const config = await this.configHandler.loadConfig();
     if (config.disableIndexing) {
       return;
@@ -72,9 +76,7 @@ export class CodebaseIndexer {
 
     // Wait until Git Extension has loaded to report progress
     // so we don't appear stuck at 0% while waiting
-    if (workspaceDirs.length > 0) {
-      await this.ide.getRepoName(workspaceDirs[0]);
-    }
+    await this.ide.getRepoName(workspaceDirs[0]);
     yield {
       progress: 0,
       desc: "Starting indexing...",
