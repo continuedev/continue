@@ -11,7 +11,10 @@
       "../../../core/node_modules/sqlite3/**/*",
       "../../node_modules/@lancedb/vectordb-win32-x64-msvc/index.node",
       "../../out/tree-sitter.wasm",
-      "../../out/tree-sitter-wasms/*"
+      "../../out/tree-sitter-wasms/*",
+      "../../node_modules/win-ca/lib/crypt32-ia32.node",
+      "../../node_modules/win-ca/lib/crypt32-x64.node",
+      "../../node_modules/win-ca/lib/roots.exe"
     ],
     "targets": [
       "node18-win-arm64"
