@@ -1,7 +1,10 @@
+import { JSONContent } from "@tiptap/react";
+
 type LocalStorageTypes = {
   onboardingComplete: boolean;
   mainTextEntryCounter: number;
   lastSessionId: string | undefined;
+  inputHistory: JSONContent[];
 };
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(

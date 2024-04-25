@@ -245,6 +245,8 @@ function TipTapEditor(props: TipTapEditorProps) {
     (store: RootState) => store.state.mainEditorContent,
   );
 
+  const { prevRef, nextRef, addRef } = useInputHistory();
+
   const editor: Editor = useEditor({
     extensions: [
       Document,
@@ -433,6 +435,8 @@ function TipTapEditor(props: TipTapEditorProps) {
       props.onEnter(json, modifiers);
 
       if (props.isMainInput) {
+        const content = editor.state.toJSON().doc;
+        addRef.current(content);
         editor.commands.clearContent(true);
       }
     },
