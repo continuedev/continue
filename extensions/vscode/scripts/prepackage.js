@@ -4,6 +4,15 @@ const ncp = require("ncp").ncp;
 const path = require("path");
 const { rimrafSync } = require("rimraf");
 
+function execCmdSync(cmd) {
+  try {
+    execSync(cmd);
+  } catch (err) {
+    console.error(`Error executing command '${cmd}': `, err);
+    process.exit(1);
+  }
+}
+
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "bin"));
 rimrafSync(path.join(__dirname, "out"));
@@ -93,16 +102,16 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // Install node_modules //
-  execSync("npm install --no-save");
+  execCmdSync("npm install --no-save");
   console.log("[info] npm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execSync("npm install --no-save");
+  execCmdSync("npm install --no-save");
   console.log("[info] npm install in gui completed");
 
   if (ghAction()) {
-    execSync("npm run build");
+    execCmdSync("npm run build");
   }
 
   // Copy over the dist folder to the Intellij extension //
@@ -284,17 +293,17 @@ const exe = os === "win32" ? ".exe" : "";
         "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
         "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
       }[target];
-      execSync(`npm install -f ${packageToInstall} --no-save`);
+      execCmdSync(`npm install -f ${packageToInstall} --no-save`);
     }
 
     // Download and unzip esbuild
     console.log("[info] Downloading pre-built esbuild binary");
     rimrafSync("node_modules/@esbuild");
     fs.mkdirSync("node_modules/@esbuild", { recursive: true });
-    execSync(
+    execCmdSync(
       `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
     );
-    execSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
+    execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
   }
 
@@ -310,10 +319,12 @@ const exe = os === "win32" ? ".exe" : "";
         "linux-arm64":
           "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
       }[target];
-      execSync(
+      execCmdSync(
         `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
       );
-      execSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
+      execCmdSync(
+        "cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz",
+      );
       fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
     }
   }
