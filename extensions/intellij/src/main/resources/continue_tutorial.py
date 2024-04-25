@@ -66,4 +66,4 @@ accept [⌥ ⇧ Y] or reject [⌥ ⇧ N] the edit"""
 
 # endregion
 
-# Ready to learn more? Check out the Continue documentation: https://continue.dev/docs
+# Ready to learn more? Check out the Continue documentation: https://docs.continue.dev

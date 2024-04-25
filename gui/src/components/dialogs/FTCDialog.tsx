@@ -27,7 +27,7 @@ function FTCDialog() {
         OpenAI API key. To keep using Continue, you can either use your own API
         key, or use a local LLM. To read more about the options, see our{" "}
         <a
-          href="https://continue.dev/docs/customization/models"
+          href="https://docs.continue.dev/customization/models"
           target="_blank"
         >
           documentation

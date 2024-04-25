@@ -6,7 +6,7 @@
 
 <div align="center">
 
-**[Continue](https://continue.dev/docs) is an open-source autopilot for VS Code and JetBrains—the easiest way to code with any LLM**
+**[Continue](https://docs.continue.dev) is an open-source autopilot for VS Code and JetBrains—the easiest way to code with any LLM**
 
 </div>
 
@@ -15,7 +15,7 @@
 <a target="_blank" href="https://opensource.org/licenses/Apache-2.0" style="background:none">
     <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" style="height: 20px;" />
 </a>
-<a target="_blank" href="https://continue.dev/docs" style="background:none">
+<a target="_blank" href="https://docs.continue.dev" style="background:none">
     <img src="https://img.shields.io/badge/continue_docs-%23BE1B55" style="height: 20px;" />
 </a>
 <a target="_blank" href="https://discord.gg/vapESyrFmJ" style="background:none">
@@ -74,7 +74,7 @@ Open a blank file, <kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>L</kbd>, and le
 
 You can try out Continue for free using a proxy server that securely makes calls with our API key to models like GPT-4, Gemini Pro, and Phind CodeLlama via OpenAI, Google, and Together respectively.
 
-Once you're ready to use your own API key or a different model / provider, press the `+` button in the bottom left to add a new model to your `config.json`. Learn more about the models and providers [here](https://continue.dev/docs/model-setup/overview).
+Once you're ready to use your own API key or a different model / provider, press the `+` button in the bottom left to add a new model to your `config.json`. Learn more about the models and providers [here](https://docs.continue.dev/model-setup/overview).
 
 ## License
 

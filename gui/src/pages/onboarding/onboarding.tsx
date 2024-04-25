@@ -81,7 +81,7 @@ function Onboarding() {
       )}
       <br></br>
       {/* <p>
-        <a href="https://continue.dev/docs/customization/overview">
+        <a href="https://docs.continue.dev/customization/overview">
           Read the docs
         </a>{" "}
         to learn more and fully customize Continue by opening config.json.
@@ -101,7 +101,7 @@ function Onboarding() {
         <h3>⚙️ Your own models</h3>
         <p>
           Continue lets you use your own API key or self-hosted LLMs.{" "}
-          <a href="https://continue.dev/docs/customization/overview">
+          <a href="https://docs.continue.dev/customization/overview">
             Read the docs
           </a>{" "}
           to learn more about using config.json to customize Continue. This can
@@ -111,15 +111,15 @@ function Onboarding() {
       {selected === 2 && (
         <p className="px-3">
           Use <code>config.json</code> to configure your own{" "}
-          <a href="https://continue.dev/docs/model-setup/overview">models</a>,{" "}
-          <a href="https://continue.dev/docs/customization/context-providers">
+          <a href="https://docs.continue.dev/model-setup/overview">models</a>,{" "}
+          <a href="https://docs.continue.dev/customization/context-providers">
             context providers
           </a>
           ,{" "}
-          <a href="https://continue.dev/docs/customization/slash-commands">
+          <a href="https://docs.continue.dev/customization/slash-commands">
             slash commands
           </a>
-          , and <a href="https://continue.dev/docs/reference/config">more</a>.
+          , and <a href="https://docs.continue.dev/reference/config">more</a>.
         </p>
       )}
 

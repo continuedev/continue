@@ -24,7 +24,7 @@ export class ContinueCompletionProvider
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
-            "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+            "https://docs.continue.dev/walkthroughs/tab-autocomplete",
           ),
         );
       } else if (val === "Download Ollama") {

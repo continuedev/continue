@@ -40,7 +40,7 @@ export class TabAutocompleteModel {
               if (value === "Documentation") {
                 vscode.env.openExternal(
                   vscode.Uri.parse(
-                    "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+                    "https://docs.continue.dev/walkthroughs/tab-autocomplete",
                   ),
                 );
               } else if (value === "Copy Command") {
@@ -63,7 +63,7 @@ export class TabAutocompleteModel {
             if (value === "Documentation") {
               vscode.env.openExternal(
                 vscode.Uri.parse(
-                  "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+                  "https://docs.continue.dev/walkthroughs/tab-autocomplete",
                 ),
               );
             } else if (value === "Download Ollama") {

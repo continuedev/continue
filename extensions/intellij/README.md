@@ -1,6 +1,6 @@
 <!-- Plugin description -->
 
-**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—an extension that brings the power of ChatGPT to your IDE**
+**[Continue](https://docs.continue.dev) is the open-source autopilot for software development—an extension that brings the power of ChatGPT to your IDE**
 
 ### Get possible explanations
 
@@ -30,6 +30,6 @@ Open a blank file and let Continue start new Python scripts, React components, e
 
 You can try out Continue for free using a proxy server that securely makes calls with our API key to models like GPT-4, Gemini Pro, and Phind CodeLlama via OpenAI, Google, and Together respectively.
 
-Once you're ready to use your own API key or a different model / provider, press the `+` button in the bottom left to add a new model to your `config.json`. Learn more about the models and providers [here](https://continue.dev/docs/model-setup/overview).
+Once you're ready to use your own API key or a different model / provider, press the `+` button in the bottom left to add a new model to your `config.json`. Learn more about the models and providers [here](https://docs.continue.dev/model-setup/overview).
 
 <!-- Plugin description end -->
