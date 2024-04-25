@@ -488,31 +488,6 @@ const gemini15Pro: ModelPackage = {
   icon: "gemini.png",
   providerOptions: ["gemini", "freetrial"],
 };
-const gemini15Pro: ModelPackage = {
-  title: "Gemini 1.5 Pro",
-  description: "A newer Gemini model with 1M token context length",
-  params: {
-    title: "Gemini 1.5 Pro",
-    model: "gemini-1.5-pro-latest",
-    contextLength: 1_000_000,
-    apiKey: "<API_KEY>",
-  },
-  icon: "gemini.png",
-  providerOptions: ["gemini", "freetrial"],
-};
-const gemini15Flash: ModelPackage = {
-  title: "Gemini 1.5 Flash",
-  description:
-    "Fast and versatile multimodal model for scaling across diverse tasks",
-  params: {
-    title: "Gemini 1.5 Flash",
-    model: "gemini-1.5-flash-latest",
-    contextLength: 1_000_000,
-    apiKey: "<API_KEY>",
-  },
-  icon: "gemini.png",
-  providerOptions: ["gemini"],
-};
 
 const deepseek: ModelPackage = {
   title: "DeepSeek-Coder",
@@ -575,34 +550,6 @@ const commandRPlus: ModelPackage = {
   icon: "cohere.png",
 };
 
-const commandR: ModelPackage = {
-  title: "Command R",
-  description:
-    "Command R is a scalable generative model targeting RAG and Tool Use to enable production-scale AI for enterprise.",
-  params: {
-    model: "command-r",
-    contextLength: 128_000,
-    title: "Command R",
-    apiKey: "",
-  },
-  providerOptions: ["cohere"],
-  icon: "cohere.png",
-};
-
-const commandRPlus: ModelPackage = {
-  title: "Command R+",
-  description:
-    "Command R+ is a state-of-the-art RAG-optimized model designed to tackle enterprise-grade workloads",
-  params: {
-    model: "command-r-plus",
-    contextLength: 128_000,
-    title: "Command R+",
-    apiKey: "",
-  },
-  providerOptions: ["cohere"],
-  icon: "cohere.png",
-};
-
 const osModels = [
   llama3Chat,
   deepseek,
@@ -610,8 +557,6 @@ const osModels = [
   codeLlamaInstruct,
   mistralOs,
   phindCodeLlama,
-  zephyr,
-  neuralChat,
 ];
 
 const gpt4: ModelPackage = {
@@ -720,12 +665,13 @@ const AUTODETECT: ModelPackage = {
 export const MODEL_INFO: (ModelPackage | string)[] = [
   "OpenAI",
   gpt4turbo,
+  // gpt4,
   gpt35turbo,
   "Anthropic",
   claude3Opus,
   claude3Sonnet,
   claude3Haiku,
-  claude2,
+  // claude2,
   "Cohere",
   commandR,
   commandRPlus,
@@ -736,11 +682,9 @@ export const MODEL_INFO: (ModelPackage | string)[] = [
   llama3Chat,
   deepseek,
   mistral,
-  codellama70bTrial,
-  wizardCoder,
-  codeLlamaInstruct,
-  phindCodeLlama,
-  zephyr,
+  // wizardCoder,
+  // codeLlamaInstruct,
+  // phindCodeLlama,
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -753,9 +697,9 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
     packages: [
-      gpt4o,
       gpt4turbo,
-      gpt4turbo,
+      gpt35turbo,
+      // gpt4,
       {
         ...AUTODETECT,
         params: {
@@ -806,49 +750,6 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       claude3Haiku,
       // claude2
     ],
-    apiKeyUrl: "https://console.anthropic.com/account/keys",
-  },
-  mistral: {
-    title: "Mistral API",
-    provider: "mistral",
-    description:
-      "The Mistral API provides seamless access to their models, including Codestral, Mistral 8x22B, Mistral Large, and more.",
-    icon: "mistral.png",
-    longDescription: `To get access to the Mistral API, obtain your API key from [here](https://console.mistral.ai/codestral) for Codestral or the [Mistral platform](https://docs.mistral.ai/) for all other models.`,
-    tags: [
-      ModelProviderTag["Requires API Key"],
-      ModelProviderTag["Open-Source"],
-    ],
-    params: {
-      apiKey: "",
-    },
-    collectInputFor: [
-      {
-        inputType: CollectInputType.text,
-        key: "apiKey",
-        label: "API Key",
-        placeholder: "Enter your Mistral API key",
-        required: true,
-      },
-      ...completionParamsInputs,
-    ],
-    packages: [
-      codestral,
-      mistralLarge,
-      mistralSmall,
-      mistral8x22b,
-      mistral8x7b,
-      mistral7b,
-    ],
-    apiKeyUrl: "https://console.mistral.ai/codestral",
-  },
-  bedrock: {
-    title: "Bedrock",
-    provider: "bedrock",
-    refPage: "amazon.com",
-    description: "Bedrock is Amazon's provider of multiple diverse language models.",
-    tags: [ModelProviderTag["Requires API Key"]],
-    packages: [bedrockClaude3Sonnet],
   },
   cohere: {
     title: "Cohere",
@@ -1133,7 +1034,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistral, zephyr],
+    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistral],
   },
   llamacpp: {
     title: "llama.cpp",
