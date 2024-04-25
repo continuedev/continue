@@ -8,7 +8,7 @@ function execCmdSync(cmd) {
   try {
     execSync(cmd);
   } catch (err) {
-    console.error(`Error executing command '${cmd}': `, err);
+    console.error(`Error executing command '${cmd}': `, err.output.toString());
     process.exit(1);
   }
 }
