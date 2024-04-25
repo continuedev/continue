@@ -226,7 +226,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     if (!contextItemToEdit) {
-      yield "Select (highlight and press `cmd+shift+L` (MacOS) / `ctrl+shift+L` (Windows)) the code that you want to edit first";
+      yield "Please highlight the code you want to edit, then press `cmd/ctrl+shift+L` to add it to chat";
       return;
     }
 
