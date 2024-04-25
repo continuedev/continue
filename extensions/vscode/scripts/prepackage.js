@@ -8,6 +8,15 @@ const {
   autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
+function execCmdSync(cmd) {
+  try {
+    execSync(cmd);
+  } catch (err) {
+    console.error(`Error executing command '${cmd}': `, err);
+    process.exit(1);
+  }
+}
+
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));
 rimrafSync(path.join(__dirname, "..", "out"));
@@ -97,12 +106,12 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // Install node_modules //
-  execSync("npm install --no-save");
+  execCmdSync("npm install --no-save");
   console.log("[info] npm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execSync("npm install --no-save");
+  execCmdSync("npm install --no-save");
   console.log("[info] npm install in gui completed");
 
   if (ghAction()) {
@@ -380,14 +389,19 @@ const exe = os === "win32" ? ".exe" : "";
         "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
         "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
       }[target];
-      console.log(
-        "[info] Downloading pre-built lancedb binary: " + packageToInstall,
-      );
+      execCmdSync(`npm install -f ${packageToInstall} --no-save`);
+    }
 
-      await installNodeModuleInTempDirAndCopyToCurrent(
-        packageToInstall,
-        "@lancedb",
-      );
+    // Download and unzip esbuild
+    console.log("[info] Downloading pre-built esbuild binary");
+    rimrafSync("node_modules/@esbuild");
+    fs.mkdirSync("node_modules/@esbuild", { recursive: true });
+    execCmdSync(
+      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
+    );
+    execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
+    fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
+  }
 
       // Replace the installed with pre-built
       console.log("[info] Downloading pre-built sqlite3 binary");
