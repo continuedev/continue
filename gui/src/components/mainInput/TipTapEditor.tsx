@@ -27,6 +27,7 @@ import {
 } from "..";
 import { SubmenuContextProvidersContext } from "../../App";
 import useHistory from "../../hooks/useHistory";
+import { useInputHistory } from "../../hooks/useInputHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
@@ -238,6 +239,8 @@ function TipTapEditor(props: TipTapEditorProps) {
     (store: RootState) => store.state.mainEditorContent,
   );
 
+  const { prevRef, nextRef, addRef } = useInputHistory();
+
   const editor: Editor = useEditor({
     extensions: [
       Document,
@@ -273,6 +276,41 @@ function TipTapEditor(props: TipTapEditorProps) {
                 () => commands.liftEmptyBlock(),
                 () => commands.splitBlock(),
               ]),
+
+            ArrowUp: () => {
+              if (this.editor.state.selection.anchor > 1) {
+                return false;
+              }
+
+              const previousInput = prevRef.current(
+                this.editor.state.toJSON().doc,
+              );
+              if (previousInput) {
+                this.editor.commands.setContent(previousInput);
+                setTimeout(() => {
+                  this.editor.commands.blur();
+                  this.editor.commands.focus("start");
+                }, 0);
+                return true;
+              }
+            },
+            ArrowDown: () => {
+              if (
+                this.editor.state.selection.anchor <
+                this.editor.state.doc.content.size - 1
+              ) {
+                return false;
+              }
+              const nextInput = nextRef.current();
+              if (nextInput) {
+                this.editor.commands.setContent(nextInput);
+                setTimeout(() => {
+                  this.editor.commands.blur();
+                  this.editor.commands.focus("end");
+                }, 0);
+                return true;
+              }
+            },
           };
         },
       }).configure({
@@ -376,6 +414,8 @@ function TipTapEditor(props: TipTapEditorProps) {
       props.onEnter(json, modifiers);
 
       if (props.isMainInput) {
+        const content = editor.state.toJSON().doc;
+        addRef.current(content);
         editor.commands.clearContent(true);
       }
     },
