@@ -1,6 +1,6 @@
 <!-- Plugin description -->
 
-![readme](../../media/readme.png)
+**[Continue](https://docs.continue.dev) is the open-source autopilot for software development—an extension that brings the power of ChatGPT to your IDE**
 
 <h1 align="center">Continue</h1>
 
@@ -42,10 +42,6 @@
 
 You can try out Continue with our free trial models before configuring your setup.
 
-Learn more about the models and providers [here](https://continue.dev/docs/setup/overview).
-
-## License
-
-[Apache 2.0 © 2023 Continue Dev, Inc.](./LICENSE)
+Once you're ready to use your own API key or a different model / provider, press the `+` button in the bottom left to add a new model to your `config.json`. Learn more about the models and providers [here](https://docs.continue.dev/model-setup/overview).
 
 <!-- Plugin description end -->

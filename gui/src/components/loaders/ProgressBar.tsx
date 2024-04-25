@@ -60,21 +60,9 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
 
   return (
     <>
-      <GridDiv
-        data-tooltip-id="usage_progress_bar"
-        onClick={() => {
-          dispatch(setShowDialog(true));
-          dispatch(
-            setDialogMessage(
-              <QuickModelSetup
-                onDone={() => {
-                  dispatch(setShowDialog(false));
-                  navigate("/");
-                }}
-              />,
-            ),
-          );
-        }}
+      <a
+        href="https://docs.continue.dev/reference/Model%20Providers/freetrial"
+        className="no-underline ml-2"
       >
         <ProgressBarWrapper>
           <ProgressBarFill

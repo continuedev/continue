@@ -125,66 +125,19 @@ export class VsCodeWebviewProtocol {
             }
           }
 
-          if (message.includes("https://proxy-server")) {
-            message = message.split("\n").filter((l: string) => l !== "")[1];
-            try {
-              message = JSON.parse(message).message;
-            } catch {}
-            if (message.includes("exceeded")) {
-              message +=
-                " To keep using Continue, you can set up a local model or use your own API key.";
-            }
-
-            vscode.window
-              .showInformationMessage(message, "Add API Key", "Use Local Model")
-              .then((selection) => {
-                if (selection === "Add API Key") {
-                  this.request("addApiKey", undefined);
-                } else if (selection === "Use Local Model") {
-                  this.request("setupLocalModel", undefined);
-                }
-              });
-          } else if (message.includes("Please sign in with GitHub")) {
-            vscode.window
-              .showInformationMessage(
-                message,
-                "Sign In",
-                "Use API key / local model",
-              )
-              .then((selection) => {
-                if (selection === "Sign In") {
-                  vscode.authentication
-                    .getSession("github", [], {
-                      createIfNone: true,
-                    })
-                    .then(() => {
-                      this.reloadConfig();
-                    });
-                } else if (selection === "Use API key / local model") {
-                  this.request("openOnboarding", undefined);
-                }
-              });
-          } else {
-            vscode.window
-              .showErrorMessage(
-                message.split("\n\n")[0],
-                "Show Logs",
-                "Troubleshooting",
-              )
-              .then((selection) => {
-                if (selection === "Show Logs") {
-                  vscode.commands.executeCommand(
-                    "workbench.action.toggleDevTools",
-                  );
-                } else if (selection === "Troubleshooting") {
-                  vscode.env.openExternal(
-                    vscode.Uri.parse(
-                      "https://docs.continue.dev/troubleshooting",
-                    ),
-                  );
-                }
-              });
-          }
+          vscode.window
+            .showErrorMessage(message, "Show Logs", "Troubleshooting")
+            .then((selection) => {
+              if (selection === "Show Logs") {
+                vscode.commands.executeCommand(
+                  "workbench.action.toggleDevTools",
+                );
+              } else if (selection === "Troubleshooting") {
+                vscode.env.openExternal(
+                  vscode.Uri.parse("https://docs.continue.dev/troubleshooting"),
+                );
+              }
+            });
         }
       }
     });
