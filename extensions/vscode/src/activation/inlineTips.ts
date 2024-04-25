@@ -3,7 +3,7 @@ import { getMetaKeyName } from "../util/util";
 
 const inlineTipDecoration = vscode.window.createTextEditorDecorationType({
   after: {
-    contentText: `Add to chat (${getMetaKeyName()}+L) | Edit highlighted code (${getMetaKeyName()}+I).`,
+    contentText: `Add to chat (${getMetaKeyLabel()} L) | Edit highlighted code (${getMetaKeyLabel()} I).`,
     color: "#888",
     margin: "0 0 0 6em",
     fontWeight: "bold",
