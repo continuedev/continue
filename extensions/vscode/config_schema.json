@@ -1735,6 +1735,11 @@
             },
             "apiBase": {
               "type": "string"
+            },
+            "requestOptions": {
+              "title": "Request Options",
+              "description": "Request options to be used in any fetch requests made by the embeddings provider",
+              "$ref": "#/definitions/RequestOptions"
             }
           },
           "required": ["provider"],

@@ -648,6 +648,7 @@ export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
+  requestOptions?: RequestOptions;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
