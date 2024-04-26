@@ -319,7 +319,10 @@ async function intermediateToFinalConfig(
       config.embeddingsProvider = new embeddingsProviderClass(
         options,
         (url: string | URL, init: any) =>
-          fetchwithRequestOptions(url, init, config.requestOptions),
+          fetchwithRequestOptions(url, init, {
+            ...config.requestOptions,
+            ...options.requestOptions,
+          }),
       );
     }
   }
