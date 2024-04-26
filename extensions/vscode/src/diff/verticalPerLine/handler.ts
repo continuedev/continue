@@ -362,19 +362,24 @@ export class VerticalPerLineDiffHandler {
     this.greenDecorationManager.shiftDownAfterLine(startLine, offset);
 
     // Shift the codelens objects
-    const blocks =
-      this.editorToVerticalDiffCodeLens
-        .get(this.filepath)
-        ?.filter((x) => x.start !== startLine)
-        .map((x) => {
-          if (x.start > startLine) {
-            return { ...x, start: x.start + offset };
-          }
-          return x;
-        }) || [];
-    this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
+    this.shiftCodeLensObjects(startLine, offset)
+  }
 
-    this.refreshCodeLens();
+  private shiftCodeLensObjects(startLine: number, offset: number){  
+      // Shift the codelens objects
+      const blocks =
+        this.editorToVerticalDiffCodeLens
+          .get(this.filepath)
+          ?.filter((x) => x.start !== startLine)
+          .map((x) => {
+            if (x.start > startLine) {
+              return { ...x, start: x.start + offset };
+            }
+            return x;
+          }) || [];
+      this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
+  
+      this.refreshCodeLens();
   }
 
   public updateLineDelta(filepath: string, startLine: number, lineDelta: number) {
@@ -394,14 +399,14 @@ export class VerticalPerLineDiffHandler {
       else if (startLine < block.start + block.numGreen) {
         block.numGreen += lineDelta
       }
-      //if file changes occur after the block, that doesn't change anything for the block
+      // If file changes occur after the block, that doesn't change anything for the block
       return block;
     }).filter(block => block.numRed > 0 || block.numGreen > 0); // Remove blocks with no red or green lines
     
     // Update the map with the filtered blocks
     this.editorToVerticalDiffCodeLens.set(filepath, updatedBlocks);
 
-    // Refresh the CodeLens display
-    this.refreshCodeLens();
+    // Adjust the code lens's accordingly
+    this.shiftCodeLensObjects(startLine, lineDelta)
   }
 }

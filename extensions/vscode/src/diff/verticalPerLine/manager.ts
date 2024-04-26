@@ -20,8 +20,10 @@ export class VerticalPerLineDiffManager {
 
   filepathToCodeLens: Map<string, VerticalDiffCodeLens[]> = new Map();
 
+  private userChangeListener: vscode.Disposable | undefined;
+
   constructor(private readonly configHandler: ConfigHandler) {
-    this.setupDocumentChangeListener();
+    this.userChangeListener = this.enableDocumentChangeListener();
   }
 
   createVerticalPerLineDiffHandler(
@@ -56,17 +58,29 @@ export class VerticalPerLineDiffManager {
     return this.filepathToHandler.get(filepath);
   }
 
-  //Creates a listener for document changes (called by constructor)
-  private setupDocumentChangeListener() {
-    vscode.workspace.onDidChangeTextDocument((event) => {
-      // Check if there is an active handler for the affected file
-      const filepath = event.document.uri.fsPath;
-      const handler = this.getHandlerForFile(filepath);
-      if (handler) {
-        // If there is an active diff for that file, handle the document change
-        this.handleDocumentChange(event, handler);
-      }
-    });
+  //Creates a listener for document changes by user.
+  private enableDocumentChangeListener(): vscode.Disposable | undefined {
+    if (!this.userChangeListener) {
+      console.log("enabled")
+      return vscode.workspace.onDidChangeTextDocument((event) => {
+        // Check if there is an active handler for the affected file
+        const filepath = event.document.uri.fsPath;
+        const handler = this.getHandlerForFile(filepath);
+        if (handler) {
+          // If there is an active diff for that file, handle the document change
+          this.handleDocumentChange(event, handler);
+        }
+      });
+    }
+    return undefined
+  }
+
+  //Listener for user doc changes is disabled during updates to the text document by continue.
+  public disableDocumentChangeListener() {
+    if (this.userChangeListener) {
+        this.userChangeListener.dispose();
+        this.userChangeListener = undefined;
+    }
   }
 
   private handleDocumentChange(
@@ -79,7 +93,9 @@ export class VerticalPerLineDiffManager {
       const linesAdded = change.text.split('\n').length - 1;
       const linesDeleted = change.range.end.line - change.range.start.line;
       const lineDelta = linesAdded - linesDeleted;
+      
 
+      console.log("handling doc change: ", linesAdded, " ", linesDeleted)
       // Update the diff handler with the new line delta
       handler.updateLineDelta(event.document.uri.fsPath, change.range.start.line, lineDelta);
     });
@@ -103,12 +119,12 @@ export class VerticalPerLineDiffManager {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", false);
   }
 
-  acceptRejectVerticalDiffBlock(
+  acceptRejectVerticalDiffBlock = async (
     accept: boolean,
     filepath?: string,
     index?: number,
     all?:boolean
-  ) {
+  ) => {
     if (!filepath) {
       const activeEditor = vscode.window.activeTextEditor;
       if (!activeEditor) {
@@ -131,30 +147,47 @@ export class VerticalPerLineDiffManager {
       return;
     }
 
-    //if 'all' is false, only handle the block at the specified index
-    let toHandle = []
-    if (!all && blocks.length > 1) {
-      if (!blocks || blocks.length <= index) {
-        return;
+    try {
+      //Disable user file change listener 
+      console.log("disabling")
+      this.disableDocumentChangeListener()
+
+      //if 'all' is false, only handle the block at the specified index
+      if (!all && blocks.length > 1) {
+        if (!blocks || blocks.length <= index) {
+          return;
+        }
+        await handler.acceptRejectBlock(
+          accept,
+          blocks[index].start,
+          blocks[index].numGreen,
+          blocks[index].numRed,
+        );
+      } else {
+        for (const block of blocks) {
+          // CodeLens object removed from editorToVerticalDiffCodeLens here
+          await handler.acceptRejectBlock(
+            accept,
+            block.start,
+            block.numGreen,
+            block.numRed,
+          );
+        }
       }
-      toHandle.push(blocks[index])
-    } else {
-      toHandle = blocks.slice()
-    }
 
-    for (const block of toHandle) {
-      // CodeLens object removed from editorToVerticalDiffCodeLens here
-      handler.acceptRejectBlock(
-        accept,
-        block.start,
-        block.numGreen,
-        block.numRed,
-      );
-    }
+      if (blocks.length === 1 || all) {
+        this.clearForFilepath(filepath, true);
+      }
+    } finally {
+      //Re-enable user file change listener
+      console.log("enabling")
+      this.enableDocumentChangeListener()
 
-    if (blocks.length === 1 || all) {
-      this.clearForFilepath(filepath, true);
+      //ensure that the correct number of code lenses are assumed
+      console.log("refreshinging code lens")
+      this.refreshCodeLens();
     }
+    
   }
 
   async streamEdit(input: string, modelTitle: string | undefined, quickEdit?: string) {

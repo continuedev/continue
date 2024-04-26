@@ -29,6 +29,7 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     const filepath = document.uri.fsPath;
     const blocks = this.editorToVerticalDiffCodeLens.get(filepath);
+    console.log("num blocks in provideCodeLenses: ", blocks?.length)
     if (!blocks) {
       return [];
     }
