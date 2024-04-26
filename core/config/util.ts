@@ -2,6 +2,16 @@ import { readFileSync, writeFileSync } from "node:fs";
 import type { ModelDescription } from "..";
 import { editConfigJson, getConfigJsonPath } from "../util/paths";
 
+function stringify(obj: any, indentation?: number): string {
+  return JSON.stringify(
+    obj,
+    (key, value) => {
+      return value === null ? undefined : value;
+    },
+    indentation,
+  );
+}
+
 export function addModel(model: ModelDescription) {
   const config = readFileSync(getConfigJsonPath(), "utf8");
   const configJson = JSON.parse(config);
