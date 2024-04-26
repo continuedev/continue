@@ -448,6 +448,8 @@ export class VsCodeWebviewProtocol {
         },
         selectedCode,
         config,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
       })) {
         if (content) {
           yield { content };

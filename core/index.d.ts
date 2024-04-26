@@ -430,6 +430,7 @@ export interface ContinueSDK {
   contextItems: ContextItemWithId[];
   selectedCode: RangeInFile[];
   config: ContinueConfig;
+  fetch: FetchFunction;
 }
 
 export interface SlashCommand {

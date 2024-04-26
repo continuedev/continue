@@ -1,3 +1,4 @@
+import fetch, { Headers, RequestInfo, RequestInit, Response } from "node-fetch";
 import {
   ChatMessage,
   ChatMessageRole,
@@ -243,6 +244,8 @@ ${prompt}`;
         0.5,
       );
     }
+
+    console.log("Falling back to default fetch implementation");
 
     // Most of the requestOptions aren't available in the browser
     const headers = new Headers(init?.headers);
