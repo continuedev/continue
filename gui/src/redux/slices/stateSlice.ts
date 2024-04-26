@@ -473,14 +473,17 @@ export const stateSlice = createSlice({
         };
       }
     },
-    setDefaultModel: (state, { payload }: PayloadAction<string>) => {
+    setDefaultModel: (
+      state,
+      { payload }: PayloadAction<{ title: string; force?: boolean }>,
+    ) => {
       const model = state.config.models.find(
-        (model) => model.title === payload,
+        (model) => model.title === payload.title,
       );
-      if (!model) return;
+      if (!model && !payload.force) return;
       return {
         ...state,
-        defaultModelTitle: payload,
+        defaultModelTitle: payload.title,
       };
     },
   },
