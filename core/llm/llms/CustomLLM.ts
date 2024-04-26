@@ -1,5 +1,10 @@
 import { BaseLLM } from "..";
-import type { ChatMessage, CompletionOptions, CustomLLM } from "../..";
+import {
+  ChatMessage,
+  CompletionOptions,
+  CustomLLM,
+  ModelProvider,
+} from "../..";
 
 class CustomLLMClass extends BaseLLM {
   get providerName(): ModelProvider {

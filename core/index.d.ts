@@ -543,7 +543,8 @@ type ModelProvider =
   | "bedrock"
   | "deepinfra"
   | "flowise"
-  | "groq";
+  | "groq"
+  | "custom";
 
 export type ModelName =
   | "AUTODETECT"
