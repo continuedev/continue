@@ -99,10 +99,11 @@ const LLMs = [
 ];
 
 export async function llmFromDescription(
-	desc: ModelDescription,
-	readFile: (filepath: string) => Promise<string>,
-	completionOptions?: BaseCompletionOptions,
-	systemMessage?: string,
+  desc: ModelDescription,
+  readFile: (filepath: string) => Promise<string>,
+  writeLog: (log: string) => Promise<void>,
+  completionOptions?: BaseCompletionOptions,
+  systemMessage?: string,
 ): Promise<BaseLLM | undefined> {
 	const cls = LLMs.find((llm) => llm.providerName === desc.provider);
 
@@ -120,18 +121,19 @@ export async function llmFromDescription(
 		systemMessage = await renderTemplatedString(systemMessage, readFile, {});
 	}
 
-	const options: LLMOptions = {
-		...desc,
-		completionOptions: {
-			...finalCompletionOptions,
-			model: (desc.model || cls.defaultOptions?.model) ?? "codellama-7b",
-			maxTokens:
-				finalCompletionOptions.maxTokens ??
-				cls.defaultOptions?.completionOptions?.maxTokens ??
-				DEFAULT_MAX_TOKENS,
-		},
-		systemMessage,
-	};
+  const options: LLMOptions = {
+    ...desc,
+    completionOptions: {
+      ...finalCompletionOptions,
+      model: (desc.model || cls.defaultOptions?.model) ?? "codellama-7b",
+      maxTokens:
+        finalCompletionOptions.maxTokens ??
+        cls.defaultOptions?.completionOptions?.maxTokens ??
+        DEFAULT_MAX_TOKENS,
+    },
+    systemMessage,
+    writeLog,
+  };
 
 	return new cls(options);
 }

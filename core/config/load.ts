@@ -191,9 +191,7 @@ function isContextProviderWithParams(
 /** Only difference between intermediate and final configs is the `models` array */
 async function intermediateToFinalConfig(
   config: Config,
-  ide: IDE,
-  ideSettings: IdeSettings,
-  uniqueId: string,
+  readFile: (filepath: string) => Promise<string>,
   writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
   // Auto-detect models
@@ -202,9 +200,7 @@ async function intermediateToFinalConfig(
     if (isModelDescription(desc)) {
       const llm = await llmFromDescription(
         desc,
-        ide.readFile.bind(ide),
-        uniqueId,
-        ideSettings,
+        readFile,
         writeLog,
         config.completionOptions,
         config.systemMessage,
@@ -224,9 +220,7 @@ async function intermediateToFinalConfig(
                   model: modelName,
                   title: `${llm.title} - ${modelName}`,
                 },
-                ide.readFile.bind(ide),
-                uniqueId,
-                ideSettings,
+                readFile,
                 writeLog,
                 copyOf(config.completionOptions),
                 config.systemMessage,
@@ -270,15 +264,21 @@ async function intermediateToFinalConfig(
     }
   }
 
+  // Prepare models
+  for (const model of models) {
+    model.requestOptions = {
+      ...model.requestOptions,
+      ...config.requestOptions,
+    };
+  }
+
   // Tab autocomplete model
   let autocompleteLlm: BaseLLM | undefined = undefined;
   if (config.tabAutocompleteModel) {
     if (isModelDescription(config.tabAutocompleteModel)) {
       autocompleteLlm = await llmFromDescription(
         config.tabAutocompleteModel,
-        ide.readFile.bind(ide),
-        uniqueId,
-        ideSettings,
+        readFile,
         writeLog,
         config.completionOptions,
         config.systemMessage,
@@ -474,7 +474,6 @@ async function loadFullConfigNode(
   workspaceConfigs: ContinueRcJson[],
   ideSettings: IdeSettings,
   ideType: IdeType,
-  uniqueId: string,
   writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
   const serialized = loadSerializedConfig(
@@ -519,9 +518,7 @@ async function loadFullConfigNode(
 
   const finalConfig = await intermediateToFinalConfig(
     intermediate,
-    ide,
-    ideSettings,
-    uniqueId,
+    readFile,
     writeLog,
   );
   return finalConfig;
