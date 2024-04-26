@@ -57,7 +57,7 @@ function FTCDialog() {
           onClick={() => {
             postToIde("config/addOpenAiKey", apiKey);
             dispatch(setShowDialog(false));
-            dispatch(setDefaultModel("GPT-4"));
+            dispatch(setDefaultModel({ title: "GPT-4" }));
           }}
         >
           Use my API key
