@@ -82,7 +82,12 @@ function formatExternalSnippet(
 }
 
 let shownGptClaudeWarning = false;
-const nonAutocompleteModels = ["gpt", "claude", "mistral", "instruct"];
+const nonAutocompleteModels = [
+  // "gpt",
+  // "claude",
+  "mistral",
+  "instruct",
+];
 
 export async function getTabCompletion(
   token: AbortSignal,
