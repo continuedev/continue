@@ -376,4 +376,38 @@ export class VerticalPerLineDiffHandler {
 
     this.refreshCodeLens();
   }
+
+  public async rejectAllBlocks(startLineList: number[], numGreenList: number[]) {
+    // Delete all green lines
+    // Gather start and end indexes for all green lines to be deleted
+    const deletionRanges: vscode.Range[] = [];
+    for (let i = 0; i < startLineList.length; i++) {
+      const start = startLineList[i];
+      const numGreen = numGreenList[i];
+      // Assuming numGreen lines immediately follow the start line
+      if (numGreen > 0) {
+        const startLine = new vscode.Position(start, 0);
+        const endLine = startLine.translate(numGreen);
+        deletionRanges.push(new vscode.Range(startLine, endLine));
+      }
+    }
+
+    // Execute all deletion in one edit operation
+    await this.editor.edit((editBuilder) => {
+      for (const range of deletionRanges) {
+        editBuilder.delete(range);
+      }
+    }, {
+      undoStopAfter: false,
+      undoStopBefore: false,
+    });
+
+    //clear all decorations
+    this.redDecorationManager.clear()
+    this.greenDecorationManager.clear()
+    
+    //remove code lenses
+    this.editorToVerticalDiffCodeLens.set(this.filepath, []);
+    this.refreshCodeLens();
+  } 
 }

@@ -162,11 +162,11 @@ const commandsMap: (
     verticalDiffManager.clearForFilepath(newFilepath, false);
     await diffManager.rejectDiff(newFilepath);
   },
-  "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
-    verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index);
+  "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number, all?:boolean) => {
+    verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index, all);
   },
-  "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number) => {
-    verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index);
+  "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number, all?: boolean) => {
+    verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index, all);
   },
   "continue.quickFix": async (message: string, code: string, edit: boolean) => {
     sidebar.webviewProtocol?.request("newSessionWithPrompt", {

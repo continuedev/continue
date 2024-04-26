@@ -97,10 +97,11 @@ export class VerticalPerLineDiffManager {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", false);
   }
 
-  acceptRejectVerticalDiffBlock(
+  async acceptRejectVerticalDiffBlock(
     accept: boolean,
     filepath?: string,
     index?: number,
+    all?: boolean,
   ) {
     if (!filepath) {
       const activeEditor = vscode.window.activeTextEditor;
@@ -125,13 +126,28 @@ export class VerticalPerLineDiffManager {
       return;
     }
 
-    // CodeLens object removed from editorToVerticalDiffCodeLens here
-    handler.acceptRejectBlock(
-      accept,
-      block.start,
-      block.numGreen,
-      block.numRed,
-    );
+    if (!all && blocks.length > 1) { // Only accept/reject the block at the specified index
+      if (!blocks || blocks.length <= index) {
+        return;
+      }
+      handler.acceptRejectBlock(
+        accept,
+        blocks[index].start,
+        blocks[index].numGreen,
+        blocks[index].numRed,
+      );
+    } else if (all && accept) { // Accept all blocks
+      for (const block of blocks) { 
+        await handler.acceptRejectBlock(
+          accept,
+          block.start,
+          block.numGreen,
+          block.numRed,
+        );
+      }
+    } else { // Reject all blocks
+      handler.rejectAllBlocks(blocks?.map(block => block.start), blocks?.map(block => block.numGreen))
+    }
 
     if (blocks.length === 1) {
       this.clearForFilepath(filepath, true);
