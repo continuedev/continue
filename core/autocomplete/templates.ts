@@ -114,7 +114,8 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     lowerCaseModel.includes("star-coder") ||
     lowerCaseModel.includes("starchat") ||
     lowerCaseModel.includes("octocoder") ||
-    lowerCaseModel.includes("stable")
+    lowerCaseModel.includes("stable") ||
+    lowerCaseModel.includes("codeqwen")
   ) {
     return stableCodeFimTemplate;
   }
