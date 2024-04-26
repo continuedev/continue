@@ -408,6 +408,7 @@ export interface IDE {
     stepIndex: number,
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
+  getCurrentFile(): Promise<string | undefined>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string): Promise<[string, string]>;
@@ -477,7 +478,8 @@ type ContextProviderName =
   | "code"
   | "docs"
   | "gitlab-mr"
-  | "os";
+  | "os"
+  | "currentFile";
 
 type TemplateType =
   | "llama2"

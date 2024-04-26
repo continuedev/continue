@@ -80,8 +80,8 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
         {props.description}
       </span>
       <div className="flex gap-2 float-right">
-        {shortcut.split(" ").map((key) => {
-          return <KeyDiv text={key}></KeyDiv>;
+        {shortcut.split(" ").map((key, i) => {
+          return <KeyDiv key={i} text={key}></KeyDiv>;
         })}
       </div>
     </div>
@@ -212,9 +212,10 @@ function KeyboardShortcutsDialog() {
         {(localStorage.getItem("ide") === "jetbrains"
           ? jetbrainsShortcuts
           : vscodeShortcuts
-        ).map((shortcut) => {
+        ).map((shortcut, i) => {
           return (
             <KeyboardShortcut
+              key={i}
               mac={shortcut.mac}
               windows={shortcut.windows}
               description={shortcut.description}

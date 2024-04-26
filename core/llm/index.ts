@@ -244,7 +244,7 @@ ${prompt}`;
       );
     }
 
-    console.log("Falling back to default fetch implementation");
+    // console.log("Falling back to default fetch implementation");
 
     // Most of the requestOptions aren't available in the browser
     const headers = new Headers(init?.headers);

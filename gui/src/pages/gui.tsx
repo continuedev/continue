@@ -35,7 +35,11 @@ import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import { newSession, setInactive } from "../redux/slices/stateSlice";
+import {
+  clearLastResponse,
+  newSession,
+  setInactive,
+} from "../redux/slices/stateSlice";
 import {
   setDialogEntryOn,
   setDialogMessage,
@@ -487,6 +491,12 @@ function GUI(props: GUIProps) {
           className="mt-auto"
           onClick={() => {
             dispatch(setInactive());
+            if (
+              state.history[state.history.length - 1]?.message.content
+                .length === 0
+            ) {
+              dispatch(clearLastResponse());
+            }
           }}
         >
           {getMetaKeyLabel()} ⌫ Cancel
