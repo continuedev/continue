@@ -197,6 +197,7 @@ function isContextProviderWithParams(
 async function intermediateToFinalConfig(
   config: Config,
   readFile: (filepath: string) => Promise<string>,
+  writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
   // Auto-detect models
   const models: BaseLLM[] = [];
@@ -205,6 +206,7 @@ async function intermediateToFinalConfig(
       const llm = await llmFromDescription(
         desc,
         readFile,
+        writeLog,
         config.completionOptions,
         config.systemMessage,
       );
@@ -222,6 +224,7 @@ async function intermediateToFinalConfig(
                   title: llm.title + " - " + modelName,
                 },
                 readFile,
+                writeLog,
                 copyOf(config.completionOptions),
                 config.systemMessage,
               );
@@ -239,7 +242,10 @@ async function intermediateToFinalConfig(
         models.push(llm);
       }
     } else {
-      const llm = new CustomLLMClass(desc);
+      const llm = new CustomLLMClass({
+        ...desc,
+        options: { ...desc.options, writeLog } as any,
+      });
       if (llm.model === "AUTODETECT") {
         try {
           const modelNames = await llm.listModels();
@@ -247,7 +253,7 @@ async function intermediateToFinalConfig(
             (modelName) =>
               new CustomLLMClass({
                 ...desc,
-                options: { ...desc.options, model: modelName },
+                options: { ...desc.options, model: modelName, writeLog },
               }),
           );
 
@@ -261,6 +267,14 @@ async function intermediateToFinalConfig(
     }
   }
 
+  // Prepare models
+  for (const model of models) {
+    model.requestOptions = {
+      ...model.requestOptions,
+      ...config.requestOptions,
+    };
+  }
+
   // Tab autocomplete model
   let autocompleteLlm: BaseLLM | undefined = undefined;
   if (config.tabAutocompleteModel) {
@@ -268,6 +282,7 @@ async function intermediateToFinalConfig(
       autocompleteLlm = await llmFromDescription(
         config.tabAutocompleteModel,
         readFile,
+        writeLog,
         config.completionOptions,
         config.systemMessage,
       );
@@ -457,6 +472,7 @@ async function loadFullConfigNode(
   workspaceConfigs: ContinueRcJson[],
   remoteConfigServerUrl: URL | undefined,
   ideType: IdeType,
+  writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
   let serialized = loadSerializedConfig(
     workspaceConfigs,
@@ -498,7 +514,11 @@ async function loadFullConfigNode(
     }
   }
 
-  const finalConfig = await intermediateToFinalConfig(intermediate, readFile);
+  const finalConfig = await intermediateToFinalConfig(
+    intermediate,
+    readFile,
+    writeLog,
+  );
   return finalConfig;
 }
 

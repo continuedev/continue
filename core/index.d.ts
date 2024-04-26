@@ -75,8 +75,6 @@ export interface ILLM extends LLMOptions {
   region?: string;
   projectId?: string;
 
-  _fetch?: (input: any, init?: any) => Promise<any>;
-
   complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
 
   streamComplete(
