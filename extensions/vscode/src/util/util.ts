@@ -83,7 +83,7 @@ export function getAltOrOption() {
   if (getPlatform() === "mac") {
     return "⌥";
   } else {
-    return "⎇";
+    return "Alt";
   }
 }
 
