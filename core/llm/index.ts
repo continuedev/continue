@@ -228,18 +228,7 @@ ${prompt}`;
       promptTokens: promptTokens,
       generatedTokens: generatedTokens,
     });
-    DevDataSqliteDb.logTokensGenerated(
-      model,
-      this.providerName,
-      promptTokens,
-      generatedTokens,
-    );
-    logDevData("tokens_generated", {
-      model: model,
-      provider: this.providerName,
-      promptTokens: promptTokens,
-      generatedTokens: generatedTokens,
-    });
+    DevDataSqliteDb.logTokensGenerated(model, this.providerName, tokens);
   }
 
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
