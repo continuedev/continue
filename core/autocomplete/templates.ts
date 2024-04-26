@@ -25,9 +25,17 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
 };
 
 const codegemmaFimTemplate: AutocompleteTemplate = {
-  template: "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
+  template:
+    "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
   completionOptions: {
-    stop: ["<|fim_prefix|>", "<|fim_suffix|>", "<|fim_middle|>", "<|file_separator|>", "<end_of_turn>", "<eos>"],
+    stop: [
+      "<|fim_prefix|>",
+      "<|fim_suffix|>",
+      "<|fim_middle|>",
+      "<|file_separator|>",
+      "<end_of_turn>",
+      "<eos>",
+    ],
   },
 };
 

@@ -60,6 +60,9 @@ export abstract class BaseLLM implements ILLM {
         return false;
       }
     }
+    if (this.providerName === "groq") {
+      return false;
+    }
     return true;
   }
 
