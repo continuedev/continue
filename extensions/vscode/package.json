@@ -281,11 +281,6 @@
         "command": "continue.toggleTabAutocompleteEnabled",
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a"
-      },
-      {
-        "command": "continue.openConfigJson",
-        "mac": "cmd+k cmd+c",
-        "key": "ctrl+k ctrl+c"
       }
     ],
     "submenus": [
