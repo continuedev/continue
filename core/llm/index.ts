@@ -220,11 +220,6 @@ ${prompt}`;
       provider: this.providerName,
       tokens: tokens,
     });
-    Telemetry.capture("tokensGenerated", {
-      model: model,
-      provider: this.providerName,
-      tokens: tokens,
-    });
     DevDataSqliteDb.logTokensGenerated(model, this.providerName, tokens);
   }
 
