@@ -374,6 +374,8 @@ export class Core {
         },
         selectedCode,
         config,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
       })) {
         if (content) {
           yield { content };

@@ -1,4 +1,5 @@
-import type { Chunk, Reranker } from "../..";
+import fetch from "node-fetch";
+import { Chunk, Reranker } from "../..";
 
 export class VoyageReranker implements Reranker {
   name = "voyage";
@@ -23,7 +24,7 @@ export class VoyageReranker implements Reranker {
         model: this.params.model ?? "rerank-lite-1",
       }),
     });
-    const data = await resp.json();
+    const data: any = await resp.json();
     const results = data.data.sort((a: any, b: any) => a.index - b.index);
     return results.map((result: any) => result.relevance_score);
   }

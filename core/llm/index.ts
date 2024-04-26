@@ -1,4 +1,5 @@
-import type {
+import fetch, { Headers, RequestInfo, RequestInit, Response } from "node-fetch";
+import {
   ChatMessage,
   ChatMessageRole,
   CompletionOptions,
@@ -265,11 +266,15 @@ ${prompt}`;
       );
     }
 
-        return resp;
-      } catch (e: any) {
-        console.warn(
-          `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
-        );
+    console.log("Falling back to default fetch implementation");
+
+    // Most of the requestOptions aren't available in the browser
+    const headers = new Headers(init?.headers);
+    for (const [key, value] of Object.entries(
+      this.requestOptions?.headers ?? {},
+    )) {
+      headers.append(key, value as string);
+    }
 
     return withExponentialBackoff<Response>(() =>
       fetch(url, {
