@@ -38,7 +38,7 @@ jobs:
             platform: darwin
             arch: x64
             npm_config_arch: x64
-          - os: macos-latest
+          - os: macos-12 # same here, especially
             platform: darwin
             arch: arm64
             npm_config_arch: arm64
