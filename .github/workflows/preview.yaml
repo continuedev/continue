@@ -144,6 +144,55 @@ jobs:
           name: ${{ env.target }}
           path: "extensions/vscode/*.vsix"
 
+    release:
+      permissions:
+        contents: write
+      runs-on: ubuntu-latest
+      needs:
+        - build
+      steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+
+        - name: Set up Git
+          run: |
+            git config --local user.email "action@github.com"
+            git config --local user.name "GitHub Action"
+
+        # Download the .vsix artifacts
+        - uses: actions/download-artifact@v3
+
+        - name: List files
+          run: ls -l ${{ github.workspace }}
+
+        - name: Tag the repository
+          id: tag
+          run: |
+            # See https://docs.github.com/en/get-started/using-git/dealing-with-special-characters-in-branch-and-tag-names
+            TAG=v$(grep -o '"version": "[^"]*' extensions/vscode/package.json | cut -d'"' -f4)-vscode
+            echo "$TAG"
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            git tag -a $TAG -m "Published version $TAG" ${GITHUB_SHA}
+            git push origin $TAG
+
+        - name: Release
+          uses: softprops/action-gh-release@v2
+          with:
+            tag_name: ${{ steps.tag.outputs.tag }}
+            body_path: extensions/vscode/CHANGELOG.md
+            files: |
+              alpine-x64/*.vsix
+              darwin-arm64/*.vsix
+              darwin-x64/*.vsix
+              linux-arm64/*.vsix
+              linux-armhf/*.vsix
+              linux-x64/*.vsix
+              win32-x64/*.vsix
+              win32-arm64/*.vsix
+            token: ${{ secrets.CI_GITHUB_TOKEN }}
+            repository: continuedev/continue
+            prerelease: true
+
   publish:
     runs-on: ubuntu-latest
     needs:
