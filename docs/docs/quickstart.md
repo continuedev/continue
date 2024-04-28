@@ -16,7 +16,9 @@ keywords: [quickstart, start, install, vscode, jetbrains]
 
 > We strongly recommend moving Continue to VS Code's right sidebar. This helps keep the file explorer open while using Continue, and the sidebar can be toggled with a simple keyboard shortcut. ![move-to-right-sidebar](/img/move-to-right-sidebar.png)
 
-4. If you have any problems, see the [troubleshooting guide](./troubleshooting.md) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs).
+4. settings llms,Click on the gear icon in the lower-left corner of VSCode, click on the "Settings" option, search for "autodev" in the opened settings page, click on "Edit in Settings.json", and then set it up according to your own LLM (Large Language Model).
+
+5. If you have any problems, see the [troubleshooting guide](./troubleshooting.md) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs).
 
 ## JetBrains
 
