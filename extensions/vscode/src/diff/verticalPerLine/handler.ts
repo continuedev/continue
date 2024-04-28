@@ -8,6 +8,7 @@ import {
   redDecorationType,
 } from "./decorations";
 import { VerticalDiffCodeLens } from "./manager";
+import { start } from "repl";
 
 export class VerticalPerLineDiffHandler {
   private editor: vscode.TextEditor;
@@ -362,6 +363,13 @@ export class VerticalPerLineDiffHandler {
     this.greenDecorationManager.shiftDownAfterLine(startLine, offset);
 
     // Shift the codelens objects
+    this.shiftCodeLensObjects(startLine, offset)
+
+    this.refreshCodeLens();
+  }
+
+  private shiftCodeLensObjects(startLine: number, offset: number){  
+    // Shift the codelens objects
     const blocks =
       this.editorToVerticalDiffCodeLens
         .get(this.filepath)
@@ -375,7 +383,7 @@ export class VerticalPerLineDiffHandler {
     this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
 
     this.refreshCodeLens();
-  }
+}
 
   public async rejectAllBlocks(startLineList: number[], numGreenList: number[]) {
     // Delete all green lines
@@ -410,4 +418,36 @@ export class VerticalPerLineDiffHandler {
     this.editorToVerticalDiffCodeLens.set(this.filepath, []);
     this.refreshCodeLens();
   } 
+
+  public updateLineDelta(filepath: string, startLine: number, lineDelta: number) {
+    // Retrieve the diff blocks for the given file
+    const blocks = this.editorToVerticalDiffCodeLens.get(filepath);
+    if (!blocks) {
+      return;
+    }
+
+    this.redDecorationManager.shiftDownAfterLine(startLine, lineDelta);
+    this.greenDecorationManager.shiftDownAfterLine(startLine, lineDelta);
+
+    // Update the diff blocks based on the line delta
+    const updatedBlocks = blocks.map(block => {
+      // If the change occurs before the block, adjust the block's start line
+      if (startLine <= block.start) { 
+        block.start += lineDelta;
+      }
+      // If the change occurs within the block, adjust the number of green lines (red lines can't be edited)
+      else if (startLine < block.start + block.numGreen) {
+        block.numGreen += lineDelta
+      }
+      // If file changes occur after the block, that doesn't change anything for the block
+      return block;
+    }).filter(block => block.numRed > 0 || block.numGreen > 0); // Remove blocks with no red or green lines
+
+    // Update the map with the filtered blocks
+    this.editorToVerticalDiffCodeLens.set(filepath, updatedBlocks);
+
+    // Adjust the code lens's accordingly
+    // this.shiftCodeLensObjects(startLine, lineDelta)
+    // this.refreshCodeLens();
+  }
 }

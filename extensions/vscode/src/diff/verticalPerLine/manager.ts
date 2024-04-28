@@ -19,7 +19,12 @@ export class VerticalPerLineDiffManager {
 
   filepathToCodeLens: Map<string, VerticalDiffCodeLens[]> = new Map();
 
-  constructor(private readonly configHandler: ConfigHandler) {}
+  private userChangeListener: vscode.Disposable | undefined;
+
+  constructor(private readonly configHandler: ConfigHandler) {
+    console.log("Constructor being run")
+    this.userChangeListener = undefined
+  }
 
   createVerticalPerLineDiffHandler(
     filepath: string,
@@ -49,34 +54,53 @@ export class VerticalPerLineDiffManager {
     }
   }
 
-  getOrCreateVerticalPerLineDiffHandler(
-    filepath: string,
-    startLine: number,
-    endLine: number,
-  ) {
-    if (this.filepathToHandler.has(filepath)) {
-      return this.filepathToHandler.get(filepath)!;
-    } else {
-      const editor = vscode.window.activeTextEditor; // TODO
-      if (editor && editor.document.uri.fsPath === filepath) {
-        const handler = new VerticalPerLineDiffHandler(
-          startLine,
-          endLine,
-          editor,
-          this.filepathToCodeLens,
-          this.clearForFilepath.bind(this),
-          this.refreshCodeLens,
-        );
-        this.filepathToHandler.set(filepath, handler);
-        return handler;
-      } else {
-        return undefined;
-      }
-    }
-  }
-
   getHandlerForFile(filepath: string) {
     return this.filepathToHandler.get(filepath);
+  }
+
+  //Creates a listener for document changes by user.
+  private enableDocumentChangeListener(): vscode.Disposable | undefined {
+    if (this.userChangeListener) {
+      console.log("Document change listener already enabled.");
+      return;
+    }
+
+    console.log("enabled")
+    this.userChangeListener = vscode.workspace.onDidChangeTextDocument((event) => {
+      // Check if there is an active handler for the affected file
+      const filepath = event.document.uri.fsPath;
+      const handler = this.getHandlerForFile(filepath);
+      if (handler) {
+        // If there is an active diff for that file, handle the document change
+        this.handleDocumentChange(event, handler);
+      }
+    }); 
+  }
+
+  //Listener for user doc changes is disabled during updates to the text document by continue.
+  public disableDocumentChangeListener() {
+      if (this.userChangeListener) {
+          this.userChangeListener.dispose();
+          this.userChangeListener = undefined;
+      }
+    }
+
+  private handleDocumentChange(
+    event: vscode.TextDocumentChangeEvent,
+    handler: VerticalPerLineDiffHandler
+  ) {
+    // Loop through each change in the event
+    event.contentChanges.forEach((change) => {
+      // Calculate the number of lines added or removed
+      const linesAdded = change.text.split('\n').length - 1;
+      const linesDeleted = change.range.end.line - change.range.start.line;
+      const lineDelta = linesAdded - linesDeleted;
+
+
+      console.log("handling doc change: ", linesAdded, " ", linesDeleted)
+      // Update the diff handler with the new line delta
+      handler.updateLineDelta(event.document.uri.fsPath, change.range.start.line, lineDelta);
+    });
   }
 
   clearForFilepath(filepath: string | undefined, accept: boolean) {
@@ -126,27 +150,38 @@ export class VerticalPerLineDiffManager {
       return;
     }
 
-    if (!all && blocks.length > 1) { // Only accept/reject the block at the specified index
-      if (!blocks || blocks.length <= index) {
-        return;
-      }
-      handler.acceptRejectBlock(
-        accept,
-        blocks[index].start,
-        blocks[index].numGreen,
-        blocks[index].numRed,
-      );
-    } else if (all && accept) { // Accept all blocks
-      for (const block of blocks) { 
+    try {
+      //Disable user file change listener 
+      console.log("disabling")
+      this.disableDocumentChangeListener()
+
+      if (!all && blocks.length > 1) { // Only accept/reject the block at the specified index
+        if (!blocks || blocks.length <= index) {
+          return;
+        }
         await handler.acceptRejectBlock(
           accept,
-          block.start,
-          block.numGreen,
-          block.numRed,
+          blocks[index].start,
+          blocks[index].numGreen,
+          blocks[index].numRed,
         );
-      }
-    } else { // Reject all blocks
-      handler.rejectAllBlocks(blocks?.map(block => block.start), blocks?.map(block => block.numGreen))
+      } else if (all && accept) { // Accept all blocks
+        for (const block of blocks) { 
+          await handler.acceptRejectBlock(
+            accept,
+            block.start,
+            block.numGreen,
+            block.numRed,
+          );
+        }
+      } else { // Reject all blocks
+        await handler.rejectAllBlocks(blocks?.map(block => block.start), blocks?.map(block => block.numGreen)) 
+      } 
+    } finally {
+      if (blocks.length > 1){
+        console.log(blocks.length - 1, " blocks still remaining. Enabling")
+        this.enableDocumentChangeListener()
+      } 
     }
 
     if (blocks.length === 1) {
@@ -154,29 +189,43 @@ export class VerticalPerLineDiffManager {
     }
   }
 
-  async streamEdit(input: string, modelTitle: string | undefined) {
+  async streamEdit(input: string, modelTitle: string | undefined, quickEdit?: string) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
     const editor = vscode.window.activeTextEditor;
+
     if (!editor) {
       return;
     }
 
     const filepath = editor.document.uri.fsPath;
-    const startLine = editor.selection.start.line;
-    const endLine = editor.selection.end.line;
 
+    // Check for existing diffs in the same file the new one will be created in
     const existingHandler = this.getHandlerForFile(filepath);
+    
+    // initialize start/end line to existing handler if it exists and should reuse previousInput,
+    // otherwise, use the editor selection
+    const startLine = (quickEdit && existingHandler) ? existingHandler.range.start.line : editor.selection.start.line
+    const endLine = (quickEdit && existingHandler) ? existingHandler.range.end.line : editor.selection.end.line
+
+    if (existingHandler && !quickEdit) { //If there is an existing handler and should not reuse block
+      //reject the existing diff
+      console.log("New diff being created - rejecting previous diff in: ", filepath)
+      this.acceptRejectVerticalDiffBlock(false, filepath, undefined, true)
+    } 
     existingHandler?.clear(false);
+
     await new Promise((resolve) => {
       setTimeout(resolve, 200);
     });
+
     const diffHandler = this.createVerticalPerLineDiffHandler(
       filepath,
-      existingHandler?.range.start.line ?? startLine,
-      existingHandler?.range.end.line ?? endLine,
+      startLine,
+      endLine,
       input,
     );
+    
     if (!diffHandler) {
       return;
     }
@@ -238,6 +287,9 @@ export class VerticalPerLineDiffManager {
       console.error("Error streaming diff:", e);
       vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
     } finally {
+      console.log("enable in streamEdit")
+      this.enableDocumentChangeListener()
+
       vscode.commands.executeCommand(
         "setContext",
         "continue.streamingDiff",
