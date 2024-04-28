@@ -1,6 +1,6 @@
 > 🎉 **Tab autocomplete now available in pre-release (experimental)**
 
-![Continue logo](media/c_d.png)
+![Continue logo](media/readme.png)
 
 <h1 align="center">Continue</h1>
 

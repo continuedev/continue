@@ -156,24 +156,6 @@ function constructBaseKey(
   };
 }
 
-const gutterSpinnerDecorationType =
-  vscode.window.createTextEditorDecorationType({
-    gutterIconPath: vscode.Uri.file(
-      path.join(__dirname, "..", "media", "spinner.gif"),
-    ),
-    gutterIconSize: "contain",
-  });
-
-export function showGutterSpinner(
-  editor: vscode.TextEditor,
-  lineno: number,
-): DecorationKey {
-  const key = constructBaseKey(editor, lineno, gutterSpinnerDecorationType);
-  decorationManager.addDecoration(key);
-
-  return key;
-}
-
 export function showLintMessage(
   editor: vscode.TextEditor,
   lineno: number,
