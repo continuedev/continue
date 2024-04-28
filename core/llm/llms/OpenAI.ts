@@ -64,6 +64,7 @@ class OpenAI extends BaseLLM {
       };
       if (part.type === "imageUrl") {
         msg.image_url = { ...part.imageUrl, detail: "low" };
+        msg.type = "image_url";
       }
       return msg;
     });
