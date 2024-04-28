@@ -152,8 +152,7 @@ export const getDefinitionsFromLsp: GetLspDefinitionsFunction = async (
   contents: string,
   cursorIndex: number,
   ide: IDE,
-  lang: AutocompleteLanguageInfo,
-): Promise<AutocompleteSnippet[]> => {
+): Promise<AutocompleteSnippet[]> {
   try {
     const ast = await getAst(filepath, contents);
     if (!ast) return [];
@@ -163,13 +162,27 @@ export const getDefinitionsFromLsp: GetLspDefinitionsFunction = async (
 
     const results: RangeInFileWithContents[] = [];
     for (const node of treePath.reverse()) {
-      const definitions = await getDefinitionsForNode(
-        filepath,
-        node,
-        ide,
-        lang,
+      const definitions = await getDefinitionsForNode(filepath, node);
+      results.push(
+        ...(await Promise.all(
+          definitions.map(async (def) => ({
+            ...def,
+            contents: await ide.readRangeInFile(
+              def.filepath,
+              new vscode.Range(
+                new vscode.Position(
+                  def.range.start.line,
+                  def.range.start.character,
+                ),
+                new vscode.Position(
+                  def.range.end.line,
+                  def.range.end.character,
+                ),
+              ),
+            ),
+          })),
+        )),
       );
-      results.push(...definitions);
     }
 
     return results.map((result) => ({
@@ -180,4 +193,4 @@ export const getDefinitionsFromLsp: GetLspDefinitionsFunction = async (
     console.warn("Error getting definitions from LSP: ", e);
     return [];
   }
-};
+}
