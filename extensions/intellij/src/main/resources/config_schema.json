@@ -2149,6 +2149,14 @@
           "title": "Experimental",
           "description": "Experimental properties are subject to change.",
           "properties": {
+            "modelRoles": {
+              "type": "object",
+              "properties": {
+                "inlineEdit": {
+                  "type": "string"
+                }
+              }
+            },
             "contextMenuPrompts": {
               "type": "object",
               "properties": {
