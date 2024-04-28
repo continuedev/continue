@@ -702,8 +702,14 @@ interface ContextMenuConfig {
   optimize?: string;
   fixGrammar?: string;
 }
+
+interface ModelRoles {
+  inlineEdit?: string;
+}
+
 interface ExperimantalConfig {
   contextMenuPrompts?: ContextMenuConfig;
+  modelRoles?: ModelRoles;
 }
 
 export interface SerializedContinueConfig {
