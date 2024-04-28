@@ -38,6 +38,7 @@ export interface AutocompleteInput {
   recentlyEditedFiles: RangeInFileWithContents[];
   recentlyEditedRanges: RangeInFileWithContents[];
   clipboardText: string;
+  manuallyPassFileContents?: string;
 }
 
 export interface AutocompleteOutcome extends TabAutocompleteOptions {
@@ -105,8 +106,10 @@ export async function getTabCompletion(
     recentlyEditedFiles,
     recentlyEditedRanges,
     clipboardText,
+    manuallyPassFileContents,
   } = input;
-  const fileContents = await ide.readFile(filepath);
+  const fileContents =
+    manuallyPassFileContents ?? (await ide.readFile(filepath));
   const fileLines = fileContents.split("\n");
 
   // Filter

@@ -75,13 +75,40 @@ export class ContinueCompletionProvider
         clipboardText = await vscode.env.clipboard.readText();
       }
 
+      // Handle notebook cells
+      const pos = {
+        line: position.line,
+        character: position.character,
+      };
+      let manuallyPassFileContents: string | undefined = undefined;
+      if (document.uri.scheme === "vscode-notebook-cell") {
+        const notebook = vscode.workspace.notebookDocuments.find((notebook) =>
+          notebook
+            .getCells()
+            .some((cell) => cell.document.uri === document.uri),
+        );
+        if (notebook) {
+          const cells = notebook.getCells();
+          manuallyPassFileContents = cells
+            .map((cell) => cell.document.getText())
+            .join("\n\n");
+          for (const cell of cells) {
+            if (cell.document.uri === document.uri) {
+              break;
+            } else {
+              pos.line += cell.document.getText().split("\n").length + 1;
+            }
+          }
+        }
+      }
       const input: AutocompleteInput = {
         completionId: uuidv4(),
         filepath: document.uri.fsPath,
-        pos: { line: position.line, character: position.character },
+        pos,
         recentlyEditedFiles: [],
         recentlyEditedRanges: [],
         clipboardText: clipboardText,
+        manuallyPassFileContents,
       };
 
       setupStatusBar(true, true);
