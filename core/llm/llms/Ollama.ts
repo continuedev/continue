@@ -40,13 +40,13 @@ class Ollama extends BaseLLM {
         const body = await response.json();
         if (body.parameters) {
           const params = [];
-          for (const line of body.parameters.split("\n")) {
-            const parts = line.split(" ");
+          for (let line of body.parameters.split("\n")) {
+            let parts = line.match(/^(\S+)\s+((?:".*")|\S+)$/);
             if (parts.length < 2) {
               continue;
             }
-            const key = parts[0];
-            const value = parts[parts.length - 1];
+            let key = parts[1];
+            let value = parts[2];
             switch (key) {
               case "num_ctx":
                 this.contextLength = Number.parseInt(value);
@@ -55,7 +55,12 @@ class Ollama extends BaseLLM {
                 if (!this.completionOptions.stop) {
                   this.completionOptions.stop = [];
                 }
-                this.completionOptions.stop.push(JSON.parse(value));
+                try {
+                  this.completionOptions.stop.push(JSON.parse(value));
+                }
+                catch(e) {
+                  console.warn('Error parsing stop parameter value "{value}: ${e}');
+                }
                 break;
               default:
                 break;
