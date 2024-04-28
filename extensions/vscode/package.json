@@ -313,12 +313,6 @@
           "command": "continue.newSession"
         }
       ],
-      "webview/context": [
-        {
-          "command": "continue.shareSession",
-          "group": "navigation@1"
-        }
-      ],
       "editor/context": [
         {
           "submenu": "continue.continueSubMenu",
