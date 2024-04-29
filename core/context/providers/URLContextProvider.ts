@@ -1,12 +1,12 @@
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
 import { NodeHtmlMarkdown } from "node-html-markdown";
-import { BaseContextProvider } from "../index.js";
+import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../../index.js";
+} from "../..";
 
 class URLContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
