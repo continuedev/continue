@@ -895,7 +895,8 @@
                   "mistral-8x7b",
                   "gemma",
                   "llama3-8b",
-                  "llama3-70b"
+                  "llama3-70b",
+                  "AUTODETECT"
                 ]
               }
             }
