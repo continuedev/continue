@@ -44,7 +44,7 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
       if (codeLenses.length === 0) {
         codeLenses.push(
           new vscode.CodeLens(range, {
-            title: `Accept All (${getMetaKeyLabel()}⇧↩)`,
+            title: `Accept All (${getMetaKeyLabel()}⇧⏎)`,
             command: "continue.acceptDiff",
             arguments: [filepath, i],
           }),
@@ -121,7 +121,7 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
       if (codeLenses.length === 2) {
         codeLenses.push(
           new vscode.CodeLens(range, {
-            title: `(${getMetaKeyLabel()}⇧↩/${getMetaKeyLabel()}⇧⌫ to accept/reject all)`,
+            title: `(${getMetaKeyLabel()}⇧⏎/${getMetaKeyLabel()}⇧⌫ to accept/reject all)`,
             command: "",
           }),
         );
@@ -152,7 +152,7 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
       }
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: `Accept All ✅ (${getMetaKeyLabel()}⇧↩)`,
+          title: `Accept All ✅ (${getMetaKeyLabel()}⇧⏎)`,
           command: "continue.acceptDiff",
           arguments: [document.uri.fsPath],
         }),
