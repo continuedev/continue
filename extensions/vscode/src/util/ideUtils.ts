@@ -543,7 +543,7 @@ export class VsCodeIdeUtils {
 
     try {
       const git = extension.exports.getAPI(1);
-      return git.getRepository(forDirectory);
+      return git.getRepository(forDirectory) ?? undefined;
     } catch (e) {
       this._repoWasNone = true;
       console.warn("Git not found: ", e);
@@ -551,8 +551,8 @@ export class VsCodeIdeUtils {
     }
   }
 
-  private _repoWasNone = false;
-  async getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
+  private _repoWasNone: boolean = false;
+  async getRepo(forDirectory: vscode.Uri): Promise<Repository | undefined> {
     let repo = await this._getRepo(forDirectory);
 
     let i = 0;
@@ -598,7 +598,8 @@ export class VsCodeIdeUtils {
   }
 
   async getDiff(): Promise<string> {
-    const diffs = [];
+    let diffs: string[] = [];
+    let repos = [];
 
     for (const dir of this.getWorkspaceDirectories()) {
       const repo = await this.getRepo(vscode.Uri.file(dir));
@@ -607,17 +608,7 @@ export class VsCodeIdeUtils {
       }
 
       repos.push(repo.state.HEAD?.name);
-      // Staged changes
-      // const a = await repo.diffIndexWithHEAD();
-      const staged = await repo.diff(true);
-      // Un-staged changes
-      // const b = await repo.diffWithHEAD();
-      const unstaged = await repo.diff(false);
-      // All changes
-      // const e = await repo.diffWith("HEAD");
-      // Only staged
-      // const f = await repo.diffIndexWith("HEAD");
-      diffs.push(`${staged}\n${unstaged}`);
+      diffs.push(await repo.diff());
     }
 
     const fullDiff = diffs.join("\n\n");
