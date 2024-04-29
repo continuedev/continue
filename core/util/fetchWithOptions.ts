@@ -9,7 +9,7 @@ import { RequestOptions } from "..";
 
 export function fetchwithRequestOptions(
   url_: URL | string,
-  init: RequestInit,
+  init?: RequestInit,
   requestOptions?: RequestOptions,
 ): Promise<Response> {
   let url = url_;
@@ -60,7 +60,7 @@ export function fetchwithRequestOptions(
     : new protocol.Agent(agentOptions);
 
   const headers: { [key: string]: string } = requestOptions?.headers || {};
-  for (const [key, value] of Object.entries(init.headers || {})) {
+  for (const [key, value] of Object.entries(init?.headers || {})) {
     headers[key] = value as string;
   }
 
@@ -72,7 +72,7 @@ export function fetchwithRequestOptions(
   // add extra body properties if provided
   let updatedBody: string | undefined = undefined;
   try {
-    if (requestOptions?.extraBodyProperties && typeof init.body === "string") {
+    if (requestOptions?.extraBodyProperties && typeof init?.body === "string") {
       const parsedBody = JSON.parse(init.body);
       updatedBody = JSON.stringify({
         ...parsedBody,
@@ -86,7 +86,7 @@ export function fetchwithRequestOptions(
   // fetch the request with the provided options
   let resp = fetch(url, {
     ...init,
-    body: updatedBody ?? init.body,
+    body: updatedBody ?? init?.body,
     headers: headers,
     agent: agent,
   });

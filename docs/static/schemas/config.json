@@ -1198,7 +1198,8 @@
                 "outline",
                 "postgres",
                 "code",
-                "system"
+                "system",
+                "url"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1219,7 +1220,8 @@
                 "Displays definition lines from the currently open files",
                 "References Postgres table schema and sample rows",
                 "Reference specific functions and classes from throughout your codebase",
-                "Reference your operating system and cpu"
+                "Reference your operating system and cpu",
+                "Reference the contents of a page at a URL"
               ],
               "type": "string"
             },

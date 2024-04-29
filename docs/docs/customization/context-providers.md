@@ -80,6 +80,14 @@ Type '@search' to reference the results of codebase search, just like the result
 { "name": "search" }
 ```
 
+### URL
+
+Type '@url' and input a URL, then Continue will convert it to a markdown document to pass to the model.
+
+```json
+{ "name": "url" }
+```
+
 ### File Tree
 
 Type '@tree' to reference the structure of your current workspace. The LLM will be able to see the nested directory structure of your project.
