@@ -10,6 +10,8 @@ import configs from "../../indexing/docs/preIndexedDocs";
 import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider";
 
 class DocsContextProvider extends BaseContextProvider {
+  static DEFAULT_N_RETRIEVE = 30;
+  static DEFAULT_N_FINAL = 15;
   static description: ContextProviderDescription = {
     title: "docs",
     displayTitle: "Docs",
@@ -26,12 +28,31 @@ class DocsContextProvider extends BaseContextProvider {
     const embeddingsProvider = new TransformersJsEmbeddingsProvider();
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 
-    const chunks = await retrieveDocs(
+    let chunks = await retrieveDocs(
       query,
       vector,
-      this.options?.nRetrieve || 15,
+      this.options?.nRetrieve ?? DocsContextProvider.DEFAULT_N_RETRIEVE,
       embeddingsProvider.id,
     );
+
+    if (extras.reranker) {
+      try {
+        const scores = await extras.reranker.rerank(query, chunks);
+        chunks.sort(
+          (a, b) => scores[chunks.indexOf(b)] - scores[chunks.indexOf(a)],
+        );
+        chunks = chunks.splice(
+          0,
+          this.options?.nFinal ?? DocsContextProvider.DEFAULT_N_FINAL,
+        );
+      } catch (e) {
+        console.warn(`Failed to rerank docs results: ${e}`);
+        chunks = chunks.splice(
+          0,
+          this.options?.nFinal ?? DocsContextProvider.DEFAULT_N_FINAL,
+        );
+      }
+    }
 
     return [
       ...chunks

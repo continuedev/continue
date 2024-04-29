@@ -65,6 +65,13 @@ const CODE_BLOCK_END = "```";
 const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
 const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
 
+// Errors that can be expected on occasion even during normal functioning should not be shown.
+// Not worth disrupting the user to tell them that a single autocomplete request didn't go through
+const ERRORS_TO_IGNORE = [
+  // From Ollama
+  "unexpected server status: 1",
+];
+
 function formatExternalSnippet(
   filepath: string,
   snippet: string,
@@ -284,8 +291,16 @@ export async function getTabCompletion(
     lineGenerator = streamWithNewLines(lineGenerator);
 
     const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
-    for await (const update of finalGenerator) {
-      completion += update;
+
+    try {
+      for await (const update of finalGenerator) {
+        completion += update;
+      }
+    } catch (e: any) {
+      if (ERRORS_TO_IGNORE.some((err) => e.includes(err))) {
+        return undefined;
+      }
+      throw e;
     }
 
     if (cancelled) {
