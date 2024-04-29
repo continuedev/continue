@@ -274,13 +274,6 @@ function TipTapEditor(props: TipTapEditorProps) {
               onEnterRef.current({ useCodebase: true });
               return true;
             },
-            "Alt-Enter": () => {
-              onEnterRef.current({
-                useCodebase: false,
-                noContext: useActiveFile,
-              });
-              return true;
-            },
             "Cmd-Backspace": () => {
               // If you press cmd+backspace wanting to cancel,
               // but are inside of a text box, it shouldn't
