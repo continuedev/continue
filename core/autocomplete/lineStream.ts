@@ -111,12 +111,6 @@ export async function* skipLines(stream: LineStream): LineStream {
   }
 }
 
-const LINES_TO_REMOVE_BEFORE_START = [
-  "<COMPLETION>",
-  "[CODE]",
-  "<START EDITING HERE>",
-];
-
 function shouldRemoveLineBeforeStart(line: string): boolean {
   return (
     line.trimStart().startsWith("```") ||
