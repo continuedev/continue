@@ -194,6 +194,9 @@ function TipTapEditor(props: TipTapEditorProps) {
     props.availableSlashCommands,
   );
 
+  const active = useSelector((state: RootState) => state.state.active);
+  const activeRef = useUpdatingRef(active);
+
   async function handleImageFile(
     file: File,
   ): Promise<[HTMLImageElement, string] | undefined> {
@@ -268,7 +271,14 @@ function TipTapEditor(props: TipTapEditorProps) {
               onEnterRef.current({ useCodebase: true });
               return true;
             },
-
+            "Cmd-Backspace": () => {
+              // If you press cmd+backspace wanting to cancel,
+              // but are inside of a text box, it shouldn't
+              // delete the text
+              if (activeRef.current) {
+                return true;
+              }
+            },
             "Shift-Enter": () =>
               this.editor.commands.first(({ commands }) => [
                 () => commands.newlineInCode(),
@@ -448,7 +458,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, []);
 
   // Re-focus main input after done generating
-  const active = useSelector((state: RootState) => state.state.active);
   useEffect(() => {
     if (editor && !active && props.isMainInput && document.hasFocus()) {
       editor.commands.focus();
