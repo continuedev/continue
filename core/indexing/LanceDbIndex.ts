@@ -98,6 +98,12 @@ export class LanceDbIndex implements CodebaseIndex {
         chunks.map((c) => c.content),
       );
 
+      if (embeddings.some((emb) => emb === undefined)) {
+        throw new Error(
+          `Failed to generate embedding for ${chunks[0]?.filepath} with provider: ${this.embeddingsProvider.id}`,
+        );
+      }
+
       // Create row format
       for (let j = 0; j < chunks.length; j++) {
         const progress = (i + j / chunks.length) / items.length;
