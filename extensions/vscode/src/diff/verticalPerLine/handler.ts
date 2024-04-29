@@ -8,7 +8,6 @@ import {
   redDecorationType,
 } from "./decorations";
 import { VerticalDiffCodeLens } from "./manager";
-import { start } from "repl";
 
 export class VerticalPerLineDiffHandler {
   private editor: vscode.TextEditor;
@@ -209,7 +208,21 @@ export class VerticalPerLineDiffHandler {
     this.editor.setDecorations(indexDecorationType, []);
   }
 
-  clear(accept: boolean) {
+  public getLineDeltaBeforeLine(line: number) {
+    //Returns the number of lines removed from a file when the diff currently active is closed 
+    let totalLineDelta = 0
+    for (const range of this.greenDecorationManager.getRanges().sort((a, b) => a.start.line - b.start.line)) {
+      if (range.start.line > line){
+        break
+      }
+
+      totalLineDelta -= range.end.line - range.start.line + 1
+    }
+
+    return totalLineDelta
+  }
+
+  async clear(accept: boolean) {
     vscode.commands.executeCommand(
       "setContext",
       "continue.streamingDiff",
@@ -225,7 +238,7 @@ export class VerticalPerLineDiffHandler {
 
     this.editorToVerticalDiffCodeLens.delete(this.filepath);
 
-    this.editor.edit(
+    await this.editor.edit(
       (editBuilder) => {
         for (const range of rangesToDelete) {
           editBuilder.delete(
@@ -364,8 +377,6 @@ export class VerticalPerLineDiffHandler {
 
     // Shift the codelens objects
     this.shiftCodeLensObjects(startLine, offset)
-
-    this.refreshCodeLens();
   }
 
   private shiftCodeLensObjects(startLine: number, offset: number){  
@@ -383,41 +394,7 @@ export class VerticalPerLineDiffHandler {
     this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
 
     this.refreshCodeLens();
-}
-
-  public async rejectAllBlocks(startLineList: number[], numGreenList: number[]) {
-    // Delete all green lines
-    // Gather start and end indexes for all green lines to be deleted
-    const deletionRanges: vscode.Range[] = [];
-    for (let i = 0; i < startLineList.length; i++) {
-      const start = startLineList[i];
-      const numGreen = numGreenList[i];
-      // Assuming numGreen lines immediately follow the start line
-      if (numGreen > 0) {
-        const startLine = new vscode.Position(start, 0);
-        const endLine = startLine.translate(numGreen);
-        deletionRanges.push(new vscode.Range(startLine, endLine));
-      }
-    }
-
-    // Execute all deletion in one edit operation
-    await this.editor.edit((editBuilder) => {
-      for (const range of deletionRanges) {
-        editBuilder.delete(range);
-      }
-    }, {
-      undoStopAfter: false,
-      undoStopBefore: false,
-    });
-
-    //clear all decorations
-    this.redDecorationManager.clear()
-    this.greenDecorationManager.clear()
-    
-    //remove code lenses
-    this.editorToVerticalDiffCodeLens.set(this.filepath, []);
-    this.refreshCodeLens();
-  } 
+  }
 
   public updateLineDelta(filepath: string, startLine: number, lineDelta: number) {
     // Retrieve the diff blocks for the given file
@@ -426,28 +403,11 @@ export class VerticalPerLineDiffHandler {
       return;
     }
 
+    //update decorations
     this.redDecorationManager.shiftDownAfterLine(startLine, lineDelta);
     this.greenDecorationManager.shiftDownAfterLine(startLine, lineDelta);
 
-    // Update the diff blocks based on the line delta
-    const updatedBlocks = blocks.map(block => {
-      // If the change occurs before the block, adjust the block's start line
-      if (startLine <= block.start) { 
-        block.start += lineDelta;
-      }
-      // If the change occurs within the block, adjust the number of green lines (red lines can't be edited)
-      else if (startLine < block.start + block.numGreen) {
-        block.numGreen += lineDelta
-      }
-      // If file changes occur after the block, that doesn't change anything for the block
-      return block;
-    }).filter(block => block.numRed > 0 || block.numGreen > 0); // Remove blocks with no red or green lines
-
-    // Update the map with the filtered blocks
-    this.editorToVerticalDiffCodeLens.set(filepath, updatedBlocks);
-
-    // Adjust the code lens's accordingly
-    // this.shiftCodeLensObjects(startLine, lineDelta)
-    // this.refreshCodeLens();
+    //update code lens
+    this.shiftCodeLensObjects(startLine, lineDelta)
   }
 }
