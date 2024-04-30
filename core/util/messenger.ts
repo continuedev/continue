@@ -29,9 +29,7 @@ export interface IMessenger<
 
   on<T extends keyof ToProtocol>(
     messageType: T,
-    handler: (
-      message: Message<ToProtocol[T][0]>,
-    ) => Promise<ToProtocol[T][1]> | ToProtocol[T][1],
+    handler: (message: Message<ToProtocol[T][0]>) => ToProtocol[T][1],
   ): void;
 
   request<T extends keyof FromProtocol>(
@@ -42,7 +40,6 @@ export interface IMessenger<
   invoke<T extends keyof ToProtocol>(
     messageType: T,
     data: ToProtocol[T][0],
-    messageId?: string,
   ): ToProtocol[T][1];
 }
 
@@ -51,18 +48,11 @@ export class InProcessMessenger<
   FromProtocol extends IProtocol,
 > implements IMessenger<ToProtocol, FromProtocol>
 {
-  // Listeners for the entity that owns this messenger (right now, always Core)
-  protected myTypeListeners = new Map<
+  protected typeListeners = new Map<
     keyof ToProtocol,
-    (message: Message) => any
+    ((message: Message) => any)[]
   >();
-
-  // Listeners defined by the other side of the protocol (right now, always IDE)
-  protected externalTypeListeners = new Map<
-    keyof FromProtocol,
-    (message: Message) => any
-  >();
-
+  protected idListeners = new Map<string, (message: Message) => any>();
   protected _onErrorHandlers: ((error: Error) => void)[] = [];
 
   onError(handler: (error: Error) => void) {
@@ -72,17 +62,44 @@ export class InProcessMessenger<
   invoke<T extends keyof ToProtocol>(
     messageType: T,
     data: ToProtocol[T][0],
-    messageId?: string,
   ): ToProtocol[T][1] {
-    const listener = this.myTypeListeners.get(messageType);
-    if (!listener) return;
+    const listeners = this.typeListeners.get(messageType);
+    if (!listeners || !listeners.length) return;
 
     const msg: Message = {
       messageType: messageType as string,
       data,
-      messageId: messageId ?? uuidv4(),
+      messageId: uuidv4(),
     };
-    return listener(msg);
+    return listeners[0](msg);
+  }
+
+  // get reverseMessenger(): IMessenger<ToProtocol, FromProtocol> {
+  //   return {
+  //     onError: (handler: (error: Error) => void) => {},
+  //     send: (messageType: string, message: any, messageId?: string) => {
+  //       const messageId_ = messageId || uuidv4();
+  //       this.handleMessage({
+  //         messageType,
+  //         messageId: messageId_,
+  //         data: message,
+  //       });
+  //       return messageId_;
+  //     },
+  //     on: (
+  //       messageType: keyof ToProtocol,
+  //       handler: (message: Message) => any,
+  //     ) => {
+  //       // Need to keep track of stuff?
+  //     },
+  //     request: (messageType: keyof FromProtocol, data: any) => {
+  //       return this.request(messageType, data);
+  //     },
+  //   };
+  // }
+
+  protected _send(message: Message) {
+    throw new Error("Not implemented");
   }
 
   send<T extends keyof FromProtocol>(
@@ -96,55 +113,62 @@ export class InProcessMessenger<
       data: message,
       messageId,
     };
-    this.externalTypeListeners.get(messageType)?.(data);
+    this._send(message);
     return messageId;
+  }
+
+  protected handleMessage(msg: Message) {
+    if (msg.messageType === undefined || msg.messageId === undefined) {
+      throw new Error(`Invalid message sent: ${JSON.stringify(msg)}`);
+    }
+
+    // Call handler and respond with return value
+    const listeners = this.typeListeners.get(msg.messageType as any);
+    listeners?.forEach(async (handler) => {
+      try {
+        const response = await handler(msg);
+        if (response && typeof response[Symbol.asyncIterator] === "function") {
+          for await (const update of response) {
+            this.send(msg.messageType, update, msg.messageId);
+          }
+          this.send(msg.messageType, { done: true }, msg.messageId);
+        } else {
+          this.send(msg.messageType, response || {}, msg.messageId);
+        }
+      } catch (e: any) {
+        console.warn(`Error running handler for "${msg.messageType}": `, e);
+        this._onErrorHandlers.forEach((handler) => {
+          handler(e);
+        });
+      }
+    });
+
+    // Call handler which is waiting for the response, nothing to return
+    this.idListeners.get(msg.messageId)?.(msg);
   }
 
   on<T extends keyof ToProtocol>(
     messageType: T,
     handler: (message: Message<ToProtocol[T][0]>) => ToProtocol[T][1],
   ): void {
-    this.myTypeListeners.set(messageType, handler);
+    if (!this.typeListeners.has(messageType)) {
+      this.typeListeners.set(messageType, []);
+    }
+    this.typeListeners.get(messageType)?.push(handler);
   }
 
-  async request<T extends keyof FromProtocol>(
+  request<T extends keyof FromProtocol>(
     messageType: T,
     data: FromProtocol[T][0],
   ): Promise<FromProtocol[T][1]> {
     const messageId = uuidv4();
-    const listener = this.externalTypeListeners.get(messageType);
-    if (!listener) {
-      throw new Error(`No handler for message type "${String(messageType)}"`);
-    }
-    const response = await listener({
-      messageType: messageType as string,
-      data,
-      messageId,
+    return new Promise((resolve) => {
+      const handler = (msg: Message) => {
+        resolve(msg.data);
+        this.idListeners.delete(messageId);
+      };
+      this.idListeners.set(messageId, handler);
+      this.send(messageType, data, messageId);
     });
-    return response;
-  }
-
-  externalOn<T extends keyof FromProtocol>(
-    messageType: T,
-    handler: (message: Message) => any,
-  ) {
-    this.externalTypeListeners.set(messageType, handler);
-  }
-
-  externalRequest<T extends keyof ToProtocol>(
-    messageType: T,
-    data: ToProtocol[T][0],
-  ): Promise<ToProtocol[T][1]> {
-    const messageId = uuidv4();
-    const listener = this.myTypeListeners.get(messageType);
-    if (!listener) {
-      throw new Error(`No handler for message type "${String(messageType)}"`);
-    }
-    const response = listener({
-      messageType: messageType as string,
-      data,
-      messageId,
-    });
-    return Promise.resolve(response);
   }
 }

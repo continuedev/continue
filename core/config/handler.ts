@@ -1,11 +1,11 @@
 import type { ContinueConfig, ContinueRcJson, IDE, ILLM } from "..";
-import type { IdeSettings } from "../protocol";
+import type { IdeSettings } from "../protocol/ideWebview";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 import { Telemetry } from "../util/posthog";
 import {
-  type BrowserSerializedContinueConfig,
   finalToBrowserConfig,
   loadFullConfigNode,
+  type BrowserSerializedContinueConfig,
 } from "./load";
 
 export class ConfigHandler {

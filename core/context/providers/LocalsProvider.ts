@@ -32,7 +32,7 @@ class LocalsProvider extends BaseContextProvider {
     );
     const callStackContents = callStacksSources.reduce(
       (acc, source, index) =>
-        `${acc}\n\ncall stack ${index}\n\`\`\`\n${source}\n`\`\``,
+        `${acc}\n\ncall stack ${index}\n\`\`\`\n${source}\n\`\`\``,
       "",
     );
     return [

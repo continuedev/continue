@@ -1,7 +1,6 @@
 import {
   ContinueRcJson,
   DiffLine,
-  FileType,
   IdeInfo,
   IndexTag,
   Problem,
@@ -13,10 +12,7 @@ import { IdeSettings } from "./ideWebview";
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
   getIdeInfo: [undefined, IdeInfo];
-  listWorkspaceContents: [
-    { directory?: string; useGitIgnore?: boolean },
-    string[],
-  ];
+  listWorkspaceContents: [undefined, string[]];
   getWorkspaceDirs: [undefined, string[]];
   listFolders: [undefined, string[]];
   writeFile: [{ path: string; contents: string }, void];
@@ -43,7 +39,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   ];
   getProblems: [{ filepath: string }, Problem[]];
   getOpenFiles: [undefined, string[]];
-  getCurrentFile: [undefined, string | undefined];
   getPinnedFiles: [undefined, string[]];
   showLines: [{ filepath: string; startLine: number; endLine: number }, void];
   readRangeInFile: [{ filepath: string; range: Range }, string];
@@ -61,17 +56,10 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getTags: [string, IndexTag[]];
   // end methods from IDE type
 
+  errorPopup: [{ message: string }, void];
   getIdeSettings: [undefined, IdeSettings];
 
   // Git
   getBranch: [{ dir: string }, string];
   getRepoName: [{ dir: string }, string | undefined];
-
-  errorPopup: [{ message: string }, void];
-  infoPopup: [{ message: string }, void];
-  getGitRootPath: [{ dir: string }, string | undefined];
-  listDir: [{ dir: string }, [string, FileType][]];
-  getLastModified: [{ files: string[] }, { [path: string]: number }];
-
-  getGitHubAuthToken: [undefined, string | undefined];
 };

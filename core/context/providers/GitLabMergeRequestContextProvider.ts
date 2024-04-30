@@ -243,7 +243,8 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
           if (filename !== "general") {
             parts.push(`### File ${filename}`);
             locationComments.sort(
-              (a, b) => a.position?.new_line - b.position?.new_line,
+              (a, b) =>
+                (a.position?.new_line ?? 0) - (b.position?.new_line ?? 0),
             );
           } else {
             parts.push("### General");

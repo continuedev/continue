@@ -1,4 +1,4 @@
-import type { ToWebviewProtocol } from "core/protocol";
+import { ToWebviewProtocol } from "core/web/webviewProtocol";
 import { useLocation, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { useWebviewListener } from "./useWebviewListener";

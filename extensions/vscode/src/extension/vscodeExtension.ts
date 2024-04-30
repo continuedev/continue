@@ -1,7 +1,9 @@
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/handler";
+import { Core } from "core/core";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
-import type { IdeSettings } from "core/protocol";
+import type { IdeSettings } from "core/protocol/ideWebview";
+import { InProcessMessenger } from "core/util/messenger";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
@@ -30,6 +32,7 @@ export class VsCodeExtension {
   private diffManager: DiffManager;
   private verticalDiffManager: VerticalPerLineDiffManager;
   webviewProtocol: VsCodeWebviewProtocol;
+  private core: Core;
 
   constructor(context: vscode.ExtensionContext) {
     let resolveWebviewProtocol: any = undefined;
@@ -132,6 +135,8 @@ export class VsCodeExtension {
       ideSettings.remoteConfigServerUrl,
       userTokenPromise,
     );
+
+    this.core = new Core(new InProcessMessenger(), this.ide);
 
     if (
       !(
