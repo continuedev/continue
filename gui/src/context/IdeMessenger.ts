@@ -7,8 +7,8 @@ import {
 import { MessageIde } from "core/util/messageIde";
 import { Message } from "core/util/messenger";
 import {
-  ReverseWebviewProtocol,
-  WebviewProtocol,
+  ToWebviewProtocol,
+  WebviewToIdeProtocol,
 } from "core/web/webviewProtocol";
 import { createContext } from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -22,29 +22,29 @@ interface vscode {
 declare const vscode: any;
 
 export interface IIdeMessenger {
-  post<T extends keyof WebviewProtocol>(
+  post<T extends keyof WebviewToIdeProtocol>(
     messageType: T,
-    data: WebviewProtocol[T][0],
+    data: WebviewToIdeProtocol[T][0],
     messageId?: string,
     attempt?: number,
   ): void;
 
-  respond<T extends keyof ReverseWebviewProtocol>(
+  respond<T extends keyof ToWebviewProtocol>(
     messageType: T,
-    data: ReverseWebviewProtocol[T][1],
+    data: ToWebviewProtocol[T][1],
     messageId: string,
   ): void;
 
-  request<T extends keyof WebviewProtocol>(
+  request<T extends keyof WebviewToIdeProtocol>(
     messageType: T,
-    data: WebviewProtocol[T][0],
-  ): Promise<WebviewProtocol[T][1]>;
+    data: WebviewToIdeProtocol[T][0],
+  ): Promise<WebviewToIdeProtocol[T][1]>;
 
-  streamRequest<T extends keyof WebviewProtocol>(
+  streamRequest<T extends keyof WebviewToIdeProtocol>(
     messageType: T,
-    data: WebviewProtocol[T][0],
+    data: WebviewToIdeProtocol[T][0],
     cancelToken?: AbortSignal,
-  ): WebviewProtocol[T][1];
+  ): WebviewToIdeProtocol[T][1];
 
   llmStreamChat(
     modelTitle: string,
@@ -94,9 +94,9 @@ export class IdeMessenger implements IIdeMessenger {
     vscode.postMessage(msg);
   }
 
-  post<T extends keyof WebviewProtocol>(
+  post<T extends keyof WebviewToIdeProtocol>(
     messageType: T,
-    data: WebviewProtocol[T][0],
+    data: WebviewToIdeProtocol[T][0],
     messageId?: string,
     attempt: number = 0,
   ) {
@@ -118,9 +118,9 @@ export class IdeMessenger implements IIdeMessenger {
     }
   }
 
-  respond<T extends keyof ReverseWebviewProtocol>(
+  respond<T extends keyof ToWebviewProtocol>(
     messageType: T,
-    data: ReverseWebviewProtocol[T][1],
+    data: ToWebviewProtocol[T][1],
     messageId: string,
   ) {
     this._postToIde(messageType, data, messageId);
@@ -134,10 +134,10 @@ export class IdeMessenger implements IIdeMessenger {
     return responseData;
   }
 
-  request<T extends keyof WebviewProtocol>(
+  request<T extends keyof WebviewToIdeProtocol>(
     messageType: T,
-    data: WebviewProtocol[T][0],
-  ): Promise<WebviewProtocol[T][1]> {
+    data: WebviewToIdeProtocol[T][0],
+  ): Promise<WebviewToIdeProtocol[T][1]> {
     const messageId = uuidv4();
 
     return new Promise((resolve) => {
@@ -153,11 +153,11 @@ export class IdeMessenger implements IIdeMessenger {
     }) as any;
   }
 
-  async *streamRequest<T extends keyof WebviewProtocol>(
+  async *streamRequest<T extends keyof WebviewToIdeProtocol>(
     messageType: T,
-    data: WebviewProtocol[T][0],
+    data: WebviewToIdeProtocol[T][0],
     cancelToken?: AbortSignal,
-  ): WebviewProtocol[T][1] {
+  ): WebviewToIdeProtocol[T][1] {
     const messageId = uuidv4();
 
     this.post(messageType, data, messageId);

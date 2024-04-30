@@ -10,23 +10,23 @@ import type {
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
-} from ".";
-import type { AutocompleteInput } from "./autocomplete/completionProvider";
-import type { IdeProtocol } from "./web/webviewProtocol";
+} from "..";
+import type { AutocompleteInput } from "../autocomplete/completionProvider";
+import type { IdeSettings } from "./ideWebview";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
   content: T;
 }>;
 
-export type Protocol = {
+export type ToCoreFromIdeOrWebviewProtocol = {
   // New
   "update/modelChange": [string, void];
+
   // Special
   ping: [string, string];
   abort: [undefined, void];
 
-  // History
   "history/list": [undefined, SessionInfo[]];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, PersistedSessionInfo];
@@ -109,15 +109,19 @@ export type Protocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
-};
-
-export interface IdeSettings {
-  remoteConfigServerUrl: string | undefined;
-  remoteConfigSyncPeriod: number;
-  userToken: string;
-}
-
-export type ReverseProtocol = IdeProtocol & {
-  getIdeSettings: [undefined, IdeSettings];
-  errorPopup: [{ message: string }, void];
+  "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
+  "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
+  "index/setPaused": [boolean, void];
+  "index/forceReIndex": [undefined, void];
+  completeOnboarding: [
+    {
+      mode:
+        | "local"
+        | "optimized"
+        | "custom"
+        | "localExistingUser"
+        | "optimizedExistingUser";
+    },
+    void,
+  ];
 };

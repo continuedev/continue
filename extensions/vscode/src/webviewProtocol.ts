@@ -8,16 +8,18 @@ import {
 import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
 import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { ToCoreFromWebviewProtocol } from "core/protocol/coreWebview";
+import {
+  ToIdeFromWebviewProtocol,
+  ToWebviewFromIdeProtocol,
+} from "core/protocol/ideWebview";
+import { WEBVIEW_TO_CORE_PASS_THROUGH } from "core/protocol/passThrough";
 import { logDevData } from "core/util/devdata";
 import { DevDataSqliteDb } from "core/util/devdataSqlite";
 import historyManager from "core/util/history";
-import type { Message } from "core/util/messenger";
+import { IMessenger, type Message } from "core/util/messenger";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
-import type {
-  ReverseWebviewProtocol,
-  WebviewProtocol,
-} from "core/web/webviewProtocol";
 import fs from "node:fs";
 import path from "node:path";
 import { v4 as uuidv4 } from "uuid";
@@ -43,11 +45,14 @@ async function showTutorial() {
   await vscode.window.showTextDocument(doc);
 }
 
-export class VsCodeWebviewProtocol {
-  listeners = new Map<keyof WebviewProtocol, ((message: Message) => any)[]>();
-  abortedMessageIds: Set<string> = new Set();
+type ToProtocol = ToIdeFromWebviewProtocol;
+type FromProtocol = ToWebviewFromIdeProtocol;
+export class VsCodeWebviewProtocol
+  implements IMessenger<ToProtocol, FromProtocol>
+{
+  listeners = new Map<keyof ToProtocol, ((message: Message) => any)[]>();
 
-  private send(messageType: string, data: any, messageId?: string): string {
+  send(messageType: string, data: any, messageId?: string): string {
     const id = messageId ?? uuidv4();
     this.webview?.postMessage({
       messageType,
@@ -57,11 +62,11 @@ export class VsCodeWebviewProtocol {
     return id;
   }
 
-  on<T extends keyof WebviewProtocol>(
+  on<T extends keyof ToProtocol>(
     messageType: T,
     handler: (
-      message: Message<WebviewProtocol[T][0]>,
-    ) => Promise<WebviewProtocol[T][1]> | WebviewProtocol[T][1],
+      message: Message<ToProtocol[T][0]>,
+    ) => Promise<ToProtocol[T][1]> | ToProtocol[T][1],
   ): void {
     if (!this.listeners.has(messageType)) {
       this.listeners.set(messageType, []);
@@ -76,6 +81,18 @@ export class VsCodeWebviewProtocol {
     return this._webview;
   }
 
+  handleWebviewToCoreMessage<T extends keyof ToCoreFromWebviewProtocol>(
+    messageType: T,
+    data: ToCoreFromWebviewProtocol[T][0],
+    messageId: string,
+  ) {
+    // Pass through to core
+    const response = "TODO";
+
+    // Send response back to webview
+    this.send(messageType, response, messageId);
+  }
+
   set webview(webView: vscode.Webview) {
     this._webview = webView;
     this._webviewListener?.dispose();
@@ -83,6 +100,15 @@ export class VsCodeWebviewProtocol {
     this._webviewListener = this._webview.onDidReceiveMessage(async (msg) => {
       if (!msg.messageType || !msg.messageId) {
         throw new Error(`Invalid webview protocol msg: ${JSON.stringify(msg)}`);
+      }
+
+      if (WEBVIEW_TO_CORE_PASS_THROUGH.includes(msg.messageType)) {
+        this.handleWebviewToCoreMessage(
+          msg.messageType,
+          msg.data,
+          msg.messageId,
+        );
+        return;
       }
 
       const respond = (message: any) =>
@@ -148,9 +174,6 @@ export class VsCodeWebviewProtocol {
     private readonly configHandler: ConfigHandler,
     private readonly verticalDiffManager: VerticalPerLineDiffManager,
   ) {
-    this.on("abort", (msg) => {
-      this.abortedMessageIds.add(msg.messageId);
-    });
     this.on("showFile", (msg) => {
       this.ide.openFile(msg.data.filepath);
     });
@@ -579,8 +602,8 @@ export class VsCodeWebviewProtocol {
         mode === "local"
           ? setupLocalMode
           : mode === "optimized"
-            ? setupOptimizedMode
-            : setupOptimizedExistingUserMode,
+          ? setupOptimizedMode
+          : setupOptimizedExistingUserMode,
       );
     });
 
@@ -609,11 +632,21 @@ export class VsCodeWebviewProtocol {
       });
     });
   }
-
-  public request<T extends keyof ReverseWebviewProtocol>(
+  invoke<T extends keyof ToProtocol>(
     messageType: T,
-    data: ReverseWebviewProtocol[T][0],
-  ): Promise<ReverseWebviewProtocol[T][1]> {
+    data: ToProtocol[T][0],
+  ): ToProtocol[T][1] {
+    throw new Error("Method not implemented.");
+  }
+
+  onError(handler: (error: Error) => void): void {
+    throw new Error("Method not implemented.");
+  }
+
+  public request<T extends keyof FromProtocol>(
+    messageType: T,
+    data: FromProtocol[T][0],
+  ): Promise<FromProtocol[T][1]> {
     const messageId = uuidv4();
     return new Promise((resolve) => {
       if (!this.webview) {
@@ -623,7 +656,7 @@ export class VsCodeWebviewProtocol {
 
       this.send(messageType, data, messageId);
       const disposable = this.webview.onDidReceiveMessage(
-        (msg: Message<ReverseWebviewProtocol[T][1]>) => {
+        (msg: Message<FromProtocol[T][1]>) => {
           if (msg.messageId === messageId) {
             resolve(msg.data);
             disposable?.dispose();

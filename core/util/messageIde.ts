@@ -7,10 +7,14 @@ import type {
   Range,
   Thread,
 } from "..";
+import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide";
 
 export class MessageIde implements IDE {
   constructor(
-    private readonly request: (messageType: string, data: any) => Promise<any>,
+    private readonly request: <T extends keyof ToIdeFromWebviewOrCoreProtocol>(
+      messageType: T,
+      data: ToIdeFromWebviewOrCoreProtocol[T][0],
+    ) => Promise<ToIdeFromWebviewOrCoreProtocol[T][1]>,
   ) {}
 
   getRepoName(dir: string): Promise<string | undefined> {
@@ -144,7 +148,7 @@ export class MessageIde implements IDE {
     return this.request("getSearchResults", { query });
   }
 
-  getProblems(filepath?: string | undefined): Promise<Problem[]> {
+  getProblems(filepath: string): Promise<Problem[]> {
     return this.request("getProblems", { filepath });
   }
 

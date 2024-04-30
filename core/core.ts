@@ -1,25 +1,22 @@
-import type { ContextItemId, IDE } from "core";
-import { CompletionProvider } from "core/autocomplete/completionProvider";
-import { ConfigHandler } from "core/config/handler";
-import { addModel, addOpenAIKey, deleteModel } from "core/config/util";
-import { indexDocs } from "core/indexing/docs";
-import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
-import { logDevData } from "core/util/devdata";
-import historyManager from "core/util/history";
-import type { Message } from "core/util/messenger";
-import { Telemetry } from "core/util/posthog";
-import { streamDiffLines } from "core/util/verticalEdit";
 import { v4 as uuidv4 } from "uuid";
-import type { IpcMessenger } from "./messenger";
-import type { Protocol } from "./protocol";
+import type { ContextItemId, IDE } from ".";
+import { CompletionProvider } from "./autocomplete/completionProvider";
+import { ConfigHandler } from "./config/handler";
+import { addModel, addOpenAIKey, deleteModel } from "./config/util";
+import { indexDocs } from "./indexing/docs";
+import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider";
+import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase";
+import { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import { logDevData } from "./util/devdata";
+import historyManager from "./util/history";
+import type { IMessenger, Message } from "./util/messenger";
+import { Telemetry } from "./util/posthog";
+import { streamDiffLines } from "./util/verticalEdit";
 
 export class Core {
-  private messenger: IpcMessenger;
-  private readonly ide: IDE;
-  private readonly configHandler: ConfigHandler;
-  private readonly codebaseIndexer: CodebaseIndexer;
-  private readonly completionProvider: CompletionProvider;
+  configHandler: ConfigHandler;
+  codebaseIndexer: CodebaseIndexer;
+  completionProvider: CompletionProvider;
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -33,10 +30,19 @@ export class Core {
     return await this.configHandler.llmFromTitle(this.selectedModelTitle);
   }
 
-  constructor(messenger: IpcMessenger, ide: IDE) {
-    this.messenger = messenger;
-    this.ide = ide;
+  invoke<T extends keyof ToCoreProtocol>(
+    messageType: T,
+    data: ToCoreProtocol[T][0],
+  ): ToCoreProtocol[T][1] {
+    return this.messenger.invoke(messageType, data);
+  }
 
+  // TODO: It shouldn't actually need an IDE type, because this can happen
+  // through the messenger (it does in the case of any non-VS Code IDEs already)
+  constructor(
+    private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+    private readonly ide: IDE,
+  ) {
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     this.configHandler = new ConfigHandler(
       this.ide,
@@ -179,7 +185,7 @@ export class Core {
     async function* llmStreamChat(
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
-      msg: Message<Protocol["llm/streamChat"][0]>,
+      msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamChat(
@@ -208,7 +214,7 @@ export class Core {
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
 
-      msg: Message<Protocol["llm/streamComplete"][0]>,
+      msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
     ) {
       const model = await configHandler.llmFromTitle(msg.data.title);
       const gen = model.streamComplete(
@@ -236,7 +242,7 @@ export class Core {
     async function* runNodeJsSlashCommand(
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
-      msg: Message<Protocol["command/run"][0]>,
+      msg: Message<ToCoreProtocol["command/run"][0]>,
     ) {
       const {
         input,
@@ -306,7 +312,7 @@ export class Core {
     async function* streamDiffLinesGenerator(
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
-      msg: Message<Protocol["streamDiffLines"][0]>,
+      msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
     ) {
       const data = msg.data;
       const llm = await configHandler.llmFromTitle(msg.data.modelTitle);
@@ -332,13 +338,5 @@ export class Core {
     on("streamDiffLines", (msg) =>
       streamDiffLinesGenerator(this.configHandler, this.abortedMessageIds, msg),
     );
-  }
-
-  public invoke<T extends keyof Protocol>(
-    method: keyof Protocol,
-    data: Protocol[T][0],
-  ): Protocol[T][1] {
-    const response = this.messenger.invoke(method, data);
-    return response;
   }
 }
