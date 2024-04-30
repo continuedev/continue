@@ -38,7 +38,10 @@ export interface AutocompleteInput {
   recentlyEditedFiles: RangeInFileWithContents[];
   recentlyEditedRanges: RangeInFileWithContents[];
   clipboardText: string;
+  // Used for notebook files
   manuallyPassFileContents?: string;
+  // Used for VS Code git commit input box
+  manuallyPassPrefix?: string;
 }
 
 export interface AutocompleteOutcome extends TabAutocompleteOptions {
@@ -114,6 +117,7 @@ export async function getTabCompletion(
     recentlyEditedRanges,
     clipboardText,
     manuallyPassFileContents,
+    manuallyPassPrefix,
   } = input;
   const fileContents =
     manuallyPassFileContents ?? (await ide.readFile(filepath));
@@ -196,6 +200,12 @@ export async function getTabCompletion(
       llm.model,
       extrasSnippets,
     );
+
+  // If prefix is manually passed
+  if (manuallyPassPrefix) {
+    prefix = manuallyPassPrefix;
+    suffix = "";
+  }
 
   // Template prompt
   const { template, completionOptions } = options.template

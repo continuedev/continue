@@ -49,9 +49,6 @@
     "onStartupFinished",
     "onView:continueGUIView"
   ],
-  "extensionDependencies": [
-    "vscode.git"
-  ],
   "main": "./out/extension.js",
   "browser": "./out/extension.js",
   "contributes": {
