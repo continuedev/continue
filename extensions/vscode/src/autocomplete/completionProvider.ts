@@ -167,6 +167,15 @@ export class ContinueCompletionProvider
           }
         }
       }
+      // Handle commit message input box
+      let manuallyPassPrefix: string | undefined = undefined;
+      if (document.uri.scheme === "vscode-scm") {
+        return [];
+        // let diff = await this.ide.getDiff();
+        // diff = diff.split("\n").splice(-150).join("\n");
+        // manuallyPassPrefix = `${diff}\n\nCommit message: `;
+      }
+
       const input: AutocompleteInput = {
         completionId: uuidv4(),
         filepath: document.uri.fsPath,
@@ -175,6 +184,7 @@ export class ContinueCompletionProvider
         recentlyEditedRanges: [],
         clipboardText: clipboardText,
         manuallyPassFileContents,
+        manuallyPassPrefix,
       };
 
       setupStatusBar(true, true);
