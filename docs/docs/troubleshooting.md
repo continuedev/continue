@@ -24,7 +24,9 @@ To solve many problems, the first step is reading the logs to find the relevant 
 
 Open `~/.continue/core.log`. The most recent logs are found at the bottom of the file.
 
-## Configure Certificates
+## Networking Issues
+
+### Configure Certificates
 
 If you're seeing a `fetch failed` error and your network requires custom certificates, you will need to configure them in `config.json`. In each of the objects in the `"models"` array, add `requestOptions.caBundlePath` like this:
 
@@ -44,6 +46,14 @@ If you're seeing a `fetch failed` error and your network requires custom certifi
 ```
 
 You may also set `requestOptions.caBundlePath` to an array of paths to multiple certificates.
+
+### VS Code Proxy Settings
+
+If you are using VS Code and require requests to be made through a proxy, you are likely already set up through VS Code's [Proxy Server Support](https://code.visualstudio.com/docs/setup/network#_proxy-server-support). To double-check that this is enabled, use cmd/ctrl+, to open settings and search for "Proxy Support". Unless it is set to "off", then VS Code is responsible for making the request to the proxy.
+
+### code-server
+
+Continue can be used in [code-server](https://coder.com/), but if you are running across an error in the logs that includes "This is likely because the editor is not running in a secure context", please see [their documentation on securely exposing code-server](https://coder.com/docs/code-server/latest/guide#expose-code-server).
 
 ## Download a Newer Version
 
