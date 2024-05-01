@@ -90,7 +90,14 @@ export class ContinueCompletionProvider
         if (notebook) {
           const cells = notebook.getCells();
           manuallyPassFileContents = cells
-            .map((cell) => cell.document.getText())
+            .map((cell) => {
+              const text = cell.document.getText();
+              if (cell.kind === vscode.NotebookCellKind.Markup) {
+                return `"""${text}"""`;
+              } else {
+                return text;
+              }
+            })
             .join("\n\n");
           for (const cell of cells) {
             if (cell.document.uri === document.uri) {
