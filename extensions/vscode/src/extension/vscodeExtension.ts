@@ -1,7 +1,6 @@
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/handler";
 import { Core } from "core/core";
-import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
 import { v4 as uuidv4 } from "uuid";
@@ -96,40 +95,7 @@ export class VsCodeExtension {
     );
     resolveWebviewProtocol(this.sidebar.webviewProtocol);
 
-    // Config Handler with output channel
-    const outputChannel = vscode.window.createOutputChannel(
-      "Continue - LLM Prompt/Completion",
-    );
-    const inProcessMessenger = new InProcessMessenger<
-      ToCoreProtocol,
-      FromCoreProtocol
-    >();
-    const vscodeMessenger = new VsCodeMessenger(
-      inProcessMessenger,
-      this.sidebar.webviewProtocol,
-      this.ide,
-      verticalDiffManagerPromise,
-    );
-    this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
-      outputChannel.appendLine(
-        "==========================================================================",
-      );
-      outputChannel.appendLine(
-        "==========================================================================",
-      );
-      outputChannel.append(log);
-    });
-    this.configHandler = this.core.configHandler;
-    resolveConfigHandler?.(this.configHandler);
-    this.configHandler.onConfigUpdate(() => {
-      this.sidebar.webviewProtocol?.request("configUpdate", undefined);
-    });
-    this.webviewProtocol.on("index/forceReIndex", (msg) => {
-      this.ide
-        .getWorkspaceDirs()
-        .then((dirs) => this.refreshCodebaseIndex(dirs));
-    });
-
+    // Indexing + pause token
     this.diffManager.webviewProtocol = this.webviewProtocol;
 
     const userTokenPromise: Promise<string | undefined> = new Promise(
@@ -145,13 +111,6 @@ export class VsCodeExtension {
         const token = await getUserToken();
         resolve(token);
       },
-    );
-    this.indexer = new CodebaseIndexer(
-      this.configHandler,
-      this.ide,
-      indexingPauseToken,
-      ideSettings.remoteConfigServerUrl,
-      userTokenPromise,
     );
 
     const inProcessMessenger = new InProcessMessenger<
@@ -215,17 +174,7 @@ export class VsCodeExtension {
 
     registerDebugTracker(this.sidebar.webviewProtocol, this.ide);
 
-    // Listen for file saving - use global file watcher so that changes
-    // from outside the window are also caught
-    fs.watchFile(getConfigJsonPath(), { interval: 1000 }, (stats) => {
-      this.configHandler.reloadConfig();
-      this.tabAutocompleteModel.clearLlm();
-    });
-    fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
-      this.configHandler.reloadConfig();
-      this.tabAutocompleteModel.clearLlm();
-    });
-
+    // Listen for file saving
     vscode.workspace.onDidSaveTextDocument((event) => {
       // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
@@ -299,18 +248,4 @@ export class VsCodeExtension {
   static continueVirtualDocumentScheme = "continue";
 
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
-  private indexingCancellationController: AbortController | undefined;
-
-  private async refreshCodebaseIndex(dirs: string[]) {
-    if (this.indexingCancellationController) {
-      this.indexingCancellationController.abort();
-    }
-    this.indexingCancellationController = new AbortController();
-    for await (const update of this.indexer.refresh(
-      dirs,
-      this.indexingCancellationController.signal,
-    )) {
-      this.webviewProtocol.request("indexProgress", update);
-    }
-  }
 }

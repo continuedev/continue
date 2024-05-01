@@ -1,6 +1,5 @@
 import fs from "node:fs";
 import { getGlobalContextFilePath } from "./paths";
-import { IndexingProgressUpdate } from "..";
 
 export type GlobalContextType = {
   indexingPaused: boolean;
