@@ -3,7 +3,6 @@ import { ConfigHandler } from "core/config/handler";
 import { Core } from "core/core";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
-import type { IdeSettings } from "core/protocol/ideWebview";
 import { InProcessMessenger } from "core/util/messenger";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -37,10 +36,27 @@ export class VsCodeExtension {
   private core: Core;
 
   constructor(context: vscode.ExtensionContext) {
-    let resolveWebviewProtocol: any = undefined;
-    this.webviewProtocolPromise = new Promise<VsCodeWebviewProtocol>(
-      (resolve) => {
-        resolveWebviewProtocol = resolve;
+    this.diffManager = new DiffManager(context);
+    this.ide = new VsCodeIde(this.diffManager);
+
+    const ideSettings = this.ide.getIdeSettings();
+    const { remoteConfigServerUrl, remoteConfigSyncPeriod } = ideSettings;
+
+    // Config Handler with output channel
+    const outputChannel = vscode.window.createOutputChannel(
+      "Continue - LLM Prompt/Completion",
+    );
+    this.configHandler = new ConfigHandler(
+      this.ide,
+      Promise.resolve(ideSettings),
+      async (log: string) => {
+        outputChannel.appendLine(
+          "==========================================================================",
+        );
+        outputChannel.appendLine(
+          "==========================================================================",
+        );
+        outputChannel.append(log);
       },
     );
     this.diffManager = new DiffManager(context);
@@ -142,13 +158,13 @@ export class VsCodeExtension {
       ToCoreProtocol,
       FromCoreProtocol
     >();
-    this.core = new Core(inProcessMessenger, this.ide);
     const vscodeMessenger = new VsCodeMessenger(
       inProcessMessenger,
       this.webviewProtocol,
       this.ide,
       this.verticalDiffManager,
     );
+    this.core = new Core(inProcessMessenger, this.ide);
 
     if (
       !(

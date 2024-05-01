@@ -11,6 +11,7 @@ import type {
   Range,
   Thread,
 } from "core";
+import { IdeSettings } from "core/protocol/ideWebview";
 import { getContinueGlobalPath } from "core/util/paths";
 import * as vscode from "vscode";
 import type { DiffManager } from "./diff/horizontal";
@@ -363,19 +364,6 @@ class VsCodeIde implements IDE {
 
   async getBranch(dir: string): Promise<string> {
     return this.ideUtils.getBranch(vscode.Uri.file(dir));
-  }
-
-  getGitRootPath(dir: string): Promise<string | undefined> {
-    return this.ideUtils.getGitRoot(dir);
-  }
-
-  async listDir(dir: string): Promise<[string, FileType][]> {
-    const files = await vscode.workspace.fs.readDirectory(uriFromFilePath(dir));
-    return files
-      .filter(([name, type]) => {
-        !(type === vscode.FileType.File && defaultIgnoreFile.ignores(name));
-      })
-      .map(([name, type]) => [path.join(dir, name), type]) as any;
   }
 
   getIdeSettings(): IdeSettings {
