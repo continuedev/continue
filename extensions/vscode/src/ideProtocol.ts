@@ -11,6 +11,7 @@ import type {
   Range,
   Thread,
 } from "core";
+import { IdeSettings } from "core/protocol/ideWebview";
 import { getContinueGlobalPath } from "core/util/paths";
 import * as vscode from "vscode";
 import type { DiffManager } from "./diff/horizontal";
@@ -352,6 +353,23 @@ class VsCodeIde implements IDE {
 
   async getBranch(dir: string): Promise<string> {
     return this.ideUtils.getBranch(vscode.Uri.file(dir));
+  }
+
+  getIdeSettings(): IdeSettings {
+    const settings = vscode.workspace.getConfiguration("continue");
+    const remoteConfigServerUrl = settings.get<string | undefined>(
+      "remoteConfigServerUrl",
+      undefined,
+    );
+    const ideSettings: IdeSettings = {
+      remoteConfigServerUrl,
+      remoteConfigSyncPeriod: settings.get<number>(
+        "remoteConfigSyncPeriod",
+        60,
+      ),
+      userToken: settings.get<string>("userToken", ""),
+    };
+    return ideSettings;
   }
 }
 

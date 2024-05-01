@@ -2,7 +2,6 @@ import { ConfigHandler } from "core/config/handler";
 import { Core } from "core/core";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
-import type { IdeSettings } from "core/protocol/ideWebview";
 import { InProcessMessenger } from "core/util/messenger";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -40,19 +39,8 @@ export class VsCodeExtension {
     this.diffManager = new DiffManager(context);
     this.ide = new VsCodeIde(this.diffManager);
 
-    const settings = vscode.workspace.getConfiguration("continue");
-    const remoteConfigServerUrl = settings.get<string | undefined>(
-      "remoteConfigServerUrl",
-      undefined,
-    );
-    const ideSettings: IdeSettings = {
-      remoteConfigServerUrl,
-      remoteConfigSyncPeriod: settings.get<number>(
-        "remoteConfigSyncPeriod",
-        60,
-      ),
-      userToken: settings.get<string>("userToken", ""),
-    };
+    const ideSettings = this.ide.getIdeSettings();
+    const { remoteConfigServerUrl, remoteConfigSyncPeriod } = ideSettings;
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
@@ -148,13 +136,13 @@ export class VsCodeExtension {
       ToCoreProtocol,
       FromCoreProtocol
     >();
-    this.core = new Core(inProcessMessenger, this.ide);
     const vscodeMessenger = new VsCodeMessenger(
       inProcessMessenger,
       this.webviewProtocol,
       this.ide,
       this.verticalDiffManager,
     );
+    this.core = new Core(inProcessMessenger, this.ide);
 
     if (
       !(

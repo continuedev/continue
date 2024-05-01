@@ -92,7 +92,7 @@ export class VsCodeWebviewProtocol
               { msg },
               null,
               2,
-            )}`,
+            )}\n\n${e}`,
           );
 
           let message = e.message;
