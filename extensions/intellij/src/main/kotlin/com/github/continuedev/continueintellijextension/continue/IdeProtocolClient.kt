@@ -318,6 +318,36 @@ class IdeProtocolClient (
                     "setSuggestionsLocked" -> {}
                     "getSessionId" -> {}
 
+                    // INDEXING //
+                    "getStats" -> {
+                        // TODO
+                        respond(null)
+                    }
+                    "getBranch" -> {
+                        // Get the current branch name
+                        val builder = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
+                        builder.directory(File(workspacePath ?: "."))
+                        val process = builder.start()
+
+                        val reader = BufferedReader(InputStreamReader(process.inputStream))
+                        val output = reader.readLine()
+                        process.waitFor()
+
+                        respond(output)
+                    }
+                    "getRepoName" -> {
+                        // Get the current repository name
+                        val builder = ProcessBuilder("git", "config", "--get", "remote.origin.url")
+                        builder.directory(File(workspacePath ?: "."))
+                        val process = builder.start()
+
+                        val reader = BufferedReader(InputStreamReader(process.inputStream))
+                        val output = reader.readLine()
+                        process.waitFor()
+
+                        respond(output)
+                    }
+
                     // NEW //
                     "getDiff" -> {
                         val builder = ProcessBuilder("git", "diff")
