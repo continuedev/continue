@@ -81,5 +81,6 @@ export const DEFAULT_IGNORE_DIRS = [
   "__pycache__",
   "site-packages",
   ".cache",
+  "gems",
 ];
 export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
