@@ -113,7 +113,9 @@ async function getLinksFromUrl(url: string, path: string) {
 }
 
 function splitUrl(url: URL) {
-  const baseUrl = `${url.protocol}//${url.hostname}`;
+  const baseUrl = `${url.protocol}//${url.hostname}${
+    url.port ? ":" + url.port : ""
+  }`;
   const basePath = url.pathname;
   return {
     baseUrl,
