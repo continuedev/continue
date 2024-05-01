@@ -118,7 +118,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     Promise<{ model: string; tokens: number }[]>,
   ];
   "index/setPaused": [boolean, void];
-  "index/forceReIndex": [undefined, void];
+  "index/forceReIndex": [undefined | string, void];
   completeOnboarding: [
     {
       mode:

@@ -12,6 +12,7 @@ import { indexDocs } from "./indexing/docs";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase";
 import { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import { GlobalContext } from "./util/GlobalContext";
 import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
 import historyManager from "./util/history";
@@ -23,7 +24,7 @@ import { streamDiffLines } from "./util/verticalEdit";
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
   configHandler: ConfigHandler;
-  codebaseIndexer: CodebaseIndexer;
+  codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
 
   private abortedMessageIds: Set<string> = new Set();
@@ -58,13 +59,24 @@ export class Core {
       (text: string) => {},
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
-    this.codebaseIndexer = new CodebaseIndexer(
-      this.configHandler,
-      this.ide,
-      new PauseToken(false),
-      undefined, // TODO
-      Promise.resolve(undefined), // TODO
+
+    // Codebase Indexer
+    const indexingPauseToken = new PauseToken(
+      new GlobalContext().get("indexingPaused") === true,
     );
+    this.codebaseIndexerPromise = new Promise(async (resolve) => {
+      const ideSettings = await ideSettingsPromise;
+      new CodebaseIndexer(
+        this.configHandler,
+        this.ide,
+        new PauseToken(false),
+        ideSettings.remoteConfigServerUrl,
+        ideSettings.userToken,
+      );
+      this.ide
+        .getWorkspaceDirs()
+        .then((dirs) => this.refreshCodebaseIndex(dirs));
+    });
 
     const getLlm = async () => {
       const config = await this.configHandler.loadConfig();
@@ -437,5 +449,28 @@ export class Core {
       const rows = await DevDataSqliteDb.getTokensPerModel();
       return rows;
     });
+    on("index/forceReIndex", async (msg) => {
+      const dirs = msg.data ? [msg.data] : await this.ide.getWorkspaceDirs();
+      this.refreshCodebaseIndex(dirs);
+    });
+    on("index/setPaused", (msg) => {
+      new GlobalContext().update("indexingPaused", msg.data);
+      indexingPauseToken.paused = msg.data;
+    });
+  }
+
+  private indexingCancellationController: AbortController | undefined;
+
+  private async refreshCodebaseIndex(dirs: string[]) {
+    if (this.indexingCancellationController) {
+      this.indexingCancellationController.abort();
+    }
+    this.indexingCancellationController = new AbortController();
+    for await (const update of (await this.codebaseIndexerPromise).refresh(
+      dirs,
+      this.indexingCancellationController.signal,
+    )) {
+      this.messenger.request("indexProgress", update);
+    }
   }
 }

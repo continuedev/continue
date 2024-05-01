@@ -1,7 +1,7 @@
+import dotenv from "dotenv";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import dotenv from "dotenv";
 import type { IdeType, SerializedContinueConfig } from "..";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default";
 import Types from "../config/types";
@@ -29,6 +29,10 @@ export function getIndexFolderPath(): string {
     fs.mkdirSync(indexPath);
   }
   return indexPath;
+}
+
+export function getGlobalContextFilePath(): string {
+  return path.join(getIndexFolderPath(), "globalContext.json");
 }
 
 export function getSessionFilePath(sessionId: string): string {

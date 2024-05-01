@@ -1,6 +1,5 @@
 import { ConfigHandler } from "core/config/handler";
 import { Core } from "core/core";
-import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
 import { v4 as uuidv4 } from "uuid";
@@ -29,7 +28,6 @@ export class VsCodeExtension {
   private tabAutocompleteModel: TabAutocompleteModel;
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
-  private indexer: CodebaseIndexer;
   private diffManager: DiffManager;
   private verticalDiffManager: VerticalPerLineDiffManager;
   webviewProtocol: VsCodeWebviewProtocol;
@@ -95,19 +93,6 @@ export class VsCodeExtension {
     this.webviewProtocol = this.sidebar.webviewProtocol;
 
     // Indexing + pause token
-    const indexingPauseToken = new PauseToken(
-      context.globalState.get<boolean>("continue.indexingPaused") === true,
-    );
-    this.webviewProtocol.on("index/setPaused", (msg) => {
-      context.globalState.update("continue.indexingPaused", msg.data);
-      indexingPauseToken.paused = msg.data;
-    });
-    this.webviewProtocol.on("index/forceReIndex", (msg) => {
-      this.ide
-        .getWorkspaceDirs()
-        .then((dirs) => this.refreshCodebaseIndex(dirs));
-    });
-
     this.diffManager.webviewProtocol = this.webviewProtocol;
 
     const userTokenPromise: Promise<string | undefined> = new Promise(
@@ -123,13 +108,6 @@ export class VsCodeExtension {
         const token = await getUserToken();
         resolve(token);
       },
-    );
-    this.indexer = new CodebaseIndexer(
-      this.configHandler,
-      this.ide,
-      indexingPauseToken,
-      ideSettings.remoteConfigServerUrl,
-      userTokenPromise,
     );
 
     const inProcessMessenger = new InProcessMessenger<
@@ -193,9 +171,6 @@ export class VsCodeExtension {
 
     registerDebugTracker(this.webviewProtocol, this.ide);
 
-    // Indexing
-    this.ide.getWorkspaceDirs().then((dirs) => this.refreshCodebaseIndex(dirs));
-
     // Listen for file saving
     vscode.workspace.onDidSaveTextDocument((event) => {
       const filepath = event.uri.fsPath;
@@ -231,7 +206,7 @@ export class VsCodeExtension {
                   currentBranch !== this.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]
                 ) {
                   // Trigger refresh of index only in this directory
-                  this.refreshCodebaseIndex([dir]);
+                  this.core.invoke("index/forceReIndex", dir);
                 }
               }
 
@@ -265,18 +240,4 @@ export class VsCodeExtension {
   static continueVirtualDocumentScheme = "continue";
 
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
-  private indexingCancellationController: AbortController | undefined;
-
-  private async refreshCodebaseIndex(dirs: string[]) {
-    if (this.indexingCancellationController) {
-      this.indexingCancellationController.abort();
-    }
-    this.indexingCancellationController = new AbortController();
-    for await (const update of this.indexer.refresh(
-      dirs,
-      this.indexingCancellationController.signal,
-    )) {
-      this.webviewProtocol.request("indexProgress", update);
-    }
-  }
 }

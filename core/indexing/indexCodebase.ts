@@ -27,12 +27,12 @@ export class CodebaseIndexer {
     private readonly ide: IDE,
     private readonly pauseToken: PauseToken,
     private readonly continueServerUrl: string | undefined,
-    private readonly userToken: Promise<string | undefined>,
+    private readonly userToken: string | undefined,
   ) {
-    if (continueServerUrl) {
+    if (this.continueServerUrl) {
       this.continueServerClient = new ContinueServerClient(
-        continueServerUrl,
-        userToken,
+        this.continueServerUrl,
+        Promise.resolve(this.userToken),
       );
     }
   }
