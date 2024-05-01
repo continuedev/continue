@@ -317,7 +317,8 @@
       {
         "command": "continue.toggleTabAutocompleteEnabled",
         "mac": "cmd+k cmd+a",
-        "key": "ctrl+k ctrl+a"
+        "key": "ctrl+k ctrl+a",
+        "when": "!terminalFocus"
       }
     ],
     "submenus": [
