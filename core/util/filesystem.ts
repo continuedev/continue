@@ -12,6 +12,12 @@ import type {
 import { getContinueGlobalPath } from "./paths";
 
 class FileSystemIde implements IDE {
+  infoPopup(message: string): Promise<void> {
+    return Promise.resolve();
+  }
+  errorPopup(message: string): Promise<void> {
+    return Promise.resolve();
+  }
   getRepoName(dir: string): Promise<string | undefined> {
     return Promise.resolve(undefined);
   }

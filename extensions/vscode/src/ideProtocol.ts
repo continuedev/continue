@@ -29,6 +29,14 @@ class VsCodeIde implements IDE {
     this.ideUtils = new VsCodeIdeUtils();
   }
 
+  async infoPopup(message: string): Promise<void> {
+    vscode.window.showInformationMessage(message);
+  }
+
+  async errorPopup(message: string): Promise<void> {
+    vscode.window.showErrorMessage(message);
+  }
+
   async getRepoName(dir: string): Promise<string | undefined> {
     const repo = await this.getRepo(vscode.Uri.file(dir));
     const remotes = repo?.repository?.remotes;

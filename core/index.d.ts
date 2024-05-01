@@ -412,6 +412,8 @@ export interface IDE {
   getStats(directory: string): Promise<{ [path: string]: number }>;
   getTags(artifactId: string): Promise<IndexTag[]>;
   getRepoName(dir: string): Promise<string | undefined>;
+  errorPopup(message: string): Promise<void>;
+  infoPopup(message: string): Promise<void>;
 }
 
 // Slash Commands

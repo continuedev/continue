@@ -80,7 +80,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       completionOptions: LLMFullCompletionOptions;
       title: string;
     },
-    string,
+    Promise<string>,
   ];
   "llm/streamComplete": [
     {
@@ -109,8 +109,14 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
-  "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
-  "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
+  "stats/getTokensPerDay": [
+    undefined,
+    Promise<{ day: string; tokens: number }[]>,
+  ];
+  "stats/getTokensPerModel": [
+    undefined,
+    Promise<{ model: string; tokens: number }[]>,
+  ];
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [undefined, void];
   completeOnboarding: [

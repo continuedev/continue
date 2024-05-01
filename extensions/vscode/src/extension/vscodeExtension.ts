@@ -1,6 +1,7 @@
 import { ConfigHandler } from "core/config/handler";
 import { Core } from "core/core";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
+import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import type { IdeSettings } from "core/protocol/ideWebview";
 import { InProcessMessenger } from "core/util/messenger";
 import { v4 as uuidv4 } from "uuid";
@@ -18,6 +19,7 @@ import { setupRemoteConfigSync } from "../stubs/activation";
 import { getUserToken } from "../stubs/auth";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { VsCodeMessenger } from "./VsCodeMessenger";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
@@ -142,7 +144,17 @@ export class VsCodeExtension {
       userTokenPromise,
     );
 
-    this.core = new Core(new InProcessMessenger(), this.ide);
+    const inProcessMessenger = new InProcessMessenger<
+      ToCoreProtocol,
+      FromCoreProtocol
+    >();
+    this.core = new Core(inProcessMessenger, this.ide);
+    const vscodeMessenger = new VsCodeMessenger(
+      inProcessMessenger,
+      this.webviewProtocol,
+      this.ide,
+      this.verticalDiffManager,
+    );
 
     if (
       !(

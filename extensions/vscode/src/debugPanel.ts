@@ -55,11 +55,7 @@ export class ContinueGUIWebviewViewProvider
     private readonly extensionContext: vscode.ExtensionContext,
     private readonly verticalDiffManager: VerticalPerLineDiffManager,
   ) {
-    this.webviewProtocol = new VsCodeWebviewProtocol(
-      ide,
-      configHandler,
-      verticalDiffManager,
-    );
+    this.webviewProtocol = new VsCodeWebviewProtocol();
   }
 
   getSidebarContent(
