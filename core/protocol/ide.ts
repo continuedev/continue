@@ -56,10 +56,12 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getTags: [string, IndexTag[]];
   // end methods from IDE type
 
-  errorPopup: [{ message: string }, void];
   getIdeSettings: [undefined, IdeSettings];
 
   // Git
   getBranch: [{ dir: string }, string];
   getRepoName: [{ dir: string }, string | undefined];
+
+  errorPopup: [{ message: string }, void];
+  infoPopup: [{ message: string }, void];
 };

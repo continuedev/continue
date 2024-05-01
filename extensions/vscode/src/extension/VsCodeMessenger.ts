@@ -1,11 +1,7 @@
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
-import { ToWebviewFromCoreProtocol } from "core/protocol/coreWebview";
 import { ToIdeFromWebviewOrCoreProtocol } from "core/protocol/ide";
 import { ToIdeFromCoreProtocol } from "core/protocol/ideCore";
-import {
-  CORE_TO_WEBVIEW_PASS_THROUGH,
-  WEBVIEW_TO_CORE_PASS_THROUGH,
-} from "core/protocol/passThrough";
+import { WEBVIEW_TO_CORE_PASS_THROUGH } from "core/protocol/passThrough";
 import { InProcessMessenger, Message } from "core/util/messenger";
 import { getConfigJsonPath } from "core/util/paths";
 import * as fs from "node:fs";
@@ -23,9 +19,6 @@ import {
  * A shared messenger class between Core and Webview
  * so we don't have to rewrite some of the handlers
  */
-type TODO = any;
-type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
-  ToWebviewFromCoreProtocol;
 export class VsCodeMessenger {
   onWebview<T extends keyof ToCoreOrIdeFromWebviewProtocol>(
     messageType: T,
@@ -38,13 +31,11 @@ export class VsCodeMessenger {
     this.webviewProtocol.on(messageType, handler);
   }
 
-  onCore<T extends keyof ToIdeOrWebviewFromCoreProtocol>(
+  onCore<T extends keyof ToIdeFromCoreProtocol>(
     messageType: T,
     handler: (
-      message: Message<ToIdeOrWebviewFromCoreProtocol[T][0]>,
-    ) =>
-      | Promise<ToIdeOrWebviewFromCoreProtocol[T][1]>
-      | ToIdeOrWebviewFromCoreProtocol[T][1],
+      message: Message<ToIdeFromCoreProtocol[T][0]>,
+    ) => Promise<ToIdeFromCoreProtocol[T][1]> | ToIdeFromCoreProtocol[T][1],
   ): void {
     this.inProcessMessenger.externalOn(messageType, handler);
   }
@@ -68,9 +59,9 @@ export class VsCodeMessenger {
     >,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: VsCodeIde,
-    private readonly verticalDiffManagerPromise: Promise<VerticalPerLineDiffManager>,
+    private readonly verticalDiffManager: VerticalPerLineDiffManager,
   ) {
-    /** WEBVIEW ONLY LISTENERS **/
+    /** WEBVIEW LISTENERS **/
     this.onWebview("showFile", (msg) => {
       this.ide.openFile(msg.data.filepath);
     });
@@ -102,7 +93,58 @@ export class VsCodeMessenger {
     this.onWebview("toggleFullScreen", (msg) => {
       vscode.commands.executeCommand("continue.toggleFullScreen");
     });
+
+    // IDE
+    this.onWebview("getDiff", async (msg) => {
+      return await ide.getDiff();
+    });
+    this.onWebview("getTerminalContents", async (msg) => {
+      return await ide.getTerminalContents();
+    });
+    this.onWebview("getDebugLocals", async (msg) => {
+      return await ide.getDebugLocals(Number(msg.data.threadIndex));
+    });
+    this.onWebview("getAvailableThreads", async (msg) => {
+      return await ide.getAvailableThreads();
+    });
+    this.onWebview("getTopLevelCallStackSources", async (msg) => {
+      return await ide.getTopLevelCallStackSources(
+        msg.data.threadIndex,
+        msg.data.stackDepth,
+      );
+    });
+    this.onWebview("listWorkspaceContents", async (msg) => {
+      return await ide.listWorkspaceContents();
+    });
+    this.onWebview("getWorkspaceDirs", async (msg) => {
+      return await ide.getWorkspaceDirs();
+    });
+    this.onWebview("listFolders", async (msg) => {
+      return await ide.listFolders();
+    });
+    this.onWebview("writeFile", async (msg) => {
+      return await ide.writeFile(msg.data.path, msg.data.contents);
+    });
+    this.onWebview("showVirtualFile", async (msg) => {
+      return await ide.showVirtualFile(msg.data.name, msg.data.content);
+    });
+    this.onWebview("getContinueDir", async (msg) => {
+      return await ide.getContinueDir();
+    });
+    this.onWebview("openFile", async (msg) => {
+      return await ide.openFile(msg.data.path);
+    });
+    this.onWebview("runCommand", async (msg) => {
+      await ide.runCommand(msg.data.command);
+    });
+    this.onWebview("getSearchResults", async (msg) => {
+      return await ide.getSearchResults(msg.data.query);
+    });
+    this.onWebview("subprocess", async (msg) => {
+      return await ide.subprocess(msg.data.command);
+    });
     // History
+
     this.onWebview("saveFile", async (msg) => {
       return await ide.saveFile(msg.data.filepath);
     });
@@ -116,6 +158,34 @@ export class VsCodeMessenger {
         msg.data.stepIndex,
       );
     });
+
+    this.onWebview("getProblems", async (msg) => {
+      return await ide.getProblems(msg.data.filepath);
+    });
+    this.onWebview("getBranch", async (msg) => {
+      const { dir } = msg.data;
+      return await ide.getBranch(dir);
+    });
+    this.onWebview("getOpenFiles", async (msg) => {
+      return await ide.getOpenFiles();
+    });
+    this.onWebview("getPinnedFiles", async (msg) => {
+      return await ide.getPinnedFiles();
+    });
+    this.onWebview("showLines", async (msg) => {
+      const { filepath, startLine, endLine } = msg.data;
+      return await ide.showLines(filepath, startLine, endLine);
+    });
+    // Other
+    this.onWebview("errorPopup", (msg) => {
+      vscode.window
+        .showErrorMessage(msg.data.message, "Show Logs")
+        .then((selection) => {
+          if (selection === "Show Logs") {
+            vscode.commands.executeCommand("workbench.action.toggleDevTools");
+          }
+        });
+    });
     this.onWebview("applyToCurrentFile", async (msg) => {
       // Select the entire current file
       const editor = vscode.window.activeTextEditor;
@@ -123,18 +193,15 @@ export class VsCodeMessenger {
         vscode.window.showErrorMessage("No active editor to apply edits to");
         return;
       }
+      const document = editor.document;
+      const start = new vscode.Position(0, 0);
+      const end = new vscode.Position(
+        document.lineCount - 1,
+        document.lineAt(document.lineCount - 1).text.length,
+      );
+      editor.selection = new vscode.Selection(start, end);
 
-      if (editor.selection.isEmpty) {
-        const document = editor.document;
-        const start = new vscode.Position(0, 0);
-        const end = new vscode.Position(
-          document.lineCount - 1,
-          document.lineAt(document.lineCount - 1).text.length,
-        );
-        editor.selection = new vscode.Selection(start, end);
-      }
-
-      (await this.verticalDiffManagerPromise).streamEdit(
+      this.verticalDiffManager.streamEdit(
         `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`,
         await this.webviewProtocol.request("getDefaultModelTitle", undefined),
       );
@@ -176,113 +243,14 @@ export class VsCodeMessenger {
       });
     });
 
-    /** PASS THROUGH FROM WEBVIEW TO CORE AND BACK **/
+    /** PASS THROUGH **/
     WEBVIEW_TO_CORE_PASS_THROUGH.forEach((messageType) => {
       this.onWebview(messageType, async (msg) => {
-        return (await this.inProcessMessenger.externalRequest(
+        return await this.inProcessMessenger.externalRequest(
           messageType,
           msg.data,
-        )) as TODO;
+        );
       });
     });
-
-    /** PASS THROUGH FROM CORE TO WEBVIEW AND BACK **/
-    CORE_TO_WEBVIEW_PASS_THROUGH.forEach((messageType) => {
-      this.onCore(messageType, async (msg) => {
-        return this.webviewProtocol.request(messageType, msg.data);
-      });
-    });
-
-    /** CORE ONLY LISTENERS **/
-    // None right now
-
-    /** BOTH CORE AND WEBVIEW **/
-    this.onWebviewOrCore("getIdeSettings", async (msg) => {
-      return ide.getIdeSettings();
-    });
-    this.onWebviewOrCore("getDiff", async (msg) => {
-      return ide.getDiff();
-    });
-    this.onWebviewOrCore("getTerminalContents", async (msg) => {
-      return ide.getTerminalContents();
-    });
-    this.onWebviewOrCore("getDebugLocals", async (msg) => {
-      return ide.getDebugLocals(Number(msg.data.threadIndex));
-    });
-    this.onWebviewOrCore("getAvailableThreads", async (msg) => {
-      return ide.getAvailableThreads();
-    });
-    this.onWebviewOrCore("getTopLevelCallStackSources", async (msg) => {
-      return ide.getTopLevelCallStackSources(
-        msg.data.threadIndex,
-        msg.data.stackDepth,
-      );
-    });
-    this.onWebviewOrCore("listWorkspaceContents", async (msg) => {
-      return ide.listWorkspaceContents(
-        msg.data.directory,
-        msg.data.useGitIgnore,
-      );
-    });
-    this.onWebviewOrCore("getWorkspaceDirs", async (msg) => {
-      return ide.getWorkspaceDirs();
-    });
-    this.onWebviewOrCore("listFolders", async (msg) => {
-      return ide.listFolders();
-    });
-    this.onWebviewOrCore("writeFile", async (msg) => {
-      return ide.writeFile(msg.data.path, msg.data.contents);
-    });
-    this.onWebviewOrCore("showVirtualFile", async (msg) => {
-      return ide.showVirtualFile(msg.data.name, msg.data.content);
-    });
-    this.onWebviewOrCore("getContinueDir", async (msg) => {
-      return ide.getContinueDir();
-    });
-    this.onWebviewOrCore("openFile", async (msg) => {
-      return ide.openFile(msg.data.path);
-    });
-    this.onWebviewOrCore("runCommand", async (msg) => {
-      await ide.runCommand(msg.data.command);
-    });
-    this.onWebviewOrCore("getSearchResults", async (msg) => {
-      return ide.getSearchResults(msg.data.query);
-    });
-    this.onWebviewOrCore("subprocess", async (msg) => {
-      return ide.subprocess(msg.data.command);
-    });
-    this.onWebviewOrCore("getProblems", async (msg) => {
-      return ide.getProblems(msg.data.filepath);
-    });
-    this.onWebviewOrCore("getBranch", async (msg) => {
-      const { dir } = msg.data;
-      return ide.getBranch(dir);
-    });
-    this.onWebviewOrCore("getOpenFiles", async (msg) => {
-      return ide.getOpenFiles();
-    });
-    this.onWebviewOrCore("getCurrentFile", async () => {
-      return ide.getCurrentFile();
-    });
-    this.onWebviewOrCore("getPinnedFiles", async (msg) => {
-      return ide.getPinnedFiles();
-    });
-    this.onWebviewOrCore("showLines", async (msg) => {
-      const { filepath, startLine, endLine } = msg.data;
-      return ide.showLines(filepath, startLine, endLine);
-    });
-    // Other
-    this.onWebviewOrCore("errorPopup", (msg) => {
-      vscode.window
-        .showErrorMessage(msg.data.message, "Show Logs")
-        .then((selection) => {
-          if (selection === "Show Logs") {
-            vscode.commands.executeCommand("workbench.action.toggleDevTools");
-          }
-        });
-    });
-    this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
-      ide.getGitHubAuthToken(),
-    );
   }
 }

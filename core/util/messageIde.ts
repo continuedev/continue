@@ -17,6 +17,14 @@ export class MessageIde implements IDE {
     ) => Promise<ToIdeFromWebviewOrCoreProtocol[T][1]>,
   ) {}
 
+  infoPopup(message: string): Promise<void> {
+    return this.request("errorPopup", { message });
+  }
+
+  errorPopup(message: string): Promise<void> {
+    return this.request("errorPopup", { message });
+  }
+
   getRepoName(dir: string): Promise<string | undefined> {
     return this.request("getRepoName", { dir });
   }

@@ -51,12 +51,7 @@ export class ContinueGUIWebviewViewProvider
     private readonly windowId: string,
     private readonly extensionContext: vscode.ExtensionContext,
   ) {
-    this.webviewProtocol = new VsCodeWebviewProtocol(
-      (async () => {
-        const configHandler = await this.configHandlerPromise;
-        return configHandler.reloadConfig();
-      }).bind(this),
-    );
+    this.webviewProtocol = new VsCodeWebviewProtocol();
   }
 
   getSidebarContent(

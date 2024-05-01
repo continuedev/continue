@@ -439,6 +439,8 @@ export interface IDE {
   getBranch(dir: string): Promise<string>;
   getTags(artifactId: string): Promise<IndexTag[]>;
   getRepoName(dir: string): Promise<string | undefined>;
+  errorPopup(message: string): Promise<void>;
+  infoPopup(message: string): Promise<void>;
 }
 
 // Slash Commands

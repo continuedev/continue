@@ -58,7 +58,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   openSettings: [undefined, void];
   viewHistory: [undefined, void];
   newSession: [undefined, void];
-  refreshSubmenuItems: [undefined, void];
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
   "jetbrains/editorInsetRefresh": [undefined, void];

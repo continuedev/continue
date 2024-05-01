@@ -2,18 +2,26 @@ import { v4 as uuidv4 } from "uuid";
 import type { ContextItemId, IDE } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider";
 import { ConfigHandler } from "./config/handler";
+import {
+  setupLocalMode,
+  setupOptimizedExistingUserMode,
+  setupOptimizedMode,
+} from "./config/onboarding";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util";
 import { indexDocs } from "./indexing/docs";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase";
 import { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { logDevData } from "./util/devdata";
+import { DevDataSqliteDb } from "./util/devdataSqlite";
 import historyManager from "./util/history";
 import type { IMessenger, Message } from "./util/messenger";
+import { editConfigJson, getConfigJsonPath } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { streamDiffLines } from "./util/verticalEdit";
 
 export class Core {
+  // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
   configHandler: ConfigHandler;
   codebaseIndexer: CodebaseIndexer;
   completionProvider: CompletionProvider;
@@ -115,13 +123,46 @@ export class Core {
 
     // Edit config
     on("config/addModel", (msg) => {
-      addModel(msg.data.model);
+      const model = msg.data.model;
+      const newConfigString = addModel(model);
+      this.configHandler.reloadConfig();
+      this.ide.openFile(getConfigJsonPath());
+
+      // Find the range where it was added and highlight
+      const lines = newConfigString.split("\n");
+      let startLine: number | undefined;
+      let endLine: number | undefined;
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+
+        if (!startLine) {
+          if (line.trim() === `"title": "${model.title}",`) {
+            startLine = i - 1;
+          }
+        } else {
+          if (line.startsWith("    }")) {
+            endLine = i;
+            break;
+          }
+        }
+      }
+
+      if (startLine && endLine) {
+        this.ide.showLines(
+          getConfigJsonPath(),
+          startLine,
+          endLine,
+          // "#fff1"
+        );
+      }
     });
     on("config/addOpenAiKey", (msg) => {
       addOpenAIKey(msg.data);
+      this.configHandler.reloadConfig();
     });
     on("config/deleteModel", (msg) => {
       deleteModel(msg.data.title);
+      this.configHandler.reloadConfig();
     });
     on("config/reload", (msg) => {
       this.configHandler.reloadConfig();
@@ -139,43 +180,66 @@ export class Core {
         new TransformersJsEmbeddingsProvider(),
       )) {
       }
+      this.ide.infoPopup(`🎉 Successfully indexed ${msg.data.title}`);
+      this.messenger.send("refreshSubmenuItems", undefined);
     });
     on("context/loadSubmenuItems", async (msg) => {
-      const config = await this.config();
-      const items = config.contextProviders
-        ?.find((provider) => provider.description.title === msg.data.title)
-        ?.loadSubmenuItems({ ide: this.ide });
-      return items || [];
+      const { title } = msg.data;
+      const config = await this.configHandler.loadConfig();
+      const provider = config.contextProviders?.find(
+        (p) => p.description.title === title,
+      );
+      if (!provider) {
+        throw new Error(
+          `Unknown provider ${title}. Existing providers: ${config.contextProviders
+            ?.map((p) => p.description.title)
+            .join(", ")}`,
+        );
+      }
+
+      try {
+        const items = await provider.loadSubmenuItems({ ide });
+        return items;
+      } catch (e) {
+        this.ide.errorPopup(`Error loading submenu items from ${title}: ${e}`);
+        return [];
+      }
     });
     on("context/getContextItems", async (msg) => {
+      const { name, query, fullInput, selectedCode } = msg.data;
       const config = await this.config();
       const llm = await this.getSelectedModel();
       const provider = config.contextProviders?.find(
-        (provider) => provider.description.title === msg.data.name,
+        (provider) => provider.description.title === name,
       );
       if (!provider) return [];
 
-      const id: ContextItemId = {
-        providerTitle: provider.description.title,
-        itemId: uuidv4(),
-      };
-      const items = await provider.getContextItems(msg.data.query, {
-        llm,
-        embeddingsProvider: config.embeddingsProvider,
-        fullInput: msg.data.fullInput,
-        ide,
-        selectedCode: msg.data.selectedCode,
-        reranker: config.reranker,
-      });
+      try {
+        const id: ContextItemId = {
+          providerTitle: provider.description.title,
+          itemId: uuidv4(),
+        };
+        const items = await provider.getContextItems(query, {
+          llm,
+          embeddingsProvider: config.embeddingsProvider,
+          fullInput,
+          ide,
+          selectedCode,
+          reranker: config.reranker,
+        });
 
-      Telemetry.capture("useContextProvider", {
-        name: provider.description.title,
-      });
+        Telemetry.capture("useContextProvider", {
+          name: provider.description.title,
+        });
 
-      return items.map((item) => ({
-        ...item,
-        id,
-      }));
+        return items.map((item) => ({
+          ...item,
+          id,
+        }));
+      } catch (e) {
+        this.ide.errorPopup(`Error getting context items from ${name}: ${e}`);
+        return [];
+      }
     });
 
     on("config/getBrowserSerialized", (msg) => {
@@ -238,6 +302,15 @@ export class Core {
     on("llm/streamComplete", (msg) =>
       llmStreamComplete(this.configHandler, this.abortedMessageIds, msg),
     );
+
+    on("llm/complete", async (msg) => {
+      const model = await this.configHandler.llmFromTitle(msg.data.title);
+      const completion = await model.complete(
+        msg.data.prompt,
+        msg.data.completionOptions,
+      );
+      return completion;
+    });
 
     async function* runNodeJsSlashCommand(
       configHandler: ConfigHandler,
@@ -338,5 +411,31 @@ export class Core {
     on("streamDiffLines", (msg) =>
       streamDiffLinesGenerator(this.configHandler, this.abortedMessageIds, msg),
     );
+
+    on("completeOnboarding", (msg) => {
+      const mode = msg.data.mode;
+      Telemetry.capture("onboardingSelection", {
+        mode,
+      });
+      if (mode === "custom" || mode === "localExistingUser") {
+        return;
+      }
+      editConfigJson(
+        mode === "local"
+          ? setupLocalMode
+          : mode === "optimized"
+          ? setupOptimizedMode
+          : setupOptimizedExistingUserMode,
+      );
+    });
+
+    on("stats/getTokensPerDay", async (msg) => {
+      const rows = await DevDataSqliteDb.getTokensPerDay();
+      return rows;
+    });
+    on("stats/getTokensPerModel", async (msg) => {
+      const rows = await DevDataSqliteDb.getTokensPerModel();
+      return rows;
+    });
   }
 }
