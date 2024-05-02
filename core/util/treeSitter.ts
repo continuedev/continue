@@ -93,6 +93,11 @@ export async function getParserForFile(filepath: string) {
   }
 }
 
+// Loading the wasm files to create a Language object is an expensive operation and with
+// sufficient number of files can result in errors, instead keep a map of language name
+// to Language object
+const nameToLanguage = new Map<string, Language>();
+
 export async function getLanguageForFile(
   filepath: string,
 ): Promise<Language | undefined> {
@@ -100,18 +105,15 @@ export async function getLanguageForFile(
     await Parser.init();
     const extension = path.extname(filepath).slice(1);
 
-    if (!supportedLanguages[extension]) {
+    const languageName = supportedLanguages[extension];
+    if (!languageName) {
       return undefined;
     }
-
-    const wasmPath = path.join(
-      __dirname,
-      ...(process.env.NODE_ENV === "test"
-        ? ["node_modules", "tree-sitter-wasms", "out"]
-        : ["tree-sitter-wasms"]),
-      `tree-sitter-${supportedLanguages[extension]}.wasm`,
-    );
-    const language = await Parser.Language.load(wasmPath);
+    let language = nameToLanguage.get(languageName);
+    if (!language) {
+        language = await loadLanguageForFileExt(extension);
+        nameToLanguage.set(languageName, language);
+    }
     return language;
   } catch (e) {
     console.error("Unable to load language for file", filepath, e);
@@ -148,4 +150,15 @@ export async function getQueryForFile(
 
   const query = language.query(querySource);
   return query;
+}
+
+async function loadLanguageForFileExt(fileExtension: string): Promise<Language> {
+  const wasmPath = path.join(
+    __dirname,
+    ...(process.env.NODE_ENV === "test"
+      ? ["node_modules", "tree-sitter-wasms", "out"]
+      : ["tree-sitter-wasms"]),
+    `tree-sitter-${supportedLanguages[fileExtension]}.wasm`,
+  );
+  return await Parser.Language.load(wasmPath);
 }
