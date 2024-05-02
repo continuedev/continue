@@ -492,7 +492,8 @@ type TemplateType =
   | "neural-chat"
   | "codellama-70b"
   | "llava"
-  | "gemma";
+  | "gemma"
+  | "llama3";
 
 type ModelProvider =
   | "openai"
