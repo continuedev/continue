@@ -533,7 +533,7 @@
     "ncp": "^2.0.0",
     "node-fetch": "^3.3.2",
     "node-machine-id": "^1.1.12",
-    "posthog-node": "^3.1.2",
+    "posthog-node": "^3.6.3",
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
     "request": "^2.88.2",
