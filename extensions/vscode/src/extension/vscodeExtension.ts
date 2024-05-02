@@ -97,6 +97,26 @@ export class VsCodeExtension {
     resolveWebviewProtocol(this.sidebar.webviewProtocol);
 
     // Indexing + pause token
+    const indexingPauseToken = new PauseToken(
+      context.globalState.get<boolean>("continue.indexingPaused") === true,
+    );
+    this.webviewProtocol.on("index/setPaused", (msg) => {
+      context.globalState.update("continue.indexingPaused", msg.data);
+      indexingPauseToken.paused = msg.data;
+    });
+    this.webviewProtocol.on("index/forceReIndex", (msg) => {
+      this.ide
+        .getWorkspaceDirs()
+        .then((dirs) => this.refreshCodebaseIndex(dirs));
+      //ToDo: Maybe set indexingFailed to false here - no i dont think so
+      context.globalState.update("continue.indexingFailed", false)
+      console.log("modified global state to false (in forcereindex)")
+    });
+    this.webviewProtocol.on("index/setIndexingFailed", (msg) => {
+      console.log("updating indexFailed globalState")
+      context.globalState.update("continue.indexingFailed", msg.data); //Todo: not sure if this is needed
+    });
+    
     this.diffManager.webviewProtocol = this.webviewProtocol;
 
     const userTokenPromise: Promise<string | undefined> = new Promise(
@@ -256,4 +276,46 @@ export class VsCodeExtension {
   static continueVirtualDocumentScheme = "continue";
 
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
+  private indexingCancellationController: AbortController | undefined;
+
+  private async refreshCodebaseIndex(dirs: string[]) {
+    //ToDo:Maybe a try catch block here which calls handleIndexingFailure?
+    console.log("setting to false from refreshcodebase")
+    this.webviewProtocol?.request("setIndexingFailed", {
+      message: "false",
+      failed: false  
+    });
+    if (this.indexingCancellationController) {
+      this.indexingCancellationController.abort();
+    }
+    this.indexingCancellationController = new AbortController();
+    for await (const update of this.indexer.refresh(
+      dirs,
+      this.indexingCancellationController.signal,
+    )) {
+      if (update.indexingFailed) {
+        //Alert user //ToDo: not working
+        // postToIde("errorPopup", {
+        //   message: 'Failed to index codebase',
+        // });
+        console.log("setting to true from refreshcodebase")
+        this.webviewProtocol?.request("setIndexingFailed", {
+          message: update.desc,
+          failed: true 
+      });
+      } else {
+        this.webviewProtocol.request("indexProgress", update);
+      }
+    }
+  }
+
+  //ToDO:
+  // private handleIndexingFailure(errorMessage: string): void {
+  //   this.webviewProtocol?.request("setIndexingFailed", {
+  //     message: errorMessage,
+  //     failed: true
+  //   });
+  //   // Optionally, log the error and inform the user via the VS Code interface
+  //   vscode.window.showErrorMessage(`Indexing failed: ${errorMessage}`);
+  // }
 }

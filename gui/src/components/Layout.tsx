@@ -169,6 +169,13 @@ const Layout = () => {
     setIndexingState(data);
   });
 
+
+  //ToDO: does this update
+  useWebviewListener("setIndexingFailed", async (data) => {
+    console.log("setting indexing failed to (i think): ", data.failed)
+    setIndexingFailed(data.failed);
+  });
+
   useEffect(() => {
     if (isJetBrains()) {
       return;
@@ -189,6 +196,7 @@ const Layout = () => {
 
   const [indexingProgress, setIndexingProgress] = useState(1);
   const [indexingTask, setIndexingTask] = useState("Indexing Codebase");
+  const [indexingFailed, setIndexingFailed] = useState(false); //ToDO: is this default? Or what it changes it to?
 
   return (
     <LayoutTopDiv>
@@ -261,6 +269,7 @@ const Layout = () => {
                     currentlyIndexing={indexingTask}
                     completed={indexingProgress * 100}
                     total={100}
+                    indexingFailed={indexingFailed}
                   />
                 )}
               </div>
