@@ -5,6 +5,7 @@ type LocalStorageTypes = {
   mainTextEntryCounter: number;
   lastSessionId: string | undefined;
   inputHistory: JSONContent[];
+  extensionVersion: string;
 };
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(
@@ -16,7 +17,11 @@ export function getLocalStorage<T extends keyof LocalStorageTypes>(
   }
   try {
     return JSON.parse(value);
-  } catch (e) {
+  } catch (error) {
+    console.error(
+      `Error parsing ${key} from local storage. Value was ${value}\n\n`,
+      error,
+    );
     return undefined;
   }
 }
