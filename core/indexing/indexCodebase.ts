@@ -70,6 +70,15 @@ export class CodebaseIndexer {
       return;
     }
 
+    //Test to see if embeddings provider is configured properly
+    // let indexingFailed = false;
+    try {
+      await config.embeddingsProvider.embed(['sample text']);
+    } catch (error) {
+      yield { progress: 1, desc: "Indexing failed while testing provider", indexingFailed: true };
+      return
+    }
+
     const indexesToBuild = await this.getIndexesToBuild();
 
     let completedDirs = 0;
@@ -114,6 +123,7 @@ export class CodebaseIndexer {
               yield {
                 progress: 1,
                 desc: "Indexing cancelled",
+                indexingFailed: true
               };
               return;
             }
@@ -140,6 +150,7 @@ export class CodebaseIndexer {
           console.warn(
             `Error updating the ${codebaseIndex.artifactId} index: ${e}`,
           );
+          yield {progress: 1, desc: "error updating index", indexingFailed: true}
         }
       }
 

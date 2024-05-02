@@ -52,12 +52,14 @@ interface ProgressBarProps {
   completed: number;
   total: number;
   currentlyIndexing?: string;
+  indexingFailed?: boolean;
 }
 
 const IndexingProgressBar = ({
   completed,
   total,
   currentlyIndexing,
+  indexingFailed,
 }: ProgressBarProps) => {
   const fillPercentage = Math.min(100, Math.max(0, (completed / total) * 100));
 
@@ -70,18 +72,38 @@ const IndexingProgressBar = ({
     postToIde("index/setPaused", !expanded);
   }, [expanded]);
 
+  // useEffect(() => {
+  //   setFailed(true);
+  //   console.log("In progress bar use effect: ", indexingFailed)
+  // }, [indexingFailed]);
+
   return (
     <div
       onClick={() => {
         if (completed < total) {
           setExpanded((prev) => !prev);
         } else {
+          // console.log("indexingFailed was: ", indexingFailed)
+          indexingFailed = false
+          // console.log("setting failed to False")
           postToIde("index/forceReIndex", undefined);
         }
       }}
       className="cursor-pointer"
     >
-      {completed >= total ? (
+      {
+        indexingFailed ? ( //red 'failed' dot
+        <>
+        <CircleDiv data-tooltip-id="indexingFailed_dot" color="#ff0000"></CircleDiv>
+        {tooltipPortalDiv &&
+          ReactDOM.createPortal(
+            <StyledTooltip id="indexingFailed_dot" place="top">
+              Codebase not indexed. Click to retry
+            </StyledTooltip>,
+            tooltipPortalDiv,
+          )}
+        </>
+        ) : completed >= total ? ( //indexing complete green dot
         <>
           <CircleDiv data-tooltip-id="progress_dot" color="#090"></CircleDiv>
           {tooltipPortalDiv &&
@@ -92,7 +114,7 @@ const IndexingProgressBar = ({
               tooltipPortalDiv,
             )}
         </>
-      ) : expanded ? (
+      ) : expanded ? ( //progress bar
         <>
           <GridDiv
             data-tooltip-id="usage_progress_bar"
@@ -116,7 +138,7 @@ const IndexingProgressBar = ({
               tooltipPortalDiv,
             )}
         </>
-      ) : (
+      ) : ( //yellow 'paused' dot
         <>
           <CircleDiv data-tooltip-id="progress_dot" color="#bb0"></CircleDiv>
           {tooltipPortalDiv &&

@@ -113,8 +113,15 @@ export class VsCodeExtension {
       this.ide
         .getWorkspaceDirs()
         .then((dirs) => this.refreshCodebaseIndex(dirs));
+      //ToDo: Maybe set indexingFailed to false here - no i dont think so
+      context.globalState.update("continue.indexingFailed", false)
+      console.log("modified global state to false (in forcereindex)")
     });
-
+    this.webviewProtocol.on("index/setIndexingFailed", (msg) => {
+      console.log("updating indexFailed globalState")
+      context.globalState.update("continue.indexingFailed", msg.data); //Todo: not sure if this is needed
+    });
+    
     this.diffManager.webviewProtocol = this.webviewProtocol;
 
     const userTokenPromise: Promise<string | undefined> = new Promise(
@@ -268,6 +275,12 @@ export class VsCodeExtension {
   private indexingCancellationController: AbortController | undefined;
 
   private async refreshCodebaseIndex(dirs: string[]) {
+    //ToDo:Maybe a try catch block here which calls handleIndexingFailure?
+    console.log("setting to false from refreshcodebase")
+    this.webviewProtocol?.request("setIndexingFailed", {
+      message: "false",
+      failed: false  
+    });
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
@@ -276,7 +289,29 @@ export class VsCodeExtension {
       dirs,
       this.indexingCancellationController.signal,
     )) {
-      this.webviewProtocol.request("indexProgress", update);
+      if (update.indexingFailed) {
+        //Alert user //ToDo: not working
+        // postToIde("errorPopup", {
+        //   message: 'Failed to index codebase',
+        // });
+        console.log("setting to true from refreshcodebase")
+        this.webviewProtocol?.request("setIndexingFailed", {
+          message: update.desc,
+          failed: true 
+      });
+      } else {
+        this.webviewProtocol.request("indexProgress", update);
+      }
     }
   }
+
+  //ToDO:
+  // private handleIndexingFailure(errorMessage: string): void {
+  //   this.webviewProtocol?.request("setIndexingFailed", {
+  //     message: errorMessage,
+  //     failed: true
+  //   });
+  //   // Optionally, log the error and inform the user via the VS Code interface
+  //   vscode.window.showErrorMessage(`Indexing failed: ${errorMessage}`);
+  // }
 }
