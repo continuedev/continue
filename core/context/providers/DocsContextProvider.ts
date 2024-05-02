@@ -37,7 +37,7 @@ class DocsContextProvider extends BaseContextProvider {
 
     if (extras.reranker) {
       try {
-        const scores = await extras.reranker.rerank(query, chunks);
+        const scores = await extras.reranker.rerank(extras.fullInput, chunks);
         chunks.sort(
           (a, b) => scores[chunks.indexOf(b)] - scores[chunks.indexOf(a)],
         );
