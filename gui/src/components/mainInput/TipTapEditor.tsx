@@ -37,7 +37,7 @@ import {
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
-import { isJetBrains, postToIde } from "../../util/ide";
+import { isJetBrains, isPrerelease, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -404,6 +404,34 @@ function TipTapEditor(props: TipTapEditorProps) {
       }
     },
   });
+
+  useEffect(() => {
+    if (isJetBrains() || !isPrerelease()) {
+      // This is only for VS Code .ipynb files
+      return;
+    }
+
+    const handleKeyDown = async (event: KeyboardEvent) => {
+      if (!editor) return;
+
+      if (event.metaKey && event.key === "x") {
+        document.execCommand("cut");
+        event.stopPropagation();
+      } else if (event.metaKey && event.key === "v") {
+        document.execCommand("paste");
+        event.stopPropagation();
+      } else if (event.metaKey && event.key === "c") {
+        document.execCommand("copy");
+        event.stopPropagation();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [editor]);
 
   useEffect(() => {
     if (mainEditorContent && editor) {

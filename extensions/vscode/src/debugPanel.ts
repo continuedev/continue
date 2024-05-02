@@ -3,6 +3,7 @@ import { ConfigHandler } from "core/config/handler";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getTheme } from "./util/getTheme";
+import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -34,10 +35,10 @@ export class ContinueGUIWebviewViewProvider
   }
 
   public resetWebviewProtocolWebview(): void {
-    if (this._webview) { 
+    if (this._webview) {
       this.webviewProtocol.webview = this._webview;
-    } else{
-      console.warn("no webview found during reset")
+    } else {
+      console.warn("no webview found during reset");
     }
   }
 
@@ -148,6 +149,7 @@ export class ContinueGUIWebviewViewProvider
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
 
         <script>localStorage.setItem("ide", "vscode")</script>
+        <script>localStorage.setItem("extensionVersion", '"${getExtensionVersion()}"')</script>
         <script>window.windowId = "${this.windowId}"</script>
         <script>window.vscMachineId = "${getUniqueId()}"</script>
         <script>window.vscMediaUrl = "${vscMediaUrl}"</script>
