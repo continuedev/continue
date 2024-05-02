@@ -504,7 +504,6 @@ declare global {
     | "llama.cpp"
     | "replicate"
     | "text-gen-webui"
-    | "gemini"
     | "lmstudio"
     | "llamafile"
     | "gemini"
@@ -512,7 +511,8 @@ declare global {
     | "bedrock"
     | "deepinfra"
     | "flowise"
-    | "groq";
+    | "groq"
+    | "custom";
   
   export type ModelName =
     | "AUTODETECT"
@@ -523,7 +523,6 @@ declare global {
     | "gpt-3.5-turbo-0613"
     | "gpt-4-32k"
     | "gpt-4-turbo"
-    | "gpt-4o"
     | "gpt-4-turbo-preview"
     | "gpt-4-vision-preview"
     // Mistral
@@ -557,6 +556,9 @@ declare global {
     | "claude-3-sonnet-20240229"
     | "claude-3-haiku-20240307"
     | "claude-2.1"
+    // Cohere
+    | "command-r"
+    | "command-r-plus"
     // Gemini
     | "gemini-pro"
     | "gemini-1.5-pro-latest"
@@ -636,6 +638,7 @@ declare global {
     | "transformers.js"
     | "ollama"
     | "openai"
+    | "cohere"
     | "free-trial";
   
   export interface EmbedOptions {
@@ -683,6 +686,7 @@ declare global {
     useCache: boolean;
     onlyMyCode: boolean;
     useOtherFiles: boolean;
+    disableInFiles?: string[];
   }
   
   export interface ContinueUIConfig {
@@ -696,8 +700,14 @@ declare global {
     optimize?: string;
     fixGrammar?: string;
   }
+  
+  interface ModelRoles {
+    inlineEdit?: string;
+  }
+  
   interface ExperimantalConfig {
     contextMenuPrompts?: ContextMenuConfig;
+    modelRoles?: ModelRoles;
   }
   
   export interface SerializedContinueConfig {
