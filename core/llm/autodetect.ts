@@ -253,6 +253,7 @@ const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
   "phind",
   "xwin-coder",
   "zephyr",
+  "llama3",
 ];
 
 function autodetectPromptTemplates(
@@ -298,6 +299,8 @@ function autodetectPromptTemplates(
     editTemplate = claudeEditPrompt;
   } else if (templateType === "gemma") {
     editTemplate = gemmaEditPrompt;
+  } else if (templateType === "llama3") {
+    editTemplate = llama3EditPrompt;
   } else if (templateType === "none") {
     editTemplate = null;
   } else if (templateType) {
