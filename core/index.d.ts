@@ -311,7 +311,7 @@ type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   }[Keys];
 
 export interface CustomLLMWithOptionals {
-  options?: LLMOptions;
+  options: LLMOptions;
   streamCompletion?: (
     prompt: string,
     options: CompletionOptions,
