@@ -61,7 +61,7 @@ const DOUBLE_NEWLINE = "\n\n";
 const WINDOWS_DOUBLE_NEWLINE = "\r\n\r\n";
 const SRC_DIRECTORY = "/src/";
 // Starcoder2 tends to output artifacts starting with the letter "t"
-const STARCODER2_T_ARTIFACTS = ["t.", "\nt"];
+const STARCODER2_T_ARTIFACTS = ["t.", "\nt", "<file_sep>"];
 const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
@@ -72,7 +72,7 @@ const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
 // Not worth disrupting the user to tell them that a single autocomplete request didn't go through
 const ERRORS_TO_IGNORE = [
   // From Ollama
-  "unexpected server status: 1",
+  "unexpected server status",
 ];
 
 function formatExternalSnippet(
