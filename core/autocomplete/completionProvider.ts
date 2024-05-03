@@ -57,6 +57,7 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   modelName: string;
   completionOptions: any;
   cacheHit: boolean;
+  filepath: string;
 }
 
 const autocompleteCache = AutocompleteLruCache.get();
@@ -341,6 +342,7 @@ export async function getTabCompletion(
     modelName: llm.model,
     completionOptions,
     cacheHit,
+    filepath: input.filepath,
     ...options,
   };
 }
@@ -386,6 +388,7 @@ export class CompletionProvider {
     this._abortControllers.clear();
   }
 
+  // Key is completionId
   private _abortControllers = new Map<string, AbortController>();
   private _logRejectionTimeouts = new Map<string, NodeJS.Timeout>();
   private _outcomes = new Map<string, AutocompleteOutcome>();
@@ -408,6 +411,17 @@ export class CompletionProvider {
         time: outcome.time,
         cacheHit: outcome.cacheHit,
       });
+      this._outcomes.delete(completionId);
+    }
+  }
+
+  public cancelRejectionTimeout(completionId: string) {
+    if (this._logRejectionTimeouts.has(completionId)) {
+      clearTimeout(this._logRejectionTimeouts.get(completionId)!);
+      this._logRejectionTimeouts.delete(completionId);
+    }
+
+    if (this._outcomes.has(completionId)) {
       this._outcomes.delete(completionId);
     }
   }
@@ -525,6 +539,8 @@ export class CompletionProvider {
     }
   }
 
+  _lastDisplayedCompletionId: string | undefined = undefined;
+
   markDisplayed(completionId: string, outcome: AutocompleteOutcome) {
     const logRejectionTimeout = setTimeout(() => {
       // Wait 10 seconds, then assume it wasn't accepted
@@ -539,5 +555,45 @@ export class CompletionProvider {
     }, 2_000);
     this._outcomes.set(completionId, outcome);
     this._logRejectionTimeouts.set(completionId, logRejectionTimeout);
+
+    // If the previously displayed completion is still waiting for rejection,
+    // and this one is a continuation of that (the outcome.completion is the same modulo prefix)
+    // then we should cancel the rejection timeout
+    const previous = this._lastDisplayedCompletionId;
+    if (previous && this._logRejectionTimeouts.has(previous)) {
+      const previousOutcome = this._outcomes.get(previous);
+      const c1 = previousOutcome?.completion.split("\n")[0] ?? "";
+      const c2 = outcome.completion.split("\n")[0];
+      if (
+        previousOutcome &&
+        (c1.endsWith(c2) ||
+          c2.endsWith(c1) ||
+          c1.startsWith(c2) ||
+          c2.startsWith(c1))
+      ) {
+        this.cancelRejectionTimeout(previous);
+        console.log(
+          [
+            "Match: ",
+            previousOutcome?.completion,
+            outcome.completion,
+            c1,
+            c2,
+          ].join("\n"),
+        );
+      } else {
+        console.log(
+          [
+            "No match: ",
+            previousOutcome?.completion,
+            outcome.completion,
+            c1,
+            c2,
+          ].join("\n"),
+        );
+      }
+    }
+
+    this._lastDisplayedCompletionId = completionId;
   }
 }
