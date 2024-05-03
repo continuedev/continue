@@ -76,9 +76,8 @@ export class CodebaseIndexer {
 
     // Wait until Git Extension has loaded to report progress
     // so we don't appear stuck at 0% while waiting
-    if (workspaceDirs.length > 0) {
-      await this.ide.getRepoName(workspaceDirs[0]);
-    }
+    await this.ide.getRepoName(workspaceDirs[0]);
+
     yield {
       progress: 0,
       desc: "Starting indexing...",
