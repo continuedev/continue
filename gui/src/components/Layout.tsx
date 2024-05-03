@@ -28,8 +28,6 @@ import TextDialog from "./dialogs";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import ModelSelect from "./modelSelection/ModelSelect";
-import * as vscode from "../../../extensions/vscode";
-
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
