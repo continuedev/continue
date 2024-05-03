@@ -71,8 +71,8 @@ export class ConfigHandler {
     const ideInfo = await this.ide.getIdeInfo();
     const uniqueId = await this.ide.getUniqueId();
 
-    const newConfig = await loadFullConfigNode(
-      this.ide,
+    this.savedConfig = await loadFullConfigNode(
+      this.ide.readFile.bind(this.ide),
       workspaceConfigs,
       remoteConfigServerUrl,
       ideInfo.ideType,
