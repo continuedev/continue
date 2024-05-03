@@ -114,50 +114,17 @@ export class VsCodeExtension {
         .getWorkspaceDirs()
         .then((dirs) => this.refreshCodebaseIndex(dirs, context));
       context.globalState.update("continue.indexingFailed", false)
-      console.log("modified global state to false (in forcereindex)")
     });
-    // let indexingProgressBar: boolean = false
     this.webviewProtocol.on("index/setIndexingFailed", (msg) => {
-      console.log("forwarding setIndexingFailed to webviewProtocol")
-
-      //if the sidebar has not been opened, this request will not succeed
       this.webviewProtocol?.request("setIndexingFailed", msg.data); 
-
-      //Set the global state so that when the sidebar is opened, it can read the state
       context.globalState.update("continue.indexingFailed", msg.data)
-
-
-      // If the indexing progress bar has been initialized do the update, 
-      // otherwise, put it in a queue, which will execute when the bar is initialized
-      // if (indexingProgressBar) {
-      //   console.log("not adding to queue, doing update")
-      //   context.globalState.update("continue.indexingFailed", msg.data); 
-      // } else {
-      //   console.log("adding to message queue")
-      //   messageQueue.push(msg.data)
-      // }
     });
-    // let messageQueue: {failed:boolean}[] = [];
     this.webviewProtocol.on("index/indexingProgressBarInitialized", (msg) => {
-      console.log("from vscode extension, forwarding setIndexingFailed from index bar initialized")
-
       if (context.globalState.get("continue.indexingFailed")){
-        console.log("global state was true: ", context.globalState.get("continue.indexingFailed"))
         this.webviewProtocol?.request("setIndexingFailed", {failed: true});
       } else {
-        console.log("global state was false: ", context.globalState.get("continue.indexingFailed"))
         this.webviewProtocol?.request("setIndexingFailed", {failed: false});
       }
-
-
-      //console.log("forwarding indexProgressBarInitialized to webviewProtocol")
-      //this.webviewProtocol?.request("indexingProgressBarInitialized", {ready:true});
-      // console.log("webview, initializing progress bar. messagequeu len: ", messageQueue.length)
-      // indexingProgressBar = true
-      // for (let i = 0; i < messageQueue.length; i++) {
-      //   context.globalState.update("continue.indexingFailed", messageQueue[i])
-      // }
-      // messageQueue = []
     });
     
     this.diffManager.webviewProtocol = this.webviewProtocol;
@@ -313,7 +280,6 @@ export class VsCodeExtension {
   private indexingCancellationController: AbortController | undefined;
 
   private async refreshCodebaseIndex(dirs: string[], context: vscode.ExtensionContext) {
-    console.log("setting to false from refreshcodebase")
     this.webviewProtocol?.request("setIndexingFailed", {failed:false});
     context.globalState.update("continue.indexingFailed", false)
 
@@ -327,14 +293,13 @@ export class VsCodeExtension {
       this.indexingCancellationController.signal,
     )) {
       if (update.indexingFailed) {
-        //Alert user //ToDo: not working
-        // postToIde("errorPopup", {
-        //   message: 'Failed to index codebase',
-        // });
-        console.log("setting to true from refreshcodebase")
+        err = update.desc
+
+        // Signal to front-end
         this.webviewProtocol?.request("setIndexingFailed", {failed: true});
         context.globalState.update("continue.indexingFailed", true)
-        err = update.desc
+
+        break
       } else {
         this.webviewProtocol.request("indexProgress", update);
       }
@@ -347,14 +312,4 @@ export class VsCodeExtension {
     }
     
   }
-
-  //ToDO:
-  // private handleIndexingFailure(errorMessage: string): void {
-  //   this.webviewProtocol?.request("setIndexingFailed", {
-  //     message: errorMessage,
-  //     failed: true
-  //   });
-  //   // Optionally, log the error and inform the user via the VS Code interface
-  //   vscode.window.showErrorMessage(`Indexing failed: ${errorMessage}`);
-  // }
 }
