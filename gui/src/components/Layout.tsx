@@ -28,6 +28,8 @@ import TextDialog from "./dialogs";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import ModelSelect from "./modelSelection/ModelSelect";
+import * as vscode from "../../../extensions/vscode";
+
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -167,11 +169,32 @@ const Layout = () => {
     setIndexingTask(data.desc);
   });
 
+  // let indexingProgressBarInitialized: boolean = false 
+  // let messageQueue: {failed:boolean}[] = [];
+  // useWebviewListener("indexingProgressBarInitialized", async (data) => { 
+  //   indexingProgressBarInitialized = true
+  //   console.log("webview, initializing progress bar. message queue len: ", messageQueue.length)
 
-  //ToDO: does this update
+  //   for (let i = 0; i < messageQueue.length; i++) {
+  //     setIndexingFailed(messageQueue[i].failed)
+  //   }
+  //   messageQueue = []
+  // });
+
   useWebviewListener("setIndexingFailed", async (data) => {
-    console.log("setting indexing failed to (i think): ", data.failed)
-    setIndexingFailed(data.failed);
+    setIndexingFailed(data.failed)
+
+    // // Check if bar has been initialized
+    // if (indexingProgressBarInitialized) {
+    //   console.log("no pushing to queue")
+    //   setIndexingFailed(data.failed)
+    // } else {
+    //   console.log("pushing to queue")
+    //   messageQueue.push(data)
+    // }
+    console.log("From layout. setting indexing failed to : ", data.failed)
+    //postToIde("index/setIndexingFailed", {failed: data.failed})
+    //setIndexingFailed(data.failed); //may not needs this if switch to global
   });
 
   useEffect(() => {
@@ -194,7 +217,7 @@ const Layout = () => {
 
   const [indexingProgress, setIndexingProgress] = useState(1);
   const [indexingTask, setIndexingTask] = useState("Indexing Codebase");
-  const [indexingFailed, setIndexingFailed] = useState(false); //ToDO: is this default? Or what it changes it to?
+  const [indexingFailed, setIndexingFailed] = useState(false); 
 
   return (
     <LayoutTopDiv>

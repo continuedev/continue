@@ -59,7 +59,7 @@ const IndexingProgressBar = ({
   completed,
   total,
   currentlyIndexing,
-  indexingFailed,
+  indexingFailed = false
 }: ProgressBarProps) => {
   const fillPercentage = Math.min(100, Math.max(0, (completed / total) * 100));
 
@@ -69,23 +69,21 @@ const IndexingProgressBar = ({
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
+    console.log("posting initialization from progress bar")
+    postToIde("index/indexingProgressBarInitialized", {ready:true})
+  }, []);
+  
+  useEffect(() => {
     postToIde("index/setPaused", !expanded);
   }, [expanded]);
-
-  // useEffect(() => {
-  //   setFailed(true);
-  //   console.log("In progress bar use effect: ", indexingFailed)
-  // }, [indexingFailed]);
 
   return (
     <div
       onClick={() => {
+        console.log(completed, " | ", total, " | ", expanded)
         if (completed < total) {
           setExpanded((prev) => !prev);
         } else {
-          // console.log("indexingFailed was: ", indexingFailed)
-          indexingFailed = false
-          // console.log("setting failed to False")
           postToIde("index/forceReIndex", undefined);
         }
       }}
