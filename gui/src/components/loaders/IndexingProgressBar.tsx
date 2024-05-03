@@ -79,8 +79,6 @@ const IndexingProgressBar = ({
   return (
     <div
       onClick={() => {
-        console.log("progress bar clicked")
-        console.log(completed, " | ", total)
         if (completed < total && completed >= 0) {
           setExpanded((prev) => !prev);
         } else {
