@@ -777,54 +777,6 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     title: "Ollama",
     provider: "ollama",
     description:
-      "One of the fastest ways to get started with local models on Mac, Linux, or Windows",
-    longDescription:
-      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
-    icon: "ollama.png",
-    tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
-    packages: [
-      {
-        ...AUTODETECT,
-        params: {
-          ...AUTODETECT.params,
-          title: "Ollama",
-        },
-      },
-      ...osModels,
-    ],
-    collectInputFor: [
-      ...completionParamsInputs,
-      { ...apiBaseInput, defaultValue: "http://localhost:11434" },
-    ],
-    downloadUrl: "https://ollama.ai/",
-  },
-  cohere: {
-    title: "Cohere",
-    provider: "cohere",
-    refPage: "cohere",
-    description:
-      "Optimized for enterprise generative AI, search and discovery, and advanced retrieval.",
-    icon: "cohere.png",
-    tags: [ModelProviderTag["Requires API Key"]],
-    longDescription:
-      "To use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.",
-    collectInputFor: [
-      {
-        inputType: CollectInputType.text,
-        key: "apiKey",
-        label: "API Key",
-        placeholder: "Enter your Cohere API key",
-        required: true,
-      },
-      ...completionParamsInputs,
-    ],
-    packages: [commandR, commandRPlus],
-  },
-  groq: {
-    title: "Groq",
-    provider: "groq",
-    icon: "groq.png",
-    description:
       "Groq is the fastest LLM provider by a wide margin, using 'LPUs' to serve open-source models at blazing speed.",
     longDescription:
       "To get started with Groq, obtain an API key from their website [here](https://wow.groq.com/).",
