@@ -193,7 +193,7 @@ const Layout = () => {
     }
   }, [location]);
 
-  const [indexingProgress, setIndexingProgress] = useState(1);
+  const [indexingProgress, setIndexingProgress] = useState(-1);
   const [indexingTask, setIndexingTask] = useState("Indexing Codebase");
   const [indexingFailed, setIndexingFailed] = useState(false); 
 

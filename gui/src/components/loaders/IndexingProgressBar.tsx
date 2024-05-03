@@ -90,7 +90,18 @@ const IndexingProgressBar = ({
       className="cursor-pointer"
     >
       {
-        indexingFailed ? ( //red 'failed' dot
+        completed < 0 ? ( //
+        <>
+        <CircleDiv data-tooltip-id="indexingNotLoaded_dot" color="#72aec2"></CircleDiv>
+        {tooltipPortalDiv &&
+          ReactDOM.createPortal(
+            <StyledTooltip id="indexingNotLoaded_dot" place="top">
+              Codebase indexing is starting up.
+            </StyledTooltip>,
+            tooltipPortalDiv,
+          )}
+        </>
+        ) : indexingFailed ? ( //red 'failed' dot
         <>
         <CircleDiv data-tooltip-id="indexingFailed_dot" color="#ff0000"></CircleDiv>
         {tooltipPortalDiv &&
@@ -101,7 +112,7 @@ const IndexingProgressBar = ({
             tooltipPortalDiv,
           )}
         </>
-        ) : completed >= total ? ( //indexing complete green dot
+        ) : completed >= total  ? ( //indexing complete green dot
         <>
           <CircleDiv data-tooltip-id="progress_dot" color="#090"></CircleDiv>
           {tooltipPortalDiv &&
