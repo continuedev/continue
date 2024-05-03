@@ -81,7 +81,9 @@ const IndexingProgressBar = ({
   return (
     <div
       onClick={() => {
-        if (completed < total) {
+        console.log("progress bar clicked")
+        console.log(completed, " | ", total)
+        if (completed < total && completed >= 0) {
           setExpanded((prev) => !prev);
         } else {
           postToIde("index/forceReIndex", undefined);
@@ -90,7 +92,7 @@ const IndexingProgressBar = ({
       className="cursor-pointer"
     >
       {
-        completed < 0 ? ( //
+        (completed < 0 && !indexingFailed) ? ( // ice-blue 'indexing starting up' dot
         <>
         <CircleDiv data-tooltip-id="indexingNotLoaded_dot" color="#72aec2"></CircleDiv>
         {tooltipPortalDiv &&
@@ -112,7 +114,7 @@ const IndexingProgressBar = ({
             tooltipPortalDiv,
           )}
         </>
-        ) : completed >= total  ? ( //indexing complete green dot
+        ) : completed >= total ? ( //indexing complete green dot
         <>
           <CircleDiv data-tooltip-id="progress_dot" color="#090"></CircleDiv>
           {tooltipPortalDiv &&

@@ -115,10 +115,21 @@ export class VsCodeExtension {
       context.globalState.update("continue.indexingFailed", msg.data)
     });
     this.webviewProtocol.on("index/indexingProgressBarInitialized", (msg) => {
+      // Triggered when progress bar is initialized.
+      // Purpose: To relay global state values to the progress bar
+      
+      // Update indexingFailed
       if (context.globalState.get("continue.indexingFailed")){
         this.webviewProtocol?.request("setIndexingFailed", {failed: true});
       } else {
         this.webviewProtocol?.request("setIndexingFailed", {failed: false});
+      }
+
+      // Update indexingProgress
+      if (context.globalState.get("continue.indexingProgress")){
+        let progress = context.globalState.get<number>("continue.indexingProgress") as number
+        let desc = context.globalState.get<string>("continue.indexingDesc") as string
+        this.webviewProtocol?.request("indexProgress", {progress, desc})
       }
     });
     
@@ -287,8 +298,11 @@ export class VsCodeExtension {
   private indexingCancellationController: AbortController | undefined;
 
   private async refreshCodebaseIndex(dirs: string[], context: vscode.ExtensionContext) {
+    //reset all state variables
     this.webviewProtocol?.request("setIndexingFailed", {failed:false});
     context.globalState.update("continue.indexingFailed", false)
+    context.globalState.update("continue.indexingProgress", 0)
+    context.globalState.update("continue.indexingDesc", "")
 
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
@@ -302,12 +316,14 @@ export class VsCodeExtension {
       if (update.indexingFailed) {
         err = update.desc
 
-        // Signal to front-end
+        // Signal failure to front-end
         this.webviewProtocol?.request("setIndexingFailed", {failed: true});
         context.globalState.update("continue.indexingFailed", true)
-
         break
       } else {
+      // Save progress
+        context.globalState.update("continue.indexingProgress", update.progress)
+        context.globalState.update("continue.indexingDesc", update.desc)
         this.webviewProtocol.request("indexProgress", update);
       }
     }
