@@ -83,9 +83,16 @@ const config = {
             label: "Docs",
           },
           {
-            href: "https://github.com/continuedev/continue",
+            to: "https://github.com/continuedev/continue",
             label: "GitHub",
             position: "right",
+            className: 'github-navbar',
+          },
+          {
+            to: "https://discord.gg/vapESyrFmJ",
+            label: "Discord",
+            position: "right",
+            className: 'discord-navbar',
           },
         ],
       },
@@ -93,15 +100,15 @@ const config = {
         style: "dark",
         links: [
           {
-            title: "Docs",
+            title: "Extensions",
             items: [
-              {
-                label: "Introduction",
-                to: "/intro",
-              },
               {
                 label: "VS Code",
                 to: "https://marketplace.visualstudio.com/items?itemName=Continue.continue",
+              },
+              {
+                label: "JetBrains",
+                to: "https://plugins.jetbrains.com/plugin/22707-continue-extension",
               },
             ],
           },
@@ -110,24 +117,24 @@ const config = {
             items: [
               {
                 label: "Discord",
-                href: "https://discord.gg/vapESyrFmJ",
+                to: "https://discord.gg/vapESyrFmJ",
               },
               {
-                label: "Twitter",
-                href: "https://twitter.com/continuedev",
+                label: "GitHub",
+                to: "https://github.com/continuedev/continue",
               },
             ],
           },
           {
-            title: "More",
+            title: "Follow Us",
             items: [
               {
-                label: "GitHub",
-                href: "https://github.com/continuedev/continue",
+                label: "Twitter",
+                to: "https://twitter.com/continuedev",
               },
               {
-                label: "Website",
-                href: "https://continue.dev",
+                label: "LinkedIn",
+                to: "https://linkedin.com/company/continuedev",
               },
             ],
           },
