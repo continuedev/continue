@@ -48,6 +48,8 @@ Type `@docs` to index and retrieve snippets from any documentation site. You can
 { "name": "docs" }
 ```
 
+Continue also pre-indexes a number of common sites, listed [here](https://github.com/continuedev/continue/blob/main/core/indexing/docs/preIndexedDocs.ts). The embeddings for these sites are hosted by us, but downloaded for local use after the first time. All other indexing occurs entirely locally.
+
 ### Open Files
 
 Type '@open' to reference the contents of all of your open files. Set `onlyPinned` to `true` to only reference pinned files.
