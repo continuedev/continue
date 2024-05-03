@@ -82,7 +82,6 @@ export class CodebaseIndexer {
     }
 
     //Test to see if embeddings provider is configured properly
-    // let indexingFailed = false;
     try {
       await config.embeddingsProvider.embed(['sample text']);
     } catch (error) {
@@ -168,7 +167,7 @@ export class CodebaseIndexer {
           console.warn(
             `Error updating the ${codebaseIndex.artifactId} index: ${e}`,
           );
-          yield {progress: 1, desc: "error updating index", indexingFailed: true}
+          yield {progress: 1, desc: "error updating index"} 
         }
       }
 
