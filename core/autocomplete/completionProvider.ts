@@ -2,7 +2,7 @@ import Handlebars from "handlebars";
 import ignore from "ignore";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { IDE, ILLM, Position, TabAutocompleteOptions } from "..";
+import { IDE, ILLM, Position, Range, TabAutocompleteOptions } from "..";
 import { RangeInFileWithContents } from "../commands/util";
 import { ConfigHandler } from "../config/handler";
 import { streamLines } from "../diff/util";
@@ -42,6 +42,10 @@ export interface AutocompleteInput {
   manuallyPassFileContents?: string;
   // Used for VS Code git commit input box
   manuallyPassPrefix?: string;
+  selectedCompletionInfo?: {
+    text: string;
+    range: Range;
+  };
 }
 
 export interface AutocompleteOutcome extends TabAutocompleteOptions {
@@ -156,10 +160,12 @@ export async function getTabCompletion(
   }
 
   // Prompt
-  const fullPrefix = getRangeInString(fileContents, {
-    start: { line: 0, character: 0 },
-    end: pos,
-  });
+  const fullPrefix =
+    getRangeInString(fileContents, {
+      start: { line: 0, character: 0 },
+      end: input.selectedCompletionInfo?.range.start ?? pos,
+    }) + (input.selectedCompletionInfo?.text ?? "");
+
   const fullSuffix = getRangeInString(fileContents, {
     start: pos,
     end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
@@ -394,6 +400,7 @@ export class CompletionProvider {
       const outcome = this._outcomes.get(completionId)!;
       outcome.accepted = true;
       logDevData("autocomplete", outcome);
+      console.log("Outcome: ", outcome.accepted);
       Telemetry.capture("autocomplete", {
         accepted: outcome.accepted,
         modelName: outcome.modelName,
@@ -492,31 +499,23 @@ export class CompletionProvider {
         input,
         this.getDefinitionsFromLsp,
       );
-      const completion = outcome?.completion;
 
-      if (!completion) {
+      if (!outcome?.completion) {
         return undefined;
       }
 
       // Do some stuff later so as not to block return. Latency matters
+      const completionToCache = outcome.completion;
       setTimeout(async () => {
         if (!outcome.cacheHit) {
-          (await this.autocompleteCache).put(outcome.prompt, completion);
+          (await this.autocompleteCache).put(outcome.prompt, completionToCache);
         }
       }, 100);
 
-      outcome.accepted = false;
-      const logRejectionTimeout = setTimeout(() => {
-        // Wait 10 seconds, then assume it wasn't accepted
-        logDevData("autocomplete", outcome);
-        const { prompt, completion, ...restOfOutcome } = outcome;
-        Telemetry.capture("autocomplete", {
-          ...restOfOutcome,
-        });
-        this._logRejectionTimeouts.delete(input.completionId);
-      }, 10_000);
-      this._outcomes.set(input.completionId, outcome);
-      this._logRejectionTimeouts.set(input.completionId, logRejectionTimeout);
+      // Adding the prefix must happen after caching
+      if (input.selectedCompletionInfo) {
+        outcome.completion = `${input.selectedCompletionInfo.text}${outcome.completion}`;
+      }
 
       return outcome;
     } catch (e: any) {
@@ -524,5 +523,21 @@ export class CompletionProvider {
     } finally {
       this._abortControllers.delete(input.completionId);
     }
+  }
+
+  markDisplayed(completionId: string, outcome: AutocompleteOutcome) {
+    const logRejectionTimeout = setTimeout(() => {
+      // Wait 10 seconds, then assume it wasn't accepted
+      outcome.accepted = false;
+      console.log("Outcome: ", outcome.accepted);
+      logDevData("autocomplete", outcome);
+      const { prompt, completion, ...restOfOutcome } = outcome;
+      Telemetry.capture("autocomplete", {
+        ...restOfOutcome,
+      });
+      this._logRejectionTimeouts.delete(completionId);
+    }, 2_000);
+    this._outcomes.set(completionId, outcome);
+    this._logRejectionTimeouts.set(completionId, logRejectionTimeout);
   }
 }

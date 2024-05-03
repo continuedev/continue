@@ -4,8 +4,6 @@ import {
   CompletionProvider,
 } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
-import { logDevData } from "core/util/devdata";
-import { Telemetry } from "core/util/posthog";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
@@ -61,6 +59,17 @@ export class ContinueCompletionProvider
         .getConfiguration("continue")
         .get<boolean>("enableTabAutocomplete") || false;
     if (token.isCancellationRequested || !enableTabAutocomplete) {
+      return [];
+    }
+
+    // If the text at the range isn't a prefix of the intellisense text,
+    // no completion will be displayed, regardless of what we return
+    if (
+      context.selectedCompletionInfo &&
+      !context.selectedCompletionInfo.text.startsWith(
+        document.getText(context.selectedCompletionInfo.range),
+      )
+    ) {
       return [];
     }
 
@@ -126,6 +135,7 @@ export class ContinueCompletionProvider
         clipboardText: clipboardText,
         manuallyPassFileContents,
         manuallyPassPrefix,
+        selectedCompletionInfo: context.selectedCompletionInfo,
       };
 
       setupStatusBar(true, true);
@@ -139,32 +149,44 @@ export class ContinueCompletionProvider
         return [];
       }
 
-      const logRejectionTimeout = setTimeout(() => {
-        // Wait 10 seconds, then assume it wasn't accepted
-        outcome.accepted = false;
-        logDevData("autocomplete", outcome);
-        Telemetry.capture("autocomplete", {
-          accepted: outcome.accepted,
-          modelName: outcome.modelName,
-          modelProvider: outcome.modelProvider,
-          time: outcome.time,
-          cacheHit: outcome.cacheHit,
-        });
-      }, 10_000);
+      // VS Code displays dependent on context.selectedCompletionInfo (their docstring below)
+      // We should first always make sure we have a valid completion, but if it goes wrong we
+      // want telemetry to be correct
+      /**
+       * Provides information about the currently selected item in the autocomplete widget if it is visible.
+       *
+       * If set, provided inline completions must extend the text of the selected item
+       * and use the same range, otherwise they are not shown as preview.
+       * As an example, if the document text is `console.` and the selected item is `.log` replacing the `.` in the document,
+       * the inline completion must also replace `.` and start with `.log`, for example `.log()`.
+       *
+       * Inline completion providers are requested again whenever the selected item changes.
+       */
+      const completionRange = new vscode.Range(
+        context.selectedCompletionInfo?.range.start ?? position,
+        position.translate(0, outcome.completion.length),
+      );
+      let willDisplay = true;
+      if (context.selectedCompletionInfo) {
+        const { text, range } = context.selectedCompletionInfo;
+        if (text && !outcome.completion.startsWith(text)) {
+          willDisplay = false;
+          console.log(
+            `Won't display completion because text doesn't match: ${text}, ${outcome.completion}`,
+            range,
+          );
+        }
+      }
+      if (willDisplay) {
+        this.completionProvider.markDisplayed(input.completionId, outcome);
+      }
 
       return [
-        new vscode.InlineCompletionItem(
-          outcome.completion,
-          new vscode.Range(
-            position,
-            position.translate(0, outcome.completion.length),
-          ),
-          {
-            title: "Log Autocomplete Outcome",
-            command: "continue.logAutocompleteOutcome",
-            arguments: [outcome, logRejectionTimeout],
-          },
-        ),
+        new vscode.InlineCompletionItem(outcome.completion, completionRange, {
+          title: "Log Autocomplete Outcome",
+          command: "continue.logAutocompleteOutcome",
+          arguments: [input.completionId, this.completionProvider],
+        }),
       ];
     } finally {
       stopStatusBarLoading();
