@@ -72,7 +72,7 @@ export class ConfigHandler {
     } catch (e) {}
 
     this.savedConfig = await loadFullConfigNode(
-      this.ide.readFile,
+      this.ide.readFile.bind(this.ide),
       workspaceConfigs,
       remoteConfigServerUrl,
       ideInfo.ideType,
