@@ -71,7 +71,6 @@ const IndexingProgressBar = ({
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    console.log("posting initialization from progress bar")
     postToIde("index/indexingProgressBarInitialized", {ready:true})
   }, []);
   
@@ -82,7 +81,6 @@ const IndexingProgressBar = ({
   return (
     <div
       onClick={() => {
-        console.log(completed, " | ", total, " | ", expanded)
         if (completed < total) {
           setExpanded((prev) => !prev);
         } else {
