@@ -40,7 +40,7 @@ export class TabAutocompleteModel {
               if (value === "Documentation") {
                 vscode.env.openExternal(
                   vscode.Uri.parse(
-                    "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+                    "https://docs.continue.dev/walkthroughs/tab-autocomplete",
                   ),
                 );
               } else if (value === "Copy Command") {
@@ -63,7 +63,7 @@ export class TabAutocompleteModel {
             if (value === "Documentation") {
               vscode.env.openExternal(
                 vscode.Uri.parse(
-                  "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+                  "https://docs.continue.dev/walkthroughs/tab-autocomplete",
                 ),
               );
             } else if (value === "Download Ollama") {
@@ -82,7 +82,7 @@ export class TabAutocompleteModel {
     if (!this._llm) {
       const config = await this.configHandler.loadConfig();
       if (config.tabAutocompleteModel) {
-        this._llm = this.configHandler.setupLlm(config.tabAutocompleteModel);
+        this._llm = config.tabAutocompleteModel;
       } else {
         this._llm = await this.getDefaultTabAutocompleteModel();
       }

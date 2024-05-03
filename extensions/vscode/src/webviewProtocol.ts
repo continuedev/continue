@@ -10,6 +10,7 @@ import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { logDevData } from "core/util/devdata";
 import { DevDataSqliteDb } from "core/util/devdataSqlite";
+import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
@@ -25,7 +26,7 @@ import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getExtensionUri } from "./util/vscode";
 
-async function showTutorial() {
+export async function showTutorial() {
   const tutorialPath = path.join(
     getExtensionUri().fsPath,
     "continue_tutorial.py",
@@ -40,7 +41,7 @@ async function showTutorial() {
   const doc = await vscode.workspace.openTextDocument(
     vscode.Uri.file(tutorialPath),
   );
-  await vscode.window.showTextDocument(doc);
+  await vscode.window.showTextDocument(doc, { preview: false });
 }
 
 export class VsCodeWebviewProtocol {
@@ -106,6 +107,8 @@ export class VsCodeWebviewProtocol {
             respond(response || {});
           }
         } catch (e: any) {
+          respond({ done: true, error: e });
+
           console.error(
             "Error handling webview message: " +
               JSON.stringify({ msg }, null, 2),
@@ -114,9 +117,9 @@ export class VsCodeWebviewProtocol {
           let message = e.message;
           if (e.cause) {
             if (e.cause.name === "ConnectTimeoutError") {
-              message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in config.json by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://continue.dev/docs/reference/config`;
+              message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in config.json by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://docs.continue.dev/reference/config`;
             } else if (e.cause.code === "ECONNREFUSED") {
-              message = `Connection was refused. This likely means that there is no server running at the specified URL. If you are running your own server you may need to set the "apiBase" parameter in config.json. For example, you can set up an OpenAI-compatible server like here: https://continue.dev/docs/reference/Model%20Providers/openai#openai-compatible-servers--apis`;
+              message = `Connection was refused. This likely means that there is no server running at the specified URL. If you are running your own server you may need to set the "apiBase" parameter in config.json. For example, you can set up an OpenAI-compatible server like here: https://docs.continue.dev/reference/Model%20Providers/openai#openai-compatible-servers--apis`;
             } else {
               message = `The request failed with "${e.cause.name}": ${e.cause.message}. If you're having trouble setting up Continue, please see the troubleshooting guide for help.`;
             }
@@ -131,7 +134,7 @@ export class VsCodeWebviewProtocol {
                 );
               } else if (selection === "Troubleshooting") {
                 vscode.env.openExternal(
-                  vscode.Uri.parse("https://continue.dev/docs/troubleshooting"),
+                  vscode.Uri.parse("https://docs.continue.dev/troubleshooting"),
                 );
               }
             });
@@ -445,6 +448,8 @@ export class VsCodeWebviewProtocol {
         },
         selectedCode,
         config,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
       })) {
         if (content) {
           yield { content };
@@ -470,7 +475,11 @@ export class VsCodeWebviewProtocol {
       }
 
       try {
-        const items = await provider.loadSubmenuItems({ ide });
+        const items = await provider.loadSubmenuItems({
+          ide,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
+        });
         return items;
       } catch (e) {
         vscode.window.showErrorMessage(
@@ -508,6 +517,8 @@ export class VsCodeWebviewProtocol {
           fullInput,
           ide,
           selectedCode,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
         });
 
         Telemetry.capture("useContextProvider", {

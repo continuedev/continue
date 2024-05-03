@@ -73,8 +73,8 @@ function Models() {
           <li>a model (the LLM being run, e.g. GPT-4, CodeLlama).</li>
         </ul>
         To read more about the options, check out our{" "}
-        <a href="https://continue.dev/docs/setup/overview">overview</a> in the
-        docs.
+        <a href="https://docs.continue.dev/model-setup/overview">overview</a> in
+        the docs.
       </IntroDiv>
       {providersSelected ? (
         <GridDiv>
@@ -84,7 +84,7 @@ function Models() {
               description={modelInfo.description}
               tags={modelInfo.tags}
               icon={modelInfo.icon}
-              refUrl={`https://continue.dev/docs/reference/Model%20Providers/${
+              refUrl={`https://docs.continue.dev/reference/Model%20Providers/${
                 modelInfo.refPage || modelInfo.provider.toLowerCase()
               }`}
               onClick={(e) => {
@@ -136,7 +136,9 @@ function Models() {
                       provider: PROVIDER_INFO[selectedProvider].provider,
                     };
                     postToIde("config/addModel", { model });
-                    dispatch(setDefaultModel(model.title));
+                    dispatch(
+                      setDefaultModel({ title: model.title, force: true }),
+                    );
                     navigate("/");
                   }}
                 />

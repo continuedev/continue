@@ -6,6 +6,7 @@ import {
   deepseekTemplateMessages,
   gemmaTemplateMessage,
   llama2TemplateMessages,
+  llama3TemplateMessages,
   llavaTemplateMessages,
   neuralChatTemplateMessages,
   openchatTemplateMessages,
@@ -22,6 +23,7 @@ import {
   deepseekEditPrompt,
   gemmaEditPrompt,
   gptEditPrompt,
+  llama3EditPrompt,
   mistralEditPrompt,
   neuralChatEditPrompt,
   openchatEditPrompt,
@@ -124,6 +126,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return undefined;
   }
 
+  if (lower.includes("llama3")) {
+    return "llama3";
+  }
+
   if (lower.includes("llava")) {
     return "llava";
   }
@@ -218,6 +224,7 @@ function autodetectTemplateFunction(
       llava: llavaTemplateMessages,
       "codellama-70b": codeLlama70bTemplateMessages,
       gemma: gemmaTemplateMessage,
+      llama3: llama3TemplateMessages,
       none: null,
     };
 
@@ -241,6 +248,7 @@ const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
   "phind",
   "xwin-coder",
   "zephyr",
+  "llama3",
 ];
 
 function autodetectPromptTemplates(
@@ -284,6 +292,8 @@ function autodetectPromptTemplates(
     editTemplate = claudeEditPrompt;
   } else if (templateType === "gemma") {
     editTemplate = gemmaEditPrompt;
+  } else if (templateType === "llama3") {
+    editTemplate = llama3EditPrompt;
   } else if (templateType === "none") {
     editTemplate = null;
   } else if (templateType) {

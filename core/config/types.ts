@@ -77,8 +77,6 @@ declare global {
     region?: string;
     projectId?: string;
   
-    _fetch?: (input: any, init?: any) => Promise<any>;
-  
     complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
   
     streamComplete(
@@ -124,6 +122,8 @@ declare global {
     type: ContextProviderType;
   }
   
+  export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
+  
   export interface ContextProviderExtras {
     fullInput: string;
     embeddingsProvider: EmbeddingsProvider;
@@ -131,10 +131,12 @@ declare global {
     llm: ILLM;
     ide: IDE;
     selectedCode: RangeInFile[];
+    fetch: FetchFunction;
   }
   
   export interface LoadSubmenuItemsArgs {
     ide: IDE;
+    fetch: FetchFunction;
   }
   
   export interface CustomContextProvider {
@@ -311,7 +313,7 @@ declare global {
     }[Keys];
   
   export interface CustomLLMWithOptionals {
-    options?: LLMOptions;
+    options: LLMOptions;
     streamCompletion?: (
       prompt: string,
       options: CompletionOptions,
@@ -428,6 +430,7 @@ declare global {
     contextItems: ContextItemWithId[];
     selectedCode: RangeInFile[];
     config: ContinueConfig;
+    fetch: FetchFunction;
   }
   
   export interface SlashCommand {
@@ -497,6 +500,7 @@ declare global {
     | "openai"
     | "free-trial"
     | "anthropic"
+    | "cohere"
     | "together"
     | "ollama"
     | "huggingface-tgi"
@@ -504,7 +508,6 @@ declare global {
     | "llama.cpp"
     | "replicate"
     | "text-gen-webui"
-    | "gemini"
     | "lmstudio"
     | "llamafile"
     | "gemini"
@@ -512,7 +515,8 @@ declare global {
     | "bedrock"
     | "deepinfra"
     | "flowise"
-    | "groq";
+    | "groq"
+    | "custom";
   
   export type ModelName =
     | "AUTODETECT"
@@ -522,11 +526,13 @@ declare global {
     | "gpt-4"
     | "gpt-3.5-turbo-0613"
     | "gpt-4-32k"
+    | "gpt-4-turbo"
     | "gpt-4-turbo-preview"
     | "gpt-4-vision-preview"
-    // Open Source
+    // Mistral
     | "mistral-7b"
     | "mistral-8x7b"
+    // Llama 2
     | "llama2-7b"
     | "llama2-13b"
     | "llama2-70b"
@@ -534,6 +540,10 @@ declare global {
     | "codellama-13b"
     | "codellama-34b"
     | "codellama-70b"
+    // Llama 3
+    | "llama3-8b"
+    | "llama3-70b"
+    // Other Open-source
     | "phi2"
     | "phind-codellama-34b"
     | "wizardcoder-7b"
@@ -550,6 +560,9 @@ declare global {
     | "claude-3-sonnet-20240229"
     | "claude-3-haiku-20240307"
     | "claude-2.1"
+    // Cohere
+    | "command-r"
+    | "command-r-plus"
     // Gemini
     | "gemini-pro"
     | "gemini-1.5-pro-latest"
@@ -629,12 +642,14 @@ declare global {
     | "transformers.js"
     | "ollama"
     | "openai"
+    | "cohere"
     | "free-trial";
   
   export interface EmbedOptions {
     apiBase?: string;
     apiKey?: string;
     model?: string;
+    requestOptions?: RequestOptions;
   }
   
   export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -646,7 +661,7 @@ declare global {
     embed(chunks: string[]): Promise<number[][]>;
   }
   
-  export type RerankerName = "voyage" | "llm" | "free-trial";
+  export type RerankerName = "cohere" | "voyage" | "llm" | "free-trial";
   
   export interface RerankerDescription {
     name: RerankerName;
@@ -675,6 +690,7 @@ declare global {
     useCache: boolean;
     onlyMyCode: boolean;
     useOtherFiles: boolean;
+    disableInFiles?: string[];
   }
   
   export interface ContinueUIConfig {
@@ -688,8 +704,14 @@ declare global {
     optimize?: string;
     fixGrammar?: string;
   }
+  
+  interface ModelRoles {
+    inlineEdit?: string;
+  }
+  
   interface ExperimantalConfig {
     contextMenuPrompts?: ContextMenuConfig;
+    modelRoles?: ModelRoles;
   }
   
   export interface SerializedContinueConfig {
@@ -698,6 +720,7 @@ declare global {
     models: ModelDescription[];
     systemMessage?: string;
     completionOptions?: BaseCompletionOptions;
+    requestOptions?: RequestOptions;
     slashCommands?: SlashCommandDescription[];
     customCommands?: CustomCommand[];
     contextProviders?: ContextProviderWithParams[];
@@ -719,7 +742,7 @@ declare global {
   };
   
   export interface Config {
-    /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://continue.dev/docs/telemetry */
+    /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
     allowAnonymousTelemetry?: boolean;
     /** Each entry in this array will originally be a ModelDescription, the same object from your config.json, but you may add CustomLLMs.
      * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either \`streamCompletion\` or \`streamChat\` (or both).
@@ -730,6 +753,8 @@ declare global {
     systemMessage?: string;
     /** The default completion options for all models */
     completionOptions?: BaseCompletionOptions;
+    /** Request options that will be applied to all models and context providers */
+    requestOptions?: RequestOptions;
     /** The list of slash commands that will be available in the sidebar */
     slashCommands?: SlashCommand[];
     /** Each entry in this array will originally be a ContextProviderWithParams, the same object from your config.json, but you may add CustomContextProviders.
@@ -761,6 +786,7 @@ declare global {
     models: ILLM[];
     systemMessage?: string;
     completionOptions?: BaseCompletionOptions;
+    requestOptions?: RequestOptions;
     slashCommands?: SlashCommand[];
     contextProviders?: IContextProvider[];
     disableSessionTitles?: boolean;
@@ -779,6 +805,7 @@ declare global {
     models: ModelDescription[];
     systemMessage?: string;
     completionOptions?: BaseCompletionOptions;
+    requestOptions?: RequestOptions;
     slashCommands?: SlashCommandDescription[];
     contextProviders?: ContextProviderDescription[];
     disableIndexing?: boolean;

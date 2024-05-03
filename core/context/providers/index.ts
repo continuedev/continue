@@ -19,6 +19,7 @@ import PostgresContextProvider from "./PostgresContextProvider";
 import ProblemsContextProvider from "./ProblemsContextProvider";
 import SearchContextProvider from "./SearchContextProvider";
 import TerminalContextProvider from "./TerminalContextProvider";
+import URLContextProvider from "./URLContextProvider";
 
 const Providers: (typeof BaseContextProvider)[] = [
   DiffContextProvider,
@@ -42,6 +43,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   PostgresContextProvider,
   DatabaseContextProvider,
   CodeContextProvider,
+  URLContextProvider,
 ];
 
 export function contextProviderClassFromName(

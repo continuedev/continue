@@ -13,6 +13,7 @@ import { getContinueGlobalPath } from "core/util/paths";
 import * as path from "path";
 import * as vscode from "vscode";
 import { DiffManager } from "./diff/horizontal";
+import { Repository } from "./otherExtensions/git";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { traverseDirectory } from "./util/traverseDirectory";
 import {
@@ -30,7 +31,7 @@ class VsCodeIde implements IDE {
 
   async getRepoName(dir: string): Promise<string | undefined> {
     const repo = await this.getRepo(vscode.Uri.file(dir));
-    const remotes = repo?.repository?.remotes;
+    const remotes = repo?.state.remotes;
     if (!remotes) {
       return undefined;
     }
@@ -40,10 +41,10 @@ class VsCodeIde implements IDE {
       return undefined;
     }
     const ownerAndRepo = remote.fetchUrl
-      .replace(".git", "")
+      ?.replace(".git", "")
       .split("/")
       .slice(-2);
-    return ownerAndRepo.join("/");
+    return ownerAndRepo?.join("/");
   }
 
   async getTags(artifactId: string): Promise<IndexTag[]> {
@@ -96,7 +97,7 @@ class VsCodeIde implements IDE {
     return pathToLastModified;
   }
 
-  async getRepo(dir: vscode.Uri): Promise<any> {
+  async getRepo(dir: vscode.Uri): Promise<Repository | undefined> {
     return this.ideUtils.getRepo(dir);
   }
 

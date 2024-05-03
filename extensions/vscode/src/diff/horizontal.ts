@@ -121,7 +121,7 @@ export class DiffManager {
     ) {
       vscode.window
         .showInformationMessage(
-          `Accept (${getMetaKeyLabel()}⇧↩) or reject (${getMetaKeyLabel()}⇧⌫) at the top of the file.`,
+          `Accept (${getMetaKeyLabel()}⇧⏎) or reject (${getMetaKeyLabel()}⇧⌫) at the top of the file.`,
           "Got it",
           "Don't show again",
         )
