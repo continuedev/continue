@@ -1,0 +1,26 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.docsSidebar.category.🌉 Model setup": {
+    "message": "🌉 模型设置",
+    "description": "The label for category 🌉 Model setup in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.🎨 Customization": {
+    "message": "🎨 自定义",
+    "description": "The label for category 🎨 Customization in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.🚶 Walkthroughs": {
+    "message": "🚶 演练",
+    "description": "The label for category 🚶 Walkthroughs in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.📖 Reference": {
+    "message": "📖 参考",
+    "description": "The label for category 📖 Reference in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Model Providers": {
+    "message": "模型提供者",
+    "description": "The label for category Model Providers in sidebar docsSidebar"
+  }
+}

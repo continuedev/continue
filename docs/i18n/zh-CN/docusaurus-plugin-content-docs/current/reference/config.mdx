@@ -1,0 +1,15 @@
+import Schema from "@site/static/schemas/config.json";
+import JSONSchemaViewer from "@theme/JSONSchemaViewer";
+
+# 配置选项
+
+以下展示了 `config.json` 的 JSON Schema 定义。你也可以定义一个局部的 `config.json` 对象，在你的工作区根目录的 `.continuerc.json` 文件中。 这将 [应用在](https://github.com/continuedev/continue/blob/74c1eb5e25c517c575f72d26227d31d5d2ea18ed/extensions/vscode/src/ideProtocol.ts#L165-L173) 任何来自 `config.json` 的配置之上。
+
+<JSONSchemaViewer
+  schema={Schema}
+  resolverOptions={{
+    jsonPointer: "#/definitions/SerializedContinueConfig",
+  }}
+/>
+
+[查看源码](https://github.com/continuedev/continue/blob/main/extensions/vscode/config_schema.json)

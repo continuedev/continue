@@ -31,7 +31,7 @@ const config = {
   // to replace "en" with "zh-Hans".
   i18n: {
     defaultLocale: "en",
-    locales: ["en"],
+    locales: ["en", "zh-CN"],
   },
 
   themes: [["docusaurus-json-schema-plugin", {}]],
@@ -81,6 +81,10 @@ const config = {
             sidebarId: "docsSidebar",
             position: "left",
             label: "Docs",
+          },
+          {
+            type: "localeDropdown",
+            position: "right",
           },
           {
             href: "https://github.com/continuedev/continue",
