@@ -9,7 +9,7 @@ import {
 } from "../../autocomplete/lineStream";
 import { streamLines } from "../../diff/util";
 import { stripImages } from "../../llm/countTokens";
-import { dedentAndGetCommonWhitespace } from "../../util";
+import { dedentAndGetCommonWhitespace, getMarkdownLanguageTagForFile } from "../../util";
 import {
   type RangeInFileWithContents,
   contextItemToRangeInFileWithContents,
