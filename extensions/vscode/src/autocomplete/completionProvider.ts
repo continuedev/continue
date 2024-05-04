@@ -63,25 +63,6 @@ export class ContinueCompletionProvider
   _lastShownCompletion: AutocompleteOutcome | undefined;
 
   _lastVsCodeCompletionInput: VsCodeCompletionInput | undefined;
-  private _requestTriggeredByIntellisenseDropdownChange(
-    next: VsCodeCompletionInput,
-  ): boolean {
-    const last = this._lastVsCodeCompletionInput;
-
-    return (
-      last !== undefined &&
-      last.position.isEqual(next.position) &&
-      last.context.triggerKind === next.context.triggerKind &&
-      last.document.uri.toString() === last.document.uri.toString() &&
-      last.context.selectedCompletionInfo !== undefined &&
-      next.context.selectedCompletionInfo !== undefined &&
-      last.context.selectedCompletionInfo.range.isEqual(
-        next.context.selectedCompletionInfo.range,
-      ) &&
-      last.context.selectedCompletionInfo.text !==
-        next.context.selectedCompletionInfo.text
-    );
-  }
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
@@ -116,10 +97,7 @@ export class ContinueCompletionProvider
       document,
       position,
     };
-    const selectedCompletionInfo =
-      this._requestTriggeredByIntellisenseDropdownChange(newVsCodeInput)
-        ? context.selectedCompletionInfo
-        : undefined;
+    const selectedCompletionInfo = context.selectedCompletionInfo;
     this._lastVsCodeCompletionInput = newVsCodeInput;
 
     try {
@@ -169,7 +147,7 @@ export class ContinueCompletionProvider
       // Handle commit message input box
       let manuallyPassPrefix: string | undefined = undefined;
       if (document.uri.scheme === "vscode-scm") {
-        return [];
+        return null;
         // let diff = await this.ide.getDiff();
         // diff = diff.split("\n").splice(-150).join("\n");
         // manuallyPassPrefix = `${diff}\n\nCommit message: `;
@@ -184,7 +162,7 @@ export class ContinueCompletionProvider
         clipboardText: clipboardText,
         manuallyPassFileContents,
         manuallyPassPrefix,
-        selectedCompletionInfo: selectedCompletionInfo,
+        selectedCompletionInfo,
       };
 
       setupStatusBar(true, true);
@@ -195,7 +173,7 @@ export class ContinueCompletionProvider
         );
 
       if (!outcome || !outcome.completion) {
-        return [];
+        return null;
       }
 
       // VS Code displays dependent on selectedCompletionInfo (their docstring below)
@@ -211,20 +189,17 @@ export class ContinueCompletionProvider
        *
        * Inline completion providers are requested again whenever the selected item changes.
        */
+      if (selectedCompletionInfo) {
+        outcome.completion = selectedCompletionInfo.text + outcome.completion;
+      }
       const willDisplay = this.willDisplay(
         document,
-        context.selectedCompletionInfo,
+        selectedCompletionInfo,
         signal,
         outcome,
       );
       if (!willDisplay) {
-        return [];
-      }
-
-      if (selectedCompletionInfo) {
-        outcome.completion = outcome.completion.slice(
-          selectedCompletionInfo.text.length,
-        );
+        return null;
       }
 
       // Mark displayed
@@ -232,9 +207,10 @@ export class ContinueCompletionProvider
       this._lastShownCompletion = outcome;
 
       // Construct the range/text to show
+      const startPos = selectedCompletionInfo?.range.start ?? position;
       const completionRange = new vscode.Range(
-        selectedCompletionInfo?.range.start ?? position,
-        position.translate(0, outcome.completion.length),
+        startPos,
+        startPos.translate(0, outcome.completion.length),
       );
       const completionItem = new vscode.InlineCompletionItem(
         outcome.completion,
@@ -261,7 +237,7 @@ export class ContinueCompletionProvider
   ): boolean {
     if (selectedCompletionInfo) {
       const { text, range } = selectedCompletionInfo;
-      if (!(document.getText(range) + outcome.completion).startsWith(text)) {
+      if (!outcome.completion.startsWith(text)) {
         console.log(
           `Won't display completion because text doesn't match: ${text}, ${outcome.completion}`,
           range,

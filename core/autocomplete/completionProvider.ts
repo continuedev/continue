@@ -529,11 +529,6 @@ export class CompletionProvider {
         }
       }, 100);
 
-      // Adding the prefix must happen after caching
-      if (input.selectedCompletionInfo) {
-        outcome.completion = `${input.selectedCompletionInfo.text}${outcome.completion}`;
-      }
-
       return outcome;
     } catch (e: any) {
       this.onError(e);
