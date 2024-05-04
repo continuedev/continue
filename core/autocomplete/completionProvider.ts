@@ -411,7 +411,6 @@ export class CompletionProvider {
       const outcome = this._outcomes.get(completionId)!;
       outcome.accepted = true;
       logDevData("autocomplete", outcome);
-      console.log("Outcome: ", outcome.accepted);
       Telemetry.capture("autocomplete", {
         accepted: outcome.accepted,
         modelName: outcome.modelName,
@@ -549,7 +548,6 @@ export class CompletionProvider {
     const logRejectionTimeout = setTimeout(() => {
       // Wait 10 seconds, then assume it wasn't accepted
       outcome.accepted = false;
-      console.log("Outcome: ", outcome.accepted);
       logDevData("autocomplete", outcome);
       const { prompt, completion, ...restOfOutcome } = outcome;
       Telemetry.capture("autocomplete", {

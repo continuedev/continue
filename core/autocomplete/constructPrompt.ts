@@ -57,6 +57,15 @@ async function shouldCompleteMultiline(
   fullPrefix: string,
   fullSuffix: string,
 ): Promise<boolean> {
+  // First, if the line before ends with an opening bracket, then assume multi-line
+  if (
+    ["{", "(", "["].includes(
+      fullPrefix.split("\n").slice(-2)[0]?.trim().slice(-1)[0],
+    )
+  ) {
+    return true;
+  }
+
   // Use AST to determine whether to complete multiline
   let treePath: Parser.SyntaxNode[] | undefined;
   try {
