@@ -448,7 +448,7 @@ class IdeProtocolClient (
                         val output = reader.readLine()
                         process.waitFor()
 
-                        respond(output)
+                        respond(output ?: "NONE")
                     }
                     "getRepoName" -> {
                         // Get the current repository name
@@ -460,7 +460,7 @@ class IdeProtocolClient (
                         val output = reader.readLine()
                         process.waitFor()
 
-                        respond(output)
+                        respond(output ?: "NONE")
                     }
 
                     // NEW //
@@ -832,8 +832,6 @@ class IdeProtocolClient (
             "__pycache__",
             "site-packages",
             ".gradle",
-            ".cache",
-            "gems",
     )
     private fun shouldIgnoreDirectory(name: String): Boolean {
         val components = File(name).path.split(File.separator)

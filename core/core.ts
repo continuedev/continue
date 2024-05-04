@@ -66,12 +66,14 @@ export class Core {
     );
     this.codebaseIndexerPromise = new Promise(async (resolve) => {
       const ideSettings = await ideSettingsPromise;
-      new CodebaseIndexer(
-        this.configHandler,
-        this.ide,
-        new PauseToken(false),
-        ideSettings.remoteConfigServerUrl,
-        ideSettings.userToken,
+      resolve(
+        new CodebaseIndexer(
+          this.configHandler,
+          this.ide,
+          new PauseToken(false),
+          ideSettings.remoteConfigServerUrl,
+          ideSettings.userToken,
+        ),
       );
       this.ide
         .getWorkspaceDirs()
