@@ -21,7 +21,7 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
-import { getFontSize, isJetBrains, isMetaEquivalentKeyPressed } from "../util";
+import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage } from "../util/localStorage";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
@@ -235,13 +235,11 @@ const Layout = () => {
                   />
                 )}
 
-              {isJetBrains() || (
-                <IndexingProgressBar
-                  currentlyIndexing={indexingTask}
-                  completed={indexingProgress * 100}
-                  total={100}
-                />
-              )}
+              <IndexingProgressBar
+                currentlyIndexing={indexingTask}
+                completed={indexingProgress * 100}
+                total={100}
+              />
             </div>
             <HeaderButtonWithText
               text="Help"
