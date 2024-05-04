@@ -1,43 +1,38 @@
 import { IProtocol } from "core/protocol";
-import { getCoreLogsPath } from "core/util/paths";
-import * as fs from "node:fs";
+import { IMessenger, Message } from "core/util/messenger";
+import net from "net";
 import { v4 as uuidv4 } from "uuid";
-import { IMessenger, type Message } from "../../core/util/messenger";
 
-export class IpcMessenger<
+export class TcpMessenger<
   ToProtocol extends IProtocol,
   FromProtocol extends IProtocol,
 > implements IMessenger<ToProtocol, FromProtocol>
 {
+  private port: number = 3000;
+  private socket: net.Socket | null = null;
+
   typeListeners = new Map<keyof ToProtocol, ((message: Message) => any)[]>();
   idListeners = new Map<string, (message: Message) => any>();
 
   constructor() {
-    const logger = (message: any, ...optionalParams: any[]) => {
-      const logFilePath = getCoreLogsPath();
-      const timestamp = new Date().toISOString().split(".")[0];
-      const logMessage = `[${timestamp}] ${message} ${optionalParams.join(
-        " ",
-      )}\n`;
-      fs.appendFileSync(logFilePath, logMessage);
-    };
-    console.log = logger;
-    console.error = logger;
-    console.warn = logger;
-    console.log("[info] Starting Continue core...");
+    const server = net.createServer((socket) => {
+      this.socket = socket;
+      socket.on("data", (data: Buffer) => {
+        console.log("Received from server:", data.toString());
+        this._handleData(data);
+      });
 
-    process.stdin.on("data", (data) => {
-      this._handleData(data);
+      socket.on("end", () => {
+        console.log("Disconnected from server");
+      });
+
+      socket.on("error", (err: any) => {
+        console.error("Client error:", err);
+      });
     });
-    process.stdout.on("close", () => {
-      fs.writeFileSync("./error.log", `${new Date().toISOString()}\n`);
-      console.log("[info] Exiting Continue core...");
-      process.exit(1);
-    });
-    process.stdin.on("close", () => {
-      fs.writeFileSync("./error.log", `${new Date().toISOString()}\n`);
-      console.log("[info] Exiting Continue core...");
-      process.exit(1);
+
+    server.listen(this.port, () => {
+      console.log(`Server listening on port ${this.port}`);
     });
   }
 
@@ -47,9 +42,10 @@ export class IpcMessenger<
     this._onErrorHandlers.push(handler);
   }
 
-  mock(data: any) {
-    const d = JSON.stringify(data);
-    this._handleData(Buffer.from(d));
+  public async awaitConnection() {
+    while (!this.socket) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
   }
 
   private _handleLine(line: string) {
@@ -64,7 +60,10 @@ export class IpcMessenger<
       listeners?.forEach(async (handler) => {
         try {
           const response = await handler(msg);
-          console.log("Response from handler: ", JSON.stringify(response));
+          console.log(
+            `Response from ${msg.messageType} handler: `,
+            JSON.stringify(response),
+          );
           if (
             response &&
             typeof response[Symbol.asyncIterator] === "function"
@@ -126,8 +125,8 @@ export class IpcMessenger<
       data,
       messageId,
     };
-    // process.send?.(data);
-    process.stdout?.write(JSON.stringify(msg) + "\r\n");
+
+    this.socket?.write(JSON.stringify(msg) + "\r\n");
     return messageId;
   }
 
@@ -151,7 +150,6 @@ export class IpcMessenger<
       data,
     });
   }
-
   request<T extends keyof FromProtocol>(
     messageType: T,
     data: FromProtocol[T][0],

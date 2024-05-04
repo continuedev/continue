@@ -141,7 +141,7 @@ class IdeProtocolClient (
             )
             val messageType = parsedMessage["messageType"] as? String
             if (messageType == null) {
-                println("Recieved message without type: $text")
+                println("Received message without type: $text")
                 return@launch
             }
             val data = parsedMessage["data"]
@@ -360,7 +360,7 @@ class IdeProtocolClient (
                         val output = reader.readLine()
                         process.waitFor()
 
-                        respond(output)
+                        respond(output ?: "NONE")
                     }
                     "getRepoName" -> {
                         // Get the current repository name
@@ -372,7 +372,7 @@ class IdeProtocolClient (
                         val output = reader.readLine()
                         process.waitFor()
 
-                        respond(output)
+                        respond(output ?: "NONE")
                     }
 
                     // NEW //
@@ -717,7 +717,9 @@ class IdeProtocolClient (
             ".pytest_cache",
             ".vscode-test",
             ".continue",
-            "__pycache__"
+            "__pycache__",
+            "site-packages",
+            ".gradle",
     )
     private fun shouldIgnoreDirectory(name: String): Boolean {
         val components = File(name).path.split(File.separator)

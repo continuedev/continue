@@ -1,4 +1,5 @@
 package com.github.continuedev.continueintellijextension.`continue`
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -10,28 +11,30 @@ import com.google.gson.Gson
 import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
+import java.net.Socket
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.nio.file.attribute.PosixFilePermission
 
 class CoreMessenger(private val project: Project, esbuildPath: String, continueCorePath: String, ideProtocolClient: IdeProtocolClient) {
-    private val writer: OutputStreamWriter
-    private val reader: BufferedReader
-    private val process: Process
+    private var writer: Writer? = null
+    private var reader: BufferedReader? = null
+    private var process: Process? = null
     private val gson = Gson()
     private val responseListeners = mutableMapOf<String, (String) -> Unit>()
     private val ideProtocolClient = ideProtocolClient
+    private val useTcp: Boolean = true
 
     private fun write(message: String) {
-        writer.write(message + "\r\n")
-        writer.flush()
+        writer?.write(message + "\r\n")
+        writer?.flush()
     }
 
     private fun close() {
-        writer.close()
-        reader.close()
-        val exitCode = process.waitFor()
+        writer?.close()
+        reader?.close()
+        val exitCode = process?.waitFor()
         println("Subprocess exited with code: $exitCode")
     }
 
@@ -66,8 +69,20 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
 
         // Forward to webview
         if (forwardToWebview.contains(messageType)) {
+            // TODO: Currently we aren't set up to receive a response back from the webview
+            // Can circumvent for getDefaultsModelTitle here for now
+            if (messageType == "getDefaultModelTitle") {
+                val continueSettingsService = service<ContinueExtensionSettings>()
+                val defaultModelTitle = continueSettingsService.continueState.lastSelectedInlineEditModel;
+                val message = gson.toJson(mapOf(
+                        "messageId" to messageId,
+                        "messageType" to messageType,
+                        "data" to defaultModelTitle
+                ))
+                write(message)
+            }
             val continuePluginService = project.service<ContinuePluginService>()
-            continuePluginService.sendToWebview(messageType, data, messageType)
+            continuePluginService.sendToWebview(messageType, responseMap["data"], messageType)
         }
 
         // Responses for messageId
@@ -120,11 +135,18 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "getBranch",
         "getIdeInfo",
         "getIdeSettings",
-        "errorPopup"
+        "errorPopup",
+        "getRepoName",
+        "listDir",
+        "getGitRootPath",
+        "getLastModified"
     )
 
     private val forwardToWebview = listOf<String>(
-            "configUpdate"
+            "configUpdate",
+            "getDefaultModelTitle",
+            "indexProgress",
+            "refreshSubmenuItems"
     )
 
     private fun setPermissions(destination: String) {
@@ -151,55 +173,94 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
     }
 
     init {
-        // Set proper permissions
-        setPermissions(continueCorePath)
-        setPermissions(esbuildPath)
-
-        // Start the subprocess
-        val processBuilder = ProcessBuilder(continueCorePath)
-                .directory(File(continueCorePath).parentFile)
-        process = processBuilder.start()
-
-        val outputStream = process.outputStream
-        val inputStream = process.inputStream
-
-        writer = OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
-        reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
-
-        process.onExit().thenRun {
-            val err = process.errorStream.bufferedReader().readText().trim()
-            println("Core process exited with output: $err")
-            ideProtocolClient.showMessage("Core process exited with output: $err")
-        }
-
-        Thread {
+        if (useTcp) {
             try {
-                while (true) {
-                    val line = reader.readLine()
-                    if (line != null && line.isNotEmpty()) {
-                        try {
-                            handleMessage(line)
-                        } catch (e: Exception) {
-                            println("Error handling message: $line")
-                            println(e)
+                val socket = Socket("localhost", 3000)
+                val writer = PrintWriter(socket.getOutputStream(), true)
+                this.writer = writer
+                val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
+                this.reader = reader
+
+                Thread {
+                    try {
+                        while (true) {
+                            val line = reader.readLine()
+                            if (line != null && line.isNotEmpty()) {
+                                try {
+                                    handleMessage(line)
+                                } catch (e: Exception) {
+                                    println("Error handling message: $line")
+                                    println(e)
+                                }
+                            } else {
+                                Thread.sleep(100)
+                            }
                         }
-                    } else {
-                        Thread.sleep(100)
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    } finally {
+                        try {
+                            reader.close()
+                            writer.close()
+                        } catch (e: IOException) {
+                            e.printStackTrace()
+                        }
                     }
-                }
-            } catch (e: IOException) {
-                e.printStackTrace()
-            } finally {
+                }.start()
+            } catch (e: Exception) {
+                println("An error occurred: ${e.message}")
+            }
+        } else {
+            // Set proper permissions
+            setPermissions(continueCorePath)
+            setPermissions(esbuildPath)
+
+            // Start the subprocess
+            val processBuilder = ProcessBuilder(continueCorePath)
+                    .directory(File(continueCorePath).parentFile)
+            process = processBuilder.start()
+
+            val outputStream = process!!.outputStream
+            val inputStream = process!!.inputStream
+
+            writer = OutputStreamWriter(outputStream, StandardCharsets.UTF_8)
+            reader = BufferedReader(InputStreamReader(inputStream, StandardCharsets.UTF_8))
+
+            process!!.onExit().thenRun {
+                val err = process?.errorStream?.bufferedReader()?.readText()?.trim()
+                println("Core process exited with output: $err")
+                ideProtocolClient.showMessage("Core process exited with output: $err")
+            }
+
+            Thread {
                 try {
-                    reader.close()
-                    writer.close()
-                    outputStream.close()
-                    inputStream.close()
-                    process.destroy()
+                    while (true) {
+                        val line = reader?.readLine()
+                        if (line != null && line.isNotEmpty()) {
+                            try {
+                                handleMessage(line)
+                            } catch (e: Exception) {
+                                println("Error handling message: $line")
+                                println(e)
+                            }
+                        } else {
+                            Thread.sleep(100)
+                        }
+                    }
                 } catch (e: IOException) {
                     e.printStackTrace()
+                } finally {
+                    try {
+                        reader?.close()
+                        writer?.close()
+                        outputStream.close()
+                        inputStream.close()
+                        process?.destroy()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
                 }
-            }
-        }.start()
+            }.start()
+        }
     }
 }

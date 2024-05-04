@@ -43,6 +43,7 @@
     "core": "file:../core",
     "follow-redirects": "^1.15.5",
     "ncp": "^2.0.0",
+    "node-fetch": "^3.3.2",
     "posthog-node": "^3.6.3",
     "uuid": "^9.0.1",
     "vectordb": "^0.4.10"

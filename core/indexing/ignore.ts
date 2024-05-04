@@ -76,5 +76,6 @@ export const DEFAULT_IGNORE_DIRS = [
   ".continue",
   "__pycache__",
   "site-packages",
+  ".gradle",
 ];
 export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
