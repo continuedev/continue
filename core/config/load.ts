@@ -55,7 +55,7 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
 
     config.env.forEach((envVar) => {
       if (envVar in env) {
-        content = content.replaceAll(
+        content = (content as any).replaceAll(
           new RegExp(`"${envVar}"`, "g"),
           `"${env[envVar]}"`,
         );
