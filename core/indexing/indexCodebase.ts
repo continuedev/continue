@@ -81,7 +81,11 @@ export class CodebaseIndexer {
     };
 
     for (const directory of workspaceDirs) {
-      const stats = await this.ide.getStats(directory);
+      // const scheme = vscode.workspace.workspaceFolders?.[0].uri.scheme;
+      // const files = await this.listWorkspaceContents(directory);
+
+      const files = await this.ide.listWorkspaceContents(directory);
+      const stats = await this.ide.getLastModified(files);
       const branch = await this.ide.getBranch(directory);
       const repoName = await this.ide.getRepoName(directory);
       let completedIndexes = 0;

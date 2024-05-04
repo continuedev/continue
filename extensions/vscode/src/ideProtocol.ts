@@ -4,6 +4,7 @@ import * as path from "node:path";
 
 import type {
   ContinueRcJson,
+  FileType,
   IDE,
   IdeInfo,
   IndexTag,
@@ -11,6 +12,7 @@ import type {
   Range,
   Thread,
 } from "core";
+import { defaultIgnoreFile } from "core/indexing/ignore";
 import { IdeSettings } from "core/protocol/ideWebview";
 import { getContinueGlobalPath } from "core/util/paths";
 import * as vscode from "vscode";
@@ -92,9 +94,7 @@ class VsCodeIde implements IDE {
     );
   }
 
-  async getStats(directory: string): Promise<{ [path: string]: number }> {
-    const scheme = vscode.workspace.workspaceFolders?.[0].uri.scheme;
-    const files = await this.listWorkspaceContents(directory);
+  async getLastModified(files: string[]): Promise<{ [path: string]: number }> {
     const pathToLastModified: { [path: string]: number } = {};
     await Promise.all(
       files.map(async (file) => {
@@ -353,6 +353,19 @@ class VsCodeIde implements IDE {
 
   async getBranch(dir: string): Promise<string> {
     return this.ideUtils.getBranch(vscode.Uri.file(dir));
+  }
+
+  getGitRootPath(dir: string): Promise<string | undefined> {
+    return this.ideUtils.getGitRoot(dir);
+  }
+
+  async listDir(dir: string): Promise<[string, FileType][]> {
+    const files = await vscode.workspace.fs.readDirectory(uriFromFilePath(dir));
+    return files
+      .filter(([name, type]) => {
+        !(type === vscode.FileType.File && defaultIgnoreFile.ignores(name));
+      })
+      .map(([name, type]) => [path.join(dir, name), type]) as any;
   }
 
   getIdeSettings(): IdeSettings {

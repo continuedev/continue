@@ -1,5 +1,6 @@
 import type {
   ContinueRcJson,
+  FileType,
   IDE,
   IdeInfo,
   IndexTag,
@@ -16,6 +17,15 @@ export class MessageIde implements IDE {
       data: ToIdeFromWebviewOrCoreProtocol[T][0],
     ) => Promise<ToIdeFromWebviewOrCoreProtocol[T][1]>,
   ) {}
+  getLastModified(files: string[]): Promise<{ [path: string]: number }> {
+    return this.request("getLastModified", { files });
+  }
+  getGitRootPath(dir: string): Promise<string | undefined> {
+    return this.request("getGitRootPath", { dir });
+  }
+  listDir(dir: string): Promise<[string, FileType][]> {
+    return this.request("listDir", { dir });
+  }
 
   infoPopup(message: string): Promise<void> {
     return this.request("errorPopup", { message });
@@ -57,10 +67,6 @@ export class MessageIde implements IDE {
 
   readRangeInFile(filepath: string, range: Range): Promise<string> {
     return this.request("readRangeInFile", { filepath, range });
-  }
-
-  getStats(directory: string): Promise<{ [path: string]: number }> {
-    throw new Error("Method not implemented.");
   }
 
   isTelemetryEnabled(): Promise<boolean> {

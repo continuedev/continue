@@ -411,7 +411,6 @@ declare global {
     subprocess(command: string): Promise<[string, string]>;
     getProblems(filepath?: string | undefined): Promise<Problem[]>;
     getBranch(dir: string): Promise<string>;
-    getStats(directory: string): Promise<{ [path: string]: number }>;
     getTags(artifactId: string): Promise<IndexTag[]>;
     getRepoName(dir: string): Promise<string | undefined>;
   }
