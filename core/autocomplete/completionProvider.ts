@@ -9,7 +9,10 @@ import { streamLines } from "../diff/util";
 import OpenAI from "../llm/llms/OpenAI";
 import { getBasename } from "../util";
 import { logDevData } from "../util/devdata";
-import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters";
+import {
+  COUNT_COMPLETION_REJECTED_AFTER,
+  DEFAULT_AUTOCOMPLETE_OPTS,
+} from "../util/parameters";
 import { Telemetry } from "../util/posthog";
 import { getRangeInString } from "../util/ranges";
 import AutocompleteLruCache from "./cache";
@@ -539,7 +542,8 @@ export class CompletionProvider {
     }
   }
 
-  _lastDisplayedCompletionId: string | undefined = undefined;
+  _lastDisplayedCompletion: { id: string; displayedAt: number } | undefined =
+    undefined;
 
   markDisplayed(completionId: string, outcome: AutocompleteOutcome) {
     const logRejectionTimeout = setTimeout(() => {
@@ -552,16 +556,17 @@ export class CompletionProvider {
         ...restOfOutcome,
       });
       this._logRejectionTimeouts.delete(completionId);
-    }, 2_000);
+    }, COUNT_COMPLETION_REJECTED_AFTER);
     this._outcomes.set(completionId, outcome);
     this._logRejectionTimeouts.set(completionId, logRejectionTimeout);
 
     // If the previously displayed completion is still waiting for rejection,
     // and this one is a continuation of that (the outcome.completion is the same modulo prefix)
     // then we should cancel the rejection timeout
-    const previous = this._lastDisplayedCompletionId;
-    if (previous && this._logRejectionTimeouts.has(previous)) {
-      const previousOutcome = this._outcomes.get(previous);
+    const previous = this._lastDisplayedCompletion;
+    const now = Date.now();
+    if (previous && this._logRejectionTimeouts.has(previous.id)) {
+      const previousOutcome = this._outcomes.get(previous.id);
       const c1 = previousOutcome?.completion.split("\n")[0] ?? "";
       const c2 = outcome.completion.split("\n")[0];
       if (
@@ -571,29 +576,16 @@ export class CompletionProvider {
           c1.startsWith(c2) ||
           c2.startsWith(c1))
       ) {
-        this.cancelRejectionTimeout(previous);
-        console.log(
-          [
-            "Match: ",
-            previousOutcome?.completion,
-            outcome.completion,
-            c1,
-            c2,
-          ].join("\n"),
-        );
-      } else {
-        console.log(
-          [
-            "No match: ",
-            previousOutcome?.completion,
-            outcome.completion,
-            c1,
-            c2,
-          ].join("\n"),
-        );
+        this.cancelRejectionTimeout(previous.id);
+      } else if (now - previous.displayedAt < 500) {
+        // If a completion isn't shown for more than
+        this.cancelRejectionTimeout(previous.id);
       }
     }
 
-    this._lastDisplayedCompletionId = completionId;
+    this._lastDisplayedCompletion = {
+      id: completionId,
+      displayedAt: now,
+    };
   }
 }
