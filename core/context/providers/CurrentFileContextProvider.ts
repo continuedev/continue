@@ -1,10 +1,10 @@
+import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../../index.js";
-import { getBasename } from "../../util/index.js";
-import { BaseContextProvider } from "../index.js";
+} from "../..";
+import { getBasename } from "../../util";
 
 class CurrentFileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

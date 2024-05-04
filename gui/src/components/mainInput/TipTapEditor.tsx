@@ -267,12 +267,17 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return false;
               }
 
-              onEnterRef.current({ useCodebase: false });
+              onEnterRef.current({ useCodebase: false, noContext: false });
               return true;
             },
 
             "Cmd-Enter": () => {
-              onEnterRef.current({ useCodebase: true });
+              onEnterRef.current({ useCodebase: true, noContext: false });
+              return true;
+            },
+
+            "Alt-Enter": () => {
+              onEnterRef.current({ useCodebase: false, noContext: true });
               return true;
             },
             "Cmd-Backspace": () => {
@@ -505,7 +510,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
       editor?.commands.insertContent(data.input);
-      onEnterRef.current({ useCodebase: false });
+      onEnterRef.current({ useCodebase: false, noContext: true });
     },
     [editor, onEnterRef.current, props.isMainInput],
   );

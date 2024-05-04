@@ -272,6 +272,9 @@ export class VsCodeWebviewProtocol {
     this.on("getOpenFiles", async (msg) => {
       return await ide.getOpenFiles();
     });
+    this.on("getCurrentFile", async (msg) => {
+      return await ide.getCurrentFile();
+    });
     this.on("getPinnedFiles", async (msg) => {
       return await ide.getPinnedFiles();
     });

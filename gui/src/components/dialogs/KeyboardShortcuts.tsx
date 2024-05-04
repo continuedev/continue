@@ -209,17 +209,19 @@ function KeyboardShortcutsDialog() {
     <div className="p-2">
       <h3 className="my-3 mx-auto text-center">Keyboard Shortcuts</h3>
       <GridDiv>
-        {(isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts).map(
-          (shortcut) => {
-            return (
-              <KeyboardShortcut
-                mac={shortcut.mac}
-                windows={shortcut.windows}
-                description={shortcut.description}
-              />
-            );
-          },
-        )}
+        {(localStorage.getItem("ide") === "jetbrains"
+          ? jetbrainsShortcuts
+          : vscodeShortcuts
+        ).map((shortcut, i) => {
+          return (
+            <KeyboardShortcut
+              key={i}
+              mac={shortcut.mac}
+              windows={shortcut.windows}
+              description={shortcut.description}
+            />
+          );
+        })}
       </GridDiv>
     </div>
   );

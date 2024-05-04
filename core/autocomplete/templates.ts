@@ -251,7 +251,7 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     lowerCaseModel.includes("davinci-002") ||
     lowerCaseModel.includes("claude")
   ) {
-    return gptAutocompleteTemplate;
+    return holeFillerTemplate;
   }
 
   return stableCodeFimTemplate;
