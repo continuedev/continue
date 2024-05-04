@@ -1200,6 +1200,7 @@
                 "postgres",
                 "code",
                 "system",
+                "currentFile",
                 "url"
               ],
               "markdownEnumDescriptions": [
@@ -1222,6 +1223,7 @@
                 "References Postgres table schema and sample rows",
                 "Reference specific functions and classes from throughout your codebase",
                 "Reference your operating system and cpu",
+                "Reference the contents of the currently active file",
                 "Reference the contents of a page at a URL"
               ],
               "type": "string"

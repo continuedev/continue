@@ -263,12 +263,17 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return false;
               }
 
-              onEnterRef.current({ useCodebase: false });
+              onEnterRef.current({ useCodebase: false, noContext: false });
               return true;
             },
 
             "Cmd-Enter": () => {
-              onEnterRef.current({ useCodebase: true });
+              onEnterRef.current({ useCodebase: true, noContext: false });
+              return true;
+            },
+
+            "Alt-Enter": () => {
+              onEnterRef.current({ useCodebase: false, noContext: true });
               return true;
             },
             "Cmd-Backspace": () => {
@@ -500,7 +505,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
       editor?.commands.insertContent(data.input);
-      onEnterRef.current({ useCodebase: false });
+      onEnterRef.current({ useCodebase: false, noContext: true });
     },
     [editor, onEnterRef.current, props.isMainInput],
   );
@@ -643,8 +648,20 @@ function TipTapEditor(props: TipTapEditorProps) {
     };
   }, []);
 
+  const [optionKeyHeld, setOptionKeyHeld] = useState(false);
+
   return (
     <InputBoxDiv
+      onKeyDown={(e) => {
+        if (e.key === "Alt") {
+          setOptionKeyHeld(true);
+        }
+      }}
+      onKeyUp={(e) => {
+        if (e.key === "Alt") {
+          setOptionKeyHeld(false);
+        }
+      }}
       className="cursor-text"
       onClick={() => {
         editor && editor.commands.focus();
@@ -703,6 +720,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         }}
       />
       <InputToolbar
+        showNoContext={optionKeyHeld}
         hidden={!(inputFocused || props.isMainInput)}
         onAddContextItem={() => {
           if (editor.getText().endsWith("@")) {

@@ -2,6 +2,7 @@ import { BaseContextProvider } from "..";
 import { ContextProviderName } from "../..";
 import CodeContextProvider from "./CodeContextProvider";
 import CodebaseContextProvider from "./CodebaseContextProvider";
+import CurrentFileContextProvider from "./CurrentFileContextProvider";
 import DatabaseContextProvider from "./DatabaseContextProvider";
 import DiffContextProvider from "./DiffContextProvider";
 import DocsContextProvider from "./DocsContextProvider";
@@ -43,6 +44,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   PostgresContextProvider,
   DatabaseContextProvider,
   CodeContextProvider,
+  CurrentFileContextProvider,
   URLContextProvider,
 ];
 

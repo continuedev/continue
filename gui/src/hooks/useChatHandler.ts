@@ -13,6 +13,7 @@ import {
 } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import { stripImages } from "core/llm/countTokens";
+import { getBasename } from "core/util";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
@@ -29,6 +30,7 @@ import {
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { ideStreamRequest, llmStreamChat, postToIde } from "../util/ide";
+import { WebviewIde } from "../util/webviewIde";
 
 function useChatHandler(dispatch: Dispatch) {
   const posthog = usePostHog();
@@ -158,6 +160,33 @@ function useChatHandler(dispatch: Dispatch) {
         editorState,
         modifiers,
       );
+
+      // Automatically use currently open file
+      if (!modifiers.noContext && (history.length === 0 || index === 0)) {
+        const usingFreeTrial = defaultModel.provider === "free-trial";
+        const ide = new WebviewIde();
+        const currentFilePath = await ide.getCurrentFile();
+        if (typeof currentFilePath === "string") {
+          let currentFileContents = await ide.readFile(currentFilePath);
+          if (usingFreeTrial) {
+            currentFileContents = currentFileContents
+              .split("\n")
+              .slice(0, 1000)
+              .join("\n");
+          }
+          contextItems.unshift({
+            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getBasename(
+              currentFilePath,
+            )}\n${currentFileContents}\n\`\`\``,
+            name: `Active file: ${getBasename(currentFilePath)}`,
+            description: currentFilePath,
+            id: {
+              itemId: currentFilePath,
+              providerTitle: "file",
+            },
+          });
+        }
+      }
 
       const message: ChatMessage = {
         role: "user",
