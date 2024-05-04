@@ -38,12 +38,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     void,
   ];
   "config/ideSettingsUpdate": [IdeSettings, void];
-  "config/getBrowserSerialized": [
-    undefined,
-    Promise<BrowserSerializedContinueConfig>,
-  ];
+  "config/getBrowserSerialized": [undefined, BrowserSerializedContinueConfig];
   "config/deleteModel": [{ title: string }, void];
-  "config/reload": [undefined, Promise<BrowserSerializedContinueConfig>];
+  "config/reload": [undefined, BrowserSerializedContinueConfig];
   "context/getContextItems": [
     {
       name: string;
@@ -51,14 +48,11 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       fullInput: string;
       selectedCode: RangeInFile[];
     },
-    Promise<ContextItemWithId[]>,
+    ContextItemWithId[],
   ];
-  "context/loadSubmenuItems": [
-    { title: string },
-    Promise<ContextSubmenuItem[]>,
-  ];
+  "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "context/addDocs": [{ title: string; url: string }, void];
-  "autocomplete/complete": [AutocompleteInput, Promise<string[]>];
+  "autocomplete/complete": [AutocompleteInput, string[]];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
   "command/run": [
@@ -80,7 +74,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       completionOptions: LLMFullCompletionOptions;
       title: string;
     },
-    Promise<string>,
+    string,
   ];
   "llm/streamComplete": [
     {
@@ -109,14 +103,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
-  "stats/getTokensPerDay": [
-    undefined,
-    Promise<{ day: string; tokens: number }[]>,
-  ];
-  "stats/getTokensPerModel": [
-    undefined,
-    Promise<{ model: string; tokens: number }[]>,
-  ];
+  "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
+  "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [undefined | string, void];
   completeOnboarding: [

@@ -29,7 +29,9 @@ export interface IMessenger<
 
   on<T extends keyof ToProtocol>(
     messageType: T,
-    handler: (message: Message<ToProtocol[T][0]>) => ToProtocol[T][1],
+    handler: (
+      message: Message<ToProtocol[T][0]>,
+    ) => Promise<ToProtocol[T][1]> | ToProtocol[T][1],
   ): void;
 
   request<T extends keyof FromProtocol>(
