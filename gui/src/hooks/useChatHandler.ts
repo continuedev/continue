@@ -162,7 +162,7 @@ function useChatHandler(dispatch: Dispatch) {
       );
 
       // Automatically use currently open file
-      if (history.length === 0 || index === 0) {
+      if (!modifiers.noContext && (history.length === 0 || index === 0)) {
         const ide = new WebviewIde();
         const currentFilePath = await ide.getCurrentFile();
         if (typeof currentFilePath === "string") {

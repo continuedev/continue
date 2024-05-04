@@ -257,6 +257,7 @@ export interface ContextItemWithId {
 
 export interface InputModifiers {
   useCodebase: boolean;
+  noContext: boolean;
 }
 
 export interface ChatHistoryItem {

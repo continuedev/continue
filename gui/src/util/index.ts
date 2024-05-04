@@ -42,6 +42,16 @@ export function getMetaKeyLabel(): string {
   }
 }
 
+export function getAltKeyLabel(): string {
+  const platform = getPlatform();
+  switch (platform) {
+    case "mac":
+      return "⌥";
+    default:
+      return "Alt";
+  }
+}
+
 export function getFontSize(): number {
   const fontSize = localStorage.getItem("fontSize");
   return fontSize ? parseInt(fontSize) : 14;
