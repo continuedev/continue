@@ -52,8 +52,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     ContextItemWithId[],
   ];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
+  "context/addDocs": [{ title: string; url: string }, void];
   "autocomplete/complete": [AutocompleteInput, string[]];
-  "context/addDocs": [SiteIndexingConfig, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
   "command/run": [
@@ -75,7 +75,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
       completionOptions: LLMFullCompletionOptions;
       title: string;
     },
-    Promise<string>,
+    string,
   ];
   "llm/listModels": [{ title: string }, string[] | undefined];
   "llm/streamComplete": [
@@ -105,14 +105,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
-  "stats/getTokensPerDay": [
-    undefined,
-    Promise<{ day: string; tokens: number }[]>,
-  ];
-  "stats/getTokensPerModel": [
-    undefined,
-    Promise<{ model: string; tokens: number }[]>,
-  ];
+  "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
+  "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [undefined | string, void];
   completeOnboarding: [
