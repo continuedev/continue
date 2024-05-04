@@ -407,9 +407,36 @@ class IdeProtocolClient (
                     "getSessionId" -> {}
 
                     // INDEXING //
-                    "getStats" -> {
+                    "getLastModified" -> {
                         // TODO
-                        respond(null)
+                        val data = data as Map<String, Any>
+                        val files = data["files"] as List<String>
+                        val pathToLastModified = files.map { file ->
+                            file to File(file).lastModified()
+                        }.toMap()
+                        respond(pathToLastModified)
+                    }
+                    "listDir" -> {
+                        val data = data as Map<String, Any>
+                        val dir = data["dir"] as String
+                        // List of [file, FileType]
+                        val files: List<List<Any>> = File(dir).listFiles()?.map {
+                            listOf(it.name, if (it.isDirectory) 2 else 1)
+                        } ?: emptyList()
+                        respond(files)
+                    }
+                    "getGitRootPath" -> {
+                        val data = data as Map<String, Any>
+                        val directory = data["dir"] as String
+                        val builder = ProcessBuilder("git", "rev-parse", "--show-toplevel")
+                        builder.directory(File(directory))
+                        val process = builder.start()
+
+                        val reader = BufferedReader(InputStreamReader(process.inputStream))
+                        val output = reader.readLine()
+                        process.waitFor()
+
+                        respond(output)
                     }
                     "getBranch" -> {
                         // Get the current branch name

@@ -1,6 +1,7 @@
 import {
   ContinueRcJson,
   DiffLine,
+  FileType,
   IdeInfo,
   IndexTag,
   Problem,
@@ -64,4 +65,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
 
   errorPopup: [{ message: string }, void];
   infoPopup: [{ message: string }, void];
+  getGitRootPath: [{ dir: string }, string | undefined];
+  listDir: [{ dir: string }, [string, FileType][]];
+  getLastModified: [{ files: string[] }, { [path: string]: number }];
 };
