@@ -1,12 +1,11 @@
 import type { IDE } from "core";
 import {
-  type AutocompleteInput,
+  AutocompleteInput,
+  AutocompleteOutcome,
   CompletionProvider,
   type AutocompleteInput,
 } from "core/autocomplete/completionProvider";
-import type { ConfigHandler } from "core/config/handler";
-import { logDevData } from "core/util/devdata";
-import { Telemetry } from "core/util/posthog";
+import { ConfigHandler } from "core/config/handler";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
@@ -94,32 +93,6 @@ export class ContinueCompletionProvider
       return null;
     }
 
-    let injectDetails: string | undefined = undefined;
-    // Here we could use the details from the intellisense dropdown
-    // and place them just above the line being typed but because
-    // we don't have control over the formatting of the details and
-    // they could be especially long, not doing this for now
-    // if (context.selectedCompletionInfo) {
-    //   const results: any = await vscode.commands.executeCommand(
-    //     "vscode.executeCompletionItemProvider",
-    //     document.uri,
-    //     position,
-    //     null,
-    //     1,
-    //   );
-    //   if (results?.items) {
-    //     injectDetails = results.items?.[0]?.detail;
-    //     // const label = results?.items?.[0].label;
-    //     // const workspaceSymbols = (
-    //     //   (await vscode.commands.executeCommand(
-    //     //     "vscode.executeWorkspaceSymbolProvider",
-    //     //     label,
-    //     //   )) as any
-    //     // ).filter((symbol: any) => symbol.name === label);
-    //     // console.log(label, "=>", workspaceSymbols);
-    //   }
-    // }
-
     // The first time intellisense dropdown shows up, and the first choice is selected,
     // we should not consider this. Only once user explicitly moves down the list
     const newVsCodeInput = {
@@ -177,7 +150,7 @@ export class ContinueCompletionProvider
       // Handle commit message input box
       let manuallyPassPrefix: string | undefined = undefined;
       if (document.uri.scheme === "vscode-scm") {
-        return [];
+        return null;
         // let diff = await this.ide.getDiff();
         // diff = diff.split("\n").splice(-150).join("\n");
         // manuallyPassPrefix = `${diff}\n\nCommit message: `;
@@ -192,6 +165,7 @@ export class ContinueCompletionProvider
         clipboardText: clipboardText,
         manuallyPassFileContents,
         manuallyPassPrefix,
+        selectedCompletionInfo,
       };
 
       setupStatusBar(true, true);
@@ -231,20 +205,28 @@ export class ContinueCompletionProvider
         return null;
       }
 
-      return [
-        new vscode.InlineCompletionItem(
-          outcome.completion,
-          new vscode.Range(
-            position,
-            position.translate(0, outcome.completion.length),
-          ),
-          {
-            title: "Log Autocomplete Outcome",
-            command: "continue.logAutocompleteOutcome",
-            arguments: [outcome, logRejectionTimeout],
-          },
-        ),
-      ];
+      // Mark displayed
+      this.completionProvider.markDisplayed(input.completionId, outcome);
+      this._lastShownCompletion = outcome;
+
+      // Construct the range/text to show
+      const startPos = selectedCompletionInfo?.range.start ?? position;
+      const completionRange = new vscode.Range(
+        startPos,
+        startPos.translate(0, outcome.completion.length),
+      );
+      const completionItem = new vscode.InlineCompletionItem(
+        outcome.completion,
+        completionRange,
+        {
+          title: "Log Autocomplete Outcome",
+          command: "continue.logAutocompleteOutcome",
+          arguments: [input.completionId, this.completionProvider],
+        },
+      );
+
+      (completionItem as any).completeBracketPairs = true;
+      return [completionItem];
     } finally {
       stopStatusBarLoading();
     }

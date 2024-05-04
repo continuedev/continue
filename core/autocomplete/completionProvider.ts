@@ -2,18 +2,25 @@ import Handlebars from "handlebars";
 import ignore from "ignore";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import type { IDE, ILLM, Position, TabAutocompleteOptions } from "..";
-import type { RangeInFileWithContents } from "../commands/util";
-import type { ConfigHandler } from "../config/handler";
+import { IDE, ILLM, Position, Range, TabAutocompleteOptions } from "..";
+import { RangeInFileWithContents } from "../commands/util";
+import { ConfigHandler } from "../config/handler";
 import { streamLines } from "../diff/util";
 import OpenAI from "../llm/llms/OpenAI";
 import { getBasename } from "../util";
 import { logDevData } from "../util/devdata";
-import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters";
+import {
+  COUNT_COMPLETION_REJECTED_AFTER,
+  DEFAULT_AUTOCOMPLETE_OPTS,
+} from "../util/parameters";
 import { Telemetry } from "../util/posthog";
 import { getRangeInString } from "../util/ranges";
 import AutocompleteLruCache from "./cache";
-import { noFirstCharNewline, onlyWhitespaceAfterEndOfLine } from "./charStream";
+import {
+  noFirstCharNewline,
+  onlyWhitespaceAfterEndOfLine,
+  stopOnUnmatchedClosingBracket,
+} from "./charStream";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
@@ -42,6 +49,10 @@ export interface AutocompleteInput {
   manuallyPassFileContents?: string;
   // Used for VS Code git commit input box
   manuallyPassPrefix?: string;
+  selectedCompletionInfo?: {
+    text: string;
+    range: Range;
+  };
 }
 
 export interface AutocompleteOutcome extends TabAutocompleteOptions {
@@ -56,9 +67,6 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   completionOptions: any;
   cacheHit: boolean;
   filepath: string;
-  gitRepo?: string;
-  completionId: string;
-  uniqueId: string;
 }
 
 const autocompleteCache = AutocompleteLruCache.get();
@@ -71,7 +79,7 @@ const STARCODER2_T_ARTIFACTS = ["t.", "\nt", "<file_sep>"];
 const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
-const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
+const multilineStops: string[] = []; // [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
 const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
 
 // Errors that can be expected on occasion even during normal functioning should not be shown.
@@ -162,20 +170,11 @@ export async function getTabCompletion(
   }
 
   // Prompt
-  let fullPrefix =
+  const fullPrefix =
     getRangeInString(fileContents, {
       start: { line: 0, character: 0 },
       end: input.selectedCompletionInfo?.range.start ?? pos,
     }) + (input.selectedCompletionInfo?.text ?? "");
-
-  if (input.injectDetails) {
-    const lines = fullPrefix.split("\n");
-    fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
-      lang.singleLineComment
-    } ${input.injectDetails.split("\n").join(`\n${lang.singleLineComment} `)}\n${
-      lines[lines.length - 1]
-    }`;
-  }
 
   const fullSuffix = getRangeInString(fileContents, {
     start: pos,
@@ -328,6 +327,7 @@ export async function getTabCompletion(
     let charGenerator = generatorWithCancellation();
     charGenerator = noFirstCharNewline(charGenerator);
     charGenerator = onlyWhitespaceAfterEndOfLine(charGenerator, lang.endOfLine);
+    charGenerator = stopOnUnmatchedClosingBracket(charGenerator, suffix);
 
     let lineGenerator = streamLines(charGenerator);
     lineGenerator = stopAtLines(lineGenerator);
@@ -377,6 +377,7 @@ export async function getTabCompletion(
     modelName: llm.model,
     completionOptions,
     cacheHit,
+    filepath: input.filepath,
     ...options,
   };
 }
@@ -458,6 +459,17 @@ export class CompletionProvider {
         outcome.completion,
         outcome.filepath,
       );
+    }
+  }
+
+  public cancelRejectionTimeout(completionId: string) {
+    if (this._logRejectionTimeouts.has(completionId)) {
+      clearTimeout(this._logRejectionTimeouts.get(completionId)!);
+      this._logRejectionTimeouts.delete(completionId);
+    }
+
+    if (this._outcomes.has(completionId)) {
+      this._outcomes.delete(completionId);
     }
   }
 
@@ -564,31 +576,13 @@ export class CompletionProvider {
         return undefined;
       }
 
-      // Filter out unwanted results
-      if (isOnlyPunctuationAndWhitespace(outcome.completion)) {
-        return undefined;
-      }
-
       // Do some stuff later so as not to block return. Latency matters
       const completionToCache = outcome.completion;
       setTimeout(async () => {
         if (!outcome.cacheHit) {
-          (await this.autocompleteCache).put(outcome.prefix, completionToCache);
+          (await this.autocompleteCache).put(outcome.prompt, completionToCache);
         }
       }, 100);
-
-      outcome.accepted = false;
-      const logRejectionTimeout = setTimeout(() => {
-        // Wait 10 seconds, then assume it wasn't accepted
-        logDevData("autocomplete", outcome);
-        const { prompt, completion, ...restOfOutcome } = outcome;
-        Telemetry.capture("autocomplete", {
-          ...restOfOutcome,
-        });
-        this._logRejectionTimeouts.delete(input.completionId);
-      }, 10_000);
-      this._outcomes.set(input.completionId, outcome);
-      this._logRejectionTimeouts.set(input.completionId, logRejectionTimeout);
 
       return outcome;
     } catch (e: any) {
