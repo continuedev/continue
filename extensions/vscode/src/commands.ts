@@ -4,12 +4,10 @@ import * as path from "path";
 import * as vscode from "vscode";
 
 import { ContextMenuConfig, IDE } from "core";
-import { AutocompleteOutcome } from "core/autocomplete/completionProvider";
+import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
-import { logDevData } from "core/util/devdata";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import { getConfigJsonPath } from "core/util/paths";
-import { Telemetry } from "core/util/posthog";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
@@ -511,19 +509,10 @@ const commandsMap: (
       );
     },
     "continue.logAutocompleteOutcome": (
-      outcome: AutocompleteOutcome,
-      logRejectionTimeout: NodeJS.Timeout,
+      completionId: string,
+      completionProvider: CompletionProvider,
     ) => {
-      clearTimeout(logRejectionTimeout);
-      outcome.accepted = true;
-      logDevData("autocomplete", outcome);
-      Telemetry.capture("autocomplete", {
-        accepted: outcome.accepted,
-        modelName: outcome.modelName,
-        modelProvider: outcome.modelProvider,
-        time: outcome.time,
-        cacheHit: outcome.cacheHit,
-      });
+      completionProvider.accept(completionId);
     },
     "continue.toggleTabAutocompleteEnabled": () => {
       const config = vscode.workspace.getConfiguration("continue");

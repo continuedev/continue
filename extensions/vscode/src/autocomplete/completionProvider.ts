@@ -1,16 +1,21 @@
 import { IDE } from "core";
 import {
   AutocompleteInput,
+  AutocompleteOutcome,
   CompletionProvider,
 } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
-import { logDevData } from "core/util/devdata";
-import { Telemetry } from "core/util/posthog";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { getDefinitionsFromLsp } from "./lsp";
 import { setupStatusBar, stopStatusBarLoading } from "./statusBar";
+
+interface VsCodeCompletionInput {
+  document: vscode.TextDocument;
+  position: vscode.Position;
+  context: vscode.InlineCompletionContext;
+}
 
 export class ContinueCompletionProvider
   implements vscode.InlineCompletionItemProvider
@@ -47,7 +52,17 @@ export class ContinueCompletionProvider
       this.onError.bind(this),
       getDefinitionsFromLsp,
     );
+
+    vscode.workspace.onDidChangeTextDocument((event) => {
+      if (event.document.uri.fsPath === this._lastShownCompletion?.filepath) {
+        // console.log("updating completion");
+      }
+    });
   }
+
+  _lastShownCompletion: AutocompleteOutcome | undefined;
+
+  _lastVsCodeCompletionInput: VsCodeCompletionInput | undefined;
 
   public async provideInlineCompletionItems(
     document: vscode.TextDocument,
@@ -61,8 +76,29 @@ export class ContinueCompletionProvider
         .getConfiguration("continue")
         .get<boolean>("enableTabAutocomplete") || false;
     if (token.isCancellationRequested || !enableTabAutocomplete) {
-      return [];
+      return null;
     }
+
+    // If the text at the range isn't a prefix of the intellisense text,
+    // no completion will be displayed, regardless of what we return
+    if (
+      context.selectedCompletionInfo &&
+      !context.selectedCompletionInfo.text.startsWith(
+        document.getText(context.selectedCompletionInfo.range),
+      )
+    ) {
+      return null;
+    }
+
+    // The first time intellisense dropdown shows up, and the first choice is selected,
+    // we should not consider this. Only once user explicitly moves down the list
+    const newVsCodeInput = {
+      context,
+      document,
+      position,
+    };
+    const selectedCompletionInfo = context.selectedCompletionInfo;
+    this._lastVsCodeCompletionInput = newVsCodeInput;
 
     try {
       const abortController = new AbortController();
@@ -111,7 +147,7 @@ export class ContinueCompletionProvider
       // Handle commit message input box
       let manuallyPassPrefix: string | undefined = undefined;
       if (document.uri.scheme === "vscode-scm") {
-        return [];
+        return null;
         // let diff = await this.ide.getDiff();
         // diff = diff.split("\n").splice(-150).join("\n");
         // manuallyPassPrefix = `${diff}\n\nCommit message: `;
@@ -126,6 +162,7 @@ export class ContinueCompletionProvider
         clipboardText: clipboardText,
         manuallyPassFileContents,
         manuallyPassPrefix,
+        selectedCompletionInfo,
       };
 
       setupStatusBar(true, true);
@@ -136,38 +173,83 @@ export class ContinueCompletionProvider
         );
 
       if (!outcome || !outcome.completion) {
-        return [];
+        return null;
       }
 
-      const logRejectionTimeout = setTimeout(() => {
-        // Wait 10 seconds, then assume it wasn't accepted
-        outcome.accepted = false;
-        logDevData("autocomplete", outcome);
-        Telemetry.capture("autocomplete", {
-          accepted: outcome.accepted,
-          modelName: outcome.modelName,
-          modelProvider: outcome.modelProvider,
-          time: outcome.time,
-          cacheHit: outcome.cacheHit,
-        });
-      }, 10_000);
+      // VS Code displays dependent on selectedCompletionInfo (their docstring below)
+      // We should first always make sure we have a valid completion, but if it goes wrong we
+      // want telemetry to be correct
+      /**
+       * Provides information about the currently selected item in the autocomplete widget if it is visible.
+       *
+       * If set, provided inline completions must extend the text of the selected item
+       * and use the same range, otherwise they are not shown as preview.
+       * As an example, if the document text is `console.` and the selected item is `.log` replacing the `.` in the document,
+       * the inline completion must also replace `.` and start with `.log`, for example `.log()`.
+       *
+       * Inline completion providers are requested again whenever the selected item changes.
+       */
+      if (selectedCompletionInfo) {
+        outcome.completion = selectedCompletionInfo.text + outcome.completion;
+      }
+      const willDisplay = this.willDisplay(
+        document,
+        selectedCompletionInfo,
+        signal,
+        outcome,
+      );
+      if (!willDisplay) {
+        return null;
+      }
 
-      return [
-        new vscode.InlineCompletionItem(
-          outcome.completion,
-          new vscode.Range(
-            position,
-            position.translate(0, outcome.completion.length),
-          ),
-          {
-            title: "Log Autocomplete Outcome",
-            command: "continue.logAutocompleteOutcome",
-            arguments: [outcome, logRejectionTimeout],
-          },
-        ),
-      ];
+      // Mark displayed
+      this.completionProvider.markDisplayed(input.completionId, outcome);
+      this._lastShownCompletion = outcome;
+
+      // Construct the range/text to show
+      const startPos = selectedCompletionInfo?.range.start ?? position;
+      const completionRange = new vscode.Range(
+        startPos,
+        startPos.translate(0, outcome.completion.length),
+      );
+      const completionItem = new vscode.InlineCompletionItem(
+        outcome.completion,
+        completionRange,
+        {
+          title: "Log Autocomplete Outcome",
+          command: "continue.logAutocompleteOutcome",
+          arguments: [input.completionId, this.completionProvider],
+        },
+      );
+
+      (completionItem as any).completeBracketPairs = true;
+      return [completionItem];
     } finally {
       stopStatusBarLoading();
     }
+  }
+
+  willDisplay(
+    document: vscode.TextDocument,
+    selectedCompletionInfo: vscode.SelectedCompletionInfo | undefined,
+    abortSignal: AbortSignal,
+    outcome: AutocompleteOutcome,
+  ): boolean {
+    if (selectedCompletionInfo) {
+      const { text, range } = selectedCompletionInfo;
+      if (!outcome.completion.startsWith(text)) {
+        console.log(
+          `Won't display completion because text doesn't match: ${text}, ${outcome.completion}`,
+          range,
+        );
+        return false;
+      }
+    }
+
+    if (abortSignal.aborted) {
+      return false;
+    }
+
+    return true;
   }
 }
