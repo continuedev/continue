@@ -16,7 +16,11 @@ import {
 import { Telemetry } from "../util/posthog";
 import { getRangeInString } from "../util/ranges";
 import AutocompleteLruCache from "./cache";
-import { noFirstCharNewline, onlyWhitespaceAfterEndOfLine } from "./charStream";
+import {
+  noFirstCharNewline,
+  onlyWhitespaceAfterEndOfLine,
+  stopOnUnmatchedClosingBracket,
+} from "./charStream";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
@@ -73,7 +77,7 @@ const STARCODER2_T_ARTIFACTS = ["t.", "\nt"];
 const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
-const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
+const multilineStops: string[] = []; // [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
 const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
 
 // Errors that can be expected on occasion even during normal functioning should not be shown.
@@ -302,6 +306,7 @@ export async function getTabCompletion(
     let charGenerator = generatorWithCancellation();
     charGenerator = noFirstCharNewline(charGenerator);
     charGenerator = onlyWhitespaceAfterEndOfLine(charGenerator, lang.endOfLine);
+    charGenerator = stopOnUnmatchedClosingBracket(charGenerator, suffix);
 
     let lineGenerator = streamLines(charGenerator);
     lineGenerator = stopAtLines(lineGenerator);
