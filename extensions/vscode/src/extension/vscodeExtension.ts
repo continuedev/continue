@@ -195,9 +195,11 @@ export class VsCodeExtension {
     // from outside the window are also caught
     fs.watchFile(getConfigJsonPath(), { interval: 1000 }, (stats) => {
       this.configHandler.reloadConfig();
+      this.tabAutocompleteModel.clearLlm();
     });
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
       this.configHandler.reloadConfig();
+      this.tabAutocompleteModel.clearLlm();
     });
 
     vscode.workspace.onDidSaveTextDocument((event) => {

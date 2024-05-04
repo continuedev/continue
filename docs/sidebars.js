@@ -19,14 +19,14 @@ const sidebars = {
     "how-to-use-continue",
     {
       type: "category",
-      label: "🌉 Model setup",
+      label: "🌉 Setup",
       collapsible: true,
       collapsed: true,
       items: [
-        "model-setup/overview",
-        "model-setup/select-provider",
-        "model-setup/select-model",
-        "model-setup/configuration",
+        "setup/overview",
+        "setup/select-provider",
+        "setup/select-model",
+        "setup/configuration",
       ],
     },
     {

@@ -6,6 +6,7 @@ import {
 } from "core/web/webviewProtocol";
 import { v4 as uuidv4 } from "uuid";
 import "vscode-webview";
+import { getLocalStorage } from "./localStorage";
 interface vscode {
   postMessage(message: any): vscode;
 }
@@ -189,4 +190,19 @@ export function appendText(text: string) {
 
 export function isJetBrains() {
   return localStorage.getItem("ide") === "jetbrains";
+}
+
+export function isPrerelease() {
+  const extensionVersion = getLocalStorage("extensionVersion");
+  if (!extensionVersion) {
+    console.warn(
+      `Could not find extension version in local storage, assuming it's a prerelease`,
+    );
+    return true;
+  }
+  const minor = parseInt(extensionVersion.split(".")[1], 10);
+  if (minor % 2 !== 0) {
+    return true;
+  }
+  return false;
 }

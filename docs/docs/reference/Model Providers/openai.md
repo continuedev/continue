@@ -37,7 +37,7 @@ OpenAI compatible APIs
 - [Anyscale Endpoints](https://github.com/continuedev/deploy-os-code-llm#others)
 - [Anyscale Private Endpoints](https://github.com/continuedev/deploy-os-code-llm#anyscale-private-endpoints)
 
-If you are [using an OpenAI compatible server / API](../../model-setup/select-provider#local), you can change the `apiBase` like this:
+If you are [using an OpenAI compatible server / API](../../setup/select-provider#local), you can change the `apiBase` like this:
 
 ```json title="~/.continue/config.json"
 {

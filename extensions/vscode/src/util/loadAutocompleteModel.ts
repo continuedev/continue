@@ -82,7 +82,7 @@ export class TabAutocompleteModel {
     if (!this._llm) {
       const config = await this.configHandler.loadConfig();
       if (config.tabAutocompleteModel) {
-        this._llm = this.configHandler.setupLlm(config.tabAutocompleteModel);
+        this._llm = config.tabAutocompleteModel;
       } else {
         this._llm = await this.getDefaultTabAutocompleteModel();
       }

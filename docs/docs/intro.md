@@ -6,21 +6,19 @@ keywords: [introduction, intro, continue, autopilot, chatgpt]
 
 # 💻 Introduction
 
-![continue-cover-logo](/img/continue-cover-logo.png)
+![continue-cover-logo](/img/intro.png)
 
-**Continue is an open-source autopilot for [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)—the easiest way to code with any LLM**
-
-Many developers have begun to use ChatGPT while coding; however, the experience is painful because of how much copying, pasting, and editing is required to provide the context and incorporate the generated answers into your codebase. Continue eliminates this pain by enabling LLMs to act natively in your IDE as you complete your workflows.
+**Continue keeps developers in flow. Our open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions enable you to easily create your own modular AI software development system that you can improve.**
 
 Some examples of what you can achieve are:
 
-- Use cmd/ctrl + I to generate boilerplate code from natural language
-- Use our local tab-autocomplete to get inline suggestions and write boilerplate code quickly
-- Highlight code, describe how to refactor it, and have changes streamed into your editor
-- Ask high-level questions about your codebase, with Continue automatically finding relevant files
-- Quickly generate unit tests for any function or class
-- Ask a quick question to get immediate answers without leaving your editor
-- Have your current changes reviewed for mistakes that the compiler can't catch
-- Type '@' to reference dozens of different sources while communicating with the LLM
+- [Easily understand code sections](how-to-use-continue.md#easily-understand-code-sections)
+- [Tab to autocomplete code suggestions](how-to-use-continue.md#tab-to-autocomplete-code-suggestions)
+- [Refactor functions where you are coding](how-to-use-continue.md#refactor-functions-where-you-are-coding)
+- [Ask questions about your codebase](how-to-use-continue.md#ask-questions-about-your-codebase)
+- [Quickly use documentation as context](how-to-use-continue.md#quickly-use-documentation-as-context)
+- [Kick off actions with slash commands](how-to-use-continue.md#kick-off-actions-with-slash-commands)
+- [Add classes, files, and more to context](how-to-use-continue.md#add-classes-files-and-more-to-context)
+- [Understand terminal errors immediately](how-to-use-continue.md#understand-terminal-errors-immediately)
 
-Continue lets you do all of this with any LLM, whether open-source, commercial, local, or remote. And we provide numerous points of configuration so that you can customize the extension to fit into your existing workflows.
+Continue enables you to use the right model for the job, whether it's open-source or commercial, running local or remote, and used for chat, autocomplete, or embeddings. And we provide numerous points of configuration, so that you can customize the extension to fit into your existing workflows.

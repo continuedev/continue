@@ -75,8 +75,6 @@ export interface ILLM extends LLMOptions {
   region?: string;
   projectId?: string;
 
-  _fetch?: (input: any, init?: any) => Promise<any>;
-
   complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
 
   streamComplete(
@@ -314,7 +312,7 @@ type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   }[Keys];
 
 export interface CustomLLMWithOptionals {
-  options?: LLMOptions;
+  options: LLMOptions;
   streamCompletion?: (
     prompt: string,
     options: CompletionOptions,
@@ -497,7 +495,8 @@ type TemplateType =
   | "neural-chat"
   | "codellama-70b"
   | "llava"
-  | "gemma";
+  | "gemma"
+  | "llama3";
 
 type ModelProvider =
   | "openai"
@@ -518,7 +517,8 @@ type ModelProvider =
   | "bedrock"
   | "deepinfra"
   | "flowise"
-  | "groq";
+  | "groq"
+  | "custom";
 
 export type ModelName =
   | "AUTODETECT"
@@ -651,6 +651,7 @@ export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
+  requestOptions?: RequestOptions;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -705,8 +706,14 @@ interface ContextMenuConfig {
   optimize?: string;
   fixGrammar?: string;
 }
+
+interface ModelRoles {
+  inlineEdit?: string;
+}
+
 interface ExperimantalConfig {
   contextMenuPrompts?: ContextMenuConfig;
+  modelRoles?: ModelRoles;
 }
 
 export interface SerializedContinueConfig {

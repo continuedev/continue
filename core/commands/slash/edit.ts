@@ -9,7 +9,7 @@ import {
 } from "../../autocomplete/lineStream";
 import { streamLines } from "../../diff/util";
 import { stripImages } from "../../llm/countTokens";
-import { dedentAndGetCommonWhitespace } from "../../util";
+import { dedentAndGetCommonWhitespace, getMarkdownLanguageTagForFile } from "../../util";
 import {
   RangeInFileWithContents,
   contextItemToRangeInFileWithContents,
@@ -456,6 +456,12 @@ const EditSlashCommand: SlashCommand = {
           userInput,
           filePrefix: filePrefix,
           fileSuffix: fileSuffix,
+
+          // Some built-in templates use these instead of the above
+          prefix: filePrefix,
+          suffix: fileSuffix,
+
+          language: getMarkdownLanguageTagForFile(rif.filepath),
           systemMessage: llm.systemMessage ?? "",
           // "contextItems": (await sdk.getContextItemChatMessages()).map(x => x.content || "").join("\n\n"),
         },

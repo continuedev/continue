@@ -37,7 +37,7 @@ import {
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
-import { isJetBrains, postToIde } from "../../util/ide";
+import { isJetBrains, isPrerelease, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -194,6 +194,9 @@ function TipTapEditor(props: TipTapEditorProps) {
     props.availableSlashCommands,
   );
 
+  const active = useSelector((state: RootState) => state.state.active);
+  const activeRef = useUpdatingRef(active);
+
   async function handleImageFile(
     file: File,
   ): Promise<[HTMLImageElement, string] | undefined> {
@@ -273,7 +276,14 @@ function TipTapEditor(props: TipTapEditorProps) {
               onEnterRef.current({ useCodebase: false, noContext: true });
               return true;
             },
-
+            "Cmd-Backspace": () => {
+              // If you press cmd+backspace wanting to cancel,
+              // but are inside of a text box, it shouldn't
+              // delete the text
+              if (activeRef.current) {
+                return true;
+              }
+            },
             "Shift-Enter": () =>
               this.editor.commands.first(({ commands }) => [
                 () => commands.newlineInCode(),
@@ -401,6 +411,34 @@ function TipTapEditor(props: TipTapEditorProps) {
   });
 
   useEffect(() => {
+    if (isJetBrains() || !isPrerelease()) {
+      // This is only for VS Code .ipynb files
+      return;
+    }
+
+    const handleKeyDown = async (event: KeyboardEvent) => {
+      if (!editor) return;
+
+      if (event.metaKey && event.key === "x") {
+        document.execCommand("cut");
+        event.stopPropagation();
+      } else if (event.metaKey && event.key === "v") {
+        document.execCommand("paste");
+        event.stopPropagation();
+      } else if (event.metaKey && event.key === "c") {
+        document.execCommand("copy");
+        event.stopPropagation();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [editor]);
+
+  useEffect(() => {
     if (mainEditorContent && editor) {
       editor.commands.setContent(mainEditorContent);
       dispatch(consumeMainEditorContent());
@@ -453,7 +491,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   }, []);
 
   // Re-focus main input after done generating
-  const active = useSelector((state: RootState) => state.state.active);
   useEffect(() => {
     if (editor && !active && props.isMainInput && document.hasFocus()) {
       editor.commands.focus();

@@ -26,7 +26,7 @@ class ContinueCustomElementRenderer (
     protected val font: Font
         get() {
             val editorFont = editor.colorsScheme.getFont(EditorFontType.PLAIN)
-            return editorFont.deriveFont(Font.ITALIC) ?: editorFont
+            return editorFont.deriveFont(Font.PLAIN) ?: editorFont
         }
 
     private fun offsetY(): Int {
