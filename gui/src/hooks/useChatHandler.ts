@@ -163,10 +163,17 @@ function useChatHandler(dispatch: Dispatch) {
 
       // Automatically use currently open file
       if (!modifiers.noContext && (history.length === 0 || index === 0)) {
+        const usingFreeTrial = defaultModel.provider === "free-trial";
         const ide = new WebviewIde();
         const currentFilePath = await ide.getCurrentFile();
         if (typeof currentFilePath === "string") {
-          const currentFileContents = await ide.readFile(currentFilePath);
+          let currentFileContents = await ide.readFile(currentFilePath);
+          if (usingFreeTrial) {
+            currentFileContents = currentFileContents
+              .split("\n")
+              .slice(0, 1000)
+              .join("\n");
+          }
           contextItems.unshift({
             content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getBasename(
               currentFilePath,
