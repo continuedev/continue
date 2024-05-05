@@ -255,6 +255,9 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("getOpenFiles", async (msg) => {
       return await ide.getOpenFiles();
     });
+    this.onWebviewOrCore("getCurrentFile", async () => {
+      return await ide.getCurrentFile();
+    });
     this.onWebviewOrCore("getPinnedFiles", async (msg) => {
       return await ide.getPinnedFiles();
     });
