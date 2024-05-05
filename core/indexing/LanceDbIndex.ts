@@ -13,10 +13,10 @@ import { MAX_CHUNK_SIZE } from "../llm/constants";
 import { getBasename } from "../util";
 import { getLanceDbPath } from "../util/paths";
 import { chunkDocument } from "./chunk/chunk";
-import { type DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+import { SqliteDb, tagToString, type DatabaseConnection } from "./refreshIndex";
 import {
-  type CodebaseIndex,
   IndexResultType,
+  type CodebaseIndex,
   type PathAndCacheKey,
   type RefreshIndexResults,
 } from "./types";
