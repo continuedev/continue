@@ -8,6 +8,11 @@ import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
 
+let resolveVsCodeExtension = (_: VsCodeExtension): void => {};
+export const vscodeExtensionPromise: Promise<VsCodeExtension> = new Promise(
+  (resolve) => (resolveVsCodeExtension = resolve),
+);
+
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
   getTsConfigPath();
@@ -16,7 +21,7 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   registerQuickFixProvider();
   setupInlineTips(context);
 
-  const vscodeExtension = new VsCodeExtension(context);
+  resolveVsCodeExtension(new VsCodeExtension(context));
 
   migrate("showWelcome_1", () => {
     vscode.commands.executeCommand(

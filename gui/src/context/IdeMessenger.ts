@@ -223,6 +223,11 @@ export class IdeMessenger implements IIdeMessenger {
       yield { role: "user", content: next.value };
       next = await gen.next();
     }
+
+    if (next.value.error) {
+      throw new Error(next.value.error);
+    }
+
     return {
       prompt: next.value.content?.prompt,
       completion: next.value.content?.completion,

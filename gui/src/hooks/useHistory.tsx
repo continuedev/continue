@@ -9,7 +9,6 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
-import { ideRequest } from "../util/ide";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 function truncateText(text: string, maxLength: number) {
@@ -31,7 +30,7 @@ function useHistory(dispatch: Dispatch) {
     offset?: number,
     limit?: number,
   ): Promise<SessionInfo[]> {
-    return await ideRequest("history/list", { offset, limit });
+    return await ideMessenger.request("history/list", { offset, limit });
   }
 
   async function saveSession() {
