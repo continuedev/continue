@@ -77,7 +77,7 @@ function HelpPage() {
         <TutorialButton
           onClick={() => {
             ideMessenger.post("showTutorial", undefined);
-            // navigate("/onboarding");
+            navigate("/onboarding");
           }}
         >
           Open tutorial
@@ -114,7 +114,7 @@ function HelpPage() {
         </IconDiv>
         <IconDiv backgroundColor={"#1bbe84a8"}>
           <a
-            href="https://continue.dev/docs/how-to-use-continue"
+            href="https://docs.continue.dev/how-to-use-continue"
             target="_blank"
           >
             <svg

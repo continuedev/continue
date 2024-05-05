@@ -2,6 +2,8 @@ import { ConfigHandler } from "core/config/handler";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
+import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
+import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
@@ -171,17 +173,22 @@ export class VsCodeExtension {
 
     registerDebugTracker(this.webviewProtocol, this.ide);
 
-    // Listen for file saving
+    // Listen for file saving - use global file watcher so that changes
+    // from outside the window are also caught
+    fs.watchFile(getConfigJsonPath(), { interval: 1000 }, (stats) => {
+      this.configHandler.reloadConfig();
+      this.tabAutocompleteModel.clearLlm();
+    });
+    fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
+      this.configHandler.reloadConfig();
+      this.tabAutocompleteModel.clearLlm();
+    });
+
     vscode.workspace.onDidSaveTextDocument((event) => {
+      // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
 
-      if (
-        filepath.endsWith(".continue/config.json") ||
-        filepath.endsWith(".continue\\config.json") ||
-        filepath.endsWith(".continue/config.ts") ||
-        filepath.endsWith(".continue\\config.ts") ||
-        filepath.endsWith(".continuerc.json")
-      ) {
+      if (filepath.endsWith(".continuerc.json")) {
         this.configHandler.reloadConfig();
         this.tabAutocompleteModel.clearLlm();
       } else if (

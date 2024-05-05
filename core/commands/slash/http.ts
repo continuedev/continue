@@ -4,7 +4,7 @@ import { removeQuotesAndEscapes } from "../../util";
 const HttpSlashCommand: SlashCommand = {
   name: "http",
   description: "Call an HTTP endpoint to serve response",
-  run: async function* ({ ide, llm, input, params }) {
+  run: async function* ({ ide, llm, input, params, fetch }) {
     const url = params?.url;
     if (!url) {
       throw new Error("URL is not defined in params");

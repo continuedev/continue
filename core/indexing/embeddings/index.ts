@@ -1,4 +1,5 @@
-import type { EmbeddingsProviderName } from "../..";
+import { EmbeddingsProviderName } from "../..";
+import CohereEmbeddingsProvider from "./CohereEmbeddingsProvider";
 import FreeTrialEmbeddingsProvider from "./FreeTrialEmbeddingsProvider";
 import OllamaEmbeddingsProvider from "./OllamaEmbeddingsProvider";
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider";
@@ -10,5 +11,6 @@ export const AllEmbeddingsProviders: {
   ollama: OllamaEmbeddingsProvider,
   "transformers.js": TransformersJsEmbeddingsProvider,
   openai: OpenAIEmbeddingsProvider,
+  cohere: CohereEmbeddingsProvider,
   "free-trial": FreeTrialEmbeddingsProvider,
 };

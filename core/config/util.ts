@@ -2,17 +2,30 @@ import { readFileSync, writeFileSync } from "node:fs";
 import type { ModelDescription } from "..";
 import { editConfigJson, getConfigJsonPath } from "../util/paths";
 
-export function addModel(model: ModelDescription) {
-  const config = readFileSync(getConfigJsonPath(), "utf8");
-  const configJson = JSON.parse(config);
-  configJson.models.push(model);
-  const newConfigString = JSON.stringify(
-    configJson,
+function stringify(obj: any, indentation?: number): string {
+  return JSON.stringify(
+    obj,
     (key, value) => {
       return value === null ? undefined : value;
     },
-    2,
+    indentation,
   );
+}
+
+export function addModel(model: ModelDescription) {
+  const config = readFileSync(getConfigJsonPath(), "utf8");
+  const configJson = JSON.parse(config);
+
+  // De-duplicate
+  if (configJson.models?.some((m: any) => stringify(m) === stringify(model))) {
+    return config;
+  }
+  if (configJson.models?.some((m: any) => m?.title === model.title)) {
+    model.title = `${model.title} (1)`;
+  }
+
+  configJson.models.push(model);
+  const newConfigString = stringify(configJson, 2);
   writeFileSync(getConfigJsonPath(), newConfigString);
   return newConfigString;
 }

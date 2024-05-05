@@ -9,11 +9,14 @@
       "title": "Ollama",
       "provider": "ollama",
       "model": "llama2-7b",
-      "completionOptions": {}
+      "completionOptions": {},
+      "apiBase": "http://localhost:11434"
     }
   ]
 }
 ```
+
+If you'd like to host Ollama on another machine, you can set it up as described in the [Ollama FAQ](https://github.com/ollama/ollama/blob/main/docs/faq.md#how-can-i-expose-ollama-on-my-network), and then set `"apiBase"` to match the IP address / port of that machine.
 
 ## Completion Options
 

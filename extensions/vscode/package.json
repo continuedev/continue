@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.92",
+  "version": "0.9.93",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -17,7 +17,7 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - Claude, CodeLlama, GPT-4, and more",
+  "displayName": "Continue - Llama 3, GPT-4, and more",
   "pricing": "Free",
   "description": "Open-source autopilot for software development - bring the power of ChatGPT to your IDE",
   "publisher": "Continue",
@@ -41,6 +41,7 @@
     "github",
     "copilot",
     "llama",
+    "3",
     "codegpt",
     "ai"
   ],
@@ -57,7 +58,7 @@
         "continue.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://continue.dev/docs/telemetry)."
+          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -67,7 +68,7 @@
         "continue.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://continue.dev/docs/walkthroughs/tab-autocomplete)"
+          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://docs.continue.dev/walkthroughs/tab-autocomplete)"
         },
         "continue.remoteConfigServerUrl": {
           "type": "string",
@@ -147,6 +148,18 @@
         "category": "Continue",
         "title": "Toggle Full Screen",
         "icon": "$(fullscreen)",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.openConfigJson",
+        "category": "Continue",
+        "title": "Open config.json",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.toggleTabAutocompleteEnabled",
+        "category": "Continue",
+        "title": "Toggle Autocomplete Enabled",
         "group": "Continue"
       },
       {
@@ -263,6 +276,11 @@
         "mac": "cmd+k cmd+m",
         "key": "ctrl+k ctrl+m",
         "when": "!terminalFocus"
+      },
+      {
+        "command": "continue.toggleTabAutocompleteEnabled",
+        "mac": "cmd+k cmd+a",
+        "key": "ctrl+k ctrl+a"
       }
     ],
     "submenus": [
@@ -293,12 +311,6 @@
         },
         {
           "command": "continue.newSession"
-        }
-      ],
-      "webview/context": [
-        {
-          "command": "continue.shareSession",
-          "group": "navigation@1"
         }
       ],
       "editor/context": [
@@ -382,7 +394,7 @@
         {
           "id": "continue",
           "title": "Continue",
-          "icon": "media/continue-dev-square.png"
+          "icon": "media/sidebar-icon.png"
         }
       ]
     },
@@ -522,7 +534,7 @@
     "ncp": "^2.0.0",
     "node-fetch": "^3.3.2",
     "node-machine-id": "^1.1.12",
-    "posthog-node": "^3.1.2",
+    "posthog-node": "^3.6.3",
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
     "request": "^2.88.2",

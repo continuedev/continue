@@ -13,7 +13,9 @@ export const Typescript = {
 
 // Python
 export const Python = {
-  stopWords: ["def", "class"],
+  // """"#" is for .ipynb files, where we add '"""' surrounding markdown blocks.
+  // This stops the model from trying to complete the start of a new markdown block
+  stopWords: ["def", "class", '"""#'],
   comment: "#",
   endOfLine: [],
 };
@@ -211,6 +213,7 @@ export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   js: Typescript,
   tsx: Typescript,
   jsx: Typescript,
+  ipynb: Python,
   py: Python,
   pyi: Python,
   java: Java,

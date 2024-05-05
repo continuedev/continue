@@ -74,36 +74,44 @@ export async function getDefinitionsFromLsp(
   cursorIndex: number,
   ide: IDE,
 ): Promise<AutocompleteSnippet[]> {
-  const ast = await getAst(filepath, contents);
-  if (!ast) return [];
+  try {
+    const ast = await getAst(filepath, contents);
+    if (!ast) return [];
 
-  const treePath = await getTreePathAtCursor(ast, cursorIndex);
-  if (!treePath) return [];
+    const treePath = await getTreePathAtCursor(ast, cursorIndex);
+    if (!treePath) return [];
 
-  const results: RangeInFileWithContents[] = [];
-  for (const node of treePath.reverse()) {
-    const definitions = await getDefinitionsForNode(filepath, node);
-    results.push(
-      ...(await Promise.all(
-        definitions.map(async (def) => ({
-          ...def,
-          contents: await ide.readRangeInFile(
-            def.filepath,
-            new vscode.Range(
-              new vscode.Position(
-                def.range.start.line,
-                def.range.start.character,
+    const results: RangeInFileWithContents[] = [];
+    for (const node of treePath.reverse()) {
+      const definitions = await getDefinitionsForNode(filepath, node);
+      results.push(
+        ...(await Promise.all(
+          definitions.map(async (def) => ({
+            ...def,
+            contents: await ide.readRangeInFile(
+              def.filepath,
+              new vscode.Range(
+                new vscode.Position(
+                  def.range.start.line,
+                  def.range.start.character,
+                ),
+                new vscode.Position(
+                  def.range.end.line,
+                  def.range.end.character,
+                ),
               ),
-              new vscode.Position(def.range.end.line, def.range.end.character),
             ),
-          ),
-        })),
-      )),
-    );
-  }
+          })),
+        )),
+      );
+    }
 
-  return results.map((result) => ({
-    ...result,
-    score: 0.8,
-  }));
+    return results.map((result) => ({
+      ...result,
+      score: 0.8,
+    }));
+  } catch (e) {
+    console.warn("Error getting definitions from LSP: ", e);
+    return [];
+  }
 }

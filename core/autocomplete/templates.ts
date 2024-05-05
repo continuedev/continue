@@ -100,6 +100,109 @@ Fill in the blank to complete the code block. Your response should include only 
   completionOptions: { stop: ["\n"] },
 };
 
+const holeFillerTemplate: AutocompleteTemplate = {
+  template: (
+    prefix: string,
+    suffix: string,
+    filename: string,
+    reponame: string,
+    snippets: AutocompleteSnippet[],
+  ) => {
+    // From https://github.com/VictorTaelin/AI-scripts
+    const SYSTEM_MSG = `You are a HOLE FILLER. You are provided with a file containing holes, formatted as '{{HOLE_NAME}}'. Your TASK is to complete with a string to replace this hole with, inside a <COMPLETION/> XML tag, including context-aware indentation, if needed.  All completions MUST be truthful, accurate, well-written and correct.
+
+## EXAMPLE QUERY:
+
+<QUERY>
+function sum_evens(lim) {
+  var sum = 0;
+  for (var i = 0; i < lim; ++i) {
+    {{FILL_HERE}}
+  }
+  return sum;
+}
+</QUERY>
+
+TASK: Fill the {{FILL_HERE}} hole.
+
+## CORRECT COMPLETION
+
+<COMPLETION>if (i % 2 === 0) {
+      sum += i;
+    }</COMPLETION>
+
+## EXAMPLE QUERY:
+
+<QUERY>
+def sum_list(lst):
+  total = 0
+  for x in lst:
+  {{FILL_HERE}}
+  return total
+
+print sum_list([1, 2, 3])
+</QUERY>
+
+## CORRECT COMPLETION:
+
+<COMPLETION>  total += x</COMPLETION>
+
+## EXAMPLE QUERY:
+
+<QUERY>
+// data Tree a = Node (Tree a) (Tree a) | Leaf a
+
+// sum :: Tree Int -> Int
+// sum (Node lft rgt) = sum lft + sum rgt
+// sum (Leaf val)     = val
+
+// convert to TypeScript:
+{{FILL_HERE}}
+</QUERY>
+
+## CORRECT COMPLETION:
+
+<COMPLETION>type Tree<T>
+  = {$:"Node", lft: Tree<T>, rgt: Tree<T>}
+  | {$:"Leaf", val: T};
+
+function sum(tree: Tree<number>): number {
+  switch (tree.$) {
+    case "Node":
+      return sum(tree.lft) + sum(tree.rgt);
+    case "Leaf":
+      return tree.val;
+  }
+}</COMPLETION>
+
+## EXAMPLE QUERY:
+
+The 4th {{FILL_HERE}} is Jupiter.
+
+## CORRECT COMPLETION:
+
+<COMPLETION>the 4th planet after Mars</COMPLETION>
+
+## EXAMPLE QUERY:
+
+function hypothenuse(a, b) {
+  return Math.sqrt({{FILL_HERE}}b ** 2);
+}
+
+## CORRECT COMPLETION:
+
+<COMPLETION>a ** 2 + </COMPLETION>`;
+
+    const fullPrompt =
+      SYSTEM_MSG +
+      `\n\n<QUERY>\n${prefix}{{FILL_HERE}}${suffix}\n</QUERY>\nTASK: Fill the {{FILL_HERE}} hole. Answer only with the CORRECT completion, and NOTHING ELSE. Do it now.\n<COMPLETION>`;
+    return fullPrompt;
+  },
+  completionOptions: {
+    stop: ["</COMPLETION>"],
+  },
+};
+
 export function getTemplateForModel(model: string): AutocompleteTemplate {
   const lowerCaseModel = model.toLowerCase();
 
@@ -112,7 +215,8 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     lowerCaseModel.includes("star-coder") ||
     lowerCaseModel.includes("starchat") ||
     lowerCaseModel.includes("octocoder") ||
-    lowerCaseModel.includes("stable")
+    lowerCaseModel.includes("stable") ||
+    lowerCaseModel.includes("codeqwen")
   ) {
     return stableCodeFimTemplate;
   }
@@ -134,7 +238,7 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     lowerCaseModel.includes("davinci-002") ||
     lowerCaseModel.includes("claude")
   ) {
-    return gptAutocompleteTemplate;
+    return holeFillerTemplate;
   }
 
   return stableCodeFimTemplate;

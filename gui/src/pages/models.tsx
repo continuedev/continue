@@ -74,7 +74,7 @@ function Models() {
           <li>a model (the LLM being run, e.g. GPT-4, CodeLlama).</li>
         </ul>
         To read more about the options, check out our{" "}
-        <a href="https://continue.dev/docs/model-setup/overview">overview</a> in
+        <a href="https://docs.continue.dev/model-setup/overview">overview</a> in
         the docs.
       </IntroDiv>
       {providersSelected ? (
@@ -85,7 +85,7 @@ function Models() {
               description={modelInfo.description}
               tags={modelInfo.tags}
               icon={modelInfo.icon}
-              refUrl={`https://continue.dev/docs/reference/Model%20Providers/${
+              refUrl={`https://docs.continue.dev/reference/Model%20Providers/${
                 modelInfo.refPage || modelInfo.provider.toLowerCase()
               }`}
               onClick={(e) => {
@@ -96,34 +96,56 @@ function Models() {
         </GridDiv>
       ) : (
         <GridDiv>
-          {Object.entries(MODEL_INFO).map(([name, pkg]) => (
-            <ModelCard
-              title={pkg.title}
-              description={pkg.description}
-              tags={pkg.tags}
-              icon={pkg.icon}
-              dimensions={pkg.dimensions}
-              providerOptions={pkg.providerOptions}
-              onClick={(e, dimensionChoices, selectedProvider) => {
-                const model = {
-                  ...pkg.params,
-                  ..._.merge(
-                    {},
-                    ...(pkg.dimensions?.map((dimension, i) => {
-                      if (!dimensionChoices?.[i]) return {};
-                      return {
-                        ...dimension.options[dimensionChoices[i]],
-                      };
-                    }) || []),
-                  ),
-                  provider: PROVIDER_INFO[selectedProvider].provider,
-                };
-                ideMessenger.post("config/addModel", { model });
-                dispatch(setDefaultModel(model.title));
-                navigate("/");
-              }}
-            />
-          ))}
+          {MODEL_INFO.map((pkg) => {
+            if (typeof pkg === "string") {
+              return (
+                <div className="-my-8 grid grid-cols-[auto_1fr] w-full items-center">
+                  <h3 className="">{pkg}</h3>
+                  <hr
+                    className="ml-2"
+                    style={{
+                      height: "0px",
+                      width: "calc(100% - 16px)",
+                      color: lightGray,
+                      border: `1px solid ${lightGray}`,
+                      borderRadius: "2px",
+                    }}
+                  ></hr>
+                </div>
+              );
+            } else {
+              return (
+                <ModelCard
+                  title={pkg.title}
+                  description={pkg.description}
+                  tags={pkg.tags}
+                  icon={pkg.icon}
+                  dimensions={pkg.dimensions}
+                  providerOptions={pkg.providerOptions}
+                  onClick={(e, dimensionChoices, selectedProvider) => {
+                    const model = {
+                      ...pkg.params,
+                      ..._.merge(
+                        {},
+                        ...(pkg.dimensions?.map((dimension, i) => {
+                          if (!dimensionChoices?.[i]) return {};
+                          return {
+                            ...dimension.options[dimensionChoices[i]],
+                          };
+                        }) || []),
+                      ),
+                      provider: PROVIDER_INFO[selectedProvider].provider,
+                    };
+                    ideMessenger.post("config/addModel", { model });
+                    dispatch(
+                      setDefaultModel({ title: model.title, force: true }),
+                    );
+                    navigate("/");
+                  }}
+                />
+              );
+            }
+          })}
         </GridDiv>
       )}
 

@@ -1,5 +1,5 @@
-import fetch, { type Response } from "node-fetch";
-import type { EmbedOptions } from "../..";
+import { Response } from "node-fetch";
+import { EmbedOptions } from "../..";
 import { getHeaders } from "../../continueServer/stubs/headers";
 import { SERVER_URL } from "../../util/parameters";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff";
@@ -31,7 +31,7 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
         batchedChunks.map(async (batch) => {
           const fetchWithBackoff = () =>
             withExponentialBackoff<Response>(() =>
-              fetch(new URL("embeddings", SERVER_URL), {
+              this.fetch(new URL("embeddings", SERVER_URL), {
                 method: "POST",
                 body: JSON.stringify({
                   input: batch,

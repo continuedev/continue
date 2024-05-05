@@ -1,4 +1,5 @@
 import {
+  ArrowLeftIcon,
   ChatBubbleOvalLeftIcon,
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
@@ -36,7 +37,11 @@ import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
-import { newSession, setInactive } from "../redux/slices/stateSlice";
+import {
+  clearLastResponse,
+  newSession,
+  setInactive,
+} from "../redux/slices/stateSlice";
 import {
   setDialogEntryOn,
   setDialogMessage,
@@ -107,7 +112,7 @@ const NewSessionButton = styled.div`
   font-size: 12px;
 
   border-radius: ${defaultBorderRadius};
-  padding: 2px 8px;
+  padding: 2px 6px;
   color: ${lightGray};
 
   &:hover {
@@ -236,11 +241,11 @@ function GUI(props: GUIProps) {
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
       if (defaultModel?.provider === "free-trial") {
-        const ftc = getLocalStorage("ftc");
-        if (ftc) {
-          setLocalStorage("ftc", ftc + 1);
+        const u = getLocalStorage("ftc");
+        if (u) {
+          setLocalStorage("ftc", u + 1);
 
-          if (ftc >= 250) {
+          if (u >= 150) {
             dispatch(setShowDialog(true));
             dispatch(setDialogMessage(<FTCDialog />));
             posthog?.capture("ftc_reached");
@@ -261,10 +266,10 @@ function GUI(props: GUIProps) {
           dispatch(
             setDialogMessage(
               <div className="text-center p-4">
-                👋 Thanks for using Continue. We are a beta product and love
-                working closely with our first users. If you're interested in
-                speaking, enter your name and email. We won't use this
-                information for anything other than reaching out.
+                👋 Thanks for using Continue. We are always trying to improve
+                and love hearing from users. If you're interested in speaking,
+                enter your name and email. We won't use this information for
+                anything other than reaching out.
                 <br />
                 <br />
                 <form
@@ -332,7 +337,8 @@ function GUI(props: GUIProps) {
     ],
   );
 
-  const { saveSession } = useHistory(dispatch);
+  const { saveSession, getLastSessionId, loadLastSession } =
+    useHistory(dispatch);
 
   useWebviewListener(
     "newSession",
@@ -478,6 +484,16 @@ function GUI(props: GUIProps) {
             >
               New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
             </NewSessionButton>
+          ) : getLastSessionId() ? (
+            <NewSessionButton
+              onClick={async () => {
+                loadLastSession();
+              }}
+              className="mr-auto flex items-center gap-1"
+            >
+              <ArrowLeftIcon width="11px" height="11px" />
+              Last Session
+            </NewSessionButton>
           ) : null}
         </div>
       </TopGuiDiv>
@@ -486,6 +502,12 @@ function GUI(props: GUIProps) {
           className="mt-auto"
           onClick={() => {
             dispatch(setInactive());
+            if (
+              state.history[state.history.length - 1]?.message.content
+                .length === 0
+            ) {
+              dispatch(clearLastResponse());
+            }
           }}
         >
           {getMetaKeyLabel()} ⌫ Cancel

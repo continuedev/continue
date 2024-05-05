@@ -1,6 +1,7 @@
 import * as fs from "node:fs";
+import os from "node:os";
 import { join as joinPath } from "node:path";
-import { promisify } from "node:util";
+import { promisify } from "util";
 import { BaseLLM } from "..";
 import type {
   ChatMessage,
@@ -143,7 +144,7 @@ class Bedrock extends BaseLLM {
 
     try {
       const data = await readFile(
-        joinPath(process.env.HOME!, ".aws", "credentials"),
+        joinPath(process.env.HOME ?? os.homedir(), ".aws", "credentials"),
         "utf8",
       );
       const credentials = this._parseCredentialsFile(data);

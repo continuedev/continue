@@ -104,10 +104,16 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
     for (let i = 0; i < results.compute.length; i++) {
       const compute = results.compute[i];
-      const snippets = await this.getSnippetsInFile(
-        compute.path,
-        await this.ide.readFile(compute.path),
-      );
+
+      let snippets: (ChunkWithoutID & { title: string })[] = [];
+      try {
+        snippets = await this.getSnippetsInFile(
+          compute.path,
+          await this.ide.readFile(compute.path),
+        );
+      } catch (e) {
+        // If can't parse, assume malformatted code
+      }
 
       // Add snippets to sqlite
       for (const snippet of snippets) {

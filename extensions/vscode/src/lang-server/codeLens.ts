@@ -4,7 +4,7 @@ import * as vscode from "vscode";
 import { DIFF_DIRECTORY, type DiffManager } from "../diff/horizontal";
 import type { VerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
 import { editorSuggestionsLocked, editorToSuggestions } from "../suggestions";
-import { getAltOrOption, getMetaKeyLabel } from "../util/util";
+import { getAltOrOption, getMetaKeyLabel, getPlatform } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 
 class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
@@ -44,13 +44,13 @@ class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
       if (codeLenses.length === 0) {
         codeLenses.push(
           new vscode.CodeLens(range, {
-            title: `Accept All (${getMetaKeyLabel()}⇧↩)`,
-            command: "continue.acceptVerticalDiffBlock",
+            title: `Accept All (${getMetaKeyLabel()}⇧⏎)`,
+            command: "continue.acceptDiff",
             arguments: [filepath, i],
           }),
           new vscode.CodeLens(range, {
             title: `Reject All (${getMetaKeyLabel()}⇧⌫)`,
-            command: "continue.rejectVerticalDiffBlock",
+            command: "continue.rejectDiff",
             arguments: [filepath, i],
           }),
         );
@@ -121,7 +121,7 @@ class SuggestionsCodeLensProvider implements vscode.CodeLensProvider {
       if (codeLenses.length === 2) {
         codeLenses.push(
           new vscode.CodeLens(range, {
-            title: `(${getMetaKeyLabel()}⇧↩/${getMetaKeyLabel()}⇧⌫ to accept/reject all)`,
+            title: `(${getMetaKeyLabel()}⇧⏎/${getMetaKeyLabel()}⇧⌫ to accept/reject all)`,
             command: "",
           }),
         );
@@ -152,7 +152,7 @@ class DiffViewerCodeLensProvider implements vscode.CodeLensProvider {
       }
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: `Accept All ✅ (${getMetaKeyLabel()}⇧↩)`,
+          title: `Accept All ✅ (${getMetaKeyLabel()}⇧⏎)`,
           command: "continue.acceptDiff",
           arguments: [document.uri.fsPath],
         }),
@@ -229,12 +229,15 @@ interface TutorialCodeLensItems {
   lineIncludes: string;
   commands: vscode.Command[];
 }
+
+const cmdCtrl = getPlatform() === "mac" ? "Cmd" : "Ctrl";
+
 const actions: TutorialCodeLensItems[] = [
   {
-    lineIncludes: "Step 2: Use the keyboard shortcut cmd/ctrl + M",
+    lineIncludes: `Step 2: Use the keyboard shortcut [${cmdCtrl}+L]`,
     commands: [
       {
-        title: "Do it for me",
+        title: `${cmdCtrl}+L`,
         command: "continue.focusContinueInput",
       },
     ],
@@ -255,17 +258,12 @@ const actions: TutorialCodeLensItems[] = [
     ],
   },
   {
-    lineIncludes: 'Step 3: Type "<your edit request>" and press Enter',
+    lineIncludes: `Step 2: Use the keyboard shortcut [${cmdCtrl}+I] to edit`,
     commands: [
       {
-        title: `"/edit make this more efficient"`,
-        command: "continue.sendMainUserInput",
-        arguments: ["/edit make this more efficient"],
-      },
-      {
-        title: `"/edit write comments for this function"`,
-        command: "continue.sendMainUserInput",
-        arguments: ["/edit write comments for this function"],
+        title: `${cmdCtrl}+I`,
+        command: "continue.quickEdit",
+        arguments: ["Add comments"],
       },
     ],
   },
@@ -289,6 +287,15 @@ const actions: TutorialCodeLensItems[] = [
     commands: [
       {
         title: "Debug the error",
+        command: "continue.debugTerminal",
+      },
+    ],
+  },
+  {
+    lineIncludes: `Step 2: Use the keyboard shortcut [${cmdCtrl}+Shift+R]`,
+    commands: [
+      {
+        title: `${cmdCtrl}+Shift+R`,
         command: "continue.debugTerminal",
       },
     ],
@@ -349,26 +356,26 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     // Folding of the tutorial
-    const regionLines = lines
-      .map((line, i) => [line, i])
-      .filter(([line, i]) => (line as string).startsWith("# region "))
-      .map(([line, i]) => i);
-    for (const lineOfRegion of regionLines as number[]) {
-      const range = new vscode.Range(lineOfRegion, 0, lineOfRegion + 1, 0);
+    // const regionLines = lines
+    //   .map((line, i) => [line, i])
+    //   .filter(([line, i]) => (line as string).startsWith("# region "))
+    //   .map(([line, i]) => i);
+    // for (const lineOfRegion of regionLines as number[]) {
+    //   const range = new vscode.Range(lineOfRegion, 0, lineOfRegion + 1, 0);
 
-      const linesToFold = regionLines
-        .filter((i) => lineOfRegion !== i)
-        .flatMap((i) => {
-          return [i, (i as number) + 1];
-        });
-      codeLenses.push(
-        new vscode.CodeLens(range, {
-          title: "Begin Section",
-          command: "continue.foldAndUnfold",
-          arguments: [linesToFold, [lineOfRegion, lineOfRegion + 1]],
-        }),
-      );
-    }
+    //   const linesToFold = regionLines
+    //     .filter((i) => lineOfRegion !== i)
+    //     .flatMap((i) => {
+    //       return [i, (i as number) + 1];
+    //     });
+    //   codeLenses.push(
+    //     new vscode.CodeLens(range, {
+    //       title: `Begin Section`,
+    //       command: "continue.foldAndUnfold",
+    //       arguments: [linesToFold, [lineOfRegion, lineOfRegion + 1]],
+    //     }),
+    //   );
+    // }
 
     return codeLenses;
   }

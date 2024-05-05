@@ -220,6 +220,7 @@ export class VerticalPerLineDiffManager {
       );
     } catch (e) {
       console.error("Error streaming diff:", e);
+      vscode.window.showErrorMessage(`Error streaming diff: ${e}`);
     } finally {
       vscode.commands.executeCommand(
         "setContext",

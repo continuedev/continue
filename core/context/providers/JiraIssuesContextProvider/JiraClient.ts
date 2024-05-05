@@ -1,5 +1,4 @@
 import type { RequestOptions } from "../../..";
-import { fetchwithRequestOptions } from "../../../util/fetchWithOptions";
 const { convert: adf2md } = require("adf-to-md");
 
 interface JiraClientOptions {
@@ -86,12 +85,15 @@ export class JiraClient {
         };
   }
 
-  async issue(issueId: string): Promise<Issue> {
+  async issue(
+    issueId: string,
+    customFetch: (url: string | URL, init: any) => Promise<any>,
+  ): Promise<Issue> {
     const result = {} as Issue;
 
-    const response = await fetchwithRequestOptions(
+    const response = await customFetch(
       new URL(
-        `${this.baseUrl}/issue/${issueId}?fields=description,comment,summary`,
+        this.baseUrl + `/issue/${issueId}?fields=description,comment,summary`,
       ),
       {
         method: "GET",
@@ -100,7 +102,6 @@ export class JiraClient {
           ...this.authHeader,
         },
       },
-      this.options.requestOptions,
     );
 
     const issue = (await response.json()) as any;
@@ -134,13 +135,16 @@ export class JiraClient {
     return result;
   }
 
-  async listIssues(): Promise<Array<QueryResult>> {
-    const response = await fetchwithRequestOptions(
+  async listIssues(
+    customFetch: (url: string | URL, init: any) => Promise<any>,
+  ): Promise<Array<QueryResult>> {
+    const response = await customFetch(
       new URL(
-        `${this.baseUrl}/search?fields=summary&jql=${
-          this.options.issueQuery ??
-          "assignee = currentUser() AND resolution = Unresolved order by updated DESC"
-        }`,
+        this.baseUrl +
+          `/search?fields=summary&jql=${
+            this.options.issueQuery ??
+            `assignee = currentUser() AND resolution = Unresolved order by updated DESC`
+          }`,
       ),
       {
         method: "GET",
@@ -149,7 +153,6 @@ export class JiraClient {
           ...this.authHeader,
         },
       },
-      this.options.requestOptions,
     );
 
     if (response.status !== 200) {

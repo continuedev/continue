@@ -1,15 +1,16 @@
-import path from "node:path";
 import type { FileEdit, RangeInFile, Thread } from "core";
 import { defaultIgnoreFile } from "core/indexing/ignore";
+import path from "node:path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/vscodeExtension";
+import { GitExtension, Repository } from "../otherExtensions/git";
 import {
-  type SuggestionRanges,
   acceptSuggestionCommand,
   editorSuggestionsLocked,
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
+  type SuggestionRanges,
 } from "../suggestions";
 import { traverseDirectory } from "./traverseDirectory";
 import {
@@ -490,9 +491,12 @@ export class VsCodeIdeUtils {
     else return "unavailable";
   }
 
-  private async _getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
+  private async _getRepo(
+    forDirectory: vscode.Uri,
+  ): Promise<Repository | undefined> {
     // Use the native git extension to get the branch name
-    const extension = vscode.extensions.getExtension("vscode.git");
+    const extension =
+      vscode.extensions.getExtension<GitExtension>("vscode.git");
     if (
       typeof extension === "undefined" ||
       !extension.isActive ||
@@ -503,7 +507,7 @@ export class VsCodeIdeUtils {
 
     try {
       const git = extension.exports.getAPI(1);
-      return git.getRepository(forDirectory);
+      return git.getRepository(forDirectory) ?? undefined;
     } catch (e) {
       this._repoWasNone = true;
       console.warn("Git not found: ", e);
@@ -511,8 +515,8 @@ export class VsCodeIdeUtils {
     }
   }
 
-  private _repoWasNone = false;
-  async getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
+  private _repoWasNone: boolean = false;
+  async getRepo(forDirectory: vscode.Uri): Promise<Repository | undefined> {
     let repo = await this._getRepo(forDirectory);
 
     let i = 0;
@@ -552,7 +556,8 @@ export class VsCodeIdeUtils {
   }
 
   async getDiff(): Promise<string> {
-    const diffs = [];
+    let diffs: string[] = [];
+    let repos = [];
 
     for (const dir of this.getWorkspaceDirectories()) {
       const repo = await this.getRepo(vscode.Uri.file(dir));
@@ -560,10 +565,15 @@ export class VsCodeIdeUtils {
         continue;
       }
 
-      diffs.push((await repo.getDiff()).join("\n"));
+      repos.push(repo.state.HEAD?.name);
+      diffs.push(await repo.diff());
     }
 
-    return diffs.join("\n\n");
+    const fullDiff = diffs.join("\n\n");
+    if (fullDiff.trim() === "") {
+      console.log(`Diff empty for repos: ${repos}`);
+    }
+    return fullDiff;
   }
 
   getHighlightedCode(): RangeInFile[] {

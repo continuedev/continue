@@ -191,6 +191,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve([]);
   }
 
+  getCurrentFile(): Promise<string | undefined> {
+    return Promise.resolve("");
+  }
+
   getPinnedFiles(): Promise<string[]> {
     return Promise.resolve([]);
   }

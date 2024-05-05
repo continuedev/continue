@@ -246,7 +246,9 @@ function ModelConfig() {
                     provider: modelInfo.provider,
                   };
                   ideMessenger.post("config/addModel", { model });
-                  dispatch(setDefaultModel(model.title));
+                  dispatch(
+                    setDefaultModel({ title: model.title, force: true }),
+                  );
                   navigate("/");
                 }}
               />

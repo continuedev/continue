@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import type { ContextItemId, IDE } from ".";
+import { ContextItemId, IDE } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider";
 import { ConfigHandler } from "./config/handler";
 import {
@@ -15,6 +15,7 @@ import { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext";
 import { logDevData } from "./util/devdata";
 import { DevDataSqliteDb } from "./util/devdataSqlite";
+import { fetchwithRequestOptions } from "./util/fetchWithOptions";
 import historyManager from "./util/history";
 import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson, getConfigJsonPath } from "./util/paths";
@@ -56,7 +57,7 @@ export class Core {
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
-      (text: string) => {},
+      async (text: string) => {},
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
 
@@ -118,7 +119,7 @@ export class Core {
 
     // History
     on("history/list", (msg) => {
-      return historyManager.list();
+      return historyManager.list(msg.data);
     });
     on("history/delete", (msg) => {
       historyManager.delete(msg.data.id);
@@ -198,26 +199,15 @@ export class Core {
       this.messenger.send("refreshSubmenuItems", undefined);
     });
     on("context/loadSubmenuItems", async (msg) => {
-      const { title } = msg.data;
-      const config = await this.configHandler.loadConfig();
-      const provider = config.contextProviders?.find(
-        (p) => p.description.title === title,
-      );
-      if (!provider) {
-        throw new Error(
-          `Unknown provider ${title}. Existing providers: ${config.contextProviders
-            ?.map((p) => p.description.title)
-            .join(", ")}`,
-        );
-      }
-
-      try {
-        const items = await provider.loadSubmenuItems({ ide });
-        return items;
-      } catch (e) {
-        this.ide.errorPopup(`Error loading submenu items from ${title}: ${e}`);
-        return [];
-      }
+      const config = await this.config();
+      const items = config.contextProviders
+        ?.find((provider) => provider.description.title === msg.data.title)
+        ?.loadSubmenuItems({
+          ide: this.ide,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
+        });
+      return items || [];
     });
     on("context/getContextItems", async (msg) => {
       const { name, query, fullInput, selectedCode } = msg.data;
@@ -240,6 +230,8 @@ export class Core {
           ide,
           selectedCode,
           reranker: config.reranker,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
         });
 
         Telemetry.capture("useContextProvider", {
@@ -371,6 +363,8 @@ export class Core {
         },
         selectedCode,
         config,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
       })) {
         if (content) {
           yield { content };

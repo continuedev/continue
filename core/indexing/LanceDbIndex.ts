@@ -44,10 +44,7 @@ export class LanceDbIndex implements CodebaseIndex {
   ) {}
 
   private tableNameForTag(tag: IndexTag) {
-    return tagToString(tag)
-      .replace(/\//g, "")
-      .replace(/\\/g, "")
-      .replace(/\:/g, "");
+    return tagToString(tag).replace(/[^\w-_.]/g, "");
   }
 
   private async createSqliteCacheTable(db: DatabaseConnection) {
@@ -100,6 +97,12 @@ export class LanceDbIndex implements CodebaseIndex {
       const embeddings = await this.embeddingsProvider.embed(
         chunks.map((c) => c.content),
       );
+
+      if (embeddings.some((emb) => emb === undefined)) {
+        throw new Error(
+          `Failed to generate embedding for ${chunks[0]?.filepath} with provider: ${this.embeddingsProvider.id}`,
+        );
+      }
 
       // Create row format
       for (let j = 0; j < chunks.length; j++) {

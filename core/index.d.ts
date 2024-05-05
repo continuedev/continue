@@ -75,8 +75,6 @@ export interface ILLM extends LLMOptions {
   region?: string;
   projectId?: string;
 
-  _fetch?: (input: any, init?: any) => Promise<any>;
-
   complete(prompt: string, options?: LLMFullCompletionOptions): Promise<string>;
 
   streamComplete(
@@ -122,6 +120,8 @@ export interface ContextProviderDescription {
   type: ContextProviderType;
 }
 
+export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
+
 export interface ContextProviderExtras {
   fullInput: string;
   embeddingsProvider: EmbeddingsProvider;
@@ -129,10 +129,12 @@ export interface ContextProviderExtras {
   llm: ILLM;
   ide: IDE;
   selectedCode: RangeInFile[];
+  fetch: FetchFunction;
 }
 
 export interface LoadSubmenuItemsArgs {
   ide: IDE;
+  fetch: FetchFunction;
 }
 
 export interface CustomContextProvider {
@@ -253,6 +255,7 @@ export interface ContextItemWithId {
 
 export interface InputModifiers {
   useCodebase: boolean;
+  noContext: boolean;
 }
 
 export interface ChatHistoryItem {
@@ -309,7 +312,7 @@ type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   }[Keys];
 
 export interface CustomLLMWithOptionals {
-  options?: LLMOptions;
+  options: LLMOptions;
   streamCompletion?: (
     prompt: string,
     options: CompletionOptions,
@@ -411,6 +414,7 @@ export interface IDE {
     stepIndex: number,
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
+  getCurrentFile(): Promise<string | undefined>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string): Promise<[string, string]>;
@@ -438,6 +442,7 @@ export interface ContinueSDK {
   contextItems: ContextItemWithId[];
   selectedCode: RangeInFile[];
   config: ContinueConfig;
+  fetch: FetchFunction;
 }
 
 export interface SlashCommand {
@@ -484,7 +489,8 @@ type ContextProviderName =
   | "code"
   | "docs"
   | "gitlab-mr"
-  | "os";
+  | "os"
+  | "currentFile";
 
 type TemplateType =
   | "llama2"
@@ -501,12 +507,14 @@ type TemplateType =
   | "neural-chat"
   | "codellama-70b"
   | "llava"
-  | "gemma";
+  | "gemma"
+  | "llama3";
 
 type ModelProvider =
   | "openai"
   | "free-trial"
   | "anthropic"
+  | "cohere"
   | "together"
   | "ollama"
   | "huggingface-tgi"
@@ -521,7 +529,8 @@ type ModelProvider =
   | "bedrock"
   | "deepinfra"
   | "flowise"
-  | "groq";
+  | "groq"
+  | "custom";
 
 export type ModelName =
   | "AUTODETECT"
@@ -534,9 +543,10 @@ export type ModelName =
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
-  // Open Source
+  // Mistral
   | "mistral-7b"
   | "mistral-8x7b"
+  // Llama 2
   | "llama2-7b"
   | "llama2-13b"
   | "llama2-70b"
@@ -544,6 +554,10 @@ export type ModelName =
   | "codellama-13b"
   | "codellama-34b"
   | "codellama-70b"
+  // Llama 3
+  | "llama3-8b"
+  | "llama3-70b"
+  // Other Open-source
   | "phi2"
   | "phind-codellama-34b"
   | "wizardcoder-7b"
@@ -560,6 +574,9 @@ export type ModelName =
   | "claude-3-sonnet-20240229"
   | "claude-3-haiku-20240307"
   | "claude-2.1"
+  // Cohere
+  | "command-r"
+  | "command-r-plus"
   // Gemini
   | "gemini-pro"
   | "gemini-1.5-pro-latest"
@@ -639,12 +656,14 @@ export type EmbeddingsProviderName =
   | "transformers.js"
   | "ollama"
   | "openai"
+  | "cohere"
   | "free-trial";
 
 export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
+  requestOptions?: RequestOptions;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -656,7 +675,7 @@ export interface EmbeddingsProvider {
   embed(chunks: string[]): Promise<number[][]>;
 }
 
-export type RerankerName = "voyage" | "llm" | "free-trial";
+export type RerankerName = "cohere" | "voyage" | "llm" | "free-trial";
 
 export interface RerankerDescription {
   name: RerankerName;
@@ -685,6 +704,7 @@ export interface TabAutocompleteOptions {
   useCache: boolean;
   onlyMyCode: boolean;
   useOtherFiles: boolean;
+  disableInFiles?: string[];
 }
 
 export interface ContinueUIConfig {
@@ -698,8 +718,14 @@ interface ContextMenuConfig {
   optimize?: string;
   fixGrammar?: string;
 }
+
+interface ModelRoles {
+  inlineEdit?: string;
+}
+
 interface ExperimantalConfig {
   contextMenuPrompts?: ContextMenuConfig;
+  modelRoles?: ModelRoles;
 }
 
 export interface SerializedContinueConfig {
@@ -708,6 +734,7 @@ export interface SerializedContinueConfig {
   models: ModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
+  requestOptions?: RequestOptions;
   slashCommands?: SlashCommandDescription[];
   customCommands?: CustomCommand[];
   contextProviders?: ContextProviderWithParams[];
@@ -729,7 +756,7 @@ export type ContinueRcJson = Partial<SerializedContinueConfig> & {
 };
 
 export interface Config {
-  /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://continue.dev/docs/telemetry */
+  /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
   allowAnonymousTelemetry?: boolean;
   /** Each entry in this array will originally be a ModelDescription, the same object from your config.json, but you may add CustomLLMs.
    * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either `streamCompletion` or `streamChat` (or both).
@@ -740,6 +767,8 @@ export interface Config {
   systemMessage?: string;
   /** The default completion options for all models */
   completionOptions?: BaseCompletionOptions;
+  /** Request options that will be applied to all models and context providers */
+  requestOptions?: RequestOptions;
   /** The list of slash commands that will be available in the sidebar */
   slashCommands?: SlashCommand[];
   /** Each entry in this array will originally be a ContextProviderWithParams, the same object from your config.json, but you may add CustomContextProviders.
@@ -771,6 +800,7 @@ export interface ContinueConfig {
   models: ILLM[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
+  requestOptions?: RequestOptions;
   slashCommands?: SlashCommand[];
   contextProviders?: IContextProvider[];
   disableSessionTitles?: boolean;
@@ -789,6 +819,7 @@ export interface BrowserSerializedContinueConfig {
   models: ModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
+  requestOptions?: RequestOptions;
   slashCommands?: SlashCommandDescription[];
   contextProviders?: ContextProviderDescription[];
   disableIndexing?: boolean;

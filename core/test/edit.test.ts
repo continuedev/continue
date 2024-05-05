@@ -1,5 +1,6 @@
 import * as dotenv from "dotenv";
-import type { ContinueSDK } from "..";
+import fetch from "node-fetch";
+import { ContinueSDK } from "..";
 import EditSlashCommand, { getPromptParts } from "../commands/slash/edit";
 import { contextItemToRangeInFileWithContents } from "../commands/util";
 import FreeTrial from "../llm/llms/FreeTrial";
@@ -64,6 +65,7 @@ describe("/edit slash command", () => {
       contextItems: [TEST_CONTEXT_ITEM],
       selectedCode: [],
       config: {} as any,
+      fetch,
     };
 
     let total = "";

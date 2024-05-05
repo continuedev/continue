@@ -6,6 +6,7 @@ import {
   deepseekTemplateMessages,
   gemmaTemplateMessage,
   llama2TemplateMessages,
+  llama3TemplateMessages,
   llavaTemplateMessages,
   neuralChatTemplateMessages,
   openchatTemplateMessages,
@@ -22,6 +23,7 @@ import {
   deepseekEditPrompt,
   gemmaEditPrompt,
   gptEditPrompt,
+  llama3EditPrompt,
   mistralEditPrompt,
   neuralChatEditPrompt,
   openchatEditPrompt,
@@ -50,26 +52,32 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "bedrock",
 ];
 
-function modelSupportsImages(provider: ModelProvider, model: string): boolean {
+const MODEL_SUPPORTS_IMAGES: string[] = [
+  "llava",
+  "gpt-4-turbo",
+  "gpt-4-vision",
+  "claude-3",
+  "gemini-ultra",
+  "gemini-1.5-pro",
+  "sonnet",
+  "opus",
+  "haiku",
+];
+
+function modelSupportsImages(
+  provider: ModelProvider,
+  model: string,
+  title: string | undefined,
+): boolean {
   if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
     return false;
   }
 
-  if (model.includes("llava")) {
-    return true;
-  }
-
-  if (model.includes("claude-3")) {
-    return true;
-  }
-
-  if (["gpt-4-vision-preview", "gpt-4-turbo"].includes(model)) {
-    return true;
-  }
-
+  const lower = model.toLowerCase();
   if (
-    (model === "gemini-ultra" || model === "gemini-1.5-pro-latest") &&
-    (provider === "gemini" || provider === "free-trial")
+    MODEL_SUPPORTS_IMAGES.some(
+      (modelName) => lower.includes(modelName) || title?.includes(modelName),
+    )
   ) {
     return true;
   }
@@ -110,11 +118,16 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
 
   if (
     lower.includes("gpt") ||
+    lower.includes("command") ||
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
     lower.includes("gemini")
   ) {
     return undefined;
+  }
+
+  if (lower.includes("llama3")) {
+    return "llama3";
   }
 
   if (lower.includes("llava")) {
@@ -211,6 +224,7 @@ function autodetectTemplateFunction(
       llava: llavaTemplateMessages,
       "codellama-70b": codeLlama70bTemplateMessages,
       gemma: gemmaTemplateMessage,
+      llama3: llama3TemplateMessages,
       none: null,
     };
 
@@ -234,6 +248,7 @@ const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
   "phind",
   "xwin-coder",
   "zephyr",
+  "llama3",
 ];
 
 function autodetectPromptTemplates(
@@ -277,6 +292,10 @@ function autodetectPromptTemplates(
     editTemplate = claudeEditPrompt;
   } else if (templateType === "gemma") {
     editTemplate = gemmaEditPrompt;
+  } else if (templateType === "llama3") {
+    editTemplate = llama3EditPrompt;
+  } else if (templateType === "none") {
+    editTemplate = null;
   } else if (templateType) {
     editTemplate = gptEditPrompt;
   }

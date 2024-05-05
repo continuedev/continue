@@ -1,13 +1,15 @@
-import type { ChatMessageRole, SlashCommand } from "../..";
+import { ChatMessageRole, FetchFunction, SlashCommand } from "../..";
 import { pruneStringFromBottom, stripImages } from "../../llm/countTokens";
 
 const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
-const PROMPT = (input: string) => `The above sources are excerpts from related StackOverflow questions. Use them to help answer the below question from our user. Provide links to the sources in markdown whenever possible:
+const PROMPT = (
+  input: string,
+) => `The above sources are excerpts from related StackOverflow questions. Use them to help answer the below question from our user. Provide links to the sources in markdown whenever possible:
 
 ${input}
 `;
 
-async function getResults(q: string): Promise<any> {
+async function getResults(q: string, fetch: FetchFunction): Promise<any> {
   const payload = JSON.stringify({
     q: `${q} site:stackoverflow.com`,
   });
@@ -22,7 +24,10 @@ async function getResults(q: string): Promise<any> {
   return await resp.json();
 }
 
-async function fetchData(url: string): Promise<string | undefined> {
+async function fetchData(
+  url: string,
+  fetch: FetchFunction,
+): Promise<string | undefined> {
   const response = await fetch(url, {
     headers: {
       Accept: "text/html",
@@ -58,16 +63,16 @@ ${answer}
 const StackOverflowSlashCommand: SlashCommand = {
   name: "so",
   description: "Search Stack Overflow",
-  run: async function* ({ llm, input, addContextItem, history }) {
+  run: async function* ({ llm, input, addContextItem, history, fetch }) {
     const contextLength = llm.contextLength;
 
     const sources: string[] = [];
-    const results = await getResults(input);
+    const results = await getResults(input, fetch);
     const links = results.organic.map((result: any) => result.link);
     let totalTokens = llm.countTokens(input) + 200;
 
     for (const link of links) {
-      const contents = await fetchData(link);
+      const contents = await fetchData(link, fetch);
       if (!contents) {
         continue;
       }

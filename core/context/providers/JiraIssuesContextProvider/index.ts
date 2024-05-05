@@ -34,7 +34,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
     const issueId = query;
 
     const api = this.getApi();
-    const issue = await api.issue(query);
+    const issue = await api.issue(query, extras.fetch);
 
     const parts = [
       `# Jira Issue ${issue.key}: ${issue.summary}`,
@@ -69,7 +69,7 @@ class JiraIssuesContextProvider extends BaseContextProvider {
     const api = await this.getApi();
 
     try {
-      const issues = await api.listIssues();
+      const issues = await api.listIssues(args.fetch);
 
       return issues.map((issue) => ({
         id: issue.id,

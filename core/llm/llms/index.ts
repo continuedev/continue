@@ -9,6 +9,7 @@ import type {
 import { DEFAULT_MAX_TOKENS } from "../constants";
 import Anthropic from "./Anthropic";
 import Bedrock from "./Bedrock";
+import Cohere from "./Cohere";
 import DeepInfra from "./DeepInfra";
 import Flowise from "./Flowise";
 import FreeTrial from "./FreeTrial";
@@ -58,24 +59,25 @@ const getHandlebarsVars = (
   return [value, keysToFilepath];
 };
 
-async function renderTemplatedString(
+export async function renderTemplatedString(
   template: string,
   readFile: (filepath: string) => Promise<string>,
+  inputData: any,
 ): Promise<string> {
   const [newTemplate, vars] = getHandlebarsVars(template);
-  template = newTemplate;
-  const data: any = {};
+  const data: any = { ...inputData };
   for (const key in vars) {
     const fileContents = await readFile(vars[key]);
-    data[key] = fileContents || vars[key];
+    data[key] = fileContents || (inputData[vars[key]] ?? vars[key]);
   }
-  const templateFn = Handlebars.compile(template);
+  const templateFn = Handlebars.compile(newTemplate);
   const final = templateFn(data);
   return final;
 }
 
 const LLMs = [
   Anthropic,
+  Cohere,
   FreeTrial,
   Gemini,
   Llamafile,
@@ -99,6 +101,7 @@ const LLMs = [
 export async function llmFromDescription(
   desc: ModelDescription,
   readFile: (filepath: string) => Promise<string>,
+  writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
 ): Promise<BaseLLM | undefined> {
@@ -115,7 +118,7 @@ export async function llmFromDescription(
 
   systemMessage = desc.systemMessage ?? systemMessage;
   if (systemMessage !== undefined) {
-    systemMessage = await renderTemplatedString(systemMessage, readFile);
+    systemMessage = await renderTemplatedString(systemMessage, readFile, {});
   }
 
   const options: LLMOptions = {
@@ -129,6 +132,7 @@ export async function llmFromDescription(
         DEFAULT_MAX_TOKENS,
     },
     systemMessage,
+    writeLog,
   };
 
   return new cls(options);

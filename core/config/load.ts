@@ -32,6 +32,7 @@ import type { BaseLLM } from "../llm";
 import { llmFromDescription } from "../llm/llms";
 import CustomLLMClass from "../llm/llms/CustomLLM";
 import { copyOf } from "../util";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions";
 import mergeJson from "../util/merge";
 import {
   getConfigJsPath,
@@ -42,6 +43,12 @@ import {
   getContinueDotEnv,
   migrate,
 } from "../util/paths";
+import {
+  defaultContextProvidersJetBrains,
+  defaultContextProvidersVsCode,
+  defaultSlashCommandsJetBrains,
+  defaultSlashCommandsVscode,
+} from "./default";
 const { execSync } = require("node:child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -138,6 +145,16 @@ function loadSerializedConfig(
     );
   }
 
+  // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
+  config.contextProviders ??=
+    ideType === "vscode"
+      ? defaultContextProvidersVsCode
+      : defaultContextProvidersJetBrains;
+  config.slashCommands ??=
+    ideType === "vscode"
+      ? defaultSlashCommandsVscode
+      : defaultSlashCommandsJetBrains;
+
   return config;
 }
 
@@ -180,13 +197,16 @@ function isContextProviderWithParams(
 async function intermediateToFinalConfig(
   config: Config,
   readFile: (filepath: string) => Promise<string>,
+  writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
+  // Auto-detect models
   const models: BaseLLM[] = [];
   for (const desc of config.models) {
     if (isModelDescription(desc)) {
       const llm = await llmFromDescription(
         desc,
         readFile,
+        writeLog,
         config.completionOptions,
         config.systemMessage,
       );
@@ -204,6 +224,7 @@ async function intermediateToFinalConfig(
                   title: `${llm.title} - ${modelName}`,
                 },
                 readFile,
+                writeLog,
                 copyOf(config.completionOptions),
                 config.systemMessage,
               );
@@ -221,7 +242,10 @@ async function intermediateToFinalConfig(
         models.push(llm);
       }
     } else {
-      const llm = new CustomLLMClass(desc);
+      const llm = new CustomLLMClass({
+        ...desc,
+        options: { ...desc.options, writeLog } as any,
+      });
       if (llm.model === "AUTODETECT") {
         try {
           const modelNames = await llm.listModels();
@@ -229,7 +253,7 @@ async function intermediateToFinalConfig(
             (modelName) =>
               new CustomLLMClass({
                 ...desc,
-                options: { ...desc.options, model: modelName },
+                options: { ...desc.options, model: modelName, writeLog },
               }),
           );
 
@@ -243,12 +267,22 @@ async function intermediateToFinalConfig(
     }
   }
 
+  // Prepare models
+  for (const model of models) {
+    model.requestOptions = {
+      ...model.requestOptions,
+      ...config.requestOptions,
+    };
+  }
+
+  // Tab autocomplete model
   let autocompleteLlm: BaseLLM | undefined = undefined;
   if (config.tabAutocompleteModel) {
     if (isModelDescription(config.tabAutocompleteModel)) {
       autocompleteLlm = await llmFromDescription(
         config.tabAutocompleteModel,
         readFile,
+        writeLog,
         config.completionOptions,
         config.systemMessage,
       );
@@ -257,6 +291,7 @@ async function intermediateToFinalConfig(
     }
   }
 
+  // Context providers
   const contextProviders: IContextProvider[] = [new FileContextProvider({})];
   for (const provider of config.contextProviders || []) {
     if (isContextProviderWithParams(provider)) {
@@ -279,7 +314,14 @@ async function intermediateToFinalConfig(
     const { provider, ...options } = embeddingsProviderDescription;
     const embeddingsProviderClass = AllEmbeddingsProviders[provider];
     if (embeddingsProviderClass) {
-      config.embeddingsProvider = new embeddingsProviderClass(options);
+      config.embeddingsProvider = new embeddingsProviderClass(
+        options,
+        (url: string | URL, init: any) =>
+          fetchwithRequestOptions(url, init, {
+            ...config.requestOptions,
+            ...options.requestOptions,
+          }),
+      );
     }
   }
 
@@ -334,10 +376,10 @@ function finalToBrowserConfig(
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
-    slashCommands: final.slashCommands?.map((m) => ({
-      name: m.name,
-      description: m.description,
-      options: m.params,
+    slashCommands: final.slashCommands?.map((s) => ({
+      name: s.name,
+      description: s.description,
+      params: s.params, //PZTODO: is this why params aren't referenced properly by slash commands?
     })),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
@@ -429,6 +471,7 @@ async function loadFullConfigNode(
   workspaceConfigs: ContinueRcJson[],
   remoteConfigServerUrl: URL | undefined,
   ideType: IdeType,
+  writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
   const serialized = loadSerializedConfig(
     workspaceConfigs,
@@ -470,7 +513,11 @@ async function loadFullConfigNode(
     }
   }
 
-  const finalConfig = await intermediateToFinalConfig(intermediate, readFile);
+  const finalConfig = await intermediateToFinalConfig(
+    intermediate,
+    readFile,
+    writeLog,
+  );
   return finalConfig;
 }
 

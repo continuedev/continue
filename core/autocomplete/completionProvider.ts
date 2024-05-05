@@ -1,17 +1,26 @@
 import Handlebars from "handlebars";
+import ignore from "ignore";
+import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import type { IDE, ILLM, Position, TabAutocompleteOptions } from "..";
+import type { IDE, ILLM, Position, Range, TabAutocompleteOptions } from "..";
 import type { RangeInFileWithContents } from "../commands/util";
 import type { ConfigHandler } from "../config/handler";
 import { streamLines } from "../diff/util";
 import OpenAI from "../llm/llms/OpenAI";
 import { getBasename } from "../util";
 import { logDevData } from "../util/devdata";
-import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters";
+import {
+  COUNT_COMPLETION_REJECTED_AFTER,
+  DEFAULT_AUTOCOMPLETE_OPTS,
+} from "../util/parameters";
 import { Telemetry } from "../util/posthog";
 import { getRangeInString } from "../util/ranges";
 import AutocompleteLruCache from "./cache";
-import { noFirstCharNewline, onlyWhitespaceAfterEndOfLine } from "./charStream";
+import {
+  noFirstCharNewline,
+  onlyWhitespaceAfterEndOfLine,
+  stopOnUnmatchedClosingBracket,
+} from "./charStream";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
@@ -36,6 +45,14 @@ export interface AutocompleteInput {
   recentlyEditedFiles: RangeInFileWithContents[];
   recentlyEditedRanges: RangeInFileWithContents[];
   clipboardText: string;
+  // Used for notebook files
+  manuallyPassFileContents?: string;
+  // Used for VS Code git commit input box
+  manuallyPassPrefix?: string;
+  selectedCompletionInfo?: {
+    text: string;
+    range: Range;
+  };
 }
 
 export interface AutocompleteOutcome extends TabAutocompleteOptions {
@@ -47,6 +64,7 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   modelName: string;
   completionOptions: any;
   cacheHit: boolean;
+  filepath: string;
 }
 
 const autocompleteCache = AutocompleteLruCache.get();
@@ -55,12 +73,19 @@ const DOUBLE_NEWLINE = "\n\n";
 const WINDOWS_DOUBLE_NEWLINE = "\r\n\r\n";
 const SRC_DIRECTORY = "/src/";
 // Starcoder2 tends to output artifacts starting with the letter "t"
-const STARCODER2_T_ARTIFACTS = ["t.", "\nt"];
+const STARCODER2_T_ARTIFACTS = ["t.", "\nt", "<file_sep>"];
 const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
-const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
+const multilineStops: string[] = []; // [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
 const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
+
+// Errors that can be expected on occasion even during normal functioning should not be shown.
+// Not worth disrupting the user to tell them that a single autocomplete request didn't go through
+const ERRORS_TO_IGNORE = [
+  // From Ollama
+  "unexpected server status",
+];
 
 function formatExternalSnippet(
   filepath: string,
@@ -78,6 +103,14 @@ function formatExternalSnippet(
   ];
   return lines.join("\n");
 }
+
+let shownGptClaudeWarning = false;
+const nonAutocompleteModels = [
+  // "gpt",
+  // "claude",
+  "mistral",
+  "instruct",
+];
 
 export async function getTabCompletion(
   token: AbortSignal,
@@ -101,8 +134,11 @@ export async function getTabCompletion(
     recentlyEditedFiles,
     recentlyEditedRanges,
     clipboardText,
+    manuallyPassFileContents,
+    manuallyPassPrefix,
   } = input;
-  const fileContents = await ide.readFile(filepath);
+  const fileContents =
+    manuallyPassFileContents ?? (await ide.readFile(filepath));
   const fileLines = fileContents.split("\n");
 
   // Filter
@@ -115,6 +151,7 @@ export async function getTabCompletion(
   }
 
   // Model
+  if (!llm) return;
   if (llm instanceof OpenAI) {
     llm.useLegacyCompletionsEndpoint = true;
   } else if (
@@ -125,13 +162,25 @@ export async function getTabCompletion(
       "The only free trial model supported for tab-autocomplete is starcoder-7b.",
     );
   }
-  if (!llm) return;
+
+  if (
+    !shownGptClaudeWarning &&
+    nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
+    !llm.model.includes("deepseek")
+  ) {
+    shownGptClaudeWarning = true;
+    throw new Error(
+      `Warning: ${llm.model} is not trained for tab-autocomplete, and may result in low-quality suggestions. See the docs for our recommended models: https://docs.continue.dev/setup/select-model#autocomplete`,
+    );
+  }
 
   // Prompt
-  const fullPrefix = getRangeInString(fileContents, {
-    start: { line: 0, character: 0 },
-    end: pos,
-  });
+  const fullPrefix =
+    getRangeInString(fileContents, {
+      start: { line: 0, character: 0 },
+      end: input.selectedCompletionInfo?.range.start ?? pos,
+    }) + (input.selectedCompletionInfo?.text ?? "");
+
   const fullSuffix = getRangeInString(fileContents, {
     start: pos,
     end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
@@ -172,6 +221,12 @@ export async function getTabCompletion(
       llm.model,
       extrasSnippets,
     );
+
+  // If prefix is manually passed
+  if (manuallyPassPrefix) {
+    prefix = manuallyPassPrefix;
+    suffix = "";
+  }
 
   // Template prompt
   const { template, completionOptions } = options.template
@@ -258,6 +313,7 @@ export async function getTabCompletion(
     let charGenerator = generatorWithCancellation();
     charGenerator = noFirstCharNewline(charGenerator);
     charGenerator = onlyWhitespaceAfterEndOfLine(charGenerator, lang.endOfLine);
+    charGenerator = stopOnUnmatchedClosingBracket(charGenerator, suffix);
 
     let lineGenerator = streamLines(charGenerator);
     lineGenerator = stopAtLines(lineGenerator);
@@ -267,8 +323,16 @@ export async function getTabCompletion(
     lineGenerator = streamWithNewLines(lineGenerator);
 
     const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
-    for await (const update of finalGenerator) {
-      completion += update;
+
+    try {
+      for await (const update of finalGenerator) {
+        completion += update;
+      }
+    } catch (e: any) {
+      if (ERRORS_TO_IGNORE.some((err) => e.includes(err))) {
+        return undefined;
+      }
+      throw e;
     }
 
     if (cancelled) {
@@ -293,6 +357,7 @@ export async function getTabCompletion(
     modelName: llm.model,
     completionOptions,
     cacheHit,
+    filepath: input.filepath,
     ...options,
   };
 }
@@ -338,6 +403,7 @@ export class CompletionProvider {
     this._abortControllers.clear();
   }
 
+  // Key is completionId
   private _abortControllers = new Map<string, AbortController>();
   private _logRejectionTimeouts = new Map<string, NodeJS.Timeout>();
   private _outcomes = new Map<string, AutocompleteOutcome>();
@@ -363,17 +429,21 @@ export class CompletionProvider {
     }
   }
 
+  public cancelRejectionTimeout(completionId: string) {
+    if (this._logRejectionTimeouts.has(completionId)) {
+      clearTimeout(this._logRejectionTimeouts.get(completionId)!);
+      this._logRejectionTimeouts.delete(completionId);
+    }
+
+    if (this._outcomes.has(completionId)) {
+      this._outcomes.delete(completionId);
+    }
+  }
+
   public async provideInlineCompletionItems(
     input: AutocompleteInput,
     token: AbortSignal | undefined,
   ): Promise<AutocompleteOutcome | undefined> {
-    // Create abort signal if not given
-    if (!token) {
-      const controller = new AbortController();
-      token = controller.signal;
-      this._abortControllers.set(input.completionId, controller);
-    }
-
     try {
       // Debounce
       const uuid = uuidv4();
@@ -384,6 +454,36 @@ export class CompletionProvider {
         ...DEFAULT_AUTOCOMPLETE_OPTS,
         ...config.tabAutocompleteOptions,
       };
+
+      // Check whether autocomplete is disabled for this file
+      if (options.disableInFiles) {
+        // Relative path needed for `ignore`
+        const workspaceDirs = await this.ide.getWorkspaceDirs();
+        let filepath = input.filepath;
+        for (const workspaceDir of workspaceDirs) {
+          if (filepath.startsWith(workspaceDir)) {
+            filepath = path.relative(workspaceDir, filepath);
+            break;
+          }
+        }
+
+        // Worst case we can check filetype glob patterns
+        if (filepath === input.filepath) {
+          filepath = getBasename(filepath);
+        }
+
+        const pattern = ignore().add(options.disableInFiles);
+        if (pattern.ignores(filepath)) {
+          return undefined;
+        }
+      }
+
+      // Create abort signal if not given
+      if (!token) {
+        const controller = new AbortController();
+        token = controller.signal;
+        this._abortControllers.set(input.completionId, controller);
+      }
 
       // Allow disabling autocomplete from config.json
       if (options.disable) {
@@ -427,31 +527,18 @@ export class CompletionProvider {
         input,
         this.getDefinitionsFromLsp,
       );
-      const completion = outcome?.completion;
 
-      if (!completion) {
+      if (!outcome?.completion) {
         return undefined;
       }
 
       // Do some stuff later so as not to block return. Latency matters
+      const completionToCache = outcome.completion;
       setTimeout(async () => {
         if (!outcome.cacheHit) {
-          (await this.autocompleteCache).put(outcome.prompt, completion);
+          (await this.autocompleteCache).put(outcome.prompt, completionToCache);
         }
       }, 100);
-
-      outcome.accepted = false;
-      const logRejectionTimeout = setTimeout(() => {
-        // Wait 10 seconds, then assume it wasn't accepted
-        logDevData("autocomplete", outcome);
-        const { prompt, completion, ...restOfOutcome } = outcome;
-        Telemetry.capture("autocomplete", {
-          ...restOfOutcome,
-        });
-        this._logRejectionTimeouts.delete(input.completionId);
-      }, 10_000);
-      this._outcomes.set(input.completionId, outcome);
-      this._logRejectionTimeouts.set(input.completionId, logRejectionTimeout);
 
       return outcome;
     } catch (e: any) {
@@ -459,5 +546,51 @@ export class CompletionProvider {
     } finally {
       this._abortControllers.delete(input.completionId);
     }
+  }
+
+  _lastDisplayedCompletion: { id: string; displayedAt: number } | undefined =
+    undefined;
+
+  markDisplayed(completionId: string, outcome: AutocompleteOutcome) {
+    const logRejectionTimeout = setTimeout(() => {
+      // Wait 10 seconds, then assume it wasn't accepted
+      outcome.accepted = false;
+      logDevData("autocomplete", outcome);
+      const { prompt, completion, ...restOfOutcome } = outcome;
+      Telemetry.capture("autocomplete", {
+        ...restOfOutcome,
+      });
+      this._logRejectionTimeouts.delete(completionId);
+    }, COUNT_COMPLETION_REJECTED_AFTER);
+    this._outcomes.set(completionId, outcome);
+    this._logRejectionTimeouts.set(completionId, logRejectionTimeout);
+
+    // If the previously displayed completion is still waiting for rejection,
+    // and this one is a continuation of that (the outcome.completion is the same modulo prefix)
+    // then we should cancel the rejection timeout
+    const previous = this._lastDisplayedCompletion;
+    const now = Date.now();
+    if (previous && this._logRejectionTimeouts.has(previous.id)) {
+      const previousOutcome = this._outcomes.get(previous.id);
+      const c1 = previousOutcome?.completion.split("\n")[0] ?? "";
+      const c2 = outcome.completion.split("\n")[0];
+      if (
+        previousOutcome &&
+        (c1.endsWith(c2) ||
+          c2.endsWith(c1) ||
+          c1.startsWith(c2) ||
+          c2.startsWith(c1))
+      ) {
+        this.cancelRejectionTimeout(previous.id);
+      } else if (now - previous.displayedAt < 500) {
+        // If a completion isn't shown for more than
+        this.cancelRejectionTimeout(previous.id);
+      }
+    }
+
+    this._lastDisplayedCompletion = {
+      id: completionId,
+      displayedAt: now,
+    };
   }
 }

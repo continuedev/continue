@@ -35,3 +35,42 @@ export async function* noFirstCharNewline(stream: AsyncGenerator<string>) {
     yield char;
   }
 }
+
+const BRACKETS: { [key: string]: string } = { "(": ")", "{": "}", "[": "]" };
+const BRACKETS_REVERSE: { [key: string]: string } = {
+  ")": "(",
+  "}": "{",
+  "]": "[",
+};
+export async function* stopOnUnmatchedClosingBracket(
+  stream: AsyncGenerator<string>,
+  suffix: string,
+): AsyncGenerator<string> {
+  const stack: string[] = [];
+  for (let i = 0; i < suffix.length; i++) {
+    if (suffix[i] === " ") continue;
+    const openBracket = BRACKETS_REVERSE[suffix[i]];
+    if (!openBracket) break;
+    stack.unshift(openBracket);
+  }
+
+  let all = "";
+  for await (let chunk of stream) {
+    all += chunk;
+    for (let i = 0; i < chunk.length; i++) {
+      const char = chunk[i];
+      if (Object.values(BRACKETS).includes(char)) {
+        // It's a closing bracket
+        if (stack.length === 0 || BRACKETS[stack.pop()!] !== char) {
+          // If the stack is empty or the top of the stack doesn't match the current closing bracket
+          yield chunk.slice(0, i);
+          return; // Stop the generator if the closing bracket doesn't have a matching opening bracket in the stream
+        }
+      } else if (Object.keys(BRACKETS).includes(char)) {
+        // It's an opening bracket
+        stack.push(char);
+      }
+    }
+    yield chunk;
+  }
+}

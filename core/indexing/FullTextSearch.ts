@@ -121,7 +121,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     let results = await db.all(query, [
       ...tagStrings,
       ...(filterPaths || []),
-      n,
+      Math.ceil(n),
     ]);
 
     results = results.filter((result) => result.rank <= bm25Threshold);

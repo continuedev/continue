@@ -16,6 +16,8 @@ class Replicate extends BaseLLM {
       "meta/codellama-70b-instruct:a279116fe47a0f65701a8817188601e2fe8f4b9e04a518789655ea7b995851bf",
     "llama2-7b": "meta/llama-2-7b-chat" as any,
     "llama2-13b": "meta/llama-2-13b-chat" as any,
+    "llama3-8b": "meta/meta-llama-3-8b-instruct" as any,
+    "llama3-70b": "meta/meta-llama-3-70b-instruct" as any,
     "zephyr-7b":
       "nateraw/zephyr-7b-beta:b79f33de5c6c4e34087d44eaea4a9d98ce5d3f3a09522f7328eea0685003a931",
     "mistral-7b":

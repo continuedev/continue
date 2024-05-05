@@ -231,6 +231,32 @@ const mixtralTrial: ModelPackage = {
   providerOptions: ["freetrial", "groq"],
 };
 
+const llama38bChat: ModelPackage = {
+  title: "Llama3 8b",
+  description: "The latest Llama model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama3-8b",
+    model: "llama3-8b",
+    contextLength: 8192,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
+};
+
+const llama370bChat: ModelPackage = {
+  title: "Llama3 70b Chat",
+  description: "The latest Llama model from Meta, fine-tuned for chat",
+  refUrl: "",
+  params: {
+    title: "Llama3-70b",
+    model: "llama3-70b",
+    contextLength: 8192,
+  },
+  icon: "meta.png",
+  providerOptions: ["groq"],
+};
+
 const llama270bChat: ModelPackage = {
   title: "Llama2 70b Chat",
   description: "The latest Llama model from Meta, fine-tuned for chat",
@@ -244,14 +270,14 @@ const llama270bChat: ModelPackage = {
   providerOptions: ["groq"],
 };
 
-const llama2Chat: ModelPackage = {
-  title: "Llama2 Chat",
-  description: "The latest Llama model from Meta, fine-tuned for chat",
+const llama3Chat: ModelPackage = {
+  title: "Llama3 Chat",
+  description: "The latest model from Meta, fine-tuned for chat",
   refUrl: "",
   params: {
-    title: "Llama2-7b",
-    model: "llama2-7b",
-    contextLength: 4096,
+    title: "Llama3-8b",
+    model: "llama3-8b",
+    contextLength: 8192,
   },
   icon: "meta.png",
   dimensions: [
@@ -259,17 +285,13 @@ const llama2Chat: ModelPackage = {
       name: "Parameter Count",
       description: "The number of parameters in the model",
       options: {
-        "7b": {
-          model: "llama2-7b",
-          title: "Llama2-7b",
+        "8b": {
+          model: "llama3-8b",
+          title: "Llama3-8b",
         },
-        "13b": {
-          model: "llama2-13b",
-          title: "Llama2-13b",
-        },
-        "34b": {
-          model: "llama2-34b",
-          title: "Llama2-34b",
+        "70b": {
+          model: "llama3-70b",
+          title: "Llama3-70b",
         },
       },
     },
@@ -433,19 +455,6 @@ const gemini15Pro: ModelPackage = {
   providerOptions: ["gemini", "freetrial"],
 };
 
-const zephyr: ModelPackage = {
-  title: "Zephyr-Beta (7b)",
-  description:
-    "A fine-tune of Mistral, trained on publicly available and synthetic datasets.",
-  params: {
-    title: "Zephyr",
-    model: "zephyr-7b",
-    contextLength: 4096,
-  },
-  icon: "mistral.png",
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
-};
-
 const deepseek: ModelPackage = {
   title: "DeepSeek-Coder",
   description:
@@ -479,38 +488,41 @@ const deepseek: ModelPackage = {
   providerOptions: ["ollama", "lmstudio", "llamacpp"],
 };
 
-const codeup: ModelPackage = {
-  title: "CodeUp (13b)",
-  description: "An open-source coding model based on Llama2",
+const commandR: ModelPackage = {
+  title: "Command R",
+  description:
+    "Command R is a scalable generative model targeting RAG and Tool Use to enable production-scale AI for enterprise.",
   params: {
-    title: "CodeUp",
-    model: "codeup-13b",
-    contextLength: 4096,
+    model: "command-r",
+    contextLength: 128_000,
+    title: "Command R",
+    apiKey: "",
   },
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
+  providerOptions: ["cohere"],
+  icon: "cohere.png",
 };
 
-const neuralChat: ModelPackage = {
-  title: "Neural-Chat-v3-3 (7b)",
+const commandRPlus: ModelPackage = {
+  title: "Command R+",
   description:
-    "A fine-tuned 7B parameter LLM on the Intel Gaudi 2 processor from the Intel/neural-chat-7b-v3-1 on the meta-math/MetaMathQA dataset.",
+    "Command R+ is a state-of-the-art RAG-optimized model designed to tackle enterprise-grade workloads",
   params: {
-    title: "NeuralChat",
-    model: "neural-chat-7b",
-    contextLength: 4096,
+    model: "command-r-plus",
+    contextLength: 128_000,
+    title: "Command R+",
+    apiKey: "",
   },
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
+  providerOptions: ["cohere"],
+  icon: "cohere.png",
 };
 
 const osModels = [
+  llama3Chat,
   deepseek,
   wizardCoder,
   codeLlamaInstruct,
   mistral,
   phindCodeLlama,
-  llama2Chat,
-  zephyr,
-  neuralChat,
 ];
 
 const gpt4: ModelPackage = {
@@ -616,24 +628,29 @@ const AUTODETECT: ModelPackage = {
   providerOptions: [],
 };
 
-export const MODEL_INFO: ModelPackage[] = [
+export const MODEL_INFO: (ModelPackage | string)[] = [
+  "OpenAI",
   gpt4turbo,
-  gpt4,
+  // gpt4,
   gpt35turbo,
+  "Anthropic",
   claude3Opus,
   claude3Sonnet,
   claude3Haiku,
+  // claude2,
+  "Cohere",
+  commandR,
+  commandRPlus,
+  "Gemini",
   gemini15Pro,
   geminiPro,
-  claude2,
+  "Open Source",
+  llama3Chat,
   deepseek,
   mistral,
-  codellama70bTrial,
-  wizardCoder,
-  codeLlamaInstruct,
-  phindCodeLlama,
-  llama2Chat,
-  zephyr,
+  // wizardCoder,
+  // codeLlamaInstruct,
+  // phindCodeLlama,
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -646,10 +663,9 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
     packages: [
-      gpt4,
+      gpt4turbo,
       gpt35turbo,
-      gpt4turbo,
-      gpt4turbo,
+      // gpt4,
       {
         ...AUTODETECT,
         params: {
@@ -693,7 +709,34 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         defaultValue: 100_000,
       },
     ],
-    packages: [claude3Opus, claude3Sonnet, claude3Haiku, claude2],
+    packages: [
+      claude3Opus,
+      claude3Sonnet,
+      claude3Haiku,
+      // claude2
+    ],
+  },
+  cohere: {
+    title: "Cohere",
+    provider: "cohere",
+    refPage: "cohere",
+    description:
+      "Optimized for enterprise generative AI, search and discovery, and advanced retrieval.",
+    icon: "cohere.png",
+    tags: [ModelProviderTag["Requires API Key"]],
+    longDescription:
+      "To use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.",
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Cohere API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
+    packages: [commandR, commandRPlus],
   },
   ollama: {
     title: "Ollama",
@@ -744,7 +787,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
       ...completionParamsInputs,
     ],
-    packages: [llama2Chat, codeLlamaInstruct, mistral].map((p) => {
+    packages: [llama3Chat, codeLlamaInstruct, mistral].map((p) => {
       p.params.contextLength = 4096;
       return p;
     }),
@@ -771,6 +814,8 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
     ],
     packages: [
+      llama370bChat,
+      llama38bChat,
       { ...mixtralTrial, title: "Mixtral" },
       llama270bChat,
       {
@@ -786,7 +831,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
   gemini: {
     title: "Google Gemini API",
     provider: "gemini",
-    refPage: "googlepalmapi",
+    refPage: "geminiapi",
     description:
       "Try out Google's state-of-the-art Gemini model from their API.",
     longDescription: `To get started with Google Gemini API, obtain your API key from [here](https://ai.google.dev/tutorials/workspace_auth_quickstart) and paste it below.`,
@@ -891,7 +936,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [codeLlamaInstruct, llama2Chat, wizardCoder, mistral, zephyr],
+    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistral],
   },
   llamacpp: {
     title: "llama.cpp",
@@ -899,7 +944,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     refPage: "llamacpp",
     description: "If you are running the llama.cpp server from source",
     longDescription: `llama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:
-    
+
 1. Clone the repository with \`git clone https://github.com/ggerganov/llama.cpp\`.
 2. \`cd llama.cpp\`
 3. Run \`make\` to build the server.

@@ -24,6 +24,9 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
 
     const octokit = new Octokit({
       auth: this.options?.githubToken,
+      request: {
+        fetch: extras.fetch,
+      },
     });
 
     const { owner, repo, issue_number } = JSON.parse(issueId);
@@ -64,6 +67,9 @@ class GitHubIssuesContextProvider extends BaseContextProvider {
 
     const octokit = new Octokit({
       auth: this.options?.githubToken,
+      request: {
+        fetch: args.fetch,
+      },
     });
 
     const allIssues = [];

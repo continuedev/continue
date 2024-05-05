@@ -1,7 +1,7 @@
-import { URL } from "node:url";
 import { Octokit } from "@octokit/rest";
 import cheerio from "cheerio";
 import fetch from "node-fetch";
+import { URL } from "node:url";
 
 const IGNORE_PATHS_ENDING_IN = [
   "favicon.ico",
@@ -44,8 +44,8 @@ async function crawlGithubRepo(baseUrl: URL) {
   );
 
   const paths = tree.data.tree
-    .filter((file) => file.type === "blob" && file.path?.endsWith(".md"))
-    .map((file) => `${baseUrl.pathname}/tree/main/${file.path}`);
+    .filter((file: any) => file.type === "blob" && file.path?.endsWith(".md"))
+    .map((file: any) => baseUrl.pathname + "/tree/main/" + file.path);
 
   return paths;
 }
@@ -112,7 +112,9 @@ async function getLinksFromUrl(url: string, path: string) {
 }
 
 function splitUrl(url: URL) {
-  const baseUrl = `${url.protocol}//${url.hostname}`;
+  const baseUrl = `${url.protocol}//${url.hostname}${
+    url.port ? ":" + url.port : ""
+  }`;
   const basePath = url.pathname;
   return {
     baseUrl,

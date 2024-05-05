@@ -154,6 +154,10 @@ export class MessageIde implements IDE {
     return this.request("getOpenFiles", undefined);
   }
 
+  getCurrentFile(): Promise<string | undefined> {
+    return this.request("getCurrentFile", undefined);
+  }
+
   getPinnedFiles(): Promise<string[]> {
     return this.request("getPinnedFiles", undefined);
   }

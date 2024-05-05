@@ -131,7 +131,7 @@ After the "Full example" these examples will only show the relevant portion of t
     },
     {
       "name": "share",
-      "description": "Download and share this session",
+      "description": "Export the current chat session to markdown",
       "step": "ShareSessionStep"
     },
     {
@@ -143,7 +143,7 @@ After the "Full example" these examples will only show the relevant portion of t
   "custom_commands": [
     {
       "name": "test",
-      "prompt": "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+      "prompt": "{{{ input }}}\n\nWrite a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
       "description": "Write unit tests for highlighted code"
     }
   ],
@@ -206,7 +206,7 @@ This is an example of serving a model using an OpenAI-compatible API on http://l
       "title": "OpenAI-compatible API",
       "provider": "openai",
       "model": "codellama-13b",
-      "api_base": "http://localhost:8000"
+      "api_base": "http://localhost:8000/v1"
     }
   ]
 }

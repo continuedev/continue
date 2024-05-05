@@ -13,6 +13,7 @@ import {
 } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import { stripImages } from "core/llm/countTokens";
+import { getBasename } from "core/util";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
@@ -21,6 +22,7 @@ import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   addPromptCompletionPair,
+  clearLastResponse,
   initNewActiveMessage,
   resubmitAtIndex,
   setInactive,
@@ -52,27 +54,35 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   async function _streamNormalInput(messages: ChatMessage[]) {
     const abortController = new AbortController();
     const cancelToken = abortController.signal;
-    const gen = ideMessenger.llmStreamChat(
-      defaultModel.title,
-      cancelToken,
-      messages,
-    );
-    let next = await gen.next();
 
-    while (!next.done) {
-      if (!activeRef.current) {
-        abortController.abort();
-        break;
-      }
-      dispatch(streamUpdate(stripImages((next.value as ChatMessage).content)));
-      next = await gen.next();
-    }
-
-    let returnVal = next.value as LLMReturnValue;
-    if (returnVal) {
-      dispatch(
-        addPromptCompletionPair([[returnVal?.prompt, returnVal?.completion]]),
+    try {
+      const gen = ideMessenger.llmStreamChat(
+        defaultModel.title,
+        cancelToken,
+        messages,
       );
+      let next = await gen.next();
+
+      while (!next.done) {
+        if (!activeRef.current) {
+          abortController.abort();
+          break;
+        }
+        dispatch(
+          streamUpdate(stripImages((next.value as ChatMessage).content)),
+        );
+        next = await gen.next();
+      }
+
+      let returnVal = next.value as LLMReturnValue;
+      if (returnVal) {
+        dispatch(
+          addPromptCompletionPair([[returnVal?.prompt, returnVal?.completion]]),
+        );
+      }
+    } catch (e) {
+      // If there's an error, we should clear the response so there aren't two input boxes
+      dispatch(clearLastResponse());
     }
   }
 
@@ -155,6 +165,34 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         modifiers,
         ideMessenger,
       );
+
+      // Automatically use currently open file
+      if (!modifiers.noContext && (history.length === 0 || index === 0)) {
+        const usingFreeTrial = defaultModel.provider === "free-trial";
+
+        const currentFilePath = await ideMessenger.ide.getCurrentFile();
+        if (typeof currentFilePath === "string") {
+          let currentFileContents =
+            await ideMessenger.ide.readFile(currentFilePath);
+          if (usingFreeTrial) {
+            currentFileContents = currentFileContents
+              .split("\n")
+              .slice(0, 1000)
+              .join("\n");
+          }
+          contextItems.unshift({
+            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getBasename(
+              currentFilePath,
+            )}\n${currentFileContents}\n\`\`\``,
+            name: `Active file: ${getBasename(currentFilePath)}`,
+            description: currentFilePath,
+            id: {
+              itemId: currentFilePath,
+              providerTitle: "file",
+            },
+          });
+        }
+      }
 
       const message: ChatMessage = {
         role: "user",

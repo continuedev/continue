@@ -35,7 +35,7 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static MaxGroupSize = 4;
 
   constructor() {
-    super({ model: EmbeddingsPipeline.model });
+    super({ model: EmbeddingsPipeline.model }, () => Promise.resolve(null));
   }
 
   get id(): string {

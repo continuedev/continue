@@ -133,13 +133,13 @@ class Gemini extends BaseLLM {
 
         // Incrementally stream the content to make it smoother
         const content = data.candidates[0].content.parts[0].text;
-        const words = content.split(" ");
+        const words = content.split(/(\s+)/);
         const delaySeconds = Math.min(4.0 / (words.length + 1), 0.1);
         while (words.length > 0) {
           const wordsToYield = Math.min(3, words.length);
           yield {
             role: "assistant",
-            content: `${words.splice(0, wordsToYield).join(" ")} `,
+            content: words.splice(0, wordsToYield).join(""),
           };
           await delay(delaySeconds);
         }

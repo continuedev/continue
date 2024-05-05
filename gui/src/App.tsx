@@ -16,6 +16,7 @@ import { VscThemeContext } from "./context/VscTheme";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
 import GUI from "./pages/gui";
+import LocalOnboarding from "./pages/localOnboarding";
 import ExistingUserOnboarding from "./pages/onboarding/existingUserOnboarding";
 import Onboarding from "./pages/onboarding/onboarding";
 import Stats from "./pages/stats";
@@ -73,6 +74,10 @@ const router = createMemoryRouter([
       {
         path: "/existingUserOnboarding",
         element: <ExistingUserOnboarding />,
+      },
+      {
+        path: "/localOnboarding",
+        element: <LocalOnboarding />,
       },
       {
         path: "/migration",
