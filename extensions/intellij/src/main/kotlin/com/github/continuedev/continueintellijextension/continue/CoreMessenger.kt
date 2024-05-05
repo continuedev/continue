@@ -128,6 +128,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "readFile",
         "showDiff",
         "getOpenFiles",
+        "getCurrentFile",
         "getPinnedFiles",
         "getSearchResults",
         "getProblems",

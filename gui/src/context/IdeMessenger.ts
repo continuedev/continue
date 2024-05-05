@@ -126,11 +126,13 @@ export class IdeMessenger implements IIdeMessenger {
   }
 
   private _safeParseResponse(data: any) {
-    let responseData = data ?? null;
-    try {
-      responseData = JSON.parse(responseData);
-    } catch {}
-    return responseData;
+    return data ?? null;
+    // This caused .json files to be parsed as objects instead of remaining strings
+    // let responseData = data ?? null;
+    // try {
+    //   responseData = JSON.parse(responseData);
+    // } catch {}
+    // return responseData;
   }
 
   request<T extends keyof FromWebviewProtocol>(
