@@ -1,7 +1,7 @@
 import {
-  type PipelineType,
   env,
   pipeline,
+  type PipelineType,
 } from "../../vendor/node_modules/@xenova/transformers";
 
 import path from "node:path";
@@ -35,11 +35,11 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static MaxGroupSize = 4;
 
   constructor() {
-    super({ model: "all-MiniLM-L2-v6" });
+    super({ model: EmbeddingsPipeline.model });
   }
 
   get id(): string {
-    return "sentence-transformers/all-MiniLM-L6-v2";
+    return EmbeddingsPipeline.model;
   }
 
   async embed(chunks: string[]) {
