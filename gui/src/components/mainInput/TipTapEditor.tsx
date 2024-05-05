@@ -38,8 +38,11 @@ import {
   setEditingContextItemAtIndex,
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
-import { isMetaEquivalentKeyPressed } from "../../util";
-import { isJetBrains, isPrerelease, postToIde } from "../../util/ide";
+import {
+  isJetBrains,
+  isMetaEquivalentKeyPressed,
+  isPrerelease,
+} from "../../util";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";

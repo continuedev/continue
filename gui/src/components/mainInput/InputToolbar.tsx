@@ -18,9 +18,9 @@ import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   getAltKeyLabel,
   getMetaKeyLabel,
+  isJetBrains,
   isMetaEquivalentKeyPressed,
 } from "../../util";
-import { isJetBrains } from "../../util/ide";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
   position: absolute;
