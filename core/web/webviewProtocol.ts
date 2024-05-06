@@ -75,7 +75,6 @@ export type WebviewProtocol = Protocol &
     errorPopup: [{ message: string }, void];
     "index/setPaused": [boolean, void];
     "index/forceReIndex": [undefined, void];
-    "index/setIndexingFailed": [{failed: boolean}, void];
     "index/indexingProgressBarInitialized": [{ready: boolean}, void]
     openUrl: [string, void];
     applyToCurrentFile: [{ text: string }, void];
@@ -130,8 +129,7 @@ export type ReverseWebviewProtocol = {
   addModel: [undefined, void];
   openSettings: [undefined, void];
   viewHistory: [undefined, void];
-  indexProgress: [{ progress: number; desc: string }, void];
-  setIndexingFailed: [{failed: boolean}, void];
+  indexProgress: [{ progress: number; desc: string; failed?: boolean }, void];
   indexingProgressBarInitialized: [{ready: boolean}, void]
   newSession: [undefined, void];
   refreshSubmenuItems: [undefined, void];

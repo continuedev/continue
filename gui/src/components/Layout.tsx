@@ -166,10 +166,8 @@ const Layout = () => {
   );
 
   useWebviewListener("indexProgress", async (data) => {
-    setIndexingState(data);
-  });
-
-  useWebviewListener("setIndexingFailed", async (data) => {
+    setIndexingProgress(data.progress);
+    setIndexingTask(data.desc);
     setIndexingFailed(data.failed)
   });
 

@@ -37,7 +37,7 @@ export interface Chunk extends ChunkWithoutID {
 export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
-  indexingFailed?: boolean;
+  failed?: boolean;
 }
 
 export interface LLMReturnValue {
