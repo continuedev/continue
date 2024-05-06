@@ -9,7 +9,10 @@ import {
 } from "../../autocomplete/lineStream";
 import { streamLines } from "../../diff/util";
 import { stripImages } from "../../llm/countTokens";
-import { dedentAndGetCommonWhitespace, getMarkdownLanguageTagForFile } from "../../util";
+import {
+  dedentAndGetCommonWhitespace,
+  getMarkdownLanguageTagForFile,
+} from "../../util";
 import {
   type RangeInFileWithContents,
   contextItemToRangeInFileWithContents,
@@ -232,17 +235,8 @@ const EditSlashCommand: SlashCommand = {
     }
 
     // Strip unecessary parts of the input (the fact that you have to do this is suboptimal, should be refactored away)
-    const content = history[history.length - 1].content;
-    if (typeof content !== "string") {
-      content.forEach((part) => {
-        if (part.text?.startsWith("/edit")) {
-          part.text = part.text.replace("/edit", "").trimStart();
-        }
-      });
-    } else {
-      content = input.replace("/edit", "").trimStart();
-    }
-    const userInput = stripImages(content).replace(
+    let content = input.replace("/edit", "").trimStart();
+    let userInput = stripImages(content).replace(
       `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,
       "",
     );
