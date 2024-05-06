@@ -81,7 +81,7 @@ const IndexingProgressBar = ({
   return (
     <div
       onClick={() => {
-        if (completed < total && completed >= 0) {
+        if (!indexingFailed && completed < total && completed >= 0) {
           setExpanded((prev) => !prev);
         } else {
           postToIde("index/forceReIndex", undefined);

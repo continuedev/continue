@@ -167,7 +167,6 @@ export class CodebaseIndexer {
           console.warn(
             `Error updating the ${codebaseIndex.artifactId} index: ${e}`,
           );
-          yield { progress: 1, desc: "error updating index" }
         }
       }
 
