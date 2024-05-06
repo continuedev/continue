@@ -39,11 +39,6 @@ export interface IndexingProgressUpdate {
   desc: string;
 }
 
-export interface LLMReturnValue {
-  prompt: string;
-  completion: string;
-}
-
 export type PromptTemplate =
   | string
   | ((
@@ -80,12 +75,12 @@ export interface ILLM extends LLMOptions {
   streamComplete(
     prompt: string,
     options?: LLMFullCompletionOptions,
-  ): AsyncGenerator<string, LLMReturnValue>;
+  ): AsyncGenerator<string, PromptLog>;
 
   streamChat(
     messages: ChatMessage[],
     options?: LLMFullCompletionOptions,
-  ): AsyncGenerator<ChatMessage, LLMReturnValue>;
+  ): AsyncGenerator<ChatMessage, PromptLog>;
 
   chat(
     messages: ChatMessage[],
@@ -258,12 +253,18 @@ export interface InputModifiers {
   noContext: boolean;
 }
 
+export interface PromptLog {
+  completionOptions: CompletionOptions;
+  prompt: string;
+  completion: string;
+}
+
 export interface ChatHistoryItem {
   message: ChatMessage;
   editorState?: any;
   modifiers?: InputModifiers;
   contextItems: ContextItemWithId[];
-  promptLogs?: [string, string][]; // [prompt, completion]
+  promptLogs?: PromptLog[];
 }
 
 export type ChatHistory = ChatHistoryItem[];

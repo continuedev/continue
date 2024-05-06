@@ -7,6 +7,7 @@ import {
   ContextItemId,
   ContextItemWithId,
   PersistedSessionInfo,
+  PromptLog,
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { stripImages } from "core/llm/countTokens";
@@ -142,7 +143,7 @@ export const stateSlice = createSlice({
     },
     addPromptCompletionPair: (
       state,
-      { payload }: PayloadAction<[string, string][]>,
+      { payload }: PayloadAction<PromptLog[]>,
     ) => {
       if (!state.history.length) {
         return;

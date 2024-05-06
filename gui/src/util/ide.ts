@@ -1,4 +1,4 @@
-import { ChatMessage, LLMFullCompletionOptions, LLMReturnValue } from "core";
+import { ChatMessage, LLMFullCompletionOptions, PromptLog } from "core";
 import { Message } from "core/util/messenger";
 import {
   ReverseWebviewProtocol,
@@ -155,7 +155,7 @@ export async function* llmStreamChat(
   cancelToken: AbortSignal | undefined,
   messages: ChatMessage[],
   options: LLMFullCompletionOptions = {},
-): AsyncGenerator<ChatMessage, LLMReturnValue> {
+): AsyncGenerator<ChatMessage, PromptLog> {
   const gen = ideStreamRequest(
     "llm/streamChat",
     {
@@ -179,6 +179,7 @@ export async function* llmStreamChat(
   return {
     prompt: next.value.content?.prompt,
     completion: next.value.content?.completion,
+    completionOptions: next.value.content?.completionOptions,
   };
 }
 

@@ -5,9 +5,9 @@ import {
   ILLM,
   LLMFullCompletionOptions,
   LLMOptions,
-  LLMReturnValue,
   ModelName,
   ModelProvider,
+  PromptLog,
   PromptTemplate,
   RequestOptions,
   TemplateType,
@@ -340,7 +340,7 @@ ${prompt}`;
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
     }
 
-    return { prompt, completion };
+    return { prompt, completion, completionOptions };
   }
 
   async complete(prompt: string, options: LLMFullCompletionOptions = {}) {
@@ -388,7 +388,7 @@ ${prompt}`;
   async *streamChat(
     messages: ChatMessage[],
     options: LLMFullCompletionOptions = {},
-  ): AsyncGenerator<ChatMessage, LLMReturnValue> {
+  ): AsyncGenerator<ChatMessage, PromptLog> {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
@@ -436,7 +436,11 @@ ${prompt}`;
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
     }
 
-    return { prompt, completion };
+    return {
+      prompt,
+      completion,
+      completionOptions,
+    };
   }
 
   protected async *_streamComplete(
