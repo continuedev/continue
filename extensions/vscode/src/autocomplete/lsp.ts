@@ -1,5 +1,7 @@
 import { IDE, RangeInFile } from "core";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/ast";
+import { GetLspDefinitionsFunction } from "core/autocomplete/completionProvider";
+import { AutocompleteLanguageInfo } from "core/autocomplete/languages";
 import { AutocompleteSnippet } from "core/autocomplete/ranking";
 import { RangeInFileWithContents } from "core/commands/util";
 import * as vscode from "vscode";
@@ -24,28 +26,36 @@ async function executeGotoProvider(
   )) as any;
 
   return definitions
-    .filter((d: any) => d.targetUri && d.targetRange)
+    .filter((d: any) => (d.targetUri || d.uri) && (d.targetRange || d.range))
     .map((d: any) => ({
-      filepath: d.targetUri.fsPath,
-      range: d.targetRange,
+      filepath: (d.targetUri || d.uri).fsPath,
+      range: d.targetRange || d.range,
     }));
+}
+
+function isRifWithContents(
+  rif: RangeInFile | RangeInFileWithContents,
+): rif is RangeInFileWithContents {
+  return typeof (rif as any).contents === "string";
 }
 
 export async function getDefinitionsForNode(
   uri: string,
   node: Parser.SyntaxNode,
-): Promise<RangeInFile[]> {
-  const ranges: RangeInFile[] = [];
+  ide: IDE,
+  lang: AutocompleteLanguageInfo,
+): Promise<RangeInFileWithContents[]> {
+  const ranges: (RangeInFile | RangeInFileWithContents)[] = [];
   switch (node.type) {
     case "call_expression":
       // function call -> function definition
-      const defs = await executeGotoProvider(
+      const funDefs = await executeGotoProvider(
         uri,
         node.startPosition.row,
         node.startPosition.column,
         "vscode.executeDefinitionProvider",
       );
-      ranges.push(...defs);
+      ranges.push(...funDefs);
       break;
     case "variable_declarator":
       // variable assignment -> variable definition/type
@@ -54,11 +64,35 @@ export async function getDefinitionsForNode(
     case "impl_item":
       // impl of trait -> trait definition
       break;
+    case "new_expression":
+      const [classDef] = await executeGotoProvider(
+        uri,
+        node.endPosition.row,
+        node.endPosition.column,
+        "vscode.executeDefinitionProvider",
+      );
+      ranges.push({
+        ...classDef,
+        contents: `${lang.comment} ${node.text}:\n${(
+          await ide.readRangeInFile(classDef.filepath, classDef.range)
+        ).trim()}`,
+      });
+      break;
     case "":
       // function definition -> implementations?
       break;
   }
-  return ranges;
+  return await Promise.all(
+    ranges.map(async (rif) => {
+      if (!isRifWithContents(rif)) {
+        return {
+          ...rif,
+          contents: await ide.readRangeInFile(rif.filepath, rif.range),
+        };
+      }
+      return rif;
+    }),
+  );
 }
 
 /**
@@ -67,12 +101,13 @@ export async function getDefinitionsForNode(
  * ...etc...
  */
 
-export async function getDefinitionsFromLsp(
+export const getDefinitionsFromLsp: GetLspDefinitionsFunction = async (
   filepath: string,
   contents: string,
   cursorIndex: number,
   ide: IDE,
-): Promise<AutocompleteSnippet[]> {
+  lang: AutocompleteLanguageInfo,
+): Promise<AutocompleteSnippet[]> => {
   try {
     const ast = await getAst(filepath, contents);
     if (!ast) return [];
@@ -82,27 +117,13 @@ export async function getDefinitionsFromLsp(
 
     const results: RangeInFileWithContents[] = [];
     for (const node of treePath.reverse()) {
-      const definitions = await getDefinitionsForNode(filepath, node);
-      results.push(
-        ...(await Promise.all(
-          definitions.map(async (def) => ({
-            ...def,
-            contents: await ide.readRangeInFile(
-              def.filepath,
-              new vscode.Range(
-                new vscode.Position(
-                  def.range.start.line,
-                  def.range.start.character,
-                ),
-                new vscode.Position(
-                  def.range.end.line,
-                  def.range.end.character,
-                ),
-              ),
-            ),
-          })),
-        )),
+      const definitions = await getDefinitionsForNode(
+        filepath,
+        node,
+        ide,
+        lang,
       );
+      results.push(...definitions);
     }
 
     return results.map((result) => ({
@@ -113,4 +134,4 @@ export async function getDefinitionsFromLsp(
     console.warn("Error getting definitions from LSP: ", e);
     return [];
   }
-}
+};

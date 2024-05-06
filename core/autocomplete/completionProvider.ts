@@ -112,6 +112,14 @@ const nonAutocompleteModels = [
   "instruct",
 ];
 
+export type GetLspDefinitionsFunction = (
+  filepath: string,
+  contents: string,
+  cursorIndex: number,
+  ide: IDE,
+  lang: AutocompleteLanguageInfo,
+) => Promise<AutocompleteSnippet[]>;
+
 export async function getTabCompletion(
   token: AbortSignal,
   options: TabAutocompleteOptions,
@@ -119,12 +127,7 @@ export async function getTabCompletion(
   ide: IDE,
   generatorReuseManager: GeneratorReuseManager,
   input: AutocompleteInput,
-  getDefinitionsFromLsp: (
-    filepath: string,
-    contents: string,
-    cursorIndex: number,
-    ide: IDE,
-  ) => Promise<AutocompleteSnippet[]>,
+  getDefinitionsFromLsp: GetLspDefinitionsFunction,
 ): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
@@ -194,6 +197,7 @@ export async function getTabCompletion(
       fullPrefix + fullSuffix,
       fullPrefix.length,
       ide,
+      lang,
     ),
     new Promise((resolve) => {
       setTimeout(() => resolve([]), 100);
@@ -372,12 +376,7 @@ export class CompletionProvider {
     private readonly ide: IDE,
     private readonly getLlm: () => Promise<ILLM | undefined>,
     private readonly _onError: (e: any) => void,
-    private readonly getDefinitionsFromLsp: (
-      filepath: string,
-      contents: string,
-      cursorIndex: number,
-      ide: IDE,
-    ) => Promise<AutocompleteSnippet[]>,
+    private readonly getDefinitionsFromLsp: GetLspDefinitionsFunction,
   ) {
     this.generatorReuseManager = new GeneratorReuseManager(
       this.onError.bind(this),

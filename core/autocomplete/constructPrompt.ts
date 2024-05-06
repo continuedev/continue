@@ -15,7 +15,6 @@ import {
   rankSnippets,
   removeRangeFromSnippets,
 } from "./ranking";
-import { slidingWindowMatcher } from "./slidingWindow";
 
 export function languageForFilepath(
   filepath: string,
@@ -131,13 +130,13 @@ export async function constructAutocompletePrompt(
         options.slidingWindowSize * (1 - options.slidingWindowPrefixPercentage),
       );
 
-    const slidingWindowMatches = await slidingWindowMatcher(
-      recentlyEditedFiles,
-      windowAroundCursor,
-      3,
-      options.slidingWindowSize,
-    );
-    snippets.push(...slidingWindowMatches);
+    // const slidingWindowMatches = await slidingWindowMatcher(
+    //   recentlyEditedFiles,
+    //   windowAroundCursor,
+    //   3,
+    //   options.slidingWindowSize,
+    // );
+    // snippets.push(...slidingWindowMatches);
 
     const recentlyEdited = (
       await Promise.all(
@@ -148,6 +147,7 @@ export async function constructAutocompletePrompt(
       )
     ).filter((s) => !!s);
     snippets.push(...(recentlyEdited as any));
+
     // Filter out empty snippets
     snippets = snippets.filter(
       (s) =>
