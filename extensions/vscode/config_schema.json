@@ -1607,6 +1607,7 @@
           "default": true,
           "type": "boolean"
         },
+        // add isEnabled setting here
         "models": {
           "title": "Models",
           "markdownDescription": "Learn about setting up models in [the documentation](https://docs.continue.dev/model-setup/overview).",

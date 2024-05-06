@@ -19,6 +19,7 @@ import {
 } from "..";
 import {
   slashCommandFromDescription,
+  slashCommandFromPromptFolder,
   slashFromCustomCommand,
 } from "../commands";
 import { contextProviderClassFromName } from "../context/providers";
@@ -171,6 +172,12 @@ function serializedToIntermediateConfig(
   for (const command of initial.customCommands || []) {
     slashCommands.push(slashFromCustomCommand(command));
   }
+
+  if(config.slashCommandFromPromptFolderIsEnabled() {
+    for (const file of filesUnderPromptFolder(config.promptFolder) || []) {
+      slashCommands.push(slashCommandFromFile(file));
+  }
+}
 
   const config: Config = {
     ...initial,
@@ -361,6 +368,7 @@ function finalToBrowserConfig(
 ): BrowserSerializedContinueConfig {
   return {
     allowAnonymousTelemetry: final.allowAnonymousTelemetry,
+    // add isEnabled setting here
     models: final.models.map((m) => ({
       provider: m.providerName,
       model: m.model,

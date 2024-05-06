@@ -56,3 +56,13 @@ export function slashCommandFromDescription(
 		params: desc.params,
 	};
 }
+
+export function filesUnderPromptFolder(promptFolder: string) {
+	// return here a list of files
+}
+
+
+export function slashCommandFromFile(file: String): SlashCommand | undefined {
+	return promptAsCodeCommandGenerator(file);
+}
+	

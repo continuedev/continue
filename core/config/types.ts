@@ -717,6 +717,7 @@ declare global {
   export interface SerializedContinueConfig {
     env?: string[];
     allowAnonymousTelemetry?: boolean;
+    // add isEnabled setting here
     models: ModelDescription[];
     systemMessage?: string;
     completionOptions?: BaseCompletionOptions;
@@ -748,6 +749,8 @@ declare global {
      * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either \`streamCompletion\` or \`streamChat\` (or both).
      * Continue will do the rest of the work to construct prompt templates, handle context items, prune context, etc.
      */
+
+    // add isEnabled setting here
     models: (CustomLLM | ModelDescription)[];
     /** A system message to be followed by all of your models */
     systemMessage?: string;
@@ -783,6 +786,7 @@ declare global {
   
   export interface ContinueConfig {
     allowAnonymousTelemetry?: boolean;
+    // add isEnabled setting here
     models: ILLM[];
     systemMessage?: string;
     completionOptions?: BaseCompletionOptions;
@@ -802,6 +806,7 @@ declare global {
   
   export interface BrowserSerializedContinueConfig {
     allowAnonymousTelemetry?: boolean;
+    // add isEnabled setting here
     models: ModelDescription[];
     systemMessage?: string;
     completionOptions?: BaseCompletionOptions;
