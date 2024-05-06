@@ -234,7 +234,16 @@ const EditSlashCommand: SlashCommand = {
     }
 
     // Strip unecessary parts of the input (the fact that you have to do this is suboptimal, should be refactored away)
-    let content = input.replace("/edit", "").trimStart();
+    let content = history[history.length - 1].content;
+    if (typeof content !== "string") {
+      content.forEach((part) => {
+        if (part.text && part.text.startsWith("/edit")) {
+          part.text = part.text.replace("/edit", "").trimStart();
+        }
+      });
+    } else {
+      content = input.replace("/edit", "").trimStart();
+    }
     let userInput = stripImages(content).replace(
       `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,
       "",
