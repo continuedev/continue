@@ -9,7 +9,7 @@ import { getComputeDeleteAddRemove } from "./refreshIndex";
 import { CodebaseIndex } from "./types";
 
 export class PauseToken {
-  constructor(private _paused: boolean) {}
+  constructor(private _paused: boolean) { }
 
   set paused(value: boolean) {
     this._paused = value;
@@ -150,7 +150,7 @@ export class CodebaseIndexer {
           console.warn(
             `Error updating the ${codebaseIndex.artifactId} index: ${e}`,
           );
-          yield {progress: 1, desc: "error updating index", failed: true} 
+          yield { progress: 1, desc: "error updating index" }
         }
       }
 
