@@ -15,7 +15,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   recentlyEditedSimilarityThreshold: 0.3,
   useCache: true,
   onlyMyCode: true,
-  useOtherFiles: false,
+  useOtherFiles: true,
   disableInFiles: undefined,
 };
 
