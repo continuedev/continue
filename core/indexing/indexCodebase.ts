@@ -61,6 +61,10 @@ export class CodebaseIndexer {
     workspaceDirs: string[],
     abortSignal: AbortSignal,
   ): AsyncGenerator<IndexingProgressUpdate> {
+    if (workspaceDirs.length === 0) {
+      return;
+    }
+
     const config = await this.configHandler.loadConfig();
     if (config.disableIndexing) {
       return;
@@ -72,9 +76,8 @@ export class CodebaseIndexer {
 
     // Wait until Git Extension has loaded to report progress
     // so we don't appear stuck at 0% while waiting
-    if (workspaceDirs.length > 0) {
-      await this.ide.getRepoName(workspaceDirs[0]);
-    }
+    await this.ide.getRepoName(workspaceDirs[0]);
+
     yield {
       progress: 0,
       desc: "Starting indexing...",
@@ -86,21 +89,21 @@ export class CodebaseIndexer {
       const repoName = await this.ide.getRepoName(directory);
       let completedIndexes = 0;
 
-      try {
-        for (let codebaseIndex of indexesToBuild) {
-          // TODO: IndexTag type should use repoName rather than directory
-          const tag: IndexTag = {
-            directory,
-            branch,
-            artifactId: codebaseIndex.artifactId,
-          };
-          const [results, markComplete] = await getComputeDeleteAddRemove(
-            tag,
-            { ...stats },
-            (filepath) => this.ide.readFile(filepath),
-            repoName,
-          );
+      for (let codebaseIndex of indexesToBuild) {
+        // TODO: IndexTag type should use repoName rather than directory
+        const tag: IndexTag = {
+          directory,
+          branch,
+          artifactId: codebaseIndex.artifactId,
+        };
+        const [results, markComplete] = await getComputeDeleteAddRemove(
+          tag,
+          { ...stats },
+          (filepath) => this.ide.readFile(filepath),
+          repoName,
+        );
 
+        try {
           for await (let { progress, desc } of codebaseIndex.update(
             tag,
             results,
@@ -134,9 +137,11 @@ export class CodebaseIndexer {
               workspaceDirs.length,
             desc: "Completed indexing " + codebaseIndex.artifactId,
           };
+        } catch (e) {
+          console.warn(
+            `Error updating the ${codebaseIndex.artifactId} index: ${e}`,
+          );
         }
-      } catch (e) {
-        console.warn("Error refreshing index: ", e);
       }
 
       completedDirs++;

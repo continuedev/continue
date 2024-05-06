@@ -1,4 +1,5 @@
 import * as dotenv from "dotenv";
+import fetch from "node-fetch";
 import { ContinueSDK } from "..";
 import EditSlashCommand, { getPromptParts } from "../commands/slash/edit";
 import { contextItemToRangeInFileWithContents } from "../commands/util";
@@ -64,6 +65,7 @@ describe("/edit slash command", () => {
       contextItems: [TEST_CONTEXT_ITEM],
       selectedCode: [],
       config: {} as any,
+      fetch,
     };
 
     let total = "";
@@ -82,7 +84,7 @@ describe("/edit slash command", () => {
       ...
       ...
        ..
-          .  .`
+          .  .`,
     );
 
     expect(dedented).toEqual(`\
@@ -110,7 +112,7 @@ describe("/edit slash command", () => {
         fullFile,
         new FreeTrial({ model: "gpt-3.5-turbo" }),
         "implement this function",
-        1200
+        1200,
       );
 
     expect(filePrefix).toEqual(`${f1}`);

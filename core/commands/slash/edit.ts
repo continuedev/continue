@@ -9,7 +9,7 @@ import {
 } from "../../autocomplete/lineStream";
 import { streamLines } from "../../diff/util";
 import { stripImages } from "../../llm/countTokens";
-import { dedentAndGetCommonWhitespace } from "../../util";
+import { dedentAndGetCommonWhitespace, getMarkdownLanguageTagForFile } from "../../util";
 import {
   RangeInFileWithContents,
   contextItemToRangeInFileWithContents,
@@ -226,7 +226,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     if (!contextItemToEdit) {
-      yield "Select (highlight and press `cmd+shift+L` (MacOS) / `ctrl+shift+L` (Windows)) the code that you want to edit first";
+      yield "Please highlight the code you want to edit, then press `cmd/ctrl+shift+L` to add it to chat";
       return;
     }
 
@@ -456,6 +456,12 @@ const EditSlashCommand: SlashCommand = {
           userInput,
           filePrefix: filePrefix,
           fileSuffix: fileSuffix,
+
+          // Some built-in templates use these instead of the above
+          prefix: filePrefix,
+          suffix: fileSuffix,
+
+          language: getMarkdownLanguageTagForFile(rif.filepath),
           systemMessage: llm.systemMessage ?? "",
           // "contextItems": (await sdk.getContextItemChatMessages()).map(x => x.content || "").join("\n\n"),
         },

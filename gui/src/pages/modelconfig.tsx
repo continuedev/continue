@@ -239,13 +239,15 @@ function ModelConfig() {
                         return {
                           ...dimension.options[dimensionChoices[i]],
                         };
-                      }) || [])
+                      }) || []),
                     ),
                     ...formParams,
                     provider: modelInfo.provider,
                   };
                   postToIde("config/addModel", { model });
-                  dispatch(setDefaultModel(model.title));
+                  dispatch(
+                    setDefaultModel({ title: model.title, force: true }),
+                  );
                   navigate("/");
                 }}
               />

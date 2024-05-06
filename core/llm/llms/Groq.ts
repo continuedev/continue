@@ -6,6 +6,7 @@ class Groq extends OpenAI {
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "https://api.groq.com/openai/v1/",
   };
+  protected maxStopWords: number | undefined = 4;
 
   private static modelConversion: { [key: string]: string } = {
     "llama2-70b": "llama2-70b-4096",

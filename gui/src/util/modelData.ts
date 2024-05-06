@@ -455,19 +455,6 @@ const gemini15Pro: ModelPackage = {
   providerOptions: ["gemini", "freetrial"],
 };
 
-const zephyr: ModelPackage = {
-  title: "Zephyr-Beta (7b)",
-  description:
-    "A fine-tune of Mistral, trained on publicly available and synthetic datasets.",
-  params: {
-    title: "Zephyr",
-    model: "zephyr-7b",
-    contextLength: 4096,
-  },
-  icon: "mistral.png",
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
-};
-
 const deepseek: ModelPackage = {
   title: "DeepSeek-Coder",
   description:
@@ -499,29 +486,6 @@ const deepseek: ModelPackage = {
     },
   ],
   providerOptions: ["ollama", "lmstudio", "llamacpp"],
-};
-
-const codeup: ModelPackage = {
-  title: "CodeUp (13b)",
-  description: "An open-source coding model based on Llama2",
-  params: {
-    title: "CodeUp",
-    model: "codeup-13b",
-    contextLength: 4096,
-  },
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
-};
-
-const neuralChat: ModelPackage = {
-  title: "Neural-Chat-v3-3 (7b)",
-  description:
-    "A fine-tuned 7B parameter LLM on the Intel Gaudi 2 processor from the Intel/neural-chat-7b-v3-1 on the meta-math/MetaMathQA dataset.",
-  params: {
-    title: "NeuralChat",
-    model: "neural-chat-7b",
-    contextLength: 4096,
-  },
-  providerOptions: ["ollama", "lmstudio", "llamacpp", "replicate"],
 };
 
 const commandR: ModelPackage = {
@@ -559,8 +523,6 @@ const osModels = [
   codeLlamaInstruct,
   mistral,
   phindCodeLlama,
-  zephyr,
-  neuralChat,
 ];
 
 const gpt4: ModelPackage = {
@@ -669,13 +631,13 @@ const AUTODETECT: ModelPackage = {
 export const MODEL_INFO: (ModelPackage | string)[] = [
   "OpenAI",
   gpt4turbo,
-  gpt4,
+  // gpt4,
   gpt35turbo,
   "Anthropic",
   claude3Opus,
   claude3Sonnet,
   claude3Haiku,
-  claude2,
+  // claude2,
   "Cohere",
   commandR,
   commandRPlus,
@@ -686,11 +648,9 @@ export const MODEL_INFO: (ModelPackage | string)[] = [
   llama3Chat,
   deepseek,
   mistral,
-  codellama70bTrial,
-  wizardCoder,
-  codeLlamaInstruct,
-  phindCodeLlama,
-  zephyr,
+  // wizardCoder,
+  // codeLlamaInstruct,
+  // phindCodeLlama,
 ];
 
 export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
@@ -703,10 +663,9 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
     packages: [
-      gpt4,
+      gpt4turbo,
       gpt35turbo,
-      gpt4turbo,
-      gpt4turbo,
+      // gpt4,
       {
         ...AUTODETECT,
         params: {
@@ -750,7 +709,12 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         defaultValue: 100_000,
       },
     ],
-    packages: [claude3Opus, claude3Sonnet, claude3Haiku, claude2],
+    packages: [
+      claude3Opus,
+      claude3Sonnet,
+      claude3Haiku,
+      // claude2
+    ],
   },
   cohere: {
     title: "Cohere",
@@ -972,7 +936,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistral, zephyr],
+    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistral],
   },
   llamacpp: {
     title: "llama.cpp",

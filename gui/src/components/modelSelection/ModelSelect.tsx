@@ -225,7 +225,7 @@ function ModelSelect(props: {}) {
         );
         let nextIndex = (currentIndex + 1 * direction) % options.length;
         if (nextIndex < 0) nextIndex = options.length - 1;
-        dispatch(setDefaultModel(options[nextIndex].value));
+        dispatch(setDefaultModel({ title: options[nextIndex].value }));
       }
     };
 
@@ -242,7 +242,7 @@ function ModelSelect(props: {}) {
           value={"GPT-4"}
           onChange={(val: string) => {
             if (val === defaultModel?.title) return;
-            dispatch(setDefaultModel(val));
+            dispatch(setDefaultModel({ title: val }));
             // TODO
             // client?.setModelForRoleFromTitle("default", val);
           }}

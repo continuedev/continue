@@ -24,7 +24,7 @@ export class ContinueCompletionProvider
       if (val === "Documentation") {
         vscode.env.openExternal(
           vscode.Uri.parse(
-            "https://continue.dev/docs/walkthroughs/tab-autocomplete",
+            "https://docs.continue.dev/walkthroughs/tab-autocomplete",
           ),
         );
       } else if (val === "Download Ollama") {
@@ -75,13 +75,57 @@ export class ContinueCompletionProvider
         clipboardText = await vscode.env.clipboard.readText();
       }
 
+      // Handle notebook cells
+      const pos = {
+        line: position.line,
+        character: position.character,
+      };
+      let manuallyPassFileContents: string | undefined = undefined;
+      if (document.uri.scheme === "vscode-notebook-cell") {
+        const notebook = vscode.workspace.notebookDocuments.find((notebook) =>
+          notebook
+            .getCells()
+            .some((cell) => cell.document.uri === document.uri),
+        );
+        if (notebook) {
+          const cells = notebook.getCells();
+          manuallyPassFileContents = cells
+            .map((cell) => {
+              const text = cell.document.getText();
+              if (cell.kind === vscode.NotebookCellKind.Markup) {
+                return `"""${text}"""`;
+              } else {
+                return text;
+              }
+            })
+            .join("\n\n");
+          for (const cell of cells) {
+            if (cell.document.uri === document.uri) {
+              break;
+            } else {
+              pos.line += cell.document.getText().split("\n").length + 1;
+            }
+          }
+        }
+      }
+      // Handle commit message input box
+      let manuallyPassPrefix: string | undefined = undefined;
+      if (document.uri.scheme === "vscode-scm") {
+        return [];
+        // let diff = await this.ide.getDiff();
+        // diff = diff.split("\n").splice(-150).join("\n");
+        // manuallyPassPrefix = `${diff}\n\nCommit message: `;
+      }
+
       const input: AutocompleteInput = {
         completionId: uuidv4(),
         filepath: document.uri.fsPath,
-        pos: { line: position.line, character: position.character },
+        pos,
         recentlyEditedFiles: [],
         recentlyEditedRanges: [],
         clipboardText: clipboardText,
+        manuallyPassFileContents,
+        manuallyPassPrefix,
       };
 
       setupStatusBar(true, true);

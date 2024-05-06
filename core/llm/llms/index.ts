@@ -101,6 +101,7 @@ const LLMs = [
 export async function llmFromDescription(
   desc: ModelDescription,
   readFile: (filepath: string) => Promise<string>,
+  writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
 ): Promise<BaseLLM | undefined> {
@@ -131,6 +132,7 @@ export async function llmFromDescription(
         DEFAULT_MAX_TOKENS,
     },
     systemMessage,
+    writeLog,
   };
 
   return new cls(options);

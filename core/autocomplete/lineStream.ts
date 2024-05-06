@@ -81,6 +81,16 @@ export async function* stopAtLines(stream: LineStream): LineStream {
   }
 }
 
+const LINES_TO_SKIP = ["</START EDITING HERE>"];
+
+export async function* skipLines(stream: LineStream): LineStream {
+  for await (const line of stream) {
+    if (!LINES_TO_SKIP.some((skipAt) => line.startsWith(skipAt))) {
+      yield line;
+    }
+  }
+}
+
 function shouldRemoveLineBeforeStart(line: string): boolean {
   return (
     line.trimStart().startsWith("```") ||
@@ -129,7 +139,7 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
       return;
     }
 
-    if (line === "```") {
+    if (line.startsWith("```")) {
       waitingToSeeIfLineIsLast = line;
     } else {
       yield line;

@@ -58,7 +58,7 @@
         "continue.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://continue.dev/docs/telemetry)."
+          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -68,7 +68,7 @@
         "continue.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://continue.dev/docs/walkthroughs/tab-autocomplete)"
+          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://docs.continue.dev/walkthroughs/tab-autocomplete)"
         },
         "continue.remoteConfigServerUrl": {
           "type": "string",
@@ -281,11 +281,6 @@
         "command": "continue.toggleTabAutocompleteEnabled",
         "mac": "cmd+k cmd+a",
         "key": "ctrl+k ctrl+a"
-      },
-      {
-        "command": "continue.openConfigJson",
-        "mac": "cmd+k cmd+c",
-        "key": "ctrl+k ctrl+c"
       }
     ],
     "submenus": [
@@ -316,12 +311,6 @@
         },
         {
           "command": "continue.newSession"
-        }
-      ],
-      "webview/context": [
-        {
-          "command": "continue.shareSession",
-          "group": "navigation@1"
         }
       ],
       "editor/context": [
@@ -544,7 +533,7 @@
     "ncp": "^2.0.0",
     "node-fetch": "^3.3.2",
     "node-machine-id": "^1.1.12",
-    "posthog-node": "^3.1.2",
+    "posthog-node": "^3.6.3",
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
     "request": "^2.88.2",

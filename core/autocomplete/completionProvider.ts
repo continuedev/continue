@@ -38,6 +38,10 @@ export interface AutocompleteInput {
   recentlyEditedFiles: RangeInFileWithContents[];
   recentlyEditedRanges: RangeInFileWithContents[];
   clipboardText: string;
+  // Used for notebook files
+  manuallyPassFileContents?: string;
+  // Used for VS Code git commit input box
+  manuallyPassPrefix?: string;
 }
 
 export interface AutocompleteOutcome extends TabAutocompleteOptions {
@@ -57,12 +61,19 @@ const DOUBLE_NEWLINE = "\n\n";
 const WINDOWS_DOUBLE_NEWLINE = "\r\n\r\n";
 const SRC_DIRECTORY = "/src/";
 // Starcoder2 tends to output artifacts starting with the letter "t"
-const STARCODER2_T_ARTIFACTS = ["t.", "\nt"];
+const STARCODER2_T_ARTIFACTS = ["t.", "\nt", "<file_sep>"];
 const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
 const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
 const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
+
+// Errors that can be expected on occasion even during normal functioning should not be shown.
+// Not worth disrupting the user to tell them that a single autocomplete request didn't go through
+const ERRORS_TO_IGNORE = [
+  // From Ollama
+  "unexpected server status",
+];
 
 function formatExternalSnippet(
   filepath: string,
@@ -105,8 +116,11 @@ export async function getTabCompletion(
     recentlyEditedFiles,
     recentlyEditedRanges,
     clipboardText,
+    manuallyPassFileContents,
+    manuallyPassPrefix,
   } = input;
-  const fileContents = await ide.readFile(filepath);
+  const fileContents =
+    manuallyPassFileContents ?? (await ide.readFile(filepath));
   const fileLines = fileContents.split("\n");
 
   // Filter
@@ -137,7 +151,7 @@ export async function getTabCompletion(
   ) {
     shownGptClaudeWarning = true;
     throw new Error(
-      `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://continue.dev/docs/walkthroughs/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
+      `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/walkthroughs/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
     );
   }
 
@@ -186,6 +200,12 @@ export async function getTabCompletion(
       llm.model,
       extrasSnippets,
     );
+
+  // If prefix is manually passed
+  if (manuallyPassPrefix) {
+    prefix = manuallyPassPrefix;
+    suffix = "";
+  }
 
   // Template prompt
   const { template, completionOptions } = options.template
@@ -281,8 +301,16 @@ export async function getTabCompletion(
     lineGenerator = streamWithNewLines(lineGenerator);
 
     const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
-    for await (const update of finalGenerator) {
-      completion += update;
+
+    try {
+      for await (const update of finalGenerator) {
+        completion += update;
+      }
+    } catch (e: any) {
+      if (ERRORS_TO_IGNORE.some((err) => e.includes(err))) {
+        return undefined;
+      }
+      throw e;
     }
 
     if (cancelled) {

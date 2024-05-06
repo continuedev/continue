@@ -76,4 +76,4 @@ print_sum(["a", "b", "c"])
 
 # endregion
 
-# Ready to learn more? Check out the Continue documentation: https://continue.dev/docs
+# Ready to learn more? Check out the Continue documentation: https://docs.continue.dev

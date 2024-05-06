@@ -12,7 +12,10 @@ export class IpcMessenger {
   constructor() {
     const logger = (message: any, ...optionalParams: any[]) => {
       const logFilePath = getCoreLogsPath();
-      const logMessage = `${message} ${optionalParams.join(" ")}\n`;
+      const timestamp = new Date().toISOString().split(".")[0];
+      const logMessage = `[${timestamp}] ${message} ${optionalParams.join(
+        " ",
+      )}\n`;
       fs.appendFileSync(logFilePath, logMessage);
     };
     console.log = logger;

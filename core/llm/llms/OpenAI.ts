@@ -40,6 +40,8 @@ const CHAT_ONLY_MODELS = [
 class OpenAI extends BaseLLM {
   public useLegacyCompletionsEndpoint: boolean | undefined = undefined;
 
+  protected maxStopWords: number | undefined = undefined;
+
   constructor(options: LLMOptions) {
     super(options);
     this.useLegacyCompletionsEndpoint = options.useLegacyCompletionsEndpoint;
@@ -62,6 +64,7 @@ class OpenAI extends BaseLLM {
       };
       if (part.type === "imageUrl") {
         msg.image_url = { ...part.imageUrl, detail: "low" };
+        msg.type = "image_url";
       }
       return msg;
     });
@@ -87,9 +90,11 @@ class OpenAI extends BaseLLM {
       presence_penalty: options.presencePenalty,
       stop:
         // Jan + Azure OpenAI don't truncate and will throw an error
-        url.port === "1337" ||
-        url.host === "api.openai.com" ||
-        this.apiType === "azure"
+        this.maxStopWords !== undefined
+          ? options.stop?.slice(0, this.maxStopWords)
+          : url.port === "1337" ||
+            url.host === "api.openai.com" ||
+            this.apiType === "azure"
           ? options.stop?.slice(0, 4)
           : options.stop,
     };

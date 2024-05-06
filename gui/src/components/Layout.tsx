@@ -247,10 +247,10 @@ const Layout = () => {
                 {indexingProgress >= 1 && // Would take up too much space together with indexing progress
                   defaultModel?.provider === "free-trial" &&
                   (location.pathname === "/settings" ||
-                    parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
+                    parseInt(localStorage.getItem("ftc") || "0") >= 50) && (
                     <ProgressBar
                       completed={parseInt(localStorage.getItem("ftc") || "0")}
-                      total={250}
+                      total={150}
                     />
                   )}
 
