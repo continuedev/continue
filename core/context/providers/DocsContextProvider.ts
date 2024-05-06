@@ -24,7 +24,6 @@ class DocsContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const { retrieveDocs } = await import("../../indexing/docs/db");
-    console.log("getContextItems")
     const embeddingsProvider = new TransformersJsEmbeddingsProvider();
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 
