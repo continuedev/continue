@@ -86,11 +86,7 @@ function useSetup(dispatch: Dispatch<any>) {
   });
 
   useWebviewListener("submitMessage", async (data) => {
-    streamResponse(
-      data.message,
-      { useCodebase: false, noContext: true },
-      ideMessenger,
-    );
+    streamResponse(data.message, { useCodebase: false, noContext: true });
   });
 
   useWebviewListener("addContextItem", async (data) => {
