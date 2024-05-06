@@ -14,7 +14,7 @@ You likely want to use a model that is 30B+ parameters for chat.
 
 ### Open-source LLMs
 
-*We currently reccommend the following open-source models:*
+*We currently recommend the following open-source models:*
 
 #### Llama 3 from Meta
 
@@ -53,7 +53,7 @@ You likely want to use a model that is 1-15B parameters for autocomplete.
 
 ### Open-source LLMs
 
-*We currently reccommend the following open-source models:*
+*We currently recommend the following open-source models:*
 
 #### DeepSeek Coder from DeepSeek
 
