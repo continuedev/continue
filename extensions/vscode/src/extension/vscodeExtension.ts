@@ -113,7 +113,6 @@ export class VsCodeExtension {
       this.ide
         .getWorkspaceDirs()
         .then((dirs) => this.refreshCodebaseIndex(dirs, context));
-      context.globalState.update("continue.indexingFailed", false)
     });
     this.webviewProtocol.on("index/indexingProgressBarInitialized", (msg) => {
       // Triggered when progress bar is initialized. Purpose: To relay global state values to the progress bar
@@ -277,7 +276,8 @@ export class VsCodeExtension {
 
   private async refreshCodebaseIndex(dirs: string[], context: vscode.ExtensionContext) {
     //reset all state variables
-    this.webviewProtocol?.request("indexProgress", {progress:0, desc: "", failed:false});
+    console.log("Codebase indexing starting up")
+    this.webviewProtocol?.request("indexProgress", {progress: 0, desc: "", failed:false});
     context.globalState.update("continue.indexingFailed", false)
     context.globalState.update("continue.indexingProgress", 0)
     context.globalState.update("continue.indexingDesc", "")
