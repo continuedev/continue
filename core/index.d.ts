@@ -40,11 +40,6 @@ export interface IndexingProgressUpdate {
   status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
 }
 
-export interface LLMReturnValue {
-  prompt: string;
-  completion: string;
-}
-
 export type PromptTemplate =
   | string
   | ((
@@ -80,12 +75,6 @@ export interface ILLM extends LLMOptions {
 
   streamComplete(
     prompt: string,
-    options?: LLMFullCompletionOptions,
-  ): AsyncGenerator<string, PromptLog>;
-
-  streamFim(
-    prefix: string,
-    suffix: string,
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<string, PromptLog>;
 
@@ -270,6 +259,12 @@ export interface ContextItemWithId {
 export interface InputModifiers {
   useCodebase: boolean;
   noContext: boolean;
+}
+
+export interface PromptLog {
+  completionOptions: CompletionOptions;
+  prompt: string;
+  completion: string;
 }
 
 export interface ChatHistoryItem {

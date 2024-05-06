@@ -69,7 +69,7 @@ export class Core {
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
-      (text: string) => {},
+      async (text: string) => {},
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
 
@@ -277,7 +277,14 @@ export class Core {
       while (!next.done) {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
+          next = await gen.return({
+            completion: "",
+            prompt: "",
+            completionOptions: {
+              ...msg.data.completionOptions,
+              model: model.model,
+            },
+          });
           break;
         }
         yield { content: next.value.content };
@@ -306,7 +313,14 @@ export class Core {
       while (!next.done) {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
+          next = await gen.return({
+            completion: "",
+            prompt: "",
+            completionOptions: {
+              ...msg.data.completionOptions,
+              model: model.model,
+            },
+          });
           break;
         }
         yield { content: next.value };

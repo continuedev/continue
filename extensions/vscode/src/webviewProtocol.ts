@@ -365,7 +365,14 @@ export class VsCodeWebviewProtocol {
       while (!next.done) {
         if (protocol.abortedMessageIds.has(msg.messageId)) {
           protocol.abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
+          next = await gen.return({
+            completion: "",
+            prompt: "",
+            completionOptions: {
+              ...msg.data.completionOptions,
+              model: model.model,
+            },
+          });
           break;
         }
         yield { content: next.value };
@@ -389,7 +396,14 @@ export class VsCodeWebviewProtocol {
       while (!next.done) {
         if (protocol.abortedMessageIds.has(msg.messageId)) {
           protocol.abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
+          next = await gen.return({
+            completion: "",
+            prompt: "",
+            completionOptions: {
+              ...msg.data.completionOptions,
+              model: model.model,
+            },
+          });
           break;
         }
         yield { content: next.value.content };

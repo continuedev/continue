@@ -7,6 +7,7 @@ import {
   LLMOptions,
   ModelName,
   ModelProvider,
+  PromptLog,
   PromptTemplate,
   RequestOptions,
   TemplateType,

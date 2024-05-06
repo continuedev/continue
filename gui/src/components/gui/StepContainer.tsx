@@ -74,8 +74,8 @@ function StepContainer(props: StepContainerProps) {
   const sendFeedback = (feedback: boolean) => {
     setFeedback(feedback);
     if (props.item.promptLogs?.length) {
-      for (const [prompt, completion] of props.item.promptLogs) {
-        ideMessenger.post("devdata/log", {
+      for (const promptLog of props.item.promptLogs) {
+        postToIde("devdata/log", {
           tableName: "chat",
           data: { ...promptLog, feedback },
         });
