@@ -115,27 +115,12 @@ export class VsCodeExtension {
         .then((dirs) => this.refreshCodebaseIndex(dirs, context));
       context.globalState.update("continue.indexingFailed", false)
     });
-    this.webviewProtocol.on("index/setIndexingFailed", (msg) => {
-      this.webviewProtocol?.request("setIndexingFailed", msg.data); 
-      context.globalState.update("continue.indexingFailed", msg.data)
-    });
     this.webviewProtocol.on("index/indexingProgressBarInitialized", (msg) => {
-      // Triggered when progress bar is initialized.
-      // Purpose: To relay global state values to the progress bar
-      
-      // Update indexingFailed
-      if (context.globalState.get("continue.indexingFailed")){
-        this.webviewProtocol?.request("setIndexingFailed", {failed: true});
-      } else {
-        this.webviewProtocol?.request("setIndexingFailed", {failed: false});
-      }
-
-      // Update indexingProgress
-      if (context.globalState.get("continue.indexingProgress")){
-        let progress = context.globalState.get<number>("continue.indexingProgress") as number
-        let desc = context.globalState.get<string>("continue.indexingDesc") as string
-        this.webviewProtocol?.request("indexProgress", {progress, desc})
-      }
+      // Triggered when progress bar is initialized. Purpose: To relay global state values to the progress bar
+      let progress = context.globalState.get<number>("continue.indexingProgress") as number
+      let desc = context.globalState.get<string>("continue.indexingDesc") as string
+      let failed = context.globalState.get<boolean>("continue.indexingFailed") as boolean
+      this.webviewProtocol?.request("indexProgress", {progress, desc, failed})
     });
     
     this.diffManager.webviewProtocol = this.webviewProtocol;
@@ -292,7 +277,7 @@ export class VsCodeExtension {
 
   private async refreshCodebaseIndex(dirs: string[], context: vscode.ExtensionContext) {
     //reset all state variables
-    this.webviewProtocol?.request("setIndexingFailed", {failed:false});
+    this.webviewProtocol?.request("indexProgress", {progress:0, desc: "", failed:false});
     context.globalState.update("continue.indexingFailed", false)
     context.globalState.update("continue.indexingProgress", 0)
     context.globalState.update("continue.indexingDesc", "")
@@ -306,18 +291,14 @@ export class VsCodeExtension {
       dirs,
       this.indexingCancellationController.signal,
     )) {
-      if (update.indexingFailed) {
+      this.webviewProtocol.request("indexProgress", update);
+      if (update.failed) {
         err = update.desc
-
-        // Signal failure to front-end
-        this.webviewProtocol?.request("setIndexingFailed", {failed: true});
         context.globalState.update("continue.indexingFailed", true)
         break
       } else {
-      // Save progress
         context.globalState.update("continue.indexingProgress", update.progress)
         context.globalState.update("continue.indexingDesc", update.desc)
-        this.webviewProtocol.request("indexProgress", update);
       }
     }
 

@@ -74,7 +74,7 @@ export class CodebaseIndexer {
     try {
       await config.embeddingsProvider.embed(['sample text']);
     } catch (error) {
-      yield { progress: 1, desc: "Indexing failed while testing provider", indexingFailed: true };
+      yield { progress: 1, desc: "Indexing failed while testing provider", failed: true };
       return
     }
 
@@ -88,6 +88,7 @@ export class CodebaseIndexer {
     yield {
       progress: 0,
       desc: "Starting indexing...",
+      failed: false
     };
 
     for (let directory of workspaceDirs) {
@@ -122,7 +123,7 @@ export class CodebaseIndexer {
               yield {
                 progress: 1,
                 desc: "Indexing cancelled",
-                indexingFailed: true
+                failed: true
               };
               return;
             }
@@ -149,7 +150,7 @@ export class CodebaseIndexer {
           console.warn(
             `Error updating the ${codebaseIndex.artifactId} index: ${e}`,
           );
-          yield {progress: 1, desc: "error updating index"} 
+          yield {progress: 1, desc: "error updating index", failed: true} 
         }
       }
 
