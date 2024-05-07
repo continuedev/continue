@@ -25,6 +25,7 @@ import {
   constructAutocompletePrompt,
   languageForFilepath,
 } from "./constructPrompt";
+import { isOnlyPunctuationAndWhitespace } from "./filter";
 import { AutocompleteLanguageInfo } from "./languages";
 import {
   avoidPathLine,
@@ -53,6 +54,7 @@ export interface AutocompleteInput {
     text: string;
     range: Range;
   };
+  injectDetails?: string;
 }
 
 export interface AutocompleteOutcome extends TabAutocompleteOptions {
@@ -178,31 +180,51 @@ export async function getTabCompletion(
   }
 
   // Prompt
-  const fullPrefix =
+  let fullPrefix =
     getRangeInString(fileContents, {
       start: { line: 0, character: 0 },
       end: input.selectedCompletionInfo?.range.start ?? pos,
     }) + (input.selectedCompletionInfo?.text ?? "");
 
+  if (input.injectDetails) {
+    const lines = fullPrefix.split("\n");
+    fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
+      lang.comment
+    } ${input.injectDetails.split("\n").join(`\n${lang.comment} `)}\n${
+      lines[lines.length - 1]
+    }`;
+  }
+
   const fullSuffix = getRangeInString(fileContents, {
     start: pos,
     end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
   });
-  const lineBelowCursor =
-    fileLines[Math.min(pos.line + 1, fileLines.length - 1)];
 
-  let extrasSnippets = (await Promise.race([
-    getDefinitionsFromLsp(
-      filepath,
-      fullPrefix + fullSuffix,
-      fullPrefix.length,
-      ide,
-      lang,
-    ),
-    new Promise((resolve) => {
-      setTimeout(() => resolve([]), 100);
-    }),
-  ])) as AutocompleteSnippet[];
+  // First non-whitespace line below the cursor
+  let lineBelowCursor = "";
+  let i = 1;
+  while (
+    lineBelowCursor.trim() === "" &&
+    pos.line + i <= fileLines.length - 1
+  ) {
+    lineBelowCursor = fileLines[Math.min(pos.line + i, fileLines.length - 1)];
+    i++;
+  }
+
+  let extrasSnippets = options.useOtherFiles
+    ? ((await Promise.race([
+        getDefinitionsFromLsp(
+          filepath,
+          fullPrefix + fullSuffix,
+          fullPrefix.length,
+          ide,
+          lang,
+        ),
+        new Promise((resolve) => {
+          setTimeout(() => resolve([]), 100);
+        }),
+      ])) as AutocompleteSnippet[])
+    : [];
 
   const workspaceDirs = await ide.getWorkspaceDirs();
   if (options.onlyMyCode) {
