@@ -4,6 +4,7 @@ import { GetLspDefinitionsFunction } from "core/autocomplete/completionProvider"
 import { AutocompleteLanguageInfo } from "core/autocomplete/languages";
 import { AutocompleteSnippet } from "core/autocomplete/ranking";
 import { RangeInFileWithContents } from "core/commands/util";
+import { intersection } from "core/util/ranges";
 import * as vscode from "vscode";
 import Parser from "web-tree-sitter";
 
@@ -19,24 +20,134 @@ async function executeGotoProvider(
   character: number,
   name: GotoProviderName,
 ): Promise<RangeInFile[]> {
-  const definitions = (await vscode.commands.executeCommand(
-    name,
-    vscode.Uri.parse(uri),
-    new vscode.Position(line, character),
-  )) as any;
+  try {
+    const definitions = (await vscode.commands.executeCommand(
+      name,
+      vscode.Uri.parse(uri),
+      new vscode.Position(line, character),
+    )) as any;
 
-  return definitions
-    .filter((d: any) => (d.targetUri || d.uri) && (d.targetRange || d.range))
-    .map((d: any) => ({
-      filepath: (d.targetUri || d.uri).fsPath,
-      range: d.targetRange || d.range,
-    }));
+    return definitions
+      .filter((d: any) => (d.targetUri || d.uri) && (d.targetRange || d.range))
+      .map((d: any) => ({
+        filepath: (d.targetUri || d.uri).fsPath,
+        range: d.targetRange || d.range,
+      }));
+  } catch (e) {
+    console.warn(`Error executing ${name}:`, e);
+    return [];
+  }
 }
 
 function isRifWithContents(
   rif: RangeInFile | RangeInFileWithContents,
 ): rif is RangeInFileWithContents {
   return typeof (rif as any).contents === "string";
+}
+
+function findChildren(
+  node: Parser.SyntaxNode,
+  predicate: (n: Parser.SyntaxNode) => boolean,
+): Parser.SyntaxNode[] {
+  let matchingNodes: Parser.SyntaxNode[] = [];
+
+  // Check if the current node's type is in the list of types we're interested in
+  if (predicate(node)) {
+    matchingNodes.push(node);
+  }
+
+  // Recursively search for matching types in all children of the current node
+  for (const child of node.children) {
+    matchingNodes = matchingNodes.concat(findChildren(child, predicate));
+  }
+
+  return matchingNodes;
+}
+
+function findTypeIdentifiers(node: Parser.SyntaxNode): Parser.SyntaxNode[] {
+  return findChildren(
+    node,
+    (childNode) =>
+      childNode.type === "type_identifier" ||
+      (["ERROR"].includes(childNode.parent?.type ?? "") &&
+        childNode.type === "identifier" &&
+        childNode.text[0].toUpperCase() === childNode.text[0]),
+  );
+}
+
+async function crawlTypes(
+  rif: RangeInFile | RangeInFileWithContents,
+  ide: IDE,
+  depth: number,
+  results: RangeInFileWithContents[],
+  searchedLabels: Set<string>,
+): Promise<RangeInFileWithContents[]> {
+  // Get the file contents if not already attached
+  const contents = isRifWithContents(rif)
+    ? rif.contents
+    : await ide.readFile(rif.filepath);
+
+  // Parse AST
+  const ast = await getAst(rif.filepath, contents);
+  if (!ast) return results;
+  const astLineCount = ast.rootNode.text.split("\n").length;
+
+  // Find type identifiers
+  const identifierNodes = findTypeIdentifiers(ast.rootNode).filter(
+    (node) => !searchedLabels.has(node.text),
+  );
+  // Don't search for the same type definition more than once
+  // We deduplicate below to be sure, but this saves calls to the LSP
+  identifierNodes.forEach((node) => searchedLabels.add(node.text));
+
+  // Use LSP to get the definitions of those types
+  const definitions = await Promise.all(
+    identifierNodes.map(async (node) => {
+      const [typeDef] = await executeGotoProvider(
+        rif.filepath,
+        // TODO: tree-sitter is zero-indexed, but there seems to be an off-by-one
+        // error at least with the .ts parser sometimes
+        rif.range.start.line +
+          Math.min(node.startPosition.row, astLineCount - 1),
+        rif.range.start.character + node.startPosition.column,
+        "vscode.executeDefinitionProvider",
+      );
+
+      if (!typeDef) {
+        return undefined;
+      }
+      return {
+        ...typeDef,
+        contents: await ide.readRangeInFile(typeDef.filepath, typeDef.range),
+      };
+    }),
+  );
+
+  // TODO: Filter out if not in our code?
+
+  // Filter out duplicates
+  for (const definition of definitions) {
+    if (
+      !definition ||
+      results.some(
+        (result) =>
+          result.filepath === definition.filepath &&
+          intersection(result.range, definition.range) !== null,
+      )
+    ) {
+      continue; // ;)
+    }
+    results.push(definition);
+  }
+
+  // Recurse
+  if (depth > 0) {
+    for (const result of [...results]) {
+      await crawlTypes(result, ide, depth - 1, results, searchedLabels);
+    }
+  }
+
+  return results;
 }
 
 export async function getDefinitionsForNode(
@@ -65,18 +176,40 @@ export async function getDefinitionsForNode(
       // impl of trait -> trait definition
       break;
     case "new_expression":
+      // In 'new MyClass(...)', "MyClass" is the classNameNode
+      const classNameNode = node.children.find(
+        (child) => child.type === "identifier",
+      );
       const [classDef] = await executeGotoProvider(
         uri,
-        node.endPosition.row,
-        node.endPosition.column,
+        (classNameNode ?? node).endPosition.row,
+        (classNameNode ?? node).endPosition.column,
         "vscode.executeDefinitionProvider",
       );
+      if (!classDef) {
+        break;
+      }
+      const contents = await ide.readRangeInFile(
+        classDef.filepath,
+        classDef.range,
+      );
+
       ranges.push({
         ...classDef,
-        contents: `${lang.comment} ${node.text}:\n${(
-          await ide.readRangeInFile(classDef.filepath, classDef.range)
-        ).trim()}`,
+        contents: `${
+          classNameNode?.text ? `${lang.comment} ${classNameNode.text}:\n` : ""
+        }${contents.trim()}`,
       });
+
+      const definitions = await crawlTypes(
+        { ...classDef, contents },
+        ide,
+        1,
+        [],
+        new Set(),
+      );
+      ranges.push(...definitions.filter(Boolean));
+
       break;
     case "":
       // function definition -> implementations?
