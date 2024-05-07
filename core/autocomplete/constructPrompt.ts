@@ -19,6 +19,7 @@ import {
   rankSnippets,
   removeRangeFromSnippets,
 } from "./ranking";
+import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited";
 
 export function languageForFilepath(
   filepath: string,
@@ -146,6 +147,7 @@ export async function constructAutocompletePrompt(
         options.slidingWindowSize * (1 - options.slidingWindowPrefixPercentage),
       );
 
+    // This was much too slow, and not super useful
     // const slidingWindowMatches = await slidingWindowMatcher(
     //   recentlyEditedFiles,
     //   windowAroundCursor,
@@ -154,22 +156,38 @@ export async function constructAutocompletePrompt(
     // );
     // snippets.push(...slidingWindowMatches);
 
-    const recentlyEdited = (
-      await Promise.all(
-        recentlyEditedRanges.map(async (r) => {
-          return r;
-          // return await getScopeAroundRange(r);
-        }),
-      )
-    ).filter((s) => !!s);
-    snippets.push(...(recentlyEdited as any));
+    // snippets.push(
+    //   ...recentlyEditedRanges.map((r) => ({
+    //     ...r,
+    //     contents: r.lines.join("\n"),
+    //   })),
+    // );
 
-    // Filter out empty snippets
-    snippets = snippets.filter(
-      (s) =>
-        s.contents.trim() !== "" &&
-        !(prefix + suffix).includes(s.contents.trim()),
-    );
+    if (options.useRecentlyEdited) {
+      const currentLinePrefix = prefix.trim().split("\n").slice(-1)[0];
+      if (currentLinePrefix?.length > options.recentLinePrefixMatchMinLength) {
+        const matchingRange = findMatchingRange(
+          recentlyEditedRanges,
+          currentLinePrefix,
+        );
+        if (matchingRange) {
+          snippets.push({
+            ...matchingRange,
+            contents: matchingRange.lines.join("\n"),
+            score: 0.8,
+          });
+        }
+      }
+    }
+
+    // Filter out empty snippets and ones that are already in the prefix/suffix
+    snippets = snippets
+      .map((snippet) => ({ ...snippet }))
+      .filter(
+        (s) =>
+          s.contents.trim() !== "" &&
+          !(prefix + suffix).includes(s.contents.trim()),
+      );
 
     // Rank / order the snippets
     const scoredSnippets = rankSnippets(snippets, windowAroundCursor);

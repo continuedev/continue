@@ -715,6 +715,8 @@ export interface TabAutocompleteOptions {
   useCache: boolean;
   onlyMyCode: boolean;
   useOtherFiles: boolean;
+  useRecentlyEdited: boolean;
+  recentLinePrefixMatchMinLength: number;
   disableInFiles?: string[];
 }
 

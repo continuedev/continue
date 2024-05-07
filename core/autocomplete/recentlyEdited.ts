@@ -1,4 +1,4 @@
-import type { RangeInFileWithContents } from "../commands/util";
+import { RangeInFile } from "..";
 
 export type RecentlyEditedRange = RangeInFile & {
   timestamp: number;

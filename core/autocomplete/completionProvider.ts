@@ -35,7 +35,8 @@ import {
   stopAtSimilarLine,
   streamWithNewLines,
 } from "./lineStream";
-import type { AutocompleteSnippet } from "./ranking";
+import { AutocompleteSnippet } from "./ranking";
+import { RecentlyEditedRange } from "./recentlyEdited";
 import { getTemplateForModel } from "./templates";
 import { GeneratorReuseManager } from "./util";
 

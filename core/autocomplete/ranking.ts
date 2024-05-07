@@ -218,9 +218,9 @@ export function removeRangeFromSnippets(
   snippets: Required<AutocompleteSnippet>[],
   filepath: string,
   range: Range,
-): AutocompleteSnippet[] {
-  const finalSnippets: AutocompleteSnippet[] = [];
-  for (const snippet of snippets) {
+): Required<AutocompleteSnippet>[] {
+  const finalSnippets: Required<AutocompleteSnippet>[] = [];
+  for (let snippet of snippets) {
     if (snippet.filepath !== filepath) {
       finalSnippets.push(snippet);
       continue;

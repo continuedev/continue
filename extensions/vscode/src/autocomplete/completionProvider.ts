@@ -187,7 +187,8 @@ export class ContinueCompletionProvider
         filepath: document.uri.fsPath,
         pos,
         recentlyEditedFiles: [],
-        recentlyEditedRanges: [],
+        recentlyEditedRanges:
+          await this.recentlyEditedTracker.getRecentlyEditedRanges(),
         clipboardText: clipboardText,
         manuallyPassFileContents,
         manuallyPassPrefix,
