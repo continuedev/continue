@@ -4,6 +4,10 @@ import { GetLspDefinitionsFunction } from "core/autocomplete/completionProvider"
 import { AutocompleteLanguageInfo } from "core/autocomplete/languages";
 import { AutocompleteSnippet } from "core/autocomplete/ranking";
 import { RangeInFileWithContents } from "core/commands/util";
+import {
+  FUNCTION_BLOCK_NODE_TYPES,
+  FUNCTION_DECLARATION_NODE_TYPEs,
+} from "core/indexing/chunk/code";
 import { intersection } from "core/util/ranges";
 import * as vscode from "vscode";
 import Parser from "web-tree-sitter";
@@ -48,8 +52,13 @@ function isRifWithContents(
 function findChildren(
   node: Parser.SyntaxNode,
   predicate: (n: Parser.SyntaxNode) => boolean,
+  firstN?: number,
 ): Parser.SyntaxNode[] {
   let matchingNodes: Parser.SyntaxNode[] = [];
+
+  if (firstN && firstN <= 0) {
+    return [];
+  }
 
   // Check if the current node's type is in the list of types we're interested in
   if (predicate(node)) {
@@ -58,7 +67,13 @@ function findChildren(
 
   // Recursively search for matching types in all children of the current node
   for (const child of node.children) {
-    matchingNodes = matchingNodes.concat(findChildren(child, predicate));
+    matchingNodes = matchingNodes.concat(
+      findChildren(
+        child,
+        predicate,
+        firstN ? firstN - matchingNodes.length : undefined,
+      ),
+    );
   }
 
   return matchingNodes;
@@ -78,9 +93,9 @@ function findTypeIdentifiers(node: Parser.SyntaxNode): Parser.SyntaxNode[] {
 async function crawlTypes(
   rif: RangeInFile | RangeInFileWithContents,
   ide: IDE,
-  depth: number,
-  results: RangeInFileWithContents[],
-  searchedLabels: Set<string>,
+  depth: number = 1,
+  results: RangeInFileWithContents[] = [],
+  searchedLabels: Set<string> = new Set(),
 ): Promise<RangeInFileWithContents[]> {
   // Get the file contents if not already attached
   const contents = isRifWithContents(rif)
@@ -160,13 +175,57 @@ export async function getDefinitionsForNode(
   switch (node.type) {
     case "call_expression":
       // function call -> function definition
-      const funDefs = await executeGotoProvider(
+      const [funDef] = await executeGotoProvider(
         uri,
         node.startPosition.row,
         node.startPosition.column,
         "vscode.executeDefinitionProvider",
       );
-      ranges.push(...funDefs);
+      if (!funDef) {
+        return [];
+      }
+
+      // Don't display a function of more than 15 lines
+      // We can of course do something smarter here eventually
+      let funcText = await ide.readRangeInFile(funDef.filepath, funDef.range);
+      if (funcText.split("\n").length > 15) {
+        let truncated = false;
+        const funRootAst = await getAst(funDef.filepath, funcText);
+        if (funRootAst) {
+          const [funNode] = findChildren(
+            funRootAst?.rootNode,
+            (node) => FUNCTION_DECLARATION_NODE_TYPEs.includes(node.type),
+            1,
+          );
+          if (funNode) {
+            const [statementBlockNode] = findChildren(
+              funNode,
+              (node) => FUNCTION_BLOCK_NODE_TYPES.includes(node.type),
+              1,
+            );
+            if (statementBlockNode) {
+              funcText = funRootAst.rootNode.text
+                .slice(0, statementBlockNode.startIndex)
+                .trim();
+              truncated = true;
+            }
+          }
+        }
+        if (!truncated) {
+          funcText = funcText.split("\n")[0];
+        }
+      }
+
+      ranges.push(funDef);
+
+      const typeDefs = await crawlTypes(
+        {
+          ...funDef,
+          contents: funcText,
+        },
+        ide,
+      );
+      ranges.push(...typeDefs);
       break;
     case "variable_declarator":
       // variable assignment -> variable definition/type
@@ -201,13 +260,7 @@ export async function getDefinitionsForNode(
         }${contents.trim()}`,
       });
 
-      const definitions = await crawlTypes(
-        { ...classDef, contents },
-        ide,
-        1,
-        [],
-        new Set(),
-      );
+      const definitions = await crawlTypes({ ...classDef, contents }, ide);
       ranges.push(...definitions.filter(Boolean));
 
       break;
