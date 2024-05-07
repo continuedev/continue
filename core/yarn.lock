@@ -633,10 +633,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@lancedb/vectordb-darwin-arm64@0.4.12":
-  version "0.4.12"
-  resolved "https://registry.npmjs.org/@lancedb/vectordb-darwin-arm64/-/vectordb-darwin-arm64-0.4.12.tgz"
-  integrity sha512-38/rkJRlWXkPWXuj9onzvbrhnIWcIUQjgEp5G9v5ixPosBowm7A4j8e2Q8CJMsVSNcVX2JLqwWVldiWegZFuYw==
+"@lancedb/vectordb-darwin-arm64@0.4.19":
+  version "0.4.19"
+  resolved "https://registry.npmjs.org/@lancedb/vectordb-darwin-arm64/-/vectordb-darwin-arm64-0.4.19.tgz"
+  integrity sha512-xVxFuRzxUxVDz2dkTfAqV3fQQSSF3l6NFifO7xQ3SkUIxPWpf8JgcsBIbld9cCPbxxTN+wziMh/hxGE2kShLug==
 
 "@mozilla/readability@^0.5.0":
   version "0.5.0"
@@ -5731,19 +5731,19 @@ v8-to-istanbul@^9.0.1:
     "@types/istanbul-lib-coverage" "^2.0.1"
     convert-source-map "^2.0.0"
 
-vectordb@0.4.12:
-  version "0.4.12"
-  resolved "https://registry.npmjs.org/vectordb/-/vectordb-0.4.12.tgz"
-  integrity sha512-H2mFwZ87d3BcuX4yGx5RoW06amRZQ3W5u/FRTNc86rwVINuEEa+Ivsqng1i8hURHXoTDbF/0Y9qwCshySkeznQ==
+vectordb@^0.4.12:
+  version "0.4.19"
+  resolved "https://registry.npmjs.org/vectordb/-/vectordb-0.4.19.tgz"
+  integrity sha512-pv3wJPw3FyKNUGYISTHWjkhn02B2M4uaJNjV1vvSmOKYah3+pFccED5GfhcjPPkyj8jqbpZJKV0Dep9mSDOT2A==
   dependencies:
     "@neon-rs/load" "^0.0.74"
     axios "^1.4.0"
   optionalDependencies:
-    "@lancedb/vectordb-darwin-arm64" "0.4.12"
-    "@lancedb/vectordb-darwin-x64" "0.4.12"
-    "@lancedb/vectordb-linux-arm64-gnu" "0.4.12"
-    "@lancedb/vectordb-linux-x64-gnu" "0.4.12"
-    "@lancedb/vectordb-win32-x64-msvc" "0.4.12"
+    "@lancedb/vectordb-darwin-arm64" "0.4.19"
+    "@lancedb/vectordb-darwin-x64" "0.4.19"
+    "@lancedb/vectordb-linux-arm64-gnu" "0.4.19"
+    "@lancedb/vectordb-linux-x64-gnu" "0.4.19"
+    "@lancedb/vectordb-win32-x64-msvc" "0.4.19"
 
 verror@1.10.0:
   version "1.10.0"
