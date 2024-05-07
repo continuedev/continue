@@ -149,7 +149,8 @@ function InputToolbar(props: InputToolbarProps) {
             padding: "2px 4px",
           }}
         >
-          {getAltKeyLabel()} ⏎ No context
+          {getAltKeyLabel()} ⏎{" "}
+          {useActiveFile ? "No context" : "Use active file"}
         </span>
       ) : (
         isJetBrains() || (
@@ -165,7 +166,7 @@ function InputToolbar(props: InputToolbarProps) {
             onClick={(e) => {
               props.onEnter({
                 useCodebase: true,
-                noContext: false,
+                noContext: !useActiveFile,
               });
             }}
             className={"hover:underline cursor-pointer float-right"}
@@ -174,7 +175,6 @@ function InputToolbar(props: InputToolbarProps) {
           </span>
         )
       )}
-
       <EnterButton
         offFocus={props.usingCodebase}
         // disabled={
@@ -185,7 +185,7 @@ function InputToolbar(props: InputToolbarProps) {
         onClick={(e) => {
           props.onEnter({
             useCodebase: isMetaEquivalentKeyPressed(e),
-            noContext: e.altKey,
+            noContext: useActiveFile ? e.altKey : !e.altKey,
           });
         }}
       >

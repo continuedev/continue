@@ -270,17 +270,26 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return false;
               }
 
-              onEnterRef.current({ useCodebase: false, noContext: false });
+              onEnterRef.current({
+                useCodebase: false,
+                noContext: !useActiveFile,
+              });
               return true;
             },
 
             "Cmd-Enter": () => {
-              onEnterRef.current({ useCodebase: true, noContext: false });
+              onEnterRef.current({
+                useCodebase: true,
+                noContext: !useActiveFile,
+              });
               return true;
             },
 
             "Alt-Enter": () => {
-              onEnterRef.current({ useCodebase: false, noContext: true });
+              onEnterRef.current({
+                useCodebase: false,
+                noContext: useActiveFile,
+              });
               return true;
             },
             "Cmd-Backspace": () => {

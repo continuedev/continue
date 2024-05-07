@@ -759,6 +759,7 @@ interface ModelRoles {
 interface ExperimantalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
+  defaultContext?: "activeFile"[];
 }
 
 export interface SerializedContinueConfig {
