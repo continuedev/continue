@@ -326,7 +326,7 @@ export async function getTabCompletion(
       ...(llm.model.toLowerCase().includes("starcoder2")
         ? STARCODER2_T_ARTIFACTS
         : []),
-      ...lang.stopWords,
+      ...lang.stopWords.map((word) => `\n${word}`),
     ];
 
     const multiline =
