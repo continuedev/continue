@@ -531,6 +531,11 @@ export class CompletionProvider {
         return undefined;
       }
 
+      // Filter out unwanted results
+      if (isOnlyPunctuationAndWhitespace(outcome.completion)) {
+        return undefined;
+      }
+
       // Do some stuff later so as not to block return. Latency matters
       const completionToCache = outcome.completion;
       setTimeout(async () => {
