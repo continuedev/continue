@@ -267,7 +267,11 @@ const Layout = () => {
               <HeaderButtonWithText
                 text="Help"
                 onClick={() => {
-                  navigate("/help");
+                  if (location.pathname === "/help") {
+                    navigate("/");
+                  } else {
+                    navigate("/help");
+                  }
                 }}
               >
                 <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
