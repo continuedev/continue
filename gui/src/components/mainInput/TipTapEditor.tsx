@@ -30,6 +30,7 @@ import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   consumeMainEditorContent,
@@ -140,6 +141,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const historyLength = useSelector(
     (store: RootState) => store.state.history.length,
   );
+  const useActiveFile = useSelector(selectUseActiveFile);
 
   const [inputFocused, setInputFocused] = useState(false);
 
@@ -263,17 +265,26 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return false;
               }
 
-              onEnterRef.current({ useCodebase: false, noContext: false });
+              onEnterRef.current({
+                useCodebase: false,
+                noContext: !useActiveFile,
+              });
               return true;
             },
 
             "Cmd-Enter": () => {
-              onEnterRef.current({ useCodebase: true, noContext: false });
+              onEnterRef.current({
+                useCodebase: true,
+                noContext: !useActiveFile,
+              });
               return true;
             },
 
             "Alt-Enter": () => {
-              onEnterRef.current({ useCodebase: false, noContext: true });
+              onEnterRef.current({
+                useCodebase: false,
+                noContext: useActiveFile,
+              });
               return true;
             },
             "Cmd-Backspace": () => {

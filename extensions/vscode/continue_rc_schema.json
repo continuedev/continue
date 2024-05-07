@@ -2205,6 +2205,14 @@
           "title": "Experimental",
           "description": "Experimental properties are subject to change.",
           "properties": {
+            "defaultContext": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "activeFile"
+                ]
+              }
+            },
             "modelRoles": {
               "type": "object",
               "properties": {

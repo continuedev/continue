@@ -387,6 +387,7 @@ function finalToBrowserConfig(
     userToken: final.userToken,
     embeddingsProvider: final.embeddingsProvider?.id,
     ui: final.ui,
+    experimental: final.experimental,
   };
 }
 
