@@ -18,25 +18,50 @@ type GotoProviderName =
   | "vscode.executeDeclarationProvider"
   | "vscode.executeImplementationProvider"
   | "vscode.executeReferenceProvider";
-async function executeGotoProvider(
-  uri: string,
-  line: number,
-  character: number,
-  name: GotoProviderName,
-): Promise<RangeInFile[]> {
+
+interface GotoInput {
+  uri: string;
+  line: number;
+  character: number;
+  name: GotoProviderName;
+}
+function gotoInputKey(input: GotoInput) {
+  return `${input.name}${input.uri.toString}${input.line}${input.character}`;
+}
+
+const MAX_CACHE_SIZE = 50;
+const gotoCache = new Map<string, RangeInFile[]>();
+
+async function executeGotoProvider(input: GotoInput): Promise<RangeInFile[]> {
+  const cacheKey = gotoInputKey(input);
+  const cached = gotoCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   try {
     const definitions = (await vscode.commands.executeCommand(
-      name,
-      vscode.Uri.parse(uri),
-      new vscode.Position(line, character),
+      input.name,
+      vscode.Uri.parse(input.uri),
+      new vscode.Position(input.line, input.character),
     )) as any;
 
-    return definitions
+    const results = definitions
       .filter((d: any) => (d.targetUri || d.uri) && (d.targetRange || d.range))
       .map((d: any) => ({
         filepath: (d.targetUri || d.uri).fsPath,
         range: d.targetRange || d.range,
       }));
+
+    // Add to cache
+    if (gotoCache.size >= MAX_CACHE_SIZE) {
+      // Remove the oldest item from the cache
+      const oldestKey = gotoCache.keys().next().value;
+      gotoCache.delete(oldestKey);
+    }
+    gotoCache.set(cacheKey, results);
+
+    return results;
   } catch (e) {
     console.warn(`Error executing ${name}:`, e);
     return [];
@@ -118,15 +143,16 @@ async function crawlTypes(
   // Use LSP to get the definitions of those types
   const definitions = await Promise.all(
     identifierNodes.map(async (node) => {
-      const [typeDef] = await executeGotoProvider(
-        rif.filepath,
+      const [typeDef] = await executeGotoProvider({
+        uri: rif.filepath,
         // TODO: tree-sitter is zero-indexed, but there seems to be an off-by-one
         // error at least with the .ts parser sometimes
-        rif.range.start.line +
+        line:
+          rif.range.start.line +
           Math.min(node.startPosition.row, astLineCount - 1),
-        rif.range.start.character + node.startPosition.column,
-        "vscode.executeDefinitionProvider",
-      );
+        character: rif.range.start.character + node.startPosition.column,
+        name: "vscode.executeDefinitionProvider",
+      });
 
       if (!typeDef) {
         return undefined;
@@ -175,12 +201,12 @@ export async function getDefinitionsForNode(
   switch (node.type) {
     case "call_expression":
       // function call -> function definition
-      const [funDef] = await executeGotoProvider(
+      const [funDef] = await executeGotoProvider({
         uri,
-        node.startPosition.row,
-        node.startPosition.column,
-        "vscode.executeDefinitionProvider",
-      );
+        line: node.startPosition.row,
+        character: node.startPosition.column,
+        name: "vscode.executeDefinitionProvider",
+      });
       if (!funDef) {
         return [];
       }
@@ -239,12 +265,12 @@ export async function getDefinitionsForNode(
       const classNameNode = node.children.find(
         (child) => child.type === "identifier",
       );
-      const [classDef] = await executeGotoProvider(
+      const [classDef] = await executeGotoProvider({
         uri,
-        (classNameNode ?? node).endPosition.row,
-        (classNameNode ?? node).endPosition.column,
-        "vscode.executeDefinitionProvider",
-      );
+        line: (classNameNode ?? node).endPosition.row,
+        character: (classNameNode ?? node).endPosition.column,
+        name: "vscode.executeDefinitionProvider",
+      });
       if (!classDef) {
         break;
       }
