@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { getDefinitionsFromLsp } from "./lsp";
+import { RecentlyEditedTracker } from "./recentlyEdited";
 import { setupStatusBar, stopStatusBarLoading } from "./statusBar";
 
 interface VsCodeCompletionInput {
@@ -39,6 +40,7 @@ export class ContinueCompletionProvider
   }
 
   private completionProvider: CompletionProvider;
+  private recentlyEditedTracker = new RecentlyEditedTracker();
 
   constructor(
     private readonly configHandler: ConfigHandler,
@@ -184,7 +186,8 @@ export class ContinueCompletionProvider
         filepath: document.uri.fsPath,
         pos,
         recentlyEditedFiles: [],
-        recentlyEditedRanges: [],
+        recentlyEditedRanges:
+          await this.recentlyEditedTracker.getRecentlyEditedRanges(),
         clipboardText: clipboardText,
         manuallyPassFileContents,
         manuallyPassPrefix,

@@ -36,6 +36,7 @@ import {
   streamWithNewLines,
 } from "./lineStream";
 import { AutocompleteSnippet } from "./ranking";
+import { RecentlyEditedRange } from "./recentlyEdited";
 import { getTemplateForModel } from "./templates";
 import { GeneratorReuseManager } from "./util";
 
@@ -44,7 +45,7 @@ export interface AutocompleteInput {
   filepath: string;
   pos: Position;
   recentlyEditedFiles: RangeInFileWithContents[];
-  recentlyEditedRanges: RangeInFileWithContents[];
+  recentlyEditedRanges: RecentlyEditedRange[];
   clipboardText: string;
   // Used for notebook files
   manuallyPassFileContents?: string;
