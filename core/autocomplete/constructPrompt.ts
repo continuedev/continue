@@ -61,6 +61,17 @@ async function shouldCompleteMultiline(
   fullSuffix: string,
   language: AutocompleteLanguageInfo,
 ): Promise<boolean> {
+  // Don't complete multi-line for single-line comments
+  if (
+    fullPrefix
+      .split("\n")
+      .slice(-1)[0]
+      ?.trimStart()
+      .startsWith(language.comment)
+  ) {
+    return false;
+  }
+
   // First, if the line before ends with an opening bracket, then assume multi-line
   if (
     ["{", "(", "["].includes(
