@@ -279,7 +279,6 @@ function TipTapEditor(props: TipTapEditorProps) {
               });
               return true;
             },
-
             "Alt-Enter": () => {
               onEnterRef.current({
                 useCodebase: false,

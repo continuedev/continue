@@ -176,7 +176,7 @@ export async function getTabCompletion(
   ) {
     shownGptClaudeWarning = true;
     throw new Error(
-      `Warning: ${llm.model} is not trained for tab-autocomplete, and may result in low-quality suggestions. See the docs for our recommended models: https://docs.continue.dev/setup/select-model#autocomplete`,
+      `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/walkthroughs/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
     );
   }
 
