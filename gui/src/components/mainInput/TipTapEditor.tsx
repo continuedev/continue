@@ -439,12 +439,15 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (event.metaKey && event.key === "x") {
         document.execCommand("cut");
         event.stopPropagation();
+        event.preventDefault();
       } else if (event.metaKey && event.key === "v") {
         document.execCommand("paste");
         event.stopPropagation();
+        event.preventDefault();
       } else if (event.metaKey && event.key === "c") {
         document.execCommand("copy");
         event.stopPropagation();
+        event.preventDefault();
       }
     };
 
