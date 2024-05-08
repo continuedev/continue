@@ -412,6 +412,13 @@ export class CompletionProvider {
 
   private onError(e: any) {
     console.warn("Error generating autocompletion: ", e);
+    if (
+      ERRORS_TO_IGNORE.some((err) =>
+        typeof e === "string" ? e.includes(err) : e?.message?.includes(err),
+      )
+    ) {
+      return;
+    }
     if (!this.errorsShown.has(e.message)) {
       this.errorsShown.add(e.message);
       this._onError(e);

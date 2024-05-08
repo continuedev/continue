@@ -1,5 +1,6 @@
 import { createSelector } from "@reduxjs/toolkit";
 import { ComboBoxItemType } from "../../components/mainInput/types";
+import { isPrerelease } from "../../util/ide";
 import { RootState } from "../store";
 
 export const selectSlashCommands = createSelector(
@@ -26,5 +27,7 @@ export const selectContextProviderDescriptions = createSelector(
 
 export const selectUseActiveFile = createSelector(
   [(store: RootState) => store.state.config.experimental?.defaultContext],
-  (defaultContext) => !defaultContext || defaultContext?.includes("activeFile"),
+  (defaultContext) =>
+    isPrerelease() &&
+    (!defaultContext || defaultContext?.includes("activeFile")),
 );
