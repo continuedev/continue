@@ -1,22 +1,32 @@
 package com.github.continuedev.continueintellijextension.toolWindow
 
 import com.github.continuedev.continueintellijextension.activities.showTutorial
+import com.github.continuedev.continueintellijextension.activities.ContinuePluginStartupActivity
 import com.github.continuedev.continueintellijextension.constants.getConfigJsonPath
+import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.factories.CustomSchemeHandlerFactory
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
+import com.intellij.openapi.util.io.StreamUtil
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.ui.jcef.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import org.cef.CefApp
 import org.cef.browser.CefBrowser
 import org.cef.handler.CefLoadHandlerAdapter
+import java.io.File
+import java.io.IOException
+import java.nio.charset.StandardCharsets
+import java.nio.file.Paths
 
 class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false) {
     private val heightChangeListeners = mutableListOf<(Int) -> Unit>()
