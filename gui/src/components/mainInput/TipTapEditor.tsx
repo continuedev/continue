@@ -38,11 +38,8 @@ import {
   setEditingContextItemAtIndex,
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
-import {
-  isJetBrains,
-  isMetaEquivalentKeyPressed,
-  isPrerelease,
-} from "../../util";
+import { isMetaEquivalentKeyPressed } from "../../util";
+import { isJetBrains, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -428,7 +425,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   });
 
   useEffect(() => {
-    if (isJetBrains() || !isPrerelease()) {
+    if (isJetBrains()) {
       // This is only for VS Code .ipynb files
       return;
     }
