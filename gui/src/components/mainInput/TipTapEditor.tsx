@@ -30,6 +30,7 @@ import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   consumeMainEditorContent,
@@ -37,7 +38,7 @@ import {
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
 import { isMetaEquivalentKeyPressed } from "../../util";
-import { isJetBrains, isPrerelease, postToIde } from "../../util/ide";
+import { isJetBrains, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -140,6 +141,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const historyLength = useSelector(
     (store: RootState) => store.state.history.length,
   );
+  const useActiveFile = useSelector(selectUseActiveFile);
 
   const [inputFocused, setInputFocused] = useState(false);
 
@@ -263,12 +265,25 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return false;
               }
 
-              onEnterRef.current({ useCodebase: false });
+              onEnterRef.current({
+                useCodebase: false,
+                noContext: !useActiveFile,
+              });
               return true;
             },
 
             "Cmd-Enter": () => {
-              onEnterRef.current({ useCodebase: true });
+              onEnterRef.current({
+                useCodebase: true,
+                noContext: !useActiveFile,
+              });
+              return true;
+            },
+            "Alt-Enter": () => {
+              onEnterRef.current({
+                useCodebase: false,
+                noContext: useActiveFile,
+              });
               return true;
             },
             "Cmd-Backspace": () => {
@@ -406,7 +421,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   });
 
   useEffect(() => {
-    if (isJetBrains() || !isPrerelease()) {
+    if (isJetBrains()) {
       // This is only for VS Code .ipynb files
       return;
     }
@@ -417,12 +432,15 @@ function TipTapEditor(props: TipTapEditorProps) {
       if (event.metaKey && event.key === "x") {
         document.execCommand("cut");
         event.stopPropagation();
+        event.preventDefault();
       } else if (event.metaKey && event.key === "v") {
         document.execCommand("paste");
         event.stopPropagation();
+        event.preventDefault();
       } else if (event.metaKey && event.key === "c") {
         document.execCommand("copy");
         event.stopPropagation();
+        event.preventDefault();
       }
     };
 
@@ -500,7 +518,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         return;
       }
       editor?.commands.insertContent(data.input);
-      onEnterRef.current({ useCodebase: false });
+      onEnterRef.current({ useCodebase: false, noContext: true });
     },
     [editor, onEnterRef.current, props.isMainInput],
   );
@@ -643,8 +661,20 @@ function TipTapEditor(props: TipTapEditorProps) {
     };
   }, []);
 
+  const [optionKeyHeld, setOptionKeyHeld] = useState(false);
+
   return (
     <InputBoxDiv
+      onKeyDown={(e) => {
+        if (e.key === "Alt") {
+          setOptionKeyHeld(true);
+        }
+      }}
+      onKeyUp={(e) => {
+        if (e.key === "Alt") {
+          setOptionKeyHeld(false);
+        }
+      }}
       className="cursor-text"
       onClick={() => {
         editor && editor.commands.focus();
@@ -703,6 +733,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         }}
       />
       <InputToolbar
+        showNoContext={optionKeyHeld}
         hidden={!(inputFocused || props.isMainInput)}
         onAddContextItem={() => {
           if (editor.getText().endsWith("@")) {

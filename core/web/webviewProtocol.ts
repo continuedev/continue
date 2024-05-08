@@ -41,6 +41,7 @@ export type IdeProtocol = {
   getProblems: [{ filepath: string }, Problem[]];
   getBranch: [{ dir: string }, string];
   getOpenFiles: [undefined, string[]];
+  getCurrentFile: [undefined, string | undefined];
   getPinnedFiles: [undefined, string[]];
   showLines: [{ filepath: string; startLine: number; endLine: number }, void];
   readRangeInFile: [{ filepath: string; range: Range }, string];

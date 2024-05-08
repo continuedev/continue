@@ -9,7 +9,10 @@ import {
 } from "../../autocomplete/lineStream";
 import { streamLines } from "../../diff/util";
 import { stripImages } from "../../llm/countTokens";
-import { dedentAndGetCommonWhitespace, getMarkdownLanguageTagForFile } from "../../util";
+import {
+  dedentAndGetCommonWhitespace,
+  getMarkdownLanguageTagForFile,
+} from "../../util";
 import {
   RangeInFileWithContents,
   contextItemToRangeInFileWithContents,
@@ -238,6 +241,8 @@ const EditSlashCommand: SlashCommand = {
           part.text = part.text.replace("/edit", "").trimStart();
         }
       });
+    } else {
+      content = input.replace("/edit", "").trimStart();
     }
     let userInput = stripImages(content).replace(
       `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,

@@ -831,7 +831,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
   gemini: {
     title: "Google Gemini API",
     provider: "gemini",
-    refPage: "googlepalmapi",
+    refPage: "geminiapi",
     description:
       "Try out Google's state-of-the-art Gemini model from their API.",
     longDescription: `To get started with Google Gemini API, obtain your API key from [here](https://ai.google.dev/tutorials/workspace_auth_quickstart) and paste it below.`,
@@ -944,7 +944,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     refPage: "llamacpp",
     description: "If you are running the llama.cpp server from source",
     longDescription: `llama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:
-    
+
 1. Clone the repository with \`git clone https://github.com/ggerganov/llama.cpp\`.
 2. \`cd llama.cpp\`
 3. Run \`make\` to build the server.

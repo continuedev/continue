@@ -108,6 +108,8 @@ const ItemsDiv = styled.div`
     0px 10px 20px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
   overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 330px;
   padding: 0.2rem;
   position: relative;
 

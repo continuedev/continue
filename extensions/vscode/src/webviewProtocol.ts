@@ -272,6 +272,9 @@ export class VsCodeWebviewProtocol {
     this.on("getOpenFiles", async (msg) => {
       return await ide.getOpenFiles();
     });
+    this.on("getCurrentFile", async (msg) => {
+      return await ide.getCurrentFile();
+    });
     this.on("getPinnedFiles", async (msg) => {
       return await ide.getPinnedFiles();
     });
@@ -362,7 +365,14 @@ export class VsCodeWebviewProtocol {
       while (!next.done) {
         if (protocol.abortedMessageIds.has(msg.messageId)) {
           protocol.abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
+          next = await gen.return({
+            completion: "",
+            prompt: "",
+            completionOptions: {
+              ...msg.data.completionOptions,
+              model: model.model,
+            },
+          });
           break;
         }
         yield { content: next.value };
@@ -386,7 +396,14 @@ export class VsCodeWebviewProtocol {
       while (!next.done) {
         if (protocol.abortedMessageIds.has(msg.messageId)) {
           protocol.abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
+          next = await gen.return({
+            completion: "",
+            prompt: "",
+            completionOptions: {
+              ...msg.data.completionOptions,
+              model: model.model,
+            },
+          });
           break;
         }
         yield { content: next.value.content };

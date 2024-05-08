@@ -96,6 +96,14 @@ function collapseChildren(
   return code;
 }
 
+export const FUNCTION_BLOCK_NODE_TYPES = ["block", "statement_block"];
+export const FUNCTION_DECLARATION_NODE_TYPEs = [
+  "method_definition",
+  "function_definition",
+  "function_item",
+  "function_declaration",
+];
+
 function constructClassDefinitionChunk(
   node: SyntaxNode,
   code: string,
@@ -105,8 +113,8 @@ function constructClassDefinitionChunk(
     node,
     code,
     ["block", "class_body", "declaration_list"],
-    ["method_definition", "function_definition", "function_item"],
-    ["block", "statement_block"],
+    FUNCTION_DECLARATION_NODE_TYPEs,
+    FUNCTION_BLOCK_NODE_TYPES,
     maxChunkSize,
   );
 }

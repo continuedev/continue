@@ -19,7 +19,7 @@
   "license": "Apache-2.0",
   "displayName": "Continue - Llama 3, GPT-4, and more",
   "pricing": "Free",
-  "description": "Open-source autopilot for software development - bring the power of ChatGPT to your IDE",
+  "description": "Open-source autopilot - build your own AI software development system",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.70.0",
@@ -542,7 +542,7 @@
     "tailwindcss": "^3.3.2",
     "undici": "^6.2.0",
     "uuidv4": "^6.2.13",
-    "vectordb": "0.4.12",
+    "vectordb": "^0.4.12",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"

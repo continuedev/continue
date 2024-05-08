@@ -13,7 +13,7 @@ const MINISEARCH_OPTIONS = {
   fuzzy: 2,
 };
 
-const MAX_LENGTH = 10;
+const MAX_LENGTH = 70;
 
 function useSubmenuContextProviders() {
   // TODO: Refresh periodically

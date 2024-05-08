@@ -2,22 +2,30 @@ import Handlebars from "handlebars";
 import ignore from "ignore";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { IDE, ILLM, Position, TabAutocompleteOptions } from "..";
+import { IDE, ILLM, Position, Range, TabAutocompleteOptions } from "..";
 import { RangeInFileWithContents } from "../commands/util";
 import { ConfigHandler } from "../config/handler";
 import { streamLines } from "../diff/util";
 import OpenAI from "../llm/llms/OpenAI";
 import { getBasename } from "../util";
 import { logDevData } from "../util/devdata";
-import { DEFAULT_AUTOCOMPLETE_OPTS } from "../util/parameters";
+import {
+  COUNT_COMPLETION_REJECTED_AFTER,
+  DEFAULT_AUTOCOMPLETE_OPTS,
+} from "../util/parameters";
 import { Telemetry } from "../util/posthog";
 import { getRangeInString } from "../util/ranges";
 import AutocompleteLruCache from "./cache";
-import { noFirstCharNewline, onlyWhitespaceAfterEndOfLine } from "./charStream";
+import {
+  noFirstCharNewline,
+  onlyWhitespaceAfterEndOfLine,
+  stopOnUnmatchedClosingBracket,
+} from "./charStream";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
 } from "./constructPrompt";
+import { isOnlyPunctuationAndWhitespace } from "./filter";
 import { AutocompleteLanguageInfo } from "./languages";
 import {
   avoidPathLine,
@@ -28,6 +36,7 @@ import {
   streamWithNewLines,
 } from "./lineStream";
 import { AutocompleteSnippet } from "./ranking";
+import { RecentlyEditedRange } from "./recentlyEdited";
 import { getTemplateForModel } from "./templates";
 import { GeneratorReuseManager } from "./util";
 
@@ -36,12 +45,17 @@ export interface AutocompleteInput {
   filepath: string;
   pos: Position;
   recentlyEditedFiles: RangeInFileWithContents[];
-  recentlyEditedRanges: RangeInFileWithContents[];
+  recentlyEditedRanges: RecentlyEditedRange[];
   clipboardText: string;
   // Used for notebook files
   manuallyPassFileContents?: string;
   // Used for VS Code git commit input box
   manuallyPassPrefix?: string;
+  selectedCompletionInfo?: {
+    text: string;
+    range: Range;
+  };
+  injectDetails?: string;
 }
 
 export interface AutocompleteOutcome extends TabAutocompleteOptions {
@@ -53,6 +67,7 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   modelName: string;
   completionOptions: any;
   cacheHit: boolean;
+  filepath: string;
 }
 
 const autocompleteCache = AutocompleteLruCache.get();
@@ -65,7 +80,7 @@ const STARCODER2_T_ARTIFACTS = ["t.", "\nt", "<file_sep>"];
 const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
-const multilineStops = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
+const multilineStops: string[] = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
 const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
 
 // Errors that can be expected on occasion even during normal functioning should not be shown.
@@ -93,6 +108,20 @@ function formatExternalSnippet(
 }
 
 let shownGptClaudeWarning = false;
+const nonAutocompleteModels = [
+  // "gpt",
+  // "claude",
+  "mistral",
+  "instruct",
+];
+
+export type GetLspDefinitionsFunction = (
+  filepath: string,
+  contents: string,
+  cursorIndex: number,
+  ide: IDE,
+  lang: AutocompleteLanguageInfo,
+) => Promise<AutocompleteSnippet[]>;
 
 export async function getTabCompletion(
   token: AbortSignal,
@@ -101,12 +130,7 @@ export async function getTabCompletion(
   ide: IDE,
   generatorReuseManager: GeneratorReuseManager,
   input: AutocompleteInput,
-  getDefinitionsFromLsp: (
-    filepath: string,
-    contents: string,
-    cursorIndex: number,
-    ide: IDE,
-  ) => Promise<AutocompleteSnippet[]>,
+  getDefinitionsFromLsp: GetLspDefinitionsFunction,
 ): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
@@ -147,7 +171,8 @@ export async function getTabCompletion(
 
   if (
     !shownGptClaudeWarning &&
-    (llm.model.includes("gpt") || llm.model.includes("claude"))
+    nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
+    !llm.model.includes("deepseek")
   ) {
     shownGptClaudeWarning = true;
     throw new Error(
@@ -156,28 +181,51 @@ export async function getTabCompletion(
   }
 
   // Prompt
-  const fullPrefix = getRangeInString(fileContents, {
-    start: { line: 0, character: 0 },
-    end: pos,
-  });
+  let fullPrefix =
+    getRangeInString(fileContents, {
+      start: { line: 0, character: 0 },
+      end: input.selectedCompletionInfo?.range.start ?? pos,
+    }) + (input.selectedCompletionInfo?.text ?? "");
+
+  if (input.injectDetails) {
+    const lines = fullPrefix.split("\n");
+    fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
+      lang.comment
+    } ${input.injectDetails.split("\n").join(`\n${lang.comment} `)}\n${
+      lines[lines.length - 1]
+    }`;
+  }
+
   const fullSuffix = getRangeInString(fileContents, {
     start: pos,
     end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
   });
-  const lineBelowCursor =
-    fileLines[Math.min(pos.line + 1, fileLines.length - 1)];
 
-  let extrasSnippets = (await Promise.race([
-    getDefinitionsFromLsp(
-      filepath,
-      fullPrefix + fullSuffix,
-      fullPrefix.length,
-      ide,
-    ),
-    new Promise((resolve) => {
-      setTimeout(() => resolve([]), 100);
-    }),
-  ])) as AutocompleteSnippet[];
+  // First non-whitespace line below the cursor
+  let lineBelowCursor = "";
+  let i = 1;
+  while (
+    lineBelowCursor.trim() === "" &&
+    pos.line + i <= fileLines.length - 1
+  ) {
+    lineBelowCursor = fileLines[Math.min(pos.line + i, fileLines.length - 1)];
+    i++;
+  }
+
+  let extrasSnippets = options.useOtherFiles
+    ? ((await Promise.race([
+        getDefinitionsFromLsp(
+          filepath,
+          fullPrefix + fullSuffix,
+          fullPrefix.length,
+          ide,
+          lang,
+        ),
+        new Promise((resolve) => {
+          setTimeout(() => resolve([]), 100);
+        }),
+      ])) as AutocompleteSnippet[])
+    : [];
 
   const workspaceDirs = await ide.getWorkspaceDirs();
   if (options.onlyMyCode) {
@@ -259,7 +307,7 @@ export async function getTabCompletion(
       ...(llm.model.toLowerCase().includes("starcoder2")
         ? STARCODER2_T_ARTIFACTS
         : []),
-      ...lang.stopWords,
+      ...lang.stopWords.map((word) => `\n${word}`),
     ];
 
     const multiline =
@@ -292,6 +340,7 @@ export async function getTabCompletion(
     let charGenerator = generatorWithCancellation();
     charGenerator = noFirstCharNewline(charGenerator);
     charGenerator = onlyWhitespaceAfterEndOfLine(charGenerator, lang.endOfLine);
+    charGenerator = stopOnUnmatchedClosingBracket(charGenerator, suffix);
 
     let lineGenerator = streamLines(charGenerator);
     lineGenerator = stopAtLines(lineGenerator);
@@ -335,6 +384,7 @@ export async function getTabCompletion(
     modelName: llm.model,
     completionOptions,
     cacheHit,
+    filepath: input.filepath,
     ...options,
   };
 }
@@ -349,12 +399,7 @@ export class CompletionProvider {
     private readonly ide: IDE,
     private readonly getLlm: () => Promise<ILLM | undefined>,
     private readonly _onError: (e: any) => void,
-    private readonly getDefinitionsFromLsp: (
-      filepath: string,
-      contents: string,
-      cursorIndex: number,
-      ide: IDE,
-    ) => Promise<AutocompleteSnippet[]>,
+    private readonly getDefinitionsFromLsp: GetLspDefinitionsFunction,
   ) {
     this.generatorReuseManager = new GeneratorReuseManager(
       this.onError.bind(this),
@@ -367,6 +412,13 @@ export class CompletionProvider {
 
   private onError(e: any) {
     console.warn("Error generating autocompletion: ", e);
+    if (
+      ERRORS_TO_IGNORE.some((err) =>
+        typeof e === "string" ? e.includes(err) : e?.message?.includes(err),
+      )
+    ) {
+      return;
+    }
     if (!this.errorsShown.has(e.message)) {
       this.errorsShown.add(e.message);
       this._onError(e);
@@ -380,6 +432,7 @@ export class CompletionProvider {
     this._abortControllers.clear();
   }
 
+  // Key is completionId
   private _abortControllers = new Map<string, AbortController>();
   private _logRejectionTimeouts = new Map<string, NodeJS.Timeout>();
   private _outcomes = new Map<string, AutocompleteOutcome>();
@@ -401,6 +454,17 @@ export class CompletionProvider {
         time: outcome.time,
         cacheHit: outcome.cacheHit,
       });
+      this._outcomes.delete(completionId);
+    }
+  }
+
+  public cancelRejectionTimeout(completionId: string) {
+    if (this._logRejectionTimeouts.has(completionId)) {
+      clearTimeout(this._logRejectionTimeouts.get(completionId)!);
+      this._logRejectionTimeouts.delete(completionId);
+    }
+
+    if (this._outcomes.has(completionId)) {
       this._outcomes.delete(completionId);
     }
   }
@@ -492,31 +556,23 @@ export class CompletionProvider {
         input,
         this.getDefinitionsFromLsp,
       );
-      const completion = outcome?.completion;
 
-      if (!completion) {
+      if (!outcome?.completion) {
+        return undefined;
+      }
+
+      // Filter out unwanted results
+      if (isOnlyPunctuationAndWhitespace(outcome.completion)) {
         return undefined;
       }
 
       // Do some stuff later so as not to block return. Latency matters
+      const completionToCache = outcome.completion;
       setTimeout(async () => {
         if (!outcome.cacheHit) {
-          (await this.autocompleteCache).put(outcome.prompt, completion);
+          (await this.autocompleteCache).put(outcome.prompt, completionToCache);
         }
       }, 100);
-
-      outcome.accepted = false;
-      const logRejectionTimeout = setTimeout(() => {
-        // Wait 10 seconds, then assume it wasn't accepted
-        logDevData("autocomplete", outcome);
-        const { prompt, completion, ...restOfOutcome } = outcome;
-        Telemetry.capture("autocomplete", {
-          ...restOfOutcome,
-        });
-        this._logRejectionTimeouts.delete(input.completionId);
-      }, 10_000);
-      this._outcomes.set(input.completionId, outcome);
-      this._logRejectionTimeouts.set(input.completionId, logRejectionTimeout);
 
       return outcome;
     } catch (e: any) {
@@ -524,5 +580,51 @@ export class CompletionProvider {
     } finally {
       this._abortControllers.delete(input.completionId);
     }
+  }
+
+  _lastDisplayedCompletion: { id: string; displayedAt: number } | undefined =
+    undefined;
+
+  markDisplayed(completionId: string, outcome: AutocompleteOutcome) {
+    const logRejectionTimeout = setTimeout(() => {
+      // Wait 10 seconds, then assume it wasn't accepted
+      outcome.accepted = false;
+      logDevData("autocomplete", outcome);
+      const { prompt, completion, ...restOfOutcome } = outcome;
+      Telemetry.capture("autocomplete", {
+        ...restOfOutcome,
+      });
+      this._logRejectionTimeouts.delete(completionId);
+    }, COUNT_COMPLETION_REJECTED_AFTER);
+    this._outcomes.set(completionId, outcome);
+    this._logRejectionTimeouts.set(completionId, logRejectionTimeout);
+
+    // If the previously displayed completion is still waiting for rejection,
+    // and this one is a continuation of that (the outcome.completion is the same modulo prefix)
+    // then we should cancel the rejection timeout
+    const previous = this._lastDisplayedCompletion;
+    const now = Date.now();
+    if (previous && this._logRejectionTimeouts.has(previous.id)) {
+      const previousOutcome = this._outcomes.get(previous.id);
+      const c1 = previousOutcome?.completion.split("\n")[0] ?? "";
+      const c2 = outcome.completion.split("\n")[0];
+      if (
+        previousOutcome &&
+        (c1.endsWith(c2) ||
+          c2.endsWith(c1) ||
+          c1.startsWith(c2) ||
+          c2.startsWith(c1))
+      ) {
+        this.cancelRejectionTimeout(previous.id);
+      } else if (now - previous.displayedAt < 500) {
+        // If a completion isn't shown for more than
+        this.cancelRejectionTimeout(previous.id);
+      }
+    }
+
+    this._lastDisplayedCompletion = {
+      id: completionId,
+      displayedAt: now,
+    };
   }
 }

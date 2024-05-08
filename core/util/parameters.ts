@@ -15,9 +15,14 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   recentlyEditedSimilarityThreshold: 0.3,
   useCache: true,
   onlyMyCode: true,
-  useOtherFiles: false,
+  useOtherFiles: true,
+  useRecentlyEdited: true,
+  recentLinePrefixMatchMinLength: 7,
   disableInFiles: undefined,
 };
+
+export const COUNT_COMPLETION_REJECTED_AFTER = 10_000;
+export const DO_NOT_COUNT_REJECTED_BEFORE = 250;
 
 export const RETRIEVAL_PARAMS = {
   rerankThreshold: 0.3,
