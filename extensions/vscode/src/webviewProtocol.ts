@@ -586,13 +586,16 @@ export class VsCodeWebviewProtocol {
         vscode.window.showErrorMessage("No active editor to apply edits to");
         return;
       }
-      const document = editor.document;
-      const start = new vscode.Position(0, 0);
-      const end = new vscode.Position(
-        document.lineCount - 1,
-        document.lineAt(document.lineCount - 1).text.length,
-      );
-      editor.selection = new vscode.Selection(start, end);
+
+      if (editor.selection.isEmpty) {
+        const document = editor.document;
+        const start = new vscode.Position(0, 0);
+        const end = new vscode.Position(
+          document.lineCount - 1,
+          document.lineAt(document.lineCount - 1).text.length,
+        );
+        editor.selection = new vscode.Selection(start, end);
+      }
 
       this.verticalDiffManager.streamEdit(
         `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`,
