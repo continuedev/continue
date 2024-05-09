@@ -41,7 +41,6 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
-  migrate,
 } from "../util/paths";
 import {
   defaultContextProvidersJetBrains,
@@ -96,34 +95,6 @@ function loadSerializedConfig(
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
   }
-
-  migrate("codeContextProvider", () => {
-    if (!config.contextProviders?.filter((cp) => cp.name === "code")?.length) {
-      config.contextProviders = [
-        ...(config.contextProviders || []),
-        {
-          name: "code",
-          params: {},
-        },
-      ];
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
-
-  migrate("docsContextProvider1", () => {
-    if (!config.contextProviders?.filter((cp) => cp.name === "docs")?.length) {
-      config.contextProviders = [
-        ...(config.contextProviders || []),
-        {
-          name: "docs",
-          params: {},
-        },
-      ];
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
 
   if (remoteConfigServerUrl) {
     try {
