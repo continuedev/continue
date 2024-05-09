@@ -471,6 +471,10 @@ export class VsCodeWebviewProtocol {
         if (content) {
           yield { content };
         }
+        if (protocol.abortedMessageIds.has(msg.messageId)) {
+          protocol.abortedMessageIds.delete(msg.messageId);
+          break;
+        }
       }
       yield { done: true, content: "" };
     }
