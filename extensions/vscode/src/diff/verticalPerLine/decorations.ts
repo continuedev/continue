@@ -2,7 +2,7 @@ import * as vscode from "vscode";
 
 export const redDecorationType = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
-  backgroundColor: { id: "diffEditor.removedTextBackground" },
+  backgroundColor: { id: "diffEditor.removedLineBackground" },
   color: "#808080",
   outlineWidth: "1px",
   outlineStyle: "solid",
@@ -13,7 +13,7 @@ export const redDecorationType = vscode.window.createTextEditorDecorationType({
 export const greenDecorationType = vscode.window.createTextEditorDecorationType(
   {
     isWholeLine: true,
-    backgroundColor: { id: "diffEditor.insertedTextBackground" },
+    backgroundColor: { id: "diffEditor.insertedLineBackground" },
     outlineWidth: "1px",
     outlineStyle: "solid",
     outlineColor: { id: "diffEditor.insertedTextBorder" },
