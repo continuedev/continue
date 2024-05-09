@@ -261,6 +261,10 @@ class VsCodeIde implements IDE {
     return await this.ideUtils.getOpenFiles();
   }
 
+  async getCurrentFile(): Promise<string | undefined> {
+    return vscode.window.activeTextEditor?.document.uri.fsPath;
+  }
+
   async getPinnedFiles(): Promise<string[]> {
     const tabArray = vscode.window.tabGroups.all[0].tabs;
 

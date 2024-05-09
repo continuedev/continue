@@ -1,12 +1,12 @@
+import { getSymbolsForSnippet } from "core/autocomplete/ranking";
 import { RecentlyEditedRange } from "core/autocomplete/recentlyEdited";
 import { RangeInFileWithContents } from "core/commands/util";
 import * as vscode from "vscode";
 
-interface VsCodeRecentlyEditedRange {
-  timestamp: number;
+type VsCodeRecentlyEditedRange = {
   uri: vscode.Uri;
   range: vscode.Range;
-}
+} & Omit<RecentlyEditedRange, "filepath" | "range">;
 
 interface VsCodeRecentlyEditedDocument {
   timestamp: number;
@@ -46,21 +46,35 @@ export class RecentlyEditedTracker {
     }, 1000 * 15);
   }
 
-  private insertRange(editedRange: VsCodeRecentlyEditedRange): void {
+  private async insertRange(
+    editedRange: Omit<VsCodeRecentlyEditedRange, "lines" | "symbols">,
+  ): Promise<void> {
     // Check for overlap with any existing ranges
     for (let i = 0; i < this.recentlyEditedRanges.length; i++) {
       let range = this.recentlyEditedRanges[i];
       if (range.range.intersection(editedRange.range)) {
+        const union = range.range.union(editedRange.range);
+        const contents = await this._getContentsForRange({
+          ...range,
+          range: union,
+        });
         range = {
           ...range,
-          range: range.range.union(editedRange.range),
+          range: union,
+          lines: contents.split("\n"),
+          symbols: getSymbolsForSnippet(contents),
         };
         return;
       }
     }
 
     // Otherwise, just add the new and maintain max size
-    const newLength = this.recentlyEditedRanges.unshift(editedRange);
+    const contents = await this._getContentsForRange(editedRange);
+    const newLength = this.recentlyEditedRanges.unshift({
+      ...editedRange,
+      lines: contents.split("\n"),
+      symbols: getSymbolsForSnippet(contents),
+    });
     if (newLength >= RecentlyEditedTracker.maxRecentlyEditedRanges) {
       this.recentlyEditedRanges = this.recentlyEditedRanges.slice(
         0,
@@ -93,40 +107,25 @@ export class RecentlyEditedTracker {
     );
   }
 
-  public async getRecentlyEditedRanges(): Promise<RecentlyEditedRange[]> {
-    const results = await Promise.all(
-      this.recentlyEditedRanges.map(async (entry) => {
-        try {
-          const contents = await vscode.workspace.fs
-            .readFile(entry.uri)
-            .then((content) =>
-              content
-                .toString()
-                .split("\n")
-                .slice(entry.range.start.line, entry.range.end.line + 1)
-                .join("\n"),
-            );
-          return {
-            timestamp: entry.timestamp,
-            filepath: entry.uri.fsPath,
-            contents,
-            range: {
-              start: {
-                line: entry.range.start.line,
-                character: entry.range.start.character,
-              },
-              end: {
-                line: entry.range.end.line,
-                character: entry.range.end.character,
-              },
-            },
-          };
-        } catch (e) {
-          return null;
-        }
-      }),
+  private async _getContentsForRange(
+    entry: Omit<VsCodeRecentlyEditedRange, "lines" | "symbols">,
+  ): Promise<string> {
+    return vscode.workspace.fs.readFile(entry.uri).then((content) =>
+      content
+        .toString()
+        .split("\n")
+        .slice(entry.range.start.line, entry.range.end.line + 1)
+        .join("\n"),
     );
-    return results.filter((result) => result !== null) as any;
+  }
+
+  public async getRecentlyEditedRanges(): Promise<RecentlyEditedRange[]> {
+    return this.recentlyEditedRanges.map((entry) => {
+      return {
+        ...entry,
+        filepath: entry.uri.fsPath,
+      };
+    });
   }
 
   public async getRecentlyEditedDocuments(): Promise<

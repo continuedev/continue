@@ -226,6 +226,11 @@ const configs: SiteIndexingConfig[] = [
     startUrl: "https://developer.wordpress.org/reference/",
     rootUrl: "https://developer.wordpress.org/reference/",
   },
+  {
+    title: "PySide6",
+    startUrl: "https://doc.qt.io/qtforpython-6/quickstart.html",
+    rootUrl: "https://doc.qt.io/qtforpython-6/api.html",
+  },
 ];
 
 export default configs;

@@ -38,7 +38,7 @@ export async function slidingWindowMatcher(
   windowSize: number,
 ): Promise<AutocompleteSnippet[]> {
   // Sorted lowest similarity to highest
-  const topMatches: AutocompleteSnippet[] = [];
+  const topMatches: Required<AutocompleteSnippet>[] = [];
 
   for (const { filepath, contents, range } of recentFiles) {
     for (const window of slidingWindow(contents, windowSize)) {

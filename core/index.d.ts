@@ -39,11 +39,6 @@ export interface IndexingProgressUpdate {
   desc: string;
 }
 
-export interface LLMReturnValue {
-  prompt: string;
-  completion: string;
-}
-
 export type PromptTemplate =
   | string
   | ((
@@ -80,12 +75,12 @@ export interface ILLM extends LLMOptions {
   streamComplete(
     prompt: string,
     options?: LLMFullCompletionOptions,
-  ): AsyncGenerator<string, LLMReturnValue>;
+  ): AsyncGenerator<string, PromptLog>;
 
   streamChat(
     messages: ChatMessage[],
     options?: LLMFullCompletionOptions,
-  ): AsyncGenerator<ChatMessage, LLMReturnValue>;
+  ): AsyncGenerator<ChatMessage, PromptLog>;
 
   chat(
     messages: ChatMessage[],
@@ -255,6 +250,13 @@ export interface ContextItemWithId {
 
 export interface InputModifiers {
   useCodebase: boolean;
+  noContext: boolean;
+}
+
+export interface PromptLog {
+  completionOptions: CompletionOptions;
+  prompt: string;
+  completion: string;
 }
 
 export interface ChatHistoryItem {
@@ -262,7 +264,7 @@ export interface ChatHistoryItem {
   editorState?: any;
   modifiers?: InputModifiers;
   contextItems: ContextItemWithId[];
-  promptLogs?: [string, string][]; // [prompt, completion]
+  promptLogs?: PromptLog[];
 }
 
 export type ChatHistory = ChatHistoryItem[];
@@ -406,6 +408,7 @@ export interface IDE {
     stepIndex: number,
   ): Promise<void>;
   getOpenFiles(): Promise<string[]>;
+  getCurrentFile(): Promise<string | undefined>;
   getPinnedFiles(): Promise<string[]>;
   getSearchResults(query: string): Promise<string>;
   subprocess(command: string): Promise<[string, string]>;
@@ -475,7 +478,8 @@ type ContextProviderName =
   | "code"
   | "docs"
   | "gitlab-mr"
-  | "os";
+  | "os"
+  | "currentFile";
 
 type TemplateType =
   | "llama2"
@@ -689,6 +693,8 @@ export interface TabAutocompleteOptions {
   useCache: boolean;
   onlyMyCode: boolean;
   useOtherFiles: boolean;
+  useRecentlyEdited: boolean;
+  recentLinePrefixMatchMinLength: number;
   disableInFiles?: string[];
 }
 
@@ -711,6 +717,7 @@ interface ModelRoles {
 interface ExperimantalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
+  defaultContext?: "activeFile"[];
 }
 
 export interface SerializedContinueConfig {

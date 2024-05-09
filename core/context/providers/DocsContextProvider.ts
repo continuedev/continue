@@ -24,7 +24,6 @@ class DocsContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const { retrieveDocs } = await import("../../indexing/docs/db");
-
     const embeddingsProvider = new TransformersJsEmbeddingsProvider();
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 
@@ -102,6 +101,23 @@ class DocsContextProvider extends BaseContextProvider {
           id: config.startUrl,
         })),
     );
+
+    // Sort submenuItems such that the objects with titles which don't occur in configs occur first, and alphabetized
+    submenuItems.sort((a, b) => {
+      const aTitleInConfigs = !!configs.find(config => config.title === a.title);
+      const bTitleInConfigs = !!configs.find(config => config.title === b.title);
+    
+      // Primary criterion: Items not in configs come first
+      if (!aTitleInConfigs && bTitleInConfigs) {
+        return -1;
+      } else if (aTitleInConfigs && !bTitleInConfigs) {
+        return 1;
+      } else {
+        // Secondary criterion: Alphabetical order when both items are in the same category
+        return a.title.localeCompare(b.title);
+      }
+    });
+
     return submenuItems;
   }
 }

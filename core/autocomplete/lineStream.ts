@@ -44,26 +44,27 @@ export async function* streamWithNewLines(stream: LineStream): LineStream {
   }
 }
 
-const brackets = ["(", "[", "{", "`", '"""'];
-const bracketsReverse = [")", "]", "}", "`", '"""'];
-
+const bracketEnding = [")", "]", "}", ";"];
+function isBracketEnding(line: string): boolean {
+  return line
+    .trim()
+    .split("")
+    .some((char) => bracketEnding.includes(char));
+}
 export async function* stopAtSimilarLine(
   stream: LineStream,
   line: string,
 ): AsyncGenerator<string> {
   line = line.trim();
+  const lineIsBracketEnding = isBracketEnding(line);
   for await (const nextLine of stream) {
-    if (
-      bracketsReverse.includes(nextLine.trim()) &&
-      bracketsReverse.includes(line.trim()) &&
-      line.trim() === nextLine.trim()
-    ) {
+    if (lineIsBracketEnding && line.trim() === nextLine.trim()) {
+      yield nextLine;
       continue;
     }
 
-    const dist = distance(nextLine.trim(), line);
     let lineQualifies = nextLine.length > 4 && line.length > 4;
-    if (lineQualifies && dist / line.length < 0.1) {
+    if (lineQualifies && distance(nextLine.trim(), line) / line.length < 0.1) {
       break;
     }
     yield nextLine;
