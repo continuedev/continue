@@ -102,16 +102,16 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // Install node_modules //
-  execCmdSync("npm install --no-save");
-  console.log("[info] npm install in extensions/vscode completed");
+  execCmdSync("yarn install --no-save");
+  console.log("[info] yarn install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execCmdSync("npm install --no-save");
-  console.log("[info] npm install in gui completed");
+  execCmdSync("yarn install --no-save");
+  console.log("[info] yarn install in gui completed");
 
   if (ghAction()) {
-    execCmdSync("npm run build");
+    execCmdSync("yarn run build");
   }
 
   // Copy over the dist folder to the Intellij extension //
@@ -293,7 +293,7 @@ const exe = os === "win32" ? ".exe" : "";
         "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
         "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
       }[target];
-      execCmdSync(`npm install -f ${packageToInstall} --no-save`);
+      execCmdSync(`yarn install -f ${packageToInstall} --no-save`);
     }
 
     // Download and unzip esbuild
