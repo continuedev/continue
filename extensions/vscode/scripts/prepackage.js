@@ -287,13 +287,16 @@ const exe = os === "win32" ? ".exe" : "";
     // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
     if (!isWin()) {
       // lancedb binary
-      console.log("[info] Downloading pre-built lancedb binary");
-      rimrafSync("node_modules/@lancedb");
       const packageToInstall = {
         "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
         "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
       }[target];
-      execCmdSync(`yarn install -f ${packageToInstall} --no-save`);
+      console.log(
+        "[info] Downloading pre-built lancedb binary: " + packageToInstall,
+      );
+      rimrafSync("node_modules/@lancedb");
+      execCmdSync(`yarn add ${packageToInstall} --no-save --no-lockfile`);
+      execCmdSync(`yarn remove ${packageToInstall}`);
     }
 
     // Download and unzip esbuild
