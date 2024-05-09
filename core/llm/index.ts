@@ -1,3 +1,4 @@
+import Handlebars from "handlebars";
 import {
   ChatMessage,
   ChatMessageRole,
