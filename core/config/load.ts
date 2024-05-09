@@ -42,7 +42,6 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
-  migrate,
 } from "../util/paths";
 import {
   defaultContextProvidersJetBrains,
@@ -98,7 +97,7 @@ function loadSerializedConfig(
     config.allowAnonymousTelemetry = true;
   }
 
-  if (ideSettings.remoteConfigServerUrl) {
+  if (remoteConfigServerUrl) {
     try {
       const remoteConfigJson = resolveSerializedConfig(
         getConfigJsonPathForRemote(ideSettings.remoteConfigServerUrl),
