@@ -113,6 +113,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       yield {
         progress: i / results.compute.length,
         desc: `Chunking ${getBasename(item.path)}`,
+        status: "indexing",
       };
       markComplete([item], IndexResultType.Compute);
     }

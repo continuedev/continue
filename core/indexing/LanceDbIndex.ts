@@ -250,7 +250,7 @@ export class LanceDbIndex implements CodebaseIndex {
           data.contents,
         );
 
-        yield { progress, desc };
+        yield { progress, desc, status: "indexing" };
       } else {
         await addComputedLanceDbRows(update, computedRows);
         computedRows = [];
@@ -304,7 +304,11 @@ export class LanceDbIndex implements CodebaseIndex {
     }
 
     markComplete(results.del, IndexResultType.Delete);
-    yield { progress: 1, desc: "Completed Calculating Embeddings" };
+    yield {
+      progress: 1,
+      desc: "Completed Calculating Embeddings",
+      status: "done",
+    };
   }
 
   private async _retrieveForTag(

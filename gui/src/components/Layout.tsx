@@ -2,6 +2,7 @@ import {
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
+import { IndexingProgressUpdate } from "core";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -163,9 +164,7 @@ const Layout = () => {
   );
 
   useWebviewListener("indexProgress", async (data) => {
-    setIndexingProgress(data.progress);
-    setIndexingTask(data.desc);
-    setIndexingFailed(data.failed)
+    setIndexingState(data);
   });
 
   useEffect(() => {
@@ -186,9 +185,11 @@ const Layout = () => {
     }
   }, [location]);
 
-  const [indexingProgress, setIndexingProgress] = useState(-1);
-  const [indexingTask, setIndexingTask] = useState("Indexing Codebase");
-  const [indexingFailed, setIndexingFailed] = useState(false); 
+  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
+    desc: "Starting indexing",
+    progress: 0.0,
+    status: "starting",
+  });
 
   return (
     <LayoutTopDiv>
@@ -246,7 +247,7 @@ const Layout = () => {
                   />
                 )} */}
                 <ModelSelect />
-                {indexingProgress >= 1 && // Would take up too much space together with indexing progress
+                {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
                   defaultModel?.provider === "free-trial" &&
                   (location.pathname === "/settings" ||
                     parseInt(localStorage.getItem("ftc") || "0") >= 50) && (
@@ -257,12 +258,7 @@ const Layout = () => {
                   )}
 
                 {isJetBrains() || (
-                  <IndexingProgressBar
-                    currentlyIndexing={indexingTask}
-                    completed={indexingProgress * 100}
-                    total={100}
-                    indexingFailed={indexingFailed}
-                  />
+                  <IndexingProgressBar indexingState={indexingState} />
                 )}
               </div>
               <HeaderButtonWithText

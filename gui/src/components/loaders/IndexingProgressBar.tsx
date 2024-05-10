@@ -1,3 +1,4 @@
+import { IndexingProgressUpdate } from "core";
 import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
@@ -49,19 +50,14 @@ const P = styled.p`
 `;
 
 interface ProgressBarProps {
-  completed: number;
-  total: number;
-  currentlyIndexing?: string;
-  indexingFailed?: boolean;
+  indexingState: IndexingProgressUpdate;
 }
 
-const IndexingProgressBar = ({
-  completed,
-  total,
-  currentlyIndexing,
-  indexingFailed = false
-}: ProgressBarProps) => {
-  const fillPercentage = Math.min(100, Math.max(0, (completed / total) * 100));
+const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
+  const fillPercentage = Math.min(
+    100,
+    Math.max(0, indexingState.progress * 100),
+  );
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
@@ -69,17 +65,17 @@ const IndexingProgressBar = ({
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    postToIde("index/indexingProgressBarInitialized", {ready:true})
-  }, []);
-  
-  useEffect(() => {
     postToIde("index/setPaused", !expanded);
   }, [expanded]);
 
   return (
     <div
       onClick={() => {
-        if (!indexingFailed && completed < total && completed >= 0) {
+        if (
+          indexingState.status !== "failed" &&
+          indexingState.progress < 1 &&
+          indexingState.progress >= 0
+        ) {
           setExpanded((prev) => !prev);
         } else {
           postToIde("index/forceReIndex", undefined);
@@ -87,30 +83,37 @@ const IndexingProgressBar = ({
       }}
       className="cursor-pointer"
     >
-      {
-        (completed < 0 && !indexingFailed) ? ( // ice-blue 'indexing starting up' dot
+      {indexingState.status === "starting" ? ( // ice-blue 'indexing starting up' dot
         <>
-        <CircleDiv data-tooltip-id="indexingNotLoaded_dot" color="#72aec2"></CircleDiv>
-        {tooltipPortalDiv &&
-          ReactDOM.createPortal(
-            <StyledTooltip id="indexingNotLoaded_dot" place="top">
-              Codebase indexing is starting up.
-            </StyledTooltip>,
-            tooltipPortalDiv,
-          )}
+          <CircleDiv
+            data-tooltip-id="indexingNotLoaded_dot"
+            color="#72aec2"
+          ></CircleDiv>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id="indexingNotLoaded_dot" place="top">
+                Codebase indexing is starting up.
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
         </>
-        ) : indexingFailed ? ( //red 'failed' dot
+      ) : indexingState.status === "failed" ? ( //red 'failed' dot
         <>
-        <CircleDiv data-tooltip-id="indexingFailed_dot" color="#ff0000"></CircleDiv>
-        {tooltipPortalDiv &&
-          ReactDOM.createPortal(
-            <StyledTooltip id="indexingFailed_dot" place="top">
-              Codebase not indexed. Click to retry
-            </StyledTooltip>,
-            tooltipPortalDiv,
-          )}
+          <CircleDiv
+            data-tooltip-id="indexingFailed_dot"
+            color="#ff0000"
+          ></CircleDiv>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id="indexingFailed_dot" place="top">
+                Error indexing codebase: {indexingState.desc}
+                <br />
+                Click to retry
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
         </>
-        ) : completed >= total ? ( //indexing complete green dot
+      ) : indexingState.status === "done" ? ( //indexing complete green dot
         <>
           <CircleDiv data-tooltip-id="progress_dot" color="#090"></CircleDiv>
           {tooltipPortalDiv &&
@@ -134,25 +137,26 @@ const IndexingProgressBar = ({
             <P>
               {hovered
                 ? "Click to pause"
-                : `Indexing (${Math.trunc((completed / total) * 100)}%)`}
+                : `Indexing (${Math.trunc(indexingState.progress * 100)}%)`}
             </P>
           </GridDiv>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="usage_progress_bar" place="top">
-                {currentlyIndexing}
+                {indexingState.desc}
               </StyledTooltip>,
               tooltipPortalDiv,
             )}
         </>
-      ) : ( //yellow 'paused' dot
+      ) : (
+        //yellow 'paused' dot
         <>
           <CircleDiv data-tooltip-id="progress_dot" color="#bb0"></CircleDiv>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="progress_dot" place="top">
                 Click to unpause indexing (
-                {Math.trunc((completed / total) * 100)}%)
+                {Math.trunc(indexingState.progress * 100)}%)
               </StyledTooltip>,
               tooltipPortalDiv,
             )}

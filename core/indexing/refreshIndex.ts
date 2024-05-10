@@ -356,7 +356,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
         return this.deleteOrRemoveTag(cacheKey, tag);
       }),
     ]);
-    yield { progress: 1, desc: "Done updating global cache" };
+    yield { progress: 1, desc: "Done updating global cache", status: "done" };
   }
 
   private async computeOrAddTag(

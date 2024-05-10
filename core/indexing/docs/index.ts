@@ -1,12 +1,8 @@
-import {
-  Chunk,
-  EmbeddingsProvider,
-  IndexingProgressUpdate,
-} from "../..";
+import { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "../..";
 
+import { Article, chunkArticle, pageToArticle } from "./article";
 import { crawlPage } from "./crawl";
 import { addDocs, hasDoc } from "./db";
-import { pageToArticle, chunkArticle, Article } from "./article";
 
 export async function* indexDocs(
   title: string,
@@ -17,6 +13,7 @@ export async function* indexDocs(
     yield {
       progress: 1,
       desc: "Already indexed",
+      status: "done",
     };
     return;
   }
@@ -24,19 +21,21 @@ export async function* indexDocs(
   yield {
     progress: 0,
     desc: "Finding subpages",
+    status: "indexing",
   };
 
   const articles: Article[] = [];
 
   for await (const page of crawlPage(baseUrl)) {
     const article = pageToArticle(page);
-    if (!article) continue; 
+    if (!article) continue;
 
     articles.push(article);
 
     yield {
       progress: 0,
       desc: `Finding subpages (${page.path})`,
+      status: "indexing",
     };
   }
 
@@ -47,14 +46,15 @@ export async function* indexDocs(
     yield {
       progress: Math.max(1, Math.floor(100 / (articles.length + 1))),
       desc: `${article.subpath}`,
+      status: "indexing",
     };
 
     const subpathEmbeddings = await embeddingsProvider.embed(
-      chunkArticle(article).map(chunk => {
+      chunkArticle(article).map((chunk) => {
         chunks.push(chunk);
 
         return chunk.content;
-      })
+      }),
     );
 
     embeddings.push(...subpathEmbeddings);
@@ -65,5 +65,6 @@ export async function* indexDocs(
   yield {
     progress: 1,
     desc: "Done",
+    status: "done",
   };
 }

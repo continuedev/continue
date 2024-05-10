@@ -138,6 +138,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       yield {
         desc: `Indexing ${compute.path}`,
         progress: i / results.compute.length,
+        status: "indexing",
       };
       markComplete([compute], IndexResultType.Compute);
     }

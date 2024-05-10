@@ -61,6 +61,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
       yield {
         progress: i / results.compute.length,
         desc: `Indexing ${item.path}`,
+        status: "indexing",
       };
       markComplete([item], IndexResultType.Compute);
     }
