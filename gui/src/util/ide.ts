@@ -115,6 +115,9 @@ export async function* ideStreamRequest<T extends keyof WebviewProtocol>(
   let returnVal = undefined;
 
   const handler = (event: { data: Message }) => {
+    if (event.data.messageType === "setInactive") {
+      postToIde("abort", undefined, messageId);
+    }
     if (event.data.messageId === messageId) {
       const responseData = safeParseResponse(event.data.data);
       if (responseData.done) {
