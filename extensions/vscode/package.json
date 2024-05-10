@@ -140,7 +140,7 @@
       {
         "command": "continue.debugTerminal",
         "category": "Continue",
-        "title": "Debug Terminal",
+        "title": "Continue: Debug Terminal",
         "group": "Continue"
       },
       {
@@ -386,6 +386,12 @@
           "command": "continue.toggleFullScreen",
           "group": "navigation@1",
           "when": "activeWebviewPanelId == continue.continueGUIView"
+        }
+      ],
+      "terminal/context": [
+        {
+          "command": "continue.debugTerminal",
+          "group": "navigation@top"
         }
       ]
     },
