@@ -1,4 +1,5 @@
 import { JSONContent } from "@tiptap/react";
+import { IndexingProgressUpdate } from "core";
 
 type LocalStorageTypes = {
   onboardingComplete: boolean;
@@ -6,6 +7,7 @@ type LocalStorageTypes = {
   lastSessionId: string | undefined;
   inputHistory: JSONContent[];
   extensionVersion: string;
+  indexingState: IndexingProgressUpdate;
 };
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(

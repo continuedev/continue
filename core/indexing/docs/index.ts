@@ -1,6 +1,6 @@
-import type { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "../..";
+import { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "../..";
 
-import { type Article, chunkArticle, pageToArticle } from "./article";
+import { Article, chunkArticle, pageToArticle } from "./article";
 import { crawlPage } from "./crawl";
 import { addDocs, hasDoc } from "./db";
 
