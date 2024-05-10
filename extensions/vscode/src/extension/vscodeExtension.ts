@@ -112,9 +112,16 @@ export class VsCodeExtension {
     this.webviewProtocol.on("index/forceReIndex", (msg) => {
       this.ide
         .getWorkspaceDirs()
-        .then((dirs) => this.refreshCodebaseIndex(dirs));
+        .then((dirs) => this.refreshCodebaseIndex(dirs, context));
     });
-
+    this.webviewProtocol.on("index/indexingProgressBarInitialized", (msg) => {
+      // Triggered when progress bar is initialized. Purpose: To relay global state values to the progress bar
+      let progress = context.globalState.get<number>("continue.indexingProgress") as number
+      let desc = context.globalState.get<string>("continue.indexingDesc") as string
+      let failed = context.globalState.get<boolean>("continue.indexingFailed") as boolean
+      this.webviewProtocol?.request("indexProgress", {progress, desc, failed})
+    });
+    
     this.diffManager.webviewProtocol = this.webviewProtocol;
 
     const userTokenPromise: Promise<string | undefined> = new Promise(
@@ -189,7 +196,7 @@ export class VsCodeExtension {
     registerDebugTracker(this.webviewProtocol, this.ide);
 
     // Indexing
-    this.ide.getWorkspaceDirs().then((dirs) => this.refreshCodebaseIndex(dirs));
+    this.ide.getWorkspaceDirs().then((dirs) => this.refreshCodebaseIndex(dirs, context));
 
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught
@@ -231,7 +238,7 @@ export class VsCodeExtension {
                   currentBranch !== this.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]
                 ) {
                   // Trigger refresh of index only in this directory
-                  this.refreshCodebaseIndex([dir]);
+                  this.refreshCodebaseIndex([dir], context);
                 }
               }
 
@@ -267,16 +274,39 @@ export class VsCodeExtension {
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
   private indexingCancellationController: AbortController | undefined;
 
-  private async refreshCodebaseIndex(dirs: string[]) {
+  private async refreshCodebaseIndex(dirs: string[], context: vscode.ExtensionContext) {
+    //reset all state variables
+    console.log("Codebase indexing starting up")
+    this.webviewProtocol?.request("indexProgress", {progress: 0, desc: "", failed:false});
+    context.globalState.update("continue.indexingFailed", false)
+    context.globalState.update("continue.indexingProgress", 0)
+    context.globalState.update("continue.indexingDesc", "")
+
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
+    let err = undefined
     for await (const update of this.indexer.refresh(
       dirs,
       this.indexingCancellationController.signal,
     )) {
       this.webviewProtocol.request("indexProgress", update);
+      if (update.failed) {
+        err = update.desc
+        context.globalState.update("continue.indexingFailed", true)
+        break
+      } else {
+        context.globalState.update("continue.indexingProgress", update.progress)
+        context.globalState.update("continue.indexingDesc", update.desc)
+      }
     }
+
+    if (err) {
+      console.log("Codebase Indexing Failed: ", err)
+    } else {
+      console.log("Codebase Indexing Complete")
+    }
+    
   }
 }

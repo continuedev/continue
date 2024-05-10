@@ -37,6 +37,7 @@ export interface Chunk extends ChunkWithoutID {
 export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
+  failed?: boolean;
 }
 
 export type PromptTemplate =

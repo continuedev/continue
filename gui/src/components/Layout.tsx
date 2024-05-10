@@ -165,6 +165,7 @@ const Layout = () => {
   useWebviewListener("indexProgress", async (data) => {
     setIndexingProgress(data.progress);
     setIndexingTask(data.desc);
+    setIndexingFailed(data.failed)
   });
 
   useEffect(() => {
@@ -185,8 +186,9 @@ const Layout = () => {
     }
   }, [location]);
 
-  const [indexingProgress, setIndexingProgress] = useState(1);
+  const [indexingProgress, setIndexingProgress] = useState(-1);
   const [indexingTask, setIndexingTask] = useState("Indexing Codebase");
+  const [indexingFailed, setIndexingFailed] = useState(false); 
 
   return (
     <LayoutTopDiv>
@@ -259,6 +261,7 @@ const Layout = () => {
                     currentlyIndexing={indexingTask}
                     completed={indexingProgress * 100}
                     total={100}
+                    indexingFailed={indexingFailed}
                   />
                 )}
               </div>

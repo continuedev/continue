@@ -9,7 +9,7 @@ import { getComputeDeleteAddRemove } from "./refreshIndex";
 import { CodebaseIndex } from "./types";
 
 export class PauseToken {
-  constructor(private _paused: boolean) {}
+  constructor(private _paused: boolean) { }
 
   set paused(value: boolean) {
     this._paused = value;
@@ -70,6 +70,14 @@ export class CodebaseIndexer {
       return;
     }
 
+    //Test to see if embeddings provider is configured properly
+    try {
+      await config.embeddingsProvider.embed(['sample text']);
+    } catch (error) {
+      yield { progress: 1, desc: "Indexing failed while testing provider", failed: true };
+      return
+    }
+
     const indexesToBuild = await this.getIndexesToBuild();
 
     let completedDirs = 0;
@@ -81,6 +89,7 @@ export class CodebaseIndexer {
     yield {
       progress: 0,
       desc: "Starting indexing...",
+      failed: false
     };
 
     for (let directory of workspaceDirs) {
@@ -115,6 +124,7 @@ export class CodebaseIndexer {
               yield {
                 progress: 1,
                 desc: "Indexing cancelled",
+                failed: true
               };
               return;
             }
