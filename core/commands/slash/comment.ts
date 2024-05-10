@@ -7,7 +7,8 @@ const CommentSlashCommand: SlashCommand = {
   run: async function* (sdk) {
     for await (const update of EditSlashCommand.run({
       ...sdk,
-      input: "Write comments for this code",
+      input:
+        "Write comments for this code. Do not change anything about the code itself.",
     })) {
       yield update;
     }
