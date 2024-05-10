@@ -2,15 +2,21 @@ import * as vscode from "vscode";
 
 export const redDecorationType = vscode.window.createTextEditorDecorationType({
   isWholeLine: true,
-  backgroundColor: "rgba(255, 0, 0, 0.2)",
-  color: "rgb(200, 200, 200)",
+  backgroundColor: { id: "diffEditor.removedLineBackground" },
+  color: "#808080",
+  outlineWidth: "1px",
+  outlineStyle: "solid",
+  outlineColor: { id: "diffEditor.removedTextBorder" },
   rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
 });
 
 export const greenDecorationType = vscode.window.createTextEditorDecorationType(
   {
     isWholeLine: true,
-    backgroundColor: "rgba(0, 255, 0, 0.2)",
+    backgroundColor: { id: "diffEditor.insertedLineBackground" },
+    outlineWidth: "1px",
+    outlineStyle: "solid",
+    outlineColor: { id: "diffEditor.insertedTextBorder" },
     rangeBehavior: vscode.DecorationRangeBehavior.ClosedClosed,
   },
 );
