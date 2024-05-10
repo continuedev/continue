@@ -55,9 +55,11 @@ If you are using VS Code and require requests to be made through a proxy, you ar
 
 Continue can be used in [code-server](https://coder.com/), but if you are running across an error in the logs that includes "This is likely because the editor is not running in a secure context", please see [their documentation on securely exposing code-server](https://coder.com/docs/code-server/latest/guide#expose-code-server).
 
-## Download a Newer Version
+## Download the latest pre-release
 
-If you are using an older version of the Continue extension, particularly one which depends on the separate Python server, we would recommend downloading the latest version of the extension, as we are constantly making bug fixes and are likely to have solved any major issues.
+We are constantly making fixes and improvements to Continue, but the latest changes remain in a "pre-release" version for roughly a week so that we can test their stability. If you are experiencing issues, you can try the pre-release by going to the Continue extension page in VS Code and selecting "Switch to Pre-Release" as shown below.
+
+![Pre-Release](../static/img/prerelease.png)
 
 ## Download an Older Version
 
