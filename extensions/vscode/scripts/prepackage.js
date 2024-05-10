@@ -102,16 +102,16 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // Install node_modules //
-  execCmdSync("yarn install --no-save");
-  console.log("[info] yarn install in extensions/vscode completed");
+  execCmdSync("pnpm install");
+  console.log("[info] pnpm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execCmdSync("yarn install --no-save");
-  console.log("[info] yarn install in gui completed");
+  execCmdSync("pnpm install");
+  console.log("[info] pnpm install in gui completed");
 
   if (ghAction()) {
-    execCmdSync("yarn run build");
+    execCmdSync("pnpm run build");
   }
 
   // Copy over the dist folder to the Intellij extension //
@@ -295,8 +295,7 @@ const exe = os === "win32" ? ".exe" : "";
         "[info] Downloading pre-built lancedb binary: " + packageToInstall,
       );
       rimrafSync("node_modules/@lancedb");
-      execCmdSync(`yarn add ${packageToInstall} --no-save --no-lockfile`);
-      execCmdSync(`yarn remove ${packageToInstall}`);
+      execCmdSync(`npm install -f ${packageToInstall} --no-save`);
     }
 
     // Download and unzip esbuild

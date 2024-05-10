@@ -25,18 +25,6 @@ if ($null -eq $node) {
     & node --version
 }
 
-Push-Location extensions/vscode
-$yarn  = (get-command yarn -ErrorAction SilentlyContinue)
-if ($null -eq $yarn) {
-    Write-Host "Not Found " -ForegroundColor Red -NoNewLine
-    Write-Host "yarn"
-} else {
-    Write-Host "Found " -ForegroundColor Green -NoNewLine
-    Write-Host "yarn " -NoNewLine
-    & yarn --version
-}
-Pop-Location
-
 if ($null -eq $cargo) {
     Write-Host "`n...`n"
     Write-Host "Cargo`n" -ForegroundColor  White
@@ -56,31 +44,21 @@ if ($null -eq $node) {
     Write-Host "https://nodejs.org/" -ForegroundColor Yellow
 }
 
-if ($null -eq $yarn) {
-    Write-Host "`n...`n"
-    Write-Host "Yarn`n" -ForegroundColor White
-    Write-Host "Doesn't appear to be installed or is not accessible from .\extensions\vscode"
-    Write-Host "For how to install Yarn 1.x see:"
-    Write-Host "https://classic.yarnpkg.com/lang/en/docs/install/#windows-stable" -ForegroundColor Yellow
-    Write-Host "For how to install Yarn 2.x or 3.x see: "
-    Write-Host "https://yarnpkg.com/getting-started/install" -ForegroundColor Yellow
-}
-
-if (($null -eq $cargo) -or ($null -eq $node) -or ($null -eq $yarn)) {
+if (($null -eq $cargo) -or ($null -eq $node)) {
     return "`nSome dependencies that may require installation could not be found. Exiting"
 }
 
 Write-Host "`nInstalling Core extension dependencies..." -ForegroundColor White
 Push-Location core
-yarn install
-yarn link
+pnpm install
+pnpm link --global
 Pop-Location
 
 Write-Output "`nInstalling GUI extension dependencies..." -ForegroundColor White
 Push-Location gui
-yarn install
-yarn link @continuedev/core
-yarn run build
+pnpm install
+pnpm link --global @continuedev/core
+pnpm run build
 Pop-Location
 
 # VSCode Extension (will also package GUI)
@@ -88,10 +66,10 @@ Write-Output "`nInstalling VSCode extension dependencies..." -ForegroundColor Wh
 Push-Location extensions/vscode
 
 # This does way too many things inline but is the common denominator between many of the scripts
-yarn install
-yarn link @continuedev/core
+pnpm install
+pnpm link --global @continuedev/core
 
-yarn run package
+pnpm run package
 
 Pop-Location
 
@@ -99,8 +77,8 @@ Pop-Location
 Write-Output "`nInstalling binary dependencies..." -ForegroundColor White
 Push-Location binary
 
-yarn install
-yarn run build
+pnpm install
+pnpm run build
 
 Pop-Location
 

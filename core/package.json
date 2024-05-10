@@ -10,7 +10,6 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "@types/follow-redirects": "^1.14.4",
-    "@types/handlebars": "^4.1.0",
     "@types/jest": "^29.5.11",
     "@types/jquery": "^3.5.29",
     "@types/mustache": "^4.2.5",
