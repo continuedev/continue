@@ -18,5 +18,5 @@
     "noEmitOnError": false,
     "types": ["jest", "node"]
   },
-  "include": ["./**/*.ts", "indexing/embeddings/TransformersJsWorkerThread.js"]
+  "include": ["./**/*.ts", "indexing/embeddings/TransformersJsWorkerThread.js", "llm/llamaTokenizer.js"]
 }

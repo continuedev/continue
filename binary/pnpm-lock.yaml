@@ -1608,9 +1608,6 @@ packages:
     resolution: {integrity: sha512-+bT2uH4E5LGE7h/n3evcS/sQlJXCpIp6ym8OWJ5eV6+67Dsql/LaaT7qJBAt2rzfoa/5QBGBhxDix1dMt2kQKQ==}
     engines: {node: '>= 0.8.0'}
 
-  llama-tokenizer-js@1.1.3:
-    resolution: {integrity: sha512-+BUgsLCXVQJkjiD/t7PdESLn+yXJIRX/BJfwzVVYfKZ9aN3gsP9xoadBZxKnCxGz2Slby+S7x41gUr2TKNaS4Q==}
-
   llm-code-highlighter@0.0.14:
     resolution: {integrity: sha512-FxGAmu4zRp3Xi+9esP5SYrr4neC6SZqP+YnP/IfksT9k+AdnoemkQopUtilqKAWZp5c2VqG6NDMnHp6zyadebg==}
 
@@ -2771,7 +2768,6 @@ snapshots:
       ignore: 5.3.1
       js-tiktoken: 1.0.11
       jsdom: 24.0.0
-      llama-tokenizer-js: 1.1.3
       llm-code-highlighter: 0.0.14(graphology-types@0.24.7)
       node-fetch: 3.3.2
       node-html-markdown: 1.3.0
@@ -4487,8 +4483,6 @@ snapshots:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
-
-  llama-tokenizer-js@1.1.3: {}
 
   llm-code-highlighter@0.0.14(graphology-types@0.24.7):
     dependencies:

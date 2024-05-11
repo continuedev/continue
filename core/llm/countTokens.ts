@@ -1,16 +1,26 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
-// @ts-ignore
-import llamaTokenizer from "llama-tokenizer-js";
 import { ChatMessage, MessageContent, MessagePart } from "..";
 import { autodetectTemplateType } from "./autodetect";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
+import llamaTokenizer from "./llamaTokenizer";
 
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
 }
 
+class LlamaEncoding implements Encoding {
+  encode(text: string, allowedSpecial?: string[] | "all" | undefined, disallowedSpecial?: string[] | "all" | undefined): number[] {
+    return llamaTokenizer.encode(text);
+  }
+  decode(tokens: number[]): string {
+    return llamaTokenizer.decode(tokens);
+  }
+
+}
+
 let gptEncoding: Encoding | null = null;
+const llamaEncoding = new LlamaEncoding();
 
 function encodingForModel(modelName: string): Encoding {
   const modelType = autodetectTemplateType(modelName);
@@ -23,7 +33,7 @@ function encodingForModel(modelName: string): Encoding {
     return gptEncoding;
   }
 
-  return llamaTokenizer;
+  return llamaEncoding;
 }
 
 function countImageTokens(content: MessagePart): number {
@@ -354,5 +364,6 @@ export {
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop,
+  pruneStringFromTop
 };
+
