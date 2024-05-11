@@ -1,8 +1,7 @@
 import {
   env,
   pipeline,
-  type PipelineType,
-} from "../../vendor/node_modules/@xenova/transformers";
+} from "../../vendor/modules/@xenova/transformers";
 
 import path from "node:path";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
