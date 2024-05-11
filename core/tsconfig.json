@@ -18,6 +18,6 @@
     "noEmitOnError": false,
     "types": ["jest", "node"]
   },
-  "include": ["./**/*.ts", "./**/*.js"],
+  "include": ["./**/*.ts", "./**/*.js", "./**/*.d.ts"],
   "exclude": ["test", "dist"]
 }

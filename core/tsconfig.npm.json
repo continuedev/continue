@@ -20,6 +20,6 @@
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["./**/*.ts", "**/*.js"],
+  "include": ["./**/*.ts", "**/*.js", "./**/*.d.ts"],
   "exclude": ["test", "dist"]
 }
