@@ -1,12 +1,8 @@
-import {
-  type Tiktoken,
-  encodingForModel as _encodingForModel,
-} from "js-tiktoken";
-// @ts-ignore
-import llamaTokenizer from "llama-tokenizer-js";
-import type { ChatMessage, MessageContent, MessagePart } from "..";
+import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
+import { ChatMessage, MessageContent, MessagePart } from "..";
 import { autodetectTemplateType } from "./autodetect";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
+import llamaTokenizer from "./llamaTokenizer";
 
 interface Encoding {
   encode: Tiktoken["encode"];
@@ -14,16 +10,13 @@ interface Encoding {
 }
 
 class LlamaEncoding implements Encoding {
-  encode(
-    text: string,
-    allowedSpecial?: string[] | "all" | undefined,
-    disallowedSpecial?: string[] | "all" | undefined,
-  ): number[] {
+  encode(text: string, allowedSpecial?: string[] | "all" | undefined, disallowedSpecial?: string[] | "all" | undefined): number[] {
     return llamaTokenizer.encode(text);
   }
   decode(tokens: number[]): string {
     return llamaTokenizer.decode(tokens);
   }
+
 }
 
 let gptEncoding: Encoding | null = null;
@@ -367,5 +360,6 @@ export {
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop,
+  pruneStringFromTop
 };
+
