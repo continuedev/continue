@@ -552,9 +552,16 @@
     "undici": "^6.2.0",
     "uuid": "^9.0.1",
     "uuidv4": "^6.2.13",
-    "vectordb": "^0.4.12",
+    "vectordb": "^0.4.20",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"
+  },
+  "optionalDependencies": {
+    "@lancedb/vectordb-darwin-arm64": "^0.4.20",
+    "@lancedb/vectordb-darwin-x64": "^0.4.20",
+    "@lancedb/vectordb-linux-arm64-gnu": "^0.4.20",
+    "@lancedb/vectordb-linux-x64-gnu": "^0.4.20",
+    "@lancedb/vectordb-win32-x64-msvc": "^0.4.20"
   }
 }

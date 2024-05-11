@@ -50,15 +50,15 @@ if (($null -eq $cargo) -or ($null -eq $node)) {
 
 Write-Host "`nInstalling Core extension dependencies..." -ForegroundColor White
 Push-Location core
-yarn install
-yarn link
+pnpm install
+pnpm link --global
 Pop-Location
 
 Write-Output "`nInstalling GUI extension dependencies..." -ForegroundColor White
 Push-Location gui
-yarn install
-yarn link @continuedev/core
-yarn run build
+pnpm install
+pnpm link --global @continuedev/core
+pnpm run build
 Pop-Location
 
 # VSCode Extension (will also package GUI)
@@ -66,10 +66,10 @@ Write-Output "`nInstalling VSCode extension dependencies..." -ForegroundColor Wh
 Push-Location extensions/vscode
 
 # This does way too many things inline but is the common denominator between many of the scripts
-yarn install
-yarn link @continuedev/core
+pnpm install
+pnpm link --global @continuedev/core
 
-yarn run package
+pnpm run package
 
 Pop-Location
 
@@ -77,8 +77,8 @@ Pop-Location
 Write-Output "`nInstalling binary dependencies..." -ForegroundColor White
 Push-Location binary
 
-yarn install
-yarn run build
+pnpm install
+pnpm run build
 
 Pop-Location
 
