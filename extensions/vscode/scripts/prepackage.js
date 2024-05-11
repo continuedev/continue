@@ -102,16 +102,16 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // Install node_modules //
-  execCmdSync("yarn install --no-save");
-  console.log("[info] yarn install in extensions/vscode completed");
+  execCmdSync("pnpm install");
+  console.log("[info] pnpm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execCmdSync("yarn install --no-save");
-  console.log("[info] yarn install in gui completed");
+  execCmdSync("pnpm install");
+  console.log("[info] pnpm install in gui completed");
 
   if (ghAction()) {
-    execCmdSync("yarn run build");
+    execCmdSync("pnpm run build");
   }
 
   // Copy over the dist folder to the Intellij extension //
@@ -186,6 +186,9 @@ const exe = os === "win32" ? ".exe" : "";
     ncp(
       path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
       path.join(__dirname, "../bin"),
+      {
+        dereference: true,
+      },
       (error) => {
         if (error) {
           console.warn("[info] Error copying onnxruntime-node files", error);
@@ -220,6 +223,7 @@ const exe = os === "win32" ? ".exe" : "";
     ncp(
       path.join(__dirname, "../../../core/node_modules/tree-sitter-wasms/out"),
       path.join(__dirname, "../out/tree-sitter-wasms"),
+      {dereference: true, },
       (error) => {
         if (error) {
           console.warn("[error] Error copying tree-sitter-wasm files", error);
@@ -283,22 +287,9 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-  if (isArm()) {
-    // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
-    if (!isWin()) {
-      // lancedb binary
-      const packageToInstall = {
-        "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
-        "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
-      }[target];
-      console.log(
-        "[info] Downloading pre-built lancedb binary: " + packageToInstall,
-      );
-      rimrafSync("node_modules/@lancedb");
-      execCmdSync(`yarn add ${packageToInstall} --no-save --no-lockfile`);
-      execCmdSync(`yarn remove ${packageToInstall}`);
-    }
 
+
+  if (ghAction() && isArm()) {
     // Download and unzip esbuild
     console.log("[info] Downloading pre-built esbuild binary");
     rimrafSync("node_modules/@esbuild");
@@ -308,11 +299,22 @@ const exe = os === "win32" ? ".exe" : "";
     );
     execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
-  }
 
-  if (ghAction()) {
     // sqlite3
-    if (isArm() && !isWin()) {
+    if (!isWin()) {
+      // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
+      
+      // lancedb binary
+      const packageToInstall = {
+        "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
+        "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
+      }[target];
+      console.log(
+        "[info] Downloading pre-built lancedb binary: " + packageToInstall,
+      );
+      rimrafSync("node_modules/@lancedb");
+      execCmdSync(`pnpm add ${packageToInstall}`);
+
       // Replace the installed with pre-built
       console.log("[info] Downloading pre-built sqlite3 binary");
       rimrafSync("../../core/node_modules/sqlite3/build");
@@ -336,6 +338,7 @@ const exe = os === "win32" ? ".exe" : "";
     ncp(
       path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
       path.join(__dirname, "../out/build"),
+      {dereference: true, },
       (error) => {
         if (error) {
           console.warn("[error] Error copying sqlite3 files", error);
@@ -359,6 +362,7 @@ const exe = os === "win32" ? ".exe" : "";
           ncp(
             `node_modules/${mod}`,
             `out/node_modules/${mod}`,
+            {dereference: true, },
             function (error) {
               if (error) {
                 console.error(`[error] Error copying ${mod}`, error);
@@ -399,9 +403,9 @@ function validateFilesPresent() {
     `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
     `bin/napi-v3/${os}/${arch}/${
       os === "darwin"
-        ? "libonnxruntime.1.14.0.dylib"
+        ? "libonnxruntime.1.17.3.dylib"
         : os === "linux"
-        ? "libonnxruntime.so.1.14.0"
+        ? "libonnxruntime.so.1.17.3"
         : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
