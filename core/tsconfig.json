@@ -3,7 +3,7 @@
     "target": "ESNext",
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext", "ES2021"],
-    "allowJs": false,
+    "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
@@ -18,5 +18,6 @@
     "noEmitOnError": false,
     "types": ["jest", "node"]
   },
-  "include": ["./**/*.ts", "indexing/embeddings/TransformersJsWorkerThread.js", "llm/llamaTokenizer.js"]
+  "include": ["./**/*.ts", "./**/*.js"],
+  "exclude": ["test", "dist"]
 }
