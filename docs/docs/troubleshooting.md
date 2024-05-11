@@ -14,11 +14,21 @@ To solve many problems, the first step is reading the logs to find the relevant 
 
 ### VS Code
 
+#### Console logs
+
 1. `cmd+shift+p` (MacOS) / `ctrl+shift+p` (Windows)
 2. Search for and then select "Developer: Toggle Developer Tools"
 3. This will open the [Chrome DevTools window](https://developer.chrome.com/docs/devtools/)
 4. Select the `Console` tab
 5. Read the console logs
+
+#### LLM prompt logs
+
+If you're getting a response from the LLM that doesn't seem to make sense, you can
+
+1. Open the "Output" panel (right next to the terminal)
+2. In the dropdown, select "Continue - LLM Prompts/Completions
+3. View the exact prompts that were sent to the LLM and the completions recieved
 
 ### JetBrains
 
