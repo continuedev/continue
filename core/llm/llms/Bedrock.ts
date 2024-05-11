@@ -10,13 +10,17 @@ import {
   ModelProvider,
 } from "../..";
 import { stripImages } from "../countTokens";
+import {
+  BedrockRuntimeClient,
+  InvokeModelWithResponseStreamCommand,
+} from "@aws-sdk/client-bedrock-runtime";
 
 const aws4 = require("aws4");
 const readFile = promisify(fs.readFile);
 
 namespace BedrockCommon {
   export enum Method {
-    Chat = "invoke",
+    Chat = "invoke-with-response-stream",
     Completion = "invoke-with-response-stream",
   }
   export const Service: string = "bedrock";
@@ -126,10 +130,7 @@ class Bedrock extends BaseLLM {
     const path = `/model/${model}/${apiMethod}`;
     const opts = {
       headers: {
-        accept:
-          apiMethod === BedrockCommon.Method.Chat
-            ? "application/json"
-            : "application/vnd.amazon.eventstream",
+        accept: "application/vnd.amazon.eventstream",
         "content-type": "application/json",
         "x-amzn-bedrock-accept": "*/*",
       },
@@ -172,39 +173,55 @@ class Bedrock extends BaseLLM {
     for await (const update of this._streamChat(messages, options)) {
       yield stripImages(update.content);
     }
-    // TODO: Couldn't seem to get this stream API working yet. Deferring to _streamChat.
-    // import { streamSse } from "../stream";
-    // const response = await this._fetchWithAwsAuthSigV4(BedrockCommon.Method.Completion, JSON.stringify({
-    //     ...this._convertArgs(options),
-    //     max_tokens: undefined, // Delete this key in favor of the correct one for the Completions API.
-    //     max_tokens_to_sample: options.maxTokens,
-    //     prompt: `\n\nHuman: ${prompt}\n\nAssistant:`,
-    //   })
-    // );
-    // for await (const value of streamSse(response)) {
-    //   if (value.completion) {
-    //     yield value.completion
-    //   }
-    // }
   }
 
   protected async *_streamChat(
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const response = await this._fetchWithAwsAuthSigV4(
-      BedrockCommon.Method.Chat,
-      JSON.stringify({
-        ...this._convertArgs(options),
-        messages: this._convertMessages(messages),
-        anthropic_version: "bedrock-2023-05-31", // Fixed, required parameter for Chat API.
-      }),
-      this._convertModelName(options.model),
+    const data = await readFile(
+      joinPath(process.env.HOME ?? os.homedir(), ".aws", "credentials"),
+      "utf8",
     );
-    yield {
-      role: "assistant",
-      content: (await response.json()).content[0].text,
-    };
+    const credentials = this._parseCredentialsFile(data);
+    const accessKeyId = credentials.bedrock.accessKeyId;
+    const secretAccessKey = credentials.bedrock.secretAccessKey;
+    const sessionToken = credentials.bedrock.sessionToken || "";
+    const client = new BedrockRuntimeClient({
+      region: this.region,
+      credentials: {
+        accessKeyId: accessKeyId,
+        secretAccessKey: secretAccessKey,
+        sessionToken: sessionToken,
+      },
+    });
+    const command = new InvokeModelWithResponseStreamCommand({
+      body: new TextEncoder().encode(
+        JSON.stringify({
+          anthropic_version: "bedrock-2023-05-31",
+          max_tokens: options.maxTokens,
+          system: this.systemMessage,
+          messages: this._convertMessages(messages),
+          temperature: options.temperature,
+          top_p: options.topP,
+          top_k: options.topK,
+          stop_sequences: options.stop
+        }),
+      ),
+      contentType: "application/json",
+      modelId: options.model,
+    });
+    const response = await client.send(command);
+    if (response.body) {
+      for await (const value of response.body) {
+        const binaryChunk = value.chunk?.bytes;
+        const textChunk = new TextDecoder().decode(binaryChunk);
+        const chunk = JSON.parse(textChunk).delta?.text;
+        if (chunk) {
+          yield { role: "assistant", content: chunk };
+        }
+      }
+    }
   }
 }
 
