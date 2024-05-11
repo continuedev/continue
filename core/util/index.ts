@@ -150,8 +150,10 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
       return "latex";
     case "sql":
       return "sql";
+    case "ps1":
+      return "powershell";
     default:
-      return "";
+      return ext ?? "";
   }
 }
 
