@@ -1,6 +1,6 @@
 {
   "name": "@continuedev/core",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "The Continue Core contains functionality that can be shared across web, VS Code, or Node.js server. It is written in TypeScript and contains much of the functionality that was previously inside of the legacy Continue Python Server.",
   "scripts": {
     "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest ./test/diff.test.ts",
