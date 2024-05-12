@@ -11,6 +11,7 @@ import { addDocs, hasDoc } from "./db.js";
 export async function* indexDocs(
   siteIndexingConfig: SiteIndexingConfig,
   embeddingsProvider: EmbeddingsProvider,
+  maxDepth?: number
 ): AsyncGenerator<IndexingProgressUpdate> {
   const startUrl = new URL(siteIndexingConfig.startUrl);
 
@@ -31,8 +32,7 @@ export async function* indexDocs(
 
   const articles: Article[] = [];
 
-  // Crawl pages and retrieve info as articles
-  for await (const page of crawlPage(startUrl, siteIndexingConfig.maxDepth)) {
+  for await (const page of crawlPage(baseUrl, maxDepth)) {
     const article = pageToArticle(page);
     if (!article) {
       continue;

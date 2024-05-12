@@ -16,11 +16,12 @@ const GridDiv = styled.div`
 `;
 
 function AddDocsDialog() {
-  const defaultMaxDepth = 3;
+  const defaultMaxDepth = 4
   const [docsUrl, setDocsUrl] = React.useState("");
   const [docsTitle, setDocsTitle] = React.useState("");
   const [urlValid, setUrlValid] = React.useState(false);
-  const [maxDepth, setMaxDepth] = React.useState<number | string>(""); // Change here
+  const [maxDepth, setMaxDepth] = React.useState(defaultMaxDepth);
+  const [maxDepthValid, setMaxDepthValid] = React.useState(false)  // ToDo
 
   const dispatch = useDispatch();
 
@@ -67,29 +68,18 @@ function AddDocsDialog() {
       />
       <Input
         type="text"
-        placeholder={`Optional: Max Depth (Default: ${defaultMaxDepth})`}
-        title="The maximum search tree depth - where your input url is the root node"
+        placeholder={`Max Depth (Default=${defaultMaxDepth})`}
         value={maxDepth}
-        onChange={(e) => {
-          const value = e.target.value;
-          if (value == "") {
-            setMaxDepth("");
-          } else if (!isNaN(+value) && Number(value) > 0) {
-            setMaxDepth(Number(value));
-          }
-        }}
+        onChange={(e) => setMaxDepth(Number(e.target.value))}
       />
       <Button
         disabled={!docsUrl || !urlValid}
         className="ml-auto"
         onClick={() => {
-          ideMessenger.post("context/addDocs", {
-            url: docsUrl,
-            title: docsTitle,
-          });
+          postToIde("context/addDocs", { startUrl: docsUrl, rootUrl: docsUrl, title: docsTitle, maxDepth:maxDepth });
           setDocsTitle("");
           setDocsUrl("");
-          setMaxDepth("");
+          setMaxDepth(defaultMaxDepth)
           dispatch(setShowDialog(false));
           addItem("docs", {
             id: docsUrl,
