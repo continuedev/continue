@@ -1,8 +1,5 @@
-import {
-  PipelineType,
-  env,
-  pipeline,
-} from "../../vendor/modules/@xenova/transformers/src/transformers";
+// @ts-ignore
+import { PipelineType, env, pipeline } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
 
 import path from "path";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
