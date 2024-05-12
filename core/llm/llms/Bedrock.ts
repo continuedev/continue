@@ -2,14 +2,14 @@ import * as fs from "fs";
 import os from "os";
 import { join as joinPath } from "path";
 import { promisify } from "util";
-import { BaseLLM } from "..";
+import { BaseLLM } from "../index.js";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
 
 const aws4 = require("aws4");
 const readFile = promisify(fs.readFile);

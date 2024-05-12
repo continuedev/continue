@@ -1,5 +1,5 @@
-import { SlashCommand } from "../..";
-import { stripImages } from "../../llm/countTokens";
+import { SlashCommand } from "../../index.js";
+import { stripImages } from "../../llm/countTokens.js";
 
 const CommitMessageCommand: SlashCommand = {
   name: "commit",

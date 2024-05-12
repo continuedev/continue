@@ -1,12 +1,12 @@
-import { BaseLLM } from "..";
+import { BaseLLM } from "../index.js";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
-import { streamSse } from "../stream";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
+import { streamSse } from "../stream.js";
 
 const NON_CHAT_MODELS = [
   "text-davinci-002",

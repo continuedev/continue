@@ -12,31 +12,31 @@ import {
   PromptTemplate,
   RequestOptions,
   TemplateType,
-} from "..";
-import { DevDataSqliteDb } from "../util/devdataSqlite";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions";
-import mergeJson from "../util/merge";
-import { Telemetry } from "../util/posthog";
-import { withExponentialBackoff } from "../util/withExponentialBackoff";
+} from "../index.js";
+import { DevDataSqliteDb } from "../util/devdataSqlite.js";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
+import mergeJson from "../util/merge.js";
+import { Telemetry } from "../util/posthog.js";
+import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,
   autodetectTemplateType,
   modelSupportsImages,
-} from "./autodetect";
+} from "./autodetect.js";
 import {
   CONTEXT_LENGTH_FOR_MODEL,
   DEFAULT_ARGS,
   DEFAULT_CONTEXT_LENGTH,
   DEFAULT_MAX_TOKENS,
-} from "./constants";
+} from "./constants.js";
 import {
   compileChatMessages,
   countTokens,
   pruneRawPromptFromTop,
   stripImages,
-} from "./countTokens";
-import CompletionOptionsForModels from "./templates/options";
+} from "./countTokens.js";
+import CompletionOptionsForModels from "./templates/options.js";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;

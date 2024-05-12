@@ -1,4 +1,4 @@
-import { RequestOptions } from "../../..";
+import { RequestOptions } from "../../../index.js";
 const { convert: adf2md } = require("adf-to-md");
 
 interface JiraClientOptions {
@@ -67,7 +67,7 @@ export class JiraClient {
   private authHeader;
   constructor(options: JiraClientOptions) {
     this.options = {
-      issueQuery: `assignee = currentUser() AND resolution = Unresolved order by updated DESC`,
+      issueQuery: "assignee = currentUser() AND resolution = Unresolved order by updated DESC",
       apiVersion: "3",
       requestOptions: {},
       ...options,
@@ -142,7 +142,7 @@ export class JiraClient {
         this.baseUrl +
           `/search?fields=summary&jql=${
             this.options.issueQuery ??
-            `assignee = currentUser() AND resolution = Unresolved order by updated DESC`
+            "assignee = currentUser() AND resolution = Unresolved order by updated DESC"
           }`,
       ),
       {

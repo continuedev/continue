@@ -1,12 +1,12 @@
-import { IDE, IndexTag, IndexingProgressUpdate } from "..";
-import { ConfigHandler } from "../config/handler";
-import { ContinueServerClient } from "../continueServer/stubs/client";
-import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex";
-import { FullTextSearchCodebaseIndex } from "./FullTextSearch";
-import { LanceDbIndex } from "./LanceDbIndex";
-import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
-import { getComputeDeleteAddRemove } from "./refreshIndex";
-import { CodebaseIndex } from "./types";
+import { IDE, IndexTag, IndexingProgressUpdate } from "../index.js";
+import { ConfigHandler } from "../config/handler.js";
+import { ContinueServerClient } from "../continueServer/stubs/client.js";
+import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
+import { FullTextSearchCodebaseIndex } from "./FullTextSearch.js";
+import { LanceDbIndex } from "./LanceDbIndex.js";
+import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
+import { getComputeDeleteAddRemove } from "./refreshIndex.js";
+import { CodebaseIndex } from "./types.js";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}

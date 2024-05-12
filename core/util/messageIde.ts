@@ -6,7 +6,7 @@ import {
   Problem,
   Range,
   Thread,
-} from "..";
+} from "../index.js";
 
 export class MessageIde implements IDE {
   constructor(

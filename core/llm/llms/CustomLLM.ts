@@ -1,10 +1,10 @@
-import { BaseLLM } from "..";
+import { BaseLLM } from "../index.js";
 import {
   ChatMessage,
   CompletionOptions,
   CustomLLM,
   ModelProvider,
-} from "../..";
+} from "../../index.js";
 
 class CustomLLMClass extends BaseLLM {
   get providerName(): ModelProvider {

@@ -8,10 +8,10 @@ import {
   Problem,
   Range,
   Thread,
-} from "..";
-import { RangeInFileWithContents } from "../commands/util";
+} from "../index.js";
+import { RangeInFileWithContents } from "../commands/util.js";
 
-import { Protocol } from "../protocol";
+import { Protocol } from "../protocol.js";
 
 export type IdeProtocol = {
   listWorkspaceContents: [undefined, string[]];

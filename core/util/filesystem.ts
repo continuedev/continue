@@ -7,9 +7,9 @@ import {
   Problem,
   Range,
   Thread,
-} from "..";
+} from "../index.js";
 
-import { getContinueGlobalPath } from "./paths";
+import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
   getRepoName(dir: string): Promise<string | undefined> {

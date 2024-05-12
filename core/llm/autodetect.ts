@@ -1,4 +1,4 @@
-import { ModelProvider, TemplateType } from "..";
+import { ModelProvider, TemplateType } from "../index.js";
 import {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
@@ -15,7 +15,7 @@ import {
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
   zephyrTemplateMessages,
-} from "./templates/chat";
+} from "./templates/chat.js";
 import {
   alpacaEditPrompt,
   claudeEditPrompt,
@@ -32,7 +32,7 @@ import {
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
-} from "./templates/edit";
+} from "./templates/edit.js";
 
 const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "lmstudio",

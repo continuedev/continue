@@ -1,8 +1,8 @@
-import { BaseLLM } from "..";
-import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
-import { getHeaders } from "../../continueServer/stubs/headers";
-import { SERVER_URL } from "../../util/parameters";
-import { streamResponse } from "../stream";
+import { BaseLLM } from "../index.js";
+import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
+import { getHeaders } from "../../continueServer/stubs/headers.js";
+import { SERVER_URL } from "../../util/parameters.js";
+import { streamResponse } from "../stream.js";
 
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";

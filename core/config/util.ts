@@ -1,6 +1,6 @@
 import { readFileSync, writeFileSync } from "fs";
-import { ModelDescription } from "..";
-import { editConfigJson, getConfigJsonPath } from "../util/paths";
+import { ModelDescription } from "../index.js";
+import { editConfigJson, getConfigJsonPath } from "../util/paths.js";
 
 function stringify(obj: any, indentation?: number): string {
   return JSON.stringify(

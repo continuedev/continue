@@ -1,10 +1,10 @@
-import { BaseContextProvider } from "..";
+import { BaseContextProvider } from "../index.js";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
-import { getBasename } from "../../util";
+} from "../../index.js";
+import { getBasename } from "../../util/index.js";
 
 class ProblemsContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -46,7 +46,7 @@ class ProblemsContextProvider extends BaseContextProvider {
       ? [
           {
             description: "Problems in current file",
-            content: `There are no problems found in the open file.`,
+            content: "There are no problems found in the open file.",
             name: "No problems found",
           },
         ]

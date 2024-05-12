@@ -1,32 +1,32 @@
 import Handlebars from "handlebars";
-import { BaseLLM } from "..";
+import { BaseLLM } from "../index.js";
 import {
   BaseCompletionOptions,
   ILLM,
   LLMOptions,
   ModelDescription,
-} from "../..";
-import { DEFAULT_MAX_TOKENS } from "../constants";
-import Anthropic from "./Anthropic";
-import Bedrock from "./Bedrock";
-import Cohere from "./Cohere";
-import DeepInfra from "./DeepInfra";
-import Flowise from "./Flowise";
-import FreeTrial from "./FreeTrial";
-import Gemini from "./Gemini";
-import Groq from "./Groq";
-import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
-import HuggingFaceTGI from "./HuggingFaceTGI";
-import LMStudio from "./LMStudio";
-import LlamaCpp from "./LlamaCpp";
-import Llamafile from "./Llamafile";
-import Mistral from "./Mistral";
-import Ollama from "./Ollama";
-import OpenAI from "./OpenAI";
-import OpenAIFreeTrial from "./OpenAIFreeTrial";
-import Replicate from "./Replicate";
-import TextGenWebUI from "./TextGenWebUI";
-import Together from "./Together";
+} from "../../index.js";
+import { DEFAULT_MAX_TOKENS } from "../constants.js";
+import Anthropic from "./Anthropic.js";
+import Bedrock from "./Bedrock.js";
+import Cohere from "./Cohere.js";
+import DeepInfra from "./DeepInfra.js";
+import Flowise from "./Flowise.js";
+import FreeTrial from "./FreeTrial.js";
+import Gemini from "./Gemini.js";
+import Groq from "./Groq.js";
+import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI.js";
+import HuggingFaceTGI from "./HuggingFaceTGI.js";
+import LMStudio from "./LMStudio.js";
+import LlamaCpp from "./LlamaCpp.js";
+import Llamafile from "./Llamafile.js";
+import Mistral from "./Mistral.js";
+import Ollama from "./Ollama.js";
+import OpenAI from "./OpenAI.js";
+import OpenAIFreeTrial from "./OpenAIFreeTrial.js";
+import Replicate from "./Replicate.js";
+import TextGenWebUI from "./TextGenWebUI.js";
+import Together from "./Together.js";
 
 function convertToLetter(num: number): string {
   let result = "";

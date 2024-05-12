@@ -1,6 +1,6 @@
-import { SlashCommand } from "../..";
-import { streamLines } from "../../diff/util";
-import { removeQuotesAndEscapes } from "../../util";
+import { SlashCommand } from "../../index.js";
+import { streamLines } from "../../diff/util.js";
+import { removeQuotesAndEscapes } from "../../util/index.js";
 
 const GenerateTerminalCommand: SlashCommand = {
   name: "cmd",

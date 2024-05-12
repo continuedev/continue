@@ -1,8 +1,8 @@
-import { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "../..";
+import { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "../../index.js";
 
-import { Article, chunkArticle, pageToArticle } from "./article";
-import { crawlPage } from "./crawl";
-import { addDocs, hasDoc } from "./db";
+import { Article, chunkArticle, pageToArticle } from "./article.js";
+import { crawlPage } from "./crawl.js";
+import { addDocs, hasDoc } from "./db.js";
 
 export async function* indexDocs(
   title: string,
@@ -28,7 +28,7 @@ export async function* indexDocs(
 
   for await (const page of crawlPage(baseUrl)) {
     const article = pageToArticle(page);
-    if (!article) continue;
+    if (!article) {continue;}
 
     articles.push(article);
 

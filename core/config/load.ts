@@ -16,24 +16,24 @@ import {
   RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
-} from "..";
+} from "../index.js";
 import {
   slashCommandFromDescription,
   slashFromCustomCommand,
-} from "../commands";
-import { contextProviderClassFromName } from "../context/providers";
-import CustomContextProviderClass from "../context/providers/CustomContextProvider";
-import FileContextProvider from "../context/providers/FileContextProvider";
-import { AllRerankers } from "../context/rerankers";
-import { LLMReranker } from "../context/rerankers/llm";
-import { AllEmbeddingsProviders } from "../indexing/embeddings";
-import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { BaseLLM } from "../llm";
-import { llmFromDescription } from "../llm/llms";
-import CustomLLMClass from "../llm/llms/CustomLLM";
-import { copyOf } from "../util";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions";
-import mergeJson from "../util/merge";
+} from "../commands/index.js";
+import { contextProviderClassFromName } from "../context/providers/index.js";
+import CustomContextProviderClass from "../context/providers/CustomContextProvider.js";
+import FileContextProvider from "../context/providers/FileContextProvider.js";
+import { AllRerankers } from "../context/rerankers/index.js";
+import { LLMReranker } from "../context/rerankers/llm.js";
+import { AllEmbeddingsProviders } from "../indexing/embeddings/index.js";
+import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
+import { BaseLLM } from "../llm/index.js";
+import { llmFromDescription } from "../llm/llms/index.js";
+import CustomLLMClass from "../llm/llms/CustomLLM.js";
+import { copyOf } from "../util/index.js";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
+import mergeJson from "../util/merge.js";
 import {
   getConfigJsPath,
   getConfigJsPathForRemote,
@@ -41,13 +41,13 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
-} from "../util/paths";
+} from "../util/paths.js";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
   defaultSlashCommandsJetBrains,
   defaultSlashCommandsVscode,
-} from "./default";
+} from "./default.js";
 const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -181,7 +181,7 @@ async function intermediateToFinalConfig(
         config.completionOptions,
         config.systemMessage,
       );
-      if (!llm) continue;
+      if (!llm) {continue;}
 
       if (llm.model === "AUTODETECT") {
         try {

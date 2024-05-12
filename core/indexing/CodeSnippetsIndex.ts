@@ -7,20 +7,20 @@ import {
   IDE,
   IndexTag,
   IndexingProgressUpdate,
-} from "..";
-import { getBasename } from "../util";
+} from "../index.js";
+import { getBasename } from "../util/index.js";
 import {
   getLanguageForFile,
   getParserForFile,
   supportedLanguages,
-} from "../util/treeSitter";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+} from "../util/treeSitter.js";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
-} from "./types";
+} from "./types.js";
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   artifactId = "codeSnippets";
@@ -118,7 +118,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       // Add snippets to sqlite
       for (const snippet of snippets) {
         const { lastID } = await db.run(
-          `INSERT INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)`,
+          "INSERT INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)",
           [
             compute.path,
             compute.cacheKey,
@@ -130,7 +130,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         );
 
         await db.run(
-          `INSERT INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)`,
+          "INSERT INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)",
           [lastID, tagString],
         );
       }
@@ -146,10 +146,10 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     for (let i = 0; i < results.del.length; i++) {
       const del = results.del[i];
       const deleted = await db.run(
-        `DELETE FROM code_snippets WHERE path = ? AND cacheKey = ?`,
+        "DELETE FROM code_snippets WHERE path = ? AND cacheKey = ?",
         [del.path, del.cacheKey],
       );
-      await db.run(`DELETE FROM code_snippets_tags WHERE snippetId = ?`, [
+      await db.run("DELETE FROM code_snippets_tags WHERE snippetId = ?", [
         deleted.lastID,
       ]);
       markComplete([del], IndexResultType.Delete);
@@ -157,13 +157,13 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
     for (let i = 0; i < results.addTag.length; i++) {
       const snippetsWithPath = await db.all(
-        `SELECT * FROM code_snippets WHERE cacheKey = ?`,
+        "SELECT * FROM code_snippets WHERE cacheKey = ?",
         [results.addTag[i].cacheKey],
       );
 
       for (const snippet of snippetsWithPath) {
         await db.run(
-          `INSERT INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)`,
+          "INSERT INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)",
           [snippet.id, tagString],
         );
       }
@@ -190,7 +190,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
   static async getForId(id: number): Promise<ContextItem> {
     const db = await SqliteDb.get();
-    const row = await db.get(`SELECT * FROM code_snippets WHERE id = ?`, [id]);
+    const row = await db.get("SELECT * FROM code_snippets WHERE id = ?", [id]);
 
     return {
       name: row.title,

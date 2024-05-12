@@ -5,15 +5,23 @@
       "ecmaVersion": 6,
       "sourceType": "module"
     },
-    "plugins": ["@typescript-eslint"],
+    "extends": ["plugin:require-extensions/recommended"],
+    "plugins": ["@typescript-eslint", "import", "require-extensions"],
     "rules": {
-      "@typescript-eslint/naming-convention": "warn",
-      "@typescript-eslint/semi": "warn",
-      "curly": "warn",
-      "eqeqeq": "warn",
-      "no-throw-literal": "warn",
-      "semi": "off"
-    },
+      "quotes": ["warn", "double", {}],
+      "import/extensions": ["error", "always", {
+          "js": "never",
+          "jsx": "never",
+          "ts": "never",
+          "tsx": "never"
+        }],
+        "@typescript-eslint/naming-convention": "warn",
+        "@typescript-eslint/semi": "warn",
+        "curly": "warn",
+        "eqeqeq": "warn",
+        "no-throw-literal": "warn",
+        "semi": "off"
+      },
     "ignorePatterns": ["out", "dist", "**/*.d.ts"]
   }
   

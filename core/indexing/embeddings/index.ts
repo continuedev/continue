@@ -1,9 +1,9 @@
-import { EmbeddingsProviderName } from "../..";
-import CohereEmbeddingsProvider from "./CohereEmbeddingsProvider";
-import FreeTrialEmbeddingsProvider from "./FreeTrialEmbeddingsProvider";
-import OllamaEmbeddingsProvider from "./OllamaEmbeddingsProvider";
-import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider";
-import TransformersJsEmbeddingsProvider from "./TransformersJsEmbeddingsProvider";
+import { EmbeddingsProviderName } from "../../index.js";
+import CohereEmbeddingsProvider from "./CohereEmbeddingsProvider.js";
+import FreeTrialEmbeddingsProvider from "./FreeTrialEmbeddingsProvider.js";
+import OllamaEmbeddingsProvider from "./OllamaEmbeddingsProvider.js";
+import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider.js";
+import TransformersJsEmbeddingsProvider from "./TransformersJsEmbeddingsProvider.js";
 
 export const AllEmbeddingsProviders: {
   [key in EmbeddingsProviderName]: any;

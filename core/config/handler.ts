@@ -1,11 +1,11 @@
-import { ContinueConfig, ContinueRcJson, IDE, ILLM } from "..";
-import { IdeSettings } from "../protocol";
-import { Telemetry } from "../util/posthog";
+import { ContinueConfig, ContinueRcJson, IDE, ILLM } from "../index.js";
+import { IdeSettings } from "../protocol.js";
+import { Telemetry } from "../util/posthog.js";
 import {
   BrowserSerializedContinueConfig,
   finalToBrowserConfig,
   loadFullConfigNode,
-} from "./load";
+} from "./load.js";
 
 export class ConfigHandler {
   private savedConfig: ContinueConfig | undefined;

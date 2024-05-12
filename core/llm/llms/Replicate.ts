@@ -1,6 +1,6 @@
 import ReplicateClient from "replicate";
-import { BaseLLM } from "..";
-import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
+import { BaseLLM } from "../index.js";
+import { CompletionOptions, LLMOptions, ModelProvider } from "../../index.js";
 
 class Replicate extends BaseLLM {
   private static MODEL_IDS: {

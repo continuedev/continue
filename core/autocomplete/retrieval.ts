@@ -1,5 +1,5 @@
-import { BranchAndDir, Chunk } from "..";
-import { FullTextSearchCodebaseIndex } from "../indexing/FullTextSearch";
+import { BranchAndDir, Chunk } from "../index.js";
+import { FullTextSearchCodebaseIndex } from "../indexing/FullTextSearch.js";
 
 export async function fullTextRetrieve(
   prefix: string,

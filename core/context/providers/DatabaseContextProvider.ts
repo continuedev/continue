@@ -1,11 +1,11 @@
-import { BaseContextProvider } from "..";
+import { BaseContextProvider } from "../index.js";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
-} from "../..";
+} from "../../index.js";
 
 class DatabaseContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -47,7 +47,7 @@ class DatabaseContextProvider extends BaseContextProvider {
 
           let contextItem = {
             name: `${connectionName}-all-tables-schemas`,
-            description: `Schema for all tables.`,
+            description: "Schema for all tables.",
             content: prompt,
           };
 
@@ -101,7 +101,7 @@ class DatabaseContextProvider extends BaseContextProvider {
       let contextItem = {
         id: `${connection.name}.all`,
         title: `${connection.name} all table schemas`,
-        description: ``,
+        description: "",
       };
 
       contextItems.push(contextItem);
@@ -110,7 +110,7 @@ class DatabaseContextProvider extends BaseContextProvider {
         let contextItem = {
           id: `${connection.name}.${tableName}`,
           title: `${connection.name}.${tableName} schema`,
-          description: ``,
+          description: "",
         };
 
         contextItems.push(contextItem);

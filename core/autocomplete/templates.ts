@@ -1,7 +1,7 @@
 // Fill in the middle prompts
 
-import { CompletionOptions } from "..";
-import { AutocompleteSnippet } from "./ranking";
+import { CompletionOptions } from "../index.js";
+import { AutocompleteSnippet } from "./ranking.js";
 
 interface AutocompleteTemplate {
   template:

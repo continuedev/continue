@@ -1,12 +1,12 @@
-import { BaseLLM } from "..";
+import { BaseLLM } from "../index.js";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
-import { streamResponse } from "../stream";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
+import { streamResponse } from "../stream.js";
 
 class Ollama extends BaseLLM {
   static providerName: ModelProvider = "ollama";
@@ -56,7 +56,7 @@ class Ollama extends BaseLLM {
                   this.completionOptions.stop.push(JSON.parse(value));
                 } catch (e) {
                   console.warn(
-                    'Error parsing stop parameter value "{value}: ${e}',
+                    "Error parsing stop parameter value \"{value}: ${e}",
                   );
                 }
                 break;
