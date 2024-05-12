@@ -33,8 +33,11 @@ class EmbeddingsPipeline {
 export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static MaxGroupSize = 4;
 
-  constructor() {
+  constructor(modelPath?: string) {
     super({ model: "all-MiniLM-L2-v6" }, () => Promise.resolve(null));
+    if (modelPath) {
+      env.localModelPath = modelPath;
+    }
   }
 
   get id(): string {
