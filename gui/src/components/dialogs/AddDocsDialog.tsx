@@ -15,9 +15,13 @@ const GridDiv = styled.div`
 `;
 
 function AddDocsDialog() {
+  const defaultMaxDepth = 4
   const [docsUrl, setDocsUrl] = React.useState("");
   const [docsTitle, setDocsTitle] = React.useState("");
   const [urlValid, setUrlValid] = React.useState(false);
+  const [maxDepth, setMaxDepth] = React.useState(defaultMaxDepth);
+  const [maxDepthValid, setMaxDepthValid] = React.useState(false)  // ToDo
+
   const dispatch = useDispatch();
 
   const { addItem } = useContext(SubmenuContextProvidersContext);
@@ -60,14 +64,20 @@ function AddDocsDialog() {
         value={docsTitle}
         onChange={(e) => setDocsTitle(e.target.value)}
       />
-
+      <Input
+        type="text"
+        placeholder={`Max Depth (Default=${defaultMaxDepth})`}
+        value={maxDepth}
+        onChange={(e) => setMaxDepth(Number(e.target.value))}
+      />
       <Button
         disabled={!docsUrl || !urlValid}
         className="ml-auto"
         onClick={() => {
-          postToIde("context/addDocs", { url: docsUrl, title: docsTitle });
+          postToIde("context/addDocs", { startUrl: docsUrl, rootUrl: docsUrl, title: docsTitle, maxDepth:maxDepth });
           setDocsTitle("");
           setDocsUrl("");
+          setMaxDepth(defaultMaxDepth)
           dispatch(setShowDialog(false));
           addItem("docs", {
             id: docsUrl,

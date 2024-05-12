@@ -12,6 +12,7 @@ import {
   SessionInfo,
 } from ".";
 import { AutocompleteInput } from "./autocomplete/completionProvider";
+import { SiteIndexingConfig } from "./indexing/docs/preIndexedDocs";
 import { IdeProtocol } from "./web/webviewProtocol";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
@@ -62,7 +63,7 @@ export type Protocol = {
     { title: string },
     Promise<ContextSubmenuItem[]>,
   ];
-  "context/addDocs": [{ title: string; url: string }, void];
+  "context/addDocs": [SiteIndexingConfig, void];
   "autocomplete/complete": [AutocompleteInput, Promise<string[]>];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
