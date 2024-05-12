@@ -1,8 +1,8 @@
 // @ts-ignore
 import { PipelineType, env, pipeline } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
 
-import path from "node:path";
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
+import path from "path";
+import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 env.allowLocalModels = true;
 env.allowRemoteModels = false;

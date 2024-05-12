@@ -1,5 +1,5 @@
-import { BaseContextProvider } from "..";
-import type {
+import { BaseContextProvider } from "../index.js";
+import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
@@ -7,9 +7,6 @@ import type {
   LoadSubmenuItemsArgs,
 } from "../../index.js";
 import { CodeSnippetsCodebaseIndex } from "../../indexing/CodeSnippetsIndex.js";
-import { BaseContextProvider } from "../index.js";
-
-const MAX_SUBMENU_ITEMS = 10_000;
 
 class CodeContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

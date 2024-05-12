@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { Chunk, Reranker } from "../..";
+import { Chunk, Reranker } from "../../index.js";
 
 export class CohereReranker implements Reranker {
   name = "cohere";
@@ -18,7 +18,7 @@ export class CohereReranker implements Reranker {
   ) {}
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
-    let apiBase = this.params.apiBase ?? CohereReranker.defaultOptions.apiBase
+    let apiBase = this.params.apiBase ?? CohereReranker.defaultOptions.apiBase;
     if (!apiBase.endsWith("/")) {
       apiBase += "/";
     }

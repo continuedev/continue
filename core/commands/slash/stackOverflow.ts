@@ -1,5 +1,5 @@
-import { ChatMessageRole, FetchFunction, SlashCommand } from "../..";
-import { pruneStringFromBottom, stripImages } from "../../llm/countTokens";
+import { ChatMessageRole, FetchFunction, SlashCommand } from "../../index.js";
+import { pruneStringFromBottom, stripImages } from "../../llm/countTokens.js";
 
 const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
 const PROMPT = (input: string) => `The above sources are excerpts from related StackOverflow questions. Use them to help answer the below question from our user. Provide links to the sources in markdown whenever possible:

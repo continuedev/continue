@@ -1,6 +1,6 @@
-import type { SlashCommand } from "../..";
-import type { ChatMessage } from "../..";
-import { stripImages } from "../../llm/countTokens";
+import { SlashCommand } from "../../index.js";
+import { stripImages } from "../../llm/countTokens.js";
+import { ChatMessage } from "../../index.js";
 
 const prompt = `
      Review the following code, focusing on Readability, Maintainability, Code Smells, Speed, and Memory Performance. Provide feedback with these guidelines:
@@ -16,7 +16,7 @@ function getLastUserHistory(history: ChatMessage[]): string {
     .reverse()
     .find((message) => message.role === "user");
 
-  if (!lastUserHistory) return "";
+  if (!lastUserHistory) {return "";}
 
   if (Array.isArray(lastUserHistory.content)) {
     return lastUserHistory.content.reduce(

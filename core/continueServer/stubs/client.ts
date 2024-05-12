@@ -2,7 +2,7 @@ import type {
   ArtifactType,
   EmbeddingsCacheResponse,
   IContinueServerClient,
-} from "../interface";
+} from "../interface.js";
 
 export class ContinueServerClient implements IContinueServerClient {
   constructor(

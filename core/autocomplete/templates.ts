@@ -1,7 +1,7 @@
 // Fill in the middle prompts
 
-import type { CompletionOptions } from "..";
-import type { AutocompleteSnippet } from "./ranking";
+import { CompletionOptions } from "../index.js";
+import { AutocompleteSnippet } from "./ranking.js";
 
 interface AutocompleteTemplate {
   compilePrefixSuffix?: (

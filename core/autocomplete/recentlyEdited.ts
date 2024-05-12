@@ -1,4 +1,4 @@
-import { RangeInFile } from "..";
+import { RangeInFile } from "../index.js";
 
 export type RecentlyEditedRange = RangeInFile & {
   timestamp: number;

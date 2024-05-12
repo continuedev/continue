@@ -1,12 +1,12 @@
-import { BaseLLM } from "..";
+import { BaseLLM } from "../index.js";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
-import { streamJSON } from "../stream";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
+import { streamJSON } from "../stream.js";
 
 class Cohere extends BaseLLM {
   static providerName: ModelProvider = "cohere";

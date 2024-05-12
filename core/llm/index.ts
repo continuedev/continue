@@ -12,12 +12,12 @@ import {
   PromptTemplate,
   RequestOptions,
   TemplateType,
-} from "..";
-import { DevDataSqliteDb } from "../util/devdataSqlite";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions";
-import mergeJson from "../util/merge";
-import { Telemetry } from "../util/posthog";
-import { withExponentialBackoff } from "../util/withExponentialBackoff";
+} from "../index.js";
+import { DevDataSqliteDb } from "../util/devdataSqlite.js";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
+import mergeJson from "../util/merge.js";
+import { Telemetry } from "../util/posthog.js";
+import { withExponentialBackoff } from "../util/withExponentialBackoff.js";
 import {
   autodetectPromptTemplates,
   autodetectTemplateFunction,

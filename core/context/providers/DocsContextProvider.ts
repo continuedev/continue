@@ -1,5 +1,5 @@
-import { BaseContextProvider } from "..";
-import type {
+import { BaseContextProvider } from "../index.js";
+import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
@@ -8,7 +8,6 @@ import type {
 } from "../../index.js";
 import configs from "../../indexing/docs/preIndexedDocs.js";
 import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
-import { BaseContextProvider } from "../index.js";
 
 class DocsContextProvider extends BaseContextProvider {
   static DEFAULT_N_RETRIEVE = 30;

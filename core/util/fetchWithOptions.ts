@@ -4,8 +4,9 @@ import { http, https } from "follow-redirects";
 import { HttpProxyAgent } from "http-proxy-agent";
 import { globalAgent } from "https";
 import { HttpsProxyAgent } from "https-proxy-agent";
-import fetch, { type RequestInit, type Response } from "node-fetch";
-import type { RequestOptions } from "..";
+import fetch, { RequestInit, Response } from "node-fetch";
+import tls from "tls";
+import { RequestOptions } from "../index.js";
 
 export function fetchwithRequestOptions(
   url_: URL | string,

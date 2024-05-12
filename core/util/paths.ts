@@ -1,10 +1,10 @@
 import dotenv from "dotenv";
-import * as fs from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
-import type { IdeType, SerializedContinueConfig } from "..";
-import { defaultConfig, defaultConfigJetBrains } from "../config/default";
-import Types from "../config/types";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import { IdeType, SerializedContinueConfig } from "../index.js";
+import { defaultConfig, defaultConfigJetBrains } from "../config/default.js";
+import Types from "../config/types.js";
 
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux

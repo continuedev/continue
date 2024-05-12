@@ -1,5 +1,5 @@
 import fetch from "node-fetch";
-import { Chunk, Reranker } from "../..";
+import { Chunk, Reranker } from "../../index.js";
 
 export class VoyageReranker implements Reranker {
   name = "voyage";

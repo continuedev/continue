@@ -1,7 +1,7 @@
-import type { SyntaxNode } from "web-tree-sitter";
-import type { ChunkWithoutID } from "../..";
-import { countTokens } from "../../llm/countTokens";
-import { getParserForFile } from "../../util/treeSitter";
+import { SyntaxNode } from "web-tree-sitter";
+import { ChunkWithoutID } from "../../index.js";
+import { countTokens } from "../../llm/countTokens.js";
+import { getParserForFile } from "../../util/treeSitter.js";
 
 function collapsedReplacement(node: SyntaxNode): string {
   if (node.type === "statement_block") {

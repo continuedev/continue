@@ -1,12 +1,11 @@
-import { BaseLLM } from "..";
-import type {
+import { BaseLLM } from "../index.js";
+import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
 import { stripImages } from "../countTokens.js";
-import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
 const NON_CHAT_MODELS = [

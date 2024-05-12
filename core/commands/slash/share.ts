@@ -1,9 +1,9 @@
 import path from "path";
 import * as fs from "fs";
 import { homedir } from "os";
-import { SlashCommand } from "../..";
-import { languageForFilepath } from "../../autocomplete/constructPrompt";
-import { stripImages } from "../../llm/countTokens";
+import { SlashCommand } from "../../index.js";
+import { languageForFilepath } from "../../autocomplete/constructPrompt.js";
+import { stripImages } from "../../llm/countTokens.js";
 
 // If useful elsewhere, helper funcs should move to core/util/index.ts or similar
 function getOffsetDatetime(date: Date): Date {
@@ -31,7 +31,7 @@ function reformatCodeBlocks(msgText: string): string {
     },
   );
   // Appease the markdown linter
-  return msgText.replace(/```\n```/g, '```\n\n```');
+  return msgText.replace(/```\n```/g, "```\n\n```");
 }
 
 const ShareSlashCommand: SlashCommand = {
@@ -69,7 +69,7 @@ const ShareSlashCommand: SlashCommand = {
       outputDir = outputDir.replace(/^~/, homedir);
     } else if (
       outputDir.startsWith("./") ||
-      outputDir.startsWith(`.\\`) ||
+      outputDir.startsWith(".\\") ||
       outputDir === "."
     ) {
       const workspaceDirs = await ide.getWorkspaceDirs();

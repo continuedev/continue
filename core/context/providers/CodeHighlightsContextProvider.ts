@@ -1,11 +1,12 @@
-import { BaseContextProvider } from "..";
-import type {
+import { BaseContextProvider } from "../index.js";
+import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
 import { getBasename } from "../../util/index.js";
-import { BaseContextProvider } from "../index.js";
+
+// import { getHighlightsThatFit, ILLMContextSizer } from "llm-code-highlighter/dist/index.continue";
 
 const HIGHLIGHTS_TOKEN_BUDGET = 2000;
 

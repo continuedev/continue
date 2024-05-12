@@ -1,11 +1,9 @@
-import { BaseContextProvider } from "..";
-import type {
+import { BaseContextProvider } from "../index.js";
+import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
-import { BaseContextProvider } from "../index.js";
-import { splitPath } from "../../util/index.js";
 
 interface Directory {
   name: string;

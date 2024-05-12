@@ -1,4 +1,4 @@
-import type { CompletionOptions, ModelName } from "../..";
+import { CompletionOptions, ModelName } from "../../index.js";
 
 const CompletionOptionsForModels: {
   [key in ModelName]?: Partial<CompletionOptions>;

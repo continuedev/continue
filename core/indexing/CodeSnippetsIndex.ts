@@ -8,19 +8,19 @@ import type {
   IndexTag,
   IndexingProgressUpdate,
 } from "../index.js";
-import { getBasename, getLastNPathParts } from "../util/index.js";
+import { getBasename } from "../util/index.js";
 import {
   getLanguageForFile,
   getParserForFile,
   supportedLanguages,
-} from "../util/treeSitter";
-import { type DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+} from "../util/treeSitter.js";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   type CodebaseIndex,
   IndexResultType,
-  type MarkCompleteCallback,
-  type RefreshIndexResults,
-} from "./types";
+  MarkCompleteCallback,
+  RefreshIndexResults,
+} from "./types.js";
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   artifactId = "codeSnippets";

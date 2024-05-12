@@ -1,9 +1,9 @@
-import type { Chunk, ChunkWithoutID } from "../..";
-import { MAX_CHUNK_SIZE } from "../../llm/constants";
-import { countTokens } from "../../llm/countTokens";
-import { supportedLanguages } from "../../util/treeSitter";
-import { basicChunker } from "./basic";
-import { codeChunker } from "./code";
+import { Chunk, ChunkWithoutID } from "../../index.js";
+import { MAX_CHUNK_SIZE } from "../../llm/constants.js";
+import { countTokens } from "../../llm/countTokens.js";
+import { supportedLanguages } from "../../util/treeSitter.js";
+import { basicChunker } from "./basic.js";
+import { codeChunker } from "./code.js";
 
 async function* chunkDocumentWithoutId(
   filepath: string,

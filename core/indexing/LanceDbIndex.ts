@@ -7,19 +7,18 @@ import type {
   EmbeddingsProvider,
   IndexTag,
   IndexingProgressUpdate,
-} from "..";
-import type { ContinueServerClient } from "../continueServer/stubs/client";
-import { MAX_CHUNK_SIZE } from "../llm/constants";
-import { getBasename } from "../util";
-import { getLanceDbPath } from "../util/paths";
-import { chunkDocument } from "./chunk/chunk";
-import { SqliteDb, tagToString, type DatabaseConnection } from "./refreshIndex";
+} from "../index.js";
+import { ContinueServerClient } from "../continueServer/stubs/client.js";
+import { MAX_CHUNK_SIZE } from "../llm/constants.js";
+import { getBasename } from "../util/index.js";
+import { getLanceDbPath } from "../util/paths.js";
+import { chunkDocument } from "./chunk/chunk.js";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   IndexResultType,
-  type CodebaseIndex,
-  type PathAndCacheKey,
-  type RefreshIndexResults,
-} from "./types";
+  PathAndCacheKey,
+  RefreshIndexResults,
+} from "./types.js";
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {

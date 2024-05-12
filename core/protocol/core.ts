@@ -11,9 +11,9 @@ import type {
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
-} from "..";
-import type { AutocompleteInput } from "../autocomplete/completionProvider";
-import type { IdeSettings } from "./ideWebview";
+} from "./index.js";
+import { AutocompleteInput } from "./autocomplete/completionProvider.js";
+import { IdeProtocol } from "./web/webviewProtocol.js";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;

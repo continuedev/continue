@@ -1,10 +1,10 @@
-import { BaseContextProvider } from "..";
-import type {
+import { BaseContextProvider } from "../index.js";
+import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
-import { retrieveContextItemsFromEmbeddings } from "../retrieval/retrieval";
+} from "../../index.js";
+import { retrieveContextItemsFromEmbeddings } from "../retrieval/retrieval.js";
 
 class CodebaseContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

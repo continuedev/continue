@@ -32,9 +32,7 @@ export async function* noFirstCharNewline(stream: AsyncGenerator<string>) {
   for await (const char of stream) {
     if (first) {
       first = false;
-      if (char.startsWith("\n") || char.startsWith("\r")) {
-        return;
-      }
+      if (char === "\n") {return;}
     }
     yield char;
   }
@@ -52,9 +50,9 @@ export async function* stopOnUnmatchedClosingBracket(
 ): AsyncGenerator<string> {
   const stack: string[] = [];
   for (let i = 0; i < suffix.length; i++) {
-    if (suffix[i] === " ") continue;
+    if (suffix[i] === " ") {continue;}
     const openBracket = BRACKETS_REVERSE[suffix[i]];
-    if (!openBracket) break;
+    if (!openBracket) {break;}
     stack.unshift(openBracket);
   }
 
