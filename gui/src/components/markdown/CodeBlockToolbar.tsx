@@ -97,7 +97,8 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
                   if (text.startsWith("$ ")) {
                     text = text.slice(2);
                   }
-                  ideMessenger.ide.runCommand(text);
+                  new WebviewIde().runCommand(text);
+                  return;
                 }
 
                 if (applying) return;
