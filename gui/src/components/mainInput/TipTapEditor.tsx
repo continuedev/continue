@@ -424,6 +424,8 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
   });
 
+  const shortcutTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
   useEffect(() => {
     if (isJetBrains()) {
       // This is only for VS Code .ipynb files
@@ -433,16 +435,33 @@ function TipTapEditor(props: TipTapEditorProps) {
     const handleKeyDown = async (event: KeyboardEvent) => {
       if (!editor) return;
 
+      const shouldSkip = () => {
+        const skip = shortcutTimeoutRef.current !== undefined;
+
+        if (!skip) {
+          shortcutTimeoutRef.current = setTimeout(async () => {
+            shortcutTimeoutRef.current = undefined;
+          }, 100);
+        }
+        return skip
+      }
+
       if (event.metaKey && event.key === "x") {
-        document.execCommand("cut");
+        if (!shouldSkip()) {
+          document.execCommand("cut");
+        }
         event.stopPropagation();
         event.preventDefault();
       } else if (event.metaKey && event.key === "v") {
-        document.execCommand("paste");
+        if (!shouldSkip()) {
+          document.execCommand("paste");
+        }
         event.stopPropagation();
         event.preventDefault();
       } else if (event.metaKey && event.key === "c") {
-        document.execCommand("copy");
+        if (!shouldSkip()) {
+          document.execCommand("copy");
+        }
         event.stopPropagation();
         event.preventDefault();
       }
@@ -453,7 +472,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [editor]);
+  }, [editor, shortcutTimeoutRef]);
 
   useEffect(() => {
     if (mainEditorContent && editor) {
