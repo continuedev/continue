@@ -75,7 +75,7 @@ jobs:
       - name: Install extension Dependencies
         run: |
           cd extensions/vscode
-          npm ci
+          pnpm ci
         env:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
@@ -121,7 +121,7 @@ jobs:
       - name: Re-install esbuild
         run: |
           cd extensions/vscode
-          npm install -f esbuild
+          pnpm install -f esbuild
 
       # 5. Package the extension
       - name: Package the extension
