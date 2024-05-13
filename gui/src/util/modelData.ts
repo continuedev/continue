@@ -580,6 +580,19 @@ const gpt4turbo: ModelPackage = {
     contextLength: 128_000,
     title: "GPT-4 Turbo",
   },
+  providerOptions: ["openai"],
+  icon: "openai.png",
+};
+
+const gpt4o: ModelPackage = {
+  title: "GPT-4o",
+  description:
+    "An even faster version of GPT-4 with stronger multi-modal capabilities.",
+  params: {
+    model: "gpt-4o",
+    contextLength: 128_000,
+    title: "GPT-4o",
+  },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
 };
@@ -664,6 +677,7 @@ const AUTODETECT: ModelPackage = {
 
 export const MODEL_INFO: (ModelPackage | string)[] = [
   "OpenAI",
+  gpt4o,
   gpt4turbo,
   // gpt4,
   gpt35turbo,
@@ -697,6 +711,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     icon: "openai.png",
     tags: [ModelProviderTag["Requires API Key"]],
     packages: [
+      gpt4o,
       gpt4turbo,
       gpt35turbo,
       // gpt4,
@@ -1071,7 +1086,7 @@ After it's up and running, you can start using Continue.`,
       { ...claude3Sonnet, title: "Claude 3 Sonnet (trial)" },
       { ...claude3Haiku, title: "Claude 3 Haiku (trial)" },
       { ...gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
-      { ...gpt4turbo, title: "GPT-4 Turbo (trial)" },
+      { ...gpt4o, title: "GPT-4o (trial)" },
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
       {
         ...AUTODETECT,

@@ -16,13 +16,12 @@ const CONTEXT_LENGTH_FOR_MODEL: { [name: string]: number } = {
   "gpt-35-turbo-16k": 16_384,
   "gpt-35-turbo-0613": 4096,
   "gpt-35-turbo": 4096,
-  "gpt-4": GPT_4_CTX_LEN,
-  "gpt-4-32k": GPT_4_CTX_LEN,
-  "gpt-4-turbo-preview": GPT_4_CTX_LEN,
-  "gpt-4o": GPT_4_CTX_LEN,
-  "gpt-4-vision": GPT_4_CTX_LEN,
-  "gpt-4-0125-preview": GPT_4_CTX_LEN,
-  "gpt-4-1106-preview": GPT_4_CTX_LEN,
+  "gpt-4-32k": 32_768,
+  "gpt-4-turbo-preview": 128_000,
+  "gpt-4o": 128_000,
+  "gpt-4-vision": 128_000,
+  "gpt-4-0125-preview": 128_000,
+  "gpt-4-1106-preview": 128_000,
 };
 
 const TOKEN_BUFFER_FOR_SAFETY = 350;
@@ -37,5 +36,6 @@ export {
   DEFAULT_MAX_TOKENS,
   MAX_CHUNK_SIZE,
   PROXY_URL,
-  TOKEN_BUFFER_FOR_SAFETY,
+  TOKEN_BUFFER_FOR_SAFETY
 };
+
