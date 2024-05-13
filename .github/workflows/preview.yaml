@@ -72,6 +72,10 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.1.1
+
       - name: Install extension Dependencies
         run: |
           cd extensions/vscode
