@@ -28,10 +28,17 @@ export function slashFromCustomCommand(
 			const messages = [...history];
 			// Find the last chat message with this slash command and replace it with the user input
 			for (let i = messages.length - 1; i >= 0; i--) {
-				if (
-					messages[i].role === "user" &&
-					stripImages(messages[i].content).startsWith(`/${customCommand.name}`)
-				) {
+				const {role, content} = messages[i];
+				if (role !== "user") {
+					continue;
+				}
+
+				if (Array.isArray(content) && content.some((part) => part.text?.startsWith(`/${customCommand.name}`))) {
+					messages[i] = { ...messages[i], content: content.map((part) => {
+						return part.text?.startsWith(`/${customCommand.name}`) ? {...part, text: promptUserInput } : part;
+					}) };
+					break;
+				} else if (typeof content === "string" && content.startsWith(`/${customCommand.name}`)) {
 					messages[i] = { ...messages[i], content: promptUserInput };
 					break;
 				}
