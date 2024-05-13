@@ -136,7 +136,7 @@ jobs:
 
       # 5. Package the extension
       - name: Package the extension
-        run: cd extensions/vscode && npx vsce package --pre-release --target ${{ env.target }}
+        run: cd extensions/vscode && npx vsce package --pre-release --no-dependencies --target ${{ env.target }}
 
       # 6. Upload the .vsix as an artifact
       - uses: actions/upload-artifact@v2
