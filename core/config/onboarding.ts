@@ -12,9 +12,9 @@ export function setupOptimizedMode(
         model: "claude-3-sonnet-20240229",
       },
       {
-        title: "GPT-4 Turbo (Free Trial)",
+        title: "GPT-4o (Free Trial)",
         provider: "free-trial",
-        model: "gpt-4-turbo",
+        model: "gpt-4o",
       },
       {
         title: "GPT-3.5-Turbo (Free Trial)",

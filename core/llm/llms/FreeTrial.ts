@@ -1,7 +1,7 @@
-import { BaseLLM } from "../index.js";
-import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
+import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
 import { SERVER_URL } from "../../util/parameters.js";
+import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
 class FreeTrial extends BaseLLM {
@@ -94,7 +94,7 @@ class FreeTrial extends BaseLLM {
   async listModels(): Promise<string[]> {
     return [
       "gpt-3.5-turbo",
-      "gpt-4-turbo",
+      "gpt-4o",
       "gemini-1.5-pro-latest",
       "claude-3-opus-20240229",
       "claude-3-sonnet-20240229",

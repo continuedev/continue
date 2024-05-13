@@ -1,4 +1,3 @@
-import { BaseLLM } from "../index.js";
 import {
   ChatMessage,
   CompletionOptions,
@@ -6,6 +5,7 @@ import {
   ModelProvider,
 } from "../../index.js";
 import { stripImages } from "../countTokens.js";
+import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
 const NON_CHAT_MODELS = [
@@ -27,6 +27,7 @@ const CHAT_ONLY_MODELS = [
   "gpt-3.5-turbo-16k",
   "gpt-4",
   "gpt-4-turbo",
+  "gpt-4o",
   "gpt-35-turbo-16k",
   "gpt-35-turbo-0613",
   "gpt-35-turbo",

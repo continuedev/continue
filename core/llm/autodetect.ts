@@ -55,6 +55,7 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
 const MODEL_SUPPORTS_IMAGES: string[] = [
   "llava",
   "gpt-4-turbo",
+  "gpt-4o",
   "gpt-4-vision",
   "claude-3",
   "gemini-ultra",
@@ -312,5 +313,6 @@ export {
   autodetectTemplateFunction,
   autodetectTemplateType,
   llmCanGenerateInParallel,
-  modelSupportsImages,
+  modelSupportsImages
 };
+
