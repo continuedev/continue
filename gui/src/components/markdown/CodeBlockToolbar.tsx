@@ -96,6 +96,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
                     text = text.slice(2);
                   }
                   new WebviewIde().runCommand(text);
+                  return;
                 }
 
                 if (applying) return;
