@@ -1,5 +1,4 @@
 import Handlebars from "handlebars";
-import { BaseLLM } from "../index.js";
 import {
   BaseCompletionOptions,
   ILLM,
@@ -7,6 +6,7 @@ import {
   ModelDescription,
 } from "../../index.js";
 import { DEFAULT_MAX_TOKENS } from "../constants.js";
+import { BaseLLM } from "../index.js";
 import Anthropic from "./Anthropic.js";
 import Bedrock from "./Bedrock.js";
 import Cohere from "./Cohere.js";
@@ -101,6 +101,7 @@ const LLMs = [
 export async function llmFromDescription(
   desc: ModelDescription,
   readFile: (filepath: string) => Promise<string>,
+  uniqueId: string,
   writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
@@ -133,6 +134,7 @@ export async function llmFromDescription(
     },
     systemMessage,
     writeLog,
+    uniqueId
   };
 
   return new cls(options);

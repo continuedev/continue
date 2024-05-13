@@ -1,6 +1,15 @@
 import * as fs from "fs";
 import path from "path";
 import {
+  slashCommandFromDescription,
+  slashFromCustomCommand,
+} from "../commands/index.js";
+import CustomContextProviderClass from "../context/providers/CustomContextProvider.js";
+import FileContextProvider from "../context/providers/FileContextProvider.js";
+import { contextProviderClassFromName } from "../context/providers/index.js";
+import { AllRerankers } from "../context/rerankers/index.js";
+import { LLMReranker } from "../context/rerankers/llm.js";
+import {
   BrowserSerializedContinueConfig,
   Config,
   ContextProviderWithParams,
@@ -17,22 +26,13 @@ import {
   SerializedContinueConfig,
   SlashCommand,
 } from "../index.js";
-import {
-  slashCommandFromDescription,
-  slashFromCustomCommand,
-} from "../commands/index.js";
-import { contextProviderClassFromName } from "../context/providers/index.js";
-import CustomContextProviderClass from "../context/providers/CustomContextProvider.js";
-import FileContextProvider from "../context/providers/FileContextProvider.js";
-import { AllRerankers } from "../context/rerankers/index.js";
-import { LLMReranker } from "../context/rerankers/llm.js";
-import { AllEmbeddingsProviders } from "../indexing/embeddings/index.js";
 import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
+import { AllEmbeddingsProviders } from "../indexing/embeddings/index.js";
 import { BaseLLM } from "../llm/index.js";
-import { llmFromDescription } from "../llm/llms/index.js";
 import CustomLLMClass from "../llm/llms/CustomLLM.js";
-import { copyOf } from "../util/index.js";
+import { llmFromDescription } from "../llm/llms/index.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
+import { copyOf } from "../util/index.js";
 import mergeJson from "../util/merge.js";
 import {
   getConfigJsPath,
@@ -168,6 +168,7 @@ function isContextProviderWithParams(
 async function intermediateToFinalConfig(
   config: Config,
   readFile: (filepath: string) => Promise<string>,
+  uniqueId: string,
   writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
   // Auto-detect models
@@ -177,6 +178,7 @@ async function intermediateToFinalConfig(
       const llm = await llmFromDescription(
         desc,
         readFile,
+        uniqueId,
         writeLog,
         config.completionOptions,
         config.systemMessage,
@@ -195,6 +197,7 @@ async function intermediateToFinalConfig(
                   title: llm.title + " - " + modelName,
                 },
                 readFile,
+                uniqueId,
                 writeLog,
                 copyOf(config.completionOptions),
                 config.systemMessage,
@@ -253,6 +256,7 @@ async function intermediateToFinalConfig(
       autocompleteLlm = await llmFromDescription(
         config.tabAutocompleteModel,
         readFile,
+        uniqueId,
         writeLog,
         config.completionOptions,
         config.systemMessage,
@@ -444,6 +448,7 @@ async function loadFullConfigNode(
   workspaceConfigs: ContinueRcJson[],
   remoteConfigServerUrl: URL | undefined,
   ideType: IdeType,
+  uniqueId: string,
   writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
   let serialized = loadSerializedConfig(
@@ -489,6 +494,7 @@ async function loadFullConfigNode(
   const finalConfig = await intermediateToFinalConfig(
     intermediate,
     readFile,
+    uniqueId,
     writeLog,
   );
   return finalConfig;
@@ -499,5 +505,6 @@ export {
   intermediateToFinalConfig,
   loadFullConfigNode,
   serializedToIntermediateConfig,
-  type BrowserSerializedContinueConfig,
+  type BrowserSerializedContinueConfig
 };
+

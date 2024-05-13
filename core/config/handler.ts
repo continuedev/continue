@@ -61,6 +61,7 @@ export class ConfigHandler {
     }
 
     const ideInfo = await this.ide.getIdeInfo();
+    const uniqueId = await this.ide.getUniqueId();
     const ideSettings = await this.ideSettingsPromise;
     let remoteConfigServerUrl = undefined;
     try {
@@ -76,6 +77,7 @@ export class ConfigHandler {
       workspaceConfigs,
       remoteConfigServerUrl,
       ideInfo.ideType,
+      uniqueId,
       this.writeLog,
     );
     this.savedConfig.allowAnonymousTelemetry =
