@@ -69,12 +69,22 @@ export class ConfigHandler {
 
     const ideInfo = await this.ide.getIdeInfo();
     const uniqueId = await this.ide.getUniqueId();
+    const ideSettings = await this.ideSettingsPromise;
+    let remoteConfigServerUrl = undefined;
+    try {
+      remoteConfigServerUrl =
+        typeof ideSettings.remoteConfigServerUrl !== "string" ||
+        ideSettings.remoteConfigServerUrl === ""
+          ? undefined
+          : new URL(ideSettings.remoteConfigServerUrl);
+    } catch (e) {}
 
     this.savedConfig = await loadFullConfigNode(
       this.ide.readFile.bind(this.ide),
       workspaceConfigs,
       remoteConfigServerUrl,
       ideInfo.ideType,
+      uniqueId,
       this.writeLog,
     );
     newConfig.allowAnonymousTelemetry =
