@@ -72,14 +72,10 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
-      - name: Install global Dependencies
-        run: |
-          npm install -g cargo-cp-artifact
-
       - name: Install extension Dependencies
         run: |
           cd extensions/vscode
-          npm ci
+          pnpm ci
         env:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
@@ -87,12 +83,12 @@ jobs:
       - name: Install gui Dependencies
         run: |
           cd gui
-          npm ci --legacy-peer-deps
+          pnpm ci --legacy-peer-deps
 
       - name: Install Core Dependencies
         run: |
           cd core
-          npm ci --legacy-peer-deps
+          pnpm ci --legacy-peer-deps
 
       # 2.5. Pre package
       - name: Make the out/node_modules directory
@@ -132,7 +128,7 @@ jobs:
       - name: Re-install esbuild
         run: |
           cd extensions/vscode
-          npm install -f esbuild
+          pnpm install -f esbuild
 
       # 5. Package the extension
       - name: Package the extension
