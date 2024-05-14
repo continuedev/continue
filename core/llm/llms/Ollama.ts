@@ -1,12 +1,12 @@
-import { BaseLLM } from "..";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
-import { streamResponse } from "../stream";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
+import { BaseLLM } from "../index.js";
+import { streamResponse } from "../stream.js";
 
 class Ollama extends BaseLLM {
   static providerName: ModelProvider = "ollama";
@@ -23,7 +23,9 @@ class Ollama extends BaseLLM {
     }
     this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
-      headers: {},
+      headers: {
+        "Authorization": `Bearer ${this.apiKey}`
+      },
       body: JSON.stringify({ name: this._getModel() }),
     })
       .then(async (response) => {
@@ -38,12 +40,12 @@ class Ollama extends BaseLLM {
         if (body.parameters) {
           const params = [];
           for (let line of body.parameters.split("\n")) {
-            let parts = line.split(" ");
+            let parts = line.match(/^(\S+)\s+((?:".*")|\S+)$/);
             if (parts.length < 2) {
               continue;
             }
-            let key = parts[0];
-            let value = parts[parts.length - 1];
+            let key = parts[1];
+            let value = parts[2];
             switch (key) {
               case "num_ctx":
                 this.contextLength = parseInt(value);
@@ -52,7 +54,13 @@ class Ollama extends BaseLLM {
                 if (!this.completionOptions.stop) {
                   this.completionOptions.stop = [];
                 }
-                this.completionOptions.stop.push(value);
+                try {
+                  this.completionOptions.stop.push(JSON.parse(value));
+                } catch (e) {
+                  console.warn(
+                    "Error parsing stop parameter value \"{value}: ${e}",
+                  );
+                }
                 break;
               default:
                 break;
@@ -76,6 +84,8 @@ class Ollama extends BaseLLM {
         "codellama-13b": "codellama:13b",
         "codellama-34b": "codellama:34b",
         "codellama-70b": "codellama:70b",
+        "llama3-8b": "llama3:8b",
+        "llama3-70b": "llama3:70b",
         "phi-2": "phi:2.7b",
         "phind-codellama-34b": "phind-codellama:34b-v2",
         "wizardcoder-7b": "wizardcoder:7b-python",
@@ -155,6 +165,7 @@ class Ollama extends BaseLLM {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.apiKey}`
       },
       body: JSON.stringify(this._convertArgs(options, prompt)),
     });
@@ -193,6 +204,7 @@ class Ollama extends BaseLLM {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "Authorization": `Bearer ${this.apiKey}`
       },
       body: JSON.stringify(this._convertArgs(options, messages)),
     });

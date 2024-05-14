@@ -4,9 +4,18 @@ const ncp = require("ncp").ncp;
 const path = require("path");
 const { rimrafSync } = require("rimraf");
 
+function execCmdSync(cmd) {
+  try {
+    execSync(cmd);
+  } catch (err) {
+    console.error(`Error executing command '${cmd}': `, err.output.toString());
+    process.exit(1);
+  }
+}
+
 // Clear folders that will be packaged to ensure clean slate
-rimrafSync(path.join(__dirname, "bin"));
-rimrafSync(path.join(__dirname, "out"));
+rimrafSync(path.join(__dirname, "..", "bin"));
+rimrafSync(path.join(__dirname, "..", "out"));
 
 // Get the target to package for
 let target = undefined;
@@ -41,6 +50,8 @@ if (!target) {
     s390x: "x64",
     x64: "x64",
   }[process.arch];
+} else {
+  [os, arch] = target.split("-");
 }
 
 if (os === "alpine") {
@@ -91,16 +102,16 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // Install node_modules //
-  execSync("npm install --no-save");
-  console.log("[info] npm install in extensions/vscode completed");
+  execCmdSync("pnpm install");
+  console.log("[info] pnpm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execSync("npm install --no-save");
-  console.log("[info] npm install in gui completed");
+  execCmdSync("pnpm install");
+  console.log("[info] pnpm install in gui completed");
 
   if (ghAction()) {
-    execSync("npm run build");
+    execCmdSync("pnpm run build");
   }
 
   // Copy over the dist folder to the Intellij extension //
@@ -175,6 +186,9 @@ const exe = os === "win32" ? ".exe" : "";
     ncp(
       path.join(__dirname, "../../../core/node_modules/onnxruntime-node/bin"),
       path.join(__dirname, "../bin"),
+      {
+        dereference: true,
+      },
       (error) => {
         if (error) {
           console.warn("[info] Error copying onnxruntime-node files", error);
@@ -209,6 +223,7 @@ const exe = os === "win32" ? ".exe" : "";
     ncp(
       path.join(__dirname, "../../../core/node_modules/tree-sitter-wasms/out"),
       path.join(__dirname, "../out/tree-sitter-wasms"),
+      {dereference: true, },
       (error) => {
         if (error) {
           console.warn("[error] Error copying tree-sitter-wasm files", error);
@@ -272,33 +287,34 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-  if (isArm()) {
-    // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
-    if (!isWin()) {
-      // lancedb binary
-      console.log("[info] Downloading pre-built lancedb binary");
-      rimrafSync("node_modules/@lancedb");
-      const packageToInstall = {
-        "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
-        "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
-      }[target];
-      execSync(`npm install -f ${packageToInstall} --no-save`);
-    }
 
+
+  if (ghAction() && isArm()) {
     // Download and unzip esbuild
     console.log("[info] Downloading pre-built esbuild binary");
     rimrafSync("node_modules/@esbuild");
     fs.mkdirSync("node_modules/@esbuild", { recursive: true });
-    execSync(
+    execCmdSync(
       `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
     );
-    execSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
+    execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
-  }
 
-  if (ghAction()) {
     // sqlite3
-    if (isArm() && !isWin()) {
+    if (!isWin()) {
+      // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
+      
+      // lancedb binary
+      const packageToInstall = {
+        "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
+        "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
+      }[target];
+      console.log(
+        "[info] Downloading pre-built lancedb binary: " + packageToInstall,
+      );
+      rimrafSync("node_modules/@lancedb");
+      execCmdSync(`pnpm add ${packageToInstall}`);
+
       // Replace the installed with pre-built
       console.log("[info] Downloading pre-built sqlite3 binary");
       rimrafSync("../../core/node_modules/sqlite3/build");
@@ -308,10 +324,12 @@ const exe = os === "win32" ? ".exe" : "";
         "linux-arm64":
           "https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v3-linux-arm64.tar.gz",
       }[target];
-      execSync(
+      execCmdSync(
         `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
       );
-      execSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
+      execCmdSync(
+        "cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz",
+      );
       fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
     }
   }
@@ -320,6 +338,7 @@ const exe = os === "win32" ? ".exe" : "";
     ncp(
       path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
       path.join(__dirname, "../out/build"),
+      {dereference: true, },
       (error) => {
         if (error) {
           console.warn("[error] Error copying sqlite3 files", error);
@@ -343,6 +362,7 @@ const exe = os === "win32" ? ".exe" : "";
           ncp(
             `node_modules/${mod}`,
             `out/node_modules/${mod}`,
+            {dereference: true, },
             function (error) {
               if (error) {
                 console.error(`[error] Error copying ${mod}`, error);
@@ -383,9 +403,9 @@ function validateFilesPresent() {
     `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
     `bin/napi-v3/${os}/${arch}/${
       os === "darwin"
-        ? "libonnxruntime.1.14.0.dylib"
+        ? "libonnxruntime.1.17.3.dylib"
         : os === "linux"
-        ? "libonnxruntime.so.1.14.0"
+        ? "libonnxruntime.so.1.17.3"
         : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",

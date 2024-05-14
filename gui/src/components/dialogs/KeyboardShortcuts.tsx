@@ -80,8 +80,8 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
         {props.description}
       </span>
       <div className="flex gap-2 float-right">
-        {shortcut.split(" ").map((key) => {
-          return <KeyDiv text={key}></KeyDiv>;
+        {shortcut.split(" ").map((key, i) => {
+          return <KeyDiv key={i} text={key}></KeyDiv>;
         })}
       </div>
     </div>
@@ -116,18 +116,18 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
   },
   {
     mac: "⌥ ⌘ Y",
-    windows: "⎇ ⌃ Y",
+    windows: "Alt ⌃ Y",
     description: "Accept Top Change in Diff",
   },
   {
     mac: "⌥ ⌘ N",
-    windows: "⎇ ⌃ N",
+    windows: "Alt ⌃ N",
     description: "Reject Top Change in Diff",
   },
   {
     mac: "⌥ ⌘ L",
-    windows: "⎇ ⌃ L",
-    description: "Toggle Auxiliary Bar",
+    windows: "Alt ⌃ L",
+    description: "Toggle Continue Sidebar",
   },
   {
     mac: "⌘ ⇧ R",
@@ -184,12 +184,12 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   },
   {
     mac: "⌥ ⇧ J",
-    windows: "⎇ ⇧ J",
+    windows: "Alt ⇧ J",
     description: "Quick Input",
   },
   {
     mac: "⌥ ⌘ J",
-    windows: "⎇ ⌃ J",
+    windows: "Alt ⌃ J",
     description: "Toggle Sidebar",
   },
   {
@@ -212,9 +212,10 @@ function KeyboardShortcutsDialog() {
         {(localStorage.getItem("ide") === "jetbrains"
           ? jetbrainsShortcuts
           : vscodeShortcuts
-        ).map((shortcut) => {
+        ).map((shortcut, i) => {
           return (
             <KeyboardShortcut
+              key={i}
               mac={shortcut.mac}
               windows={shortcut.windows}
               description={shortcut.description}

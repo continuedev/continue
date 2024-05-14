@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.92",
+  "version": "0.9.93",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -17,9 +17,9 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - Claude, CodeLlama, GPT-4, and more",
+  "displayName": "Continue - Llama 3, GPT-4, and more",
   "pricing": "Free",
-  "description": "Open-source autopilot for software development - bring the power of ChatGPT to your IDE",
+  "description": "Open-source autopilot - build your own AI software development system",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.70.0",
@@ -41,6 +41,7 @@
     "github",
     "copilot",
     "llama",
+    "3",
     "codegpt",
     "ai"
   ],
@@ -57,7 +58,7 @@
         "continue.telemetryEnabled": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://continue.dev/docs/telemetry)."
+          "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
         },
         "continue.showInlineTip": {
           "type": "boolean",
@@ -67,7 +68,7 @@
         "continue.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://continue.dev/docs/walkthroughs/tab-autocomplete)"
+          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://docs.continue.dev/walkthroughs/tab-autocomplete)"
         },
         "continue.remoteConfigServerUrl": {
           "type": "string",
@@ -139,7 +140,7 @@
       {
         "command": "continue.debugTerminal",
         "category": "Continue",
-        "title": "Debug Terminal",
+        "title": "Continue: Debug Terminal",
         "group": "Continue"
       },
       {
@@ -147,6 +148,18 @@
         "category": "Continue",
         "title": "Toggle Full Screen",
         "icon": "$(fullscreen)",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.openConfigJson",
+        "category": "Continue",
+        "title": "Open config.json",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.toggleTabAutocompleteEnabled",
+        "category": "Continue",
+        "title": "Toggle Autocomplete Enabled",
         "group": "Continue"
       },
       {
@@ -263,6 +276,11 @@
         "mac": "cmd+k cmd+m",
         "key": "ctrl+k ctrl+m",
         "when": "!terminalFocus"
+      },
+      {
+        "command": "continue.toggleTabAutocompleteEnabled",
+        "mac": "cmd+k cmd+a",
+        "key": "ctrl+k ctrl+a"
       }
     ],
     "submenus": [
@@ -293,12 +311,6 @@
         },
         {
           "command": "continue.newSession"
-        }
-      ],
-      "webview/context": [
-        {
-          "command": "continue.shareSession",
-          "group": "navigation@1"
         }
       ],
       "editor/context": [
@@ -375,6 +387,12 @@
           "group": "navigation@1",
           "when": "activeWebviewPanelId == continue.continueGUIView"
         }
+      ],
+      "terminal/context": [
+        {
+          "command": "continue.debugTerminal",
+          "group": "navigation@top"
+        }
       ]
     },
     "viewsContainers": {
@@ -382,7 +400,7 @@
         {
           "id": "continue",
           "title": "Continue",
-          "icon": "media/continue-dev-square.png"
+          "icon": "media/sidebar-icon.png"
         }
       ]
     },
@@ -495,6 +513,7 @@
     "@reduxjs/toolkit": "^1.9.3",
     "@types/jest": "^29.5.11",
     "@types/node-fetch": "^2.6.11",
+    "@types/uuid": "^9.0.8",
     "@vscode/ripgrep": "^1.15.9",
     "@vscode/test-electron": "^2.3.9",
     "axios": "^1.2.5",
@@ -521,7 +540,7 @@
     "ncp": "^2.0.0",
     "node-fetch": "^3.3.2",
     "node-machine-id": "^1.1.12",
-    "posthog-node": "^3.1.2",
+    "posthog-node": "^3.6.3",
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
     "request": "^2.88.2",
@@ -529,10 +548,41 @@
     "strip-ansi": "^7.1.0",
     "tailwindcss": "^3.3.2",
     "undici": "^6.2.0",
+    "uuid": "^9.0.1",
     "uuidv4": "^6.2.13",
-    "vectordb": "0.4.12",
+    "vectordb": "^0.4.20",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"
+  },
+  "optionalDependencies": {
+    "@lancedb/vectordb-darwin-arm64": "^0.4.20",
+    "@lancedb/vectordb-darwin-x64": "^0.4.20",
+    "@lancedb/vectordb-linux-arm64-gnu": "^0.4.20",
+    "@lancedb/vectordb-linux-x64-gnu": "^0.4.20",
+    "@lancedb/vectordb-win32-x64-msvc": "^0.4.20",
+
+    "@esbuild/android-arm": "0.17.19",
+    "@esbuild/android-arm64": "0.17.19",
+    "@esbuild/android-x64": "0.17.19",
+    "@esbuild/darwin-arm64": "0.17.19",
+    "@esbuild/darwin-x64": "0.17.19",
+    "@esbuild/freebsd-arm64": "0.17.19",
+    "@esbuild/freebsd-x64": "0.17.19",
+    "@esbuild/linux-arm": "0.17.19",
+    "@esbuild/linux-arm64": "0.17.19",
+    "@esbuild/linux-ia32": "0.17.19",
+    "@esbuild/linux-loong64": "0.17.19",
+    "@esbuild/linux-mips64el": "0.17.19",
+    "@esbuild/linux-ppc64": "0.17.19",
+    "@esbuild/linux-riscv64": "0.17.19",
+    "@esbuild/linux-s390x": "0.17.19",
+    "@esbuild/linux-x64": "0.17.19",
+    "@esbuild/netbsd-x64": "0.17.19",
+    "@esbuild/openbsd-x64": "0.17.19",
+    "@esbuild/sunos-x64": "0.17.19",
+    "@esbuild/win32-arm64": "0.17.19",
+    "@esbuild/win32-ia32": "0.17.19",
+    "@esbuild/win32-x64": "0.17.19"
   }
 }

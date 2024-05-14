@@ -2,13 +2,14 @@ import {
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
+import { IndexingProgressUpdate } from "core";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
+  CustomScrollbarDiv,
   defaultBorderRadius,
-  vscBackground,
   vscForeground,
   vscInputBackground,
 } from ".";
@@ -32,26 +33,9 @@ import ModelSelect from "./modelSelection/ModelSelect";
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
 
-const LayoutTopDiv = styled.div`
+const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
   border-radius: ${defaultBorderRadius};
-  scrollbar-base-color: transparent;
-  scrollbar-width: thin;
-  background-color: ${vscBackground};
-
-  & * {
-    ::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    ::-webkit-scrollbar:horizontal {
-      height: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      border-radius: 2px;
-    }
-  }
 `;
 
 const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
@@ -102,6 +86,12 @@ const DropdownPortalDiv = styled.div`
 `;
 
 // #endregion
+
+const HIDE_FOOTER_ON_PAGES = [
+  "/onboarding",
+  "/existingUserOnboarding",
+  "/localOnboarding",
+];
 
 const Layout = () => {
   const navigate = useNavigate();
@@ -174,11 +164,13 @@ const Layout = () => {
   );
 
   useWebviewListener("indexProgress", async (data) => {
-    setIndexingProgress(data.progress);
-    setIndexingTask(data.desc);
+    setIndexingState(data);
   });
 
   useEffect(() => {
+    if (isJetBrains()) {
+      return;
+    }
     const onboardingComplete = getLocalStorage("onboardingComplete");
     if (
       !onboardingComplete &&
@@ -193,8 +185,11 @@ const Layout = () => {
     }
   }, [location]);
 
-  const [indexingProgress, setIndexingProgress] = useState(1);
-  const [indexingTask, setIndexingTask] = useState("Indexing Codebase");
+  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
+    desc: "Starting indexing",
+    progress: 0.0,
+    status: "starting",
+  });
 
   return (
     <LayoutTopDiv>
@@ -220,9 +215,10 @@ const Layout = () => {
         <GridDiv>
           <Outlet />
           <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
-          <Footer>
-            <div className="mr-auto flex gap-2 items-center">
-              {/* {localStorage.getItem("ide") === "jetbrains" ||
+          {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
+            <Footer>
+              <div className="mr-auto flex gap-2 items-center">
+                {/* {localStorage.getItem("ide") === "jetbrains" ||
                 localStorage.getItem("hideFeature") === "true" || (
                   <SparklesIcon
                     className="cursor-pointer"
@@ -250,43 +246,44 @@ const Layout = () => {
                     color="yellow"
                   />
                 )} */}
-              <ModelSelect />
-              {indexingProgress >= 1 && // Would take up too much space together with indexing progress
-                defaultModel?.provider === "free-trial" &&
-                (location.pathname === "/settings" ||
-                  parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
-                  <ProgressBar
-                    completed={parseInt(localStorage.getItem("ftc") || "0")}
-                    total={250}
-                  />
-                )}
+                <ModelSelect />
+                {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
+                  defaultModel?.provider === "free-trial" &&
+                  (location.pathname === "/settings" ||
+                    parseInt(localStorage.getItem("ftc") || "0") >= 50) && (
+                    <ProgressBar
+                      completed={parseInt(localStorage.getItem("ftc") || "0")}
+                      total={150}
+                    />
+                  )}
 
-              {isJetBrains() || (
-                <IndexingProgressBar
-                  currentlyIndexing={indexingTask}
-                  completed={indexingProgress * 100}
-                  total={100}
-                />
-              )}
-            </div>
-            <HeaderButtonWithText
-              text="Help"
-              onClick={() => {
-                navigate("/help");
-              }}
-            >
-              <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-            <HeaderButtonWithText
-              onClick={() => {
-                // navigate("/settings");
-                postToIde("openConfigJson", undefined);
-              }}
-              text="Configure Continue"
-            >
-              <Cog6ToothIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-          </Footer>
+                {isJetBrains() || (
+                  <IndexingProgressBar indexingState={indexingState} />
+                )}
+              </div>
+              <HeaderButtonWithText
+                text="Help"
+                onClick={() => {
+                  if (location.pathname === "/help") {
+                    navigate("/");
+                  } else {
+                    navigate("/help");
+                  }
+                }}
+              >
+                <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+              <HeaderButtonWithText
+                onClick={() => {
+                  // navigate("/settings");
+                  postToIde("openConfigJson", undefined);
+                }}
+                text="Configure Continue"
+              >
+                <Cog6ToothIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+            </Footer>
+          )}
         </GridDiv>
 
         <BottomMessageDiv

@@ -1,19 +1,33 @@
 import { http, https } from "follow-redirects";
 import * as fs from "fs";
 import { HttpProxyAgent } from "http-proxy-agent";
+import { globalAgent } from "https";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import fetch, { RequestInit, Response } from "node-fetch";
 import tls from "tls";
-import { RequestOptions } from "..";
+import { RequestOptions } from "../index.js";
 
 export function fetchwithRequestOptions(
-  url: URL,
-  init: RequestInit,
+  url_: URL | string,
+  init?: RequestInit,
   requestOptions?: RequestOptions,
 ): Promise<Response> {
+  let url = url_;
+  if (typeof url === "string") {
+    url = new URL(url);
+  }
+
   const TIMEOUT = 7200; // 7200 seconds = 2 hours
 
-  const ca = [...tls.rootCertificates];
+  let globalCerts: string[] = [];
+  if (process.env.IS_BINARY) {
+    if (Array.isArray(globalAgent.options.ca)) {
+      globalCerts = [...globalAgent.options.ca.map((cert) => cert.toString())];
+    } else if (typeof globalAgent.options.ca !== "undefined") {
+      globalCerts.push(globalAgent.options.ca.toString());
+    }
+  }
+  const ca = Array.from(new Set([...tls.rootCertificates, ...globalCerts]));
   const customCerts =
     typeof requestOptions?.caBundlePath === "string"
       ? [requestOptions?.caBundlePath]
@@ -46,7 +60,7 @@ export function fetchwithRequestOptions(
     : new protocol.Agent(agentOptions);
 
   const headers: { [key: string]: string } = requestOptions?.headers || {};
-  for (const [key, value] of Object.entries(init.headers || {})) {
+  for (const [key, value] of Object.entries(init?.headers || {})) {
     headers[key] = value as string;
   }
 
@@ -58,7 +72,7 @@ export function fetchwithRequestOptions(
   // add extra body properties if provided
   let updatedBody: string | undefined = undefined;
   try {
-    if (requestOptions?.extraBodyProperties && typeof init.body === "string") {
+    if (requestOptions?.extraBodyProperties && typeof init?.body === "string") {
       const parsedBody = JSON.parse(init.body);
       updatedBody = JSON.stringify({
         ...parsedBody,
@@ -72,7 +86,7 @@ export function fetchwithRequestOptions(
   // fetch the request with the provided options
   let resp = fetch(url, {
     ...init,
-    body: updatedBody ?? init.body,
+    body: updatedBody ?? init?.body,
     headers: headers,
     agent: agent,
   });

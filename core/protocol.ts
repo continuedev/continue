@@ -10,14 +10,19 @@ import {
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
-} from ".";
-import { AutocompleteInput } from "./autocomplete/completionProvider";
-import { IdeProtocol } from "./web/webviewProtocol";
+} from "./index.js";
+import { AutocompleteInput } from "./autocomplete/completionProvider.js";
+import { IdeProtocol } from "./web/webviewProtocol.js";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
   content: T;
 }>;
+
+export interface ListHistoryOptions {
+  offset?: number;
+  limit?: number;
+}
 
 export type Protocol = {
   // New
@@ -27,7 +32,7 @@ export type Protocol = {
   abort: [undefined, void];
 
   // History
-  "history/list": [undefined, SessionInfo[]];
+  "history/list": [ListHistoryOptions, SessionInfo[]];
   "history/delete": [{ id: string }, void];
   "history/load": [{ id: string }, PersistedSessionInfo];
   "history/save": [PersistedSessionInfo, void];
@@ -82,6 +87,7 @@ export type Protocol = {
     },
     string,
   ];
+  "llm/listModels": [{ title: string }, string[] | undefined];
   "llm/streamComplete": [
     {
       prompt: string;

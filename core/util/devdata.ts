@@ -1,5 +1,5 @@
 import { writeFileSync } from "fs";
-import { getDevDataFilePath } from "./paths";
+import { getDevDataFilePath } from "./paths.js";
 
 export function logDevData(tableName: string, data: any) {
   const filepath: string = getDevDataFilePath(tableName);

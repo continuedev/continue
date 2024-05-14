@@ -13,6 +13,7 @@ import { getContinueGlobalPath } from "core/util/paths";
 import * as path from "path";
 import * as vscode from "vscode";
 import { DiffManager } from "./diff/horizontal";
+import { Repository } from "./otherExtensions/git";
 import { VsCodeIdeUtils } from "./util/ideUtils";
 import { traverseDirectory } from "./util/traverseDirectory";
 import {
@@ -30,17 +31,20 @@ class VsCodeIde implements IDE {
 
   async getRepoName(dir: string): Promise<string | undefined> {
     const repo = await this.getRepo(vscode.Uri.file(dir));
+    const remotes = repo?.state.remotes;
+    if (!remotes) {
+      return undefined;
+    }
     const remote =
-      repo?.repository.remotes.find((r: any) => r.name === "origin") ??
-      repo?.repository.remotes[0];
+      remotes?.find((r: any) => r.name === "origin") ?? remotes?.[0];
     if (!remote) {
       return undefined;
     }
     const ownerAndRepo = remote.fetchUrl
-      .replace(".git", "")
+      ?.replace(".git", "")
       .split("/")
       .slice(-2);
-    return ownerAndRepo.join("/");
+    return ownerAndRepo?.join("/");
   }
 
   async getTags(artifactId: string): Promise<IndexTag[]> {
@@ -93,7 +97,7 @@ class VsCodeIde implements IDE {
     return pathToLastModified;
   }
 
-  async getRepo(dir: vscode.Uri): Promise<any> {
+  async getRepo(dir: vscode.Uri): Promise<Repository | undefined> {
     return this.ideUtils.getRepo(dir);
   }
 
@@ -228,8 +232,10 @@ class VsCodeIde implements IDE {
 
   async runCommand(command: string): Promise<void> {
     if (vscode.window.terminals.length) {
-      vscode.window.terminals[0].show();
-      vscode.window.terminals[0].sendText(command, false);
+      const terminal =
+        vscode.window.activeTerminal ?? vscode.window.terminals[0];
+      terminal.show();
+      terminal.sendText(command, false);
     } else {
       const terminal = vscode.window.createTerminal();
       terminal.show();
@@ -253,6 +259,10 @@ class VsCodeIde implements IDE {
 
   async getOpenFiles(): Promise<string[]> {
     return await this.ideUtils.getOpenFiles();
+  }
+
+  async getCurrentFile(): Promise<string | undefined> {
+    return vscode.window.activeTextEditor?.document.uri.fsPath;
   }
 
   async getPinnedFiles(): Promise<string[]> {

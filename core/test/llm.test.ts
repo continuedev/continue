@@ -1,7 +1,7 @@
 import * as dotenv from "dotenv";
 
-import { CompletionOptions } from "..";
-import { BaseLLM } from "../llm";
+import { CompletionOptions } from "../index.js";
+import { BaseLLM } from "../llm/index.js";
 
 jest.setTimeout(100_000);
 
@@ -94,7 +94,7 @@ describe("LLM", () => {
   // testLLM(new HuggingFaceTGI({ model: "codellama-7b" }));
   // testLLM(new HuggingFaceInferenceAPI({ model: "codellama-7b" }));
   // testLLM(
-  //   new GooglePalm({
+  //   new Gemini({
   //     model: "gemini-pro",
   //     //   model: "chat-bison-001",
   //     apiKey: process.env.GOOGLE_PALM_API_KEY,

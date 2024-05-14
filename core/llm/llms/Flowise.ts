@@ -1,12 +1,12 @@
 import socketIOClient, { Socket } from "socket.io-client";
-import { BaseLLM } from "..";
+import { BaseLLM } from "../index.js";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
 
 interface IFlowiseApiOptions {
   /** Sampling temperature to use */

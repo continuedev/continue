@@ -1,5 +1,5 @@
 import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
-import { PersistedSessionInfo, SessionInfo } from "core";
+import { SessionInfo } from "core";
 import MiniSearch from "minisearch";
 import React, { Fragment, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -16,7 +16,6 @@ import {
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
 import useHistory from "../hooks/useHistory";
 import { useNavigationListener } from "../hooks/useNavigationListener";
-import { newSession } from "../redux/slices/stateSlice";
 import { getFontSize } from "../util";
 
 const SearchBar = styled.input`
@@ -106,10 +105,7 @@ function TableRow({
             // Save current session
             saveSession();
 
-            const json: PersistedSessionInfo = await loadSession(
-              session.sessionId
-            );
-            dispatch(newSession(json));
+            await loadSession(session.sessionId);
             navigate("/");
           }}
         >
@@ -165,7 +161,7 @@ function History() {
 
   const deleteSessionInUI = async (sessionId: string) => {
     setSessions((prev) =>
-      prev.filter((session) => session.sessionId !== sessionId)
+      prev.filter((session) => session.sessionId !== sessionId),
     );
   };
 
@@ -182,7 +178,7 @@ function History() {
     new MiniSearch({
       fields: ["title"],
       storeFields: ["title", "sessionId", "id"],
-    })
+    }),
   );
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -195,7 +191,7 @@ function History() {
           title: session.title,
           sessionId: session.sessionId,
           id: session.sessionId,
-        }))
+        })),
       );
     };
     fetchSessions();
@@ -227,8 +223,8 @@ function History() {
         .sort(
           (a, b) =>
             parseDate(b.dateCreated).getTime() -
-            parseDate(a.dateCreated).getTime()
-        )
+            parseDate(a.dateCreated).getTime(),
+        ),
     );
   }, [filteringByWorkspace, sessions, searchTerm, minisearch]);
 

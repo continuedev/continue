@@ -37,6 +37,13 @@ function AddDocsDialog() {
     <div className="p-4">
       <h3>Add Docs</h3>
 
+      <p>
+        Continue pre-indexes many common documentation sites, but if there's one
+        you don't see in the dropdown, enter the URL here. Continue's indexing
+        engine will crawl the site and generate embeddings so that you can ask
+        questions.
+      </p>
+
       <Input
         type="url"
         placeholder="URL"

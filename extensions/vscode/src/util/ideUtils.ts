@@ -4,6 +4,7 @@ import path from "path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/vscodeExtension";
+import { GitExtension, Repository } from "../otherExtensions/git";
 import {
   SuggestionRanges,
   acceptSuggestionCommand,
@@ -297,7 +298,19 @@ export class VsCodeIdeUtils {
       filepath = this.getAbsolutePath(filepath);
       const uri = uriFromFilePath(filepath);
 
-      // Check first whether it's an open document
+      // First, check whether it's a notebook document
+      // Need to iterate over the cells to get full contents
+      const notebook = vscode.workspace.notebookDocuments.find(
+        (doc) => doc.uri.toString() === uri.toString(),
+      );
+      if (notebook) {
+        return notebook
+          .getCells()
+          .map((cell) => cell.document.getText())
+          .join("\n\n");
+      }
+
+      // Check whether it's an open document
       const openTextDocument = vscode.workspace.textDocuments.find(
         (doc) => doc.uri.fsPath === uri.fsPath,
       );
@@ -359,13 +372,23 @@ export class VsCodeIdeUtils {
     await vscode.commands.executeCommand(
       "workbench.action.terminal.clearSelection",
     );
-    const terminalContents = await vscode.env.clipboard.readText();
+    let terminalContents = (await vscode.env.clipboard.readText()).trim();
     await vscode.env.clipboard.writeText(tempCopyBuffer);
 
     if (tempCopyBuffer === terminalContents) {
       // This means there is no terminal open to select text from
       return "";
     }
+
+    // Sometimes the above won't successfully separate by command, so we attempt manually
+    const lines = terminalContents.split("\n");
+    const lastLine = lines.pop()?.trim();
+    if (lastLine) {
+      let i = lines.length - 1;
+      while (i >= 0 && !lines[i].trim().startsWith(lastLine)) i--;
+      terminalContents = lines.slice(i).join("\n");
+    }
+
     return terminalContents;
   }
 
@@ -492,9 +515,12 @@ export class VsCodeIdeUtils {
     else return "unavailable";
   }
 
-  private async _getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
+  private async _getRepo(
+    forDirectory: vscode.Uri,
+  ): Promise<Repository | undefined> {
     // Use the native git extension to get the branch name
-    const extension = vscode.extensions.getExtension("vscode.git");
+    const extension =
+      vscode.extensions.getExtension<GitExtension>("vscode.git");
     if (
       typeof extension === "undefined" ||
       !extension.isActive ||
@@ -503,17 +529,28 @@ export class VsCodeIdeUtils {
       return undefined;
     }
 
-    const git = extension.exports.getAPI(1);
-    return git.getRepository(forDirectory);
+    try {
+      const git = extension.exports.getAPI(1);
+      return git.getRepository(forDirectory) ?? undefined;
+    } catch (e) {
+      this._repoWasNone = true;
+      console.warn("Git not found: ", e);
+      return undefined;
+    }
   }
 
-  async getRepo(forDirectory: vscode.Uri): Promise<any | undefined> {
+  private _repoWasNone: boolean = false;
+  async getRepo(forDirectory: vscode.Uri): Promise<Repository | undefined> {
     let repo = await this._getRepo(forDirectory);
+
     let i = 0;
     while (!repo?.state?.HEAD?.name) {
+      if (this._repoWasNone) return undefined;
+
       await new Promise((resolve) => setTimeout(resolve, 1000));
       i++;
       if (i >= 20) {
+        this._repoWasNone = true;
         return undefined;
       }
       repo = await this._getRepo(forDirectory);
@@ -543,7 +580,8 @@ export class VsCodeIdeUtils {
   }
 
   async getDiff(): Promise<string> {
-    let diffs = [];
+    let diffs: string[] = [];
+    let repos = [];
 
     for (const dir of this.getWorkspaceDirectories()) {
       const repo = await this.getRepo(vscode.Uri.file(dir));
@@ -551,10 +589,15 @@ export class VsCodeIdeUtils {
         continue;
       }
 
-      diffs.push((await repo.getDiff()).join("\n"));
+      repos.push(repo.state.HEAD?.name);
+      diffs.push(await repo.diff());
     }
 
-    return diffs.join("\n\n");
+    const fullDiff = diffs.join("\n\n");
+    if (fullDiff.trim() === "") {
+      console.log(`Diff empty for repos: ${repos}`);
+    }
+    return fullDiff;
   }
 
   getHighlightedCode(): RangeInFile[] {

@@ -6,7 +6,7 @@ import {
   Problem,
   Range,
   Thread,
-} from "..";
+} from "../index.js";
 
 export class MessageIde implements IDE {
   constructor(
@@ -134,6 +134,10 @@ export class MessageIde implements IDE {
 
   getOpenFiles(): Promise<string[]> {
     return this.request("getOpenFiles", undefined);
+  }
+
+  getCurrentFile(): Promise<string | undefined> {
+    return this.request("getCurrentFile", undefined);
   }
 
   getPinnedFiles(): Promise<string[]> {

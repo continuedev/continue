@@ -397,6 +397,10 @@ class IdeProtocolClient (
                         val openFiles = visibleFiles()
                         respond(openFiles)
                     }
+                    "getCurrentFile" -> {
+                        val currentFile = currentFile()
+                        respond(currentFile)
+                    }
                     "getPinnedFiles" -> {
                         val openFiles = visibleFiles()
                         respond(openFiles)
@@ -747,6 +751,13 @@ class IdeProtocolClient (
     private fun visibleFiles(): List<String> {
         val fileEditorManager = FileEditorManager.getInstance(project)
         return fileEditorManager.openFiles.toList().map { it.path }
+    }
+
+    private fun currentFile(): String? {
+        val fileEditorManager = FileEditorManager.getInstance(project)
+        val editor = fileEditorManager.selectedTextEditor
+        val virtualFile = editor?.document?.let { FileDocumentManager.getInstance().getFile(it) }
+        return virtualFile?.path
     }
 
     fun showMessage(msg: String) {

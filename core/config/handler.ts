@@ -1,13 +1,11 @@
-import { ContinueConfig, ContinueRcJson, IDE, ILLM } from "..";
-import { IContinueServerClient } from "../continueServer/interface";
-import { IdeSettings } from "../protocol";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions";
-import { Telemetry } from "../util/posthog";
+import { ContinueConfig, ContinueRcJson, IDE, ILLM } from "../index.js";
+import { IdeSettings } from "../protocol.js";
+import { Telemetry } from "../util/posthog.js";
 import {
   BrowserSerializedContinueConfig,
   finalToBrowserConfig,
   loadFullConfigNode,
-} from "./load";
+} from "./load.js";
 
 export class ConfigHandler {
   private savedConfig: ContinueConfig | undefined;
@@ -15,11 +13,12 @@ export class ConfigHandler {
 
   constructor(
     private readonly ide: IDE,
-    private readonly writeLog: (text: string) => void,
+    private ideSettingsPromise: Promise<IdeSettings>,
+    private readonly writeLog: (text: string) => Promise<void>,
     private readonly onConfigUpdate: () => void,
-    private readonly continueServerClient: IContinueServerClient,
   ) {
     this.ide = ide;
+    this.ideSettingsPromise = ideSettingsPromise;
     this.writeLog = writeLog;
     this.onConfigUpdate = onConfigUpdate;
     try {
@@ -30,6 +29,7 @@ export class ConfigHandler {
   }
 
   updateIdeSettings(ideSettings: IdeSettings) {
+    this.ideSettingsPromise = Promise.resolve(ideSettings);
     this.reloadConfig();
   }
 
@@ -61,27 +61,30 @@ export class ConfigHandler {
     }
 
     const ideInfo = await this.ide.getIdeInfo();
+    const uniqueId = await this.ide.getUniqueId();
+    const ideSettings = await this.ideSettingsPromise;
+    let remoteConfigServerUrl = undefined;
+    try {
+      remoteConfigServerUrl =
+        typeof ideSettings.remoteConfigServerUrl !== "string" ||
+        ideSettings.remoteConfigServerUrl === ""
+          ? undefined
+          : new URL(ideSettings.remoteConfigServerUrl);
+    } catch (e) {}
 
     this.savedConfig = await loadFullConfigNode(
-      this.ide.readFile,
+      this.ide.readFile.bind(this.ide),
       workspaceConfigs,
-      this.continueServerClient.url,
+      remoteConfigServerUrl,
       ideInfo.ideType,
+      uniqueId,
+      this.writeLog,
     );
-
-    // Final modifications
-    const userToken = await this.continueServerClient.getUserToken();
-    this.savedConfig.models.forEach((model) => {
-      if (model.providerName === "continue-proxy") {
-        model.apiKey = userToken;
-      }
-    });
-
-    // Setup telemetry only after (and if) we know it is enabled
     this.savedConfig.allowAnonymousTelemetry =
       this.savedConfig.allowAnonymousTelemetry &&
       (await this.ide.isTelemetryEnabled());
 
+    // Setup telemetry only after (and if) we know it is enabled
     await Telemetry.setup(
       this.savedConfig.allowAnonymousTelemetry ?? true,
       await this.ide.getUniqueId(),
@@ -89,42 +92,6 @@ export class ConfigHandler {
     );
 
     return this.savedConfig;
-  }
-
-  setupLlm(llm: ILLM): ILLM {
-    llm._fetch = async (input, init) => {
-      const resp = await fetchwithRequestOptions(
-        new URL(input),
-        { ...init },
-        llm.requestOptions,
-      );
-
-      if (!resp.ok) {
-        let text = await resp.text();
-        if (resp.status === 404 && !resp.url.includes("/v1")) {
-          if (text.includes("try pulling it first")) {
-            const model = JSON.parse(text).error.split(" ")[1].slice(1, -1);
-            text = `The model "${model}" was not found. To download it, run \`ollama run ${model}\`.`;
-          } else if (text.includes("/api/chat")) {
-            text =
-              "The /api/chat endpoint was not found. This may mean that you are using an older version of Ollama that does not support /api/chat. Upgrading to the latest version will solve the issue.";
-          } else {
-            text =
-              "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
-          }
-        }
-        throw new Error(
-          `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
-        );
-      }
-
-      return resp;
-    };
-
-    llm.writeLog = async (log: string) => {
-      this.writeLog(log);
-    };
-    return llm;
   }
 
   async llmFromTitle(title?: string): Promise<ILLM> {
@@ -135,6 +102,6 @@ export class ConfigHandler {
       throw new Error("No model found");
     }
 
-    return this.setupLlm(model);
+    return model;
   }
 }

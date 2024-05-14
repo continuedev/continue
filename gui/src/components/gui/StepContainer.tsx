@@ -73,10 +73,10 @@ function StepContainer(props: StepContainerProps) {
   const sendFeedback = (feedback: boolean) => {
     setFeedback(feedback);
     if (props.item.promptLogs?.length) {
-      for (const [prompt, completion] of props.item.promptLogs) {
+      for (const promptLog of props.item.promptLogs) {
         postToIde("devdata/log", {
           tableName: "chat",
-          data: { prompt, completion, feedback },
+          data: { ...promptLog, feedback },
         });
       }
     }

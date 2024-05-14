@@ -15,7 +15,7 @@ body:
           required: false
         - label: I'm not able to find an [open issue](https://github.com/continuedev/continue/issues?q=is%3Aopen+is%3Aissue) that reports the same bug
           required: false
-        - label: I've seen the [troubleshooting guide](https://continue.dev/docs/troubleshooting) on the Continue Docs
+        - label: I've seen the [troubleshooting guide](https://docs.continue.dev/troubleshooting) on the Continue Docs
           required: false
   - type: textarea
     attributes:
@@ -58,5 +58,5 @@ body:
     attributes:
       label: Log output
       description: |
-        Please refer to the [troubleshooting guide](https://continue.dev/docs/troubleshooting) in the Continue Docs for instructions on obtaining the logs. Copy either the relevant lines or the last 100 lines or so.
+        Please refer to the [troubleshooting guide](https://docs.continue.dev/troubleshooting) in the Continue Docs for instructions on obtaining the logs. Copy either the relevant lines or the last 100 lines or so.
       render: Shell

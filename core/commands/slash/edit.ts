@@ -1,4 +1,4 @@
-import { ContextItemWithId, ILLM, SlashCommand } from "../..";
+import { ContextItemWithId, ILLM, SlashCommand } from "../../index.js";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -6,14 +6,17 @@ import {
   fixCodeLlamaFirstLineIndentation,
   stopAtLines,
   streamWithNewLines,
-} from "../../autocomplete/lineStream";
-import { streamLines } from "../../diff/util";
-import { stripImages } from "../../llm/countTokens";
-import { dedentAndGetCommonWhitespace } from "../../util";
+} from "../../autocomplete/lineStream.js";
+import { streamLines } from "../../diff/util.js";
+import { stripImages } from "../../llm/countTokens.js";
+import {
+  dedentAndGetCommonWhitespace,
+  getMarkdownLanguageTagForFile,
+} from "../../util/index.js";
 import {
   RangeInFileWithContents,
   contextItemToRangeInFileWithContents,
-} from "../util";
+} from "../util.js";
 
 const PROMPT = `Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section. Do not ever use nested tags.
 
@@ -226,7 +229,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     if (!contextItemToEdit) {
-      yield "Select (highlight and press `cmd+shift+L` (MacOS) / `ctrl+shift+L` (Windows)) the code that you want to edit first";
+      yield "Please highlight the code you want to edit, then press `cmd/ctrl+shift+L` to add it to chat";
       return;
     }
 
@@ -238,6 +241,8 @@ const EditSlashCommand: SlashCommand = {
           part.text = part.text.replace("/edit", "").trimStart();
         }
       });
+    } else {
+      content = input.replace("/edit", "").trimStart();
     }
     let userInput = stripImages(content).replace(
       `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,
@@ -456,6 +461,12 @@ const EditSlashCommand: SlashCommand = {
           userInput,
           filePrefix: filePrefix,
           fileSuffix: fileSuffix,
+
+          // Some built-in templates use these instead of the above
+          prefix: filePrefix,
+          suffix: fileSuffix,
+
+          language: getMarkdownLanguageTagForFile(rif.filepath),
           systemMessage: llm.systemMessage ?? "",
           // "contextItems": (await sdk.getContextItemChatMessages()).map(x => x.content || "").join("\n\n"),
         },

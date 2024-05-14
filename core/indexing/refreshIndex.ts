@@ -2,8 +2,8 @@ import crypto from "crypto";
 import * as fs from "fs";
 import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { IndexTag, IndexingProgressUpdate } from "..";
-import { getIndexSqlitePath } from "../util/paths";
+import { IndexTag, IndexingProgressUpdate } from "../index.js";
+import { getIndexSqlitePath } from "../util/paths.js";
 import {
   CodebaseIndex,
   IndexResultType,
@@ -11,7 +11,7 @@ import {
   MarkCompleteCallback,
   PathAndCacheKey,
   RefreshIndexResults,
-} from "./types";
+} from "./types.js";
 
 export type DatabaseConnection = Database<sqlite3.Database>;
 
@@ -157,7 +157,7 @@ async function getAddRemoveForTag(
       switch (resultType) {
         case AddRemoveResultType.Add:
           await db.run(
-            `INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)`,
+            "INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
             path,
             cacheKey,
             newLastUpdatedTimestamp,
@@ -243,7 +243,7 @@ async function getTagsFromGlobalCache(
 ): Promise<IndexTag[]> {
   const db = await SqliteDb.get();
   const stmt = await db.prepare(
-    `SELECT dir, branch, artifactId FROM global_cache WHERE cacheKey = ? AND artifactId = ?`,
+    "SELECT dir, branch, artifactId FROM global_cache WHERE cacheKey = ? AND artifactId = ?",
   );
   const rows = await stmt.all(cacheKey, artifactId);
   return rows;
@@ -356,7 +356,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
         return this.deleteOrRemoveTag(cacheKey, tag);
       }),
     ]);
-    yield { progress: 1, desc: "Done updating global cache" };
+    yield { progress: 1, desc: "Done updating global cache", status: "done" };
   }
 
   private async computeOrAddTag(

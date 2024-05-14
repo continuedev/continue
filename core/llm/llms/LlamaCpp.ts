@@ -1,6 +1,6 @@
-import { BaseLLM } from "..";
-import { CompletionOptions, LLMOptions, ModelProvider } from "../..";
-import { streamSse } from "../stream";
+import { BaseLLM } from "../index.js";
+import { CompletionOptions, LLMOptions, ModelProvider } from "../../index.js";
+import { streamSse } from "../stream.js";
 
 class LlamaCpp extends BaseLLM {
   static providerName: ModelProvider = "llama.cpp";

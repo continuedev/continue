@@ -1,6 +1,6 @@
 import { distance } from "fastest-levenshtein";
-import { DiffLine } from "..";
-import { LineStream } from "../diff/util";
+import { DiffLine } from "../index.js";
+import { LineStream } from "../diff/util.js";
 
 export async function* noTopLevelKeywordsMidline(
   lines: LineStream,
@@ -44,26 +44,27 @@ export async function* streamWithNewLines(stream: LineStream): LineStream {
   }
 }
 
-const brackets = ["(", "[", "{", "`", '"""'];
-const bracketsReverse = [")", "]", "}", "`", '"""'];
-
+const bracketEnding = [")", "]", "}", ";"];
+function isBracketEnding(line: string): boolean {
+  return line
+    .trim()
+    .split("")
+    .some((char) => bracketEnding.includes(char));
+}
 export async function* stopAtSimilarLine(
   stream: LineStream,
   line: string,
 ): AsyncGenerator<string> {
   line = line.trim();
+  const lineIsBracketEnding = isBracketEnding(line);
   for await (const nextLine of stream) {
-    if (
-      bracketsReverse.includes(nextLine.trim()) &&
-      bracketsReverse.includes(line.trim()) &&
-      line.trim() === nextLine.trim()
-    ) {
+    if (lineIsBracketEnding && line.trim() === nextLine.trim()) {
+      yield nextLine;
       continue;
     }
 
-    const dist = distance(nextLine.trim(), line);
     let lineQualifies = nextLine.length > 4 && line.length > 4;
-    if (lineQualifies && dist / line.length < 0.1) {
+    if (lineQualifies && distance(nextLine.trim(), line) / line.length < 0.1) {
       break;
     }
     yield nextLine;
@@ -78,6 +79,16 @@ export async function* stopAtLines(stream: LineStream): LineStream {
       break;
     }
     yield line;
+  }
+}
+
+const LINES_TO_SKIP = ["</START EDITING HERE>"];
+
+export async function* skipLines(stream: LineStream): LineStream {
+  for await (const line of stream) {
+    if (!LINES_TO_SKIP.some((skipAt) => line.startsWith(skipAt))) {
+      yield line;
+    }
   }
 }
 
@@ -129,7 +140,7 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
       return;
     }
 
-    if (line === "```") {
+    if (line.startsWith("```")) {
       waitingToSeeIfLineIsLast = line;
     } else {
       yield line;

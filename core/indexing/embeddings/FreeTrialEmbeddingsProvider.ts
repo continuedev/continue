@@ -1,9 +1,9 @@
-import fetch, { Response } from "node-fetch";
-import { EmbedOptions } from "../..";
-import { getHeaders } from "../../continueServer/stubs/headers";
-import { SERVER_URL } from "../../util/parameters";
-import { withExponentialBackoff } from "../../util/withExponentialBackoff";
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
+import { Response } from "node-fetch";
+import { EmbedOptions } from "../../index.js";
+import { getHeaders } from "../../continueServer/stubs/headers.js";
+import { SERVER_URL } from "../../util/parameters.js";
+import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
   static maxBatchSize = 128;
@@ -31,7 +31,7 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
         batchedChunks.map(async (batch) => {
           const fetchWithBackoff = () =>
             withExponentialBackoff<Response>(() =>
-              fetch(new URL("embeddings", SERVER_URL), {
+              this.fetch(new URL("embeddings", SERVER_URL), {
                 method: "POST",
                 body: JSON.stringify({
                   input: batch,

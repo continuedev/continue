@@ -3,7 +3,7 @@ Welcome to Continue!
 
 _________               _____ _____                       
 __  ____/______ _______ __  /____(_)_______ ____  _______ 
-_  /     _  __ \__  __ \_  __/__  / __  __ \_  / / /_  _ \
+_  /     _  __ \__  __ \_  __/__  / __  __ \_  / / /_  _ \ 
 / /___   / /_/ /_  / / // /_  _  /  _  / / // /_/ / /  __/
 \____/   \____/ /_/ /_/ \__/  /_/   /_/ /_/ \__,_/  \___/ 
 
@@ -66,4 +66,4 @@ accept [⌥ ⇧ Y] or reject [⌥ ⇧ N] the edit"""
 
 # endregion
 
-# Ready to learn more? Check out the Continue documentation: https://continue.dev/docs
+# Ready to learn more? Check out the Continue documentation: https://docs.continue.dev

@@ -1,6 +1,15 @@
 import * as fs from "fs";
 import path from "path";
 import {
+  slashCommandFromDescription,
+  slashFromCustomCommand,
+} from "../commands/index.js";
+import CustomContextProviderClass from "../context/providers/CustomContextProvider.js";
+import FileContextProvider from "../context/providers/FileContextProvider.js";
+import { contextProviderClassFromName } from "../context/providers/index.js";
+import { AllRerankers } from "../context/rerankers/index.js";
+import { LLMReranker } from "../context/rerankers/llm.js";
+import {
   BrowserSerializedContinueConfig,
   Config,
   ContextProviderWithParams,
@@ -16,23 +25,15 @@ import {
   RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
-} from "..";
-import {
-  slashCommandFromDescription,
-  slashFromCustomCommand,
-} from "../commands";
-import { contextProviderClassFromName } from "../context/providers";
-import CustomContextProviderClass from "../context/providers/CustomContextProvider";
-import FileContextProvider from "../context/providers/FileContextProvider";
-import { AllRerankers } from "../context/rerankers";
-import { LLMReranker } from "../context/rerankers/llm";
-import { AllEmbeddingsProviders } from "../indexing/embeddings";
-import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { BaseLLM } from "../llm";
-import { llmFromDescription } from "../llm/llms";
-import CustomLLMClass from "../llm/llms/CustomLLM";
-import { copyOf } from "../util";
-import mergeJson from "../util/merge";
+} from "../index.js";
+import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
+import { AllEmbeddingsProviders } from "../indexing/embeddings/index.js";
+import { BaseLLM } from "../llm/index.js";
+import CustomLLMClass from "../llm/llms/CustomLLM.js";
+import { llmFromDescription } from "../llm/llms/index.js";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
+import { copyOf } from "../util/index.js";
+import mergeJson from "../util/merge.js";
 import {
   getConfigJsPath,
   getConfigJsPathForRemote,
@@ -40,8 +41,13 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
-  migrate,
-} from "../util/paths";
+} from "../util/paths.js";
+import {
+  defaultContextProvidersJetBrains,
+  defaultContextProvidersVsCode,
+  defaultSlashCommandsJetBrains,
+  defaultSlashCommandsVscode,
+} from "./default.js";
 const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -90,34 +96,6 @@ function loadSerializedConfig(
     config.allowAnonymousTelemetry = true;
   }
 
-  migrate("codeContextProvider", () => {
-    if (!config.contextProviders?.filter((cp) => cp.name === "code")?.length) {
-      config.contextProviders = [
-        ...(config.contextProviders || []),
-        {
-          name: "code",
-          params: {},
-        },
-      ];
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
-
-  migrate("docsContextProvider1", () => {
-    if (!config.contextProviders?.filter((cp) => cp.name === "docs")?.length) {
-      config.contextProviders = [
-        ...(config.contextProviders || []),
-        {
-          name: "docs",
-          params: {},
-        },
-      ];
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
-
   if (remoteConfigServerUrl) {
     try {
       const remoteConfigJson = resolveSerializedConfig(
@@ -137,6 +115,16 @@ function loadSerializedConfig(
       configMergeKeys,
     );
   }
+
+  // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
+  config.contextProviders ??=
+    ideType === "vscode"
+      ? defaultContextProvidersVsCode
+      : defaultContextProvidersJetBrains;
+  config.slashCommands ??=
+    ideType === "vscode"
+      ? defaultSlashCommandsVscode
+      : defaultSlashCommandsJetBrains;
 
   return config;
 }
@@ -180,17 +168,22 @@ function isContextProviderWithParams(
 async function intermediateToFinalConfig(
   config: Config,
   readFile: (filepath: string) => Promise<string>,
+  uniqueId: string,
+  writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
+  // Auto-detect models
   const models: BaseLLM[] = [];
   for (const desc of config.models) {
     if (isModelDescription(desc)) {
       const llm = await llmFromDescription(
         desc,
         readFile,
+        uniqueId,
+        writeLog,
         config.completionOptions,
         config.systemMessage,
       );
-      if (!llm) continue;
+      if (!llm) {continue;}
 
       if (llm.model === "AUTODETECT") {
         try {
@@ -204,6 +197,8 @@ async function intermediateToFinalConfig(
                   title: llm.title + " - " + modelName,
                 },
                 readFile,
+                uniqueId,
+                writeLog,
                 copyOf(config.completionOptions),
                 config.systemMessage,
               );
@@ -221,7 +216,10 @@ async function intermediateToFinalConfig(
         models.push(llm);
       }
     } else {
-      const llm = new CustomLLMClass(desc);
+      const llm = new CustomLLMClass({
+        ...desc,
+        options: { ...desc.options, writeLog } as any,
+      });
       if (llm.model === "AUTODETECT") {
         try {
           const modelNames = await llm.listModels();
@@ -229,7 +227,7 @@ async function intermediateToFinalConfig(
             (modelName) =>
               new CustomLLMClass({
                 ...desc,
-                options: { ...desc.options, model: modelName },
+                options: { ...desc.options, model: modelName, writeLog },
               }),
           );
 
@@ -243,12 +241,23 @@ async function intermediateToFinalConfig(
     }
   }
 
+  // Prepare models
+  for (const model of models) {
+    model.requestOptions = {
+      ...model.requestOptions,
+      ...config.requestOptions,
+    };
+  }
+
+  // Tab autocomplete model
   let autocompleteLlm: BaseLLM | undefined = undefined;
   if (config.tabAutocompleteModel) {
     if (isModelDescription(config.tabAutocompleteModel)) {
       autocompleteLlm = await llmFromDescription(
         config.tabAutocompleteModel,
         readFile,
+        uniqueId,
+        writeLog,
         config.completionOptions,
         config.systemMessage,
       );
@@ -257,6 +266,7 @@ async function intermediateToFinalConfig(
     }
   }
 
+  // Context providers
   const contextProviders: IContextProvider[] = [new FileContextProvider({})];
   for (const provider of config.contextProviders || []) {
     if (isContextProviderWithParams(provider)) {
@@ -272,13 +282,22 @@ async function intermediateToFinalConfig(
   }
 
   // Embeddings Provider
-  if (
-    (config.embeddingsProvider as EmbeddingsProviderDescription | undefined)
-      ?.provider
-  ) {
-    const { provider, ...options } =
-      config.embeddingsProvider as EmbeddingsProviderDescription;
-    config.embeddingsProvider = new AllEmbeddingsProviders[provider](options);
+  const embeddingsProviderDescription = config.embeddingsProvider as
+    | EmbeddingsProviderDescription
+    | undefined;
+  if (embeddingsProviderDescription?.provider) {
+    const { provider, ...options } = embeddingsProviderDescription;
+    const embeddingsProviderClass = AllEmbeddingsProviders[provider];
+    if (embeddingsProviderClass) {
+      config.embeddingsProvider = new embeddingsProviderClass(
+        options,
+        (url: string | URL, init: any) =>
+          fetchwithRequestOptions(url, init, {
+            ...config.requestOptions,
+            ...options.requestOptions,
+          }),
+      );
+    }
   }
 
   if (!config.embeddingsProvider) {
@@ -332,10 +351,10 @@ function finalToBrowserConfig(
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
-    slashCommands: final.slashCommands?.map((m) => ({
-      name: m.name,
-      description: m.description,
-      options: m.params,
+    slashCommands: final.slashCommands?.map((s) => ({
+      name: s.name,
+      description: s.description,
+      params: s.params, //PZTODO: is this why params aren't referenced properly by slash commands?
     })),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
@@ -343,6 +362,7 @@ function finalToBrowserConfig(
     userToken: final.userToken,
     embeddingsProvider: final.embeddingsProvider?.id,
     ui: final.ui,
+    experimental: final.experimental,
   };
 }
 
@@ -428,6 +448,8 @@ async function loadFullConfigNode(
   workspaceConfigs: ContinueRcJson[],
   remoteConfigServerUrl: URL | undefined,
   ideType: IdeType,
+  uniqueId: string,
+  writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
   let serialized = loadSerializedConfig(
     workspaceConfigs,
@@ -469,7 +491,12 @@ async function loadFullConfigNode(
     }
   }
 
-  const finalConfig = await intermediateToFinalConfig(intermediate, readFile);
+  const finalConfig = await intermediateToFinalConfig(
+    intermediate,
+    readFile,
+    uniqueId,
+    writeLog,
+  );
   return finalConfig;
 }
 
@@ -478,5 +505,6 @@ export {
   intermediateToFinalConfig,
   loadFullConfigNode,
   serializedToIntermediateConfig,
-  type BrowserSerializedContinueConfig,
+  type BrowserSerializedContinueConfig
 };
+

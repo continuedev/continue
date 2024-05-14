@@ -1,18 +1,31 @@
 import { readFileSync, writeFileSync } from "fs";
-import { ModelDescription } from "..";
-import { editConfigJson, getConfigJsonPath } from "../util/paths";
+import { ModelDescription } from "../index.js";
+import { editConfigJson, getConfigJsonPath } from "../util/paths.js";
+
+function stringify(obj: any, indentation?: number): string {
+  return JSON.stringify(
+    obj,
+    (key, value) => {
+      return value === null ? undefined : value;
+    },
+    indentation,
+  );
+}
 
 export function addModel(model: ModelDescription) {
   const config = readFileSync(getConfigJsonPath(), "utf8");
   const configJson = JSON.parse(config);
+
+  // De-duplicate
+  if (configJson.models?.some((m: any) => stringify(m) === stringify(model))) {
+    return config;
+  }
+  if (configJson.models?.some((m: any) => m?.title === model.title)) {
+    model.title = `${model.title} (1)`;
+  }
+
   configJson.models.push(model);
-  const newConfigString = JSON.stringify(
-    configJson,
-    (key, value) => {
-      return value === null ? undefined : value;
-    },
-    2,
-  );
+  const newConfigString = stringify(configJson, 2);
   writeFileSync(getConfigJsonPath(), newConfigString);
   return newConfigString;
 }

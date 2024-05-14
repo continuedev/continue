@@ -1,35 +1,51 @@
 <!-- Plugin description -->
 
-**[Continue](https://continue.dev/docs) is the open-source autopilot for software development—an extension that brings the power of ChatGPT to your IDE**
+![readme](../../media/readme.png)
 
-### Get possible explanations
+<h1 align="center">Continue</h1>
 
-Highlight + select code sections and ask a question to get another perspective
+<div align="center">
 
-- “how can I set up a Prisma schema that cascades deletes?”
-- “where in the page should I be making this request to the backend?”
-- “how can I communicate between these iframes?”
+**[Continue](https://continue.dev/docs) keeps developers in flow. Our open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions enable you to easily create your own modular AI software development system that you can improve.**
 
-### Edit in natural language
+</div>
 
-Highlight + select a section of code and instruct Continue to refactor it
+<div align="center">
 
-- “/edit migrate this digital ocean terraform file into one that works for GCP”
-- “/edit change this plot into a bar chart in this dashboard component”
-- “/edit rewrite this function to be async”
+## Easily understand code sections
 
-### Generate files from scratch
+![understand](../../docs/static/img/understand.gif)
 
-Open a blank file and let Continue start new Python scripts, React components, etc.
+`cmd+J` (MacOS) / `ctrl+J` (Windows)
 
-- “/edit here is a connector for postgres, now write one for kafka”
-- “/edit make an IAM policy that creates a user with read-only access to S3”
-- “/edit use this schema to write me a SQL query that gets recently churned users”
+## Tab to autocomplete code suggestions
+
+![autocomplete](../../docs/static/img/autocomplete.gif)
+
+`tab` (MacOS) / `tab` (Windows)
+
+## Refactor functions where you are coding
+
+![inline](../../docs/static/img/inline.gif)
+
+`cmd+I` (MacOS) / `ctrl+I` (Windows)
+
+## Quickly use documentation as context
+
+![docs](../../docs/static/img/docs.gif)
+
+`@docs` (MacOS) / `@docs` (Windows)
+
+</div>
 
 ## Getting Started
 
-You can try out Continue for free using a proxy server that securely makes calls with our API key to models like GPT-4, Gemini Pro, and Phind CodeLlama via OpenAI, Google, and Together respectively.
+You can try out Continue with our free trial models before configuring your setup.
 
-Once you're ready to use your own API key or a different model / provider, press the `+` button in the bottom left to add a new model to your `config.json`. Learn more about the models and providers [here](https://continue.dev/docs/model-setup/overview).
+Learn more about the models and providers [here](https://continue.dev/docs/setup/overview).
+
+## License
+
+[Apache 2.0 © 2023 Continue Dev, Inc.](./LICENSE)
 
 <!-- Plugin description end -->

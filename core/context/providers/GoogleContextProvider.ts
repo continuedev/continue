@@ -1,9 +1,9 @@
-import { BaseContextProvider } from "..";
+import { BaseContextProvider } from "../index.js";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
+} from "../../index.js";
 
 class GoogleContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -32,7 +32,7 @@ class GoogleContextProvider extends BaseContextProvider {
       "Content-Type": "application/json",
     };
 
-    const response = await fetch(url, {
+    const response = await extras.fetch(url, {
       method: "POST",
       headers: headers,
       body: payload,

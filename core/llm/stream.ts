@@ -6,7 +6,7 @@ export async function* streamResponse(
   }
 
   if (!response.body) {
-    throw new Error(`No response body returned.`);
+    throw new Error("No response body returned.");
   }
 
   const stream = response.body as any;
@@ -70,6 +70,21 @@ export async function* streamSse(response: Response): AsyncGenerator<any> {
     const { done, data } = parseSseLine(buffer);
     if (!done && data) {
       yield data;
+    }
+  }
+}
+
+export async function* streamJSON(response: Response): AsyncGenerator<any> {
+  let buffer = "";
+  for await (const value of streamResponse(response)) {
+    buffer += value;
+
+    let position;
+    while ((position = buffer.indexOf("\n")) >= 0) {
+      const line = buffer.slice(0, position);
+      const data = JSON.parse(line);
+      yield data;
+      buffer = buffer.slice(position + 1);
     }
   }
 }

@@ -2,6 +2,8 @@ import { ConfigHandler } from "core/config/handler";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { IdeSettings } from "core/protocol";
+import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
+import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
@@ -131,7 +133,7 @@ export class VsCodeExtension {
     this.webviewProtocol.on("index/forceReIndex", (msg) => {
       this.ide
         .getWorkspaceDirs()
-        .then((dirs) => this.refreshCodebaseIndex(dirs));
+        .then((dirs) => this.refreshCodebaseIndex(dirs, context));
     });
 
     this.diffManager.webviewProtocol = this.webviewProtocol;
@@ -193,19 +195,26 @@ export class VsCodeExtension {
     registerDebugTracker(this.webviewProtocol, this.ide);
 
     // Indexing
-    this.ide.getWorkspaceDirs().then((dirs) => this.refreshCodebaseIndex(dirs));
+    this.ide
+      .getWorkspaceDirs()
+      .then((dirs) => this.refreshCodebaseIndex(dirs, context));
 
-    // Listen for file saving
+    // Listen for file saving - use global file watcher so that changes
+    // from outside the window are also caught
+    fs.watchFile(getConfigJsonPath(), { interval: 1000 }, (stats) => {
+      this.configHandler.reloadConfig();
+      this.tabAutocompleteModel.clearLlm();
+    });
+    fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
+      this.configHandler.reloadConfig();
+      this.tabAutocompleteModel.clearLlm();
+    });
+
     vscode.workspace.onDidSaveTextDocument((event) => {
+      // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
 
-      if (
-        filepath.endsWith(".continue/config.json") ||
-        filepath.endsWith(".continue\\config.json") ||
-        filepath.endsWith(".continue/config.ts") ||
-        filepath.endsWith(".continue\\config.ts") ||
-        filepath.endsWith(".continuerc.json")
-      ) {
+      if (filepath.endsWith(".continuerc.json")) {
         this.configHandler.reloadConfig();
         this.tabAutocompleteModel.clearLlm();
       } else if (
@@ -230,7 +239,7 @@ export class VsCodeExtension {
                   currentBranch !== this.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]
                 ) {
                   // Trigger refresh of index only in this directory
-                  this.refreshCodebaseIndex([dir]);
+                  this.refreshCodebaseIndex([dir], context);
                 }
               }
 
@@ -266,16 +275,38 @@ export class VsCodeExtension {
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
   private indexingCancellationController: AbortController | undefined;
 
-  private async refreshCodebaseIndex(dirs: string[]) {
+  private async refreshCodebaseIndex(
+    dirs: string[],
+    context: vscode.ExtensionContext,
+  ) {
+    //reset all state variables
+    console.log("Codebase indexing starting up");
+    this.webviewProtocol?.request("indexProgress", {
+      progress: 0,
+      desc: "",
+      status: "failed",
+    });
+    context.globalState.update("continue.indexingFailed", false);
+    context.globalState.update("continue.indexingProgress", 0);
+    context.globalState.update("continue.indexingDesc", "");
+
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
+    let err = undefined;
     for await (const update of this.indexer.refresh(
       dirs,
       this.indexingCancellationController.signal,
     )) {
       this.webviewProtocol.request("indexProgress", update);
+      context.globalState.update("continue.indexingProgress", update);
+    }
+
+    if (err) {
+      console.log("Codebase Indexing Failed: ", err);
+    } else {
+      console.log("Codebase Indexing Complete");
     }
   }
 }

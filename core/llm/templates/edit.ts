@@ -1,4 +1,4 @@
-import { ChatMessage, PromptTemplate } from "../..";
+import { ChatMessage, PromptTemplate } from "../../index.js";
 
 const simplifiedEditPrompt = `Consider the following code:
 \`\`\`{{{language}}}
@@ -74,7 +74,7 @@ const osModelsEditPrompt: PromptTemplate = (history, otherData) => {
     !firstCharOfFirstLine;
   const suffixTag = isSuffix ? "<STOP EDITING HERE>" : "";
   const suffixExplanation = isSuffix
-    ? ' When you get to "<STOP EDITING HERE>", end your response.'
+    ? " When you get to \"<STOP EDITING HERE>\", end your response."
     : "";
 
   // If neither prefilling nor /v1/completions are supported, we have to use a chat prompt without putting words in the model's mouth
@@ -259,6 +259,15 @@ Output only a code block with the rewritten code:
   },
 ];
 
+const llama3EditPrompt: PromptTemplate = `<|begin_of_text|><|start_header_id|>user<|end_header_id|>
+\`\`\`{{{language}}}
+{{{codeToEdit}}}
+\`\`\`
+
+Rewrite the above code to satisfy this request: "{{{userInput}}}"<|eot_id|><|start_header_id|>assistant<|end_header_id|>
+Sure! Here's the code you requested:
+\`\`\`{{{language}}}`;
+
 const gemmaEditPrompt = `<start_of_turn>user
 You are an expert programmer and write code on the first attempt without any errors or fillers. Rewrite the code to satisfy this request: "{{{userInput}}}"
 
@@ -279,6 +288,7 @@ export {
   deepseekEditPrompt,
   gemmaEditPrompt,
   gptEditPrompt,
+  llama3EditPrompt,
   mistralEditPrompt,
   neuralChatEditPrompt,
   openchatEditPrompt,

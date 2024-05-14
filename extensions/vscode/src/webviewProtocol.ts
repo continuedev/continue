@@ -10,6 +10,7 @@ import { indexDocs } from "core/indexing/docs";
 import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { logDevData } from "core/util/devdata";
 import { DevDataSqliteDb } from "core/util/devdataSqlite";
+import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import historyManager from "core/util/history";
 import { Message } from "core/util/messenger";
 import { editConfigJson, getConfigJsonPath } from "core/util/paths";
@@ -25,7 +26,7 @@ import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getExtensionUri } from "./util/vscode";
 
-async function showTutorial() {
+export async function showTutorial() {
   const tutorialPath = path.join(
     getExtensionUri().fsPath,
     "continue_tutorial.py",
@@ -40,7 +41,7 @@ async function showTutorial() {
   const doc = await vscode.workspace.openTextDocument(
     vscode.Uri.file(tutorialPath),
   );
-  await vscode.window.showTextDocument(doc);
+  await vscode.window.showTextDocument(doc, { preview: false });
 }
 
 export class VsCodeWebviewProtocol {
@@ -106,6 +107,8 @@ export class VsCodeWebviewProtocol {
             respond(response || {});
           }
         } catch (e: any) {
+          respond({ done: true, error: e });
+
           console.error(
             "Error handling webview message: " +
               JSON.stringify({ msg }, null, 2),
@@ -114,9 +117,9 @@ export class VsCodeWebviewProtocol {
           let message = e.message;
           if (e.cause) {
             if (e.cause.name === "ConnectTimeoutError") {
-              message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in config.json by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://continue.dev/docs/reference/config`;
+              message = `Connection timed out. If you expect it to take a long time to connect, you can increase the timeout in config.json by setting "requestOptions": { "timeout": 10000 }. You can find the full config reference here: https://docs.continue.dev/reference/config`;
             } else if (e.cause.code === "ECONNREFUSED") {
-              message = `Connection was refused. This likely means that there is no server running at the specified URL. If you are running your own server you may need to set the "apiBase" parameter in config.json. For example, you can set up an OpenAI-compatible server like here: https://continue.dev/docs/reference/Model%20Providers/openai#openai-compatible-servers--apis`;
+              message = `Connection was refused. This likely means that there is no server running at the specified URL. If you are running your own server you may need to set the "apiBase" parameter in config.json. For example, you can set up an OpenAI-compatible server like here: https://docs.continue.dev/reference/Model%20Providers/openai#openai-compatible-servers--apis`;
             } else {
               message = `The request failed with "${e.cause.name}": ${e.cause.message}. If you're having trouble setting up Continue, please see the troubleshooting guide for help.`;
             }
@@ -131,7 +134,7 @@ export class VsCodeWebviewProtocol {
                 );
               } else if (selection === "Troubleshooting") {
                 vscode.env.openExternal(
-                  vscode.Uri.parse("https://continue.dev/docs/troubleshooting"),
+                  vscode.Uri.parse("https://docs.continue.dev/troubleshooting"),
                 );
               }
             });
@@ -234,7 +237,7 @@ export class VsCodeWebviewProtocol {
     });
     // History
     this.on("history/list", (msg) => {
-      return historyManager.list();
+      return historyManager.list(msg.data);
     });
     this.on("history/save", (msg) => {
       historyManager.save(msg.data);
@@ -268,6 +271,9 @@ export class VsCodeWebviewProtocol {
     });
     this.on("getOpenFiles", async (msg) => {
       return await ide.getOpenFiles();
+    });
+    this.on("getCurrentFile", async (msg) => {
+      return await ide.getCurrentFile();
     });
     this.on("getPinnedFiles", async (msg) => {
       return await ide.getPinnedFiles();
@@ -335,6 +341,17 @@ export class VsCodeWebviewProtocol {
       this.configHandler.reloadConfig();
     });
 
+    this.on("llm/listModels", async (msg) => {
+      try {
+        const model = await this.configHandler.llmFromTitle(msg.data.title);
+        const models = await model.listModels();
+        return models;
+      } catch (e) {
+        console.warn("Error listing models", e);
+        return undefined;
+      }
+    });
+
     async function* llmStreamComplete(
       protocol: VsCodeWebviewProtocol,
       msg: Message<WebviewProtocol["llm/streamComplete"][0]>,
@@ -348,7 +365,14 @@ export class VsCodeWebviewProtocol {
       while (!next.done) {
         if (protocol.abortedMessageIds.has(msg.messageId)) {
           protocol.abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
+          next = await gen.return({
+            completion: "",
+            prompt: "",
+            completionOptions: {
+              ...msg.data.completionOptions,
+              model: model.model,
+            },
+          });
           break;
         }
         yield { content: next.value };
@@ -372,7 +396,14 @@ export class VsCodeWebviewProtocol {
       while (!next.done) {
         if (protocol.abortedMessageIds.has(msg.messageId)) {
           protocol.abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
+          next = await gen.return({
+            completion: "",
+            prompt: "",
+            completionOptions: {
+              ...msg.data.completionOptions,
+              model: model.model,
+            },
+          });
           break;
         }
         yield { content: next.value.content };
@@ -434,9 +465,15 @@ export class VsCodeWebviewProtocol {
         },
         selectedCode,
         config,
+        fetch: (url, init) =>
+          fetchwithRequestOptions(url, init, config.requestOptions),
       })) {
         if (content) {
           yield { content };
+        }
+        if (protocol.abortedMessageIds.has(msg.messageId)) {
+          protocol.abortedMessageIds.delete(msg.messageId);
+          break;
         }
       }
       yield { done: true, content: "" };
@@ -459,7 +496,11 @@ export class VsCodeWebviewProtocol {
       }
 
       try {
-        const items = await provider.loadSubmenuItems({ ide });
+        const items = await provider.loadSubmenuItems({
+          ide,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
+        });
         return items;
       } catch (e) {
         vscode.window.showErrorMessage(
@@ -497,6 +538,8 @@ export class VsCodeWebviewProtocol {
           fullInput,
           ide,
           selectedCode,
+          fetch: (url, init) =>
+            fetchwithRequestOptions(url, init, config.requestOptions),
         });
 
         Telemetry.capture("useContextProvider", {
@@ -547,13 +590,16 @@ export class VsCodeWebviewProtocol {
         vscode.window.showErrorMessage("No active editor to apply edits to");
         return;
       }
-      const document = editor.document;
-      const start = new vscode.Position(0, 0);
-      const end = new vscode.Position(
-        document.lineCount - 1,
-        document.lineAt(document.lineCount - 1).text.length,
-      );
-      editor.selection = new vscode.Selection(start, end);
+
+      if (editor.selection.isEmpty) {
+        const document = editor.document;
+        const start = new vscode.Position(0, 0);
+        const end = new vscode.Position(
+          document.lineCount - 1,
+          document.lineAt(document.lineCount - 1).text.length,
+        );
+        editor.selection = new vscode.Selection(start, end);
+      }
 
       this.verticalDiffManager.streamEdit(
         `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`,
@@ -579,6 +625,7 @@ export class VsCodeWebviewProtocol {
           ? setupOptimizedMode
           : setupOptimizedExistingUserMode,
       );
+      this.configHandler.reloadConfig();
     });
 
     this.on("openUrl", (msg) => {
@@ -605,6 +652,9 @@ export class VsCodeWebviewProtocol {
         );
       });
     });
+    this.on("copyText", async (msg) => {
+      await vscode.env.clipboard.writeText(msg.data.text);
+    });
   }
 
   public request<T extends keyof ReverseWebviewProtocol>(
@@ -612,10 +662,16 @@ export class VsCodeWebviewProtocol {
     data: ReverseWebviewProtocol[T][0],
   ): Promise<ReverseWebviewProtocol[T][1]> {
     const messageId = uuidv4();
-    return new Promise((resolve) => {
-      if (!this.webview) {
-        resolve(undefined);
-        return;
+    return new Promise(async (resolve) => {
+      let i = 0;
+      while (!this.webview) {
+        if (i >= 10) {
+          resolve(undefined);
+          return;
+        } else {
+          await new Promise((res) => setTimeout(res, i >= 5 ? 1000 : 500));
+          i++;
+        }
       }
 
       this.send(messageType, data, messageId);

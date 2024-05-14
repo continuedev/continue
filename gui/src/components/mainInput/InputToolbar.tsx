@@ -13,8 +13,14 @@ import {
   vscForeground,
   vscInputBackground,
 } from "..";
+import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
-import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../../util";
+import {
+  getAltKeyLabel,
+  getMetaKeyLabel,
+  isMetaEquivalentKeyPressed,
+} from "../../util";
+import { isJetBrains } from "../../util/ide";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
   position: absolute;
@@ -66,6 +72,7 @@ interface InputToolbarProps {
   onImageFileSelected?: (file: File) => void;
 
   hidden?: boolean;
+  showNoContext: boolean;
 }
 
 function InputToolbar(props: InputToolbarProps) {
@@ -73,6 +80,7 @@ function InputToolbar(props: InputToolbarProps) {
   const [fileSelectHovered, setFileSelectHovered] = useState(false);
 
   const defaultModel = useSelector(defaultModelSelector);
+  const useActiveFile = useSelector(selectUseActiveFile);
 
   return (
     <StyledDiv hidden={props.hidden} onClick={props.onClick} id="input-toolbar">
@@ -89,7 +97,11 @@ function InputToolbar(props: InputToolbarProps) {
           + Add Context
         </span>
         {defaultModel &&
-          modelSupportsImages(defaultModel.provider, defaultModel.model) && (
+          modelSupportsImages(
+            defaultModel.provider,
+            defaultModel.model,
+            defaultModel.title,
+          ) && (
             <span
               className="ml-1.5 mt-0.5"
               onMouseLeave={() => setFileSelectHovered(false)}
@@ -128,23 +140,41 @@ function InputToolbar(props: InputToolbarProps) {
             </span>
           )}
       </span>
-      <span
-        style={{
-          color: props.usingCodebase ? vscBadgeBackground : lightGray,
-          backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
-          borderRadius: defaultBorderRadius,
-          padding: "2px 4px",
-        }}
-        onClick={(e) => {
-          props.onEnter({
-            useCodebase: true,
-          });
-        }}
-        className={"hover:underline cursor-pointer float-right"}
-      >
-        {getMetaKeyLabel()} ⏎ Use Codebase
-      </span>
-
+      {props.showNoContext ? (
+        <span
+          style={{
+            color: props.usingCodebase ? vscBadgeBackground : lightGray,
+            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
+            borderRadius: defaultBorderRadius,
+            padding: "2px 4px",
+          }}
+        >
+          {getAltKeyLabel()} ⏎{" "}
+          {useActiveFile ? "No context" : "Use active file"}
+        </span>
+      ) : (
+        isJetBrains() || (
+          <span
+            style={{
+              color: props.usingCodebase ? vscBadgeBackground : lightGray,
+              backgroundColor: props.usingCodebase
+                ? lightGray + "33"
+                : undefined,
+              borderRadius: defaultBorderRadius,
+              padding: "2px 4px",
+            }}
+            onClick={(e) => {
+              props.onEnter({
+                useCodebase: true,
+                noContext: !useActiveFile,
+              });
+            }}
+            className={"hover:underline cursor-pointer float-right"}
+          >
+            {getMetaKeyLabel()} ⏎ Use codebase
+          </span>
+        )
+      )}
       <EnterButton
         offFocus={props.usingCodebase}
         // disabled={
@@ -155,6 +185,7 @@ function InputToolbar(props: InputToolbarProps) {
         onClick={(e) => {
           props.onEnter({
             useCodebase: isMetaEquivalentKeyPressed(e),
+            noContext: useActiveFile ? e.altKey : !e.altKey,
           });
         }}
       >

@@ -16,14 +16,9 @@ import com.intellij.openapi.keymap.KeymapManager
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.StartupActivity
-import com.intellij.openapi.ui.DialogWrapper
 import com.intellij.openapi.util.io.StreamUtil
 import com.intellij.openapi.vfs.LocalFileSystem
-import com.intellij.openapi.wm.ToolWindowManager
 import kotlinx.coroutines.*
-import java.awt.Dimension
-import java.awt.Font
-import java.awt.GridLayout
 import java.io.*
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -31,52 +26,6 @@ import java.nio.file.Paths
 import javax.swing.*
 import com.intellij.ide.plugins.PluginManager
 import com.intellij.openapi.extensions.PluginId
-
-class WelcomeDialogWrapper(val project: Project) : DialogWrapper(true) {
-    private var panel: JPanel? = null
-    private var paragraph: JTextArea? = null
-
-    init {
-        init()
-        title = "Welcome to Continue"
-    }
-
-    override fun doOKAction() {
-        super.doOKAction()
-        val toolWindowManager = ToolWindowManager.getInstance(project)
-        val toolWindow =
-                toolWindowManager.getToolWindow("Continue")
-        toolWindow?.show()
-    }
-
-    override fun createCenterPanel(): JComponent? {
-        panel = JPanel(GridLayout(0, 1))
-        panel!!.preferredSize = Dimension(500, panel!!.preferredSize.height)
-        val paragraph = JLabel()
-        val shortcutKey = if (System.getProperty("os.name").toLowerCase().contains("mac")) "⌘" else "⌃"
-        paragraph.text = """
-            <html>Welcome! You can access Continue from the right side panel by clicking on the logo.<br><br>
-            
-            To <b>ask a question</b> about a piece of code: highlight it, use <b>$shortcutKey J</b> to select the code and focus the input box, then ask your question.<br><br>
-            To generate an <b>inline edit</b>: highlight the code you want to edit, use <b>$shortcutKey ⇧ J</b>, then type your requested edit.</html>""".trimIndent()
-
-        paragraph.font = Font("Arial", Font.PLAIN, 16)
-
-        panel!!.add(paragraph)
-
-        return panel
-    }
-
-    override fun createActions(): Array<Action> {
-        val okAction = getOKAction()
-        okAction.putValue(Action.NAME, "Open Continue")
-
-        val cancelAction = getCancelAction()
-        cancelAction.putValue(Action.NAME, "Cancel")
-
-        return arrayOf(okAction, cancelAction)
-    }
-}
 
 fun showTutorial(project: Project) {
     ContinuePluginStartupActivity::class.java.getClassLoader().getResourceAsStream("continue_tutorial.py").use { `is` ->
@@ -124,7 +73,12 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
         val keyStroke = KeyStroke.getKeyStroke(shortcut)
         val actionIds = keymap.getActionIds(keyStroke)
 
-         for (actionId in actionIds) {
+        // If Continue has been re-assigned to another key, don't remove the shortcut
+        if (!actionIds.any { it.startsWith("continue") }) {
+            return
+        }
+
+        for (actionId in actionIds) {
              if (actionId.startsWith("continue")) {
                  continue
              }
@@ -134,7 +88,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                      keymap.removeShortcut(actionId, shortcut)
                  }
              }
-         }
+        }
     }
 
     private fun initializePlugin(project: Project) {
@@ -142,8 +96,6 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             project,
             ContinuePluginService::class.java
         )
-
-        val theme = GetTheme().getTheme()
 
         val defaultStrategy = DefaultTextSelectionStrategy()
 
@@ -154,13 +106,6 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 settings.continueState.shownWelcomeDialog = true
                 // Open continue_tutorial.py
                 showTutorial(project)
-
-                // Show the welcome dialog
-//                withContext(Dispatchers.Main) {
-//                    val dialog = WelcomeDialogWrapper(project)
-//                    dialog.show()
-//                }
-//                settings.continueState.shownWelcomeDialog = true
             }
 
             val ideProtocolClient = IdeProtocolClient(
@@ -172,8 +117,6 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             )
 
             continuePluginService.ideProtocolClient = ideProtocolClient
-
-
 
             // Listen to changes to settings so the core can reload remote configuration
             val connection = ApplicationManager.getApplication().messageBus.connect()
@@ -202,12 +145,6 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                         listener,
                         this@ContinuePluginStartupActivity
                 )
-
-                try {
-                    startProxyServer()
-                } catch (e: Exception) {
-                    println(e)
-                }
             }
 
             GlobalScope.async(Dispatchers.IO) {
@@ -253,7 +190,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                 // esbuild needs permissions
                 val esbuildPath = Paths.get(targetPath, "esbuild"+ (if (os == "win32") ".exe" else "")).toString()
 
-                val coreMessenger = CoreMessenger(project, esbuildPath, continueCorePath, ideProtocolClient);
+                val coreMessenger = CoreMessenger(project, esbuildPath, continueCorePath, ideProtocolClient)
                 continuePluginService.coreMessenger = coreMessenger
             }
         }

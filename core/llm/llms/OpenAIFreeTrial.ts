@@ -1,6 +1,6 @@
-import { BaseLLM } from "..";
-import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
-import { streamResponse } from "../stream";
+import { BaseLLM } from "../index.js";
+import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
+import { streamResponse } from "../stream.js";
 
 // const SERVER_URL = "http://localhost:8080";
 const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";

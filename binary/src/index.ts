@@ -3,6 +3,7 @@ import { Command } from "commander";
 import { getCoreLogsPath } from "core/util/paths";
 import fs from "fs";
 import { IpcIde } from "./IpcIde";
+import { setupCa } from "./ca";
 import { Core } from "./core";
 import { IpcMessenger } from "./messenger";
 
@@ -17,6 +18,8 @@ program.action(() => {
     const ide = new IpcIde(messenger);
     // const ide = new FileSystemIde();
     const core = new Core(messenger, ide);
+
+    setupCa();
 
     // setTimeout(() => {
     //   messenger.mock({

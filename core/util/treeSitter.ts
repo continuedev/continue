@@ -1,6 +1,5 @@
 import * as path from "path";
-import { Language } from "web-tree-sitter";
-const Parser = require("web-tree-sitter");
+import Parser, { Language } from "web-tree-sitter";
 
 export const supportedLanguages: { [key: string]: string } = {
   cpp: "cpp",
@@ -70,6 +69,7 @@ export const supportedLanguages: { [key: string]: string } = {
   rs: "rust",
   rdl: "systemrdl",
   toml: "toml",
+  sol: "solidity",
 
   // jl: "julia",
   // swift: "swift",

@@ -1,11 +1,15 @@
-import { EmbedOptions } from "../..";
-import { withExponentialBackoff } from "../../util/withExponentialBackoff";
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
+import { EmbedOptions, FetchFunction } from "../../index.js";
+import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
-async function embedOne(chunk: string, options: EmbedOptions) {
+async function embedOne(
+  chunk: string,
+  options: EmbedOptions,
+  customFetch: FetchFunction,
+) {
   const fetchWithBackoff = () =>
     withExponentialBackoff<Response>(() =>
-      fetch(new URL("api/embeddings", options.apiBase), {
+      customFetch(new URL("api/embeddings", options.apiBase), {
         method: "POST",
         body: JSON.stringify({
           model: options.model,
@@ -33,7 +37,7 @@ class OllamaEmbeddingsProvider extends BaseEmbeddingsProvider {
   async embed(chunks: string[]) {
     const results: any = [];
     for (const chunk of chunks) {
-      results.push(await embedOne(chunk, this.options));
+      results.push(await embedOne(chunk, this.options, this.fetch));
     }
     return results;
   }

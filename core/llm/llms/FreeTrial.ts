@@ -1,8 +1,8 @@
-import { BaseLLM } from "..";
-import { ChatMessage, CompletionOptions, ModelProvider } from "../..";
-import { getHeaders } from "../../continueServer/stubs/headers";
-import { SERVER_URL } from "../../util/parameters";
-import { streamResponse } from "../stream";
+import { getHeaders } from "../../continueServer/stubs/headers.js";
+import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
+import { SERVER_URL } from "../../util/parameters.js";
+import { BaseLLM } from "../index.js";
+import { streamResponse } from "../stream.js";
 
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
@@ -94,10 +94,8 @@ class FreeTrial extends BaseLLM {
   async listModels(): Promise<string[]> {
     return [
       "gpt-3.5-turbo",
-      "gpt-4",
-      "gemini-pro",
-      "gpt-4-vision-preview",
-      "codellama-70b",
+      "gpt-4o",
+      "gemini-1.5-pro-latest",
       "claude-3-opus-20240229",
       "claude-3-sonnet-20240229",
       "claude-3-haiku-20240307",

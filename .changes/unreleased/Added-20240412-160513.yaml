@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Added
+body: Support for Gemini 1.5 Pro
+time: 2024-04-12T16:05:13.251485-07:00

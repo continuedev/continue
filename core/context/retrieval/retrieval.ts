@@ -1,9 +1,9 @@
-import { BranchAndDir, Chunk, ContextItem, ContextProviderExtras } from "../..";
-import { LanceDbIndex } from "../../indexing/LanceDbIndex";
+import { BranchAndDir, Chunk, ContextItem, ContextProviderExtras } from "../../index.js";
+import { LanceDbIndex } from "../../indexing/LanceDbIndex.js";
 
-import { deduplicateArray, getBasename } from "../../util";
-import { RETRIEVAL_PARAMS } from "../../util/parameters";
-import { retrieveFts } from "./fullTextSearch";
+import { deduplicateArray, getBasename } from "../../util/index.js";
+import { RETRIEVAL_PARAMS } from "../../util/parameters.js";
+import { retrieveFts } from "./fullTextSearch.js";
 
 function deduplicateChunks(chunks: Chunk[]): Chunk[] {
   return deduplicateArray(chunks, (a, b) => {
@@ -66,24 +66,26 @@ export async function retrieveContextItemsFromEmbeddings(
   // Source: expansion with code graph
   // consider doing this after reranking? Or just having a lower reranking threshold
   // This is VS Code only until we use PSI for JetBrains or build our own general solution
-  if ((await extras.ide.getIdeInfo()).ideType === "vscode") {
-    const { expandSnippet } = await import(
-      "../../../extensions/vscode/src/util/expandSnippet"
-    );
-    let expansionResults = (
-      await Promise.all(
-        extras.selectedCode.map(async (rif) => {
-          return expandSnippet(
-            rif.filepath,
-            rif.range.start.line,
-            rif.range.end.line,
-            extras.ide,
-          );
-        }),
-      )
-    ).flat() as Chunk[];
-    retrievalResults.push(...expansionResults);
-  }
+  // TODO: Need to pass in the expandSnippet function as a function argument
+  // because this import causes `tsc` to fail
+  // if ((await extras.ide.getIdeInfo()).ideType === "vscode") {
+  //   const { expandSnippet } = await import(
+  //     "../../../extensions/vscode/src/util/expandSnippet"
+  //   );
+  //   let expansionResults = (
+  //     await Promise.all(
+  //       extras.selectedCode.map(async (rif) => {
+  //         return expandSnippet(
+  //           rif.filepath,
+  //           rif.range.start.line,
+  //           rif.range.end.line,
+  //           extras.ide,
+  //         );
+  //       }),
+  //     )
+  //   ).flat() as Chunk[];
+  //   retrievalResults.push(...expansionResults);
+  // }
 
   // Source: Open file exact match
   // Source: Class/function name exact match

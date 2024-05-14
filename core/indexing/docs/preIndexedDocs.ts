@@ -143,8 +143,8 @@ const configs: SiteIndexingConfig[] = [
   },
   {
     title: "Continue",
-    startUrl: "https://continue.dev/docs/intro",
-    rootUrl: "https://continue.dev/docs",
+    startUrl: "https://docs.continue.dev/intro",
+    rootUrl: "https://docs.continue.dev",
   },
   {
     title: "jQuery",
@@ -215,6 +215,21 @@ const configs: SiteIndexingConfig[] = [
     title: "Langchain",
     startUrl: "https://python.langchain.com/docs/get_started/introduction",
     rootUrl: "https://python.langchain.com/docs",
+  },
+  {
+    title: "WooCommerce",
+    startUrl: "https://developer.woocommerce.com/docs/",
+    rootUrl: "https://developer.woocommerce.com/docs/",
+  },
+  {
+    title: "WordPress",
+    startUrl: "https://developer.wordpress.org/reference/",
+    rootUrl: "https://developer.wordpress.org/reference/",
+  },
+  {
+    title: "PySide6",
+    startUrl: "https://doc.qt.io/qtforpython-6/quickstart.html",
+    rootUrl: "https://doc.qt.io/qtforpython-6/api.html",
   },
 ];
 

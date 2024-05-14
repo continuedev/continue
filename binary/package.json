@@ -41,9 +41,12 @@
     "commander": "^12.0.0",
     "core": "file:../core",
     "follow-redirects": "^1.15.5",
+    "mac-ca": "^2.0.3",
     "ncp": "^2.0.0",
     "posthog-node": "^3.6.3",
+    "system-ca": "^1.0.2",
     "uuid": "^9.0.1",
-    "vectordb": "^0.4.10"
+    "vectordb": "^0.4.10",
+    "win-ca": "^3.5.1"
   }
 }

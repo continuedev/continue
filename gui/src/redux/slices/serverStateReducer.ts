@@ -4,7 +4,6 @@ import {
   ContinueConfig,
   SlashCommandDescription,
 } from "core";
-import FreeTrial from "core/llm/llms/FreeTrial";
 
 const TEST_SLASH_COMMANDS = [
   {
@@ -36,10 +35,7 @@ const initialState: ServerState = {
   slashCommands: [],
   selectedContextItems: [],
   config: {
-    models: [
-      new FreeTrial({ model: "gpt-4" }),
-      new FreeTrial({ model: "gpt-3.5-turbo" }),
-    ],
+    models: [],
   } as any,
   contextProviders: [],
   savedContextGroups: [],
@@ -52,7 +48,7 @@ export const serverStateSlice = createSlice({
   reducers: {
     setSlashCommands: (
       state,
-      action: PayloadAction<ServerState["slashCommands"]>
+      action: PayloadAction<ServerState["slashCommands"]>,
     ) => {
       state.slashCommands = [
         ...action.payload,
@@ -62,13 +58,13 @@ export const serverStateSlice = createSlice({
     },
     setContextProviders: (
       state,
-      action: PayloadAction<ServerState["contextProviders"]>
+      action: PayloadAction<ServerState["contextProviders"]>,
     ) => {
       state.contextProviders = action.payload;
     },
     setIndexingProgress: (
       state,
-      action: PayloadAction<ServerState["indexingProgress"]>
+      action: PayloadAction<ServerState["indexingProgress"]>,
     ) => {
       state.indexingProgress = action.payload;
     },

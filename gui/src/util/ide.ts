@@ -1,4 +1,4 @@
-import { ChatMessage, LLMFullCompletionOptions, LLMReturnValue } from "core";
+import { ChatMessage, LLMFullCompletionOptions, PromptLog } from "core";
 import { Message } from "core/util/messenger";
 import {
   ReverseWebviewProtocol,
@@ -6,6 +6,7 @@ import {
 } from "core/web/webviewProtocol";
 import { v4 as uuidv4 } from "uuid";
 import "vscode-webview";
+import { getLocalStorage } from "./localStorage";
 interface vscode {
   postMessage(message: any): vscode;
 }
@@ -114,6 +115,9 @@ export async function* ideStreamRequest<T extends keyof WebviewProtocol>(
   let returnVal = undefined;
 
   const handler = (event: { data: Message }) => {
+    if (event.data.messageType === "setInactive") {
+      postToIde("abort", undefined, messageId);
+    }
     if (event.data.messageId === messageId) {
       const responseData = safeParseResponse(event.data.data);
       if (responseData.done) {
@@ -154,7 +158,7 @@ export async function* llmStreamChat(
   cancelToken: AbortSignal | undefined,
   messages: ChatMessage[],
   options: LLMFullCompletionOptions = {},
-): AsyncGenerator<ChatMessage, LLMReturnValue> {
+): AsyncGenerator<ChatMessage, PromptLog> {
   const gen = ideStreamRequest(
     "llm/streamChat",
     {
@@ -170,9 +174,15 @@ export async function* llmStreamChat(
     yield { role: "user", content: next.value };
     next = await gen.next();
   }
+
+  if (next.value.error) {
+    throw new Error(next.value.error);
+  }
+
   return {
     prompt: next.value.content?.prompt,
     completion: next.value.content?.completion,
+    completionOptions: next.value.content?.completionOptions,
   };
 }
 
@@ -184,4 +194,19 @@ export function appendText(text: string) {
 
 export function isJetBrains() {
   return localStorage.getItem("ide") === "jetbrains";
+}
+
+export function isPrerelease() {
+  const extensionVersion = getLocalStorage("extensionVersion");
+  if (!extensionVersion) {
+    console.warn(
+      `Could not find extension version in local storage, assuming it's a prerelease`,
+    );
+    return true;
+  }
+  const minor = parseInt(extensionVersion.split(".")[1], 10);
+  if (minor % 2 !== 0) {
+    return true;
+  }
+  return false;
 }
