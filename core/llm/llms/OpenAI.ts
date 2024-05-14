@@ -94,14 +94,22 @@ class OpenAI extends BaseLLM {
         this.maxStopWords !== undefined
           ? options.stop?.slice(0, this.maxStopWords)
           : url.port === "1337" ||
-            url.host === "api.openai.com" ||
-            url.host === "api.groq.com" ||
-            this.apiType === "azure"
-          ? options.stop?.slice(0, 4)
-          : options.stop,
+              url.host === "api.openai.com" ||
+              url.host === "api.groq.com" ||
+              this.apiType === "azure"
+            ? options.stop?.slice(0, 4)
+            : options.stop,
     };
 
     return finalOptions;
+  }
+
+  protected _getHeaders() {
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${this.apiKey}`,
+      "api-key": this.apiKey ?? "", // For Azure
+    };
   }
 
   protected async _complete(
@@ -160,11 +168,7 @@ class OpenAI extends BaseLLM {
 
     const response = await this.fetch(this._getEndpoint("completions"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey ?? "", // For Azure
-      },
+      headers: this._getHeaders(),
       body: JSON.stringify({
         ...args,
         stream: true,
@@ -212,11 +216,7 @@ class OpenAI extends BaseLLM {
     })) as any;
     const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey ?? "", // For Azure
-      },
+      headers: this._getHeaders(),
       body: JSON.stringify(body),
     });
 
@@ -230,10 +230,7 @@ class OpenAI extends BaseLLM {
   async listModels(): Promise<string[]> {
     const response = await this.fetch(this._getEndpoint("models"), {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey ?? "", // For Azure
-      },
+      headers: this._getHeaders(),
     });
 
     const data = await response.json();
