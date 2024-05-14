@@ -30,7 +30,7 @@ export class ContinueServerClient implements IContinueServerClient {
 
   public async getConfig(): Promise<{ configJson: string; configJs: string }> {
     const userToken = await this.userToken;
-    const response = await fetch(new URL("sync", this.serverUrl).href, {
+    const response = await fetch(new URL("sync", this.url).href, {
       method: "GET",
       headers: {
         Authorization: `Bearer ${userToken}`,
@@ -61,7 +61,7 @@ export class ContinueServerClient implements IContinueServerClient {
         files: {},
       };
     }
-    const url = new URL("indexing/cache", this.serverUrl);
+    const url = new URL("indexing/cache", this.url);
     const response = await fetch(url, {
       method: "POST",
       headers: {
