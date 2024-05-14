@@ -28,7 +28,7 @@ export class ConfigHandler {
   }
 
   updateIdeSettings(ideSettings: IdeSettings) {
-    this.ideSettings = ideSettings
+    this.ideSettings = ideSettings;
     this.reloadConfig();
   }
 
@@ -70,19 +70,10 @@ export class ConfigHandler {
     const ideInfo = await this.ide.getIdeInfo();
     const uniqueId = await this.ide.getUniqueId();
 
-    let remoteConfigServerUrl = undefined;
-    try {
-      remoteConfigServerUrl =
-        typeof this.ideSettings.remoteConfigServerUrl !== "string" ||
-        this.ideSettings.remoteConfigServerUrl === ""
-          ? undefined
-          : new URL(this.ideSettings.remoteConfigServerUrl);
-    } catch (e) {}
-
     this.savedConfig = await loadFullConfigNode(
       this.ide.readFile.bind(this.ide),
       workspaceConfigs,
-      remoteConfigServerUrl,
+      this.ideSettings,
       ideInfo.ideType,
       uniqueId,
       this.writeLog,
