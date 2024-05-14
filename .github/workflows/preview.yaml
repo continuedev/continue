@@ -129,10 +129,10 @@ jobs:
       #   if: matrix.os != 'ubuntu-latest'
 
       # 4. Re-install esbuild
-      - name: Re-install esbuild
-        run: |
-          cd extensions/vscode
-          npm install -f esbuild
+      # - name: Re-install esbuild
+      #   run: |
+      #     cd extensions/vscode
+      #     pnpm install -f esbuild
 
       # 5. Package the extension
       - name: Package the extension
