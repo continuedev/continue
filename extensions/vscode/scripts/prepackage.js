@@ -14,6 +14,18 @@ fs.mkdirSync(path.join(__dirname, "..", "out", "node_modules"), {
   recursive: true,
 });
 
+// Print the contents of node_modules/@lancedb
+const lancedbPath = path.join(__dirname, "..", "node_modules", "@lancedb");
+
+if (fs.existsSync(lancedbPath)) {
+  console.log("[info] Contents of node_modules/@lancedb:");
+  fs.readdirSync(lancedbPath).forEach((file) => {
+    console.log(file);
+  });
+} else {
+  console.warn("[warn] node_modules/@lancedb does not exist.");
+}
+
 // Get the target to package for
 let target = undefined;
 const args = process.argv;
