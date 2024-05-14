@@ -525,7 +525,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   // Re-focus main input after done generating
   useEffect(() => {
     if (editor && !active && props.isMainInput && document.hasFocus()) {
-      editor.commands.focus();
+      editor.commands.focus(undefined, {scrollIntoView: false});
     }
   }, [props.isMainInput, active, editor]);
 
