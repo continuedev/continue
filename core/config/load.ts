@@ -31,6 +31,7 @@ import { AllEmbeddingsProviders } from "../indexing/embeddings/index.js";
 import { BaseLLM } from "../llm/index.js";
 import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import { llmFromDescription } from "../llm/llms/index.js";
+import { IdeSettings } from "../protocol.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
 import mergeJson from "../util/merge.js";
@@ -81,7 +82,7 @@ const configMergeKeys = {
 
 function loadSerializedConfig(
   workspaceConfigs: ContinueRcJson[],
-  remoteConfigServerUrl: URL | undefined,
+  ideSettings: IdeSettings,
   ideType: IdeType,
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath(ideType);
@@ -96,10 +97,10 @@ function loadSerializedConfig(
     config.allowAnonymousTelemetry = true;
   }
 
-  if (remoteConfigServerUrl) {
+  if (ideSettings.remoteConfigServerUrl) {
     try {
       const remoteConfigJson = resolveSerializedConfig(
-        getConfigJsonPathForRemote(remoteConfigServerUrl),
+        getConfigJsonPathForRemote(ideSettings.remoteConfigServerUrl),
       );
       config = mergeJson(config, remoteConfigJson, "merge", configMergeKeys);
     } catch (e) {
@@ -168,6 +169,7 @@ function isContextProviderWithParams(
 async function intermediateToFinalConfig(
   config: Config,
   readFile: (filepath: string) => Promise<string>,
+  ideSettings: IdeSettings,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
@@ -179,11 +181,14 @@ async function intermediateToFinalConfig(
         desc,
         readFile,
         uniqueId,
+        ideSettings,
         writeLog,
         config.completionOptions,
         config.systemMessage,
       );
-      if (!llm) {continue;}
+      if (!llm) {
+        continue;
+      }
 
       if (llm.model === "AUTODETECT") {
         try {
@@ -198,6 +203,7 @@ async function intermediateToFinalConfig(
                 },
                 readFile,
                 uniqueId,
+                ideSettings,
                 writeLog,
                 copyOf(config.completionOptions),
                 config.systemMessage,
@@ -257,6 +263,7 @@ async function intermediateToFinalConfig(
         config.tabAutocompleteModel,
         readFile,
         uniqueId,
+        ideSettings,
         writeLog,
         config.completionOptions,
         config.systemMessage,
@@ -446,16 +453,12 @@ async function buildConfigTs() {
 async function loadFullConfigNode(
   readFile: (filepath: string) => Promise<string>,
   workspaceConfigs: ContinueRcJson[],
-  remoteConfigServerUrl: URL | undefined,
+  ideSettings: IdeSettings,
   ideType: IdeType,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
-  let serialized = loadSerializedConfig(
-    workspaceConfigs,
-    remoteConfigServerUrl,
-    ideType,
-  );
+  let serialized = loadSerializedConfig(workspaceConfigs, ideSettings, ideType);
   let intermediate = serializedToIntermediateConfig(serialized);
 
   const configJsContents = await buildConfigTs();
@@ -475,10 +478,10 @@ async function loadFullConfigNode(
   }
 
   // Remote config.js
-  if (remoteConfigServerUrl) {
+  if (ideSettings.remoteConfigServerUrl) {
     try {
       const configJsPathForRemote = getConfigJsPathForRemote(
-        remoteConfigServerUrl,
+        ideSettings.remoteConfigServerUrl,
       );
       const module = await require(configJsPathForRemote);
       delete require.cache[require.resolve(configJsPathForRemote)];
@@ -494,6 +497,7 @@ async function loadFullConfigNode(
   const finalConfig = await intermediateToFinalConfig(
     intermediate,
     readFile,
+    ideSettings,
     uniqueId,
     writeLog,
   );
@@ -505,6 +509,5 @@ export {
   intermediateToFinalConfig,
   loadFullConfigNode,
   serializedToIntermediateConfig,
-  type BrowserSerializedContinueConfig
+  type BrowserSerializedContinueConfig,
 };
-

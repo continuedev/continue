@@ -2,9 +2,9 @@ import dotenv from "dotenv";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { IdeType, SerializedContinueConfig } from "../index.js";
 import { defaultConfig, defaultConfigJetBrains } from "../config/default.js";
 import Types from "../config/types.js";
+import { IdeType, SerializedContinueConfig } from "../index.js";
 
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
@@ -197,22 +197,30 @@ export function getRemoteConfigsFolderPath(): string {
   return dir;
 }
 
-export function getPathToRemoteConfig(remoteConfigServerUrl: URL): string {
-  const dir = path.join(
-    getRemoteConfigsFolderPath(),
-    remoteConfigServerUrl.hostname,
-  );
+export function getPathToRemoteConfig(remoteConfigServerUrl: string): string {
+  let url: URL | undefined = undefined;
+  try {
+    url =
+      typeof remoteConfigServerUrl !== "string" || remoteConfigServerUrl === ""
+        ? undefined
+        : new URL(remoteConfigServerUrl);
+  } catch (e) {}
+  const dir = path.join(getRemoteConfigsFolderPath(), url?.hostname ?? "None");
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir);
   }
   return dir;
 }
 
-export function getConfigJsonPathForRemote(remoteConfigServerUrl: URL): string {
+export function getConfigJsonPathForRemote(
+  remoteConfigServerUrl: string,
+): string {
   return path.join(getPathToRemoteConfig(remoteConfigServerUrl), "config.json");
 }
 
-export function getConfigJsPathForRemote(remoteConfigServerUrl: URL): string {
+export function getConfigJsPathForRemote(
+  remoteConfigServerUrl: string,
+): string {
   return path.join(getPathToRemoteConfig(remoteConfigServerUrl), "config.js");
 }
 

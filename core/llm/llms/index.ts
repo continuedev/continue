@@ -5,6 +5,7 @@ import {
   LLMOptions,
   ModelDescription,
 } from "../../index.js";
+import { IdeSettings } from "../../protocol.js";
 import { DEFAULT_MAX_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
 import Anthropic from "./Anthropic.js";
@@ -104,6 +105,7 @@ export async function llmFromDescription(
   desc: ModelDescription,
   readFile: (filepath: string) => Promise<string>,
   uniqueId: string,
+  ideSettings: IdeSettings,
   writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
@@ -124,7 +126,7 @@ export async function llmFromDescription(
     systemMessage = await renderTemplatedString(systemMessage, readFile, {});
   }
 
-  const options: LLMOptions = {
+  let options: LLMOptions = {
     ...desc,
     completionOptions: {
       ...finalCompletionOptions,
@@ -138,6 +140,17 @@ export async function llmFromDescription(
     writeLog,
     uniqueId,
   };
+
+  if (desc.provider === "continue-proxy") {
+    options = {
+      ...options,
+      apiBase: new URL(
+        "/proxy/v1",
+        ideSettings.remoteConfigServerUrl,
+      ).toString(),
+      apiKey: ideSettings.userToken,
+    };
+  }
 
   return new cls(options);
 }
