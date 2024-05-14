@@ -40,6 +40,8 @@ const esbuildPath = path.join(
 );
 if (fs.existsSync(esbuildPath)) {
   console.log("ESBUILD: ", fs.readdirSync(esbuildPath));
+} else {
+  console.log("ESBUILD doesn't exist");
 }
 
 // Get the target to package for
