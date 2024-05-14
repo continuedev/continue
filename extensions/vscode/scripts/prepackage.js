@@ -25,6 +25,16 @@ if (fs.existsSync(lancedbPath)) {
 } else {
   console.warn("[warn] node_modules/@lancedb does not exist.");
 }
+const esbuildPath = path.join(
+  __dirname,
+  "..",
+  "node_modules",
+  ".bin",
+  "@esbuild",
+);
+if (fs.existsSync(esbuildPath)) {
+  console.log("ESBUILD: ", fs.readdirSync(esbuildPath));
+}
 
 // Get the target to package for
 let target = undefined;
