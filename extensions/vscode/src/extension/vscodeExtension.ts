@@ -1,5 +1,6 @@
 import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/handler";
+import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { IdeSettings } from "core/protocol";
 import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
@@ -42,13 +43,32 @@ export class VsCodeExtension {
     const ideSettings = this.ide.getIdeSettings();
     const { remoteConfigServerUrl, remoteConfigSyncPeriod } = ideSettings;
 
+    const userTokenPromise: Promise<string | undefined> = new Promise(
+      async (resolve) => {
+        if (
+          remoteConfigServerUrl === null ||
+          remoteConfigServerUrl === undefined ||
+          remoteConfigServerUrl.trim() === ""
+        ) {
+          resolve(undefined);
+          return;
+        }
+        const token = await getUserToken();
+        resolve(token);
+      },
+    );
+
+    const continueServerClient = new ContinueServerClient(
+      ideSettings.remoteConfigServerUrl,
+      userTokenPromise,
+    );
+
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
       "Continue - LLM Prompt/Completion",
     );
     this.configHandler = new ConfigHandler(
       this.ide,
-      Promise.resolve(ideSettings),
       async (log: string) => {
         outputChannel.appendLine(
           "==========================================================================",
@@ -58,6 +78,15 @@ export class VsCodeExtension {
         );
         outputChannel.append(log);
       },
+      (() => this.webviewProtocol?.request("configUpdate", undefined)).bind(
+        this,
+      ),
+      continueServerClient,
+    );
+
+    this.configHandler.reloadConfig();
+    this.verticalDiffManager = new VerticalPerLineDiffManager(
+      this.configHandler,
     );
     this.diffManager = new DiffManager(context);
     this.ide = new VsCodeIde(this.diffManager, this.webviewProtocolPromise);
@@ -112,30 +141,11 @@ export class VsCodeExtension {
 
     this.diffManager.webviewProtocol = this.webviewProtocol;
 
-    const userTokenPromise: Promise<string | undefined> = new Promise(
-      async (resolve) => {
-        if (
-          remoteConfigServerUrl === null ||
-          remoteConfigServerUrl === undefined ||
-          remoteConfigServerUrl.trim() === ""
-        ) {
-          resolve(undefined);
-          return;
-        }
-        const token = await getUserToken();
-        resolve(token);
-      },
-    );
-
-    const inProcessMessenger = new InProcessMessenger<
-      ToCoreProtocol,
-      FromCoreProtocol
-    >();
-    const vscodeMessenger = new VsCodeMessenger(
-      inProcessMessenger,
-      this.webviewProtocol,
+    this.indexer = new CodebaseIndexer(
+      this.configHandler,
       this.ide,
-      this.verticalDiffManager,
+      indexingPauseToken,
+      continueServerClient,
     );
     this.core = new Core(inProcessMessenger, this.ide);
 

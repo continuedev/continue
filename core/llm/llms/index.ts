@@ -27,6 +27,7 @@ import OpenAIFreeTrial from "./OpenAIFreeTrial.js";
 import Replicate from "./Replicate.js";
 import TextGenWebUI from "./TextGenWebUI.js";
 import Together from "./Together.js";
+import ContinueProxy from "./stubs/ContinueProxy.js";
 
 function convertToLetter(num: number): string {
 	let result = "";
@@ -76,26 +77,27 @@ export async function renderTemplatedString(
 }
 
 const LLMs = [
-	Anthropic,
-	Cohere,
-	FreeTrial,
-	Gemini,
-	Llamafile,
-	Ollama,
-	Replicate,
-	TextGenWebUI,
-	Together,
-	HuggingFaceTGI,
-	HuggingFaceInferenceAPI,
-	LlamaCpp,
-	OpenAI,
-	LMStudio,
-	Mistral,
-	Bedrock,
-	DeepInfra,
-	OpenAIFreeTrial,
-	Flowise,
-	Groq,
+  Anthropic,
+  Cohere,
+  FreeTrial,
+  Gemini,
+  Llamafile,
+  Ollama,
+  Replicate,
+  TextGenWebUI,
+  Together,
+  HuggingFaceTGI,
+  HuggingFaceInferenceAPI,
+  LlamaCpp,
+  OpenAI,
+  LMStudio,
+  Mistral,
+  Bedrock,
+  DeepInfra,
+  OpenAIFreeTrial,
+  Flowise,
+  Groq,
+  ContinueProxy,
 ];
 
 export async function llmFromDescription(
@@ -134,7 +136,7 @@ export async function llmFromDescription(
     },
     systemMessage,
     writeLog,
-    uniqueId
+    uniqueId,
   };
 
 	return new cls(options);
