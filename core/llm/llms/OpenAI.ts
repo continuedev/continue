@@ -94,11 +94,11 @@ class OpenAI extends BaseLLM {
         this.maxStopWords !== undefined
           ? options.stop?.slice(0, this.maxStopWords)
           : url.port === "1337" ||
-            url.host === "api.openai.com" ||
-            url.host === "api.groq.com" ||
-            this.apiType === "azure"
-          ? options.stop?.slice(0, 4)
-          : options.stop,
+              url.host === "api.openai.com" ||
+              url.host === "api.groq.com" ||
+              this.apiType === "azure"
+            ? options.stop?.slice(0, 4)
+            : options.stop,
     };
 
     return finalOptions;
