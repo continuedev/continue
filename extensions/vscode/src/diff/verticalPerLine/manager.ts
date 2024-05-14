@@ -138,7 +138,11 @@ export class VerticalPerLineDiffManager {
     }
   }
 
-  async streamEdit(input: string, modelTitle: string | undefined) {
+  async streamEdit(
+    input: string,
+    modelTitle: string | undefined,
+    onlyOneInsertion?: boolean,
+  ) {
     vscode.commands.executeCommand("setContext", "continue.diffVisible", true);
 
     const editor = vscode.window.activeTextEditor;
