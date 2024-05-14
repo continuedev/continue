@@ -39,7 +39,7 @@ export class LanceDbIndex implements CodebaseIndex {
   constructor(
     private readonly embeddingsProvider: EmbeddingsProvider,
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly continueServerClient: IContinueServerClient,
+    private readonly continueServerClient?: IContinueServerClient,
   ) {}
 
   private tableNameForTag(tag: IndexTag) {
@@ -175,7 +175,7 @@ export class LanceDbIndex implements CodebaseIndex {
     };
 
     // Check remote cache
-    if (this.continueServerClient.connected) {
+    if (this.continueServerClient?.connected) {
       try {
         const keys = results.compute.map(({ cacheKey }) => cacheKey);
         const resp = await this.continueServerClient.getFromIndexCache(
