@@ -1,6 +1,7 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { v4 as uuidv4 } from "uuid";
 import { Table } from "vectordb";
+import { IContinueServerClient } from "../continueServer/interface.js";
 import {
   BranchAndDir,
   Chunk,
@@ -8,7 +9,6 @@ import {
   IndexTag,
   IndexingProgressUpdate,
 } from "../index.js";
-import { ContinueServerClient } from "../continueServer/stubs/client.js";
 import { MAX_CHUNK_SIZE } from "../llm/constants.js";
 import { getBasename } from "../util/index.js";
 import { getLanceDbPath } from "../util/paths.js";
@@ -40,7 +40,7 @@ export class LanceDbIndex implements CodebaseIndex {
   constructor(
     private readonly embeddingsProvider: EmbeddingsProvider,
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly continueServerClient?: ContinueServerClient,
+    private readonly continueServerClient: IContinueServerClient,
   ) {}
 
   private tableNameForTag(tag: IndexTag) {
@@ -176,7 +176,7 @@ export class LanceDbIndex implements CodebaseIndex {
     };
 
     // Check remote cache
-    if (this.continueServerClient !== undefined) {
+    if (this.continueServerClient.connected) {
       try {
         const keys = results.compute.map(({ cacheKey }) => cacheKey);
         const resp = await this.continueServerClient.getFromIndexCache(

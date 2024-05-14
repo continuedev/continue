@@ -520,6 +520,7 @@ type ModelProvider =
   | "deepinfra"
   | "flowise"
   | "groq"
+  | "continue-proxy"
   | "custom";
 
 export type ModelName =

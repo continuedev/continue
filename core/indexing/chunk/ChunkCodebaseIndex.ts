@@ -1,5 +1,5 @@
+import { IContinueServerClient } from "../../continueServer/interface.js";
 import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
-import { ContinueServerClient } from "../../continueServer/stubs/client.js";
 import { MAX_CHUNK_SIZE } from "../../llm/constants.js";
 import { getBasename } from "../../util/index.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex.js";
@@ -17,7 +17,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
   constructor(
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly continueServerClient?: ContinueServerClient,
+    private readonly continueServerClient: IContinueServerClient,
   ) {
     this.readFile = readFile;
   }
@@ -71,7 +71,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     }
 
     // Check the remote cache
-    if (this.continueServerClient !== undefined) {
+    if (this.continueServerClient.connected) {
       try {
         const keys = results.compute.map(({ cacheKey }) => cacheKey);
         const resp = await this.continueServerClient.getFromIndexCache(

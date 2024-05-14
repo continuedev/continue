@@ -1,6 +1,6 @@
-import { IDE, IndexTag, IndexingProgressUpdate } from "../index.js";
 import { ConfigHandler } from "../config/handler.js";
-import { ContinueServerClient } from "../continueServer/stubs/client.js";
+import { IContinueServerClient } from "../continueServer/interface.js";
+import { IDE, IndexTag, IndexingProgressUpdate } from "../index.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
 import { FullTextSearchCodebaseIndex } from "./FullTextSearch.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
@@ -21,21 +21,12 @@ export class PauseToken {
 }
 
 export class CodebaseIndexer {
-  private continueServerClient?: ContinueServerClient;
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly pauseToken: PauseToken,
-    private readonly continueServerUrl: string | undefined,
-    private readonly userToken: Promise<string | undefined>,
-  ) {
-    if (continueServerUrl) {
-      this.continueServerClient = new ContinueServerClient(
-        continueServerUrl,
-        userToken,
-      );
-    }
-  }
+    private readonly continueServerClient: IContinueServerClient,
+  ) {}
 
   private async getIndexesToBuild(): Promise<CodebaseIndex[]> {
     const config = await this.configHandler.loadConfig();

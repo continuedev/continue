@@ -1,4 +1,5 @@
 import { ConfigHandler } from "core/config/handler";
+import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { IdeSettings } from "core/protocol";
 import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
@@ -49,13 +50,32 @@ export class VsCodeExtension {
       userToken: settings.get<string>("userToken", ""),
     };
 
+    const userTokenPromise: Promise<string | undefined> = new Promise(
+      async (resolve) => {
+        if (
+          remoteConfigServerUrl === null ||
+          remoteConfigServerUrl === undefined ||
+          remoteConfigServerUrl.trim() === ""
+        ) {
+          resolve(undefined);
+          return;
+        }
+        const token = await getUserToken();
+        resolve(token);
+      },
+    );
+
+    const continueServerClient = new ContinueServerClient(
+      ideSettings.remoteConfigServerUrl,
+      userTokenPromise,
+    );
+
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
       "Continue - LLM Prompt/Completion",
     );
     this.configHandler = new ConfigHandler(
       this.ide,
-      Promise.resolve(ideSettings),
       async (log: string) => {
         outputChannel.appendLine(
           "==========================================================================",
@@ -68,6 +88,7 @@ export class VsCodeExtension {
       (() => this.webviewProtocol?.request("configUpdate", undefined)).bind(
         this,
       ),
+      continueServerClient,
     );
 
     this.configHandler.reloadConfig();
@@ -117,26 +138,11 @@ export class VsCodeExtension {
 
     this.diffManager.webviewProtocol = this.webviewProtocol;
 
-    const userTokenPromise: Promise<string | undefined> = new Promise(
-      async (resolve) => {
-        if (
-          remoteConfigServerUrl === null ||
-          remoteConfigServerUrl === undefined ||
-          remoteConfigServerUrl.trim() === ""
-        ) {
-          resolve(undefined);
-          return;
-        }
-        const token = await getUserToken();
-        resolve(token);
-      },
-    );
     this.indexer = new CodebaseIndexer(
       this.configHandler,
       this.ide,
       indexingPauseToken,
-      ideSettings.remoteConfigServerUrl,
-      userTokenPromise,
+      continueServerClient,
     );
 
     if (
