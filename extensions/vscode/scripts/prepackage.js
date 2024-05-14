@@ -102,13 +102,13 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // Install node_modules //
-  execCmdSync("pnpm install");
-  console.log("[info] pnpm install in extensions/vscode completed");
+  // execCmdSync("pnpm install");
+  // console.log("[info] pnpm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execCmdSync("pnpm install");
-  console.log("[info] pnpm install in gui completed");
+  // execCmdSync("pnpm install");
+  // console.log("[info] pnpm install in gui completed");
 
   if (ghAction()) {
     execCmdSync("pnpm run build");
@@ -210,6 +210,25 @@ const exe = os === "win32" ? ".exe" : "";
       if (!target.startsWith("win")) {
         rimrafSync(path.join(__dirname, "../bin/napi-v3/win32"));
       }
+
+      // Also don't want to include cuda/shared/tensorrt binaries, they are too large
+      if (target.startsWith("linux")) {
+        const filesToRemove = [
+          "libonnxruntime_providers_cuda.so",
+          "libonnxruntime_providers_shared.so",
+          "libonnxruntime_providers_tensorrt.so",
+        ];
+        filesToRemove.forEach((file) => {
+          const filepath = path.join(
+            __dirname,
+            "../bin/napi-v3/linux/x64",
+            file,
+          );
+          if (fs.existsSync(filepath)) {
+            fs.rmSync(filepath);
+          }
+        });
+      }
     } catch (e) {
       console.warn("[info] Error removing unused binaries", e);
     }
@@ -223,7 +242,7 @@ const exe = os === "win32" ? ".exe" : "";
     ncp(
       path.join(__dirname, "../../../core/node_modules/tree-sitter-wasms/out"),
       path.join(__dirname, "../out/tree-sitter-wasms"),
-      {dereference: true, },
+      { dereference: true },
       (error) => {
         if (error) {
           console.warn("[error] Error copying tree-sitter-wasm files", error);
@@ -286,24 +305,62 @@ const exe = os === "win32" ? ".exe" : "";
     return target?.startsWith("win");
   }
 
+  async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
+    console.log(`Copying ${package} to ${toCopy}`);
+    // This is a way to install only one package without npm trying to install all the dependencies
+    // Create a temporary directory for installing the package
+    const tempDir = `/tmp/continue-node_modules-${package}-${toCopy}`;
+    const currentDir = process.cwd();
+
+    // Remove the dir we will be copying to
+    rimrafSync(`node_modules/${toCopy}`);
+
+    // Ensure the temporary directory exists
+    fs.mkdirSync(tempDir, { recursive: true });
+
+    try {
+      // Move to the temporary directory
+      process.chdir(tempDir);
+
+      // Initialize a new package.json and install the package
+      execCmdSync(`npm init -y && npm i -f ${package} --no-save`);
+
+      console.log(
+        `Contents of: ${package}`,
+        fs.readdirSync(path.join(tempDir, "node_modules", toCopy)),
+      );
+
+      // Copy the installed package back to the current directory
+      await new Promise((resolve, reject) => {
+        ncp(
+          path.join(tempDir, "node_modules", toCopy),
+          path.join(currentDir, "node_modules", toCopy),
+          { dereference: true },
+          (error) => {
+            if (error) {
+              console.error(`[error] Error copying ${package} package`, error);
+              reject(error);
+            } else {
+              resolve();
+            }
+          },
+        );
+      });
+    } finally {
+      // Clean up the temporary directory
+      // rimrafSync(tempDir);
+
+      // Return to the original directory
+      process.chdir(currentDir);
+    }
+  }
+
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-
-
   if (ghAction() && isArm()) {
-    // Download and unzip esbuild
-    console.log("[info] Downloading pre-built esbuild binary");
-    rimrafSync("node_modules/@esbuild");
-    fs.mkdirSync("node_modules/@esbuild", { recursive: true });
-    execCmdSync(
-      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
-    );
-    execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
-    fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
-
     // sqlite3
     if (!isWin()) {
       // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
-      
+
       // lancedb binary
       const packageToInstall = {
         "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
@@ -312,8 +369,11 @@ const exe = os === "win32" ? ".exe" : "";
       console.log(
         "[info] Downloading pre-built lancedb binary: " + packageToInstall,
       );
-      rimrafSync("node_modules/@lancedb");
-      execCmdSync(`pnpm add ${packageToInstall}`);
+
+      await installNodeModuleInTempDirAndCopyToCurrent(
+        packageToInstall,
+        "@lancedb",
+      );
 
       // Replace the installed with pre-built
       console.log("[info] Downloading pre-built sqlite3 binary");
@@ -332,13 +392,26 @@ const exe = os === "win32" ? ".exe" : "";
       );
       fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
     }
+
+    // Download and unzip esbuild
+    console.log("[info] Downloading pre-built esbuild binary");
+    rimrafSync("node_modules/@esbuild");
+    fs.mkdirSync("node_modules/@esbuild", { recursive: true });
+    execCmdSync(
+      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
+    );
+    execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
+    fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
+  } else {
+    // Download esbuild from npm in tmp and copy over
+    await installNodeModuleInTempDirAndCopyToCurrent("esbuild", "@esbuild");
   }
 
   await new Promise((resolve, reject) => {
     ncp(
       path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
       path.join(__dirname, "../out/build"),
-      {dereference: true, },
+      { dereference: true },
       (error) => {
         if (error) {
           console.warn("[error] Error copying sqlite3 files", error);
@@ -362,7 +435,7 @@ const exe = os === "win32" ? ".exe" : "";
           ncp(
             `node_modules/${mod}`,
             `out/node_modules/${mod}`,
-            {dereference: true, },
+            { dereference: true },
             function (error) {
               if (error) {
                 console.error(`[error] Error copying ${mod}`, error);
@@ -405,8 +478,8 @@ function validateFilesPresent() {
       os === "darwin"
         ? "libonnxruntime.1.17.3.dylib"
         : os === "linux"
-        ? "libonnxruntime.so.1.17.3"
-        : "onnxruntime.dll"
+          ? "libonnxruntime.so.1.17.3"
+          : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -445,8 +518,8 @@ function validateFilesPresent() {
       target === "win32-arm64"
         ? "esbuild.exe"
         : target === "win32-x64"
-        ? "win32-x64/esbuild.exe"
-        : `${target}/bin/esbuild`
+          ? "win32-x64/esbuild.exe"
+          : `${target}/bin/esbuild`
     }`,
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"
