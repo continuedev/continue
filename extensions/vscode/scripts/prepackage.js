@@ -389,6 +389,15 @@ const exe = os === "win32" ? ".exe" : "";
     }
   }
 
+  if (fs.existsSync(lancedbPath)) {
+    console.log("[info] Contents of node_modules/@lancedb (check 2):");
+    fs.readdirSync(lancedbPath).forEach((file) => {
+      console.log(file);
+    });
+  } else {
+    console.warn("[warn] node_modules/@lancedb does not exist (check 2).");
+  }
+
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
   if (ghAction() && isArm()) {
     // sqlite3
