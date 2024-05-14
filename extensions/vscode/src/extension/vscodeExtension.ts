@@ -76,6 +76,7 @@ export class VsCodeExtension {
     );
     this.configHandler = new ConfigHandler(
       this.ide,
+      ideSettings,
       async (log: string) => {
         outputChannel.appendLine(
           "==========================================================================",
@@ -88,7 +89,6 @@ export class VsCodeExtension {
       (() => this.webviewProtocol?.request("configUpdate", undefined)).bind(
         this,
       ),
-      continueServerClient,
     );
 
     this.configHandler.reloadConfig();

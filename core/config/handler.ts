@@ -13,12 +13,12 @@ export class ConfigHandler {
 
   constructor(
     private readonly ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
+    private ideSettings: IdeSettings,
     private readonly writeLog: (text: string) => Promise<void>,
     private readonly onConfigUpdate: () => void,
   ) {
     this.ide = ide;
-    this.ideSettingsPromise = ideSettingsPromise;
+    this.ideSettings = ideSettings;
     this.writeLog = writeLog;
     this.onConfigUpdate = onConfigUpdate;
     try {
@@ -29,7 +29,7 @@ export class ConfigHandler {
   }
 
   updateIdeSettings(ideSettings: IdeSettings) {
-    this.ideSettingsPromise = Promise.resolve(ideSettings);
+    this.ideSettings = ideSettings
     this.reloadConfig();
   }
 
@@ -62,14 +62,14 @@ export class ConfigHandler {
 
     const ideInfo = await this.ide.getIdeInfo();
     const uniqueId = await this.ide.getUniqueId();
-    const ideSettings = await this.ideSettingsPromise;
+
     let remoteConfigServerUrl = undefined;
     try {
       remoteConfigServerUrl =
-        typeof ideSettings.remoteConfigServerUrl !== "string" ||
-        ideSettings.remoteConfigServerUrl === ""
+        typeof this.ideSettings.remoteConfigServerUrl !== "string" ||
+        this.ideSettings.remoteConfigServerUrl === ""
           ? undefined
-          : new URL(ideSettings.remoteConfigServerUrl);
+          : new URL(this.ideSettings.remoteConfigServerUrl);
     } catch (e) {}
 
     this.savedConfig = await loadFullConfigNode(

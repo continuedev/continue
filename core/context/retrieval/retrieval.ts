@@ -1,4 +1,9 @@
-import { BranchAndDir, Chunk, ContextItem, ContextProviderExtras } from "../../index.js";
+import {
+  BranchAndDir,
+  Chunk,
+  ContextItem,
+  ContextProviderExtras,
+} from "../../index.js";
 import { LanceDbIndex } from "../../indexing/LanceDbIndex.js";
 
 import { deduplicateArray, getBasename } from "../../util/index.js";
