@@ -125,7 +125,7 @@ jobs:
       - name: Re-install esbuild
         run: |
           cd extensions/vscode
-          pnpm install -f esbuild
+          npm install -f esbuild
 
       # 5. Package the extension
       - name: Package the extension
