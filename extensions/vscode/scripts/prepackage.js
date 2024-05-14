@@ -20,30 +20,6 @@ fs.mkdirSync(path.join(__dirname, "..", "out", "node_modules"), {
   recursive: true,
 });
 
-// Print the contents of node_modules/@lancedb
-const lancedbPath = path.join(__dirname, "..", "node_modules", "@lancedb");
-
-if (fs.existsSync(lancedbPath)) {
-  console.log("[info] Contents of node_modules/@lancedb:");
-  fs.readdirSync(lancedbPath).forEach((file) => {
-    console.log(file);
-  });
-} else {
-  console.warn("[warn] node_modules/@lancedb does not exist.");
-}
-const esbuildPath = path.join(
-  __dirname,
-  "..",
-  "node_modules",
-  ".bin",
-  "@esbuild",
-);
-if (fs.existsSync(esbuildPath)) {
-  console.log("ESBUILD: ", fs.readdirSync(esbuildPath));
-} else {
-  console.log("ESBUILD doesn't exist");
-}
-
 // Get the target to package for
 let target = undefined;
 const args = process.argv;
@@ -387,15 +363,6 @@ const exe = os === "win32" ? ".exe" : "";
       // Return to the original directory
       process.chdir(currentDir);
     }
-  }
-
-  if (fs.existsSync(lancedbPath)) {
-    console.log("[info] Contents of node_modules/@lancedb (check 2):");
-    fs.readdirSync(lancedbPath).forEach((file) => {
-      console.log(file);
-    });
-  } else {
-    console.warn("[warn] node_modules/@lancedb does not exist (check 2).");
   }
 
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
