@@ -106,13 +106,13 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // Install node_modules //
-  execCmdSync("pnpm install");
-  console.log("[info] pnpm install in extensions/vscode completed");
+  // execCmdSync("pnpm install");
+  // console.log("[info] pnpm install in extensions/vscode completed");
 
   process.chdir("../../gui");
 
-  execCmdSync("pnpm install");
-  console.log("[info] pnpm install in gui completed");
+  // execCmdSync("pnpm install");
+  // console.log("[info] pnpm install in gui completed");
 
   if (ghAction()) {
     execCmdSync("pnpm run build");
@@ -253,7 +253,7 @@ const exe = os === "win32" ? ".exe" : "";
     ncp(
       path.join(__dirname, "../../../core/node_modules/tree-sitter-wasms/out"),
       path.join(__dirname, "../out/tree-sitter-wasms"),
-      {dereference: true, },
+      { dereference: true },
       (error) => {
         if (error) {
           console.warn("[error] Error copying tree-sitter-wasm files", error);
@@ -316,16 +316,11 @@ const exe = os === "win32" ? ".exe" : "";
     return target?.startsWith("win");
   }
 
-  async function installNodeModuleInTempDirAndCopyToCurrent(
-    packageName,
-    toCopy,
-  ) {
-    console.log(`Copying ${packageName} to ${toCopy}`);
+  async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
+    console.log(`Copying ${package} to ${toCopy}`);
     // This is a way to install only one package without npm trying to install all the dependencies
     // Create a temporary directory for installing the package
-    const adjustedName = packageName.replace(/@/g, "").replace("/", "-");
-
-    const tempDir = `/tmp/continue-node_modules-${adjustedName}`;
+    const tempDir = `/tmp/continue-node_modules-${package}-${toCopy}`;
     const currentDir = process.cwd();
 
     // Remove the dir we will be copying to
@@ -339,16 +334,12 @@ const exe = os === "win32" ? ".exe" : "";
       process.chdir(tempDir);
 
       // Initialize a new package.json and install the package
-      execCmdSync(`npm init -y && npm i -f ${packageName} --no-save`);
+      execCmdSync(`npm init -y && npm i -f ${package} --no-save`);
 
       console.log(
-        `Contents of: ${packageName}`,
+        `Contents of: ${package}`,
         fs.readdirSync(path.join(tempDir, "node_modules", toCopy)),
       );
-
-      // Without this it seems the file isn't completely written to disk
-      // Ideally we validate file integrity in the validation at the end
-      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Copy the installed package back to the current directory
       await new Promise((resolve, reject) => {
@@ -358,10 +349,7 @@ const exe = os === "win32" ? ".exe" : "";
           { dereference: true },
           (error) => {
             if (error) {
-              console.error(
-                `[error] Error copying ${packageName} package`,
-                error,
-              );
+              console.error(`[error] Error copying ${package} package`, error);
               reject(error);
             } else {
               resolve();
@@ -379,23 +367,11 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // GitHub Actions doesn't support ARM, so we need to download pre-saved binaries
-
-
   if (ghAction() && isArm()) {
-    // Download and unzip esbuild
-    console.log("[info] Downloading pre-built esbuild binary");
-    rimrafSync("node_modules/@esbuild");
-    fs.mkdirSync("node_modules/@esbuild", { recursive: true });
-    execCmdSync(
-      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
-    );
-    execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
-    fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
-
     // sqlite3
     if (!isWin()) {
       // Neither lancedb nor sqlite3 have pre-built windows arm64 binaries
-      
+
       // lancedb binary
       const packageToInstall = {
         "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
@@ -404,8 +380,11 @@ const exe = os === "win32" ? ".exe" : "";
       console.log(
         "[info] Downloading pre-built lancedb binary: " + packageToInstall,
       );
-      rimrafSync("node_modules/@lancedb");
-      execCmdSync(`pnpm add ${packageToInstall}`);
+
+      await installNodeModuleInTempDirAndCopyToCurrent(
+        packageToInstall,
+        "@lancedb",
+      );
 
       // Replace the installed with pre-built
       console.log("[info] Downloading pre-built sqlite3 binary");
@@ -436,11 +415,7 @@ const exe = os === "win32" ? ".exe" : "";
     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
   } else {
     // Download esbuild from npm in tmp and copy over
-    console.log("npm installing esbuild binary");
-    await installNodeModuleInTempDirAndCopyToCurrent(
-      "esbuild@0.17.19",
-      "@esbuild",
-    );
+    await installNodeModuleInTempDirAndCopyToCurrent("esbuild", "@esbuild");
   }
 
   console.log("[info] Copying sqlite node binding from core");
@@ -448,7 +423,7 @@ const exe = os === "win32" ? ".exe" : "";
     ncp(
       path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
       path.join(__dirname, "../out/build"),
-      {dereference: true, },
+      { dereference: true },
       (error) => {
         if (error) {
           console.warn("[error] Error copying sqlite3 files", error);
@@ -477,7 +452,7 @@ const exe = os === "win32" ? ".exe" : "";
           ncp(
             `node_modules/${mod}`,
             `out/node_modules/${mod}`,
-            {dereference: true, },
+            { dereference: true },
             function (error) {
               if (error) {
                 console.error(`[error] Error copying ${mod}`, error);
@@ -521,8 +496,8 @@ function validateFilesPresent() {
       os === "darwin"
         ? "libonnxruntime.1.17.3.dylib"
         : os === "linux"
-        ? "libonnxruntime.so.1.17.3"
-        : "onnxruntime.dll"
+          ? "libonnxruntime.so.1.17.3"
+          : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
 
@@ -561,8 +536,8 @@ function validateFilesPresent() {
       target === "win32-arm64"
         ? "esbuild.exe"
         : target === "win32-x64"
-        ? "win32-x64/esbuild.exe"
-        : `${target}/bin/esbuild`
+          ? "win32-x64/esbuild.exe"
+          : `${target}/bin/esbuild`
     }`,
     `out/node_modules/@lancedb/vectordb-${
       os === "win32"
