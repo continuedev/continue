@@ -1,17 +1,17 @@
 import crypto from "node:crypto";
 import * as fs from "node:fs";
-import { type Database, open } from "sqlite";
+import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
-import type { IndexTag, IndexingProgressUpdate } from "..";
-import { getIndexSqlitePath } from "../util/paths";
-import type {
+import { IndexTag, IndexingProgressUpdate } from "../index.js";
+import { getIndexSqlitePath } from "../util/paths.js";
+import {
   CodebaseIndex,
   IndexResultType,
   LastModifiedMap,
   MarkCompleteCallback,
   PathAndCacheKey,
   RefreshIndexResults,
-} from "./types";
+} from "./types.js";
 
 export type DatabaseConnection = Database<sqlite3.Database>;
 
@@ -356,7 +356,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
         return this.deleteOrRemoveTag(cacheKey, tag);
       }),
     ]);
-    yield { progress: 1, desc: "Done updating global cache" };
+    yield { progress: 1, desc: "Done updating global cache", status: "done" };
   }
 
   private async computeOrAddTag(

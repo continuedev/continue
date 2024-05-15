@@ -1,10 +1,10 @@
-import { AxiosError, type AxiosInstance } from "axios";
-import { BaseContextProvider } from "..";
-import type {
+import { AxiosError, AxiosInstance } from "axios";
+import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 interface RemoteBranchInfo {
   branch: string | null;

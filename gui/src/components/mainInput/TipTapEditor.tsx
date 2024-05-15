@@ -31,17 +31,15 @@ import useHistory from "../../hooks/useHistory";
 import { useInputHistory } from "../../hooks/useInputHistory";
 import useUpdatingRef from "../../hooks/useUpdatingRef";
 import { useWebviewListener } from "../../hooks/useWebviewListener";
+import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   consumeMainEditorContent,
   setEditingContextItemAtIndex,
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
-import {
-  isJetBrains,
-  isMetaEquivalentKeyPressed,
-  isPrerelease,
-} from "../../util";
+import { isMetaEquivalentKeyPressed } from "../../util";
+import { isJetBrains } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -145,6 +143,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   const historyLength = useSelector(
     (store: RootState) => store.state.history.length,
   );
+  const useActiveFile = useSelector(selectUseActiveFile);
 
   const [inputFocused, setInputFocused] = useState(false);
 
@@ -268,17 +267,25 @@ function TipTapEditor(props: TipTapEditorProps) {
                 return false;
               }
 
-              onEnterRef.current({ useCodebase: false, noContext: false });
+              onEnterRef.current({
+                useCodebase: false,
+                noContext: !useActiveFile,
+              });
               return true;
             },
 
             "Cmd-Enter": () => {
-              onEnterRef.current({ useCodebase: true, noContext: false });
+              onEnterRef.current({
+                useCodebase: true,
+                noContext: !useActiveFile,
+              });
               return true;
             },
-
             "Alt-Enter": () => {
-              onEnterRef.current({ useCodebase: false, noContext: true });
+              onEnterRef.current({
+                useCodebase: false,
+                noContext: useActiveFile,
+              });
               return true;
             },
             "Cmd-Backspace": () => {
@@ -416,8 +423,10 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
   });
 
+  const shortcutTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+
   useEffect(() => {
-    if (isJetBrains() || !isPrerelease()) {
+    if (isJetBrains()) {
       // This is only for VS Code .ipynb files
       return;
     }
@@ -425,15 +434,35 @@ function TipTapEditor(props: TipTapEditorProps) {
     const handleKeyDown = async (event: KeyboardEvent) => {
       if (!editor) return;
 
+      const shouldSkip = () => {
+        const skip = shortcutTimeoutRef.current !== undefined;
+
+        if (!skip) {
+          shortcutTimeoutRef.current = setTimeout(async () => {
+            shortcutTimeoutRef.current = undefined;
+          }, 100);
+        }
+        return skip;
+      };
+
       if (event.metaKey && event.key === "x") {
-        document.execCommand("cut");
+        if (!shouldSkip()) {
+          document.execCommand("cut");
+        }
         event.stopPropagation();
+        event.preventDefault();
       } else if (event.metaKey && event.key === "v") {
-        document.execCommand("paste");
+        if (!shouldSkip()) {
+          document.execCommand("paste");
+        }
         event.stopPropagation();
+        event.preventDefault();
       } else if (event.metaKey && event.key === "c") {
-        document.execCommand("copy");
+        if (!shouldSkip()) {
+          document.execCommand("copy");
+        }
         event.stopPropagation();
+        event.preventDefault();
       }
     };
 
@@ -442,7 +471,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [editor]);
+  }, [editor, shortcutTimeoutRef]);
 
   useEffect(() => {
     if (mainEditorContent && editor) {
@@ -499,7 +528,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   // Re-focus main input after done generating
   useEffect(() => {
     if (editor && !active && props.isMainInput && document.hasFocus()) {
-      editor.commands.focus();
+      editor.commands.focus(undefined, { scrollIntoView: false });
     }
   }, [props.isMainInput, active, editor]);
 

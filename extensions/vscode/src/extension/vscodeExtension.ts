@@ -1,11 +1,12 @@
 import { ConfigHandler } from "core/config/handler";
-import { Core } from "core/core";
-import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
-import { InProcessMessenger } from "core/util/messenger";
+import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
+import { Core } from "../../../../core/core";
+import { FromCoreProtocol, ToCoreProtocol } from "../../../../core/protocol";
+import { InProcessMessenger } from "../../../../core/util/messenger";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
 import { setupStatusBar } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
@@ -42,13 +43,33 @@ export class VsCodeExtension {
     const ideSettings = this.ide.getIdeSettings();
     const { remoteConfigServerUrl, remoteConfigSyncPeriod } = ideSettings;
 
+    const userTokenPromise: Promise<string | undefined> = new Promise(
+      async (resolve) => {
+        if (
+          remoteConfigServerUrl === null ||
+          remoteConfigServerUrl === undefined ||
+          remoteConfigServerUrl.trim() === ""
+        ) {
+          resolve(undefined);
+          return;
+        }
+        const token = await getUserToken();
+        resolve(token);
+      },
+    );
+
+    const continueServerClient = new ContinueServerClient(
+      ideSettings.remoteConfigServerUrl,
+      userTokenPromise,
+    );
+
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
       "Continue - LLM Prompt/Completion",
     );
     this.configHandler = new ConfigHandler(
       this.ide,
-      Promise.resolve(ideSettings),
+      ideSettings,
       async (log: string) => {
         outputChannel.appendLine(
           "==========================================================================",

@@ -18,6 +18,7 @@ import {
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
+import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
@@ -74,10 +75,10 @@ function StepContainer(props: StepContainerProps) {
   const sendFeedback = (feedback: boolean) => {
     setFeedback(feedback);
     if (props.item.promptLogs?.length) {
-      for (const [prompt, completion] of props.item.promptLogs) {
-        ideMessenger.post("devdata/log", {
+      for (const promptLog of props.item.promptLogs) {
+        postToIde("devdata/log", {
           tableName: "chat",
-          data: { prompt, completion, feedback },
+          data: { ...promptLog, feedback },
         });
       }
     }

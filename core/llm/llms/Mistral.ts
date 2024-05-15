@@ -1,5 +1,5 @@
-import type { LLMOptions, ModelProvider } from "../..";
-import OpenAI from "./OpenAI";
+import { LLMOptions, ModelProvider } from "../../index.js";
+import OpenAI from "./OpenAI.js";
 
 class Mistral extends OpenAI {
   static providerName: ModelProvider = "mistral";

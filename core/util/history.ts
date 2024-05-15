@@ -1,7 +1,7 @@
 import * as fs from "fs";
-import { PersistedSessionInfo, SessionInfo } from "..";
-import { ListHistoryOptions } from "../protocol/core";
-import { getSessionFilePath, getSessionsListPath } from "./paths";
+import { PersistedSessionInfo, SessionInfo } from "../index.js";
+import { ListHistoryOptions } from "../protocol/core.js";
+import { getSessionFilePath, getSessionsListPath } from "./paths.js";
 
 class HistoryManager {
   list(options: ListHistoryOptions): SessionInfo[] {

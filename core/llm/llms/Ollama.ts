@@ -1,12 +1,12 @@
-import { BaseLLM } from "..";
-import type {
+import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
-import { streamResponse } from "../stream";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
+import { BaseLLM } from "../index.js";
+import { streamResponse } from "../stream.js";
 
 class Ollama extends BaseLLM {
   static providerName: ModelProvider = "ollama";
@@ -23,7 +23,9 @@ class Ollama extends BaseLLM {
     }
     this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
-      headers: {},
+      headers: {
+        Authorization: `Bearer ${this.apiKey}`,
+      },
       body: JSON.stringify({ name: this._getModel() }),
     })
       .then(async (response) => {
@@ -163,6 +165,7 @@ class Ollama extends BaseLLM {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(this._convertArgs(options, prompt)),
     });
@@ -201,6 +204,7 @@ class Ollama extends BaseLLM {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(this._convertArgs(options, messages)),
     });

@@ -8,9 +8,9 @@ import {
   Problem,
   Range,
   Thread,
-} from "..";
+} from "../index.js";
 
-import { getContinueGlobalPath } from "./paths";
+import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
   getLastModified(files: string[]): Promise<{ [path: string]: number }> {

@@ -1,19 +1,15 @@
-import type { Chunk, IndexTag, IndexingProgressUpdate } from "../..";
-import type { ContinueServerClient } from "../../continueServer/stubs/client";
-import { MAX_CHUNK_SIZE } from "../../llm/constants";
-import { getBasename } from "../../util";
+import { IContinueServerClient } from "../../continueServer/interface.js";
+import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
+import { MAX_CHUNK_SIZE } from "../../llm/constants.js";
+import { getBasename } from "../../util/index.js";
+import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex.js";
 import {
-  type DatabaseConnection,
-  SqliteDb,
-  tagToString,
-} from "../refreshIndex";
-import {
-  type CodebaseIndex,
   IndexResultType,
-  type MarkCompleteCallback,
-  type RefreshIndexResults,
-} from "../types";
-import { chunkDocument } from "./chunk";
+  MarkCompleteCallback,
+  RefreshIndexResults,
+  type CodebaseIndex,
+} from "../types.js";
+import { chunkDocument } from "./chunk.js";
 
 export class ChunkCodebaseIndex implements CodebaseIndex {
   static artifactId = "chunks";
@@ -21,7 +17,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
   constructor(
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly continueServerClient?: ContinueServerClient,
+    private readonly continueServerClient: IContinueServerClient,
   ) {
     this.readFile = readFile;
   }
@@ -75,7 +71,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     }
 
     // Check the remote cache
-    if (this.continueServerClient !== undefined) {
+    if (this.continueServerClient.connected) {
       try {
         const keys = results.compute.map(({ cacheKey }) => cacheKey);
         const resp = await this.continueServerClient.getFromIndexCache(
@@ -117,6 +113,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       yield {
         progress: i / results.compute.length,
         desc: `Chunking ${getBasename(item.path)}`,
+        status: "indexing",
       };
       markComplete([item], IndexResultType.Compute);
     }

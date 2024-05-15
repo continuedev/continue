@@ -1,4 +1,4 @@
-import type { TabAutocompleteOptions } from "..";
+import { TabAutocompleteOptions } from "../index.js";
 
 export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   disable: false,
@@ -15,7 +15,9 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   recentlyEditedSimilarityThreshold: 0.3,
   useCache: true,
   onlyMyCode: true,
-  useOtherFiles: false,
+  useOtherFiles: true,
+  useRecentlyEdited: true,
+  recentLinePrefixMatchMinLength: 7,
   disableInFiles: undefined,
 };
 

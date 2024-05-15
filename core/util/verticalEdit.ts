@@ -1,4 +1,3 @@
-import type { ChatMessage, DiffLine, ILLM } from "..";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -6,11 +5,12 @@ import {
   filterLeadingAndTrailingNewLineInsertion,
   skipLines,
   stopAtLines,
-} from "../autocomplete/lineStream";
-import { streamDiff } from "../diff/streamDiff";
-import { streamLines } from "../diff/util";
-import { gptEditPrompt } from "../llm/templates/edit";
-import { Telemetry } from "./posthog";
+} from "../autocomplete/lineStream.js";
+import { streamDiff } from "../diff/streamDiff.js";
+import { streamLines } from "../diff/util.js";
+import { ChatMessage, DiffLine, ILLM } from "../index.js";
+import { gptEditPrompt } from "../llm/templates/edit.js";
+import { Telemetry } from "./posthog.js";
 
 function constructPrompt(
   prefix: string,
@@ -53,6 +53,7 @@ export async function* streamDiffLines(
   llm: ILLM,
   input: string,
   language: string | undefined,
+  onlyOneInsertion?: boolean,
 ): AsyncGenerator<DiffLine> {
   Telemetry.capture("inlineEdit", {
     model: llm.model,
@@ -105,7 +106,13 @@ export async function* streamDiffLines(
     diffLines = addIndentation(diffLines, indentation);
   }
 
+  let seenGreen = false;
   for await (const diffLine of diffLines) {
     yield diffLine;
+    if (diffLine.type === "new") {
+      seenGreen = true;
+    } else if (onlyOneInsertion && seenGreen && diffLine.type === "same") {
+      break;
+    }
   }
 }

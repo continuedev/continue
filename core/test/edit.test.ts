@@ -1,12 +1,12 @@
 import * as dotenv from "dotenv";
 import fetch from "node-fetch";
-import { ContinueSDK } from "..";
-import EditSlashCommand, { getPromptParts } from "../commands/slash/edit";
-import { contextItemToRangeInFileWithContents } from "../commands/util";
-import FreeTrial from "../llm/llms/FreeTrial";
-import Ollama from "../llm/llms/Ollama";
-import { dedentAndGetCommonWhitespace } from "../util";
-import FileSystemIde from "../util/filesystem";
+import { ContinueSDK } from "../index.js";
+import EditSlashCommand, { getPromptParts } from "../commands/slash/edit.js";
+import { contextItemToRangeInFileWithContents } from "../commands/util.js";
+import FreeTrial from "../llm/llms/FreeTrial.js";
+import Ollama from "../llm/llms/Ollama.js";
+import { dedentAndGetCommonWhitespace } from "../util/index.js";
+import FileSystemIde from "../util/filesystem.js";
 
 jest.setTimeout(100_000);
 
@@ -70,7 +70,7 @@ describe("/edit slash command", () => {
 
     let total = "";
     for await (const update of command.run(sdk)) {
-      if (update === undefined) continue;
+      if (update === undefined) {continue;}
       total += update;
     }
     console.log(total);

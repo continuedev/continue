@@ -1,9 +1,9 @@
-import { BaseContextProvider } from "..";
-import type {
+import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class GoogleContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

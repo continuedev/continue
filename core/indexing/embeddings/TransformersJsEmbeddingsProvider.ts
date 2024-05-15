@@ -1,11 +1,12 @@
+// @ts-ignore
 import {
+  PipelineType,
   env,
   pipeline,
-  type PipelineType,
-} from "../../vendor/node_modules/@xenova/transformers";
+} from "../../vendor/modules/@xenova/transformers/src/transformers.js";
 
-import path from "node:path";
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
+import path from "path";
+import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 env.allowLocalModels = true;
 env.allowRemoteModels = false;
@@ -34,8 +35,11 @@ class EmbeddingsPipeline {
 export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static MaxGroupSize = 4;
 
-  constructor() {
-    super({ model: EmbeddingsPipeline.model }, () => Promise.resolve(null));
+  constructor(modelPath?: string) {
+    super({ model: "all-MiniLM-L2-v6" }, () => Promise.resolve(null));
+    if (modelPath) {
+      env.localModelPath = modelPath;
+    }
   }
 
   get id(): string {

@@ -6,8 +6,8 @@ import {
   ChatHistoryItem,
   ChatMessage,
   InputModifiers,
-  LLMReturnValue,
   MessageContent,
+  PromptLog,
   RangeInFile,
   SlashCommandDescription,
 } from "core";
@@ -74,11 +74,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
         next = await gen.next();
       }
 
-      let returnVal = next.value as LLMReturnValue;
+      let returnVal = next.value as PromptLog;
       if (returnVal) {
-        dispatch(
-          addPromptCompletionPair([[returnVal?.prompt, returnVal?.completion]]),
-        );
+        dispatch(addPromptCompletionPair([returnVal]));
       }
     } catch (e) {
       // If there's an error, we should clear the response so there aren't two input boxes

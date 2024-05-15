@@ -1,13 +1,13 @@
-import { BaseLLM } from "..";
-import type {
+import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   MessagePart,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
-import { streamResponse } from "../stream";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
+import { BaseLLM } from "../index.js";
+import { streamResponse } from "../stream.js";
 
 class Gemini extends BaseLLM {
   static providerName: ModelProvider = "gemini";

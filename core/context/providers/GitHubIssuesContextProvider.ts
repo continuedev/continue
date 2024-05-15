@@ -1,11 +1,11 @@
-import { BaseContextProvider } from "..";
-import type {
+import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class GitHubIssuesContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

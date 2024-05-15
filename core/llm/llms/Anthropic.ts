@@ -1,12 +1,12 @@
-import { BaseLLM } from "..";
-import type {
+import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
-import { streamSse } from "../stream";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
+import { BaseLLM } from "../index.js";
+import { streamSse } from "../stream.js";
 
 class Anthropic extends BaseLLM {
   static providerName: ModelProvider = "anthropic";

@@ -7,20 +7,20 @@ import type {
   IDE,
   IndexTag,
   IndexingProgressUpdate,
-} from "..";
-import { getBasename } from "../util";
+} from "../index.js";
+import { getBasename } from "../util/index.js";
 import {
   getLanguageForFile,
   getParserForFile,
   supportedLanguages,
-} from "../util/treeSitter";
-import { type DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+} from "../util/treeSitter.js";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
-  type CodebaseIndex,
   IndexResultType,
-  type MarkCompleteCallback,
-  type RefreshIndexResults,
-} from "./types";
+  MarkCompleteCallback,
+  RefreshIndexResults,
+  type CodebaseIndex,
+} from "./types.js";
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   artifactId = "codeSnippets";
@@ -138,6 +138,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       yield {
         desc: `Indexing ${compute.path}`,
         progress: i / results.compute.length,
+        status: "indexing",
       };
       markComplete([compute], IndexResultType.Compute);
     }

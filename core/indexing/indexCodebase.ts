@@ -1,12 +1,12 @@
-import type { IDE, IndexTag, IndexingProgressUpdate } from "..";
-import type { ConfigHandler } from "../config/handler";
-import { ContinueServerClient } from "../continueServer/stubs/client";
-import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex";
-import { FullTextSearchCodebaseIndex } from "./FullTextSearch";
-import { LanceDbIndex } from "./LanceDbIndex";
-import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
-import { getComputeDeleteAddRemove } from "./refreshIndex";
-import type { CodebaseIndex } from "./types";
+import { ConfigHandler } from "../config/handler.js";
+import { IContinueServerClient } from "../continueServer/interface.js";
+import { IDE, IndexTag, IndexingProgressUpdate } from "../index.js";
+import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
+import { FullTextSearchCodebaseIndex } from "./FullTextSearch.js";
+import { LanceDbIndex } from "./LanceDbIndex.js";
+import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
+import { getComputeDeleteAddRemove } from "./refreshIndex.js";
+import { CodebaseIndex } from "./types.js";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -21,21 +21,12 @@ export class PauseToken {
 }
 
 export class CodebaseIndexer {
-  private continueServerClient?: ContinueServerClient;
   constructor(
     private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly pauseToken: PauseToken,
-    private readonly continueServerUrl: string | undefined,
-    private readonly userToken: string | undefined,
-  ) {
-    if (this.continueServerUrl) {
-      this.continueServerClient = new ContinueServerClient(
-        this.continueServerUrl,
-        Promise.resolve(this.userToken),
-      );
-    }
-  }
+    private readonly continueServerClient: IContinueServerClient,
+  ) {}
 
   private async getIndexesToBuild(): Promise<CodebaseIndex[]> {
     const config = await this.configHandler.loadConfig();
@@ -81,6 +72,7 @@ export class CodebaseIndexer {
     yield {
       progress: 0,
       desc: "Starting indexing...",
+      status: "starting",
     };
 
     for (const directory of workspaceDirs) {
@@ -119,6 +111,7 @@ export class CodebaseIndexer {
               yield {
                 progress: 1,
                 desc: "Indexing cancelled",
+                status: "failed",
               };
               return;
             }
@@ -132,6 +125,7 @@ export class CodebaseIndexer {
                   (completedIndexes + progress) / indexesToBuild.length) /
                 workspaceDirs.length,
               desc,
+              status: "indexing",
             };
           }
           completedIndexes++;
@@ -139,7 +133,8 @@ export class CodebaseIndexer {
             progress:
               (completedDirs + completedIndexes / indexesToBuild.length) /
               workspaceDirs.length,
-            desc: `Completed indexing ${codebaseIndex.artifactId}`,
+            desc: "Completed indexing " + codebaseIndex.artifactId,
+            status: "indexing",
           };
         } catch (e) {
           console.warn(
@@ -152,6 +147,7 @@ export class CodebaseIndexer {
       yield {
         progress: completedDirs / workspaceDirs.length,
         desc: "Indexing Complete",
+        status: "done",
       };
     }
   }

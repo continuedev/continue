@@ -1,5 +1,5 @@
-import type { RangeInFileWithContents } from "../commands/util";
-import { type AutocompleteSnippet, jaccardSimilarity } from "./ranking";
+import { RangeInFileWithContents } from "../commands/util.js";
+import { AutocompleteSnippet, jaccardSimilarity } from "./ranking.js";
 
 function* slidingWindow(
   content: string,
@@ -38,7 +38,7 @@ export async function slidingWindowMatcher(
   windowSize: number,
 ): Promise<AutocompleteSnippet[]> {
   // Sorted lowest similarity to highest
-  const topMatches: AutocompleteSnippet[] = [];
+  const topMatches: Required<AutocompleteSnippet>[] = [];
 
   for (const { filepath, contents, range } of recentFiles) {
     for (const window of slidingWindow(contents, windowSize)) {

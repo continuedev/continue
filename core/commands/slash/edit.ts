@@ -1,4 +1,3 @@
-import type { ContextItemWithId, ILLM, SlashCommand } from "../..";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -6,14 +5,18 @@ import {
   fixCodeLlamaFirstLineIndentation,
   stopAtLines,
   streamWithNewLines,
-} from "../../autocomplete/lineStream";
-import { streamLines } from "../../diff/util";
-import { stripImages } from "../../llm/countTokens";
-import { dedentAndGetCommonWhitespace, getMarkdownLanguageTagForFile } from "../../util";
+} from "../../autocomplete/lineStream.js";
+import { streamLines } from "../../diff/util.js";
+import { ContextItemWithId, ILLM, SlashCommand } from "../../index.js";
+import { stripImages } from "../../llm/countTokens.js";
 import {
-  type RangeInFileWithContents,
+  dedentAndGetCommonWhitespace,
+  getMarkdownLanguageTagForFile,
+} from "../../util/index.js";
+import {
   contextItemToRangeInFileWithContents,
-} from "../util";
+  type RangeInFileWithContents,
+} from "../util.js";
 
 const PROMPT = `Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section. Do not ever use nested tags.
 
@@ -238,6 +241,8 @@ const EditSlashCommand: SlashCommand = {
           part.text = part.text.replace("/edit", "").trimStart();
         }
       });
+    } else {
+      content = input.replace("/edit", "").trimStart();
     }
     const userInput = stripImages(content).replace(
       `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,

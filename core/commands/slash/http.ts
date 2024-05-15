@@ -1,5 +1,5 @@
-import type { SlashCommand } from "../..";
-import { removeQuotesAndEscapes } from "../../util";
+import { SlashCommand } from "../../index.js";
+import { removeQuotesAndEscapes } from "../../util/index.js";
 
 const HttpSlashCommand: SlashCommand = {
   name: "http",
@@ -26,7 +26,9 @@ const HttpSlashCommand: SlashCommand = {
     const reader = response.body.getReader();
     while (true) {
       const { done, value } = await reader.read();
-      if (done) break;
+      if (done) {
+        break;
+      }
       const decoded = new TextDecoder("utf-8").decode(value);
       yield decoded;
     }

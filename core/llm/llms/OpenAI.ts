@@ -1,12 +1,12 @@
-import { BaseLLM } from "..";
-import type {
+import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
-import { streamSse } from "../stream";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
+import { BaseLLM } from "../index.js";
+import { streamSse } from "../stream.js";
 
 const NON_CHAT_MODELS = [
   "text-davinci-002",
@@ -27,6 +27,7 @@ const CHAT_ONLY_MODELS = [
   "gpt-3.5-turbo-16k",
   "gpt-4",
   "gpt-4-turbo",
+  "gpt-4o",
   "gpt-35-turbo-16k",
   "gpt-35-turbo-0613",
   "gpt-35-turbo",
@@ -93,13 +94,22 @@ class OpenAI extends BaseLLM {
         this.maxStopWords !== undefined
           ? options.stop?.slice(0, this.maxStopWords)
           : url.port === "1337" ||
-            url.host === "api.openai.com" ||
-            this.apiType === "azure"
-          ? options.stop?.slice(0, 4)
-          : options.stop,
+              url.host === "api.openai.com" ||
+              url.host === "api.groq.com" ||
+              this.apiType === "azure"
+            ? options.stop?.slice(0, 4)
+            : options.stop,
     };
 
     return finalOptions;
+  }
+
+  protected _getHeaders() {
+    return {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${this.apiKey}`,
+      "api-key": this.apiKey ?? "", // For Azure
+    };
   }
 
   protected async _complete(
@@ -157,11 +167,7 @@ class OpenAI extends BaseLLM {
 
     const response = await this.fetch(this._getEndpoint("completions"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey ?? "", // For Azure
-      },
+      headers: this._getHeaders(),
       body: JSON.stringify({
         ...args,
         stream: true,
@@ -209,11 +215,7 @@ class OpenAI extends BaseLLM {
     })) as any;
     const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey ?? "", // For Azure
-      },
+      headers: this._getHeaders(),
       body: JSON.stringify(body),
     });
 
@@ -227,10 +229,7 @@ class OpenAI extends BaseLLM {
   async listModels(): Promise<string[]> {
     const response = await this.fetch(this._getEndpoint("models"), {
       method: "GET",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-        "api-key": this.apiKey ?? "", // For Azure
-      },
+      headers: this._getHeaders(),
     });
 
     const data = await response.json();

@@ -1,9 +1,9 @@
 import { Response } from "node-fetch";
-import { EmbedOptions } from "../..";
-import { getHeaders } from "../../continueServer/stubs/headers";
-import { SERVER_URL } from "../../util/parameters";
-import { withExponentialBackoff } from "../../util/withExponentialBackoff";
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider";
+import { EmbedOptions } from "../../index.js";
+import { getHeaders } from "../../continueServer/stubs/headers.js";
+import { SERVER_URL } from "../../util/parameters.js";
+import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
   static maxBatchSize = 128;

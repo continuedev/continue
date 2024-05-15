@@ -1,6 +1,6 @@
-import type Parser from "web-tree-sitter";
-import type { RangeInFileWithContents } from "../commands/util";
-import { getParserForFile } from "../util/treeSitter";
+import Parser from "web-tree-sitter";
+import { RangeInFileWithContents } from "../commands/util.js";
+import { getParserForFile } from "../util/treeSitter.js";
 
 export async function getAst(
   filepath: string,

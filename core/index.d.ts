@@ -37,11 +37,7 @@ export interface Chunk extends ChunkWithoutID {
 export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
-}
-
-export interface LLMReturnValue {
-  prompt: string;
-  completion: string;
+  status: "starting" | "indexing" | "done" | "failed" | "paused";
 }
 
 export type PromptTemplate =
@@ -80,12 +76,12 @@ export interface ILLM extends LLMOptions {
   streamComplete(
     prompt: string,
     options?: LLMFullCompletionOptions,
-  ): AsyncGenerator<string, LLMReturnValue>;
+  ): AsyncGenerator<string, PromptLog>;
 
   streamChat(
     messages: ChatMessage[],
     options?: LLMFullCompletionOptions,
-  ): AsyncGenerator<ChatMessage, LLMReturnValue>;
+  ): AsyncGenerator<ChatMessage, PromptLog>;
 
   chat(
     messages: ChatMessage[],
@@ -258,12 +254,18 @@ export interface InputModifiers {
   noContext: boolean;
 }
 
+export interface PromptLog {
+  completionOptions: CompletionOptions;
+  prompt: string;
+  completion: string;
+}
+
 export interface ChatHistoryItem {
   message: ChatMessage;
   editorState?: any;
   modifiers?: InputModifiers;
   contextItems: ContextItemWithId[];
-  promptLogs?: [string, string][]; // [prompt, completion]
+  promptLogs?: PromptLog[];
 }
 
 export type ChatHistory = ChatHistoryItem[];
@@ -530,6 +532,7 @@ type ModelProvider =
   | "deepinfra"
   | "flowise"
   | "groq"
+  | "continue-proxy"
   | "custom";
 
 export type ModelName =
@@ -540,6 +543,7 @@ export type ModelName =
   | "gpt-4"
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
+  | "gpt-4o"
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
@@ -704,6 +708,8 @@ export interface TabAutocompleteOptions {
   useCache: boolean;
   onlyMyCode: boolean;
   useOtherFiles: boolean;
+  useRecentlyEdited: boolean;
+  recentLinePrefixMatchMinLength: number;
   disableInFiles?: string[];
 }
 
@@ -726,6 +732,7 @@ interface ModelRoles {
 interface ExperimantalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
+  defaultContext?: "activeFile"[];
 }
 
 export interface SerializedContinueConfig {

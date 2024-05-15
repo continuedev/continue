@@ -1,4 +1,5 @@
-import type { Chunk, IDE } from "core";
+import { Chunk, IDE } from "core";
+import { languageForFilepath } from "core/autocomplete/constructPrompt";
 import { DEFAULT_IGNORE_DIRS } from "core/indexing/ignore";
 import { deduplicateArray } from "core/util";
 import { getParserForFile } from "core/util/treeSitter";
@@ -49,7 +50,12 @@ export async function expandSnippet(
   let callExpressionDefinitions = (
     await Promise.all(
       callExpressions.map(async (node) => {
-        return getDefinitionsForNode(filepath, node);
+        return getDefinitionsForNode(
+          filepath,
+          node,
+          ide,
+          languageForFilepath(filepath),
+        );
       }),
     )
   ).flat();

@@ -298,7 +298,19 @@ export class VsCodeIdeUtils {
       filepath = this.getAbsolutePath(filepath);
       const uri = uriFromFilePath(filepath);
 
-      // Check first whether it's an open document
+      // First, check whether it's a notebook document
+      // Need to iterate over the cells to get full contents
+      const notebook = vscode.workspace.notebookDocuments.find(
+        (doc) => doc.uri.toString() === uri.toString(),
+      );
+      if (notebook) {
+        return notebook
+          .getCells()
+          .map((cell) => cell.document.getText())
+          .join("\n\n");
+      }
+
+      // Check whether it's an open document
       const openTextDocument = vscode.workspace.textDocuments.find(
         (doc) => doc.uri.fsPath === uri.fsPath,
       );
@@ -358,13 +370,23 @@ export class VsCodeIdeUtils {
     await vscode.commands.executeCommand(
       "workbench.action.terminal.clearSelection",
     );
-    const terminalContents = await vscode.env.clipboard.readText();
+    let terminalContents = (await vscode.env.clipboard.readText()).trim();
     await vscode.env.clipboard.writeText(tempCopyBuffer);
 
     if (tempCopyBuffer === terminalContents) {
       // This means there is no terminal open to select text from
       return "";
     }
+
+    // Sometimes the above won't successfully separate by command, so we attempt manually
+    const lines = terminalContents.split("\n");
+    const lastLine = lines.pop()?.trim();
+    if (lastLine) {
+      let i = lines.length - 1;
+      while (i >= 0 && !lines[i].trim().startsWith(lastLine)) i--;
+      terminalContents = lines.slice(i).join("\n");
+    }
+
     return terminalContents;
   }
 

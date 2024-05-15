@@ -1,4 +1,4 @@
-import type { ChatMessage, PromptTemplate } from "../..";
+import { ChatMessage, PromptTemplate } from "../../index.js";
 
 const simplifiedEditPrompt = `Consider the following code:
 \`\`\`{{{language}}}

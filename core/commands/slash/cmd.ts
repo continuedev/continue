@@ -1,12 +1,13 @@
-import type { SlashCommand } from "../..";
-import { streamLines } from "../../diff/util";
-import { removeQuotesAndEscapes } from "../../util";
+import { streamLines } from "../../diff/util.js";
+import { SlashCommand } from "../../index.js";
+import { removeQuotesAndEscapes } from "../../util/index.js";
 
 const GenerateTerminalCommand: SlashCommand = {
   name: "cmd",
   description: "Generate a shell command",
   run: async function* ({ ide, llm, input }) {
-    const gen = llm.streamComplete(`The user has made a request to run a shell command. Their description of what it should do is:
+    const gen =
+      llm.streamComplete(`The user has made a request to run a shell command. Their description of what it should do is:
 
 "${input}"
 

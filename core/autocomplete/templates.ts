@@ -1,7 +1,7 @@
 // Fill in the middle prompts
 
-import type { CompletionOptions } from "..";
-import type { AutocompleteSnippet } from "./ranking";
+import { CompletionOptions } from "../index.js";
+import { AutocompleteSnippet } from "./ranking.js";
 
 interface AutocompleteTemplate {
   template:
@@ -82,7 +82,13 @@ const deepseekFimTemplate: AutocompleteTemplate = {
   template:
     "<｜fim▁begin｜>{{{prefix}}}<｜fim▁hole｜>{{{suffix}}}<｜fim▁end｜>",
   completionOptions: {
-    stop: ["<｜fim▁begin｜>", "<｜fim▁hole｜>", "<｜fim▁end｜>", "//"],
+    stop: [
+      "<｜fim▁begin｜>",
+      "<｜fim▁hole｜>",
+      "<｜fim▁end｜>",
+      "//",
+      "<｜end▁of▁sentence｜>",
+    ],
   },
 };
 

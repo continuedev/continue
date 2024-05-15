@@ -14,7 +14,7 @@
     "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
     "resolveJsonModule": true /* Enable importing .json files */
   },
-  "include": ["src/**/*", "../../core/**/*.ts"],
+  "include": ["src/**/*", "../../core/**/*.ts", "../../core/**/*.d.ts"],
   // core/test uses @types/jest, which conflicts with @types/mocha
   "exclude": ["../../core/dist/**/*", "../../core/test/**/*"]
 }

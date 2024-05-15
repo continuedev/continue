@@ -1,4 +1,5 @@
-import React, { memo, useEffect } from "react";
+import React, { memo, useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { useRemark } from "react-remark";
 import rehypeHighlight from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
@@ -11,6 +12,7 @@ import {
   vscEditorBackground,
   vscForeground,
 } from "..";
+import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
 import PreWithToolbar from "./PreWithToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
@@ -92,6 +94,18 @@ interface StyledMarkdownPreviewProps {
 const FadeInWords: React.FC = (props: any) => {
   const { children, ...otherProps } = props;
 
+  const active = useSelector((store: RootState) => store.state.active);
+
+  const [textWhenActiveStarted, setTextWhenActiveStarted] = useState(
+    props.children,
+  );
+
+  useEffect(() => {
+    if (active) {
+      setTextWhenActiveStarted(children);
+    }
+  }, [active]);
+
   // Split the text into words
   const words = children
     .map((child) => {
@@ -107,7 +121,11 @@ const FadeInWords: React.FC = (props: any) => {
     })
     .flat();
 
-  return <p {...otherProps}>{words}</p>;
+  return active && children !== textWhenActiveStarted ? (
+    <p {...otherProps}>{words}</p>
+  ) : (
+    <p>{children}</p>
+  );
 };
 
 const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
@@ -173,9 +191,9 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
         //       <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
         //     );
         //   },
-        //   // p: ({ node, ...props }) => {
-        //   //   return <FadeInWords {...props}></FadeInWords>;
-        //   // },
+        // p: ({ node, ...props }) => {
+        //   return <FadeInWords {...props}></FadeInWords>;
+        // },
       },
     },
   });

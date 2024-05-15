@@ -1,13 +1,13 @@
 //os.platform()
 //os.arch()
 
-import os from "node:os";
-import { BaseContextProvider } from "..";
-import type {
+import os from "os";
+import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class OSContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

@@ -16,8 +16,8 @@ import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 function getFullScreenTab() {
   const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
-  return tabs.find(
-    (tab) => (tab.input as any)?.viewType?.endsWith("continue.continueGUIView"),
+  return tabs.find((tab) =>
+    (tab.input as any)?.viewType?.endsWith("continue.continueGUIView"),
   );
 }
 
@@ -152,6 +152,7 @@ const commandsMap: (
   async function streamInlineEdit(
     promptName: keyof ContextMenuConfig,
     fallbackPrompt: string,
+    onlyOneInsertion?: boolean,
   ) {
     const config = await configHandler.loadConfig();
     const modelTitle =
@@ -163,6 +164,7 @@ const commandsMap: (
     await verticalDiffManager.streamEdit(
       config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       modelTitle,
+      onlyOneInsertion,
     );
   }
   return {
@@ -336,6 +338,7 @@ const commandsMap: (
       streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
+        true,
       );
     },
     "continue.fixCode": async () => {

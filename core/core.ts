@@ -266,7 +266,14 @@ export class Core {
       while (!next.done) {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
+          next = await gen.return({
+            completion: "",
+            prompt: "",
+            completionOptions: {
+              ...msg.data.completionOptions,
+              model: model.model,
+            },
+          });
           break;
         }
         yield { content: next.value.content };
@@ -295,7 +302,14 @@ export class Core {
       while (!next.done) {
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
-          next = await gen.return({ completion: "", prompt: "" });
+          next = await gen.return({
+            completion: "",
+            prompt: "",
+            completionOptions: {
+              ...msg.data.completionOptions,
+              model: model.model,
+            },
+          });
           break;
         }
         yield { content: next.value };

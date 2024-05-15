@@ -1,11 +1,13 @@
-import type { ContinueConfig, ContinueRcJson, IDE, ILLM } from "..";
-import type { IdeSettings } from "../protocol/ideWebview";
-import { Telemetry } from "../util/posthog";
 import {
-  finalToBrowserConfig,
-  loadFullConfigNode,
-  type BrowserSerializedContinueConfig,
-} from "./load";
+  BrowserSerializedContinueConfig,
+  ContinueConfig,
+  ContinueRcJson,
+  IDE,
+  ILLM,
+} from "../index.js";
+import { IdeSettings } from "../protocol/ideWebview.js";
+import { Telemetry } from "../util/posthog.js";
+import { finalToBrowserConfig, loadFullConfigNode } from "./load.js";
 
 export class ConfigHandler {
   private savedConfig: ContinueConfig | undefined;
@@ -13,12 +15,12 @@ export class ConfigHandler {
 
   constructor(
     private readonly ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
+    private ideSettings: IdeSettings,
     private readonly writeLog: (text: string) => Promise<void>,
     private readonly onConfigUpdate: () => void,
   ) {
     this.ide = ide;
-    this.ideSettingsPromise = ideSettingsPromise;
+    this.ideSettings = ideSettings;
     this.writeLog = writeLog;
     this.onConfigUpdate = onConfigUpdate;
     try {
@@ -29,7 +31,7 @@ export class ConfigHandler {
   }
 
   updateIdeSettings(ideSettings: IdeSettings) {
-    this.ideSettingsPromise = Promise.resolve(ideSettings);
+    this.ideSettings = ideSettings;
     this.reloadConfig();
   }
 
@@ -61,21 +63,14 @@ export class ConfigHandler {
     }
 
     const ideInfo = await this.ide.getIdeInfo();
-    const ideSettings = await this.ideSettingsPromise;
-    let remoteConfigServerUrl = undefined;
-    try {
-      remoteConfigServerUrl =
-        typeof ideSettings.remoteConfigServerUrl !== "string" ||
-        ideSettings.remoteConfigServerUrl === ""
-          ? undefined
-          : new URL(ideSettings.remoteConfigServerUrl);
-    } catch (e) {}
+    const uniqueId = await this.ide.getUniqueId();
 
     this.savedConfig = await loadFullConfigNode(
       this.ide.readFile.bind(this.ide),
       workspaceConfigs,
-      remoteConfigServerUrl,
+      this.ideSettings,
       ideInfo.ideType,
+      uniqueId,
       this.writeLog,
     );
     this.savedConfig.allowAnonymousTelemetry =

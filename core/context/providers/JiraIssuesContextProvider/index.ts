@@ -1,12 +1,12 @@
-import { BaseContextProvider } from "../..";
-import type {
+import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
-} from "../../..";
-import { JiraClient } from "./JiraClient";
+} from "../../../index.js";
+import { BaseContextProvider } from "../../index.js";
+import { JiraClient } from "./JiraClient.js";
 
 class JiraIssuesContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

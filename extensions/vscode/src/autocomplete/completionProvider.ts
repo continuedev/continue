@@ -9,6 +9,7 @@ import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { getDefinitionsFromLsp } from "./lsp";
+import { RecentlyEditedTracker } from "./recentlyEdited";
 import { setupStatusBar, stopStatusBarLoading } from "./statusBar";
 
 interface VsCodeCompletionInput {
@@ -39,6 +40,7 @@ export class ContinueCompletionProvider
   }
 
   private completionProvider: CompletionProvider;
+  private recentlyEditedTracker = new RecentlyEditedTracker();
 
   constructor(
     private readonly configHandler: ConfigHandler,
@@ -89,6 +91,32 @@ export class ContinueCompletionProvider
     ) {
       return null;
     }
+
+    let injectDetails: string | undefined = undefined;
+    // Here we could use the details from the intellisense dropdown
+    // and place them just above the line being typed but because
+    // we don't have control over the formatting of the details and
+    // they could be especially long, not doing this for now
+    // if (context.selectedCompletionInfo) {
+    //   const results: any = await vscode.commands.executeCommand(
+    //     "vscode.executeCompletionItemProvider",
+    //     document.uri,
+    //     position,
+    //     null,
+    //     1,
+    //   );
+    //   if (results?.items) {
+    //     injectDetails = results.items?.[0]?.detail;
+    //     // const label = results?.items?.[0].label;
+    //     // const workspaceSymbols = (
+    //     //   (await vscode.commands.executeCommand(
+    //     //     "vscode.executeWorkspaceSymbolProvider",
+    //     //     label,
+    //     //   )) as any
+    //     // ).filter((symbol: any) => symbol.name === label);
+    //     // console.log(label, "=>", workspaceSymbols);
+    //   }
+    // }
 
     // The first time intellisense dropdown shows up, and the first choice is selected,
     // we should not consider this. Only once user explicitly moves down the list
@@ -158,11 +186,13 @@ export class ContinueCompletionProvider
         filepath: document.uri.fsPath,
         pos,
         recentlyEditedFiles: [],
-        recentlyEditedRanges: [],
+        recentlyEditedRanges:
+          await this.recentlyEditedTracker.getRecentlyEditedRanges(),
         clipboardText: clipboardText,
         manuallyPassFileContents,
         manuallyPassPrefix,
         selectedCompletionInfo,
+        injectDetails,
       };
 
       setupStatusBar(true, true);

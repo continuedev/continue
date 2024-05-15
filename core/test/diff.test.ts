@@ -1,4 +1,4 @@
-import { streamDiff } from "../diff/streamDiff";
+import { streamDiff } from "../diff/streamDiff.js";
 
 const oldCode = [
   `A

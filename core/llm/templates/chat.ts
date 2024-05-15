@@ -1,5 +1,5 @@
-import type { ChatMessage } from "../..";
-import { stripImages } from "../countTokens";
+import { ChatMessage } from "../../index.js";
+import { stripImages } from "../countTokens.js";
 
 function templateFactory(
   systemMessage: (msg: ChatMessage) => string,

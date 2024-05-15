@@ -166,6 +166,8 @@ const TooltipStyles = {
   padding: "2px 6px",
   zIndex: 1000,
   maxWidth: "80vw",
+  textAlign: "center",
+  overflow: "hidden",
 };
 
 export function StyledTooltip(props) {

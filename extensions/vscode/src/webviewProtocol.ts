@@ -1,16 +1,17 @@
-import {
-  ToCoreFromWebviewProtocol,
-  ToWebviewFromCoreProtocol,
-} from "core/protocol/coreWebview";
-import {
-  ToIdeFromWebviewProtocol,
-  ToWebviewFromIdeProtocol,
-} from "core/protocol/ideWebview";
-import { IMessenger, Message } from "core/util/messenger";
+import { Message } from "core/util/messenger";
 import fs from "node:fs";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
+import {
+  ToCoreFromWebviewProtocol,
+  ToWebviewFromCoreProtocol,
+} from "../../../core/protocol/coreWebview";
+import {
+  ToIdeFromWebviewProtocol,
+  ToWebviewFromIdeProtocol,
+} from "../../../core/protocol/ideWebview";
+import { IMessenger } from "../../../core/util/messenger";
 import { getExtensionUri } from "./util/vscode";
 
 export async function showTutorial() {

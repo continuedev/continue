@@ -1,14 +1,14 @@
-import type {
+import {
   BranchAndDir,
   Chunk,
   ContextItem,
   ContextProviderExtras,
-} from "../..";
-import { LanceDbIndex } from "../../indexing/LanceDbIndex";
+} from "../../index.js";
+import { LanceDbIndex } from "../../indexing/LanceDbIndex.js";
 
-import { deduplicateArray, getBasename } from "../../util";
-import { RETRIEVAL_PARAMS } from "../../util/parameters";
-import { retrieveFts } from "./fullTextSearch";
+import { deduplicateArray, getBasename } from "../../util/index.js";
+import { RETRIEVAL_PARAMS } from "../../util/parameters.js";
+import { retrieveFts } from "./fullTextSearch.js";
 
 function deduplicateChunks(chunks: Chunk[]): Chunk[] {
   return deduplicateArray(chunks, (a, b) => {

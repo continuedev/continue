@@ -1,58 +1,82 @@
-import type { CustomCommand, SlashCommand, SlashCommandDescription } from "..";
-import { stripImages } from "../llm/countTokens";
-import { renderTemplatedString } from "../llm/llms";
-import SlashCommands from "./slash";
+import {
+  CustomCommand,
+  SlashCommand,
+  SlashCommandDescription,
+} from "../index.js";
+import { stripImages } from "../llm/countTokens.js";
+import { renderTemplatedString } from "../llm/llms/index.js";
+import SlashCommands from "./slash/index.js";
 
 export function slashFromCustomCommand(
-	customCommand: CustomCommand,
+  customCommand: CustomCommand,
 ): SlashCommand {
-	return {
-		name: customCommand.name,
-		description: customCommand.description,
-		run: async function* ({ input, llm, history, ide }) {
-			// Remove slash command prefix from input
-			let userInput = input;
-			if (userInput.startsWith(`/${customCommand.name}`)) {
-				userInput = userInput
-					.slice(customCommand.name.length + 1, userInput.length)
-					.trimStart();
-			}
+  return {
+    name: customCommand.name,
+    description: customCommand.description,
+    run: async function* ({ input, llm, history, ide }) {
+      // Remove slash command prefix from input
+      let userInput = input;
+      if (userInput.startsWith(`/${customCommand.name}`)) {
+        userInput = userInput
+          .slice(customCommand.name.length + 1, userInput.length)
+          .trimStart();
+      }
 
-			// Render prompt template
-			const promptUserInput = await renderTemplatedString(
-				customCommand.prompt,
-				ide.readFile.bind(ide),
-				{ input: userInput },
-			);
+      // Render prompt template
+      const promptUserInput = await renderTemplatedString(
+        customCommand.prompt,
+        ide.readFile.bind(ide),
+        { input: userInput },
+      );
 
-			const messages = [...history];
-			// Find the last chat message with this slash command and replace it with the user input
-			for (let i = messages.length - 1; i >= 0; i--) {
-				if (
-					messages[i].role === "user" &&
-					stripImages(messages[i].content).startsWith(`/${customCommand.name}`)
-				) {
-					messages[i] = { ...messages[i], content: promptUserInput };
-					break;
-				}
-			}
+      const messages = [...history];
+      // Find the last chat message with this slash command and replace it with the user input
+      for (let i = messages.length - 1; i >= 0; i--) {
+        const { role, content } = messages[i];
+        if (role !== "user") {
+          continue;
+        }
 
-			for await (const chunk of llm.streamChat(messages)) {
-				yield stripImages(chunk.content);
-			}
-		},
-	};
+        if (
+          Array.isArray(content) &&
+          content.some((part) =>
+            part.text?.startsWith(`/${customCommand.name}`),
+          )
+        ) {
+          messages[i] = {
+            ...messages[i],
+            content: content.map((part) => {
+              return part.text?.startsWith(`/${customCommand.name}`)
+                ? { ...part, text: promptUserInput }
+                : part;
+            }),
+          };
+          break;
+        } else if (
+          typeof content === "string" &&
+          content.startsWith(`/${customCommand.name}`)
+        ) {
+          messages[i] = { ...messages[i], content: promptUserInput };
+          break;
+        }
+      }
+
+      for await (const chunk of llm.streamChat(messages)) {
+        yield stripImages(chunk.content);
+      }
+    },
+  };
 }
 
 export function slashCommandFromDescription(
-	desc: SlashCommandDescription,
+  desc: SlashCommandDescription,
 ): SlashCommand | undefined {
-	const cmd = SlashCommands.find((cmd) => cmd.name === desc.name);
-	if (!cmd) {
-		return undefined;
-	}
-	return {
-		...cmd,
-		params: desc.params,
-	};
+  const cmd = SlashCommands.find((cmd) => cmd.name === desc.name);
+  if (!cmd) {
+    return undefined;
+  }
+  return {
+    ...cmd,
+    params: desc.params,
+  };
 }

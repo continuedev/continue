@@ -1,5 +1,5 @@
-import type { DiffLine } from "..";
-import { type LineStream, matchLine } from "./util";
+import { DiffLine } from "../index.js";
+import { LineStream, matchLine } from "./util.js";
 
 /**
  * https://blog.jcoglan.com/2017/02/12/the-myers-diff-algorithm-part-1/

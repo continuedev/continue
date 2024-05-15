@@ -1,7 +1,11 @@
-import type { Chunk, ILLM, Reranker } from "../..";
-import { getBasename } from "../../util";
+import { Chunk, ILLM, Reranker } from "../../index.js";
+import { getBasename } from "../../util/index.js";
 
-const RERANK_PROMPT = (query: string, documentId: string, document: string) => `You are an expert software developer responsible for helping detect whether the retrieved snippet of code is relevant to the query. For a given input, you need to output a single word: "Yes" or "No" indicating the retrieved snippet is relevant to the query.
+const RERANK_PROMPT = (
+  query: string,
+  documentId: string,
+  document: string,
+) => `You are an expert software developer responsible for helping detect whether the retrieved snippet of code is relevant to the query. For a given input, you need to output a single word: "Yes" or "No" indicating the retrieved snippet is relevant to the query.
   
   Query: Where is the FastAPI server?
   Snippet:

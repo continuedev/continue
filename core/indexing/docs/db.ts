@@ -1,10 +1,10 @@
-import { type Database, open } from "sqlite";
+import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
-import type { Chunk } from "../..";
-import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths";
+import { Chunk } from "../../index.js";
+import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths.js";
 
-import { downloadPreIndexedDocs } from "./preIndexed";
-import { default as configs } from "./preIndexedDocs";
+import { downloadPreIndexedDocs } from "./preIndexed.js";
+import { default as configs } from "./preIndexedDocs.js";
 
 const DOCS_TABLE_NAME = "docs";
 
@@ -69,7 +69,9 @@ export async function retrieveDocs(
   const tableNames = await lance.tableNames();
   if (!tableNames.includes(DOCS_TABLE_NAME)) {
     const downloaded = await downloadDocs();
-    if (downloaded) return downloaded;
+    if (downloaded) {
+      return downloaded;
+    }
   }
 
   const table = await lance.openTable(DOCS_TABLE_NAME);
@@ -83,7 +85,9 @@ export async function retrieveDocs(
 
   if ((!docs || docs.length === 0) && !nested) {
     const downloaded = await downloadDocs();
-    if (downloaded) return downloaded;
+    if (downloaded) {
+      return downloaded;
+    }
   }
 
   return docs.map((doc) => ({

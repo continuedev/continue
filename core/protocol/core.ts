@@ -1,4 +1,4 @@
-import type {
+import {
   BrowserSerializedContinueConfig,
   ChatMessage,
   ContextItemWithId,
@@ -11,8 +11,8 @@ import type {
   SerializedContinueConfig,
   SessionInfo,
 } from "..";
-import type { AutocompleteInput } from "../autocomplete/completionProvider";
-import type { IdeSettings } from "./ideWebview";
+import { AutocompleteInput } from "../autocomplete/completionProvider";
+import { IdeSettings } from "./ideWebview";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;

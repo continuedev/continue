@@ -1,7 +1,7 @@
 import fetch from "node-fetch";
-import type { Chunk, Reranker } from "../..";
-import { getHeaders } from "../../continueServer/stubs/headers";
-import { SERVER_URL } from "../../util/parameters";
+import { getHeaders } from "../../continueServer/stubs/headers.js";
+import { Chunk, Reranker } from "../../index.js";
+import { SERVER_URL } from "../../util/parameters.js";
 
 export class FreeTrialReranker implements Reranker {
   name = "free-trial";

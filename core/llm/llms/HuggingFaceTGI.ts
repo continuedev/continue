@@ -1,6 +1,6 @@
-import { BaseLLM } from "..";
-import type { CompletionOptions, LLMOptions, ModelProvider } from "../..";
-import { streamSse } from "../stream";
+import { CompletionOptions, LLMOptions, ModelProvider } from "../../index.js";
+import { BaseLLM } from "../index.js";
+import { streamSse } from "../stream.js";
 
 class HuggingFaceTGI extends BaseLLM {
   static providerName: ModelProvider = "huggingface-tgi";

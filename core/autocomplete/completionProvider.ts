@@ -2,30 +2,37 @@ import Handlebars from "handlebars";
 import ignore from "ignore";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import type { IDE, ILLM, Position, Range, TabAutocompleteOptions } from "..";
-import type { RangeInFileWithContents } from "../commands/util";
-import type { ConfigHandler } from "../config/handler";
-import { streamLines } from "../diff/util";
-import OpenAI from "../llm/llms/OpenAI";
-import { getBasename } from "../util";
-import { logDevData } from "../util/devdata";
+import { RangeInFileWithContents } from "../commands/util.js";
+import { ConfigHandler } from "../config/handler.js";
+import { streamLines } from "../diff/util.js";
+import {
+  IDE,
+  ILLM,
+  Position,
+  Range,
+  TabAutocompleteOptions,
+} from "../index.js";
+import OpenAI from "../llm/llms/OpenAI.js";
+import { logDevData } from "../util/devdata.js";
+import { getBasename } from "../util/index.js";
 import {
   COUNT_COMPLETION_REJECTED_AFTER,
   DEFAULT_AUTOCOMPLETE_OPTS,
-} from "../util/parameters";
-import { Telemetry } from "../util/posthog";
-import { getRangeInString } from "../util/ranges";
-import AutocompleteLruCache from "./cache";
+} from "../util/parameters.js";
+import { Telemetry } from "../util/posthog.js";
+import { getRangeInString } from "../util/ranges.js";
+import AutocompleteLruCache from "./cache.js";
 import {
   noFirstCharNewline,
   onlyWhitespaceAfterEndOfLine,
   stopOnUnmatchedClosingBracket,
-} from "./charStream";
+} from "./charStream.js";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
-} from "./constructPrompt";
-import type { AutocompleteLanguageInfo } from "./languages";
+} from "./constructPrompt.js";
+import { isOnlyPunctuationAndWhitespace } from "./filter.js";
+import { AutocompleteLanguageInfo } from "./languages.js";
 import {
   avoidPathLine,
   noTopLevelKeywordsMidline,
@@ -33,17 +40,18 @@ import {
   stopAtRepeatingLines,
   stopAtSimilarLine,
   streamWithNewLines,
-} from "./lineStream";
-import type { AutocompleteSnippet } from "./ranking";
-import { getTemplateForModel } from "./templates";
-import { GeneratorReuseManager } from "./util";
+} from "./lineStream.js";
+import { AutocompleteSnippet } from "./ranking.js";
+import { RecentlyEditedRange } from "./recentlyEdited.js";
+import { getTemplateForModel } from "./templates.js";
+import { GeneratorReuseManager } from "./util.js";
 
 export interface AutocompleteInput {
   completionId: string;
   filepath: string;
   pos: Position;
   recentlyEditedFiles: RangeInFileWithContents[];
-  recentlyEditedRanges: RangeInFileWithContents[];
+  recentlyEditedRanges: RecentlyEditedRange[];
   clipboardText: string;
   // Used for notebook files
   manuallyPassFileContents?: string;
@@ -53,6 +61,7 @@ export interface AutocompleteInput {
     text: string;
     range: Range;
   };
+  injectDetails?: string;
 }
 
 export interface AutocompleteOutcome extends TabAutocompleteOptions {
@@ -77,7 +86,7 @@ const STARCODER2_T_ARTIFACTS = ["t.", "\nt", "<file_sep>"];
 const PYTHON_ENCODING = "#- coding: utf-8";
 const CODE_BLOCK_END = "```";
 
-const multilineStops: string[] = []; // [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
+const multilineStops: string[] = [DOUBLE_NEWLINE, WINDOWS_DOUBLE_NEWLINE];
 const commonStops = [SRC_DIRECTORY, PYTHON_ENCODING, CODE_BLOCK_END];
 
 // Errors that can be expected on occasion even during normal functioning should not be shown.
@@ -112,6 +121,14 @@ const nonAutocompleteModels = [
   "instruct",
 ];
 
+export type GetLspDefinitionsFunction = (
+  filepath: string,
+  contents: string,
+  cursorIndex: number,
+  ide: IDE,
+  lang: AutocompleteLanguageInfo,
+) => Promise<AutocompleteSnippet[]>;
+
 export async function getTabCompletion(
   token: AbortSignal,
   options: TabAutocompleteOptions,
@@ -119,12 +136,7 @@ export async function getTabCompletion(
   ide: IDE,
   generatorReuseManager: GeneratorReuseManager,
   input: AutocompleteInput,
-  getDefinitionsFromLsp: (
-    filepath: string,
-    contents: string,
-    cursorIndex: number,
-    ide: IDE,
-  ) => Promise<AutocompleteSnippet[]>,
+  getDefinitionsFromLsp: GetLspDefinitionsFunction,
 ): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
@@ -151,7 +163,9 @@ export async function getTabCompletion(
   }
 
   // Model
-  if (!llm) return;
+  if (!llm) {
+    return;
+  }
   if (llm instanceof OpenAI) {
     llm.useLegacyCompletionsEndpoint = true;
   } else if (
@@ -170,35 +184,56 @@ export async function getTabCompletion(
   ) {
     shownGptClaudeWarning = true;
     throw new Error(
-      `Warning: ${llm.model} is not trained for tab-autocomplete, and may result in low-quality suggestions. See the docs for our recommended models: https://docs.continue.dev/setup/select-model#autocomplete`,
+      `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/walkthroughs/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
     );
   }
 
   // Prompt
-  const fullPrefix =
+  let fullPrefix =
     getRangeInString(fileContents, {
       start: { line: 0, character: 0 },
       end: input.selectedCompletionInfo?.range.start ?? pos,
     }) + (input.selectedCompletionInfo?.text ?? "");
 
+  if (input.injectDetails) {
+    const lines = fullPrefix.split("\n");
+    fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
+      lang.comment
+    } ${input.injectDetails.split("\n").join(`\n${lang.comment} `)}\n${
+      lines[lines.length - 1]
+    }`;
+  }
+
   const fullSuffix = getRangeInString(fileContents, {
     start: pos,
     end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
   });
-  const lineBelowCursor =
-    fileLines[Math.min(pos.line + 1, fileLines.length - 1)];
 
-  let extrasSnippets = (await Promise.race([
-    getDefinitionsFromLsp(
-      filepath,
-      fullPrefix + fullSuffix,
-      fullPrefix.length,
-      ide,
-    ),
-    new Promise((resolve) => {
-      setTimeout(() => resolve([]), 100);
-    }),
-  ])) as AutocompleteSnippet[];
+  // First non-whitespace line below the cursor
+  let lineBelowCursor = "";
+  let i = 1;
+  while (
+    lineBelowCursor.trim() === "" &&
+    pos.line + i <= fileLines.length - 1
+  ) {
+    lineBelowCursor = fileLines[Math.min(pos.line + i, fileLines.length - 1)];
+    i++;
+  }
+
+  let extrasSnippets = options.useOtherFiles
+    ? ((await Promise.race([
+        getDefinitionsFromLsp(
+          filepath,
+          fullPrefix + fullSuffix,
+          fullPrefix.length,
+          ide,
+          lang,
+        ),
+        new Promise((resolve) => {
+          setTimeout(() => resolve([]), 100);
+        }),
+      ])) as AutocompleteSnippet[])
+    : [];
 
   const workspaceDirs = await ide.getWorkspaceDirs();
   if (options.onlyMyCode) {
@@ -280,7 +315,7 @@ export async function getTabCompletion(
       ...(llm.model.toLowerCase().includes("starcoder2")
         ? STARCODER2_T_ARTIFACTS
         : []),
-      ...lang.stopWords,
+      ...lang.stopWords.map((word) => `\n${word}`),
     ];
 
     const multiline =
@@ -372,12 +407,7 @@ export class CompletionProvider {
     private readonly ide: IDE,
     private readonly getLlm: () => Promise<ILLM | undefined>,
     private readonly _onError: (e: any) => void,
-    private readonly getDefinitionsFromLsp: (
-      filepath: string,
-      contents: string,
-      cursorIndex: number,
-      ide: IDE,
-    ) => Promise<AutocompleteSnippet[]>,
+    private readonly getDefinitionsFromLsp: GetLspDefinitionsFunction,
   ) {
     this.generatorReuseManager = new GeneratorReuseManager(
       this.onError.bind(this),
@@ -390,6 +420,13 @@ export class CompletionProvider {
 
   private onError(e: any) {
     console.warn("Error generating autocompletion: ", e);
+    if (
+      ERRORS_TO_IGNORE.some((err) =>
+        typeof e === "string" ? e.includes(err) : e?.message?.includes(err),
+      )
+    ) {
+      return;
+    }
     if (!this.errorsShown.has(e.message)) {
       this.errorsShown.add(e.message);
       this._onError(e);
@@ -529,6 +566,11 @@ export class CompletionProvider {
       );
 
       if (!outcome?.completion) {
+        return undefined;
+      }
+
+      // Filter out unwanted results
+      if (isOnlyPunctuationAndWhitespace(outcome.completion)) {
         return undefined;
       }
 

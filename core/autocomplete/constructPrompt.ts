@@ -1,25 +1,25 @@
-import type Parser from "web-tree-sitter";
-import type { TabAutocompleteOptions } from "..";
-import type { RangeInFileWithContents } from "../commands/util";
+import Parser from "web-tree-sitter";
+import { RangeInFileWithContents } from "../commands/util.js";
+import { TabAutocompleteOptions } from "../index.js";
 
 import {
   countTokens,
   pruneLinesFromBottom,
   pruneLinesFromTop,
-} from "../llm/countTokens";
-import { getAst, getTreePathAtCursor } from "./ast";
+} from "../llm/countTokens.js";
+import { getAst, getTreePathAtCursor } from "./ast.js";
 import {
-  type AutocompleteLanguageInfo,
+  AutocompleteLanguageInfo,
   LANGUAGES,
   Typescript,
-} from "./languages";
+} from "./languages.js";
 import {
-  type AutocompleteSnippet,
   fillPromptWithSnippets,
   rankSnippets,
   removeRangeFromSnippets,
-} from "./ranking";
-import { slidingWindowMatcher } from "./slidingWindow";
+  type AutocompleteSnippet,
+} from "./ranking.js";
+import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
 
 export function languageForFilepath(
   filepath: string,
@@ -60,7 +60,19 @@ async function shouldCompleteMultiline(
   filepath: string,
   fullPrefix: string,
   fullSuffix: string,
+  language: AutocompleteLanguageInfo,
 ): Promise<boolean> {
+  // Don't complete multi-line for single-line comments
+  if (
+    fullPrefix
+      .split("\n")
+      .slice(-1)[0]
+      ?.trimStart()
+      .startsWith(language.comment)
+  ) {
+    return false;
+  }
+
   // First, if the line before ends with an opening bracket, then assume multi-line
   if (
     ["{", "(", "["].includes(
@@ -99,7 +111,7 @@ export async function constructAutocompletePrompt(
   clipboardText: string,
   language: AutocompleteLanguageInfo,
   options: TabAutocompleteOptions,
-  recentlyEditedRanges: RangeInFileWithContents[],
+  recentlyEditedRanges: RecentlyEditedRange[],
   recentlyEditedFiles: RangeInFileWithContents[],
   modelName: string,
   extraSnippets: AutocompleteSnippet[],
@@ -135,29 +147,47 @@ export async function constructAutocompletePrompt(
         options.slidingWindowSize * (1 - options.slidingWindowPrefixPercentage),
       );
 
-    const slidingWindowMatches = await slidingWindowMatcher(
-      recentlyEditedFiles,
-      windowAroundCursor,
-      3,
-      options.slidingWindowSize,
-    );
-    snippets.push(...slidingWindowMatches);
+    // This was much too slow, and not super useful
+    // const slidingWindowMatches = await slidingWindowMatcher(
+    //   recentlyEditedFiles,
+    //   windowAroundCursor,
+    //   3,
+    //   options.slidingWindowSize,
+    // );
+    // snippets.push(...slidingWindowMatches);
 
-    const recentlyEdited = (
-      await Promise.all(
-        recentlyEditedRanges.map(async (r) => {
-          return r;
-          // return await getScopeAroundRange(r);
-        }),
-      )
-    ).filter((s) => !!s);
-    snippets.push(...(recentlyEdited as any));
-    // Filter out empty snippets
-    snippets = snippets.filter(
-      (s) =>
-        s.contents.trim() !== "" &&
-        !(prefix + suffix).includes(s.contents.trim()),
-    );
+    // snippets.push(
+    //   ...recentlyEditedRanges.map((r) => ({
+    //     ...r,
+    //     contents: r.lines.join("\n"),
+    //   })),
+    // );
+
+    if (options.useRecentlyEdited) {
+      const currentLinePrefix = prefix.trim().split("\n").slice(-1)[0];
+      if (currentLinePrefix?.length > options.recentLinePrefixMatchMinLength) {
+        const matchingRange = findMatchingRange(
+          recentlyEditedRanges,
+          currentLinePrefix,
+        );
+        if (matchingRange) {
+          snippets.push({
+            ...matchingRange,
+            contents: matchingRange.lines.join("\n"),
+            score: 0.8,
+          });
+        }
+      }
+    }
+
+    // Filter out empty snippets and ones that are already in the prefix/suffix
+    snippets = snippets
+      .map((snippet) => ({ ...snippet }))
+      .filter(
+        (s) =>
+          s.contents.trim() !== "" &&
+          !(prefix + suffix).includes(s.contents.trim()),
+      );
 
     // Rank / order the snippets
     const scoredSnippets = rankSnippets(snippets, windowAroundCursor);
@@ -207,6 +237,7 @@ export async function constructAutocompletePrompt(
       filepath,
       fullPrefix,
       fullSuffix,
+      language,
     ),
     snippets,
   };
