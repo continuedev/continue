@@ -100,6 +100,19 @@ export function getMetaKeyLabel() {
   }
 }
 
+export function getMetaKeyName() {
+  const platform = getPlatform();
+  switch (platform) {
+    case "mac":
+      return "Cmd";
+    case "linux":
+    case "windows":
+      return "Ctrl";
+    default:
+      return "Ctrl";
+  }
+}
+
 export function getExtensionVersion(): string {
   const extension = vscode.extensions.getExtension("continue.continue");
   return extension?.packageJSON.version || "0.1.0";
