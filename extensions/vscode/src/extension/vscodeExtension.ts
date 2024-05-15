@@ -1,9 +1,8 @@
-import { IContextProvider } from "core";
-import { ConfigHandler } from "core/config/handler";
-import { ContinueServerClient } from "core/continueServer/stubs/client";
-import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
-import { IdeSettings } from "core/protocol";
-import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
+import { ConfigHandler } from "core/config/handler.js";
+import { Core } from "core/core";
+import { FromCoreProtocol, ToCoreProtocol } from "core/protocol/index.js";
+import { InProcessMessenger } from "core/util/messenger.js";
+import { getConfigJsonPath, getConfigTsPath } from "core/util/paths.js";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -41,27 +40,7 @@ export class VsCodeExtension {
     this.ide = new VsCodeIde(this.diffManager);
 
     const ideSettings = this.ide.getIdeSettings();
-    const { remoteConfigServerUrl, remoteConfigSyncPeriod } = ideSettings;
-
-    const userTokenPromise: Promise<string | undefined> = new Promise(
-      async (resolve) => {
-        if (
-          remoteConfigServerUrl === null ||
-          remoteConfigServerUrl === undefined ||
-          remoteConfigServerUrl.trim() === ""
-        ) {
-          resolve(undefined);
-          return;
-        }
-        const token = await getUserToken();
-        resolve(token);
-      },
-    );
-
-    const continueServerClient = new ContinueServerClient(
-      ideSettings.remoteConfigServerUrl,
-      userTokenPromise,
-    );
+    const { remoteConfigServerUrl } = ideSettings;
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
@@ -69,7 +48,7 @@ export class VsCodeExtension {
     );
     this.configHandler = new ConfigHandler(
       this.ide,
-      ideSettings,
+      Promise.resolve(ideSettings),
       async (log: string) => {
         outputChannel.appendLine(
           "==========================================================================",
@@ -141,8 +120,13 @@ export class VsCodeExtension {
 
     this.diffManager.webviewProtocol = this.webviewProtocol;
 
-    this.indexer = new CodebaseIndexer(
-      this.configHandler,
+    const inProcessMessenger = new InProcessMessenger<
+      ToCoreProtocol,
+      FromCoreProtocol
+    >();
+    const vscodeMessenger = new VsCodeMessenger(
+      inProcessMessenger,
+      this.webviewProtocol,
       this.ide,
       indexingPauseToken,
       continueServerClient,

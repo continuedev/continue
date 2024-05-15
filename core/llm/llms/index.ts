@@ -5,7 +5,7 @@ import {
   LLMOptions,
   ModelDescription,
 } from "../../index.js";
-import { IdeSettings } from "../../protocol.js";
+import { IdeSettings } from "../../protocol/ideWebview.js";
 import { DEFAULT_MAX_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
 import Anthropic from "./Anthropic.js";
