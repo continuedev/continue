@@ -309,9 +309,13 @@ export class VsCodeIdeUtils {
 
       // First, check whether it's a notebook document
       // Need to iterate over the cells to get full contents
-      const notebook = vscode.workspace.notebookDocuments.find(
-        (doc) => doc.uri.toString() === uri.toString(),
-      );
+      const notebook =
+        vscode.workspace.notebookDocuments.find(
+          (doc) => doc.uri.toString() === uri.toString(),
+        ) ??
+        (uri.fsPath.endsWith("ipynb")
+          ? await vscode.workspace.openNotebookDocument(uri)
+          : undefined);
       if (notebook) {
         return notebook
           .getCells()
