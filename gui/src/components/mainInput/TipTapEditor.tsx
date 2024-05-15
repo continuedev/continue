@@ -423,7 +423,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
   });
 
-  const shortcutTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
 
   useEffect(() => {
     if (isJetBrains()) {
@@ -432,35 +432,18 @@ function TipTapEditor(props: TipTapEditorProps) {
     }
 
     const handleKeyDown = async (event: KeyboardEvent) => {
-      if (!editor) return;
-
-      const shouldSkip = () => {
-        const skip = shortcutTimeoutRef.current !== undefined;
-
-        if (!skip) {
-          shortcutTimeoutRef.current = setTimeout(async () => {
-            shortcutTimeoutRef.current = undefined;
-          }, 100);
-        }
-        return skip
-      }
+      if (!editor || !editorFocusedRef.current) return;
 
       if (event.metaKey && event.key === "x") {
-        if (!shouldSkip()) {
-          document.execCommand("cut");
-        }
+        document.execCommand("cut");
         event.stopPropagation();
         event.preventDefault();
       } else if (event.metaKey && event.key === "v") {
-        if (!shouldSkip()) {
-          document.execCommand("paste");
-        }
+        document.execCommand("paste");
         event.stopPropagation();
         event.preventDefault();
       } else if (event.metaKey && event.key === "c") {
-        if (!shouldSkip()) {
-          document.execCommand("copy");
-        }
+        document.execCommand("copy");
         event.stopPropagation();
         event.preventDefault();
       }
@@ -471,7 +454,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [editor, shortcutTimeoutRef]);
+  }, [editor, editorFocusedRef]);
 
   useEffect(() => {
     if (mainEditorContent && editor) {
@@ -528,7 +511,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   // Re-focus main input after done generating
   useEffect(() => {
     if (editor && !active && props.isMainInput && document.hasFocus()) {
-      editor.commands.focus(undefined, {scrollIntoView: false});
+      editor.commands.focus(undefined, { scrollIntoView: false });
     }
   }, [props.isMainInput, active, editor]);
 
