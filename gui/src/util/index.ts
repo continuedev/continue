@@ -1,3 +1,5 @@
+import { getLocalStorage } from "./localStorage";
+
 type Platform = "mac" | "linux" | "windows" | "unknown";
 
 export function getPlatform(): Platform {
@@ -53,6 +55,5 @@ export function getAltKeyLabel(): string {
 }
 
 export function getFontSize(): number {
-  const fontSize = localStorage.getItem("fontSize");
-  return fontSize ? parseInt(fontSize) : 14;
+  return getLocalStorage("fontSize") ?? 14;
 }

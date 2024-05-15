@@ -301,7 +301,10 @@ const Layout = () => {
           {bottomMessage}
         </BottomMessageDiv>
       </div>
-      <div className="text-sm" id="tooltip-portal-div" />
+      <div
+        style={{ fontSize: `${getFontSize() - 4}px` }}
+        id="tooltip-portal-div"
+      />
     </LayoutTopDiv>
   );
 };

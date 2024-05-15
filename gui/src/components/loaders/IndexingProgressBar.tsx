@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
+import { getFontSize } from "../../util";
 import { postToIde } from "../../util/ide";
 
 const DIAMETER = 6;
@@ -41,7 +42,7 @@ const GridDiv = styled.div`
 const P = styled.p`
   margin: 0;
   margin-top: 2px;
-  font-size: 11.5px;
+  font-size: ${getFontSize() - 2.5}px;
   color: ${lightGray};
   text-align: center;
   white-space: nowrap;
