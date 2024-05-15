@@ -590,7 +590,17 @@ export class VsCodeIdeUtils {
       }
 
       repos.push(repo.state.HEAD?.name);
-      diffs.push(await repo.diff());
+      // Staged changes
+      // const a = await repo.diffIndexWithHEAD();
+      const staged = await repo.diff(true);
+      // Un-staged changes
+      // const b = await repo.diffWithHEAD();
+      const unstaged = await repo.diff(false);
+      // All changes
+      // const e = await repo.diffWith("HEAD");
+      // Only staged
+      // const f = await repo.diffIndexWith("HEAD");
+      diffs.push(`${staged}\n${unstaged}`);
     }
 
     const fullDiff = diffs.join("\n\n");
