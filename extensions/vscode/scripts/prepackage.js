@@ -309,7 +309,7 @@ const exe = os === "win32" ? ".exe" : "";
     console.log(`Copying ${package} to ${toCopy}`);
     // This is a way to install only one package without npm trying to install all the dependencies
     // Create a temporary directory for installing the package
-    const tempDir = `/tmp/continue-node_modules-${package}-${toCopy}`;
+    const tempDir = `/tmp/continue-node_modules-${toCopy}`;
     const currentDir = process.cwd();
 
     // Remove the dir we will be copying to
