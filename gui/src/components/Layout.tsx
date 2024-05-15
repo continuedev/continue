@@ -256,7 +256,7 @@ const Layout = () => {
                     parseInt(localStorage.getItem("ftc") || "0") >= 50) && (
                     <ProgressBar
                       completed={parseInt(localStorage.getItem("ftc") || "0")}
-                      total={150}
+                      total={100}
                     />
                   )}
 

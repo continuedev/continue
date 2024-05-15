@@ -592,6 +592,8 @@ const gpt4o: ModelPackage = {
     model: "gpt-4o",
     contextLength: 128_000,
     title: "GPT-4o",
+    systemMessage:
+      "You are an expert software developer. You give helpful and concise responses.",
   },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",

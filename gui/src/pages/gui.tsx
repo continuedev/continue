@@ -245,7 +245,7 @@ function GUI(props: GUIProps) {
         if (ftc) {
           setLocalStorage("ftc", ftc + 1);
 
-          if (u >= 150) {
+          if (u >= 100) {
             dispatch(setShowDialog(true));
             dispatch(setDialogMessage(<FTCDialog />));
             posthog?.capture("ftc_reached");
