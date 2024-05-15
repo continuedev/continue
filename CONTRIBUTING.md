@@ -97,11 +97,10 @@ Similarly, any changes to `core` or `extensions/vscode` will be automatically in
 Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](https://www.jetbrains.com/idea/download). Either Ultimate or Community (free) will work. Continue is built with JDK version 17, as specified in `extensions/intellij/build.gradle.kts`. You should also ensure that you have the Gradle plugin installed.
 
 1. Clone the repository
-2. Run `scripts/install-dependencies.sh` or `scripts/install-dependencies.ps1` on Windows. This will install and build all of the necessary dependencies.
-3. To test the plugin, select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button as shown in this screenshot:
-   ![img](./media/IntelliJRunPluginScreenshot.png)
-4. To package the extension, run `./gradlew build` (or `./gradlew.bat build` on Windows) from the `extensions/intellij` directory. This will generate a .zip file in `extensions/intellij/build/distributions` with the version defined in `extensions/intellij/gradle.properties`.
-5. If you make changes, you may need to re-build before running the "Build Plugin" configuration
+2. Run `scripts/install-dependencies.sh` or `scripts/install-dependencies.ps1` on Windows
+3. Run `cd extensions/vscode && node scripts/prepackage.js` (this will copy over the built React application to the proper JetBrains directory)
+4. Select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button
+5. To package the extension, choose the "Build Plugin" Gradle configuration
 
    a. If you change code from the `core` or `binary` directories, make sure to run `npm run build` from the `binary` directory to create a new binary.
 
