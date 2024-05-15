@@ -404,7 +404,11 @@ const exe = os === "win32" ? ".exe" : "";
     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
   } else {
     // Download esbuild from npm in tmp and copy over
-    await installNodeModuleInTempDirAndCopyToCurrent("esbuild", "@esbuild");
+    console.log("npm installing esbuild binary");
+    await installNodeModuleInTempDirAndCopyToCurrent(
+      "esbuild@0.17.19",
+      "@esbuild",
+    );
   }
 
   await new Promise((resolve, reject) => {
