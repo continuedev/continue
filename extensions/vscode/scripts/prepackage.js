@@ -107,8 +107,8 @@ const exe = os === "win32" ? ".exe" : "";
 
   process.chdir("../../gui");
 
-  // execCmdSync("pnpm install");
-  // console.log("[info] pnpm install in gui completed");
+  execCmdSync("pnpm install");
+  console.log("[info] pnpm install in gui completed");
 
   if (ghAction()) {
     execCmdSync("pnpm run build");
