@@ -440,10 +440,6 @@ export interface SlashCommand {
   description: string;
   params?: { [key: string]: any };
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
-
-  // If true, this command will be run in NodeJs and have access to the filesystem and other Node-only APIs
-  // You must make sure to dynamically import any Node-only dependencies in your command so that it doesn't break in the browser
-  runInNodeJs?: boolean;
 }
 
 // Config

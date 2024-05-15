@@ -89,7 +89,7 @@ nvm use
 Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](https://www.jetbrains.com/idea/download). Either Ultimate or Community (free) will work. Continue is built with JDK version 19.
 
 1. Clone the repository
-2. Run `install-dependencies.sh` or `install-dependencies.ps1` on Windows
+2. Run `scripts/install-dependencies.sh` or `scripts/install-dependencies.ps1` on Windows
 3. Run `cd extensions/vscode && node scripts/prepackage.js` (this will copy over the built React application to the proper JetBrains directory)
 4. Select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button
 5. To package the extension, choose the "Build Plugin" Gradle configuration
