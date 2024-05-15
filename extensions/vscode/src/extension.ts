@@ -9,7 +9,7 @@ import { getExtensionVersion } from "./util/util";
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
   const { activateExtension } = await import("./activation/activate");
   try {
-    await activateExtension(context);
+    return activateExtension(context);
   } catch (e) {
     console.log("Error activating extension: ", e);
     vscode.window
@@ -30,7 +30,7 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  dynamicImportAndActivate(context);
+  return dynamicImportAndActivate(context);
 }
 
 export function deactivate() {

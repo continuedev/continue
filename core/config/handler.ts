@@ -1,4 +1,4 @@
-import { ContinueConfig, ContinueRcJson, IDE, ILLM } from "../index.js";
+import { ContinueConfig, ContinueRcJson, IDE, ILLM, IContextProvider } from "../index.js";
 import { IdeSettings } from "../protocol.js";
 import { Telemetry } from "../util/posthog.js";
 import {
@@ -10,6 +10,7 @@ import {
 export class ConfigHandler {
   private savedConfig: ContinueConfig | undefined;
   private savedBrowserConfig?: BrowserSerializedContinueConfig;
+  private additionalContextProviders: IContextProvider[] = [];
 
   constructor(
     private readonly ide: IDE,
@@ -82,6 +83,10 @@ export class ConfigHandler {
       ideInfo.extensionVersion,
     );
 
+    (this.savedConfig.contextProviders ?? []).push(
+      ...this.additionalContextProviders,
+    );
+
     return this.savedConfig;
   }
 
@@ -94,5 +99,10 @@ export class ConfigHandler {
     }
 
     return model;
+  }
+
+  registerCustomContextProvider(contextProvider: IContextProvider) {
+    this.additionalContextProviders.push(contextProvider);
+    this.reloadConfig();
   }
 }
