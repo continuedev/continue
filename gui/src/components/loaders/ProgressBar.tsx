@@ -3,13 +3,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
-import {
-  setDialogMessage,
-  setShowDialog,
-} from "../../redux/slices/uiStateSlice";
 import { getFontSize } from "../../util";
-import { ftl } from "../dialogs/FTCDialog";
-import QuickModelSetup from "../modelSelection/quickSetup/QuickModelSetup";
 
 const ProgressBarWrapper = styled.div`
   width: 100px;

@@ -10,7 +10,8 @@ import {
   setInactive,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
-import { isJetBrains } from "../util";
+import { ideRequest, isJetBrains } from "../util/ide";
+import { setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
 

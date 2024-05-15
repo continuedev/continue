@@ -744,25 +744,6 @@ interface ModelRoles {
   inlineEdit?: string;
 }
 
-interface ExperimentalConfig {
-  contextMenuPrompts?: ContextMenuConfig;
-  modelRoles?: ModelRoles;
-  defaultContext?: "activeFile"[];
-  promptPath?: string;
-}
-
-interface ContextMenuConfig {
-  comment?: string;
-  docstring?: string;
-  fix?: string;
-  optimize?: string;
-  fixGrammar?: string;
-}
-
-interface ModelRoles {
-  inlineEdit?: string;
-}
-
 interface ExperimantalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;

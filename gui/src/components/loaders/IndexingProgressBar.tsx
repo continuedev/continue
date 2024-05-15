@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { getFontSize } from "../../util";
+import { postToIde } from "../../util/ide";
 
 const DIAMETER = 6;
 const CircleDiv = styled.div<{ color: string }>`

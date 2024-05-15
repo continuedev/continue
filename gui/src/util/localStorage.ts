@@ -8,6 +8,7 @@ type LocalStorageTypes = {
   inputHistory: JSONContent[];
   extensionVersion: string;
   indexingState: IndexingProgressUpdate;
+  fontSize: number;
 };
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(

@@ -159,7 +159,7 @@ export const CustomScrollbarDiv = styled.div`
 `;
 
 const TooltipStyles = {
-  fontSize: "12px",
+  fontSize: `${getFontSize() - 2}px`,
   backgroundColor: vscInputBackground,
   boxShadow: `0px 0px 2px 1px ${vscBadgeBackground}`,
   color: vscForeground,

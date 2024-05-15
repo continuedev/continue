@@ -17,6 +17,7 @@ import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   getAltKeyLabel,
+  getFontSize,
   getMetaKeyLabel,
   isJetBrains,
   isMetaEquivalentKeyPressed,
