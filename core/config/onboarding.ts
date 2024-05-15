@@ -15,6 +15,8 @@ export function setupOptimizedMode(
         title: "GPT-4o (Free Trial)",
         provider: "free-trial",
         model: "gpt-4o",
+        systemMessage:
+          "You are an expert software developer. You give helpful and concise responses.",
       },
       {
         title: "GPT-3.5-Turbo (Free Trial)",

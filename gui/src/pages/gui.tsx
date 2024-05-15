@@ -240,7 +240,7 @@ function GUI(props: GUIProps) {
           const u = parseInt(ftc);
           localStorage.setItem("ftc", (u + 1).toString());
 
-          if (u >= 150) {
+          if (u >= 100) {
             dispatch(setShowDialog(true));
             dispatch(setDialogMessage(<FTCDialog />));
             posthog?.capture("ftc_reached");
