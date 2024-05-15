@@ -234,7 +234,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     // Strip unecessary parts of the input (the fact that you have to do this is suboptimal, should be refactored away)
-    const content = history[history.length - 1].content;
+    let content = history[history.length - 1].content;
     if (typeof content !== "string") {
       content.forEach((part) => {
         if (part.text?.startsWith("/edit")) {

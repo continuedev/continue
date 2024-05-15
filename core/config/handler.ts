@@ -15,12 +15,12 @@ export class ConfigHandler {
 
   constructor(
     private readonly ide: IDE,
-    private ideSettings: IdeSettings,
+    private ideSettingsPromise: Promise<IdeSettings>,
     private readonly writeLog: (text: string) => Promise<void>,
     private readonly onConfigUpdate: () => void,
   ) {
     this.ide = ide;
-    this.ideSettings = ideSettings;
+    this.ideSettingsPromise = ideSettingsPromise;
     this.writeLog = writeLog;
     this.onConfigUpdate = onConfigUpdate;
     try {
@@ -31,7 +31,7 @@ export class ConfigHandler {
   }
 
   updateIdeSettings(ideSettings: IdeSettings) {
-    this.ideSettings = ideSettings;
+    this.ideSettingsPromise = Promise.resolve(ideSettings);
     this.reloadConfig();
   }
 
@@ -68,7 +68,7 @@ export class ConfigHandler {
     this.savedConfig = await loadFullConfigNode(
       this.ide.readFile.bind(this.ide),
       workspaceConfigs,
-      this.ideSettings,
+      await this.ideSettingsPromise,
       ideInfo.ideType,
       uniqueId,
       this.writeLog,

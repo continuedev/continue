@@ -1,9 +1,4 @@
-import {
-  ChatMessage,
-  IDE,
-  LLMFullCompletionOptions,
-  LLMReturnValue,
-} from "core";
+import { ChatMessage, IDE, LLMFullCompletionOptions, PromptLog } from "core";
 import type { FromWebviewProtocol, ToWebviewProtocol } from "core/protocol";
 import { MessageIde } from "core/util/messageIde";
 import { Message } from "core/util/messenger";
@@ -50,7 +45,7 @@ export interface IIdeMessenger {
     cancelToken: AbortSignal | undefined,
     messages: ChatMessage[],
     options?: LLMFullCompletionOptions,
-  ): AsyncGenerator<ChatMessage, LLMReturnValue, unknown>;
+  ): AsyncGenerator<ChatMessage, PromptLog, unknown>;
 
   ide: IDE;
 }
@@ -209,7 +204,7 @@ export class IdeMessenger implements IIdeMessenger {
     cancelToken: AbortSignal | undefined,
     messages: ChatMessage[],
     options: LLMFullCompletionOptions = {},
-  ): AsyncGenerator<ChatMessage, LLMReturnValue> {
+  ): AsyncGenerator<ChatMessage, PromptLog> {
     const gen = this.streamRequest(
       "llm/streamChat",
       {
@@ -233,6 +228,7 @@ export class IdeMessenger implements IIdeMessenger {
     return {
       prompt: next.value.content?.prompt,
       completion: next.value.content?.completion,
+      completionOptions: next.value.content?.completionOptions,
     };
   }
 }

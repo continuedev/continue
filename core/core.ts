@@ -8,6 +8,7 @@ import {
   setupOptimizedMode,
 } from "./config/onboarding";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util";
+import { ContinueServerClient } from "./continueServer/stubs/client";
 import { indexDocs } from "./indexing/docs";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase";
@@ -27,6 +28,7 @@ export class Core {
   configHandler: ConfigHandler;
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
+  continueServerClientPromise: Promise<ContinueServerClient>;
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -61,19 +63,33 @@ export class Core {
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
 
-    // Codebase Indexer
+    // Codebase Indexer and ContinueServerClient depend on IdeSettings
     const indexingPauseToken = new PauseToken(
       new GlobalContext().get("indexingPaused") === true,
     );
-    this.codebaseIndexerPromise = new Promise(async (resolve) => {
-      const ideSettings = await ideSettingsPromise;
-      resolve(
+    let codebaseIndexerResolve: (_: any) => void | undefined;
+    this.codebaseIndexerPromise = new Promise(
+      async (resolve) => (codebaseIndexerResolve = resolve),
+    );
+
+    let continueServerClientResolve: (_: any) => void | undefined;
+    this.continueServerClientPromise = new Promise(
+      (resolve) => (continueServerClientResolve = resolve),
+    );
+
+    ideSettingsPromise.then((ideSettings) => {
+      const continueServerClient = new ContinueServerClient(
+        ideSettings.remoteConfigServerUrl,
+        ideSettings.userToken,
+      );
+      continueServerClientResolve(continueServerClient);
+
+      codebaseIndexerResolve(
         new CodebaseIndexer(
           this.configHandler,
           this.ide,
           new PauseToken(false),
-          ideSettings.remoteConfigServerUrl,
-          ideSettings.userToken,
+          continueServerClient,
         ),
       );
       this.ide
@@ -446,8 +462,8 @@ export class Core {
         mode === "local"
           ? setupLocalMode
           : mode === "optimized"
-          ? setupOptimizedMode
-          : setupOptimizedExistingUserMode,
+            ? setupOptimizedMode
+            : setupOptimizedExistingUserMode,
       );
     });
 

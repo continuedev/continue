@@ -1,6 +1,8 @@
+import { IndexingProgressUpdate } from "..";
+
 export type ToWebviewFromIdeOrCoreProtocol = {
   configUpdate: [undefined, void];
   getDefaultModelTitle: [undefined, string];
-  indexProgress: [{ progress: number; desc: string }, void];
+  indexProgress: [IndexingProgressUpdate, void];
   refreshSubmenuItems: [undefined, void];
 };
