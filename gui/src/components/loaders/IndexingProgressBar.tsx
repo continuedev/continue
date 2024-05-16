@@ -66,8 +66,9 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    postToIde("index/setPaused", !expanded);
-  }, [expanded]);
+    if (paused === undefined) return;
+    postToIde("index/setPaused", paused);
+  }, [paused]);
 
   return (
     <div
@@ -77,7 +78,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
           indexingState.progress < 1 &&
           indexingState.progress >= 0
         ) {
-          setExpanded((prev) => !prev);
+          setPaused((prev) => !prev);
         } else {
           postToIde("index/forceReIndex", undefined);
         }
@@ -125,14 +126,48 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
               tooltipPortalDiv,
             )}
         </>
-      ) : expanded ? ( //progress bar
+      ) : indexingState.status === "disabled" ? ( //gray disabled dot
+        <>
+          <CircleDiv
+            data-tooltip-id="progress_dot"
+            color={lightGray}
+          ></CircleDiv>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id="progress_dot" place="top">
+                {indexingState.desc}
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
+        </>
+      ) : indexingState.status === "paused" ||
+        (paused && indexingState.status === "indexing") ? (
+        //yellow 'paused' dot
+        <>
+          <CircleDiv
+            data-tooltip-id="progress_dot"
+            color="#bb0"
+            onClick={(e) => {
+              postToIde("index/setPaused", false);
+            }}
+          ></CircleDiv>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id="progress_dot" place="top">
+                Click to unpause indexing (
+                {Math.trunc(indexingState.progress * 100)}%)
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
+        </>
+      ) : indexingState.status === "indexing" ? ( //progress bar
         <>
           <GridDiv
             data-tooltip-id="usage_progress_bar"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onClick={(e) => {
-              ideMessenger.post("index/setPaused", true);
+              postToIde("index/setPaused", true);
             }}
           >
             <ProgressBarWrapper>
@@ -152,20 +187,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
               tooltipPortalDiv,
             )}
         </>
-      ) : (
-        //yellow 'paused' dot
-        <>
-          <CircleDiv data-tooltip-id="progress_dot" color="#bb0"></CircleDiv>
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id="progress_dot" place="top">
-                Click to unpause indexing (
-                {Math.trunc(indexingState.progress * 100)}%)
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
-        </>
-      )}
+      ) : null}
     </div>
   );
 };

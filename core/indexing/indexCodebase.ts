@@ -53,6 +53,11 @@ export class CodebaseIndexer {
     abortSignal: AbortSignal,
   ): AsyncGenerator<IndexingProgressUpdate> {
     if (workspaceDirs.length === 0) {
+      yield {
+        progress: 0,
+        desc: "Nothing to index",
+        status: "disabled",
+      };
       return;
     }
 
@@ -60,7 +65,7 @@ export class CodebaseIndexer {
     if (config.disableIndexing) {
       yield {
         progress: 0,
-        desc: "Indexing is disabled in config.json",
+        desc: "Indexing is disabled in the config.json",
         status: "disabled",
       };
       return;
@@ -68,7 +73,7 @@ export class CodebaseIndexer {
       yield {
         progress: 0,
         desc: "Starting indexing",
-        status: "loading",
+        status: "starting",
       };
     }
 
@@ -122,12 +127,20 @@ export class CodebaseIndexer {
               yield {
                 progress: 1,
                 desc: "Indexing cancelled",
-                status: "failed",
+                status: "disabled",
               };
               return;
             }
-            while (this.pauseToken.paused) {
-              await new Promise((resolve) => setTimeout(resolve, 100));
+
+            if (this.pauseToken.paused) {
+              yield {
+                progress: completedDirs / workspaceDirs.length,
+                desc: "Paused",
+                status: "paused",
+              };
+              while (this.pauseToken.paused) {
+                await new Promise((resolve) => setTimeout(resolve, 100));
+              }
             }
 
             yield {
