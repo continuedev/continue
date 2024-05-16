@@ -279,21 +279,17 @@ export class VsCodeExtension {
     dirs: string[],
     context: vscode.ExtensionContext,
   ) {
-    //reset all state variables
-    console.log("Codebase indexing starting up");
-    this.webviewProtocol?.request("indexProgress", {
-      progress: 0,
-      desc: "",
-      status: "failed",
-    });
-    context.globalState.update("continue.indexingFailed", false);
-    context.globalState.update("continue.indexingProgress", 0);
-    context.globalState.update("continue.indexingDesc", "");
-
+    // Cancel previous indexing job if it exists
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
+
+    //reset all state variables
+    context.globalState.update("continue.indexingFailed", false);
+    context.globalState.update("continue.indexingProgress", 0);
+    context.globalState.update("continue.indexingDesc", "");
+
     let err = undefined;
     for await (const update of this.indexer.refresh(
       dirs,

@@ -186,9 +186,9 @@ const Layout = () => {
   }, [location]);
 
   const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
-    desc: "Starting indexing",
+    desc: "Indexing disabled",
     progress: 0.0,
-    status: "starting",
+    status: "disabled",
   });
 
   return (
