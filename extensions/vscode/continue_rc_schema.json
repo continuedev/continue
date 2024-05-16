@@ -2202,6 +2202,9 @@
               ],
               "default": "top",
               "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
+            },
+            "fontSize": {
+              "type": "number"
             }
           }
         },
