@@ -12,20 +12,31 @@ export class DevDataSqliteDb {
             model TEXT NOT NULL,
             provider TEXT NOT NULL,
             tokens_generated INTEGER NOT NULL,
+            tokens_prompt INTEGER NOT NULL DEFAULT 0,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )`,
     );
+
+    // Add tokens_prompt column if it doesn't exist
+    const columnCheckResult = await db.all(
+      `PRAGMA table_info(tokens_generated);`
+    );
+    const columnExists = columnCheckResult.some((col: any) => col.name === "tokens_prompt");
+    if (!columnExists) {
+      await db.exec(`ALTER TABLE tokens_generated ADD COLUMN tokens_prompt INTEGER NOT NULL DEFAULT 0;`);
+    }
   }
 
   public static async logTokensGenerated(
     model: string,
     provider: string,
-    tokens: number,
+    promptTokens: number,
+    generatedTokens: number
   ) {
     const db = await DevDataSqliteDb.get();
     await db?.run(
-      "INSERT INTO tokens_generated (model, provider, tokens_generated) VALUES (?, ?, ?)",
-      [model, provider, tokens],
+      `INSERT INTO tokens_generated (model, provider, tokens_prompt, tokens_generated) VALUES (?, ?, ?, ?)`,
+      [model, provider, promptTokens, generatedTokens],
     );
   }
 
