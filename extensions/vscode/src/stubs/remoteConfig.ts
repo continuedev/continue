@@ -82,7 +82,7 @@ export class RemoteConfigSync {
     }
 
     // Sync once
-    await this.sync(this.userToken, new URL(this.remoteConfigServerUrl));
+    await this.sync(this.userToken, this.remoteConfigServerUrl);
 
     // Set timer to sync at user-defined interval
     this.setInterval();
@@ -95,13 +95,13 @@ export class RemoteConfigSync {
     this.syncInterval = setInterval(
       () => {
         if (!this.userToken || !this.remoteConfigServerUrl) return;
-        this.sync(this.userToken, new URL(this.remoteConfigServerUrl));
+        this.sync(this.userToken, this.remoteConfigServerUrl);
       },
       this.remoteConfigSyncPeriod * 1000 * 60,
     );
   }
 
-  async sync(userToken: string, remoteConfigServerUrl: URL) {
+  async sync(userToken: string, remoteConfigServerUrl: string) {
     try {
       const client = new ContinueServerClient(
         remoteConfigServerUrl.toString(),
