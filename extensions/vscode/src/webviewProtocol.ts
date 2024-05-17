@@ -555,7 +555,7 @@ export class VsCodeWebviewProtocol {
       }
     });
     this.on("context/addDocs", (msg) => {
-      const { url, title } = msg.data;
+      const { startUrl, title, maxDepth } = msg.data;
       const embeddingsProvider = new TransformersJsEmbeddingsProvider();
       vscode.window.withProgress(
         {
@@ -566,8 +566,9 @@ export class VsCodeWebviewProtocol {
         async (progress) => {
           for await (const update of indexDocs(
             title,
-            new URL(url),
+            new URL(startUrl),
             embeddingsProvider,
+            maxDepth
           )) {
             progress.report({
               increment: update.progress,

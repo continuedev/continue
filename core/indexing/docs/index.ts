@@ -8,6 +8,7 @@ export async function* indexDocs(
   title: string,
   baseUrl: URL,
   embeddingsProvider: EmbeddingsProvider,
+  maxDepth?: number
 ): AsyncGenerator<IndexingProgressUpdate> {
   if (await hasDoc(baseUrl.toString())) {
     yield {
@@ -26,7 +27,7 @@ export async function* indexDocs(
 
   const articles: Article[] = [];
 
-  for await (const page of crawlPage(baseUrl)) {
+  for await (const page of crawlPage(baseUrl, maxDepth)) {
     const article = pageToArticle(page);
     if (!article) {continue;}
 

@@ -1,7 +1,8 @@
 export interface SiteIndexingConfig {
   startUrl: string;
-  title: string;
   rootUrl: string;
+  title: string;
+  maxDepth?: number;
 }
 
 const configs: SiteIndexingConfig[] = [

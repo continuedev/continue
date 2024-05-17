@@ -129,7 +129,7 @@ export type PageData = {
   html: string;
 };
 
-export async function* crawlPage(url: URL): AsyncGenerator<PageData> {
+export async function* crawlPage(url: URL, maxDepth?: number): AsyncGenerator<PageData> {
   const { baseUrl, basePath } = splitUrl(url);
   let paths: string[] = [basePath];
 
@@ -170,5 +170,41 @@ export async function* crawlPage(url: URL): AsyncGenerator<PageData> {
         (result) => result.html !== "" && result.links.includes(path),
       ),
     );
+  }
+}
+
+export async function* crawlPage2(url: URL, maxDepth: number = 3): AsyncGenerator<PageData> {
+  const { baseUrl, basePath } = splitUrl(url);
+  let paths: { path: string; depth: number }[] = [{ path: basePath, depth: 0 }];
+  
+  let index = 0;
+
+  while (index < paths.length) {
+    const batch = paths.slice(index, index + 50);
+
+    const promises = batch.map(({ path, depth }) => getLinksFromUrl(baseUrl, path).then(links => ({ links, path, depth }))); // Adjust for depth tracking
+
+    const results = await Promise.all(promises);
+
+    for (const { links: { html, links: linksArray }, path, depth } of results) {
+      if (html !== "" && depth <= maxDepth) { // Check depth
+        yield {
+          url: url.toString(),
+          path,
+          html,
+        };
+      }
+      
+      // Ensure we only add links if within depth limit
+      if (depth < maxDepth) {
+        for (let link of linksArray) {
+          if (!paths.some(p => p.path === link)) {
+            paths.push({ path: link, depth: depth + 1 }); // Increment depth for new paths
+          }
+        }
+      }
+    }
+
+    index += batch.length; // Proceed to next batch
   }
 }
