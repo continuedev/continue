@@ -6,19 +6,19 @@ keywords: [configure, llm, provider]
 
 # Configuration
 
-## Change the default LLM
+## Setting up chat models
 
 In `config.json`, you'll find the `models` property, a list of the models that you have saved to use with Continue:
 
 ```json
 "models": [
     {
-        "title": "Smart Model",
+        "title": "GPT-4",
         "provider": "free-trial",
         "model": "gpt-4"
     },
     {
-        "title": "Fast Model",
+        "title": "GPT-3.5-Turbo",
         "provider": "free-trial",
         "model": "gpt-3.5-turbo"
     }
@@ -167,7 +167,10 @@ export function modifyConfig(config: Config): Config {
       title: "My Custom LLM",
       model: "mistral-7b",
     },
-    streamCompletion: async function* (prompt: string, options: CompletionOptions) {
+    streamCompletion: async function* (
+      prompt: string,
+      options: CompletionOptions,
+    ) {
       // Make the API call here
 
       // Then yield each part of the completion as it is streamed

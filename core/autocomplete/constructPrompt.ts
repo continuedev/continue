@@ -1,6 +1,6 @@
 import Parser from "web-tree-sitter";
-import { TabAutocompleteOptions } from "../index.js";
 import { RangeInFileWithContents } from "../commands/util.js";
+import { TabAutocompleteOptions } from "../index.js";
 
 import {
   countTokens,
@@ -8,7 +8,11 @@ import {
   pruneLinesFromTop,
 } from "../llm/countTokens.js";
 import { getAst, getTreePathAtCursor } from "./ast.js";
-import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages.js";
+import {
+  AutocompleteLanguageInfo,
+  LANGUAGES,
+  Typescript,
+} from "./languages.js";
 import {
   AutocompleteSnippet,
   fillPromptWithSnippets,
