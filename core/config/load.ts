@@ -50,6 +50,7 @@ import {
   defaultSlashCommandsJetBrains,
   defaultSlashCommandsVscode,
 } from "./default.js";
+import { getPromptFiles, slashCommandFromPromptFile } from "./promptFile.js";
 const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -147,22 +148,15 @@ async function serializedToIntermediateConfig(
   }
 
   const workspaceDirs = await ide.getWorkspaceDirs();
-  const promptFolder = initial.experimental?.promptPath;
-
-  let promptFiles: { path: string; content: string }[] = [];
-  if (promptFolder) {
-    promptFiles = (
-      await Promise.all(
-        workspaceDirs.map((dir) => getPromptFiles(ide, promptFolder)),
-      )
+  const promptFiles = (
+    await Promise.all(
+      workspaceDirs.map((dir) =>
+        getPromptFiles(ide, path.join(dir, ".prompts")),
+      ),
     )
-      .flat()
-      .filter(({ path }) => path.endsWith(".prompt"));
-  }
-
-  // Also read from ~/.continue/.prompts
-  promptFiles.push(...readAllGlobalPromptFiles());
-
+  )
+    .flat()
+    .filter(({ path }) => path.endsWith(".prompt"));
   for (const file of promptFiles) {
     slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
   }
@@ -191,7 +185,7 @@ function isContextProviderWithParams(
 /** Only difference between intermediate and final configs is the `models` array */
 async function intermediateToFinalConfig(
   config: Config,
-  readFile: (filepath: string) => Promise<string>,
+  ide: IDE,
   ideSettings: IdeSettings,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
@@ -202,7 +196,7 @@ async function intermediateToFinalConfig(
     if (isModelDescription(desc)) {
       const llm = await llmFromDescription(
         desc,
-        readFile,
+        ide.readFile.bind(ide),
         uniqueId,
         ideSettings,
         writeLog,
@@ -224,7 +218,7 @@ async function intermediateToFinalConfig(
                   model: modelName,
                   title: `${llm.title} - ${modelName}`,
                 },
-                readFile,
+                ide.readFile.bind(ide),
                 uniqueId,
                 ideSettings,
                 writeLog,
@@ -284,7 +278,7 @@ async function intermediateToFinalConfig(
     if (isModelDescription(config.tabAutocompleteModel)) {
       autocompleteLlm = await llmFromDescription(
         config.tabAutocompleteModel,
-        readFile,
+        ide.readFile.bind(ide),
         uniqueId,
         ideSettings,
         writeLog,
@@ -486,7 +480,7 @@ async function loadFullConfigNode(
   writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
   let serialized = loadSerializedConfig(workspaceConfigs, ideSettings, ideType);
-  let intermediate = serializedToIntermediateConfig(serialized);
+  let intermediate = await serializedToIntermediateConfig(serialized, ide);
 
   const configJsContents = await buildConfigTs();
   if (configJsContents) {
@@ -523,7 +517,7 @@ async function loadFullConfigNode(
 
   const finalConfig = await intermediateToFinalConfig(
     intermediate,
-    readFile,
+    ide,
     ideSettings,
     uniqueId,
     writeLog,

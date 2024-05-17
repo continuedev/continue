@@ -8,17 +8,12 @@ export async function getPromptFiles(
   ide: IDE,
   dir: string,
 ): Promise<{ path: string; content: string }[]> {
-  try {
-    const paths = await ide.listWorkspaceContents(dir, false);
-    const results = paths.map(async (path) => {
-      const content = await ide.readFile(path);
-      return { path, content };
-    });
-    return Promise.all(results);
-  } catch (e) {
-    console.error(e);
-    return [];
-  }
+  const paths = await ide.listWorkspaceContents(dir);
+  const results = paths.map(async (path) => {
+    const content = await ide.readFile(path);
+    return { path, content };
+  });
+  return Promise.all(results);
 }
 
 export function slashCommandFromPromptFile(
@@ -55,17 +50,10 @@ export function slashCommandFromPromptFile(
 
       // Render prompt template
       const diff = await ide.getDiff();
-      const currentFilePath = await ide.getCurrentFile();
       const promptUserInput = await renderTemplatedString(
         prompt,
         ide.readFile.bind(ide),
-        {
-          input: userInput,
-          diff,
-          currentFile: currentFilePath
-            ? await ide.readFile(currentFilePath)
-            : undefined,
-        },
+        { input: userInput, diff },
       );
 
       const messages = [...history];
