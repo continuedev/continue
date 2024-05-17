@@ -8,7 +8,13 @@ import {
 } from "../autocomplete/lineStream.js";
 import { streamDiff } from "../diff/streamDiff.js";
 import { streamLines } from "../diff/util.js";
-import { ChatMessage, DiffLine, ILLM } from "../index.js";
+import {
+  ChatMessage,
+  DiffLine,
+  ILLM,
+  LLMFullCompletionOptions,
+  ModelProvider,
+} from "../index.js";
 import { gptEditPrompt } from "../llm/templates/edit.js";
 import { Telemetry } from "./posthog.js";
 
@@ -44,6 +50,10 @@ async function* addIndentation(
 
 function modelIsInept(model: string): boolean {
   return !(model.includes("gpt") || model.includes("claude"));
+}
+
+function isGpt4Trial(model: string, provider: ModelProvider): boolean {
+  return provider === "free-trial" && model.startsWith("gpt-4");
 }
 
 export async function* streamDiffLines(
@@ -82,6 +92,10 @@ export async function* streamDiffLines(
   );
   const inept = modelIsInept(llm.model);
 
+  const options: LLMFullCompletionOptions = {};
+  if (isGpt4Trial(llm.model, llm.providerName)) {
+    options.maxTokens = 2048;
+  }
   const completion =
     typeof prompt === "string"
       ? llm.streamComplete(prompt, { raw: true })
@@ -106,11 +120,11 @@ export async function* streamDiffLines(
     diffLines = addIndentation(diffLines, indentation);
   }
 
-  let seenGreen = false
+  let seenGreen = false;
   for await (let diffLine of diffLines) {
     yield diffLine;
     if (diffLine.type === "new") {
-      seenGreen = true
+      seenGreen = true;
     } else if (onlyOneInsertion && seenGreen && diffLine.type === "same") {
       break;
     }

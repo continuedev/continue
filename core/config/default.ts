@@ -1,4 +1,7 @@
-import { ContextProviderWithParams, SerializedContinueConfig } from "../index.js";
+import {
+  ContextProviderWithParams,
+  SerializedContinueConfig,
+} from "../index.js";
 
 export const defaultConfig: SerializedContinueConfig = {
   models: [

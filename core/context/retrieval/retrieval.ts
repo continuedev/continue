@@ -126,9 +126,9 @@ export async function retrieveContextItemsFromEmbeddings(
     );
 
     results.sort(
-      (a, b) => scores[results.indexOf(b)] - scores[results.indexOf(a)],
+      (a, b) => scores[results.indexOf(a)] - scores[results.indexOf(b)],
     );
-    results = results.slice(0, nFinal);
+    results = results.slice(-nFinal);
   }
 
   if (results.length === 0) {
