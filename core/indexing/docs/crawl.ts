@@ -129,51 +129,7 @@ export type PageData = {
   html: string;
 };
 
-export async function* crawlPage(url: URL, maxDepth?: number): AsyncGenerator<PageData> {
-  const { baseUrl, basePath } = splitUrl(url);
-  let paths: string[] = [basePath];
-
-  if (url.hostname === "github.com") {
-    const githubLinks = await crawlGithubRepo(url);
-    paths = [...paths, ...githubLinks];
-  }
-
-  let index = 0;
-
-  while (index < paths.length) {
-    const promises = paths
-      .slice(index, index + 50)
-      .map((path) => getLinksFromUrl(baseUrl, path));
-
-    const results = await Promise.all(promises);
-
-    for (const { html, links } of results) {
-      if (html !== "") {
-        yield {
-          url: url.toString(),
-          path: paths[index],
-          html: html,
-        };
-      }
-
-      for (let link of links) {
-        if (!paths.includes(link)) {
-          paths.push(link);
-        }
-      }
-
-      index++;
-    }
-
-    paths = paths.filter((path) =>
-      results.some(
-        (result) => result.html !== "" && result.links.includes(path),
-      ),
-    );
-  }
-}
-
-export async function* crawlPage2(url: URL, maxDepth: number = 3): AsyncGenerator<PageData> {
+export async function* crawlPage(url: URL, maxDepth: number = 3): AsyncGenerator<PageData> {
   const { baseUrl, basePath } = splitUrl(url);
   let paths: { path: string; depth: number }[] = [{ path: basePath, depth: 0 }];
   

@@ -555,20 +555,19 @@ export class VsCodeWebviewProtocol {
       }
     });
     this.on("context/addDocs", (msg) => {
-      const { startUrl, title, maxDepth } = msg.data;
+      const SiteIndexingConfig = msg.data
       const embeddingsProvider = new TransformersJsEmbeddingsProvider();
       vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: `Indexing ${title}`,
+          title: `Indexing ${SiteIndexingConfig.title}`,
           cancellable: false,
         },
         async (progress) => {
           for await (const update of indexDocs(
-            title,
-            new URL(startUrl),
+            SiteIndexingConfig.title,
+            new URL(SiteIndexingConfig.url),
             embeddingsProvider,
-            maxDepth
           )) {
             progress.report({
               increment: update.progress,
@@ -577,7 +576,7 @@ export class VsCodeWebviewProtocol {
           }
 
           vscode.window.showInformationMessage(
-            `🎉 Successfully indexed ${title}`,
+            `🎉 Successfully indexed ${SiteIndexingConfig.title}`,
           );
 
           this.request("refreshSubmenuItems", undefined);
