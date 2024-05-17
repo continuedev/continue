@@ -7,6 +7,8 @@ import { Button, Input } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import { postToIde } from "../../util/ide";
+import { SiteIndexingConfig } from "core/indexing/docs/preIndexedDocs";
 
 const GridDiv = styled.div`
   display: grid;
@@ -76,7 +78,8 @@ function AddDocsDialog() {
         disabled={!docsUrl || !urlValid}
         className="ml-auto"
         onClick={() => {
-          postToIde("context/addDocs", { startUrl: docsUrl, rootUrl: docsUrl, title: docsTitle, maxDepth:maxDepth });
+          const siteindexingConfig = { url: docsUrl, title: docsTitle, maxDepth:maxDepth }
+          postToIde("context/addDocs", siteindexingConfig);
           setDocsTitle("");
           setDocsUrl("");
           setMaxDepth(defaultMaxDepth)

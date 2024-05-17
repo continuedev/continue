@@ -128,12 +128,12 @@ export class Core {
 
     // Context providers
     on("context/addDocs", async (msg) => {
-      const { startUrl, title, maxDepth } = msg.data;
+      const SiteIndexingConfig = msg.data;
       for await (const _ of indexDocs(
-        msg.data.title,
-        new URL(msg.data.rootUrl),
+        SiteIndexingConfig.title,
+        new URL(SiteIndexingConfig.rootUrl),
         new TransformersJsEmbeddingsProvider(),
-        msg.data.maxDepth
+        SiteIndexingConfig.maxDepth
       )) {
       }
     });

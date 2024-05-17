@@ -141,66 +141,7 @@ export type PageData = {
   html: string;
 };
 
-export async function* crawlPage(url: URL, maxDepth?: number): AsyncGenerator<PageData> {
-  const { baseUrl, basePath } = splitUrl(url);
-  let paths: { path: string; depth: number }[] = [{ path: basePath, depth: 0 }];
-
-  if (url.hostname === "github.com") {
-    const githubLinks = await crawlGithubRepo(url);
-    const githubLinkObjects = githubLinks.map((link) => ({
-      path: link,
-      depth: 0,
-    }));
-    paths = [...paths, ...githubLinkObjects];
-  }
-
-  let index = 0;
-  while (index < paths.length) {
-    const batch = paths.slice(index, index + 50);
-
-    try {
-      const promises = batch.map(({ path, depth }) =>
-        getLinksFromUrl(baseUrl, path).then((links) => ({
-          links,
-          path,
-          depth,
-        })),
-      ); // Adjust for depth tracking
-
-      const results = await Promise.all(promises);
-      for (const {
-        links: { html, links: linksArray },
-        path,
-        depth,
-      } of results) {
-        if (html !== "" && depth <= maxDepth) {
-          // Check depth
-          yield {
-            url: url.toString(),
-            path,
-            html,
-          };
-        }
-
-      for (const link of links) {
-        if (!paths.includes(link)) {
-          paths.push(link);
-        }
-      }
-    } catch (e) {
-      if (e instanceof TypeError) {
-        console.warn("Error while crawling page: ", e); // Likely an invalid url, continue with process
-      } else {
-        console.error("Error while crawling page: ", e);
-      }
-    }
-
-    index += batch.length; // Proceed to next batch
-  }
-  console.log("Crawl completed");
-}
-
-export async function* crawlPage2(url: URL, maxDepth: number = 3): AsyncGenerator<PageData> {
+export async function* crawlPage(url: URL, maxDepth: number = 3): AsyncGenerator<PageData> {
   const { baseUrl, basePath } = splitUrl(url);
   let paths: { path: string; depth: number }[] = [{ path: basePath, depth: 0 }];
   
