@@ -1,15 +1,30 @@
 const fs = require("fs");
-const path = require("path");
 
-const directories = ["./gui", "./core", "./extensions/vscode", "./binary"];
+const directories = [
+  // gui
+  "./gui/node_modules",
+  "./gui/out",
+  "./gui/dist",
+  // core
+  "./core/node_modules",
+  "./core/dist",
+  // extensions/vscode
+  "./extensions/vscode/node_modules",
+  "./extensions/vscode/bin",
+  "./extensions/vscode/build",
+  "./extensions/vscode/out",
+  // binary
+  "./binary/node_modules",
+  "./binary/bin",
+  "./binary/dist",
+  "./binary/out",
+];
 
 directories.forEach((dir) => {
-  const nodeModulesPath = path.join(dir, "node_modules");
-
-  if (fs.existsSync(nodeModulesPath)) {
-    fs.rmdirSync(nodeModulesPath, { recursive: true });
-    console.log(`Removed ${nodeModulesPath}`);
+  if (fs.existsSync(dir)) {
+    fs.rmdirSync(dir, { recursive: true });
+    console.log(`Removed ${dir}`);
   } else {
-    console.log(`No node_modules found in ${dir}`);
+    console.log(`${dir} not found`);
   }
 });
