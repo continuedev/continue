@@ -8,7 +8,13 @@ import {
 } from "../autocomplete/lineStream.js";
 import { streamDiff } from "../diff/streamDiff.js";
 import { streamLines } from "../diff/util.js";
-import { ChatMessage, DiffLine, ILLM } from "../index.js";
+import {
+  ChatMessage,
+  DiffLine,
+  ILLM,
+  LLMFullCompletionOptions,
+  ModelProvider,
+} from "../index.js";
 import { gptEditPrompt } from "../llm/templates/edit.js";
 import { Telemetry } from "./posthog.js";
 
@@ -114,11 +120,11 @@ export async function* streamDiffLines(
     diffLines = addIndentation(diffLines, indentation);
   }
 
-  let seenGreen = false
+  let seenGreen = false;
   for await (let diffLine of diffLines) {
     yield diffLine;
     if (diffLine.type === "new") {
-      seenGreen = true
+      seenGreen = true;
     } else if (onlyOneInsertion && seenGreen && diffLine.type === "same") {
       break;
     }
