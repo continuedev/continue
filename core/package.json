@@ -65,7 +65,8 @@
     "tree-sitter-wasms": "^0.1.11",
     "uuid": "^9.0.1",
     "vectordb": "^0.4.12",
-    "web-tree-sitter": "^0.21.0"
+    "web-tree-sitter": "^0.21.0",
+    "yaml": "^2.4.2"
   },
   "puppeteer": {
     "chromium_revision": "119.0.6045.105"

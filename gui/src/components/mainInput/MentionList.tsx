@@ -4,10 +4,10 @@ import {
   AtSymbolIcon,
   BeakerIcon,
   BookOpenIcon,
-  ChevronDoubleRightIcon,
   CodeBracketIcon,
   Cog6ToothIcon,
   CommandLineIcon,
+  CubeIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   FolderIcon,
@@ -82,8 +82,8 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
     props.item.type === "contextProvider"
       ? props.item.id
       : props.item.type === "slashCommand"
-      ? props.item.id
-      : props.item.type;
+        ? props.item.id
+        : props.item.type;
 
   const Icon = ICONS_FOR_DROPDOWN[provider];
   const iconClass = `${props.className} flex-shrink-0`;
@@ -91,11 +91,7 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
     return props.item.type === "contextProvider" ? (
       <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
     ) : (
-      <ChevronDoubleRightIcon
-        className={iconClass}
-        height="1.2em"
-        width="1.2em"
-      />
+      <CubeIcon className={iconClass} height="1.2em" width="1.2em" />
     );
   }
   return <Icon className={iconClass} height="1.2em" width="1.2em" />;
