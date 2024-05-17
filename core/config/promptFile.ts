@@ -21,7 +21,12 @@ export function slashCommandFromPromptFile(
   content: string,
 ): SlashCommand {
   let [preambleRaw, prompt] = content.split("\n---\n");
-  const preamble = YAML.parse(preambleRaw);
+  if (prompt === undefined) {
+    prompt = preambleRaw;
+    preambleRaw = "";
+  }
+
+  const preamble = YAML.parse(preambleRaw) ?? {};
   const name = preamble.name ?? getBasename(path).split(".prompt")[0];
   const description = preamble.description ?? name;
 
