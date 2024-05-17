@@ -160,13 +160,15 @@ export const CustomScrollbarDiv = styled.div`
 `;
 
 const TooltipStyles = {
-  fontSize: "12px",
+  fontSize: `${getFontSize() - 2}px`,
   backgroundColor: vscInputBackground,
   boxShadow: `0px 0px 2px 1px ${vscBadgeBackground}`,
   color: vscForeground,
   padding: "2px 6px",
   zIndex: 1000,
   maxWidth: "80vw",
+  textAlign: "center",
+  overflow: "hidden",
 };
 
 export function StyledTooltip(props) {
@@ -300,18 +302,6 @@ export const MainContainerWithBorder = styled.div<{ borderWidth?: string }>`
   border-radius: ${defaultBorderRadius};
   padding: ${(props) => props.borderWidth || "1px"};
   background-color: white;
-`;
-
-export const MainTextInput = styled.textarea`
-  padding: 8px;
-  font-size: 16px;
-  border-radius: ${defaultBorderRadius};
-  border: 1px solid #ccc;
-  margin: 8px 8px;
-  background-color: ${vscBackground};
-  color: ${vscForeground};
-  outline: 1px solid orange;
-  resize: none;
 `;
 
 export const appear = keyframes`

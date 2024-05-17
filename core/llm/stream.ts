@@ -6,7 +6,7 @@ export async function* streamResponse(
   }
 
   if (!response.body) {
-    throw new Error(`No response body returned.`);
+    throw new Error("No response body returned.");
   }
 
   const stream = response.body as any;

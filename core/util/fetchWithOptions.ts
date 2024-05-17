@@ -5,7 +5,7 @@ import { globalAgent } from "https";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import fetch, { RequestInit, Response } from "node-fetch";
 import tls from "tls";
-import { RequestOptions } from "..";
+import { RequestOptions } from "../index.js";
 
 export function fetchwithRequestOptions(
   url_: URL | string,

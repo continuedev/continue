@@ -1,6 +1,15 @@
 import * as fs from "fs";
 import path from "path";
 import {
+  slashCommandFromDescription,
+  slashFromCustomCommand,
+} from "../commands/index.js";
+import CustomContextProviderClass from "../context/providers/CustomContextProvider.js";
+import FileContextProvider from "../context/providers/FileContextProvider.js";
+import { contextProviderClassFromName } from "../context/providers/index.js";
+import { AllRerankers } from "../context/rerankers/index.js";
+import { LLMReranker } from "../context/rerankers/llm.js";
+import {
   BrowserSerializedContinueConfig,
   Config,
   ContextProviderWithParams,
@@ -16,24 +25,16 @@ import {
   RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
-} from "..";
-import {
-  slashCommandFromDescription,
-  slashFromCustomCommand,
-} from "../commands";
-import { contextProviderClassFromName } from "../context/providers";
-import CustomContextProviderClass from "../context/providers/CustomContextProvider";
-import FileContextProvider from "../context/providers/FileContextProvider";
-import { AllRerankers } from "../context/rerankers";
-import { LLMReranker } from "../context/rerankers/llm";
-import { AllEmbeddingsProviders } from "../indexing/embeddings";
-import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { BaseLLM } from "../llm";
-import { llmFromDescription } from "../llm/llms";
-import CustomLLMClass from "../llm/llms/CustomLLM";
-import { copyOf } from "../util";
-import { fetchwithRequestOptions } from "../util/fetchWithOptions";
-import mergeJson from "../util/merge";
+} from "../index.js";
+import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
+import { AllEmbeddingsProviders } from "../indexing/embeddings/index.js";
+import { BaseLLM } from "../llm/index.js";
+import CustomLLMClass from "../llm/llms/CustomLLM.js";
+import { llmFromDescription } from "../llm/llms/index.js";
+import { IdeSettings } from "../protocol.js";
+import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
+import { copyOf } from "../util/index.js";
+import mergeJson from "../util/merge.js";
 import {
   getConfigJsPath,
   getConfigJsPathForRemote,
@@ -41,14 +42,13 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
-  migrate,
-} from "../util/paths";
+} from "../util/paths.js";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
   defaultSlashCommandsJetBrains,
   defaultSlashCommandsVscode,
-} from "./default";
+} from "./default.js";
 const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -82,7 +82,7 @@ const configMergeKeys = {
 
 function loadSerializedConfig(
   workspaceConfigs: ContinueRcJson[],
-  remoteConfigServerUrl: URL | undefined,
+  ideSettings: IdeSettings,
   ideType: IdeType,
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath(ideType);
@@ -97,38 +97,10 @@ function loadSerializedConfig(
     config.allowAnonymousTelemetry = true;
   }
 
-  migrate("codeContextProvider", () => {
-    if (!config.contextProviders?.filter((cp) => cp.name === "code")?.length) {
-      config.contextProviders = [
-        ...(config.contextProviders || []),
-        {
-          name: "code",
-          params: {},
-        },
-      ];
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
-
-  migrate("docsContextProvider1", () => {
-    if (!config.contextProviders?.filter((cp) => cp.name === "docs")?.length) {
-      config.contextProviders = [
-        ...(config.contextProviders || []),
-        {
-          name: "docs",
-          params: {},
-        },
-      ];
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
-
-  if (remoteConfigServerUrl) {
+  if (ideSettings.remoteConfigServerUrl) {
     try {
       const remoteConfigJson = resolveSerializedConfig(
-        getConfigJsonPathForRemote(remoteConfigServerUrl),
+        getConfigJsonPathForRemote(ideSettings.remoteConfigServerUrl),
       );
       config = mergeJson(config, remoteConfigJson, "merge", configMergeKeys);
     } catch (e) {
@@ -197,6 +169,8 @@ function isContextProviderWithParams(
 async function intermediateToFinalConfig(
   config: Config,
   readFile: (filepath: string) => Promise<string>,
+  ideSettings: IdeSettings,
+  uniqueId: string,
   writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
   // Auto-detect models
@@ -206,11 +180,15 @@ async function intermediateToFinalConfig(
       const llm = await llmFromDescription(
         desc,
         readFile,
+        uniqueId,
+        ideSettings,
         writeLog,
         config.completionOptions,
         config.systemMessage,
       );
-      if (!llm) continue;
+      if (!llm) {
+        continue;
+      }
 
       if (llm.model === "AUTODETECT") {
         try {
@@ -224,6 +202,8 @@ async function intermediateToFinalConfig(
                   title: llm.title + " - " + modelName,
                 },
                 readFile,
+                uniqueId,
+                ideSettings,
                 writeLog,
                 copyOf(config.completionOptions),
                 config.systemMessage,
@@ -282,6 +262,8 @@ async function intermediateToFinalConfig(
       autocompleteLlm = await llmFromDescription(
         config.tabAutocompleteModel,
         readFile,
+        uniqueId,
+        ideSettings,
         writeLog,
         config.completionOptions,
         config.systemMessage,
@@ -471,15 +453,12 @@ async function buildConfigTs() {
 async function loadFullConfigNode(
   readFile: (filepath: string) => Promise<string>,
   workspaceConfigs: ContinueRcJson[],
-  remoteConfigServerUrl: URL | undefined,
+  ideSettings: IdeSettings,
   ideType: IdeType,
+  uniqueId: string,
   writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
-  let serialized = loadSerializedConfig(
-    workspaceConfigs,
-    remoteConfigServerUrl,
-    ideType,
-  );
+  let serialized = loadSerializedConfig(workspaceConfigs, ideSettings, ideType);
   let intermediate = serializedToIntermediateConfig(serialized);
 
   const configJsContents = await buildConfigTs();
@@ -499,10 +478,10 @@ async function loadFullConfigNode(
   }
 
   // Remote config.js
-  if (remoteConfigServerUrl) {
+  if (ideSettings.remoteConfigServerUrl) {
     try {
       const configJsPathForRemote = getConfigJsPathForRemote(
-        remoteConfigServerUrl,
+        ideSettings.remoteConfigServerUrl,
       );
       const module = await require(configJsPathForRemote);
       delete require.cache[require.resolve(configJsPathForRemote)];
@@ -518,6 +497,8 @@ async function loadFullConfigNode(
   const finalConfig = await intermediateToFinalConfig(
     intermediate,
     readFile,
+    ideSettings,
+    uniqueId,
     writeLog,
   );
   return finalConfig;

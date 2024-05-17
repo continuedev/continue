@@ -1,4 +1,4 @@
-import { ContextItemWithId } from "..";
+import { ContextItemWithId } from "../index.js";
 
 export interface RangeInFileWithContents {
   filepath: string;

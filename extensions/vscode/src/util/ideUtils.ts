@@ -298,7 +298,23 @@ export class VsCodeIdeUtils {
       filepath = this.getAbsolutePath(filepath);
       const uri = uriFromFilePath(filepath);
 
-      // Check first whether it's an open document
+      // First, check whether it's a notebook document
+      // Need to iterate over the cells to get full contents
+      const notebook =
+        vscode.workspace.notebookDocuments.find(
+          (doc) => doc.uri.toString() === uri.toString(),
+        ) ??
+        (uri.fsPath.endsWith("ipynb")
+          ? await vscode.workspace.openNotebookDocument(uri)
+          : undefined);
+      if (notebook) {
+        return notebook
+          .getCells()
+          .map((cell) => cell.document.getText())
+          .join("\n\n");
+      }
+
+      // Check whether it's an open document
       const openTextDocument = vscode.workspace.textDocuments.find(
         (doc) => doc.uri.fsPath === uri.fsPath,
       );
@@ -319,7 +335,8 @@ export class VsCodeIdeUtils {
       const truncatedBytes = bytes.slice(0, VsCodeIdeUtils.MAX_BYTES);
       const contents = new TextDecoder().decode(truncatedBytes);
       return contents;
-    } catch {
+    } catch (e) {
+      console.warn("Error reading file", e);
       return "";
     }
   }
@@ -360,13 +377,23 @@ export class VsCodeIdeUtils {
     await vscode.commands.executeCommand(
       "workbench.action.terminal.clearSelection",
     );
-    const terminalContents = await vscode.env.clipboard.readText();
+    let terminalContents = (await vscode.env.clipboard.readText()).trim();
     await vscode.env.clipboard.writeText(tempCopyBuffer);
 
     if (tempCopyBuffer === terminalContents) {
       // This means there is no terminal open to select text from
       return "";
     }
+
+    // Sometimes the above won't successfully separate by command, so we attempt manually
+    const lines = terminalContents.split("\n");
+    const lastLine = lines.pop()?.trim();
+    if (lastLine) {
+      let i = lines.length - 1;
+      while (i >= 0 && !lines[i].trim().startsWith(lastLine)) i--;
+      terminalContents = lines.slice(i).join("\n");
+    }
+
     return terminalContents;
   }
 
@@ -568,7 +595,17 @@ export class VsCodeIdeUtils {
       }
 
       repos.push(repo.state.HEAD?.name);
-      diffs.push(await repo.diff());
+      // Staged changes
+      // const a = await repo.diffIndexWithHEAD();
+      const staged = await repo.diff(true);
+      // Un-staged changes
+      // const b = await repo.diffWithHEAD();
+      const unstaged = await repo.diff(false);
+      // All changes
+      // const e = await repo.diffWith("HEAD");
+      // Only staged
+      // const f = await repo.diffIndexWith("HEAD");
+      diffs.push(`${staged}\n${unstaged}`);
     }
 
     const fullDiff = diffs.join("\n\n");

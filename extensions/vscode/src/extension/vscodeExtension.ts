@@ -1,4 +1,5 @@
 import { ConfigHandler } from "core/config/handler";
+import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { IdeSettings } from "core/protocol";
 import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
@@ -49,13 +50,33 @@ export class VsCodeExtension {
       userToken: settings.get<string>("userToken", ""),
     };
 
+    const userTokenPromise: Promise<string | undefined> = new Promise(
+      async (resolve) => {
+        if (
+          remoteConfigServerUrl === null ||
+          remoteConfigServerUrl === undefined ||
+          remoteConfigServerUrl.trim() === ""
+        ) {
+          resolve(undefined);
+          return;
+        }
+        const token = await getUserToken();
+        resolve(token);
+      },
+    );
+
+    const continueServerClient = new ContinueServerClient(
+      ideSettings.remoteConfigServerUrl,
+      userTokenPromise,
+    );
+
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
       "Continue - LLM Prompt/Completion",
     );
     this.configHandler = new ConfigHandler(
       this.ide,
-      Promise.resolve(ideSettings),
+      ideSettings,
       async (log: string) => {
         outputChannel.appendLine(
           "==========================================================================",
@@ -112,31 +133,16 @@ export class VsCodeExtension {
     this.webviewProtocol.on("index/forceReIndex", (msg) => {
       this.ide
         .getWorkspaceDirs()
-        .then((dirs) => this.refreshCodebaseIndex(dirs));
+        .then((dirs) => this.refreshCodebaseIndex(dirs, context));
     });
 
     this.diffManager.webviewProtocol = this.webviewProtocol;
 
-    const userTokenPromise: Promise<string | undefined> = new Promise(
-      async (resolve) => {
-        if (
-          remoteConfigServerUrl === null ||
-          remoteConfigServerUrl === undefined ||
-          remoteConfigServerUrl.trim() === ""
-        ) {
-          resolve(undefined);
-          return;
-        }
-        const token = await getUserToken();
-        resolve(token);
-      },
-    );
     this.indexer = new CodebaseIndexer(
       this.configHandler,
       this.ide,
       indexingPauseToken,
-      ideSettings.remoteConfigServerUrl,
-      userTokenPromise,
+      continueServerClient,
     );
 
     if (
@@ -189,7 +195,9 @@ export class VsCodeExtension {
     registerDebugTracker(this.webviewProtocol, this.ide);
 
     // Indexing
-    this.ide.getWorkspaceDirs().then((dirs) => this.refreshCodebaseIndex(dirs));
+    this.ide
+      .getWorkspaceDirs()
+      .then((dirs) => this.refreshCodebaseIndex(dirs, context));
 
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught
@@ -231,7 +239,7 @@ export class VsCodeExtension {
                   currentBranch !== this.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]
                 ) {
                   // Trigger refresh of index only in this directory
-                  this.refreshCodebaseIndex([dir]);
+                  this.refreshCodebaseIndex([dir], context);
                 }
               }
 
@@ -267,16 +275,34 @@ export class VsCodeExtension {
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
   private indexingCancellationController: AbortController | undefined;
 
-  private async refreshCodebaseIndex(dirs: string[]) {
+  private async refreshCodebaseIndex(
+    dirs: string[],
+    context: vscode.ExtensionContext,
+  ) {
+    // Cancel previous indexing job if it exists
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
+
+    //reset all state variables
+    context.globalState.update("continue.indexingFailed", false);
+    context.globalState.update("continue.indexingProgress", 0);
+    context.globalState.update("continue.indexingDesc", "");
+
+    let err = undefined;
     for await (const update of this.indexer.refresh(
       dirs,
       this.indexingCancellationController.signal,
     )) {
       this.webviewProtocol.request("indexProgress", update);
+      context.globalState.update("continue.indexingProgress", update);
+    }
+
+    if (err) {
+      console.log("Codebase Indexing Failed: ", err);
+    } else {
+      console.log("Codebase Indexing Complete");
     }
   }
 }

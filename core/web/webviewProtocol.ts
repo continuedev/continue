@@ -4,13 +4,14 @@ import {
   ContinueRcJson,
   DiffLine,
   IndexTag,
+  IndexingProgressUpdate,
   Problem,
   Range,
   Thread,
-} from "..";
-import { RangeInFileWithContents } from "../commands/util";
+} from "../index.js";
+import { RangeInFileWithContents } from "../commands/util.js";
 
-import { Protocol } from "../protocol";
+import { Protocol } from "../protocol.js";
 
 export type IdeProtocol = {
   listWorkspaceContents: [undefined, string[]];
@@ -128,7 +129,7 @@ export type ReverseWebviewProtocol = {
   addModel: [undefined, void];
   openSettings: [undefined, void];
   viewHistory: [undefined, void];
-  indexProgress: [{ progress: number; desc: string }, void];
+  indexProgress: [IndexingProgressUpdate, void];
   newSession: [undefined, void];
   refreshSubmenuItems: [undefined, void];
   setTheme: [{ theme: any }, void];

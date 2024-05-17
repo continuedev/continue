@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.93",
+  "version": "0.9.94",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -116,7 +116,7 @@
       {
         "command": "continue.quickEdit",
         "category": "Continue",
-        "title": "Quick Edit",
+        "title": "Generate Code",
         "group": "Continue"
       },
       {
@@ -140,7 +140,7 @@
       {
         "command": "continue.debugTerminal",
         "category": "Continue",
-        "title": "Debug Terminal",
+        "title": "Continue: Debug Terminal",
         "group": "Continue"
       },
       {
@@ -387,6 +387,12 @@
           "group": "navigation@1",
           "when": "activeWebviewPanelId == continue.continueGUIView"
         }
+      ],
+      "terminal/context": [
+        {
+          "command": "continue.debugTerminal",
+          "group": "navigation@top"
+        }
       ]
     },
     "viewsContainers": {
@@ -492,7 +498,7 @@
     "@typescript-eslint/parser": "^5.45.0",
     "@vscode/vsce": "^2.22.0",
     "cargo-cp-artifact": "^0.1",
-    "esbuild": "^0.17.19",
+    "esbuild": "0.17.19",
     "eslint": "^8.28.0",
     "glob": "^8.0.3",
     "json-schema-to-typescript": "^12.0.0",
@@ -507,6 +513,7 @@
     "@reduxjs/toolkit": "^1.9.3",
     "@types/jest": "^29.5.11",
     "@types/node-fetch": "^2.6.11",
+    "@types/uuid": "^9.0.8",
     "@vscode/ripgrep": "^1.15.9",
     "@vscode/test-electron": "^2.3.9",
     "axios": "^1.2.5",
@@ -541,8 +548,9 @@
     "strip-ansi": "^7.1.0",
     "tailwindcss": "^3.3.2",
     "undici": "^6.2.0",
+    "uuid": "^9.0.1",
     "uuidv4": "^6.2.13",
-    "vectordb": "^0.4.12",
+    "vectordb": "^0.4.20",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"

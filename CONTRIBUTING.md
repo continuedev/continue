@@ -56,9 +56,12 @@ Continue is continuously improving, but a feature isn't complete until it is ref
 
 ### Environment Setup
 
-#### VS Code
+#### Pre-requisites
 
-Pre-requisite: You should have Node.js version 20.11.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
+- You should have Node.js version 20.11.0 (LTS) or higher installed. You can get it on [nodejs.org](https://nodejs.org/en/download) or, if you are using NVM (Node Version Manager), you can set the correct version of Node.js for this project by running the following command in the root of the project:
+- Continue uses `pnpm` to manage node_modules. You can install `pnpm` globally with `npm install -g pnpm`, or another method described in [their docs](https://pnpm.io/installation#using-npm).
+
+#### VS Code
 
 ```bash
 nvm use
@@ -77,7 +80,7 @@ nvm use
       1. The new VS Code window with the extension is referred to as the _Host VS Code_
       2. The window you started debugging from is referred to as the _Main VS Code_
 
-4. To package the extension, run `npm run package` in the `extensions/vscode` directory. This will generate `extensions/vscode/build/continue-patch.vsix`, which you can install by right-clicking and selecting "Install Extension VSIX".
+4. To package the extension, run `pnpm package` in the `extensions/vscode` directory. This will generate `extensions/vscode/build/continue-patch.vsix`, which you can install by right-clicking and selecting "Install Extension VSIX".
 
 > Note: Breakpoints can be used in both the `core` and `extensions/vscode` folders while debugging, but are not currently supported inside of `gui` code. Hot-reloading is enabled with Vite, so if you make any changes to the `gui`, they should be automatically reflected without rebuilding. Similarly, any changes to `core` or `extensions/vscode` will be automatically included by just reloading the _Host VS Code_ window with cmd/ctrl+shift+p "Reload Window".
 
@@ -86,7 +89,7 @@ nvm use
 Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](https://www.jetbrains.com/idea/download). Either Ultimate or Community (free) will work. Continue is built with JDK version 19.
 
 1. Clone the repository
-2. Run `install-dependencies.sh` or `install-dependencies.ps1` on Windows
+2. Run `scripts/install-dependencies.sh` or `scripts/install-dependencies.ps1` on Windows
 3. Run `cd extensions/vscode && node scripts/prepackage.js` (this will copy over the built React application to the proper JetBrains directory)
 4. Select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button
 5. To package the extension, choose the "Build Plugin" Gradle configuration

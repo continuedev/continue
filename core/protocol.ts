@@ -10,9 +10,9 @@ import {
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
-} from ".";
-import { AutocompleteInput } from "./autocomplete/completionProvider";
-import { IdeProtocol } from "./web/webviewProtocol";
+} from "./index.js";
+import { AutocompleteInput } from "./autocomplete/completionProvider.js";
+import { IdeProtocol } from "./web/webviewProtocol.js";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;

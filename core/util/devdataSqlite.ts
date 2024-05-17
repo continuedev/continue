@@ -1,6 +1,6 @@
 import fs from "fs";
-import { DatabaseConnection } from "../indexing/refreshIndex";
-import { getDevDataSqlitePath } from "./paths";
+import { DatabaseConnection } from "../indexing/refreshIndex.js";
+import { getDevDataSqlitePath } from "./paths.js";
 
 export class DevDataSqliteDb {
   static db: DatabaseConnection | null = null;
@@ -24,7 +24,7 @@ export class DevDataSqliteDb {
   ) {
     const db = await DevDataSqliteDb.get();
     await db?.run(
-      `INSERT INTO tokens_generated (model, provider, tokens_generated) VALUES (?, ?, ?)`,
+      "INSERT INTO tokens_generated (model, provider, tokens_generated) VALUES (?, ?, ?)",
       [model, provider, tokens],
     );
   }

@@ -1,13 +1,13 @@
-import { BaseContextProvider } from "..";
+import { BaseContextProvider } from "../index.js";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
-} from "../..";
-import configs from "../../indexing/docs/preIndexedDocs";
-import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider";
+} from "../../index.js";
+import configs from "../../indexing/docs/preIndexedDocs.js";
+import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 
 class DocsContextProvider extends BaseContextProvider {
   static DEFAULT_N_RETRIEVE = 30;

@@ -1,4 +1,4 @@
-import { ModelProvider, TemplateType } from "..";
+import { ModelProvider, TemplateType } from "../index.js";
 import {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
@@ -15,7 +15,7 @@ import {
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
   zephyrTemplateMessages,
-} from "./templates/chat";
+} from "./templates/chat.js";
 import {
   alpacaEditPrompt,
   claudeEditPrompt,
@@ -32,7 +32,7 @@ import {
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
-} from "./templates/edit";
+} from "./templates/edit.js";
 
 const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "lmstudio",
@@ -41,6 +41,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "together",
   "anthropic",
   "bedrock",
+  "continue-proxy",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
@@ -50,11 +51,13 @@ const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [
   "free-trial",
   "anthropic",
   "bedrock",
+  "continue-proxy",
 ];
 
 const MODEL_SUPPORTS_IMAGES: string[] = [
   "llava",
   "gpt-4-turbo",
+  "gpt-4o",
   "gpt-4-vision",
   "claude-3",
   "gemini-ultra",
@@ -312,5 +315,6 @@ export {
   autodetectTemplateFunction,
   autodetectTemplateType,
   llmCanGenerateInParallel,
-  modelSupportsImages,
+  modelSupportsImages
 };
+

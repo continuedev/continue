@@ -148,7 +148,8 @@
             "mistral",
             "deepinfra",
             "flowise",
-            "groq"
+            "groq",
+            "continue-proxy"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -166,7 +167,8 @@
             "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/lmstudio)",
             "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/llamafile)",
             "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
-            "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)"
+            "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
+            "### Continue Proxy\n\nContinue Enterprise users can use the Continue Proxy as a single point of access to models."
           ],
           "type": "string"
         },
@@ -373,6 +375,7 @@
                     "enum": [
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
+                      "gpt-4o",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -435,12 +438,12 @@
             "properties": {
               "model": {
                 "enum": [
+                  "gpt-4-turbo",
+                  "gpt-4o",
+                  "llama3-70b",
                   "gpt-3.5-turbo",
-                  "gpt-4",
                   "phind-codellama-34b",
                   "gemini-pro",
-                  "gpt-4-vision-preview",
-                  "codellama-70b",
                   "mistral-8x7b",
                   "claude-3-opus-20240229",
                   "claude-3-sonnet-20240229",
@@ -474,6 +477,7 @@
                     "enum": [
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
+                      "gpt-4o",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -948,6 +952,7 @@
                     "enum": [
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
+                      "gpt-4o",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -1958,6 +1963,9 @@
               "enum": ["top", "bottom"],
               "default": "top",
               "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
+            },
+            "fontSize": {
+              "type": "number"
             }
           }
         },

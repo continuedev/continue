@@ -35,9 +35,9 @@ You likely want to use a model that is 30B+ parameters for chat.
 - Unlimited budget: `claude-3-opus-20240229`
 - Limited budget: `claude-3-sonnet-20240229`
 
-#### GPT-4 Turbo from OpenAI
+#### GPT-4o from OpenAI
 
-- Unlimited budget: `gpt-4-turbo-2024-04-09`
+- Unlimited budget: `gpt-4o`
 - Limited budget: `gpt-3.5-turbo-0125`
 
 #### Gemini Pro from Google

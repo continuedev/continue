@@ -1,21 +1,25 @@
 import Parser from "web-tree-sitter";
-import { TabAutocompleteOptions } from "..";
-import { RangeInFileWithContents } from "../commands/util";
+import { RangeInFileWithContents } from "../commands/util.js";
+import { TabAutocompleteOptions } from "../index.js";
 
 import {
   countTokens,
   pruneLinesFromBottom,
   pruneLinesFromTop,
-} from "../llm/countTokens";
-import { getAst, getTreePathAtCursor } from "./ast";
-import { AutocompleteLanguageInfo, LANGUAGES, Typescript } from "./languages";
+} from "../llm/countTokens.js";
+import { getAst, getTreePathAtCursor } from "./ast.js";
+import {
+  AutocompleteLanguageInfo,
+  LANGUAGES,
+  Typescript,
+} from "./languages.js";
 import {
   AutocompleteSnippet,
   fillPromptWithSnippets,
   rankSnippets,
   removeRangeFromSnippets,
-} from "./ranking";
-import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited";
+} from "./ranking.js";
+import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
 
 export function languageForFilepath(
   filepath: string,

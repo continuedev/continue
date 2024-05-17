@@ -1,12 +1,12 @@
-import GenerateTerminalCommand from "./cmd";
-import CommentSlashCommand from "./comment";
-import CommitMessageCommand from "./commit";
-import DraftIssueCommand from "./draftIssue";
-import EditSlashCommand from "./edit";
-import HttpSlashCommand from "./http";
-import ShareSlashCommand from "./share";
-import StackOverflowSlashCommand from "./stackOverflow";
-import ReviewMessageCommand from "./review";
+import GenerateTerminalCommand from "./cmd.js";
+import CommentSlashCommand from "./comment.js";
+import CommitMessageCommand from "./commit.js";
+import DraftIssueCommand from "./draftIssue.js";
+import EditSlashCommand from "./edit.js";
+import HttpSlashCommand from "./http.js";
+import ShareSlashCommand from "./share.js";
+import StackOverflowSlashCommand from "./stackOverflow.js";
+import ReviewMessageCommand from "./review.js";
 
 export default [
   DraftIssueCommand,

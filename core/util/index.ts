@@ -150,13 +150,17 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
       return "latex";
     case "sql":
       return "sql";
+    case "ps1":
+      return "powershell";
     default:
-      return "";
+      return ext ?? "";
   }
 }
 
 export function copyOf(obj: any): any {
-  if (obj === null || obj === undefined) return obj;
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
   return JSON.parse(JSON.stringify(obj));
 }
 

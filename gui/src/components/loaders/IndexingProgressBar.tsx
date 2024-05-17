@@ -1,7 +1,9 @@
+import { IndexingProgressUpdate } from "core";
 import { useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
+import { getFontSize } from "../../util";
 import { postToIde } from "../../util/ide";
 
 const DIAMETER = 6;
@@ -40,7 +42,7 @@ const GridDiv = styled.div`
 const P = styled.p`
   margin: 0;
   margin-top: 2px;
-  font-size: 11.5px;
+  font-size: ${getFontSize() - 2.5}px;
   color: ${lightGray};
   text-align: center;
   white-space: nowrap;
@@ -49,39 +51,71 @@ const P = styled.p`
 `;
 
 interface ProgressBarProps {
-  completed: number;
-  total: number;
-  currentlyIndexing?: string;
+  indexingState: IndexingProgressUpdate;
 }
 
-const IndexingProgressBar = ({
-  completed,
-  total,
-  currentlyIndexing,
-}: ProgressBarProps) => {
-  const fillPercentage = Math.min(100, Math.max(0, (completed / total) * 100));
+const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
+  const fillPercentage = Math.min(
+    100,
+    Math.max(0, indexingState.progress * 100),
+  );
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
-  const [expanded, setExpanded] = useState(true);
+  const [paused, setPaused] = useState<boolean | undefined>(undefined);
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
-    postToIde("index/setPaused", !expanded);
-  }, [expanded]);
+    if (paused === undefined) return;
+    postToIde("index/setPaused", paused);
+  }, [paused]);
 
   return (
     <div
       onClick={() => {
-        if (completed < total) {
-          setExpanded((prev) => !prev);
+        if (
+          indexingState.status !== "failed" &&
+          indexingState.progress < 1 &&
+          indexingState.progress >= 0
+        ) {
+          setPaused((prev) => !prev);
         } else {
           postToIde("index/forceReIndex", undefined);
         }
       }}
       className="cursor-pointer"
     >
-      {completed >= total ? (
+      {indexingState.status === "starting" ? ( // ice-blue 'indexing starting up' dot
+        <>
+          <CircleDiv
+            data-tooltip-id="indexingNotLoaded_dot"
+            color="#72aec2"
+          ></CircleDiv>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id="indexingNotLoaded_dot" place="top">
+                Codebase indexing is starting up.
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
+        </>
+      ) : indexingState.status === "failed" ? ( //red 'failed' dot
+        <>
+          <CircleDiv
+            data-tooltip-id="indexingFailed_dot"
+            color="#ff0000"
+          ></CircleDiv>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id="indexingFailed_dot" place="top">
+                Error indexing codebase: {indexingState.desc}
+                <br />
+                Click to retry
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
+        </>
+      ) : indexingState.status === "done" ? ( //indexing complete green dot
         <>
           <CircleDiv data-tooltip-id="progress_dot" color="#090"></CircleDiv>
           {tooltipPortalDiv &&
@@ -92,12 +126,49 @@ const IndexingProgressBar = ({
               tooltipPortalDiv,
             )}
         </>
-      ) : expanded ? (
+      ) : indexingState.status === "disabled" ? ( //gray disabled dot
+        <>
+          <CircleDiv
+            data-tooltip-id="progress_dot"
+            color={lightGray}
+          ></CircleDiv>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id="progress_dot" place="top">
+                {indexingState.desc}
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
+        </>
+      ) : indexingState.status === "paused" ||
+        (paused && indexingState.status === "indexing") ? (
+        //yellow 'paused' dot
+        <>
+          <CircleDiv
+            data-tooltip-id="progress_dot"
+            color="#bb0"
+            onClick={(e) => {
+              postToIde("index/setPaused", false);
+            }}
+          ></CircleDiv>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id="progress_dot" place="top">
+                Click to unpause indexing (
+                {Math.trunc(indexingState.progress * 100)}%)
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
+        </>
+      ) : indexingState.status === "indexing" ? ( //progress bar
         <>
           <GridDiv
             data-tooltip-id="usage_progress_bar"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
+            onClick={(e) => {
+              postToIde("index/setPaused", true);
+            }}
           >
             <ProgressBarWrapper>
               <ProgressBarFill completed={fillPercentage} />
@@ -105,30 +176,18 @@ const IndexingProgressBar = ({
             <P>
               {hovered
                 ? "Click to pause"
-                : `Indexing (${Math.trunc((completed / total) * 100)}%)`}
+                : `Indexing (${Math.trunc(indexingState.progress * 100)}%)`}
             </P>
           </GridDiv>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="usage_progress_bar" place="top">
-                {currentlyIndexing}
+                {indexingState.desc}
               </StyledTooltip>,
               tooltipPortalDiv,
             )}
         </>
-      ) : (
-        <>
-          <CircleDiv data-tooltip-id="progress_dot" color="#bb0"></CircleDiv>
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id="progress_dot" place="top">
-                Click to unpause indexing (
-                {Math.trunc((completed / total) * 100)}%)
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
-        </>
-      )}
+      ) : null}
     </div>
   );
 };

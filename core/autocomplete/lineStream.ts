@@ -1,6 +1,6 @@
 import { distance } from "fastest-levenshtein";
-import { DiffLine } from "..";
-import { LineStream } from "../diff/util";
+import { DiffLine } from "../index.js";
+import { LineStream } from "../diff/util.js";
 
 export async function* noTopLevelKeywordsMidline(
   lines: LineStream,

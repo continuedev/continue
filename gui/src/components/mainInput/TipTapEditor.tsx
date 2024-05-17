@@ -37,7 +37,7 @@ import {
   setEditingContextItemAtIndex,
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
-import { isMetaEquivalentKeyPressed } from "../../util";
+import { getFontSize, isMetaEquivalentKeyPressed } from "../../util";
 import { isJetBrains, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
@@ -62,7 +62,7 @@ const InputBoxDiv = styled.div`
   z-index: 1;
   border: 0.5px solid ${vscInputBorder};
   outline: none;
-  font-size: 14px;
+  font-size: ${getFontSize()}px;
 
   &:focus {
     outline: none;
@@ -378,7 +378,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     editorProps: {
       attributes: {
         class: "outline-none -mt-1 overflow-hidden",
-        style: "font-size: 14px;",
+        style: `font-size: ${getFontSize()}px;`,
       },
     },
     content: props.editorState || mainEditorContent || "",
@@ -420,6 +420,8 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
   });
 
+  const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
+
   useEffect(() => {
     if (isJetBrains()) {
       // This is only for VS Code .ipynb files
@@ -427,7 +429,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     }
 
     const handleKeyDown = async (event: KeyboardEvent) => {
-      if (!editor) return;
+      if (!editor || !editorFocusedRef.current) return;
 
       if (event.metaKey && event.key === "x") {
         document.execCommand("cut");
@@ -449,7 +451,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [editor]);
+  }, [editor, editorFocusedRef]);
 
   useEffect(() => {
     if (mainEditorContent && editor) {
@@ -506,7 +508,7 @@ function TipTapEditor(props: TipTapEditorProps) {
   // Re-focus main input after done generating
   useEffect(() => {
     if (editor && !active && props.isMainInput && document.hasFocus()) {
-      editor.commands.focus();
+      editor.commands.focus(undefined, { scrollIntoView: false });
     }
   }, [props.isMainInput, active, editor]);
 

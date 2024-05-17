@@ -1,25 +1,25 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { v4 as uuidv4 } from "uuid";
 import { Table } from "vectordb";
+import { IContinueServerClient } from "../continueServer/interface.js";
 import {
   BranchAndDir,
   Chunk,
   EmbeddingsProvider,
   IndexTag,
   IndexingProgressUpdate,
-} from "..";
-import { ContinueServerClient } from "../continueServer/stubs/client";
-import { MAX_CHUNK_SIZE } from "../llm/constants";
-import { getBasename } from "../util";
-import { getLanceDbPath } from "../util/paths";
-import { chunkDocument } from "./chunk/chunk";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+} from "../index.js";
+import { MAX_CHUNK_SIZE } from "../llm/constants.js";
+import { getBasename } from "../util/index.js";
+import { getLanceDbPath } from "../util/paths.js";
+import { chunkDocument } from "./chunk/chunk.js";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
   PathAndCacheKey,
   RefreshIndexResults,
-} from "./types";
+} from "./types.js";
 
 // LanceDB  converts to lowercase, so names must all be lowercase
 interface LanceDbRow {
@@ -40,7 +40,7 @@ export class LanceDbIndex implements CodebaseIndex {
   constructor(
     private readonly embeddingsProvider: EmbeddingsProvider,
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly continueServerClient?: ContinueServerClient,
+    private readonly continueServerClient?: IContinueServerClient,
   ) {}
 
   private tableNameForTag(tag: IndexTag) {
@@ -176,7 +176,7 @@ export class LanceDbIndex implements CodebaseIndex {
     };
 
     // Check remote cache
-    if (this.continueServerClient !== undefined) {
+    if (this.continueServerClient?.connected) {
       try {
         const keys = results.compute.map(({ cacheKey }) => cacheKey);
         const resp = await this.continueServerClient.getFromIndexCache(
@@ -250,7 +250,7 @@ export class LanceDbIndex implements CodebaseIndex {
           data.contents,
         );
 
-        yield { progress, desc };
+        yield { progress, desc, status: "indexing" };
       } else {
         await addComputedLanceDbRows(update, computedRows);
         computedRows = [];
@@ -304,7 +304,11 @@ export class LanceDbIndex implements CodebaseIndex {
     }
 
     markComplete(results.del, IndexResultType.Delete);
-    yield { progress: 1, desc: "Completed Calculating Embeddings" };
+    yield {
+      progress: 1,
+      desc: "Completed Calculating Embeddings",
+      status: "done",
+    };
   }
 
   private async _retrieveForTag(

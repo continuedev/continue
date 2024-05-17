@@ -1,10 +1,10 @@
 import { Database, open } from "sqlite";
 import sqlite3 from "sqlite3";
-import { Chunk } from "../..";
-import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths";
+import { Chunk } from "../../index.js";
+import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths.js";
 
-import { downloadPreIndexedDocs } from "./preIndexed";
-import { default as configs } from "./preIndexedDocs";
+import { downloadPreIndexedDocs } from "./preIndexed.js";
+import { default as configs } from "./preIndexedDocs.js";
 
 const DOCS_TABLE_NAME = "docs";
 
@@ -69,7 +69,7 @@ export async function retrieveDocs(
   const tableNames = await lance.tableNames();
   if (!tableNames.includes(DOCS_TABLE_NAME)) {
     const downloaded = await downloadDocs();
-    if (downloaded) return downloaded;
+    if (downloaded) {return downloaded;}
   }
 
   const table = await lance.openTable(DOCS_TABLE_NAME);
@@ -83,7 +83,7 @@ export async function retrieveDocs(
 
   if ((!docs || docs.length === 0) && !nested) {
     const downloaded = await downloadDocs();
-    if (downloaded) return downloaded;
+    if (downloaded) {return downloaded;}
   }
 
   return docs.map((doc) => ({
@@ -128,7 +128,7 @@ export async function addDocs(
   // Only after add it to SQLite
   const db = await getDBDocs();
   await db.run(
-    `INSERT INTO docs (title, baseUrl) VALUES (?, ?)`,
+    "INSERT INTO docs (title, baseUrl) VALUES (?, ?)",
     title,
     baseUrl.toString(),
   );
@@ -138,12 +138,12 @@ export async function listDocs(): Promise<
   { title: string; baseUrl: string }[]
 > {
   const db = await getDBDocs();
-  const docs = db.all(`SELECT title, baseUrl FROM docs`);
+  const docs = db.all("SELECT title, baseUrl FROM docs");
   return docs;
 }
 
 export async function hasDoc(baseUrl: string) {
   const db = await getDBDocs();
-  const doc = await db.get(`SELECT title FROM docs WHERE baseUrl =?`, baseUrl);
+  const doc = await db.get("SELECT title FROM docs WHERE baseUrl =?", baseUrl);
   return !!doc;
 }

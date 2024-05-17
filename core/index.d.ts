@@ -37,6 +37,7 @@ export interface Chunk extends ChunkWithoutID {
 export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
+  status: "starting" | "indexing" | "done" | "failed" | "paused" | "disabled";
 }
 
 export type PromptTemplate =
@@ -439,10 +440,6 @@ export interface SlashCommand {
   description: string;
   params?: { [key: string]: any };
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
-
-  // If true, this command will be run in NodeJs and have access to the filesystem and other Node-only APIs
-  // You must make sure to dynamically import any Node-only dependencies in your command so that it doesn't break in the browser
-  runInNodeJs?: boolean;
 }
 
 // Config
@@ -519,6 +516,7 @@ type ModelProvider =
   | "deepinfra"
   | "flowise"
   | "groq"
+  | "continue-proxy"
   | "custom";
 
 export type ModelName =
@@ -529,6 +527,7 @@ export type ModelName =
   | "gpt-4"
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
+  | "gpt-4o"
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
@@ -700,6 +699,7 @@ export interface TabAutocompleteOptions {
 
 export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
+  fontSize?: number;
 }
 
 interface ContextMenuConfig {

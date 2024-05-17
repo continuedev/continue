@@ -1,15 +1,15 @@
-import { Chunk, IndexTag, IndexingProgressUpdate } from "../..";
-import { ContinueServerClient } from "../../continueServer/stubs/client";
-import { MAX_CHUNK_SIZE } from "../../llm/constants";
-import { getBasename } from "../../util";
-import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex";
+import { IContinueServerClient } from "../../continueServer/interface.js";
+import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
+import { MAX_CHUNK_SIZE } from "../../llm/constants.js";
+import { getBasename } from "../../util/index.js";
+import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
-} from "../types";
-import { chunkDocument } from "./chunk";
+} from "../types.js";
+import { chunkDocument } from "./chunk.js";
 
 export class ChunkCodebaseIndex implements CodebaseIndex {
   static artifactId: string = "chunks";
@@ -17,7 +17,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
   constructor(
     private readonly readFile: (filepath: string) => Promise<string>,
-    private readonly continueServerClient?: ContinueServerClient,
+    private readonly continueServerClient: IContinueServerClient,
   ) {
     this.readFile = readFile;
   }
@@ -53,7 +53,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     async function handleChunk(chunk: Chunk) {
       const { lastID } = await db.run(
-        `INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)`,
+        "INSERT INTO chunks (cacheKey, path, idx, startLine, endLine, content) VALUES (?, ?, ?, ?, ?, ?)",
         [
           chunk.digest,
           chunk.filepath,
@@ -64,14 +64,14 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         ],
       );
 
-      await db.run(`INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)`, [
+      await db.run("INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)", [
         lastID,
         tagString,
       ]);
     }
 
     // Check the remote cache
-    if (this.continueServerClient !== undefined) {
+    if (this.continueServerClient.connected) {
       try {
         const keys = results.compute.map(({ cacheKey }) => cacheKey);
         const resp = await this.continueServerClient.getFromIndexCache(
@@ -113,6 +113,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       yield {
         progress: i / results.compute.length,
         desc: `Chunking ${getBasename(item.path)}`,
+        status: "indexing",
       };
       markComplete([item], IndexResultType.Compute);
     }
@@ -120,12 +121,12 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     // Add tag
     for (const item of results.addTag) {
       const chunksWithPath = await db.all(
-        `SELECT * FROM chunks WHERE cacheKey = ?`,
+        "SELECT * FROM chunks WHERE cacheKey = ?",
         [item.cacheKey],
       );
 
       for (const chunk of chunksWithPath) {
-        await db.run(`INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)`, [
+        await db.run("INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)", [
           chunk.id,
           tagString,
         ]);
@@ -152,12 +153,12 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     // Delete
     for (const item of results.del) {
-      const deleted = await db.run(`DELETE FROM chunks WHERE cacheKey = ?`, [
+      const deleted = await db.run("DELETE FROM chunks WHERE cacheKey = ?", [
         item.cacheKey,
       ]);
 
       // Delete from chunk_tags
-      await db.run(`DELETE FROM chunk_tags WHERE chunkId = ?`, [
+      await db.run("DELETE FROM chunk_tags WHERE chunkId = ?", [
         deleted.lastID,
       ]);
 

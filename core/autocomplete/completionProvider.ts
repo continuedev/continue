@@ -2,31 +2,37 @@ import Handlebars from "handlebars";
 import ignore from "ignore";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { IDE, ILLM, Position, Range, TabAutocompleteOptions } from "..";
-import { RangeInFileWithContents } from "../commands/util";
-import { ConfigHandler } from "../config/handler";
-import { streamLines } from "../diff/util";
-import OpenAI from "../llm/llms/OpenAI";
-import { getBasename } from "../util";
-import { logDevData } from "../util/devdata";
+import { RangeInFileWithContents } from "../commands/util.js";
+import { ConfigHandler } from "../config/handler.js";
+import { streamLines } from "../diff/util.js";
+import {
+  IDE,
+  ILLM,
+  Position,
+  Range,
+  TabAutocompleteOptions,
+} from "../index.js";
+import OpenAI from "../llm/llms/OpenAI.js";
+import { logDevData } from "../util/devdata.js";
+import { getBasename } from "../util/index.js";
 import {
   COUNT_COMPLETION_REJECTED_AFTER,
   DEFAULT_AUTOCOMPLETE_OPTS,
-} from "../util/parameters";
-import { Telemetry } from "../util/posthog";
-import { getRangeInString } from "../util/ranges";
-import AutocompleteLruCache from "./cache";
+} from "../util/parameters.js";
+import { Telemetry } from "../util/posthog.js";
+import { getRangeInString } from "../util/ranges.js";
+import AutocompleteLruCache from "./cache.js";
 import {
   noFirstCharNewline,
   onlyWhitespaceAfterEndOfLine,
   stopOnUnmatchedClosingBracket,
-} from "./charStream";
+} from "./charStream.js";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
-} from "./constructPrompt";
-import { isOnlyPunctuationAndWhitespace } from "./filter";
-import { AutocompleteLanguageInfo } from "./languages";
+} from "./constructPrompt.js";
+import { isOnlyPunctuationAndWhitespace } from "./filter.js";
+import { AutocompleteLanguageInfo } from "./languages.js";
 import {
   avoidPathLine,
   noTopLevelKeywordsMidline,
@@ -34,11 +40,11 @@ import {
   stopAtRepeatingLines,
   stopAtSimilarLine,
   streamWithNewLines,
-} from "./lineStream";
-import { AutocompleteSnippet } from "./ranking";
-import { RecentlyEditedRange } from "./recentlyEdited";
-import { getTemplateForModel } from "./templates";
-import { GeneratorReuseManager } from "./util";
+} from "./lineStream.js";
+import { AutocompleteSnippet } from "./ranking.js";
+import { RecentlyEditedRange } from "./recentlyEdited.js";
+import { getTemplateForModel } from "./templates.js";
+import { GeneratorReuseManager } from "./util.js";
 
 export interface AutocompleteInput {
   completionId: string;
@@ -157,7 +163,9 @@ export async function getTabCompletion(
   }
 
   // Model
-  if (!llm) return;
+  if (!llm) {
+    return;
+  }
   if (llm instanceof OpenAI) {
     llm.useLegacyCompletionsEndpoint = true;
   } else if (

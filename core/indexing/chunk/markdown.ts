@@ -1,6 +1,6 @@
-import { ChunkWithoutID } from "../..";
-import { countTokens } from "../../llm/countTokens";
-import { basicChunker } from "./basic";
+import { ChunkWithoutID } from "../../index.js";
+import { countTokens } from "../../llm/countTokens.js";
+import { basicChunker } from "./basic.js";
 
 export function cleanFragment(
   fragment: string | undefined,

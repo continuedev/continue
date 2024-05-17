@@ -6,28 +6,28 @@
 set -e
 echo "Installing Core extension dependencies..."
 pushd core
-npm install
-npm link
+pnpm install
+pnpm link --global
 popd
 
 echo "Installing GUI extension dependencies..."
 pushd gui
-npm install
-npm link @continuedev/core
-npm run build
+pnpm install
+pnpm link --global @continuedev/core
+pnpm run build
 popd
 # VSCode Extension (will also package GUI)
 echo "Installing VSCode extension dependencies..."
 pushd extensions/vscode
 
 # This does way too many things inline but is the common denominator between many of the scripts
-npm install
-npm link @continuedev/core
-npm run package
+pnpm install
+pnpm link --global @continuedev/core
+pnpm run package
 
 popd
 
 echo "Installing binary dependencies..."
 pushd binary
-npm install
-npm run build
+pnpm install
+pnpm run build

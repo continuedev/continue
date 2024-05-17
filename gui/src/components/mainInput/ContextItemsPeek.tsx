@@ -9,6 +9,7 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
+import { getFontSize } from "../../util";
 import { WebviewIde } from "../../util/webviewIde";
 import FileIcon from "../FileIcon";
 
@@ -77,7 +78,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
           display: "flex",
           justifyContent: "left",
           alignItems: "center",
-          fontSize: "11px",
+          fontSize: `${getFontSize() - 3}px`,
         }}
         onClick={() => setOpen((prev) => !prev)}
       >

@@ -1,13 +1,13 @@
-import { BranchAndDir, Chunk, IndexTag, IndexingProgressUpdate } from "..";
-import { RETRIEVAL_PARAMS } from "../util/parameters";
-import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+import { BranchAndDir, Chunk, IndexTag, IndexingProgressUpdate } from "../index.js";
+import { RETRIEVAL_PARAMS } from "../util/parameters.js";
+import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
   CodebaseIndex,
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
-} from "./types";
+} from "./types.js";
 
 export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   artifactId: string = "sqliteFts";
@@ -43,17 +43,17 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
       // Insert chunks
       const chunks = await db.all(
-        `SELECT * FROM chunks WHERE path = ? AND cacheKey = ?`,
+        "SELECT * FROM chunks WHERE path = ? AND cacheKey = ?",
         [item.path, item.cacheKey],
       );
 
       for (let chunk of chunks) {
         const { lastID } = await db.run(
-          `INSERT INTO fts (path, content) VALUES (?, ?)`,
+          "INSERT INTO fts (path, content) VALUES (?, ?)",
           [item.path, chunk.content],
         );
         await db.run(
-          `INSERT INTO fts_metadata (id, path, cacheKey, chunkId) VALUES (?, ?, ?, ?)`,
+          "INSERT INTO fts_metadata (id, path, cacheKey, chunkId) VALUES (?, ?, ?, ?)",
           [lastID, item.path, item.cacheKey, chunk.id],
         );
       }
@@ -61,6 +61,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
       yield {
         progress: i / results.compute.length,
         desc: `Indexing ${item.path}`,
+        status: "indexing",
       };
       markComplete([item], IndexResultType.Compute);
     }
@@ -78,10 +79,10 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     // Delete
     for (const item of results.del) {
       const { lastID } = await db.run(
-        `DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?`,
+        "DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?",
         [item.path, item.cacheKey],
       );
-      await db.run(`DELETE FROM fts WHERE rowid = ?`, [lastID]);
+      await db.run("DELETE FROM fts WHERE rowid = ?", [lastID]);
 
       markComplete([item], IndexResultType.Delete);
     }

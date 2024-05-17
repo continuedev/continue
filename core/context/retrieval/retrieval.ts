@@ -1,9 +1,14 @@
-import { BranchAndDir, Chunk, ContextItem, ContextProviderExtras } from "../..";
-import { LanceDbIndex } from "../../indexing/LanceDbIndex";
+import {
+  BranchAndDir,
+  Chunk,
+  ContextItem,
+  ContextProviderExtras,
+} from "../../index.js";
+import { LanceDbIndex } from "../../indexing/LanceDbIndex.js";
 
-import { deduplicateArray, getBasename } from "../../util";
-import { RETRIEVAL_PARAMS } from "../../util/parameters";
-import { retrieveFts } from "./fullTextSearch";
+import { deduplicateArray, getBasename } from "../../util/index.js";
+import { RETRIEVAL_PARAMS } from "../../util/parameters.js";
+import { retrieveFts } from "./fullTextSearch.js";
 
 function deduplicateChunks(chunks: Chunk[]): Chunk[] {
   return deduplicateArray(chunks, (a, b) => {
@@ -121,9 +126,9 @@ export async function retrieveContextItemsFromEmbeddings(
     );
 
     results.sort(
-      (a, b) => scores[results.indexOf(b)] - scores[results.indexOf(a)],
+      (a, b) => scores[results.indexOf(a)] - scores[results.indexOf(b)],
     );
-    results = results.slice(0, nFinal);
+    results = results.slice(-nFinal);
   }
 
   if (results.length === 0) {

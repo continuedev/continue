@@ -30,7 +30,9 @@ export async function* noFirstCharNewline(stream: AsyncGenerator<string>) {
   for await (let char of stream) {
     if (first) {
       first = false;
-      if (char === "\n") return;
+      if (char === "\n") {
+        return;
+      }
     }
     yield char;
   }
