@@ -42,22 +42,20 @@ export class DevDataSqliteDb {
 
   public static async getTokensPerDay() {
     const db = await DevDataSqliteDb.get();
-    // Return a sum of tokens_generated column aggregated by day
     const result = await db?.all(
-      `SELECT date(timestamp) as day, sum(tokens_generated) as tokens
+      // Return a sum of tokens_generated and tokens_prompt columns aggregated by day
+      `SELECT date(timestamp) as day, sum(tokens_prompt) as promptTokens, sum(tokens_generated) as generatedTokens
         FROM tokens_generated
         GROUP BY date(timestamp)`,
-      // WHERE model = ? AND provider = ?
-      // [model, provider],
     );
     return result ?? [];
   }
 
   public static async getTokensPerModel() {
     const db = await DevDataSqliteDb.get();
-    // Return a sum of tokens_generated column aggregated by model
     const result = await db?.all(
-      `SELECT model, sum(tokens_generated) as tokens
+      // Return a sum of tokens_generated and tokens_prompt columns aggregated by model
+      `SELECT model, sum(tokens_prompt) as promptTokens, sum(tokens_generated) as generatedTokens
         FROM tokens_generated
         GROUP BY model`,
     );
