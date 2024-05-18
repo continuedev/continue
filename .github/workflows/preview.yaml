@@ -117,11 +117,11 @@ jobs:
       #     npm run test
       #   if: matrix.os != 'ubuntu-latest'
 
-      # 4. Re-install esbuild
-      # - name: Re-install esbuild
-      #   run: |
-      #     cd extensions/vscode
-      #     npm install -f esbuild
+      # 4. Re-install esbuild (for cases that we force installed for another arch in prepackage.js)
+      - name: Re-install esbuild
+        run: |
+          cd extensions/vscode
+          npm install -f esbuild
 
       # 5. Package the extension
       - name: Package the extension
