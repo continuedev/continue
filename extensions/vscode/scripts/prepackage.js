@@ -16,6 +16,9 @@ function execCmdSync(cmd) {
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));
 rimrafSync(path.join(__dirname, "..", "out"));
+fs.mkdirSync(path.join(__dirname, "..", "out", "node_modules"), {
+  recursive: true,
+});
 
 // Get the target to package for
 let target = undefined;
