@@ -1,11 +1,11 @@
-import React, { useContext } from "react";
+import React from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Button, Input } from "..";
-import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import { ideRequest, postToIde } from "../../util/ide";
 
 const GridDiv = styled.div`
   display: grid;
@@ -19,8 +19,6 @@ function SetupLocalOrKeyDialog() {
   const [apiKey, setApiKey] = React.useState("");
   const dispatch = useDispatch();
 
-  const ideMessenger = useContext(IdeMessengerContext);
-
   return (
     <div className="p-4">
       <h3>Set up your own model</h3>
@@ -30,7 +28,7 @@ function SetupLocalOrKeyDialog() {
         <a
           className="cursor-pointer"
           onClick={() =>
-            ideMessenger.request(
+            ideRequest(
               "openUrl",
               "https://docs.continue.dev/reference/Model%20Providers/freetrial",
             )
@@ -51,7 +49,7 @@ function SetupLocalOrKeyDialog() {
         className="w-full"
         disabled={!apiKey}
         onClick={() => {
-          ideMessenger.post("config/addOpenAiKey", apiKey);
+          postToIde("config/addOpenAiKey", apiKey);
           dispatch(setShowDialog(false));
           dispatch(setDefaultModel({ title: "GPT-4" }));
         }}
@@ -63,7 +61,7 @@ function SetupLocalOrKeyDialog() {
         <Button
           onClick={() => {
             dispatch(setShowDialog(false));
-            ideMessenger.request("completeOnboarding", {
+            postToIde("completeOnboarding", {
               mode: "localAfterFreeTrial",
             });
             navigate("/localOnboarding");

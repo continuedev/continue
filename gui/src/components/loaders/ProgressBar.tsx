@@ -1,9 +1,13 @@
 import ReactDOM from "react-dom";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
 import { getFontSize } from "../../util";
+import SetupLocalOrKeyDialog from "../dialogs/SetupLocalOrKey";
 
 const ProgressBarWrapper = styled.div`
   width: 100px;
@@ -47,16 +51,18 @@ interface ProgressBarProps {
 
 const ProgressBar = ({ completed, total }: ProgressBarProps) => {
   const dispatch = useDispatch();
-  const navigate = useNavigate();
   const fillPercentage = Math.min(100, Math.max(0, (completed / total) * 100));
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
   return (
     <>
-      <a
-        href="https://docs.continue.dev/reference/Model%20Providers/freetrial"
-        className="no-underline ml-2"
+      <GridDiv
+        data-tooltip-id="usage_progress_bar"
+        onClick={() => {
+          dispatch(setShowDialog(true));
+          dispatch(setDialogMessage(<SetupLocalOrKeyDialog />));
+        }}
       >
         <ProgressBarWrapper>
           <ProgressBarFill
@@ -78,7 +84,9 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
       {tooltipPortalDiv &&
         ReactDOM.createPortal(
           <StyledTooltip id="usage_progress_bar" place="top">
-            {`Click to use your own API key or local LLM (required after ${ftl()} inputs)`}
+            {
+              "Click to use your own API key or local LLM (required after 100 inputs)"
+            }
           </StyledTooltip>,
           tooltipPortalDiv,
         )}
