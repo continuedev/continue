@@ -107,7 +107,11 @@ const exe = os === "win32" ? ".exe" : "";
   // Install node_modules //
   execCmdSync("npm install");
   console.log("[info] npm install in extensions/vscode completed");
-  console.log("Contents of node_modules: ", fs.readdirSync("./node_modules"));
+  console.log(
+    "Contents of node_modules: ",
+    fs.readdirSync("./node_modules"),
+    fs.readdirSync("./node_modules/@lancedb"),
+  );
 
   process.chdir("../../gui");
 
