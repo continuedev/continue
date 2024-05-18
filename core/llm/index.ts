@@ -225,15 +225,16 @@ ${settings}
 ${prompt}`;
   }
 
-  private _logTokensGenerated(model: string, completion: string) {
-    const tokens = this.countTokens(completion);
+  private _logTokensGenerated(model: string, prompt: string, completion: string) {
+    let promptTokens = this.countTokens(prompt);
+    let generatedTokens = this.countTokens(completion);
     Telemetry.capture("tokens_generated", {
       model: model,
       provider: this.providerName,
       promptTokens: promptTokens,
       generatedTokens: generatedTokens,
     });
-    DevDataSqliteDb.logTokensGenerated(model, this.providerName, tokens);
+    DevDataSqliteDb.logTokensGenerated(model, this.providerName, promptTokens, generatedTokens);
   }
 
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -594,3 +595,4 @@ ${prompt}`;
     return rendered;
   }
 }
+
