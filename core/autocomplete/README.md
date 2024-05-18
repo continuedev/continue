@@ -14,32 +14,27 @@ Once it has been downloaded, you should begin to see completions in VS Code.
 
 ## Setting up with LM Studio
 
-You can set up tab-autocomplete with a local LM Studio instance! Here are the steps to set that up;
+You can also set up tab-autocomplete with a local LM Studio instance by following these steps:
 
 1. Download the latest version of LM Studio from [here](https://lmstudio.ai/)
-1. Download a model (you can search for `second-state/StarCoder2-3B-GGUF` and choose one of the options there) 
-1. Go to the server section (button is on the left), select your model from the dropdown at the top, and click "Start Server"
-1. Go to the "my models" section (button is on the left), find your selected model and copy the name the path (example: `
-second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf`); this will be used as the "title" and "model" for continue
-1. Go to continue, and modify the configurations for a [custom model](#setting-up-a-custom-model)
-1. Title and model should be set to the model that was copied earlier, provider should be `lmstudio`
+2. Download a model (e.g. search for `second-state/StarCoder2-3B-GGUF` and choose one of the options there)
+3. Go to the server section (button is on the left), select your model from the dropdown at the top, and click "Start Server"
+4. Go to the "My Models" section (button is on the left), find your selected model, and copy the name the path (example: `second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf`); this will be used as the "model" attribute in Continue
+5. Go to Continue and modify the configurations for a [custom model](#setting-up-a-custom-model)
+6. Set the "provider" to `lmstudio` and the "model" to the path copied earlier
 
-Example: 
+Example:
+
 ```json title=~/.continue/config.json
 {
-  ...
-
   "tabAutocompleteModel": {
-      "title": "second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf",
+      "title": "Starcoder2 3b",
       "model": "second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf",
       "provider": "lmstudio",
   },
-
   ...
 }
 ```
-
-You should now be set up to see completions in VS Code!
 
 ## Setting up a custom model
 
