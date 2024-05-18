@@ -34,9 +34,9 @@ function FTCDialog() {
     <div className="p-4">
       <h3>Free Trial Limit Reached</h3>
       <p>
-        You've reached the free trial limit of 250 free inputs with Continue's
-        OpenAI API key. To keep using Continue, you can either use your own API
-        key, or use a local LLM. To read more about the options, see our{" "}
+        You've reached the free trial limit of 100 free inputs. To keep using
+        Continue, you can either use your own API key, or use a local LLM. To
+        read more about the options, see our{" "}
         <a
           href="https://docs.continue.dev/customization/models"
           target="_blank"
