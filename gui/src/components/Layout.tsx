@@ -167,6 +167,25 @@ const Layout = () => {
     setIndexingState(data);
   });
 
+  useWebviewListener(
+    "addApiKey",
+    async () => {
+      navigate("/modelconfig/openai");
+    },
+    [navigate],
+  );
+
+  useWebviewListener(
+    "setupLocalModel",
+    async () => {
+      postToIde("completeOnboarding", {
+        mode: "localAfterFreeTrial",
+      });
+      navigate("/localOnboarding");
+    },
+    [navigate],
+  );
+
   useEffect(() => {
     if (isJetBrains()) {
       return;

@@ -1,3 +1,4 @@
+import { RangeInFileWithContents } from "../commands/util.js";
 import {
   ContextItemWithId,
   ContextSubmenuItem,
@@ -9,7 +10,6 @@ import {
   Range,
   Thread,
 } from "../index.js";
-import { RangeInFileWithContents } from "../commands/util.js";
 
 import { Protocol } from "../protocol.js";
 
@@ -86,8 +86,14 @@ export type WebviewProtocol = Protocol &
     reloadWindow: [undefined, void];
     focusEditor: [undefined, void];
     toggleFullScreen: [undefined, void];
-    "stats/getTokensPerDay": [undefined, { day: string; promptTokens: number; generatedTokens: number }[]];
-    "stats/getTokensPerModel": [undefined, { model: string; promptTokens: number; generatedTokens: number }[]];
+    "stats/getTokensPerDay": [
+      undefined,
+      { day: string; promptTokens: number; generatedTokens: number }[],
+    ];
+    "stats/getTokensPerModel": [
+      undefined,
+      { model: string; promptTokens: number; generatedTokens: number }[],
+    ];
     insertAtCursor: [{ text: string }, void];
     copyText: [{ text: string }, void];
     "jetbrains/editorInsetHeight": [{ height: number }, void];
@@ -98,7 +104,8 @@ export type WebviewProtocol = Protocol &
           | "optimized"
           | "custom"
           | "localExistingUser"
-          | "optimizedExistingUser";
+          | "optimizedExistingUser"
+          | "localAfterFreeTrial";
       },
       void,
     ];
@@ -135,4 +142,6 @@ export type ReverseWebviewProtocol = {
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
   "jetbrains/editorInsetRefresh": [undefined, void];
+  addApiKey: [undefined, void];
+  setupLocalModel: [undefined, void];
 };
