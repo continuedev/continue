@@ -19,11 +19,15 @@ export class DevDataSqliteDb {
 
     // Add tokens_prompt column if it doesn't exist
     const columnCheckResult = await db.all(
-      `PRAGMA table_info(tokens_generated);`
+      `PRAGMA table_info(tokens_generated);`,
     );
-    const columnExists = columnCheckResult.some((col: any) => col.name === "tokens_prompt");
+    const columnExists = columnCheckResult.some(
+      (col: any) => col.name === "tokens_prompt",
+    );
     if (!columnExists) {
-      await db.exec(`ALTER TABLE tokens_generated ADD COLUMN tokens_prompt INTEGER NOT NULL DEFAULT 0;`);
+      await db.exec(
+        `ALTER TABLE tokens_generated ADD COLUMN tokens_prompt INTEGER NOT NULL DEFAULT 0;`,
+      );
     }
   }
 
@@ -31,7 +35,7 @@ export class DevDataSqliteDb {
     model: string,
     provider: string,
     promptTokens: number,
-    generatedTokens: number
+    generatedTokens: number,
   ) {
     const db = await DevDataSqliteDb.get();
     await db?.run(

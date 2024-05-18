@@ -38,19 +38,21 @@ function Stats() {
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  const [days, setDays] = useState<{ day: string; promptTokens: number; generatedTokens: number }[]>([]);
-  const [models, setModels] = useState<{ model: string; promptTokens: number; generatedTokens: number }[]>([]);
+  const [days, setDays] = useState<
+    { day: string; promptTokens: number; generatedTokens: number }[]
+  >([]);
+  const [models, setModels] = useState<
+    { model: string; promptTokens: number; generatedTokens: number }[]
+  >([]);
 
   useEffect(() => {
     ideRequest("stats/getTokensPerDay", undefined).then((days) => {
-      console.log("days", days);
       setDays(days);
     });
   }, []);
 
   useEffect(() => {
     ideRequest("stats/getTokensPerModel", undefined).then((models) => {
-      console.log("models", models);
       setModels(models);
     });
   }, []);
@@ -78,7 +80,11 @@ function Stats() {
         <CopyButton
           text={generateTable(
             ([["Day", "Generated Tokens", "Prompt Tokens"]] as any).concat(
-              days.map((day) => [day.day, day.generatedTokens, day.promptTokens]),
+              days.map((day) => [
+                day.day,
+                day.generatedTokens,
+                day.promptTokens,
+              ]),
             ),
           )}
         />
@@ -107,7 +113,11 @@ function Stats() {
         <CopyButton
           text={generateTable(
             ([["Model", "Generated Tokens", "Prompt Tokens"]] as any).concat(
-              models.map((model) => [model.model, model.generatedTokens, model.promptTokens]),
+              models.map((model) => [
+                model.model,
+                model.generatedTokens,
+                model.promptTokens,
+              ]),
             ),
           )}
         />
