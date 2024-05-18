@@ -86,8 +86,8 @@ export type WebviewProtocol = Protocol &
     reloadWindow: [undefined, void];
     focusEditor: [undefined, void];
     toggleFullScreen: [undefined, void];
-    "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
-    "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
+    "stats/getTokensPerDay": [undefined, { day: string; promptTokens: number; generatedTokens: number }[]];
+    "stats/getTokensPerModel": [undefined, { model: string; promptTokens: number; generatedTokens: number }[]];
     insertAtCursor: [{ text: string }, void];
     copyText: [{ text: string }, void];
     "jetbrains/editorInsetHeight": [{ height: number }, void];

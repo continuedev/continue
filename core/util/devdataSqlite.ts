@@ -12,41 +12,50 @@ export class DevDataSqliteDb {
             model TEXT NOT NULL,
             provider TEXT NOT NULL,
             tokens_generated INTEGER NOT NULL,
+            tokens_prompt INTEGER NOT NULL DEFAULT 0,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
         )`,
     );
+
+    // Add tokens_prompt column if it doesn't exist
+    const columnCheckResult = await db.all(
+      `PRAGMA table_info(tokens_generated);`
+    );
+    const columnExists = columnCheckResult.some((col: any) => col.name === "tokens_prompt");
+    if (!columnExists) {
+      await db.exec(`ALTER TABLE tokens_generated ADD COLUMN tokens_prompt INTEGER NOT NULL DEFAULT 0;`);
+    }
   }
 
   public static async logTokensGenerated(
     model: string,
     provider: string,
-    tokens: number,
+    promptTokens: number,
+    generatedTokens: number
   ) {
     const db = await DevDataSqliteDb.get();
     await db?.run(
-      "INSERT INTO tokens_generated (model, provider, tokens_generated) VALUES (?, ?, ?)",
-      [model, provider, tokens],
+      `INSERT INTO tokens_generated (model, provider, tokens_prompt, tokens_generated) VALUES (?, ?, ?, ?)`,
+      [model, provider, promptTokens, generatedTokens],
     );
   }
 
   public static async getTokensPerDay() {
     const db = await DevDataSqliteDb.get();
-    // Return a sum of tokens_generated column aggregated by day
     const result = await db?.all(
-      `SELECT date(timestamp) as day, sum(tokens_generated) as tokens
+      // Return a sum of tokens_generated and tokens_prompt columns aggregated by day
+      `SELECT date(timestamp) as day, sum(tokens_prompt) as promptTokens, sum(tokens_generated) as generatedTokens
         FROM tokens_generated
         GROUP BY date(timestamp)`,
-      // WHERE model = ? AND provider = ?
-      // [model, provider],
     );
     return result ?? [];
   }
 
   public static async getTokensPerModel() {
     const db = await DevDataSqliteDb.get();
-    // Return a sum of tokens_generated column aggregated by model
     const result = await db?.all(
-      `SELECT model, sum(tokens_generated) as tokens
+      // Return a sum of tokens_generated and tokens_prompt columns aggregated by model
+      `SELECT model, sum(tokens_prompt) as promptTokens, sum(tokens_generated) as generatedTokens
         FROM tokens_generated
         GROUP BY model`,
     );
