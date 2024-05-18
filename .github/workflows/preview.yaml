@@ -58,28 +58,24 @@ jobs:
         uses: actions/cache@v3
         with:
           path: extensions/vscode/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('extensions/vscode/package-lock.json') }}
 
       - name: Cache core node_modules
         uses: actions/cache@v3
         with:
           path: core/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('core/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-node-${{ hashFiles('core/package-lock.json') }}
 
       - name: Cache gui node_modules
         uses: actions/cache@v3
         with:
           path: gui/node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('gui/pnpm-lock.yaml') }}
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.1.1
+          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
       - name: Install extension Dependencies
         run: |
           cd extensions/vscode
-          pnpm install
+          npm ci
         env:
           # https://github.com/microsoft/vscode-ripgrep/issues/9#issuecomment-643965333
           GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
@@ -87,21 +83,14 @@ jobs:
       - name: Install gui Dependencies
         run: |
           cd gui
-          pnpm install
+          npm ci
 
       - name: Install Core Dependencies
         run: |
           cd core
-          pnpm install
+          npm ci
 
       # 2.5. Pre package
-      - name: Make the out/node_modules directory
-        run: |
-          cd extensions/vscode
-          mkdir out
-          cd out
-          mkdir node_modules
-
       - name: Set var for environment info
         shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
@@ -132,7 +121,7 @@ jobs:
       # - name: Re-install esbuild
       #   run: |
       #     cd extensions/vscode
-      #     pnpm install -f esbuild
+      #     npm install -f esbuild
 
       # 5. Package the extension
       - name: Package the extension
@@ -162,9 +151,6 @@ jobs:
       # Download the .vsix artifacts
       - uses: actions/download-artifact@v3
 
-      - name: List files
-        run: ls -l ${{ github.workspace }}
-
       - name: Tag the repository
         id: tag
         run: |
@@ -179,7 +165,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
-          body_path: extensions/vscode/CHANGELOG.md
           files: |
             alpine-x64/*.vsix
             darwin-arm64/*.vsix
