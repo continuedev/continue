@@ -25,7 +25,4 @@ You should look primarily for the following types of issues, and only mention ot
 - algorithmic errors that could fail under edge cases
 - something that could be refactored
 
-For the following types of files, you should completely ignore them. Do not write the header or any feedback:
-- package-lock.json
-- yarn.lock
-- any other json file
+Make sure to review ALL files that were changed, do not skip any.
