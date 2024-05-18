@@ -12,6 +12,35 @@ ollama run starcoder:3b
 
 Once it has been downloaded, you should begin to see completions in VS Code.
 
+## Setting up with LM Studio
+
+You can set up tab-autocomplete with a local LM Studio instance! Here are the steps to set that up;
+
+1. Download the latest version of LM Studio from [here](https://lmstudio.ai/)
+1. Download a model (you can search for `second-state/StarCoder2-3B-GGUF` and choose one of the options there) 
+1. Go to the server section (button is on the left), select your model from the dropdown at the top, and click "Start Server"
+1. Go to the "my models" section (button is on the left), find your selected model and copy the name the path (example: `
+second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf`); this will be used as the "title" and "model" for continue
+1. Go to continue, and modify the configurations for a [custom model](#setting-up-a-custom-model)
+1. Title and model should be set to the model that was copied earlier, provider should be `lmstudio`
+
+Example: 
+```json title=~/.continue/config.json
+{
+  ...
+
+  "tabAutocompleteModel": {
+      "title": "second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf",
+      "model": "second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf",
+      "provider": "lmstudio",
+  },
+
+  ...
+}
+```
+
+You should now be set up to see completions in VS Code!
+
 ## Setting up a custom model
 
 All of the configuration options available for chat models are available to use for tab-autocomplete. For example, if you wanted to use a remote vLLM instance you would edit your `config.json` like this (note that it is not inside the models array), filling in the correct model name and vLLM endpoint:
