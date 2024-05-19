@@ -10,7 +10,9 @@ import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
@@ -144,8 +146,6 @@ class IdeProtocolClient (
                 return@launch
             }
             val data = parsedMessage["data"]
-
-            val historyManager = HistoryManager()
 
             try {
                 when (messageType) {
@@ -288,8 +288,8 @@ class IdeProtocolClient (
                     "showLines" -> {
                         val data = data as Map<String, Any>
                         val filepath = data["filepath"] as String
-                        val startLine = data["startLine"] as Int
-                        val endLine = data["endLine"] as Int
+                        val startLine = (data["startLine"] as Double).toInt()
+                        val endLine = (data["endLine"] as Double).toInt()
                         highlightCode(
                                 RangeInFile(
                                         filepath,
@@ -428,22 +428,6 @@ class IdeProtocolClient (
                         respond(null)
                     }
 
-                    // History
-                    "history" -> {
-                        respond(historyManager.list());
-                    }
-                    "saveSession" -> {
-                        historyManager.save(data as MutableMap<String, Any>);
-                        respond(null);
-                    }
-                    "deleteSession" -> {
-                        historyManager.delete(data as String);
-                        respond(null);
-                    }
-                    "loadSession" -> {
-                        val session = historyManager.load(data as String)
-                        respond(session)
-                    }
                     "getSearchResults" -> {
                         respond("")
                     }
@@ -461,59 +445,24 @@ class IdeProtocolClient (
                         val openFiles = visibleFiles()
                         respond(openFiles)
                     }
-                    "logDevData" -> {
-                        val data = data as Map<String, Any>
-                        val filename = data["tableName"] as String
-                        val jsonLine = data["data"]
-                        val filepath = getDevDataFilepath(filename)
-                        val contents = Gson().toJson(jsonLine) + "\n"
-                        File(filepath).appendText(contents)
-                    }
-                    "addModel" -> {
-                        val data = data as Map<String, Any>
-                        val model = data["model"] as Map<String, Any>
-                        val updatedConfig = editConfigJson {
-                            val models = it["models"] as MutableList<Map<String, Any>>
-                            models.add(model)
-                            it
+                    "insertAtCursor" -> {
+                        val msg = data as Map<String, String>;
+                        val text = msg["text"] as String
+                        ApplicationManager.getApplication().invokeLater {
+                            val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
+                            val selectionModel: SelectionModel = editor.selectionModel
+
+                            val document = editor.document
+                            val startOffset = selectionModel.selectionStart
+                            val endOffset = selectionModel.selectionEnd
+
+                            WriteCommandAction.runWriteCommandAction(project) {
+                                document.replaceString(startOffset, endOffset, text)
+                            }
                         }
-
-                        configUpdate()
-                        setFileOpen(getConfigJsonPath())
                     }
-                    "deleteModel" -> {
-                        val configJson = editConfigJson { config ->
-                            var models: MutableList<Map<String, Any>> = config["models"] as MutableList<Map<String, Any>>
-                            val data = data as Map<String, Any>
-                            val model = data["title"] as String
-                            models = models.filter { it["title"] != model }.toMutableList()
-                            config["models"] = models
-                            config
-                        }
-                        configUpdate()
+                    "applyToFile" -> {
                     }
-                    "addOpenAIKey" -> {
-                        val updatedConfig = editConfigJson { config ->
-                            val data = data as Map<String, Any>
-                            val key = data["key"] as String
-                            var models = config["models"] as MutableList<MutableMap<String, Any>>
-                            models = models.map {
-                                if (it["provider"] == "free-trial") {
-                                    it["apiKey"] = key
-                                    it["provider"] = "openai"
-                                    it
-                                } else {
-                                    it
-                                }
-                            }.toMutableList()
-                            config["models"] = models
-                            config
-                        }
-                        configUpdate()
-                    }
-
-
-
                     else -> {
                         println("Unknown messageType: $messageType")
                     }
