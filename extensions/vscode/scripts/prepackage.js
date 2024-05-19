@@ -111,7 +111,6 @@ const exe = os === "win32" ? ".exe" : "";
   // Install node_modules //
   execCmdSync("npm install");
   console.log("[info] npm install in extensions/vscode completed");
-  console.log("Contents of node_modules: ", fs.readdirSync("./node_modules"));
 
   process.chdir("../../gui");
 
@@ -538,7 +537,7 @@ function validateFilesPresent() {
     // Worker required by jsdom
     "out/xhr-sync-worker.js",
     // SQLite3 Node native module
-    "out/Release/node_sqlite3.node",
+    "out/build/Release/node_sqlite3.node",
 
     // out/node_modules (to be accessed by extension.js)
     `out/node_modules/@vscode/ripgrep/bin/rg${exe}`,
