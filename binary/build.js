@@ -55,10 +55,10 @@ async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
   );
   const currentDir = process.cwd();
 
-  // Remove the dir we will be copying to
-  rimrafSync(`node_modules/${toCopy}`);
+  // // Remove the dir we will be copying to
+  // rimrafSync(`node_modules/${toCopy}`);
 
-  // Ensure the temporary directory exists
+  // // Ensure the temporary directory exists
   fs.mkdirSync(tempDir, { recursive: true });
 
   try {
