@@ -3,6 +3,7 @@ import { ContextItemId, IDE } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider";
 import { ConfigHandler } from "./config/handler";
 import {
+  setupLocalAfterFreeTrial,
   setupLocalMode,
   setupOptimizedExistingUserMode,
   setupOptimizedMode,
@@ -461,10 +462,13 @@ export class Core {
       editConfigJson(
         mode === "local"
           ? setupLocalMode
-          : mode === "optimized"
-            ? setupOptimizedMode
-            : setupOptimizedExistingUserMode,
+          : mode === "localAfterFreeTrial"
+            ? setupLocalAfterFreeTrial
+            : mode === "optimized"
+              ? setupOptimizedMode
+              : setupOptimizedExistingUserMode,
       );
+      this.configHandler.reloadConfig();
     });
 
     on("stats/getTokensPerDay", async (msg) => {
