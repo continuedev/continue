@@ -37,7 +37,7 @@ export interface Chunk extends ChunkWithoutID {
 export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
-  status: "starting" | "indexing" | "done" | "failed" | "paused";
+  status: "starting" | "indexing" | "done" | "failed" | "paused" | "disabled";
 }
 
 export type PromptTemplate =
@@ -452,10 +452,6 @@ export interface SlashCommand {
   description: string;
   params?: { [key: string]: any };
   run: (sdk: ContinueSDK) => AsyncGenerator<string | undefined>;
-
-  // If true, this command will be run in NodeJs and have access to the filesystem and other Node-only APIs
-  // You must make sure to dynamically import any Node-only dependencies in your command so that it doesn't break in the browser
-  runInNodeJs?: boolean;
 }
 
 // Config
@@ -715,6 +711,7 @@ export interface TabAutocompleteOptions {
 
 export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
+  fontSize?: number;
 }
 
 interface ContextMenuConfig {

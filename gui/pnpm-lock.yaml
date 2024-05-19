@@ -4517,6 +4517,7 @@ snapshots:
       uuid: 9.0.1
       vectordb: 0.4.20(@apache-arrow/ts@14.0.2)(apache-arrow@14.0.2)
       web-tree-sitter: 0.21.0
+      yaml: 2.4.2
     transitivePeerDependencies:
       - '@apache-arrow/ts'
       - apache-arrow

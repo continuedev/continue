@@ -300,9 +300,13 @@ export class VsCodeIdeUtils {
 
       // First, check whether it's a notebook document
       // Need to iterate over the cells to get full contents
-      const notebook = vscode.workspace.notebookDocuments.find(
-        (doc) => doc.uri.toString() === uri.toString(),
-      );
+      const notebook =
+        vscode.workspace.notebookDocuments.find(
+          (doc) => doc.uri.toString() === uri.toString(),
+        ) ??
+        (uri.fsPath.endsWith("ipynb")
+          ? await vscode.workspace.openNotebookDocument(uri)
+          : undefined);
       if (notebook) {
         return notebook
           .getCells()
@@ -331,7 +335,8 @@ export class VsCodeIdeUtils {
       const truncatedBytes = bytes.slice(0, VsCodeIdeUtils.MAX_BYTES);
       const contents = new TextDecoder().decode(truncatedBytes);
       return contents;
-    } catch {
+    } catch (e) {
+      console.warn("Error reading file", e);
       return "";
     }
   }
@@ -588,7 +593,17 @@ export class VsCodeIdeUtils {
       }
 
       repos.push(repo.state.HEAD?.name);
-      diffs.push(await repo.diff());
+      // Staged changes
+      // const a = await repo.diffIndexWithHEAD();
+      const staged = await repo.diff(true);
+      // Un-staged changes
+      // const b = await repo.diffWithHEAD();
+      const unstaged = await repo.diff(false);
+      // All changes
+      // const e = await repo.diffWith("HEAD");
+      // Only staged
+      // const f = await repo.diffIndexWith("HEAD");
+      diffs.push(`${staged}\n${unstaged}`);
     }
 
     const fullDiff = diffs.join("\n\n");

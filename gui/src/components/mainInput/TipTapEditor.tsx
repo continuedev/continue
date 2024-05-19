@@ -38,7 +38,11 @@ import {
   setEditingContextItemAtIndex,
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
-import { isJetBrains, isMetaEquivalentKeyPressed } from "../../util";
+import {
+  getFontSize,
+  isJetBrains,
+  isMetaEquivalentKeyPressed,
+} from "../../util";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
@@ -62,7 +66,7 @@ const InputBoxDiv = styled.div`
   z-index: 1;
   border: 0.5px solid ${vscInputBorder};
   outline: none;
-  font-size: 14px;
+  font-size: ${getFontSize()}px;
 
   &:focus {
     outline: none;
@@ -380,7 +384,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     editorProps: {
       attributes: {
         class: "outline-none -mt-1 overflow-hidden",
-        style: "font-size: 14px;",
+        style: `font-size: ${getFontSize()}px;`,
       },
     },
     content: props.editorState || mainEditorContent || "",
@@ -422,7 +426,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     },
   });
 
-  const shortcutTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const editorFocusedRef = useUpdatingRef(editor?.isFocused, [editor]);
 
   useEffect(() => {
     if (isJetBrains()) {
@@ -431,35 +435,18 @@ function TipTapEditor(props: TipTapEditorProps) {
     }
 
     const handleKeyDown = async (event: KeyboardEvent) => {
-      if (!editor) return;
-
-      const shouldSkip = () => {
-        const skip = shortcutTimeoutRef.current !== undefined;
-
-        if (!skip) {
-          shortcutTimeoutRef.current = setTimeout(async () => {
-            shortcutTimeoutRef.current = undefined;
-          }, 100);
-        }
-        return skip;
-      };
+      if (!editor || !editorFocusedRef.current) return;
 
       if (event.metaKey && event.key === "x") {
-        if (!shouldSkip()) {
-          document.execCommand("cut");
-        }
+        document.execCommand("cut");
         event.stopPropagation();
         event.preventDefault();
       } else if (event.metaKey && event.key === "v") {
-        if (!shouldSkip()) {
-          document.execCommand("paste");
-        }
+        document.execCommand("paste");
         event.stopPropagation();
         event.preventDefault();
       } else if (event.metaKey && event.key === "c") {
-        if (!shouldSkip()) {
-          document.execCommand("copy");
-        }
+        document.execCommand("copy");
         event.stopPropagation();
         event.preventDefault();
       }
@@ -470,7 +457,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [editor, shortcutTimeoutRef]);
+  }, [editor, editorFocusedRef]);
 
   useEffect(() => {
     if (mainEditorContent && editor) {

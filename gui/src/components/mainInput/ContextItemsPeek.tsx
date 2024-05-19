@@ -10,6 +10,7 @@ import {
   vscForeground,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { getFontSize } from "../../util";
 import FileIcon from "../FileIcon";
 
 const ContextItemDiv = styled.div`
@@ -79,7 +80,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
           display: "flex",
           justifyContent: "left",
           alignItems: "center",
-          fontSize: "11px",
+          fontSize: `${getFontSize() - 3}px`,
         }}
         onClick={() => setOpen((prev) => !prev)}
       >

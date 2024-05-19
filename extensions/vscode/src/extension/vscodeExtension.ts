@@ -173,7 +173,10 @@ export class VsCodeExtension {
       // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
 
-      if (filepath.endsWith(".continuerc.json")) {
+      if (
+        filepath.endsWith(".continuerc.json") ||
+        filepath.endsWith(".prompt")
+      ) {
         this.configHandler.reloadConfig();
         this.tabAutocompleteModel.clearLlm();
       } else if (

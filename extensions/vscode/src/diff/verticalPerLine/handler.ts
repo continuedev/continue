@@ -9,7 +9,7 @@ import {
 } from "./decorations";
 import type { VerticalDiffCodeLens } from "./manager";
 
-export class VerticalPerLineDiffHandler {
+export class VerticalPerLineDiffHandler implements vscode.Disposable {
   private editor: vscode.TextEditor;
   private startLine: number;
   private endLine: number;
@@ -56,7 +56,7 @@ export class VerticalPerLineDiffHandler {
       this.editor,
     );
 
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
+    const disposable = vscode.window.onDidChangeActiveTextEditor((editor) => {
       // When we switch away and back to this editor, need to re-draw decorations
       if (editor?.document.uri.fsPath === this.filepath) {
         this.editor = editor;
@@ -69,6 +69,7 @@ export class VerticalPerLineDiffHandler {
         this.queueDiffLine(undefined);
       }
     });
+    this.disposables.push(disposable);
   }
 
   private get filepath() {
@@ -243,6 +244,13 @@ export class VerticalPerLineDiffHandler {
 
     this.cancelled = true;
     this.refreshCodeLens();
+    this.dispose();
+  }
+
+  disposables: vscode.Disposable[] = [];
+
+  dispose() {
+    this.disposables.forEach((disposable) => disposable.dispose());
   }
 
   get isCancelled() {

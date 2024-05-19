@@ -35,6 +35,7 @@
     "@vercel/ncc": "^0.38.1",
     "esbuild": "0.19.11",
     "pkg": "^5.8.1",
+    "rimraf": "^5.0.7",
     "typescript": "^5.3.3"
   },
   "dependencies": {
@@ -48,7 +49,7 @@
     "posthog-node": "^3.6.3",
     "system-ca": "^1.0.2",
     "uuid": "^9.0.1",
-    "vectordb": "^0.4.10",
+    "vectordb": "^0.4.20",
     "win-ca": "^3.5.1"
   }
 }

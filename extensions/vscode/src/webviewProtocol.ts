@@ -130,19 +130,45 @@ export class VsCodeWebviewProtocol
             }
           }
 
-          vscode.window
-            .showErrorMessage(message, "Show Logs", "Troubleshooting")
-            .then((selection) => {
-              if (selection === "Show Logs") {
-                vscode.commands.executeCommand(
-                  "workbench.action.toggleDevTools",
-                );
-              } else if (selection === "Troubleshooting") {
-                vscode.env.openExternal(
-                  vscode.Uri.parse("https://docs.continue.dev/troubleshooting"),
-                );
-              }
-            });
+          if (message.includes("https://proxy-server")) {
+            message = message.split("\n").slice(1).join("\n").trim();
+            try {
+              message = JSON.parse(message).message;
+            } catch {}
+            if (message.includes("exceeded")) {
+              message +=
+                " To keep using Continue, you can set up a local model or use your own API key.";
+            } else {
+              message +=
+                " To avoid rate limiting, you can set up a local model or use your own API key.";
+            }
+
+            vscode.window
+              .showInformationMessage(message, "Add API Key", "Use Local Model")
+              .then((selection) => {
+                if (selection === "Add API Key") {
+                  this.request("addApiKey", undefined);
+                } else if (selection === "Use Local Model") {
+                  this.request("setupLocalModel", undefined);
+                }
+              });
+          } else {
+            vscode.window
+              .showErrorMessage(message, "Show Logs", "Troubleshooting")
+              .then((selection) => {
+                if (selection === "Show Logs") {
+                  vscode.commands.executeCommand(
+                    "workbench.action.toggleDevTools",
+                  );
+                } else if (selection === "Troubleshooting") {
+                  vscode.env.openExternal(
+                    vscode.Uri.parse(
+                      "https://docs.continue.dev/troubleshooting",
+                    ),
+                  );
+                }
+              });
+          }
         }
       }
     });

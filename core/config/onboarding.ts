@@ -7,29 +7,30 @@ export function setupOptimizedMode(
     ...config,
     models: [
       {
-        title: "Claude 3 Sonnet (Free Trial)",
+        title: "GPT-4-Turbo (Free Trial)",
         provider: "free-trial",
-        model: "claude-3-sonnet-20240229",
+        model: "gpt-4-turbo",
+        systemMessage:
+          "You are an expert software developer. You give helpful and concise responses.",
+      },
+      {
+        title: "Llama3 70b (Free Trial)",
+        provider: "free-trial",
+        model: "llama3-70b",
+        systemMessage:
+          "You are an expert software developer. You give helpful and concise responses. Whenever you write a code block you include the language after the opening ticks.",
       },
       {
         title: "GPT-4o (Free Trial)",
         provider: "free-trial",
         model: "gpt-4o",
+        systemMessage:
+          "You are an expert software developer. You give helpful and concise responses.",
       },
       {
-        title: "GPT-3.5-Turbo (Free Trial)",
+        title: "Claude 3 Sonnet (Free Trial)",
         provider: "free-trial",
-        model: "gpt-3.5-turbo",
-      },
-      {
-        title: "Gemini Pro (Free Trial)",
-        provider: "free-trial",
-        model: "gemini-pro",
-      },
-      {
-        title: "Mixtral (Free Trial)",
-        provider: "free-trial",
-        model: "mistral-8x7b",
+        model: "claude-3-sonnet-20240229",
       },
     ],
     tabAutocompleteModel: {
@@ -91,5 +92,26 @@ export function setupLocalMode(
       provider: "transformers.js",
     },
     reranker: undefined,
+  };
+}
+
+export function setupLocalAfterFreeTrial(
+  config: SerializedContinueConfig,
+): SerializedContinueConfig {
+  return {
+    ...config,
+    models: [
+      {
+        title: "Llama 3",
+        provider: "ollama",
+        model: "llama3",
+      },
+      {
+        title: "Ollama",
+        provider: "ollama",
+        model: "AUTODETECT",
+      },
+      ...config.models.filter((model) => model.provider !== "free-trial"),
+    ],
   };
 }

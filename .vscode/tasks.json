@@ -110,8 +110,8 @@
     {
       "label": "install-all-dependencies",
       "type": "shell",
-      "windows": { "command": "./install-dependencies.ps1" },
-      "command": "./install-dependencies.sh",
+      "windows": { "command": "./scripts/install-dependencies.ps1" },
+      "command": "./scripts/install-dependencies.sh",
       "problemMatcher": [] // Empty so users are not prompted to select progress reporting
     },
     //

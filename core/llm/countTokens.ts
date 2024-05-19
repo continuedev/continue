@@ -58,8 +58,9 @@ function countTokens(
         ? countImageTokens(part)
         : encoding.encode(part.text ?? "", "all", []).length;
     }, 0);
+  } else {
+    return encoding.encode(content ?? "", "all", []).length;
   }
-  return encoding.encode(content, "all", []).length;
 }
 
 function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {

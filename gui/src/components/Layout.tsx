@@ -169,6 +169,25 @@ const Layout = () => {
     setIndexingState(data);
   });
 
+  useWebviewListener(
+    "addApiKey",
+    async () => {
+      navigate("/modelconfig/openai");
+    },
+    [navigate],
+  );
+
+  useWebviewListener(
+    "setupLocalModel",
+    async () => {
+      postToIde("completeOnboarding", {
+        mode: "localAfterFreeTrial",
+      });
+      navigate("/localOnboarding");
+    },
+    [navigate],
+  );
+
   useEffect(() => {
     const onboardingComplete = getLocalStorage("onboardingComplete");
     if (
@@ -185,9 +204,9 @@ const Layout = () => {
   }, [location]);
 
   const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
-    desc: "Starting indexing",
+    desc: "Indexing disabled",
     progress: 0.0,
-    status: "starting",
+    status: "disabled",
   });
 
   return (
@@ -221,10 +240,10 @@ const Layout = () => {
                 {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
                   defaultModel?.provider === "free-trial" &&
                   (location.pathname === "/settings" ||
-                    parseInt(localStorage.getItem("ftc") || "0") >= 50) && (
+                    parseInt(localStorage.getItem("ftc") || "0") >= 10) && (
                     <ProgressBar
                       completed={parseInt(localStorage.getItem("ftc") || "0")}
-                      total={150}
+                      total={100}
                     />
                   )}
 
@@ -270,7 +289,10 @@ const Layout = () => {
           {bottomMessage}
         </BottomMessageDiv>
       </div>
-      <div className="text-sm" id="tooltip-portal-div" />
+      <div
+        style={{ fontSize: `${getFontSize() - 4}px` }}
+        id="tooltip-portal-div"
+      />
     </LayoutTopDiv>
   );
 };

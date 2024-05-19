@@ -546,7 +546,7 @@ const gpt4turbo: ModelPackage = {
     contextLength: 128_000,
     title: "GPT-4 Turbo",
   },
-  providerOptions: ["openai"],
+  providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
 };
 
@@ -558,6 +558,8 @@ const gpt4o: ModelPackage = {
     model: "gpt-4o",
     contextLength: 128_000,
     title: "GPT-4o",
+    systemMessage:
+      "You are an expert software developer. You give helpful and concise responses.",
   },
   providerOptions: ["openai", "freetrial"],
   icon: "openai.png",
@@ -1037,6 +1039,7 @@ After it's up and running, you can start using Continue.`,
       { ...claude3Haiku, title: "Claude 3 Haiku (trial)" },
       { ...gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
       { ...gpt4o, title: "GPT-4o (trial)" },
+      { ...gpt4turbo, title: "GPT-4-Turbo (trial)" },
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
       {
         ...AUTODETECT,

@@ -1,6 +1,7 @@
 import { PlayIcon, StopIcon } from "@heroicons/react/24/outline";
 import styled from "styled-components";
 import { Button } from "..";
+import { getFontSize } from "../../util";
 
 const StyledButton = styled(Button)<{
   color?: string | null;
@@ -46,7 +47,7 @@ function ContinueButton(props: {
     <StyledButton
       showStop={props.showStop}
       hidden={props.hidden}
-      style={{ fontSize: "10px" }}
+      style={{ fontSize: `${getFontSize() - 4}px` }}
       className="m-auto"
       onClick={props.disabled ? undefined : props.onClick}
       isDisabled={props.disabled}

@@ -438,12 +438,12 @@
             "properties": {
               "model": {
                 "enum": [
+                  "gpt-4-turbo",
+                  "gpt-4o",
+                  "llama3-70b",
                   "gpt-3.5-turbo",
-                  "gpt-4",
                   "phind-codellama-34b",
                   "gemini-pro",
-                  "gpt-4-vision-preview",
-                  "codellama-70b",
                   "mistral-8x7b",
                   "claude-3-opus-20240229",
                   "claude-3-sonnet-20240229",
@@ -1963,6 +1963,9 @@
               "enum": ["top", "bottom"],
               "default": "top",
               "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
+            },
+            "fontSize": {
+              "type": "number"
             }
           }
         },

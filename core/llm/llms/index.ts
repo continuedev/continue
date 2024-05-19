@@ -142,14 +142,13 @@ export async function llmFromDescription(
   };
 
   if (desc.provider === "continue-proxy") {
-    options = {
-      ...options,
-      apiBase: new URL(
+    options.apiKey = ideSettings.userToken;
+    if (ideSettings.remoteConfigServerUrl) {
+      options.apiBase = new URL(
         "/proxy/v1",
         ideSettings.remoteConfigServerUrl,
-      ).toString(),
-      apiKey: ideSettings.userToken,
-    };
+      ).toString();
+    }
   }
 
   return new cls(options);
