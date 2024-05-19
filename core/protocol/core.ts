@@ -111,8 +111,14 @@ export type Protocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
-  "stats/getTokensPerDay": [undefined, { day: string; tokens: number }[]];
-  "stats/getTokensPerModel": [undefined, { model: string; tokens: number }[]];
+  "stats/getTokensPerDay": [
+    undefined,
+    { day: string; promptTokens: number; generatedTokens: number }[],
+  ];
+  "stats/getTokensPerModel": [
+    undefined,
+    { model: string; promptTokens: number; generatedTokens: number }[],
+  ];
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [undefined | string, void];
   completeOnboarding: [
@@ -122,7 +128,8 @@ export type Protocol = {
         | "optimized"
         | "custom"
         | "localExistingUser"
-        | "optimizedExistingUser";
+        | "optimizedExistingUser"
+        | "localAfterFreeTrial";
     },
     void,
   ];

@@ -61,4 +61,6 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setTheme: [{ theme: any }, void];
   setColors: [{ [key: string]: string }, void];
   "jetbrains/editorInsetRefresh": [undefined, void];
+  addApiKey: [undefined, void];
+  setupLocalModel: [undefined, void];
 };
