@@ -5,17 +5,7 @@ const { rimrafSync } = require("rimraf");
 const {
   validateFilesPresent,
   execCmdSync,
-  autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
-
-function execCmdSync(cmd) {
-  try {
-    execSync(cmd);
-  } catch (err) {
-    console.error(`Error executing command '${cmd}': `, err.output.toString());
-    process.exit(1);
-  }
-}
 
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));
@@ -319,11 +309,14 @@ const exe = os === "win32" ? ".exe" : "";
     return target?.startsWith("win");
   }
 
-  async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
-    console.log(`Copying ${package} to ${toCopy}`);
+  async function installNodeModuleInTempDirAndCopyToCurrent(
+    packageName,
+    toCopy,
+  ) {
+    console.log(`Copying ${packageName} to ${toCopy}`);
     // This is a way to install only one package without npm trying to install all the dependencies
     // Create a temporary directory for installing the package
-    const adjustedName = toCopy.replace(/^@/, "").replace("/", "-");
+    const adjustedName = packageName.replace(/^@/, "").replace("/", "-");
 
     const tempDir = `/tmp/continue-node_modules-${adjustedName}`;
     const currentDir = process.cwd();
@@ -339,12 +332,16 @@ const exe = os === "win32" ? ".exe" : "";
       process.chdir(tempDir);
 
       // Initialize a new package.json and install the package
-      execCmdSync(`npm init -y && npm i -f ${package} --no-save`);
+      execCmdSync(`npm init -y && npm i -f ${packageName} --no-save`);
 
       console.log(
-        `Contents of: ${package}`,
+        `Contents of: ${packageName}`,
         fs.readdirSync(path.join(tempDir, "node_modules", toCopy)),
       );
+
+      // Without this it seems the file isn't completely written to disk
+      // Ideally we validate file integrity in the validation at the end
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Copy the installed package back to the current directory
       await new Promise((resolve, reject) => {
@@ -354,7 +351,10 @@ const exe = os === "win32" ? ".exe" : "";
           { dereference: true },
           (error) => {
             if (error) {
-              console.error(`[error] Error copying ${package} package`, error);
+              console.error(
+                `[error] Error copying ${packageName} package`,
+                error,
+              );
               reject(error);
             } else {
               resolve();
@@ -485,14 +485,7 @@ const exe = os === "win32" ? ".exe" : "";
   );
 
   // Validate the all of the necessary files are present
-  validateFilesPresent();
-})();
-
-function validateFilesPresent() {
-  // This script verifies after pacakging that necessary files are in the correct locations
-  // In many cases just taking a sample file from the folder when they are all roughly the same thing
-
-  const pathsToVerify = [
+  validateFilesPresent([
     // Queries used to create the index for @code context provider
     "tree-sitter/code-snippet-queries/tree-sitter-c_sharp-tags.scm",
 
@@ -555,52 +548,5 @@ function validateFilesPresent() {
     }/index.node`,
     `out/node_modules/esbuild/lib/main.js`,
     `out/node_modules/esbuild/bin/esbuild`,
-  ];
-
-  let missingFiles = [];
-  for (const path of pathsToVerify) {
-    if (!fs.existsSync(path)) {
-      const parentFolder = path.split("/").slice(0, -1).join("/");
-      const grandparentFolder = path.split("/").slice(0, -2).join("/");
-      const grandGrandparentFolder = path.split("/").slice(0, -3).join("/");
-
-      console.error(`File ${path} does not exist`);
-      if (!fs.existsSync(parentFolder)) {
-        console.error(`Parent folder ${parentFolder} does not exist`);
-      } else {
-        console.error(
-          "Contents of parent folder:",
-          fs.readdirSync(parentFolder),
-        );
-      }
-      if (!fs.existsSync(grandparentFolder)) {
-        console.error(`Grandparent folder ${grandparentFolder} does not exist`);
-        if (!fs.existsSync(grandGrandparentFolder)) {
-          console.error(
-            `Grandgrandparent folder ${grandGrandparentFolder} does not exist`,
-          );
-        } else {
-          console.error(
-            "Contents of grandgrandparent folder:",
-            fs.readdirSync(grandGrandparentFolder),
-          );
-        }
-      } else {
-        console.error(
-          "Contents of grandparent folder:",
-          fs.readdirSync(grandparentFolder),
-        );
-      }
-
-      missingFiles.push(path);
-    }
-  }
-
-  if (missingFiles.length > 0) {
-    throw new Error(
-      `The following files were missing:\n- ${missingFiles.join("\n- ")}`,
-    );
-  } else {
-    console.log("All paths exist");
-  }
-}
+  ]);
+})();
