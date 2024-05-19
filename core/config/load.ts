@@ -313,14 +313,20 @@ async function intermediateToFinalConfig(
     const { provider, ...options } = embeddingsProviderDescription;
     const embeddingsProviderClass = AllEmbeddingsProviders[provider];
     if (embeddingsProviderClass) {
-      config.embeddingsProvider = new embeddingsProviderClass(
-        options,
-        (url: string | URL, init: any) =>
-          fetchwithRequestOptions(url, init, {
-            ...config.requestOptions,
-            ...options.requestOptions,
-          }),
-      );
+      if (
+        embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
+      ) {
+        config.embeddingsProvider = new embeddingsProviderClass();
+      } else {
+        config.embeddingsProvider = new embeddingsProviderClass(
+          options,
+          (url: string | URL, init: any) =>
+            fetchwithRequestOptions(url, init, {
+              ...config.requestOptions,
+              ...options.requestOptions,
+            }),
+        );
+      }
     }
   }
 

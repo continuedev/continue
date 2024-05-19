@@ -157,7 +157,9 @@ function isEnglishFirstLine(line: string) {
     line.startsWith("here's") ||
     line.startsWith("sure, here") ||
     line.startsWith("sure thing") ||
-    line.startsWith("sure!")
+    line.startsWith("sure!") ||
+    line.startsWith("to fill") ||
+    line.startsWith("the code should")
   ) {
     return true;
   }
