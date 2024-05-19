@@ -19,7 +19,6 @@ import com.intellij.openapi.fileEditor.TextEditor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.vfs.*
@@ -434,7 +433,7 @@ class IdeProtocolClient (
                         respond(historyManager.list());
                     }
                     "saveSession" -> {
-                        historyManager.save(data as PersistedSessionInfo);
+                        historyManager.save(data as MutableMap<String, Any>);
                         respond(null);
                     }
                     "deleteSession" -> {
