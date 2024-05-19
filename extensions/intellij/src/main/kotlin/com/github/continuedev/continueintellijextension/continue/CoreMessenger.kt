@@ -140,7 +140,9 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "getRepoName",
         "listDir",
         "getGitRootPath",
-        "getLastModified"
+        "getLastModified",
+        "insertAtCursor",
+        "applyToFile"
     )
 
     private val forwardToWebview = listOf<String>(

@@ -19,7 +19,6 @@ import {
   getAltKeyLabel,
   getFontSize,
   getMetaKeyLabel,
-  isJetBrains,
   isMetaEquivalentKeyPressed,
 } from "../../util";
 
@@ -154,27 +153,23 @@ function InputToolbar(props: InputToolbarProps) {
           {useActiveFile ? "No context" : "Use active file"}
         </span>
       ) : (
-        isJetBrains() || (
-          <span
-            style={{
-              color: props.usingCodebase ? vscBadgeBackground : lightGray,
-              backgroundColor: props.usingCodebase
-                ? lightGray + "33"
-                : undefined,
-              borderRadius: defaultBorderRadius,
-              padding: "2px 4px",
-            }}
-            onClick={(e) => {
-              props.onEnter({
-                useCodebase: true,
-                noContext: !useActiveFile,
-              });
-            }}
-            className={"hover:underline cursor-pointer float-right"}
-          >
-            {getMetaKeyLabel()} ⏎ Use codebase
-          </span>
-        )
+        <span
+          style={{
+            color: props.usingCodebase ? vscBadgeBackground : lightGray,
+            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
+            borderRadius: defaultBorderRadius,
+            padding: "2px 4px",
+          }}
+          onClick={(e) => {
+            props.onEnter({
+              useCodebase: true,
+              noContext: !useActiveFile,
+            });
+          }}
+          className={"hover:underline cursor-pointer float-right"}
+        >
+          {getMetaKeyLabel()} ⏎ Use codebase
+        </span>
       )}
       <EnterButton
         offFocus={props.usingCodebase}

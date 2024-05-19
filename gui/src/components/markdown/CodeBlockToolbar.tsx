@@ -80,53 +80,50 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
     <TopDiv>
       <SecondDiv bottom={props.bottom || false}>
         {isJetBrains() || (
-          <>
-            <HeaderButtonWithText
-              text={
-                isTerminalCodeBlock(props.language, props.text)
-                  ? "Run in terminal"
-                  : applying
+          <HeaderButtonWithText
+            text={
+              isTerminalCodeBlock(props.language, props.text)
+                ? "Run in terminal"
+                : applying
                   ? "Applying..."
                   : "Apply to current file"
-              }
-              disabled={applying}
-              style={{ backgroundColor: vscEditorBackground }}
-              onClick={() => {
-                if (terminalLanguages.includes(props.language)) {
-                  let text = props.text;
-                  if (text.startsWith("$ ")) {
-                    text = text.slice(2);
-                  }
-                  new WebviewIde().runCommand(text);
-                  return;
+            }
+            disabled={applying}
+            style={{ backgroundColor: vscEditorBackground }}
+            onClick={() => {
+              if (terminalLanguages.includes(props.language)) {
+                let text = props.text;
+                if (text.startsWith("$ ")) {
+                  text = text.slice(2);
                 }
+                ideMessenger.ide.runCommand(text);
+                return;
+              }
 
-                if (applying) return;
-                ideMessenger.post("applyToCurrentFile", {
-                  text: props.text,
-                });
-                setApplying(true);
-                setTimeout(() => setApplying(false), 2000);
-              }}
-            >
-              {applying ? (
-                <CheckIcon className="w-4 h-4 text-green-500" />
-              ) : (
-                <PlayIcon className="w-4 h-4" />
-              )}
-            </HeaderButtonWithText>
-            <HeaderButtonWithText
-              text="Insert at cursor"
-              style={{ backgroundColor: vscEditorBackground }}
-              onClick={() => {
-                ideMessenger.post("insertAtCursor", { text: props.text });
-              }}
-            >
-              <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
-            </HeaderButtonWithText>
-          </>
+              if (applying) return;
+              ideMessenger.post("applyToCurrentFile", {
+                text: props.text,
+              });
+              setApplying(true);
+              setTimeout(() => setApplying(false), 2000);
+            }}
+          >
+            {applying ? (
+              <CheckIcon className="w-4 h-4 text-green-500" />
+            ) : (
+              <PlayIcon className="w-4 h-4" />
+            )}
+          </HeaderButtonWithText>
         )}
-
+        <HeaderButtonWithText
+          text="Insert at cursor"
+          style={{ backgroundColor: vscEditorBackground }}
+          onClick={() => {
+            ideMessenger.post("insertAtCursor", { text: props.text });
+          }}
+        >
+          <ArrowLeftEndOnRectangleIcon className="w-4 h-4" />
+        </HeaderButtonWithText>
         <CopyButton text={props.text} />
       </SecondDiv>
     </TopDiv>

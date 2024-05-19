@@ -12,12 +12,8 @@ import com.intellij.ide.plugins.PluginManagerCore
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
-import com.intellij.openapi.application.ReadAction
-import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
-import com.intellij.openapi.components.service
-import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.extensions.PluginId
@@ -564,22 +560,6 @@ class IdeProtocolClient (
                         respond(folders)
                     }
 
-                    // History
-                    "history" -> {
-                        respond(historyManager.list());
-                    }
-                    "saveSession" -> {
-                        historyManager.save(data as MutableMap<String, Any>);
-                        respond(null);
-                    }
-                    "deleteSession" -> {
-                        historyManager.delete(data as String);
-                        respond(null);
-                    }
-                    "loadSession" -> {
-                        val session = historyManager.load(data as String)
-                        respond(session)
-                    }
                     "getSearchResults" -> {
                         respond("")
                     }
@@ -614,29 +594,6 @@ class IdeProtocolClient (
                         }
                     }
                     "applyToFile" -> {
-                    }
-                    "getGitHubAuthToken" -> {
-                        val continueSettingsService = service<ContinueExtensionSettings>()
-                        val ghAuthToken = continueSettingsService.continueState.ghAuthToken;
-
-                        if (ghAuthToken == null) {
-                            // Open a dialog so user can enter their GitHub token
-                            continuePluginService.sendToWebview("openOnboarding", null, uuid())
-                            respond(null)
-                        } else {
-                            respond(ghAuthToken)
-                        }
-                    }
-                    "setGitHubAuthToken" -> {
-                        val continueSettingsService = service<ContinueExtensionSettings>()
-                        val data = data as Map<String, String>
-                        continueSettingsService.continueState.ghAuthToken = data["token"]
-                        respond(null)
-                    }
-                    "openUrl" -> {
-                        val url = data as String
-                        java.awt.Desktop.getDesktop().browse(java.net.URI(url))
-                        respond(null)
                     }
                     else -> {
                         println("Unknown messageType: $messageType")
