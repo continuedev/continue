@@ -7,11 +7,11 @@ import { streamResponse } from "../stream.js";
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
 
-  private _getHeaders() {
+  private async _getHeaders() {
     return {
       uniqueId: this.uniqueId || "None",
       "Content-Type": "application/json",
-      ...getHeaders(),
+      ...(await getHeaders()),
     };
   }
 
@@ -38,7 +38,7 @@ class FreeTrial extends BaseLLM {
 
     const response = await this.fetch(`${SERVER_URL}/stream_complete`, {
       method: "POST",
-      headers: this._getHeaders(),
+      headers: await this._getHeaders(),
       body: JSON.stringify({
         prompt,
         ...args,
@@ -76,7 +76,7 @@ class FreeTrial extends BaseLLM {
 
     const response = await this.fetch(`${SERVER_URL}/stream_chat`, {
       method: "POST",
-      headers: this._getHeaders(),
+      headers: await this._getHeaders(),
       body: JSON.stringify({
         messages: messages.map(this._convertMessage),
         ...args,
