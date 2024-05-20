@@ -3,14 +3,16 @@ import { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "../../index.j
 import { Article, chunkArticle, pageToArticle } from "./article.js";
 import { crawlPage } from "./crawl.js";
 import { addDocs, hasDoc } from "./db.js";
+import {SiteIndexingConfig } from "../../index.js"
 
 export async function* indexDocs(
-  title: string,
-  baseUrl: URL,
+  siteIndexingConfig: SiteIndexingConfig,
   embeddingsProvider: EmbeddingsProvider,
-  maxDepth?: number
 ): AsyncGenerator<IndexingProgressUpdate> {
-  if (await hasDoc(baseUrl.toString())) {
+  console.log("In core indexDocs. maxDepth -> ", siteIndexingConfig.maxDepth, " Base Url -> ", siteIndexingConfig.startUrl)
+  const startUrl = new URL(siteIndexingConfig.startUrl)
+  
+  if (await hasDoc(siteIndexingConfig.startUrl.toString())) {
     yield {
       progress: 1,
       desc: "Already indexed",
@@ -27,10 +29,12 @@ export async function* indexDocs(
 
   const articles: Article[] = [];
 
-  for await (const page of crawlPage(baseUrl, maxDepth)) {
+  console.log("starting crawl loop")
+  for await (const page of crawlPage(startUrl, siteIndexingConfig.maxDepth)) {
     const article = pageToArticle(page);
-    if (!article) {continue;}
+    if (!article) { continue; }
 
+    console.log("pushing article")
     articles.push(article);
 
     yield {
@@ -61,7 +65,7 @@ export async function* indexDocs(
     embeddings.push(...subpathEmbeddings);
   }
 
-  await addDocs(title, baseUrl, chunks, embeddings);
+  await addDocs(siteIndexingConfig.title, startUrl, chunks, embeddings);
 
   yield {
     progress: 1,

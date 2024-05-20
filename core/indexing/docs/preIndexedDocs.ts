@@ -1,9 +1,4 @@
-export interface SiteIndexingConfig {
-  startUrl: string;
-  rootUrl: string;
-  title: string;
-  maxDepth?: number;
-}
+import {SiteIndexingConfig} from "../../index.js";
 
 const configs: SiteIndexingConfig[] = [
   {

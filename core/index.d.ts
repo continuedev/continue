@@ -154,6 +154,13 @@ export interface ContextSubmenuItem {
   description: string;
 }
 
+export interface SiteIndexingConfig {
+  startUrl: string;
+  rootUrl: string;
+  title: string;
+  maxDepth?: number;
+}
+
 export interface IContextProvider {
   get description(): ContextProviderDescription;
 

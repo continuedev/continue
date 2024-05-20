@@ -105,6 +105,7 @@ export type WebviewProtocol = Protocol &
   };
 
 export type ReverseWebviewProtocol = {
+  addDocs: [{  startUrl: string, rootUrl: string; title: string; maxDepth?: number;}]
   setInactive: [undefined, void];
   configUpdate: [undefined, void];
   submitMessage: [{ message: any }, void]; // any -> JSONContent from TipTap

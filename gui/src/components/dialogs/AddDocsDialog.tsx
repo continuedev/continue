@@ -6,7 +6,14 @@ import { Button, Input } from "..";
 import { SubmenuContextProvidersContext } from "../../App";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
 import { postToIde } from "../../util/ide";
-import { SiteIndexingConfig } from "core/indexing/docs/preIndexedDocs";
+import { SiteIndexingConfig } from "core/index";
+
+// export interface SiteIndexingConfig {
+//   startUrl: string;
+//   rootUrl: string;
+//   title: string;
+//   maxDepth?: number;
+// }
 
 const GridDiv = styled.div`
   display: grid;
@@ -75,8 +82,14 @@ function AddDocsDialog() {
         disabled={!docsUrl || !urlValid}
         className="ml-auto"
         onClick={() => {
-          const siteindexingConfig = { url: docsUrl, title: docsTitle, maxDepth:maxDepth }
-          postToIde("context/addDocs", siteindexingConfig);
+          const siteIndexingConfig: SiteIndexingConfig = {
+            startUrl: docsUrl,
+            rootUrl: docsUrl,
+            title: docsTitle,
+            maxDepth: maxDepth
+          };          
+          console.log("triggering addDocs. maxDepth: ", maxDepth)
+          postToIde("context/addDocs", siteIndexingConfig);
           setDocsTitle("");
           setDocsUrl("");
           setMaxDepth(defaultMaxDepth)
