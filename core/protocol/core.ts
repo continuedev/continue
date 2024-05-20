@@ -58,7 +58,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
-  "context/addDocs": [siteIndexingConfig: SiteIndexingConfig, void];
+  "context/addDocs": [SiteIndexingConfig, void];
   "autocomplete/complete": [AutocompleteInput, Promise<string[]>];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];

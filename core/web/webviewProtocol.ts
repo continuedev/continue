@@ -8,6 +8,7 @@ import {
   Problem,
   Range,
   Thread,
+  SiteIndexingConfig
 } from "../index.js";
 import { RangeInFileWithContents } from "../commands/util.js";
 
@@ -73,6 +74,7 @@ export type WebviewProtocol = Protocol &
     ];
     "index/setPaused": [boolean, void];
     "index/forceReIndex": [undefined, void];
+    "context/addDocs": [SiteIndexingConfig, void];  
     openUrl: [string, void];
     applyToCurrentFile: [{ text: string }, void];
     showTutorial: [undefined, void];
