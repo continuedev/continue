@@ -1,6 +1,5 @@
 import { IProtocol } from "core/protocol";
 import { IMessenger, type Message } from "core/util/messenger";
-import { getCoreLogsPath } from "core/util/paths";
 import * as fs from "node:fs";
 import { v4 as uuidv4 } from "uuid";
 
@@ -13,19 +12,6 @@ export class IpcMessenger<
   idListeners = new Map<string, (message: Message) => any>();
 
   constructor() {
-    const logger = (message: any, ...optionalParams: any[]) => {
-      const logFilePath = getCoreLogsPath();
-      const timestamp = new Date().toISOString().split(".")[0];
-      const logMessage = `[${timestamp}] ${message} ${optionalParams.join(
-        " ",
-      )}\n`;
-      fs.appendFileSync(logFilePath, logMessage);
-    };
-    console.log = logger;
-    console.error = logger;
-    console.warn = logger;
-    console.log("[info] Starting Continue core...");
-
     process.stdin.on("data", (data) => {
       this._handleData(data);
     });
@@ -64,7 +50,6 @@ export class IpcMessenger<
       listeners?.forEach(async (handler) => {
         try {
           const response = await handler(msg);
-          console.log("Response from handler: ", JSON.stringify(response));
           if (
             response &&
             typeof response[Symbol.asyncIterator] === "function"

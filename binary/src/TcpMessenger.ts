@@ -18,7 +18,6 @@ export class TcpMessenger<
     const server = net.createServer((socket) => {
       this.socket = socket;
       socket.on("data", (data: Buffer) => {
-        console.log("Received from server:", data.toString());
         this._handleData(data);
       });
 
@@ -60,10 +59,6 @@ export class TcpMessenger<
       listeners?.forEach(async (handler) => {
         try {
           const response = await handler(msg);
-          console.log(
-            `Response from ${msg.messageType} handler: `,
-            JSON.stringify(response),
-          );
           if (
             response &&
             typeof response[Symbol.asyncIterator] === "function"

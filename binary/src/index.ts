@@ -6,9 +6,9 @@ import { IMessenger } from "core/util/messenger";
 import { getCoreLogsPath } from "core/util/paths";
 import fs from "node:fs";
 import { IpcIde } from "./IpcIde";
-import { setupCa } from "./ca";
-import { Core } from "./core";
-import { IpcMessenger } from "./messenger";
+import { IpcMessenger } from "./IpcMessenger";
+import { TcpMessenger } from "./TcpMessenger";
+import { setupCoreLogging } from "./logging";
 
 const logFilePath = getCoreLogsPath();
 fs.appendFileSync(logFilePath, "[info] Starting Continue core...\n");
@@ -17,6 +17,7 @@ const program = new Command();
 
 program.action(async () => {
   try {
+    setupCoreLogging();
     let messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>;
     if (process.env.CONTINUE_DEVELOPMENT === "true") {
       messenger = new TcpMessenger<ToCoreProtocol, FromCoreProtocol>();

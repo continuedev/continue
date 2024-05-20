@@ -8,7 +8,6 @@ import java.io.OutputStreamWriter
 import java.io.*
 
 import com.google.gson.Gson
-import com.intellij.openapi.components.ServiceManager
 import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import java.net.Socket
@@ -68,7 +67,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         }
 
         // Forward to webview
-        if (forwardToWebview.contains(messageType)) {
+        if (PASS_THROUGH_TO_WEBVIEW.contains(messageType)) {
             // TODO: Currently we aren't set up to receive a response back from the webview
             // Can circumvent for getDefaultsModelTitle here for now
             if (messageType == "getDefaultModelTitle") {
@@ -145,7 +144,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "applyToFile"
     )
 
-    private val forwardToWebview = listOf<String>(
+    private val PASS_THROUGH_TO_WEBVIEW = listOf<String>(
             "configUpdate",
             "getDefaultModelTitle",
             "indexProgress",
