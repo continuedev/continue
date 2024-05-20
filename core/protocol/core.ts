@@ -14,7 +14,7 @@ import type {
   SiteIndexingConfig
 } from ".";
 import { AutocompleteInput } from "./autocomplete/completionProvider";
-import { IdeProtocol } from "./web/webviewProtocol";
+import { IdeProtocol } from "./web/webviewProtocol.js";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
