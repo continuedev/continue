@@ -11,9 +11,9 @@ import type {
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
+  SiteIndexingConfig
 } from ".";
 import { AutocompleteInput } from "./autocomplete/completionProvider";
-import { SiteIndexingConfig } from "./indexing/docs/preIndexedDocs";
 import { IdeProtocol } from "./web/webviewProtocol";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
@@ -58,7 +58,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
-  "context/addDocs": [SiteIndexingConfig, void];
+  "context/addDocs": [siteIndexingConfig: SiteIndexingConfig, Promise<void>];
   "autocomplete/complete": [AutocompleteInput, Promise<string[]>];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];

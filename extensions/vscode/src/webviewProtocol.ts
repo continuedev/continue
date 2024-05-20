@@ -13,6 +13,7 @@ import {
 } from "../../../core/protocol/ideWebview";
 import { IMessenger } from "../../../core/util/messenger";
 import { getExtensionUri } from "./util/vscode";
+import { SiteIndexingConfig } from "core/index";
 
 export async function showTutorial() {
   const tutorialPath = path.join(
@@ -32,21 +33,9 @@ export async function showTutorial() {
   await vscode.window.showTextDocument(doc, { preview: false });
 }
 
-export type ToCoreOrIdeFromWebviewProtocol = ToCoreFromWebviewProtocol &
-  ToIdeFromWebviewProtocol;
-type FullToWebviewFromIdeOrCoreProtocol = ToWebviewFromIdeProtocol &
-  ToWebviewFromCoreProtocol;
-export class VsCodeWebviewProtocol
-  implements
-    IMessenger<
-      ToCoreOrIdeFromWebviewProtocol,
-      FullToWebviewFromIdeOrCoreProtocol
-    >
-{
-  listeners = new Map<
-    keyof ToCoreOrIdeFromWebviewProtocol,
-    ((message: Message) => any)[]
-  >();
+ export class VsCodeWebviewProtocol {
+  listeners = new Map<keyof WebviewProtocol, ((message: Message) => any)[]>();
+  abortedMessageIds: Set<string> = new Set();
 
   send(messageType: string, data: any, messageId?: string): string {
     const id = messageId ?? uuidv4();
@@ -607,18 +596,25 @@ export class VsCodeWebviewProtocol
       }
     });
     this.on("context/addDocs", (msg) => {
-      const SiteIndexingConfig = msg.data
+      const siteIndexingConfig: SiteIndexingConfig = {
+        startUrl: msg.data.url,
+        rootUrl: msg.data.url,
+        title: msg.data.title,
+        maxDepth: 4
+      };    
+      // const siteIndexingConfig = msg.data
+      
       const embeddingsProvider = new TransformersJsEmbeddingsProvider();
+      console.log("In vscode addDocs")
       vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,
-          title: `Indexing ${SiteIndexingConfig.title}`,
+          title: `Indexing ${siteIndexingConfig.title}`,
           cancellable: false,
         },
         async (progress) => {
           for await (const update of indexDocs(
-            SiteIndexingConfig.title,
-            new URL(SiteIndexingConfig.url),
+            siteIndexingConfig,
             embeddingsProvider,
           )) {
             progress.report({
@@ -628,7 +624,7 @@ export class VsCodeWebviewProtocol
           }
 
           vscode.window.showInformationMessage(
-            `🎉 Successfully indexed ${SiteIndexingConfig.title}`,
+            `🎉 Successfully indexed ${siteIndexingConfig.title}`,
           );
 
           this.request("refreshSubmenuItems", undefined);
