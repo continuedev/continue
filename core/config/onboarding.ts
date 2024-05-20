@@ -82,6 +82,7 @@ export function setupLocalMode(
         provider: "ollama",
         model: "AUTODETECT",
       },
+      ...config.models.filter((model) => model.provider !== "free-trial"),
     ],
     tabAutocompleteModel: {
       title: "Starcoder 3b",
