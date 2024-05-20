@@ -15,6 +15,7 @@ import { RangeInFileWithContents } from "../commands/util.js";
 import { Protocol } from "../protocol.js";
 
 export type IdeProtocol = {
+  listWorkspaceContents: [undefined, string[]];
   getWorkspaceDirs: [undefined, string[]];
   listFolders: [undefined, string[]];
   writeFile: [{ path: string; contents: string }, void];
@@ -72,6 +73,7 @@ export type WebviewProtocol = Protocol &
         vscMediaUrl: string;
       },
     ];
+    errorPopup: [{ message: string }, void];
     "index/setPaused": [boolean, void];
     "index/forceReIndex": [undefined, void];
     "context/addDocs": [SiteIndexingConfig, void];  

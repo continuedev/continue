@@ -54,6 +54,9 @@ async function getLinksFromUrl(url: string, path: string) {
   const baseUrl = new URL(url);
   const location = new URL(path, url);
   let response;
+
+  //ToDo: Should have some method of checking if location is valid or not
+
   try {
     response = await fetch(location.toString());
   } catch (error: unknown) {
@@ -139,29 +142,33 @@ export async function* crawlPage(url: URL, maxDepth: number = 3): AsyncGenerator
   while (index < paths.length) {
     const batch = paths.slice(index, index + 50);
 
-    const promises = batch.map(({ path, depth }) => getLinksFromUrl(baseUrl, path).then(links => ({ links, path, depth }))); // Adjust for depth tracking
-
-    const results = await Promise.all(promises);
-    console.log("results length: ", results.length)
-    for (const { links: { html, links: linksArray }, path, depth } of results) {
-      if (html !== "" && depth <= maxDepth) { // Check depth
-        console.log("Depth: ", depth)
-        yield {
-          url: url.toString(),
-          path,
-          html,
-        };
-      }
+    try { 
+      const promises = batch.map(({ path, depth }) => getLinksFromUrl(baseUrl, path).then(links => ({ links, path, depth }))); // Adjust for depth tracking
       
-      // Ensure we only add links if within depth limit
-      if (depth < maxDepth) {
-        console.log("Depth: ", depth)
-        for (let link of linksArray) {
-          if (!paths.some(p => p.path === link)) {
-            paths.push({ path: link, depth: depth + 1 }); // Increment depth for new paths
+      const results = await Promise.all(promises);
+      console.log("results length: ", results.length)
+      for (const { links: { html, links: linksArray }, path, depth } of results) {
+        if (html !== "" && depth <= maxDepth) { // Check depth
+          console.log("Depth: ", depth)
+          yield {
+            url: url.toString(),
+            path,
+            html,
+          };
+        }
+        
+        // Ensure we only add links if within depth limit
+        if (depth < maxDepth) {
+          console.log("Depth: ", depth)
+          for (let link of linksArray) {
+            if (!paths.some(p => p.path === link)) {
+              paths.push({ path: link, depth: depth + 1 }); // Increment depth for new paths
+            }
           }
         }
       }
+    } catch(e){
+        console.warn("Error while crawling page: ", e)
     }
 
     index += batch.length; // Proceed to next batch

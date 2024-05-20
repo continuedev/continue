@@ -30,6 +30,7 @@ export async function* indexDocs(
   const articles: Article[] = [];
 
   console.log("starting crawl loop")
+  // Crawl pages and retrieve info as articles
   for await (const page of crawlPage(startUrl, siteIndexingConfig.maxDepth)) {
     const article = pageToArticle(page);
     if (!article) { continue; }
@@ -47,24 +48,35 @@ export async function* indexDocs(
   const chunks: Chunk[] = [];
   const embeddings: number[][] = [];
 
+  console.log("starting index of articles")
+  // Create embeddings of retrieved articles
   for (const article of articles) {
+    // Todo: Should have some way of checking if an article is valid
+
     yield {
       progress: Math.max(1, Math.floor(100 / (articles.length + 1))),
       desc: `${article.subpath}`,
       status: "indexing",
     };
 
-    const subpathEmbeddings = await embeddingsProvider.embed(
-      chunkArticle(article).map((chunk) => {
-        chunks.push(chunk);
+    try {
+      const subpathEmbeddings = await embeddingsProvider.embed(
+        chunkArticle(article).map((chunk) => {
+          chunks.push(chunk);
 
-        return chunk.content;
-      }),
-    );
+          return chunk.content;
+        }),
+      );
 
-    embeddings.push(...subpathEmbeddings);
+
+      embeddings.push(...subpathEmbeddings);
+    } catch (e) {
+      console.warn("Error chunking article: ", e)
+    }
   }
 
+  console.log("adding docs")
+  // Add docs to databases
   await addDocs(siteIndexingConfig.title, startUrl, chunks, embeddings);
 
   yield {

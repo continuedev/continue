@@ -148,10 +148,6 @@ export interface CustomContextProvider {
   loadSubmenuItems?: (
     args: LoadSubmenuItemsArgs,
   ) => Promise<ContextSubmenuItem[]>;
-  addDocs(
-    startUrl: string,
-    maxDepth: number
-  )
 }
 
 export interface ContextSubmenuItem {
