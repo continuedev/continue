@@ -1,13 +1,8 @@
+import path from "path";
 // @ts-ignore
 // prettier-ignore
-import { PipelineType, env, pipeline } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
-
-import path from "path";
+import { type PipelineType } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
-
-env.allowLocalModels = true;
-env.allowRemoteModels = false;
-env.localModelPath = path.join(__dirname, "..", "models");
 
 class EmbeddingsPipeline {
   static task: PipelineType = "feature-extraction";
@@ -16,6 +11,14 @@ class EmbeddingsPipeline {
 
   static async getInstance() {
     if (EmbeddingsPipeline.instance === null) {
+      // @ts-ignore
+      // prettier-ignore
+      const { env, pipeline } = await import("../../vendor/modules/@xenova/transformers/src/transformers.js");
+
+      env.allowLocalModels = true;
+      env.allowRemoteModels = false;
+      env.localModelPath = path.join(__dirname, "..", "models");
+
       EmbeddingsPipeline.instance = await pipeline(
         EmbeddingsPipeline.task,
         EmbeddingsPipeline.model,
@@ -32,7 +35,7 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   constructor(modelPath?: string) {
     super({ model: "all-MiniLM-L2-v6" }, () => Promise.resolve(null));
     if (modelPath) {
-      env.localModelPath = modelPath;
+      // env.localModelPath = modelPath;
     }
   }
 
