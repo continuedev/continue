@@ -63,7 +63,7 @@ export type Protocol = {
     { title: string },
     Promise<ContextSubmenuItem[]>,
   ];
-  "context/addDocs": [siteIndexingConfig: SiteIndexingConfig, Promise<void>];
+  "context/addDocs": [siteIndexingConfig: SiteIndexingConfig, void];
   "autocomplete/complete": [AutocompleteInput, Promise<string[]>];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
@@ -116,6 +116,7 @@ export type Protocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
+
 };
 
 export interface IdeSettings {

@@ -557,15 +557,14 @@ export async function showTutorial() {
     });
     this.on("context/addDocs", (msg) => {
       const siteIndexingConfig: SiteIndexingConfig = {
-        startUrl: msg.data.url,
-        rootUrl: msg.data.url,
+        startUrl: msg.data.startUrl,
+        rootUrl: msg.data.rootUrl,
         title: msg.data.title,
-        maxDepth: 4
+        maxDepth: msg.data.maxDepth
       };    
-      // const siteIndexingConfig = msg.data
       
       const embeddingsProvider = new TransformersJsEmbeddingsProvider();
-      console.log("In vscode addDocs")
+      console.log("In vscode addDocs. maxDepth", siteIndexingConfig.maxDepth, " startUrl: ", siteIndexingConfig.startUrl)
       vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,

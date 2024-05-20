@@ -135,6 +135,8 @@ export interface LoadSubmenuItemsArgs {
 
 export interface CustomContextProvider {
   title: string;
+  startUrl: string,
+  maxDepth: number
   displayTitle?: string;
   description?: string;
   renderInlineAs?: string;
@@ -146,6 +148,10 @@ export interface CustomContextProvider {
   loadSubmenuItems?: (
     args: LoadSubmenuItemsArgs,
   ) => Promise<ContextSubmenuItem[]>;
+  addDocs(
+    startUrl: string,
+    maxDepth: number
+  )
 }
 
 export interface ContextSubmenuItem {
