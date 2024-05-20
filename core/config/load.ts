@@ -148,17 +148,19 @@ async function serializedToIntermediateConfig(
   }
 
   const workspaceDirs = await ide.getWorkspaceDirs();
-  const promptFiles = (
-    await Promise.all(
-      workspaceDirs.map((dir) =>
-        getPromptFiles(ide, path.join(dir, ".prompts")),
-      ),
+  const promptFolder = initial.experimental?.promptPath;
+
+  if (promptFolder) {
+    const promptFiles = (
+      await Promise.all(
+        workspaceDirs.map((dir) => getPromptFiles(ide, promptFolder)),
+      )
     )
-  )
-    .flat()
-    .filter(({ path }) => path.endsWith(".prompt"));
-  for (const file of promptFiles) {
-    slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
+      .flat()
+      .filter(({ path }) => path.endsWith(".prompt"));
+    for (const file of promptFiles) {
+      slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
+    }
   }
 
   const config: Config = {
