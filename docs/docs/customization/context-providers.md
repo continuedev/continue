@@ -167,14 +167,13 @@ If you select some code to be edited, you can have the context provider filter o
 
 ### Jira Issues
 
-Type '@jira' to reference the conversation in a Jira issue. Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens).
+Type '@jira' to reference the conversation in a Jira issue. Make sure to include your own [Atlassian API Token](https://id.atlassian.com/manage-profile/security/api-tokens), or use your `email` and `token`, with token set to your password for basic authentication. If you use your own Atlassian API Token, don't configure your email.
 
 ```json
 {
   "name": "jira",
   "params": {
     "domain": "company.atlassian.net",
-    "email": "someone@somewhere.com",
     "token ": "ATATT..."
   }
 }
