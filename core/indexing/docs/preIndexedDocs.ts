@@ -227,6 +227,16 @@ const configs: SiteIndexingConfig[] = [
     startUrl: "https://doc.qt.io/qtforpython-6/quickstart.html",
     rootUrl: "https://doc.qt.io/qtforpython-6/api.html",
   },
+  {
+    title: "Bootstrap",
+    startUrl: "https://getbootstrap.com/docs/5.3/getting-started/introduction/",
+    rootUrl: "https://getbootstrap.com/docs/5.3/",
+  },
+  {
+    title: "Alpine.js",
+    startUrl: "https://alpinejs.dev/start-here",
+    rootUrl: "https://alpinejs.dev/",
+  },
 ];
 
 export default configs;
