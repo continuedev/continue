@@ -10,13 +10,6 @@ import { setShowDialog } from "../../redux/slices/uiStateSlice";
 import { postToIde } from "../../util/ide";
 import { SiteIndexingConfig } from "core/index";
 
-// export interface SiteIndexingConfig {
-//   startUrl: string;
-//   rootUrl: string;
-//   title: string;
-//   maxDepth?: number;
-// }
-
 const GridDiv = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -30,7 +23,6 @@ function AddDocsDialog() {
   const [docsTitle, setDocsTitle] = React.useState("");
   const [urlValid, setUrlValid] = React.useState(false);
   const [maxDepth, setMaxDepth] = React.useState(defaultMaxDepth);
-  const [maxDepthValid, setMaxDepthValid] = React.useState(false)  // ToDo
 
   const dispatch = useDispatch();
 
@@ -79,7 +71,9 @@ function AddDocsDialog() {
         type="text"
         placeholder={`Max Depth (Default=${defaultMaxDepth})`}
         value={maxDepth}
-        onChange={(e) => setMaxDepth(Number(e.target.value))}
+        onChange={(e) => {
+          setMaxDepth(Number(e.target.value))
+        }}
       />
       <Button
         disabled={!docsUrl || !urlValid}
@@ -91,7 +85,7 @@ function AddDocsDialog() {
             title: docsTitle,
             maxDepth: maxDepth
           };          
-          console.log("triggering addDocs. maxDepth: ", maxDepth)
+          console.log("triggering addDocs. maxDepth: ", maxDepth, " docsUrl: ", docsUrl, " title: ", docsTitle)
           postToIde("context/addDocs", siteIndexingConfig);
           setDocsTitle("");
           setDocsUrl("");

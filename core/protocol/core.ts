@@ -58,7 +58,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
-  "context/addDocs": [siteIndexingConfig: SiteIndexingConfig, Promise<void>];
+  "context/addDocs": [siteIndexingConfig: SiteIndexingConfig, void];
   "autocomplete/complete": [AutocompleteInput, Promise<string[]>];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
@@ -111,29 +111,16 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
-  "stats/getTokensPerDay": [
-    undefined,
-    { day: string; promptTokens: number; generatedTokens: number }[],
-  ];
-  "stats/getTokensPerModel": [
-    undefined,
-    { model: string; promptTokens: number; generatedTokens: number }[],
-  ];
-  "index/setPaused": [boolean, void];
-  "index/forceReIndex": [undefined | string, void];
-  "index/indexingProgressBarInitialized": [undefined, void];
-  completeOnboarding: [
-    {
-      mode:
-        | "local"
-        | "apiKeys"
-        | "custom"
-        | "freeTrial"
-        | "localExistingUser"
-        | "optimizedExistingUser"
-        | "localAfterFreeTrial";
-    },
-    void,
-  ];
-  addAutocompleteModel: [{ model: ModelDescription }, void];
+
+};
+
+export interface IdeSettings {
+  remoteConfigServerUrl: string | undefined;
+  remoteConfigSyncPeriod: number;
+  userToken: string;
+}
+
+export type ReverseProtocol = IdeProtocol & {
+  getIdeSettings: [undefined, IdeSettings];
+  errorPopup: [{ message: string }, void];
 };
