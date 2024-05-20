@@ -59,6 +59,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         "llm/complete",
         "llm/streamComplete",
         "llm/streamChat",
+        "llm/listModels",
         "streamDiffLines",
         "stats/getTokensPerDay",
         "stats/getTokensPerModel",

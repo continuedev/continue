@@ -348,6 +348,13 @@ export class Core {
       );
       return completion;
     });
+    on("llm/listModels", async (msg) => {
+      const config = await this.configHandler.loadConfig();
+      const model =
+        config.models.find((model) => model.title === msg.data.title) ??
+        config.models.find((model) => model.title?.startsWith(msg.data.title));
+      return model?.listModels();
+    });
 
     async function* runNodeJsSlashCommand(
       configHandler: ConfigHandler,

@@ -277,7 +277,9 @@ ${prompt}`;
             "Failed to connect to local Ollama instance. To start Ollama, first download it at https://ollama.ai.",
           );
         }
-        throw new Error(`${e}`);
+        throw new Error(
+          `${e.message} (${e.code}, ${e.errno}, ${e.erroredSysCall}, ${e.type})\n\n${e.stack}`,
+        );
       }
     };
     return withExponentialBackoff<Response>(
