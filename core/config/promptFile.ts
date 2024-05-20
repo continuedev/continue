@@ -8,12 +8,17 @@ export async function getPromptFiles(
   ide: IDE,
   dir: string,
 ): Promise<{ path: string; content: string }[]> {
-  const paths = await ide.listWorkspaceContents(dir);
-  const results = paths.map(async (path) => {
-    const content = await ide.readFile(path);
-    return { path, content };
-  });
-  return Promise.all(results);
+  try {
+    const paths = await ide.listWorkspaceContents(dir);
+    const results = paths.map(async (path) => {
+      const content = await ide.readFile(path);
+      return { path, content };
+    });
+    return Promise.all(results);
+  } catch (e) {
+    console.error(e);
+    return [];
+  }
 }
 
 export function slashCommandFromPromptFile(
