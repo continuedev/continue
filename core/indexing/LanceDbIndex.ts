@@ -321,6 +321,7 @@ export class LanceDbIndex implements CodebaseIndex {
     const tableName = this.tableNameForTag(tag);
     const tableNames = await db.tableNames();
     if (!tableNames.includes(tableName)) {
+      console.warn("Table not found in LanceDB", tableName);
       return [];
     }
 
