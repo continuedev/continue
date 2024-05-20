@@ -1,23 +1,34 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
+import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.*
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
+import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl
+import com.intellij.codeInsight.daemon.impl.DaemonProgressIndicator
+import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.progress.DumbProgressIndicator
+import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
@@ -26,6 +37,7 @@ import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.vfs.*
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.wm.WindowManager
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import kotlinx.coroutines.*
@@ -392,6 +404,51 @@ class IdeProtocolClient (
                         process.waitFor()
 
                         respond(output.toString());
+                    }
+                    "getProblems" -> {
+                        // Get currently active editor
+                        var editor: Editor? = null
+                        ApplicationManager.getApplication().invokeAndWait {
+                            editor = FileEditorManager.getInstance(project).selectedTextEditor
+                        }
+                        if (editor == null) {
+                            respond(emptyList<Map<String, Any?>>())
+                            return@launch
+                        }
+                        val project = editor!!.project ?: return@launch
+
+                        val document: Document = editor!!.document
+                        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return@launch
+
+                        val analyzer = DaemonCodeAnalyzer.getInstance(project) as DaemonCodeAnalyzerImpl
+                        val highlightInfos = ReadAction.compute<MutableList<HighlightInfo>, Throwable> {
+                            analyzer.getFileLevelHighlights(project, psiFile)
+                        }
+
+                        val problems = ArrayList<Map<String, Any?>>()
+                        for (highlightInfo in highlightInfos) {
+                            if (highlightInfo.severity === HighlightSeverity.ERROR ||
+                                    highlightInfo.severity === HighlightSeverity.WARNING) {
+                                val startOffset = highlightInfo.getStartOffset()
+                                val endOffset = highlightInfo.getEndOffset()
+                                val description = highlightInfo.description
+                                problems.add(mapOf(
+                                        "filepath" to psiFile.virtualFile?.path,
+                                        "range" to mapOf(
+                                                "start" to mapOf(
+                                                        "line" to document.getLineNumber(startOffset),
+                                                        "character" to startOffset - document.getLineStartOffset(document.getLineNumber(startOffset))
+                                                ),
+                                                "end" to mapOf(
+                                                        "line" to document.getLineNumber(endOffset),
+                                                        "character" to endOffset - document.getLineStartOffset(document.getLineNumber(endOffset))
+                                                )
+                                        ),
+                                        "message" to description
+                                ))
+                            }
+                        }
+                        respond(problems)
                     }
                     "getConfigJsUrl" -> {
                         // Calculate a data URL for the config.js file
