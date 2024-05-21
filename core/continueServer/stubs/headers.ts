@@ -7,14 +7,19 @@ class LaunchDarklyClient {
   private static client: LaunchDarkly.LDClient;
 
   static async variation(flagKey: string, defaultValue: any) {
-    if (!this.client) {
-      this.client = LaunchDarkly.initialize("664bda08e3442b0fdf2c8e55", {
-        kind: "multi",
-      });
-      await this.client.waitForInitialization();
-    }
+    try {
+      if (!this.client) {
+        this.client = LaunchDarkly.initialize("664bda08e3442b0fdf2c8e55", {
+          kind: "multi",
+        });
+        await this.client.waitForInitialization();
+      }
 
-    return this.client.variation(flagKey, defaultValue);
+      return this.client.variation(flagKey, defaultValue);
+    } catch (e) {
+      console.error("Error getting variation: ", e);
+      return defaultValue;
+    }
   }
 }
 
