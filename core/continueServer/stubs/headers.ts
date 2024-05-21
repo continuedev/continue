@@ -8,7 +8,9 @@ class LaunchDarklyClient {
 
   static async variation(flagKey: string, defaultValue: any) {
     if (!this.client) {
-      this.client = LaunchDarkly.initialize("664bda08e3442b0fdf2c8e55", {});
+      this.client = LaunchDarkly.initialize("664bda08e3442b0fdf2c8e55", {
+        kind: "multi",
+      });
       await this.client.waitForInitialization();
     }
 
