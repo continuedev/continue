@@ -1,3 +1,7 @@
+// prettier-ignore
+// @ts-ignore
+import { PipelineType, env, pipeline } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
+
 import path from "path";
 // @ts-ignore
 // prettier-ignore
