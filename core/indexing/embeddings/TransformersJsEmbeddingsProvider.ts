@@ -1,3 +1,4 @@
+// prettier-ignore
 // @ts-ignore
 import { PipelineType, env, pipeline } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
 
@@ -31,7 +32,7 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   constructor(modelPath?: string) {
     super({ model: "all-MiniLM-L2-v6" }, () => Promise.resolve(null));
     if (modelPath) {
-      env.localModelPath = modelPath;
+      // env.localModelPath = modelPath;
     }
   }
 
