@@ -58,9 +58,9 @@ Groq provides lightning fast inference for open-source LLMs like Llama3, up to t
 {
   "models": [
     {
-      "title": "GPT-4-Turbo",
+      "title": "GPT-4o",
       "provider": "openai",
-      "model": "gpt-4-turbo",
+      "model": "gpt-4o",
       "apiKey": "YOUR_API_KEY"
     }
   ]
