@@ -11,7 +11,7 @@ export class FreeTrialReranker implements Reranker {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        ...getHeaders(),
+        ...(await getHeaders()),
       },
       body: JSON.stringify({
         query,

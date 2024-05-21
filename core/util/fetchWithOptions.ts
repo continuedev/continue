@@ -59,10 +59,14 @@ export function fetchwithRequestOptions(
       : new HttpProxyAgent(proxy, agentOptions)
     : new protocol.Agent(agentOptions);
 
-  const headers: { [key: string]: string } = requestOptions?.headers || {};
+  let headers: { [key: string]: string } = {};
   for (const [key, value] of Object.entries(init?.headers || {})) {
     headers[key] = value as string;
   }
+  headers = {
+    ...headers,
+    ...requestOptions?.headers,
+  };
 
   // Replace localhost with 127.0.0.1
   if (url.hostname === "localhost") {
