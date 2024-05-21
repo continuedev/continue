@@ -115,7 +115,7 @@ const exe = os === "win32" ? ".exe" : "";
   console.log("[info] npm install in gui completed");
 
   if (ghAction()) {
-    execCmdSync("pnpm run build");
+    execCmdSync("npm run build");
   }
 
   // Copy over the dist folder to the Intellij extension //
