@@ -16,6 +16,9 @@ function execCmdSync(cmd) {
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));
 rimrafSync(path.join(__dirname, "..", "out"));
+fs.mkdirSync(path.join(__dirname, "..", "out", "node_modules"), {
+  recursive: true,
+});
 
 // Get the target to package for
 let target = undefined;
@@ -102,13 +105,14 @@ const exe = os === "win32" ? ".exe" : "";
   }
 
   // Install node_modules //
-  // execCmdSync("pnpm install");
-  // console.log("[info] pnpm install in extensions/vscode completed");
+  execCmdSync("npm install");
+  console.log("[info] npm install in extensions/vscode completed");
+  console.log("Contents of node_modules: ", fs.readdirSync("./node_modules"));
 
   process.chdir("../../gui");
 
-  execCmdSync("pnpm install");
-  console.log("[info] pnpm install in gui completed");
+  execCmdSync("npm install");
+  console.log("[info] npm install in gui completed");
 
   if (ghAction()) {
     execCmdSync("pnpm run build");
@@ -309,7 +313,9 @@ const exe = os === "win32" ? ".exe" : "";
     console.log(`Copying ${package} to ${toCopy}`);
     // This is a way to install only one package without npm trying to install all the dependencies
     // Create a temporary directory for installing the package
-    const tempDir = `/tmp/continue-node_modules-${toCopy}`;
+    const adjustedName = toCopy.replace(/^@/, "").replace("/", "-");
+
+    const tempDir = `/tmp/continue-node_modules-${adjustedName}`;
     const currentDir = process.cwd();
 
     // Remove the dir we will be copying to
@@ -482,7 +488,7 @@ function validateFilesPresent() {
       os === "darwin"
         ? "libonnxruntime.1.17.3.dylib"
         : os === "linux"
-          ? "libonnxruntime.so.1.17.3"
+          ? "libonnxruntime.so.1.14.0"
           : "onnxruntime.dll"
     }`,
     "builtin-themes/dark_modern.json",
