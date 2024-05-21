@@ -94,7 +94,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
     });
   } finally {
     // Clean up the temporary directory
-    rimrafSync(tempDir);
+    // rimrafSync(tempDir);
 
     // Return to the original directory
     process.chdir(currentDir);
