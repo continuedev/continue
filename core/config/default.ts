@@ -6,9 +6,9 @@ import {
 export const defaultConfig: SerializedContinueConfig = {
   models: [
     {
-      title: "GPT-4-Turbo (Free Trial)",
+      title: "GPT-4o (Free Trial)",
       provider: "free-trial",
-      model: "gpt-4-turbo",
+      model: "gpt-4o",
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
     },
@@ -18,13 +18,6 @@ export const defaultConfig: SerializedContinueConfig = {
       model: "llama3-70b",
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses. Whenever you write a code block you include the language after the opening ticks.",
-    },
-    {
-      title: "GPT-4o (Free Trial)",
-      provider: "free-trial",
-      model: "gpt-4o",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.",
     },
     {
       title: "Claude 3 Sonnet (Free Trial)",
@@ -50,9 +43,9 @@ export const defaultConfig: SerializedContinueConfig = {
 export const defaultConfigJetBrains: SerializedContinueConfig = {
   models: [
     {
-      title: "GPT-4-Turbo (Free Trial)",
+      title: "GPT-4o (Free Trial)",
       provider: "free-trial",
-      model: "gpt-4-turbo",
+      model: "gpt-4o",
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses.",
     },
@@ -62,13 +55,6 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
       model: "llama3-70b",
       systemMessage:
         "You are an expert software developer. You give helpful and concise responses. Whenever you write a code block you include the language after the opening ticks.",
-    },
-    {
-      title: "GPT-4o (Free Trial)",
-      provider: "free-trial",
-      model: "gpt-4o",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.",
     },
     {
       title: "Claude 3 Sonnet (Free Trial)",
