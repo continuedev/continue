@@ -115,7 +115,7 @@ const exe = os === "win32" ? ".exe" : "";
   console.log("[info] npm install in gui completed");
 
   if (ghAction()) {
-    execCmdSync("npm run build");
+    execCmdSync("pnpm run build");
   }
 
   // Copy over the dist folder to the Intellij extension //
@@ -486,7 +486,7 @@ function validateFilesPresent() {
     `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
     `bin/napi-v3/${os}/${arch}/${
       os === "darwin"
-        ? "libonnxruntime.1.14.0.dylib"
+        ? "libonnxruntime.1.17.3.dylib"
         : os === "linux"
           ? "libonnxruntime.so.1.14.0"
           : "onnxruntime.dll"

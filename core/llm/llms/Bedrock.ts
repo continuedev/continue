@@ -185,7 +185,7 @@ class Bedrock extends BaseLLM {
       "utf8",
     );
     const credentialsFile = this._parseCredentialsFile(data);
-    const credentials = credentialsFile.bedrock ?? credentialsFile.default
+    const credentials = credentialsFile.bedrock ?? credentialsFile.default;
     const accessKeyId = credentials.accessKeyId;
     const secretAccessKey = credentials.secretAccessKey;
     const sessionToken = credentials.sessionToken || "";
@@ -207,7 +207,7 @@ class Bedrock extends BaseLLM {
           temperature: options.temperature,
           top_p: options.topP,
           top_k: options.topK,
-          stop_sequences: options.stop
+          stop_sequences: options.stop,
         }),
       ),
       contentType: "application/json",
