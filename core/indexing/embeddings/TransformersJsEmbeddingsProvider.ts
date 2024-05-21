@@ -7,10 +7,7 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 env.allowLocalModels = true;
 env.allowRemoteModels = false;
-if (typeof window === "undefined") {
-  // The embeddings provider should just never be called in the browser
-  env.localModelPath = path.join(__dirname, "..", "models");
-}
+env.localModelPath = path.join(__dirname, "..", "models");
 
 class EmbeddingsPipeline {
   static task: PipelineType = "feature-extraction";
