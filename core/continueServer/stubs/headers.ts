@@ -36,5 +36,5 @@ export async function getHeaders() {
   if (c === DEFAULT_STRING_VAL) {
     c = undefined;
   }
-  return { key: constants.c, timestamp: getTimestamp(), a, b, c };
+  return { key: constants.c, timestamp: getTimestamp(), a, b, c, v: "1" };
 }
