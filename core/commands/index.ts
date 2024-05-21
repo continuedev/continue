@@ -78,5 +78,6 @@ export function slashCommandFromDescription(
   return {
     ...cmd,
     params: desc.params,
+    description: desc.description ?? cmd.description,
   };
 }

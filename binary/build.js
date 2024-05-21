@@ -15,11 +15,14 @@ fs.mkdirSync(bin);
 fs.mkdirSync(out);
 
 const esbuildOutputFile = "out/index.js";
-const platforms = ["darwin", "linux", "win32"];
-const architectures = ["x64", "arm64"];
-let targets = platforms.flatMap((platform) =>
-  architectures.map((arch) => `${platform}-${arch}`),
-);
+const targets = [
+  "darwin-x64",
+  "darwin-arm64",
+  "linux-x64",
+  "linux-arm64",
+  "win32-x64",
+];
+
 const assetBackups = [
   "node_modules/win-ca/lib/crypt32-ia32.node.bak",
   "node_modules/win-ca/lib/crypt32-x64.node.bak",
