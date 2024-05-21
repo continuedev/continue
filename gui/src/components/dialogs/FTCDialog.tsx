@@ -18,10 +18,8 @@ export const ftl = () => {
   const ftc = parseInt(localStorage.getItem("ftc"));
   if (ftc && ftc > 52) {
     return 100;
-  } else if (ftc && ftc > 27) {
-    return 50;
   }
-  return 25;
+  return 50;
 };
 
 function FTCDialog() {
@@ -34,9 +32,9 @@ function FTCDialog() {
     <div className="p-4">
       <h3>Free Trial Limit Reached</h3>
       <p>
-        You've reached the free trial limit of 100 free inputs. To keep using
-        Continue, you can either use your own API key, or use a local LLM. To
-        read more about the options, see our{" "}
+        You've reached the free trial limit of {ftl()} free inputs. To keep
+        using Continue, you can either use your own API key, or use a local LLM.
+        To read more about the options, see our{" "}
         <a
           href="https://docs.continue.dev/customization/models"
           target="_blank"

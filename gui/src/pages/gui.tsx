@@ -27,7 +27,7 @@ import {
   vscBackground,
   vscForeground,
 } from "../components";
-import { ftl } from "../components/dialogs/FTCDialog";
+import FTCDialog, { ftl } from "../components/dialogs/FTCDialog";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
@@ -246,7 +246,7 @@ function GUI(props: GUIProps) {
         if (ftc) {
           setLocalStorage("ftc", ftc + 1);
 
-          if (u >= 100) {
+          if (u >= ftl()) {
             dispatch(setShowDialog(true));
             dispatch(setDialogMessage(<FTCDialog />));
             posthog?.capture("ftc_reached");
