@@ -8,6 +8,10 @@ import path from "path";
 import { type PipelineType } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
+env.allowLocalModels = true;
+env.allowRemoteModels = false;
+env.localModelPath = path.join(__dirname, "..", "models");
+
 class EmbeddingsPipeline {
   static task: PipelineType = "feature-extraction";
   static model = "all-MiniLM-L6-v2";

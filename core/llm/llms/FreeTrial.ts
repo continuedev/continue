@@ -10,6 +10,9 @@ class FreeTrial extends BaseLLM {
 
   private async _getHeaders() {
     return {
+      uniqueId: this.uniqueId || "None",
+      extensionVersion: Telemetry.extensionVersion ?? "Unknown",
+      os: Telemetry.os ?? "Unknown",
       "Content-Type": "application/json",
       ...(await getHeaders()),
     };
