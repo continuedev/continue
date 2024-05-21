@@ -115,7 +115,6 @@ export const defaultContextProvidersVsCode: ContextProviderWithParams[] = [
   { name: "code", params: {} },
   { name: "docs", params: {} },
   { name: "diff", params: {} },
-  { name: "open", params: {} },
   { name: "terminal", params: {} },
   { name: "problems", params: {} },
   { name: "folder", params: {} },
@@ -123,5 +122,7 @@ export const defaultContextProvidersVsCode: ContextProviderWithParams[] = [
 ];
 
 export const defaultContextProvidersJetBrains: ContextProviderWithParams[] = [
-  { name: "open", params: {} },
+  { name: "diff", params: {} },
+  { name: "folder", params: {} },
+  { name: "codebase", params: {} },
 ];

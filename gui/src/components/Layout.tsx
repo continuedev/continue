@@ -26,6 +26,7 @@ import { isJetBrains, postToIde } from "../util/ide";
 import { getLocalStorage } from "../util/localStorage";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
+import { ftl } from "./dialogs/FTCDialog";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import ModelSelect from "./modelSelection/ModelSelect";
@@ -267,12 +268,10 @@ const Layout = () => {
                 )} */}
                 <ModelSelect />
                 {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
-                  defaultModel?.provider === "free-trial" &&
-                  (location.pathname === "/settings" ||
-                    parseInt(localStorage.getItem("ftc") || "0") >= 10) && (
+                  defaultModel?.provider === "free-trial" && (
                     <ProgressBar
                       completed={parseInt(localStorage.getItem("ftc") || "0")}
-                      total={100}
+                      total={ftl()}
                     />
                   )}
 
