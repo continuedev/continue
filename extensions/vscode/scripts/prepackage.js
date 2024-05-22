@@ -486,7 +486,7 @@ function validateFilesPresent() {
     `bin/napi-v3/${os}/${arch}/onnxruntime_binding.node`,
     `bin/napi-v3/${os}/${arch}/${
       os === "darwin"
-        ? "libonnxruntime.1.17.3.dylib"
+        ? "libonnxruntime.1.14.0.dylib"
         : os === "linux"
           ? "libonnxruntime.so.1.14.0"
           : "onnxruntime.dll"
