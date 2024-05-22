@@ -18,11 +18,11 @@ const GridDiv = styled.div`
 `;
 
 function AddDocsDialog() {
-  const defaultMaxDepth = 4
+  const defaultMaxDepth = 3
   const [docsUrl, setDocsUrl] = React.useState("");
   const [docsTitle, setDocsTitle] = React.useState("");
   const [urlValid, setUrlValid] = React.useState(false);
-  const [maxDepth, setMaxDepth] = React.useState(defaultMaxDepth);
+  const [maxDepth, setMaxDepth] = React.useState<number | string>(""); // Change here
 
   const dispatch = useDispatch();
 
@@ -69,10 +69,17 @@ function AddDocsDialog() {
       />
       <Input
         type="text"
-        placeholder={`Max Depth (Default=${defaultMaxDepth})`}
+        placeholder={`Optional: Max Depth (Default: ${defaultMaxDepth})`}
+        title="The maximum search tree depth - where your input url is the root node"
         value={maxDepth}
         onChange={(e) => {
-          setMaxDepth(Number(e.target.value))
+          const value = e.target.value;
+          if (value == '') {
+            setMaxDepth("")
+          } else if (!isNaN(+value) && Number(value) > 0) {
+            setMaxDepth(Number(value))
+          } 
+          
         }}
       />
       <Button
@@ -83,13 +90,12 @@ function AddDocsDialog() {
             startUrl: docsUrl,
             rootUrl: docsUrl,
             title: docsTitle,
-            maxDepth: maxDepth
+            maxDepth: typeof maxDepth === 'string' ? defaultMaxDepth : maxDepth, // Ensure maxDepth is a number
           };          
-          console.log("triggering addDocs. maxDepth: ", maxDepth, " docsUrl: ", docsUrl, " title: ", docsTitle)
           postToIde("context/addDocs", siteIndexingConfig);
           setDocsTitle("");
           setDocsUrl("");
-          setMaxDepth(defaultMaxDepth)
+          setMaxDepth("")
           dispatch(setShowDialog(false));
           addItem("docs", {
             id: docsUrl,
