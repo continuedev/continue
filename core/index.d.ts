@@ -519,6 +519,7 @@ type ModelProvider =
   | "deepinfra"
   | "flowise"
   | "groq"
+  | "zhiman"
   | "custom";
 
 export type ModelName =
@@ -708,6 +709,7 @@ interface ContextMenuConfig {
   fix?: string;
   optimize?: string;
   fixGrammar?: string;
+  unitTest?: string;
 }
 
 interface ModelRoles {

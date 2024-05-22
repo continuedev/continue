@@ -122,6 +122,7 @@ export type ReverseWebviewProtocol = {
   newSessionWithPrompt: [{ prompt: string }, void];
   userInput: [{ input: string }, void];
   focusContinueInput: [undefined, void];
+  unitTest: [undefined, void];
   focusContinueInputWithoutClear: [undefined, void];
   focusContinueInputWithNewSession: [undefined, void];
   highlightedCode: [{ rangeInFileWithContents: RangeInFileWithContents }, void];

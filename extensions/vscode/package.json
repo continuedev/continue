@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.93",
+  "version": "0.9.96",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -213,6 +213,12 @@
         "group": "Continue"
       },
       {
+        "command": "continue.unitTest",
+        "category": "Continue",
+        "title": "Write unit tests for this Code",
+        "group": "Continue"
+      },
+      {
         "command": "continue.fixGrammar",
         "category": "Continue",
         "title": "Fix Grammar / Spelling",
@@ -301,6 +307,9 @@
           "command": "continue.focusContinueInput"
         },
         {
+          "command": "continue.unitTest"
+        },
+        {
           "command": "continue.focusContinueInputWithoutClear"
         },
         {
@@ -349,6 +358,11 @@
         },
         {
           "command": "continue.optimizeCode",
+          "group": "Continue",
+          "when": "editorHasSelection"
+        },
+        {
+          "command": "continue.unitTest",
           "group": "Continue",
           "when": "editorHasSelection"
         },
