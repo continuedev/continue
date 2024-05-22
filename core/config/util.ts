@@ -32,13 +32,18 @@ export function addModel(model: ModelDescription) {
 
 export function addOpenAIKey(key: string) {
   editConfigJson((config) => {
-    config.models = config.models.map((m: ModelDescription) => {
-      if (m.provider === "free-trial") {
-        m.apiKey = key;
-        m.provider = "openai";
-      }
-      return m;
-    });
+    config.models = config.models
+      .filter(
+        (model) =>
+          model.provider !== "free-trial" || model.model.startsWith("gpt"),
+      )
+      .map((m: ModelDescription) => {
+        if (m.provider === "free-trial") {
+          m.apiKey = key;
+          m.provider = "openai";
+        }
+        return m;
+      });
     return config;
   });
 }

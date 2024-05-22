@@ -438,14 +438,12 @@
             "properties": {
               "model": {
                 "enum": [
-                  "gpt-4-turbo",
                   "gpt-4o",
                   "llama3-70b",
                   "gpt-3.5-turbo",
                   "phind-codellama-34b",
                   "gemini-pro",
                   "mistral-8x7b",
-                  "claude-3-opus-20240229",
                   "claude-3-sonnet-20240229",
                   "claude-3-haiku-20240307",
                   "starcoder-7b",
@@ -612,7 +610,8 @@
                 "enum": [
                   "chat-bison-001",
                   "gemini-pro",
-                  "gemini-1.5-pro-latest"
+                  "gemini-1.5-pro-latest",
+                  "gemini-1.5-flash-latest"
                 ]
               }
             }
@@ -987,6 +986,7 @@
                       "chat-bison-001",
                       "gemini-pro",
                       "gemini-1.5-pro-latest",
+                      "gemini-1.5-flash-latest",
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",

@@ -62,6 +62,7 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "claude-3",
   "gemini-ultra",
   "gemini-1.5-pro",
+  "gemini-1.5-flash",
   "sonnet",
   "opus",
   "haiku",

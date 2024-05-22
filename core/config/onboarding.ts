@@ -7,9 +7,9 @@ export function setupOptimizedMode(
     ...config,
     models: [
       {
-        title: "GPT-4-Turbo (Free Trial)",
+        title: "GPT-4o (Free Trial)",
         provider: "free-trial",
-        model: "gpt-4-turbo",
+        model: "gpt-4o",
         systemMessage:
           "You are an expert software developer. You give helpful and concise responses.",
       },
@@ -19,13 +19,6 @@ export function setupOptimizedMode(
         model: "llama3-70b",
         systemMessage:
           "You are an expert software developer. You give helpful and concise responses. Whenever you write a code block you include the language after the opening ticks.",
-      },
-      {
-        title: "GPT-4o (Free Trial)",
-        provider: "free-trial",
-        model: "gpt-4o",
-        systemMessage:
-          "You are an expert software developer. You give helpful and concise responses.",
       },
       {
         title: "Claude 3 Sonnet (Free Trial)",
@@ -82,6 +75,7 @@ export function setupLocalMode(
         provider: "ollama",
         model: "AUTODETECT",
       },
+      ...config.models.filter((model) => model.provider !== "free-trial"),
     ],
     tabAutocompleteModel: {
       title: "Starcoder 3b",
@@ -92,5 +86,26 @@ export function setupLocalMode(
       provider: "transformers.js",
     },
     reranker: undefined,
+  };
+}
+
+export function setupLocalAfterFreeTrial(
+  config: SerializedContinueConfig,
+): SerializedContinueConfig {
+  return {
+    ...config,
+    models: [
+      {
+        title: "Llama 3",
+        provider: "ollama",
+        model: "llama3",
+      },
+      {
+        title: "Ollama",
+        provider: "ollama",
+        model: "AUTODETECT",
+      },
+      ...config.models.filter((model) => model.provider !== "free-trial"),
+    ],
   };
 }
