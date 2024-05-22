@@ -488,6 +488,18 @@ const gemini15Pro: ModelPackage = {
   icon: "gemini.png",
   providerOptions: ["gemini", "freetrial"],
 };
+const gemini15Flash: ModelPackage = {
+  title: "Gemini 1.5 Flash",
+  description: "Fast and versatile multimodal model for scaling across diverse tasks",
+  params: {
+    title: "Gemini 1.5 Flash",
+    model: "gemini-1.5-flash-latest",
+    contextLength: 1_000_000,
+    apiKey: "<API_KEY>",
+  },
+  icon: "gemini.png",
+  providerOptions: ["gemini"],
+};
 
 const deepseek: ModelPackage = {
   title: "DeepSeek-Coder",
@@ -694,6 +706,7 @@ export const MODEL_INFO: (ModelPackage | string)[] = [
   "Gemini",
   gemini15Pro,
   geminiPro,
+  gemini15Flash,
   "Open Source",
   llama3Chat,
   deepseek,
@@ -910,7 +923,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         required: true,
       },
     ],
-    packages: [gemini15Pro, geminiPro],
+    packages: [gemini15Pro, geminiPro, gemini15Flash],
   },
   mistral: {
     title: "Mistral API",
