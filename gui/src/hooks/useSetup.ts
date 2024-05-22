@@ -10,6 +10,7 @@ import {
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 import { ideRequest, isJetBrains } from "../util/ide";
+import { setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
 
@@ -20,6 +21,12 @@ function useSetup(dispatch: Dispatch<any>) {
     const config = await ideRequest("config/getBrowserSerialized", undefined);
     dispatch(setConfig(config));
     setConfigLoaded(true);
+
+    // Perform any actions needed with the config
+    if (config.ui?.fontSize) {
+      setLocalStorage("fontSize", config.ui.fontSize);
+      document.body.style.fontSize = `${config.ui.fontSize}px`;
+    }
   };
 
   // Load config from the IDE

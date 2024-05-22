@@ -26,6 +26,7 @@ import { isJetBrains, postToIde } from "../util/ide";
 import { getLocalStorage } from "../util/localStorage";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
+import { ftl } from "./dialogs/FTCDialog";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import ModelSelect from "./modelSelection/ModelSelect";
@@ -167,6 +168,25 @@ const Layout = () => {
     setIndexingState(data);
   });
 
+  useWebviewListener(
+    "addApiKey",
+    async () => {
+      navigate("/modelconfig/openai");
+    },
+    [navigate],
+  );
+
+  useWebviewListener(
+    "setupLocalModel",
+    async () => {
+      postToIde("completeOnboarding", {
+        mode: "localAfterFreeTrial",
+      });
+      navigate("/localOnboarding");
+    },
+    [navigate],
+  );
+
   useEffect(() => {
     if (isJetBrains()) {
       return;
@@ -186,9 +206,9 @@ const Layout = () => {
   }, [location]);
 
   const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
-    desc: "Starting indexing",
+    desc: "Indexing disabled",
     progress: 0.0,
-    status: "starting",
+    status: "disabled",
   });
 
   return (
@@ -248,12 +268,10 @@ const Layout = () => {
                 )} */}
                 <ModelSelect />
                 {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
-                  defaultModel?.provider === "free-trial" &&
-                  (location.pathname === "/settings" ||
-                    parseInt(localStorage.getItem("ftc") || "0") >= 50) && (
+                  defaultModel?.provider === "free-trial" && (
                     <ProgressBar
                       completed={parseInt(localStorage.getItem("ftc") || "0")}
-                      total={150}
+                      total={ftl()}
                     />
                   )}
 
@@ -301,7 +319,10 @@ const Layout = () => {
           {bottomMessage}
         </BottomMessageDiv>
       </div>
-      <div className="text-sm" id="tooltip-portal-div" />
+      <div
+        style={{ fontSize: `${getFontSize() - 4}px` }}
+        id="tooltip-portal-div"
+      />
     </LayoutTopDiv>
   );
 };

@@ -217,14 +217,16 @@ ${settings}
 ${prompt}`;
   }
 
-  private _logTokensGenerated(model: string, completion: string) {
-    let tokens = this.countTokens(completion);
+  private _logTokensGenerated(model: string, prompt: string, completion: string) {
+    let promptTokens = this.countTokens(prompt);
+    let generatedTokens = this.countTokens(completion);
     Telemetry.capture("tokens_generated", {
       model: model,
       provider: this.providerName,
-      tokens: tokens,
+      promptTokens: promptTokens,
+      generatedTokens: generatedTokens,
     });
-    DevDataSqliteDb.logTokensGenerated(model, this.providerName, tokens);
+    DevDataSqliteDb.logTokensGenerated(model, this.providerName, promptTokens, generatedTokens);
   }
 
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -335,7 +337,7 @@ ${prompt}`;
       yield chunk;
     }
 
-    this._logTokensGenerated(completionOptions.model, completion);
+    this._logTokensGenerated(completionOptions.model, prompt, completion);
 
     if (log && this.writeLog) {
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
@@ -370,7 +372,7 @@ ${prompt}`;
 
     const completion = await this._complete(prompt, completionOptions);
 
-    this._logTokensGenerated(completionOptions.model, completion);
+    this._logTokensGenerated(completionOptions.model, prompt, completion);
     if (log && this.writeLog) {
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
     }
@@ -432,7 +434,7 @@ ${prompt}`;
       throw error;
     }
 
-    this._logTokensGenerated(completionOptions.model, completion);
+    this._logTokensGenerated(completionOptions.model, prompt, completion);
     if (log && this.writeLog) {
       await this.writeLog(`Completion:\n\n${completion}\n\n`);
     }
@@ -531,3 +533,4 @@ ${prompt}`;
     }
   }
 }
+

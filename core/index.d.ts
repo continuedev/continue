@@ -37,7 +37,7 @@ export interface Chunk extends ChunkWithoutID {
 export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
-  status: "starting" | "indexing" | "done" | "failed" | "paused";
+  status: "starting" | "indexing" | "done" | "failed" | "paused" | "disabled";
 }
 
 export type PromptTemplate =
@@ -699,6 +699,7 @@ export interface TabAutocompleteOptions {
 
 export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
+  fontSize?: number;
 }
 
 interface ContextMenuConfig {

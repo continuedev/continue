@@ -1,3 +1,3 @@
-export function getHeaders() {
+export async function getHeaders() {
   return {};
 }

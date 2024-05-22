@@ -1,3 +1,4 @@
+// prettier-ignore
 // @ts-ignore
 import { PipelineType, env, pipeline } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
 
@@ -6,10 +7,7 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 env.allowLocalModels = true;
 env.allowRemoteModels = false;
-if (typeof window === "undefined") {
-  // The embeddings provider should just never be called in the browser
-  env.localModelPath = path.join(__dirname, "..", "models");
-}
+env.localModelPath = path.join(__dirname, "..", "models");
 
 class EmbeddingsPipeline {
   static task: PipelineType = "feature-extraction";
@@ -31,7 +29,7 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   constructor(modelPath?: string) {
     super({ model: "all-MiniLM-L2-v6" }, () => Promise.resolve(null));
     if (modelPath) {
-      env.localModelPath = modelPath;
+      // env.localModelPath = modelPath;
     }
   }
 

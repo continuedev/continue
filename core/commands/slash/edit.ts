@@ -1,4 +1,3 @@
-import { ContextItemWithId, ILLM, SlashCommand } from "../../index.js";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
@@ -8,6 +7,7 @@ import {
   streamWithNewLines,
 } from "../../autocomplete/lineStream.js";
 import { streamLines } from "../../diff/util.js";
+import { ContextItemWithId, ILLM, SlashCommand } from "../../index.js";
 import { stripImages } from "../../llm/countTokens.js";
 import {
   dedentAndGetCommonWhitespace,

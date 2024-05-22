@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { Button, Input } from "..";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
-import { postToIde } from "../../util/ide";
+import { ideRequest, postToIde } from "../../util/ide";
 
 const GridDiv = styled.div`
   display: grid;
@@ -14,29 +14,25 @@ const GridDiv = styled.div`
   align-items: center;
 `;
 
-export const ftl = () => {
-  const ftc = parseInt(localStorage.getItem("ftc"));
-  if (ftc && ftc > 52) {
-    return 100;
-  }
-  return 50;
-};
-
-function FTCDialog() {
+function SetupLocalOrKeyDialog() {
   const navigate = useNavigate();
   const [apiKey, setApiKey] = React.useState("");
   const dispatch = useDispatch();
 
   return (
     <div className="p-4">
-      <h3>Free Trial Limit Reached</h3>
+      <h3>Set up your own model</h3>
       <p>
-        You've reached the free trial limit of {ftl()} free inputs. To keep
-        using Continue, you can either use your own API key, or use a local LLM.
-        To read more about the options, see our{" "}
+        To keep using Continue after your free inputs, you can either use your
+        own API key, or use a local LLM. To read more about the options, see our{" "}
         <a
-          href="https://docs.continue.dev/customization/models"
-          target="_blank"
+          className="cursor-pointer"
+          onClick={() =>
+            ideRequest(
+              "openUrl",
+              "https://docs.continue.dev/reference/Model%20Providers/freetrial",
+            )
+          }
         >
           documentation
         </a>
@@ -49,28 +45,41 @@ function FTCDialog() {
         value={apiKey}
         onChange={(e) => setApiKey(e.target.value)}
       />
+      <Button
+        className="w-full"
+        disabled={!apiKey}
+        onClick={() => {
+          postToIde("config/addOpenAiKey", apiKey);
+          dispatch(setShowDialog(false));
+          dispatch(setDefaultModel({ title: "GPT-4" }));
+        }}
+      >
+        Use my OpenAI API key
+      </Button>
+      <div className="text-center">— OR —</div>
       <GridDiv>
+        <Button
+          onClick={() => {
+            dispatch(setShowDialog(false));
+            postToIde("completeOnboarding", {
+              mode: "localAfterFreeTrial",
+            });
+            navigate("/localOnboarding");
+          }}
+        >
+          Use local model
+        </Button>
         <Button
           onClick={() => {
             dispatch(setShowDialog(false));
             navigate("/models");
           }}
         >
-          Select model
-        </Button>
-        <Button
-          disabled={!apiKey}
-          onClick={() => {
-            postToIde("config/addOpenAiKey", apiKey);
-            dispatch(setShowDialog(false));
-            dispatch(setDefaultModel({ title: "GPT-4" }));
-          }}
-        >
-          Use my API key
+          View all options
         </Button>
       </GridDiv>
     </div>
   );
 }
 
-export default FTCDialog;
+export default SetupLocalOrKeyDialog;

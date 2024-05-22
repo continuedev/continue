@@ -37,7 +37,7 @@ import {
   setEditingContextItemAtIndex,
 } from "../../redux/slices/stateSlice";
 import { RootState } from "../../redux/store";
-import { isMetaEquivalentKeyPressed } from "../../util";
+import { getFontSize, isMetaEquivalentKeyPressed } from "../../util";
 import { isJetBrains, postToIde } from "../../util/ide";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
@@ -62,7 +62,7 @@ const InputBoxDiv = styled.div`
   z-index: 1;
   border: 0.5px solid ${vscInputBorder};
   outline: none;
-  font-size: 14px;
+  font-size: ${getFontSize()}px;
 
   &:focus {
     outline: none;
@@ -378,7 +378,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     editorProps: {
       attributes: {
         class: "outline-none -mt-1 overflow-hidden",
-        style: "font-size: 14px;",
+        style: `font-size: ${getFontSize()}px;`,
       },
     },
     content: props.editorState || mainEditorContent || "",

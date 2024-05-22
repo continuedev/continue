@@ -1,6 +1,6 @@
 # Ollama
 
-[Ollama](https://ollama.ai/) is an application for Mac and Linux that makes it easy to locally run open-source models, including Llama-2. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/jmorganca/ollama). Continue can then be configured to use the `Ollama` LLM class:
+[Ollama](https://ollama.ai/) is an application for Mac, Windows, and Linux that makes it easy to locally run open-source models, including Llama3. Download the app from the website, and it will walk you through setup in a couple of minutes. You can also read more in their [README](https://github.com/ollama/ollama). Continue can then be configured to use the `"ollama"` provider:
 
 ```json title="~/.continue/config.json"
 {
@@ -8,9 +8,7 @@
     {
       "title": "Ollama",
       "provider": "ollama",
-      "model": "llama2-7b",
-      "completionOptions": {},
-      "apiBase": "http://localhost:11434"
+      "model": "llama3:8b"
     }
   ]
 }
@@ -38,7 +36,7 @@ If you need to send custom headers for authentication, you may use the `requestO
     {
       "title": "Ollama",
       "provider": "ollama",
-      "model": "llama2-7b",
+      "model": "llama3:8b",
       "requestOptions": {
         "headers": {
           "Authorization": "Bearer xxx"

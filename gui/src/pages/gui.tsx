@@ -26,7 +26,7 @@ import {
   vscBackground,
   vscForeground,
 } from "../components";
-import FTCDialog from "../components/dialogs/FTCDialog";
+import FTCDialog, { ftl } from "../components/dialogs/FTCDialog";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
@@ -46,7 +46,11 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
-import { getMetaKeyLabel, isMetaEquivalentKeyPressed } from "../util";
+import {
+  getFontSize,
+  getMetaKeyLabel,
+  isMetaEquivalentKeyPressed,
+} from "../util";
 import { isJetBrains } from "../util/ide";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
@@ -68,7 +72,7 @@ const StopButton = styled.div`
   margin-right: auto;
   margin-left: auto;
 
-  font-size: 12px;
+  font-size: ${getFontSize() - 2}px;
 
   border: 0.5px solid ${lightGray};
   border-radius: ${defaultBorderRadius};
@@ -104,7 +108,7 @@ const NewSessionButton = styled.div`
   margin-left: 8px;
   margin-top: 4px;
 
-  font-size: 12px;
+  font-size: ${getFontSize() - 2}px;
 
   border-radius: ${defaultBorderRadius};
   padding: 2px 6px;
@@ -240,7 +244,7 @@ function GUI(props: GUIProps) {
           const u = parseInt(ftc);
           localStorage.setItem("ftc", (u + 1).toString());
 
-          if (u >= 150) {
+          if (u >= ftl()) {
             dispatch(setShowDialog(true));
             dispatch(setDialogMessage(<FTCDialog />));
             posthog?.capture("ftc_reached");

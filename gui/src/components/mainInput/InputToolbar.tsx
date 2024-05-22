@@ -17,6 +17,7 @@ import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
 import {
   getAltKeyLabel,
+  getFontSize,
   getMetaKeyLabel,
   isMetaEquivalentKeyPressed,
 } from "../../util";
@@ -35,7 +36,7 @@ const StyledDiv = styled.div<{ hidden?: boolean }>`
 
   align-items: center;
   z-index: 50;
-  font-size: 10px;
+  font-size: ${getFontSize() - 4}px;
 
   cursor: text;
 

@@ -2,13 +2,19 @@ import Handlebars from "handlebars";
 import ignore from "ignore";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { IDE, ILLM, Position, Range, TabAutocompleteOptions } from "../index.js";
 import { RangeInFileWithContents } from "../commands/util.js";
 import { ConfigHandler } from "../config/handler.js";
 import { streamLines } from "../diff/util.js";
+import {
+  IDE,
+  ILLM,
+  Position,
+  Range,
+  TabAutocompleteOptions,
+} from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
-import { getBasename } from "../util/index.js";
 import { logDevData } from "../util/devdata.js";
+import { getBasename } from "../util/index.js";
 import {
   COUNT_COMPLETION_REJECTED_AFTER,
   DEFAULT_AUTOCOMPLETE_OPTS,
@@ -157,7 +163,9 @@ export async function getTabCompletion(
   }
 
   // Model
-  if (!llm) {return;}
+  if (!llm) {
+    return;
+  }
   if (llm instanceof OpenAI) {
     llm.useLegacyCompletionsEndpoint = true;
   } else if (

@@ -114,7 +114,7 @@ class DocsContextProvider extends BaseContextProvider {
         return 1;
       } else {
         // Secondary criterion: Alphabetical order when both items are in the same category
-        return a.title.localeCompare(b.title);
+        return a.title.toString().localeCompare(b.title.toString()); 
       }
     });
 
