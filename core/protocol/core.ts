@@ -111,7 +111,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
-
 };
 
 export interface IdeSettings {
