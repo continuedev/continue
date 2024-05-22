@@ -9,7 +9,6 @@ export async function* indexDocs(
   siteIndexingConfig: SiteIndexingConfig,
   embeddingsProvider: EmbeddingsProvider,
 ): AsyncGenerator<IndexingProgressUpdate> {
-  console.log("In core indexDocs. maxDepth -> ", siteIndexingConfig.maxDepth, " Base Url -> ", siteIndexingConfig.startUrl)
   const startUrl = new URL(siteIndexingConfig.startUrl)
   
   if (await hasDoc(siteIndexingConfig.startUrl.toString())) {
@@ -29,13 +28,10 @@ export async function* indexDocs(
 
   const articles: Article[] = [];
 
-  console.log("starting crawl loop")
   // Crawl pages and retrieve info as articles
   for await (const page of crawlPage(startUrl, siteIndexingConfig.maxDepth)) {
     const article = pageToArticle(page);
     if (!article) { continue; }
-
-    console.log("pushing article")
     articles.push(article);
 
     yield {
@@ -48,10 +44,10 @@ export async function* indexDocs(
   const chunks: Chunk[] = [];
   const embeddings: number[][] = [];
 
-  console.log("starting index of articles")
+  
   // Create embeddings of retrieved articles
+  console.log("Creating Embeddings for ", articles.length, " articles")
   for (const article of articles) {
-    // Todo: Should have some way of checking if an article is valid
 
     yield {
       progress: Math.max(1, Math.floor(100 / (articles.length + 1))),
@@ -75,8 +71,8 @@ export async function* indexDocs(
     }
   }
 
-  console.log("adding docs")
   // Add docs to databases
+  console.log("Adding ", embeddings.length, " embeddings to db")
   await addDocs(siteIndexingConfig.title, startUrl, chunks, embeddings);
 
   yield {

@@ -55,8 +55,6 @@ async function getLinksFromUrl(url: string, path: string) {
   const location = new URL(path, url);
   let response;
 
-  //ToDo: Should have some method of checking if location is valid or not
-
   try {
     response = await fetch(location.toString());
   } catch (error: unknown) {
@@ -133,7 +131,7 @@ export type PageData = {
 };
 
 export async function* crawlPage(url: URL, maxDepth: number = 3): AsyncGenerator<PageData> {
-  console.log("starting crawl")
+  console.log("Starting crawl from: ", url, " - Max Depth: ", maxDepth)
   const { baseUrl, basePath } = splitUrl(url);
   let paths: { path: string; depth: number }[] = [{ path: basePath, depth: 0 }];
   
@@ -146,10 +144,8 @@ export async function* crawlPage(url: URL, maxDepth: number = 3): AsyncGenerator
       const promises = batch.map(({ path, depth }) => getLinksFromUrl(baseUrl, path).then(links => ({ links, path, depth }))); // Adjust for depth tracking
       
       const results = await Promise.all(promises);
-      console.log("results length: ", results.length)
       for (const { links: { html, links: linksArray }, path, depth } of results) {
         if (html !== "" && depth <= maxDepth) { // Check depth
-          console.log("Depth: ", depth)
           yield {
             url: url.toString(),
             path,
@@ -159,7 +155,6 @@ export async function* crawlPage(url: URL, maxDepth: number = 3): AsyncGenerator
         
         // Ensure we only add links if within depth limit
         if (depth < maxDepth) {
-          console.log("Depth: ", depth)
           for (let link of linksArray) {
             if (!paths.some(p => p.path === link)) {
               paths.push({ path: link, depth: depth + 1 }); // Increment depth for new paths
@@ -168,10 +163,14 @@ export async function* crawlPage(url: URL, maxDepth: number = 3): AsyncGenerator
         }
       }
     } catch(e){
-        console.warn("Error while crawling page: ", e)
+      if (e instanceof TypeError) {
+        console.warn("Error while crawling page: ", e) // likely an invalid url, continue with process
+      } else {
+        console.error("Error while crawling page: ", e)
+      }
     }
 
     index += batch.length; // Proceed to next batch
   }
-  console.log("crawl completed")
+  console.log("Crawl completed")
 }

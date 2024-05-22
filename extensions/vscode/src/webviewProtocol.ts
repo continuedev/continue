@@ -583,6 +583,7 @@ export async function showTutorial() {
       }
     });
     this.on("context/addDocs", (msg) => {
+      console.log("maxDepth: ", msg.data.maxDepth)
       const siteIndexingConfig: SiteIndexingConfig = {
         startUrl: msg.data.startUrl,
         rootUrl: msg.data.rootUrl,
@@ -591,7 +592,6 @@ export async function showTutorial() {
       };    
       
       const embeddingsProvider = new TransformersJsEmbeddingsProvider();
-      console.log("In vscode addDocs. maxDepth", siteIndexingConfig.maxDepth, " startUrl: ", siteIndexingConfig.startUrl)
       vscode.window.withProgress(
         {
           location: vscode.ProgressLocation.Notification,

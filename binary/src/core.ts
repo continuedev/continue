@@ -128,6 +128,7 @@ export class Core {
 
     // Context providers
     on("context/addDocs", async (msg) => {
+      console.log("maxDepth: ", msg.data.maxDepth)
       for await (const _ of indexDocs(
         msg.data,
         new TransformersJsEmbeddingsProvider(),
