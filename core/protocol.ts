@@ -116,7 +116,6 @@ export type Protocol = {
     },
     ProtocolGeneratorType<DiffLine>,
   ];
-
 };
 
 export interface IdeSettings {
