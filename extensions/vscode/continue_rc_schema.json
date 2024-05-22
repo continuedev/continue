@@ -483,7 +483,6 @@
             "properties": {
               "model": {
                 "enum": [
-                  "gpt-4-turbo",
                   "gpt-4o",
                   "llama3-70b",
                   "gpt-3.5-turbo",
