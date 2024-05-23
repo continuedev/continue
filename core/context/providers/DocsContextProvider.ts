@@ -23,6 +23,13 @@ class DocsContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
+    // Not supported in JetBrains IDEs right now
+    if ((await extras.ide.getIdeInfo()).ideType === "jetbrains") {
+      throw new Error(
+        "The @docs context provider is not currently supported in JetBrains IDEs. We'll have an update soon!",
+      );
+    }
+
     const { retrieveDocs } = await import("../../indexing/docs/db");
     const embeddingsProvider = new TransformersJsEmbeddingsProvider();
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
@@ -118,7 +125,7 @@ class DocsContextProvider extends BaseContextProvider {
         return 1;
       } else {
         // Secondary criterion: Alphabetical order when both items are in the same category
-        return a.title.toString().localeCompare(b.title.toString()); 
+        return a.title.toString().localeCompare(b.title.toString());
       }
     });
 

@@ -310,7 +310,7 @@ class IdeProtocolClient (
                                                 Position(endLine, 0)
                                         )
                                 ),
-                                data["color"] as String
+                                data["color"] as String?
                         )
                         respond(null)
                     }
@@ -841,7 +841,7 @@ class IdeProtocolClient (
             )
     }
 
-    fun highlightCode(rangeInFile: RangeInFile, color: String) {
+    fun highlightCode(rangeInFile: RangeInFile, color: String?) {
         val file =
             LocalFileSystem.getInstance().findFileByPath(rangeInFile.filepath)
 
