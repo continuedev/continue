@@ -172,7 +172,7 @@ function ModelConfig() {
           {(modelInfo?.collectInputFor?.filter((d) => !d.required).length ||
             0) > 0 && (
             <details>
-              <summary className="mb-2">
+              <summary className="mb-2 cursor-pointer">
                 <b>Advanced (optional)</b>
               </summary>
 
