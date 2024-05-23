@@ -93,7 +93,6 @@ const PARALLEL_PROVIDERS: ModelProvider[] = [
   "bedrock",
   "deepinfra",
   "gemini",
-  "gemini",
   "huggingface-inference-api",
   "huggingface-tgi",
   "mistral",
