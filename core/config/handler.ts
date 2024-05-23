@@ -1,4 +1,4 @@
-import { ContinueConfig, ContinueRcJson, IDE, ILLM } from "../index.js";
+import { ContinueConfig, ContinueRcJson, IDE, ILLM, IContextProvider } from "../index.js";
 import { IdeSettings } from "../protocol.js";
 import { Telemetry } from "../util/posthog.js";
 import {
@@ -89,7 +89,12 @@ export class ConfigHandler {
       ideInfo.extensionVersion,
     );
 
-    (newConfig.contextProviders ?? []).push(...this.additionalContextProviders);
+    (this.savedConfig.contextProviders ?? []).push(
+      ...this.additionalContextProviders,
+    );
+
+    return this.savedConfig;
+  }
 
   async llmFromTitle(title?: string): Promise<ILLM> {
     const config = await this.loadConfig();
@@ -100,5 +105,10 @@ export class ConfigHandler {
     }
 
     return model;
+  }
+
+  registerCustomContextProvider(contextProvider: IContextProvider) {
+    this.additionalContextProviders.push(contextProvider);
+    this.reloadConfig();
   }
 }
