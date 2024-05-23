@@ -342,7 +342,10 @@ const commandsMap: (
       );
     },
     "continue.fixCode": async () => {
-      streamInlineEdit("fix", "Fix this code");
+      streamInlineEdit(
+        "fix",
+        "Fix this code. If it is already 100% correct, simply rewrite the code.",
+      );
     },
     "continue.optimizeCode": async () => {
       streamInlineEdit("optimize", "Optimize this code");
