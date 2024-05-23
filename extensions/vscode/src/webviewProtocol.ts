@@ -46,7 +46,7 @@ export async function showTutorial() {
   await vscode.window.showTextDocument(doc, { preview: false });
 }
 
- export class VsCodeWebviewProtocol {
+export class VsCodeWebviewProtocol {
   listeners = new Map<keyof WebviewProtocol, ((message: Message) => any)[]>();
   abortedMessageIds: Set<string> = new Set();
 
@@ -583,7 +583,6 @@ export async function showTutorial() {
       }
     });
     this.on("context/addDocs", (msg) => {
-      console.log("maxDepth: ", msg.data.maxDepth)
       const siteIndexingConfig: SiteIndexingConfig = {
         startUrl: msg.data.startUrl,
         rootUrl: msg.data.rootUrl,

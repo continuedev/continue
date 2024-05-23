@@ -135,8 +135,6 @@ export interface LoadSubmenuItemsArgs {
 
 export interface CustomContextProvider {
   title: string;
-  startUrl: string,
-  maxDepth: number
   displayTitle?: string;
   description?: string;
   renderInlineAs?: string;
