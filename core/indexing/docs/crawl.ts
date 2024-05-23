@@ -18,6 +18,17 @@ const IGNORE_PATHS_ENDING_IN = [
 
 const GITHUB_PATHS_TO_TRAVERSE = ["/blob/", "/tree/"];
 
+async function getDefaultBranch(owner: string, repo: string): Promise<string> {
+  const octokit = new Octokit({ auth: undefined });
+
+  const repoInfo = await octokit.repos.get({
+    owner,
+    repo,
+  });
+
+  return repoInfo.data.default_branch;
+}
+
 async function crawlGithubRepo(baseUrl: URL) {
   const octokit = new Octokit({
     auth: undefined,
@@ -25,17 +36,16 @@ async function crawlGithubRepo(baseUrl: URL) {
 
   const [_, owner, repo] = baseUrl.pathname.split("/");
 
-  let dirContentsConfig = {
-    owner: owner,
-    repo: repo,
-  };
+  const branch = await getDefaultBranch(owner, repo)
+  console.log("Github repo detected. Crawling", branch, "branch")
+
 
   const tree = await octokit.request(
     "GET /repos/{owner}/{repo}/git/trees/{tree_sha}",
     {
       owner,
       repo,
-      tree_sha: "main",
+      tree_sha: branch,
       headers: {
         "X-GitHub-Api-Version": "2022-11-28",
       },
@@ -135,8 +145,16 @@ export async function* crawlPage(url: URL, maxDepth: number = 3): AsyncGenerator
   const { baseUrl, basePath } = splitUrl(url);
   let paths: { path: string; depth: number }[] = [{ path: basePath, depth: 0 }];
   
-  let index = 0;
+  if (url.hostname === "github.com") {
+    const githubLinks = await crawlGithubRepo(url);
+    const githubLinkObjects = githubLinks.map(link => ({
+        path: link,
+        depth: 0, 
+    }));
+    paths = [...paths, ...githubLinkObjects];
+  }
 
+  let index = 0;
   while (index < paths.length) {
     const batch = paths.slice(index, index + 50);
 
@@ -164,7 +182,7 @@ export async function* crawlPage(url: URL, maxDepth: number = 3): AsyncGenerator
       }
     } catch(e){
       if (e instanceof TypeError) {
-        console.warn("Error while crawling page: ", e) // likely an invalid url, continue with process
+        console.warn("Error while crawling page: ", e) // Likely an invalid url, continue with process
       } else {
         console.error("Error while crawling page: ", e)
       }
