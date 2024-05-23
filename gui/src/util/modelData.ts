@@ -456,7 +456,8 @@ const gemini15Pro: ModelPackage = {
 };
 const gemini15Flash: ModelPackage = {
   title: "Gemini 1.5 Flash",
-  description: "Fast and versatile multimodal model for scaling across diverse tasks",
+  description:
+    "Fast and versatile multimodal model for scaling across diverse tasks",
   params: {
     title: "Gemini 1.5 Flash",
     model: "gemini-1.5-flash-latest",
@@ -613,7 +614,7 @@ const claude3Opus: ModelPackage = {
     title: "Claude 3 Opus",
     apiKey: "",
   },
-  providerOptions: ["anthropic", "freetrial"],
+  providerOptions: ["anthropic"],
   icon: "anthropic.png",
 };
 
@@ -1046,13 +1047,12 @@ After it's up and running, you can start using Continue.`,
     tags: [ModelProviderTag.Free],
     packages: [
       codellama70bTrial,
-      mixtralTrial,
-      { ...claude3Opus, title: "Claude 3 Opus (trial)" },
-      { ...claude3Sonnet, title: "Claude 3 Sonnet (trial)" },
-      { ...claude3Haiku, title: "Claude 3 Haiku (trial)" },
-      { ...gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
       { ...gpt4o, title: "GPT-4o (trial)" },
       { ...gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
+      { ...claude3Sonnet, title: "Claude 3 Sonnet (trial)" },
+      { ...claude3Haiku, title: "Claude 3 Haiku (trial)" },
+      mixtralTrial,
+      { ...gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
       {
         ...AUTODETECT,
         params: {
