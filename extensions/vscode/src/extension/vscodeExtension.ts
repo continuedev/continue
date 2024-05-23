@@ -1,6 +1,7 @@
 import { ConfigHandler } from "core/config/handler";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
+import { IContextProvider } from "core";
 import { IdeSettings } from "core/protocol";
 import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
 import fs from "fs";
@@ -307,5 +308,9 @@ export class VsCodeExtension {
     } else {
       console.log("Codebase Indexing Complete");
     }
+  }
+
+  registerCustomContextProvider(contextProvider: IContextProvider) {
+    this.configHandler.registerCustomContextProvider(contextProvider);
   }
 }

@@ -7,6 +7,7 @@ import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { setupInlineTips } from "./inlineTips";
+import { VsCodeContinueApi } from "./api";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
@@ -34,4 +35,12 @@ export async function activateExtension(context: vscode.ExtensionContext) {
       extensionVersion: getExtensionVersion(),
     });
   }
+
+  const api = new VsCodeContinueApi(vscodeExtension);
+  const continuePublicApi = {
+    registerCustomContextProvider: api.registerCustomContextProvider.bind(api),
+  };
+
+  // 'export' public api-surface
+  return continuePublicApi;
 }
