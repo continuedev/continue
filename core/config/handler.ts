@@ -2,6 +2,7 @@ import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
   ContinueRcJson,
+  IContextProvider,
   IDE,
   ILLM,
 } from "../index.js";
@@ -12,6 +13,7 @@ import { finalToBrowserConfig, loadFullConfigNode } from "./load.js";
 export class ConfigHandler {
   private savedConfig: ContinueConfig | undefined;
   private savedBrowserConfig?: BrowserSerializedContinueConfig;
+  private additionalContextProviders: IContextProvider[] = [];
 
   constructor(
     private readonly ide: IDE,
@@ -84,6 +86,10 @@ export class ConfigHandler {
       ideInfo.extensionVersion,
     );
 
+    (this.savedConfig.contextProviders ?? []).push(
+      ...this.additionalContextProviders,
+    );
+
     return this.savedConfig;
   }
 
@@ -96,5 +102,10 @@ export class ConfigHandler {
     }
 
     return model;
+  }
+
+  registerCustomContextProvider(contextProvider: IContextProvider) {
+    this.additionalContextProviders.push(contextProvider);
+    this.reloadConfig();
   }
 }

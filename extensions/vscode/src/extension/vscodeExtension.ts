@@ -1,8 +1,9 @@
-import { ConfigHandler } from "core/config/handler.js";
+import { IContextProvider } from "core";
+import { ConfigHandler } from "core/config/handler";
 import { Core } from "core/core";
-import { FromCoreProtocol, ToCoreProtocol } from "core/protocol/index.js";
-import { InProcessMessenger } from "core/util/messenger.js";
-import { getConfigJsonPath, getConfigTsPath } from "core/util/paths.js";
+import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
+import { InProcessMessenger } from "core/util/messenger";
+import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
@@ -235,4 +236,8 @@ export class VsCodeExtension {
   static continueVirtualDocumentScheme = "continue";
 
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
+
+  registerCustomContextProvider(contextProvider: IContextProvider) {
+    this.configHandler.registerCustomContextProvider(contextProvider);
+  }
 }

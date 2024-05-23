@@ -50,6 +50,7 @@ const sidebars = {
         "walkthroughs/running-continue-without-internet",
         "walkthroughs/codebase-embeddings",
         "walkthroughs/tab-autocomplete",
+        "walkthroughs/prompt-files",
         // "walkthroughs/config-file-migration",
       ],
     },
