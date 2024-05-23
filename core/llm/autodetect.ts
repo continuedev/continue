@@ -17,6 +17,7 @@ import {
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
   zephyrTemplateMessages,
+  graniteTemplateMessage,
 } from "./templates/chat.js";
 import {
   alpacaEditPrompt,
@@ -149,6 +150,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     lower.includes("command") ||
     lower.includes("chat-bison") ||
     lower.includes("pplx") ||
+    lower.includes("granite")
     lower.includes("gemini") ||
     lower.includes("grok")||
     lower.includes("moonshot")
@@ -264,6 +266,7 @@ function autodetectTemplateFunction(
       gemma: gemmaTemplateMessage,
       granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
+      granite: graniteTemplateMessage,
       none: null,
     };
 
@@ -288,6 +291,7 @@ const USES_OS_MODELS_EDIT_PROMPT: TemplateType[] = [
   "xwin-coder",
   "zephyr",
   "llama3",
+  "granite",
 ];
 
 function autodetectPromptTemplates(

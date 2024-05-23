@@ -29,7 +29,7 @@
         },
         "presencePenalty": {
           "title": "Presence Penalty",
-          "description": "The presence penalty Aof the completion.",
+          "description": "The presence penalty of the completion.",
           "type": "number"
         },
         "frequencePenalty": {
@@ -207,6 +207,7 @@
             "xAI",
             "kindo",
             "moonshot"
+            "ibm"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -245,6 +246,7 @@
             "### xAI offers a world class developer tool set to build scalable applications powered by Grok. To get started, obtain an API key from [the x Console](https://console.x.ai/), and see the [docs](https://docs.x.ai/docs/)",
             "### Secure AI management software that helps enterprises adopt and manage AI across their workforce. To get started, obtain an API key from [the Kindo console](https://app.kindo.ai/settings/api), and see the [website](https://app.kindo.ai//)",
             "### Moonshot\nTo get started with Moonshot AI, obtain your API key from [Moonshot AI](https://platform.moonshot.cn/). Moonshot AI provides high-quality large language models with competitive pricing.\n> [Reference](https://platform.moonshot.cn/docs/api)"
+            "### IBM\nSupports BAM and watsonx.ai, to get started visit [IBM BAM](https://bam.res.ibm.com/) and obtain an API key.\n> [Docs](https://bam.res.ibm.com/docs/)"
           ],
           "type": "string"
         },
@@ -355,7 +357,8 @@
             "codellama-70b",
             "llava",
             "gemma",
-            "llama3"
+            "llama3",
+            "granite"
           ],
           "type": "string"
         },
@@ -466,6 +469,7 @@
                   "cohere",
                   "gemini",
                   "huggingface-inference-api",
+                  "ibm",
                   "replicate",
                   "together",
                   "cloudflare",
@@ -1452,6 +1456,9 @@
                       "qwen2.5-coder:7b",
                       "qwen2.5-coder:14b",
                       "qwen2.5-coder:32b"
+                      "granite-3b-code-instruct"
+                      "granite-8b-code-instruct",
+                      "granite-34b-code-instruct",
                     ]
                   },
                   {

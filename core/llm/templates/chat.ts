@@ -300,4 +300,5 @@ export {
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
   zephyrTemplateMessages,
+  graniteTemplateMessage,
 };

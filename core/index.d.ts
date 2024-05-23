@@ -656,6 +656,7 @@ type TemplateType =
   | "codellama-70b"
   | "llava"
   | "gemma"
+  | "granite";
   | "granite"
   | "llama3";
 
@@ -669,6 +670,7 @@ type ModelProvider =
   | "huggingface-tgi"
   | "huggingface-inference-api"
   | "kindo"
+  | "ibm"
   | "llama.cpp"
   | "replicate"
   | "text-gen-webui"
@@ -785,6 +787,10 @@ export type ModelName =
   // Cohere
   | "command-r"
   | "command-r-plus"
+  // IBM
+  | "granite-3b-code-instruct"
+  | "granite-8b-code-instruct"
+  | "granite-34b-code-instruct"
   // Gemini
   | "gemini-pro"
   | "gemini-1.5-pro-latest"

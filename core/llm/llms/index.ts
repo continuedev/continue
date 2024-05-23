@@ -7,6 +7,7 @@ import {
 } from "../..";
 import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
 import { BaseLLM } from "../index";
+import IBM from "./IBM.js";
 
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
@@ -54,6 +55,7 @@ const LLMs = [
   Cohere,
   FreeTrial,
   Gemini,
+  IBM,
   Llamafile,
   Moonshot,
   Ollama,
