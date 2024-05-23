@@ -7,6 +7,7 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import { getFontSize } from "../../util";
+import { ftl } from "../dialogs/FTCDialog";
 import SetupLocalOrKeyDialog from "../dialogs/SetupLocalOrKey";
 
 const ProgressBarWrapper = styled.div`
@@ -84,9 +85,7 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
       {tooltipPortalDiv &&
         ReactDOM.createPortal(
           <StyledTooltip id="usage_progress_bar" place="top">
-            {
-              "Click to use your own API key or local LLM (required after 100 inputs)"
-            }
+            {`Click to use your own API key or local LLM (required after ${ftl()} inputs)`}
           </StyledTooltip>,
           tooltipPortalDiv,
         )}
