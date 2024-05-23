@@ -56,7 +56,10 @@
         "${workspaceFolder}/extensions/vscode/manual-testing-sandbox/test.js",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],
-      "outFiles": ["${workspaceFolder}/extensions/vscode/out/**/*.js"],
+      "outFiles": [
+        "${workspaceFolder}/extensions/vscode/out/**/*.js",
+        "/Users/natesesti/.continue/config.ts"
+      ],
       "preLaunchTask": "vscode-extension:build"
     },
     // Has to be run after starting the server (separately or using the compound configuration)

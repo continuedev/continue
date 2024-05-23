@@ -13,6 +13,7 @@ import {
   RequestOptions,
   TemplateType,
 } from "../index.js";
+import { logDevData } from "../util/devdata.js";
 import { DevDataSqliteDb } from "../util/devdataSqlite.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import mergeJson from "../util/merge.js";
@@ -236,6 +237,12 @@ ${prompt}`;
       promptTokens,
       generatedTokens,
     );
+    logDevData("tokens_generated", {
+      model: model,
+      provider: this.providerName,
+      promptTokens: promptTokens,
+      generatedTokens: generatedTokens,
+    });
   }
 
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {

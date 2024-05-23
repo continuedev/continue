@@ -1,3 +1,4 @@
+import { IContextProvider } from "core";
 import { ConfigHandler } from "core/config/handler.js";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol/index.js";
@@ -235,4 +236,8 @@ export class VsCodeExtension {
   static continueVirtualDocumentScheme = "continue";
 
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
+
+  registerCustomContextProvider(contextProvider: IContextProvider) {
+    this.configHandler.registerCustomContextProvider(contextProvider);
+  }
 }
