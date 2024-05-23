@@ -15,7 +15,7 @@ fs.mkdirSync(bin);
 fs.mkdirSync(out);
 
 const esbuildOutputFile = "out/index.js";
-const targets = [
+let targets = [
   "darwin-x64",
   "darwin-arm64",
   "linux-x64",
