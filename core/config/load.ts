@@ -43,6 +43,7 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
+  readAllGlobalPromptFiles,
 } from "../util/paths.js";
 import {
   defaultContextProvidersJetBrains,
@@ -157,6 +158,10 @@ async function serializedToIntermediateConfig(
   )
     .flat()
     .filter(({ path }) => path.endsWith(".prompt"));
+
+  // Also read from ~/.continue/.prompts
+  promptFiles.push(...readAllGlobalPromptFiles());
+
   for (const file of promptFiles) {
     slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
   }
