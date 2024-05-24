@@ -914,11 +914,12 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
   ibm: {
     title: "IBM API",
     provider: "ibm",
-    description: "The IBM API provides hosted access to their Granite models in sizes 3b, 8b, and 34b",
+    description: "Access the Granite Code Instruct models in sizes 3b, 8b, and 34b.",
     longDescription: `To get started with IBM API, obtain your API key from [here](https://bam.res.ibm.com/) and paste it below.`,
     tags: [
       ModelProviderTag["Cloud"], 
-      ModelProviderTag["Requires API Key"]
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
     ],
     params: {
       apiKey: "",

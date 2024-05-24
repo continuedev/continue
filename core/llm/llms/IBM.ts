@@ -1,6 +1,6 @@
 import { BaseLLM } from "../index.js";
 import { ChatMessage, CompletionOptions, LLMOptions, ModelProvider } from "../../index.js";
-import { streamJSON } from "../stream.js";
+import { streamSse } from "../stream.js";
 
 
 class IBM extends BaseLLM {
@@ -10,8 +10,9 @@ class IBM extends BaseLLM {
 	static providerName: ModelProvider = "ibm";
 
 	static defaultOptions: Partial<LLMOptions> = {
-		apiBase: "https://bam-api.res.ibm.com/v2/",
+		apiBase: "https://bam-api.res.ibm.com/v2/text",
 		apiVersion: "2024-05-23",
+		systemMessage: "You are Granite, an AI language model developed by IBM. You are capable of coding at an eltie level and very knowledgeable about the use of computers. You are not permitted to make function calls, do not use the function_call token.",
 	};
 
 	private static MODEL_IDS: { [name: string]: string } = {
@@ -23,7 +24,7 @@ class IBM extends BaseLLM {
 	private _getModelName(model: string) {
 		return IBM.MODEL_IDS[model] || this.model;
 	}
-
+	
 	private _convertArgs(options: CompletionOptions) {
 		const finalOptions = {
 			model_id: this._getModelName(this.model),
@@ -45,7 +46,13 @@ class IBM extends BaseLLM {
 		messages: ChatMessage[],
 		options: CompletionOptions,
 	): AsyncGenerator<ChatMessage> {
-		const response = await this.fetch(new URL(`${this.apiBase}chat?version=${this.apiVersion}`), {
+		let endpoint = "chat_stream"
+		if (options.stream == false) {
+			endpoint = "chat"
+		}
+		console.log(endpoint)
+
+		const response = await this.fetch(new URL(`${this.apiBase}${endpoint}?version=${this.apiVersion}`), {
 			method: "POST",
 			headers: {
 				Authorization: `Bearer ${this.apiKey}`,
@@ -54,22 +61,56 @@ class IBM extends BaseLLM {
 			body: JSON.stringify({
 				...this._convertArgs(options),
 				messages: (messages),
-				system: this.systemMessage,
 			}),
 		});
 
-		if (options.stream === false) {
+		if (options.stream == false) {
 			const data = await response.json();
-			yield { role: "assistant", content: data.text };
-			return;
+			yield { role: "assistant", content: data.results[0].generated_text}
 		}
 
-		for await (const value of streamJSON(response)) {
-			if (value.event_type === "text-generation") {
-				yield { role: "assistant", content: value.text };
-			}
-		}
+		for await (const chunk of streamSse(response)) {
+      		yield {
+        		role: "assistant",
+        		content: chunk,
+      		};
+    	}
 	}
+
+	protected async *_streamComplete(
+		prompt: string,
+		options: CompletionOptions,
+	  ): AsyncGenerator<string> {
+		let endpoint = "generation_stream"
+		if (options.stream == false) {
+			endpoint = "generation"
+		}
+		console.log(endpoint)
+		// log the templates being used for this prompt
+		console.log(this.template)
+		console.log(this.promptTemplates)
+
+		const response = await this.fetch(new URL(`${this.apiBase}${endpoint}?version=2024-03-19`), {
+		  method: "POST",
+		  headers: {
+			Authorization: `Bearer ${this.apiKey}`,
+			"Content-Type": "application/json",
+		},
+	  body: JSON.stringify({
+			"input": prompt,
+			...this._convertArgs(options),
+		}),
+		});
+
+		if (options.stream == false) {
+			const data = await response.json();
+			yield data.results[0].generated_text
+			}
+			
+		for await (const chunk of streamSse(response)) {
+        	yield chunk.results[0].generated_text
+      	};
+    }
 }
 
 export default IBM;

@@ -17,7 +17,6 @@ import {
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
   zephyrTemplateMessages,
-  graniteTemplateMessage,
 } from "./templates/chat.js";
 import {
   alpacaEditPrompt,
@@ -194,8 +193,8 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "llama2";
   }
 
-  if (lower.includes("zephyr")) {
-    return "zephyr";
+  if (lower.includes("zephyr") || lower.includes("granite")) {
+        return "zephyr";
   }
 
   // Claude requests always sent through Messages API, so formatting not necessary
@@ -266,7 +265,7 @@ function autodetectTemplateFunction(
       gemma: gemmaTemplateMessage,
       granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
-      granite: graniteTemplateMessage,
+      granite: zephyrTemplateMessages,
       none: null,
     };
 
@@ -307,6 +306,8 @@ function autodetectPromptTemplates(
     // This is overriding basically everything else
     // Will probably delete the rest later, but for now it's easy to revert
     editTemplate = osModelsEditPrompt;
+  } else if (templateType === "granite") {
+    editTemplate = zephyrEditPrompt;
   } else if (templateType === "phind") {
     editTemplate = phindEditPrompt;
   } else if (templateType === "phi2") {

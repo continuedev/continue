@@ -48,21 +48,27 @@
     },
     {
       "label": "vscode-extension:tsc",
-      "type": "npm",
-      "script": "tsc",
-      "path": "extensions/vscode",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": [
+        "-Command",
+        "Start-Process npm -ArgumentList 'run', 'tsc' -WorkingDirectory '${workspaceFolder}/extensions/vscode' -Verb RunAs"
+      ],
       "problemMatcher": ["$tsc"],
       "presentation": {
         "revealProblems": "onProblem",
         "clear": true
       }
     },
-    // Build the React app. It gets bundled into the extension as a file resource and has a seprate build step
+    // Build the React app. It gets bundled into the extension as a file resource and has a separate build step
     {
       "label": "vscode-extension:continue-ui:build",
       "type": "shell",
-      "command": "node",
-      "args": ["${workspaceFolder}/extensions/vscode/scripts/prepackage.js"],
+      "command": "powershell.exe",
+      "args": [
+        "-Command",
+        "Start-Process node -ArgumentList '${workspaceFolder}/extensions/vscode/scripts/prepackage.js' -Verb RunAs"
+      ],
       "problemMatcher": ["$tsc"],
       "presentation": {
         "revealProblems": "onProblem",
@@ -86,9 +92,12 @@
     },
     {
       "label": "vscode-extension:tests:esbuild",
-      "type": "npm",
-      "script": "build-test",
-      "path": "extensions/vscode",
+      "type": "shell",
+      "command": "powershell.exe",
+      "args": [
+        "-Command",
+        "Start-Process npm -ArgumentList 'run', 'build-test' -WorkingDirectory '${workspaceFolder}/extensions/vscode' -Verb RunAs"
+      ],
       "problemMatcher": [
         {
           "pattern": [
@@ -105,24 +114,28 @@
       ]
     },
     //
-    // Install or update all dependencies for all projects in the monrepo
+    // Install or update all dependencies for all projects in the monorepo
     {
       "label": "install-all-dependencies",
       "type": "shell",
-      "windows": { "command": "./scripts/install-dependencies.ps1" },
-      "command": "./scripts/install-dependencies.sh",
-      "problemMatcher": [] // Empty so users are not prompted to select progress reporting
+      "command": "powershell.exe",
+      "args": [
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "./scripts/install-dependencies.ps1"
+      ]
     },
-    //
+            //
     // Start the React App for debugging with Vite
     {
       "label": "gui:dev",
       "type": "shell",
-      "command": "npm",
-      "options": {
-        "cwd": "${workspaceFolder}/gui"
-      },
-      "args": ["run", "dev"],
+      "command": "powershell.exe",
+      "args": [
+        "-Command",
+        "Start-Process npm -ArgumentList 'run', 'dev' -WorkingDirectory '${workspaceFolder}/gui' -Verb RunAs"
+      ],
       "isBackground": true,
       "problemMatcher": [
         {
