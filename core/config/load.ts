@@ -377,7 +377,7 @@ function finalToBrowserConfig(
       completionOptions: m.completionOptions,
       systemMessage: m.systemMessage,
       requestOptions: m.requestOptions,
-      promptTemplates: m.promptTemplates,
+      promptTemplates: m.promptTemplates as any,
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,

@@ -1,3 +1,4 @@
+import { TRIAL_FIM_MODEL } from "../../config/onboarding.js";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
 import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
 import { SERVER_URL } from "../../util/parameters.js";
@@ -40,7 +41,7 @@ class FreeTrial extends BaseLLM {
       presence_penalty: options.presencePenalty,
       max_tokens: options.maxTokens,
       stop:
-        options.model === "starcoder-7b"
+        options.model === TRIAL_FIM_MODEL
           ? options.stop
           : options.stop?.slice(0, 2),
       temperature: options.temperature,

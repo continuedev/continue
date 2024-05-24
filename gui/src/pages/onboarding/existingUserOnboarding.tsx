@@ -1,3 +1,4 @@
+import { TRIAL_FIM_MODEL } from "core/config/onboarding";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -83,7 +84,7 @@ function ExistingUserOnboarding() {
   "tabAutocompleteModel": {
     "title": "Tab Autocomplete",
     "provider": "free-trial",
-    "model": "starcoder-7b"
+    "model": "${TRIAL_FIM_MODEL}"
   },
   // Voyage AI's voyage-code-2
   "embeddingsProvider": {
@@ -100,11 +101,10 @@ Alternatively, you can enter your own API keys:
 \`\`\`json
 {
   "tabAutocompleteModel": {
-    "title": "Starcoder 2",
-    "provider": "openai",
-    "model": "accounts/fireworks/models/starcoder-7b",
-    "apiBase": "https://api.fireworks.ai/inference/v1",
-    "apiKey": "FIREWORKS_API_KEY"
+    "title": "Codestral",
+    "provider": "mistral",
+    "model": "codestral-latest",
+    "apiKey": "MISTRAL_API_KEY"
   }
   "embeddingsProvider": {
     "provider": "openai",
