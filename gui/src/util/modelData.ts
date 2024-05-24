@@ -393,8 +393,7 @@ const mistralOs: ModelPackage = {
 
 const codestral: ModelPackage = {
   title: "Codestral",
-  description:
-    "Codestral is an advanced generative model created by Mistral AI, tailored for coding tasks like fill-in-the-middle and code completion. Trained on more than 80 programming languages, Codestral demonstrates proficiency in both widely-used and less-common languages.",
+  description: "",
   params: {
     title: "Codestral",
     model: "codestral-latest",
@@ -694,13 +693,18 @@ export const MODEL_INFO: (ModelPackage | string)[] = [
   "OpenAI",
   gpt4o,
   gpt4turbo,
-  // gpt4,
   gpt35turbo,
   "Anthropic",
   claude3Opus,
   claude3Sonnet,
   claude3Haiku,
-  // claude2,
+  "Mistral",
+  codestral,
+  mistralLarge,
+  mistralSmall,
+  mistral8x22b,
+  mistral8x7b,
+  mistral7b,
   "Cohere",
   commandR,
   commandRPlus,
@@ -709,9 +713,9 @@ export const MODEL_INFO: (ModelPackage | string)[] = [
   geminiPro,
   gemini15Flash,
   "Open Source",
+  mistralOs,
   llama3Chat,
   deepseek,
-  mistral,
   // wizardCoder,
   // codeLlamaInstruct,
   // phindCodeLlama,
@@ -782,27 +786,38 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       // claude2
     ],
   },
-  cohere: {
-    title: "Cohere",
-    provider: "cohere",
-    refPage: "cohere",
+  mistral: {
+    title: "Mistral API",
+    provider: "mistral",
     description:
-      "Optimized for enterprise generative AI, search and discovery, and advanced retrieval.",
-    icon: "cohere.png",
-    tags: [ModelProviderTag["Requires API Key"]],
-    longDescription:
-      "To use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.",
+      "The Mistral API provides seamless access to their models, including Codestral, Mistral 8x22B, Mistral Large, and more.",
+    icon: "mistral.png",
+    longDescription: `To get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)`,
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    params: {
+      apiKey: "",
+    },
     collectInputFor: [
       {
         inputType: CollectInputType.text,
         key: "apiKey",
         label: "API Key",
-        placeholder: "Enter your Cohere API key",
+        placeholder: "Enter your Mistral API key",
         required: true,
       },
       ...completionParamsInputs,
     ],
-    packages: [commandR, commandRPlus],
+    packages: [
+      codestral,
+      mistralLarge,
+      mistralSmall,
+      mistral8x22b,
+      mistral8x7b,
+      mistral7b,
+    ],
   },
   ollama: {
     title: "Ollama",
@@ -840,35 +855,27 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     ],
     apiKeyUrl: "https://console.groq.com/keys",
   },
-  together: {
-    title: "TogetherAI",
-    provider: "together",
-    refPage: "togetherllm",
+  cohere: {
+    title: "Cohere",
+    provider: "cohere",
+    refPage: "cohere",
     description:
-      "Use the TogetherAI API for extremely fast streaming of open-source models",
-    icon: "together.png",
-    longDescription: `Together is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset`,
-    tags: [
-      ModelProviderTag["Requires API Key"],
-      ModelProviderTag["Open-Source"],
-    ],
-    params: {
-      apiKey: "",
-    },
+      "Optimized for enterprise generative AI, search and discovery, and advanced retrieval.",
+    icon: "cohere.png",
+    tags: [ModelProviderTag["Requires API Key"]],
+    longDescription:
+      "To use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.",
     collectInputFor: [
       {
         inputType: CollectInputType.text,
         key: "apiKey",
         label: "API Key",
-        placeholder: "Enter your TogetherAI API key",
+        placeholder: "Enter your Cohere API key",
         required: true,
       },
       ...completionParamsInputs,
     ],
-    packages: [llama3Chat, codeLlamaInstruct, mistral].map((p) => {
-      p.params.contextLength = 4096;
-      return p;
-    }),
+    packages: [commandR, commandRPlus],
   },
   groq: {
     title: "Groq",
@@ -906,6 +913,36 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ,
     ],
   },
+  together: {
+    title: "TogetherAI",
+    provider: "together",
+    refPage: "togetherllm",
+    description:
+      "Use the TogetherAI API for extremely fast streaming of open-source models",
+    icon: "together.png",
+    longDescription: `Together is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset`,
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your TogetherAI API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
+    packages: [llama3Chat, codeLlamaInstruct, mistralOs].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
+  },
   gemini: {
     title: "Google Gemini API",
     provider: "gemini",
@@ -925,35 +962,6 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
     ],
     packages: [gemini15Pro, geminiPro, gemini15Flash],
-  },
-  mistral: {
-    title: "Mistral API",
-    provider: "mistral",
-    description:
-      "The Mistral API provides hosted access to their models, including Mistral-7b, Mixtral, and the very capable mistral-medium",
-    icon: "mistral.png",
-    longDescription: `To get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)`,
-    tags: [
-      ModelProviderTag["Requires API Key"],
-      ModelProviderTag["Open-Source"],
-    ],
-    params: {
-      apiKey: "",
-    },
-    collectInputFor: [
-      {
-        inputType: CollectInputType.text,
-        key: "apiKey",
-        label: "API Key",
-        placeholder: "Enter your Mistral API key",
-        required: true,
-      },
-      ...completionParamsInputs,
-    ],
-    packages: [mistralTiny, mistralSmall, mistralMedium].map((p) => {
-      p.params.contextLength = 4096;
-      return p;
-    }),
   },
   lmstudio: {
     title: "LM Studio",
@@ -1017,7 +1025,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistral],
+    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistralOs],
   },
   llamacpp: {
     title: "llama.cpp",
@@ -1092,7 +1100,8 @@ After it's up and running, you can start using Continue.`,
     refPage: "freetrial",
     description:
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key",
-    longDescription: `New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key. If you are ready to set up a model for long-term use or have used all ${ftl()} free uses, you can enter your API key or use a local model.`,
+    longDescription:
+      'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=""` or select another model provider.',
     icon: "openai.png",
     tags: [ModelProviderTag.Free],
     packages: [

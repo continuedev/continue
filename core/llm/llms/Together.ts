@@ -1,5 +1,4 @@
 import type {
-  ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,

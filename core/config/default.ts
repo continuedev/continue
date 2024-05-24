@@ -5,6 +5,11 @@ import {
 
 export const defaultConfig: SerializedContinueConfig = {
   models: [
+    // {
+    //   title: "Codestral (Free Trial)",
+    //   provider: "free-trial",
+    //   model: "codestral",
+    // },
     {
       title: "GPT-4o (Free Trial)",
       provider: "free-trial",
@@ -42,6 +47,11 @@ export const defaultConfig: SerializedContinueConfig = {
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
   models: [
+    // {
+    //   title: "Codestral (Free Trial)",
+    //   provider: "free-trial",
+    //   model: "codestral",
+    // },
     {
       title: "GPT-4o (Free Trial)",
       provider: "free-trial",

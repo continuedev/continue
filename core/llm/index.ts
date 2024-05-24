@@ -59,21 +59,23 @@ export abstract class BaseLLM implements ILLM {
     if (this.providerName === "openai") {
       if (
         this.apiBase?.includes("api.groq.com") ||
+        this.apiBase?.includes("api.mistral.ai") ||
         this.apiBase?.includes(":1337") ||
         this._llmOptions.useLegacyCompletionsEndpoint?.valueOf() === false
       ) {
-        // Jan + Groq don't support completions : (
+        // Jan + Groq + Mistral don't support completions : (
+        // Seems to be going out of style...
         return false;
       }
     }
-    if (this.providerName === "groq") {
+    if (["groq", "mistral"].includes(this.providerName)) {
       return false;
     }
     return true;
   }
 
   supportsPrefill(): boolean {
-    return ["ollama", "anthropic"].includes(this.providerName);
+    return ["ollama", "anthropic", "mistral"].includes(this.providerName);
   }
 
   uniqueId: string;
