@@ -6,6 +6,11 @@ export function setupOptimizedMode(
   return {
     ...config,
     models: [
+      // {
+      //   title: "Codestral (Free Trial)",
+      //   provider: "free-trial",
+      //   model: "codestral",
+      // },
       {
         title: "GPT-4o (Free Trial)",
         provider: "free-trial",

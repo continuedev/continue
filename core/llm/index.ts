@@ -55,21 +55,23 @@ export abstract class BaseLLM implements ILLM {
     if (this.providerName === "openai") {
       if (
         this.apiBase?.includes("api.groq.com") ||
+        this.apiBase?.includes("api.mistral.ai") ||
         this.apiBase?.includes(":1337") ||
         this._llmOptions.useLegacyCompletionsEndpoint?.valueOf() === false
       ) {
-        // Jan + Groq don't support completions : (
+        // Jan + Groq + Mistral don't support completions : (
+        // Seems to be going out of style...
         return false;
       }
     }
-    if (this.providerName === "groq") {
+    if (["groq", "mistral"].includes(this.providerName)) {
       return false;
     }
     return true;
   }
 
   supportsPrefill(): boolean {
-    return ["ollama", "anthropic"].includes(this.providerName);
+    return ["ollama", "anthropic", "mistral"].includes(this.providerName);
   }
 
   uniqueId: string;
@@ -81,7 +83,7 @@ export abstract class BaseLLM implements ILLM {
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
-  promptTemplates?: Record<string, string>;
+  promptTemplates?: Record<string, PromptTemplate>;
   templateMessages?: (messages: ChatMessage[]) => string;
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
