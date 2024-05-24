@@ -68,7 +68,7 @@ Push-Location extensions/vscode
 # This does way too many things inline but is the common denominator between many of the scripts
 npm install
 npm link @continuedev/core
-
+npm run prepackage
 npm run package
 
 Pop-Location
