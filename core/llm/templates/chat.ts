@@ -137,7 +137,7 @@ const zephyrTemplateMessages = templateFactory(
 );
 
 const graniteTemplateMessages = templateFactory(
-  (msg) => `<|system|>${msg.content}\n`,
+  (msg) => `<|system|>\n${msg.content}\n`,
   "<|user|>\n",
   "<|assistant|>\n",
   "\n",

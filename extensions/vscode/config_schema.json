@@ -182,6 +182,7 @@
             "ollama",
             "huggingface-tgi",
             "huggingface-inference-api",
+            "ibm",
             "llama.cpp",
             "replicate",
             "gemini",

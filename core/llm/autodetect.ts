@@ -141,7 +141,7 @@ function llmCanGenerateInParallel(
 
 function autodetectTemplateType(model: string): TemplateType | undefined {
   const lower = model.toLowerCase();
-
+  
   if (lower.includes("codellama") && lower.includes("70b")) {
     return "codellama-70b";
   }

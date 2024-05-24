@@ -578,6 +578,7 @@ declare global {
     | "ollama"
     | "huggingface-tgi"
     | "huggingface-inference-api"
+    | "ibm"
     | "kindo"
     | "llama.cpp"
     | "replicate"
@@ -673,6 +674,10 @@ declare global {
     // Cohere
     | "command-r"
     | "command-r-plus"
+    // IBM
+    | "granite-3b-code-instruct"
+    | "granite-8b-code-instruct"
+    | "granite-34b-code-instruct"  
     // Gemini
     | "gemini-pro"
     | "gemini-1.5-pro-latest"

@@ -2,7 +2,6 @@ import { BaseLLM } from "../index.js";
 import { ChatMessage, CompletionOptions, LLMOptions, ModelProvider, RequestOptions } from "../../index.js";
 import { streamSse } from "../stream.js";
 
-
 class IBM extends BaseLLM {
 	private conversationId?: string;
 	private parentId?: string;
@@ -11,7 +10,6 @@ class IBM extends BaseLLM {
 	static defaultOptions: Partial<LLMOptions> = {
 		apiBase: "https://bam-api.res.ibm.com/v2/text",
 		apiVersion: new Date().toISOString().split("T")[0],
-		systemMessage: "You are Granite, an AI language model developed by IBM to assist software engineers in their work. You are capable of coding at an eltie level and very knowledgeable about the use of computers.",
 	};
 
 	private static MODEL_IDS: { [name: string]: string } = {
@@ -77,7 +75,7 @@ class IBM extends BaseLLM {
 		prompt: string,
 		options: CompletionOptions,
 	): AsyncGenerator<string> {
-		let endpoint = options.stream !== false ? "chat_stream" : "chat"
+		let endpoint = options.stream !== false ? "generation_stream" : "generation"
 		console.log(endpoint)
 
 		const response = await this.fetch(new URL(`${this.apiBase}${endpoint}?version=${this.apiVersion}`), {
