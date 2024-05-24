@@ -156,6 +156,20 @@ Sure! Here's the code you requested:
 \`\`\`{{{language}}}
 `;
 
+const graniteEditPrompt = `<|system|>
+You are an expert programmer and write code on the first attempt without any errors or fillers.
+<|user|>
+Rewrite the code to satisfy this request: "{{{userInput}}}"
+
+\`\`\`{{{language}}}
+{{{codeToEdit}}}
+\`\`\`
+<|assistant|>
+Sure! Here's the code you requested:
+
+\`\`\`{{{language}}}
+`;
+
 const openchatEditPrompt = `GPT4 Correct User: You are an expert programmer and personal assistant. You are asked to rewrite the following code in order to {{{userInput}}}.
 \`\`\`{{{language}}}
 {{{codeToEdit}}}
@@ -258,4 +272,5 @@ export {
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
+  graniteEditPrompt,
 };

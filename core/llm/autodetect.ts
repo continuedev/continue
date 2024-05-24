@@ -17,6 +17,7 @@ import {
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
   zephyrTemplateMessages,
+  graniteTemplateMessages,
 } from "./templates/chat.js";
 import {
   alpacaEditPrompt,
@@ -34,6 +35,7 @@ import {
   simplifiedEditPrompt,
   xWinCoderEditPrompt,
   zephyrEditPrompt,
+  graniteEditPrompt,
 } from "./templates/edit.js";
 
 const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
@@ -157,6 +159,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return undefined; 
   }
 
+  if (lower.includes("granite")) {
+    return "granite";
+  }
+
   if (lower.includes("llama3")) {
     return "llama3";
   }
@@ -193,7 +199,7 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "llama2";
   }
 
-  if (lower.includes("zephyr") || lower.includes("granite")) {
+  if (lower.includes("zephyr")) {
         return "zephyr";
   }
 
@@ -265,7 +271,7 @@ function autodetectTemplateFunction(
       gemma: gemmaTemplateMessage,
       granite: graniteTemplateMessages,
       llama3: llama3TemplateMessages,
-      granite: zephyrTemplateMessages,
+      granite: graniteTemplateMessages,
       none: null,
     };
 
@@ -307,7 +313,7 @@ function autodetectPromptTemplates(
     // Will probably delete the rest later, but for now it's easy to revert
     editTemplate = osModelsEditPrompt;
   } else if (templateType === "granite") {
-    editTemplate = zephyrEditPrompt;
+    editTemplate = graniteEditPrompt;
   } else if (templateType === "phind") {
     editTemplate = phindEditPrompt;
   } else if (templateType === "phi2") {

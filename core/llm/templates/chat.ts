@@ -136,6 +136,15 @@ const zephyrTemplateMessages = templateFactory(
   "<|system|> </s>\n",
 );
 
+const graniteTemplateMessages = templateFactory(
+  (msg) => `<|system|>${msg.content}\n`,
+  "<|user|>\n",
+  "<|assistant|>\n",
+  "\n",
+  undefined,
+  "<|system|>\n",
+);
+
 const chatmlTemplateMessages = templateFactory(
   (msg) => `<|im_start|>${msg.role}\n${msg.content}<|im_end|>\n`,
   "<|im_start|>user\n",
@@ -300,4 +309,5 @@ export {
   templateAlpacaMessages,
   xWinCoderTemplateMessages,
   zephyrTemplateMessages,
+  graniteTemplateMessages,
 };
