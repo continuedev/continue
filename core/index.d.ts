@@ -83,6 +83,12 @@ export interface ILLM extends LLMOptions {
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<string, PromptLog>;
 
+  streamFim(
+    prefix: string,
+    suffix: string,
+    options?: LLMFullCompletionOptions,
+  ): AsyncGenerator<string, PromptLog>;
+
   streamChat(
     messages: ChatMessage[],
     options?: LLMFullCompletionOptions,
@@ -100,6 +106,8 @@ export interface ILLM extends LLMOptions {
   supportsCompletions(): boolean;
 
   supportsPrefill(): boolean;
+
+  supportsFim(): boolean;
 
   listModels(): Promise<string[]>;
 

@@ -1,4 +1,10 @@
-import { ChatMessage, LLMOptions, ModelProvider } from "../../index.js";
+import {
+  ChatMessage,
+  LLMFullCompletionOptions,
+  LLMOptions,
+  ModelProvider,
+} from "../../index.js";
+import { streamSse } from "../stream.js";
 import { gptEditPrompt } from "../templates/edit.js";
 import OpenAI from "./OpenAI.js";
 
@@ -29,6 +35,41 @@ class Mistral extends OpenAI {
     }
 
     return finalOptions;
+  }
+
+  supportsFim(): boolean {
+    return true;
+  }
+
+  async *_streamFim(
+    prefix: string,
+    suffix: string,
+    options: LLMFullCompletionOptions = {},
+  ): AsyncGenerator<string> {
+    const endpoint = new URL("fim/completions", this.apiBase);
+    const resp = await this.fetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify({
+        model: options.model,
+        prompt: prefix,
+        suffix,
+        max_tokens: options.maxTokens,
+        temperature: options.temperature,
+        top_p: options.topP,
+        frequency_penalty: options.frequencyPenalty,
+        presence_penalty: options.presencePenalty,
+        stop: options.stop,
+        stream: true,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "x-api-key": this.apiKey ?? "",
+      },
+    });
+    for await (const chunk of streamSse(resp)) {
+      yield chunk.choices[0].delta.content;
+    }
   }
 }
 

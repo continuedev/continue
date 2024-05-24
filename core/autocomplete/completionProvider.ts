@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { IDE, ILLM, Position, Range, TabAutocompleteOptions } from "../index.js";
 import { RangeInFileWithContents } from "../commands/util.js";
 import { ConfigHandler } from "../config/handler.js";
+import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { streamLines } from "../diff/util.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { getBasename } from "../util/index.js";
@@ -164,11 +165,9 @@ export async function getTabCompletion(
     llm.useLegacyCompletionsEndpoint = true;
   } else if (
     llm.providerName === "free-trial" &&
-    llm.model !== "starcoder-7b"
+    llm.model !== TRIAL_FIM_MODEL
   ) {
-    throw new Error(
-      "The only free trial model supported for tab-autocomplete is starcoder-7b.",
-    );
+    llm.model = TRIAL_FIM_MODEL;
   }
 
   if (
@@ -338,11 +337,16 @@ export async function getTabCompletion(
     const generator = generatorReuseManager.getGenerator(
       prefix,
       () =>
-        llm.streamComplete(prompt, {
-          ...completionOptions,
-          raw: true,
-          stop,
-        }),
+        llm.supportsFim()
+          ? llm.streamFim(prefix, suffix, {
+              ...completionOptions,
+              stop,
+            })
+          : llm.streamComplete(prompt, {
+              ...completionOptions,
+              raw: true,
+              stop,
+            }),
       multiline,
     );
 
