@@ -8,6 +8,7 @@ import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
+import { VsCodeContinueApi } from "./api";
 
 let resolveVsCodeExtension = (_: VsCodeExtension): void => {};
 export const vscodeExtensionPromise: Promise<VsCodeExtension> = new Promise(
