@@ -759,7 +759,7 @@ interface ModelRoles {
   inlineEdit?: string;
 }
 
-interface ExperimantalConfig {
+interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
   defaultContext?: "activeFile"[];
@@ -783,7 +783,7 @@ export interface SerializedContinueConfig {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
-  experimental?: ExperimantalConfig;
+  experimental?: ExperimentalConfig;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -829,7 +829,7 @@ export interface Config {
   /** Options for the reranker */
   reranker?: RerankerDescription | Reranker;
   /** Experimental configuration */
-  experimental?: ExperimantalConfig;
+  experimental?: ExperimentalConfig;
 }
 
 export interface ContinueConfig {
@@ -848,7 +848,7 @@ export interface ContinueConfig {
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: Reranker;
-  experimental?: ExperimantalConfig;
+  experimental?: ExperimentalConfig;
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -865,5 +865,5 @@ export interface BrowserSerializedContinueConfig {
   embeddingsProvider?: string;
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
-  experimental?: ExperimantalConfig;
+  experimental?: ExperimentalConfig;
 }
