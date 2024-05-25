@@ -105,7 +105,7 @@ export class RemoteConfigSync {
     try {
       const client = new ContinueServerClient(
         remoteConfigServerUrl.toString(),
-        Promise.resolve(userToken),
+        userToken,
       );
       const { configJson, configJs } = await client.getConfig();
 

@@ -1,8 +1,8 @@
+import { BaseLLM } from "..";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
 import { constants } from "../../deploy/constants.js";
 import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
 import { Telemetry } from "../../util/posthog.js";
-import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
 class FreeTrial extends BaseLLM {

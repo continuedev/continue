@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - preview
+      - nate/refactor-core
 
 jobs:
   build:
@@ -195,7 +196,7 @@ jobs:
           git config --local user.name "GitHub Action"
 
       - name: Pull latest changes
-        run: git pull origin preview
+        run: git pull origin nate/refactor-core
 
       # 1. Download the artifacts
       - uses: actions/download-artifact@v3
