@@ -24,7 +24,6 @@ import Llamafile from "./Llamafile.js";
 import Mistral from "./Mistral.js";
 import Ollama from "./Ollama.js";
 import OpenAI from "./OpenAI.js";
-import OpenAIFreeTrial from "./OpenAIFreeTrial.js";
 import Replicate from "./Replicate.js";
 import TextGenWebUI from "./TextGenWebUI.js";
 import Together from "./Together.js";
@@ -95,7 +94,6 @@ const LLMs = [
   Mistral,
   Bedrock,
   DeepInfra,
-  OpenAIFreeTrial,
   Flowise,
   Groq,
   ContinueProxy,
