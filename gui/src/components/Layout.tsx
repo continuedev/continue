@@ -24,7 +24,7 @@ import {
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
-import { getLocalStorage } from "../util/localStorage";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
 import { ftl } from "./dialogs/FTCDialog";
@@ -179,6 +179,19 @@ const Layout = () => {
       dispatch(setDialogMessage(<QuickModelSetup />));
     },
     [navigate],
+  );
+
+  useWebviewListener(
+    "incrementFtc",
+    async () => {
+      const u = getLocalStorage("ftc");
+      if (u) {
+        setLocalStorage("ftc", u + 1);
+      } else {
+        setLocalStorage("ftc", 1);
+      }
+    },
+    [],
   );
 
   useWebviewListener(
