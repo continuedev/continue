@@ -14,6 +14,11 @@ export const vscodeExtensionPromise: Promise<VsCodeExtension> = new Promise(
   (resolve) => (resolveVsCodeExtension = resolve),
 );
 
+let resolveVsCodeExtension = (_: VsCodeExtension): void => {};
+export const vscodeExtensionPromise: Promise<VsCodeExtension> = new Promise(
+  (resolve) => (resolveVsCodeExtension = resolve),
+);
+
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
   getTsConfigPath();
