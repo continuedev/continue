@@ -1,10 +1,10 @@
 import { CheckIcon, XMarkIcon } from "@heroicons/react/24/outline";
 import { DiffEditor } from "@monaco-editor/react";
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { v4 } from "uuid";
 import { vscInputBackground } from "../components";
 import HeaderButtonWithText from "../components/HeaderButtonWithText";
-import { postToIde } from "../util/ide";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 
 interface EditorFrameProps {
   filename: string;
@@ -12,8 +12,10 @@ interface EditorFrameProps {
 
 function EditorFrame(props: EditorFrameProps) {
   const [contents, setContents] = React.useState(
-    "function sum(a, b) {return a + b;}"
+    "function sum(a, b) {return a + b;}",
   );
+
+  const ideMessenger = useContext(IdeMessengerContext);
 
   useEffect(() => {
     const messageId = v4();
@@ -27,7 +29,7 @@ function EditorFrame(props: EditorFrameProps) {
     };
     window.addEventListener("message", eventListener);
 
-    postToIde("readFile", { filepath: props.filename });
+    ideMessenger.post("readFile", { filepath: props.filename });
 
     return () => window.removeEventListener("message", eventListener);
   }, []);
@@ -43,7 +45,7 @@ function EditorFrame(props: EditorFrameProps) {
         <code
           className="cursor-pointer"
           onClick={() => {
-            postToIde("showFile", {
+            ideMessenger.post("showFile", {
               filepath: props.filename,
             });
           }}

@@ -1,4 +1,4 @@
-import { Database, open } from "sqlite";
+import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import { Chunk } from "../../index.js";
 import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths.js";
@@ -45,7 +45,7 @@ export async function retrieveDocs(
   vector: number[],
   nRetrieve: number,
   embeddingsProviderId: string,
-  nested: boolean = false,
+  nested = false,
 ): Promise<Chunk[]> {
   const lancedb = await import("vectordb");
   const db = await getDBDocs();
@@ -69,7 +69,9 @@ export async function retrieveDocs(
   const tableNames = await lance.tableNames();
   if (!tableNames.includes(DOCS_TABLE_NAME)) {
     const downloaded = await downloadDocs();
-    if (downloaded) {return downloaded;}
+    if (downloaded) {
+      return downloaded;
+    }
   }
 
   const table = await lance.openTable(DOCS_TABLE_NAME);
@@ -83,7 +85,9 @@ export async function retrieveDocs(
 
   if ((!docs || docs.length === 0) && !nested) {
     const downloaded = await downloadDocs();
-    if (downloaded) {return downloaded;}
+    if (downloaded) {
+      return downloaded;
+    }
   }
 
   return docs.map((doc) => ({

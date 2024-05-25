@@ -36,7 +36,7 @@ const Dialog = styled.div`
   border: 1px solid ${vscFocusBorder};
   margin: auto;
   word-wrap: break-word;
-  overflow: hidden;
+  // overflow: hidden;
 `;
 
 const TextArea = styled.textarea`

@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { greenButtonColor } from "../../components";
-import { postToIde } from "../../util/ide";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { setLocalStorage } from "../../util/localStorage";
 import { Div, StyledButton } from "./components";
 
 function Onboarding() {
   const navigate = useNavigate();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const [hovered0, setHovered0] = useState(false);
   const [hovered1, setHovered1] = useState(false);
@@ -95,7 +96,7 @@ function Onboarding() {
         onMouseLeave={() => setHovered2(false)}
         onClick={() => {
           setSelected(2);
-          postToIde("openConfigJson", undefined);
+          ideMessenger.post("openConfigJson", undefined);
         }}
       >
         <h3>⚙️ Your own models</h3>
@@ -135,7 +136,7 @@ function Onboarding() {
           }
           disabled={selected < 0}
           onClick={() => {
-            postToIde("completeOnboarding", {
+            ideMessenger.post("completeOnboarding", {
               mode: ["optimized", "local", "custom"][selected] as any,
             });
             setLocalStorage("onboardingComplete", true);
@@ -144,9 +145,9 @@ function Onboarding() {
               navigate("/localOnboarding");
             } else {
               // Only needed when we switch from the default (local) embeddings provider
-              postToIde("index/forceReIndex", undefined);
+              ideMessenger.post("index/forceReIndex", undefined);
               // Don't show the tutorial above yet because there's another step to complete at /localOnboarding
-              postToIde("showTutorial", undefined);
+              ideMessenger.post("showTutorial", undefined);
               navigate("/");
             }
           }}

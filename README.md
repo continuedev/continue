@@ -54,9 +54,9 @@ JetBrains: `cmd+I` (MacOS) / `ctrl+I` (Windows)
 
 ![codebase](docs/static/img/codebase.gif)
 
-VS Code: `@codebase` (MacOS) / `@codebase` (Windows)
+VS Code: `cmd+enter` (MacOS) / `ctrl+enter` (Windows)
 
-JetBrains: Support coming soon
+JetBrains: `cmd+enter` (MacOS) / `ctrl+enter` (Windows)
 
 ## Quickly use documentation as context
 

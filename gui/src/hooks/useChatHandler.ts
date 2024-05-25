@@ -18,6 +18,7 @@ import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import resolveEditorContent from "../components/mainInput/resolveInput";
+import { IIdeMessenger } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   addPromptCompletionPair,
@@ -29,10 +30,8 @@ import {
   streamUpdate,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
-import { ideStreamRequest, llmStreamChat, postToIde } from "../util/ide";
-import { WebviewIde } from "../util/webviewIde";
 
-function useChatHandler(dispatch: Dispatch) {
+function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
 
   const defaultModel = useSelector(defaultModelSelector);
@@ -57,7 +56,11 @@ function useChatHandler(dispatch: Dispatch) {
     const cancelToken = abortController.signal;
 
     try {
-      const gen = llmStreamChat(defaultModel.title, cancelToken, messages);
+      const gen = ideMessenger.llmStreamChat(
+        defaultModel.title,
+        cancelToken,
+        messages,
+      );
       let next = await gen.next();
 
       while (!next.done) {
@@ -117,7 +120,7 @@ function useChatHandler(dispatch: Dispatch) {
     const cancelToken = abortController.signal;
     const modelTitle = defaultModel.title;
 
-    for await (const update of ideStreamRequest(
+    for await (const update of ideMessenger.streamRequest(
       "command/run",
       {
         input,
@@ -144,6 +147,7 @@ function useChatHandler(dispatch: Dispatch) {
   async function streamResponse(
     editorState: JSONContent,
     modifiers: InputModifiers,
+    ideMessenger: IIdeMessenger,
     index?: number,
   ) {
     try {
@@ -157,15 +161,17 @@ function useChatHandler(dispatch: Dispatch) {
       const [contextItems, selectedCode, content] = await resolveEditorContent(
         editorState,
         modifiers,
+        ideMessenger,
       );
 
       // Automatically use currently open file
       if (!modifiers.noContext && (history.length === 0 || index === 0)) {
         const usingFreeTrial = defaultModel.provider === "free-trial";
-        const ide = new WebviewIde();
-        const currentFilePath = await ide.getCurrentFile();
+
+        const currentFilePath = await ideMessenger.ide.getCurrentFile();
         if (typeof currentFilePath === "string") {
-          let currentFileContents = await ide.readFile(currentFilePath);
+          let currentFileContents =
+            await ideMessenger.ide.readFile(currentFilePath);
           if (usingFreeTrial) {
             currentFileContents = currentFileContents
               .split("\n")
@@ -241,7 +247,7 @@ function useChatHandler(dispatch: Dispatch) {
       }
     } catch (e) {
       console.log("Continue: error streaming response: ", e);
-      postToIde("errorPopup", {
+      ideMessenger.post("errorPopup", {
         message: `Error streaming response: ${e.message}`,
       });
     } finally {

@@ -1,10 +1,10 @@
 import { IndexingProgressUpdate } from "core";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
-import { postToIde } from "../../util/ide";
 
 const DIAMETER = 6;
 const CircleDiv = styled.div<{ color: string }>`
@@ -60,6 +60,8 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
     Math.max(0, indexingState.progress * 100),
   );
 
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
   const [paused, setPaused] = useState<boolean | undefined>(undefined);
@@ -67,7 +69,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
 
   useEffect(() => {
     if (paused === undefined) return;
-    postToIde("index/setPaused", paused);
+    ideMessenger.post("index/setPaused", paused);
   }, [paused]);
 
   return (
@@ -80,7 +82,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
         ) {
           setPaused((prev) => !prev);
         } else {
-          postToIde("index/forceReIndex", undefined);
+          ideMessenger.post("index/forceReIndex", undefined);
         }
       }}
       className="cursor-pointer"
@@ -148,7 +150,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
             data-tooltip-id="progress_dot"
             color="#bb0"
             onClick={(e) => {
-              postToIde("index/setPaused", false);
+              ideMessenger.post("index/setPaused", false);
             }}
           ></CircleDiv>
           {tooltipPortalDiv &&
@@ -167,7 +169,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
             onClick={(e) => {
-              postToIde("index/setPaused", true);
+              ideMessenger.post("index/setPaused", true);
             }}
           >
             <ProgressBarWrapper>

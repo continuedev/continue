@@ -67,7 +67,8 @@ export class JiraClient {
   private authHeader;
   constructor(options: JiraClientOptions) {
     this.options = {
-      issueQuery: "assignee = currentUser() AND resolution = Unresolved order by updated DESC",
+      issueQuery:
+        "assignee = currentUser() AND resolution = Unresolved order by updated DESC",
       apiVersion: "3",
       requestOptions: {},
       ...options,
@@ -75,9 +76,9 @@ export class JiraClient {
     this.baseUrl = `https://${this.options.domain}/rest/api/${this.options.apiVersion}`;
     this.authHeader = this.options.username
       ? {
-          Authorization:
-            "Basic " +
-            btoa(this.options.username + ":" + this.options.password),
+          Authorization: `Basic ${btoa(
+            `${this.options.username}:${this.options.password}`,
+          )}`,
         }
       : {
           Authorization: `Bearer ${this.options.password}`,
@@ -154,7 +155,7 @@ export class JiraClient {
       },
     );
 
-    if (response.status != 200) {
+    if (response.status !== 200) {
       console.warn(
         "Unable to get jira tickets. Response code from API is",
         response.status,

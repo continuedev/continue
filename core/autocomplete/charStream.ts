@@ -27,7 +27,7 @@ export async function* onlyWhitespaceAfterEndOfLine(
 
 export async function* noFirstCharNewline(stream: AsyncGenerator<string>) {
   let first = true;
-  for await (let char of stream) {
+  for await (const char of stream) {
     if (first) {
       first = false;
       if (char === "\n") {
@@ -48,6 +48,7 @@ export async function* stopOnUnmatchedClosingBracket(
   stream: AsyncGenerator<string>,
   suffix: string,
 ): AsyncGenerator<string> {
+  // Add corresponding open brackets from suffix to stack
   const stack: string[] = [];
   for (let i = 0; i < suffix.length; i++) {
     if (suffix[i] === " ") continue;
@@ -57,7 +58,22 @@ export async function* stopOnUnmatchedClosingBracket(
   }
 
   let all = "";
+  let seenNonWhitespaceOrClosingBracket = false;
   for await (let chunk of stream) {
+    // Allow closing brackets before any non-whitespace characters
+    if (!seenNonWhitespaceOrClosingBracket) {
+      const firstNonWhitespaceOrClosingBracketIndex =
+        chunk.search(/[^\s\)\}\]]/);
+      if (firstNonWhitespaceOrClosingBracketIndex !== -1) {
+        yield chunk.slice(0, firstNonWhitespaceOrClosingBracketIndex);
+        chunk = chunk.slice(firstNonWhitespaceOrClosingBracketIndex);
+        seenNonWhitespaceOrClosingBracket = true;
+      } else {
+        yield chunk;
+        continue;
+      }
+    }
+
     all += chunk;
     for (let i = 0; i < chunk.length; i++) {
       const char = chunk[i];

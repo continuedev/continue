@@ -78,9 +78,6 @@ export const supportedLanguages: { [key: string]: string } = {
 };
 
 export async function getParserForFile(filepath: string) {
-  if (process.env.IS_BINARY) {
-    return undefined;
-  }
   try {
     await Parser.init();
     const parser = new Parser();

@@ -5,7 +5,7 @@ import {
   LLMOptions,
   ModelDescription,
 } from "../../index.js";
-import { IdeSettings } from "../../protocol.js";
+import { IdeSettings } from "../../protocol/ideWebview.js";
 import { DEFAULT_MAX_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
 import Anthropic from "./Anthropic.js";
@@ -45,14 +45,14 @@ const getHandlebarsVars = (
 ): [string, { [key: string]: string }] => {
   const ast = Handlebars.parse(value);
 
-  let keysToFilepath: { [key: string]: string } = {};
+  const keysToFilepath: { [key: string]: string } = {};
   let keyIndex = 1;
-  for (let i in ast.body) {
+  for (const i in ast.body) {
     if (ast.body[i].type === "MustacheStatement") {
       const letter = convertToLetter(keyIndex);
       keysToFilepath[letter] = (ast.body[i] as any).path.original;
       value = value.replace(
-        new RegExp("{{\\s*" + (ast.body[i] as any).path.original + "\\s*}}"),
+        new RegExp(`{{\\s*${(ast.body[i] as any).path.original}\\s*}}`),
         `{{${letter}}}`,
       );
       keyIndex++;

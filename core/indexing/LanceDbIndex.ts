@@ -32,7 +32,7 @@ interface LanceDbRow {
 
 export class LanceDbIndex implements CodebaseIndex {
   get artifactId(): string {
-    return "vectordb::" + this.embeddingsProvider.id;
+    return `vectordb::${this.embeddingsProvider.id}`;
   }
 
   static MAX_CHUNK_SIZE = MAX_CHUNK_SIZE;
@@ -79,7 +79,7 @@ export class LanceDbIndex implements CodebaseIndex {
       const content = contents[i];
       const chunks: Chunk[] = [];
 
-      for await (let chunk of chunkDocument(
+      for await (const chunk of chunkDocument(
         items[i].path,
         content,
         LanceDbIndex.MAX_CHUNK_SIZE,
@@ -258,7 +258,7 @@ export class LanceDbIndex implements CodebaseIndex {
     }
 
     // Add tag - retrieve the computed info from lance sqlite cache
-    for (let { path, cacheKey } of results.addTag) {
+    for (const { path, cacheKey } of results.addTag) {
       const stmt = await sqlite.prepare(
         "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
         cacheKey,
@@ -279,7 +279,7 @@ export class LanceDbIndex implements CodebaseIndex {
         table = await db.createTable(tableName, lanceRows);
         needToCreateTable = false;
       } else if (lanceRows.length > 0) {
-        await table!.add(lanceRows);
+        await table?.add(lanceRows);
       }
 
       markComplete([{ path, cacheKey }], IndexResultType.AddTag);
@@ -287,15 +287,15 @@ export class LanceDbIndex implements CodebaseIndex {
 
     // Delete or remove tag - remove from lance table)
     if (!needToCreateTable) {
-      for (let { path, cacheKey } of [...results.removeTag, ...results.del]) {
+      for (const { path, cacheKey } of [...results.removeTag, ...results.del]) {
         // This is where the aforementioned lowercase conversion problem shows
-        await table!.delete(`cachekey = '${cacheKey}' AND path = '${path}'`);
+        await table?.delete(`cachekey = '${cacheKey}' AND path = '${path}'`);
       }
     }
     markComplete(results.removeTag, IndexResultType.RemoveTag);
 
     // Delete - also remove from sqlite cache
-    for (let { path, cacheKey } of results.del) {
+    for (const { path, cacheKey } of results.del) {
       await sqlite.run(
         "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
         cacheKey,

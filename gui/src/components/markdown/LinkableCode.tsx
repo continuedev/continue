@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, vscInputBackground } from "..";
-import { postToIde } from "../../util/ide";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 
 const StyledCode = styled.code<{ link: boolean }>`
   color: ${(props) => (props.link ? "#ff4343" : "#f78383")};
@@ -16,6 +16,8 @@ const StyledCode = styled.code<{ link: boolean }>`
 `;
 
 function LinkableCode(props: any) {
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const [linkingDone, setLinkingDone] = useState(false);
   const [isLink, setIsLink] = useState(false);
   const [filepath, setFilepath] = useState("");
@@ -46,7 +48,7 @@ function LinkableCode(props: any) {
   }, [linkingDone]);
 
   const onClick = () => {
-    postToIde("showFile", { filepath });
+    ideMessenger.post("showFile", { filepath });
   };
 
   return (

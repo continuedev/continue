@@ -1,4 +1,3 @@
-import { BaseLLM } from "../index.js";
 import {
   ChatMessage,
   CompletionOptions,
@@ -7,6 +6,7 @@ import {
   ModelProvider,
 } from "../../index.js";
 import { stripImages } from "../countTokens.js";
+import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
 class Gemini extends BaseLLM {
@@ -33,7 +33,7 @@ class Gemini extends BaseLLM {
     const msgs = [...messages];
 
     if (msgs[0]?.role === "system") {
-      let sysMsg = msgs.shift()!.content;
+      const sysMsg = msgs.shift()?.content;
       // @ts-ignore
       if (msgs[0]?.role === "user") {
         msgs[0].content = `System message - follow these instructions in every response: ${sysMsg}\n\n---\n\n${msgs[0].content}`;
@@ -47,7 +47,7 @@ class Gemini extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    let convertedMsgs = this.removeSystemMessage(messages);
+    const convertedMsgs = this.removeSystemMessage(messages);
     if (options.model.includes("gemini")) {
       for await (const message of this.streamChatGemini(
         convertedMsgs,

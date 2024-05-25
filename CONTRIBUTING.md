@@ -81,25 +81,47 @@ nvm use
 
 4. To package the extension, run `npm package` in the `extensions/vscode` directory. This will generate `extensions/vscode/build/continue-patch.vsix`, which you can install by right-clicking and selecting "Install Extension VSIX".
 
-> Note: Breakpoints can be used in both the `core` and `extensions/vscode` folders while debugging, but are not currently supported inside of `gui` code. Hot-reloading is enabled with Vite, so if you make any changes to the `gui`, they should be automatically reflected without rebuilding. Similarly, any changes to `core` or `extensions/vscode` will be automatically included by just reloading the _Host VS Code_ window with cmd/ctrl+shift+p "Reload Window".
+##### Debugging
+
+**Breakpoints** can be used in both the `core` and `extensions/vscode` folders while debugging, but are not currently supported inside of `gui` code.
+
+**Hot-reloading** is enabled with Vite, so if you make any changes to the `gui`, they should be automatically reflected without rebuilding. In some cases, you may need to refresh the _Host VS Code_ window to see the changes.
+
+Similarly, any changes to `core` or `extensions/vscode` will be automatically included by just reloading the _Host VS Code_ window with cmd/ctrl+shift+p "Reload Window".
 
 #### JetBrains
 
-Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](https://www.jetbrains.com/idea/download). Either Ultimate or Community (free) will work. Continue is built with JDK version 19.
+Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](https://www.jetbrains.com/idea/download). Either Ultimate or Community (free) will work. Continue is built with JDK version 17, as specified in `extensions/intellij/build.gradle.kts`. You should also ensure that you have the Gradle plugin installed.
 
 1. Clone the repository
-2. Run `scripts/install-dependencies.sh` or `scripts/install-dependencies.ps1` on Windows
-3. Run `cd extensions/vscode && node scripts/prepackage.js` (this will copy over the built React application to the proper JetBrains directory)
-4. Select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button
-5. To package the extension, choose the "Build Plugin" Gradle configuration
+2. Run `scripts/install-dependencies.sh` or `scripts/install-dependencies.ps1` on Windows. This will install and build all of the necessary dependencies.
+3. To test the plugin, select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button as shown in this screenshot:
+   ![img](./media/IntelliJRunPluginScreenshot.png)
+4. To package the extension, choose the "Build Plugin" Gradle configuration. This will generate a .zip file in `extensions/intellij/build/distributions` with the version defined in `extensions/intellij/gradle.properties`.
+5. If you make changes, you may need to re-build before running the "Build Plugin" configuration
 
-> For changes to Typescript code, the binary/gui will currently need to be rebuilt. Changes to Kotlin code can often be hot-reloaded with "Run -> Debugging Actions -> Reload Changed Classes"
+   a. If you change code from the `core` or `binary` directories, make sure to run `npm run build` from the `binary` directory to create a new binary.
+
+   b. If you change code from the `gui` directory, make sure to run `npm run build` from the `gui` directory to create a new bundle.
+
+   c. Any changes to the Kotlin coded in the `extensions/intellij` directory will be automatically included when you run "Build Plugin"
+
+##### Debugging
 
 Continue's JetBrains extension shares much of the code with the VS Code extension by utilizing shared code in the `core` directory and packaging it in a binary in the `binary` directory. The Intellij extension (written in Kotlin) is then able to communicate over stdin/stdout in the [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt) file.
 
+For the sake of rapid development, it is also possible to configure this communication to happen over local TCP sockets:
+
+1. In [CoreMessenger.kt](./extensions/intellij/src/main/kotlin/com/github/continuedev/continueintellijextension/continue/CoreMessenger.kt), change the `useTcp` variable to `true`.
+2. Open a VS Code window (we recommend this for a preconfigured Typescript debugging experience) with the `continue` repository. Select the "Core Binary" debug configuration and press play.
+3. Run the "Run Plugin" Gradle configuration.
+4. You can now set breakpoints in any of the TypeScript files in VS Code. If you make changes to the code, restart the "Core Binary" debug configuration and reload the _Host IntelliJ_ window.
+
+If you make changes to Kotlin code, they can often be hot-reloaded with "Run -> Debugging Actions -> Reload Changed Classes".
+
 ### Formatting
 
-Continue uses [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) to format JavaScript/TypeScript. Please install these extensions in VS Code and enable "Format on Save" in your settings.
+Continue uses [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode) to format JavaScript/TypeScript. Please install the Prettier extension in VS Code and enable "Format on Save" in your settings.
 
 ### Writing Slash Commands
 

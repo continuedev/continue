@@ -12,7 +12,7 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
   };
 
   get id(): string {
-    return FreeTrialEmbeddingsProvider.defaultOptions!.model!;
+    return FreeTrialEmbeddingsProvider.defaultOptions?.model!;
   }
 
   async embed(chunks: string[]) {

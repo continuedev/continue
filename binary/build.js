@@ -1,21 +1,21 @@
 const esbuild = require("esbuild");
-const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 const ncp = require("ncp").ncp;
 const { rimrafSync } = require("rimraf");
+const { validateFilesPresent, execCmdSync } = require("../scripts/util");
 
-function execCmdSync(cmd) {
-  try {
-    execSync(cmd);
-  } catch (err) {
-    console.error(`Error executing command '${cmd}': `, err.output.toString());
-    process.exit(1);
-  }
-}
+// Clean slate
+const bin = path.join(__dirname, "bin");
+const out = path.join(__dirname, "out");
+rimrafSync(bin);
+rimrafSync(out);
+rimrafSync(path.join(__dirname, "tmp"));
+fs.mkdirSync(bin);
+fs.mkdirSync(out);
 
 const esbuildOutputFile = "out/index.js";
-const targets = [
+let targets = [
   "darwin-x64",
   "darwin-arm64",
   "linux-x64",
@@ -44,13 +44,14 @@ const targetToLanceDb = {
   "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
   "linux-x64": "@lancedb/vectordb-linux-x64-gnu",
   "win32-x64": "@lancedb/vectordb-win32-x64-msvc",
+  "win32-arm64": "@lancedb/vectordb-win32-x64-msvc", // they don't have a win32-arm64 build
 };
 
-async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
-  console.log(`Copying ${package} to ${toCopy}`);
+async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
+  console.log(`Copying ${packageName} to ${toCopy}`);
   // This is a way to install only one package without npm trying to install all the dependencies
   // Create a temporary directory for installing the package
-  const adjustedName = toCopy.replace(/^@/, "").replace("/", "-");
+  const adjustedName = packageName.replace(/^@/, "").replace("/", "-");
   const tempDir = path.join(
     __dirname,
     "tmp",
@@ -58,10 +59,10 @@ async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
   );
   const currentDir = process.cwd();
 
-  // Remove the dir we will be copying to
-  rimrafSync(`node_modules/${toCopy}`);
+  // // Remove the dir we will be copying to
+  // rimrafSync(`node_modules/${toCopy}`);
 
-  // Ensure the temporary directory exists
+  // // Ensure the temporary directory exists
   fs.mkdirSync(tempDir, { recursive: true });
 
   try {
@@ -69,12 +70,16 @@ async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
     process.chdir(tempDir);
 
     // Initialize a new package.json and install the package
-    execCmdSync(`npm init -y && npm i -f ${package} --no-save`);
+    execCmdSync(`npm init -y && npm i -f ${packageName} --no-save`);
 
     console.log(
-      `Contents of: ${package}`,
+      `Contents of: ${packageName}`,
       fs.readdirSync(path.join(tempDir, "node_modules", toCopy)),
     );
+
+    // Without this it seems the file isn't completely written to disk
+    // Ideally we validate file integrity in the validation at the end
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Copy the installed package back to the current directory
     await new Promise((resolve, reject) => {
@@ -84,7 +89,10 @@ async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
         { dereference: true },
         (error) => {
           if (error) {
-            console.error(`[error] Error copying ${package} package`, error);
+            console.error(
+              `[error] Error copying ${packageName} package`,
+              error,
+            );
             reject(error);
           } else {
             resolve();
@@ -102,63 +110,51 @@ async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
 }
 
 (async () => {
-  //   console.log("[info] Building with ncc...");
-  //   execCmdSync(`npx ncc build src/index.ts -o out`);
-
-  // Copy node_modules for pre-built binaries
-  const DYNAMIC_IMPORTS = [
-    // "esbuild",
-    // "@esbuild",
-    // // "@lancedb",
-    // "posthog-node",
-    // "@octokit",
-  ];
   fs.mkdirSync("out/node_modules", { recursive: true });
   fs.mkdirSync("bin/node_modules", { recursive: true });
-
-  await Promise.all(
-    DYNAMIC_IMPORTS.map(
-      (mod) =>
-        new Promise((resolve, reject) => {
-          ncp(
-            `node_modules/${mod}`,
-            `out/node_modules/${mod}`,
-            function (error) {
-              if (error) {
-                console.error(`[error] Error copying ${mod}`, error);
-                reject(error);
-              } else {
-                resolve();
-              }
-            },
-          );
-          ncp(
-            `node_modules/${mod}`,
-            `bin/node_modules/${mod}`,
-            function (error) {
-              if (error) {
-                console.error(`[error] Error copying ${mod}`, error);
-                reject(error);
-              } else {
-                resolve();
-              }
-            },
-          );
-        }),
-    ),
-  );
-  console.log(`[info] Copied ${DYNAMIC_IMPORTS.join(", ")}`);
 
   console.log("[info] Downloading prebuilt lancedb...");
   for (const target of targets) {
     if (targetToLanceDb[target]) {
-      console.log(`[info] Downloading ${target}...`);
+      console.log(`[info] Downloading for ${target}...`);
       await installNodeModuleInTempDirAndCopyToCurrent(
         targetToLanceDb[target],
         "@lancedb",
       );
     }
   }
+
+  // tree-sitter-wasm
+  const treeSitterWasmsDir = path.join(out, "tree-sitter-wasms");
+  fs.mkdirSync(treeSitterWasmsDir);
+  await new Promise((resolve, reject) => {
+    ncp(
+      path.join(
+        __dirname,
+        "..",
+        "core",
+        "node_modules",
+        "tree-sitter-wasms",
+        "out",
+      ),
+      treeSitterWasmsDir,
+      { dereference: true },
+      (error) => {
+        if (error) {
+          console.warn("[error] Error copying tree-sitter-wasm files", error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+
+  fs.copyFileSync(
+    path.join(__dirname, "../core/vendor/tree-sitter.wasm"),
+    path.join(__dirname, "out/tree-sitter.wasm"),
+  );
+  console.log("[info] Copied tree-sitter wasms");
 
   console.log("[info] Cleaning up artifacts from previous builds...");
 
@@ -167,13 +163,13 @@ async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
     fs.rmSync(assetPath, { force: true });
   }
 
-  console.log("[info] Building with esbuild...");
   // Bundles the extension into one file
+  console.log("[info] Building with esbuild...");
   await esbuild.build({
     entryPoints: ["src/index.ts"],
     bundle: true,
     outfile: esbuildOutputFile,
-    external: ["esbuild", ...DYNAMIC_IMPORTS, "./xhr-sync-worker.js", "vscode"],
+    external: ["esbuild", "./xhr-sync-worker.js", "vscode"],
     format: "cjs",
     platform: "node",
     sourcemap: true,
@@ -208,6 +204,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
     );
 
     // Download and unzip prebuilt sqlite3 binary for the target
+    console.log("[info] Downloading node-sqlite3");
     const downloadUrl = `https://github.com/TryGhost/node-sqlite3/releases/download/v5.1.7/sqlite3-v5.1.7-napi-v6-${
       target === "win32-arm64" ? "win32-ia32" : target
     }.tar.gz`;
@@ -240,9 +237,30 @@ async function installNodeModuleInTempDirAndCopyToCurrent(package, toCopy) {
       force: true,
       recursive: true,
     });
+
+    // copy @lancedb to bin folders
+    console.log("[info] Copying @lancedb files to bin");
+    fs.copyFileSync(
+      `node_modules/${targetToLanceDb[target]}/index.node`,
+      `${targetDir}/index.node`,
+    );
   }
   // execCmdSync(
   //   `npx pkg out/index.js --target node18-darwin-arm64 --no-bytecode --public-packages "*" --public -o bin/pkg`
   // );
+
+  const pathsToVerify = [];
+  for (target of targets) {
+    const exe = target.startsWith("win") ? ".exe" : "";
+    const targetDir = `bin/${target}`;
+    pathsToVerify.push(
+      `${targetDir}/continue-binary${exe}`,
+      `${targetDir}/esbuild${exe}`,
+      `${targetDir}/index.node`, // @lancedb
+      `${targetDir}/node_sqlite3.node`,
+    );
+  }
+  validateFilesPresent(pathsToVerify);
+
   console.log("[info] Done!");
 })();

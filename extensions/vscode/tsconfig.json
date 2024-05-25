@@ -15,5 +15,6 @@
     "resolveJsonModule": true /* Enable importing .json files */
   },
   "include": ["src/**/*", "../../core/**/*.ts", "../../core/**/*.d.ts"],
+  // core/test uses @types/jest, which conflicts with @types/mocha
   "exclude": ["../../core/dist/**/*", "../../core/test/**/*"]
 }

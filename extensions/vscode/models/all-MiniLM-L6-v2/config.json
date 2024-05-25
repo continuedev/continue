@@ -1,8 +1,6 @@
 {
-  "_name_or_path": "sentence-transformers/all-MiniLM-L6-v2",
-  "architectures": [
-    "BertModel"
-  ],
+  "_name_or_path": "all-MiniLM-L6-v2",
+  "architectures": ["BertModel"],
   "attention_probs_dropout_prob": 0.1,
   "classifier_dropout": null,
   "gradient_checkpointing": false,

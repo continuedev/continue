@@ -1,7 +1,6 @@
 import { Tooltip } from "react-tooltip";
 import styled, { keyframes } from "styled-components";
-import { getFontSize } from "../util";
-import { isJetBrains } from "../util/ide";
+import { getFontSize, isJetBrains } from "../util";
 
 export const VSC_INPUT_BACKGROUND_VAR = "--vscode-input-background";
 export const VSC_BACKGROUND_VAR = "--vscode-sideBar-background";
@@ -136,6 +135,25 @@ export const Button = styled.button`
   &:hover:enabled {
     cursor: pointer;
     filter: brightness(1.2);
+  }
+`;
+
+export const SecondaryButton = styled.button`
+  padding: 10px 12px;
+  margin: 8px 0;
+  border-radius: ${defaultBorderRadius};
+
+  border: 1px solid ${vscButtonBackground};
+  color: ${vscForeground};
+  background-color: ${vscBackground};
+
+  &:disabled {
+    color: gray;
+  }
+
+  &:hover:enabled {
+    cursor: pointer;
+    background-color: ${vscInputBackground};
   }
 `;
 

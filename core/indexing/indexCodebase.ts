@@ -91,13 +91,17 @@ export class CodebaseIndexer {
       status: "starting",
     };
 
-    for (let directory of workspaceDirs) {
-      const stats = await this.ide.getStats(directory);
+    for (const directory of workspaceDirs) {
+      // const scheme = vscode.workspace.workspaceFolders?.[0].uri.scheme;
+      // const files = await this.listWorkspaceContents(directory);
+
+      const files = await this.ide.listWorkspaceContents(directory);
+      const stats = await this.ide.getLastModified(files);
       const branch = await this.ide.getBranch(directory);
       const repoName = await this.ide.getRepoName(directory);
       let completedIndexes = 0;
 
-      for (let codebaseIndex of indexesToBuild) {
+      for (const codebaseIndex of indexesToBuild) {
         // TODO: IndexTag type should use repoName rather than directory
         const tag: IndexTag = {
           directory,

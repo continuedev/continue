@@ -1,6 +1,6 @@
 import { distance } from "fastest-levenshtein";
-import { DiffLine } from "../index.js";
 import { LineStream } from "../diff/util.js";
+import { DiffLine } from "../index.js";
 
 export async function* noTopLevelKeywordsMidline(
   lines: LineStream,
@@ -8,7 +8,7 @@ export async function* noTopLevelKeywordsMidline(
 ): LineStream {
   for await (const line of lines) {
     for (const keyword of topLevelKeywords) {
-      const indexOf = line.indexOf(keyword + " ");
+      const indexOf = line.indexOf(`${keyword} `);
       if (indexOf >= 0 && line.slice(indexOf - 1, indexOf).trim() !== "") {
         yield line.slice(0, indexOf);
         break;
@@ -26,7 +26,7 @@ export async function* avoidPathLine(
   // Sometimes the model with copy this pattern, which is unwanted
   for await (const line of stream) {
     // Also filter lines that are empty comments
-    if (line.startsWith(comment + " Path: ") || line.trim() === comment) {
+    if (line.startsWith(`${comment} Path: `) || line.trim() === comment) {
       continue;
     }
     yield line;
@@ -123,9 +123,8 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
     if (!seenValidLine) {
       if (shouldRemoveLineBeforeStart(line)) {
         continue;
-      } else {
-        seenValidLine = true;
       }
+      seenValidLine = true;
     }
 
     // Filter out ending ```
@@ -158,7 +157,9 @@ function isEnglishFirstLine(line: string) {
     line.startsWith("here's") ||
     line.startsWith("sure, here") ||
     line.startsWith("sure thing") ||
-    line.startsWith("sure!")
+    line.startsWith("sure!") ||
+    line.startsWith("to fill") ||
+    line.startsWith("the code should")
   ) {
     return true;
   }
@@ -169,7 +170,7 @@ function isEnglishFirstLine(line: string) {
 export async function* filterEnglishLinesAtStart(lines: LineStream) {
   let i = 0;
   let wasEnglishFirstLine = false;
-  for await (let line of lines) {
+  for await (const line of lines) {
     if (i === 0 && line.trim() === "") {
       continue;
     }
@@ -200,7 +201,7 @@ function isEnglishPostExplanation(line: string): boolean {
 
 export async function* filterEnglishLinesAtEnd(lines: LineStream) {
   let finishedCodeBlock = false;
-  for await (let line of lines) {
+  for await (const line of lines) {
     if (line.trim() === "```") {
       finishedCodeBlock = true;
     }
@@ -213,7 +214,7 @@ export async function* filterEnglishLinesAtEnd(lines: LineStream) {
 
 export async function* fixCodeLlamaFirstLineIndentation(lines: LineStream) {
   let isFirstLine = true;
-  for await (let line of lines) {
+  for await (const line of lines) {
     if (isFirstLine && line.startsWith("  ")) {
       yield line.slice(2);
       isFirstLine = false;
@@ -233,8 +234,8 @@ export async function* filterLeadingAndTrailingNewLineInsertion(
 ): AsyncGenerator<DiffLine> {
   let isFirst = true;
   let buffer: DiffLine[] = [];
-  for await (let diffLine of diffLines) {
-    let isBlankLineInsertion =
+  for await (const diffLine of diffLines) {
+    const isBlankLineInsertion =
       diffLine.type === "new" && isUselessLine(diffLine.line);
     if (isFirst && isBlankLineInsertion) {
       isFirst = false;

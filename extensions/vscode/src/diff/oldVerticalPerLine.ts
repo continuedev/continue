@@ -65,7 +65,7 @@ async function* streamVerticalPerLineDiff(
           newLine: line,
         };
 
-        let nextLine = remainingLines.shift();
+        const nextLine = remainingLines.shift();
         nextLine && accumulatedDeletedLines.push();
       }
     } else {

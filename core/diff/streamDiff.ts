@@ -53,7 +53,7 @@ export async function* streamDiff(
 
   // Once at the edge, only one choice
   if (newLineResult.done === true && oldLines.length > 0) {
-    for (let oldLine of oldLines) {
+    for (const oldLine of oldLines) {
       yield { type: "old", line: oldLine };
     }
   }

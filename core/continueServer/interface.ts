@@ -21,7 +21,7 @@ export interface EmbeddingsCacheResponse<T extends ArtifactType> {
 export interface IContinueServerClient {
   connected: boolean;
   url: URL | undefined;
-  getUserToken(): Promise<string | undefined>;
+  getUserToken(): string | undefined;
   getConfig(): Promise<{ configJson: string; configJs: string }>;
   getFromIndexCache<T extends ArtifactType>(
     keys: string[],
