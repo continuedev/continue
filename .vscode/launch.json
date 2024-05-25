@@ -49,10 +49,13 @@
       "args": [
         // Pass a directory to manually test in
         "${workspaceFolder}/extensions/vscode",
-        "${workspaceFolder}/extensions/vscode/manual-testing-sandbox/example.ts",
+        "${workspaceFolder}/extensions/vscode/manual-testing-sandbox/test.js",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],
-      "outFiles": ["${workspaceFolder}/extensions/vscode/out/**/*.js"],
+      "outFiles": [
+        "${workspaceFolder}/extensions/vscode/out/**/*.js",
+        "/Users/natesesti/.continue/config.ts"
+      ],
       "preLaunchTask": "vscode-extension:build"
     },
     // Has to be run after starting the server (separately or using the compound configuration)

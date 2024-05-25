@@ -13,6 +13,7 @@ import {
   RequestOptions,
   TemplateType,
 } from "../index.js";
+import { logDevData } from "../util/devdata.js";
 import { DevDataSqliteDb } from "../util/devdataSqlite.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import mergeJson from "../util/merge.js";
@@ -217,7 +218,11 @@ ${settings}
 ${prompt}`;
   }
 
-  private _logTokensGenerated(model: string, prompt: string, completion: string) {
+  private _logTokensGenerated(
+    model: string,
+    prompt: string,
+    completion: string,
+  ) {
     let promptTokens = this.countTokens(prompt);
     let generatedTokens = this.countTokens(completion);
     Telemetry.capture("tokens_generated", {
@@ -226,7 +231,18 @@ ${prompt}`;
       promptTokens: promptTokens,
       generatedTokens: generatedTokens,
     });
-    DevDataSqliteDb.logTokensGenerated(model, this.providerName, promptTokens, generatedTokens);
+    DevDataSqliteDb.logTokensGenerated(
+      model,
+      this.providerName,
+      promptTokens,
+      generatedTokens,
+    );
+    logDevData("tokens_generated", {
+      model: model,
+      provider: this.providerName,
+      promptTokens: promptTokens,
+      generatedTokens: generatedTokens,
+    });
   }
 
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -533,4 +549,3 @@ ${prompt}`;
     }
   }
 }
-
