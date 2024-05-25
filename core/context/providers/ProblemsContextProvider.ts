@@ -1,10 +1,10 @@
-import { BaseContextProvider } from "../index.js";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
 import { getBasename } from "../../util/index.js";
+import { BaseContextProvider } from "../index.js";
 
 class ProblemsContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

@@ -89,6 +89,7 @@ export function getMentionSuggestion(
   onClose: () => void,
   onOpen: () => void,
   inSubmenu: MutableRefObject<string | undefined>,
+  ideMessenger: IIdeMessenger,
 ) {
   const items = async ({ query }) => {
     if (inSubmenu.current) {

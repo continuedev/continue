@@ -1,6 +1,10 @@
-import * as fs from "fs";
-import os from "os";
-import { join as joinPath } from "path";
+import {
+  BedrockRuntimeClient,
+  InvokeModelWithResponseStreamCommand,
+} from "@aws-sdk/client-bedrock-runtime";
+import * as fs from "node:fs";
+import os from "node:os";
+import { join as joinPath } from "node:path";
 import { promisify } from "util";
 import { BaseLLM } from "../index.js";
 import {

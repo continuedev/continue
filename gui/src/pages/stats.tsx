@@ -46,15 +46,17 @@ function Stats() {
   >([]);
 
   useEffect(() => {
-    ideRequest("stats/getTokensPerDay", undefined).then((days) => {
+    ideMessenger.request("stats/getTokensPerDay", undefined).then((days) => {
       setDays(days);
     });
   }, []);
 
   useEffect(() => {
-    ideRequest("stats/getTokensPerModel", undefined).then((models) => {
-      setModels(models);
-    });
+    ideMessenger
+      .request("stats/getTokensPerModel", undefined)
+      .then((models) => {
+        setModels(models);
+      });
   }, []);
 
   return (

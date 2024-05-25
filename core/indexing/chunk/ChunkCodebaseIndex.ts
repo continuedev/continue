@@ -4,15 +4,10 @@ import { MAX_CHUNK_SIZE } from "../../llm/constants.js";
 import { getBasename } from "../../util/index.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex.js";
 import {
-  type DatabaseConnection,
-  SqliteDb,
-  tagToString,
-} from "../refreshIndex";
-import {
-  type CodebaseIndex,
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
+  type CodebaseIndex,
 } from "../types.js";
 import { chunkDocument } from "./chunk.js";
 

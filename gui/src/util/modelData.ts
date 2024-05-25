@@ -785,6 +785,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       claude3Haiku,
       // claude2
     ],
+    apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
   mistral: {
     title: "Mistral API",
@@ -876,6 +877,63 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ...completionParamsInputs,
     ],
     packages: [commandR, commandRPlus],
+    apiKeyUrl: "https://dashboard.cohere.com/api-keys",
+  },
+  ollama: {
+    title: "Ollama",
+    provider: "ollama",
+    description:
+      "One of the fastest ways to get started with local models on Mac, Linux, or Windows",
+    longDescription:
+      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
+    icon: "ollama.png",
+    tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
+    packages: [
+      {
+        ...AUTODETECT,
+        params: {
+          ...AUTODETECT.params,
+          title: "Ollama",
+        },
+      },
+      ...osModels,
+    ],
+    collectInputFor: [
+      ...completionParamsInputs,
+      { ...apiBaseInput, defaultValue: "http://localhost:11434" },
+    ],
+    downloadUrl: "https://ollama.ai/",
+  },
+  together: {
+    title: "TogetherAI",
+    provider: "together",
+    refPage: "togetherllm",
+    description:
+      "Use the TogetherAI API for extremely fast streaming of open-source models",
+    icon: "together.png",
+    longDescription: `Together is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset`,
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your TogetherAI API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
+    packages: [llama3Chat, codeLlamaInstruct, mistral].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
+    apiKeyUrl: "https://api.together.ai/settings/api-keys",
   },
   groq: {
     title: "Groq",
@@ -912,6 +970,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
       ,
     ],
+    apiKeyUrl: "https://console.groq.com/keys",
   },
   together: {
     title: "TogetherAI",
@@ -962,6 +1021,37 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
     ],
     packages: [gemini15Pro, geminiPro, gemini15Flash],
+    apiKeyUrl: "https://aistudio.google.com/app/apikey",
+  },
+  mistral: {
+    title: "Mistral API",
+    provider: "mistral",
+    description:
+      "The Mistral API provides hosted access to their models, including Mistral-7b, Mixtral, and the very capable mistral-medium",
+    icon: "mistral.png",
+    longDescription: `To get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)`,
+    tags: [
+      ModelProviderTag["Requires API Key"],
+      ModelProviderTag["Open-Source"],
+    ],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: CollectInputType.text,
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Mistral API key",
+        required: true,
+      },
+      ...completionParamsInputs,
+    ],
+    packages: [mistralTiny, mistralSmall, mistralMedium].map((p) => {
+      p.params.contextLength = 4096;
+      return p;
+    }),
+    apiKeyUrl: "https://console.mistral.ai/api-keys/",
   },
   lmstudio: {
     title: "LM Studio",
@@ -1025,7 +1115,8 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
     ],
-    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistralOs],
+    packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistral],
+    apiKeyUrl: "https://replicate.com/account/api-tokens",
   },
   llamacpp: {
     title: "llama.cpp",
@@ -1101,7 +1192,7 @@ After it's up and running, you can start using Continue.`,
     description:
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key",
     longDescription:
-      'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=""` or select another model provider.',
+      'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Google, or Together using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.json where it says `apiKey=""` or select another model provider.',
     icon: "openai.png",
     tags: [ModelProviderTag.Free],
     packages: [

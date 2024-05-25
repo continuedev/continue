@@ -55,5 +55,23 @@ export function getAltKeyLabel(): string {
 }
 
 export function getFontSize(): number {
-  return getLocalStorage("fontSize") ?? 14;
+  return getLocalStorage("fontSize") ?? (isJetBrains() ? 15 : 14);
+}
+export function isJetBrains() {
+  return getLocalStorage("ide") === "jetbrains";
+}
+
+export function isPrerelease() {
+  const extensionVersion = getLocalStorage("extensionVersion");
+  if (!extensionVersion) {
+    console.warn(
+      `Could not find extension version in local storage, assuming it's a prerelease`,
+    );
+    return true;
+  }
+  const minor = parseInt(extensionVersion.split(".")[1], 10);
+  if (minor % 2 !== 0) {
+    return true;
+  }
+  return false;
 }

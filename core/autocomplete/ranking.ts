@@ -1,5 +1,5 @@
-import { Range } from "../index.js";
 import { RangeInFileWithContents } from "../commands/util.js";
+import { Range } from "../index.js";
 import { countTokens } from "../llm/countTokens.js";
 
 export type AutocompleteSnippet = RangeInFileWithContents & {
@@ -220,7 +220,7 @@ export function removeRangeFromSnippets(
   range: Range,
 ): Required<AutocompleteSnippet>[] {
   const finalSnippets: Required<AutocompleteSnippet>[] = [];
-  for (let snippet of snippets) {
+  for (const snippet of snippets) {
     if (snippet.filepath !== filepath) {
       finalSnippets.push(snippet);
       continue;

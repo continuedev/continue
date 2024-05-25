@@ -32,7 +32,7 @@ import { AllEmbeddingsProviders } from "../indexing/embeddings/index.js";
 import { BaseLLM } from "../llm/index.js";
 import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import { llmFromDescription } from "../llm/llms/index.js";
-import { IdeSettings } from "../protocol.js";
+import { IdeSettings } from "../protocol/ideWebview.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
 import mergeJson from "../util/merge.js";
@@ -43,6 +43,7 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
+  readAllGlobalPromptFiles,
 } from "../util/paths.js";
 import {
   defaultContextProvidersJetBrains,
@@ -157,6 +158,10 @@ async function serializedToIntermediateConfig(
   )
     .flat()
     .filter(({ path }) => path.endsWith(".prompt"));
+
+  // Also read from ~/.continue/.prompts
+  promptFiles.push(...readAllGlobalPromptFiles());
+
   for (const file of promptFiles) {
     slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
   }

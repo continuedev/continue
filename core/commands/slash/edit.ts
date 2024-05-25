@@ -14,8 +14,8 @@ import {
   getMarkdownLanguageTagForFile,
 } from "../../util/index.js";
 import {
-  type RangeInFileWithContents,
   contextItemToRangeInFileWithContents,
+  type RangeInFileWithContents,
 } from "../util.js";
 
 const PROMPT = `Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section. Do not ever use nested tags.
@@ -237,14 +237,14 @@ const EditSlashCommand: SlashCommand = {
     let content = history[history.length - 1].content;
     if (typeof content !== "string") {
       content.forEach((part) => {
-        if (part.text && part.text.startsWith("/edit")) {
+        if (part.text?.startsWith("/edit")) {
           part.text = part.text.replace("/edit", "").trimStart();
         }
       });
     } else {
       content = input.replace("/edit", "").trimStart();
     }
-    let userInput = stripImages(content).replace(
+    const userInput = stripImages(content).replace(
       `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,
       "",
     );

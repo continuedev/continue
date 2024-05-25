@@ -101,7 +101,7 @@ export class CodebaseIndexer {
       const repoName = await this.ide.getRepoName(directory);
       let completedIndexes = 0;
 
-      for (let codebaseIndex of indexesToBuild) {
+      for (const codebaseIndex of indexesToBuild) {
         // TODO: IndexTag type should use repoName rather than directory
         const tag: IndexTag = {
           directory,

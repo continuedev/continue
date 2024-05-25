@@ -30,8 +30,6 @@ import {
   streamUpdate,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
-import { ideStreamRequest, llmStreamChat, postToIde } from "../util/ide";
-import { WebviewIde } from "../util/webviewIde";
 
 function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
   const posthog = usePostHog();
@@ -58,7 +56,11 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
     const cancelToken = abortController.signal;
 
     try {
-      const gen = llmStreamChat(defaultModel.title, cancelToken, messages);
+      const gen = ideMessenger.llmStreamChat(
+        defaultModel.title,
+        cancelToken,
+        messages,
+      );
       let next = await gen.next();
 
       while (!next.done) {
@@ -165,10 +167,11 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
       // Automatically use currently open file
       if (!modifiers.noContext && (history.length === 0 || index === 0)) {
         const usingFreeTrial = defaultModel.provider === "free-trial";
-        const ide = new WebviewIde();
-        const currentFilePath = await ide.getCurrentFile();
+
+        const currentFilePath = await ideMessenger.ide.getCurrentFile();
         if (typeof currentFilePath === "string") {
-          let currentFileContents = await ide.readFile(currentFilePath);
+          let currentFileContents =
+            await ideMessenger.ide.readFile(currentFilePath);
           if (usingFreeTrial) {
             currentFileContents = currentFileContents
               .split("\n")

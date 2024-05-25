@@ -188,6 +188,7 @@ function LocalOnboarding() {
 
   useEffect(() => {
     const checkModels = async () => {
+      console.log("Checking models...");
       const models = await ideMessenger.request("llm/listModels", {
         title: assumedModelTitle,
       });

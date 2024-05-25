@@ -3,7 +3,7 @@ import {
   QuestionMarkCircleIcon,
 } from "@heroicons/react/24/outline";
 import { IndexingProgressUpdate } from "core";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -19,6 +19,7 @@ import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
   setBottomMessageCloseTimeout,
+  setDialogMessage,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
@@ -30,6 +31,7 @@ import { ftl } from "./dialogs/FTCDialog";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import ModelSelect from "./modelSelection/ModelSelect";
+import QuickModelSetup from "./modelSelection/quickSetup/QuickModelSetup";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -173,7 +175,8 @@ const Layout = () => {
   useWebviewListener(
     "addApiKey",
     async () => {
-      navigate("/modelconfig/openai");
+      dispatch(setShowDialog(true));
+      dispatch(setDialogMessage(<QuickModelSetup />));
     },
     [navigate],
   );
@@ -190,9 +193,6 @@ const Layout = () => {
   );
 
   useEffect(() => {
-    if (isJetBrains()) {
-      return;
-    }
     const onboardingComplete = getLocalStorage("onboardingComplete");
     if (
       !onboardingComplete &&
@@ -240,34 +240,6 @@ const Layout = () => {
           {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
             <Footer>
               <div className="mr-auto flex gap-2 items-center">
-                {/* {localStorage.getItem("ide") === "jetbrains" ||
-                localStorage.getItem("hideFeature") === "true" || (
-                  <SparklesIcon
-                    className="cursor-pointer"
-                    onClick={() => {
-                      localStorage.setItem("hideFeature", "true");
-                    }}
-                    onMouseEnter={() => {
-                      dispatch(
-                        setBottomMessage(
-                          `🎁 New Feature: Use ${getMetaKeyLabel()}⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)`
-                        )
-                      );
-                    }}
-                    onMouseLeave={() => {
-                      dispatch(
-                        setBottomMessageCloseTimeout(
-                          setTimeout(() => {
-                            dispatch(setBottomMessage(undefined));
-                          }, 2000)
-                        )
-                      );
-                    }}
-                    width="1.3em"
-                    height="1.3em"
-                    color="yellow"
-                  />
-                )} */}
                 <ModelSelect />
                 {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
                   defaultModel?.provider === "free-trial" && (
@@ -276,10 +248,7 @@ const Layout = () => {
                       total={ftl()}
                     />
                   )}
-
-                {isJetBrains() || (
-                  <IndexingProgressBar indexingState={indexingState} />
-                )}
+                <IndexingProgressBar indexingState={indexingState} />
               </div>
               <HeaderButtonWithText
                 text="Help"
@@ -296,7 +265,7 @@ const Layout = () => {
               <HeaderButtonWithText
                 onClick={() => {
                   // navigate("/settings");
-                  postToIde("openConfigJson", undefined);
+                  ideMessenger.post("openConfigJson", undefined);
                 }}
                 text="Configure Continue"
               >

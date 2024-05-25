@@ -326,6 +326,5 @@ export {
   autodetectTemplateFunction,
   autodetectTemplateType,
   llmCanGenerateInParallel,
-  modelSupportsImages
+  modelSupportsImages,
 };
-

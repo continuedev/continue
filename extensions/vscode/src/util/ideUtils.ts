@@ -1,16 +1,16 @@
-import path from "node:path";
 import type { FileEdit, RangeInFile, Thread } from "core";
 import { defaultIgnoreFile } from "core/indexing/ignore";
+import path from "node:path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/vscodeExtension";
 import { GitExtension, Repository } from "../otherExtensions/git";
 import {
-  type SuggestionRanges,
   acceptSuggestionCommand,
   editorSuggestionsLocked,
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
+  type SuggestionRanges,
 } from "../suggestions";
 import { traverseDirectory } from "./traverseDirectory";
 import {

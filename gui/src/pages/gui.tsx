@@ -27,11 +27,12 @@ import {
   vscBackground,
   vscForeground,
 } from "../components";
-import FTCDialog, { ftl } from "../components/dialogs/FTCDialog";
+import { ftl } from "../components/dialogs/FTCDialog";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
+import QuickModelSetup from "../components/modelSelection/quickSetup/QuickModelSetup";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
@@ -51,9 +52,9 @@ import { RootState } from "../redux/store";
 import {
   getFontSize,
   getMetaKeyLabel,
+  isJetBrains,
   isMetaEquivalentKeyPressed,
 } from "../util";
-import { isJetBrains } from "../util/ide";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 const TopGuiDiv = styled.div`
@@ -242,13 +243,13 @@ function GUI(props: GUIProps) {
   const sendInput = useCallback(
     (editorState: JSONContent, modifiers: InputModifiers) => {
       if (defaultModel?.provider === "free-trial") {
-        const ftc = getLocalStorage("ftc");
-        if (ftc) {
-          setLocalStorage("ftc", ftc + 1);
+        const u = getLocalStorage("ftc");
+        if (u) {
+          setLocalStorage("ftc", u + 1);
 
           if (u >= ftl()) {
             dispatch(setShowDialog(true));
-            dispatch(setDialogMessage(<FTCDialog />));
+            dispatch(setDialogMessage(<QuickModelSetup />));
             posthog?.capture("ftc_reached");
             return;
           }
@@ -447,7 +448,10 @@ function GUI(props: GUIProps) {
                             window.postMessage(
                               {
                                 messageType: "userInput",
-                                data: { input: "Keep going" },
+                                data: {
+                                  input:
+                                    "Continue your response exactly where you left off:",
+                                },
                               },
                               "*",
                             );

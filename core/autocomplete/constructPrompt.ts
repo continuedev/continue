@@ -15,10 +15,10 @@ import {
   Typescript,
 } from "./languages";
 import {
-  type AutocompleteSnippet,
   fillPromptWithSnippets,
   rankSnippets,
   removeRangeFromSnippets,
+  type AutocompleteSnippet,
 } from "./ranking.js";
 import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
 

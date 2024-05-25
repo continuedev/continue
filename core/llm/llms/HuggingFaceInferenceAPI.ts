@@ -1,5 +1,5 @@
-import { BaseLLM } from "../index.js";
 import { CompletionOptions, ModelProvider } from "../../index.js";
+import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
 class HuggingFaceInferenceAPI extends BaseLLM {

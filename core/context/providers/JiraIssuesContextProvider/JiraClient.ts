@@ -67,7 +67,8 @@ export class JiraClient {
   private authHeader;
   constructor(options: JiraClientOptions) {
     this.options = {
-      issueQuery: "assignee = currentUser() AND resolution = Unresolved order by updated DESC",
+      issueQuery:
+        "assignee = currentUser() AND resolution = Unresolved order by updated DESC",
       apiVersion: "3",
       requestOptions: {},
       ...options,

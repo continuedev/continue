@@ -5,15 +5,13 @@ import { useNavigate } from "react-router-dom";
 import { Button, Input, SecondaryButton } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { setDefaultModel } from "../../../redux/slices/stateSlice";
+import { setShowDialog } from "../../../redux/slices/uiStateSlice";
 import { getLocalStorage } from "../../../util/localStorage";
 import { PROVIDER_INFO } from "../../../util/modelData";
 import { ftl } from "../../dialogs/FTCDialog";
 import QuickSetupListBox from "./QuickSetupListBox";
 
-interface QuickModelSetupProps {
-  onDone: () => void;
-  hideFreeTrialLimitMessage?: boolean;
-}
+interface QuickModelSetupProps {}
 
 function QuickModelSetup(props: QuickModelSetupProps) {
   const [selectedProvider, setSelectedProvider] = useState(
@@ -31,18 +29,16 @@ function QuickModelSetup(props: QuickModelSetupProps) {
     setSelectedModel(selectedProvider.packages[0]);
   }, [selectedProvider]);
 
-  const [hasAddedModel, setHasAddedModel] = useState(false);
-
   return (
     <FormProvider {...formMethods}>
       <div className="p-4">
-        {/* <h1>
+        <h1>
           {getLocalStorage("ftc") > ftl()
             ? "Set up your own model"
             : "Add a new model"}
-        </h1> */}
+        </h1>
 
-        {!props.hideFreeTrialLimitMessage && getLocalStorage("ftc") > ftl() && (
+        {getLocalStorage("ftc") > ftl() && (
           <p className="text-sm text-gray-500">
             You've reached the free trial limit of {ftl()} free inputs. To keep
             using Continue, you can either use your own API key, or use a local
@@ -86,20 +82,10 @@ function QuickModelSetup(props: QuickModelSetupProps) {
         {selectedProvider.apiKeyUrl && (
           <>
             <h4>3. Paste your API key</h4>
-            {selectedModel.params.model.startsWith("codestral") && (
-              <i>
-                Note: Codestral requires a different API key from other Mistral
-                models
-              </i>
-            )}
             <SecondaryButton
               className="w-full border-2 border-solid"
               onClick={() => {
-                let apiKeyUrl = selectedProvider.apiKeyUrl;
-                if (selectedModel.params.model.startsWith("codestral")) {
-                  apiKeyUrl = "https://console.mistral.ai/codestral";
-                }
-                ideMessenger.post("openUrl", apiKeyUrl);
+                ideMessenger.post("openUrl", selectedProvider.apiKeyUrl);
               }}
             >
               Get API Key
@@ -141,16 +127,18 @@ function QuickModelSetup(props: QuickModelSetupProps) {
               };
               ideMessenger.post("config/addModel", { model });
               dispatch(setDefaultModel({ title: model.title, force: true }));
-              setHasAddedModel(true);
+              navigate("/");
             }}
             className="w-full"
           >
             Add Model
           </Button>
           <Button
-            onClick={props.onDone}
+            onClick={() => {
+              dispatch(setShowDialog(false));
+              navigate("/");
+            }}
             className="w-full"
-            disabled={!hasAddedModel}
           >
             Done
           </Button>

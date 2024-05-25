@@ -7,6 +7,14 @@ import { RangeInFileWithContents } from "../commands/util.js";
 import { ConfigHandler } from "../config/handler.js";
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { streamLines } from "../diff/util.js";
+import {
+  IDE,
+  ILLM,
+  ModelProvider,
+  Position,
+  Range,
+  TabAutocompleteOptions,
+} from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { getBasename } from "../util/index.js";
 import { logDevData } from "../util/devdata.js";
@@ -569,6 +577,7 @@ export class CompletionProvider {
         return undefined;
       }
 
+      // Debounce
       if (CompletionProvider.debouncing) {
         CompletionProvider.debounceTimeout?.refresh();
         const lastUUID = await new Promise((resolve) =>
@@ -595,6 +604,18 @@ export class CompletionProvider {
       // Set temperature (but don't overrride)
       if (llm.completionOptions.temperature === undefined) {
         llm.completionOptions.temperature = 0.01;
+      }
+
+      // Set model-specific options
+      const LOCAL_PROVIDERS: ModelProvider[] = [
+        "ollama",
+        "lmstudio",
+        "llama.cpp",
+        "llamafile",
+        "text-gen-webui",
+      ];
+      if (LOCAL_PROVIDERS.includes(llm.providerName)) {
+        options.maxPromptTokens = 500;
       }
 
       const outcome = await getTabCompletion(

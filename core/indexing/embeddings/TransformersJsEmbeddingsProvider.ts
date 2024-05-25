@@ -1,16 +1,8 @@
-// prettier-ignore
-// @ts-ignore
-import { PipelineType, env, pipeline } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
-
 import path from "path";
 // @ts-ignore
 // prettier-ignore
 import { type PipelineType } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
-
-env.allowLocalModels = true;
-env.allowRemoteModels = false;
-env.localModelPath = path.join(__dirname, "..", "models");
 
 class EmbeddingsPipeline {
   static task: PipelineType = "feature-extraction";

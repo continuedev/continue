@@ -9,8 +9,8 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
-import { WebviewIde } from "../../util/webviewIde";
 import FileIcon from "../FileIcon";
 
 const ContextItemDiv = styled.div`

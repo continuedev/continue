@@ -136,7 +136,7 @@ function Onboarding() {
           }
           disabled={selected < 0}
           onClick={() => {
-            postToIde("completeOnboarding", {
+            ideMessenger.post("completeOnboarding", {
               mode: ["optimized", "local", "custom"][selected] as any,
             });
             setLocalStorage("onboardingComplete", true);
@@ -145,9 +145,9 @@ function Onboarding() {
               navigate("/localOnboarding");
             } else {
               // Only needed when we switch from the default (local) embeddings provider
-              postToIde("index/forceReIndex", undefined);
+              ideMessenger.post("index/forceReIndex", undefined);
               // Don't show the tutorial above yet because there's another step to complete at /localOnboarding
-              postToIde("showTutorial", undefined);
+              ideMessenger.post("showTutorial", undefined);
               navigate("/");
             }
           }}

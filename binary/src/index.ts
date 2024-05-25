@@ -31,16 +31,6 @@ program.action(async () => {
     }
     const ide = new IpcIde(messenger);
     const core = new Core(messenger, ide);
-
-    setupCa();
-
-    // setTimeout(() => {
-    //   messenger.mock({
-    //     messageId: "2fe7823c-10bd-4771-abb5-781f520039ec",
-    //     messageType: "loadSubmenuItems",
-    //     data: { title: "issue" },
-    //   });
-    // }, 1000);
   } catch (e) {
     fs.writeFileSync("./error.log", `${new Date().toISOString()} ${e}\n`);
     console.log("Error: ", e);

@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import * as fs from "node:fs";
-import { type Database, open } from "sqlite";
+import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import { IndexTag, IndexingProgressUpdate } from "../index.js";
 import { getIndexSqlitePath } from "../util/paths.js";

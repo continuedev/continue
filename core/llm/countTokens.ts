@@ -10,13 +10,16 @@ interface Encoding {
 }
 
 class LlamaEncoding implements Encoding {
-  encode(text: string, allowedSpecial?: string[] | "all" | undefined, disallowedSpecial?: string[] | "all" | undefined): number[] {
+  encode(
+    text: string,
+    allowedSpecial?: string[] | "all" | undefined,
+    disallowedSpecial?: string[] | "all" | undefined,
+  ): number[] {
     return llamaTokenizer.encode(text);
   }
   decode(tokens: number[]): string {
     return llamaTokenizer.decode(tokens);
   }
-
 }
 
 let gptEncoding: Encoding | null = null;
@@ -362,6 +365,5 @@ export {
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop
+  pruneStringFromTop,
 };
-

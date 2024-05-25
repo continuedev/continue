@@ -1,12 +1,17 @@
-import { BranchAndDir, Chunk, IndexTag, IndexingProgressUpdate } from "../index.js";
+import {
+  BranchAndDir,
+  Chunk,
+  IndexTag,
+  IndexingProgressUpdate,
+} from "../index.js";
 import { RETRIEVAL_PARAMS } from "../util/parameters.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
-  type CodebaseIndex,
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
+  type CodebaseIndex,
 } from "./types.js";
 
 export class FullTextSearchCodebaseIndex implements CodebaseIndex {

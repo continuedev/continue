@@ -16,10 +16,10 @@ import {
 } from "../util/treeSitter.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
-  type CodebaseIndex,
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
+  type CodebaseIndex,
 } from "./types.js";
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {

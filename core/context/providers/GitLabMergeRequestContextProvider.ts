@@ -1,6 +1,10 @@
-import { AxiosInstance, AxiosError } from "axios";
-import {BaseContextProvider} from "../index.js";
-import { ContextProviderExtras, ContextItem, ContextProviderDescription } from "../../index.js";
+import { AxiosError, AxiosInstance } from "axios";
+import {
+  ContextItem,
+  ContextProviderDescription,
+  ContextProviderExtras,
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 interface RemoteBranchInfo {
   branch: string | null;
@@ -70,7 +74,7 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     title: "gitlab-mr",
     displayTitle: "GitLab Merge Request",
     description: "Reference comments in a GitLab Merge Request",
-    type: "normal"
+    type: "normal",
   };
 
   private async getApi(): Promise<AxiosInstance> {
@@ -79,7 +83,7 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     const domain = this.options.domain ?? "gitlab.com";
     const token = this.options.token;
 
-    if(!token) {
+    if (!token) {
       throw new Error("GitLab Private Token is required!");
     }
 
@@ -95,15 +99,15 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<RemoteBranchInfo> {
     const subprocess = await getSubprocess(extras);
-    
+
     const branchName = await subprocess("git branch --show-current");
-  
+
     const branchRemote = await subprocess(
       `git config branch.${branchName}.remote`,
     );
-  
+
     const branchInfo = await subprocess("git branch -vv");
-  
+
     const currentBranchInfo = branchInfo
       .split("\n")
       .find((line) => line.startsWith("*"));
@@ -117,11 +121,11 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
     const remoteBranch = remoteMatches?.groups?.remote_branch ?? null;
 
     const remoteUrl = await subprocess(`git remote get-url ${branchRemote}`);
-  
-    const urlMatches = RegExp(":(?<project>.*).git").exec(remoteUrl);
-  
-    const project = urlMatches?.groups?.["project"] ?? null;
-  
+
+    const urlMatches = /:(?<project>.*).git/.exec(remoteUrl);
+
+    const project = urlMatches?.groups?.project ?? null;
+
     return {
       branch: remoteBranch,
       project,
@@ -155,7 +159,9 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
 
       for (const mergeRequest of mergeRequests) {
         const parts = [
-          `# GitLab Merge Request\ntitle: "${mergeRequest.title}"\ndescription: "${mergeRequest.description ?? "None"}"`,
+          `# GitLab Merge Request\ntitle: "${
+            mergeRequest.title
+          }"\ndescription: "${mergeRequest.description ?? "None"}"`,
           "## Comments",
         ];
 
@@ -198,11 +204,15 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
         }
 
         const commentFormatter = async (comment: GitLabComment) => {
-          const commentLabel = comment.body.includes("```suggestion") ? "Code Suggestion" : "Comment";
-          let result = `#### ${commentLabel}\nauthor: "${comment.author.name}"\ndate: "${comment.created_at}"\nresolved: ${
-              comment.resolved ? "Yes" : "No"
-            }`;
-  
+          const commentLabel = comment.body.includes("```suggestion")
+            ? "Code Suggestion"
+            : "Comment";
+          let result = `#### ${commentLabel}\nauthor: "${
+            comment.author.name
+          }"\ndate: "${comment.created_at}"\nresolved: ${
+            comment.resolved ? "Yes" : "No"
+          }`;
+
           if (comment.position?.new_line) {
             result += `\nline: ${comment.position.new_line}`;
 
@@ -252,8 +262,7 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
           name: mergeRequest.title,
           content,
           description: "Comments from the Merge Request for this branch.",
-        },
-      );
+        });
       }
     } catch (ex) {
       let content = "# GitLab Merge Request\n\nError getting merge request. ";
@@ -271,14 +280,11 @@ class GitLabMergeRequestContextProvider extends BaseContextProvider {
         content += `Unknown error: ${ex.message ?? JSON.stringify(ex)}`;
       }
 
-
-      result.push(
-        {
-          name: "GitLab Merge Request",
-          content,
-          description: "Error getting the Merge Request for this branch.",
-        },
-      );
+      result.push({
+        name: "GitLab Merge Request",
+        content,
+        description: "Error getting the Merge Request for this branch.",
+      });
     }
 
     return result;

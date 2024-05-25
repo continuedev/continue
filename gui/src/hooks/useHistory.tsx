@@ -79,7 +79,7 @@ function useHistory(dispatch: Dispatch) {
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
     setLocalStorage("lastSessionId", stateCopy.sessionId);
-    return await ideRequest("history/save", sessionInfo);
+    return await ideMessenger.request("history/save", sessionInfo);
   }
 
   async function deleteSession(id: string) {
@@ -88,7 +88,10 @@ function useHistory(dispatch: Dispatch) {
 
   async function loadSession(id: string): Promise<PersistedSessionInfo> {
     setLocalStorage("lastSessionId", state.sessionId);
-    const json: PersistedSessionInfo = await ideRequest("history/load", { id });
+    const json: PersistedSessionInfo = await ideMessenger.request(
+      "history/load",
+      { id },
+    );
     dispatch(newSession(json));
     return json;
   }

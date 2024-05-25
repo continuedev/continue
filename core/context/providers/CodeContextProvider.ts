@@ -1,4 +1,3 @@
-import { BaseContextProvider } from "../index.js";
 import {
   ContextItem,
   ContextProviderDescription,
@@ -7,6 +6,7 @@ import {
   LoadSubmenuItemsArgs,
 } from "../../index.js";
 import { CodeSnippetsCodebaseIndex } from "../../indexing/CodeSnippetsIndex.js";
+import { BaseContextProvider } from "../index.js";
 
 class CodeContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

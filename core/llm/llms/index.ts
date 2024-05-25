@@ -45,20 +45,20 @@ const getHandlebarsVars = (
 ): [string, { [key: string]: string }] => {
 	const ast = Handlebars.parse(value);
 
-	let keysToFilepath: { [key: string]: string } = {};
-	let keyIndex = 1;
-	for (let i in ast.body) {
-		if (ast.body[i].type === "MustacheStatement") {
-			const letter = convertToLetter(keyIndex);
-			keysToFilepath[letter] = (ast.body[i] as any).path.original;
-			value = value.replace(
-				new RegExp("{{\\s*" + (ast.body[i] as any).path.original + "\\s*}}"),
-				`{{${letter}}}`,
-			);
-			keyIndex++;
-		}
-	}
-	return [value, keysToFilepath];
+  const keysToFilepath: { [key: string]: string } = {};
+  let keyIndex = 1;
+  for (const i in ast.body) {
+    if (ast.body[i].type === "MustacheStatement") {
+      const letter = convertToLetter(keyIndex);
+      keysToFilepath[letter] = (ast.body[i] as any).path.original;
+      value = value.replace(
+        new RegExp(`{{\\s*${(ast.body[i] as any).path.original}\\s*}}`),
+        `{{${letter}}}`,
+      );
+      keyIndex++;
+    }
+  }
+  return [value, keysToFilepath];
 };
 
 export async function renderTemplatedString(

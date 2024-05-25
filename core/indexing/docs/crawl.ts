@@ -2,6 +2,7 @@ import { URL } from "node:url";
 import { Octokit } from "@octokit/rest";
 import cheerio from "cheerio";
 import fetch from "node-fetch";
+import { URL } from "node:url";
 
 const IGNORE_PATHS_ENDING_IN = [
   "favicon.ico",

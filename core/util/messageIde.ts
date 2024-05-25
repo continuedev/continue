@@ -8,6 +8,7 @@ import type {
   Range,
   Thread,
 } from "../index.js";
+import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide.js";
 
 export class MessageIde implements IDE {
   constructor(

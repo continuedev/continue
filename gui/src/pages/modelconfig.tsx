@@ -245,7 +245,7 @@ function ModelConfig() {
                     ...formParams,
                     provider: modelInfo.provider,
                   };
-                  postToIde("config/addModel", { model });
+                  ideMessenger.post("config/addModel", { model });
                   dispatch(
                     setDefaultModel({ title: model.title, force: true }),
                   );

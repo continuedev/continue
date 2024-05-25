@@ -1,4 +1,8 @@
-import { Chunk, EmbeddingsProvider, IndexingProgressUpdate } from "../../index.js";
+import {
+  Chunk,
+  EmbeddingsProvider,
+  IndexingProgressUpdate,
+} from "../../index.js";
 
 import { Article, chunkArticle, pageToArticle } from "./article.js";
 import { crawlPage } from "./crawl.js";
@@ -30,7 +34,9 @@ export async function* indexDocs(
   // Crawl pages and retrieve info as articles
   for await (const page of crawlPage(startUrl, siteIndexingConfig.maxDepth)) {
     const article = pageToArticle(page);
-    if (!article) {continue;}
+    if (!article) {
+      continue;
+    }
 
     articles.push(article);
 

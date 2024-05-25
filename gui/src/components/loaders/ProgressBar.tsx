@@ -8,7 +8,7 @@ import {
 } from "../../redux/slices/uiStateSlice";
 import { getFontSize } from "../../util";
 import { ftl } from "../dialogs/FTCDialog";
-import SetupLocalOrKeyDialog from "../dialogs/SetupLocalOrKey";
+import QuickModelSetup from "../modelSelection/quickSetup/QuickModelSetup";
 
 const ProgressBarWrapper = styled.div`
   width: 100px;
@@ -62,7 +62,7 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
         data-tooltip-id="usage_progress_bar"
         onClick={() => {
           dispatch(setShowDialog(true));
-          dispatch(setDialogMessage(<SetupLocalOrKeyDialog />));
+          dispatch(setDialogMessage(<QuickModelSetup />));
         }}
       >
         <ProgressBarWrapper>
