@@ -103,8 +103,7 @@ Voyage AI offers the best embeddings for code with their voyage-code-2 model. Af
   "embeddingsProvider": {
     "provider": "openai",
     "model": "voyage-code-2",
-    "apiBase": "
-    https://api.voyageai.com/v1/",
+    "apiBase": "https://api.voyageai.com/v1/",
     "apiKey": "<VOYAGE_API_KEY>"
   }
 }
@@ -165,12 +164,27 @@ Configuration for the `embed-english-v3.0` model. This is the default.
   "embeddingsProvider": {
     "provider": "cohere",
     "model": "embed-english-v3.0",
-    "apiKey": "YOUR_API_KEY"
+    "apiKey": "<COHERE_API_KEY>"
   }
 }
 ```
 
 See Cohere's [embeddings](https://docs.cohere.com/docs/embed-2) for available models. Only embedding models v3 and higher are supported.
+
+### Gemini
+
+Gemini's _Text Embedding_ model is optimized for creating embeddings with 768 dimensions for text of up to 2,048 tokens.
+
+As of May 2024, the only available embedding model from Gemini is [`models/text-embedding-004`](https://ai.google.dev/gemini-api/docs/models/gemini#text-embedding-and-embedding).
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "provider": "gemini",
+    "apiKey": "<GEMINI_API_KEY>"
+  }
+}
+```
 
 ### Writing a custom `EmbeddingsProvider`
 

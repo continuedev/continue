@@ -39,11 +39,11 @@ parentPort.on("message", async (chunks) => {
     for (
       let i = 0;
       i < chunks.length;
-      i += TransformersJsEmbeddingsProvider.MaxGroupSize
+      i += TransformersJsEmbeddingsProvider.maxGroupSize
     ) {
       let chunkGroup = chunks.slice(
         i,
-        i + TransformersJsEmbeddingsProvider.MaxGroupSize,
+        i + TransformersJsEmbeddingsProvider.maxGroupSize,
       );
       let output = await extractor(chunkGroup, {
         pooling: "mean",

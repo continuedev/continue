@@ -1733,7 +1733,8 @@
                 "ollama",
                 "openai",
                 "cohere",
-                "free-trial"
+                "free-trial",
+                "gemini"
               ]
             },
             "model": {
@@ -1757,20 +1758,20 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["ollama"]
+                    "enum": ["cohere"]
                   }
                 },
                 "required": ["provider"]
               },
               "then": {
-                "required": ["model"]
+                "required": ["apiKey"]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere"]
+                    "enum": ["gemini"]
                   }
                 },
                 "required": ["provider"]

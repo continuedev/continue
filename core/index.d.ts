@@ -645,7 +645,8 @@ export type EmbeddingsProviderName =
   | "ollama"
   | "openai"
   | "cohere"
-  | "free-trial";
+  | "free-trial"
+  | "gemini";
 
 export interface EmbedOptions {
   apiBase?: string;

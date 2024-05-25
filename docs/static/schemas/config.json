@@ -438,14 +438,12 @@
             "properties": {
               "model": {
                 "enum": [
-                  "gpt-4-turbo",
                   "gpt-4o",
                   "llama3-70b",
                   "gpt-3.5-turbo",
                   "phind-codellama-34b",
                   "gemini-pro",
                   "mistral-8x7b",
-                  "claude-3-opus-20240229",
                   "claude-3-sonnet-20240229",
                   "claude-3-haiku-20240307",
                   "starcoder-7b",
@@ -1735,7 +1733,8 @@
                 "ollama",
                 "openai",
                 "cohere",
-                "free-trial"
+                "free-trial",
+                "gemini"
               ]
             },
             "model": {
@@ -1759,20 +1758,20 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["ollama"]
+                    "enum": ["cohere"]
                   }
                 },
                 "required": ["provider"]
               },
               "then": {
-                "required": ["model"]
+                "required": ["apiKey"]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere"]
+                    "enum": ["gemini"]
                   }
                 },
                 "required": ["provider"]
