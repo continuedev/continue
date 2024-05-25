@@ -497,16 +497,16 @@ export class Core {
     // on("index/setIndexingStatus", (msg) => {
     //   new GlobalContext().update("indexingStatus", msg.data);
     // });
-    // on("index/indexingProgressBarInitialized", (msg)) => {
-    //   // Triggered when progress bar is initialized. Purpose: To relay global state values to the progress bar
-    //   const globalContext = new GlobalContext()
-    //   globalContext.get("")
-    //   let progress = globalContext.get("continue.indexingProgress") as number
-    //   let desc = globalContext.get("continue.indexingDesc") as string
-    //   let failed = globalContext.get<boolean>("continue.indexingFailed") as boolean
-    //   this.messenger.request("indexProgress", {progress, desc});
-    //   this.webviewProtocol?.request("indexProgress", {progress, desc, failed})
-    // }
+    on("index/indexingProgressBarInitialized", async (msg) => {
+      console.log("message: ", msg)
+      // Triggered when progress bar is initialized.
+      const storedIndexingProgress = new GlobalContext().get("IndexingProgress")
+      
+      //If a state has been stored, update the indexing display to that state
+      if (storedIndexingProgress) {
+        this.messenger.request("indexProgress", storedIndexingProgress);
+      }
+    });
   }
 
   private indexingCancellationController: AbortController | undefined;
@@ -516,11 +516,14 @@ export class Core {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
+    const global = new GlobalContext()
     for await (const update of (await this.codebaseIndexerPromise).refresh(
       dirs,
       this.indexingCancellationController.signal,
     )) {
+      console.log("core.ts updte: ", update.status)
       this.messenger.request("indexProgress", update);
+      global.update("IndexingProgress", update)
     }
   }
 }

@@ -221,8 +221,6 @@ const Layout = () => {
     }
   }, [location]);
 
-  //ToDO: I think this is initialization - if it is, this should be 'starting up'
-  // Actually, it should read whatever
   const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({ 
     desc: "Loading indexing config",
     progress: 0.0,

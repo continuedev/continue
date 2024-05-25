@@ -5,6 +5,7 @@ import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
+import { init } from "web-tree-sitter";
 
 const DIAMETER = 6;
 const CircleDiv = styled.div<{ color: string }>`
@@ -67,8 +68,14 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
   const [paused, setPaused] = useState<boolean | undefined>(undefined);
   const [hovered, setHovered] = useState(false);
 
+  let initialized = false
   useEffect(() => {
-    ideMessenger.post("index/indexingProgressBarInitialized", {ready:true})
+    console.log("useEffect triggered")
+    if (!initialized) {
+      // Retrieves possible non-default states set prior to IndexingProgressBar initialization
+      ideMessenger.post("index/indexingProgressBarInitialized", "")
+      initialized = true
+    }
   }, []);
 
   useEffect(() => {
@@ -100,7 +107,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="indexingNotLoaded_dot" place="top">
-                Reading indexing config
+                Continue is initializing
               </StyledTooltip>,
               tooltipPortalDiv,
             )}
