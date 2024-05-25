@@ -17,6 +17,9 @@ export class MessageIde implements IDE {
       data: ToIdeFromWebviewOrCoreProtocol[T][0],
     ) => Promise<ToIdeFromWebviewOrCoreProtocol[T][1]>,
   ) {}
+  getGitHubAuthToken(): Promise<string | undefined> {
+    return this.request("getGitHubAuthToken", undefined);
+  }
   getLastModified(files: string[]): Promise<{ [path: string]: number }> {
     return this.request("getLastModified", { files });
   }

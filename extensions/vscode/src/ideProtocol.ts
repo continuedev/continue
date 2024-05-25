@@ -32,6 +32,15 @@ class VsCodeIde implements IDE {
   constructor(private readonly diffManager: DiffManager) {
     this.ideUtils = new VsCodeIdeUtils();
   }
+  async getGitHubAuthToken(): Promise<string | undefined> {
+    const session = await vscode.authentication.getSession("github", [], {
+      createIfNone: true,
+    });
+    if (session) {
+      return session.accessToken;
+    }
+    return undefined;
+  }
 
   async infoPopup(message: string): Promise<void> {
     vscode.window.showInformationMessage(message);

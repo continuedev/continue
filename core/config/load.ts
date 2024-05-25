@@ -31,6 +31,7 @@ import TransformersJsEmbeddingsProvider from "../indexing/embeddings/Transformer
 import { AllEmbeddingsProviders } from "../indexing/embeddings/index.js";
 import { BaseLLM } from "../llm/index.js";
 import CustomLLMClass from "../llm/llms/CustomLLM.js";
+import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
 import { IdeSettings } from "../protocol/ideWebview.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
@@ -275,6 +276,17 @@ async function intermediateToFinalConfig(
       ...model.requestOptions,
       ...config.requestOptions,
     };
+  }
+
+  // Obtain auth token (only if free trial being used)
+  const freeTrialModels = models.filter(
+    (model) => model.providerName === "free-trial",
+  );
+  if (freeTrialModels.length > 0) {
+    const ghAuthToken = await ide.getGitHubAuthToken();
+    for (const model of freeTrialModels) {
+      (model as FreeTrial).setupGhAuthToken(ghAuthToken);
+    }
   }
 
   // Tab autocomplete model
