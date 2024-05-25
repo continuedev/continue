@@ -63,4 +63,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   "jetbrains/editorInsetRefresh": [undefined, void];
   addApiKey: [undefined, void];
   setupLocalModel: [undefined, void];
+  incrementFtc: [undefined, void];
 };
