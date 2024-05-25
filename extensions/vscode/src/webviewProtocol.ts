@@ -131,7 +131,7 @@ export class VsCodeWebviewProtocol
           }
 
           if (message.includes("https://proxy-server")) {
-            message = message.split("\n").slice(1).join("\n").trim();
+            message = message.split("\n").filter((l: string) => l !== "")[1];
             try {
               message = JSON.parse(message).message;
             } catch {}

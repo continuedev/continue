@@ -19,6 +19,7 @@ import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
   setBottomMessageCloseTimeout,
+  setDialogMessage,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
@@ -30,6 +31,7 @@ import { ftl } from "./dialogs/FTCDialog";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import ModelSelect from "./modelSelection/ModelSelect";
+import QuickModelSetup from "./modelSelection/quickSetup/QuickModelSetup";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -173,7 +175,8 @@ const Layout = () => {
   useWebviewListener(
     "addApiKey",
     async () => {
-      navigate("/modelconfig/openai");
+      dispatch(setShowDialog(true));
+      dispatch(setDialogMessage(<QuickModelSetup />));
     },
     [navigate],
   );
