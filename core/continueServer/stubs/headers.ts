@@ -1,5 +1,6 @@
 import * as LaunchDarkly from "launchdarkly-node-client-sdk";
 import { constants, getTimestamp } from "../../deploy/constants";
+import { Telemetry } from "../../util/posthog";
 
 const DEFAULT_STRING_VAL = "NONE";
 
@@ -36,5 +37,15 @@ export async function getHeaders() {
   if (c === DEFAULT_STRING_VAL) {
     c = undefined;
   }
-  return { key: constants.c, timestamp: getTimestamp(), a, b, c, v: "1" };
+  return {
+    key: constants.c,
+    timestamp: getTimestamp(),
+    a,
+    b,
+    c,
+    v: "1",
+    extensionVersion: Telemetry.extensionVersion ?? "0.0.0",
+    os: Telemetry.os ?? "Unknown",
+    uniqueId: Telemetry.uniqueId ?? "None",
+  };
 }
