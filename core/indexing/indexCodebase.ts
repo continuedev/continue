@@ -52,11 +52,12 @@ export class CodebaseIndexer {
     workspaceDirs: string[],
     abortSignal: AbortSignal,
   ): AsyncGenerator<IndexingProgressUpdate> {
+    console.log("Indexing Starting")
     if (workspaceDirs.length === 0) {
       yield {
         progress: 0,
         desc: "Nothing to index",
-        status: "disabled",
+        status: "disabled",     //ToDo: This should maybe be green
       };
       return;
     }
@@ -73,7 +74,7 @@ export class CodebaseIndexer {
       yield {
         progress: 0,
         desc: "Starting indexing",
-        status: "starting",
+        status: "loading",
       };
     }
 
@@ -88,7 +89,7 @@ export class CodebaseIndexer {
     yield {
       progress: 0,
       desc: "Starting indexing...",
-      status: "starting",
+      status: "loading",
     };
 
     for (const directory of workspaceDirs) {
@@ -161,9 +162,15 @@ export class CodebaseIndexer {
             status: "indexing",
           };
         } catch (e) {
+          yield {
+            progress: 0, 
+            desc: `${e}`,
+            status: "failed"
+          }
           console.warn(
             `Error updating the ${codebaseIndex.artifactId} index: ${e}`,
           );
+          return
         }
       }
 
@@ -174,5 +181,6 @@ export class CodebaseIndexer {
         status: "done",
       };
     }
+    console.log("Indexing Completed")
   }
 }

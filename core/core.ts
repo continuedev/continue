@@ -494,6 +494,19 @@ export class Core {
       new GlobalContext().update("indexingPaused", msg.data);
       indexingPauseToken.paused = msg.data;
     });
+    // on("index/setIndexingStatus", (msg) => {
+    //   new GlobalContext().update("indexingStatus", msg.data);
+    // });
+    // on("index/indexingProgressBarInitialized", (msg)) => {
+    //   // Triggered when progress bar is initialized. Purpose: To relay global state values to the progress bar
+    //   const globalContext = new GlobalContext()
+    //   globalContext.get("")
+    //   let progress = globalContext.get("continue.indexingProgress") as number
+    //   let desc = globalContext.get("continue.indexingDesc") as string
+    //   let failed = globalContext.get<boolean>("continue.indexingFailed") as boolean
+    //   this.messenger.request("indexProgress", {progress, desc});
+    //   this.webviewProtocol?.request("indexProgress", {progress, desc, failed})
+    // }
   }
 
   private indexingCancellationController: AbortController | undefined;

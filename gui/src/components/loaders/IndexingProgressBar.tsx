@@ -68,6 +68,10 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
   const [hovered, setHovered] = useState(false);
 
   useEffect(() => {
+    ideMessenger.post("index/indexingProgressBarInitialized", {ready:true})
+  }, []);
+
+  useEffect(() => {
     if (paused === undefined) return;
     ideMessenger.post("index/setPaused", paused);
   }, [paused]);
@@ -87,7 +91,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
       }}
       className="cursor-pointer"
     >
-      {indexingState.status === "starting" ? ( // ice-blue 'indexing starting up' dot
+      {indexingState.status === "loading" ? ( // ice-blue 'indexing loading up' dot
         <>
           <CircleDiv
             data-tooltip-id="indexingNotLoaded_dot"
@@ -96,7 +100,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="indexingNotLoaded_dot" place="top">
-                Codebase indexing is starting up.
+                Reading indexing config
               </StyledTooltip>,
               tooltipPortalDiv,
             )}
@@ -110,7 +114,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="indexingFailed_dot" place="top">
-                Error indexing codebase: {indexingState.desc}
+                Error indexing codebase. Check your config.json file.
                 <br />
                 Click to retry
               </StyledTooltip>,

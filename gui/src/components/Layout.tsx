@@ -169,6 +169,7 @@ const Layout = () => {
   );
 
   useWebviewListener("indexProgress", async (data) => {
+    console.log("indexingProgress from layout: ", data.status)
     setIndexingState(data);
   });
 
@@ -220,10 +221,12 @@ const Layout = () => {
     }
   }, [location]);
 
-  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
-    desc: "Indexing disabled",
+  //ToDO: I think this is initialization - if it is, this should be 'starting up'
+  // Actually, it should read whatever
+  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({ 
+    desc: "Loading indexing config",
     progress: 0.0,
-    status: "disabled",
+    status: "loading",
   });
 
   return (
