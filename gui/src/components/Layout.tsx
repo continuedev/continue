@@ -245,7 +245,6 @@ const Layout = () => {
                       total={ftl()}
                     />
                   )}
-
                 <IndexingProgressBar indexingState={indexingState} />
               </div>
               <HeaderButtonWithText

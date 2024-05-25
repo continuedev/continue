@@ -138,6 +138,25 @@ export const Button = styled.button`
   }
 `;
 
+export const SecondaryButton = styled.button`
+  padding: 10px 12px;
+  margin: 8px 0;
+  border-radius: ${defaultBorderRadius};
+
+  border: 1px solid ${vscButtonBackground};
+  color: ${vscForeground};
+  background-color: ${vscBackground};
+
+  &:disabled {
+    color: gray;
+  }
+
+  &:hover:enabled {
+    cursor: pointer;
+    background-color: ${vscInputBackground};
+  }
+`;
+
 export const CustomScrollbarDiv = styled.div`
   scrollbar-base-color: transparent;
   scrollbar-width: thin;

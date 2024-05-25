@@ -27,11 +27,12 @@ import {
   vscBackground,
   vscForeground,
 } from "../components";
-import FTCDialog, { ftl } from "../components/dialogs/FTCDialog";
+import { ftl } from "../components/dialogs/FTCDialog";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
+import QuickModelSetup from "../components/modelSelection/quickSetup/QuickModelSetup";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
@@ -248,7 +249,7 @@ function GUI(props: GUIProps) {
 
           if (u >= ftl()) {
             dispatch(setShowDialog(true));
-            dispatch(setDialogMessage(<FTCDialog />));
+            dispatch(setDialogMessage(<QuickModelSetup />));
             posthog?.capture("ftc_reached");
             return;
           }
@@ -447,7 +448,10 @@ function GUI(props: GUIProps) {
                             window.postMessage(
                               {
                                 messageType: "userInput",
-                                data: { input: "Keep going" },
+                                data: {
+                                  input:
+                                    "Continue your response exactly where you left off:",
+                                },
                               },
                               "*",
                             );
