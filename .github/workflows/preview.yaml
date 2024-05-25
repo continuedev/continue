@@ -195,7 +195,7 @@ jobs:
           git config --local user.name "GitHub Action"
 
       - name: Pull latest changes
-        run: git pull origin nate/refactor-core
+        run: git pull origin preview
 
       # 1. Download the artifacts
       - uses: actions/download-artifact@v3
