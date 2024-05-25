@@ -26,7 +26,9 @@ const HttpSlashCommand: SlashCommand = {
     const reader = response.body.getReader();
     while (true) {
       const { done, value } = await reader.read();
-      if (done) {break;}
+      if (done) {
+        break;
+      }
       const decoded = new TextDecoder("utf-8").decode(value);
       yield decoded;
     }

@@ -2,7 +2,7 @@ import { Editor, ReactRenderer } from "@tiptap/react";
 import { ContextProviderDescription, ContextSubmenuItem } from "core";
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
-import { ideRequest } from "../../util/ide";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import MentionList from "./MentionList";
 import { ComboBoxItem, ComboBoxItemType } from "./types";
 
@@ -89,6 +89,7 @@ export function getMentionSuggestion(
   onClose: () => void,
   onOpen: () => void,
   inSubmenu: MutableRefObject<string | undefined>,
+  ideMessenger: IIdeMessenger,
 ) {
   const items = async ({ query }) => {
     if (inSubmenu.current) {
@@ -142,7 +143,7 @@ export function getMentionSuggestion(
         title: "Add more context providers",
         type: "action",
         action: () => {
-          ideRequest(
+          ideMessenger.request(
             "openUrl",
             "https://docs.continue.dev/customization/context-providers#built-in-context-providers",
           );

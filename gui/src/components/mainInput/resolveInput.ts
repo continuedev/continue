@@ -8,8 +8,7 @@ import {
 } from "core";
 import { stripImages } from "core/llm/countTokens";
 import { getBasename } from "core/util";
-import { ideRequest } from "../../util/ide";
-import { WebviewIde } from "../../util/webviewIde";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 
 interface MentionAttrs {
   label: string;
@@ -28,6 +27,7 @@ interface MentionAttrs {
 async function resolveEditorContent(
   editorState: JSONContent,
   modifiers: InputModifiers,
+  ideMessenger: IIdeMessenger,
 ): Promise<[ContextItemWithId[], RangeInFile[], MessageContent]> {
   let parts: MessagePart[] = [];
   let contextItemAttrs: MentionAttrs[] = [];
@@ -94,10 +94,9 @@ async function resolveEditorContent(
   let contextItems: ContextItemWithId[] = [];
   for (const item of contextItemAttrs) {
     if (item.itemType === "file") {
-      const ide = new WebviewIde();
       // This is a quick way to resolve @file references
       const basename = getBasename(item.id);
-      const rawContent = await ide.readFile(item.id);
+      const rawContent = await ideMessenger.ide.readFile(item.id);
       const content = `\`\`\`title="${basename}"\n${rawContent}\n\`\`\`\n`;
       contextItemsText += content;
       contextItems.push({
@@ -116,7 +115,10 @@ async function resolveEditorContent(
         fullInput: stripImages(parts),
         selectedCode,
       };
-      const resolvedItems = await ideRequest("context/getContextItems", data);
+      const resolvedItems = await ideMessenger.request(
+        "context/getContextItems",
+        data,
+      );
       contextItems.push(...resolvedItems);
       for (const resolvedItem of resolvedItems) {
         contextItemsText += resolvedItem.content + "\n\n";
@@ -126,12 +128,15 @@ async function resolveEditorContent(
 
   // cmd+enter to use codebase
   if (modifiers.useCodebase) {
-    const codebaseItems = await ideRequest("context/getContextItems", {
-      name: "codebase",
-      query: "",
-      fullInput: stripImages(parts),
-      selectedCode,
-    });
+    const codebaseItems = await ideMessenger.request(
+      "context/getContextItems",
+      {
+        name: "codebase",
+        query: "",
+        fullInput: stripImages(parts),
+        selectedCode,
+      },
+    );
     contextItems.push(...codebaseItems);
     for (const codebaseItem of codebaseItems) {
       contextItemsText += codebaseItem.content + "\n\n";

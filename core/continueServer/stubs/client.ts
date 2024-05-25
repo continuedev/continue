@@ -1,4 +1,4 @@
-import {
+import type {
   ArtifactType,
   EmbeddingsCacheResponse,
   IContinueServerClient,
@@ -9,7 +9,7 @@ export class ContinueServerClient implements IContinueServerClient {
 
   constructor(
     serverUrl: string | undefined,
-    private readonly userToken: Promise<string | undefined>,
+    private readonly userToken: string | undefined,
   ) {
     try {
       this.url =
@@ -22,7 +22,7 @@ export class ContinueServerClient implements IContinueServerClient {
     }
   }
 
-  getUserToken(): Promise<string | undefined> {
+  getUserToken(): string | undefined {
     return this.userToken;
   }
 

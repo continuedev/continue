@@ -38,7 +38,7 @@ export async function* chunkDocument(
   digest: string,
 ): AsyncGenerator<Chunk> {
   let index = 0;
-  for await (let chunkWithoutId of chunkDocumentWithoutId(
+  for await (const chunkWithoutId of chunkDocumentWithoutId(
     filepath,
     contents,
     maxChunkSize,

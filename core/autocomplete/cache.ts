@@ -4,7 +4,7 @@ import { DatabaseConnection } from "../indexing/refreshIndex.js";
 import { getTabAutocompleteCacheSqlitePath } from "../util/paths.js";
 
 export class AutocompleteLruCache {
-  private static capacity: number = 1000;
+  private static capacity = 1000;
 
   db: DatabaseConnection;
 

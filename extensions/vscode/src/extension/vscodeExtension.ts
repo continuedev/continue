@@ -1,8 +1,8 @@
-import { ConfigHandler } from "core/config/handler";
-import { ContinueServerClient } from "core/continueServer/stubs/client";
-import { CodebaseIndexer, PauseToken } from "core/indexing/indexCodebase";
 import { IContextProvider } from "core";
-import { IdeSettings } from "core/protocol";
+import { ConfigHandler } from "core/config/handler";
+import { Core } from "core/core";
+import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
+import { InProcessMessenger } from "core/util/messenger";
 import { getConfigJsonPath, getConfigTsPath } from "core/util/paths";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
@@ -19,57 +19,29 @@ import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
 import { getUserToken } from "../stubs/auth";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
-import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import type { VsCodeWebviewProtocol } from "../webviewProtocol";
+import { VsCodeMessenger } from "./VsCodeMessenger";
 
 export class VsCodeExtension {
+  // Currently some of these are public so they can be used in testing (test/test-suites)
+
   private configHandler: ConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
   private tabAutocompleteModel: TabAutocompleteModel;
   private sidebar: ContinueGUIWebviewViewProvider;
   private windowId: string;
-  private indexer: CodebaseIndexer;
   private diffManager: DiffManager;
   private verticalDiffManager: VerticalPerLineDiffManager;
-  private webviewProtocol: VsCodeWebviewProtocol;
+  webviewProtocol: VsCodeWebviewProtocol;
+  private core: Core;
 
   constructor(context: vscode.ExtensionContext) {
     this.diffManager = new DiffManager(context);
     this.ide = new VsCodeIde(this.diffManager);
 
-    const settings = vscode.workspace.getConfiguration("continue");
-    const remoteConfigServerUrl = settings.get<string | undefined>(
-      "remoteConfigServerUrl",
-      undefined,
-    );
-    const ideSettings: IdeSettings = {
-      remoteConfigServerUrl,
-      remoteConfigSyncPeriod: settings.get<number>(
-        "remoteConfigSyncPeriod",
-        60,
-      ),
-      userToken: settings.get<string>("userToken", ""),
-    };
-
-    const userTokenPromise: Promise<string | undefined> = new Promise(
-      async (resolve) => {
-        if (
-          remoteConfigServerUrl === null ||
-          remoteConfigServerUrl === undefined ||
-          remoteConfigServerUrl.trim() === ""
-        ) {
-          resolve(undefined);
-          return;
-        }
-        const token = await getUserToken();
-        resolve(token);
-      },
-    );
-
-    const continueServerClient = new ContinueServerClient(
-      ideSettings.remoteConfigServerUrl,
-      userTokenPromise,
-    );
+    const ideSettings = this.ide.getIdeSettings();
+    const { remoteConfigServerUrl } = ideSettings;
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
@@ -77,7 +49,7 @@ export class VsCodeExtension {
     );
     this.configHandler = new ConfigHandler(
       this.ide,
-      ideSettings,
+      Promise.resolve(ideSettings),
       async (log: string) => {
         outputChannel.appendLine(
           "==========================================================================",
@@ -124,27 +96,19 @@ export class VsCodeExtension {
     this.webviewProtocol = this.sidebar.webviewProtocol;
 
     // Indexing + pause token
-    const indexingPauseToken = new PauseToken(
-      context.globalState.get<boolean>("continue.indexingPaused") === true,
-    );
-    this.webviewProtocol.on("index/setPaused", (msg) => {
-      context.globalState.update("continue.indexingPaused", msg.data);
-      indexingPauseToken.paused = msg.data;
-    });
-    this.webviewProtocol.on("index/forceReIndex", (msg) => {
-      this.ide
-        .getWorkspaceDirs()
-        .then((dirs) => this.refreshCodebaseIndex(dirs, context));
-    });
-
     this.diffManager.webviewProtocol = this.webviewProtocol;
 
-    this.indexer = new CodebaseIndexer(
-      this.configHandler,
+    const inProcessMessenger = new InProcessMessenger<
+      ToCoreProtocol,
+      FromCoreProtocol
+    >();
+    const vscodeMessenger = new VsCodeMessenger(
+      inProcessMessenger,
+      this.webviewProtocol,
       this.ide,
-      indexingPauseToken,
-      continueServerClient,
+      this.verticalDiffManager,
     );
+    this.core = new Core(inProcessMessenger, this.ide);
 
     if (
       !(
@@ -195,11 +159,6 @@ export class VsCodeExtension {
 
     registerDebugTracker(this.webviewProtocol, this.ide);
 
-    // Indexing
-    this.ide
-      .getWorkspaceDirs()
-      .then((dirs) => this.refreshCodebaseIndex(dirs, context));
-
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught
     fs.watchFile(getConfigJsonPath(), { interval: 1000 }, (stats) => {
@@ -243,7 +202,7 @@ export class VsCodeExtension {
                   currentBranch !== this.PREVIOUS_BRANCH_FOR_WORKSPACE_DIR[dir]
                 ) {
                   // Trigger refresh of index only in this directory
-                  this.refreshCodebaseIndex([dir], context);
+                  this.core.invoke("index/forceReIndex", dir);
                 }
               }
 
@@ -277,38 +236,6 @@ export class VsCodeExtension {
   static continueVirtualDocumentScheme = "continue";
 
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
-  private indexingCancellationController: AbortController | undefined;
-
-  private async refreshCodebaseIndex(
-    dirs: string[],
-    context: vscode.ExtensionContext,
-  ) {
-    // Cancel previous indexing job if it exists
-    if (this.indexingCancellationController) {
-      this.indexingCancellationController.abort();
-    }
-    this.indexingCancellationController = new AbortController();
-
-    //reset all state variables
-    context.globalState.update("continue.indexingFailed", false);
-    context.globalState.update("continue.indexingProgress", 0);
-    context.globalState.update("continue.indexingDesc", "");
-
-    let err = undefined;
-    for await (const update of this.indexer.refresh(
-      dirs,
-      this.indexingCancellationController.signal,
-    )) {
-      this.webviewProtocol.request("indexProgress", update);
-      context.globalState.update("continue.indexingProgress", update);
-    }
-
-    if (err) {
-      console.log("Codebase Indexing Failed: ", err);
-    } else {
-      console.log("Codebase Indexing Complete");
-    }
-  }
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.configHandler.registerCustomContextProvider(contextProvider);

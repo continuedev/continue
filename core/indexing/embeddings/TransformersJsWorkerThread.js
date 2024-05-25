@@ -1,10 +1,10 @@
-import path from "path";
+import path from "node:path";
 import {
   env,
   pipeline,
 } from "../../vendor/node_modules/@xenova/transformers/types/transformers";
 import TransformersJsEmbeddingsProvider from "./TransformersJsEmbeddingsProvider";
-const { parentPort } = require("worker_threads");
+const { parentPort } = require("node:worker_threads");
 
 env.allowLocalModels = true;
 env.allowRemoteModels = false;
@@ -19,11 +19,14 @@ class EmbeddingsPipeline {
   static instance = null;
 
   static async getInstance() {
-    if (this.instance === null) {
-      this.instance = await pipeline(this.task, this.model);
+    if (EmbeddingsPipeline.instance === null) {
+      EmbeddingsPipeline.instance = await pipeline(
+        EmbeddingsPipeline.task,
+        EmbeddingsPipeline.model,
+      );
     }
 
-    return this.instance;
+    return EmbeddingsPipeline.instance;
   }
 }
 
@@ -35,17 +38,17 @@ parentPort.on("message", async (chunks) => {
       throw new Error("TransformerJS embeddings pipeline is not initialized");
     }
 
-    let outputs = [];
+    const outputs = [];
     for (
       let i = 0;
       i < chunks.length;
       i += TransformersJsEmbeddingsProvider.MaxGroupSize
     ) {
-      let chunkGroup = chunks.slice(
+      const chunkGroup = chunks.slice(
         i,
         i + TransformersJsEmbeddingsProvider.MaxGroupSize,
       );
-      let output = await extractor(chunkGroup, {
+      const output = await extractor(chunkGroup, {
         pooling: "mean",
         normalize: true,
       });

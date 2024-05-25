@@ -1,7 +1,7 @@
-import { FileEdit, IDE } from "core";
-import { ConfigHandler } from "core/config/handler";
+import type { FileEdit, IDE } from "core";
+import type { ConfigHandler } from "core/config/handler";
 import * as vscode from "vscode";
-import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import type { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getTheme } from "./util/getTheme";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
@@ -56,11 +56,7 @@ export class ContinueGUIWebviewViewProvider
     private readonly extensionContext: vscode.ExtensionContext,
     private readonly verticalDiffManager: VerticalPerLineDiffManager,
   ) {
-    this.webviewProtocol = new VsCodeWebviewProtocol(
-      ide,
-      configHandler,
-      verticalDiffManager,
-    );
+    this.webviewProtocol = new VsCodeWebviewProtocol();
   }
 
   getSidebarContent(
@@ -71,12 +67,12 @@ export class ContinueGUIWebviewViewProvider
     verticalDiffManager: VerticalPerLineDiffManager,
     page: string | undefined = undefined,
     edits: FileEdit[] | undefined = undefined,
-    isFullScreen: boolean = false,
+    isFullScreen = false,
   ): string {
-    let extensionUri = getExtensionUri();
+    const extensionUri = getExtensionUri();
     let scriptUri: string;
     let styleMainUri: string;
-    let vscMediaUrl: string = panel.webview
+    const vscMediaUrl: string = panel.webview
       .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui"))
       .toString();
 
@@ -148,7 +144,7 @@ export class ContinueGUIWebviewViewProvider
 
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
 
-        <script>localStorage.setItem("ide", "vscode")</script>
+        <script>localStorage.setItem("ide", '"vscode"')</script>
         <script>localStorage.setItem("extensionVersion", '"${getExtensionVersion()}"')</script>
         <script>window.windowId = "${this.windowId}"</script>
         <script>window.vscMachineId = "${getUniqueId()}"</script>

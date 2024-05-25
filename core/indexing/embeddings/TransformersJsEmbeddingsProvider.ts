@@ -1,13 +1,8 @@
-// prettier-ignore
-// @ts-ignore
-import { PipelineType, env, pipeline } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
-
 import path from "path";
+// @ts-ignore
+// prettier-ignore
+import { type PipelineType } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
-
-env.allowLocalModels = true;
-env.allowRemoteModels = false;
-env.localModelPath = path.join(__dirname, "..", "models");
 
 class EmbeddingsPipeline {
   static task: PipelineType = "feature-extraction";
@@ -15,11 +10,22 @@ class EmbeddingsPipeline {
   static instance: any | null = null;
 
   static async getInstance() {
-    if (this.instance === null) {
-      this.instance = await pipeline(this.task, this.model);
+    if (EmbeddingsPipeline.instance === null) {
+      // @ts-ignore
+      // prettier-ignore
+      const { env, pipeline } = await import("../../vendor/modules/@xenova/transformers/src/transformers.js");
+
+      env.allowLocalModels = true;
+      env.allowRemoteModels = false;
+      env.localModelPath = path.join(__dirname, "..", "models");
+
+      EmbeddingsPipeline.instance = await pipeline(
+        EmbeddingsPipeline.task,
+        EmbeddingsPipeline.model,
+      );
     }
 
-    return this.instance;
+    return EmbeddingsPipeline.instance;
   }
 }
 
@@ -34,11 +40,11 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   get id(): string {
-    return "sentence-transformers/all-MiniLM-L6-v2";
+    return EmbeddingsPipeline.model;
   }
 
   async embed(chunks: string[]) {
-    let extractor = await EmbeddingsPipeline.getInstance();
+    const extractor = await EmbeddingsPipeline.getInstance();
 
     if (!extractor) {
       throw new Error("TransformerJS embeddings pipeline is not initialized");
@@ -48,17 +54,17 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
       return [];
     }
 
-    let outputs = [];
+    const outputs = [];
     for (
       let i = 0;
       i < chunks.length;
       i += TransformersJsEmbeddingsProvider.MaxGroupSize
     ) {
-      let chunkGroup = chunks.slice(
+      const chunkGroup = chunks.slice(
         i,
         i + TransformersJsEmbeddingsProvider.MaxGroupSize,
       );
-      let output = await extractor(chunkGroup, {
+      const output = await extractor(chunkGroup, {
         pooling: "mean",
         normalize: true,
       });

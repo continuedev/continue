@@ -2,7 +2,7 @@ export class ListenableGenerator<T> {
   private _source: AsyncGenerator<T>;
   private _buffer: T[] = [];
   private _listeners: Set<(value: T) => void> = new Set();
-  private _isEnded: boolean = false;
+  private _isEnded = false;
 
   constructor(
     source: AsyncGenerator<T>,
@@ -55,7 +55,7 @@ export class ListenableGenerator<T> {
       }
       while (!this._isEnded) {
         let resolve: (value: any) => void;
-        let promise = new Promise<T>((res) => {
+        const promise = new Promise<T>((res) => {
           resolve = res;
           this._listeners.add(resolve!);
         });
@@ -77,7 +77,7 @@ export class ListenableGenerator<T> {
 export class GeneratorReuseManager {
   currentGenerator: ListenableGenerator<string> | undefined;
   pendingGeneratorPrefix: string | undefined;
-  pendingCompletion: string = "";
+  pendingCompletion = "";
 
   constructor(private readonly onError: (err: any) => void) {}
 
@@ -117,7 +117,7 @@ export class GeneratorReuseManager {
     }
 
     let alreadyTyped = prefix.slice(this.pendingGeneratorPrefix?.length) || "";
-    for await (let chunk of this.currentGenerator!.tee()) {
+    for await (let chunk of this.currentGenerator?.tee() ?? []) {
       if (!chunk) {
         continue;
       }

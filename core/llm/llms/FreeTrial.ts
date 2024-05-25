@@ -11,7 +11,7 @@ class FreeTrial extends BaseLLM {
   private async _getHeaders() {
     return {
       uniqueId: this.uniqueId || "None",
-      extensionVersion: Telemetry.extensionVersion ?? "Unknown",
+      extensionVersion: Telemetry.extensionVersion ?? "0.0.0",
       os: Telemetry.os ?? "Unknown",
       "Content-Type": "application/json",
       ...(await getHeaders()),
@@ -126,11 +126,11 @@ class FreeTrial extends BaseLLM {
   async listModels(): Promise<string[]> {
     return [
       "llama3-70b",
-      "gpt-3.5-turbo",
       "gpt-4o",
-      "gemini-1.5-pro-latest",
+      "gpt-3.5-turbo",
       "claude-3-sonnet-20240229",
       "claude-3-haiku-20240307",
+      "gemini-1.5-pro-latest",
     ];
   }
 }

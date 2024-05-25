@@ -3,11 +3,12 @@ import { PersistedSessionInfo, SessionInfo } from "core";
 
 import { llmCanGenerateInParallel } from "core/llm/autodetect";
 import { stripImages } from "core/llm/countTokens";
+import { useContext } from "react";
 import { useSelector } from "react-redux";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
-import { ideRequest } from "../util/ide";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 function truncateText(text: string, maxLength: number) {
@@ -23,12 +24,13 @@ function useHistory(dispatch: Dispatch) {
   const disableSessionTitles = useSelector(
     (store: RootState) => store.state.config.disableSessionTitles,
   );
+  const ideMessenger = useContext(IdeMessengerContext);
 
   async function getHistory(
     offset?: number,
     limit?: number,
   ): Promise<SessionInfo[]> {
-    return await ideRequest("history/list", { offset, limit });
+    return await ideMessenger.request("history/list", { offset, limit });
   }
 
   async function saveSession() {
@@ -77,16 +79,19 @@ function useHistory(dispatch: Dispatch) {
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
     setLocalStorage("lastSessionId", stateCopy.sessionId);
-    return await ideRequest("history/save", sessionInfo);
+    return await ideMessenger.request("history/save", sessionInfo);
   }
 
   async function deleteSession(id: string) {
-    return await ideRequest("history/delete", { id });
+    return await ideMessenger.request("history/delete", { id });
   }
 
   async function loadSession(id: string): Promise<PersistedSessionInfo> {
     setLocalStorage("lastSessionId", state.sessionId);
-    const json: PersistedSessionInfo = await ideRequest("history/load", { id });
+    const json: PersistedSessionInfo = await ideMessenger.request(
+      "history/load",
+      { id },
+    );
     dispatch(newSession(json));
     return json;
   }

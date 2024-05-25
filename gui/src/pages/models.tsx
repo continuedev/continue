@@ -1,15 +1,15 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import _ from "lodash";
-import React from "react";
+import React, { useContext } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscBackground } from "../components";
 import ModelCard from "../components/modelSelection/ModelCard";
 import Toggle from "../components/modelSelection/Toggle";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { setDefaultModel } from "../redux/slices/stateSlice";
-import { postToIde } from "../util/ide";
 import { MODEL_INFO, PROVIDER_INFO } from "../util/modelData";
 import { CustomModelButton } from "./modelconfig";
 
@@ -33,6 +33,7 @@ function Models() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   useNavigationListener();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const [providersSelected, setProvidersSelected] = React.useState(true);
 
@@ -135,7 +136,7 @@ function Models() {
                       ),
                       provider: PROVIDER_INFO[selectedProvider].provider,
                     };
-                    postToIde("config/addModel", { model });
+                    ideMessenger.post("config/addModel", { model });
                     dispatch(
                       setDefaultModel({ title: model.title, force: true }),
                     );
@@ -156,7 +157,7 @@ function Models() {
         <CustomModelButton
           disabled={false}
           onClick={(e) => {
-            postToIde("openConfigJson", undefined);
+            ideMessenger.post("openConfigJson", undefined);
           }}
         >
           <h3 className="text-center my-2">Open config.json</h3>

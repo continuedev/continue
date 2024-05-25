@@ -51,7 +51,7 @@ export function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
 }
 
 export function dedentAndGetCommonWhitespace(s: string): [string, string] {
-  let lines = s.split("\n");
+  const lines = s.split("\n");
   if (lines.length === 0 || (lines[0].trim() === "" && lines.length === 1)) {
     return ["", ""];
   }
@@ -72,7 +72,7 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
     // Iterate through the leading whitespace characters of the current line
     for (let j = 0; j < lcp.length; j++) {
       // If it doesn't have the same whitespace as lcp, then update lcp
-      if (j >= lines[i].length || lcp[j] != lines[i][j]) {
+      if (j >= lines[i].length || lcp[j] !== lines[i][j]) {
         lcp = lcp.slice(0, j);
         if (lcp === "") {
           return [s, ""];
@@ -89,7 +89,7 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
-export function getBasename(filepath: string, n: number = 1): string {
+export function getBasename(filepath: string, n = 1): string {
   return filepath.split(/[\\/]/).pop() ?? "";
 }
 
@@ -178,3 +178,5 @@ export function deduplicateArray<T>(
 
   return result;
 }
+
+export type TODO = any;

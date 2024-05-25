@@ -64,7 +64,7 @@ export class LLMReranker implements Reranker {
       return 0.0;
     }
 
-    let answer = completion
+    const answer = completion
       .trim()
       .toLowerCase()
       .replace(/"/g, "")
@@ -72,14 +72,14 @@ export class LLMReranker implements Reranker {
 
     if (answer === "yes") {
       return 1.0;
-    } else if (answer === "no") {
-      return 0.0;
-    } else {
-      console.warn(
-        `Unexpected response from single token reranker: "${answer}". Expected "yes" or "no".`,
-      );
+    }
+    if (answer === "no") {
       return 0.0;
     }
+    console.warn(
+      `Unexpected response from single token reranker: "${answer}". Expected "yes" or "no".`,
+    );
+    return 0.0;
   }
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {

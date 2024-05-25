@@ -1,16 +1,16 @@
-import { FileEdit, RangeInFile, Thread } from "core";
+import type { FileEdit, RangeInFile, Thread } from "core";
 import { defaultIgnoreFile } from "core/indexing/ignore";
-import path from "path";
+import path from "node:path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/vscodeExtension";
 import { GitExtension, Repository } from "../otherExtensions/git";
 import {
-  SuggestionRanges,
   acceptSuggestionCommand,
   editorSuggestionsLocked,
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
+  type SuggestionRanges,
 } from "../suggestions";
 import { traverseDirectory } from "./traverseDirectory";
 import {
@@ -19,8 +19,8 @@ import {
   uriFromFilePath,
 } from "./vscode";
 
-const util = require("util");
-const asyncExec = util.promisify(require("child_process").exec);
+const util = require("node:util");
+const asyncExec = util.promisify(require("node:child_process").exec);
 
 export class VsCodeIdeUtils {
   visibleMessages: Set<string> = new Set();
@@ -349,16 +349,14 @@ export class VsCodeIdeUtils {
       await vscode.workspace.fs.readFile(vscode.Uri.file(filepath)),
     );
     const lines = contents.split("\n");
-    return (
-      lines.slice(range.start.line, range.end.line).join("\n") +
-      "\n" +
-      lines[
-        range.end.line < lines.length - 1 ? range.end.line : lines.length - 1
-      ].slice(0, range.end.character)
-    );
+    return `${lines
+      .slice(range.start.line, range.end.line)
+      .join("\n")}\n${lines[
+      range.end.line < lines.length - 1 ? range.end.line : lines.length - 1
+    ].slice(0, range.end.character)}`;
   }
 
-  async getTerminalContents(commands: number = -1): Promise<string> {
+  async getTerminalContents(commands = -1): Promise<string> {
     const tempCopyBuffer = await vscode.env.clipboard.readText();
     if (commands < 0) {
       await vscode.commands.executeCommand(
@@ -416,7 +414,7 @@ export class VsCodeIdeUtils {
     return threadsResponse.threads;
   }
 
-  async getDebugLocals(threadIndex: number = 0): Promise<string> {
+  async getDebugLocals(threadIndex = 0): Promise<string> {
     const session = vscode.debug.activeDebugSession;
 
     if (!session) {
@@ -456,7 +454,7 @@ export class VsCodeIdeUtils {
 
   async getTopLevelCallStackSources(
     threadIndex: number,
-    stackDepth: number = 3,
+    stackDepth = 3,
   ): Promise<string[]> {
     const session = vscode.debug.activeDebugSession;
     if (!session) return [];
@@ -569,7 +567,7 @@ export class VsCodeIdeUtils {
   }
 
   async getBranch(forDirectory: vscode.Uri) {
-    let repo = await this.getRepo(forDirectory);
+    const repo = await this.getRepo(forDirectory);
     if (repo?.state?.HEAD?.name === undefined) {
       try {
         const { stdout } = await asyncExec("git rev-parse --abbrev-ref HEAD", {
@@ -617,7 +615,7 @@ export class VsCodeIdeUtils {
 
   getHighlightedCode(): RangeInFile[] {
     // TODO
-    let rangeInFiles: RangeInFile[] = [];
+    const rangeInFiles: RangeInFile[] = [];
     vscode.window.visibleTextEditors
       .filter((editor) => this.documentIsCode(editor.document))
       .forEach((editor) => {

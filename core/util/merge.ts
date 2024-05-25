@@ -11,8 +11,8 @@ export function mergeJson(
   const copyOfFirst = JSON.parse(JSON.stringify(first));
 
   try {
-    for (var key in second) {
-      let secondValue = second[key];
+    for (const key in second) {
+      const secondValue = second[key];
 
       if (!(key in copyOfFirst) || mergeBehavior === "overwrite") {
         // New value
@@ -25,7 +25,7 @@ export function mergeJson(
         // Array
         if (mergeKeys?.[key]) {
           // Merge keys are used to determine whether an item form the second object should override one from the first
-          let keptFromFirst: any[] = [];
+          const keptFromFirst: any[] = [];
           firstValue.forEach((item: any) => {
             if (
               !secondValue.some((item2: any) => mergeKeys[key](item, item2))

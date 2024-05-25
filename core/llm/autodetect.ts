@@ -305,7 +305,7 @@ function autodetectPromptTemplates(
   }
 
   if (editTemplate !== null) {
-    templates["edit"] = editTemplate;
+    templates.edit = editTemplate;
   }
 
   return templates;
@@ -316,6 +316,5 @@ export {
   autodetectTemplateFunction,
   autodetectTemplateType,
   llmCanGenerateInParallel,
-  modelSupportsImages
+  modelSupportsImages,
 };
-

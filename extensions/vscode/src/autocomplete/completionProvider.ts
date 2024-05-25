@@ -1,13 +1,13 @@
-import { IDE } from "core";
+import type { IDE } from "core";
 import {
-  AutocompleteInput,
   AutocompleteOutcome,
   CompletionProvider,
+  type AutocompleteInput,
 } from "core/autocomplete/completionProvider";
-import { ConfigHandler } from "core/config/handler";
+import type { ConfigHandler } from "core/config/handler";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
-import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
 import { setupStatusBar, stopStatusBarLoading } from "./statusBar";

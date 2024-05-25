@@ -1,4 +1,4 @@
-import { IDE, RangeInFile } from "core";
+import type { IDE, RangeInFile } from "core";
 import { getAst, getTreePathAtCursor } from "core/autocomplete/ast";
 import { GetLspDefinitionsFunction } from "core/autocomplete/completionProvider";
 import { AutocompleteLanguageInfo } from "core/autocomplete/languages";
@@ -10,7 +10,7 @@ import {
 } from "core/indexing/chunk/code";
 import { intersection } from "core/util/ranges";
 import * as vscode from "vscode";
-import Parser from "web-tree-sitter";
+import type Parser from "web-tree-sitter";
 
 type GotoProviderName =
   | "vscode.executeDefinitionProvider"
@@ -199,7 +199,7 @@ export async function getDefinitionsForNode(
 ): Promise<RangeInFileWithContents[]> {
   const ranges: (RangeInFile | RangeInFileWithContents)[] = [];
   switch (node.type) {
-    case "call_expression":
+    case "call_expression": {
       // function call -> function definition
       const [funDef] = await executeGotoProvider({
         uri,
@@ -253,6 +253,7 @@ export async function getDefinitionsForNode(
       );
       ranges.push(...typeDefs);
       break;
+    }
     case "variable_declarator":
       // variable assignment -> variable definition/type
       // usages of the var that appear after the declaration

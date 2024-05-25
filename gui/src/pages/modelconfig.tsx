@@ -1,6 +1,6 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import _ from "lodash";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
 import { useNavigate, useParams } from "react-router-dom";
@@ -13,9 +13,9 @@ import {
 } from "../components";
 import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
 import ModelCard from "../components/modelSelection/ModelCard";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { setDefaultModel } from "../redux/slices/stateSlice";
-import { postToIde } from "../util/ide";
 import {
   MODEL_PROVIDER_TAG_COLORS,
   ModelInfo,
@@ -59,6 +59,7 @@ function ModelConfig() {
   useNavigationListener();
   const formMethods = useForm();
   const { modelName } = useParams();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const [modelInfo, setModelInfo] = useState<ModelInfo | undefined>(undefined);
 
@@ -171,7 +172,7 @@ function ModelConfig() {
           {(modelInfo?.collectInputFor?.filter((d) => !d.required).length ||
             0) > 0 && (
             <details>
-              <summary className="mb-2">
+              <summary className="mb-2 cursor-pointer">
                 <b>Advanced (optional)</b>
               </summary>
 
@@ -244,7 +245,7 @@ function ModelConfig() {
                     ...formParams,
                     provider: modelInfo.provider,
                   };
-                  postToIde("config/addModel", { model });
+                  ideMessenger.post("config/addModel", { model });
                   dispatch(
                     setDefaultModel({ title: model.title, force: true }),
                   );
@@ -264,7 +265,7 @@ function ModelConfig() {
             <CustomModelButton
               disabled={false}
               onClick={(e) => {
-                postToIde("openConfigJson", undefined);
+                ideMessenger.post("openConfigJson", undefined);
               }}
             >
               <h3 className="text-center my-2">Open config.json</h3>

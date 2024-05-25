@@ -11,11 +11,15 @@
       "name": "Core Binary",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/binary/out/index.js",
-      "preLaunchTask": "binary:esbuild",
+      // "preLaunchTask": "binary:esbuild",
       "outFiles": ["${workspaceFolder}/binary/out/**/*.js"],
       "sourceMaps": true,
       "smartStep": true,
-      "internalConsoleOptions": "openOnSessionStart"
+      "internalConsoleOptions": "openOnSessionStart",
+      "cwd": "${workspaceFolder}/binary",
+      "env": {
+        "CONTINUE_DEVELOPMENT": "true"
+      }
     },
     {
       "type": "node",
@@ -69,18 +73,17 @@
         // Pass a directory to run tests in
         "${workspaceFolder}/extensions/vscode/manual-testing-sandbox",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode",
-        "--extensionTestsPath=${workspaceFolder}/extensions/vscode/out/test-runner/mochaRunner"
+        "--extensionTestsPath=${workspaceFolder}/extensions/vscode/out/test/runner/mochaRunner"
       ],
       "outFiles": [
         // Allows setting breakpoints in test suites across the /src folder
-        "${workspaceFolder}/extensions/vscode/out/test-suites/**/*.js",
+        "${workspaceFolder}/extensions/vscode/out/test/test-suites/**/*.js",
         // Allows setting breakpoints in mocha test runner file
-        "${workspaceFolder}/extensions/vscode/out/test-runner/**/*.js"
+        "${workspaceFolder}/extensions/vscode/out/test/runner/**/*.js"
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "preLaunchTask": "vscode-extension:tests:build",
       "env": {
-        "CONTINUE_SERVER_URL": "http://localhost:65432",
         // Avoid timing out when stopping on breakpoints during debugging in VSCode
         "MOCHA_TIMEOUT": "0"
       }

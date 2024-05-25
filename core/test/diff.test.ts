@@ -111,7 +111,7 @@ describe("streamDiff", () => {
       const diff = [];
       for await (const diffLine of streamDiff(
         oldLines,
-        generateLines(newLines)
+        generateLines(newLines),
       )) {
         diff.push(diffLine);
       }
@@ -124,7 +124,7 @@ describe("streamDiff", () => {
               dl.line
             );
           })
-          .join("\n")
+          .join("\n"),
       );
 
       const numSame = diff.filter((dl) => dl.type === "same").length;
@@ -141,7 +141,7 @@ describe("streamDiff", () => {
           throw new Error(
             `Found red '${diff[i].line}' immediately after green line '${
               diff[i - 1].line
-            }`
+            }`,
           );
         }
       }

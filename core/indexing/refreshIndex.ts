@@ -1,6 +1,6 @@
-import crypto from "crypto";
-import * as fs from "fs";
-import { Database, open } from "sqlite";
+import crypto from "node:crypto";
+import * as fs from "node:fs";
+import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import { IndexTag, IndexingProgressUpdate } from "../index.js";
 import { getIndexSqlitePath } from "../util/paths.js";
@@ -106,7 +106,7 @@ async function getAddRemoveForTag(
   const updateOldVersion: PathAndCacheKey[] = [];
   const remove: PathAndCacheKey[] = [];
 
-  for (let item of saved) {
+  for (const item of saved) {
     const { lastUpdated, ...pathAndCacheKey } = item;
 
     if (currentFiles[item.path] === undefined) {
@@ -207,22 +207,22 @@ async function getAddRemoveForTag(
     }
   }
 
-  for (let item of updateNewVersion) {
+  for (const item of updateNewVersion) {
     itemToAction[JSON.stringify(item)] = [
       item,
       AddRemoveResultType.UpdateNewVersion,
     ];
   }
-  for (let item of add) {
+  for (const item of add) {
     itemToAction[JSON.stringify(item)] = [item, AddRemoveResultType.Add];
   }
-  for (let item of updateOldVersion) {
+  for (const item of updateOldVersion) {
     itemToAction[JSON.stringify(item)] = [
       item,
       AddRemoveResultType.UpdateOldVersion,
     ];
   }
-  for (let item of remove) {
+  for (const item of remove) {
     itemToAction[JSON.stringify(item)] = [item, AddRemoveResultType.Remove];
   }
 
@@ -272,7 +272,7 @@ export async function getComputeDeleteAddRemove(
   const addTag: PathAndCacheKey[] = [];
   const removeTag: PathAndCacheKey[] = [];
 
-  for (let { path, cacheKey } of add) {
+  for (const { path, cacheKey } of add) {
     const existingTags = await getTagsFromGlobalCache(cacheKey, tag.artifactId);
     if (existingTags.length > 0) {
       addTag.push({ path, cacheKey });
@@ -281,7 +281,7 @@ export async function getComputeDeleteAddRemove(
     }
   }
 
-  for (let { path, cacheKey } of remove) {
+  for (const { path, cacheKey } of remove) {
     const existingTags = await getTagsFromGlobalCache(cacheKey, tag.artifactId);
     if (existingTags.length > 1) {
       removeTag.push({ path, cacheKey });
@@ -310,14 +310,14 @@ export async function getComputeDeleteAddRemove(
       markComplete(items, resultType);
 
       // Update the global cache
-      let results: any = {
+      const results: any = {
         compute: [],
         del: [],
         addTag: [],
         removeTag: [],
       };
       results[resultType] = items;
-      for await (let _ of globalCacheIndex.update(
+      for await (const _ of globalCacheIndex.update(
         tag,
         results,
         () => {},
@@ -334,7 +334,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
   constructor(db: DatabaseConnection) {
     this.db = db;
   }
-  artifactId: string = "globalCache";
+  artifactId = "globalCache";
 
   static async create(): Promise<GlobalCacheCodeBaseIndex> {
     return new GlobalCacheCodeBaseIndex(await SqliteDb.get());

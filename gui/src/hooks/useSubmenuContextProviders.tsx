@@ -1,11 +1,10 @@
 import { ContextSubmenuItem } from "core";
 import { deduplicateArray, getBasename, getLastNPathParts } from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
-import { ideRequest } from "../util/ide";
-import { WebviewIde } from "../util/webviewIde";
 import { useWebviewListener } from "./useWebviewListener";
 
 const MINISEARCH_OPTIONS = {
@@ -31,8 +30,10 @@ function useSubmenuContextProviders() {
 
   const [loaded, setLoaded] = useState(false);
 
+  const ideMessenger = useContext(IdeMessengerContext);
+
   async function getOpenFileItems() {
-    const openFiles = await new WebviewIde().getOpenFiles();
+    const openFiles = await ideMessenger.ide.getOpenFiles();
     return openFiles.map((file) => {
       return {
         id: file,
@@ -109,7 +110,7 @@ function useSubmenuContextProviders() {
         fields: ["title", "description"],
         storeFields: ["id", "title", "description"],
       });
-      const items = await ideRequest("context/loadSubmenuItems", {
+      const items = await ideMessenger.request("context/loadSubmenuItems", {
         title: description.title,
       });
       minisearch.addAll(items);
