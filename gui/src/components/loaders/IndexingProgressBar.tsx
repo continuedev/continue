@@ -70,10 +70,10 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
 
   let initialized = false
   useEffect(() => {
-    console.log("useEffect triggered")
     if (!initialized) {
+      console.log("useEffect triggered")
       // Retrieves possible non-default states set prior to IndexingProgressBar initialization
-      ideMessenger.post("index/indexingProgressBarInitialized", "")
+      ideMessenger.post("index/indexingProgressBarInitialized", undefined)
       initialized = true
     }
   }, []);

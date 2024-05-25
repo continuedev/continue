@@ -120,7 +120,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [undefined | string, void];
-  "index/indexingProgressBarInitialized": [string, void];
+  "index/indexingProgressBarInitialized": [undefined, void];
   completeOnboarding: [
     {
       mode:
