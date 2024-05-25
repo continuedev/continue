@@ -78,7 +78,7 @@ describe("/edit slash command", () => {
 
   test.skip("dedentAndGetCommonWhitespace", () => {
     // TODO
-    let [dedented, whitespace] = dedentAndGetCommonWhitespace(
+    const [dedented, whitespace] = dedentAndGetCommonWhitespace(
       `\
       ...
       ...
@@ -95,11 +95,11 @@ describe("/edit slash command", () => {
     .  .`);
     expect(whitespace).toEqual("      ");
 
-    let [dedented2, whitespace2] = dedentAndGetCommonWhitespace("");
+    const [dedented2, whitespace2] = dedentAndGetCommonWhitespace("");
     expect(dedented2).toEqual("");
     expect(whitespace2).toEqual("");
 
-    let [dedented3, whitespace3] = dedentAndGetCommonWhitespace(" \n\n  ");
+    const [dedented3, whitespace3] = dedentAndGetCommonWhitespace(" \n\n  ");
     expect(dedented3).toEqual(" \n\n  ");
     expect(whitespace3).toEqual("");
   });

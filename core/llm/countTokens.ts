@@ -10,13 +10,16 @@ interface Encoding {
 }
 
 class LlamaEncoding implements Encoding {
-  encode(text: string, allowedSpecial?: string[] | "all" | undefined, disallowedSpecial?: string[] | "all" | undefined): number[] {
+  encode(
+    text: string,
+    allowedSpecial?: string[] | "all" | undefined,
+    disallowedSpecial?: string[] | "all" | undefined,
+  ): number[] {
     return llamaTokenizer.encode(text);
   }
   decode(tokens: number[]): string {
     return llamaTokenizer.decode(tokens);
   }
-
 }
 
 let gptEncoding: Encoding | null = null;
@@ -39,15 +42,14 @@ function encodingForModel(modelName: string): Encoding {
 function countImageTokens(content: MessagePart): number {
   if (content.type === "imageUrl") {
     return 85;
-  } else {
-    throw new Error("Non-image content type");
   }
+  throw new Error("Non-image content type");
 }
 
 function countTokens(
   content: MessageContent,
   // defaults to llama2 because the tokenizer tends to produce more tokens
-  modelName: string = "llama2",
+  modelName = "llama2",
 ): number {
   const encoding = encodingForModel(modelName);
   if (Array.isArray(content)) {
@@ -69,7 +71,7 @@ function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
       flattened.length > 0 &&
       flattened[flattened.length - 1].role === msg.role
     ) {
-      flattened[flattened.length - 1].content += "\n\n" + (msg.content || "");
+      flattened[flattened.length - 1].content += `\n\n${msg.content || ""}`;
     } else {
       flattened.push(msg);
     }
@@ -83,9 +85,8 @@ export function stripImages(content: MessageContent): string {
       .filter((part) => part.type === "text")
       .map((part) => part.text)
       .join("\n");
-  } else {
-    return content;
   }
+  return content;
 }
 
 function countChatMessageTokens(
@@ -181,10 +182,9 @@ function pruneRawPromptFromBottom(
 
 function summarize(message: MessageContent): string {
   if (Array.isArray(message)) {
-    return stripImages(message).substring(0, 100) + "...";
-  } else {
-    return message.substring(0, 100) + "...";
+    return `${stripImages(message).substring(0, 100)}...`;
   }
+  return `${message.substring(0, 100)}...`;
 }
 
 function pruneChatHistory(
@@ -215,7 +215,7 @@ function pruneChatHistory(
   for (let i = 0; i < longerThanOneThird.length; i++) {
     // Prune line-by-line from the top
     const message = longerThanOneThird[i];
-    let content = stripImages(message.content);
+    const content = stripImages(message.content);
     const deltaNeeded = totalTokens - contextLength;
     const delta = Math.min(deltaNeeded, distanceFromThird[i]);
     message.content = pruneStringFromTop(
@@ -283,7 +283,7 @@ function pruneChatHistory(
 
 function compileChatMessages(
   modelName: string,
-  msgs: ChatMessage[] | undefined = undefined,
+  msgs: ChatMessage[] | undefined,
   contextLength: number,
   maxTokens: number,
   supportsImages: boolean,
@@ -364,6 +364,5 @@ export {
   pruneLinesFromTop,
   pruneRawPromptFromTop,
   pruneStringFromBottom,
-  pruneStringFromTop
+  pruneStringFromTop,
 };
-

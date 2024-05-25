@@ -1,4 +1,3 @@
-import { BaseContextProvider } from "../index.js";
 import {
   ContextItem,
   ContextProviderDescription,
@@ -7,6 +6,7 @@ import {
   LoadSubmenuItemsArgs,
 } from "../../index.js";
 import { getBasename, getLastNPathParts } from "../../util/index.js";
+import { BaseContextProvider } from "../index.js";
 
 class FileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {

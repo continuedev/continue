@@ -1,30 +1,43 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
+import com.github.continuedev.continueintellijextension.*
 import com.github.continuedev.continueintellijextension.constants.*
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.reflect.TypeToken
+import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
+import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl
+import com.intellij.codeInsight.daemon.impl.DaemonProgressIndicator
+import com.intellij.codeInsight.daemon.impl.HighlightInfo
 import com.intellij.ide.plugins.PluginManagerCore
+import com.intellij.lang.annotation.HighlightSeverity
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationInfo
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
+import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.editor.Document
+import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
 import com.intellij.openapi.extensions.PluginId
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.progress.DumbProgressIndicator
+import com.intellij.openapi.progress.ProgressIndicator
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.MessageType
-import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.vfs.*
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
 import com.intellij.openapi.wm.WindowManager
+import com.intellij.psi.PsiDocumentManager
 import com.intellij.testFramework.LightVirtualFile
 import com.intellij.ui.awt.RelativePoint
 import kotlinx.coroutines.*
@@ -141,12 +154,10 @@ class IdeProtocolClient (
             )
             val messageType = parsedMessage["messageType"] as? String
             if (messageType == null) {
-                println("Recieved message without type: $text")
+                println("Received message without type: $text")
                 return@launch
             }
             val data = parsedMessage["data"]
-
-            val historyManager = HistoryManager()
 
             try {
                 when (messageType) {
@@ -289,8 +300,8 @@ class IdeProtocolClient (
                     "showLines" -> {
                         val data = data as Map<String, Any>
                         val filepath = data["filepath"] as String
-                        val startLine = data["startLine"] as Int
-                        val endLine = data["endLine"] as Int
+                        val startLine = (data["startLine"] as Double).toInt()
+                        val endLine = (data["endLine"] as Double).toInt()
                         highlightCode(
                                 RangeInFile(
                                         filepath,
@@ -299,7 +310,7 @@ class IdeProtocolClient (
                                                 Position(endLine, 0)
                                         )
                                 ),
-                                data["color"] as String
+                                data["color"] as String?
                         )
                         respond(null)
                     }
@@ -317,6 +328,63 @@ class IdeProtocolClient (
 
                     "setSuggestionsLocked" -> {}
                     "getSessionId" -> {}
+
+                    // INDEXING //
+                    "getLastModified" -> {
+                        // TODO
+                        val data = data as Map<String, Any>
+                        val files = data["files"] as List<String>
+                        val pathToLastModified = files.map { file ->
+                            file to File(file).lastModified()
+                        }.toMap()
+                        respond(pathToLastModified)
+                    }
+                    "listDir" -> {
+                        val data = data as Map<String, Any>
+                        val dir = data["dir"] as String
+                        // List of [file, FileType]
+                        val files: List<List<Any>> = File(dir).listFiles()?.map {
+                            listOf(it.name, if (it.isDirectory) 2 else 1)
+                        } ?: emptyList()
+                        respond(files)
+                    }
+                    "getGitRootPath" -> {
+                        val data = data as Map<String, Any>
+                        val directory = data["dir"] as String
+                        val builder = ProcessBuilder("git", "rev-parse", "--show-toplevel")
+                        builder.directory(File(directory))
+                        val process = builder.start()
+
+                        val reader = BufferedReader(InputStreamReader(process.inputStream))
+                        val output = reader.readLine()
+                        process.waitFor()
+
+                        respond(output)
+                    }
+                    "getBranch" -> {
+                        // Get the current branch name
+                        val builder = ProcessBuilder("git", "rev-parse", "--abbrev-ref", "HEAD")
+                        builder.directory(File(workspacePath ?: "."))
+                        val process = builder.start()
+
+                        val reader = BufferedReader(InputStreamReader(process.inputStream))
+                        val output = reader.readLine()
+                        process.waitFor()
+
+                        respond(output ?: "NONE")
+                    }
+                    "getRepoName" -> {
+                        // Get the current repository name
+                        val builder = ProcessBuilder("git", "config", "--get", "remote.origin.url")
+                        builder.directory(File(workspacePath ?: "."))
+                        val process = builder.start()
+
+                        val reader = BufferedReader(InputStreamReader(process.inputStream))
+                        val output = reader.readLine()
+                        process.waitFor()
+
+                        respond(output ?: "NONE")
+                    }
 
                     // NEW //
                     "getDiff" -> {
@@ -336,6 +404,51 @@ class IdeProtocolClient (
                         process.waitFor()
 
                         respond(output.toString());
+                    }
+                    "getProblems" -> {
+                        // Get currently active editor
+                        var editor: Editor? = null
+                        ApplicationManager.getApplication().invokeAndWait {
+                            editor = FileEditorManager.getInstance(project).selectedTextEditor
+                        }
+                        if (editor == null) {
+                            respond(emptyList<Map<String, Any?>>())
+                            return@launch
+                        }
+                        val project = editor!!.project ?: return@launch
+
+                        val document: Document = editor!!.document
+                        val psiFile = PsiDocumentManager.getInstance(project).getPsiFile(document) ?: return@launch
+
+                        val analyzer = DaemonCodeAnalyzer.getInstance(project) as DaemonCodeAnalyzerImpl
+                        val highlightInfos = ReadAction.compute<MutableList<HighlightInfo>, Throwable> {
+                            analyzer.getFileLevelHighlights(project, psiFile)
+                        }
+
+                        val problems = ArrayList<Map<String, Any?>>()
+                        for (highlightInfo in highlightInfos) {
+                            if (highlightInfo.severity === HighlightSeverity.ERROR ||
+                                    highlightInfo.severity === HighlightSeverity.WARNING) {
+                                val startOffset = highlightInfo.getStartOffset()
+                                val endOffset = highlightInfo.getEndOffset()
+                                val description = highlightInfo.description
+                                problems.add(mapOf(
+                                        "filepath" to psiFile.virtualFile?.path,
+                                        "range" to mapOf(
+                                                "start" to mapOf(
+                                                        "line" to document.getLineNumber(startOffset),
+                                                        "character" to startOffset - document.getLineStartOffset(document.getLineNumber(startOffset))
+                                                ),
+                                                "end" to mapOf(
+                                                        "line" to document.getLineNumber(endOffset),
+                                                        "character" to endOffset - document.getLineStartOffset(document.getLineNumber(endOffset))
+                                                )
+                                        ),
+                                        "message" to description
+                                ))
+                            }
+                        }
+                        respond(problems)
                     }
                     "getConfigJsUrl" -> {
                         // Calculate a data URL for the config.js file
@@ -369,25 +482,12 @@ class IdeProtocolClient (
                     }
 
                     "listFolders" -> {
-                        respond(null)
+                        val workspacePath = workspacePath ?: return@launch
+                        val workspaceDir = File(workspacePath)
+                        val folders = workspaceDir.listFiles { file -> file.isDirectory }?.map { file -> file.name } ?: emptyList()
+                        respond(folders)
                     }
 
-                    // History
-                    "history" -> {
-                        respond(historyManager.list());
-                    }
-                    "saveSession" -> {
-                        historyManager.save(data as PersistedSessionInfo);
-                        respond(null);
-                    }
-                    "deleteSession" -> {
-                        historyManager.delete(data as String);
-                        respond(null);
-                    }
-                    "loadSession" -> {
-                        val session = historyManager.load(data as String)
-                        respond(session)
-                    }
                     "getSearchResults" -> {
                         respond("")
                     }
@@ -405,59 +505,24 @@ class IdeProtocolClient (
                         val openFiles = visibleFiles()
                         respond(openFiles)
                     }
-                    "logDevData" -> {
-                        val data = data as Map<String, Any>
-                        val filename = data["tableName"] as String
-                        val jsonLine = data["data"]
-                        val filepath = getDevDataFilepath(filename)
-                        val contents = Gson().toJson(jsonLine) + "\n"
-                        File(filepath).appendText(contents)
-                    }
-                    "addModel" -> {
-                        val data = data as Map<String, Any>
-                        val model = data["model"] as Map<String, Any>
-                        val updatedConfig = editConfigJson {
-                            val models = it["models"] as MutableList<Map<String, Any>>
-                            models.add(model)
-                            it
+                    "insertAtCursor" -> {
+                        val msg = data as Map<String, String>;
+                        val text = msg["text"] as String
+                        ApplicationManager.getApplication().invokeLater {
+                            val editor = FileEditorManager.getInstance(project).selectedTextEditor ?: return@invokeLater
+                            val selectionModel: SelectionModel = editor.selectionModel
+
+                            val document = editor.document
+                            val startOffset = selectionModel.selectionStart
+                            val endOffset = selectionModel.selectionEnd
+
+                            WriteCommandAction.runWriteCommandAction(project) {
+                                document.replaceString(startOffset, endOffset, text)
+                            }
                         }
-
-                        configUpdate()
-                        setFileOpen(getConfigJsonPath())
                     }
-                    "deleteModel" -> {
-                        val configJson = editConfigJson { config ->
-                            var models: MutableList<Map<String, Any>> = config["models"] as MutableList<Map<String, Any>>
-                            val data = data as Map<String, Any>
-                            val model = data["title"] as String
-                            models = models.filter { it["title"] != model }.toMutableList()
-                            config["models"] = models
-                            config
-                        }
-                        configUpdate()
+                    "applyToFile" -> {
                     }
-                    "addOpenAIKey" -> {
-                        val updatedConfig = editConfigJson { config ->
-                            val data = data as Map<String, Any>
-                            val key = data["key"] as String
-                            var models = config["models"] as MutableList<MutableMap<String, Any>>
-                            models = models.map {
-                                if (it["provider"] == "free-trial") {
-                                    it["apiKey"] = key
-                                    it["provider"] = "openai"
-                                    it
-                                } else {
-                                    it
-                                }
-                            }.toMutableList()
-                            config["models"] = models
-                            config
-                        }
-                        configUpdate()
-                    }
-
-
-
                     else -> {
                         println("Unknown messageType: $messageType")
                     }
@@ -664,7 +729,9 @@ class IdeProtocolClient (
             ".pytest_cache",
             ".vscode-test",
             ".continue",
-            "__pycache__"
+            "__pycache__",
+            "site-packages",
+            ".gradle",
     )
     private fun shouldIgnoreDirectory(name: String): Boolean {
         val components = File(name).path.split(File.separator)
@@ -774,7 +841,7 @@ class IdeProtocolClient (
             )
     }
 
-    fun highlightCode(rangeInFile: RangeInFile, color: String) {
+    fun highlightCode(rangeInFile: RangeInFile, color: String?) {
         val file =
             LocalFileSystem.getInstance().findFileByPath(rangeInFile.filepath)
 

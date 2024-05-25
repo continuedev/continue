@@ -31,6 +31,10 @@ export function getIndexFolderPath(): string {
   return indexPath;
 }
 
+export function getGlobalContextFilePath(): string {
+  return path.join(getIndexFolderPath(), "globalContext.json");
+}
+
 export function getSessionFilePath(sessionId: string): string {
   return path.join(getSessionsFolderPath(), `${sessionId}.json`);
 }
@@ -143,7 +147,7 @@ export function getDevDataSqlitePath(): string {
 }
 
 export function getDevDataFilePath(fileName: string): string {
-  return path.join(devDataPath(), fileName + ".jsonl");
+  return path.join(devDataPath(), `${fileName}.jsonl`);
 }
 
 export function editConfigJson(
@@ -228,11 +232,38 @@ export function getContinueDotEnv(): { [key: string]: string } {
   const filepath = path.join(getContinueGlobalPath(), ".env");
   if (fs.existsSync(filepath)) {
     return dotenv.parse(fs.readFileSync(filepath));
-  } else {
-    return {};
   }
+  return {};
 }
 
 export function getCoreLogsPath(): string {
   return path.join(getContinueGlobalPath(), "core.log");
+}
+
+export function getGlobalPromptsPath(): string {
+  return path.join(getContinueGlobalPath(), ".prompts");
+}
+
+export function readAllGlobalPromptFiles(
+  folderPath: string = getGlobalPromptsPath(),
+): { path: string; content: string }[] {
+  if (!fs.existsSync(folderPath)) {
+    return [];
+  }
+  const files = fs.readdirSync(folderPath);
+  const promptFiles: { path: string; content: string }[] = [];
+  files.forEach((file) => {
+    const filepath = path.join(folderPath, file);
+    const stats = fs.statSync(filepath);
+
+    if (stats.isDirectory()) {
+      const nestedPromptFiles = readAllGlobalPromptFiles(filepath);
+      promptFiles.push(...nestedPromptFiles);
+    } else {
+      const content = fs.readFileSync(filepath, "utf8");
+      promptFiles.push({ path: filepath, content });
+    }
+  });
+
+  return promptFiles;
 }

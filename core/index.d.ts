@@ -374,6 +374,13 @@ export interface IndexTag extends BranchAndDir {
   artifactId: string;
 }
 
+export enum FileType {
+  Unkown = 0,
+  File = 1,
+  Directory = 2,
+  SymbolicLink = 64,
+}
+
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getDiff(): Promise<string>;
@@ -415,9 +422,14 @@ export interface IDE {
   subprocess(command: string): Promise<[string, string]>;
   getProblems(filepath?: string | undefined): Promise<Problem[]>;
   getBranch(dir: string): Promise<string>;
-  getStats(directory: string): Promise<{ [path: string]: number }>;
   getTags(artifactId: string): Promise<IndexTag[]>;
   getRepoName(dir: string): Promise<string | undefined>;
+  errorPopup(message: string): Promise<void>;
+  infoPopup(message: string): Promise<void>;
+
+  getGitRootPath(dir: string): Promise<string | undefined>;
+  listDir(dir: string): Promise<[string, FileType][]>;
+  getLastModified(files: string[]): Promise<{ [path: string]: number }>;
 }
 
 // Slash Commands

@@ -29,6 +29,7 @@
   "author": "",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@biomejs/biome": "1.6.4",
     "@types/follow-redirects": "^1.14.4",
     "@types/uuid": "^9.0.8",
     "@vercel/ncc": "^0.38.1",
@@ -44,6 +45,7 @@
     "follow-redirects": "^1.15.5",
     "mac-ca": "^2.0.3",
     "ncp": "^2.0.0",
+    "node-fetch": "^3.3.2",
     "posthog-node": "^3.6.3",
     "system-ca": "^1.0.2",
     "uuid": "^9.0.1",

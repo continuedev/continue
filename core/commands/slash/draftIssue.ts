@@ -34,7 +34,7 @@ const DraftIssueCommand: SlashCommand = {
       { maxTokens: 20 },
     );
 
-    title = removeQuotesAndEscapes(title.trim()) + "\n\n";
+    title = `${removeQuotesAndEscapes(title.trim())}\n\n`;
     yield title;
 
     let body = "";

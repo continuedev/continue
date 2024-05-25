@@ -1,9 +1,9 @@
-import { BaseContextProvider } from "../index.js";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class GoogleContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -40,16 +40,16 @@ class GoogleContextProvider extends BaseContextProvider {
 
     const results = await response.text();
 
-    let jsonResults = JSON.parse(results);
+    const jsonResults = JSON.parse(results);
     let content = `Google Search: ${query}\n\n`;
-    let answerBox = jsonResults["answerBox"];
+    const answerBox = jsonResults.answerBox;
 
     if (answerBox) {
-      content += `Answer Box (${answerBox["title"]}): ${answerBox["answer"]}\n\n`;
+      content += `Answer Box (${answerBox.title}): ${answerBox.answer}\n\n`;
     }
 
-    for (let result of jsonResults["organic"]) {
-      content += `${result["title"]}\n${result["link"]}\n${result["snippet"]}\n\n`;
+    for (const result of jsonResults.organic) {
+      content += `${result.title}\n${result.link}\n${result.snippet}\n\n`;
     }
 
     return [

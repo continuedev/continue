@@ -10,11 +10,7 @@ function linesMatchPerfectly(lineA: string, lineB: string): boolean {
 
 const END_BRACKETS = ["}", "});", "})"];
 
-function linesMatch(
-  lineA: string,
-  lineB: string,
-  linesBetween: number = 0,
-): boolean {
+function linesMatch(lineA: string, lineB: string, linesBetween = 0): boolean {
   // Require a perfect (without padding) match for these lines
   // Otherwise they are edit distance 1 from empty lines and other single char lines (e.g. each other)
   if (["}", "*", "});", "})"].includes(lineA.trim())) {
@@ -37,7 +33,7 @@ function linesMatch(
 export function matchLine(
   newLine: string,
   oldLines: string[],
-  permissiveAboutIndentation: boolean = false,
+  permissiveAboutIndentation = false,
 ): [number, boolean, string] {
   // Only match empty lines if it's the next one:
   if (newLine.trim() === "" && oldLines[0]?.trim() === "") {
@@ -53,7 +49,8 @@ export function matchLine(
 
     if (linesMatchPerfectly(newLine, oldLines[i])) {
       return [i, true, newLine];
-    } else if (linesMatch(newLine, oldLines[i], i)) {
+    }
+    if (linesMatch(newLine, oldLines[i], i)) {
       // This is a way to fix indentation, but only for sufficiently long lines to avoid matching whitespace or short lines
       if (
         newLine.trimStart() === oldLines[i].trimStart() &&

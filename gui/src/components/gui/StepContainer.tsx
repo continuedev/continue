@@ -6,7 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/countTokens";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -15,9 +15,9 @@ import {
   vscBackground,
   vscInputBackground,
 } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
-import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
@@ -67,6 +67,7 @@ function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const isUserInput = props.item.message.role === "user";
   const active = useSelector((store: RootState) => store.state.active);
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 
@@ -74,7 +75,7 @@ function StepContainer(props: StepContainerProps) {
     setFeedback(feedback);
     if (props.item.promptLogs?.length) {
       for (const promptLog of props.item.promptLogs) {
-        postToIde("devdata/log", {
+        ideMessenger.post("devdata/log", {
           tableName: "chat",
           data: { ...promptLog, feedback },
         });

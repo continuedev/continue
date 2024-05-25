@@ -81,6 +81,7 @@ export const DEFAULT_IGNORE_DIRS = [
   ".continue",
   "__pycache__",
   "site-packages",
+  ".gradle",
   ".cache",
   "gems",
 ];

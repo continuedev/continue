@@ -14,10 +14,10 @@ import {
   Typescript,
 } from "./languages.js";
 import {
-  AutocompleteSnippet,
   fillPromptWithSnippets,
   rankSnippets,
   removeRangeFromSnippets,
+  type AutocompleteSnippet,
 } from "./ranking.js";
 import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
 
@@ -97,7 +97,7 @@ async function shouldCompleteMultiline(
 
   let completeMultiline = false;
   if (treePath) {
-    let cursorLine = fullPrefix.split("\n").length - 1;
+    const cursorLine = fullPrefix.split("\n").length - 1;
     completeMultiline = shouldCompleteMultilineAst(treePath, cursorLine);
   }
   return completeMultiline;
@@ -124,14 +124,14 @@ export async function constructAutocompletePrompt(
 }> {
   // Construct basic prefix
   const maxPrefixTokens = options.maxPromptTokens * options.prefixPercentage;
-  let prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens, modelName);
+  const prefix = pruneLinesFromTop(fullPrefix, maxPrefixTokens, modelName);
 
   // Construct suffix
   const maxSuffixTokens = Math.min(
     options.maxPromptTokens - countTokens(prefix, modelName),
     options.maxSuffixPercentage * options.maxPromptTokens,
   );
-  let suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
+  const suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
 
   // Find external snippets
   let snippets: AutocompleteSnippet[] = [];

@@ -8,6 +8,7 @@ import { streamLines } from "../diff/util.js";
 import {
   IDE,
   ILLM,
+  ModelProvider,
   Position,
   Range,
   TabAutocompleteOptions,
@@ -103,11 +104,11 @@ function formatExternalSnippet(
 ) {
   const comment = language.comment;
   const lines = [
-    comment + " Path: " + getBasename(filepath),
+    `${comment} Path: ${getBasename(filepath)}`,
     ...snippet
       .trim()
       .split("\n")
-      .map((line) => comment + " " + line),
+      .map((line) => `${comment} ${line}`),
     comment,
   ];
   return lines.join("\n");
@@ -281,7 +282,7 @@ export async function getTabCompletion(
       )
       .join("\n");
     if (formattedSnippets.length > 0) {
-      prefix = formattedSnippets + "\n\n" + prefix;
+      prefix = `${formattedSnippets}\n\n${prefix}`;
     }
 
     prompt = compiledTemplate({
@@ -308,7 +309,7 @@ export async function getTabCompletion(
     cacheHit = true;
     completion = cachedCompletion;
   } else {
-    let stop = [
+    const stop = [
       ...(completionOptions?.stop || []),
       ...multilineStops,
       ...commonStops,
@@ -323,7 +324,7 @@ export async function getTabCompletion(
       (options.multilineCompletions === "always" || completeMultiline);
 
     // Try to reuse pending requests if what the user typed matches start of completion
-    let generator = generatorReuseManager.getGenerator(
+    const generator = generatorReuseManager.getGenerator(
       prefix,
       () =>
         llm.streamComplete(prompt, {
@@ -399,7 +400,7 @@ export async function getTabCompletion(
 
 export class CompletionProvider {
   private static debounceTimeout: NodeJS.Timeout | undefined = undefined;
-  private static debouncing: boolean = false;
+  private static debouncing = false;
   private static lastUUID: string | undefined = undefined;
 
   constructor(
@@ -527,6 +528,7 @@ export class CompletionProvider {
         return undefined;
       }
 
+      // Debounce
       if (CompletionProvider.debouncing) {
         CompletionProvider.debounceTimeout?.refresh();
         const lastUUID = await new Promise((resolve) =>
@@ -553,6 +555,18 @@ export class CompletionProvider {
       // Set temperature (but don't overrride)
       if (llm.completionOptions.temperature === undefined) {
         llm.completionOptions.temperature = 0.01;
+      }
+
+      // Set model-specific options
+      const LOCAL_PROVIDERS: ModelProvider[] = [
+        "ollama",
+        "lmstudio",
+        "llama.cpp",
+        "llamafile",
+        "text-gen-webui",
+      ];
+      if (LOCAL_PROVIDERS.includes(llm.providerName)) {
+        options.maxPromptTokens = 500;
       }
 
       const outcome = await getTabCompletion(

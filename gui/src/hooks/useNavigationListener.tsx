@@ -1,9 +1,9 @@
-import { ReverseWebviewProtocol } from "core/web/webviewProtocol";
+import type { ToWebviewProtocol } from "core/protocol";
 import { useLocation, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { useWebviewListener } from "./useWebviewListener";
 
-const openGUITypes: (keyof ReverseWebviewProtocol)[] = [
+const openGUITypes: (keyof ToWebviewProtocol)[] = [
   "highlightedCode",
   "newSessionWithPrompt",
   "focusContinueInput",
@@ -27,11 +27,11 @@ export const useNavigationListener = () => {
               data,
               messageId: uuidv4(),
             },
-            "*"
+            "*",
           );
         }, 200);
       },
-      [navigate]
+      [navigate],
     );
   }
 
@@ -45,6 +45,6 @@ export const useNavigationListener = () => {
         navigate("/history");
       }
     },
-    [location, navigate]
+    [location, navigate],
   );
 };

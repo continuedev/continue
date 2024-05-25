@@ -1,7 +1,7 @@
 import { ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { contextItemToRangeInFileWithContents } from "core/commands/util";
-import React from "react";
+import React, { useContext } from "react";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -9,8 +9,8 @@ import {
   vscBackground,
   vscForeground,
 } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
-import { WebviewIde } from "../../util/webviewIde";
 import FileIcon from "../FileIcon";
 
 const ContextItemDiv = styled.div`
@@ -35,6 +35,8 @@ interface ContextItemsPeekProps {
 }
 
 const ContextItemsPeek = (props: ContextItemsPeekProps) => {
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const [open, setOpen] = React.useState(false);
 
   if (!props.contextItems || props.contextItems.length === 0) {
@@ -50,16 +52,16 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
     ) {
       if (contextItem.name.includes(" (") && contextItem.name.endsWith(")")) {
         const rif = contextItemToRangeInFileWithContents(contextItem);
-        new WebviewIde().showLines(
+        ideMessenger.ide.showLines(
           rif.filepath,
           rif.range.start.line,
           rif.range.end.line,
         );
       } else {
-        new WebviewIde().openFile(contextItem.description);
+        ideMessenger.ide.openFile(contextItem.description);
       }
     } else {
-      new WebviewIde().showVirtualFile(contextItem.name, contextItem.content);
+      ideMessenger.ide.showVirtualFile(contextItem.name, contextItem.content);
     }
   }
 

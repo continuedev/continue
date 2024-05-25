@@ -1,5 +1,6 @@
-import {
+import type {
   ContinueRcJson,
+  FileType,
   IDE,
   IdeInfo,
   IndexTag,
@@ -7,11 +8,32 @@ import {
   Range,
   Thread,
 } from "../index.js";
+import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide.js";
 
 export class MessageIde implements IDE {
   constructor(
-    private readonly request: (messageType: string, data: any) => Promise<any>,
+    private readonly request: <T extends keyof ToIdeFromWebviewOrCoreProtocol>(
+      messageType: T,
+      data: ToIdeFromWebviewOrCoreProtocol[T][0],
+    ) => Promise<ToIdeFromWebviewOrCoreProtocol[T][1]>,
   ) {}
+  getLastModified(files: string[]): Promise<{ [path: string]: number }> {
+    return this.request("getLastModified", { files });
+  }
+  getGitRootPath(dir: string): Promise<string | undefined> {
+    return this.request("getGitRootPath", { dir });
+  }
+  listDir(dir: string): Promise<[string, FileType][]> {
+    return this.request("listDir", { dir });
+  }
+
+  infoPopup(message: string): Promise<void> {
+    return this.request("errorPopup", { message });
+  }
+
+  errorPopup(message: string): Promise<void> {
+    return this.request("errorPopup", { message });
+  }
 
   getRepoName(dir: string): Promise<string | undefined> {
     return this.request("getRepoName", { dir });
@@ -45,10 +67,6 @@ export class MessageIde implements IDE {
 
   readRangeInFile(filepath: string, range: Range): Promise<string> {
     return this.request("readRangeInFile", { filepath, range });
-  }
-
-  getStats(directory: string): Promise<{ [path: string]: number }> {
-    throw new Error("Method not implemented.");
   }
 
   isTelemetryEnabled(): Promise<boolean> {
@@ -148,7 +166,7 @@ export class MessageIde implements IDE {
     return this.request("getSearchResults", { query });
   }
 
-  getProblems(filepath?: string | undefined): Promise<Problem[]> {
+  getProblems(filepath: string): Promise<Problem[]> {
     return this.request("getProblems", { filepath });
   }
 
