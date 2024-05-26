@@ -320,6 +320,7 @@ export async function getTabCompletion(
     ];
 
     const multiline =
+      !input.selectedCompletionInfo && // Only ever single-line if using intellisense selected value
       options.multilineCompletions !== "never" &&
       (options.multilineCompletions === "always" || completeMultiline);
 
