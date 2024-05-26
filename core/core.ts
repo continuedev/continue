@@ -67,8 +67,6 @@ export class Core {
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
 
-    //this.indexingState = new IndexingProgre
-
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     const indexingPauseToken = new PauseToken(
       new GlobalContext().get("indexingPaused") === true,
@@ -527,7 +525,6 @@ export class Core {
       this.messenger.request("indexProgress", update);
       console.log("setting stored indexingProgress to: ", update.status)
       this.indexingState = update
-      // new GlobalContext().update("IndexingProgress", update)
     }
   }
 }
