@@ -3,10 +3,11 @@ import { ContextItemId, IDE } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider";
 import { ConfigHandler } from "./config/handler";
 import {
+  setupApiKeysMode,
+  setupFreeTrialMode,
   setupLocalAfterFreeTrial,
   setupLocalMode,
   setupOptimizedExistingUserMode,
-  setupOptimizedMode,
 } from "./config/onboarding";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util";
 import { ContinueServerClient } from "./continueServer/stubs/client";
@@ -469,11 +470,13 @@ export class Core {
       editConfigJson(
         mode === "local"
           ? setupLocalMode
-          : mode === "localAfterFreeTrial"
-            ? setupLocalAfterFreeTrial
-            : mode === "optimized"
-              ? setupOptimizedMode
-              : setupOptimizedExistingUserMode,
+          : mode === "freeTrial"
+            ? setupFreeTrialMode
+            : mode === "localAfterFreeTrial"
+              ? setupLocalAfterFreeTrial
+              : mode === "apiKeys"
+                ? setupApiKeysMode
+                : setupOptimizedExistingUserMode,
       );
       this.configHandler.reloadConfig();
     });
