@@ -33,6 +33,30 @@ class VsCodeIde implements IDE {
     this.ideUtils = new VsCodeIdeUtils();
   }
 
+  private authToken: string | undefined;
+  private askedForAuth = false;
+
+  async getGitHubAuthToken(): Promise<string | undefined> {
+    if (this.authToken) {
+      return this.authToken;
+    }
+    try {
+      const session = await vscode.authentication.getSession("github", [], {
+        silent: this.askedForAuth,
+        createIfNone: !this.askedForAuth,
+      });
+      if (session) {
+        this.authToken = session.accessToken;
+        return session.accessToken;
+      }
+    } catch (error) {
+      console.error("Failed to get GitHub authentication session:", error);
+    } finally {
+      this.askedForAuth = true;
+    }
+    return undefined;
+  }
+
   async infoPopup(message: string): Promise<void> {
     vscode.window.showInformationMessage(message);
   }

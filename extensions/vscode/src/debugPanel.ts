@@ -1,7 +1,6 @@
-import type { FileEdit, IDE } from "core";
+import type { FileEdit } from "core";
 import type { ConfigHandler } from "core/config/handler";
 import * as vscode from "vscode";
-import type { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getTheme } from "./util/getTheme";
 import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
@@ -22,9 +21,6 @@ export class ContinueGUIWebviewViewProvider
     webviewView.webview.html = this.getSidebarContent(
       this.extensionContext,
       webviewView,
-      this.ide,
-      this.configHandler,
-      this.verticalDiffManager,
     );
   }
 
@@ -50,21 +46,21 @@ export class ContinueGUIWebviewViewProvider
   }
 
   constructor(
-    private readonly configHandler: ConfigHandler,
-    private readonly ide: IDE,
+    private readonly configHandlerPromise: Promise<ConfigHandler>,
     private readonly windowId: string,
     private readonly extensionContext: vscode.ExtensionContext,
-    private readonly verticalDiffManager: VerticalPerLineDiffManager,
   ) {
-    this.webviewProtocol = new VsCodeWebviewProtocol();
+    this.webviewProtocol = new VsCodeWebviewProtocol(
+      (async () => {
+        const configHandler = await this.configHandlerPromise;
+        return configHandler.reloadConfig();
+      }).bind(this),
+    );
   }
 
   getSidebarContent(
     context: vscode.ExtensionContext | undefined,
     panel: vscode.WebviewPanel | vscode.WebviewView,
-    ide: IDE,
-    configHandler: ConfigHandler,
-    verticalDiffManager: VerticalPerLineDiffManager,
     page: string | undefined = undefined,
     edits: FileEdit[] | undefined = undefined,
     isFullScreen = false,

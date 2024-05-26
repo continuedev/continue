@@ -430,6 +430,7 @@ export interface IDE {
   getGitRootPath(dir: string): Promise<string | undefined>;
   listDir(dir: string): Promise<[string, FileType][]>;
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
+  getGitHubAuthToken(): Promise<string | undefined>;
 }
 
 // Slash Commands
