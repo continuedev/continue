@@ -161,6 +161,7 @@ const commandsMap: (
         "getDefaultModelTitle",
         undefined,
       ));
+    sidebar.webviewProtocol.request("incrementFtc", undefined);
     await verticalDiffManager.streamEdit(
       config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       modelTitle,
@@ -279,6 +280,7 @@ const commandsMap: (
       }
 
       if (text.length > 0 || quickPickItems.length === 0) {
+        sidebar.webviewProtocol.request("incrementFtc", undefined);
         await verticalDiffManager.streamEdit(text, defaultModelTitle);
       } else {
         // Pick context first
@@ -324,6 +326,7 @@ const commandsMap: (
             "\n\n---\n\n" +
             text;
 
+          sidebar.webviewProtocol.request("incrementFtc", undefined);
           await verticalDiffManager.streamEdit(text, defaultModelTitle);
         }
       }
@@ -475,9 +478,6 @@ const commandsMap: (
       panel.webview.html = sidebar.getSidebarContent(
         extensionContext,
         panel,
-        ide,
-        configHandler,
-        verticalDiffManager,
         undefined,
         undefined,
         true,

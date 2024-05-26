@@ -4,6 +4,7 @@ This is the data that populates the model selection page.
 
 import { ModelName, ModelProvider } from "core";
 import _ from "lodash";
+import { ftl } from "../components/dialogs/FTCDialog";
 
 export function updatedObj(old: any, pathToValue: { [key: string]: any }) {
   const newObject = _.cloneDeep(old);
@@ -124,17 +125,22 @@ const apiBaseInput: InputDescriptor = {
   required: false,
 };
 
-export interface ModelInfo {
+export interface DisplayInfo {
   title: string;
+  icon?: string;
+}
+
+export interface ModelInfo extends DisplayInfo {
   provider: ModelProvider;
   description: string;
   longDescription?: string;
-  icon?: string;
   tags?: ModelProviderTag[];
   packages: ModelPackage[];
   params?: any;
   collectInputFor?: InputDescriptor[];
   refPage?: string;
+  apiKeyUrl?: string;
+  downloadUrl?: string;
 }
 
 // A dimension is like parameter count - 7b, 13b, 34b, etc.
@@ -145,13 +151,11 @@ export interface PackageDimension {
   options: { [key: string]: { [key: string]: any } };
 }
 
-export interface ModelPackage {
+export interface ModelPackage extends DisplayInfo {
   collectInputFor?: InputDescriptor[];
   description: string;
-  title: string;
   refUrl?: string;
   tags?: ModelProviderTag[];
-  icon?: string;
   params: {
     model: ModelName;
     templateMessages?: string;
@@ -736,6 +740,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
       ...completionParamsInputs,
     ],
+    apiKeyUrl: "https://platform.openai.com/account/api-keys",
   },
   anthropic: {
     title: "Anthropic",
@@ -767,6 +772,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       claude3Haiku,
       // claude2
     ],
+    apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
   mistral: {
     title: "Mistral API",
@@ -800,6 +806,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       mistral8x7b,
       mistral7b,
     ],
+    apiKeyUrl: "https://console.mistral.ai/api-keys/",
   },
   ollama: {
     title: "Ollama",
@@ -807,7 +814,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     description:
       "One of the fastest ways to get started with local models on Mac, Linux, or Windows",
     longDescription:
-      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
+      'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
     icon: "ollama.png",
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     packages: [
@@ -824,6 +831,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ...completionParamsInputs,
       { ...apiBaseInput, defaultValue: "http://localhost:11434" },
     ],
+    downloadUrl: "https://ollama.ai/",
   },
   cohere: {
     title: "Cohere",
@@ -882,6 +890,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
       ,
     ],
+    apiKeyUrl: "https://console.groq.com/keys",
   },
   together: {
     title: "TogetherAI",
@@ -932,6 +941,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
     ],
     packages: [gemini15Pro, geminiPro, gemini15Flash],
+    apiKeyUrl: "https://aistudio.google.com/app/apikey",
   },
   lmstudio: {
     title: "LM Studio",
@@ -956,6 +966,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ...osModels,
     ],
     collectInputFor: [...completionParamsInputs],
+    downloadUrl: "https://lmstudio.ai/",
   },
   llamafile: {
     title: "llamafile",
@@ -963,10 +974,12 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     icon: "llamafile.png",
     description:
       "llamafiles are a self-contained binary to run an open-source LLM",
-    longDescription: `To get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n\`\`\`shell\nchmod +x ./llamafile\n./llamafile\n\`\`\``,
+    longDescription: `To get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile?tab=readme-ov-file#quickstart). Then run it with the following command:\n\n\`\`\`shell\nchmod +x ./llamafile\n./llamafile\n\`\`\``,
     tags: [ModelProviderTag["Local"], ModelProviderTag["Open-Source"]],
     packages: osModels,
     collectInputFor: [...completionParamsInputs],
+    downloadUrl:
+      "https://github.com/Mozilla-Ocho/llamafile?tab=readme-ov-file#quickstart",
   },
   replicate: {
     title: "Replicate",
@@ -993,6 +1006,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTag["Open-Source"],
     ],
     packages: [llama3Chat, codeLlamaInstruct, wizardCoder, mistralOs],
+    apiKeyUrl: "https://replicate.com/account/api-tokens",
   },
   llamacpp: {
     title: "llama.cpp",
@@ -1016,6 +1030,7 @@ After it's up and running, you can start using Continue.`,
     tags: [ModelProviderTag.Local, ModelProviderTag["Open-Source"]],
     packages: osModels,
     collectInputFor: [...completionParamsInputs],
+    downloadUrl: "https://github.com/ggerganov/llama.cpp",
   },
   // bedrock: {
   //   title: "Bedrock",
@@ -1066,8 +1081,7 @@ After it's up and running, you can start using Continue.`,
     refPage: "freetrial",
     description:
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key",
-    longDescription:
-      'New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=""` or select another model provider.',
+    longDescription: `New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key. If you are ready to set up a model for long-term use or have used all ${ftl()} free uses, you can enter your API key or use a local model.`,
     icon: "openai.png",
     tags: [ModelProviderTag.Free],
     packages: [

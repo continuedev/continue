@@ -9,12 +9,21 @@ import { streamResponse } from "../stream.js";
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
 
+  private ghAuthToken: string | undefined = undefined;
+
+  setupGhAuthToken(ghAuthToken: string | undefined) {
+    this.ghAuthToken = ghAuthToken;
+  }
+
   private async _getHeaders() {
+    if (!this.ghAuthToken) {
+      throw new Error(
+        "Please sign in with GitHub in order to use the free trial. If you'd like to use Continue without signing in, you can set up your own local model or API key.",
+      );
+    }
     return {
-      uniqueId: this.uniqueId || "None",
-      extensionVersion: Telemetry.extensionVersion ?? "Unknown",
-      os: Telemetry.os ?? "Unknown",
       "Content-Type": "application/json",
+      Authorization: `Bearer ${this.ghAuthToken}`,
       ...(await getHeaders()),
     };
   }

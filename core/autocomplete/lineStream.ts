@@ -51,20 +51,37 @@ function isBracketEnding(line: string): boolean {
     .split("")
     .some((char) => bracketEnding.includes(char));
 }
+
+function commonPrefixLength(a: string, b: string): number {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) {
+    i++;
+  }
+  return i;
+}
+
 export async function* stopAtSimilarLine(
   stream: LineStream,
   line: string,
 ): AsyncGenerator<string> {
-  line = line.trim();
-  const lineIsBracketEnding = isBracketEnding(line);
+  const trimmedLine = line.trim();
+  const lineIsBracketEnding = isBracketEnding(trimmedLine);
   for await (const nextLine of stream) {
-    if (lineIsBracketEnding && line.trim() === nextLine.trim()) {
+    if (nextLine === line) {
+      break;
+    }
+
+    if (lineIsBracketEnding && trimmedLine.trim() === nextLine.trim()) {
       yield nextLine;
       continue;
     }
 
-    let lineQualifies = nextLine.length > 4 && line.length > 4;
-    if (lineQualifies && distance(nextLine.trim(), line) / line.length < 0.1) {
+    let lineQualifies = nextLine.length > 4 && trimmedLine.length > 4;
+    if (
+      lineQualifies &&
+      (commonPrefixLength(nextLine.trim(), trimmedLine.trim()) > 8 ||
+        distance(nextLine.trim(), trimmedLine) / trimmedLine.length < 0.1)
+    ) {
       break;
     }
     yield nextLine;

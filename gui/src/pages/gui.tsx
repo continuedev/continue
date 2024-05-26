@@ -27,7 +27,7 @@ import {
   vscBackground,
   vscForeground,
 } from "../components";
-import FTCDialog, { ftl } from "../components/dialogs/FTCDialog";
+import { ftl } from "../components/dialogs/FTCDialog";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
@@ -247,8 +247,7 @@ function GUI(props: GUIProps) {
           setLocalStorage("ftc", u + 1);
 
           if (u >= ftl()) {
-            dispatch(setShowDialog(true));
-            dispatch(setDialogMessage(<FTCDialog />));
+            navigate("/onboarding");
             posthog?.capture("ftc_reached");
             return;
           }
@@ -447,7 +446,10 @@ function GUI(props: GUIProps) {
                             window.postMessage(
                               {
                                 messageType: "userInput",
-                                data: { input: "Keep going" },
+                                data: {
+                                  input:
+                                    "Continue your response exactly where you left off:",
+                                },
                               },
                               "*",
                             );

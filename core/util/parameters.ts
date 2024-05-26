@@ -4,7 +4,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   disable: false,
   useCopyBuffer: false,
   useSuffix: true,
-  maxPromptTokens: 500,
+  maxPromptTokens: 1024,
   prefixPercentage: 0.85,
   maxSuffixPercentage: 0.25,
   debounceDelay: 350,

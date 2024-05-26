@@ -239,3 +239,31 @@ export function getContinueDotEnv(): { [key: string]: string } {
 export function getCoreLogsPath(): string {
   return path.join(getContinueGlobalPath(), "core.log");
 }
+
+export function getGlobalPromptsPath(): string {
+  return path.join(getContinueGlobalPath(), ".prompts");
+}
+
+export function readAllGlobalPromptFiles(
+  folderPath: string = getGlobalPromptsPath(),
+): { path: string; content: string }[] {
+  if (!fs.existsSync(folderPath)) {
+    return [];
+  }
+  const files = fs.readdirSync(folderPath);
+  const promptFiles: { path: string; content: string }[] = [];
+  files.forEach((file) => {
+    const filepath = path.join(folderPath, file);
+    const stats = fs.statSync(filepath);
+
+    if (stats.isDirectory()) {
+      const nestedPromptFiles = readAllGlobalPromptFiles(filepath);
+      promptFiles.push(...nestedPromptFiles);
+    } else {
+      const content = fs.readFileSync(filepath, "utf8");
+      promptFiles.push({ path: filepath, content });
+    }
+  });
+
+  return promptFiles;
+}

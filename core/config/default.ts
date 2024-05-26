@@ -1,35 +1,38 @@
 import {
   ContextProviderWithParams,
+  ModelDescription,
   SerializedContinueConfig,
 } from "../index.js";
 
+export const FREE_TRIAL_MODELS: ModelDescription[] = [
+  {
+    title: "GPT-4o (Free Trial)",
+    provider: "free-trial",
+    model: "gpt-4o",
+    systemMessage:
+      "You are an expert software developer. You give helpful and concise responses.",
+  },
+  {
+    title: "Llama3 70b (Free Trial)",
+    provider: "free-trial",
+    model: "llama3-70b",
+    systemMessage:
+      "You are an expert software developer. You give helpful and concise responses. Whenever you write a code block you include the language after the opening ticks.",
+  },
+  {
+    title: "Codestral (Free Trial)",
+    provider: "free-trial",
+    model: "codestral",
+  },
+  {
+    title: "Claude 3 Sonnet (Free Trial)",
+    provider: "free-trial",
+    model: "claude-3-sonnet-20240229",
+  },
+];
+
 export const defaultConfig: SerializedContinueConfig = {
-  models: [
-    // {
-    //   title: "Codestral (Free Trial)",
-    //   provider: "free-trial",
-    //   model: "codestral",
-    // },
-    {
-      title: "GPT-4o (Free Trial)",
-      provider: "free-trial",
-      model: "gpt-4o",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.",
-    },
-    {
-      title: "Llama3 70b (Free Trial)",
-      provider: "free-trial",
-      model: "llama3-70b",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses. Whenever you write a code block you include the language after the opening ticks.",
-    },
-    {
-      title: "Claude 3 Sonnet (Free Trial)",
-      provider: "free-trial",
-      model: "claude-3-sonnet-20240229",
-    },
-  ],
+  models: FREE_TRIAL_MODELS,
   customCommands: [
     {
       name: "test",
@@ -46,32 +49,7 @@ export const defaultConfig: SerializedContinueConfig = {
 };
 
 export const defaultConfigJetBrains: SerializedContinueConfig = {
-  models: [
-    // {
-    //   title: "Codestral (Free Trial)",
-    //   provider: "free-trial",
-    //   model: "codestral",
-    // },
-    {
-      title: "GPT-4o (Free Trial)",
-      provider: "free-trial",
-      model: "gpt-4o",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses.",
-    },
-    {
-      title: "Llama3 70b (Free Trial)",
-      provider: "free-trial",
-      model: "llama3-70b",
-      systemMessage:
-        "You are an expert software developer. You give helpful and concise responses. Whenever you write a code block you include the language after the opening ticks.",
-    },
-    {
-      title: "Claude 3 Sonnet (Free Trial)",
-      provider: "free-trial",
-      model: "claude-3-sonnet-20240229",
-    },
-  ],
+  models: FREE_TRIAL_MODELS,
   customCommands: [
     {
       name: "test",

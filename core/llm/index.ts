@@ -291,7 +291,7 @@ ${prompt}`;
           );
         }
         throw new Error(
-          `${e.message} (${e.code}, ${e.errno}, ${e.erroredSysCall}, ${e.type})\n\n${e.stack}`,
+          `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
         );
       }
     };
