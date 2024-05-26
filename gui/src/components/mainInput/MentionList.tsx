@@ -231,31 +231,48 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
   };
 
-  const totalItems = allItems.length;
+  const totalItems = allItems.length; 
 
-  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
-
+  // For scrolling up
   const upHandler = () => {
     setSelectedIndex((prevIndex) => {
-      const newIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
-      itemRefs.current[newIndex]?.scrollIntoView({
-        behavior: "instant" as ScrollBehavior,
-        block: "nearest",
-      });
-      return newIndex;
-    });
-  };
-
+      prevIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
+      return prevIndex;
+    });    };
+  
+  // For scrolling down
   const downHandler = () => {
     setSelectedIndex((prevIndex) => {
-      const newIndex = prevIndex + 1 < totalItems ? prevIndex + 1 : prevIndex;
-      itemRefs.current[newIndex]?.scrollIntoView({
-        behavior: "instant" as ScrollBehavior,
-        block: "nearest",
-      });
-      return newIndex;
-    });
-  };
+      const nextIndex = prevIndex + 1 < totalItems ? prevIndex + 1 : totalItems; 
+      return nextIndex;
+    });  };
+
+  const itemsContainerRef = useRef(null); // Ref for the scrolling container
+  const selectedItemRefs = useRef([]); // Ref for the selectable items
+
+  // Scroll to the selected item
+  useEffect(() => {
+    const itemsContainer = itemsContainerRef.current;
+    const selectedItem = selectedItemRefs.current[selectedIndex];
+    
+    if (selectedItem && itemsContainer) {
+      const containerTop = itemsContainer.scrollTop;
+      const containerBottom = containerTop + itemsContainer.clientHeight;
+      
+      const itemTop = selectedItem.offsetTop;
+      const itemBottom = itemTop + selectedItem.offsetHeight;
+  
+      // If the item is below the visible area of the container, adjust scrollTop to bring it into view.
+      if (itemBottom > containerBottom) {
+        itemsContainer.scrollTop = itemBottom - itemsContainer.clientHeight;
+      }
+      // If the item is above the visible area, adjust to bring it into view.
+      else if (itemTop < containerTop) {
+        itemsContainer.scrollTop = itemTop;
+      }
+      // No adjustment needed if the item is already within the visible area.
+    }
+  }, [selectedIndex]); // Assuming selectedIndex is the only dependency here
 
   const enterHandler = () => {
     selectItem(selectedIndex);
@@ -347,6 +364,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                 key={index}
                 onClick={() => selectItem(index)}
                 onMouseEnter={() => setSelectedIndex(index)}
+                ref={el => selectedItemRefs.current[index] = el} 
               >
                 <span className="flex justify-between w-full items-center">
                   <div className="flex items-center justify-center">
