@@ -65,19 +65,23 @@ export async function* stopAtSimilarLine(
   line: string,
   fullStop: () => void,
 ): AsyncGenerator<string> {
-  line = line.trim();
-  const lineIsBracketEnding = isBracketEnding(line);
+  const trimmedLine = line.trim();
+  const lineIsBracketEnding = isBracketEnding(trimmedLine);
   for await (const nextLine of stream) {
-    if (lineIsBracketEnding && line.trim() === nextLine.trim()) {
+    if (nextLine === line) {
+      break;
+    }
+
+    if (lineIsBracketEnding && trimmedLine.trim() === nextLine.trim()) {
       yield nextLine;
       continue;
     }
 
-    let lineQualifies = nextLine.length > 4 && line.length > 4;
+    let lineQualifies = nextLine.length > 4 && trimmedLine.length > 4;
     if (
       lineQualifies &&
-      (commonPrefixLength(nextLine.trim(), line.trim()) > 8 ||
-        distance(nextLine.trim(), line) / line.length < 0.1)
+      (commonPrefixLength(nextLine.trim(), trimmedLine.trim()) > 8 ||
+        distance(nextLine.trim(), trimmedLine) / trimmedLine.length < 0.1)
     ) {
       break;
     }
