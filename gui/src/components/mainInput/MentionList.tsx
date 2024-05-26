@@ -233,43 +233,30 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
 
   const totalItems = allItems.length; 
 
-  // For arrow key scrolling up
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  // Modify upHandler and downHandler to ensure that the selected item is scrolled into view
   const upHandler = () => {
     setSelectedIndex((prevIndex) => {
-      prevIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
-      return prevIndex;
-    });    };
+      const newIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
+      itemRefs.current[newIndex]?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+      return newIndex;
+    });
+  };
   
-  // For arrow key scrolling down
   const downHandler = () => {
     setSelectedIndex((prevIndex) => {
-      const nextIndex = prevIndex + 1 < totalItems ? prevIndex + 1 : totalItems; 
-      return nextIndex;
-    });  };
-
-  // Scroll to the selected item
-  useEffect(() => {
-    const itemsContainer = document.querySelector(".items-container"); 
-    const selectedItem = itemsContainer?.querySelector(`.item:nth-child(${selectedIndex + 1})`); 
-  
-    if (selectedItem && itemsContainer) {
-      const containerRect = itemsContainer.getBoundingClientRect();
-      const itemRect = selectedItem.getBoundingClientRect();
-  
-      if (itemRect.top >= containerRect.top && itemRect.bottom <= containerRect.bottom) {
-        return;
-      }
-  
-      if (itemRect.top < containerRect.top) {
-        selectedItem.scrollIntoView(true);
-        return;
-      }
-  
-      if (itemRect.bottom > containerRect.bottom) {
-        selectedItem.scrollIntoView(false);
-      }
-    }
-  }, [selectedIndex]);
+      const newIndex = prevIndex + 1 < totalItems ? prevIndex + 1 : prevIndex;
+      itemRefs.current[newIndex]?.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+      return newIndex;
+    });
+  };
 
   const enterHandler = () => {
     selectItem(selectedIndex);
@@ -354,7 +341,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
             allItems.map((item, index) => (
               <ItemDiv
                 as="button"
-                ref={(el) => (itemRefs.current[index] = el)}
+                ref={el => (itemRefs.current[index] = el)} // Associate the ref with the item
                 className={`item ${
                   index === selectedIndex ? "is-selected" : ""
                 }`}
