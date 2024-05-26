@@ -5,7 +5,6 @@ import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
-import { init } from "web-tree-sitter";
 
 const DIAMETER = 6;
 const CircleDiv = styled.div<{ color: string }>`
@@ -129,7 +128,7 @@ const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarPr
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="indexingFailed_dot" place="top">
-                Error indexing codebase. {indexingState.desc}
+                Error indexing codebase: {indexingState.desc}
                 <br />
                 Click to retry
               </StyledTooltip>,

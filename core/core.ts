@@ -499,13 +499,8 @@ export class Core {
     });
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
-      // const storedIndexingProgress = new GlobalContext().get("IndexingProgress")
-      
-      // const stored = this.indexingState
-
-      //If a non-default state has been stored, update the indexing display to that state
+      // If a non-default state has been stored, update the indexing display to that state
       if (this.indexingState.status != 'loading') {
-        console.log("Passing stored state: ", this.indexingState.status)
         this.messenger.request("indexProgress", this.indexingState);
       }
     });
@@ -523,7 +518,6 @@ export class Core {
       this.indexingCancellationController.signal,
     )) {
       this.messenger.request("indexProgress", update);
-      console.log("setting stored indexingProgress to: ", update.status)
       this.indexingState = update
     }
   }

@@ -169,7 +169,6 @@ const Layout = () => {
   );
 
   useWebviewListener("indexProgress", async (data) => {
-    console.log("Setting indexing state to: ", data.status)
     setIndexingState(data);
   });
 

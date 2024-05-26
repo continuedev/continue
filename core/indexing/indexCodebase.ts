@@ -28,8 +28,6 @@ export class CodebaseIndexer {
     private readonly continueServerClient: IContinueServerClient,
   ) {}
 
-  
-
   private async getIndexesToBuild(): Promise<CodebaseIndex[]> {
     const config = await this.configHandler.loadConfig();
 
@@ -54,8 +52,6 @@ export class CodebaseIndexer {
     workspaceDirs: string[],
     abortSignal: AbortSignal,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    console.log("Indexing starting")
-
     if (workspaceDirs.length === 0) {
       yield {
         progress: 0,
@@ -184,6 +180,5 @@ export class CodebaseIndexer {
         status: "done",
       };
     }
-    console.log("Indexing finished")
   }
 }
