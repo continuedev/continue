@@ -5,13 +5,14 @@ import { useNavigate } from "react-router-dom";
 import { Button, Input, SecondaryButton } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { setDefaultModel } from "../../../redux/slices/stateSlice";
-import { setShowDialog } from "../../../redux/slices/uiStateSlice";
 import { getLocalStorage } from "../../../util/localStorage";
 import { PROVIDER_INFO } from "../../../util/modelData";
 import { ftl } from "../../dialogs/FTCDialog";
 import QuickSetupListBox from "./QuickSetupListBox";
 
-interface QuickModelSetupProps {}
+interface QuickModelSetupProps {
+  onDone: () => void;
+}
 
 function QuickModelSetup(props: QuickModelSetupProps) {
   const [selectedProvider, setSelectedProvider] = useState(
@@ -29,14 +30,16 @@ function QuickModelSetup(props: QuickModelSetupProps) {
     setSelectedModel(selectedProvider.packages[0]);
   }, [selectedProvider]);
 
+  const [hasAddedModel, setHasAddedModel] = useState(false);
+
   return (
     <FormProvider {...formMethods}>
       <div className="p-4">
-        <h1>
+        {/* <h1>
           {getLocalStorage("ftc") > ftl()
             ? "Set up your own model"
             : "Add a new model"}
-        </h1>
+        </h1> */}
 
         {getLocalStorage("ftc") > ftl() && (
           <p className="text-sm text-gray-500">
@@ -127,18 +130,16 @@ function QuickModelSetup(props: QuickModelSetupProps) {
               };
               ideMessenger.post("config/addModel", { model });
               dispatch(setDefaultModel({ title: model.title, force: true }));
-              navigate("/");
+              setHasAddedModel(true);
             }}
             className="w-full"
           >
             Add Model
           </Button>
           <Button
-            onClick={() => {
-              dispatch(setShowDialog(false));
-              navigate("/");
-            }}
+            onClick={props.onDone}
             className="w-full"
+            disabled={!hasAddedModel}
           >
             Done
           </Button>

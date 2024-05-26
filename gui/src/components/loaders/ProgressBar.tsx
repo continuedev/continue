@@ -1,5 +1,6 @@
 import ReactDOM from "react-dom";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
 import {
@@ -52,6 +53,7 @@ interface ProgressBarProps {
 
 const ProgressBar = ({ completed, total }: ProgressBarProps) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const fillPercentage = Math.min(100, Math.max(0, (completed / total) * 100));
 
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
@@ -62,7 +64,16 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
         data-tooltip-id="usage_progress_bar"
         onClick={() => {
           dispatch(setShowDialog(true));
-          dispatch(setDialogMessage(<QuickModelSetup />));
+          dispatch(
+            setDialogMessage(
+              <QuickModelSetup
+                onDone={() => {
+                  dispatch(setShowDialog(false));
+                  navigate("/");
+                }}
+              />,
+            ),
+          );
         }}
       >
         <ProgressBarWrapper>

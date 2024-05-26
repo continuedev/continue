@@ -39,48 +39,27 @@ export class VsCodeExtension {
   constructor(context: vscode.ExtensionContext) {
     this.diffManager = new DiffManager(context);
     this.ide = new VsCodeIde(this.diffManager);
+    this.extensionContext = context;
+    this.windowId = uuidv4();
 
     const ideSettings = this.ide.getIdeSettings();
     const { remoteConfigServerUrl } = ideSettings;
 
-    // Config Handler with output channel
-    const outputChannel = vscode.window.createOutputChannel(
-      "Continue - LLM Prompt/Completion",
-    );
-    this.configHandler = new ConfigHandler(
-      this.ide,
-      Promise.resolve(ideSettings),
-      async (log: string) => {
-        outputChannel.appendLine(
-          "==========================================================================",
-        );
-        outputChannel.appendLine(
-          "==========================================================================",
-        );
-        outputChannel.append(log);
+    // Dependencies of core
+    let resolveVerticalDiffManager: any = undefined;
+    const verticalDiffManagerPromise = new Promise<VerticalPerLineDiffManager>(
+      (resolve) => {
+        resolveVerticalDiffManager = resolve;
       },
-      (() => this.webviewProtocol?.request("configUpdate", undefined)).bind(
-        this,
-      ),
     );
-
-    this.configHandler.reloadConfig();
-    this.verticalDiffManager = new VerticalPerLineDiffManager(
-      this.configHandler,
-    );
-    this.extensionContext = context;
-    this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
-    this.windowId = uuidv4();
+    let resolveConfigHandler: any = undefined;
+    const configHandlerPromise = new Promise<ConfigHandler>((resolve) => {
+      resolveConfigHandler = resolve;
+    });
     this.sidebar = new ContinueGUIWebviewViewProvider(
-      this.configHandler,
-      this.ide,
+      configHandlerPromise,
       this.windowId,
       this.extensionContext,
-      this.verticalDiffManager,
-    );
-
-    setupRemoteConfigSync(
-      this.configHandler.reloadConfig.bind(this.configHandler),
     );
 
     // Sidebar
@@ -95,9 +74,10 @@ export class VsCodeExtension {
     );
     this.webviewProtocol = this.sidebar.webviewProtocol;
 
-    // Indexing + pause token
-    this.diffManager.webviewProtocol = this.webviewProtocol;
-
+    // Config Handler with output channel
+    const outputChannel = vscode.window.createOutputChannel(
+      "Continue - LLM Prompt/Completion",
+    );
     const inProcessMessenger = new InProcessMessenger<
       ToCoreProtocol,
       FromCoreProtocol
@@ -106,9 +86,36 @@ export class VsCodeExtension {
       inProcessMessenger,
       this.webviewProtocol,
       this.ide,
-      this.verticalDiffManager,
+      verticalDiffManagerPromise,
     );
-    this.core = new Core(inProcessMessenger, this.ide);
+    this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
+      outputChannel.appendLine(
+        "==========================================================================",
+      );
+      outputChannel.appendLine(
+        "==========================================================================",
+      );
+      outputChannel.append(log);
+    });
+    this.configHandler = this.core.configHandler;
+    resolveConfigHandler?.(this.configHandler);
+    this.configHandler.onConfigUpdate(() => {
+      this.webviewProtocol?.request("configUpdate", undefined);
+    });
+
+    this.configHandler.reloadConfig();
+    this.verticalDiffManager = new VerticalPerLineDiffManager(
+      this.configHandler,
+    );
+    resolveVerticalDiffManager?.(this.verticalDiffManager);
+    this.tabAutocompleteModel = new TabAutocompleteModel(this.configHandler);
+
+    setupRemoteConfigSync(
+      this.configHandler.reloadConfig.bind(this.configHandler),
+    );
+
+    // Indexing + pause token
+    this.diffManager.webviewProtocol = this.webviewProtocol;
 
     if (
       !(

@@ -124,8 +124,9 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     {
       mode:
         | "local"
-        | "optimized"
+        | "apiKeys"
         | "custom"
+        | "freeTrial"
         | "localExistingUser"
         | "optimizedExistingUser"
         | "localAfterFreeTrial";
