@@ -17,7 +17,6 @@ import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
-import { getUserToken } from "../stubs/auth";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
@@ -116,16 +115,6 @@ export class VsCodeExtension {
 
     // Indexing + pause token
     this.diffManager.webviewProtocol = this.webviewProtocol;
-
-    if (
-      !(
-        remoteConfigServerUrl === null ||
-        remoteConfigServerUrl === undefined ||
-        remoteConfigServerUrl.trim() === ""
-      )
-    ) {
-      getUserToken().then((token) => {});
-    }
 
     // CodeLens
     const verticalDiffCodeLens = registerAllCodeLensProviders(
