@@ -13,6 +13,9 @@ import {
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
+  async getGitHubAuthToken(): Promise<string | undefined> {
+    return undefined;
+  }
   getLastModified(files: string[]): Promise<{ [path: string]: number }> {
     return new Promise((resolve) => {
       resolve({
@@ -31,8 +34,8 @@ class FileSystemIde implements IDE {
         dirent.isDirectory()
           ? FileType.Directory
           : dirent.isSymbolicLink()
-          ? FileType.SymbolicLink
-          : FileType.File,
+            ? FileType.SymbolicLink
+            : FileType.File,
       ]);
     return Promise.resolve(all);
   }

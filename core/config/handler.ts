@@ -19,7 +19,6 @@ export class ConfigHandler {
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private readonly writeLog: (text: string) => Promise<void>,
-    private readonly onConfigUpdate: () => void,
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
@@ -44,11 +43,10 @@ export class ConfigHandler {
   reloadConfig() {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
-    this.loadConfig().then(() => {
-      for (const listener of this.updateListeners) {
-        listener();
-      }
-    });
+    this.loadConfig();
+    for (const listener of this.updateListeners) {
+      listener();
+    }
   }
 
   async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {

@@ -3,10 +3,11 @@ import { ContextItemId, IDE } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider";
 import { ConfigHandler } from "./config/handler";
 import {
+  setupApiKeysMode,
+  setupFreeTrialMode,
   setupLocalAfterFreeTrial,
   setupLocalMode,
   setupOptimizedExistingUserMode,
-  setupOptimizedMode,
 } from "./config/onboarding";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util";
 import { ContinueServerClient } from "./continueServer/stubs/client";
@@ -55,12 +56,15 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
+    private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
-      async (text: string) => {},
+      this.onWrite,
+    );
+    this.configHandler.onConfigUpdate(
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
 
@@ -469,11 +473,13 @@ export class Core {
       editConfigJson(
         mode === "local"
           ? setupLocalMode
-          : mode === "localAfterFreeTrial"
-            ? setupLocalAfterFreeTrial
-            : mode === "optimized"
-              ? setupOptimizedMode
-              : setupOptimizedExistingUserMode,
+          : mode === "freeTrial"
+            ? setupFreeTrialMode
+            : mode === "localAfterFreeTrial"
+              ? setupLocalAfterFreeTrial
+              : mode === "apiKeys"
+                ? setupApiKeysMode
+                : setupOptimizedExistingUserMode,
       );
       this.configHandler.reloadConfig();
     });

@@ -3,7 +3,6 @@ import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import QuickModelSetup from "../../components/modelSelection/quickSetup/QuickModelSetup";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { getLocalStorage } from "../../util/localStorage";
 
 function ApiKeyOnboarding() {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -24,12 +23,7 @@ function ApiKeyOnboarding() {
       <QuickModelSetup
         onDone={() => {
           ideMessenger.post("showTutorial", undefined);
-
-          if (getLocalStorage("signedInToGh") === true) {
-            navigate("/");
-          } else {
-            navigate("/apiKeyAutocompleteOnboarding");
-          }
+          navigate("/");
         }}
       ></QuickModelSetup>
     </div>
