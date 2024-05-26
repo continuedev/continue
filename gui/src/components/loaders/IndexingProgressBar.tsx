@@ -52,10 +52,28 @@ const P = styled.p`
 `;
 
 interface ProgressBarProps {
-  indexingState: IndexingProgressUpdate;
+  indexingState?: IndexingProgressUpdate;
 }
 
-const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
+const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarProps) => {
+  // If sidebar is opened before extension initiates, define a default indexingState
+  const defaultIndexingState: IndexingProgressUpdate = {
+    status: 'loading', 
+    progress: 0, 
+    desc: ''
+  };
+  const indexingState = indexingStateProp || defaultIndexingState;
+
+  // If sidebar is opened after extension initializes, retrieve saved states.
+  let initialized = false
+  useEffect(() => {
+    if (!initialized) {
+      // Triggers retrieval for possible non-default states set prior to IndexingProgressBar initialization
+      ideMessenger.post("index/indexingProgressBarInitialized", undefined)
+      initialized = true
+    }
+  }, []);
+
   const fillPercentage = Math.min(
     100,
     Math.max(0, indexingState.progress * 100),
@@ -67,16 +85,6 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
 
   const [paused, setPaused] = useState<boolean | undefined>(undefined);
   const [hovered, setHovered] = useState(false);
-
-  let initialized = false
-  useEffect(() => {
-    if (!initialized) {
-      console.log("useEffect triggered")
-      // Retrieves possible non-default states set prior to IndexingProgressBar initialization
-      ideMessenger.post("index/indexingProgressBarInitialized", undefined)
-      initialized = true
-    }
-  }, []);
 
   useEffect(() => {
     if (paused === undefined) return;
@@ -98,7 +106,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
       }}
       className="cursor-pointer"
     >
-      {indexingState.status === "loading" ? ( // ice-blue 'indexing loading up' dot
+      {indexingState.status === "loading" ? ( // ice-blue 'indexing loading' dot
         <>
           <CircleDiv
             data-tooltip-id="indexingNotLoaded_dot"
@@ -121,7 +129,7 @@ const IndexingProgressBar = ({ indexingState }: ProgressBarProps) => {
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="indexingFailed_dot" place="top">
-                Error indexing codebase. Check your config.json file.
+                Error indexing codebase. {indexingState.desc}
                 <br />
                 Click to retry
               </StyledTooltip>,

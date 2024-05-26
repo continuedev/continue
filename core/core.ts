@@ -494,16 +494,13 @@ export class Core {
       new GlobalContext().update("indexingPaused", msg.data);
       indexingPauseToken.paused = msg.data;
     });
-    // on("index/setIndexingStatus", (msg) => {
-    //   new GlobalContext().update("indexingStatus", msg.data);
-    // });
     on("index/indexingProgressBarInitialized", async (msg) => {
-      console.log("message: ", msg)
       // Triggered when progress bar is initialized.
       const storedIndexingProgress = new GlobalContext().get("IndexingProgress")
       
       //If a state has been stored, update the indexing display to that state
       if (storedIndexingProgress) {
+        console.log("Passing stored state: ", storedIndexingProgress.status)
         this.messenger.request("indexProgress", storedIndexingProgress);
       }
     });
@@ -516,14 +513,13 @@ export class Core {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
-    const global = new GlobalContext()
     for await (const update of (await this.codebaseIndexerPromise).refresh(
       dirs,
       this.indexingCancellationController.signal,
     )) {
-      console.log("core.ts updte: ", update.status)
       this.messenger.request("indexProgress", update);
-      global.update("IndexingProgress", update)
+      console.log("setting global indexingProgress to: ", update.status)
+      new GlobalContext().update("IndexingProgress", update)
     }
   }
 }
