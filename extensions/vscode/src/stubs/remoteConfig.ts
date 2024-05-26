@@ -119,7 +119,7 @@ export class RemoteConfigSync {
       );
       this.triggerReloadConfig();
     } catch (e) {
-      vscode.window.showErrorMessage(`Failed to sync remote config: ${e}`);
+      vscode.window.showWarningMessage(`Failed to sync remote config: ${e}`);
     }
   }
 }

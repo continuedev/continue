@@ -15,7 +15,10 @@ export async function setupRemoteConfigSync(reloadConfig: () => void) {
   ) {
     return;
   }
-  getUserToken().then((token) => {
+  getUserToken().then(async (token) => {
+    await vscode.workspace
+      .getConfiguration("continue")
+      .update("userToken", token, vscode.ConfigurationTarget.Global);
     try {
       const configSync = new RemoteConfigSync(reloadConfig, token);
       configSync.setup();
