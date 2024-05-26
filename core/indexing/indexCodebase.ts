@@ -69,7 +69,7 @@ export class CodebaseIndexer {
     if (config.disableIndexing) {
       yield {
         progress: 0,
-        desc: "Indexing is disabled in the config.json",
+        desc: "Indexing is disabled in config.json",
         status: "disabled",
       };
       return;

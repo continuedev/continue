@@ -4,7 +4,7 @@ import { IndexingProgressUpdate } from "..";
 
 export type GlobalContextType = {
   indexingPaused: boolean;
-  IndexingProgress: IndexingProgressUpdate;
+  //IndexingProgress: IndexingProgressUpdate;
 };
 
 /**

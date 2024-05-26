@@ -23,6 +23,7 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson, getConfigJsonPath } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { streamDiffLines } from "./util/verticalEdit";
+import { IndexingProgressUpdate } from ".";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -30,6 +31,7 @@ export class Core {
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
+  indexingState: IndexingProgressUpdate
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -56,6 +58,7 @@ export class Core {
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
   ) {
+    this.indexingState = { status:"loading", desc: 'loading', progress: 0 }
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     this.configHandler = new ConfigHandler(
       this.ide,
@@ -63,6 +66,8 @@ export class Core {
       async (text: string) => {},
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
+
+    //this.indexingState = new IndexingProgre
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     const indexingPauseToken = new PauseToken(
@@ -496,12 +501,14 @@ export class Core {
     });
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
-      const storedIndexingProgress = new GlobalContext().get("IndexingProgress")
+      // const storedIndexingProgress = new GlobalContext().get("IndexingProgress")
       
-      //If a state has been stored, update the indexing display to that state
-      if (storedIndexingProgress) {
-        console.log("Passing stored state: ", storedIndexingProgress.status)
-        this.messenger.request("indexProgress", storedIndexingProgress);
+      // const stored = this.indexingState
+
+      //If a non-default state has been stored, update the indexing display to that state
+      if (this.indexingState.status != 'loading') {
+        console.log("Passing stored state: ", this.indexingState.status)
+        this.messenger.request("indexProgress", this.indexingState);
       }
     });
   }
@@ -518,8 +525,9 @@ export class Core {
       this.indexingCancellationController.signal,
     )) {
       this.messenger.request("indexProgress", update);
-      console.log("setting global indexingProgress to: ", update.status)
-      new GlobalContext().update("IndexingProgress", update)
+      console.log("setting stored indexingProgress to: ", update.status)
+      this.indexingState = update
+      // new GlobalContext().update("IndexingProgress", update)
     }
   }
 }
