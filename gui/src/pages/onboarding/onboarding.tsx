@@ -7,6 +7,7 @@ import {
   greenButtonColor,
   vscForeground,
 } from "../../components";
+import { ftl } from "../../components/dialogs/FTCDialog";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { isJetBrains } from "../../util";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
@@ -25,10 +26,23 @@ function Onboarding() {
 
   return (
     <div className="p-2 max-w-96 mt-16 mx-auto">
-      <h1 className="text-center">Welcome to Continue</h1>
-      <p className="text-center pb-2">
-        Let's find the setup that works best for you
-      </p>
+      {getLocalStorage("ftc") > ftl() ? (
+        <>
+          <h1 className="text-center">Free trial limit reached</h1>
+          <p className="text-center pb-2">
+            To keep using Continue, please enter an API key or set up a local
+            model
+          </p>
+        </>
+      ) : (
+        <>
+          <h1 className="text-center">Welcome to Continue</h1>
+          <p className="text-center pb-2">
+            Let's find the setup that works best for you
+          </p>
+        </>
+      )}
+
       <Div
         color={"#be841b"}
         disabled={false}
@@ -118,7 +132,7 @@ function Onboarding() {
         </StyledButton>
       </div>
 
-      {getLocalStorage("onboardingComplete") && (
+      {getLocalStorage("onboardingComplete") || (
         <>
           <hr className="w-full my-12"></hr>
 

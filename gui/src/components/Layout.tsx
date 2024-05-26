@@ -181,6 +181,14 @@ const Layout = () => {
   );
 
   useWebviewListener(
+    "openOnboarding",
+    async () => {
+      navigate("/onboarding");
+    },
+    [navigate],
+  );
+
+  useWebviewListener(
     "incrementFtc",
     async () => {
       const u = getLocalStorage("ftc");

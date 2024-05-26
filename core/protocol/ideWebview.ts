@@ -65,4 +65,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   addApiKey: [undefined, void];
   setupLocalModel: [undefined, void];
   incrementFtc: [undefined, void];
+  openOnboarding: [undefined, void];
 };
