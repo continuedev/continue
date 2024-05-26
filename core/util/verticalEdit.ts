@@ -121,7 +121,7 @@ export async function* streamDiffLines(
   }
 
   let seenGreen = false;
-  for await (let diffLine of diffLines) {
+  for await (const diffLine of diffLines) {
     yield diffLine;
     if (diffLine.type === "new") {
       seenGreen = true;

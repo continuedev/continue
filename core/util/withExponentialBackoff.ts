@@ -7,7 +7,7 @@ const RETRY_AFTER_HEADER = "Retry-After";
 const withExponentialBackoff = async <T>(
   apiCall: () => Promise<T>,
   maxRetries = 5,
-  initialDelaySeconds = 1
+  initialDelaySeconds = 1,
 ) => {
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
@@ -23,7 +23,7 @@ const withExponentialBackoff = async <T>(
         console.log(
           `Hit rate limit. Retrying in ${delay} seconds (attempt ${
             attempt + 1
-          })`
+          })`,
         );
         await new Promise((resolve) => setTimeout(resolve, delay * 1000));
       } else {

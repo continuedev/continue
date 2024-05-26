@@ -1,6 +1,6 @@
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import * as vscode from "vscode";
 
 import { ContextMenuConfig, IDE } from "core";
@@ -12,7 +12,7 @@ import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getPlatform } from "./util/util";
-import { VsCodeWebviewProtocol } from "./webviewProtocol";
+import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 function getFullScreenTab() {
   const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
@@ -25,45 +25,48 @@ async function addHighlightedCodeToContext(
   edit: boolean,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
-  // Capture highlighted terminal text
-  // const activeTerminal = vscode.window.activeTerminal;
-  // if (activeTerminal) {
-  //   // Copy selected text
-  //   const tempCopyBuffer = await vscode.env.clipboard.readText();
-  //   await vscode.commands.executeCommand(
-  //     "workbench.action.terminal.copySelection",
-  //   );
-  //   await vscode.commands.executeCommand(
-  //     "workbench.action.terminal.clearSelection",
-  //   );
-  //   const contents = (await vscode.env.clipboard.readText()).trim();
-  //   await vscode.env.clipboard.writeText(tempCopyBuffer);
-
-  //   // Add to context
-  //   const rangeInFileWithContents = {
-  //     filepath: activeTerminal.name,
-  //     contents,
-  //     range: {
-  //       start: {
-  //         line: 0,
-  //         character: 0,
-  //       },
-  //       end: {
-  //         line: contents.split("\n").length,
-  //         character: 0,
-  //       },
-  //     },
-  //   };
-
-  //   webviewProtocol?.request("highlightedCode", {
-  //     rangeInFileWithContents,
-  //   });
-  // }
-
   const editor = vscode.window.activeTextEditor;
   if (editor) {
     const selection = editor.selection;
-    if (selection.isEmpty) return;
+    if (selection.isEmpty) {
+      // Capture highlighted terminal text
+      // const activeTerminal = vscode.window.activeTerminal;
+      // if (activeTerminal) {
+      //   // Copy selected text
+      //   const tempCopyBuffer = await vscode.env.clipboard.readText();
+      //   await vscode.commands.executeCommand(
+      //     "workbench.action.terminal.copySelection",
+      //   );
+      //   await vscode.commands.executeCommand(
+      //     "workbench.action.terminal.clearSelection",
+      //   );
+      //   const contents = (await vscode.env.clipboard.readText()).trim();
+      //   await vscode.env.clipboard.writeText(tempCopyBuffer);
+
+      //   // Add to context
+      //   const rangeInFileWithContents = {
+      //     filepath: activeTerminal.name,
+      //     contents,
+      //     range: {
+      //       start: {
+      //         line: 0,
+      //         character: 0,
+      //       },
+      //       end: {
+      //         line: contents.split("\n").length,
+      //         character: 0,
+      //       },
+      //     },
+      //   };
+
+      //   if (contents.trim() !== "") {
+      //     webviewProtocol?.request("highlightedCode", {
+      //       rangeInFileWithContents,
+      //     });
+      //   }
+      // }
+      return;
+    }
     const range = new vscode.Range(selection.start, selection.end);
     const contents = editor.document.getText(range);
     const rangeInFileWithContents = {
@@ -158,6 +161,7 @@ const commandsMap: (
         "getDefaultModelTitle",
         undefined,
       ));
+    sidebar.webviewProtocol.request("incrementFtc", undefined);
     await verticalDiffManager.streamEdit(
       config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       modelTitle,
@@ -276,6 +280,7 @@ const commandsMap: (
       }
 
       if (text.length > 0 || quickPickItems.length === 0) {
+        sidebar.webviewProtocol.request("incrementFtc", undefined);
         await verticalDiffManager.streamEdit(text, defaultModelTitle);
       } else {
         // Pick context first
@@ -321,6 +326,7 @@ const commandsMap: (
             "\n\n---\n\n" +
             text;
 
+          sidebar.webviewProtocol.request("incrementFtc", undefined);
           await verticalDiffManager.streamEdit(text, defaultModelTitle);
         }
       }
@@ -339,7 +345,10 @@ const commandsMap: (
       );
     },
     "continue.fixCode": async () => {
-      streamInlineEdit("fix", "Fix this code");
+      streamInlineEdit(
+        "fix",
+        "Fix this code. If it is already 100% correct, simply rewrite the code.",
+      );
     },
     "continue.optimizeCode": async () => {
       streamInlineEdit("optimize", "Optimize this code");

@@ -1,12 +1,13 @@
-import React from "react";
-import { postToIde } from "../../util/ide";
+import { useContext } from "react";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 
 function VSCodeFileLink(props: { path: string; text?: string }) {
+  const ideMessenger = useContext(IdeMessengerContext);
   return (
     <a
       href={`file://${props.path}`}
       onClick={() => {
-        postToIde("openFile", { path: props.path });
+        ideMessenger.post("openFile", { path: props.path });
       }}
     >
       {props.text || props.path}

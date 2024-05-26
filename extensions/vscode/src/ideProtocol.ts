@@ -1,7 +1,10 @@
-import * as child_process from "child_process";
-import { exec } from "child_process";
-import {
+import * as child_process from "node:child_process";
+import { exec } from "node:child_process";
+import * as path from "node:path";
+
+import type {
   ContinueRcJson,
+  FileType,
   IDE,
   IdeInfo,
   IndexTag,
@@ -9,8 +12,9 @@ import {
   Range,
   Thread,
 } from "core";
+import { defaultIgnoreFile } from "core/indexing/ignore";
+import { IdeSettings } from "core/protocol/ideWebview";
 import { getContinueGlobalPath } from "core/util/paths";
-import * as path from "path";
 import * as vscode from "vscode";
 import { DiffManager } from "./diff/horizontal";
 import { Repository } from "./otherExtensions/git";
@@ -27,6 +31,14 @@ class VsCodeIde implements IDE {
 
   constructor(private readonly diffManager: DiffManager) {
     this.ideUtils = new VsCodeIdeUtils();
+  }
+
+  async infoPopup(message: string): Promise<void> {
+    vscode.window.showInformationMessage(message);
+  }
+
+  async errorPopup(message: string): Promise<void> {
+    vscode.window.showErrorMessage(message);
   }
 
   async getRepoName(dir: string): Promise<string | undefined> {
@@ -83,13 +95,11 @@ class VsCodeIde implements IDE {
     );
   }
 
-  async getStats(directory: string): Promise<{ [path: string]: number }> {
-    const scheme = vscode.workspace.workspaceFolders?.[0].uri.scheme;
-    const files = await this.listWorkspaceContents(directory);
+  async getLastModified(files: string[]): Promise<{ [path: string]: number }> {
     const pathToLastModified: { [path: string]: number } = {};
     await Promise.all(
       files.map(async (file) => {
-        let stat = await vscode.workspace.fs.stat(uriFromFilePath(file));
+        const stat = await vscode.workspace.fs.stat(uriFromFilePath(file));
         pathToLastModified[file] = stat.mtime;
       }),
     );
@@ -140,14 +150,13 @@ class VsCodeIde implements IDE {
   async listWorkspaceContents(directory?: string): Promise<string[]> {
     if (directory) {
       return await this.ideUtils.getDirectoryContents(directory, true);
-    } else {
-      const contents = await Promise.all(
-        this.ideUtils
-          .getWorkspaceDirectories()
-          .map((dir) => this.ideUtils.getDirectoryContents(dir, true)),
-      );
-      return contents.flat();
     }
+    const contents = await Promise.all(
+      this.ideUtils
+        .getWorkspaceDirectories()
+        .map((dir) => this.ideUtils.getDirectoryContents(dir, true)),
+    );
+    return contents.flat();
   }
 
   async getWorkspaceConfigs() {
@@ -307,8 +316,8 @@ class VsCodeIde implements IDE {
   }
 
   async getSearchResults(query: string): Promise<string> {
-    let results = [];
-    for (let dir of await this.getWorkspaceDirs()) {
+    const results = [];
+    for (const dir of await this.getWorkspaceDirs()) {
       results.push(await this._searchDir(query, dir));
     }
 
@@ -351,6 +360,36 @@ class VsCodeIde implements IDE {
 
   async getBranch(dir: string): Promise<string> {
     return this.ideUtils.getBranch(vscode.Uri.file(dir));
+  }
+
+  getGitRootPath(dir: string): Promise<string | undefined> {
+    return this.ideUtils.getGitRoot(dir);
+  }
+
+  async listDir(dir: string): Promise<[string, FileType][]> {
+    const files = await vscode.workspace.fs.readDirectory(uriFromFilePath(dir));
+    return files
+      .filter(([name, type]) => {
+        !(type === vscode.FileType.File && defaultIgnoreFile.ignores(name));
+      })
+      .map(([name, type]) => [path.join(dir, name), type]) as any;
+  }
+
+  getIdeSettings(): IdeSettings {
+    const settings = vscode.workspace.getConfiguration("continue");
+    const remoteConfigServerUrl = settings.get<string | undefined>(
+      "remoteConfigServerUrl",
+      undefined,
+    );
+    const ideSettings: IdeSettings = {
+      remoteConfigServerUrl,
+      remoteConfigSyncPeriod: settings.get<number>(
+        "remoteConfigSyncPeriod",
+        60,
+      ),
+      userToken: settings.get<string>("userToken", ""),
+    };
+    return ideSettings;
   }
 }
 

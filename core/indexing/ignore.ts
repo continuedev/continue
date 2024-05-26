@@ -58,6 +58,7 @@ const DEFAULT_IGNORE_FILETYPES = [
   "*.profraw",
   "*.gcda",
   "*.gcno",
+  "go.sum",
 ];
 export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
 export const DEFAULT_IGNORE_DIRS = [
@@ -80,6 +81,7 @@ export const DEFAULT_IGNORE_DIRS = [
   ".continue",
   "__pycache__",
   "site-packages",
+  ".gradle",
   ".cache",
   "gems",
 ];

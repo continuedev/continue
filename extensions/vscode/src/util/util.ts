@@ -1,4 +1,4 @@
-const os = require("os");
+const os = require("node:os");
 import * as vscode from "vscode";
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
@@ -51,9 +51,9 @@ export function convertSingleToDoubleQuoteJSON(json: string): string {
   return newJson;
 }
 
-export function debounced(delay: number, fn: Function) {
+export function debounced(delay: number, fn: (...args: any[]) => void) {
   let timerId: NodeJS.Timeout | null;
-  return function (...args: any[]) {
+  return (...args: any[]) => {
     if (timerId) {
       clearTimeout(timerId);
     }

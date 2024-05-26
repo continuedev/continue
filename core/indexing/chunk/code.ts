@@ -6,9 +6,8 @@ import { getParserForFile } from "../../util/treeSitter.js";
 function collapsedReplacement(node: SyntaxNode): string {
   if (node.type === "statement_block") {
     return "{ ... }";
-  } else {
-    return "...";
   }
+  return "...";
 }
 
 function firstChild(
@@ -19,9 +18,8 @@ function firstChild(
     return (
       node.children.find((child) => grammarName.includes(child.type)) || null
     );
-  } else {
-    return node.children.find((child) => child.type === grammarName) || null;
   }
+  return node.children.find((child) => child.type === grammarName) || null;
 }
 
 function collapseChildren(
@@ -138,12 +136,10 @@ function constructFunctionDefinitionChunk(
     // If inside a class, include the class header
     const classNode = node.parent.parent;
     const classBlock = node.parent;
-    return (
-      code.slice(classNode.startIndex, classBlock.startIndex) +
-      "...\n\n" +
-      " ".repeat(node.startPosition.column) + // ...
-      funcText
-    );
+    return `${code.slice(
+      classNode.startIndex,
+      classBlock.startIndex,
+    )}...\n\n${" ".repeat(node.startPosition.column)}${funcText}`;
   }
   return funcText;
 }
@@ -208,7 +204,7 @@ export async function* codeChunker(
     return;
   }
 
-  let parser = await getParserForFile(filepath);
+  const parser = await getParserForFile(filepath);
   if (parser === undefined) {
     console.warn(`Failed to load parser for file ${filepath}: `);
     return;

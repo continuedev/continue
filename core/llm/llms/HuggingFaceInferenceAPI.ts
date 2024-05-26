@@ -1,5 +1,5 @@
-import { BaseLLM } from "../index.js";
 import { CompletionOptions, ModelProvider } from "../../index.js";
+import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
 
 class HuggingFaceInferenceAPI extends BaseLLM {
@@ -38,7 +38,7 @@ class HuggingFaceInferenceAPI extends BaseLLM {
       }),
     });
     for await (const chunk of streamSse(response)) {
-      let text = chunk?.token?.text ?? "";
+      const text = chunk?.token?.text ?? "";
       if (text.endsWith("</s>")) {
         yield text.slice(0, -5);
       } else {

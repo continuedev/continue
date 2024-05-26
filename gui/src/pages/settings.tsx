@@ -1,6 +1,6 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { ContinueConfig } from "core";
-import { useEffect } from "react";
+import { useContext, useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -17,9 +17,10 @@ import {
 } from "../components";
 import InfoHover from "../components/InfoHover";
 import Loader from "../components/loaders/Loader";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { RootState } from "../redux/store";
 import { getFontSize, getPlatform } from "../util";
-import { postToIde } from "../util/ide";
+import { setLocalStorage } from "../util/localStorage";
 
 const CancelButton = styled(Button)`
   background-color: transparent;
@@ -95,6 +96,8 @@ function Settings() {
   const formMethods = useForm<ContinueConfig>();
   const onSubmit = (data: ContinueConfig) => console.log(data);
 
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const navigate = useNavigate();
   const config = useSelector((state: RootState) => state.state.config);
   const dispatch = useDispatch();
@@ -152,7 +155,7 @@ function Settings() {
           <h3 className="text-lg font-bold m-2 inline-block">Settings</h3>
           <ConfigJsonButton
             onClick={() => {
-              postToIde("showFile", {
+              ideMessenger.post("showFile", {
                 filepath:
                   getPlatform() == "windows"
                     ? "~\\.continue\\config.json"
@@ -264,7 +267,7 @@ function Settings() {
             step="1"
             defaultValue={getFontSize()}
             onChange={(e) => {
-              localStorage.setItem("fontSize", e.target.value);
+              setLocalStorage("fontSize", parseInt(e.target.value));
             }}
           />
         </div>

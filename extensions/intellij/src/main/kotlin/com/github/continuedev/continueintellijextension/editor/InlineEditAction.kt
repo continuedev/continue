@@ -73,8 +73,10 @@ class InlineEditAction : AnAction(), DumbAware {
 
         // Get highlighted range
         val selectionModel = editor.selectionModel
-        val start = selectionModel.selectionStart
-        val end = selectionModel.selectionEnd
+        val startLineNumber = editor.document.getLineNumber(selectionModel.selectionStart)
+        val endLineNumber = editor.document.getLineNumber(selectionModel.selectionEnd)
+        val start = editor.document.getLineStartOffset(startLineNumber)
+        val end = editor.document.getLineEndOffset(endLineNumber)
         val prefix = editor.document.getText(TextRange(0, start))
         val highlighted = editor.document.getText(TextRange(start, end))
         val suffix = editor.document.getText(TextRange(end, editor.document.textLength))

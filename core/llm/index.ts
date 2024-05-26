@@ -13,6 +13,7 @@ import {
   RequestOptions,
   TemplateType,
 } from "../index.js";
+import { logDevData } from "../util/devdata.js";
 import { DevDataSqliteDb } from "../util/devdataSqlite.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import mergeJson from "../util/merge.js";
@@ -95,14 +96,14 @@ export abstract class BaseLLM implements ILLM {
 
   private _llmOptions: LLMOptions;
 
-  constructor(options: LLMOptions) {
-    this._llmOptions = options;
+  constructor(_options: LLMOptions) {
+    this._llmOptions = _options;
 
     // Set default options
-    options = {
+    const options = {
       title: (this.constructor as typeof BaseLLM).providerName,
       ...(this.constructor as typeof BaseLLM).defaultOptions,
-      ...options,
+      ..._options,
     };
 
     const templateType =
@@ -141,7 +142,7 @@ export abstract class BaseLLM implements ILLM {
     this.apiKey = options.apiKey;
     this.apiBase = options.apiBase;
     if (this.apiBase && !this.apiBase.endsWith("/")) {
-      this.apiBase = this.apiBase + "/";
+      this.apiBase = `${this.apiBase}/`;
     }
 
     this.engine = options.engine;
@@ -217,7 +218,11 @@ ${settings}
 ${prompt}`;
   }
 
-  private _logTokensGenerated(model: string, prompt: string, completion: string) {
+  private _logTokensGenerated(
+    model: string,
+    prompt: string,
+    completion: string,
+  ) {
     let promptTokens = this.countTokens(prompt);
     let generatedTokens = this.countTokens(completion);
     Telemetry.capture("tokens_generated", {
@@ -226,7 +231,18 @@ ${prompt}`;
       promptTokens: promptTokens,
       generatedTokens: generatedTokens,
     });
-    DevDataSqliteDb.logTokensGenerated(model, this.providerName, promptTokens, generatedTokens);
+    DevDataSqliteDb.logTokensGenerated(
+      model,
+      this.providerName,
+      promptTokens,
+      generatedTokens,
+    );
+    logDevData("tokens_generated", {
+      model: model,
+      provider: this.providerName,
+      promptTokens: promptTokens,
+      generatedTokens: generatedTokens,
+    });
   }
 
   fetch(url: RequestInfo | URL, init?: RequestInit): Promise<Response> {
@@ -268,7 +284,9 @@ ${prompt}`;
             "Failed to connect to local Ollama instance. To start Ollama, first download it at https://ollama.ai.",
           );
         }
-        throw new Error(`${e}`);
+        throw new Error(
+          `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
+        );
       }
     };
     return withExponentialBackoff<Response>(
@@ -281,7 +299,7 @@ ${prompt}`;
   private _parseCompletionOptions(options: LLMFullCompletionOptions) {
     const log = options.log ?? true;
     const raw = options.raw ?? false;
-    delete options.log;
+    options.log = undefined;
 
     const completionOptions: CompletionOptions = mergeJson(
       this.completionOptions,
@@ -294,7 +312,7 @@ ${prompt}`;
   private _formatChatMessages(messages: ChatMessage[]): string {
     const msgsCopy = messages ? messages.map((msg) => ({ ...msg })) : [];
     let formatted = "";
-    for (let msg of msgsCopy) {
+    for (const msg of msgsCopy) {
       if ("content" in msg && Array.isArray(msg.content)) {
         const content = stripImages(msg.content);
         msg.content = content;
@@ -305,16 +323,16 @@ ${prompt}`;
   }
 
   async *streamComplete(
-    prompt: string,
+    _prompt: string,
     options: LLMFullCompletionOptions = {},
   ) {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
-    prompt = pruneRawPromptFromTop(
+    let prompt = pruneRawPromptFromTop(
       completionOptions.model,
       this.contextLength,
-      prompt,
+      _prompt,
       completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
     );
 
@@ -346,14 +364,14 @@ ${prompt}`;
     return { prompt, completion, completionOptions };
   }
 
-  async complete(prompt: string, options: LLMFullCompletionOptions = {}) {
+  async complete(_prompt: string, options: LLMFullCompletionOptions = {}) {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
-    prompt = pruneRawPromptFromTop(
+    let prompt = pruneRawPromptFromTop(
       completionOptions.model,
       this.contextLength,
-      prompt,
+      _prompt,
       completionOptions.maxTokens ?? DEFAULT_MAX_TOKENS,
     );
 
@@ -389,13 +407,13 @@ ${prompt}`;
   }
 
   async *streamChat(
-    messages: ChatMessage[],
+    _messages: ChatMessage[],
     options: LLMFullCompletionOptions = {},
   ): AsyncGenerator<ChatMessage, PromptLog> {
     const { completionOptions, log, raw } =
       this._parseCompletionOptions(options);
 
-    messages = this._compileChatMessages(completionOptions, messages);
+    const messages = this._compileChatMessages(completionOptions, _messages);
 
     const prompt = this.templateMessages
       ? this.templateMessages(messages)
@@ -446,6 +464,7 @@ ${prompt}`;
     };
   }
 
+  // biome-ignore lint/correctness/useYield: Purposefully not implemented
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions,
@@ -495,42 +514,40 @@ ${prompt}`;
     template: PromptTemplate,
     history: ChatMessage[],
     otherData: Record<string, string>,
-    canPutWordsInModelsMouth: boolean = false,
+    canPutWordsInModelsMouth = false,
   ): string | ChatMessage[] {
     if (typeof template === "string") {
-      let data: any = {
+      const data: any = {
         history: history,
         ...otherData,
       };
-      if (history.length > 0 && history[0].role == "system") {
-        data["system_message"] = history.shift()!.content;
+      if (history.length > 0 && history[0].role === "system") {
+        data.system_message = history.shift()!.content;
       }
 
       const compiledTemplate = Handlebars.compile(template);
       return compiledTemplate(data);
-    } else {
-      const rendered = template(history, {
-        ...otherData,
-        supportsCompletions: this.supportsCompletions() ? "true" : "false",
-        supportsPrefill: this.supportsPrefill() ? "true" : "false",
-      });
-      if (
-        typeof rendered !== "string" &&
-        rendered[rendered.length - 1]?.role === "assistant" &&
-        !canPutWordsInModelsMouth
-      ) {
-        // Some providers don't allow you to put words in the model's mouth
-        // So we have to manually compile the prompt template and use
-        // raw /completions, not /chat/completions
-        const templateMessages = autodetectTemplateFunction(
-          this.model,
-          this.providerName,
-          autodetectTemplateType(this.model),
-        );
-        return templateMessages(rendered);
-      }
-      return rendered;
     }
+    const rendered = template(history, {
+      ...otherData,
+      supportsCompletions: this.supportsCompletions() ? "true" : "false",
+      supportsPrefill: this.supportsPrefill() ? "true" : "false",
+    });
+    if (
+      typeof rendered !== "string" &&
+      rendered[rendered.length - 1]?.role === "assistant" &&
+      !canPutWordsInModelsMouth
+    ) {
+      // Some providers don't allow you to put words in the model's mouth
+      // So we have to manually compile the prompt template and use
+      // raw /completions, not /chat/completions
+      const templateMessages = autodetectTemplateFunction(
+        this.model,
+        this.providerName,
+        autodetectTemplateType(this.model),
+      );
+      return templateMessages(rendered);
+    }
+    return rendered;
   }
 }
-

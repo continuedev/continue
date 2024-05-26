@@ -1,16 +1,21 @@
-import { BranchAndDir, Chunk, IndexTag, IndexingProgressUpdate } from "../index.js";
+import {
+  BranchAndDir,
+  Chunk,
+  IndexTag,
+  IndexingProgressUpdate,
+} from "../index.js";
 import { RETRIEVAL_PARAMS } from "../util/parameters.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
-  CodebaseIndex,
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
+  type CodebaseIndex,
 } from "./types.js";
 
 export class FullTextSearchCodebaseIndex implements CodebaseIndex {
-  artifactId: string = "sqliteFts";
+  artifactId = "sqliteFts";
 
   private async _createTables(db: DatabaseConnection) {
     await db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(
@@ -47,7 +52,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
         [item.path, item.cacheKey],
       );
 
-      for (let chunk of chunks) {
+      for (const chunk of chunks) {
         const { lastID } = await db.run(
           "INSERT INTO fts (path, content) VALUES (?, ?)",
           [item.path, chunk.content],

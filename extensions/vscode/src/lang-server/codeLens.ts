@@ -1,8 +1,8 @@
-import * as os from "os";
-import * as path from "path";
+import * as os from "node:os";
+import * as path from "node:path";
 import * as vscode from "vscode";
-import { DIFF_DIRECTORY, DiffManager } from "../diff/horizontal";
-import { VerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
+import { DIFF_DIRECTORY, type DiffManager } from "../diff/horizontal";
+import type { VerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
 import { editorSuggestionsLocked, editorToSuggestions } from "../suggestions";
 import { getAltOrOption, getMetaKeyLabel, getPlatform } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
@@ -188,7 +188,9 @@ class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     const lines = document.getText().split(os.EOL);
-    let lineOfModels = lines.findIndex((line) => line.includes('"models": ['));
+    const lineOfModels = lines.findIndex((line) =>
+      line.includes('"models": ['),
+    );
 
     if (lineOfModels >= 0) {
       const range = new vscode.Range(lineOfModels, 0, lineOfModels + 1, 0);
@@ -213,7 +215,7 @@ class ConfigPyCodeLensProvider implements vscode.CodeLensProvider {
       );
       codeLenses.push(
         new vscode.CodeLens(range, {
-          title: `✏️ Edit in UI`,
+          title: "✏️ Edit in UI",
           command: "continue.openSettingsUI",
         }),
       );
@@ -272,9 +274,10 @@ const actions: TutorialCodeLensItems[] = [
         title: "Run the file",
         command: "continue.sendToTerminal",
         arguments: [
-          "python " +
-            path.join(getExtensionUri().fsPath, "continue_tutorial.py") +
-            "\n",
+          `python ${path.join(
+            getExtensionUri().fsPath,
+            "continue_tutorial.py",
+          )}\n`,
         ],
       },
     ],

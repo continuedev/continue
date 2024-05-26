@@ -62,6 +62,7 @@ const MODEL_SUPPORTS_IMAGES: string[] = [
   "claude-3",
   "gemini-ultra",
   "gemini-1.5-pro",
+  "gemini-1.5-flash",
   "sonnet",
   "opus",
   "haiku",
@@ -304,7 +305,7 @@ function autodetectPromptTemplates(
   }
 
   if (editTemplate !== null) {
-    templates["edit"] = editTemplate;
+    templates.edit = editTemplate;
   }
 
   return templates;
@@ -315,6 +316,5 @@ export {
   autodetectTemplateFunction,
   autodetectTemplateType,
   llmCanGenerateInParallel,
-  modelSupportsImages
+  modelSupportsImages,
 };
-

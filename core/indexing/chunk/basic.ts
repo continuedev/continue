@@ -20,7 +20,7 @@ export function* basicChunker(
     }
 
     if (lineTokens < maxChunkSize) {
-      chunkContent += line + "\n";
+      chunkContent += `${line}\n`;
       chunkTokens += lineTokens + 1;
     }
 

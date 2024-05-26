@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { greenButtonColor } from "../../components";
 import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
-import { postToIde } from "../../util/ide";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { setLocalStorage } from "../../util/localStorage";
 import { Div, StyledButton } from "./components";
 
@@ -22,6 +22,7 @@ const TopDiv = styled.div`
 
 function ExistingUserOnboarding() {
   const navigate = useNavigate();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const [hovered1, setHovered1] = useState(false);
   const [hovered2, setHovered2] = useState(false);
@@ -127,14 +128,14 @@ Alternatively, you can enter your own API keys:
           <StyledButton
             disabled={selected < 0}
             onClick={() => {
-              postToIde("completeOnboarding", {
+              ideMessenger.post("completeOnboarding", {
                 mode: ["localExistingUser", "optimizedExistingUser"][
                   selected
                 ] as any,
               });
-              postToIde("openConfigJson", undefined);
+              ideMessenger.post("openConfigJson", undefined);
               setLocalStorage("onboardingComplete", true);
-              postToIde("index/forceReIndex", undefined);
+              ideMessenger.post("index/forceReIndex", undefined);
               navigate("/");
             }}
           >

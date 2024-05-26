@@ -1,7 +1,7 @@
 import { Octokit } from "@octokit/rest";
 import cheerio from "cheerio";
 import fetch from "node-fetch";
-import { URL } from "url";
+import { URL } from "node:url";
 
 const IGNORE_PATHS_ENDING_IN = [
   "favicon.ico",
@@ -25,7 +25,7 @@ async function crawlGithubRepo(baseUrl: URL) {
 
   const [_, owner, repo] = baseUrl.pathname.split("/");
 
-  let dirContentsConfig = {
+  const dirContentsConfig = {
     owner: owner,
     repo: repo,
   };
@@ -63,13 +63,12 @@ async function getLinksFromUrl(url: string, path: string) {
         html: "",
         links: [],
       };
-    } else {
-      console.error(error);
-      return {
-        html: "",
-        links: [],
-      };
     }
+    console.error(error);
+    return {
+      html: "",
+      links: [],
+    };
   }
 
   const html = await response.text();
@@ -156,7 +155,7 @@ export async function* crawlPage(url: URL): AsyncGenerator<PageData> {
         };
       }
 
-      for (let link of links) {
+      for (const link of links) {
         if (!paths.includes(link)) {
           paths.push(link);
         }

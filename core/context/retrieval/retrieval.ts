@@ -29,6 +29,16 @@ export async function retrieveContextItemsFromEmbeddings(
     return [];
   }
 
+  // transformers.js not supported in JetBrains IDEs right now
+  if (
+    extras.embeddingsProvider.id === "all-MiniLM-L6-v2" &&
+    (await extras.ide.getIdeInfo()).ideType === "jetbrains"
+  ) {
+    throw new Error(
+      "The transformers.js context provider is not currently supported in JetBrains. For now, you can use Ollama to set up local embeddings, or use our 'free-trial' embeddings provider. See here to learn more: https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
+    );
+  }
+
   const nFinal = options?.nFinal || RETRIEVAL_PARAMS.nFinal;
   const useReranking = extras.reranker !== undefined;
   const nRetrieve =
@@ -60,7 +70,7 @@ export async function retrieveContextItemsFromEmbeddings(
   const retrievalResults: Chunk[] = [];
 
   // Source: Full-text search
-  let ftsResults = await retrieveFts(
+  const ftsResults = await retrieveFts(
     extras.fullInput,
     nRetrieve / 2,
     tags,
@@ -99,7 +109,7 @@ export async function retrieveContextItemsFromEmbeddings(
   const lanceDbIndex = new LanceDbIndex(extras.embeddingsProvider, (path) =>
     extras.ide.readFile(path),
   );
-  let vecResults = await lanceDbIndex.retrieve(
+  const vecResults = await lanceDbIndex.retrieve(
     extras.fullInput,
     nRetrieve,
     tags,

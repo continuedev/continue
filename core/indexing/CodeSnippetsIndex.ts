@@ -1,6 +1,6 @@
-import fs from "fs";
-import path from "path";
-import {
+import fs from "node:fs";
+import path from "node:path";
+import type {
   ChunkWithoutID,
   ContextItem,
   ContextSubmenuItem,
@@ -16,10 +16,10 @@ import {
 } from "../util/treeSitter.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
-  CodebaseIndex,
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
+  type CodebaseIndex,
 } from "./types.js";
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {

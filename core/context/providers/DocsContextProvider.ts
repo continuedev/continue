@@ -1,4 +1,3 @@
-import { BaseContextProvider } from "../index.js";
 import {
   ContextItem,
   ContextProviderDescription,
@@ -8,6 +7,7 @@ import {
 } from "../../index.js";
 import configs from "../../indexing/docs/preIndexedDocs.js";
 import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
+import { BaseContextProvider } from "../index.js";
 
 class DocsContextProvider extends BaseContextProvider {
   static DEFAULT_N_RETRIEVE = 30;
@@ -23,6 +23,13 @@ class DocsContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
+    // Not supported in JetBrains IDEs right now
+    if ((await extras.ide.getIdeInfo()).ideType === "jetbrains") {
+      throw new Error(
+        "The @docs context provider is not currently supported in JetBrains IDEs. We'll have an update soon!",
+      );
+    }
+
     const { retrieveDocs } = await import("../../indexing/docs/db");
     const embeddingsProvider = new TransformersJsEmbeddingsProvider();
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
@@ -104,9 +111,13 @@ class DocsContextProvider extends BaseContextProvider {
 
     // Sort submenuItems such that the objects with titles which don't occur in configs occur first, and alphabetized
     submenuItems.sort((a, b) => {
-      const aTitleInConfigs = !!configs.find(config => config.title === a.title);
-      const bTitleInConfigs = !!configs.find(config => config.title === b.title);
-    
+      const aTitleInConfigs = !!configs.find(
+        (config) => config.title === a.title,
+      );
+      const bTitleInConfigs = !!configs.find(
+        (config) => config.title === b.title,
+      );
+
       // Primary criterion: Items not in configs come first
       if (!aTitleInConfigs && bTitleInConfigs) {
         return -1;
@@ -114,7 +125,7 @@ class DocsContextProvider extends BaseContextProvider {
         return 1;
       } else {
         // Secondary criterion: Alphabetical order when both items are in the same category
-        return a.title.toString().localeCompare(b.title.toString()); 
+        return a.title.toString().localeCompare(b.title.toString());
       }
     });
 

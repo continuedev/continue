@@ -38,9 +38,11 @@ function parseDataLine(line: string): any {
 function parseSseLine(line: string): { done: boolean; data: any } {
   if (line.startsWith("data: [DONE]")) {
     return { done: true, data: undefined };
-  } else if (line.startsWith("data:")) {
+  }
+  if (line.startsWith("data:")) {
     return { done: false, data: parseDataLine(line) };
-  } else if (line.startsWith(": ping")) {
+  }
+  if (line.startsWith(": ping")) {
     return { done: true, data: undefined };
   }
   return { done: false, data: undefined };
@@ -51,7 +53,7 @@ export async function* streamSse(response: Response): AsyncGenerator<any> {
   for await (const value of streamResponse(response)) {
     buffer += value;
 
-    let position;
+    let position: number;
     while ((position = buffer.indexOf("\n")) >= 0) {
       const line = buffer.slice(0, position);
       buffer = buffer.slice(position + 1);

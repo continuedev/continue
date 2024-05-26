@@ -3,9 +3,9 @@ import React, { useContext, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
 import styled from "styled-components";
 import { Button, Input } from "..";
-import { SubmenuContextProvidersContext } from "../../App";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
-import { postToIde } from "../../util/ide";
 
 const GridDiv = styled.div`
   display: grid;
@@ -20,6 +20,7 @@ function AddDocsDialog() {
   const [urlValid, setUrlValid] = React.useState(false);
   const dispatch = useDispatch();
 
+  const ideMessenger = useContext(IdeMessengerContext);
   const { addItem } = useContext(SubmenuContextProvidersContext);
 
   const ref = React.useRef<HTMLInputElement>(null);
@@ -65,7 +66,10 @@ function AddDocsDialog() {
         disabled={!docsUrl || !urlValid}
         className="ml-auto"
         onClick={() => {
-          postToIde("context/addDocs", { url: docsUrl, title: docsTitle });
+          ideMessenger.post("context/addDocs", {
+            url: docsUrl,
+            title: docsTitle,
+          });
           setDocsTitle("");
           setDocsUrl("");
           dispatch(setShowDialog(false));

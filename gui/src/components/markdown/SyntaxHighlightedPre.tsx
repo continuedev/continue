@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import styled from "styled-components";
 import { vscForeground } from "..";
-import { VscThemeContext } from "../../App";
+import { VscThemeContext } from "../../context/VscTheme";
 
 const StyledPre = styled.pre<{ theme: any }>`
   & .hljs {

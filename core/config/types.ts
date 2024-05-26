@@ -413,7 +413,6 @@ declare global {
     subprocess(command: string): Promise<[string, string]>;
     getProblems(filepath?: string | undefined): Promise<Problem[]>;
     getBranch(dir: string): Promise<string>;
-    getStats(directory: string): Promise<{ [path: string]: number }>;
     getTags(artifactId: string): Promise<IndexTag[]>;
     getRepoName(dir: string): Promise<string | undefined>;
   }
@@ -706,7 +705,7 @@ declare global {
     inlineEdit?: string;
   }
   
-  interface ExperimantalConfig {
+  interface ExperimentalConfig {
     contextMenuPrompts?: ContextMenuConfig;
     modelRoles?: ModelRoles;
   }
@@ -729,7 +728,7 @@ declare global {
     tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
     ui?: ContinueUIConfig;
     reranker?: RerankerDescription;
-    experimental?: ExperimantalConfig;
+    experimental?: ExperimentalConfig;
   }
   
   export type ConfigMergeType = "merge" | "overwrite";
@@ -775,7 +774,7 @@ declare global {
     /** Options for the reranker */
     reranker?: RerankerDescription | Reranker;
     /** Experimental configuration */
-    experimental?: ExperimantalConfig;
+    experimental?: ExperimentalConfig;
   }
   
   export interface ContinueConfig {
@@ -794,7 +793,7 @@ declare global {
     tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
     ui?: ContinueUIConfig;
     reranker?: Reranker;
-    experimental?: ExperimantalConfig;
+    experimental?: ExperimentalConfig;
   }
   
   export interface BrowserSerializedContinueConfig {
@@ -811,7 +810,7 @@ declare global {
     embeddingsProvider?: string;
     ui?: ContinueUIConfig;
     reranker?: RerankerDescription;
-    experimental?: ExperimantalConfig;
+    experimental?: ExperimentalConfig;
   }  
 }
 

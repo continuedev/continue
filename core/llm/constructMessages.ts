@@ -11,7 +11,7 @@ export function constructMessages(history: ChatHistory): ChatMessage[] {
       : [{ type: "text", text: historyItem.message.content } as MessagePart];
 
     const ctxItems = historyItem.contextItems.map((ctxItem) => {
-      return { type: "text", text: ctxItem.content + "\n" } as MessagePart;
+      return { type: "text", text: `${ctxItem.content}\n` } as MessagePart;
     });
 
     content = [...ctxItems, ...content];

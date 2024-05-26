@@ -1,5 +1,5 @@
-import { Range } from "../index.js";
 import { RangeInFileWithContents } from "../commands/util.js";
+import { Range } from "../index.js";
 import { countTokens } from "../llm/countTokens.js";
 
 export type AutocompleteSnippet = RangeInFileWithContents & {
@@ -115,7 +115,7 @@ function mergeOverlappingRangeContents(
 ): string {
   const firstLines = first.contents.split("\n");
   const numOverlapping = first.range.end.line - second.range.start.line;
-  return firstLines.slice(-numOverlapping).join("\n") + "\n" + second.contents;
+  return `${firstLines.slice(-numOverlapping).join("\n")}\n${second.contents}`;
 }
 
 /**
@@ -135,7 +135,6 @@ export function fillPromptWithSnippets(
       tokensRemaining -= tokenCount;
       keptSnippets.push(snippet);
     } else {
-      continue;
     }
   }
 
@@ -147,18 +146,17 @@ function rangeIntersectionByLines(a: Range, b: Range): Range | null {
   const endLine = Math.min(a.end.line, b.end.line);
   if (startLine >= endLine) {
     return null;
-  } else {
-    return {
-      start: {
-        line: startLine,
-        character: 0,
-      },
-      end: {
-        line: endLine,
-        character: 0,
-      },
-    };
   }
+  return {
+    start: {
+      line: startLine,
+      character: 0,
+    },
+    end: {
+      line: endLine,
+      character: 0,
+    },
+  };
 }
 
 /**
@@ -171,7 +169,8 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
   ) {
     // / | | /
     return [];
-  } else if (
+  }
+  if (
     orig.start.line <= remove.start.line &&
     orig.end.line >= remove.end.line
   ) {
@@ -187,7 +186,8 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
         end: orig.end,
       },
     ];
-  } else if (
+  }
+  if (
     orig.start.line >= remove.start.line &&
     orig.end.line >= remove.end.line
   ) {
@@ -198,7 +198,8 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
         end: orig.end,
       },
     ];
-  } else if (
+  }
+  if (
     orig.start.line <= remove.start.line &&
     orig.end.line <= remove.end.line
   ) {
@@ -209,9 +210,8 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
         end: remove.start,
       },
     ];
-  } else {
-    return [orig];
   }
+  return [orig];
 }
 
 export function removeRangeFromSnippets(
@@ -220,7 +220,7 @@ export function removeRangeFromSnippets(
   range: Range,
 ): Required<AutocompleteSnippet>[] {
   const finalSnippets: Required<AutocompleteSnippet>[] = [];
-  for (let snippet of snippets) {
+  for (const snippet of snippets) {
     if (snippet.filepath !== filepath) {
       finalSnippets.push(snippet);
       continue;

@@ -8,7 +8,7 @@ const CommitMessageCommand: SlashCommand = {
     const diff = await ide.getDiff();
 
     if (!diff || diff.trim() === "") {
-      yield "No changes detected. Make sure you are in a git repository with current changes."
+      yield "No changes detected. Make sure you are in a git repository with current changes.";
       return;
     }
 

@@ -1,4 +1,3 @@
-import { createContext } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -12,7 +11,8 @@ import Models from "./pages/models";
 import MonacoPage from "./pages/monaco";
 import SettingsPage from "./pages/settings";
 
-import { ContextSubmenuItem } from "core";
+import { SubmenuContextProvidersContext } from "./context/SubmenuContextProviders";
+import { VscThemeContext } from "./context/VscTheme";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
 import GUI from "./pages/gui";
@@ -86,19 +86,6 @@ const router = createMemoryRouter([
     ],
   },
 ]);
-
-export const SubmenuContextProvidersContext = createContext<{
-  getSubmenuContextItems: (
-    providerTitle: string | undefined,
-    query: string,
-  ) => (ContextSubmenuItem & { providerTitle: string })[];
-  addItem: (providerTitle: string, item: ContextSubmenuItem) => void;
-}>({
-  getSubmenuContextItems: () => [],
-  addItem: () => {},
-});
-
-export const VscThemeContext = createContext<any>(undefined);
 
 function App() {
   const dispatch = useDispatch();

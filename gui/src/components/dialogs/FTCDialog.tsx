@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useContext } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Button, Input } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
-import { postToIde } from "../../util/ide";
 
 const GridDiv = styled.div`
   display: grid;
@@ -18,14 +18,17 @@ export const ftl = () => {
   const ftc = parseInt(localStorage.getItem("ftc"));
   if (ftc && ftc > 52) {
     return 100;
+  } else if (ftc && ftc > 27) {
+    return 50;
   }
-  return 50;
+  return 25;
 };
 
 function FTCDialog() {
   const navigate = useNavigate();
   const [apiKey, setApiKey] = React.useState("");
   const dispatch = useDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   return (
     <div className="p-4">
@@ -34,10 +37,7 @@ function FTCDialog() {
         You've reached the free trial limit of {ftl()} free inputs. To keep
         using Continue, you can either use your own API key, or use a local LLM.
         To read more about the options, see our{" "}
-        <a
-          href="https://docs.continue.dev/customization/models"
-          target="_blank"
-        >
+        <a href="https://docs.continue.dev/setup/overview" target="_blank">
           documentation
         </a>
         .
@@ -61,7 +61,7 @@ function FTCDialog() {
         <Button
           disabled={!apiKey}
           onClick={() => {
-            postToIde("config/addOpenAiKey", apiKey);
+            ideMessenger.post("config/addOpenAiKey", apiKey);
             dispatch(setShowDialog(false));
             dispatch(setDefaultModel({ title: "GPT-4" }));
           }}

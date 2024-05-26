@@ -4,15 +4,15 @@ import { MAX_CHUNK_SIZE } from "../../llm/constants.js";
 import { getBasename } from "../../util/index.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex.js";
 import {
-  CodebaseIndex,
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
+  type CodebaseIndex,
 } from "../types.js";
 import { chunkDocument } from "./chunk.js";
 
 export class ChunkCodebaseIndex implements CodebaseIndex {
-  static artifactId: string = "chunks";
+  static artifactId = "chunks";
   artifactId: string = ChunkCodebaseIndex.artifactId;
 
   constructor(
@@ -101,7 +101,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       const item = results.compute[i];
 
       // Insert chunks
-      for await (let chunk of chunkDocument(
+      for await (const chunk of chunkDocument(
         item.path,
         contents[i],
         MAX_CHUNK_SIZE,
