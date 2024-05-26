@@ -98,6 +98,7 @@ export class VsCodeExtension {
       outputChannel.append(log);
     });
     this.configHandler = this.core.configHandler;
+    resolveConfigHandler?.(this.configHandler);
     this.configHandler.onConfigUpdate(() => {
       this.webviewProtocol?.request("configUpdate", undefined);
     });
