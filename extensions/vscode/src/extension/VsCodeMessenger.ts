@@ -68,7 +68,7 @@ export class VsCodeMessenger {
     >,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: VsCodeIde,
-    private readonly verticalDiffManager: VerticalPerLineDiffManager,
+    private readonly verticalDiffManagerPromise: Promise<VerticalPerLineDiffManager>,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
@@ -134,7 +134,7 @@ export class VsCodeMessenger {
         editor.selection = new vscode.Selection(start, end);
       }
 
-      this.verticalDiffManager.streamEdit(
+      (await this.verticalDiffManagerPromise).streamEdit(
         `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`,
         await this.webviewProtocol.request("getDefaultModelTitle", undefined),
       );
