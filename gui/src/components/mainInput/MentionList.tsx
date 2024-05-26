@@ -235,7 +235,6 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
 
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
-  // Modify upHandler and downHandler to ensure that the selected item is scrolled into view
   const upHandler = () => {
     setSelectedIndex((prevIndex) => {
       const newIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
@@ -341,7 +340,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
             allItems.map((item, index) => (
               <ItemDiv
                 as="button"
-                ref={el => (itemRefs.current[index] = el)} // Associate the ref with the item
+                ref={el => (itemRefs.current[index] = el)}
                 className={`item ${
                   index === selectedIndex ? "is-selected" : ""
                 }`}
