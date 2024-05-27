@@ -241,6 +241,11 @@ const configs: SiteIndexingConfig[] = [
     startUrl: "https://alpinejs.dev/start-here",
     rootUrl: "https://alpinejs.dev/",
   },
+  {
+    title: "C# Language Reference",
+    startUrl: "https://learn.microsoft.com/en-us/dotnet/csharp/",
+    rootUrl: "https://learn.microsoft.com/en-us/dotnet/csharp/",
+  },
 ];
 
 export default configs;
