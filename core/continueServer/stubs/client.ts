@@ -26,7 +26,9 @@ export class ContinueServerClient implements IContinueServerClient {
     return this.userToken;
   }
 
-  connected: boolean = false;
+  get connected(): boolean {
+    return this.url !== undefined && this.userToken !== undefined;
+  }
 
   public async getConfig(): Promise<{ configJson: string; configJs: string }> {
     const userToken = await this.userToken;
@@ -62,26 +64,37 @@ export class ContinueServerClient implements IContinueServerClient {
       };
     }
     const url = new URL("indexing/cache", this.url);
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${await this.userToken}`,
-      },
-      body: JSON.stringify({
-        keys,
-        artifactId,
-        repo: repoName ?? "NONE",
-      }),
-    });
 
-    if (!response.ok) {
-      const text = await response.text();
-      throw new Error(
-        `Failed to retrieve from remote cache (HTTP ${response.status}): ${text}`,
-      );
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${await this.userToken}`,
+        },
+        body: JSON.stringify({
+          keys,
+          artifactId,
+          repo: repoName ?? "NONE",
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        console.warn(
+          `Failed to retrieve from remote cache (HTTP ${response.status}): ${text}`,
+        );
+        return {
+          files: {},
+        };
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (e) {
+      console.warn("Failed to retrieve from remote cache", e);
+      return {
+        files: {},
+      };
     }
-
-    const data = await response.json();
-    return data;
   }
 }
