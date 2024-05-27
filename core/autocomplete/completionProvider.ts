@@ -23,11 +23,11 @@ import {
 } from "../util/parameters.js";
 import { Telemetry } from "../util/posthog.js";
 import { getRangeInString } from "../util/ranges.js";
+import { BracketMatchingService } from "./brackets.js";
 import AutocompleteLruCache from "./cache.js";
 import {
   noFirstCharNewline,
   onlyWhitespaceAfterEndOfLine,
-  stopOnUnmatchedClosingBracket,
 } from "./charStream.js";
 import {
   constructAutocompletePrompt,
@@ -139,6 +139,7 @@ export async function getTabCompletion(
   generatorReuseManager: GeneratorReuseManager,
   input: AutocompleteInput,
   getDefinitionsFromLsp: GetLspDefinitionsFunction,
+  bracketMatchingService: BracketMatchingService,
 ): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
@@ -354,7 +355,11 @@ export async function getTabCompletion(
     let charGenerator = generatorWithCancellation();
     charGenerator = noFirstCharNewline(charGenerator);
     charGenerator = onlyWhitespaceAfterEndOfLine(charGenerator, lang.endOfLine);
-    charGenerator = stopOnUnmatchedClosingBracket(charGenerator, suffix);
+    charGenerator = bracketMatchingService.stopOnUnmatchedClosingBracket(
+      charGenerator,
+      suffix,
+      filepath,
+    );
 
     let lineGenerator = streamLines(charGenerator);
     lineGenerator = stopAtLines(lineGenerator);
@@ -387,6 +392,14 @@ export async function getTabCompletion(
 
     // Post-processing
     completion = completion.trimEnd();
+    if (llm.model.includes("codestral")) {
+      // Codestral sometimes starts with an extra space
+      if (completion[0] === " " && completion[1] !== " ") {
+        if (suffix.startsWith("\n")) {
+          completion = completion.slice(1);
+        }
+      }
+    }
   }
 
   const time = Date.now() - startTime;
@@ -423,6 +436,7 @@ export class CompletionProvider {
   private generatorReuseManager: GeneratorReuseManager;
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
+  private bracketMatchingService = new BracketMatchingService();
 
   private onError(e: any) {
     console.warn("Error generating autocompletion: ", e);
@@ -469,6 +483,11 @@ export class CompletionProvider {
         cacheHit: outcome.cacheHit,
       });
       this._outcomes.delete(completionId);
+
+      this.bracketMatchingService.handleAcceptedCompletion(
+        outcome.completion,
+        outcome.filepath,
+      );
     }
   }
 
@@ -582,6 +601,7 @@ export class CompletionProvider {
         this.generatorReuseManager,
         input,
         this.getDefinitionsFromLsp,
+        this.bracketMatchingService,
       );
 
       if (!outcome?.completion) {
