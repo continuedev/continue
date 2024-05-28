@@ -20,6 +20,7 @@ import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.command.WriteCommandAction
 import com.intellij.openapi.components.ServiceManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.editor.Document
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.SelectionModel
@@ -582,6 +583,22 @@ class IdeProtocolClient (
                         }
                     }
                     "applyToFile" -> {
+                    }
+                    "getGitHubAuthToken" -> {
+                        val continueSettingsService = service<ContinueExtensionSettings>()
+                        val ghAuthToken = continueSettingsService.continueState.ghAuthToken;
+                        respond(ghAuthToken)
+                    }
+                    "setGitHubAuthToken" -> {
+                        val continueSettingsService = service<ContinueExtensionSettings>()
+                        val data = data as Map<String, String>
+                        continueSettingsService.continueState.ghAuthToken = data["token"]
+                        respond(null)
+                    }
+                    "openUrl" -> {
+                        val url = data as String
+                        java.awt.Desktop.getDesktop().browse(java.net.URI(url))
+                        respond(null)
                     }
                     else -> {
                         println("Unknown messageType: $messageType")
