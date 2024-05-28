@@ -1,6 +1,6 @@
 import {
   ChatMessage,
-  LLMFullCompletionOptions,
+  CompletionOptions,
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
@@ -44,7 +44,7 @@ class Mistral extends OpenAI {
   async *_streamFim(
     prefix: string,
     suffix: string,
-    options: LLMFullCompletionOptions = {},
+    options: CompletionOptions,
   ): AsyncGenerator<string> {
     const endpoint = new URL("fim/completions", this.apiBase);
     const resp = await this.fetch(endpoint, {

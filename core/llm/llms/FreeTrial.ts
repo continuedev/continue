@@ -133,9 +133,37 @@ class FreeTrial extends BaseLLM {
     this._countTokens(completion, args.model, false);
   }
 
+  supportsFim(): boolean {
+    return this.model === "codestral-latest";
+  }
+
+  async *_streamFim(
+    prefix: string,
+    suffix: string,
+    options: CompletionOptions,
+  ): AsyncGenerator<string> {
+    const args = this._convertArgs(this.collectArgs(options));
+    const resp = await this.fetch(`${SERVER_URL}/stream_fim`, {
+      method: "POST",
+      headers: await this._getHeaders(),
+      body: JSON.stringify({
+        prefix,
+        suffix,
+        ...args,
+      }),
+    });
+
+    let completion = "";
+    for await (const value of streamResponse(resp)) {
+      yield value;
+      completion += value;
+    }
+    this._countTokens(completion, args.model, false);
+  }
+
   async listModels(): Promise<string[]> {
     return [
-      // "codestral-latest",
+      "codestral-latest",
       "llama3-70b",
       "gpt-4o",
       "gpt-3.5-turbo",
