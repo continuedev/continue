@@ -56,16 +56,16 @@ export class CodebaseIndexer {
       yield {
         progress: 0,
         desc: "Nothing to index",
-        status: "disabled",
+        status: "disabled",     
       };
       return;
     }
-
+    
     const config = await this.configHandler.loadConfig();
     if (config.disableIndexing) {
       yield {
         progress: 0,
-        desc: "Indexing is disabled in the config.json",
+        desc: "Indexing is disabled in config.json",
         status: "disabled",
       };
       return;
@@ -73,7 +73,7 @@ export class CodebaseIndexer {
       yield {
         progress: 0,
         desc: "Starting indexing",
-        status: "starting",
+        status: "loading",
       };
     }
 
@@ -88,7 +88,7 @@ export class CodebaseIndexer {
     yield {
       progress: 0,
       desc: "Starting indexing...",
-      status: "starting",
+      status: "loading",
     };
 
     for (const directory of workspaceDirs) {
@@ -161,9 +161,15 @@ export class CodebaseIndexer {
             status: "indexing",
           };
         } catch (e) {
+          yield {
+            progress: 0, 
+            desc: `${e}`,
+            status: "failed"
+          }
           console.warn(
             `Error updating the ${codebaseIndex.artifactId} index: ${e}`,
           );
+          return
         }
       }
 
