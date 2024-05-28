@@ -331,7 +331,7 @@ ${prompt}`;
   async *_streamFim(
     prefix: string,
     suffix: string,
-    options: LLMFullCompletionOptions = {},
+    options: CompletionOptions,
   ): AsyncGenerator<string, PromptLog> {
     throw new Error("Not implemented");
   }
