@@ -223,10 +223,10 @@ const Layout = () => {
     }
   }, [location]);
 
-  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
-    desc: "Indexing disabled",
+  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({ 
+    desc: "Loading indexing config",
     progress: 0.0,
-    status: "disabled",
+    status: "loading",
   });
 
   return (
