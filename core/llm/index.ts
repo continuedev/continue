@@ -93,6 +93,7 @@ export abstract class BaseLLM implements ILLM {
   apiType?: string;
   region?: string;
   projectId?: string;
+  accountId?: string;
 
   private _llmOptions: LLMOptions;
 
@@ -144,6 +145,7 @@ export abstract class BaseLLM implements ILLM {
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;
     }
+    this.accountId = options.accountId;
 
     this.engine = options.engine;
     this.apiVersion = options.apiVersion;
