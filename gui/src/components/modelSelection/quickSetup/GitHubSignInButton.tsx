@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Button, Input, SecondaryButton, vscForeground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { isJetBrains } from "../../../util";
+import { setLocalStorage } from "../../../util/localStorage";
 
 interface GitHubSignInButtonProps {
   onComplete: (token: string) => void;
@@ -52,6 +53,7 @@ function GitHubSignInButton(props: GitHubSignInButtonProps) {
           await ideMessenger.request("setGitHubAuthToken", {
             token: jbGhAuthToken,
           });
+          setLocalStorage("signedInToGh", true);
           props.onComplete(jbGhAuthToken);
         }}
       >
@@ -66,6 +68,7 @@ function GitHubSignInButton(props: GitHubSignInButtonProps) {
             "getGitHubAuthToken",
             undefined,
           );
+          setLocalStorage("signedInToGh", true);
           props.onComplete(token);
         }}
         className="grid grid-flow-col items-center gap-2"
