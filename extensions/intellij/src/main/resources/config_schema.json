@@ -157,8 +157,8 @@
             "deepinfra",
             "flowise",
             "groq",
-            "fireworks",
-            "continue-proxy"
+            "continue-proxy",
+            "cloudflare"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -177,7 +177,8 @@
             "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/llamafile)",
             "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
             "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
-            "### Continue Proxy\n\nContinue Enterprise users can use the Continue Proxy as a single point of access to models."
+            "### Continue Proxy\n\nContinue Enterprise users can use the Continue Proxy as a single point of access to models.",
+            "### Cloudflare Workers AI\n\n[Reference](https://developers.cloudflare.com/workers-ai/)"
           ],
           "type": "string"
         },
@@ -380,9 +381,6 @@
           "then": {
             "properties": {
               "accountId": {
-                "type": "string"
-              },
-              "aiGatewaySlug": {
                 "type": "string"
               },
               "model": {

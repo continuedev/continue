@@ -100,7 +100,6 @@ export abstract class BaseLLM implements ILLM {
   region?: string;
   projectId?: string;
   accountId?: string;
-  aiGatewaySlug?: string;
 
   private _llmOptions: LLMOptions;
 
