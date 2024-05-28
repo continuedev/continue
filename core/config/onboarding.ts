@@ -84,7 +84,7 @@ export function setupFreeTrialMode(
     tabAutocompleteModel: {
       title: "Tab Autocomplete",
       provider: "free-trial",
-      model: "starcoder-7b",
+      model: TRIAL_FIM_MODEL,
     },
     embeddingsProvider: {
       provider: "free-trial",
