@@ -12,6 +12,7 @@ import QuickSetupListBox from "./QuickSetupListBox";
 
 interface QuickModelSetupProps {
   onDone: () => void;
+  hideFreeTrialLimitMessage?: boolean;
 }
 
 function QuickModelSetup(props: QuickModelSetupProps) {
@@ -41,7 +42,7 @@ function QuickModelSetup(props: QuickModelSetupProps) {
             : "Add a new model"}
         </h1> */}
 
-        {getLocalStorage("ftc") > ftl() && (
+        {!props.hideFreeTrialLimitMessage && getLocalStorage("ftc") > ftl() && (
           <p className="text-sm text-gray-500">
             You've reached the free trial limit of {ftl()} free inputs. To keep
             using Continue, you can either use your own API key, or use a local

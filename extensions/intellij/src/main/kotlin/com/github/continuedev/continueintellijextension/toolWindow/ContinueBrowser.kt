@@ -65,7 +65,8 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         "stats/getTokensPerModel",
         "index/setPaused",
         "index/forceReIndex",
-        "completeOnboarding"
+        "completeOnboarding",
+        "addAutocompleteModel"
     )
 
     private fun registerAppSchemeHandler() {

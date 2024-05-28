@@ -6,6 +6,7 @@ import {
   DiffLine,
   LLMFullCompletionOptions,
   MessageContent,
+  ModelDescription,
   PersistedSessionInfo,
   RangeInFile,
   SerializedContinueConfig,
@@ -133,4 +134,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  addAutocompleteModel: [{ model: ModelDescription }, void];
 };
