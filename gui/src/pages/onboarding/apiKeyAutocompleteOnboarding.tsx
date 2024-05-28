@@ -23,12 +23,12 @@ const AUTOCOMPLETE_PROVIDER_OPTIONS: AutocompleteOption[] = [
   {
     provider: "free-trial",
     title: "Free Trial",
-    icon: "fireworks.png",
+    // icon: "fireworks.png",
   },
   {
     provider: "fireworks",
     title: "Fireworks AI",
-    icon: "fireworks.png",
+    // icon: "fireworks.png",
   },
   {
     provider: "ollama",
