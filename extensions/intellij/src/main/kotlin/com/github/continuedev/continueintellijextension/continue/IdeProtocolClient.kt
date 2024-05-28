@@ -53,6 +53,66 @@ fun uuid(): String {
     return UUID.randomUUID().toString()
 }
 
+val DEFAULT_IGNORE_FILETYPES = arrayOf(
+    ".DS_Store",
+    "-lock.json",
+    ".lock",
+    ".log",
+    ".ttf",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".mp4",
+    ".svg",
+    ".ico",
+    ".pdf",
+    ".zip",
+    ".gz",
+    ".tar",
+    ".dmg",
+    ".tgz",
+    ".rar",
+    ".7z",
+    ".exe",
+    ".dll",
+    ".obj",
+    ".o",
+    ".o.d",
+    ".a",
+    ".lib",
+    ".so",
+    ".dylib",
+    ".ncb",
+    ".sdf",
+    ".woff",
+    ".woff2",
+    ".eot",
+    ".cur",
+    ".avi",
+    ".mpg",
+    ".mpeg",
+    ".mov",
+    ".mp3",
+    ".mp4",
+    ".mkv",
+    ".mkv",
+    ".webm",
+    ".jar",
+    ".onnx",
+    ".parquet",
+    ".pqt",
+    ".wav",
+    ".webp",
+    ".db",
+    ".sqlite",
+    ".wasm",
+    ".plist",
+    ".profraw",
+    ".gcda",
+    ".gcno",
+    "go.sum",
+)
 
 data class IdeMessage<T>(val type: String, val messageId: String, val message: T)
 data class Position(val line: Int, val character: Int)
@@ -732,6 +792,8 @@ class IdeProtocolClient (
             "__pycache__",
             "site-packages",
             ".gradle",
+            ".cache",
+            "gems",
     )
     private fun shouldIgnoreDirectory(name: String): Boolean {
         val components = File(name).path.split(File.separator)
@@ -757,19 +819,30 @@ class IdeProtocolClient (
 
         val contents = ArrayList<String>()
         for (dir in dirs) {
+            if (DEFAULT_IGNORE_DIRS.any { dir.contains(it) }) {
+                continue
+            }
+
             val workspacePath = File(dir)
             val workspaceDir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
 
             if (workspaceDir != null) {
                 VfsUtil.iterateChildrenRecursively(workspaceDir, null) { virtualFile: VirtualFile ->
                     if (virtualFile.isDirectory) {
-//                        if (shouldIgnoreDirectory(virtualFile.name)) {
-//
-//                        }
+                        if (shouldIgnoreDirectory(virtualFile.name)) {
+                            // Don't recurse into this particular directory
+                            return@iterateChildrenRecursively false
+                        }
                     } else {
                         val filePath = virtualFile.path
-                        if (!shouldIgnoreDirectory(filePath)) {
+                        if (!shouldIgnoreDirectory(filePath) && !DEFAULT_IGNORE_FILETYPES.any { filePath.endsWith(it) }) {
                             contents.add(filePath)
+
+                            // Set a hard limit on the number of files to list
+                            if (contents.size > 10000) {
+                                // Completely exit the iteration
+                                return@iterateChildrenRecursively false
+                            }
                         }
                     }
                     true
