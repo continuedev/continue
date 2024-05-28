@@ -812,6 +812,8 @@ class IdeProtocolClient (
             "__pycache__",
             "site-packages",
             ".gradle",
+            ".cache",
+            "gems",
     )
     private fun shouldIgnoreDirectory(name: String): Boolean {
         val components = File(name).path.split(File.separator)
