@@ -13,6 +13,10 @@ rimrafSync(path.join(__dirname, "..", "out"));
 fs.mkdirSync(path.join(__dirname, "..", "out", "node_modules"), {
   recursive: true,
 });
+const guiDist = path.join(__dirname, "..", "..", "..", "gui", "dist");
+if (!fs.existsSync(guiDist)) {
+  fs.mkdirSync(guiDist, { recursive: true });
+}
 
 // Get the target to package for
 let target = undefined;
