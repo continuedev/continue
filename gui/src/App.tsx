@@ -17,6 +17,7 @@ import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
 import GUI from "./pages/gui";
 import LocalOnboarding from "./pages/localOnboarding";
+import ApiKeyAutocompleteOnboarding from "./pages/onboarding/apiKeyAutocompleteOnboarding";
 import ApiKeyOnboarding from "./pages/onboarding/apiKeyOnboarding";
 import ExistingUserOnboarding from "./pages/onboarding/existingUserOnboarding";
 import Onboarding from "./pages/onboarding/onboarding";
@@ -87,6 +88,10 @@ const router = createMemoryRouter([
       {
         path: "/apiKeyOnboarding",
         element: <ApiKeyOnboarding />,
+      },
+      {
+        path: "/apiKeyAutocompleteOnboarding",
+        element: <ApiKeyAutocompleteOnboarding />,
       },
     ],
   },

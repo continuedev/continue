@@ -316,6 +316,11 @@ async function intermediateToFinalConfig(
         config.completionOptions,
         config.systemMessage,
       );
+
+      if (autocompleteLlm?.providerName === "free-trial") {
+        const ghAuthToken = await ide.getGitHubAuthToken();
+        (autocompleteLlm as FreeTrial).setupGhAuthToken(ghAuthToken);
+      }
     } else {
       autocompleteLlm = new CustomLLMClass(config.tabAutocompleteModel);
     }
