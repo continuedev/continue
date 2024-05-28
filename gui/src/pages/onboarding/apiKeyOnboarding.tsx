@@ -23,7 +23,7 @@ function ApiKeyOnboarding() {
       <QuickModelSetup
         onDone={() => {
           ideMessenger.post("showTutorial", undefined);
-          navigate("/");
+          navigate("/apiKeyAutocompleteOnboarding");
         }}
       ></QuickModelSetup>
     </div>

@@ -12,6 +12,7 @@ import Anthropic from "./Anthropic.js";
 import Bedrock from "./Bedrock.js";
 import Cohere from "./Cohere.js";
 import DeepInfra from "./DeepInfra.js";
+import Fireworks from "./Fireworks.js";
 import Flowise from "./Flowise.js";
 import FreeTrial from "./FreeTrial.js";
 import Gemini from "./Gemini.js";
@@ -96,6 +97,7 @@ const LLMs = [
   DeepInfra,
   Flowise,
   Groq,
+  Fireworks,
   ContinueProxy,
 ];
 

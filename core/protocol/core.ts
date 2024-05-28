@@ -134,4 +134,5 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     void,
   ];
+  addAutocompleteModel: [{ model: ModelDescription }, void];
 };

@@ -555,6 +555,7 @@ type ModelProvider =
   | "flowise"
   | "groq"
   | "continue-proxy"
+  | "fireworks"
   | "custom";
 
 export type ModelName =
