@@ -733,6 +733,7 @@ interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
   defaultContext?: "activeFile"[];
+  promptPath?: string;
 }
 
 export interface SerializedContinueConfig {

@@ -2229,6 +2229,9 @@
                 }
               }
             },
+            "promptPath": {
+              "type": "string"
+            },
             "contextMenuPrompts": {
               "type": "object",
               "properties": {
