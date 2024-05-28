@@ -4,6 +4,7 @@ import { greenButtonColor } from "../../components";
 import { ftl } from "../../components/dialogs/FTCDialog";
 import GitHubSignInButton from "../../components/modelSelection/quickSetup/GitHubSignInButton";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { isJetBrains } from "../../util";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { Div, StyledButton } from "./components";
 
@@ -124,7 +125,7 @@ function Onboarding() {
         </StyledButton>
       </div>
 
-      {getLocalStorage("onboardingComplete") || (
+      {(!getLocalStorage("onboardingComplete") || isJetBrains()) && (
         <>
           <hr className="w-full my-12"></hr>
 

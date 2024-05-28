@@ -527,7 +527,14 @@ class IdeProtocolClient (
                     "getGitHubAuthToken" -> {
                         val continueSettingsService = service<ContinueExtensionSettings>()
                         val ghAuthToken = continueSettingsService.continueState.ghAuthToken;
-                        respond(ghAuthToken)
+
+                        if (ghAuthToken == null) {
+                            // Open a dialog so user can enter their GitHub token
+                            continuePluginService.sendToWebview("openOnboarding", null, uuid())
+                            respond(null)
+                        } else {
+                            respond(ghAuthToken)
+                        }
                     }
                     "setGitHubAuthToken" -> {
                         val continueSettingsService = service<ContinueExtensionSettings>()
