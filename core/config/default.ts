@@ -2,6 +2,7 @@ import {
   ContextProviderWithParams,
   ModelDescription,
   SerializedContinueConfig,
+  SlashCommandDescription,
 } from "../index.js";
 
 export const FREE_TRIAL_MODELS: ModelDescription[] = [
@@ -65,7 +66,7 @@ export const defaultConfigJetBrains: SerializedContinueConfig = {
   },
 };
 
-export const defaultSlashCommandsVscode = [
+export const defaultSlashCommandsVscode: SlashCommandDescription[] = [
   {
     name: "edit",
     description: "Edit selected code",
@@ -82,6 +83,10 @@ export const defaultSlashCommandsVscode = [
     name: "cmd",
     description: "Generate a shell command",
   },
+  {
+    name: "commit",
+    description: "Generate a git commit message",
+  },
 ];
 
 export const defaultSlashCommandsJetBrains = [
@@ -96,6 +101,10 @@ export const defaultSlashCommandsJetBrains = [
   {
     name: "share",
     description: "Export the current chat session to markdown",
+  },
+  {
+    name: "commit",
+    description: "Generate a git commit message",
   },
 ];
 

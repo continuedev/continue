@@ -14,6 +14,7 @@ import { ContinueServerClient } from "./continueServer/stubs/client";
 import { indexDocs } from "./indexing/docs";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase";
+import Ollama from "./llm/llms/Ollama";
 import { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext";
 import { logDevData } from "./util/devdata";
@@ -357,7 +358,15 @@ export class Core {
       const model =
         config.models.find((model) => model.title === msg.data.title) ??
         config.models.find((model) => model.title?.startsWith(msg.data.title));
-      return model?.listModels();
+      if (model) {
+        return model.listModels();
+      } else {
+        if (msg.data.title === "Ollama") {
+          return new Ollama({ model: "" }).listModels();
+        } else {
+          return undefined;
+        }
+      }
     });
 
     async function* runNodeJsSlashCommand(
@@ -481,6 +490,16 @@ export class Core {
                 ? setupApiKeysMode
                 : setupOptimizedExistingUserMode,
       );
+      this.configHandler.reloadConfig();
+    });
+
+    on("addAutocompleteModel", (msg) => {
+      editConfigJson((config) => {
+        return {
+          ...config,
+          tabAutocompleteModel: msg.data.model,
+        };
+      });
       this.configHandler.reloadConfig();
     });
 

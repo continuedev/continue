@@ -149,6 +149,7 @@
             "deepinfra",
             "flowise",
             "groq",
+            "fireworks",
             "continue-proxy"
           ],
           "markdownEnumDescriptions": [
@@ -821,6 +822,23 @@
                   "llama3-70b",
                   "AUTODETECT"
                 ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["fireworks"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["starcoder-7b"]
               }
             }
           }
