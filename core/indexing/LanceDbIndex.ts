@@ -148,8 +148,8 @@ export class LanceDbIndex implements CodebaseIndex {
 
     // Compute
     let table: Table<number[]> | undefined = undefined;
-    let needToCreateTable = true;
     const existingTables = await db.tableNames();
+    let needToCreateTable = !existingTables.includes(tableName);
 
     const addComputedLanceDbRows = async (
       pathAndCacheKey: PathAndCacheKey,
