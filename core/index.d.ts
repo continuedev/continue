@@ -304,6 +304,9 @@ export interface LLMOptions {
 
   useLegacyCompletionsEndpoint?: boolean;
 
+  // Cloudflare options
+  accountId?: string;
+
   // Azure options
   engine?: string;
   apiVersion?: string;
@@ -539,7 +542,8 @@ type ModelProvider =
   | "groq"
   | "continue-proxy"
   | "fireworks"
-  | "custom";
+  | "custom"
+  | "cloudflare";
 
 export type ModelName =
   | "AUTODETECT"
