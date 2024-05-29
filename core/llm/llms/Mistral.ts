@@ -18,6 +18,13 @@ class Mistral extends OpenAI {
     },
   };
 
+  constructor(options: LLMOptions) {
+    super(options);
+    if (options.model.includes("codestral")) {
+      this.apiBase = "https://codestral.mistral.ai/v1/";
+    }
+  }
+
   private static modelConversion: { [key: string]: string } = {
     "mistral-7b": "open-mistral-7b",
     "mistral-8x7b": "open-mixtral-8x7b",
