@@ -29,6 +29,7 @@ import Replicate from "./Replicate.js";
 import TextGenWebUI from "./TextGenWebUI.js";
 import Together from "./Together.js";
 import ContinueProxy from "./stubs/ContinueProxy.js";
+import Cloudflare from "./Cloudflare";
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -99,6 +100,7 @@ const LLMs = [
   Groq,
   Fireworks,
   ContinueProxy,
+  Cloudflare,
 ];
 
 export async function llmFromDescription(
