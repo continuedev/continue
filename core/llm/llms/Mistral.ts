@@ -72,6 +72,7 @@ class Mistral extends OpenAI {
         "Content-Type": "application/json",
         Accept: "application/json",
         "x-api-key": this.apiKey ?? "",
+        Authorization: `Bearer ${this.apiKey}`,
       },
     });
     for await (const chunk of streamSse(resp)) {
