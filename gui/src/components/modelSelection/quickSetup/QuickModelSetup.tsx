@@ -86,10 +86,20 @@ function QuickModelSetup(props: QuickModelSetupProps) {
         {selectedProvider.apiKeyUrl && (
           <>
             <h4>3. Paste your API key</h4>
+            {selectedModel.params.model.startsWith("codestral") && (
+              <i>
+                Note: Codestral requires a different API key from other Mistral
+                models
+              </i>
+            )}
             <SecondaryButton
               className="w-full border-2 border-solid"
               onClick={() => {
-                ideMessenger.post("openUrl", selectedProvider.apiKeyUrl);
+                let apiKeyUrl = selectedProvider.apiKeyUrl;
+                if (selectedModel.params.model.startsWith("codestral")) {
+                  apiKeyUrl = "https://console.mistral.ai/codestral";
+                }
+                ideMessenger.post("openUrl", apiKeyUrl);
               }}
             >
               Get API Key
