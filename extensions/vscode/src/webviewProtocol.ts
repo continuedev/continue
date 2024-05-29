@@ -175,7 +175,11 @@ export class VsCodeWebviewProtocol
               });
           } else {
             vscode.window
-              .showErrorMessage(message, "Show Logs", "Troubleshooting")
+              .showErrorMessage(
+                message.split("\n\n")[0],
+                "Show Logs",
+                "Troubleshooting",
+              )
               .then((selection) => {
                 if (selection === "Show Logs") {
                   vscode.commands.executeCommand(
