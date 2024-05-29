@@ -112,7 +112,6 @@ export class VsCodeExtension {
     setupRemoteConfigSync(
       this.configHandler.reloadConfig.bind(this.configHandler),
     );
-    this.core = new Core(inProcessMessenger, this.ide);
 
     // Indexing + pause token
     this.diffManager.webviewProtocol = this.webviewProtocol;
