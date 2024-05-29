@@ -1,5 +1,4 @@
 import type {
-  ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
@@ -29,14 +28,8 @@ class Together extends OpenAI {
     "wizardcoder-34b": "WizardLM/WizardCoder-Python-34B-V1.0",
   };
 
-  private _getModelName(model: string) {
+  protected _convertModelName(model: string) {
     return Together.MODEL_IDS[model] || this.model;
-  }
-
-  protected _convertArgs(options: any, messages: ChatMessage[]) {
-    const finalOptions = super._convertArgs(options, messages);
-    finalOptions.model = this._getModelName(options.model);
-    return finalOptions;
   }
 
   protected async *_streamComplete(

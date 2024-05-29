@@ -21,6 +21,11 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
       "You are an expert software developer. You give helpful and concise responses. Whenever you write a code block you include the language after the opening ticks.",
   },
   {
+    title: "Codestral (Free Trial)",
+    provider: "free-trial",
+    model: "codestral",
+  },
+  {
     title: "Claude 3 Sonnet (Free Trial)",
     provider: "free-trial",
     model: "claude-3-sonnet-20240229",

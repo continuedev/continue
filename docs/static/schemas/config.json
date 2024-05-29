@@ -149,6 +149,7 @@
             "deepinfra",
             "flowise",
             "groq",
+            "fireworks",
             "continue-proxy"
           ],
           "markdownEnumDescriptions": [
@@ -439,6 +440,7 @@
               "model": {
                 "enum": [
                   "gpt-4o",
+                  "codestral-latest",
                   "llama3-70b",
                   "gpt-3.5-turbo",
                   "phind-codellama-34b",
@@ -446,7 +448,6 @@
                   "mistral-8x7b",
                   "claude-3-sonnet-20240229",
                   "claude-3-haiku-20240307",
-                  "starcoder-7b",
                   "AUTODETECT"
                 ]
               }
@@ -790,11 +791,11 @@
             "properties": {
               "model": {
                 "enum": [
+                  "codestral-latest",
                   "open-mistral-7b",
                   "open-mixtral-8x7b",
                   "open-mixtral-8x22b",
                   "mistral-small-latest",
-                  "mistral-medium-latest",
                   "mistral-large-latest"
                 ]
               }
@@ -821,6 +822,23 @@
                   "llama3-70b",
                   "AUTODETECT"
                 ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["fireworks"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["starcoder-7b"]
               }
             }
           }

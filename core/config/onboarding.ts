@@ -1,6 +1,8 @@
 import { SerializedContinueConfig } from "../index.js";
 import { FREE_TRIAL_MODELS } from "./default.js";
 
+export const TRIAL_FIM_MODEL = "codestral-latest";
+
 export function setupApiKeysMode(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {
@@ -10,7 +12,7 @@ export function setupApiKeysMode(
     tabAutocompleteModel: {
       title: "Tab Autocomplete",
       provider: "free-trial",
-      model: "starcoder-7b",
+      model: TRIAL_FIM_MODEL,
     },
     embeddingsProvider: {
       provider: "free-trial",
@@ -29,7 +31,7 @@ export function setupOptimizedExistingUserMode(
     tabAutocompleteModel: {
       title: "Tab Autocomplete",
       provider: "free-trial",
-      model: "starcoder-7b",
+      model: TRIAL_FIM_MODEL,
     },
     embeddingsProvider: {
       provider: "free-trial",
@@ -82,7 +84,7 @@ export function setupFreeTrialMode(
     tabAutocompleteModel: {
       title: "Tab Autocomplete",
       provider: "free-trial",
-      model: "starcoder-7b",
+      model: TRIAL_FIM_MODEL,
     },
     embeddingsProvider: {
       provider: "free-trial",

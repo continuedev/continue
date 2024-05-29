@@ -1,6 +1,7 @@
 import { Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import { ModelProvider } from "core";
+import { TRIAL_FIM_MODEL } from "core/config/onboarding";
 import { Fragment, useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button, Input, SecondaryButton } from "../../components";
@@ -22,7 +23,7 @@ interface AutocompleteOption {
 const AUTOCOMPLETE_PROVIDER_OPTIONS: AutocompleteOption[] = [
   {
     provider: "free-trial",
-    title: "Free Trial",
+    title: "Free Trial (Codestral)",
     // icon: "fireworks.png",
   },
   {
@@ -160,7 +161,7 @@ function ApiKeyAutocompleteOnboarding() {
                 model: {
                   title: "Autocomplete Trial",
                   provider: "free-trial",
-                  model: "starcoder-7b",
+                  model: TRIAL_FIM_MODEL,
                 },
               });
               navigate("/");

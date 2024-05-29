@@ -47,6 +47,10 @@ export abstract class BaseLLM implements ILLM {
     return (this.constructor as typeof BaseLLM).providerName;
   }
 
+  supportsFim(): boolean {
+    return false;
+  }
+
   supportsImages(): boolean {
     return modelSupportsImages(this.providerName, this.model, this.title);
   }
@@ -55,21 +59,23 @@ export abstract class BaseLLM implements ILLM {
     if (this.providerName === "openai") {
       if (
         this.apiBase?.includes("api.groq.com") ||
+        this.apiBase?.includes("api.mistral.ai") ||
         this.apiBase?.includes(":1337") ||
         this._llmOptions.useLegacyCompletionsEndpoint?.valueOf() === false
       ) {
-        // Jan + Groq don't support completions : (
+        // Jan + Groq + Mistral don't support completions : (
+        // Seems to be going out of style...
         return false;
       }
     }
-    if (this.providerName === "groq") {
+    if (["groq", "mistral"].includes(this.providerName)) {
       return false;
     }
     return true;
   }
 
   supportsPrefill(): boolean {
-    return ["ollama", "anthropic"].includes(this.providerName);
+    return ["ollama", "anthropic", "mistral"].includes(this.providerName);
   }
 
   uniqueId: string;
@@ -81,7 +87,7 @@ export abstract class BaseLLM implements ILLM {
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
-  promptTemplates?: Record<string, string>;
+  promptTemplates?: Record<string, PromptTemplate>;
   templateMessages?: (messages: ChatMessage[]) => string;
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
@@ -320,6 +326,60 @@ ${prompt}`;
       formatted += `<${msg.role}>\n${msg.content || ""}\n\n`;
     }
     return formatted;
+  }
+
+  async *_streamFim(
+    prefix: string,
+    suffix: string,
+    options: CompletionOptions,
+  ): AsyncGenerator<string, PromptLog> {
+    throw new Error("Not implemented");
+  }
+
+  async *streamFim(
+    prefix: string,
+    suffix: string,
+    options: LLMFullCompletionOptions = {},
+  ): AsyncGenerator<string> {
+    const { completionOptions, log } = this._parseCompletionOptions(options);
+
+    const madeUpFimPrompt = `${prefix}<FIM>${suffix}`;
+    if (log) {
+      if (this.writeLog) {
+        await this.writeLog(
+          this._compileLogMessage(madeUpFimPrompt, completionOptions),
+        );
+      }
+      if (this.llmRequestHook) {
+        this.llmRequestHook(completionOptions.model, madeUpFimPrompt);
+      }
+    }
+
+    let completion = "";
+    for await (const chunk of this._streamFim(
+      prefix,
+      suffix,
+      completionOptions,
+    )) {
+      completion += chunk;
+      yield chunk;
+    }
+
+    this._logTokensGenerated(
+      completionOptions.model,
+      madeUpFimPrompt,
+      completion,
+    );
+
+    if (log && this.writeLog) {
+      await this.writeLog(`Completion:\n\n${completion}\n\n`);
+    }
+
+    return {
+      prompt: madeUpFimPrompt,
+      completion,
+      completionOptions,
+    };
   }
 
   async *streamComplete(
