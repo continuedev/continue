@@ -807,7 +807,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       mistral8x7b,
       mistral7b,
     ],
-    apiKeyUrl: "https://console.mistral.ai/api-keys/",
+    apiKeyUrl: "https://console.mistral.ai/codestral",
   },
   ollama: {
     title: "Ollama",
