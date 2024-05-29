@@ -820,65 +820,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       mistral8x7b,
       mistral7b,
     ],
-  },
-  ollama: {
-    title: "Ollama",
-    provider: "ollama",
-    description:
-      "Groq is the fastest LLM provider by a wide margin, using 'LPUs' to serve open-source models at blazing speed.",
-    longDescription:
-      "To get started with Groq, obtain an API key from their website [here](https://wow.groq.com/).",
-    tags: [
-      ModelProviderTag["Requires API Key"],
-      ModelProviderTag["Open-Source"],
-    ],
-    collectInputFor: [
-      {
-        inputType: CollectInputType.text,
-        key: "apiKey",
-        label: "API Key",
-        placeholder: "Enter your Groq API key",
-        required: true,
-      },
-    ],
-    packages: [
-      llama370bChat,
-      llama38bChat,
-      { ...mixtralTrial, title: "Mixtral" },
-      llama270bChat,
-      {
-        ...AUTODETECT,
-        params: {
-          ...AUTODETECT.params,
-          title: "Groq",
-        },
-      },
-      ,
-    ],
-    apiKeyUrl: "https://console.groq.com/keys",
-  },
-  cohere: {
-    title: "Cohere",
-    provider: "cohere",
-    refPage: "cohere",
-    description:
-      "Optimized for enterprise generative AI, search and discovery, and advanced retrieval.",
-    icon: "cohere.png",
-    tags: [ModelProviderTag["Requires API Key"]],
-    longDescription:
-      "To use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.",
-    collectInputFor: [
-      {
-        inputType: CollectInputType.text,
-        key: "apiKey",
-        label: "API Key",
-        placeholder: "Enter your Cohere API key",
-        required: true,
-      },
-      ...completionParamsInputs,
-    ],
-    packages: [commandR, commandRPlus],
-    apiKeyUrl: "https://dashboard.cohere.com/api-keys",
+    apiKeyUrl: "https://console.mistral.ai/codestral",
   },
   ollama: {
     title: "Ollama",
