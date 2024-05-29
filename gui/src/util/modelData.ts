@@ -781,7 +781,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     description:
       "The Mistral API provides seamless access to their models, including Codestral, Mistral 8x22B, Mistral Large, and more.",
     icon: "mistral.png",
-    longDescription: `To get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)`,
+    longDescription: `To get access to the Mistral API, obtain your API key from [here](https://console.mistral.ai/codestral) for Codestral or the [Mistral platform](https://docs.mistral.ai/) for all other models.`,
     tags: [
       ModelProviderTag["Requires API Key"],
       ModelProviderTag["Open-Source"],
@@ -807,7 +807,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       mistral8x7b,
       mistral7b,
     ],
-    apiKeyUrl: "https://console.mistral.ai/api-keys/",
+    apiKeyUrl: "https://console.mistral.ai/codestral",
   },
   ollama: {
     title: "Ollama",
