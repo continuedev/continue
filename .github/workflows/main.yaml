@@ -34,11 +34,11 @@ jobs:
             platform: alpine
             arch: x64
             npm_config_arch: x64
-          - os: macos-latest
+          - os: macos-12 # should migrate this to the newer x64 version of macos-14
             platform: darwin
             arch: x64
             npm_config_arch: x64
-          - os: macos-latest
+          - os: macos-12 # same here, especially
             platform: darwin
             arch: arm64
             npm_config_arch: arm64
@@ -51,7 +51,7 @@ jobs:
       - name: Make sure version isn't odd
         run: |
           cd extensions/vscode
-          node versionCheck.js
+          node scripts/versionCheck.js
 
       # 2. Install npm dependencies
       - name: Use Node.js from .nvmrc
@@ -77,10 +77,6 @@ jobs:
           path: gui/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
 
-      - name: Install global Dependencies
-        run: |
-          npm install -g cargo-cp-artifact
-
       - name: Install extension Dependencies
         run: |
           cd extensions/vscode
@@ -92,21 +88,14 @@ jobs:
       - name: Install gui Dependencies
         run: |
           cd gui
-          npm ci --legacy-peer-deps
+          npm ci
 
       - name: Install Core Dependencies
         run: |
           cd core
-          npm ci --legacy-peer-deps
+          npm ci
 
       # 2.5. Pre package
-      - name: Make the out/node_modules directory
-        run: |
-          cd extensions/vscode
-          mkdir out
-          cd out
-          mkdir node_modules
-
       - name: Set var for environment info
         shell: pwsh
         run: echo "target=${{ matrix.platform }}-${{ matrix.arch }}" >> $env:GITHUB_ENV
@@ -133,16 +122,17 @@ jobs:
       #     npm run test
       #   if: matrix.os != 'ubuntu-latest'
 
-      # 4. Package the extension
+      # 4. Re-install esbuild (for cases that we force installed for another arch in prepackage.js)
       - name: Re-install esbuild
         run: |
           cd extensions/vscode
           npm install -f esbuild
 
+      # 5. Package the extension
       - name: Package the extension
-        run: cd extensions/vscode && npx vsce package --target ${{ env.target }}
+        run: cd extensions/vscode && npx vsce package --no-dependencies --target ${{ env.target }}
 
-      # 5. Upload the .vsix as an artifact
+      # 6. Upload the .vsix as an artifact
       - uses: actions/upload-artifact@v2
         with:
           name: ${{ env.target }}
@@ -166,9 +156,6 @@ jobs:
       # Download the .vsix artifacts
       - uses: actions/download-artifact@v3
 
-      - name: List files
-        run: ls -l ${{ github.workspace }}
-
       - name: Tag the repository
         id: tag
         run: |
@@ -183,7 +170,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ steps.tag.outputs.tag }}
-          body_path: extensions/vscode/CHANGELOG.md
           files: |
             alpine-x64/*.vsix
             darwin-arm64/*.vsix
