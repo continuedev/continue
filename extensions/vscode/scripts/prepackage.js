@@ -13,6 +13,10 @@ rimrafSync(path.join(__dirname, "..", "out"));
 fs.mkdirSync(path.join(__dirname, "..", "out", "node_modules"), {
   recursive: true,
 });
+const guiDist = path.join(__dirname, "..", "..", "..", "gui", "dist");
+if (!fs.existsSync(guiDist)) {
+  fs.mkdirSync(guiDist, { recursive: true });
+}
 
 // Get the target to package for
 let target = undefined;
@@ -316,7 +320,7 @@ const exe = os === "win32" ? ".exe" : "";
     console.log(`Copying ${packageName} to ${toCopy}`);
     // This is a way to install only one package without npm trying to install all the dependencies
     // Create a temporary directory for installing the package
-    const adjustedName = packageName.replace(/^@/, "").replace("/", "-");
+    const adjustedName = toCopy.replace(/^@/, "").replace("/", "-");
 
     const tempDir = `/tmp/continue-node_modules-${adjustedName}`;
     const currentDir = process.cwd();

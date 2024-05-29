@@ -42,6 +42,7 @@ const PROVIDER_HANDLES_TEMPLATING: ModelProvider[] = [
   "anthropic",
   "bedrock",
   "continue-proxy",
+  "mistral",
 ];
 
 const PROVIDER_SUPPORTS_IMAGES: ModelProvider[] = [

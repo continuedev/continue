@@ -3,16 +3,18 @@ import { ContextItemId, IDE } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider";
 import { ConfigHandler } from "./config/handler";
 import {
+  setupApiKeysMode,
+  setupFreeTrialMode,
   setupLocalAfterFreeTrial,
   setupLocalMode,
   setupOptimizedExistingUserMode,
-  setupOptimizedMode,
 } from "./config/onboarding";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util";
 import { ContinueServerClient } from "./continueServer/stubs/client";
 import { indexDocs } from "./indexing/docs";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase";
+import Ollama from "./llm/llms/Ollama";
 import { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext";
 import { logDevData } from "./util/devdata";
@@ -23,6 +25,7 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson, getConfigJsonPath } from "./util/paths";
 import { Telemetry } from "./util/posthog";
 import { streamDiffLines } from "./util/verticalEdit";
+import { IndexingProgressUpdate } from ".";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -30,6 +33,7 @@ export class Core {
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
+  indexingState: IndexingProgressUpdate
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -55,12 +59,16 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
+    private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
+    this.indexingState = { status:"loading", desc: 'loading', progress: 0 }
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
-      async (text: string) => {},
+      this.onWrite,
+    );
+    this.configHandler.onConfigUpdate(
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
 
@@ -353,7 +361,15 @@ export class Core {
       const model =
         config.models.find((model) => model.title === msg.data.title) ??
         config.models.find((model) => model.title?.startsWith(msg.data.title));
-      return model?.listModels();
+      if (model) {
+        return model.listModels();
+      } else {
+        if (msg.data.title === "Ollama") {
+          return new Ollama({ model: "" }).listModels();
+        } else {
+          return undefined;
+        }
+      }
     });
 
     async function* runNodeJsSlashCommand(
@@ -469,12 +485,24 @@ export class Core {
       editConfigJson(
         mode === "local"
           ? setupLocalMode
-          : mode === "localAfterFreeTrial"
-            ? setupLocalAfterFreeTrial
-            : mode === "optimized"
-              ? setupOptimizedMode
-              : setupOptimizedExistingUserMode,
+          : mode === "freeTrial"
+            ? setupFreeTrialMode
+            : mode === "localAfterFreeTrial"
+              ? setupLocalAfterFreeTrial
+              : mode === "apiKeys"
+                ? setupApiKeysMode
+                : setupOptimizedExistingUserMode,
       );
+      this.configHandler.reloadConfig();
+    });
+
+    on("addAutocompleteModel", (msg) => {
+      editConfigJson((config) => {
+        return {
+          ...config,
+          tabAutocompleteModel: msg.data.model,
+        };
+      });
       this.configHandler.reloadConfig();
     });
 
@@ -494,6 +522,13 @@ export class Core {
       new GlobalContext().update("indexingPaused", msg.data);
       indexingPauseToken.paused = msg.data;
     });
+    on("index/indexingProgressBarInitialized", async (msg) => {
+      // Triggered when progress bar is initialized.
+      // If a non-default state has been stored, update the indexing display to that state
+      if (this.indexingState.status != 'loading') {
+        this.messenger.request("indexProgress", this.indexingState);
+      }
+    });
   }
 
   private indexingCancellationController: AbortController | undefined;
@@ -508,6 +543,7 @@ export class Core {
       this.indexingCancellationController.signal,
     )) {
       this.messenger.request("indexProgress", update);
+      this.indexingState = update
     }
   }
 }

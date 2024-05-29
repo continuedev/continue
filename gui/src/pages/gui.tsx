@@ -32,7 +32,6 @@ import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
-import QuickModelSetup from "../components/modelSelection/quickSetup/QuickModelSetup";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
@@ -248,8 +247,7 @@ function GUI(props: GUIProps) {
           setLocalStorage("ftc", u + 1);
 
           if (u >= ftl()) {
-            dispatch(setShowDialog(true));
-            dispatch(setDialogMessage(<QuickModelSetup />));
+            navigate("/onboarding");
             posthog?.capture("ftc_reached");
             return;
           }

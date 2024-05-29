@@ -8,13 +8,14 @@ const emptyJsonContent = () => ({
   content: [{ type: "paragraph", content: [{ type: "text", text: "" }] }],
 });
 
+const MAX_HISTORY_LENGTH = 100;
+
 export function useInputHistory() {
   const [inputHistory, setInputHistory] = useState<JSONContent[]>(
-    getLocalStorage("inputHistory") ?? [],
+    getLocalStorage("inputHistory")?.slice(-MAX_HISTORY_LENGTH) ?? [],
   );
-  const [pendingInput, setPendingInput] = useState<JSONContent>(
-    emptyJsonContent(),
-  );
+  const [pendingInput, setPendingInput] =
+    useState<JSONContent>(emptyJsonContent());
   const [currentIndex, setCurrentIndex] = useState(inputHistory.length);
 
   function prev(currentInput: JSONContent) {
@@ -54,9 +55,12 @@ export function useInputHistory() {
       setCurrentIndex(inputHistory.length + 1);
     }
     setInputHistory((prev) => {
-      return [...prev, inputValue];
+      return [...prev, inputValue].slice(-MAX_HISTORY_LENGTH);
     });
-    setLocalStorage("inputHistory", [...inputHistory, inputValue]);
+    setLocalStorage(
+      "inputHistory",
+      [...inputHistory, inputValue].slice(-MAX_HISTORY_LENGTH),
+    );
   }
 
   const prevRef = useUpdatingRef(prev, [inputHistory]);

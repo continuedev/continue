@@ -2,17 +2,16 @@
 
 Continue now provides support for tab autocomplete in [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains IDEs](https://plugins.jetbrains.com/plugin/22707-continue/edit). We will be greatly improving the experience over the next few releases, and it is always helpful to hear feedback. If you have any problems or suggestions, please let us know in our [Discord](https://discord.gg/vapESyrFmJ).
 
-## Setting up with Starcoder 7b (recommended)
+## Setting up with Codestral (recommended)
 
-If you want to have the best autocomplete experience, we recommend using Starcoder 7b, which is available through [Fireworks AI](https://fireworks.ai/models/fireworks/starcoder-7b). To do this, obtain an API key and add it to your `config.json`:
+If you want to have the best autocomplete experience, we recommend using Codestral, which is available through the [Mistral API](https://console.mistral.ai/). To do this, obtain an API key and add it to your `config.json`:
 
 ```json
 {
   "tabAutocompleteModel": {
-    "title": "Starcoder 7b",
-    "provider": "openai",
-    "model": "accounts/fireworks/models/starcoder-7b",
-    "apiBase": "https://api.fireworks.ai/inference/v1",
+    "title": "Codestral",
+    "provider": "mistral",
+    "model": "codestral-latest",
     "apiKey": "YOUR_API_KEY"
   }
 }

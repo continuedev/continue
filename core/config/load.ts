@@ -31,6 +31,7 @@ import TransformersJsEmbeddingsProvider from "../indexing/embeddings/Transformer
 import { AllEmbeddingsProviders } from "../indexing/embeddings/index.js";
 import { BaseLLM } from "../llm/index.js";
 import CustomLLMClass from "../llm/llms/CustomLLM.js";
+import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
 import { IdeSettings } from "../protocol/ideWebview.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
@@ -277,6 +278,17 @@ async function intermediateToFinalConfig(
     };
   }
 
+  // Obtain auth token (only if free trial being used)
+  const freeTrialModels = models.filter(
+    (model) => model.providerName === "free-trial",
+  );
+  if (freeTrialModels.length > 0) {
+    const ghAuthToken = await ide.getGitHubAuthToken();
+    for (const model of freeTrialModels) {
+      (model as FreeTrial).setupGhAuthToken(ghAuthToken);
+    }
+  }
+
   // Tab autocomplete model
   let autocompleteLlm: BaseLLM | undefined = undefined;
   if (config.tabAutocompleteModel) {
@@ -290,6 +302,11 @@ async function intermediateToFinalConfig(
         config.completionOptions,
         config.systemMessage,
       );
+
+      if (autocompleteLlm?.providerName === "free-trial") {
+        const ghAuthToken = await ide.getGitHubAuthToken();
+        (autocompleteLlm as FreeTrial).setupGhAuthToken(ghAuthToken);
+      }
     } else {
       autocompleteLlm = new CustomLLMClass(config.tabAutocompleteModel);
     }
@@ -382,7 +399,7 @@ function finalToBrowserConfig(
       completionOptions: m.completionOptions,
       systemMessage: m.systemMessage,
       requestOptions: m.requestOptions,
-      promptTemplates: m.promptTemplates,
+      promptTemplates: m.promptTemplates as any,
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,

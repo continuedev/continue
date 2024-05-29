@@ -37,7 +37,7 @@ export interface Chunk extends ChunkWithoutID {
 export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
-  status: "starting" | "indexing" | "done" | "failed" | "paused" | "disabled";
+  status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
 }
 
 export type PromptTemplate =
@@ -58,7 +58,7 @@ export interface ILLM extends LLMOptions {
   contextLength: number;
   completionOptions: CompletionOptions;
   requestOptions?: RequestOptions;
-  promptTemplates?: Record<string, string>;
+  promptTemplates?: Record<string, PromptTemplate>;
   templateMessages?: (messages: ChatMessage[]) => string;
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
@@ -75,6 +75,12 @@ export interface ILLM extends LLMOptions {
 
   streamComplete(
     prompt: string,
+    options?: LLMFullCompletionOptions,
+  ): AsyncGenerator<string, PromptLog>;
+
+  streamFim(
+    prefix: string,
+    suffix: string,
     options?: LLMFullCompletionOptions,
   ): AsyncGenerator<string, PromptLog>;
 
@@ -95,6 +101,8 @@ export interface ILLM extends LLMOptions {
   supportsCompletions(): boolean;
 
   supportsPrefill(): boolean;
+
+  supportsFim(): boolean;
 
   listModels(): Promise<string[]>;
 
@@ -287,7 +295,7 @@ export interface LLMOptions {
   completionOptions?: CompletionOptions;
   requestOptions?: RequestOptions;
   template?: TemplateType;
-  promptTemplates?: Record<string, string>;
+  promptTemplates?: Record<string, PromptTemplate>;
   templateMessages?: (messages: ChatMessage[]) => string;
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
@@ -430,6 +438,7 @@ export interface IDE {
   getGitRootPath(dir: string): Promise<string | undefined>;
   listDir(dir: string): Promise<[string, FileType][]>;
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
+  getGitHubAuthToken(): Promise<string | undefined>;
 }
 
 // Slash Commands
@@ -529,6 +538,7 @@ type ModelProvider =
   | "flowise"
   | "groq"
   | "continue-proxy"
+  | "fireworks"
   | "custom";
 
 export type ModelName =
@@ -544,6 +554,12 @@ export type ModelName =
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
   // Mistral
+  | "codestral-latest"
+  | "open-mistral-7b"
+  | "open-mixtral-8x7b"
+  | "open-mixtral-8x22b"
+  | "mistral-small-latest"
+  | "mistral-large-latest"
   | "mistral-7b"
   | "mistral-8x7b"
   // Llama 2
