@@ -176,6 +176,10 @@ function autodetectTemplateType(model: string): TemplateType | undefined {
     return "none";
   }
 
+  if (lower.includes("codestral")) {
+    return "none";
+  }
+
   if (lower.includes("alpaca") || lower.includes("wizard")) {
     return "alpaca";
   }
@@ -303,6 +307,8 @@ function autodetectPromptTemplates(
     editTemplate = null;
   } else if (templateType) {
     editTemplate = gptEditPrompt;
+  } else if (model.includes("codestral")) {
+    editTemplate = osModelsEditPrompt;
   }
 
   if (editTemplate !== null) {
