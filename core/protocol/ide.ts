@@ -69,4 +69,6 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getGitRootPath: [{ dir: string }, string | undefined];
   listDir: [{ dir: string }, [string, FileType][]];
   getLastModified: [{ files: string[] }, { [path: string]: number }];
+
+  getGitHubAuthToken: [undefined, string | undefined];
 };

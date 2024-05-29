@@ -4,6 +4,7 @@ import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { RangeInFileWithContents } from "../commands/util.js";
 import { ConfigHandler } from "../config/handler.js";
+import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { streamLines } from "../diff/util.js";
 import {
   IDE,
@@ -22,11 +23,11 @@ import {
 } from "../util/parameters.js";
 import { Telemetry } from "../util/posthog.js";
 import { getRangeInString } from "../util/ranges.js";
+import { BracketMatchingService } from "./brackets.js";
 import AutocompleteLruCache from "./cache.js";
 import {
   noFirstCharNewline,
   onlyWhitespaceAfterEndOfLine,
-  stopOnUnmatchedClosingBracket,
 } from "./charStream.js";
 import {
   constructAutocompletePrompt,
@@ -138,6 +139,7 @@ export async function getTabCompletion(
   generatorReuseManager: GeneratorReuseManager,
   input: AutocompleteInput,
   getDefinitionsFromLsp: GetLspDefinitionsFunction,
+  bracketMatchingService: BracketMatchingService,
 ): Promise<AutocompleteOutcome | undefined> {
   const startTime = Date.now();
 
@@ -171,11 +173,9 @@ export async function getTabCompletion(
     llm.useLegacyCompletionsEndpoint = true;
   } else if (
     llm.providerName === "free-trial" &&
-    llm.model !== "starcoder-7b"
+    llm.model !== TRIAL_FIM_MODEL
   ) {
-    throw new Error(
-      "The only free trial model supported for tab-autocomplete is starcoder-7b.",
-    );
+    llm.model = TRIAL_FIM_MODEL;
   }
 
   if (
@@ -320,6 +320,7 @@ export async function getTabCompletion(
     ];
 
     const multiline =
+      !input.selectedCompletionInfo && // Only ever single-line if using intellisense selected value
       options.multilineCompletions !== "never" &&
       (options.multilineCompletions === "always" || completeMultiline);
 
@@ -327,11 +328,16 @@ export async function getTabCompletion(
     const generator = generatorReuseManager.getGenerator(
       prefix,
       () =>
-        llm.streamComplete(prompt, {
-          ...completionOptions,
-          raw: true,
-          stop,
-        }),
+        llm.supportsFim()
+          ? llm.streamFim(prefix, suffix, {
+              ...completionOptions,
+              stop,
+            })
+          : llm.streamComplete(prompt, {
+              ...completionOptions,
+              raw: true,
+              stop,
+            }),
       multiline,
     );
 
@@ -349,7 +355,11 @@ export async function getTabCompletion(
     let charGenerator = generatorWithCancellation();
     charGenerator = noFirstCharNewline(charGenerator);
     charGenerator = onlyWhitespaceAfterEndOfLine(charGenerator, lang.endOfLine);
-    charGenerator = stopOnUnmatchedClosingBracket(charGenerator, suffix);
+    charGenerator = bracketMatchingService.stopOnUnmatchedClosingBracket(
+      charGenerator,
+      suffix,
+      filepath,
+    );
 
     let lineGenerator = streamLines(charGenerator);
     lineGenerator = stopAtLines(lineGenerator);
@@ -382,6 +392,14 @@ export async function getTabCompletion(
 
     // Post-processing
     completion = completion.trimEnd();
+    if (llm.model.includes("codestral")) {
+      // Codestral sometimes starts with an extra space
+      if (completion[0] === " " && completion[1] !== " ") {
+        if (suffix.startsWith("\n")) {
+          completion = completion.slice(1);
+        }
+      }
+    }
   }
 
   const time = Date.now() - startTime;
@@ -418,6 +436,7 @@ export class CompletionProvider {
   private generatorReuseManager: GeneratorReuseManager;
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
+  private bracketMatchingService = new BracketMatchingService();
 
   private onError(e: any) {
     console.warn("Error generating autocompletion: ", e);
@@ -464,6 +483,11 @@ export class CompletionProvider {
         cacheHit: outcome.cacheHit,
       });
       this._outcomes.delete(completionId);
+
+      this.bracketMatchingService.handleAcceptedCompletion(
+        outcome.completion,
+        outcome.filepath,
+      );
     }
   }
 
@@ -577,6 +601,7 @@ export class CompletionProvider {
         this.generatorReuseManager,
         input,
         this.getDefinitionsFromLsp,
+        this.bracketMatchingService,
       );
 
       if (!outcome?.completion) {

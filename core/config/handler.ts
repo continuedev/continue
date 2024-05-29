@@ -19,12 +19,10 @@ export class ConfigHandler {
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private readonly writeLog: (text: string) => Promise<void>,
-    private readonly onConfigUpdate: () => void,
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
     this.writeLog = writeLog;
-    this.onConfigUpdate = onConfigUpdate;
     try {
       this.loadConfig();
     } catch (e) {
@@ -37,11 +35,18 @@ export class ConfigHandler {
     this.reloadConfig();
   }
 
+  private updateListeners: (() => void)[] = [];
+  onConfigUpdate(listener: () => void) {
+    this.updateListeners.push(listener);
+  }
+
   reloadConfig() {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
     this.loadConfig();
-    this.onConfigUpdate();
+    for (const listener of this.updateListeners) {
+      listener();
+    }
   }
 
   async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {

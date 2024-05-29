@@ -11,6 +11,7 @@ type LocalStorageTypes = {
   inputHistory: JSONContent[];
   extensionVersion: string;
   indexingState: IndexingProgressUpdate;
+  signedInToGh: boolean;
 };
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(

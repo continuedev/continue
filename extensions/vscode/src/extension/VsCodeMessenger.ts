@@ -68,7 +68,7 @@ export class VsCodeMessenger {
     >,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: VsCodeIde,
-    private readonly verticalDiffManager: VerticalPerLineDiffManager,
+    private readonly verticalDiffManagerPromise: Promise<VerticalPerLineDiffManager>,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
@@ -134,7 +134,7 @@ export class VsCodeMessenger {
         editor.selection = new vscode.Selection(start, end);
       }
 
-      this.verticalDiffManager.streamEdit(
+      (await this.verticalDiffManagerPromise).streamEdit(
         `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`,
         await this.webviewProtocol.request("getDefaultModelTitle", undefined),
       );
@@ -201,72 +201,72 @@ export class VsCodeMessenger {
       return ide.getIdeSettings();
     });
     this.onWebviewOrCore("getDiff", async (msg) => {
-      return await ide.getDiff();
+      return ide.getDiff();
     });
     this.onWebviewOrCore("getTerminalContents", async (msg) => {
-      return await ide.getTerminalContents();
+      return ide.getTerminalContents();
     });
     this.onWebviewOrCore("getDebugLocals", async (msg) => {
-      return await ide.getDebugLocals(Number(msg.data.threadIndex));
+      return ide.getDebugLocals(Number(msg.data.threadIndex));
     });
     this.onWebviewOrCore("getAvailableThreads", async (msg) => {
-      return await ide.getAvailableThreads();
+      return ide.getAvailableThreads();
     });
     this.onWebviewOrCore("getTopLevelCallStackSources", async (msg) => {
-      return await ide.getTopLevelCallStackSources(
+      return ide.getTopLevelCallStackSources(
         msg.data.threadIndex,
         msg.data.stackDepth,
       );
     });
     this.onWebviewOrCore("listWorkspaceContents", async (msg) => {
-      return await ide.listWorkspaceContents();
+      return ide.listWorkspaceContents();
     });
     this.onWebviewOrCore("getWorkspaceDirs", async (msg) => {
-      return await ide.getWorkspaceDirs();
+      return ide.getWorkspaceDirs();
     });
     this.onWebviewOrCore("listFolders", async (msg) => {
-      return await ide.listFolders();
+      return ide.listFolders();
     });
     this.onWebviewOrCore("writeFile", async (msg) => {
-      return await ide.writeFile(msg.data.path, msg.data.contents);
+      return ide.writeFile(msg.data.path, msg.data.contents);
     });
     this.onWebviewOrCore("showVirtualFile", async (msg) => {
-      return await ide.showVirtualFile(msg.data.name, msg.data.content);
+      return ide.showVirtualFile(msg.data.name, msg.data.content);
     });
     this.onWebviewOrCore("getContinueDir", async (msg) => {
-      return await ide.getContinueDir();
+      return ide.getContinueDir();
     });
     this.onWebviewOrCore("openFile", async (msg) => {
-      return await ide.openFile(msg.data.path);
+      return ide.openFile(msg.data.path);
     });
     this.onWebviewOrCore("runCommand", async (msg) => {
       await ide.runCommand(msg.data.command);
     });
     this.onWebviewOrCore("getSearchResults", async (msg) => {
-      return await ide.getSearchResults(msg.data.query);
+      return ide.getSearchResults(msg.data.query);
     });
     this.onWebviewOrCore("subprocess", async (msg) => {
-      return await ide.subprocess(msg.data.command);
+      return ide.subprocess(msg.data.command);
     });
     this.onWebviewOrCore("getProblems", async (msg) => {
-      return await ide.getProblems(msg.data.filepath);
+      return ide.getProblems(msg.data.filepath);
     });
     this.onWebviewOrCore("getBranch", async (msg) => {
       const { dir } = msg.data;
-      return await ide.getBranch(dir);
+      return ide.getBranch(dir);
     });
     this.onWebviewOrCore("getOpenFiles", async (msg) => {
-      return await ide.getOpenFiles();
+      return ide.getOpenFiles();
     });
     this.onWebviewOrCore("getCurrentFile", async () => {
-      return await ide.getCurrentFile();
+      return ide.getCurrentFile();
     });
     this.onWebviewOrCore("getPinnedFiles", async (msg) => {
-      return await ide.getPinnedFiles();
+      return ide.getPinnedFiles();
     });
     this.onWebviewOrCore("showLines", async (msg) => {
       const { filepath, startLine, endLine } = msg.data;
-      return await ide.showLines(filepath, startLine, endLine);
+      return ide.showLines(filepath, startLine, endLine);
     });
     // Other
     this.onWebviewOrCore("errorPopup", (msg) => {
@@ -278,5 +278,8 @@ export class VsCodeMessenger {
           }
         });
     });
+    this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
+      ide.getGitHubAuthToken(),
+    );
   }
 }

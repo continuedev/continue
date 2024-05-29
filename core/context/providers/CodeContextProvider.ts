@@ -8,6 +8,8 @@ import {
 import { CodeSnippetsCodebaseIndex } from "../../indexing/CodeSnippetsIndex.js";
 import { BaseContextProvider } from "../index.js";
 
+const MAX_SUBMENU_ITEMS = 10_000;
+
 class CodeContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "code",
@@ -29,13 +31,15 @@ class CodeContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
+    // TODO: Dynamically load submenu items based on the query
+    // instead of loading everything into memory
     const tags = await args.ide.getTags("codeSnippets");
     const snippets = await Promise.all(
       tags.map((tag) => CodeSnippetsCodebaseIndex.getAll(tag)),
     );
 
     const submenuItems: ContextSubmenuItem[] = [];
-    for (const snippetList of snippets) {
+    for (const snippetList of snippets.slice(-MAX_SUBMENU_ITEMS)) {
       submenuItems.push(...snippetList);
     }
 

@@ -14,7 +14,11 @@ import type {
 } from "core";
 import { defaultIgnoreFile } from "core/indexing/ignore";
 import { IdeSettings } from "core/protocol/ideWebview";
-import { getContinueGlobalPath } from "core/util/paths";
+import {
+  editConfigJson,
+  getConfigJsonPath,
+  getContinueGlobalPath,
+} from "core/util/paths";
 import * as vscode from "vscode";
 import { DiffManager } from "./diff/horizontal";
 import { Repository } from "./otherExtensions/git";
@@ -31,6 +35,52 @@ class VsCodeIde implements IDE {
 
   constructor(private readonly diffManager: DiffManager) {
     this.ideUtils = new VsCodeIdeUtils();
+  }
+
+  private authToken: string | undefined;
+  private askedForAuth = false;
+
+  async getGitHubAuthToken(): Promise<string | undefined> {
+    if (this.authToken) {
+      return this.authToken;
+    }
+    try {
+      const session = await vscode.authentication.getSession("github", [], {
+        silent: this.askedForAuth,
+        createIfNone: !this.askedForAuth,
+      });
+      if (session) {
+        this.authToken = session.accessToken;
+        return session.accessToken;
+      } else if (!this.askedForAuth) {
+        // User cancelled the login prompt
+        // Explain that they can avoid the prompt by removing free trial models from config.json
+        vscode.window
+          .showInformationMessage(
+            "We'll only ask you to log in if using the free trial. To avoid this prompt, make sure to remove free trial models from your config.json",
+            "Remove for me",
+            "Open config.json",
+          )
+          .then((selection) => {
+            if (selection === "Remove for me") {
+              editConfigJson((configJson) => {
+                configJson.models = configJson.models.filter(
+                  (model) => model.provider !== "free-trial",
+                );
+                configJson.tabAutocompleteModel = undefined;
+                return configJson;
+              });
+            } else if (selection === "Open config.json") {
+              this.openFile(getConfigJsonPath());
+            }
+          });
+      }
+    } catch (error) {
+      console.error("Failed to get GitHub authentication session:", error);
+    } finally {
+      this.askedForAuth = true;
+    }
+    return undefined;
   }
 
   async infoPopup(message: string): Promise<void> {

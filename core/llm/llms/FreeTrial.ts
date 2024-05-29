@@ -1,3 +1,4 @@
+import { TRIAL_FIM_MODEL } from "../../config/onboarding.js";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
 import { ChatMessage, CompletionOptions, ModelProvider } from "../../index.js";
 import { SERVER_URL } from "../../util/parameters.js";
@@ -8,9 +9,21 @@ import { streamResponse } from "../stream.js";
 class FreeTrial extends BaseLLM {
   static providerName: ModelProvider = "free-trial";
 
+  private ghAuthToken: string | undefined = undefined;
+
+  setupGhAuthToken(ghAuthToken: string | undefined) {
+    this.ghAuthToken = ghAuthToken;
+  }
+
   private async _getHeaders() {
+    if (!this.ghAuthToken) {
+      throw new Error(
+        "Please sign in with GitHub in order to use the free trial. If you'd like to use Continue without signing in, you can set up your own local model or API key.",
+      );
+    }
     return {
       "Content-Type": "application/json",
+      Authorization: `Bearer ${this.ghAuthToken}`,
       ...(await getHeaders()),
     };
   }
@@ -37,7 +50,7 @@ class FreeTrial extends BaseLLM {
       presence_penalty: options.presencePenalty,
       max_tokens: options.maxTokens,
       stop:
-        options.model === "starcoder-7b"
+        options.model === TRIAL_FIM_MODEL
           ? options.stop
           : options.stop?.slice(0, 2),
       temperature: options.temperature,
@@ -120,8 +133,37 @@ class FreeTrial extends BaseLLM {
     this._countTokens(completion, args.model, false);
   }
 
+  supportsFim(): boolean {
+    return this.model === "codestral-latest";
+  }
+
+  async *_streamFim(
+    prefix: string,
+    suffix: string,
+    options: CompletionOptions,
+  ): AsyncGenerator<string> {
+    const args = this._convertArgs(this.collectArgs(options));
+    const resp = await this.fetch(`${SERVER_URL}/stream_fim`, {
+      method: "POST",
+      headers: await this._getHeaders(),
+      body: JSON.stringify({
+        prefix,
+        suffix,
+        ...args,
+      }),
+    });
+
+    let completion = "";
+    for await (const value of streamResponse(resp)) {
+      yield value;
+      completion += value;
+    }
+    this._countTokens(completion, args.model, false);
+  }
+
   async listModels(): Promise<string[]> {
     return [
+      "codestral-latest",
       "llama3-70b",
       "gpt-4o",
       "gpt-3.5-turbo",
