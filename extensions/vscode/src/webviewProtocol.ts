@@ -138,10 +138,6 @@ export class VsCodeWebviewProtocol
             if (message.includes("exceeded")) {
               message +=
                 " To keep using Continue, you can set up a local model or use your own API key.";
-            } else if (message.includes("upgrade Continue")) {
-            } else {
-              message +=
-                " To avoid rate limiting, you can set up a local model or use your own API key.";
             }
 
             vscode.window
