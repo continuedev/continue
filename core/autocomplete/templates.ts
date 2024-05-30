@@ -24,6 +24,13 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
   },
 };
 
+const codestralFimTemplate: AutocompleteTemplate = {
+  template: "<s>[SUFFIX]{{{suffix}}}[PREFIX]{{{prefix}}}",
+  completionOptions: {
+    stop: ["[PREFIX]", "[SUFFIX]"],
+  },
+};
+
 const codegemmaFimTemplate: AutocompleteTemplate = {
   template:
     "<|fim_prefix|>{{{prefix}}}<|fim_suffix|>{{{suffix}}}<|fim_middle|>",
@@ -225,6 +232,10 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     lowerCaseModel.includes("codeqwen")
   ) {
     return stableCodeFimTemplate;
+  }
+
+  if (lowerCaseModel.includes("codestral")) {
+    return codestralFimTemplate;
   }
 
   if (lowerCaseModel.includes("codegemma")) {

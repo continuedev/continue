@@ -97,7 +97,7 @@ Pre-requisite: You should use the Intellij IDE, which can be downloaded [here](h
 2. Run `scripts/install-dependencies.sh` or `scripts/install-dependencies.ps1` on Windows. This will install and build all of the necessary dependencies.
 3. To test the plugin, select the "Run Plugin" Gradle configuration and click the "Run" or "Debug" button as shown in this screenshot:
    ![img](./media/IntelliJRunPluginScreenshot.png)
-4. To package the extension, choose the "Build Plugin" Gradle configuration. This will generate a .zip file in `extensions/intellij/build/distributions` with the version defined in `extensions/intellij/gradle.properties`.
+4. To package the extension, run `./gradlew build` (or `./gradlew.bat build` on Windows) from the `extensions/intellij` directory. This will generate a .zip file in `extensions/intellij/build/distributions` with the version defined in `extensions/intellij/gradle.properties`.
 5. If you make changes, you may need to re-build before running the "Build Plugin" configuration
 
    a. If you change code from the `core` or `binary` directories, make sure to run `npm run build` from the `binary` directory to create a new binary.
