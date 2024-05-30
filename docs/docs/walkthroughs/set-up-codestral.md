@@ -23,16 +23,16 @@ keywords: [codestral, mistral, model setup]
   "models": [
     {
       "title": "Codestral",
-      "provider": "mistral"
+      "provider": "mistral",
       "model": "codestral-latest",
-      "apiKey": "[API_KEY]",
+      "apiKey": "[API_KEY]"
     }
   ],
   "tabAutocompleteModel": {
     "title": "Codestral",
     "provider": "mistral",
-    "model": "codestral-latest"
-    "apiKey": "[API_KEY]",
+    "model": "codestral-latest",
+    "apiKey": "[API_KEY]"
   }
 }
 ```
