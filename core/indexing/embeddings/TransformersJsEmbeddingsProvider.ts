@@ -17,7 +17,14 @@ class EmbeddingsPipeline {
 
       env.allowLocalModels = true;
       env.allowRemoteModels = false;
-      env.localModelPath = path.join(__dirname, "..", "models");
+      env.localModelPath = path.join(
+        typeof __dirname === "undefined"
+          ? // @ts-ignore
+            path.dirname(new URL(import.meta.url).pathname)
+          : __dirname,
+        "..",
+        "models",
+      );
 
       EmbeddingsPipeline.instance = await pipeline(
         EmbeddingsPipeline.task,

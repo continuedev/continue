@@ -32,6 +32,7 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   insertAtCursor: [{ text: string }, void];
   copyText: [{ text: string }, void];
   "jetbrains/editorInsetHeight": [{ height: number }, void];
+  setGitHubAuthToken: [{ token: string }, void];
 };
 
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
@@ -64,4 +65,5 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   addApiKey: [undefined, void];
   setupLocalModel: [undefined, void];
   incrementFtc: [undefined, void];
+  openOnboarding: [undefined, void];
 };

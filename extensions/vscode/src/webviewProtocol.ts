@@ -138,10 +138,6 @@ export class VsCodeWebviewProtocol
             if (message.includes("exceeded")) {
               message +=
                 " To keep using Continue, you can set up a local model or use your own API key.";
-            } else if (message.includes("upgrade Continue")) {
-            } else {
-              message +=
-                " To avoid rate limiting, you can set up a local model or use your own API key.";
             }
 
             vscode.window
@@ -153,9 +149,33 @@ export class VsCodeWebviewProtocol
                   this.request("setupLocalModel", undefined);
                 }
               });
+          } else if (message.includes("Please sign in with GitHub")) {
+            vscode.window
+              .showInformationMessage(
+                message,
+                "Sign In",
+                "Use API key / local model",
+              )
+              .then((selection) => {
+                if (selection === "Sign In") {
+                  vscode.authentication
+                    .getSession("github", [], {
+                      createIfNone: true,
+                    })
+                    .then(() => {
+                      this.reloadConfig();
+                    });
+                } else if (selection === "Use API key / local model") {
+                  this.request("openOnboarding", undefined);
+                }
+              });
           } else {
             vscode.window
-              .showErrorMessage(message, "Show Logs", "Troubleshooting")
+              .showErrorMessage(
+                message.split("\n\n")[0],
+                "Show Logs",
+                "Troubleshooting",
+              )
               .then((selection) => {
                 if (selection === "Show Logs") {
                   vscode.commands.executeCommand(
@@ -175,7 +195,7 @@ export class VsCodeWebviewProtocol
     });
   }
 
-  constructor() {}
+  constructor(private readonly reloadConfig: () => void) {}
   invoke<T extends keyof ToCoreOrIdeFromWebviewProtocol>(
     messageType: T,
     data: ToCoreOrIdeFromWebviewProtocol[T][0],

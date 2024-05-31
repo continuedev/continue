@@ -19,7 +19,6 @@ import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
   setBottomMessageCloseTimeout,
-  setDialogMessage,
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
@@ -31,7 +30,6 @@ import { ftl } from "./dialogs/FTCDialog";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import ModelSelect from "./modelSelection/ModelSelect";
-import QuickModelSetup from "./modelSelection/quickSetup/QuickModelSetup";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -93,7 +91,9 @@ const DropdownPortalDiv = styled.div`
 const HIDE_FOOTER_ON_PAGES = [
   "/onboarding",
   "/existingUserOnboarding",
+  "/onboarding",
   "/localOnboarding",
+  "/apiKeyOnboarding",
 ];
 
 const Layout = () => {
@@ -175,8 +175,15 @@ const Layout = () => {
   useWebviewListener(
     "addApiKey",
     async () => {
-      dispatch(setShowDialog(true));
-      dispatch(setDialogMessage(<QuickModelSetup />));
+      navigate("/apiKeyOnboarding");
+    },
+    [navigate],
+  );
+
+  useWebviewListener(
+    "openOnboarding",
+    async () => {
+      navigate("/onboarding");
     },
     [navigate],
   );
@@ -212,18 +219,14 @@ const Layout = () => {
       !location.pathname.startsWith("/onboarding") &&
       !location.pathname.startsWith("/existingUserOnboarding")
     ) {
-      if (getLocalStorage("mainTextEntryCounter")) {
-        navigate("/existingUserOnboarding");
-      } else {
-        navigate("/onboarding");
-      }
+      navigate("/onboarding");
     }
   }, [location]);
 
-  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
-    desc: "Indexing disabled",
+  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({ 
+    desc: "Loading indexing config",
     progress: 0.0,
-    status: "disabled",
+    status: "loading",
   });
 
   return (

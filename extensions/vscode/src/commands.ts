@@ -478,9 +478,6 @@ const commandsMap: (
       panel.webview.html = sidebar.getSidebarContent(
         extensionContext,
         panel,
-        ide,
-        configHandler,
-        verticalDiffManager,
         undefined,
         undefined,
         true,

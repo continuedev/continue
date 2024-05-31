@@ -10,7 +10,6 @@ import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
 
 let resolveVsCodeExtension = (_: VsCodeExtension): void => {};
-
 export const vscodeExtensionPromise: Promise<VsCodeExtension> = new Promise(
   (resolve) => (resolveVsCodeExtension = resolve),
 );

@@ -14,7 +14,7 @@ You likely want to use a model that is 30B+ parameters for chat.
 
 ### Open-source LLMs
 
-*We currently recommend the following open-source models:*
+_We currently recommend the following open-source models:_
 
 #### Llama 3 from Meta
 
@@ -26,7 +26,7 @@ You likely want to use a model that is 30B+ parameters for chat.
 - Unlimited GPU: `deepseek-coder-33b`
 - Limited GPU: `deepseek-coder-6.7b`
 
-*You can also use other open-source chat models by adding them to your `config.json`.*
+_You can also use other open-source chat models by adding them to your `config.json`._
 
 ### Commercial LLMs
 
@@ -45,15 +45,21 @@ You likely want to use a model that is 30B+ parameters for chat.
 - Unlimited budget: `gemini-pro-1.5-latest`
 - Limited budget: `gemini-pro-1.0`
 
-*You can also use other commercial chat models by adding them to your `config.json`.*
+_You can also use other commercial chat models by adding them to your `config.json`._
 
 ## Autocomplete
 
 You likely want to use a model that is 1-15B parameters for autocomplete.
 
+### Commercial LLMs
+
+#### Codestral from Mistral
+
+Our current recommendation for autocomplete, if you are able to choose any model, is `codestral-latest` from Mistral's API.
+
 ### Open-source LLMs
 
-*We currently recommend the following open-source models:*
+_We currently recommend the following open-source models:_
 
 #### DeepSeek Coder from DeepSeek
 
@@ -65,7 +71,7 @@ You likely want to use a model that is 1-15B parameters for autocomplete.
 - Unlimited GPU: `starcoder-2-7b`
 - Limited GPU: `starcoder-2-3b`
 
-*You can also use other autocomplete models by adding them to your `config.json`.*
+_You can also use other autocomplete models by adding them to your `config.json`._
 
 ## Embeddings
 
@@ -80,8 +86,6 @@ You likely want to use an embeddings model that is made to vectorize code.
 
 - `voyage-code-2`
 
-
-
-*You can also use other embeddings models by adding them to your `config.json`.*
+_You can also use other embeddings models by adding them to your `config.json`._
 
 **In addition to selecting models, you will need to figure out [what providers to use](./select-provider.md).**

@@ -149,7 +149,9 @@
             "deepinfra",
             "flowise",
             "groq",
-            "continue-proxy"
+            "fireworks",
+            "continue-proxy",
+            "cloudflare"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -168,7 +170,8 @@
             "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/llamafile)",
             "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
             "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
-            "### Continue Proxy\n\nContinue Enterprise users can use the Continue Proxy as a single point of access to models."
+            "### Continue Proxy\n\nContinue Enterprise users can use the Continue Proxy as a single point of access to models.",
+            "### Cloudflare Workers AI\n\n[Reference](https://developers.cloudflare.com/workers-ai/)"
           ],
           "type": "string"
         },
@@ -312,7 +315,8 @@
                   "gemini",
                   "huggingface-inference-api",
                   "replicate",
-                  "together"
+                  "together",
+                  "cloudflare"
                 ]
               }
             },
@@ -354,6 +358,64 @@
               },
               "apiVersion": {
                 "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["cloudflare"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "accountId": {
+                "type": "string"
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "@cf/meta/llama-3-8b-instruct",
+                      "@hf/thebloke/deepseek-coder-6.7b-instruct-awq",
+                      "@cf/deepseek-ai/deepseek-math-7b-instruct",
+                      "@cf/thebloke/discolm-german-7b-v1-awq",
+                      "@cf/tiiuae/falcon-7b-instruct",
+                      "@cf/google/gemma-2b-it-lora",
+                      "@hf/google/gemma-7b-it",
+                      "@cf/google/gemma-7b-it-lora",
+                      "@hf/nousresearch/hermes-2-pro-mistral-7b",
+                      "@cf/meta/llama-2-7b-chat-fp16",
+                      "@cf/meta/llama-2-7b-chat-int8",
+                      "@cf/meta-llama/llama-2-7b-chat-hf-lora",
+                      "@hf/thebloke/llama-2-13b-chat-awq",
+                      "@hf/thebloke/llamaguard-7b-awq",
+                      "@cf/mistral/mistral-7b-instruct-v0.1",
+                      "@hf/mistral/mistral-7b-instruct-v0.2",
+                      "@cf/mistral/mistral-7b-instruct-v0.2-lora",
+                      "@hf/thebloke/neural-chat-7b-v3-1-awq",
+                      "@cf/openchat/openchat-3.5-0106",
+                      "@hf/thebloke/openhermes-2.5-mistral-7b-awq",
+                      "@cf/microsoft/phi-2",
+                      "@cf/qwen/qwen1.5-0.5b-chat",
+                      "@cf/qwen/qwen1.5-1.8b-chat",
+                      "@cf/qwen/qwen1.5-7b-chat-awq",
+                      "@cf/qwen/qwen1.5-14b-chat-awq",
+                      "@cf/defog/sqlcoder-7b-2",
+                      "@hf/nexusflow/starling-lm-7b-beta",
+                      "@cf/tinyllama/tinyllama-1.1b-chat-v1.0",
+                      "@hf/thebloke/zephyr-7b-beta-awq",
+                      "@hf/thebloke/deepseek-coder-6.7b-base-awq"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
               }
             }
           }
@@ -439,6 +501,7 @@
               "model": {
                 "enum": [
                   "gpt-4o",
+                  "codestral-latest",
                   "llama3-70b",
                   "gpt-3.5-turbo",
                   "phind-codellama-34b",
@@ -446,7 +509,6 @@
                   "mistral-8x7b",
                   "claude-3-sonnet-20240229",
                   "claude-3-haiku-20240307",
-                  "starcoder-7b",
                   "AUTODETECT"
                 ]
               }
@@ -790,11 +852,11 @@
             "properties": {
               "model": {
                 "enum": [
+                  "codestral-latest",
                   "open-mistral-7b",
                   "open-mixtral-8x7b",
                   "open-mixtral-8x22b",
                   "mistral-small-latest",
-                  "mistral-medium-latest",
                   "mistral-large-latest"
                 ]
               }
@@ -821,6 +883,23 @@
                   "llama3-70b",
                   "AUTODETECT"
                 ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["fireworks"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["starcoder-7b"]
               }
             }
           }

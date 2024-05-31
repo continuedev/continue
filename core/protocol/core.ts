@@ -6,6 +6,7 @@ import {
   DiffLine,
   LLMFullCompletionOptions,
   MessageContent,
+  ModelDescription,
   PersistedSessionInfo,
   RangeInFile,
   SerializedContinueConfig,
@@ -120,16 +121,19 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "index/setPaused": [boolean, void];
   "index/forceReIndex": [undefined | string, void];
+  "index/indexingProgressBarInitialized": [undefined, void];
   completeOnboarding: [
     {
       mode:
         | "local"
-        | "optimized"
+        | "apiKeys"
         | "custom"
+        | "freeTrial"
         | "localExistingUser"
         | "optimizedExistingUser"
         | "localAfterFreeTrial";
     },
     void,
   ];
+  addAutocompleteModel: [{ model: ModelDescription }, void];
 };
