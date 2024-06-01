@@ -16,6 +16,9 @@ class LlamaCpp extends BaseLLM {
       min_p: options.minP,
       mirostat: options.mirostat,
       stop: options.stop,
+      top_k: options.topK,
+      top_p: options.topP,
+      temperature: options.temperature,
     };
 
     return finalOptions;
