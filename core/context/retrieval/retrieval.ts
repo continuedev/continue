@@ -6,7 +6,7 @@ import {
 } from "../../index.js";
 import { LanceDbIndex } from "../../indexing/LanceDbIndex.js";
 
-import { deduplicateArray, getBasename } from "../../util/index.js";
+import { deduplicateArray, getRelativePath } from "../../util/index.js";
 import { RETRIEVAL_PARAMS } from "../../util/parameters.js";
 import { retrieveFts } from "./fullTextSearch.js";
 
@@ -149,7 +149,7 @@ export async function retrieveContextItemsFromEmbeddings(
 
   return [
     ...results.map((r) => {
-      const name = `${getBasename(r.filepath)} (${r.startLine}-${r.endLine})`;
+      const name = `${getRelativePath(r.filepath, workspaceDirs)} (${r.startLine}-${r.endLine})`;
       const description = `${r.filepath} (${r.startLine}-${r.endLine})`;
       return {
         name,
