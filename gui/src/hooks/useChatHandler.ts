@@ -13,7 +13,7 @@ import {
 } from "core";
 import { constructMessages } from "core/llm/constructMessages";
 import { stripImages } from "core/llm/countTokens";
-import { getBasename } from "core/util";
+import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
@@ -179,8 +179,9 @@ function useChatHandler(dispatch: Dispatch, ideMessenger: IIdeMessenger) {
               .join("\n");
           }
           contextItems.unshift({
-            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getBasename(
+            content: `The following file is currently open. Don't reference it if it's not relevant to the user's message.\n\n\`\`\`${getRelativePath(
               currentFilePath,
+              await ideMessenger.ide.getWorkspaceDirs(),
             )}\n${currentFileContents}\n\`\`\``,
             name: `Active file: ${getBasename(currentFilePath)}`,
             description: currentFilePath,
