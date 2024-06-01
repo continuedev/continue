@@ -7,7 +7,7 @@ import {
   RangeInFile,
 } from "core";
 import { stripImages } from "core/llm/countTokens";
-import { getBasename } from "core/util";
+import { getBasename, getRelativePath } from "core/util";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 
 interface MentionAttrs {
@@ -96,8 +96,9 @@ async function resolveEditorContent(
     if (item.itemType === "file") {
       // This is a quick way to resolve @file references
       const basename = getBasename(item.id);
+      const relativeFilePath = getRelativePath(item.id, await ideMessenger.ide.getWorkspaceDirs());
       const rawContent = await ideMessenger.ide.readFile(item.id);
-      const content = `\`\`\`title="${basename}"\n${rawContent}\n\`\`\`\n`;
+      const content = `\`\`\`${relativeFilePath}\n${rawContent}\n\`\`\`\n`;
       contextItemsText += content;
       contextItems.push({
         name: basename,
