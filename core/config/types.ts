@@ -385,7 +385,7 @@ declare global {
       stackDepth: number,
     ): Promise<string[]>;
     getAvailableThreads(): Promise<Thread[]>;
-    listWorkspaceContents(directory?: string): Promise<string[]>;
+    listWorkspaceContents(directory?: string, useGitIgnore?: boolean): Promise<string[]>;
     listFolders(): Promise<string[]>;
     getWorkspaceDirs(): Promise<string[]>;
     getWorkspaceConfigs(): Promise<ContinueRcJson[]>;

@@ -206,12 +206,18 @@ class VsCodeIde implements IDE {
     useGitIgnore?: boolean,
   ): Promise<string[]> {
     if (directory) {
-      return await this.ideUtils.getDirectoryContents(directory, true);
+      return await this.ideUtils.getDirectoryContents(
+        directory,
+        true,
+        useGitIgnore ?? true,
+      );
     }
     const contents = await Promise.all(
       this.ideUtils
         .getWorkspaceDirectories()
-        .map((dir) => this.ideUtils.getDirectoryContents(dir, true)),
+        .map((dir) =>
+          this.ideUtils.getDirectoryContents(dir, true, useGitIgnore ?? true),
+        ),
     );
     return contents.flat();
   }
@@ -244,6 +250,7 @@ class VsCodeIde implements IDE {
         [],
         false,
         undefined,
+        true,
       )) {
         allDirs.push(dir);
       }

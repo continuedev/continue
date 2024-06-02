@@ -260,6 +260,7 @@ export class VsCodeIdeUtils {
   async getDirectoryContents(
     directory: string,
     recursive: boolean,
+    useGitIgnore: boolean,
   ): Promise<string[]> {
     if (!recursive) {
       return (
@@ -285,6 +286,7 @@ export class VsCodeIdeUtils {
       [],
       true,
       gitRoot === directory ? undefined : onlyThisDirectory,
+      useGitIgnore,
     )) {
       allFiles.push(file);
     }

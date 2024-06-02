@@ -108,7 +108,7 @@ export async function* traverseDirectory(
     }
 
     // Recurse if not ignored
-    if (!(ig.ignores(`${dir}/`) || ig.ignores(dir))) {
+    if (!useGitIgnore || !(ig.ignores(`${dir}/`) || ig.ignores(dir))) {
       // For patterns who can potentially match items of this subdir, strip the subdir from the start
       const keepPatterns = [...wildcardPatterns];
       for (const [startPattern, subDirPatterns] of entries) {
