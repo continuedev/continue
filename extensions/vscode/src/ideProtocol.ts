@@ -197,14 +197,23 @@ class VsCodeIde implements IDE {
     return await this.ideUtils.getAvailableThreads();
   }
 
-  async listWorkspaceContents(directory?: string): Promise<string[]> {
+  async listWorkspaceContents(
+    directory?: string,
+    useGitIgnore?: boolean,
+  ): Promise<string[]> {
     if (directory) {
-      return await this.ideUtils.getDirectoryContents(directory, true);
+      return await this.ideUtils.getDirectoryContents(
+        directory,
+        true,
+        useGitIgnore ?? true,
+      );
     }
     const contents = await Promise.all(
       this.ideUtils
         .getWorkspaceDirectories()
-        .map((dir) => this.ideUtils.getDirectoryContents(dir, true)),
+        .map((dir) =>
+          this.ideUtils.getDirectoryContents(dir, true, useGitIgnore ?? true),
+        ),
     );
     return contents.flat();
   }
@@ -237,6 +246,7 @@ class VsCodeIde implements IDE {
         [],
         false,
         undefined,
+        true,
       )) {
         allDirs.push(dir);
       }

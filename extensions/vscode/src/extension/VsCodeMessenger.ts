@@ -219,7 +219,10 @@ export class VsCodeMessenger {
       );
     });
     this.onWebviewOrCore("listWorkspaceContents", async (msg) => {
-      return ide.listWorkspaceContents();
+      return ide.listWorkspaceContents(
+        msg.data.directory,
+        msg.data.useGitIgnore,
+      );
     });
     this.onWebviewOrCore("getWorkspaceDirs", async (msg) => {
       return ide.getWorkspaceDirs();

@@ -28,6 +28,7 @@ export async function* traverseDirectory(
   gitIgnorePatterns: string[],
   returnFiles = true,
   onlyThisDirectory: string[] | undefined,
+  useGitIgnore: boolean,
 ): AsyncGenerator<string> {
   const nodes = await vscode.workspace.fs.readDirectory(
     uriFromFilePath(directory),
@@ -79,7 +80,7 @@ export async function* traverseDirectory(
 
   if (!onlyThisDirectory) {
     for (const node of returnFiles ? files : dirs) {
-      if (!ig.ignores(node)) {
+      if (!useGitIgnore || !ig.ignores(node)) {
         yield path.join(directory, node);
       }
     }
@@ -107,7 +108,7 @@ export async function* traverseDirectory(
     }
 
     // Recurse if not ignored
-    if (!(ig.ignores(`${dir}/`) || ig.ignores(dir))) {
+    if (!useGitIgnore || !(ig.ignores(`${dir}/`) || ig.ignores(dir))) {
       // For patterns who can potentially match items of this subdir, strip the subdir from the start
       const keepPatterns = [...wildcardPatterns];
       for (const [startPattern, subDirPatterns] of entries) {
@@ -122,6 +123,7 @@ export async function* traverseDirectory(
         onlyThisDirectory && onlyThisDirectory.length > 1
           ? onlyThisDirectory.slice(1)
           : undefined,
+        useGitIgnore,
       )) {
         yield file;
       }
