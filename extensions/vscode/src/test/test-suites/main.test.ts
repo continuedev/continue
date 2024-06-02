@@ -1,5 +1,5 @@
-import * as assert from "node:assert";
 import { describe, test } from "mocha";
+import * as assert from "node:assert";
 import * as vscode from "vscode";
 import { vscodeExtensionPromise } from "../../activation/activate";
 
@@ -16,10 +16,9 @@ describe("Extension Test Suite", () => {
     const extension = await vscodeExtensionPromise;
     await vscode.commands.executeCommand("continue.continueGUIView.focus");
     await new Promise((resolve) => setTimeout(resolve, 3_000));
-    const title = await extension.webviewProtocol.request(
-      "getDefaultModelTitle",
-      undefined,
-    );
+    const title = await (
+      await extension.webviewProtocolPromise
+    ).request("getDefaultModelTitle", undefined);
     console.log("Title of default model is: ", title);
     assert.strictEqual(typeof title, "string");
   });

@@ -6,8 +6,6 @@ import {
 import { getBasename } from "../../util/index.js";
 import { BaseContextProvider } from "../index.js";
 
-// import { getHighlightsThatFit, ILLMContextSizer } from "llm-code-highlighter/dist/index.continue";
-
 const HIGHLIGHTS_TOKEN_BUDGET = 2000;
 
 class CodeHighlightsContextProvider extends BaseContextProvider {

@@ -1,6 +1,7 @@
 import { BaseContextProvider } from "../index.js";
 import { ContextProviderName } from "../../index.js";
 import CodeContextProvider from "./CodeContextProvider.js";
+// import CodeHighlightsContextProvider from "./CodeHighlightsContextProvider.js";
 import CodebaseContextProvider from "./CodebaseContextProvider.js";
 import CurrentFileContextProvider from "./CurrentFileContextProvider.js";
 import DatabaseContextProvider from "./DatabaseContextProvider.js";
