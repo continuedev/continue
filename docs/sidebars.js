@@ -27,6 +27,7 @@ const sidebars = {
         "setup/select-provider",
         "setup/select-model",
         "setup/configuration",
+        "setup/examples",
       ],
     },
     {
