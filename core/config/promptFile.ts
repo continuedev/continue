@@ -55,10 +55,17 @@ export function slashCommandFromPromptFile(
 
       // Render prompt template
       const diff = await ide.getDiff();
+      const currentFilePath = await ide.getCurrentFile();
       const promptUserInput = await renderTemplatedString(
         prompt,
         ide.readFile.bind(ide),
-        { input: userInput, diff },
+        {
+          input: userInput,
+          diff,
+          currentFile: currentFilePath
+            ? await ide.readFile(currentFilePath)
+            : undefined,
+        },
       );
 
       const messages = [...history];
