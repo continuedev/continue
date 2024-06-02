@@ -6,8 +6,6 @@ import {
 import { getBasename } from "../../util/index.js";
 import { BaseContextProvider } from "../index.js";
 
-// import { getHighlightsThatFit, ILLMContextSizer } from "llm-code-highlighter/dist/index.continue";
-
 const HIGHLIGHTS_TOKEN_BUDGET = 2000;
 
 class CodeHighlightsContextProvider extends BaseContextProvider {
@@ -22,6 +20,9 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
+    // const { getHighlightsThatFit } = await import(
+    //   "llm-code-highlighter/src/index.continue.js"
+    // );
     const ide = extras.ide;
     const openFiles = await ide.getOpenFiles();
     const allFiles: { name: string; absPath: string; content: string }[] =
@@ -34,11 +35,11 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
           };
         }),
       );
-    // const contextSizer =  {
+    // const contextSizer = {
     //   fits(content: string): boolean {
     //     return countTokens(content, "") < HIGHLIGHTS_TOKEN_BUDGET;
-    //   }
-    // } as ILLMContextSizer
+    //   },
+    // };
     // const repoMap = await getHighlightsThatFit(
     //   contextSizer,
     //   [],
@@ -49,7 +50,7 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
     //         relPath: file.name,
     //         code: file.content,
     //       };
-    //     })
+    //     }),
     // );
     // return [
     //   {
