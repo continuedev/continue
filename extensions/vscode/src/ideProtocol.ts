@@ -69,6 +69,21 @@ class VsCodeIde implements IDE {
                 "openOnboarding",
                 undefined,
               );
+
+              // Remove free trial models
+              editConfigJson((config) => {
+                const tabAutocompleteModel =
+                  config.tabAutocompleteModel?.provider === "free-trial"
+                    ? undefined
+                    : config.tabAutocompleteModel;
+                return {
+                  ...config,
+                  models: config.models.filter(
+                    (model) => model.provider !== "free-trial",
+                  ),
+                  tabAutocompleteModel,
+                };
+              });
             } else if (selection === "Learn more") {
               vscode.env.openExternal(
                 vscode.Uri.parse(
