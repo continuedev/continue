@@ -263,6 +263,7 @@ ${prompt}`;
           { ...this.requestOptions },
         );
 
+        // Error mapping to be more helpful
         if (!resp.ok) {
           let text = await resp.text();
           if (resp.status === 404 && !resp.url.includes("/v1")) {
@@ -276,6 +277,12 @@ ${prompt}`;
               text =
                 "This may mean that you forgot to add '/v1' to the end of your 'apiBase' in config.json.";
             }
+          } else if (
+            resp.status === 404 &&
+            resp.url.includes("api.openai.com")
+          ) {
+            text =
+              "You may need to add pre-paid credits before using the OpenAI API.";
           }
           throw new Error(
             `HTTP ${resp.status} ${resp.statusText} from ${resp.url}\n\n${text}`,
@@ -284,6 +291,10 @@ ${prompt}`;
 
         return resp;
       } catch (e: any) {
+        console.warn(
+          `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
+        );
+
         if (
           e.code === "ECONNREFUSED" &&
           e.message.includes("http://127.0.0.1:11434")
@@ -292,9 +303,7 @@ ${prompt}`;
             "Failed to connect to local Ollama instance. To start Ollama, first download it at https://ollama.ai.",
           );
         }
-        throw new Error(
-          `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
-        );
+        throw new Error(e.message);
       }
     };
     return withExponentialBackoff<Response>(
