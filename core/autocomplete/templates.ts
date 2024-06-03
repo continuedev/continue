@@ -1,6 +1,7 @@
 // Fill in the middle prompts
 
 import { CompletionOptions } from "../index.js";
+import { shortestRelativePaths } from "../util/index.js";
 import { AutocompleteSnippet } from "./ranking.js";
 
 interface AutocompleteTemplate {
@@ -26,6 +27,32 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
 
 const codestralFimTemplate: AutocompleteTemplate = {
   template: "<s>[SUFFIX]{{{suffix}}}[PREFIX]{{{prefix}}}",
+  completionOptions: {
+    stop: ["[PREFIX]", "[SUFFIX]"],
+  },
+};
+
+const codestralMultifileFimTemplate: AutocompleteTemplate = {
+  template: (
+    prefix: string,
+    suffix: string,
+    filename: string,
+    reponame: string,
+    snippets: AutocompleteSnippet[],
+  ): string => {
+    if (snippets.length === 0) {
+      return `[SUFFIX]${suffix}[PREFIX]${prefix}`;
+    }
+    const relativePaths = shortestRelativePaths([
+      ...snippets.map((snippet) => snippet.filepath),
+      filename,
+    ]);
+    const otherFiles = snippets
+      .map((snippet, i) => `+++++ ${relativePaths[i]}\n${snippet.contents}`)
+      .join("\n\n");
+    const prompt = `[SUFFIX]${suffix}[PREFIX]${otherFiles}\n\n+++++ ${relativePaths[relativePaths.length - 1]}\n${prefix}`;
+    return prompt;
+  },
   completionOptions: {
     stop: ["[PREFIX]", "[SUFFIX]"],
   },
@@ -235,7 +262,7 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
   }
 
   if (lowerCaseModel.includes("codestral")) {
-    return codestralFimTemplate;
+    return codestralMultifileFimTemplate;
   }
 
   if (lowerCaseModel.includes("codegemma")) {

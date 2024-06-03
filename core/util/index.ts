@@ -1,7 +1,3 @@
-import {
-    ContextProviderExtras,
-  } from "../index.js";
-
 export function removeQuotesAndEscapes(output: string): string {
   output = output.trim();
 
@@ -93,32 +89,54 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
+const SEP_REGEX = /[\\/]/;
+
 export function getBasename(filepath: string, n = 1): string {
-  return filepath.split(/[\\/]/).pop() ?? "";
+  return filepath.split(SEP_REGEX).pop() ?? "";
 }
 
 export function getLastNPathParts(filepath: string, n: number): string {
-  return filepath.split(/[\\/]/).slice(-n).join("/");
+  return filepath.split(SEP_REGEX).slice(-n).join("/");
 }
 
-export function getRelativePath(filepath: string, workspaceDirs: string[]): string {
-    for (const workspaceDir of workspaceDirs) {
-        const filepathParts = splitPath(filepath);
-        const workspaceDirParts = splitPath(workspaceDir);
-        if (filepathParts.slice(0, workspaceDirParts.length).join('/') === workspaceDirParts.join('/')) {
-            return filepathParts.slice(workspaceDirParts.length).join('/');
-        }
+export function getRelativePath(
+  filepath: string,
+  workspaceDirs: string[],
+): string {
+  for (const workspaceDir of workspaceDirs) {
+    const filepathParts = splitPath(filepath);
+    const workspaceDirParts = splitPath(workspaceDir);
+    if (
+      filepathParts.slice(0, workspaceDirParts.length).join("/") ===
+      workspaceDirParts.join("/")
+    ) {
+      return filepathParts.slice(workspaceDirParts.length).join("/");
     }
-    return splitPath(filepath).pop() ?? ''; // If the file is not in any of the workspaces, return the plain filename
+  }
+  return splitPath(filepath).pop() ?? ""; // If the file is not in any of the workspaces, return the plain filename
+}
+
+export function shortestRelativePaths(paths: string[]): string[] {
+  if (paths.length === 0) return [];
+
+  const pathParts = paths.map((path) => path.split(SEP_REGEX));
+
+  // Shorten paths from the base until any of them doesn't have same prefix part
+  let i = 0;
+  while (!pathParts.some((parts) => parts[i] !== pathParts[0][i])) {
+    i++;
+  }
+
+  return pathParts.map((parts) => parts.slice(i).join("/"));
 }
 
 export function splitPath(path: string, withRoot?: string): string[] {
-    let parts = path.includes("/") ? path.split("/") : path.split("\\");
-    if (withRoot !== undefined) {
-        const rootParts = splitPath(withRoot);
-        parts = parts.slice(rootParts.length - 1);
-    }
-    return parts;
+  let parts = path.includes("/") ? path.split("/") : path.split("\\");
+  if (withRoot !== undefined) {
+    const rootParts = splitPath(withRoot);
+    parts = parts.slice(rootParts.length - 1);
+  }
+  return parts;
 }
 
 export function getMarkdownLanguageTagForFile(filepath: string): string {
