@@ -26,6 +26,7 @@ You can run a model on your local computer using:
 - [FastChat](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [llama-cpp-python](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples) (OpenAI compatible server)
+- [IPEX-LLM](../reference/Model%20Providers/ipex_llm.md)
 
 ### Remote
 
