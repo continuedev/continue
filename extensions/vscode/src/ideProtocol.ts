@@ -45,9 +45,20 @@ class VsCodeIde implements IDE {
   private askedForAuth = false;
 
   async getGitHubAuthToken(): Promise<string | undefined> {
+    // Saved auth token
     if (this.authToken) {
       return this.authToken;
     }
+
+    // Try to ask silently
+    const session = await vscode.authentication.getSession("github", [], {
+      silent: true,
+    });
+    if (session) {
+      this.authToken = session.accessToken;
+      return this.authToken;
+    }
+
     try {
       // If we haven't asked yet, give explanation of what is happening and why
       // But don't wait to return this immediately
@@ -90,6 +101,17 @@ class VsCodeIde implements IDE {
                   "https://docs.continue.dev/reference/Model%20Providers/freetrial",
                 ),
               );
+            } else if (selection === "Sign in") {
+              const session = await vscode.authentication.getSession(
+                "github",
+                [],
+                {
+                  createIfNone: true,
+                },
+              );
+              if (session) {
+                this.authToken = session.accessToken;
+              }
             }
           });
         this.askedForAuth = true;
