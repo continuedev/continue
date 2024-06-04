@@ -11,3 +11,4 @@ Learn more:
 - [Select providers](select-provider.md)
 - [Select models](select-model.md)
 - [Configuration](configuration.md)
+- [Example `config.json`s](examples.md)
