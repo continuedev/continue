@@ -11,6 +11,7 @@ import {
   RangeInFile,
   SerializedContinueConfig,
   SessionInfo,
+  SiteIndexingConfig,
 } from "..";
 import { AutocompleteInput } from "../autocomplete/completionProvider";
 import { IdeSettings } from "./ideWebview";
@@ -58,8 +59,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     ContextItemWithId[],
   ];
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
-  "context/addDocs": [{ title: string; url: string }, void];
   "autocomplete/complete": [AutocompleteInput, string[]];
+  "context/addDocs": [SiteIndexingConfig, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
   "command/run": [

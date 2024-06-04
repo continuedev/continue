@@ -1,3 +1,4 @@
+import { SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
 import React, { useContext, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
@@ -15,9 +16,12 @@ const GridDiv = styled.div`
 `;
 
 function AddDocsDialog() {
+  const defaultMaxDepth = 3;
   const [docsUrl, setDocsUrl] = React.useState("");
   const [docsTitle, setDocsTitle] = React.useState("");
   const [urlValid, setUrlValid] = React.useState(false);
+  const [maxDepth, setMaxDepth] = React.useState<number | string>(""); // Change here
+
   const dispatch = useDispatch();
 
   const ideMessenger = useContext(IdeMessengerContext);
@@ -61,17 +65,34 @@ function AddDocsDialog() {
         value={docsTitle}
         onChange={(e) => setDocsTitle(e.target.value)}
       />
-
+      <Input
+        type="text"
+        placeholder={`Optional: Max Depth (Default: ${defaultMaxDepth})`}
+        title="The maximum search tree depth - where your input url is the root node"
+        value={maxDepth}
+        onChange={(e) => {
+          const value = e.target.value;
+          if (value == "") {
+            setMaxDepth("");
+          } else if (!isNaN(+value) && Number(value) > 0) {
+            setMaxDepth(Number(value));
+          }
+        }}
+      />
       <Button
         disabled={!docsUrl || !urlValid}
         className="ml-auto"
         onClick={() => {
-          ideMessenger.post("context/addDocs", {
-            url: docsUrl,
+          const siteIndexingConfig: SiteIndexingConfig = {
+            startUrl: docsUrl,
+            rootUrl: docsUrl,
             title: docsTitle,
-          });
+            maxDepth: typeof maxDepth === "string" ? defaultMaxDepth : maxDepth, // Ensure maxDepth is a number
+          };
+          ideMessenger.post("context/addDocs", siteIndexingConfig);
           setDocsTitle("");
           setDocsUrl("");
+          setMaxDepth("");
           dispatch(setShowDialog(false));
           addItem("docs", {
             id: docsUrl,
