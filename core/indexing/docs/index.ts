@@ -4,16 +4,18 @@ import {
   IndexingProgressUpdate,
 } from "../../index.js";
 
+import { SiteIndexingConfig } from "../../index.js";
 import { Article, chunkArticle, pageToArticle } from "./article.js";
 import { crawlPage } from "./crawl.js";
 import { addDocs, hasDoc } from "./db.js";
 
 export async function* indexDocs(
-  title: string,
-  baseUrl: URL,
+  siteIndexingConfig: SiteIndexingConfig,
   embeddingsProvider: EmbeddingsProvider,
 ): AsyncGenerator<IndexingProgressUpdate> {
-  if (await hasDoc(baseUrl.toString())) {
+  const startUrl = new URL(siteIndexingConfig.startUrl);
+
+  if (await hasDoc(siteIndexingConfig.startUrl.toString())) {
     yield {
       progress: 1,
       desc: "Already indexed",
@@ -30,12 +32,12 @@ export async function* indexDocs(
 
   const articles: Article[] = [];
 
-  for await (const page of crawlPage(baseUrl)) {
+  // Crawl pages and retrieve info as articles
+  for await (const page of crawlPage(startUrl, siteIndexingConfig.maxDepth)) {
     const article = pageToArticle(page);
     if (!article) {
       continue;
     }
-
     articles.push(article);
 
     yield {
@@ -48,6 +50,8 @@ export async function* indexDocs(
   const chunks: Chunk[] = [];
   const embeddings: number[][] = [];
 
+  // Create embeddings of retrieved articles
+  console.log("Creating Embeddings for ", articles.length, " articles");
   for (const article of articles) {
     yield {
       progress: Math.max(1, Math.floor(100 / (articles.length + 1))),
@@ -55,18 +59,24 @@ export async function* indexDocs(
       status: "indexing",
     };
 
-    const subpathEmbeddings = await embeddingsProvider.embed(
-      chunkArticle(article).map((chunk) => {
-        chunks.push(chunk);
+    try {
+      const subpathEmbeddings = await embeddingsProvider.embed(
+        chunkArticle(article).map((chunk) => {
+          chunks.push(chunk);
 
-        return chunk.content;
-      }),
-    );
+          return chunk.content;
+        }),
+      );
 
-    embeddings.push(...subpathEmbeddings);
+      embeddings.push(...subpathEmbeddings);
+    } catch (e) {
+      console.warn("Error chunking article: ", e);
+    }
   }
 
-  await addDocs(title, baseUrl, chunks, embeddings);
+  // Add docs to databases
+  console.log("Adding ", embeddings.length, " embeddings to db");
+  await addDocs(siteIndexingConfig.title, startUrl, chunks, embeddings);
 
   yield {
     progress: 1,
