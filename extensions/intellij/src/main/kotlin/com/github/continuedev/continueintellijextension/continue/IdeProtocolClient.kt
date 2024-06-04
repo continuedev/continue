@@ -6,6 +6,7 @@ import com.github.continuedev.continueintellijextension.services.ContinueExtensi
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer
 import com.intellij.codeInsight.daemon.impl.DaemonCodeAnalyzerImpl
@@ -316,7 +317,26 @@ class IdeProtocolClient (
                     }
 
                     "getWorkspaceConfigs" -> {
-                        respond(emptyList<String>())
+                        val workspaceDirs = workspaceDirectories()
+
+                        val configs: List<String> = listOf()
+                        for (workspaceDir in workspaceDirs) {
+                            val workspacePath = File(workspaceDir)
+                            val dir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
+                            if (dir != null) {
+                                val contents = dir.children.map { it.name }
+
+                                // Find any .continuerc.json files
+                                for (file in contents) {
+                                    if (file.endsWith(".continuerc.json")) {
+                                        val filePath = workspacePath.resolve(file)
+                                        val fileContent = File(filePath.toString()).readText()
+                                        configs.plus(fileContent)
+                                    }
+                                }
+                            }
+                        }
+                        respond(configs)
                     }
 
                     "getTerminalContents" -> {

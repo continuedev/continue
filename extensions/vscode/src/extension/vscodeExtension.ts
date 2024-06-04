@@ -32,12 +32,18 @@ export class VsCodeExtension {
   private windowId: string;
   private diffManager: DiffManager;
   private verticalDiffManager: VerticalPerLineDiffManager;
-  webviewProtocol: VsCodeWebviewProtocol;
+  webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
 
   constructor(context: vscode.ExtensionContext) {
+    let resolveWebviewProtocol: any = undefined;
+    this.webviewProtocolPromise = new Promise<VsCodeWebviewProtocol>(
+      (resolve) => {
+        resolveWebviewProtocol = resolve;
+      },
+    );
     this.diffManager = new DiffManager(context);
-    this.ide = new VsCodeIde(this.diffManager);
+    this.ide = new VsCodeIde(this.diffManager, this.webviewProtocolPromise);
     this.extensionContext = context;
     this.windowId = uuidv4();
 
@@ -71,7 +77,7 @@ export class VsCodeExtension {
         },
       ),
     );
-    this.webviewProtocol = this.sidebar.webviewProtocol;
+    resolveWebviewProtocol(this.sidebar.webviewProtocol);
 
     // Config Handler with output channel
     const outputChannel = vscode.window.createOutputChannel(
@@ -83,7 +89,7 @@ export class VsCodeExtension {
     >();
     const vscodeMessenger = new VsCodeMessenger(
       inProcessMessenger,
-      this.webviewProtocol,
+      this.sidebar.webviewProtocol,
       this.ide,
       verticalDiffManagerPromise,
     );
@@ -99,7 +105,7 @@ export class VsCodeExtension {
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
     this.configHandler.onConfigUpdate(() => {
-      this.webviewProtocol?.request("configUpdate", undefined);
+      this.sidebar.webviewProtocol?.request("configUpdate", undefined);
     });
 
     this.configHandler.reloadConfig();
@@ -114,7 +120,7 @@ export class VsCodeExtension {
     );
 
     // Indexing + pause token
-    this.diffManager.webviewProtocol = this.webviewProtocol;
+    this.diffManager.webviewProtocol = this.sidebar.webviewProtocol;
 
     // CodeLens
     const verticalDiffCodeLens = registerAllCodeLensProviders(
@@ -153,7 +159,7 @@ export class VsCodeExtension {
       this.verticalDiffManager,
     );
 
-    registerDebugTracker(this.webviewProtocol, this.ide);
+    registerDebugTracker(this.sidebar.webviewProtocol, this.ide);
 
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught
@@ -181,6 +187,13 @@ export class VsCodeExtension {
         filepath.endsWith(".gitignore")
       ) {
         // Update embeddings! (TODO)
+      }
+    });
+
+    // When GitHub sign-in status changes, reload config
+    vscode.authentication.onDidChangeSessions((e) => {
+      if (e.provider.id === "github") {
+        this.configHandler.reloadConfig();
       }
     });
 

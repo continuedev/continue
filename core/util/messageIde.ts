@@ -92,8 +92,14 @@ export class MessageIde implements IDE {
     return await this.request("getTerminalContents", undefined);
   }
 
-  async listWorkspaceContents(directory?: string): Promise<string[]> {
-    return await this.request("listWorkspaceContents", undefined);
+  async listWorkspaceContents(
+    directory?: string,
+    useGitIgnore?: boolean,
+  ): Promise<string[]> {
+    return await this.request("listWorkspaceContents", {
+      directory,
+      useGitIgnore,
+    });
   }
 
   async getWorkspaceDirs(): Promise<string[]> {

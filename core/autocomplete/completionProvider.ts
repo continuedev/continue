@@ -395,7 +395,7 @@ export async function getTabCompletion(
     if (llm.model.includes("codestral")) {
       // Codestral sometimes starts with an extra space
       if (completion[0] === " " && completion[1] !== " ") {
-        if (suffix.startsWith("\n")) {
+        if (prefix.endsWith(" ") && suffix.startsWith("\n")) {
           completion = completion.slice(1);
         }
       }
