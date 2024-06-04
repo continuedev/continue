@@ -33,7 +33,7 @@ export const FREE_TRIAL_MODELS: ModelDescription[] = [
 ];
 
 export const defaultConfig: SerializedContinueConfig = {
-  models: FREE_TRIAL_MODELS,
+  models: [],
   customCommands: [
     {
       name: "test",

@@ -110,7 +110,10 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
-  listWorkspaceContents(): Promise<string[]> {
+  listWorkspaceContents(
+    directory?: string,
+    useGitIgnore?: boolean,
+  ): Promise<string[]> {
     return new Promise((resolve, reject) => {
       fs.readdir("/tmp/continue", (err, files) => {
         if (err) {

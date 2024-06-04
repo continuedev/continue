@@ -6,7 +6,7 @@ Prompt (`.prompt`) files are an easy way to build and share LLM prompts with oth
 
 Below is a quick example of setting up a prompt file to write unit tests:s
 
-1. Create a folder called `.prompts` at the top level of your repository
+1. Create a folder called `.prompts` at the top level of your workspace
 2. Add a file called `test.prompt` to this folder
 3. Write the following contents to `test.prompt` and save
 

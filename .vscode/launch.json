@@ -57,7 +57,7 @@
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],
       "outFiles": [
-        "${workspaceFolder}/extensions/vscode/out/**/*.js",
+        "${workspaceFolder}/extensions/vscode/out/extension.js",
         "/Users/natesesti/.continue/config.ts"
       ],
       "preLaunchTask": "vscode-extension:build"

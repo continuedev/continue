@@ -9,7 +9,7 @@ export async function getPromptFiles(
   dir: string,
 ): Promise<{ path: string; content: string }[]> {
   try {
-    const paths = await ide.listWorkspaceContents(dir);
+    const paths = await ide.listWorkspaceContents(dir, false);
     const results = paths.map(async (path) => {
       const content = await ide.readFile(path);
       return { path, content };
@@ -55,10 +55,17 @@ export function slashCommandFromPromptFile(
 
       // Render prompt template
       const diff = await ide.getDiff();
+      const currentFilePath = await ide.getCurrentFile();
       const promptUserInput = await renderTemplatedString(
         prompt,
         ide.readFile.bind(ide),
-        { input: userInput, diff },
+        {
+          input: userInput,
+          diff,
+          currentFile: currentFilePath
+            ? await ide.readFile(currentFilePath)
+            : undefined,
+        },
       );
 
       const messages = [...history];
