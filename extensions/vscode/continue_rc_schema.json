@@ -2015,7 +2015,8 @@
                 "ollama",
                 "openai",
                 "cohere",
-                "free-trial"
+                "free-trial",
+                "gemini"
               ]
             },
             "model": {
@@ -2042,7 +2043,7 @@
                 "properties": {
                   "provider": {
                     "enum": [
-                      "ollama"
+                      "cohere"
                     ]
                   }
                 },
@@ -2052,7 +2053,7 @@
               },
               "then": {
                 "required": [
-                  "model"
+                  "apiKey"
                 ]
               }
             },
@@ -2061,7 +2062,7 @@
                 "properties": {
                   "provider": {
                     "enum": [
-                      "cohere"
+                      "gemini"
                     ]
                   }
                 },

@@ -7,13 +7,10 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
   static maxBatchSize = 128;
+
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     model: "voyage-code-2",
   };
-
-  get id(): string {
-    return FreeTrialEmbeddingsProvider.defaultOptions?.model!;
-  }
 
   async embed(chunks: string[]) {
     const batchedChunks = [];

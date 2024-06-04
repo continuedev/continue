@@ -20,12 +20,13 @@ You can run a model on your local computer using:
 - [LM Studio](../reference/Model%20Providers/lmstudio.md)
 - [Llama.cpp](../reference/Model%20Providers/llamacpp.md)
 - [KoboldCpp](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
-- [llamafile](../reference/Model%20Providers/llamafile) ((OpenAI compatible server)
+- [llamafile](../reference/Model%20Providers/llamafile) (OpenAI compatible server)
 - [LocalAI](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [Text generation web UI](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [FastChat](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [llama-cpp-python](../reference/Model%20Providers/openai.md) (OpenAI compatible server)
 - [TensorRT-LLM](https://github.com/NVIDIA/trt-llm-as-openai-windows?tab=readme-ov-file#examples) (OpenAI compatible server)
+- [IPEX-LLM](../reference/Model%20Providers/ipex_llm.md) (Local LLM on Intel GPU)
 
 ### Remote
 

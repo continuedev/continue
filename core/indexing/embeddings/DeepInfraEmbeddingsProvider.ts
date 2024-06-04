@@ -7,10 +7,6 @@ class DeepInfraEmbeddingsProvider extends BaseEmbeddingsProvider {
     model: "sentence-transformers/all-MiniLM-L6-v2",
   };
 
-  get id(): string {
-    return this.options.model ?? "deepinfra";
-  }
-
   async embed(chunks: string[]) {
     const fetchWithBackoff = () =>
       withExponentialBackoff<Response>(() =>
