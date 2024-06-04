@@ -51,7 +51,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   console.log(`Copying ${packageName} to ${toCopy}`);
   // This is a way to install only one package without npm trying to install all the dependencies
   // Create a temporary directory for installing the package
-  const adjustedName = toCopy.replace(/^@/, "").replace("/", "-");
+  const adjustedName = packageName.replace(/^@/, "").replace("/", "-");
   const tempDir = path.join(
     __dirname,
     "tmp",
@@ -78,7 +78,6 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     );
 
     // Without this it seems the file isn't completely written to disk
-    // Ideally we validate file integrity in the validation at the end
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // Copy the installed package back to the current directory
@@ -169,7 +168,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     entryPoints: ["src/index.ts"],
     bundle: true,
     outfile: esbuildOutputFile,
-    external: ["esbuild", "./xhr-sync-worker.js", "vscode"],
+    external: ["esbuild", "./xhr-sync-worker.js", "vscode", "./index.node"],
     format: "cjs",
     platform: "node",
     sourcemap: true,
