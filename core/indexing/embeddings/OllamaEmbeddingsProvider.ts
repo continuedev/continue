@@ -1,6 +1,8 @@
 import { EmbedOptions, FetchFunction } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
+import BaseEmbeddingsProvider, {
+  IBaseEmbeddingsProvider,
+} from "./BaseEmbeddingsProvider.js";
 
 async function embedOne(
   chunk: string,
@@ -18,6 +20,7 @@ async function embedOne(
       }),
     );
   const resp = await fetchWithBackoff();
+
   if (!resp.ok) {
     throw new Error(`Failed to embed chunk: ${await resp.text()}`);
   }
@@ -26,13 +29,10 @@ async function embedOne(
 }
 
 class OllamaEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static defaultOptions: Partial<EmbedOptions> | undefined = {
+  static defaultOptions: IBaseEmbeddingsProvider["defaultOptions"] = {
     apiBase: "http://localhost:11434/",
+    model: "nomic-embed-text",
   };
-
-  get id(): string {
-    return this.options.model ?? "ollama";
-  }
 
   async embed(chunks: string[]) {
     const results: any = [];
