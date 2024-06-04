@@ -44,6 +44,13 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
               }),
             );
           const resp = await fetchWithBackoff();
+
+          if (resp.status !== 200) {
+            throw new Error(
+              `Failed to embed: ${resp.status} ${await resp.text()}`,
+            );
+          }
+
           const data = (await resp.json()) as any;
           return data.embeddings;
         }),
