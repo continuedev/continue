@@ -4,7 +4,7 @@
 [**IPEX-LLM**](https://github.com/intel-analytics/ipex-llm) is a PyTorch library for running LLM on Intel CPU and GPU (e.g., local PC with iGPU, discrete GPU such as Arc A-Series, Flex and Max) with very low latency.
 :::
 
-IPEX-LLM supports accelerated Ollama backend to be hosted on Intel GPU. Refer to [this guide](https://ipex-llm.readthedocs.io/en/latest/doc/LLM/Quickstart/ollama_quickstart.html) from IPEX-LLM official documentation about how to install and run Ollama serve accelerated by IPEX-LLM on Intel GPU. Continue can then be configured to use the IPEX-LLM accelerated `"ollama"` provider:
+IPEX-LLM supports accelerated Ollama backend to be hosted on Intel GPU. Refer to [this guide](https://ipex-llm.readthedocs.io/en/latest/doc/LLM/Quickstart/ollama_quickstart.html) from IPEX-LLM official documentation about how to install and run Ollama serve accelerated by IPEX-LLM on Intel GPU. You can then configure Continue to use the IPEX-LLM accelerated `"ollama"` provider as follows:
 
 ```json title="~/.continue/config.json"
 {
@@ -18,7 +18,7 @@ IPEX-LLM supports accelerated Ollama backend to be hosted on Intel GPU. Refer to
 }
 ```
 
-If you would like to reach the Ollama service from another machine, make sure you set or export the environment variable `OLLAMA_HOST=0.0.0.0` before executing the command `ollama serve`. And then set `"apiBase"` in Continue configuration to match the IP address / port of the remote machine. That is, Continue can be configured to be:
+If you would like to reach the Ollama service from another machine, make sure you set or export the environment variable `OLLAMA_HOST=0.0.0.0` before executing the command `ollama serve`. Then, in the Continue configuration, set `'apiBase'` to correspond with the IP address / port of the remote machine. That is, Continue can be configured to be:
 
 ```json title="~/.continue/config.json"
 {
