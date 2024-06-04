@@ -79,6 +79,8 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   completionOptions: any;
   cacheHit: boolean;
   filepath: string;
+  gitRepo?: string;
+  completionId: string;
 }
 
 const autocompleteCache = AutocompleteLruCache.get();
@@ -441,6 +443,8 @@ export async function getTabCompletion(
     completionOptions,
     cacheHit,
     filepath: input.filepath,
+    completionId: input.completionId,
+    gitRepo: await ide.getRepoName(input.filepath),
     ...options,
   };
 }
