@@ -14,4 +14,19 @@
 }
 ```
 
+### Setting up a remote instance
+
+To configure a remote instance of LM Studio, add the `"apiBase"` property to your model in config.json:
+
+```json title="~/.continue/config.json"
+{
+  "title": "LM Studio",
+  "model": "codestral",
+  "provider": "lmstudio",
+  "apiBase": "http://x.x.x.x:1234/v1/"
+}
+```
+
+This `apiBase` will now be used instead of the default `http://localhost:1234/v1`.
+
 [View the source](https://github.com/continuedev/continue/blob/main/core/llm/llms/LMStudio.ts)

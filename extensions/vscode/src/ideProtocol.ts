@@ -9,9 +9,9 @@ import type {
   IdeInfo,
   IndexTag,
   Problem,
-  Range,
   Thread,
 } from "core";
+import { Range } from "core";
 import { defaultIgnoreFile } from "core/indexing/ignore";
 import { IdeSettings } from "core/protocol/ideWebview";
 import {
@@ -29,11 +29,15 @@ import {
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./util/vscode";
+import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 class VsCodeIde implements IDE {
   ideUtils: VsCodeIdeUtils;
 
-  constructor(private readonly diffManager: DiffManager) {
+  constructor(
+    private readonly diffManager: DiffManager,
+    private readonly vscodeWebviewProtocolPromise: Promise<VsCodeWebviewProtocol>,
+  ) {
     this.ideUtils = new VsCodeIdeUtils();
   }
 
@@ -45,6 +49,53 @@ class VsCodeIde implements IDE {
       return this.authToken;
     }
     try {
+      // If we haven't asked yet, give explanation of what is happening and why
+      // But don't wait to return this immediately
+      // We will use a callback to refresh the config
+      if (!this.askedForAuth) {
+        vscode.window
+          .showInformationMessage(
+            "Continue will request read access to your GitHub email so that we can prevent abuse of the free trial. If you prefer not to sign in, you can use Continue with your own API keys or local model.",
+            "Sign in",
+            "Use API key / local model",
+            "Learn more",
+          )
+          .then(async (selection) => {
+            if (selection === "Use API key / local model") {
+              await vscode.commands.executeCommand(
+                "continue.continueGUIView.focus",
+              );
+              (await this.vscodeWebviewProtocolPromise).request(
+                "openOnboarding",
+                undefined,
+              );
+
+              // Remove free trial models
+              editConfigJson((config) => {
+                const tabAutocompleteModel =
+                  config.tabAutocompleteModel?.provider === "free-trial"
+                    ? undefined
+                    : config.tabAutocompleteModel;
+                return {
+                  ...config,
+                  models: config.models.filter(
+                    (model) => model.provider !== "free-trial",
+                  ),
+                  tabAutocompleteModel,
+                };
+              });
+            } else if (selection === "Learn more") {
+              vscode.env.openExternal(
+                vscode.Uri.parse(
+                  "https://docs.continue.dev/reference/Model%20Providers/freetrial",
+                ),
+              );
+            }
+          });
+        this.askedForAuth = true;
+        return undefined;
+      }
+
       const session = await vscode.authentication.getSession("github", [], {
         silent: this.askedForAuth,
         createIfNone: !this.askedForAuth,
@@ -77,8 +128,6 @@ class VsCodeIde implements IDE {
       }
     } catch (error) {
       console.error("Failed to get GitHub authentication session:", error);
-    } finally {
-      this.askedForAuth = true;
     }
     return undefined;
   }
@@ -197,14 +246,23 @@ class VsCodeIde implements IDE {
     return await this.ideUtils.getAvailableThreads();
   }
 
-  async listWorkspaceContents(directory?: string): Promise<string[]> {
+  async listWorkspaceContents(
+    directory?: string,
+    useGitIgnore?: boolean,
+  ): Promise<string[]> {
     if (directory) {
-      return await this.ideUtils.getDirectoryContents(directory, true);
+      return await this.ideUtils.getDirectoryContents(
+        directory,
+        true,
+        useGitIgnore ?? true,
+      );
     }
     const contents = await Promise.all(
       this.ideUtils
         .getWorkspaceDirectories()
-        .map((dir) => this.ideUtils.getDirectoryContents(dir, true)),
+        .map((dir) =>
+          this.ideUtils.getDirectoryContents(dir, true, useGitIgnore ?? true),
+        ),
     );
     return contents.flat();
   }
@@ -237,6 +295,7 @@ class VsCodeIde implements IDE {
         [],
         false,
         undefined,
+        true,
       )) {
         allDirs.push(dir);
       }

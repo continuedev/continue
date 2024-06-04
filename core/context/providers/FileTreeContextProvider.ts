@@ -4,20 +4,12 @@ import {
   ContextProviderExtras,
 } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
+import { splitPath } from "../../util/index.js";
 
 interface Directory {
   name: string;
   files: string[];
   directories: Directory[];
-}
-
-function splitPath(path: string, withRoot?: string): string[] {
-  let parts = path.includes("/") ? path.split("/") : path.split("\\");
-  if (withRoot !== undefined) {
-    const rootParts = splitPath(withRoot);
-    parts = parts.slice(rootParts.length - 1);
-  }
-  return parts;
 }
 
 function formatFileTree(tree: Directory, indentation = ""): string {
