@@ -362,7 +362,9 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         <DropdownIcon item={item} className="mr-2" />
                       </>
                     )}
-                    {item.title}
+                    <span title={item.id}> 
+                      {item.title}
+                    </span>
                     {"  "}
                   </div>
                   <span
