@@ -2049,7 +2049,9 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["cohere"]
+                    "enum": [
+                      "cohere"
+                    ]
                   }
                 },
                 "required": [
@@ -2057,14 +2059,18 @@
                 ]
               },
               "then": {
-                "required": ["apiKey"]
+                "required": [
+                  "apiKey"
+                ]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["gemini"]
+                    "enum": [
+                      "gemini"
+                    ]
                   }
                 },
                 "required": [

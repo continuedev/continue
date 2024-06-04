@@ -231,7 +231,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
   };
 
-  const totalItems = allItems.length; 
+  const totalItems = allItems.length;
 
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
@@ -239,18 +239,18 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     setSelectedIndex((prevIndex) => {
       const newIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
       itemRefs.current[newIndex]?.scrollIntoView({
-        behavior: "smooth",
+        behavior: "instant",
         block: "nearest",
       });
       return newIndex;
     });
   };
-  
+
   const downHandler = () => {
     setSelectedIndex((prevIndex) => {
       const newIndex = prevIndex + 1 < totalItems ? prevIndex + 1 : prevIndex;
       itemRefs.current[newIndex]?.scrollIntoView({
-        behavior: "smooth",
+        behavior: "instant",
         block: "nearest",
       });
       return newIndex;
@@ -340,7 +340,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
             allItems.map((item, index) => (
               <ItemDiv
                 as="button"
-                ref={el => (itemRefs.current[index] = el)}
+                ref={(el) => (itemRefs.current[index] = el)}
                 className={`item ${
                   index === selectedIndex ? "is-selected" : ""
                 }`}
