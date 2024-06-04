@@ -69,7 +69,7 @@ class Ollama extends BaseLLM {
         }
       })
       .catch((e) => {
-        console.warn(`Error calling Ollama /api/show endpoint: ${e}`);
+        // console.warn(`Error calling Ollama /api/show endpoint: ${e}`);
       });
   }
 
