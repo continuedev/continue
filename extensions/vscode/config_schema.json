@@ -1822,7 +1822,8 @@
                 "ollama",
                 "openai",
                 "cohere",
-                "free-trial"
+                "free-trial",
+                "gemini"
               ]
             },
             "model": {
@@ -1860,118 +1861,6 @@
                 "properties": {
                   "provider": {
                     "enum": ["gemini"]
-                  }
-                },
-                "required": ["provider"]
-              },
-              "then": {
-                "required": ["apiKey"]
-              }
-            }
-          ]
-        },
-        "reranker": {
-          "title": "Reranker",
-          "markdownDescription": "The reranker is responsible for selecting the final results when retrieving snippets from your codebase.",
-          "type": "object",
-          "properties": {
-            "name": {
-              "enum": ["cohere", "voyage", "llm", "free-trial"]
-            },
-            "params": {
-              "type": "object"
-            }
-          },
-          "required": ["name"],
-          "allOf": [
-            {
-              "if": {
-                "properties": {
-                  "name": {
-                    "enum": ["cohere"]
-                  }
-                },
-                "required": ["name"]
-              },
-              "then": {
-                "properties": {
-                  "params": {
-                    "type": "object",
-                    "properties": {
-                      "model": {
-                        "enum": [
-                          "rerank-english-v3.0",
-                          "rerank-multilingual-v3.0",
-                          "rerank-english-v2.0",
-                          "rerank-multilingual-v2.0"
-                        ]
-                      },
-                      "apiBase": {
-                        "type": "string"
-                      },
-                      "apiKey": {
-                        "type": "string"
-                      }
-                    },
-                    "required": ["apiKey"]
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "name": {
-                    "enum": ["llm"]
-                  }
-                },
-                "required": ["name"]
-              },
-              "then": {
-                "properties": {
-                  "params": {
-                    "type": "object",
-                    "properties": {
-                      "modelTitle": {
-                        "type": "string"
-                      }
-                    },
-                    "required": ["modelTitle"]
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "name": {
-                    "enum": ["voyage"]
-                  }
-                },
-                "required": ["name"]
-              },
-              "then": {
-                "properties": {
-                  "params": {
-                    "type": "object",
-                    "properties": {
-                      "apiKey": {
-                        "type": "string"
-                      },
-                      "model": {
-                        "enum": ["rerank-lite-1"]
-                      }
-                    },
-                    "required": ["apiKey"]
-                  }
-                }
-              }
-            },
-            {
-              "if": {
-                "properties": {
-                  "provider": {
-                    "enum": ["cohere"]
                   }
                 },
                 "required": ["provider"]

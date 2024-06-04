@@ -1,6 +1,8 @@
 import { EmbedOptions, FetchFunction } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
-import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
+import BaseEmbeddingsProvider, {
+  IBaseEmbeddingsProvider,
+} from "./BaseEmbeddingsProvider.js";
 
 async function embedOne(
   chunk: string,

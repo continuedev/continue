@@ -37,17 +37,10 @@ class EmbeddingsPipeline {
 }
 
 export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static MaxGroupSize: number = 4;
+  static maxGroupSize: number = 4;
 
-  constructor(modelPath?: string) {
+  constructor() {
     super({ model: "all-MiniLM-L2-v6" }, () => Promise.resolve(null));
-    if (modelPath) {
-      // env.localModelPath = modelPath;
-    }
-  }
-
-  get id(): string {
-    return EmbeddingsPipeline.model;
   }
 
   async embed(chunks: string[]) {

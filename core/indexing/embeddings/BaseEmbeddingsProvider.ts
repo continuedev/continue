@@ -1,20 +1,35 @@
-import { EmbedOptions, EmbeddingsProvider, FetchFunction } from "../../index.js";
+import {
+  EmbedOptions,
+  EmbeddingsProvider,
+  FetchFunction,
+} from "../../index.js";
 
 export interface IBaseEmbeddingsProvider extends EmbeddingsProvider {
   options: EmbedOptions;
   fetch: FetchFunction;
-  static defaultOptions: Partial<EmbedOptions> | undefined = undefined;
+  defaultOptions?: EmbedOptions;
+  maxBatchSize?: number;
+}
 
 abstract class BaseEmbeddingsProvider implements IBaseEmbeddingsProvider {
   static maxBatchSize: IBaseEmbeddingsProvider["maxBatchSize"];
   static defaultOptions: IBaseEmbeddingsProvider["defaultOptions"];
 
-  constructor(options: EmbedOptions, fetch: FetchFunction) {
+  options: IBaseEmbeddingsProvider["options"];
+  fetch: IBaseEmbeddingsProvider["fetch"];
+  id: IBaseEmbeddingsProvider["id"];
+
+  constructor(
+    options: IBaseEmbeddingsProvider["options"],
+    fetch: IBaseEmbeddingsProvider["fetch"],
+  ) {
+    // Overwrite default options with any runtime options
     this.options = {
       ...(this.constructor as typeof BaseEmbeddingsProvider).defaultOptions,
       ...options,
     };
     this.fetch = fetch;
+    this.id = this.options.model || this.constructor.name;
   }
 
   abstract embed(chunks: string[]): Promise<number[][]>;
