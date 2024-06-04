@@ -91,17 +91,18 @@ This is just another object like the ones in the `"models"` array of `config.jso
 
 This object allows you to customize the behavior of tab-autocomplete. The available options are:
 
+- `disable`: Disable autocomplete (can also be done from IDE settings)
+- `template`: An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables. (String)
 - `useCopyBuffer`: Determines whether the copy buffer will be considered when constructing the prompt. (Boolean)
 - `useSuffix`: Determines whether to use the file suffix in the prompt. (Boolean)
 - `maxPromptTokens`: The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context. (Number)
-- `debounceDelay`: The delay in milliseconds before triggering autocomplete after a keystroke. (Number)
-- `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number)
 - `prefixPercentage`: The percentage of the input that should be dedicated to the prefix. (Number)
-- `template`: An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables. (String)
+- `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number)
+- `debounceDelay`: The delay in milliseconds before triggering autocomplete after a keystroke. (Number)
 - `multilineCompletions`: Whether to enable multiline completions ("always", "never", or "auto"). Defaults to "auto".
 - `useCache`: Whether to cache and reuse completions when the prompt is the same as a previous one. May be useful to disable for testing purposes.
 - `useOtherFiles`: Whether to include context from files outside of the current one. Turning this off should be expected to reduce the accuracy of completions, but might be good for testing.
-- `disable`: Disable autocomplete (can also be done from IDE settings)
+- `disableInFiles`: A list of glob patterns for files in which you want to disable tab autocomplete.
 
 ### Full example
 
