@@ -35,7 +35,7 @@ function autodetectPlatformAndArch() {
     s390x: "x64",
     x64: "x64",
   }[process.arch];
-  return { platform, arch };
+  return [platform, arch];
 }
 
 function validateFilesPresent(pathsToVerify) {

@@ -27,8 +27,7 @@ let targets = [
   "win32-x64",
 ];
 
-const { platform: currentPlatform, arch: currentArch } =
-  autodetectPlatformAndArch();
+const [currentPlatform, currentArch] = autodetectPlatformAndArch();
 
 const assetBackups = [
   "node_modules/win-ca/lib/crypt32-ia32.node.bak",
