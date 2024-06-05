@@ -239,7 +239,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     setSelectedIndex((prevIndex) => {
       const newIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
       itemRefs.current[newIndex]?.scrollIntoView({
-        behavior: "instant",
+        behavior: "instant" as ScrollBehavior,
         block: "nearest",
       });
       return newIndex;
@@ -250,7 +250,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     setSelectedIndex((prevIndex) => {
       const newIndex = prevIndex + 1 < totalItems ? prevIndex + 1 : prevIndex;
       itemRefs.current[newIndex]?.scrollIntoView({
-        behavior: "instant",
+        behavior: "instant" as ScrollBehavior,
         block: "nearest",
       });
       return newIndex;
@@ -362,9 +362,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         <DropdownIcon item={item} className="mr-2" />
                       </>
                     )}
-                    <span title={item.id}> 
-                      {item.title}
-                    </span>
+                    <span title={item.id}>{item.title}</span>
                     {"  "}
                   </div>
                   <span
