@@ -395,7 +395,7 @@ export class VsCodeIdeUtils {
     if (lastLine) {
       let i = lines.length - 1;
       while (i >= 0 && !lines[i].trim().startsWith(lastLine)) i--;
-      terminalContents = lines.slice(i).join("\n");
+      terminalContents = lines.slice(Math.max(i, 0)).join("\n");
     }
 
     return terminalContents;
