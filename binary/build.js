@@ -3,7 +3,11 @@ const fs = require("fs");
 const path = require("path");
 const ncp = require("ncp").ncp;
 const { rimrafSync } = require("rimraf");
-const { validateFilesPresent, execCmdSync } = require("../scripts/util");
+const {
+  validateFilesPresent,
+  execCmdSync,
+  autodetectOsAndArch,
+} = require("../scripts/util");
 
 // Clean slate
 const bin = path.join(__dirname, "bin");
@@ -22,6 +26,8 @@ let targets = [
   "linux-arm64",
   "win32-x64",
 ];
+
+const { os: currentOs, arch: currentArch } = autodetectOsAndArch();
 
 const assetBackups = [
   "node_modules/win-ca/lib/crypt32-ia32.node.bak",
@@ -213,6 +219,16 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
       `${targetDir}/build/Release/node_sqlite3.node`,
       `${targetDir}/node_sqlite3.node`,
     );
+
+    // Copy to build directory for testing
+    const [platform, arch] = target.split("-");
+    if (platform === currentOs && arch === currentArch) {
+      fs.copyFileSync(
+        `${targetDir}/node_sqlite3.node`,
+        `build/node_sqlite3.node`,
+      );
+    }
+
     fs.unlinkSync(`${targetDir}/build.tar.gz`);
     fs.rmSync(`${targetDir}/build`, {
       recursive: true,
