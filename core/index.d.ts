@@ -629,6 +629,7 @@ export interface RequestOptions {
   proxy?: string;
   headers?: { [key: string]: string };
   extraBodyProperties?: { [key: string]: any };
+  noProxy?: string[];
 }
 
 export interface StepWithParams {

@@ -115,6 +115,14 @@
           "title": "Extra Body Properties",
           "description": "This object will be merged with the body when making the HTTP requests",
           "type": "object"
+        },
+        "noProxy": {
+          "title": "No Proxy",
+          "description": "A list of hostnames for which Continue should not use the proxy specified in requestOptions.proxy",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
         }
       }
     },
