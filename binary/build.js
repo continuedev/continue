@@ -6,7 +6,7 @@ const { rimrafSync } = require("rimraf");
 const {
   validateFilesPresent,
   execCmdSync,
-  autodetectOsAndArch,
+  autodetectPlatformAndArch,
 } = require("../scripts/util");
 
 // Clean slate
@@ -27,7 +27,8 @@ let targets = [
   "win32-x64",
 ];
 
-const { os: currentOs, arch: currentArch } = autodetectOsAndArch();
+const { platform: currentPlatform, arch: currentArch } =
+  autodetectPlatformAndArch();
 
 const assetBackups = [
   "node_modules/win-ca/lib/crypt32-ia32.node.bak",
@@ -222,7 +223,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
 
     // Copy to build directory for testing
     const [platform, arch] = target.split("-");
-    if (platform === currentOs && arch === currentArch) {
+    if (platform === currentPlatform && arch === currentArch) {
       fs.copyFileSync(
         `${targetDir}/node_sqlite3.node`,
         `build/node_sqlite3.node`,

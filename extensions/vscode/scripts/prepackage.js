@@ -5,7 +5,7 @@ const { rimrafSync } = require("rimraf");
 const {
   validateFilesPresent,
   execCmdSync,
-  autodetectOsAndArch,
+  autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
 // Clear folders that will be packaged to ensure clean slate
@@ -29,7 +29,7 @@ if (args[2] === "--target") {
 let os;
 let arch;
 if (!target) {
-  [os, arch] = autodetectOsAndArch();
+  [os, arch] = autodetectPlatformAndArch();
 } else {
   [os, arch] = target.split("-");
 }

@@ -11,8 +11,8 @@ function execCmdSync(cmd) {
   }
 }
 
-function autodetectOsAndArch() {
-  os = {
+function autodetectPlatformAndArch() {
+  platform = {
     aix: "linux",
     darwin: "darwin",
     freebsd: "linux",
@@ -35,7 +35,7 @@ function autodetectOsAndArch() {
     s390x: "x64",
     x64: "x64",
   }[process.arch];
-  return { os, arch };
+  return { platform, arch };
 }
 
 function validateFilesPresent(pathsToVerify) {
@@ -99,5 +99,5 @@ function validateFilesPresent(pathsToVerify) {
 module.exports = {
   execCmdSync,
   validateFilesPresent,
-  autodetectOsAndArch,
+  autodetectPlatformAndArch,
 };
