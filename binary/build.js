@@ -12,11 +12,14 @@ const {
 // Clean slate
 const bin = path.join(__dirname, "bin");
 const out = path.join(__dirname, "out");
+const build = path.join(__dirname, "build");
 rimrafSync(bin);
 rimrafSync(out);
+rimrafSync(build);
 rimrafSync(path.join(__dirname, "tmp"));
 fs.mkdirSync(bin);
 fs.mkdirSync(out);
+fs.mkdirSync(build);
 
 const esbuildOutputFile = "out/index.js";
 let targets = [
