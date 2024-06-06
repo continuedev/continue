@@ -43,6 +43,7 @@ import {
   stopAtSimilarLine,
   streamWithNewLines,
 } from "./lineStream.js";
+import { postprocessCompletion } from "./postprocessing.js";
 import { AutocompleteSnippet } from "./ranking.js";
 import { RecentlyEditedRange } from "./recentlyEdited.js";
 import { getTemplateForModel } from "./templates.js";
@@ -367,6 +368,9 @@ export async function getTabCompletion(
       multiline,
     );
 
+    // Full stop means to stop the LLM's generation, instead of just truncating the displayed completion
+    const fullStop = () => generatorReuseManager.currentGenerator?.cancel();
+
     // LLM
     let cancelled = false;
     const generatorWithCancellation = async function* () {
@@ -380,7 +384,11 @@ export async function getTabCompletion(
     };
     let charGenerator = generatorWithCancellation();
     charGenerator = noFirstCharNewline(charGenerator);
-    charGenerator = onlyWhitespaceAfterEndOfLine(charGenerator, lang.endOfLine);
+    charGenerator = onlyWhitespaceAfterEndOfLine(
+      charGenerator,
+      lang.endOfLine,
+      fullStop,
+    );
     charGenerator = bracketMatchingService.stopOnUnmatchedClosingBracket(
       charGenerator,
       suffix,
@@ -388,21 +396,26 @@ export async function getTabCompletion(
     );
 
     let lineGenerator = streamLines(charGenerator);
-    lineGenerator = stopAtLines(lineGenerator);
-    lineGenerator = stopAtRepeatingLines(lineGenerator);
+    lineGenerator = stopAtLines(lineGenerator, fullStop);
+    lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
     lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
     lineGenerator = noTopLevelKeywordsMidline(
       lineGenerator,
       lang.topLevelKeywords,
+      fullStop,
     );
 
     for (const lineFilter of lang.lineFilters ?? []) {
-      lineGenerator = lineFilter(lineGenerator);
+      lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
     }
 
     lineGenerator = streamWithNewLines(lineGenerator);
 
-    const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
+    const finalGenerator = stopAtSimilarLine(
+      lineGenerator,
+      lineBelowCursor,
+      fullStop,
+    );
 
     try {
       for await (const update of finalGenerator) {
@@ -419,21 +432,17 @@ export async function getTabCompletion(
       return undefined;
     }
 
-    // Don't return empty
-    if (completion.trim().length <= 0) {
+    const processedCompletion = postprocessCompletion({
+      completion,
+      prefix,
+      suffix,
+      llm,
+    });
+
+    if (!processedCompletion) {
       return undefined;
     }
-
-    // Post-processing
-    completion = completion.trimEnd();
-    if (llm.model.includes("codestral")) {
-      // Codestral sometimes starts with an extra space
-      if (completion[0] === " " && completion[1] !== " ") {
-        if (prefix.endsWith(" ") && suffix.startsWith("\n")) {
-          completion = completion.slice(1);
-        }
-      }
-    }
+    completion = processedCompletion;
   }
 
   const time = Date.now() - startTime;
