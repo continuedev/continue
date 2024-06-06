@@ -119,18 +119,40 @@ export function getRelativePath(
 export function shortestRelativePaths(paths: string[]): string[] {
   if (paths.length === 0) return [];
 
-  const pathParts = paths.map((path) => path.split(SEP_REGEX));
+  const partsLengths = paths.map((x) => x.split(SEP_REGEX).length);
+  const currentRelativePaths = paths.map(getBasename);
+  const currentNumParts = paths.map(() => 1);
+  const isDuplicated = currentRelativePaths.map(
+    (x, i) =>
+      currentRelativePaths.filter((y, j) => y === x && paths[i] !== paths[j])
+        .length > 1,
+  );
 
-  // Shorten paths from the base until any of them doesn't have same prefix part
-  let i = 0;
-  while (
-    i < pathParts.length - 1 &&
-    !pathParts.some((parts) => parts[i] !== pathParts[0][i])
-  ) {
-    i++;
+  while (isDuplicated.some(Boolean)) {
+    const firstDuplicatedPath = currentRelativePaths.find(
+      (x, i) => isDuplicated[i],
+    );
+    if (!firstDuplicatedPath) break;
+
+    currentRelativePaths.forEach((x, i) => {
+      if (x === firstDuplicatedPath) {
+        currentNumParts[i] += 1;
+        currentRelativePaths[i] = getBasename(paths[i], currentNumParts[i]);
+      }
+    });
+
+    isDuplicated.forEach((x, i) => {
+      if (x) {
+        isDuplicated[i] =
+          // Once we've used up all the parts, we can't make it longer
+          currentNumParts[i] < partsLengths[i] &&
+          currentRelativePaths.filter((y) => y === currentRelativePaths[i])
+            .length > 1;
+      }
+    });
   }
 
-  return pathParts.map((parts) => parts.slice(i).join("/"));
+  return currentRelativePaths;
 }
 
 export function splitPath(path: string, withRoot?: string): string[] {
