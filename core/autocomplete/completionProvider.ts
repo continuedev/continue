@@ -652,7 +652,7 @@ export class CompletionProvider {
       const completionToCache = outcome.completion;
       setTimeout(async () => {
         if (!outcome.cacheHit) {
-          (await this.autocompleteCache).put(outcome.prompt, completionToCache);
+          (await this.autocompleteCache).put(outcome.prefix, completionToCache);
         }
       }, 100);
 
