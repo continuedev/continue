@@ -64,13 +64,21 @@ You should have Node.js version 20.11.0 (LTS) or higher installed. You can get i
 nvm use
 ```
 
+#### Fork the Continue Repository with All Branches
+
+1. Go to the [Continue GitHub repository](https://github.com/continuedev/continue) and fork it to your GitHub account. **Ensure all branches are included in the fork**.
+
+2. Clone your forked repository to your local machine. Use: `git clone https://github.com/YOUR_USERNAME/continue.git`
+
+3. Navigate to the cloned directory and switch to the **preview** branch. Execute: `git checkout preview`, then create your feature/fix branch from there, like so: `git checkout -b 123-my-feature-branch`
+
+4. When you're ready to submit your changes, send your pull request specifically to the **preview** branch.
+
 #### VS Code
 
-1. Clone and open in VS Code the Continue repo `https://github.com/continuedev/continue`
+1. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
 
-2. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task` and then select `install-all-dependencies`
-
-3. Start debugging:
+2. Start debugging:
 
    1. Switch to Run and Debug view
    2. Select `Extension (VS Code)` from drop down
@@ -79,7 +87,7 @@ nvm use
       1. The new VS Code window with the extension is referred to as the _Host VS Code_
       2. The window you started debugging from is referred to as the _Main VS Code_
 
-4. To package the extension, run `npm run package` in the `extensions/vscode` directory. This will generate `extensions/vscode/build/continue-{VERSION}.vsix`, which you can install by right-clicking and selecting "Install Extension VSIX".
+3. To package the extension, run `npm run package` in the `extensions/vscode` directory. This will generate `extensions/vscode/build/continue-{VERSION}.vsix`, which you can install by right-clicking and selecting "Install Extension VSIX".
 
 ##### Debugging
 
