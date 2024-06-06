@@ -79,7 +79,7 @@ export async function* stopAtSimilarLine(
     let lineQualifies = nextLine.length > 4 && trimmedLine.length > 4;
     if (
       lineQualifies &&
-      (commonPrefixLength(nextLine.trim(), trimmedLine.trim()) > 8 ||
+      (commonPrefixLength(nextLine.trim(), trimmedLine.trim()) > 12 ||
         distance(nextLine.trim(), trimmedLine) / trimmedLine.length < 0.1)
     ) {
       break;

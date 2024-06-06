@@ -31,23 +31,19 @@ const val DEFAULT_CONFIG = """
   "slashCommands": [
     {
       "name": "edit",
-      "description": "Edit highlighted code",
-      "step": "EditHighlightedCodeStep"
+      "description": "Edit highlighted code"
     },
     {
       "name": "comment",
-      "description": "Write comments for the highlighted code",
-      "step": "CommentCodeStep"
+      "description": "Write comments for the highlighted code"
     },
     {
       "name": "share",
-      "description": "Export the current chat session to markdown",
-      "step": "ShareSessionStep"
+      "description": "Export the current chat session to markdown"
     },
     {
       "name": "cmd",
-      "description": "Generate a shell command",
-      "step": "GenerateShellCommandStep"
+      "description": "Generate a shell command"
     }
   ],
   "customCommands": [
