@@ -307,6 +307,7 @@ export interface LLMOptions {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+  aiGatewaySlug?: string;
   apiBase?: string;
 
   useLegacyCompletionsEndpoint?: boolean;
