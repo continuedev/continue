@@ -43,7 +43,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
   template: (
     prefix: string,
     suffix: string,
-    filename: string,
+    filepath: string,
     reponame: string,
     snippets: AutocompleteSnippet[],
   ): string => {
@@ -52,7 +52,7 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     }
     const relativePaths = shortestRelativePaths([
       ...snippets.map((snippet) => snippet.filepath),
-      filename,
+      filepath,
     ]);
     const otherFiles = snippets
       .map((snippet, i) => `+++++ ${relativePaths[i]}\n${snippet.contents}`)
