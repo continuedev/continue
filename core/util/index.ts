@@ -91,7 +91,7 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
 
 const SEP_REGEX = /[\\/]/;
 
-export function getBasename(filepath: string, n = 1): string {
+export function getBasename(filepath: string): string {
   return filepath.split(SEP_REGEX).pop() ?? "";
 }
 
@@ -137,7 +137,10 @@ export function shortestRelativePaths(paths: string[]): string[] {
     currentRelativePaths.forEach((x, i) => {
       if (x === firstDuplicatedPath) {
         currentNumParts[i] += 1;
-        currentRelativePaths[i] = getBasename(paths[i], currentNumParts[i]);
+        currentRelativePaths[i] = getLastNPathParts(
+          paths[i],
+          currentNumParts[i],
+        );
       }
     });
 

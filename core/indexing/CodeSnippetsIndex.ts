@@ -8,7 +8,7 @@ import type {
   IndexTag,
   IndexingProgressUpdate,
 } from "../index.js";
-import { getBasename } from "../util/index.js";
+import { getBasename, getLastNPathParts } from "../util/index.js";
 import {
   getLanguageForFile,
   getParserForFile,

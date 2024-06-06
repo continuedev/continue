@@ -16,8 +16,8 @@ import {
   TabAutocompleteOptions,
 } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
-import { getBasename } from "../util/index.js";
 import { logDevData } from "../util/devdata.js";
+import { getBasename, getLastNPathParts } from "../util/index.js";
 import {
   COUNT_COMPLETION_REJECTED_AFTER,
   DEFAULT_AUTOCOMPLETE_OPTS,
@@ -203,8 +203,8 @@ export async function getTabCompletion(
   if (input.injectDetails) {
     const lines = fullPrefix.split("\n");
     fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
-      lang.comment
-    } ${input.injectDetails.split("\n").join(`\n${lang.comment} `)}\n${
+      lang.singleLineComment
+    } ${input.injectDetails.split("\n").join(`\n${lang.singleLineComment} `)}\n${
       lines[lines.length - 1]
     }`;
   }
@@ -304,6 +304,9 @@ export async function getTabCompletion(
       .join("\n");
     if (formattedSnippets.length > 0) {
       prefix = `${formattedSnippets}\n\n${prefix}`;
+    } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
+      // If it's an empty file, include the file name as a comment
+      prefix = `${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n${prefix}`;
     }
 
     prompt = compiledTemplate({
@@ -337,7 +340,8 @@ export async function getTabCompletion(
       ...(llm.model.toLowerCase().includes("starcoder2")
         ? STARCODER2_T_ARTIFACTS
         : []),
-      ...lang.stopWords.map((word) => `\n${word}`),
+      ...(lang.stopWords ?? []),
+      ...lang.topLevelKeywords.map((word) => `\n${word}`),
     ];
 
     const multiline =
@@ -388,8 +392,16 @@ export async function getTabCompletion(
     let lineGenerator = streamLines(charGenerator);
     lineGenerator = stopAtLines(lineGenerator);
     lineGenerator = stopAtRepeatingLines(lineGenerator);
-    lineGenerator = avoidPathLine(lineGenerator, lang.comment);
-    lineGenerator = noTopLevelKeywordsMidline(lineGenerator, lang.stopWords);
+    lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
+    lineGenerator = noTopLevelKeywordsMidline(
+      lineGenerator,
+      lang.topLevelKeywords,
+    );
+
+    for (const lineFilter of lang.lineFilters ?? []) {
+      lineGenerator = lineFilter(lineGenerator);
+    }
+
     lineGenerator = streamWithNewLines(lineGenerator);
 
     const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);

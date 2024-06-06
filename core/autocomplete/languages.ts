@@ -10,8 +10,8 @@ export interface AutocompleteLanguageInfo {
 
 // TypeScript
 export const Typescript = {
-  stopWords: ["function", "class", "module", "export", "import"],
-  comment: "//",
+  topLevelKeywords: ["function", "class", "module", "export", "import"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
@@ -19,8 +19,8 @@ export const Typescript = {
 export const Python = {
   // """"#" is for .ipynb files, where we add '"""' surrounding markdown blocks.
   // This stops the model from trying to complete the start of a new markdown block
-  stopWords: ["def", "class", "\"\"\"#"],
-  comment: "#",
+  topLevelKeywords: ["def", "class", '"""#'],
+  singleLineComment: "#",
   endOfLine: [],
 };
 
@@ -219,12 +219,11 @@ export const YAML: AutocompleteLanguageInfo = {
   endOfLine: [],
   lineFilters: [
     // Only display one list item at a time
-    async function* ({ lines, fullStop }) {
+    async function* (lines) {
       let seenListItem = false;
       for await (const line of lines) {
         if (line.trim().startsWith("- ")) {
           if (seenListItem) {
-            fullStop();
             break;
           } else {
             seenListItem = true;
@@ -236,7 +235,7 @@ export const YAML: AutocompleteLanguageInfo = {
       }
     },
     // Don't allow consecutive lines of same key
-    async function* ({ lines }) {
+    async function* (lines) {
       let lastKey = undefined;
       for await (const line of lines) {
         if (line.includes(":")) {
