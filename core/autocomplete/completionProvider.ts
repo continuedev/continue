@@ -69,6 +69,8 @@ export interface AutocompleteInput {
 export interface AutocompleteOutcome extends TabAutocompleteOptions {
   accepted?: boolean;
   time: number;
+  prefix: string;
+  suffix: string;
   prompt: string;
   completion: string;
   modelProvider: string;
@@ -304,7 +306,7 @@ export async function getTabCompletion(
 
   const cache = await autocompleteCache;
   const cachedCompletion = options.useCache
-    ? await cache.get(prompt)
+    ? await cache.get(prefix)
     : undefined;
   let cacheHit = false;
   if (cachedCompletion) {
@@ -409,6 +411,8 @@ export async function getTabCompletion(
   return {
     time,
     completion,
+    prefix,
+    suffix,
     prompt,
     modelProvider: llm.providerName,
     modelName: llm.model,
@@ -623,7 +627,7 @@ export class CompletionProvider {
       const completionToCache = outcome.completion;
       setTimeout(async () => {
         if (!outcome.cacheHit) {
-          (await this.autocompleteCache).put(outcome.prompt, completionToCache);
+          (await this.autocompleteCache).put(outcome.prefix, completionToCache);
         }
       }, 100);
 
