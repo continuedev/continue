@@ -383,6 +383,9 @@
               "accountId": {
                 "type": "string"
               },
+              "aiGatewaySlug": {
+                "type": "string"
+              },
               "model": {
                 "anyOf": [
                   {
