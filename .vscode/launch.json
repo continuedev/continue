@@ -56,6 +56,7 @@
         "${workspaceFolder}/extensions/vscode/manual-testing-sandbox/test.js",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],
+      "pauseForSourceMap": false,
       "outFiles": [
         "${workspaceFolder}/extensions/vscode/out/extension.js",
         "/Users/natesesti/.continue/config.ts"
