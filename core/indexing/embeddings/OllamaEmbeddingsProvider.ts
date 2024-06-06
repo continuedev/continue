@@ -9,23 +9,29 @@ async function embedOne(
   options: EmbedOptions,
   customFetch: FetchFunction,
 ) {
-  const fetchWithBackoff = () =>
-    withExponentialBackoff<Response>(() =>
-      customFetch(new URL("api/embeddings", options.apiBase), {
-        method: "POST",
-        body: JSON.stringify({
-          model: options.model,
-          prompt: chunk,
-        }),
+  const embedding = await withExponentialBackoff<number[]>(async () => {
+    const resp = await customFetch(new URL("api/embeddings", options.apiBase), {
+      method: "POST",
+      body: JSON.stringify({
+        model: options.model,
+        prompt: chunk,
       }),
-    );
-  const resp = await fetchWithBackoff();
+    });
 
-  if (!resp.ok) {
-    throw new Error(`Failed to embed chunk: ${await resp.text()}`);
-  }
+    if (!resp.ok) {
+      throw new Error(`Failed to embed chunk: ${await resp.text()}`);
+    }
 
-  return (await resp.json()).embedding;
+    const data = await resp.json();
+    const embedding = data.embedding;
+
+    if (!embedding || embedding.length === 0) {
+      throw new Error("Ollama generated empty embedding");
+    }
+    return embedding;
+  });
+
+  return embedding;
 }
 
 class OllamaEmbeddingsProvider extends BaseEmbeddingsProvider {
