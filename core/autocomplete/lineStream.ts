@@ -2,17 +2,22 @@ import { distance } from "fastest-levenshtein";
 import { LineStream } from "../diff/util.js";
 import { DiffLine } from "../index.js";
 
-export type LineFilter = (stream: LineStream) => LineStream;
+export type LineFilter = (args: {
+  lines: LineStream;
+  fullStop: () => void;
+}) => LineStream;
 
 export async function* noTopLevelKeywordsMidline(
   lines: LineStream,
   topLevelKeywords: string[],
+  fullStop: () => void,
 ): LineStream {
   for await (const line of lines) {
     for (const keyword of topLevelKeywords) {
       const indexOf = line.indexOf(`${keyword} `);
       if (indexOf >= 0 && line.slice(indexOf - 1, indexOf).trim() !== "") {
         yield line.slice(0, indexOf);
+        fullStop();
         break;
       }
     }
@@ -71,6 +76,7 @@ export async function* stopAtSimilarLine(
   const lineIsBracketEnding = isBracketEnding(trimmedLine);
   for await (const nextLine of stream) {
     if (nextLine === line) {
+      fullStop();
       break;
     }
 
@@ -85,6 +91,7 @@ export async function* stopAtSimilarLine(
       (commonPrefixLength(nextLine.trim(), trimmedLine.trim()) > 12 ||
         distance(nextLine.trim(), trimmedLine) / trimmedLine.length < 0.1)
     ) {
+      fullStop();
       break;
     }
     yield nextLine;
@@ -99,6 +106,7 @@ export async function* stopAtLines(
 ): LineStream {
   for await (const line of stream) {
     if (LINES_TO_STOP_AT.some((stopAt) => line.trim().includes(stopAt))) {
+      fullStop();
       break;
     }
     yield line;

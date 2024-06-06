@@ -32,7 +32,9 @@ export async function* noFirstCharNewline(stream: AsyncGenerator<string>) {
   for await (const char of stream) {
     if (first) {
       first = false;
-      if (char === "\n") {return;}
+      if (char.startsWith("\n") || char.startsWith("\r")) {
+        return;
+      }
     }
     yield char;
   }

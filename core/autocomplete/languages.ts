@@ -219,11 +219,12 @@ export const YAML: AutocompleteLanguageInfo = {
   endOfLine: [],
   lineFilters: [
     // Only display one list item at a time
-    async function* (lines) {
+    async function* ({ lines, fullStop }) {
       let seenListItem = false;
       for await (const line of lines) {
         if (line.trim().startsWith("- ")) {
           if (seenListItem) {
+            fullStop();
             break;
           } else {
             seenListItem = true;
@@ -235,7 +236,7 @@ export const YAML: AutocompleteLanguageInfo = {
       }
     },
     // Don't allow consecutive lines of same key
-    async function* (lines) {
+    async function* ({ lines }) {
       let lastKey = undefined;
       for await (const line of lines) {
         if (line.includes(":")) {
