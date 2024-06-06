@@ -1,10 +1,17 @@
 // Fill in the middle prompts
 
 import { CompletionOptions } from "../index.js";
-import { shortestRelativePaths } from "../util/index.js";
+import { getLastNPathParts, shortestRelativePaths } from "../util/index.js";
 import { AutocompleteSnippet } from "./ranking.js";
 
 interface AutocompleteTemplate {
+  compilePrefixSuffix?: (
+    prefix: string,
+    suffix: string,
+    filepath: string,
+    reponame: string,
+    snippets: AutocompleteSnippet[],
+  ) => [string, string];
   template:
     | string
     | ((
@@ -33,15 +40,18 @@ const codestralFimTemplate: AutocompleteTemplate = {
 };
 
 const codestralMultifileFimTemplate: AutocompleteTemplate = {
-  template: (
+  compilePrefixSuffix: (
     prefix: string,
     suffix: string,
     filepath: string,
     reponame: string,
     snippets: AutocompleteSnippet[],
-  ): string => {
+  ): [string, string] => {
     if (snippets.length === 0) {
-      return `[SUFFIX]${suffix}[PREFIX]${prefix}`;
+      if (suffix.trim().length === 0 && prefix.trim().length === 0) {
+        return [`+++++ ${getLastNPathParts(filepath, 2)}\n${prefix}`, suffix];
+      }
+      return [prefix, suffix];
     }
     const relativePaths = shortestRelativePaths([
       ...snippets.map((snippet) => snippet.filepath),
@@ -50,8 +60,19 @@ const codestralMultifileFimTemplate: AutocompleteTemplate = {
     const otherFiles = snippets
       .map((snippet, i) => `+++++ ${relativePaths[i]}\n${snippet.contents}`)
       .join("\n\n");
-    const prompt = `[SUFFIX]${suffix}[PREFIX]${otherFiles}\n\n+++++ ${relativePaths[relativePaths.length - 1]}\n${prefix}`;
-    return prompt;
+    return [
+      `${otherFiles}\n\n+++++ ${relativePaths[relativePaths.length - 1]}\n${prefix}`,
+      suffix,
+    ];
+  },
+  template: (
+    prefix: string,
+    suffix: string,
+    filepath: string,
+    reponame: string,
+    snippets: AutocompleteSnippet[],
+  ): string => {
+    return `[SUFFIX]${suffix}[PREFIX]${prefix}`;
   },
   completionOptions: {
     stop: ["[PREFIX]", "[SUFFIX]"],

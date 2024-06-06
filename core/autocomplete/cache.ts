@@ -30,6 +30,8 @@ export class AutocompleteLruCache {
   }
 
   async get(prefix: string): Promise<string | undefined> {
+    // NOTE: Right now prompts with different suffixes will be considered the same
+
     // If the query is "co" and we have "c" -> "ontinue" in the cache,
     // we should return "ntinue" as the completion.
     // Have to make sure we take the key with shortest length

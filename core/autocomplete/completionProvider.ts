@@ -16,7 +16,7 @@ import {
 } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { logDevData } from "../util/devdata.js";
-import { getBasename } from "../util/index.js";
+import { getBasename, getLastNPathParts } from "../util/index.js";
 import {
   COUNT_COMPLETION_REJECTED_AFTER,
   DEFAULT_AUTOCOMPLETE_OPTS,
@@ -108,7 +108,7 @@ function formatExternalSnippet(
   snippet: string,
   language: AutocompleteLanguageInfo,
 ) {
-  const comment = language.comment;
+  const comment = language.singleLineComment;
   const lines = [
     `${comment} Path: ${getBasename(filepath)}`,
     ...snippet
@@ -204,8 +204,8 @@ export async function getTabCompletion(
   if (input.injectDetails) {
     const lines = fullPrefix.split("\n");
     fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
-      lang.comment
-    } ${input.injectDetails.split("\n").join(`\n${lang.comment} `)}\n${
+      lang.singleLineComment
+    } ${input.injectDetails.split("\n").join(`\n${lang.singleLineComment} `)}\n${
       lines[lines.length - 1]
     }`;
   }
@@ -270,13 +270,30 @@ export async function getTabCompletion(
   }
 
   // Template prompt
-  const { template, completionOptions } = options.template
+  const {
+    template,
+    completionOptions,
+    compilePrefixSuffix = undefined,
+  } = options.template
     ? { template: options.template, completionOptions: {} }
     : getTemplateForModel(llm.model);
 
   let prompt: string;
   const filename = getBasename(filepath);
   const reponame = getBasename(workspaceDirs[0] ?? "myproject");
+
+  // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
+  // into either the 2nd template to generate a raw string, or to pass prefix, suffix to a FIM endpoint
+  if (compilePrefixSuffix) {
+    [prefix, suffix] = compilePrefixSuffix(
+      prefix,
+      suffix,
+      filepath,
+      reponame,
+      snippets,
+    );
+  }
+
   if (typeof template === "string") {
     const compiledTemplate = Handlebars.compile(template);
 
@@ -288,6 +305,9 @@ export async function getTabCompletion(
       .join("\n");
     if (formattedSnippets.length > 0) {
       prefix = `${formattedSnippets}\n\n${prefix}`;
+    } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
+      // If it's an empty file, include the file name as a comment
+      prefix = `${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n${prefix}`;
     }
 
     prompt = compiledTemplate({
@@ -321,7 +341,8 @@ export async function getTabCompletion(
       ...(llm.model.toLowerCase().includes("starcoder2")
         ? STARCODER2_T_ARTIFACTS
         : []),
-      ...lang.stopWords.map((word) => `\n${word}`),
+      ...(lang.stopWords ?? []),
+      ...lang.topLevelKeywords.map((word) => `\n${word}`),
     ];
 
     const multiline =
@@ -369,8 +390,16 @@ export async function getTabCompletion(
     let lineGenerator = streamLines(charGenerator);
     lineGenerator = stopAtLines(lineGenerator);
     lineGenerator = stopAtRepeatingLines(lineGenerator);
-    lineGenerator = avoidPathLine(lineGenerator, lang.comment);
-    lineGenerator = noTopLevelKeywordsMidline(lineGenerator, lang.stopWords);
+    lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
+    lineGenerator = noTopLevelKeywordsMidline(
+      lineGenerator,
+      lang.topLevelKeywords,
+    );
+
+    for (const lineFilter of lang.lineFilters ?? []) {
+      lineGenerator = lineFilter(lineGenerator);
+    }
+
     lineGenerator = streamWithNewLines(lineGenerator);
 
     const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);

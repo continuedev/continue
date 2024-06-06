@@ -28,7 +28,7 @@ function reformatCodeBlocks(msgText: string): string {
     codeBlockFenceRegex,
     (match, metadata, filename, extension) => {
       const lang = languageForFilepath(filename);
-      return `\`\`\`${extension}\n${lang.comment} ${metadata}\n`;
+      return `\`\`\`${extension}\n${lang.singleLineComment} ${metadata}\n`;
     },
   );
   // Appease the markdown linter
