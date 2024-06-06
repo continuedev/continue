@@ -28,7 +28,7 @@ import {
   SlashCommand,
 } from "../index.js";
 import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
-import { AllEmbeddingsProviders } from "../indexing/embeddings/index.js";
+import { allEmbeddingsProviders } from "../indexing/embeddings/index.js";
 import { BaseLLM } from "../llm/index.js";
 import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import FreeTrial from "../llm/llms/FreeTrial.js";
@@ -336,7 +336,7 @@ async function intermediateToFinalConfig(
     | undefined;
   if (embeddingsProviderDescription?.provider) {
     const { provider, ...options } = embeddingsProviderDescription;
-    const embeddingsProviderClass = AllEmbeddingsProviders[provider];
+    const embeddingsProviderClass = allEmbeddingsProviders[provider];
     if (embeddingsProviderClass) {
       if (
         embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"

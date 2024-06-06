@@ -30,10 +30,10 @@ class Ollama extends BaseLLM {
     })
       .then(async (response) => {
         if (response.status !== 200) {
-          console.warn(
-            "Error calling Ollama /api/show endpoint: ",
-            await response.text(),
-          );
+          // console.warn(
+          //   "Error calling Ollama /api/show endpoint: ",
+          //   await response.text(),
+          // );
           return;
         }
         const body = await response.json();
@@ -69,7 +69,7 @@ class Ollama extends BaseLLM {
         }
       })
       .catch((e) => {
-        console.warn(`Error calling Ollama /api/show endpoint: ${e}`);
+        // console.warn(`Error calling Ollama /api/show endpoint: ${e}`);
       });
   }
 

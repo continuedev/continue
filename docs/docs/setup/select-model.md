@@ -43,7 +43,7 @@ _You can also use other open-source chat models by adding them to your `config.j
 #### Gemini Pro from Google
 
 - Unlimited budget: `gemini-pro-1.5-latest`
-- Limited budget: `gemini-pro-1.0`
+- Limited budget: `gemini-flash-1.5-latest` or `gemini-pro-1.0`
 
 _You can also use other commercial chat models by adding them to your `config.json`._
 

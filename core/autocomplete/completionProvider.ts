@@ -16,7 +16,7 @@ import {
 } from "../index.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 import { logDevData } from "../util/devdata.js";
-import { getBasename } from "../util/index.js";
+import { getBasename, getLastNPathParts } from "../util/index.js";
 import {
   COUNT_COMPLETION_REJECTED_AFTER,
   DEFAULT_AUTOCOMPLETE_OPTS,
@@ -43,6 +43,7 @@ import {
   stopAtSimilarLine,
   streamWithNewLines,
 } from "./lineStream.js";
+import { postprocessCompletion } from "./postprocessing.js";
 import { AutocompleteSnippet } from "./ranking.js";
 import { RecentlyEditedRange } from "./recentlyEdited.js";
 import { getTemplateForModel } from "./templates.js";
@@ -69,6 +70,8 @@ export interface AutocompleteInput {
 export interface AutocompleteOutcome extends TabAutocompleteOptions {
   accepted?: boolean;
   time: number;
+  prefix: string;
+  suffix: string;
   prompt: string;
   completion: string;
   modelProvider: string;
@@ -76,6 +79,9 @@ export interface AutocompleteOutcome extends TabAutocompleteOptions {
   completionOptions: any;
   cacheHit: boolean;
   filepath: string;
+  gitRepo?: string;
+  completionId: string;
+  uniqueId: string;
 }
 
 const autocompleteCache = AutocompleteLruCache.get();
@@ -103,7 +109,7 @@ function formatExternalSnippet(
   snippet: string,
   language: AutocompleteLanguageInfo,
 ) {
-  const comment = language.comment;
+  const comment = language.singleLineComment;
   const lines = [
     `${comment} Path: ${getBasename(filepath)}`,
     ...snippet
@@ -199,8 +205,8 @@ export async function getTabCompletion(
   if (input.injectDetails) {
     const lines = fullPrefix.split("\n");
     fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
-      lang.comment
-    } ${input.injectDetails.split("\n").join(`\n${lang.comment} `)}\n${
+      lang.singleLineComment
+    } ${input.injectDetails.split("\n").join(`\n${lang.singleLineComment} `)}\n${
       lines[lines.length - 1]
     }`;
   }
@@ -265,13 +271,30 @@ export async function getTabCompletion(
   }
 
   // Template prompt
-  const { template, completionOptions } = options.template
+  const {
+    template,
+    completionOptions,
+    compilePrefixSuffix = undefined,
+  } = options.template
     ? { template: options.template, completionOptions: {} }
     : getTemplateForModel(llm.model);
 
   let prompt: string;
   const filename = getBasename(filepath);
   const reponame = getBasename(workspaceDirs[0] ?? "myproject");
+
+  // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
+  // into either the 2nd template to generate a raw string, or to pass prefix, suffix to a FIM endpoint
+  if (compilePrefixSuffix) {
+    [prefix, suffix] = compilePrefixSuffix(
+      prefix,
+      suffix,
+      filepath,
+      reponame,
+      snippets,
+    );
+  }
+
   if (typeof template === "string") {
     const compiledTemplate = Handlebars.compile(template);
 
@@ -283,6 +306,9 @@ export async function getTabCompletion(
       .join("\n");
     if (formattedSnippets.length > 0) {
       prefix = `${formattedSnippets}\n\n${prefix}`;
+    } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
+      // If it's an empty file, include the file name as a comment
+      prefix = `${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n${prefix}`;
     }
 
     prompt = compiledTemplate({
@@ -293,7 +319,7 @@ export async function getTabCompletion(
     });
   } else {
     // Let the template function format snippets
-    prompt = template(prefix, suffix, filename, reponame, snippets);
+    prompt = template(prefix, suffix, filepath, reponame, snippets);
   }
 
   // Completion
@@ -301,7 +327,7 @@ export async function getTabCompletion(
 
   const cache = await autocompleteCache;
   const cachedCompletion = options.useCache
-    ? await cache.get(prompt)
+    ? await cache.get(prefix)
     : undefined;
   let cacheHit = false;
   if (cachedCompletion) {
@@ -316,7 +342,8 @@ export async function getTabCompletion(
       ...(llm.model.toLowerCase().includes("starcoder2")
         ? STARCODER2_T_ARTIFACTS
         : []),
-      ...lang.stopWords.map((word) => `\n${word}`),
+      ...(lang.stopWords ?? []),
+      ...lang.topLevelKeywords.map((word) => `\n${word}`),
     ];
 
     const multiline =
@@ -341,6 +368,9 @@ export async function getTabCompletion(
       multiline,
     );
 
+    // Full stop means to stop the LLM's generation, instead of just truncating the displayed completion
+    const fullStop = () => generatorReuseManager.currentGenerator?.cancel();
+
     // LLM
     let cancelled = false;
     const generatorWithCancellation = async function* () {
@@ -354,7 +384,11 @@ export async function getTabCompletion(
     };
     let charGenerator = generatorWithCancellation();
     charGenerator = noFirstCharNewline(charGenerator);
-    charGenerator = onlyWhitespaceAfterEndOfLine(charGenerator, lang.endOfLine);
+    charGenerator = onlyWhitespaceAfterEndOfLine(
+      charGenerator,
+      lang.endOfLine,
+      fullStop,
+    );
     charGenerator = bracketMatchingService.stopOnUnmatchedClosingBracket(
       charGenerator,
       suffix,
@@ -362,13 +396,26 @@ export async function getTabCompletion(
     );
 
     let lineGenerator = streamLines(charGenerator);
-    lineGenerator = stopAtLines(lineGenerator);
-    lineGenerator = stopAtRepeatingLines(lineGenerator);
-    lineGenerator = avoidPathLine(lineGenerator, lang.comment);
-    lineGenerator = noTopLevelKeywordsMidline(lineGenerator, lang.stopWords);
+    lineGenerator = stopAtLines(lineGenerator, fullStop);
+    lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
+    lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
+    lineGenerator = noTopLevelKeywordsMidline(
+      lineGenerator,
+      lang.topLevelKeywords,
+      fullStop,
+    );
+
+    for (const lineFilter of lang.lineFilters ?? []) {
+      lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
+    }
+
     lineGenerator = streamWithNewLines(lineGenerator);
 
-    const finalGenerator = stopAtSimilarLine(lineGenerator, lineBelowCursor);
+    const finalGenerator = stopAtSimilarLine(
+      lineGenerator,
+      lineBelowCursor,
+      fullStop,
+    );
 
     try {
       for await (const update of finalGenerator) {
@@ -385,33 +432,34 @@ export async function getTabCompletion(
       return undefined;
     }
 
-    // Don't return empty
-    if (completion.trim().length <= 0) {
+    const processedCompletion = postprocessCompletion({
+      completion,
+      prefix,
+      suffix,
+      llm,
+    });
+
+    if (!processedCompletion) {
       return undefined;
     }
-
-    // Post-processing
-    completion = completion.trimEnd();
-    if (llm.model.includes("codestral")) {
-      // Codestral sometimes starts with an extra space
-      if (completion[0] === " " && completion[1] !== " ") {
-        if (prefix.endsWith(" ") && suffix.startsWith("\n")) {
-          completion = completion.slice(1);
-        }
-      }
-    }
+    completion = processedCompletion;
   }
 
   const time = Date.now() - startTime;
   return {
     time,
     completion,
+    prefix,
+    suffix,
     prompt,
     modelProvider: llm.providerName,
     modelName: llm.model,
     completionOptions,
     cacheHit,
     filepath: input.filepath,
+    completionId: input.completionId,
+    gitRepo: await ide.getRepoName(input.filepath),
+    uniqueId: await ide.getUniqueId(),
     ...options,
   };
 }
@@ -589,7 +637,10 @@ export class CompletionProvider {
         "llamafile",
         "text-gen-webui",
       ];
-      if (LOCAL_PROVIDERS.includes(llm.providerName)) {
+      if (
+        !config.tabAutocompleteOptions?.maxPromptTokens &&
+        LOCAL_PROVIDERS.includes(llm.providerName)
+      ) {
         options.maxPromptTokens = 500;
       }
 
@@ -617,7 +668,7 @@ export class CompletionProvider {
       const completionToCache = outcome.completion;
       setTimeout(async () => {
         if (!outcome.cacheHit) {
-          (await this.autocompleteCache).put(outcome.prompt, completionToCache);
+          (await this.autocompleteCache).put(outcome.prefix, completionToCache);
         }
       }, 100);
 

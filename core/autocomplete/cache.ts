@@ -29,36 +29,43 @@ export class AutocompleteLruCache {
     return new AutocompleteLruCache(db);
   }
 
-  async get(key: string): Promise<string | undefined> {
+  async get(prefix: string): Promise<string | undefined> {
+    // NOTE: Right now prompts with different suffixes will be considered the same
+
+    // If the query is "co" and we have "c" -> "ontinue" in the cache,
+    // we should return "ntinue" as the completion.
+    // Have to make sure we take the key with shortest length
     const result = await this.db.get(
-      "SELECT value FROM cache WHERE key = ?",
-      key,
+      "SELECT key, value FROM cache WHERE ? LIKE key || '%' ORDER BY LENGTH(key) DESC LIMIT 1",
+      prefix,
     );
 
-    if (result) {
+    // Validate that the cached compeltion is a valid completion for the prefix
+    if (result && result.value.startsWith(prefix.slice(result.key.length))) {
       await this.db.run(
         "UPDATE cache SET timestamp = ? WHERE key = ?",
         Date.now(),
-        key,
+        prefix,
       );
-      return result.value;
+      // And then truncate so we aren't writing something that's already there
+      return result.value.slice(prefix.length - result.key.length);
     }
 
     return undefined;
   }
 
-  async put(key: string, value: string) {
+  async put(prefix: string, completion: string) {
     const result = await this.db.get(
       "SELECT key FROM cache WHERE key = ?",
-      key,
+      prefix,
     );
 
     if (result) {
       await this.db.run(
         "UPDATE cache SET value = ?, timestamp = ? WHERE key = ?",
-        value,
+        completion,
         Date.now(),
-        key,
+        prefix,
       );
     } else {
       const count = await this.db.get("SELECT COUNT(*) as count FROM cache");
@@ -71,8 +78,8 @@ export class AutocompleteLruCache {
 
       await this.db.run(
         "INSERT INTO cache (key, value, timestamp) VALUES (?, ?, ?)",
-        key,
-        value,
+        prefix,
+        completion,
         Date.now(),
       );
     }

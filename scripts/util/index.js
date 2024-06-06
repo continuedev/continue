@@ -1,4 +1,5 @@
 const fs = require("fs");
+const os = require("os");
 const { execSync } = require("child_process");
 
 function execCmdSync(cmd) {
@@ -10,11 +11,39 @@ function execCmdSync(cmd) {
   }
 }
 
+function autodetectPlatformAndArch() {
+  platform = {
+    aix: "linux",
+    darwin: "darwin",
+    freebsd: "linux",
+    linux: "linux",
+    openbsd: "linux",
+    sunos: "linux",
+    win32: "win32",
+  }[process.platform];
+  arch = {
+    arm: "arm64",
+    arm64: "arm64",
+    ia32: "x64",
+    loong64: "arm64",
+    mips: "arm64",
+    mipsel: "arm64",
+    ppc: "x64",
+    ppc64: "x64",
+    riscv64: "arm64",
+    s390: "x64",
+    s390x: "x64",
+    x64: "x64",
+  }[process.arch];
+  return [platform, arch];
+}
+
 function validateFilesPresent(pathsToVerify) {
   // This script verifies after pacakging that necessary files are in the correct locations
   // In many cases just taking a sample file from the folder when they are all roughly the same thing
 
   let missingFiles = [];
+  let emptyFiles = [];
   for (const path of pathsToVerify) {
     if (!fs.existsSync(path)) {
       const parentFolder = path.split("/").slice(0, -1).join("/");
@@ -51,11 +80,16 @@ function validateFilesPresent(pathsToVerify) {
 
       missingFiles.push(path);
     }
+
+    if (fs.existsSync(path) && fs.statSync(path).size === 0) {
+      console.error(`File ${path} is empty`);
+      emptyFiles.push(path);
+    }
   }
 
-  if (missingFiles.length > 0) {
+  if (missingFiles.length > 0 || emptyFiles.length > 0) {
     throw new Error(
-      `The following files were missing:\n- ${missingFiles.join("\n- ")}`,
+      `The following files were missing:\n- ${missingFiles.join("\n- ")}\n\nThe following files were empty:\n- ${emptyFiles.join("\n- ")}`,
     );
   } else {
     console.log("All paths exist");
@@ -65,4 +99,5 @@ function validateFilesPresent(pathsToVerify) {
 module.exports = {
   execCmdSync,
   validateFilesPresent,
+  autodetectPlatformAndArch,
 };

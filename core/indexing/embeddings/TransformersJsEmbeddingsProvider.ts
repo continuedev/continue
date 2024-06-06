@@ -37,17 +37,10 @@ class EmbeddingsPipeline {
 }
 
 export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
-  static MaxGroupSize: number = 4;
+  static maxGroupSize: number = 4;
 
-  constructor(modelPath?: string) {
+  constructor() {
     super({ model: "all-MiniLM-L2-v6" }, () => Promise.resolve(null));
-    if (modelPath) {
-      // env.localModelPath = modelPath;
-    }
-  }
-
-  get id(): string {
-    return EmbeddingsPipeline.model;
   }
 
   async embed(chunks: string[]) {
@@ -65,11 +58,11 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
     for (
       let i = 0;
       i < chunks.length;
-      i += TransformersJsEmbeddingsProvider.MaxGroupSize
+      i += TransformersJsEmbeddingsProvider.maxGroupSize
     ) {
       const chunkGroup = chunks.slice(
         i,
-        i + TransformersJsEmbeddingsProvider.MaxGroupSize,
+        i + TransformersJsEmbeddingsProvider.maxGroupSize,
       );
       const output = await extractor(chunkGroup, {
         pooling: "mean",

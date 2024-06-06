@@ -93,12 +93,82 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
-export function getBasename(filepath: string, n = 1): string {
-  return filepath.split(/[\\/]/).pop() ?? "";
+const SEP_REGEX = /[\\/]/;
+
+export function getBasename(filepath: string): string {
+  return filepath.split(SEP_REGEX).pop() ?? "";
 }
 
 export function getLastNPathParts(filepath: string, n: number): string {
-  return filepath.split(/[\\/]/).slice(-n).join("/");
+  return filepath.split(SEP_REGEX).slice(-n).join("/");
+}
+
+export function getRelativePath(
+  filepath: string,
+  workspaceDirs: string[],
+): string {
+  for (const workspaceDir of workspaceDirs) {
+    const filepathParts = splitPath(filepath);
+    const workspaceDirParts = splitPath(workspaceDir);
+    if (
+      filepathParts.slice(0, workspaceDirParts.length).join("/") ===
+      workspaceDirParts.join("/")
+    ) {
+      return filepathParts.slice(workspaceDirParts.length).join("/");
+    }
+  }
+  return splitPath(filepath).pop() ?? ""; // If the file is not in any of the workspaces, return the plain filename
+}
+
+export function shortestRelativePaths(paths: string[]): string[] {
+  if (paths.length === 0) return [];
+
+  const partsLengths = paths.map((x) => x.split(SEP_REGEX).length);
+  const currentRelativePaths = paths.map(getBasename);
+  const currentNumParts = paths.map(() => 1);
+  const isDuplicated = currentRelativePaths.map(
+    (x, i) =>
+      currentRelativePaths.filter((y, j) => y === x && paths[i] !== paths[j])
+        .length > 1,
+  );
+
+  while (isDuplicated.some(Boolean)) {
+    const firstDuplicatedPath = currentRelativePaths.find(
+      (x, i) => isDuplicated[i],
+    );
+    if (!firstDuplicatedPath) break;
+
+    currentRelativePaths.forEach((x, i) => {
+      if (x === firstDuplicatedPath) {
+        currentNumParts[i] += 1;
+        currentRelativePaths[i] = getLastNPathParts(
+          paths[i],
+          currentNumParts[i],
+        );
+      }
+    });
+
+    isDuplicated.forEach((x, i) => {
+      if (x) {
+        isDuplicated[i] =
+          // Once we've used up all the parts, we can't make it longer
+          currentNumParts[i] < partsLengths[i] &&
+          currentRelativePaths.filter((y) => y === currentRelativePaths[i])
+            .length > 1;
+      }
+    });
+  }
+
+  return currentRelativePaths;
+}
+
+export function splitPath(path: string, withRoot?: string): string[] {
+  let parts = path.includes("/") ? path.split("/") : path.split("\\");
+  if (withRoot !== undefined) {
+    const rootParts = splitPath(withRoot);
+    parts = parts.slice(rootParts.length - 1);
+  }
+  return parts;
 }
 
 export function getRelativePath(filepath: string, workspaceDirs: string[]): string {

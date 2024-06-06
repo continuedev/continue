@@ -53,11 +53,12 @@ export function fetchwithRequestOptions(
 
   // Create agent
   const protocol = url.protocol === "https:" ? https : http;
-  const agent = proxy
-    ? protocol === https
-      ? new HttpsProxyAgent(proxy, agentOptions)
-      : new HttpProxyAgent(proxy, agentOptions)
-    : new protocol.Agent(agentOptions);
+  const agent =
+    proxy && !requestOptions?.noProxy?.includes(url.hostname)
+      ? protocol === https
+        ? new HttpsProxyAgent(proxy, agentOptions)
+        : new HttpProxyAgent(proxy, agentOptions)
+      : new protocol.Agent(agentOptions);
 
   let headers: { [key: string]: string } = {};
   for (const [key, value] of Object.entries(init?.headers || {})) {
