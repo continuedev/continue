@@ -100,6 +100,7 @@ export abstract class BaseLLM implements ILLM {
   region?: string;
   projectId?: string;
   accountId?: string;
+  aiGatewaySlug?: string;
 
   private _llmOptions: LLMOptions;
 
@@ -147,6 +148,7 @@ export abstract class BaseLLM implements ILLM {
     this.writeLog = options.writeLog;
     this.llmRequestHook = options.llmRequestHook;
     this.apiKey = options.apiKey;
+    this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;

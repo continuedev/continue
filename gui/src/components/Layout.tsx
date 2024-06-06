@@ -216,14 +216,13 @@ const Layout = () => {
     const onboardingComplete = getLocalStorage("onboardingComplete");
     if (
       !onboardingComplete &&
-      !location.pathname.startsWith("/onboarding") &&
-      !location.pathname.startsWith("/existingUserOnboarding")
+      (location.pathname === "/" || location.pathname === "/index.html")
     ) {
       navigate("/onboarding");
     }
   }, [location]);
 
-  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({ 
+  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
     desc: "Loading indexing config",
     progress: 0.0,
     status: "loading",

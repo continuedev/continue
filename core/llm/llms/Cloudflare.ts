@@ -23,22 +23,19 @@ export default class Cloudflare extends BaseLLM {
       Authorization: `Bearer ${this.apiKey}`,
       ...this.requestOptions?.headers,
     };
-
-    const resp = await this.fetch(
-      new URL(
-        `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/v1/chat/completions`,
-      ),
-      {
-        method: "POST",
-        headers,
-        body: JSON.stringify({
-          messages,
-          stream: true,
-          model: this.model,
-          ...this._convertArgs(options),
-        }),
-      },
-    );
+    const url = this.aiGatewaySlug
+      ? `https://gateway.ai.cloudflare.com/v1/${this.accountId}/${this.aiGatewaySlug}/workers-ai/v1/chat/completions`
+      : `https://api.cloudflare.com/client/v4/accounts/${this.accountId}/ai/v1/chat/completions`;
+    const resp = await this.fetch(new URL(url), {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        messages,
+        stream: true,
+        model: this.model,
+        ...this._convertArgs(options),
+      }),
+    });
 
     for await (const value of streamSse(resp)) {
       console.log(value);

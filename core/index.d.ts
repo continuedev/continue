@@ -162,6 +162,13 @@ export interface ContextSubmenuItem {
   description: string;
 }
 
+export interface SiteIndexingConfig {
+  startUrl: string;
+  rootUrl: string;
+  title: string;
+  maxDepth?: number;
+}
+
 export interface IContextProvider {
   get description(): ContextProviderDescription;
 
@@ -300,6 +307,7 @@ export interface LLMOptions {
   writeLog?: (str: string) => Promise<void>;
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
+  aiGatewaySlug?: string;
   apiBase?: string;
 
   useLegacyCompletionsEndpoint?: boolean;
@@ -622,6 +630,7 @@ export interface RequestOptions {
   proxy?: string;
   headers?: { [key: string]: string };
   extraBodyProperties?: { [key: string]: any };
+  noProxy?: string[];
 }
 
 export interface StepWithParams {
@@ -681,7 +690,8 @@ export type EmbeddingsProviderName =
   | "ollama"
   | "openai"
   | "cohere"
-  | "free-trial";
+  | "free-trial"
+  | "gemini";
 
 export interface EmbedOptions {
   apiBase?: string;

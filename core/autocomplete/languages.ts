@@ -1,13 +1,17 @@
+import { LineFilter } from "./lineStream";
+
 export interface AutocompleteLanguageInfo {
-  stopWords: string[];
-  comment: string;
+  topLevelKeywords: string[];
+  singleLineComment: string;
   endOfLine: string[];
+  stopWords?: string[];
+  lineFilters?: LineFilter[];
 }
 
 // TypeScript
 export const Typescript = {
-  stopWords: ["function", "class", "module", "export", "import"],
-  comment: "//",
+  topLevelKeywords: ["function", "class", "module", "export", "import"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
@@ -15,63 +19,63 @@ export const Typescript = {
 export const Python = {
   // """"#" is for .ipynb files, where we add '"""' surrounding markdown blocks.
   // This stops the model from trying to complete the start of a new markdown block
-  stopWords: ["def", "class", "\"\"\"#"],
-  comment: "#",
+  topLevelKeywords: ["def", "class", '"""#'],
+  singleLineComment: "#",
   endOfLine: [],
 };
 
 // Java
 export const Java = {
-  stopWords: ["class", "function"],
-  comment: "//",
+  topLevelKeywords: ["class", "function"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
 // C++
 export const Cpp = {
-  stopWords: ["class", "namespace", "template"],
-  comment: "//",
+  topLevelKeywords: ["class", "namespace", "template"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
 // C#
 export const CSharp = {
-  stopWords: ["class", "namespace", "void"],
-  comment: "//",
+  topLevelKeywords: ["class", "namespace", "void"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
 // C
 export const C = {
-  stopWords: ["if", "else", "while", "for", "switch", "case"],
-  comment: "//",
+  topLevelKeywords: ["if", "else", "while", "for", "switch", "case"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
 // Scala
 export const Scala = {
-  stopWords: ["def", "val", "var", "class", "object", "trait"],
-  comment: "//",
+  topLevelKeywords: ["def", "val", "var", "class", "object", "trait"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
 // Go
 export const Go = {
-  stopWords: ["func", "package", "import", "type"],
-  comment: "//",
+  topLevelKeywords: ["func", "package", "import", "type"],
+  singleLineComment: "//",
   endOfLine: [],
 };
 
 // Rust
 export const Rust = {
-  stopWords: ["fn", "mod", "pub", "struct", "enum", "trait"],
-  comment: "//",
+  topLevelKeywords: ["fn", "mod", "pub", "struct", "enum", "trait"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
 // Haskell
 export const Haskell = {
-  stopWords: [
+  topLevelKeywords: [
     "data",
     "type",
     "newtype",
@@ -81,55 +85,55 @@ export const Haskell = {
     "in",
     "where",
   ],
-  comment: "--",
+  singleLineComment: "--",
   endOfLine: [],
 };
 
 // PHP
 export const PHP = {
-  stopWords: ["function", "class", "namespace", "use"],
-  comment: "//",
+  topLevelKeywords: ["function", "class", "namespace", "use"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
 // Ruby on Rails
 export const RubyOnRails = {
-  stopWords: ["def", "class", "module"],
-  comment: "#",
+  topLevelKeywords: ["def", "class", "module"],
+  singleLineComment: "#",
   endOfLine: [],
 };
 
 // Swift
 export const Swift = {
-  stopWords: ["func", "class", "struct", "import"],
-  comment: "//",
+  topLevelKeywords: ["func", "class", "struct", "import"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
 // Kotlin
 export const Kotlin = {
-  stopWords: ["fun", "class", "package", "import"],
-  comment: "//",
+  topLevelKeywords: ["fun", "class", "package", "import"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
 // Ruby
 export const Ruby = {
-  stopWords: ["class", "module", "def"],
-  comment: "#",
+  topLevelKeywords: ["class", "module", "def"],
+  singleLineComment: "#",
   endOfLine: [],
 };
 
 // Clojure
 export const Clojure = {
-  stopWords: ["def", "fn", "let", "do", "if", "defn", "ns", "defmacro"],
-  comment: ";",
+  topLevelKeywords: ["def", "fn", "let", "do", "if", "defn", "ns", "defmacro"],
+  singleLineComment: ";",
   endOfLine: [],
 };
 
 // Julia
 export const Julia = {
-  stopWords: [
+  topLevelKeywords: [
     "function",
     "macro",
     "if",
@@ -141,13 +145,13 @@ export const Julia = {
     "end",
     "module",
   ],
-  comment: "#",
+  singleLineComment: "#",
   endOfLine: [";"],
 };
 
 // F#
 export const FSharp = {
-  stopWords: [
+  topLevelKeywords: [
     "let",
     "type",
     "module",
@@ -159,13 +163,13 @@ export const FSharp = {
     "match",
     "with",
   ],
-  comment: "//",
+  singleLineComment: "//",
   endOfLine: [],
 };
 
 // R
 export const R = {
-  stopWords: [
+  topLevelKeywords: [
     "function",
     "if",
     "else",
@@ -175,20 +179,20 @@ export const R = {
     "library",
     "require",
   ],
-  comment: "#",
+  singleLineComment: "#",
   endOfLine: [],
 };
 
 // Dart
 export const Dart = {
-  stopWords: ["class", "import", "void", "enum"],
-  comment: "//",
+  topLevelKeywords: ["class", "import", "void", "enum"],
+  singleLineComment: "//",
   endOfLine: [";"],
 };
 
 // Solidity
 export const Solidity = {
-  stopWords: [
+  topLevelKeywords: [
     "contract",
     "event",
     "modifier",
@@ -204,8 +208,49 @@ export const Solidity = {
     "enum",
     "type",
   ],
-  comment: "//",
+  singleLineComment: "//",
   endOfLine: [";"],
+};
+
+// YAML
+export const YAML: AutocompleteLanguageInfo = {
+  topLevelKeywords: [],
+  singleLineComment: "#",
+  endOfLine: [],
+  lineFilters: [
+    // Only display one list item at a time
+    async function* ({ lines, fullStop }) {
+      let seenListItem = false;
+      for await (const line of lines) {
+        if (line.trim().startsWith("- ")) {
+          if (seenListItem) {
+            fullStop();
+            break;
+          } else {
+            seenListItem = true;
+          }
+          yield line;
+        } else {
+          yield line;
+        }
+      }
+    },
+    // Don't allow consecutive lines of same key
+    async function* ({ lines }) {
+      let lastKey = undefined;
+      for await (const line of lines) {
+        if (line.includes(":")) {
+          const key = line.split(":")[0];
+          if (key !== lastKey) {
+            yield line;
+            lastKey = key;
+          } else {
+            break;
+          }
+        }
+      }
+    },
+  ],
 };
 
 export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
@@ -245,4 +290,5 @@ export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   R: R,
   dart: Dart,
   sol: Solidity,
+  yaml: YAML,
 };

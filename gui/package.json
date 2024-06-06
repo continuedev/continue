@@ -62,6 +62,8 @@
     "vscode-webview": "^1.0.1-beta.1"
   },
   "devDependencies": {
+    "@swc/cli": "^0.3.12",
+    "@swc/core": "^1.5.25",
     "@types/node": "^20.5.6",
     "@types/node-fetch": "^2.6.4",
     "@types/react": "^18.0.27",
