@@ -231,12 +231,30 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
   };
 
+  const totalItems = allItems.length;
+
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
   const upHandler = () => {
-    setSelectedIndex((selectedIndex + allItems.length - 1) % allItems.length);
+    setSelectedIndex((prevIndex) => {
+      const newIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
+      itemRefs.current[newIndex]?.scrollIntoView({
+        behavior: "instant" as ScrollBehavior,
+        block: "nearest",
+      });
+      return newIndex;
+    });
   };
 
   const downHandler = () => {
-    setSelectedIndex((selectedIndex + 1) % allItems.length);
+    setSelectedIndex((prevIndex) => {
+      const newIndex = prevIndex + 1 < totalItems ? prevIndex + 1 : prevIndex;
+      itemRefs.current[newIndex]?.scrollIntoView({
+        behavior: "instant" as ScrollBehavior,
+        block: "nearest",
+      });
+      return newIndex;
+    });
   };
 
   const enterHandler = () => {
@@ -285,8 +303,12 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     return ["file", "code"].includes(item.type);
   };
 
+  useEffect(() => {
+    itemRefs.current = itemRefs.current.slice(0, allItems.length);
+  }, [allItems]);
+
   return (
-    <ItemsDiv>
+    <ItemsDiv className="items-container">
       {querySubmenuItem ? (
         <QueryInput
           rows={1}
@@ -318,6 +340,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
             allItems.map((item, index) => (
               <ItemDiv
                 as="button"
+                ref={(el) => (itemRefs.current[index] = el)}
                 className={`item ${
                   index === selectedIndex ? "is-selected" : ""
                 }`}
@@ -339,7 +362,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         <DropdownIcon item={item} className="mr-2" />
                       </>
                     )}
-                    {item.title}
+                    <span title={item.id}>{item.title}</span>
                     {"  "}
                   </div>
                   <span

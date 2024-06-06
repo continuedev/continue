@@ -11,10 +11,6 @@ class CohereEmbeddingsProvider extends BaseEmbeddingsProvider {
     model: "embed-english-v3.0",
   };
 
-  get id(): string {
-    return this.options.model ?? "cohere";
-  }
-
   async embed(chunks: string[]) {
     if (!this.options.apiBase?.endsWith("/")) {
       this.options.apiBase += "/";

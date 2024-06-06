@@ -7,13 +7,10 @@ import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
   static maxBatchSize = 128;
+
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     model: "voyage-code-2",
   };
-
-  get id(): string {
-    return FreeTrialEmbeddingsProvider.defaultOptions?.model!;
-  }
 
   async embed(chunks: string[]) {
     const batchedChunks = [];
@@ -44,6 +41,13 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
               }),
             );
           const resp = await fetchWithBackoff();
+
+          if (resp.status !== 200) {
+            throw new Error(
+              `Failed to embed: ${resp.status} ${await resp.text()}`,
+            );
+          }
+
           const data = (await resp.json()) as any;
           return data.embeddings;
         }),

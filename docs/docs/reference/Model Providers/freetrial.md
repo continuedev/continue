@@ -1,6 +1,6 @@
 # Free Trial
 
-The `"free-trial"` provider lets new users try out Continue with GPT-4, Llama3, Claude 3, and other models using a proxy server that securely makes API calls to these services. Continue should just work the first time you install the extension.
+The `"free-trial"` provider lets new users try out Continue with GPT-4, Llama3, Claude 3, and other models using a proxy server that securely makes API calls to these services. Continue will just work the first time you install the extension. To prevent abuse, we will ask you to sign in with GitHub, which you can [read more about below](#sign-in).
 
 While the Continue extension is always free to use, we cannot support infinite free LLM usage for all of our users. You will eventually need to either:
 
@@ -70,3 +70,23 @@ Groq provides lightning fast inference for open-source LLMs like Llama3, up to t
 ### ⏩ Other options
 
 The above were only a few examples, but Continue can be used with any LLM or provider. You can find [a full list of providers here](../../setup/select-provider.md).
+
+## Sign in
+
+Continue asks free trial users to sign in so that we can prevent abuse of our API endpoints. If you are not using the free trial, we will never ask you to sign in.
+
+### How do I stop Continue from asking me to sign in?
+
+Remove all models from the "models" array with `"provider": "free-trial"`, and we will never request sign in.
+
+### What information is collected?
+
+Continue uses your GitHub username and no other information, for the sole purpose of limiting requests.
+
+### What happens if I don't sign in?
+
+If you don't sign in, you can still use every feature of Continue, you will just need to provide your own LLM either with an API key or by running a local model.
+
+### How is telemetry related to sign in?
+
+It is not. We do not link your GitHub username to telemetry data.

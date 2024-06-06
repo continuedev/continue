@@ -73,7 +73,7 @@ export class ConfigHandler {
     const ideInfo = await this.ide.getIdeInfo();
     const uniqueId = await this.ide.getUniqueId();
 
-    this.savedConfig = await loadFullConfigNode(
+    const newConfig = await loadFullConfigNode(
       this.ide,
       workspaceConfigs,
       await this.ideSettingsPromise,
@@ -81,22 +81,21 @@ export class ConfigHandler {
       uniqueId,
       this.writeLog,
     );
-    this.savedConfig.allowAnonymousTelemetry =
-      this.savedConfig.allowAnonymousTelemetry &&
+    newConfig.allowAnonymousTelemetry =
+      newConfig.allowAnonymousTelemetry &&
       (await this.ide.isTelemetryEnabled());
 
     // Setup telemetry only after (and if) we know it is enabled
     await Telemetry.setup(
-      this.savedConfig.allowAnonymousTelemetry ?? true,
+      newConfig.allowAnonymousTelemetry ?? true,
       await this.ide.getUniqueId(),
       ideInfo.extensionVersion,
     );
 
-    (this.savedConfig.contextProviders ?? []).push(
-      ...this.additionalContextProviders,
-    );
+    (newConfig.contextProviders ?? []).push(...this.additionalContextProviders);
 
-    return this.savedConfig;
+    this.savedConfig = newConfig;
+    return newConfig;
   }
 
   async llmFromTitle(title?: string): Promise<ILLM> {

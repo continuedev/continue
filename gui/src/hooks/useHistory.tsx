@@ -82,6 +82,18 @@ function useHistory(dispatch: Dispatch) {
     return await ideMessenger.request("history/save", sessionInfo);
   }
 
+  async function getSession(id: string): Promise<PersistedSessionInfo> {
+    const json: PersistedSessionInfo = await ideMessenger.request(
+      "history/load",
+      { id },
+    );
+    return json;
+  }
+
+  async function updateSession(sessionInfo: PersistedSessionInfo) {
+    return await ideMessenger.request("history/save", sessionInfo);
+  }
+
   async function deleteSession(id: string) {
     return await ideMessenger.request("history/delete", { id });
   }
@@ -114,6 +126,8 @@ function useHistory(dispatch: Dispatch) {
     loadSession,
     loadLastSession,
     getLastSessionId,
+    updateSession,
+    getSession,
   };
 }
 

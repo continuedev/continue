@@ -103,8 +103,7 @@ Voyage AI offers the best embeddings for code with their voyage-code-2 model. Af
   "embeddingsProvider": {
     "provider": "openai",
     "model": "voyage-code-2",
-    "apiBase": "
-    https://api.voyageai.com/v1/",
+    "apiBase": "https://api.voyageai.com/v1/",
     "apiKey": "<VOYAGE_API_KEY>"
   }
 }
@@ -165,12 +164,27 @@ Configuration for the `embed-english-v3.0` model. This is the default.
   "embeddingsProvider": {
     "provider": "cohere",
     "model": "embed-english-v3.0",
-    "apiKey": "YOUR_API_KEY"
+    "apiKey": "<COHERE_API_KEY>"
   }
 }
 ```
 
 See Cohere's [embeddings](https://docs.cohere.com/docs/embed-2) for available models. Only embedding models v3 and higher are supported.
+
+### Gemini
+
+Gemini's _Text Embedding_ model is optimized for creating embeddings with 768 dimensions for text of up to 2,048 tokens.
+
+As of May 2024, the only available embedding model from Gemini is [`text-embedding-004`](https://ai.google.dev/gemini-api/docs/models/gemini#text-embedding-and-embedding).
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "provider": "gemini",
+    "apiKey": "<GEMINI_API_KEY>"
+  }
+}
+```
 
 ### Writing a custom `EmbeddingsProvider`
 
@@ -201,6 +215,6 @@ export function modifyConfig(config: Config): Config {
 
 Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.continueignore` file, which follows the exact same rules as `.gitignore`.
 
-If you want to see exactly what files Continue has indexed, the metadata is stored in `~/.continue/index/index.sqlite`. You can use a tool like [DB Browser for SQLite](https://sqlitebrowser.org/) to view the `tags_catalog` table within this file.
+If you want to see exactly what files Continue has indexed, the metadata is stored in `~/.continue/index/index.sqlite`. You can use a tool like [DB Browser for SQLite](https://sqlitebrowser.org/) to view the `tag_catalog` table within this file.
 
 If you need to force a refresh of the index, reload the VS Code window with `cmd/ctrl + shift + p` + "Reload Window".
