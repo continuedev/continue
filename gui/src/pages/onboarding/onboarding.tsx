@@ -1,4 +1,4 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { greenButtonColor } from "../../components";
 import { ftl } from "../../components/dialogs/FTCDialog";
@@ -16,6 +16,10 @@ function Onboarding() {
   const [hovered1, setHovered1] = useState(false);
 
   const [selected, setSelected] = useState(-1);
+
+  useEffect(() => {
+    setLocalStorage("onboardingComplete", true);
+  }, []);
 
   return (
     <div className="p-2 max-w-96 mt-16 mx-auto">
