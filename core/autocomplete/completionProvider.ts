@@ -637,7 +637,10 @@ export class CompletionProvider {
         "llamafile",
         "text-gen-webui",
       ];
-      if (LOCAL_PROVIDERS.includes(llm.providerName)) {
+      if (
+        !config.tabAutocompleteOptions?.maxPromptTokens &&
+        LOCAL_PROVIDERS.includes(llm.providerName)
+      ) {
         options.maxPromptTokens = 500;
       }
 
