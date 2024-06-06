@@ -296,7 +296,7 @@ export async function getTabCompletion(
     });
   } else {
     // Let the template function format snippets
-    prompt = template(prefix, suffix, filename, reponame, snippets);
+    prompt = template(prefix, suffix, filepath, reponame, snippets);
   }
 
   // Completion

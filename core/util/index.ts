@@ -123,7 +123,10 @@ export function shortestRelativePaths(paths: string[]): string[] {
 
   // Shorten paths from the base until any of them doesn't have same prefix part
   let i = 0;
-  while (!pathParts.some((parts) => parts[i] !== pathParts[0][i])) {
+  while (
+    i < pathParts.length - 1 &&
+    !pathParts.some((parts) => parts[i] !== pathParts[0][i])
+  ) {
     i++;
   }
 
