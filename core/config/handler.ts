@@ -73,7 +73,7 @@ export class ConfigHandler {
     const ideInfo = await this.ide.getIdeInfo();
     const uniqueId = await this.ide.getUniqueId();
 
-    this.savedConfig = await loadFullConfigNode(
+    const newConfig = await loadFullConfigNode(
       this.ide,
       workspaceConfigs,
       await this.ideSettingsPromise,
@@ -92,11 +92,10 @@ export class ConfigHandler {
       ideInfo.extensionVersion,
     );
 
-    (this.savedConfig.contextProviders ?? []).push(
-      ...this.additionalContextProviders,
-    );
+    (newConfig.contextProviders ?? []).push(...this.additionalContextProviders);
 
-    return this.savedConfig;
+    this.savedConfig = newConfig;
+    return newConfig;
   }
 
   async llmFromTitle(title?: string): Promise<ILLM> {
