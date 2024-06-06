@@ -1,3 +1,7 @@
+import {
+    ContextProviderExtras,
+  } from "../index.js";
+
 export function removeQuotesAndEscapes(output: string): string {
   output = output.trim();
 
@@ -165,6 +169,26 @@ export function splitPath(path: string, withRoot?: string): string[] {
     parts = parts.slice(rootParts.length - 1);
   }
   return parts;
+}
+
+export function getRelativePath(filepath: string, workspaceDirs: string[]): string {
+    for (const workspaceDir of workspaceDirs) {
+        const filepathParts = splitPath(filepath);
+        const workspaceDirParts = splitPath(workspaceDir);
+        if (filepathParts.slice(0, workspaceDirParts.length).join('/') === workspaceDirParts.join('/')) {
+            return filepathParts.slice(workspaceDirParts.length).join('/');
+        }
+    }
+    return splitPath(filepath).pop() ?? ''; // If the file is not in any of the workspaces, return the plain filename
+}
+
+export function splitPath(path: string, withRoot?: string): string[] {
+    let parts = path.includes("/") ? path.split("/") : path.split("\\");
+    if (withRoot !== undefined) {
+        const rootParts = splitPath(withRoot);
+        parts = parts.slice(rootParts.length - 1);
+    }
+    return parts;
 }
 
 export function getMarkdownLanguageTagForFile(filepath: string): string {
