@@ -8,7 +8,7 @@ import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
-import { setupStatusBar } from "../autocomplete/statusBar";
+import { StatusBarStatus, setupStatusBar, monitorBatteryChanges } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
 import { registerDebugTracker } from "../debug/debug";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
@@ -18,6 +18,7 @@ import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
+import { Battery } from "../util/battery";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
 
@@ -34,6 +35,7 @@ export class VsCodeExtension {
   private verticalDiffManager: VerticalPerLineDiffManager;
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
+  private battery: Battery;
 
   constructor(context: vscode.ExtensionContext) {
     let resolveWebviewProtocol: any = undefined;
@@ -136,7 +138,7 @@ export class VsCodeExtension {
     const enabled = config.get<boolean>("enableTabAutocomplete");
 
     // Register inline completion provider
-    setupStatusBar(enabled);
+    setupStatusBar(enabled ? StatusBarStatus.Enabled : StatusBarStatus.Disabled);
     context.subscriptions.push(
       vscode.languages.registerInlineCompletionItemProvider(
         [{ pattern: "**" }],
@@ -148,6 +150,11 @@ export class VsCodeExtension {
       ),
     );
 
+    // Battery
+    this.battery = new Battery();
+    context.subscriptions.push(this.battery);
+    context.subscriptions.push(monitorBatteryChanges(this.battery));
+
     // Commands
     registerAllCommands(
       context,
@@ -157,6 +164,7 @@ export class VsCodeExtension {
       this.configHandler,
       this.diffManager,
       this.verticalDiffManager,
+      this.battery,
     );
 
     registerDebugTracker(this.sidebar.webviewProtocol, this.ide);
@@ -224,8 +232,7 @@ export class VsCodeExtension {
 
     // Register a content provider for the readonly virtual documents
     const documentContentProvider = new (class
-      implements vscode.TextDocumentContentProvider
-    {
+      implements vscode.TextDocumentContentProvider {
       // emitter and its event
       onDidChangeEmitter = new vscode.EventEmitter<vscode.Uri>();
       onDidChange = this.onDidChangeEmitter.event;

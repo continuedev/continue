@@ -71,6 +71,11 @@
           "default": true,
           "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://docs.continue.dev/walkthroughs/tab-autocomplete)"
         },
+        "continue.pauseTabAutocompleteOnBattery": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Pause the Continue's tab autocomplete feature, when you device is on battery."
+        },
         "continue.remoteConfigServerUrl": {
           "type": "string",
           "default": null,
@@ -548,6 +553,7 @@
     "request": "^2.88.2",
     "socket.io-client": "^4.7.2",
     "strip-ansi": "^7.1.0",
+    "systeminformation": "^5.22.10",
     "tailwindcss": "^3.3.2",
     "undici": "^6.2.0",
     "uuid": "^9.0.1",
