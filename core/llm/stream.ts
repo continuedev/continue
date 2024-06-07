@@ -14,7 +14,7 @@ export async function* streamResponse(
   const decoder = new TextDecoder("utf-8");
 
   for await (const chunk of stream) {
-    yield decoder.decode(chunk);
+    yield decoder.decode(chunk, { stream: true, });
   }
 }
 

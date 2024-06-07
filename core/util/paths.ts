@@ -236,8 +236,20 @@ export function getContinueDotEnv(): { [key: string]: string } {
   return {};
 }
 
+export function getLogsDirPath(): string {
+  const logsPath = path.join(getContinueGlobalPath(), "logs");
+  if (!fs.existsSync(logsPath)) {
+    fs.mkdirSync(logsPath);
+  }
+  return logsPath;
+}
+
 export function getCoreLogsPath(): string {
-  return path.join(getContinueGlobalPath(), "core.log");
+  return path.join(getLogsDirPath(), "core.log");
+}
+
+export function getPromptLogsPath(): string {
+  return path.join(getLogsDirPath(), "prompt.log");
 }
 
 export function getGlobalPromptsPath(): string {

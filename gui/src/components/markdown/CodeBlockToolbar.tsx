@@ -64,7 +64,7 @@ const commonTerminalCommands = [
 function isTerminalCodeBlock(language: string | undefined, text: string) {
   return (
     terminalLanguages.includes(language) ||
-    (language?.length === 0 &&
+    ((!language || language?.length === 0) &&
       (text.trim().split("\n").length === 1 ||
         commonTerminalCommands.some((c) => text.trim().startsWith(c))))
   );
@@ -91,7 +91,7 @@ function CodeBlockToolBar(props: CodeBlockToolBarProps) {
             disabled={applying}
             style={{ backgroundColor: vscEditorBackground }}
             onClick={() => {
-              if (terminalLanguages.includes(props.language)) {
+              if (isTerminalCodeBlock(props.language, props.text)) {
                 let text = props.text;
                 if (text.startsWith("$ ")) {
                   text = text.slice(2);
