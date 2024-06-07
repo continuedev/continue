@@ -71,13 +71,15 @@ function StepContainer(props: StepContainerProps) {
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
 
+  const sessionId = useSelector((store: RootState) => store.state.sessionId);
+
   const sendFeedback = (feedback: boolean) => {
     setFeedback(feedback);
     if (props.item.promptLogs?.length) {
       for (const promptLog of props.item.promptLogs) {
         ideMessenger.post("devdata/log", {
           tableName: "chat",
-          data: { ...promptLog, feedback },
+          data: { ...promptLog, feedback, sessionId },
         });
       }
     }

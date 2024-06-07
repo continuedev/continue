@@ -21,14 +21,14 @@ class Ollama extends BaseLLM {
     if (options.model === "AUTODETECT") {
       return;
     }
-    this.fetch(this.getEndpoint("api/show"), {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${this.apiKey}`,
-      },
-      body: JSON.stringify({ name: this._getModel() }),
-    })
-      .then(async (response) => {
+    try {
+      this.fetch(this.getEndpoint("api/show"), {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({ name: this._getModel() }),
+      }).then(async (response) => {
         if (response.status !== 200) {
           // console.warn(
           //   "Error calling Ollama /api/show endpoint: ",
@@ -67,10 +67,8 @@ class Ollama extends BaseLLM {
             }
           }
         }
-      })
-      .catch((e) => {
-        // console.warn(`Error calling Ollama /api/show endpoint: ${e}`);
       });
+    } catch (e) {}
   }
 
   private _getModel() {
