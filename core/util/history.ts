@@ -102,7 +102,6 @@ class HistoryManager {
         if (sessionInfo.sessionId === session.sessionId) {
           sessionInfo.title = session.title;
           sessionInfo.workspaceDirectory = session.workspaceDirectory;
-          sessionInfo.dateCreated = String(Date.now());
           found = true;
           break;
         }
