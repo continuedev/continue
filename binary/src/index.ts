@@ -3,7 +3,7 @@ import { Command } from "commander";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { IMessenger } from "core/util/messenger";
-import { getCoreLogsPath } from "core/util/paths";
+import { getCoreLogsPath, getPromptLogsPath } from "core/util/paths";
 import fs from "node:fs";
 import { IpcIde } from "./IpcIde";
 import { IpcMessenger } from "./IpcMessenger";
@@ -30,7 +30,10 @@ program.action(async () => {
       messenger = new IpcMessenger<ToCoreProtocol, FromCoreProtocol>();
     }
     const ide = new IpcIde(messenger);
-    const core = new Core(messenger, ide);
+    const promptLogsPath = getPromptLogsPath();
+    const core = new Core(messenger, ide, async (text) => {
+      fs.appendFileSync(promptLogsPath, text + "\n\n");
+    });
   } catch (e) {
     fs.writeFileSync("./error.log", `${new Date().toISOString()} ${e}\n`);
     console.log("Error: ", e);
