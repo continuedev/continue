@@ -12,7 +12,10 @@ export type IProtocol = Record<string, [any, any]>;
 
 // IDE
 export type ToIdeProtocol = ToIdeFromWebviewProtocol & ToIdeFromCoreProtocol;
-export type FromIdeProtocol = ToWebviewFromIdeProtocol & ToCoreFromIdeProtocol;
+export type FromIdeProtocol = ToWebviewFromIdeProtocol &
+  ToCoreFromIdeProtocol & {
+    didChangeActiveTextEditor: [{ filepath: string }, void];
+  };
 
 // Webview
 export type ToWebviewProtocol = ToWebviewFromIdeProtocol &

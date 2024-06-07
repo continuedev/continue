@@ -1,4 +1,5 @@
-import * as path from "path";
+import fs from "node:fs";
+import path from "node:path";
 import Parser, { Language } from "web-tree-sitter";
 
 export const supportedLanguages: { [key: string]: string } = {
@@ -114,4 +115,35 @@ export async function getLanguageForFile(
     console.error("Unable to load language for file", filepath, e);
     return undefined;
   }
+}
+
+export enum TSQueryType {
+  CodeSnippets = "code-snippet-queries",
+  Imports = "import-queries",
+}
+
+export async function getQueryForFile(
+  filepath: string,
+  queryType: TSQueryType,
+): Promise<Parser.Query | undefined> {
+  const language = await getLanguageForFile(filepath);
+  if (!language) {
+    return undefined;
+  }
+
+  const fullLangName = supportedLanguages[filepath.split(".").pop() ?? ""];
+  const sourcePath = path.join(
+    __dirname,
+    "..",
+    "tree-sitter",
+    queryType,
+    `${fullLangName}.scm`,
+  );
+  if (!fs.existsSync(sourcePath)) {
+    return undefined;
+  }
+  const querySource = fs.readFileSync(sourcePath).toString();
+
+  const query = language.query(querySource);
+  return query;
 }

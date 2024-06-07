@@ -4,8 +4,10 @@ import {
   FileType,
   IdeInfo,
   IndexTag,
+  Location,
   Problem,
   Range,
+  RangeInFile,
   Thread,
 } from "..";
 import { IdeSettings } from "./ideWebview";
@@ -72,6 +74,8 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getGitRootPath: [{ dir: string }, string | undefined];
   listDir: [{ dir: string }, [string, FileType][]];
   getLastModified: [{ files: string[] }, { [path: string]: number }];
+
+  gotoDefinition: [{ location: Location }, RangeInFile[]];
 
   getGitHubAuthToken: [undefined, string | undefined];
 };

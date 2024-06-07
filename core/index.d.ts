@@ -199,6 +199,11 @@ export interface RangeInFile {
   range: Range;
 }
 
+export interface Location {
+  filepath: string;
+  position: Position;
+}
+
 export interface FileWithContents {
   filepath: string;
   contents: string;
@@ -453,6 +458,12 @@ export interface IDE {
   listDir(dir: string): Promise<[string, FileType][]>;
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
   getGitHubAuthToken(): Promise<string | undefined>;
+
+  // LSP
+  gotoDefinition(location: Location): Promise<RangeInFile[]>;
+
+  // Callbacks
+  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
 }
 
 // Slash Commands
@@ -741,6 +752,7 @@ export interface TabAutocompleteOptions {
   useRecentlyEdited: boolean;
   recentLinePrefixMatchMinLength: number;
   disableInFiles?: string[];
+  useImports?: boolean;
 }
 
 export interface ContinueUIConfig {

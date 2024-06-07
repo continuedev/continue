@@ -5,14 +5,22 @@ import {
   IDE,
   IdeInfo,
   IndexTag,
+  Location,
   Problem,
   Range,
+  RangeInFile,
   Thread,
 } from "../index.js";
 
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
+  gotoDefinition(location: Location): Promise<RangeInFile[]> {
+    throw new Error("Method not implemented.");
+  }
+  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
+    throw new Error("Method not implemented.");
+  }
   async getGitHubAuthToken(): Promise<string | undefined> {
     return undefined;
   }
