@@ -228,7 +228,7 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     if (platform === currentPlatform && arch === currentArch) {
       fs.copyFileSync(
         `${targetDir}/node_sqlite3.node`,
-        `build/node_sqlite3.node`,
+        `${targetDir}/build/node_sqlite3.node`,
       );
     }
 
