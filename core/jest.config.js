@@ -16,7 +16,8 @@ export default {
   },
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   extensionsToTreatAsEsm: [".ts"],
+  // Remove or comment out the moduleNameMapper configuration
   moduleNameMapper: {
-    "^(\\.{1,2}/.*)\\.js$": "$1",
+    "^(.*)\\.js$": "$1",
   },
 };
