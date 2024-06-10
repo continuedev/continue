@@ -1,4 +1,4 @@
-import { ILLM } from "..";
+import type { ILLM } from "..";
 
 export function postprocessCompletion({
   completion,
