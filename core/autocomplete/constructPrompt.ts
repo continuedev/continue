@@ -56,12 +56,21 @@ function shouldCompleteMultilineAst(
   return false;
 }
 
+function isMidlineCompletion(prefix: string, suffix: string): boolean {
+  return !suffix.startsWith("\n");
+}
+
 async function shouldCompleteMultiline(
   filepath: string,
   fullPrefix: string,
   fullSuffix: string,
   language: AutocompleteLanguageInfo,
 ): Promise<boolean> {
+  // Don't complete multi-line if you are mid-line
+  if (isMidlineCompletion(fullPrefix, fullSuffix)) {
+    return false;
+  }
+
   // Don't complete multi-line for single-line comments
   if (
     fullPrefix

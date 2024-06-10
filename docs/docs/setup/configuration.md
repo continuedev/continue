@@ -170,6 +170,7 @@ export function modifyConfig(config: Config): Config {
     streamCompletion: async function* (
       prompt: string,
       options: CompletionOptions,
+      fetch,
     ) {
       // Make the API call here
 
