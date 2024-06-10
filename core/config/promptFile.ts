@@ -1,8 +1,8 @@
+import type { IDE, SlashCommand } from "..";
 import * as YAML from "yaml";
-import { IDE, SlashCommand } from "..";
-import { stripImages } from "../llm/countTokens";
-import { renderTemplatedString } from "../llm/llms";
-import { getBasename } from "../util";
+import { stripImages } from "../llm/countTokens.js";
+import { renderTemplatedString } from "../llm/llms/index.js";
+import { getBasename } from "../util/index.js";
 
 export async function getPromptFiles(
   ide: IDE,
