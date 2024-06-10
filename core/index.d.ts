@@ -560,7 +560,8 @@ type ModelProvider =
   | "continue-proxy"
   | "fireworks"
   | "custom"
-  | "cloudflare";
+  | "cloudflare"
+  | "deepseek";
 
 export type ModelName =
   | "AUTODETECT"

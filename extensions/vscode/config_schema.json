@@ -159,7 +159,8 @@
             "groq",
             "fireworks",
             "continue-proxy",
-            "cloudflare"
+            "cloudflare",
+            "deepseek"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -870,6 +871,23 @@
                   "mistral-small-latest",
                   "mistral-large-latest"
                 ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["deepseek"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["deepseek-chat", "deepseek-coder"]
               }
             }
           }
