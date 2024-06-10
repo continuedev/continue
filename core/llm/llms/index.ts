@@ -10,8 +10,10 @@ import { DEFAULT_MAX_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
 import Anthropic from "./Anthropic.js";
 import Bedrock from "./Bedrock.js";
+import Cloudflare from "./Cloudflare.js";
 import Cohere from "./Cohere.js";
 import DeepInfra from "./DeepInfra.js";
+import Deepseek from "./Deepseek.js";
 import Fireworks from "./Fireworks.js";
 import Flowise from "./Flowise.js";
 import FreeTrial from "./FreeTrial.js";
@@ -29,7 +31,6 @@ import Replicate from "./Replicate.js";
 import TextGenWebUI from "./TextGenWebUI.js";
 import Together from "./Together.js";
 import ContinueProxy from "./stubs/ContinueProxy.js";
-import Cloudflare from "./Cloudflare.js";
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -101,6 +102,7 @@ const LLMs = [
   Fireworks,
   ContinueProxy,
   Cloudflare,
+  Deepseek,
 ];
 
 export async function llmFromDescription(
