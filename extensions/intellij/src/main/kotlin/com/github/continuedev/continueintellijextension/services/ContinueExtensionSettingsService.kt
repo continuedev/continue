@@ -67,7 +67,7 @@ open class ContinueExtensionSettings : PersistentStateComponent<ContinueExtensio
         var remoteConfigServerUrl: String? = null
         var remoteConfigSyncPeriod: Int = 60
         var userToken: String? = null
-        var enableTabAutocomplete: Boolean = false
+        var enableTabAutocomplete: Boolean = true
         var ghAuthToken: String? = null
     }
 
