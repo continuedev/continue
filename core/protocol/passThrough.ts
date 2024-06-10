@@ -1,7 +1,7 @@
 import {
   ToCoreFromWebviewProtocol,
   ToWebviewFromCoreProtocol,
-} from "./coreWebview";
+} from "./coreWebview.js";
 
 // Message types to pass through from webview to core
 export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =

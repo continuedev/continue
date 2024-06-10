@@ -21,7 +21,7 @@ class FolderContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const { retrieveContextItemsFromEmbeddings } = await import(
-      "../retrieval/retrieval"
+      "../retrieval/retrieval.js"
     );
     return retrieveContextItemsFromEmbeddings(extras, this.options, query);
   }

@@ -30,7 +30,7 @@ class DocsContextProvider extends BaseContextProvider {
       );
     }
 
-    const { retrieveDocs } = await import("../../indexing/docs/db");
+    const { retrieveDocs } = await import("../../indexing/docs/db.js");
     const embeddingsProvider = new TransformersJsEmbeddingsProvider();
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 
@@ -88,7 +88,7 @@ class DocsContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
-    const { listDocs } = await import("../../indexing/docs/db");
+    const { listDocs } = await import("../../indexing/docs/db.js");
     const docs = await listDocs();
     const submenuItems = docs.map((doc) => ({
       title: doc.title,
