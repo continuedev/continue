@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   roots: ["<rootDir>"],
   transform: {
     "^.+\\.ts?$": [
@@ -7,8 +7,16 @@ module.exports = {
         useESM: true,
       },
     ],
+    "^.+\\.js$": [
+      "babel-jest",
+      {
+        presets: [["@babel/preset-env", { targets: { node: "current" } }]],
+      },
+    ],
   },
-  // testRegex: ".+\\.test\\.ts$",
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
   extensionsToTreatAsEsm: [".ts"],
+  moduleNameMapper: {
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+  },
 };
