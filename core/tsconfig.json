@@ -19,5 +19,5 @@
     "types": ["jest", "node"]
   },
   "include": ["./**/*.ts", "./**/*.js", "./**/*.d.ts"],
-  "exclude": ["test", "dist"]
+  "exclude": ["dist"]
 }
