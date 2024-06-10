@@ -29,7 +29,7 @@ import Replicate from "./Replicate.js";
 import TextGenWebUI from "./TextGenWebUI.js";
 import Together from "./Together.js";
 import ContinueProxy from "./stubs/ContinueProxy.js";
-import Cloudflare from "./Cloudflare";
+import Cloudflare from "./Cloudflare.js";
 
 function convertToLetter(num: number): string {
   let result = "";
