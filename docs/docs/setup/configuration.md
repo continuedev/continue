@@ -167,7 +167,11 @@ export function modifyConfig(config: Config): Config {
       title: "My Custom LLM",
       model: "mistral-7b",
     },
-    streamCompletion: async function* (prompt: string, options: CompletionOptions) {
+    streamCompletion: async function* (
+      prompt: string,
+      options: CompletionOptions,
+      fetch,
+    ) {
       // Make the API call here
 
       // Then yield each part of the completion as it is streamed
