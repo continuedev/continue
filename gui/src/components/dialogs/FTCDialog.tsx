@@ -15,13 +15,8 @@ const GridDiv = styled.div`
 `;
 
 export const ftl = () => {
-  const ftc = parseInt(localStorage.getItem("ftc"));
-  if (ftc && ftc > 52) {
-    return 100;
-  } else if (ftc && ftc > 27) {
-    return 50;
-  }
-  return 25;
+  // const ftc = parseInt(localStorage.getItem("ftc"));
+  return 50;
 };
 
 function FTCDialog() {

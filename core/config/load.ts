@@ -293,26 +293,36 @@ async function intermediateToFinalConfig(
   }
 
   // Tab autocomplete model
-  let autocompleteLlm: BaseLLM | undefined = undefined;
+  let tabAutocompleteModels: BaseLLM[] = [];
   if (config.tabAutocompleteModel) {
-    if (isModelDescription(config.tabAutocompleteModel)) {
-      autocompleteLlm = await llmFromDescription(
-        config.tabAutocompleteModel,
-        ide.readFile.bind(ide),
-        uniqueId,
-        ideSettings,
-        writeLog,
-        config.completionOptions,
-        config.systemMessage,
-      );
+    tabAutocompleteModels = (
+      await Promise.all(
+        (Array.isArray(config.tabAutocompleteModel)
+          ? config.tabAutocompleteModel
+          : [config.tabAutocompleteModel]
+        ).map(async (desc) => {
+          if (isModelDescription(desc)) {
+            const llm = await llmFromDescription(
+              desc,
+              ide.readFile.bind(ide),
+              uniqueId,
+              ideSettings,
+              writeLog,
+              config.completionOptions,
+              config.systemMessage,
+            );
 
-      if (autocompleteLlm?.providerName === "free-trial") {
-        const ghAuthToken = await ide.getGitHubAuthToken();
-        (autocompleteLlm as FreeTrial).setupGhAuthToken(ghAuthToken);
-      }
-    } else {
-      autocompleteLlm = new CustomLLMClass(config.tabAutocompleteModel);
-    }
+            if (llm?.providerName === "free-trial") {
+              const ghAuthToken = await ide.getGitHubAuthToken();
+              (llm as FreeTrial).setupGhAuthToken(ghAuthToken);
+            }
+            return llm;
+          } else {
+            return new CustomLLMClass(desc);
+          }
+        }),
+      )
+    ).filter((x) => x !== undefined) as BaseLLM[];
   }
 
   // Context providers
@@ -381,7 +391,7 @@ async function intermediateToFinalConfig(
     contextProviders,
     models,
     embeddingsProvider: config.embeddingsProvider as any,
-    tabAutocompleteModel: autocompleteLlm,
+    tabAutocompleteModels,
     reranker: config.reranker as any,
   };
 }
