@@ -17,6 +17,30 @@ class Gemini extends BaseLLM {
     apiBase: "https://generativelanguage.googleapis.com/v1beta/",
   };
 
+  // Function to convert completion options to Gemini format
+  private _convertArgs(options: CompletionOptions) {
+    const finalOptions: any = {}; // Initialize an empty object
+
+    // Map known options
+    if (options.topK) {
+      finalOptions.topK = options.topK;
+    }
+    if (options.topP) {
+      finalOptions.topP = options.topP;
+    }
+    if (options.temperature !== undefined && options.temperature !== null) {
+      finalOptions.temperature = options.temperature;
+    }
+    if (options.maxTokens) {
+      finalOptions.maxOutputTokens = options.maxTokens;
+    }
+    if (options.stop) {
+      finalOptions.stopSequences = options.stop.filter((x) => x.trim() !== "");
+    }
+
+    return { generationConfig: finalOptions }; // Wrap options under 'generationConfig'
+  }
+
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions,
@@ -121,6 +145,7 @@ class Gemini extends BaseLLM {
       .filter((c) => c !== null);
 
     const body = {
+      ...this._convertArgs(options),
       contents,
       // if this.systemMessage is defined, reformat it for Gemini API
       ...(this.systemMessage &&
