@@ -1,3 +1,4 @@
+import * as JSONC from "comment-json";
 import * as fs from "fs";
 import path from "path";
 import {
@@ -57,7 +58,7 @@ const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
-  const config = JSON.parse(content) as SerializedContinueConfig;
+  const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
   if (config.env && Array.isArray(config.env)) {
     const env = {
       ...process.env,
@@ -74,7 +75,7 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
     });
   }
 
-  return JSON.parse(content);
+  return JSONC.parse(content) as unknown as SerializedContinueConfig;
 }
 
 const configMergeKeys = {

@@ -1,6 +1,5 @@
-import { readFileSync, writeFileSync } from "fs";
 import { ModelDescription } from "../index.js";
-import { editConfigJson, getConfigJsonPath } from "../util/paths.js";
+import { editConfigJson } from "../util/paths.js";
 
 function stringify(obj: any, indentation?: number): string {
   return JSON.stringify(
@@ -13,21 +12,17 @@ function stringify(obj: any, indentation?: number): string {
 }
 
 export function addModel(model: ModelDescription) {
-  const config = readFileSync(getConfigJsonPath(), "utf8");
-  const configJson = JSON.parse(config);
+  editConfigJson((config) => {
+    if (config.models?.some((m: any) => stringify(m) === stringify(model))) {
+      return config;
+    }
+    if (config.models?.some((m: any) => m?.title === model.title)) {
+      model.title = `${model.title} (1)`;
+    }
 
-  // De-duplicate
-  if (configJson.models?.some((m: any) => stringify(m) === stringify(model))) {
+    config.models.push(model);
     return config;
-  }
-  if (configJson.models?.some((m: any) => m?.title === model.title)) {
-    model.title = `${model.title} (1)`;
-  }
-
-  configJson.models.push(model);
-  const newConfigString = stringify(configJson, 2);
-  writeFileSync(getConfigJsonPath(), newConfigString);
-  return newConfigString;
+  });
 }
 
 export function addOpenAIKey(key: string) {
