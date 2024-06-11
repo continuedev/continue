@@ -1,9 +1,9 @@
 /* Terminal emulator - commented because node-pty is causing problems. */
 
+import { longestCommonSubsequence } from "core/util/lcs";
 import * as os from "node:os";
 import stripAnsi from "strip-ansi";
 import * as vscode from "vscode";
-import { longestCommonSubsequence } from "../util/lcs";
 
 function loadNativeModule<T>(id: string): T | null {
   try {
