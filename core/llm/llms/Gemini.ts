@@ -123,9 +123,10 @@ class Gemini extends BaseLLM {
     const body = {
       contents,
       // if this.systemMessage is defined, reformat it for Gemini API
-      ...(this.systemMessage && isV1API && {
-        systemInstruction: { parts: [{ text: this.systemMessage }] },
-      }),
+      ...(this.systemMessage &&
+        !isV1API && {
+          systemInstruction: { parts: [{ text: this.systemMessage }] },
+        }),
     };
     const response = await this.fetch(apiURL, {
       method: "POST",
