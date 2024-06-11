@@ -338,6 +338,30 @@ async function copySqliteBinary() {
   });
 }
 
+async function downloadRipgrepBinary(target) {
+  console.log("[info] Downloading pre-built repgrep binary");
+  rimrafSync("../../core/node_modules/@vscode/build");
+  const downloadUrl = {
+    "darwin-arm64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-apple-darwin.tar.gz",
+    "linux-arm64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-unknown-linux-gnu.tar.gz",
+    "win32-arm64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-pc-windows-msvc.zip",
+    "linux-x64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-unknown-linux-musl.tar.gz",
+    "darwin-x64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-apple-darwin.tar.gz",
+    "win32-x64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-pc-windows-msvc.zip",
+  }[target];
+  execCmdSync(
+    `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
+  );
+  execCmdSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
+  fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
+}
+
 async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
   console.log(`Copying ${packageName} to ${toCopy}`);
   // This is a way to install only one package without npm trying to install all the dependencies
