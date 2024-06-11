@@ -27,7 +27,7 @@ import { DevDataSqliteDb } from "./util/devdataSqlite.js";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions.js";
 import historyManager from "./util/history.js";
 import type { IMessenger, Message } from "./util/messenger";
-import { editConfigJson, getConfigJsonPath } from "./util/paths.js";
+import { editConfigJson } from "./util/paths.js";
 import { Telemetry } from "./util/posthog.js";
 import { streamDiffLines } from "./util/verticalEdit.js";
 
@@ -179,37 +179,8 @@ export class Core {
     // Edit config
     on("config/addModel", (msg) => {
       const model = msg.data.model;
-      const newConfigString = addModel(model);
+      addModel(model);
       this.configHandler.reloadConfig();
-      this.ide.openFile(getConfigJsonPath());
-
-      // Find the range where it was added and highlight
-      const lines = newConfigString.split("\n");
-      let startLine: number | undefined;
-      let endLine: number | undefined;
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-
-        if (!startLine) {
-          if (line.trim() === `"title": "${model.title}",`) {
-            startLine = i - 1;
-          }
-        } else {
-          if (line.startsWith("    }")) {
-            endLine = i;
-            break;
-          }
-        }
-      }
-
-      if (startLine && endLine) {
-        this.ide.showLines(
-          getConfigJsonPath(),
-          startLine,
-          endLine,
-          // "#fff1"
-        );
-      }
     });
     on("config/addOpenAiKey", (msg) => {
       addOpenAIKey(msg.data);
