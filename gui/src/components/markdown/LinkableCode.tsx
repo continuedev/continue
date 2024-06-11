@@ -51,17 +51,28 @@ function LinkableCode(props: any) {
     );
     if (contextItemFileMatch) {
       setIsLink(true);
-      setFilepath(contextItemFileMatch.description);
-      setLine(0);
+      if (contextItemFileMatch.description.includes(" (")) {
+        // Get line number from filename
+        const [startLine, _] = contextItemFileMatch.description
+          .split(" (")[1]
+          .split(")")[0]
+          .split("-");
+        setFilepath(contextItemFileMatch.description.split(" (")[0]);
+        setLine(parseInt(startLine));
+      } else {
+        setFilepath(contextItemFileMatch.description.split(" (")[0]);
+        setLine(0);
+      }
     }
 
     if (content.length > 6) {
-      const contextItemContentMatch = contextItems.find((item) =>
-        item.content.includes(content),
+      const contextItemContentMatch = contextItems.find(
+        (item) =>
+          item.id.providerTitle === "file" && item.content.includes(content),
       );
       if (contextItemContentMatch) {
         setIsLink(true);
-        setFilepath(contextItemContentMatch.description);
+        setFilepath(contextItemContentMatch.description.split(" (")[0]);
         setLine(
           contextItemContentMatch.content
             .split("\n")
