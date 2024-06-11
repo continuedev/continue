@@ -193,7 +193,7 @@ async function copyOnnxRuntimeFromNodeModules(target) {
 }
 
 async function copyTreeSitterWasms() {
-  process.chdir(path.join(continueDir, "extensioins", "vscode"));
+  process.chdir(path.join(continueDir, "extensions", "vscode"));
   fs.mkdirSync("out", { recursive: true });
 
   await new Promise((resolve, reject) => {
