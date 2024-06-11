@@ -87,32 +87,35 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
         : props.item.type;
 
   const iconClass = `${props.className} flex-shrink-0`;
-  if (false && provider === "docs" && props.item.id !== "docs") {
+
+  let fallbackIcon;
+  const Icon = ICONS_FOR_DROPDOWN[provider];
+  if (!Icon) {
+    fallbackIcon =
+      props.item.type === "contextProvider" ? (
+        <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
+      ) : (
+        <CubeIcon className={iconClass} height="1.2em" width="1.2em" />
+      );
+  } else {
+    fallbackIcon = <Icon className={iconClass} height="1.2em" width="1.2em" />;
+  }
+
+  if (false && props.item.iconUrl) {
     try {
-      const faviconUrl = new URL("/favicon.ico", props.item.id);
       return (
         <SafeImg
           className="flex-shrink-0 pr-2"
-          src={faviconUrl.toString()}
+          src={props.item.iconUrl}
           height="18em"
           width="18em"
-          fallback={
-            <BookOpenIcon className={iconClass} height="1.2em" width="1.2em" />
-          }
+          fallback={fallbackIcon}
         />
       );
     } catch (e) {}
   }
 
-  const Icon = ICONS_FOR_DROPDOWN[provider];
-  if (!Icon) {
-    return props.item.type === "contextProvider" ? (
-      <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
-    ) : (
-      <CubeIcon className={iconClass} height="1.2em" width="1.2em" />
-    );
-  }
-  return <Icon className={iconClass} height="1.2em" width="1.2em" />;
+  return fallbackIcon;
 }
 
 const ItemsDiv = styled.div`

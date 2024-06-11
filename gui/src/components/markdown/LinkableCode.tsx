@@ -47,7 +47,8 @@ function LinkableCode(props: any) {
     // Check if this is a real file
     const contextItemFileMatch = contextItems.find(
       (item) =>
-        item.id.providerTitle === "file" && item.description.endsWith(content),
+        ["file", "codebase", "folder"].includes(item.id.providerTitle) &&
+        item.description.split(" (")[0].endsWith(content),
     );
     if (contextItemFileMatch) {
       setIsLink(true);
@@ -68,7 +69,8 @@ function LinkableCode(props: any) {
     if (content.length > 6) {
       const contextItemContentMatch = contextItems.find(
         (item) =>
-          item.id.providerTitle === "file" && item.content.includes(content),
+          ["file", "codebase", "folder"].includes(item.id.providerTitle) &&
+          item.content.includes(content),
       );
       if (contextItemContentMatch) {
         setIsLink(true);
