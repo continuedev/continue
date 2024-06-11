@@ -1,4 +1,8 @@
-import { ArrowLeftIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowLeftIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import { SessionInfo } from "core";
 import MiniSearch from "minisearch";
 import React, { Fragment, useEffect, useState } from "react";
@@ -7,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
+  Input,
   lightGray,
   vscBackground,
   vscBadgeBackground,
@@ -91,8 +96,28 @@ function TableRow({
   const apiUrl = window.serverUrl;
   const workspacePaths = window.workspacePaths || [""];
   const [hovered, setHovered] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [sessionTitleEditValue, setSessionTitleEditValue] = useState(
+    session.title,
+  );
 
-  const { saveSession, deleteSession, loadSession } = useHistory(dispatch);
+  const { saveSession, deleteSession, loadSession, getSession, updateSession } =
+    useHistory(dispatch);
+
+  const handleKeyUp = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      if (sessionTitleEditValue !== session.title) {
+        session.title = sessionTitleEditValue;
+        const persistedSessionInfo = await getSession(session.sessionId);
+        persistedSessionInfo.title = sessionTitleEditValue;
+        await updateSession(persistedSessionInfo);
+        setEditing(false);
+      }
+    } else if (e.key === "Escape") {
+      setEditing(false);
+      setSessionTitleEditValue(session.title);
+    }
+  };
 
   return (
     <td
@@ -104,15 +129,27 @@ function TableRow({
           onClick={async () => {
             // Save current session
             saveSession();
-
             await loadSession(session.sessionId);
             navigate("/");
           }}
         >
-          <div className="text-md">
-            {JSON.stringify(session.title).slice(1, -1)}
+          <div className="text-md w-100">
+            {editing ? (
+              <Input
+                type="text"
+                style={{ width: "100%" }}
+                ref={(titleInput) => titleInput && titleInput.focus()}
+                value={sessionTitleEditValue}
+                onChange={(e) => setSessionTitleEditValue(e.target.value)}
+                onKeyUp={(e) => handleKeyUp(e)}
+                onBlur={() => setEditing(false)}
+              />
+            ) : (
+              JSON.stringify(session.title).slice(1, -1)
+            )}
           </div>
-          <div className="text-gray-400">
+
+          <div style={{ color: "#9ca3af" }}>
             {date.toLocaleString("en-US", {
               year: "2-digit",
               month: "2-digit",
@@ -122,9 +159,21 @@ function TableRow({
               hour12: true,
             })}
             {" | "}
-            {lastPartOfPath(session.workspaceDirectory || "")}/
+            {lastPartOfPath(session.workspaceDirectory || "")}
           </div>
         </TdDiv>
+
+        {hovered && (
+          <HeaderButtonWithText
+            className="mr-2"
+            text="Edit"
+            onClick={async () => {
+              setEditing(true);
+            }}
+          >
+            <PencilSquareIcon width="1.3em" height="1.3em" />
+          </HeaderButtonWithText>
+        )}
 
         {hovered && (
           <HeaderButtonWithText

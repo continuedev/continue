@@ -40,13 +40,16 @@ function useHistory(dispatch: Dispatch) {
     dispatch(newSession());
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    let title = truncateText(
-      stripImages(stateCopy.history[0].message.content)
-        .split("\n")
-        .filter((l) => l.trim() !== "")
-        .slice(-1)[0] || "",
-      50,
-    );
+    let title =
+      stateCopy.title === "New Session"
+        ? truncateText(
+            stripImages(stateCopy.history[0].message.content)
+              .split("\n")
+              .filter((l) => l.trim() !== "")
+              .slice(-1)[0] || "",
+            50,
+          )
+        : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
 
     if (
       false && // Causing maxTokens to be set to 20 for main requests sometimes, so disabling until resolved
