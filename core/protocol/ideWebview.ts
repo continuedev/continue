@@ -1,7 +1,7 @@
 import type { ContextItemWithId, ContextSubmenuItem } from "..";
 import type { RangeInFileWithContents } from "../commands/util";
-import { ToIdeFromWebviewOrCoreProtocol } from "./ide";
-import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
+import { ToIdeFromWebviewOrCoreProtocol } from "./ide.js";
+import { ToWebviewFromIdeOrCoreProtocol } from "./webview.js";
 
 export interface IdeSettings {
   remoteConfigServerUrl: string | undefined;

@@ -14,6 +14,7 @@ import {
 } from "..";
 import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
+import LinkableCode from "./LinkableCode";
 import PreWithToolbar from "./PreWithToolbar";
 import { SyntaxHighlightedPre } from "./SyntaxHighlightedPre";
 import "./katex.css";
@@ -167,6 +168,17 @@ const StyledMarkdownPreview = memo(function StyledMarkdownPreview(
             </PreWithToolbar>
           ) : (
             <SyntaxHighlightedPre {...preProps}></SyntaxHighlightedPre>
+          );
+        },
+        code: ({ node, ...codeProps }) => {
+          if (
+            codeProps.className?.split(" ").includes("hljs") ||
+            codeProps.children?.length > 1
+          ) {
+            return <code {...codeProps}>{codeProps.children}</code>;
+          }
+          return (
+            <LinkableCode {...codeProps}>{codeProps.children}</LinkableCode>
           );
         },
         //   pre: ({ node, ...preProps }) => {

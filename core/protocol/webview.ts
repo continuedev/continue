@@ -1,4 +1,4 @@
-import { IndexingProgressUpdate } from "..";
+import type { IndexingProgressUpdate } from "..";
 
 export type ToWebviewFromIdeOrCoreProtocol = {
   configUpdate: [undefined, void];

@@ -1,35 +1,35 @@
-import { v4 as uuidv4 } from "uuid";
-import {
+import type {
   ContextItemId,
   IDE,
   IndexingProgressUpdate,
   SiteIndexingConfig,
 } from ".";
-import { CompletionProvider } from "./autocomplete/completionProvider";
-import { ConfigHandler } from "./config/handler";
+import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import type { IMessenger, Message } from "./util/messenger";
+import { v4 as uuidv4 } from "uuid";
+import { CompletionProvider } from "./autocomplete/completionProvider.js";
+import { ConfigHandler } from "./config/handler.js";
 import {
   setupApiKeysMode,
   setupFreeTrialMode,
   setupLocalAfterFreeTrial,
   setupLocalMode,
   setupOptimizedExistingUserMode,
-} from "./config/onboarding";
-import { addModel, addOpenAIKey, deleteModel } from "./config/util";
-import { ContinueServerClient } from "./continueServer/stubs/client";
-import { indexDocs } from "./indexing/docs";
-import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase";
-import Ollama from "./llm/llms/Ollama";
-import { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-import { GlobalContext } from "./util/GlobalContext";
-import { logDevData } from "./util/devdata";
-import { DevDataSqliteDb } from "./util/devdataSqlite";
-import { fetchwithRequestOptions } from "./util/fetchWithOptions";
-import historyManager from "./util/history";
-import type { IMessenger, Message } from "./util/messenger";
-import { editConfigJson, getConfigJsonPath } from "./util/paths";
-import { Telemetry } from "./util/posthog";
-import { streamDiffLines } from "./util/verticalEdit";
+} from "./config/onboarding.js";
+import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
+import { ContinueServerClient } from "./continueServer/stubs/client.js";
+import { indexDocs } from "./indexing/docs/index.js";
+import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
+import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase.js";
+import Ollama from "./llm/llms/Ollama.js";
+import { GlobalContext } from "./util/GlobalContext.js";
+import { logDevData } from "./util/devdata.js";
+import { DevDataSqliteDb } from "./util/devdataSqlite.js";
+import { fetchwithRequestOptions } from "./util/fetchWithOptions.js";
+import historyManager from "./util/history.js";
+import { editConfigJson, getConfigJsonPath } from "./util/paths.js";
+import { Telemetry } from "./util/posthog.js";
+import { streamDiffLines } from "./util/verticalEdit.js";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -251,7 +251,9 @@ export class Core {
       const provider = config.contextProviders?.find(
         (provider) => provider.description.title === name,
       );
-      if (!provider) return [];
+      if (!provider) {
+        return [];
+      }
 
       try {
         const id: ContextItemId = {
@@ -496,12 +498,12 @@ export class Core {
         mode === "local"
           ? setupLocalMode
           : mode === "freeTrial"
-            ? setupFreeTrialMode
-            : mode === "localAfterFreeTrial"
-              ? setupLocalAfterFreeTrial
-              : mode === "apiKeys"
-                ? setupApiKeysMode
-                : setupOptimizedExistingUserMode,
+          ? setupFreeTrialMode
+          : mode === "localAfterFreeTrial"
+          ? setupLocalAfterFreeTrial
+          : mode === "apiKeys"
+          ? setupApiKeysMode
+          : setupOptimizedExistingUserMode,
       );
       this.configHandler.reloadConfig();
     });

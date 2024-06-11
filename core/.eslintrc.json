@@ -5,20 +5,10 @@
     "ecmaVersion": 6,
     "sourceType": "module"
   },
-  "extends": ["plugin:require-extensions/recommended"],
-  "plugins": ["@typescript-eslint", "import", "require-extensions"],
+  "plugins": ["@typescript-eslint", "import"],
   "rules": {
     "quotes": ["warn", "double", {}],
-    "import/extensions": [
-      "error",
-      "always",
-      {
-        "js": "never",
-        "jsx": "never",
-        "ts": "never",
-        "tsx": "never"
-      }
-    ],
+    "import/extensions": ["error", "ignorePackages"],
     "@typescript-eslint/naming-convention": "warn",
     "@typescript-eslint/semi": "warn",
     "curly": "warn",
