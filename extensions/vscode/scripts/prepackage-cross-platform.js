@@ -24,6 +24,14 @@ const {
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
 } = require("./utils");
+const PLATFORMS = [
+  "win32-x64",
+  "win32-arm64",
+  "linux-x64",
+  "linux-arm64",
+  "darwin-x64",
+  "darwin-arm64",
+]
 
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));
@@ -38,29 +46,31 @@ if (!fs.existsSync(guiDist)) {
 
 // Get the target to package for
 let target = undefined;
-const args = process.argv;
-if (args[2] === "--target") {
-  target = args[3];
-}
-
 let os;
 let arch;
-if (!target) {
-  [os, arch] = autodetectPlatformAndArch();
+let exe;
+
+const args = process.argv;
+const packageAll = args.includes("--all");
+
+if (packageAll) {
+  target = "all";
+  console.log(
+    "[info] Packaging for all platforms. This may take some time, please wait..."
+  );
+} else if (args[2] === "--target") {
+  target = args[3];
 } else {
-  [os, arch] = target.split("-");
+  if (!target) {
+    [os, arch] = autodetectPlatformAndArch();
+  } else {
+    [os, arch] = target.split("-");
+  }
+  target = `${os}-${arch}`;  
+  exe = os === "win32" ? ".exe" : "";  
 }
 
-if (os === "alpine") {
-  os = "linux";
-}
-if (arch === "armhf") {
-  arch = "arm64";
-}
-target = `${os}-${arch}`;
 console.log("[info] Using target: ", target);
-
-const exe = os === "win32" ? ".exe" : "";
 
 function ghAction() {
   return !!process.env.GITHUB_ACTIONS;
@@ -78,7 +88,7 @@ function isWin() {
   return target?.startsWith("win");
 }
 
-(async () => {
+async function package(target, os, arch, exe) {
   console.log("[info] Packaging extension for target ", target);
 
   // Copy config_schema.json to config.json in docs and intellij
@@ -102,7 +112,7 @@ function isWin() {
   await copyOnnxRuntimeFromNodeModules(target);
 
   // *** Install @lancedb binary ***
-  const packageToInstall = {
+  const lancePackageToInstall = {
     "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
     "darwin-x64": "@lancedb/vectordb-darwin-x64",
     "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
@@ -111,13 +121,21 @@ function isWin() {
     "win32-arm64": "@lancedb/vectordb-win32-x64-msvc", // they don't have a win32-arm64 build
   }[target];
   await installNodeModuleInTempDirAndCopyToCurrent(
-    packageToInstall,
+    lancePackageToInstall,
     "@lancedb",
   );
 
+  const esbuildPackageToInstall = {
+    "darwin-arm64": "@esbuild/darwin-arm64@0.17.19",
+    "darwin-x64": "@esbuild/darwin-x64@0.17.19",
+    "linux-arm64": "@esbuild/linux-arm64@0.17.19",
+    "linux-x64": "@esbuild/linux-x64@0.17.19",
+    "win32-x64": "@esbuild/win32-x64@0.17.19",
+    "win32-arm64": "@esbuild/win32-arm64@0.17.19", // they don't have a win32-arm64 build
+  }[target];
   // *** esbuild ***
   await installNodeModuleInTempDirAndCopyToCurrent(
-    "esbuild@0.17.19",
+    esbuildPackageToInstall,
     "@esbuild",
   );
 
@@ -199,4 +217,18 @@ function isWin() {
     `out/node_modules/esbuild/lib/main.js`,
     `out/node_modules/esbuild/bin/esbuild`,
   ]);
+}
+
+(async () => {
+  if (packageAll) {
+    for (const platform of PLATFORMS) {
+      [os, arch] = platform.split("-");
+      target = `${os}-${arch}`;  
+      exe = os === "win32" ? ".exe" : "";
+      await package(target, os, arch, exe)  
+    }
+
+  } else {
+    package(target, os, arch, exe)
+  }
 })();
