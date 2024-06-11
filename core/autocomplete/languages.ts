@@ -6,6 +6,10 @@ export interface AutocompleteLanguageInfo {
   endOfLine: string[];
   stopWords?: string[];
   lineFilters?: LineFilter[];
+  useMultiline?: (args: {
+    prefix: string;
+    suffix: string;
+  }) => boolean | undefined;
 }
 
 // TypeScript
@@ -253,6 +257,30 @@ export const YAML: AutocompleteLanguageInfo = {
   ],
 };
 
+export const Markdown: AutocompleteLanguageInfo = {
+  topLevelKeywords: [],
+  singleLineComment: "",
+  endOfLine: [],
+  useMultiline: ({ prefix, suffix }) => {
+    const singleLineStarters = ["- ", "* ", /^\d+\. /, "> ", "```", /^#{1,6} /];
+    let currentLine = prefix.split("\n").pop();
+    if (!currentLine) {
+      return undefined;
+    }
+    currentLine = currentLine.trim();
+    for (const starter of singleLineStarters) {
+      if (
+        typeof starter === "string"
+          ? currentLine.startsWith(starter)
+          : starter.test(currentLine)
+      ) {
+        return false;
+      }
+    }
+    return undefined;
+  },
+};
+
 export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   ts: Typescript,
   js: Typescript,
@@ -291,4 +319,6 @@ export const LANGUAGES: { [extension: string]: AutocompleteLanguageInfo } = {
   dart: Dart,
   sol: Solidity,
   yaml: YAML,
+  yml: YAML,
+  md: Markdown,
 };
