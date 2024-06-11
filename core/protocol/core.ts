@@ -27,8 +27,8 @@ export interface ListHistoryOptions {
 }
 
 export type ToCoreFromIdeOrWebviewProtocol = {
-  // New
   "update/modelChange": [string, void];
+  "update/selectTabAutocompleteModel": [string, void];
 
   // Special
   ping: [string, string];

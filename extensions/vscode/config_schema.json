@@ -1999,7 +1999,17 @@
             "provider": "ollama",
             "model": "deepseek-coder:1.3b-base"
           },
-          "$ref": "#/definitions/ModelDescription"
+          "oneOf": [
+            {
+              "$ref": "#/definitions/ModelDescription"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ModelDescription"
+              }
+            }
+          ]
         },
         "tabAutocompleteOptions": {
           "title": "TabAutocompleteOptions",

@@ -7,6 +7,7 @@ import { ContextMenuConfig, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
+import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath } from "core/util/paths";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
@@ -531,6 +532,63 @@ const commandsMap: (
         !enabled,
         vscode.ConfigurationTarget.Global,
       );
+    },
+    "continue.openTabAutocompleteConfigMenu": async () => {
+      const config = vscode.workspace.getConfiguration("continue");
+      const enabled = config.get("enableTabAutocomplete");
+      const quickPick = vscode.window.createQuickPick();
+      const selected = new GlobalContext().get("selectedTabAutocompleteModel");
+      const autocompleteModelTitles = ((
+        await configHandler.loadConfig()
+      ).tabAutocompleteModels
+        ?.map((model) => model.title)
+        .filter((t) => t !== undefined) || []) as string[];
+      quickPick.items = [
+        {
+          label: enabled
+            ? "$(check) Disable autocomplete"
+            : "$(circle-slash) Enable autocomplete",
+        },
+        {
+          label: "$(gear) Configure autocomplete options",
+        },
+        {
+          kind: vscode.QuickPickItemKind.Separator,
+          label: "Switch model",
+        },
+        ...autocompleteModelTitles.map((title) => ({
+          label: title === selected ? `$(check) ${title}` : title,
+          description: title === selected ? "Currently selected" : undefined,
+        })),
+      ];
+      quickPick.onDidAccept(() => {
+        const selectedOption = quickPick.selectedItems[0].label;
+        if (selectedOption === "$(circle-slash) Enable autocomplete") {
+          config.update(
+            "enableTabAutocomplete",
+            true,
+            vscode.ConfigurationTarget.Global,
+          );
+        } else if (selectedOption === "$(check) Disable autocomplete") {
+          config.update(
+            "enableTabAutocomplete",
+            false,
+            vscode.ConfigurationTarget.Global,
+          );
+        } else if (
+          selectedOption === "$(gear) Configure autocomplete options"
+        ) {
+          ide.openFile(getConfigJsonPath());
+        } else if (autocompleteModelTitles.includes(selectedOption)) {
+          new GlobalContext().update(
+            "selectedTabAutocompleteModel",
+            selectedOption,
+          );
+          configHandler.reloadConfig();
+        }
+        quickPick.dispose();
+      });
+      quickPick.show();
     },
   };
 };

@@ -1,12 +1,10 @@
+import { v4 as uuidv4 } from "uuid";
 import type {
   ContextItemId,
   IDE,
   IndexingProgressUpdate,
   SiteIndexingConfig,
 } from ".";
-import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-import type { IMessenger, Message } from "./util/messenger";
-import { v4 as uuidv4 } from "uuid";
 import { CompletionProvider } from "./autocomplete/completionProvider.js";
 import { ConfigHandler } from "./config/handler.js";
 import {
@@ -22,11 +20,13 @@ import { indexDocs } from "./indexing/docs/index.js";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase.js";
 import Ollama from "./llm/llms/Ollama.js";
+import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext.js";
 import { logDevData } from "./util/devdata.js";
 import { DevDataSqliteDb } from "./util/devdataSqlite.js";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions.js";
 import historyManager from "./util/history.js";
+import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson, getConfigJsonPath } from "./util/paths.js";
 import { Telemetry } from "./util/posthog.js";
 import { streamDiffLines } from "./util/verticalEdit.js";
@@ -37,7 +37,8 @@ export class Core {
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
-  indexingState: IndexingProgressUpdate
+  indexingState: IndexingProgressUpdate;
+  private globalContext = new GlobalContext();
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -78,7 +79,7 @@ export class Core {
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     const indexingPauseToken = new PauseToken(
-      new GlobalContext().get("indexingPaused") === true,
+      this.globalContext.get("indexingPaused") === true,
     );
     let codebaseIndexerResolve: (_: any) => void | undefined;
     this.codebaseIndexerPromise = new Promise(
@@ -112,7 +113,12 @@ export class Core {
 
     const getLlm = async () => {
       const config = await this.configHandler.loadConfig();
-      return config.tabAutocompleteModel;
+      const selected = this.globalContext.get("selectedTabAutocompleteModel");
+      return (
+        config.tabAutocompleteModels?.find(
+          (model) => model.title === selected,
+        ) ?? config.tabAutocompleteModels?.[0]
+      );
     };
     this.completionProvider = new CompletionProvider(
       this.configHandler,
@@ -132,6 +138,11 @@ export class Core {
     // New
     on("update/modelChange", (msg) => {
       this.selectedModelTitle = msg.data;
+    });
+
+    on("update/selectTabAutocompleteModel", async (msg) => {
+      this.globalContext.update("selectedTabAutocompleteModel", msg.data);
+      this.configHandler.reloadConfig();
     });
 
     // Special
@@ -218,6 +229,14 @@ export class Core {
 
     // Context providers
     on("context/addDocs", async (msg) => {
+      const siteIndexingConfig: SiteIndexingConfig = {
+        startUrl: msg.data.startUrl,
+        rootUrl: msg.data.rootUrl,
+        title: msg.data.title,
+        maxDepth: msg.data.maxDepth,
+        faviconUrl: new URL("/favicon.ico", msg.data.rootUrl).toString(),
+      };
+
       for await (const _ of indexDocs(
         msg.data.title,
         new URL(msg.data.url),
@@ -492,12 +511,12 @@ export class Core {
         mode === "local"
           ? setupLocalMode
           : mode === "freeTrial"
-          ? setupFreeTrialMode
-          : mode === "localAfterFreeTrial"
-          ? setupLocalAfterFreeTrial
-          : mode === "apiKeys"
-          ? setupApiKeysMode
-          : setupOptimizedExistingUserMode,
+            ? setupFreeTrialMode
+            : mode === "localAfterFreeTrial"
+              ? setupLocalAfterFreeTrial
+              : mode === "apiKeys"
+                ? setupApiKeysMode
+                : setupOptimizedExistingUserMode,
       );
       this.configHandler.reloadConfig();
     });

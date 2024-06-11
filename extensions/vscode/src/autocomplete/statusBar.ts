@@ -35,7 +35,7 @@ export function setupStatusBar(
     ? "$(loading~spin) Continue"
     : statusBarItemText(enabled);
   statusBarItem.tooltip = statusBarItemTooltip(enabled);
-  statusBarItem.command = "continue.toggleTabAutocompleteEnabled";
+  statusBarItem.command = "continue.openTabAutocompleteConfigMenu";
 
   statusBarItem.show();
 

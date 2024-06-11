@@ -165,12 +165,14 @@ export class VsCodeExtension {
     // from outside the window are also caught
     fs.watchFile(getConfigJsonPath(), { interval: 1000 }, (stats) => {
       this.configHandler.reloadConfig();
-      this.tabAutocompleteModel.clearLlm();
     });
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
       this.configHandler.reloadConfig();
-      this.tabAutocompleteModel.clearLlm();
     });
+
+    this.configHandler.onConfigUpdate(
+      this.tabAutocompleteModel.clearLlm.bind(this.tabAutocompleteModel),
+    );
 
     vscode.workspace.onDidSaveTextDocument((event) => {
       // Listen for file changes in the workspace
@@ -181,7 +183,6 @@ export class VsCodeExtension {
         filepath.endsWith(".prompt")
       ) {
         this.configHandler.reloadConfig();
-        this.tabAutocompleteModel.clearLlm();
       } else if (
         filepath.endsWith(".continueignore") ||
         filepath.endsWith(".gitignore")
