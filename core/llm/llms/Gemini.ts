@@ -48,7 +48,10 @@ class Gemini extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     // Ensure this.apiBase is used if available, otherwise use default
-    const apiBase = this.apiBase || Gemini.defaultOptions?.apiBase || "https://generativelanguage.googleapis.com/v1beta/";    // Determine if it's a v1 API call based on apiBase
+    const apiBase =
+      this.apiBase ||
+      Gemini.defaultOptions?.apiBase ||
+      "https://generativelanguage.googleapis.com/v1beta/"; // Determine if it's a v1 API call based on apiBase
     const isV1API = apiBase.includes("/v1/");
 
     // Conditionally apply removeSystemMessage
@@ -94,8 +97,19 @@ class Gemini extends BaseLLM {
       `models/${options.model}:streamGenerateContent?key=${this.apiKey}`,
       this.apiBase,
     );
-    const body = {
-      contents: messages.map((msg) => {
+    // This feels hacky to repeat code from above function but was the quickest
+    // way to ensure system message re-formatting isn't done if user has specified v1
+    const apiBase =
+      this.apiBase ||
+      Gemini.defaultOptions?.apiBase ||
+      "https://generativelanguage.googleapis.com/v1beta/"; // Determine if it's a v1 API call based on apiBase
+    const isV1API = apiBase.includes("/v1/");
+
+    const contents = messages
+      .map((msg) => {
+        if (msg.role === "system" && !isV1API) {
+          return null; // Don't include system message in contents
+        }
         return {
           role: msg.role === "assistant" ? "model" : "user",
           parts:
@@ -103,6 +117,14 @@ class Gemini extends BaseLLM {
               ? [{ text: msg.content }]
               : msg.content.map(this._continuePartToGeminiPart),
         };
+      })
+      .filter((c) => c !== null);
+
+    const body = {
+      contents,
+      // if this.systemMessage is defined, reformat it for Gemini API
+      ...(this.systemMessage && isV1API && {
+        systemInstruction: { parts: [{ text: this.systemMessage }] },
       }),
     };
     const response = await this.fetch(apiURL, {
