@@ -3,7 +3,7 @@ import {
   PencilSquareIcon,
   TrashIcon,
 } from "@heroicons/react/24/outline";
-import { PersistedSessionInfo, SessionInfo } from "core";
+import { SessionInfo } from "core";
 import MiniSearch from "minisearch";
 import React, { Fragment, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
+  Input,
   lightGray,
   vscBackground,
   vscBadgeBackground,
@@ -96,21 +97,25 @@ function TableRow({
   const workspacePaths = window.workspacePaths || [""];
   const [hovered, setHovered] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [sessionTitle, setSessionTitle] = useState(session.title);
+  const [sessionTitleEditValue, setSessionTitleEditValue] = useState(
+    session.title,
+  );
 
   const { saveSession, deleteSession, loadSession, getSession, updateSession } =
     useHistory(dispatch);
 
   const handleKeyUp = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (sessionTitle !== session.title) {
-      session.title = sessionTitle;
-      const persistedSessionInfo = await getSession(session.sessionId);
-      persistedSessionInfo.title = sessionTitle;
-      await updateSession(persistedSessionInfo);
-    }
-
-    if (e.key === "Enter" || e.key === "Escape") {
+    if (e.key === "Enter") {
+      if (sessionTitleEditValue !== session.title) {
+        session.title = sessionTitleEditValue;
+        const persistedSessionInfo = await getSession(session.sessionId);
+        persistedSessionInfo.title = sessionTitleEditValue;
+        await updateSession(persistedSessionInfo);
+        setEditing(false);
+      }
+    } else if (e.key === "Escape") {
       setEditing(false);
+      setSessionTitleEditValue(session.title);
     }
   };
 
@@ -130,12 +135,12 @@ function TableRow({
         >
           <div className="text-md w-100">
             {editing ? (
-              <input
+              <Input
                 type="text"
                 style={{ width: "100%" }}
                 ref={(titleInput) => titleInput && titleInput.focus()}
-                value={sessionTitle}
-                onChange={(e) => setSessionTitle(e.target.value)}
+                value={sessionTitleEditValue}
+                onChange={(e) => setSessionTitleEditValue(e.target.value)}
                 onKeyUp={(e) => handleKeyUp(e)}
                 onBlur={() => setEditing(false)}
               />
