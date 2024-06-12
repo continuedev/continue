@@ -371,6 +371,7 @@ export class Core {
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["command/run"][0]>,
+      messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     ) {
       const {
         input,
@@ -404,11 +405,10 @@ export class Core {
         params,
         ide,
         addContextItem: (item) => {
-          // TODO
-          // protocol.request("addContextItem", {
-          //   item,
-          //   historyIndex,
-          // });
+          messenger.request("addContextItem", {
+            item,
+            historyIndex,
+          });
         },
         selectedCode,
         config,
@@ -422,7 +422,12 @@ export class Core {
       yield { done: true, content: "" };
     }
     on("command/run", (msg) =>
-      runNodeJsSlashCommand(this.configHandler, this.abortedMessageIds, msg),
+      runNodeJsSlashCommand(
+        this.configHandler,
+        this.abortedMessageIds,
+        msg,
+        this.messenger,
+      ),
     );
 
     // Autocomplete
