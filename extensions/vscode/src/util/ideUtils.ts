@@ -6,11 +6,11 @@ import { threadStopped } from "../debug/debug";
 import { VsCodeExtension } from "../extension/vscodeExtension";
 import { GitExtension, Repository } from "../otherExtensions/git";
 import {
+  SuggestionRanges,
   acceptSuggestionCommand,
   editorSuggestionsLocked,
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
-  type SuggestionRanges,
 } from "../suggestions";
 import { traverseDirectory } from "./traverseDirectory";
 import {
@@ -62,11 +62,15 @@ export class VsCodeIdeUtils {
     );
   }
 
+  private _workspaceDirectories: string[] | undefined = undefined;
   getWorkspaceDirectories(): string[] {
-    return (
-      vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath) ||
-      []
-    );
+    if (this._workspaceDirectories === undefined) {
+      this._workspaceDirectories =
+        vscode.workspace.workspaceFolders?.map((folder) => folder.uri.fsPath) ||
+        [];
+    }
+
+    return this._workspaceDirectories;
   }
 
   getUniqueId() {
@@ -391,7 +395,7 @@ export class VsCodeIdeUtils {
     if (lastLine) {
       let i = lines.length - 1;
       while (i >= 0 && !lines[i].trim().startsWith(lastLine)) i--;
-      terminalContents = lines.slice(i).join("\n");
+      terminalContents = lines.slice(Math.max(i, 0)).join("\n");
     }
 
     return terminalContents;
@@ -545,7 +549,20 @@ export class VsCodeIdeUtils {
   }
 
   private _repoWasNone: boolean = false;
+  private repoCache: Map<string, Repository> = new Map();
   async getRepo(forDirectory: vscode.Uri): Promise<Repository | undefined> {
+    const workspaceDirs = this.getWorkspaceDirectories();
+    const parentDir = workspaceDirs.find((dir) =>
+      forDirectory.fsPath.startsWith(dir),
+    );
+    if (parentDir) {
+      // Check if the repository is already cached
+      const cachedRepo = this.repoCache.get(parentDir);
+      if (cachedRepo) {
+        return cachedRepo;
+      }
+    }
+
     let repo = await this._getRepo(forDirectory);
 
     let i = 0;
@@ -560,6 +577,12 @@ export class VsCodeIdeUtils {
       }
       repo = await this._getRepo(forDirectory);
     }
+
+    if (parentDir) {
+      // Cache the repository for the parent directory
+      this.repoCache.set(parentDir, repo);
+    }
+
     return repo;
   }
 

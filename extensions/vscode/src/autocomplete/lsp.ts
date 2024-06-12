@@ -283,7 +283,9 @@ export async function getDefinitionsForNode(
       ranges.push({
         ...classDef,
         contents: `${
-          classNameNode?.text ? `${lang.comment} ${classNameNode.text}:\n` : ""
+          classNameNode?.text
+            ? `${lang.singleLineComment} ${classNameNode.text}:\n`
+            : ""
         }${contents.trim()}`,
       });
 

@@ -68,7 +68,7 @@ async function shouldCompleteMultiline(
       .split("\n")
       .slice(-1)[0]
       ?.trimStart()
-      .startsWith(language.comment)
+      .startsWith(language.singleLineComment)
   ) {
     return false;
   }

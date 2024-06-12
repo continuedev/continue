@@ -8,7 +8,7 @@ import type {
   IndexTag,
   IndexingProgressUpdate,
 } from "../index.js";
-import { getBasename } from "../util/index.js";
+import { getBasename, getLastNPathParts } from "../util/index.js";
 import {
   getLanguageForFile,
   getParserForFile,
@@ -194,7 +194,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
     return {
       name: row.title,
-      description: getBasename(row.path, 2),
+      description: getLastNPathParts(row.path, 2),
       content: `\`\`\`${getBasename(row.path)}\n${row.content}\n\`\`\``,
     };
   }
@@ -214,7 +214,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
       return rows.map((row) => ({
         title: row.title,
-        description: getBasename(row.path, 2),
+        description: getLastNPathParts(row.path, 2),
         id: row.id.toString(),
       }));
     } catch (e) {

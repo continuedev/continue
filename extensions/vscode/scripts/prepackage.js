@@ -5,6 +5,7 @@ const { rimrafSync } = require("rimraf");
 const {
   validateFilesPresent,
   execCmdSync,
+  autodetectPlatformAndArch,
 } = require("../../../scripts/util/index");
 
 // Clear folders that will be packaged to ensure clean slate
@@ -28,29 +29,7 @@ if (args[2] === "--target") {
 let os;
 let arch;
 if (!target) {
-  os = {
-    aix: "linux",
-    darwin: "darwin",
-    freebsd: "linux",
-    linux: "linux",
-    openbsd: "linux",
-    sunos: "linux",
-    win32: "win32",
-  }[process.platform];
-  arch = {
-    arm: "arm64",
-    arm64: "arm64",
-    ia32: "x64",
-    loong64: "arm64",
-    mips: "arm64",
-    mipsel: "arm64",
-    ppc: "x64",
-    ppc64: "x64",
-    riscv64: "arm64",
-    s390: "x64",
-    s390x: "x64",
-    x64: "x64",
-  }[process.arch];
+  [os, arch] = autodetectPlatformAndArch();
 } else {
   [os, arch] = target.split("-");
 }
@@ -269,17 +248,17 @@ const exe = os === "win32" ? ".exe" : "";
   console.log("[info] Copied tree-sitter wasms");
 
   // tree-sitter tag query files
-  ncp(
-    path.join(
-      __dirname,
-      "../../../core/node_modules/llm-code-highlighter/dist/tag-qry",
-    ),
-    path.join(__dirname, "../out/tag-qry"),
-    (error) => {
-      if (error)
-        console.warn("Error copying code-highlighter tag-qry files", error);
-    },
-  );
+  // ncp(
+  //   path.join(
+  //     __dirname,
+  //     "../../../core/node_modules/llm-code-highlighter/dist/tag-qry",
+  //   ),
+  //   path.join(__dirname, "../out/tag-qry"),
+  //   (error) => {
+  //     if (error)
+  //       console.warn("Error copying code-highlighter tag-qry files", error);
+  //   },
+  // );
 
   // textmate-syntaxes
   await new Promise((resolve, reject) => {
@@ -320,7 +299,7 @@ const exe = os === "win32" ? ".exe" : "";
     console.log(`Copying ${packageName} to ${toCopy}`);
     // This is a way to install only one package without npm trying to install all the dependencies
     // Create a temporary directory for installing the package
-    const adjustedName = toCopy.replace(/^@/, "").replace("/", "-");
+    const adjustedName = packageName.replace(/@/g, "").replace("/", "-");
 
     const tempDir = `/tmp/continue-node_modules-${adjustedName}`;
     const currentDir = process.cwd();
