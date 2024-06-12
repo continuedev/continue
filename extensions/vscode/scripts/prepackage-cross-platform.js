@@ -117,15 +117,6 @@ async function package(target, os, arch, exe) {
     lancePackageToInstall,
     "@lancedb",
   );
-
-  const esbuildPackageToInstall = {
-    "darwin-arm64": "@esbuild/darwin-arm64@0.17.19",
-    "darwin-x64": "@esbuild/darwin-x64@0.17.19",
-    "linux-arm64": "@esbuild/linux-arm64@0.17.19",
-    "linux-x64": "@esbuild/linux-x64@0.17.19",
-    "win32-x64": "@esbuild/win32-x64@0.17.19",
-    "win32-arm64": "@esbuild/win32-arm64@0.17.19", // they don't have a win32-arm64 build
-  }[target];
   // *** esbuild ***
   // await installNodeModuleInTempDirAndCopyToCurrent(
   //   "esbuild@0.17.19",
