@@ -17,5 +17,6 @@ export interface ComboBoxItem {
   contextProvider?: ContextProviderDescription;
   query?: string;
   label?: string;
+  iconUrl?: string;
   action?: () => void;
 }

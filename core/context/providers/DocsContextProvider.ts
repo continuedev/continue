@@ -1,3 +1,4 @@
+import fetch from "node-fetch";
 import {
   ContextItem,
   ContextProviderDescription,
@@ -18,6 +19,22 @@ class DocsContextProvider extends BaseContextProvider {
     description: "Type to search docs",
     type: "submenu",
   };
+
+  private async _getIconDataUrl(url: string): Promise<string | undefined> {
+    try {
+      const response = await fetch(url);
+      if (!response.headers.get("content-type")?.startsWith("image/")) {
+        console.log("Not an image: ", await response.text());
+        return undefined;
+      }
+      const buffer = await response.buffer();
+      const base64data = buffer.toString("base64");
+      return `data:${response.headers.get("content-type")};base64,${base64data}`;
+    } catch (e) {
+      console.log("E: ", e);
+      return undefined;
+    }
+  }
 
   async getContextItems(
     query: string,
@@ -90,7 +107,7 @@ class DocsContextProvider extends BaseContextProvider {
   ): Promise<ContextSubmenuItem[]> {
     const { listDocs } = await import("../../indexing/docs/db.js");
     const docs = await listDocs();
-    const submenuItems = docs.map((doc) => ({
+    const submenuItems: ContextSubmenuItem[] = docs.map((doc) => ({
       title: doc.title,
       description: new URL(doc.baseUrl).hostname,
       id: doc.baseUrl,
@@ -106,6 +123,7 @@ class DocsContextProvider extends BaseContextProvider {
           title: config.title,
           description: new URL(config.startUrl).hostname,
           id: config.startUrl,
+          // iconUrl: config.faviconUrl,
         })),
     );
 
@@ -128,6 +146,15 @@ class DocsContextProvider extends BaseContextProvider {
         return a.title.toString().localeCompare(b.title.toString());
       }
     });
+
+    // const icons = await Promise.all(
+    //   submenuItems.map(async (item) =>
+    //     item.iconUrl ? this._getIconDataUrl(item.iconUrl) : undefined,
+    //   ),
+    // );
+    // icons.forEach((icon, i) => {
+    //   submenuItems[i].iconUrl = icon;
+    // });
 
     return submenuItems;
   }

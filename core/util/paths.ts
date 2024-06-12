@@ -1,3 +1,4 @@
+import * as JSONC from "comment-json";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import * as os from "os";
@@ -152,12 +153,16 @@ export function getDevDataFilePath(fileName: string): string {
 
 export function editConfigJson(
   callback: (config: SerializedContinueConfig) => SerializedContinueConfig,
-) {
+): void {
   const config = fs.readFileSync(getConfigJsonPath(), "utf8");
-  let configJson = JSON.parse(config);
-  configJson = callback(configJson);
-  fs.writeFileSync(getConfigJsonPath(), JSON.stringify(configJson, null, 2));
-  return configJson;
+  let configJson = JSONC.parse(config);
+  // Check if it's an object
+  if (typeof configJson === "object" && configJson !== null) {
+    configJson = callback(configJson as any) as any;
+    fs.writeFileSync(getConfigJsonPath(), JSONC.stringify(configJson, null, 2));
+  } else {
+    console.warn("config.json is not a valid object");
+  }
 }
 
 function getMigrationsFolderPath(): string {

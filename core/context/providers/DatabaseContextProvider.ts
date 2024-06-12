@@ -13,6 +13,7 @@ class DatabaseContextProvider extends BaseContextProvider {
     displayTitle: "Database",
     description: "Table schemas",
     type: "submenu",
+    renderInlineAs: "",
   };
 
   async getContextItems(

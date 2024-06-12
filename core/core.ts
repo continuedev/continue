@@ -1,12 +1,10 @@
+import { v4 as uuidv4 } from "uuid";
 import type {
   ContextItemId,
   IDE,
   IndexingProgressUpdate,
   SiteIndexingConfig,
 } from ".";
-import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-import type { IMessenger, Message } from "./util/messenger";
-import { v4 as uuidv4 } from "uuid";
 import { CompletionProvider } from "./autocomplete/completionProvider.js";
 import { ConfigHandler } from "./config/handler.js";
 import {
@@ -22,12 +20,14 @@ import { indexDocs } from "./indexing/docs/index.js";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase.js";
 import Ollama from "./llm/llms/Ollama.js";
+import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext.js";
 import { logDevData } from "./util/devdata.js";
 import { DevDataSqliteDb } from "./util/devdataSqlite.js";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions.js";
 import historyManager from "./util/history.js";
-import { editConfigJson, getConfigJsonPath } from "./util/paths.js";
+import type { IMessenger, Message } from "./util/messenger";
+import { editConfigJson } from "./util/paths.js";
 import { Telemetry } from "./util/posthog.js";
 import { streamDiffLines } from "./util/verticalEdit.js";
 
@@ -38,6 +38,7 @@ export class Core {
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
   indexingState: IndexingProgressUpdate;
+  private globalContext = new GlobalContext();
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -78,7 +79,7 @@ export class Core {
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     const indexingPauseToken = new PauseToken(
-      new GlobalContext().get("indexingPaused") === true,
+      this.globalContext.get("indexingPaused") === true,
     );
     let codebaseIndexerResolve: (_: any) => void | undefined;
     this.codebaseIndexerPromise = new Promise(
@@ -112,7 +113,12 @@ export class Core {
 
     const getLlm = async () => {
       const config = await this.configHandler.loadConfig();
-      return config.tabAutocompleteModel;
+      const selected = this.globalContext.get("selectedTabAutocompleteModel");
+      return (
+        config.tabAutocompleteModels?.find(
+          (model) => model.title === selected,
+        ) ?? config.tabAutocompleteModels?.[0]
+      );
     };
     this.completionProvider = new CompletionProvider(
       this.configHandler,
@@ -132,6 +138,11 @@ export class Core {
     // New
     on("update/modelChange", (msg) => {
       this.selectedModelTitle = msg.data;
+    });
+
+    on("update/selectTabAutocompleteModel", async (msg) => {
+      this.globalContext.update("selectedTabAutocompleteModel", msg.data);
+      this.configHandler.reloadConfig();
     });
 
     // Special
@@ -168,37 +179,8 @@ export class Core {
     // Edit config
     on("config/addModel", (msg) => {
       const model = msg.data.model;
-      const newConfigString = addModel(model);
+      addModel(model);
       this.configHandler.reloadConfig();
-      this.ide.openFile(getConfigJsonPath());
-
-      // Find the range where it was added and highlight
-      const lines = newConfigString.split("\n");
-      let startLine: number | undefined;
-      let endLine: number | undefined;
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i];
-
-        if (!startLine) {
-          if (line.trim() === `"title": "${model.title}",`) {
-            startLine = i - 1;
-          }
-        } else {
-          if (line.startsWith("    }")) {
-            endLine = i;
-            break;
-          }
-        }
-      }
-
-      if (startLine && endLine) {
-        this.ide.showLines(
-          getConfigJsonPath(),
-          startLine,
-          endLine,
-          // "#fff1"
-        );
-      }
     });
     on("config/addOpenAiKey", (msg) => {
       addOpenAIKey(msg.data);
@@ -223,6 +205,7 @@ export class Core {
         rootUrl: msg.data.rootUrl,
         title: msg.data.title,
         maxDepth: msg.data.maxDepth,
+        faviconUrl: new URL("/favicon.ico", msg.data.rootUrl).toString(),
       };
 
       for await (const _ of indexDocs(
@@ -388,6 +371,7 @@ export class Core {
       configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["command/run"][0]>,
+      messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     ) {
       const {
         input,
@@ -421,11 +405,10 @@ export class Core {
         params,
         ide,
         addContextItem: (item) => {
-          // TODO
-          // protocol.request("addContextItem", {
-          //   item,
-          //   historyIndex,
-          // });
+          messenger.request("addContextItem", {
+            item,
+            historyIndex,
+          });
         },
         selectedCode,
         config,
@@ -439,7 +422,12 @@ export class Core {
       yield { done: true, content: "" };
     }
     on("command/run", (msg) =>
-      runNodeJsSlashCommand(this.configHandler, this.abortedMessageIds, msg),
+      runNodeJsSlashCommand(
+        this.configHandler,
+        this.abortedMessageIds,
+        msg,
+        this.messenger,
+      ),
     );
 
     // Autocomplete
@@ -498,12 +486,12 @@ export class Core {
         mode === "local"
           ? setupLocalMode
           : mode === "freeTrial"
-          ? setupFreeTrialMode
-          : mode === "localAfterFreeTrial"
-          ? setupLocalAfterFreeTrial
-          : mode === "apiKeys"
-          ? setupApiKeysMode
-          : setupOptimizedExistingUserMode,
+            ? setupFreeTrialMode
+            : mode === "localAfterFreeTrial"
+              ? setupLocalAfterFreeTrial
+              : mode === "apiKeys"
+                ? setupApiKeysMode
+                : setupOptimizedExistingUserMode,
       );
       this.configHandler.reloadConfig();
     });

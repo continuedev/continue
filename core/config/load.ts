@@ -1,3 +1,4 @@
+import * as JSONC from "comment-json";
 import * as fs from "fs";
 import path from "path";
 import {
@@ -58,7 +59,7 @@ const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
-  const config = JSON.parse(content) as SerializedContinueConfig;
+  const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
   if (config.env && Array.isArray(config.env)) {
     const env = {
       ...process.env,
@@ -75,7 +76,7 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
     });
   }
 
-  return JSON.parse(content);
+  return JSONC.parse(content) as unknown as SerializedContinueConfig;
 }
 
 const configMergeKeys = {
@@ -167,15 +168,15 @@ async function serializedToIntermediateConfig(
   const promptFolder = initial.experimental?.promptPath;
 
   let promptFiles: { path: string; content: string }[] = [];
-  if (promptFolder) {
-    promptFiles = (
-      await Promise.all(
-        workspaceDirs.map((dir) => getPromptFiles(ide, promptFolder)),
-      )
+  promptFiles = (
+    await Promise.all(
+      workspaceDirs.map((dir) =>
+        getPromptFiles(ide, path.join(dir, promptFolder ?? ".prompts")),
+      ),
     )
-      .flat()
-      .filter(({ path }) => path.endsWith(".prompt"));
-  }
+  )
+    .flat()
+    .filter(({ path }) => path.endsWith(".prompt"));
 
   // Also read from ~/.continue/.prompts
   promptFiles.push(...readAllGlobalPromptFiles());
@@ -307,26 +308,36 @@ async function intermediateToFinalConfig(
   }
 
   // Tab autocomplete model
-  let autocompleteLlm: BaseLLM | undefined = undefined;
+  let tabAutocompleteModels: BaseLLM[] = [];
   if (config.tabAutocompleteModel) {
-    if (isModelDescription(config.tabAutocompleteModel)) {
-      autocompleteLlm = await llmFromDescription(
-        config.tabAutocompleteModel,
-        ide.readFile.bind(ide),
-        uniqueId,
-        ideSettings,
-        writeLog,
-        config.completionOptions,
-        config.systemMessage,
-      );
+    tabAutocompleteModels = (
+      await Promise.all(
+        (Array.isArray(config.tabAutocompleteModel)
+          ? config.tabAutocompleteModel
+          : [config.tabAutocompleteModel]
+        ).map(async (desc) => {
+          if (isModelDescription(desc)) {
+            const llm = await llmFromDescription(
+              desc,
+              ide.readFile.bind(ide),
+              uniqueId,
+              ideSettings,
+              writeLog,
+              config.completionOptions,
+              config.systemMessage,
+            );
 
-      if (autocompleteLlm?.providerName === "free-trial") {
-        const ghAuthToken = await ide.getGitHubAuthToken();
-        (autocompleteLlm as FreeTrial).setupGhAuthToken(ghAuthToken);
-      }
-    } else {
-      autocompleteLlm = new CustomLLMClass(config.tabAutocompleteModel);
-    }
+            if (llm?.providerName === "free-trial") {
+              const ghAuthToken = await ide.getGitHubAuthToken();
+              (llm as FreeTrial).setupGhAuthToken(ghAuthToken);
+            }
+            return llm;
+          } else {
+            return new CustomLLMClass(desc);
+          }
+        }),
+      )
+    ).filter((x) => x !== undefined) as BaseLLM[];
   }
 
   // Context providers
@@ -395,7 +406,7 @@ async function intermediateToFinalConfig(
     contextProviders,
     models,
     embeddingsProvider: config.embeddingsProvider as any,
-    tabAutocompleteModel: autocompleteLlm,
+    tabAutocompleteModels,
     reranker: config.reranker as any,
   };
 }

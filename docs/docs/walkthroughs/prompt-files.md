@@ -64,9 +64,13 @@ To add a system message, start the body with `<system></system>` tags like in th
 The body also supports templating with [Handlebars syntax](https://handlebarsjs.com/guide/). The following variables are currently available:
 
 - `input`: The full text from the input box in the sidebar that is sent along with the slash command
-- `diff`: The current git diff in your workspace
+- `currentFile`: The currently open file in your IDE
 
-We plan to add support soon for templating with all [context providers](../customization/context-providers.md).
+#### Context providers
+
+The body of a .prompt file also supports any [context provider](../customization/context-providers.md) that you have added to your config by referencing the name of the context provider.
+
+For example, if you wanted to include the contents of the terminal in your prompt, then you would use `{{{terminal}}}` in your prompt file. If you wanted to use the "url" context provider to include the contents of https://github.com/continuedev/continue, you would use `{{{url "https://github.com/continuedev/continue"}}}`, where the second part is the argument to the context provider, separated by a space.
 
 ## Feedback
 

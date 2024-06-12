@@ -238,11 +238,11 @@ function sum(tree: Tree<number>): number {
 
 ## EXAMPLE QUERY:
 
-The 4th {{FILL_HERE}} is Jupiter.
+The 5th {{FILL_HERE}} is Jupiter.
 
 ## CORRECT COMPLETION:
 
-<COMPLETION>the 4th planet after Mars</COMPLETION>
+<COMPLETION>the 5th planet after Mars</COMPLETION>
 
 ## EXAMPLE QUERY:
 

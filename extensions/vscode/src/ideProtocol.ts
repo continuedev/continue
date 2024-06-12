@@ -83,10 +83,17 @@ class VsCodeIde implements IDE {
 
               // Remove free trial models
               editConfigJson((config) => {
-                const tabAutocompleteModel =
+                let tabAutocompleteModel = undefined;
+                if (Array.isArray(config.tabAutocompleteModel)) {
+                  tabAutocompleteModel = config.tabAutocompleteModel.filter(
+                    (model) => model.provider !== "free-trial",
+                  );
+                } else if (
                   config.tabAutocompleteModel?.provider === "free-trial"
-                    ? undefined
-                    : config.tabAutocompleteModel;
+                ) {
+                  tabAutocompleteModel = undefined;
+                }
+
                 return {
                   ...config,
                   models: config.models.filter(

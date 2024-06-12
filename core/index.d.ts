@@ -160,6 +160,7 @@ export interface ContextSubmenuItem {
   id: string;
   title: string;
   description: string;
+  iconUrl?: string;
 }
 
 export interface SiteIndexingConfig {
@@ -167,6 +168,7 @@ export interface SiteIndexingConfig {
   rootUrl: string;
   title: string;
   maxDepth?: number;
+  faviconUrl: string;
 }
 
 export interface IContextProvider {
@@ -782,7 +784,7 @@ export interface SerializedContinueConfig {
   disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
-  tabAutocompleteModel?: ModelDescription;
+  tabAutocompleteModel?: ModelDescription | ModelDescription[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
@@ -824,7 +826,10 @@ export interface Config {
   /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
-  tabAutocompleteModel?: CustomLLM | ModelDescription;
+  tabAutocompleteModel?:
+    | CustomLLM
+    | ModelDescription
+    | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -847,7 +852,7 @@ export interface ContinueConfig {
   disableIndexing?: boolean;
   userToken?: string;
   embeddingsProvider: EmbeddingsProvider;
-  tabAutocompleteModel?: ILLM;
+  tabAutocompleteModels?: ILLM[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: Reranker;
