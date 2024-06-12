@@ -168,7 +168,7 @@ export interface SiteIndexingConfig {
   rootUrl: string;
   title: string;
   maxDepth?: number;
-  faviconUrl: string;
+  faviconUrl?: string;
 }
 
 export interface IContextProvider {
