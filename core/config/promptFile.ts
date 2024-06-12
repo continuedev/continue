@@ -1,5 +1,5 @@
-import type { IDE, SlashCommand } from "..";
 import * as YAML from "yaml";
+import type { IDE, SlashCommand } from "..";
 import { stripImages } from "../llm/countTokens.js";
 import { renderTemplatedString } from "../llm/llms/index.js";
 import { getBasename } from "../util/index.js";
@@ -44,7 +44,16 @@ export function slashCommandFromPromptFile(
   return {
     name,
     description,
-    run: async function* ({ input, llm, history, ide }) {
+    run: async function* ({
+      input,
+      llm,
+      history,
+      ide,
+      config,
+      fetch,
+      selectedCode,
+      addContextItem,
+    }) {
       // Remove slash command prefix from input
       let userInput = input;
       if (userInput.startsWith(`/${name}`)) {
@@ -54,6 +63,35 @@ export function slashCommandFromPromptFile(
       }
 
       // Render prompt template
+      const helpers: [string, Handlebars.HelperDelegate][] | undefined =
+        config.contextProviders?.map((provider) => {
+          return [
+            provider.description.title,
+            async (context: any) => {
+              const items = await provider.getContextItems(context, {
+                embeddingsProvider: config.embeddingsProvider,
+                fetch,
+                fullInput: userInput,
+                ide,
+                llm,
+                reranker: config.reranker,
+                selectedCode,
+              });
+              items.forEach((item) =>
+                addContextItem({
+                  ...item,
+                  id: {
+                    itemId: item.description,
+                    providerTitle: provider.description.title,
+                  },
+                }),
+              );
+              return items.map((item) => item.content).join("\n\n");
+            },
+          ];
+        });
+
+      // A few context providers that don't need to be in config.json to work in .prompt files
       const diff = await ide.getDiff();
       const currentFilePath = await ide.getCurrentFile();
       const promptUserInput = await renderTemplatedString(
@@ -66,6 +104,7 @@ export function slashCommandFromPromptFile(
             ? await ide.readFile(currentFilePath)
             : undefined,
         },
+        helpers,
       );
 
       const messages = [...history];

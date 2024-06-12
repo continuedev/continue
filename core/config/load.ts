@@ -154,15 +154,15 @@ async function serializedToIntermediateConfig(
   const promptFolder = initial.experimental?.promptPath;
 
   let promptFiles: { path: string; content: string }[] = [];
-  if (promptFolder) {
-    promptFiles = (
-      await Promise.all(
-        workspaceDirs.map((dir) => getPromptFiles(ide, promptFolder)),
-      )
+  promptFiles = (
+    await Promise.all(
+      workspaceDirs.map((dir) =>
+        getPromptFiles(ide, path.join(dir, promptFolder ?? ".prompts")),
+      ),
     )
-      .flat()
-      .filter(({ path }) => path.endsWith(".prompt"));
-  }
+  )
+    .flat()
+    .filter(({ path }) => path.endsWith(".prompt"));
 
   // Also read from ~/.continue/.prompts
   promptFiles.push(...readAllGlobalPromptFiles());

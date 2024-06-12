@@ -1,4 +1,5 @@
 import Handlebars from "handlebars";
+import { v4 as uuidv4 } from "uuid";
 import {
   BaseCompletionOptions,
   ILLM,
@@ -64,19 +65,37 @@ const getHandlebarsVars = (
 };
 
 export async function renderTemplatedString(
-	template: string,
-	readFile: (filepath: string) => Promise<string>,
-	inputData: any,
+  template: string,
+  readFile: (filepath: string) => Promise<string>,
+  inputData: any,
+  helpers?: [string, Handlebars.HelperDelegate][],
 ): Promise<string> {
-	const [newTemplate, vars] = getHandlebarsVars(template);
-	const data: any = { ...inputData };
-	for (const key in vars) {
-		const fileContents = await readFile(vars[key]);
-		data[key] = fileContents || (inputData[vars[key]] ?? vars[key]);
-	}
-	const templateFn = Handlebars.compile(newTemplate);
-	const final = templateFn(data);
-	return final;
+  const promises: { [key: string]: Promise<string> } = {};
+  if (helpers) {
+    for (const [name, helper] of helpers) {
+      Handlebars.registerHelper(name, (...args) => {
+        const id = uuidv4();
+        promises[id] = helper(...args);
+        return `__${id}__`;
+      });
+    }
+  }
+
+  const [newTemplate, vars] = getHandlebarsVars(template);
+  const data: any = { ...inputData };
+  for (const key in vars) {
+    const fileContents = await readFile(vars[key]);
+    data[key] = fileContents || (inputData[vars[key]] ?? vars[key]);
+  }
+  const templateFn = Handlebars.compile(newTemplate);
+  let final = templateFn(data);
+
+  await Promise.all(Object.values(promises));
+  for (const id in promises) {
+    final = final.replace(`__${id}__`, await promises[id]);
+  }
+
+  return final;
 }
 
 const LLMs = [
