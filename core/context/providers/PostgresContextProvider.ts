@@ -13,6 +13,7 @@ class PostgresContextProvider extends BaseContextProvider {
     displayTitle: "PostgreSQL",
     description: "Retrieve PostgreSQL table schema and sample rows",
     type: "submenu",
+    renderInlineAs: "",
   };
 
   static ALL_TABLES = "__all_tables";

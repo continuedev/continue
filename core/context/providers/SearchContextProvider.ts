@@ -11,6 +11,7 @@ class SearchContextProvider extends BaseContextProvider {
     displayTitle: "Search",
     description: "Use ripgrep to exact search the workspace",
     type: "query",
+    renderInlineAs: "",
   };
 
   async getContextItems(
