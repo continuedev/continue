@@ -14,6 +14,7 @@ class CodeHighlightsContextProvider extends BaseContextProvider {
     displayTitle: "Highlights",
     description: "Code highlights from open files",
     type: "normal",
+    renderInlineAs: "",
   };
 
   async getContextItems(
