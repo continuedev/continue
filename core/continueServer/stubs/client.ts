@@ -39,4 +39,23 @@ export class ContinueServerClient implements IContinueServerClient {
   ): Promise<EmbeddingsCacheResponse<T>> {
     return { files: {} };
   }
+
+  public async sendFeedback(feedback: string, data: string): Promise<void> {
+    if (!this.url) {
+      return;
+    }
+
+    const url = new URL("feedback", this.url);
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${await this.userToken}`,
+      },
+      body: JSON.stringify({
+        feedback,
+        data,
+      }),
+    });
+  }
 }
