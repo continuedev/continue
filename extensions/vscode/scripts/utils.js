@@ -340,7 +340,8 @@ async function copySqliteBinary() {
 
 async function downloadRipgrepBinary(target) {
   console.log("[info] Downloading pre-built repgrep binary");
-  rimrafSync("../../core/node_modules/@vscode/build");
+  rimrafSync("node_modules/@vscode/ripgrep");
+
   const downloadUrl = {
     "darwin-arm64":
       "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-apple-darwin.tar.gz",
@@ -355,11 +356,21 @@ async function downloadRipgrepBinary(target) {
     "win32-x64":
       "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-pc-windows-msvc.zip",
   }[target];
-  execCmdSync(
-    `curl -L -o ../../core/node_modules/sqlite3/build.tar.gz ${downloadUrl}`,
-  );
-  execCmdSync("cd ../../core/node_modules/sqlite3 && tar -xvzf build.tar.gz");
-  fs.unlinkSync("../../core/node_modules/sqlite3/build.tar.gz");
+
+
+  if(target.startsWith("win")) {
+    execCmdSync(
+      `curl -L -o node_modules/@vscode/ripgrep/build.zip ${downloadUrl}`,
+    );
+    execCmdSync("cd node_modules/@vscode/ripgrep/ && unzip build.zip");
+    fs.unlinkSync("node_modules/@vscode/ripgrep/build.zip");
+  } else {
+    execCmdSync(
+      `curl -L -o node_modules/@vscode/ripgrep/build.tar.gz ${downloadUrl}`,
+    );
+    execCmdSync("cd node_modules/@vscode/ripgrep/ && tar -xvzf build.tar.gz");
+    fs.unlinkSync("node_modules/@vscode/ripgrep/build.tar.gz");
+  }
 }
 
 async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
