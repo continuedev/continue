@@ -487,7 +487,7 @@ Continue exposes an API for registering context providers from a 3rd party VSCod
 
 Or copy `~/.continue/type/core/index.d.ts` to your extension repository.
 
-Then, you can use the `registerContextProvider` function to register your context provider. Your custom context provider must implement the `IContextProvider` interface.
+Then, you can use the `registerCustomContextProvider` function to register your context provider. Your custom context provider must implement the `IContextProvider` interface.
 Here is an example:
 
 ```typescript
