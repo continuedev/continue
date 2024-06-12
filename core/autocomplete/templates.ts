@@ -242,7 +242,7 @@ The 5th {{FILL_HERE}} is Jupiter.
 
 ## CORRECT COMPLETION:
 
-<COMPLETION>the 5th planet after Mars</COMPLETION>
+<COMPLETION>planet from the Sun</COMPLETION>
 
 ## EXAMPLE QUERY:
 
