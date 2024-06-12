@@ -472,3 +472,68 @@ If you'd like to write a context provider in a language other than TypeScript, y
 ```
 
 Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI.
+
+### Exention API for VSCode
+
+Continue exposes an API for registering context providers from a 3rd party VSCode extension. This is useful if you have a VSCode extension that provides some additional context that you would like to use in Continue. To use this API, add the following to your `package.json`:
+
+```json
+{
+  "extensionDependencies": [
+    "continue.continue"
+  ],
+}
+```
+
+Or copy `~/.continue/type/core/index.d.ts` to your extension repository.
+
+Then, you can use the `registerContextProvider` function to register your context provider. Your custom context provider must implement the `IContextProvider` interface.
+Here is an example:
+
+```typescript
+import * as vscode from "vscode";
+
+class MyCustomProvider implements IContextProvider {
+
+  get description(): ContextProviderDescription {
+    return {
+      title: "custom",
+      displayTitle: "Custom",
+      description: "Custom description",
+      type: "normal",
+    };
+  }
+
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
+    return [
+      {
+        name: "Custom",
+        description: "Custom description",
+        content: "Custom content",
+      },
+    ];
+  }
+
+  async loadSubmenuItems(
+    args: LoadSubmenuItemsArgs
+  ): Promise<ContextSubmenuItem[]> {
+    return [];
+  }
+}
+
+// create an instance of your custom provider
+const customProvider = new MyCustomProvider();
+
+// get Continue extension using vscode API
+const continueExt = vscode.extensions.getExtension("continue.continue");
+
+// get the API from the extension
+const continueApi = continueExt?.exports;
+
+// register your custom provider
+continueApi?.registerCustomContextProvider(customProvider);
+
+```
