@@ -20,18 +20,11 @@ const {
   copyTreeSitterTagQryFiles,
   copyNodeModules,
   downloadEsbuildBinary,
+  downloadRipgrepBinary,
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
 } = require("./utils");
-const PLATFORMS = [
-  "win32-x64",
-  "win32-arm64",
-  "linux-x64",
-  "linux-arm64",
-  "darwin-x64",
-  "darwin-arm64",
-]
 
 // Clear folders that will be packaged to ensure clean slate
 rimrafSync(path.join(__dirname, "..", "bin"));
@@ -46,29 +39,29 @@ if (!fs.existsSync(guiDist)) {
 
 // Get the target to package for
 let target = undefined;
+const args = process.argv;
+if (args[2] === "--target") {
+  target = args[3];
+}
+
 let os;
 let arch;
-let exe;
-
-const args = process.argv;
-const packageAll = args.includes("--all");
-
-if (packageAll) {
-  target = "all";
-  console.log(
-    "[info] Packaging for all platforms. This may take some time, please wait..."
-  );
-} else if (args[2] === "--target") {
-  target = args[3];
+if (!target) {
+  [os, arch] = autodetectPlatformAndArch();
 } else {
-  if (!target) {
-    [os, arch] = autodetectPlatformAndArch();
-  } else {
-    [os, arch] = target.split("-");
-  }
-  target = `${os}-${arch}`;  
-  exe = os === "win32" ? ".exe" : "";  
+  [os, arch] = target.split("-");
 }
+
+if (os === "alpine") {
+  os = "linux";
+}
+if (arch === "armhf") {
+  arch = "arm64";
+}
+target = `${os}-${arch}`;
+console.log("[info] Using target: ", target);
+
+const exe = os === "win32" ? ".exe" : "";
 
 console.log("[info] Using target: ", target);
 
@@ -134,14 +127,17 @@ async function package(target, os, arch, exe) {
     "win32-arm64": "@esbuild/win32-arm64@0.17.19", // they don't have a win32-arm64 build
   }[target];
   // *** esbuild ***
-  await installNodeModuleInTempDirAndCopyToCurrent(
-    esbuildPackageToInstall,
-    "@esbuild",
-  );
+  // await installNodeModuleInTempDirAndCopyToCurrent(
+  //   "esbuild@0.17.19",
+  //   "@esbuild",
+  // );
+  await downloadEsbuildBinary(target);
 
   // *** sqlite ***
   await downloadSqliteBinary(target);
   await copySqliteBinary();
+
+  await downloadRipgrepBinary(target);
 
   // copy node_modules to out/node_modules
   await copyNodeModules();
@@ -220,15 +216,5 @@ async function package(target, os, arch, exe) {
 }
 
 (async () => {
-  if (packageAll) {
-    for (const platform of PLATFORMS) {
-      [os, arch] = platform.split("-");
-      target = `${os}-${arch}`;  
-      exe = os === "win32" ? ".exe" : "";
-      await package(target, os, arch, exe)  
-    }
-
-  } else {
-    package(target, os, arch, exe)
-  }
+  await package(target, os, arch, exe);
 })();
