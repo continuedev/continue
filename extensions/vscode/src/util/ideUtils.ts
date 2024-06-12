@@ -222,21 +222,26 @@ export class VsCodeIdeUtils {
   // Checks to see if the editor is a code editor.
   // In some cases vscode.window.visibleTextEditors can return non-code editors
   // e.g. terminal editors in side-by-side mode
-  private documentIsCode(document: vscode.TextDocument) {
-    return document.uri.scheme === "file";
+  private documentIsCode(uri: vscode.Uri) {
+    return uri.scheme === "file";
   }
 
   getOpenFiles(): string[] {
-    return vscode.workspace.textDocuments
-      .filter((document) => this.documentIsCode(document))
-      .map((document) => {
-        return document.uri.fsPath;
-      });
+    return vscode.window.tabGroups.all
+      .map((group) => {
+        return group.tabs.map((tab) => {
+          return (tab.input as any).uri;
+        });
+      })
+      .flat()
+      .filter(Boolean) // filter out undefined values
+      .filter((uri) => this.documentIsCode(uri)) // Filter out undesired documents
+      .map((uri) => uri.fsPath);
   }
 
   getVisibleFiles(): string[] {
     return vscode.window.visibleTextEditors
-      .filter((editor) => this.documentIsCode(editor.document))
+      .filter((editor) => this.documentIsCode(editor.document.uri))
       .map((editor) => {
         return editor.document.uri.fsPath;
       });
@@ -244,7 +249,7 @@ export class VsCodeIdeUtils {
 
   saveFile(filepath: string) {
     vscode.window.visibleTextEditors
-      .filter((editor) => this.documentIsCode(editor.document))
+      .filter((editor) => this.documentIsCode(editor.document.uri))
       .forEach((editor) => {
         if (editor.document.uri.fsPath === filepath) {
           editor.document.save();
@@ -642,7 +647,7 @@ export class VsCodeIdeUtils {
     // TODO
     const rangeInFiles: RangeInFile[] = [];
     vscode.window.visibleTextEditors
-      .filter((editor) => this.documentIsCode(editor.document))
+      .filter((editor) => this.documentIsCode(editor.document.uri))
       .forEach((editor) => {
         editor.selections.forEach((selection) => {
           // if (!selection.isEmpty) {
