@@ -39,12 +39,14 @@ You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-co
 ## SaaS
 
 You can access both open-source and commercial LLMs via:
-* [OpenRouter](../reference/Model%20Providers/openrouter.md)
+
+- [OpenRouter](../reference/Model%20Providers/openrouter.md)
 
 ### Open-source models
 
-You can deploy open-source LLMs on a service using:
+You can run open-source LLMs with cloud services like:
 
+- [Codestral API](../walkthroughs/set-up-codestral.md)
 - [Together](../reference/Model%20Providers/togetherllm.md)
 - [HuggingFace Inference Endpoints](../reference/Model%20Providers/huggingfaceinferenceapi.md)
 - [Anyscale Endpoints](../reference/Model%20Providers/openai.md) (OpenAI compatible API)

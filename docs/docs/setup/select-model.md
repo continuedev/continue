@@ -55,7 +55,7 @@ You likely want to use a model that is 1-15B parameters for autocomplete.
 
 #### Codestral from Mistral
 
-Our current recommendation for autocomplete, if you are able to choose any model, is `codestral-latest` from Mistral's API.
+Our current recommendation for autocomplete, if you are able to choose any model, is `codestral-latest` from [Mistral's API](../walkthroughs/set-up-codestral.md).
 
 ### Open-source LLMs
 
