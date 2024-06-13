@@ -6,9 +6,11 @@ import * as vscode from "vscode";
 import { ContextMenuConfig, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
+import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import { GlobalContext } from "core/util/GlobalContext";
-import { getConfigJsonPath } from "core/util/paths";
+import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import readLastLines from "read-last-lines";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
@@ -142,6 +144,7 @@ const commandsMap: (
   configHandler: ConfigHandler,
   diffManager: DiffManager,
   verticalDiffManager: VerticalPerLineDiffManager,
+  continueServerClientPromise: Promise<ContinueServerClient>,
 ) => { [command: string]: (...args: any) => any } = (
   ide,
   extensionContext,
@@ -149,6 +152,7 @@ const commandsMap: (
   configHandler,
   diffManager,
   verticalDiffManager,
+  continueServerClientPromise,
 ) => {
   async function streamInlineEdit(
     promptName: keyof ContextMenuConfig,
@@ -553,6 +557,9 @@ const commandsMap: (
           label: "$(gear) Configure autocomplete options",
         },
         {
+          label: "$(feedback) Give feedback",
+        },
+        {
           kind: vscode.QuickPickItemKind.Separator,
           label: "Switch model",
         },
@@ -585,10 +592,25 @@ const commandsMap: (
             selectedOption,
           );
           configHandler.reloadConfig();
+        } else if (selectedOption === "$(feedback) Give feedback") {
+          vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
         }
         quickPick.dispose();
       });
       quickPick.show();
+    },
+    "continue.giveAutocompleteFeedback": async () => {
+      const feedback = await vscode.window.showInputBox({
+        prompt:
+          "Please share what went wrong with the last completion. The details of the completion as well as this message will be sent to the Continue team in order to improve.",
+      });
+      if (feedback) {
+        const client = await continueServerClientPromise;
+        const completionsPath = getDevDataFilePath("autocomplete");
+
+        const lastLines = await readLastLines.read(completionsPath, 2);
+        client.sendFeedback(feedback, lastLines);
+      }
     },
   };
 };
@@ -601,6 +623,7 @@ export function registerAllCommands(
   configHandler: ConfigHandler,
   diffManager: DiffManager,
   verticalDiffManager: VerticalPerLineDiffManager,
+  continueServerClientPromise: Promise<ContinueServerClient>,
 ) {
   for (const [command, callback] of Object.entries(
     commandsMap(
@@ -610,6 +633,7 @@ export function registerAllCommands(
       configHandler,
       diffManager,
       verticalDiffManager,
+      continueServerClientPromise,
     ),
   )) {
     context.subscriptions.push(

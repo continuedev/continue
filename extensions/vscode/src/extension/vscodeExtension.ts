@@ -157,6 +157,7 @@ export class VsCodeExtension {
       this.configHandler,
       this.diffManager,
       this.verticalDiffManager,
+      this.core.continueServerClientPromise,
     );
 
     registerDebugTracker(this.sidebar.webviewProtocol, this.ide);
