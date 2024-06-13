@@ -62,7 +62,7 @@ class AutocompleteService(private val project: Project) {
         val lineLength = lineEnd - lineStart
 
         project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/complete", input, null, ({ response ->
-            val completions = Gson().fromJson(response, List::class.java)
+            val completions = response as List<*>
             if (completions.isNotEmpty()) {
                 val completion = completions[0].toString()
 
