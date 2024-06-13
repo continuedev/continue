@@ -33,7 +33,7 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
 };
 
 const codestralFimTemplate: AutocompleteTemplate = {
-  template: "<s>[SUFFIX]{{{suffix}}}[PREFIX]{{{prefix}}}",
+  template: "[SUFFIX]{{{suffix}}}[PREFIX]{{{prefix}}}",
   completionOptions: {
     stop: ["[PREFIX]", "[SUFFIX]"],
   },

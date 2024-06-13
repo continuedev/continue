@@ -45,6 +45,7 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
+  migrate,
   readAllGlobalPromptFiles,
 } from "../util/paths.js";
 import {
@@ -101,6 +102,19 @@ function loadSerializedConfig(
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
   }
+
+  migrate("codeContextProvider", () => {
+    const gpt = config.models.find(
+      (model) =>
+        model.model.startsWith("gpt-4") && model.provider === "free-trial",
+    );
+    if (gpt) {
+      gpt.systemMessage =
+        "You are an expert software developer. You give helpful and concise responses.";
+    }
+
+    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
+  });
 
   if (ideSettings.remoteConfigServerUrl) {
     try {
