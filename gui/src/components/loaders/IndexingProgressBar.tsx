@@ -1,10 +1,12 @@
 import { IndexingProgressUpdate } from "core";
 import { useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import { StyledTooltip, lightGray, vscForeground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
-import { getFontSize } from "../../util";
+import { RootState } from "../../redux/store";
+import { getFontSize, isJetBrains } from "../../util";
 
 const DIAMETER = 6;
 const CircleDiv = styled.div<{ color: string }>`
@@ -54,22 +56,24 @@ interface ProgressBarProps {
   indexingState?: IndexingProgressUpdate;
 }
 
-const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarProps) => {
+const IndexingProgressBar = ({
+  indexingState: indexingStateProp,
+}: ProgressBarProps) => {
   // If sidebar is opened before extension initiates, define a default indexingState
   const defaultIndexingState: IndexingProgressUpdate = {
-    status: 'loading', 
-    progress: 0, 
-    desc: ''
+    status: "loading",
+    progress: 0,
+    desc: "",
   };
   const indexingState = indexingStateProp || defaultIndexingState;
 
   // If sidebar is opened after extension initializes, retrieve saved states.
-  let initialized = false
+  let initialized = false;
   useEffect(() => {
     if (!initialized) {
       // Triggers retrieval for possible non-default states set prior to IndexingProgressBar initialization
-      ideMessenger.post("index/indexingProgressBarInitialized", undefined)
-      initialized = true
+      ideMessenger.post("index/indexingProgressBarInitialized", undefined);
+      initialized = true;
     }
   }, []);
 
@@ -80,6 +84,10 @@ const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarPr
 
   const ideMessenger = useContext(IdeMessengerContext);
 
+  const embeddingsProvider = useSelector(
+    (state: RootState) => state.state.config.embeddingsProvider,
+  );
+
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
   const [paused, setPaused] = useState<boolean | undefined>(undefined);
@@ -89,6 +97,13 @@ const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarPr
     if (paused === undefined) return;
     ideMessenger.post("index/setPaused", paused);
   }, [paused]);
+
+  function getIndexingErrMsg(msg: string): string {
+    if (isJetBrains() && embeddingsProvider === "all-MiniLM-L6-v2") {
+      return "The 'transformers.js' embeddingsProvider is currently unsupported in JetBrains. To enable codebase indexing, you can use any of the other providers described in the docs: https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers";
+    }
+    return msg;
+  }
 
   return (
     <div
@@ -105,7 +120,23 @@ const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarPr
       }}
       className="cursor-pointer"
     >
-      {indexingState.status === "loading" ? ( // ice-blue 'indexing loading' dot
+      {indexingState.status === "failed" ? ( //red 'failed' dot
+        <>
+          <CircleDiv
+            data-tooltip-id="indexingFailed_dot"
+            color="#ff0000"
+          ></CircleDiv>
+          {tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip id="indexingFailed_dot" place="top">
+                Error indexing codebase: {getIndexingErrMsg(indexingState.desc)}
+                <br />
+                Click to retry
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
+        </>
+      ) : indexingState.status === "loading" ? ( // ice-blue 'indexing loading' dot
         <>
           <CircleDiv
             data-tooltip-id="indexingNotLoaded_dot"
@@ -115,22 +146,6 @@ const IndexingProgressBar = ({ indexingState: indexingStateProp }: ProgressBarPr
             ReactDOM.createPortal(
               <StyledTooltip id="indexingNotLoaded_dot" place="top">
                 Continue is initializing
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
-        </>
-      ) : indexingState.status === "failed" ? ( //red 'failed' dot
-        <>
-          <CircleDiv
-            data-tooltip-id="indexingFailed_dot"
-            color="#ff0000"
-          ></CircleDiv>
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id="indexingFailed_dot" place="top">
-                Error indexing codebase: {indexingState.desc}
-                <br />
-                Click to retry
               </StyledTooltip>,
               tooltipPortalDiv,
             )}

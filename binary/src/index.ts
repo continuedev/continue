@@ -8,6 +8,7 @@ import fs from "node:fs";
 import { IpcIde } from "./IpcIde";
 import { IpcMessenger } from "./IpcMessenger";
 import { TcpMessenger } from "./TcpMessenger";
+import { setupCa } from "./ca";
 import { setupCoreLogging } from "./logging";
 
 const logFilePath = getCoreLogsPath();
@@ -17,7 +18,6 @@ const program = new Command();
 
 program.action(async () => {
   try {
-    setupCoreLogging();
     let messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>;
     if (process.env.CONTINUE_DEVELOPMENT === "true") {
       messenger = new TcpMessenger<ToCoreProtocol, FromCoreProtocol>();
@@ -27,6 +27,8 @@ program.action(async () => {
       ).awaitConnection();
       console.log("Connected");
     } else {
+      setupCoreLogging();
+      await setupCa();
       messenger = new IpcMessenger<ToCoreProtocol, FromCoreProtocol>();
     }
     const ide = new IpcIde(messenger);

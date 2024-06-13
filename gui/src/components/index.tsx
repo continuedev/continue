@@ -143,7 +143,7 @@ export const SecondaryButton = styled.button`
   margin: 8px 0;
   border-radius: ${defaultBorderRadius};
 
-  border: 1px solid ${vscButtonBackground};
+  border: 1px solid ${vscInputBorder};
   color: ${vscForeground};
   background-color: ${vscBackground};
 

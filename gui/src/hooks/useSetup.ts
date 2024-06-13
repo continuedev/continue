@@ -80,6 +80,7 @@ function useSetup(dispatch: Dispatch<any>) {
   useWebviewListener("setColors", async (colors) => {
     Object.keys(colors).forEach((key) => {
       document.body.style.setProperty(key, colors[key]);
+      document.documentElement.style.setProperty(key, colors[key]);
     });
   });
 

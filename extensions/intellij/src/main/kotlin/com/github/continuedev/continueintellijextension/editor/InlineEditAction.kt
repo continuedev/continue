@@ -60,8 +60,7 @@ class InlineEditAction : AnAction(), DumbAware {
         val continuePluginService = project.service<ContinuePluginService>()
         val modelTitles = mutableListOf<String>()
         continuePluginService.coreMessenger?.request("config/getBrowserSerialized", null, null) { response ->
-            val gson = Gson()
-            val config = gson.fromJson(response, Map::class.java)
+            val config = response as Map<String, Any>
             val models = config["models"] as List<Map<String, Any>>
             modelTitles.addAll(models.map { it["title"] as String })
         }
