@@ -26,8 +26,12 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
     private val useTcp: Boolean = false
 
     private fun write(message: String) {
-        writer?.write(message + "\r\n")
-        writer?.flush()
+        try {
+            writer?.write(message + "\r\n")
+            writer?.flush()
+        } catch (e: Exception) {
+            println("Error writing to Continue core: $e")
+        }
     }
 
     private fun close() {
