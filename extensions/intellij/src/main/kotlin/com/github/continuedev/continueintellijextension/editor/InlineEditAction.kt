@@ -6,6 +6,7 @@ import com.github.continuedev.continueintellijextension.services.ContinuePluginS
 import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
 import com.google.gson.Gson
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.actionSystem.ActionUpdateThread
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.PlatformDataKeys
@@ -47,6 +48,10 @@ class InlineEditAction : AnAction(), DumbAware {
     override fun update(e: AnActionEvent) {
         e.presentation.isEnabled = true
         e.presentation.isVisible = true
+    }
+
+    override fun getActionUpdateThread(): ActionUpdateThread {
+        return ActionUpdateThread.EDT
     }
 
     override fun actionPerformed(e: AnActionEvent) {
