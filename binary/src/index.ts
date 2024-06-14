@@ -2,14 +2,14 @@ process.env.IS_BINARY = "true";
 import { Command } from "commander";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
+import { setupCa } from "core/util/ca";
 import { IMessenger } from "core/util/messenger";
 import { getCoreLogsPath, getPromptLogsPath } from "core/util/paths";
 import fs from "node:fs";
 import { IpcIde } from "./IpcIde";
 import { IpcMessenger } from "./IpcMessenger";
-import { TcpMessenger } from "./TcpMessenger";
-import { setupCa } from "./ca";
 import { setupCoreLogging } from "./logging";
+import { TcpMessenger } from "./TcpMessenger";
 
 const logFilePath = getCoreLogsPath();
 fs.appendFileSync(logFilePath, "[info] Starting Continue core...\n");
