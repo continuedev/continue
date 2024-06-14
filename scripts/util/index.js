@@ -14,6 +14,7 @@ function execCmdSync(cmd) {
 function autodetectPlatformAndArch() {
   platform = {
     aix: "linux",
+    alpine: "linux",
     darwin: "darwin",
     freebsd: "linux",
     linux: "linux",
@@ -23,6 +24,7 @@ function autodetectPlatformAndArch() {
   }[process.platform];
   arch = {
     arm: "arm64",
+    armhf: "arm64",
     arm64: "arm64",
     ia32: "x64",
     loong64: "arm64",

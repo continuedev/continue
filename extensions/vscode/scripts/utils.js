@@ -193,7 +193,7 @@ async function copyOnnxRuntimeFromNodeModules(target) {
 }
 
 async function copyTreeSitterWasms() {
-  process.chdir(path.join(continueDir, "extensioins", "vscode"));
+  process.chdir(path.join(continueDir, "extensions", "vscode"));
   fs.mkdirSync("out", { recursive: true });
 
   await new Promise((resolve, reject) => {
@@ -271,27 +271,79 @@ async function copyNodeModules() {
   console.log(`[info] Copied ${NODE_MODULES_TO_COPY.join(", ")}`);
 }
 
-async function downloadEsbuildBinary(isGhAction, isArm, target) {
-  process.chdir(path.join(continueDir, "extensions", "vscode"));
+// async function downloadEsbuildBinary(isGhAction, isArm, target) {
+//   process.chdir(path.join(continueDir, "extensions", "vscode"));
 
-  if (isGhAction && isArm) {
-    // Download and unzip esbuild
-    console.log("[info] Downloading pre-built esbuild binary");
-    rimrafSync("node_modules/@esbuild");
-    fs.mkdirSync("node_modules/@esbuild", { recursive: true });
-    execCmdSync(
-      `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
-    );
-    execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
-    fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
-  } else {
-    // Download esbuild from npm in tmp and copy over
-    console.log("npm installing esbuild binary");
-    await installNodeModuleInTempDirAndCopyToCurrent(
-      "esbuild@0.17.19",
-      "@esbuild",
-    );
+//   if (isGhAction && isArm) {
+//     // Download and unzip esbuild
+//     console.log("[info] Downloading pre-built esbuild binary");
+//     rimrafSync("node_modules/@esbuild");
+//     fs.mkdirSync("node_modules/@esbuild", { recursive: true });
+//     execCmdSync(
+//       `curl -o node_modules/@esbuild/esbuild.zip https://continue-server-binaries.s3.us-west-1.amazonaws.com/${target}/esbuild.zip`,
+//     );
+//     execCmdSync(`cd node_modules/@esbuild && unzip esbuild.zip`);
+//     fs.unlinkSync("node_modules/@esbuild/esbuild.zip");
+//   } else {
+//     // Download esbuild from npm in tmp and copy over
+//     console.log("npm installing esbuild binary");
+//     await installNodeModuleInTempDirAndCopyToCurrent(
+//       "esbuild@0.17.19",
+//       "@esbuild",
+//     );
+//   }
+// }
+
+async function downloadEsbuildBinary(target) {
+  console.log("[info] Downloading pre-built esbuild binary");
+  rimrafSync("out/node_modules/@esbuild");
+  fs.mkdirSync(`out/node_modules/@esbuild/${target}/bin`, { recursive: true });
+  fs.mkdirSync(`out/tmp`, { recursive: true });
+  const downloadUrl = {
+    "darwin-arm64":
+      "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.17.19.tgz",
+    "linux-arm64":
+      "https://registry.npmjs.org/@esbuild/linux-arm64/-/linux-arm64-0.17.19.tgz",
+    "win32-arm64":
+      "https://registry.npmjs.org/@esbuild/win32-arm64/-/win32-arm64-0.17.19.tgz",
+    "linux-x64":
+      "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.17.19.tgz",
+    "darwin-x64":
+      "https://registry.npmjs.org/@esbuild/darwin-x64/-/darwin-x64-0.17.19.tgz",
+    "win32-x64":
+      "https://registry.npmjs.org/@esbuild/win32-x64/-/win32-x64-0.17.19.tgz",
+  }[target];
+  execCmdSync(
+    `curl -L -o out/tmp/esbuild.tgz ${downloadUrl}`,
+  );
+  execCmdSync("cd out/tmp && tar -xvzf esbuild.tgz");
+  // Copy the installed package back to the current directory
+  let tmpPath = "out/tmp/package/bin";
+  let outPath = `out/node_modules/@esbuild/${target}/bin`;
+  if (target.startsWith("win")) {
+    tmpPath = 'out/tmp/package';
+    outPath = `out/node_modules/@esbuild/${target}`;
   }
+
+  await new Promise((resolve, reject) => {
+    ncp(
+      path.join(tmpPath),
+      path.join(outPath),
+      { dereference: true },
+      (error) => {
+        if (error) {
+          console.error(
+            `[error] Error copying esbuild package`,
+            error,
+          );
+          reject(error);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+  rimrafSync("out/tmp")
 }
 
 async function downloadSqliteBinary(target) {
@@ -336,6 +388,41 @@ async function copySqliteBinary() {
       },
     );
   });
+}
+
+async function downloadRipgrepBinary(target) {
+  console.log("[info] Downloading pre-built ripgrep binary");
+  rimrafSync("node_modules/@vscode/ripgrep/bin");
+  fs.mkdirSync("node_modules/@vscode/ripgrep/bin", { recursive: true });4
+  const downloadUrl = {
+    "darwin-arm64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-apple-darwin.tar.gz",
+    "linux-arm64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-unknown-linux-gnu.tar.gz",
+    "win32-arm64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-aarch64-pc-windows-msvc.zip",
+    "linux-x64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-unknown-linux-musl.tar.gz",
+    "darwin-x64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-apple-darwin.tar.gz",
+    "win32-x64":
+      "https://github.com/microsoft/ripgrep-prebuilt/releases/download/v13.0.0-10/ripgrep-v13.0.0-10-x86_64-pc-windows-msvc.zip",
+  }[target];
+
+
+  if(target.startsWith("win")) {
+    execCmdSync(
+      `curl -L -o node_modules/@vscode/ripgrep/bin/build.zip ${downloadUrl}`,
+    );
+    execCmdSync("cd node_modules/@vscode/ripgrep/bin && unzip build.zip");
+    fs.unlinkSync("node_modules/@vscode/ripgrep/bin/build.zip");
+  } else {
+    execCmdSync(
+      `curl -L -o node_modules/@vscode/ripgrep/bin/build.tar.gz ${downloadUrl}`,
+    );
+    execCmdSync("cd node_modules/@vscode/ripgrep/bin && tar -xvzf build.tar.gz");
+    fs.unlinkSync("node_modules/@vscode/ripgrep/bin/build.tar.gz");
+  }
 }
 
 async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
@@ -409,4 +496,5 @@ module.exports = {
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
+  downloadRipgrepBinary,
 };
