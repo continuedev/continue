@@ -1,13 +1,16 @@
 import fetch from "node-fetch";
 import { getHeaders } from "../../continueServer/stubs/headers.js";
+import { constants } from "../../deploy/constants.js";
 import { Chunk, Reranker } from "../../index.js";
-import { SERVER_URL } from "../../util/parameters.js";
 
 export class FreeTrialReranker implements Reranker {
   name = "free-trial";
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
-    const resp = await fetch(new URL("rerank", SERVER_URL), {
+    if (chunks.length === 0) {
+      return [];
+    }
+    const resp = await fetch(new URL("rerank", constants.a), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
