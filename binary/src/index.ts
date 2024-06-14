@@ -2,7 +2,6 @@ process.env.IS_BINARY = "true";
 import { Command } from "commander";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
-import { setupCa } from "core/util/ca";
 import { IMessenger } from "core/util/messenger";
 import { getCoreLogsPath, getPromptLogsPath } from "core/util/paths";
 import fs from "node:fs";
@@ -28,7 +27,7 @@ program.action(async () => {
       console.log("Connected");
     } else {
       setupCoreLogging();
-      await setupCa();
+      // await setupCa();
       messenger = new IpcMessenger<ToCoreProtocol, FromCoreProtocol>();
     }
     const ide = new IpcIde(messenger);

@@ -871,22 +871,24 @@ class IdeProtocolClient (
             val workspaceDir = VirtualFileManager.getInstance().findFileByUrl("file://$workspacePath")
 
             if (workspaceDir != null) {
-                VfsUtil.iterateChildrenRecursively(workspaceDir, null) { virtualFile: VirtualFile ->
-                    if (virtualFile.isDirectory) {
-                        if (shouldIgnoreDirectory(virtualFile.name)) {
-                            // Don't recurse into this particular directory
-                            return@iterateChildrenRecursively false
+                val filter = object : VirtualFileFilter {
+                    override fun accept(file: VirtualFile): Boolean {
+                        if (file.isDirectory) {
+                            return !shouldIgnoreDirectory(file.name)
+                        } else {
+                            val filePath = file.path
+                            return !shouldIgnoreDirectory(filePath) && !DEFAULT_IGNORE_FILETYPES.any { filePath.endsWith(it) }
                         }
-                    } else {
-                        val filePath = virtualFile.path
-                        if (!shouldIgnoreDirectory(filePath) && !DEFAULT_IGNORE_FILETYPES.any { filePath.endsWith(it) }) {
-                            contents.add(filePath)
+                    }
+                }
+                VfsUtil.iterateChildrenRecursively(workspaceDir, filter) { virtualFile: VirtualFile ->
+                    if (!virtualFile.isDirectory) {
+                        contents.add(virtualFile.path)
 
-                            // Set a hard limit on the number of files to list
-                            if (contents.size > 10000) {
-                                // Completely exit the iteration
-                                return@iterateChildrenRecursively false
-                            }
+                        // Set a hard limit on the number of files to list
+                        if (contents.size > 10000) {
+                            // Completely exit the iteration
+                            return@iterateChildrenRecursively false
                         }
                     }
                     true
