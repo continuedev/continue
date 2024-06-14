@@ -161,10 +161,26 @@ export function getCommandSuggestion(
   availableSlashCommandsRef: MutableRefObject<ComboBoxItem[]>,
   onClose: () => void,
   onOpen: () => void,
+  ideMessenger: IIdeMessenger,
 ) {
   const items = async ({ query }) => {
+    const options = [
+      ...availableSlashCommandsRef.current,
+      {
+        title: "Build a custom prompt",
+        description: "Build a custom prompt",
+        type: "action",
+        id: "createPromptFile",
+        label: "Create Prompt File",
+        action: () => {
+          console.log("I", ideMessenger.request);
+          ideMessenger.request("config/newPromptFile", undefined);
+        },
+        name: "Create Prompt File",
+      },
+    ];
     return (
-      availableSlashCommandsRef.current?.filter((slashCommand) => {
+      options.filter((slashCommand) => {
         const sc = slashCommand.title.substring(1).toLowerCase();
         const iv = query.toLowerCase();
         return sc.startsWith(iv);
@@ -175,7 +191,8 @@ export function getCommandSuggestion(
       id: provider.title,
       title: provider.title,
       label: provider.title,
-      type: "slashCommand" as ComboBoxItemType,
+      type: (provider.type ?? "slashCommand") as ComboBoxItemType,
+      action: provider.action,
     }));
   };
   return getSuggestion(items, undefined, onClose, onOpen);

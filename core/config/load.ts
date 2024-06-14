@@ -54,7 +54,11 @@ import {
   defaultSlashCommandsJetBrains,
   defaultSlashCommandsVscode,
 } from "./default.js";
-import { getPromptFiles, slashCommandFromPromptFile } from "./promptFile.js";
+import {
+  DEFAULT_PROMPTS_FOLDER,
+  getPromptFiles,
+  slashCommandFromPromptFile,
+} from "./promptFile.js";
 const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -171,7 +175,10 @@ async function serializedToIntermediateConfig(
   promptFiles = (
     await Promise.all(
       workspaceDirs.map((dir) =>
-        getPromptFiles(ide, path.join(dir, promptFolder ?? ".prompts")),
+        getPromptFiles(
+          ide,
+          path.join(dir, promptFolder ?? DEFAULT_PROMPTS_FOLDER),
+        ),
       ),
     )
   )

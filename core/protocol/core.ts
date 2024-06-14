@@ -45,6 +45,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { model: SerializedContinueConfig["models"][number] },
     void,
   ];
+  "config/newPromptFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getBrowserSerialized": [undefined, BrowserSerializedContinueConfig];
   "config/deleteModel": [{ title: string }, void];
