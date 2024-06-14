@@ -1,3 +1,4 @@
+import { RangeInFile } from "core";
 import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
@@ -24,14 +25,13 @@ function LinkableCode(props: any) {
 
   const [linkingDone, setLinkingDone] = useState(false);
   const [isLink, setIsLink] = useState(false);
-  const [filepath, setFilepath] = useState("");
-  const [line, setLine] = useState(0);
+  const [rif, setRif] = useState<undefined | RangeInFile>(undefined);
 
   useEffect(() => {
     if (linkingDone) return;
     setLinkingDone(true);
 
-    // Get filename from props.children
+    // Get content of the code tag
     let content: string | undefined = undefined;
     if (typeof props.children === "string") {
       content = props.children;
@@ -44,7 +44,7 @@ function LinkableCode(props: any) {
     }
     if (!content) return;
 
-    // Check if this is a real file
+    // Match filepath with context items
     const contextItemFileMatch = contextItems.find(
       (item) =>
         ["file", "codebase", "folder"].includes(item.id.providerTitle) &&
@@ -58,38 +58,89 @@ function LinkableCode(props: any) {
           .split(" (")[1]
           .split(")")[0]
           .split("-");
-        setFilepath(contextItemFileMatch.description.split(" (")[0]);
-        setLine(parseInt(startLine));
+        const filepath = contextItemFileMatch.description.split(" (")[0];
+        setRif({
+          filepath,
+          range: {
+            start: {
+              line: 0,
+              character: 0,
+            },
+            end: {
+              line: 0,
+              character: 0,
+            },
+          },
+        });
+        return;
       } else {
-        setFilepath(contextItemFileMatch.description.split(" (")[0]);
-        setLine(0);
+        // If no line number, just open the file
+        setRif({
+          filepath: contextItemFileMatch.description.split(" (")[0],
+          range: {
+            start: {
+              line: 0,
+              character: 0,
+            },
+            end: {
+              line: 0,
+              character: 0,
+            },
+          },
+        });
+        return;
       }
     }
 
-    if (content.length > 6) {
+    // Try to match the content with a line in a file
+    if (content.length > 8) {
       const contextItemContentMatch = contextItems.find(
         (item) =>
           ["file", "codebase", "folder"].includes(item.id.providerTitle) &&
           item.content.includes(content),
       );
       if (contextItemContentMatch) {
+        const line = contextItemContentMatch.content
+          .split("\n")
+          .slice(1) // code block fence
+          .findIndex((line) => line.includes(content));
+
+        const [filepath, rest] =
+          contextItemContentMatch.description.split(" (");
+        const [startLine, endLine] = rest.split(")")[0]?.split("-") || [
+          "0",
+          "0",
+        ];
+        const start = parseInt(startLine);
+        const end = parseInt(endLine);
+
         setIsLink(true);
-        setFilepath(contextItemContentMatch.description.split(" (")[0]);
-        setLine(
-          contextItemContentMatch.content
-            .split("\n")
-            .findIndex((line) => line.includes(content)) + 1,
-        );
+        setRif({
+          filepath,
+          range: {
+            start: {
+              line: start + line,
+              character: 0,
+            },
+            end: {
+              line: start + line + 1,
+              character: 0,
+            },
+          },
+        });
+
+        console.log("MATCH: ", content, contextItemContentMatch, line);
       }
     }
   }, [linkingDone, contextItems]);
 
   const onClick = () => {
     if (!isLink) return;
+    if (!rif) return;
     ideMessenger.post("showLines", {
-      filepath,
-      startLine: line,
-      endLine: line + 1,
+      filepath: rif.filepath,
+      startLine: rif.range.start.line,
+      endLine: rif.range.end.line,
     });
   };
 
