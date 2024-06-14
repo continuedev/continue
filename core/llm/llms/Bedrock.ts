@@ -2,10 +2,7 @@ import {
   BedrockRuntimeClient,
   InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
-import * as fs from "node:fs";
-import os from "node:os";
-import { join as joinPath } from "node:path";
-import { promisify } from "util";
+import { fromIni } from "@aws-sdk/credential-providers";
 import {
   ChatMessage,
   CompletionOptions,
@@ -16,9 +13,8 @@ import {
 import { stripImages } from "../countTokens.js";
 import { BaseLLM } from "../index.js";
 
-const readFile = promisify(fs.readFile);
-
 class Bedrock extends BaseLLM {
+  private static PROFILE_NAME: string = "bedrock";
   static providerName: ModelProvider = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
@@ -63,34 +59,17 @@ class Bedrock extends BaseLLM {
     });
   }
 
-  private _parseCredentialsFile(fileContents: string) {
-    const profiles: { [key: string]: any } = {};
-    const lines = fileContents.trim().split("\n");
-
-    let currentProfile: string | null = null;
-
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-
-      if (trimmedLine.startsWith("[") && trimmedLine.endsWith("]")) {
-        currentProfile = trimmedLine.slice(1, -1);
-        profiles[currentProfile] = {};
-      } else if (currentProfile !== null && trimmedLine.includes("=")) {
-        const [key, value] = trimmedLine.split("=");
-        const trimmedKey = key.trim();
-        const trimmedValue = value.trim();
-
-        if (trimmedKey === "aws_access_key_id") {
-          profiles[currentProfile].accessKeyId = trimmedValue;
-        } else if (trimmedKey === "aws_secret_access_key") {
-          profiles[currentProfile].secretAccessKey = trimmedValue;
-        } else if (trimmedKey === "aws_session_token") {
-          profiles[currentProfile].sessionToken = trimmedValue;
-        }
-      }
+  private async _getCredentials() {
+    try {
+      return await fromIni({
+        profile: Bedrock.PROFILE_NAME,
+      })();
+    } catch (e) {
+      console.warn(
+        `AWS profile with name ${Bedrock.PROFILE_NAME} not found in ~/.aws/credentials, using default profile`,
+      );
+      return await fromIni()();
     }
-
-    return profiles;
   }
 
   protected async *_streamComplete(
@@ -107,12 +86,7 @@ class Bedrock extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const data = await readFile(
-      joinPath(process.env.HOME ?? os.homedir(), ".aws", "credentials"),
-      "utf8",
-    );
-    const credentialsFile = this._parseCredentialsFile(data);
-    const credentials = credentialsFile.bedrock ?? credentialsFile.default;
+    const credentials = await this._getCredentials();
     const accessKeyId = credentials.accessKeyId;
     const secretAccessKey = credentials.secretAccessKey;
     const sessionToken = credentials.sessionToken || "";
