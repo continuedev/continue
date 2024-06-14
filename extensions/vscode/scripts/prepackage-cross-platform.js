@@ -20,6 +20,7 @@ const {
   copyTreeSitterTagQryFiles,
   copyNodeModules,
   downloadEsbuildBinary,
+  downloadRipgrepBinary,
   copySqliteBinary,
   installNodeModuleInTempDirAndCopyToCurrent,
   downloadSqliteBinary,
@@ -62,6 +63,8 @@ console.log("[info] Using target: ", target);
 
 const exe = os === "win32" ? ".exe" : "";
 
+console.log("[info] Using target: ", target);
+
 function ghAction() {
   return !!process.env.GITHUB_ACTIONS;
 }
@@ -78,7 +81,7 @@ function isWin() {
   return target?.startsWith("win");
 }
 
-(async () => {
+async function package(target, os, arch, exe) {
   console.log("[info] Packaging extension for target ", target);
 
   // Copy config_schema.json to config.json in docs and intellij
@@ -102,7 +105,7 @@ function isWin() {
   await copyOnnxRuntimeFromNodeModules(target);
 
   // *** Install @lancedb binary ***
-  const packageToInstall = {
+  const lancePackageToInstall = {
     "darwin-arm64": "@lancedb/vectordb-darwin-arm64",
     "darwin-x64": "@lancedb/vectordb-darwin-x64",
     "linux-arm64": "@lancedb/vectordb-linux-arm64-gnu",
@@ -111,19 +114,21 @@ function isWin() {
     "win32-arm64": "@lancedb/vectordb-win32-x64-msvc", // they don't have a win32-arm64 build
   }[target];
   await installNodeModuleInTempDirAndCopyToCurrent(
-    packageToInstall,
+    lancePackageToInstall,
     "@lancedb",
   );
-
   // *** esbuild ***
-  await installNodeModuleInTempDirAndCopyToCurrent(
-    "esbuild@0.17.19",
-    "@esbuild",
-  );
+  // await installNodeModuleInTempDirAndCopyToCurrent(
+  //   "esbuild@0.17.19",
+  //   "@esbuild",
+  // );
+  await downloadEsbuildBinary(target);
 
   // *** sqlite ***
   await downloadSqliteBinary(target);
   await copySqliteBinary();
+
+  await downloadRipgrepBinary(target);
 
   // copy node_modules to out/node_modules
   await copyNodeModules();
@@ -199,4 +204,8 @@ function isWin() {
     `out/node_modules/esbuild/lib/main.js`,
     `out/node_modules/esbuild/bin/esbuild`,
   ]);
+}
+
+(async () => {
+  await package(target, os, arch, exe);
 })();
