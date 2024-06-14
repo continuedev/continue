@@ -10,7 +10,6 @@ import styled from "styled-components";
 import {
   CustomScrollbarDiv,
   defaultBorderRadius,
-  vscEditorBackground,
   vscForeground,
   vscInputBackground,
 } from ".";
@@ -38,7 +37,6 @@ const FOOTER_HEIGHT = "1.8em";
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
   border-radius: ${defaultBorderRadius};
-  background-color: ${vscEditorBackground};
 `;
 
 const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
