@@ -8,7 +8,7 @@ import {
   Problem,
   Range,
   Thread,
-} from "../index.js";
+} from "../index.d.js";
 
 import { getContinueGlobalPath } from "./paths.js";
 
