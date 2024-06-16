@@ -64,6 +64,7 @@ describe("Test Suite", () => {
       "BIN CONTENTS: ",
       __dirname,
       fs.readdirSync(path.join(__dirname, "..", "bin")),
+      fs.readdirSync(path.join(__dirname, "..", "bin", `${platform}-${arch}`)),
     );
     expect(fs.existsSync(binaryPath)).toBe(true);
 
