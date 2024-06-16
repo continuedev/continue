@@ -228,11 +228,19 @@ jobs:
           npm ci
 
       # Download the binary artifact
-      - name: Download binary artifact
+      - name: Download binary artifact (non-Windows)
         uses: actions/download-artifact@v4
         with:
           name: continue-binary-${{ matrix.platform }}-${{ matrix.arch }}
-          path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}
+          path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
+        if: ${{ matrix.platform }} != 'win32'
+
+      - name: Download binary artifact (Windows)
+        uses: actions/download-artifact@v4
+        with:
+          name: continue-binary-${{ matrix.platform }}-${{ matrix.arch }}.exe
+          path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary.exe
+        if: ${{ matrix.platform }} == 'win32'
 
       # Run tests for binary
       - name: Run binary tests
