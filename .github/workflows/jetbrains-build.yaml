@@ -185,7 +185,7 @@ jobs:
           #   platform: linux
           #   arch: arm64
           #   npm_config_arch: arm64
-          - os: macos-latest
+          - os: macos-12
             platform: darwin
             arch: x64
             npm_config_arch: x64
