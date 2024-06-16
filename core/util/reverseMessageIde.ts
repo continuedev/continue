@@ -100,6 +100,10 @@ export class ReverseMessageIde {
       return this.ide.getWorkspaceConfigs();
     });
 
+    this.on("getIdeSettings", () => {
+      return this.ide.getIdeSettings();
+    });
+
     this.on("getDiff", () => {
       return this.ide.getDiff();
     });

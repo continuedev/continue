@@ -404,6 +404,7 @@ export enum FileType {
 
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
+  getIdeSettings(): Promise<IdeSettings>;
   getDiff(): Promise<string>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;

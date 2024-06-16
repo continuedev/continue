@@ -9,6 +9,7 @@ import type {
   Thread,
 } from "../index.js";
 import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide.js";
+import { IdeSettings } from "../protocol/ideWebview.js";
 
 export class MessageIde implements IDE {
   constructor(
@@ -17,6 +18,9 @@ export class MessageIde implements IDE {
       data: ToIdeFromWebviewOrCoreProtocol[T][0],
     ) => Promise<ToIdeFromWebviewOrCoreProtocol[T][1]>,
   ) {}
+  getIdeSettings(): Promise<IdeSettings> {
+    return this.request("getIdeSettings", undefined);
+  }
   getGitHubAuthToken(): Promise<string | undefined> {
     return this.request("getGitHubAuthToken", undefined);
   }
