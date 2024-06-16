@@ -2,15 +2,12 @@ import {
   BedrockRuntimeClient,
   InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
-import * as fs from "node:fs";
-import os from "node:os";
-import { join as joinPath } from "node:path";
-import { promisify } from "util";
-import { BaseLLM } from "../index.js";
+import { fromIni } from "@aws-sdk/credential-providers";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
+  MessageContent,
   ModelProvider,
 } from "../..";
 import { stripImages } from "../countTokens";
@@ -19,21 +16,8 @@ import {
   InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 
-const aws4 = require("aws4");
-const readFile = promisify(fs.readFile);
-
-
-namespace BedrockCommon {
-  export enum Method {
-    Chat = "invoke-with-response-stream",
-    Completion = "invoke-with-response-stream",
-  }
-  export const Service: string = "bedrock";
-  export const AuthAlgo: string = "AWS4-HMAC-SHA256";
-  export const HashAlgo: string = "sha256";
-}
-
 class Bedrock extends BaseLLM {
+  private static PROFILE_NAME: string = "bedrock";
   static providerName: ModelProvider = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
@@ -53,118 +37,50 @@ class Bedrock extends BaseLLM {
     super(options);
     this.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
   }
- 
-  private _convertArgs(options: CompletionOptions) {
-    const finalOptions = {
-      top_k: options.topK,
-      top_p: options.topP,
-      temperature: options.temperature,
-      max_tokens: options.maxTokens ?? 2048,
-      stop_sequences: options.stop,
-    };
-
-    return finalOptions;
-  } 
 
   private _convertMessages(msgs: ChatMessage[]): any[] {
-    const messages = msgs
-      .filter((m) => m.role !== "system")
-      .map((message) => {
-        if (typeof message.content === "string") {
-          return message;
-        }
-        return {
-          ...message,
-          content: message.content.map((part) => {
-            if (part.type === "text") {
-              return part;
-            }
-            return {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: "image/jpeg",
-                data: part.imageUrl?.url.split(",")[1],
-              },
-            };
-          }),
-        };
-      });
-    return messages;
+    return msgs
+      .filter(m => m.role !== "system")
+      .map(message => this._convertMessage(message));
   }
 
-  private _parseCredentialsFile(fileContents: string) {
-    const profiles: { [key: string]: any } = {};
-    const lines = fileContents.trim().split('\n');
-  
-    let currentProfile: string | null = null;
-  
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-  
-      if (trimmedLine.startsWith('[') && trimmedLine.endsWith(']')) {
-        currentProfile = trimmedLine.slice(1, -1);
-        profiles[currentProfile] = {};
-      } else if (currentProfile !== null && trimmedLine.includes('=')) {
-        const [key, value] = trimmedLine.split('=');
-        const trimmedKey = key.trim();
-        const trimmedValue = value.trim();
-  
-        if (trimmedKey === 'aws_access_key_id') {
-          profiles[currentProfile].accessKeyId = trimmedValue;
-        } else if (trimmedKey === 'aws_secret_access_key') {
-          profiles[currentProfile].secretAccessKey = trimmedValue;
-        } else if (trimmedKey === 'aws_session_token') {
-          profiles[currentProfile].sessionToken = trimmedValue;
-        }
+  private _convertMessage(message: ChatMessage): any {
+    return {
+        role: message.role,
+        content: this._convertMessageContent(message.content)
+    }
+  }
+
+  private _convertMessageContent(messageContent: MessageContent): any {
+    if (typeof messageContent === "string") {
+      return messageContent;
+    }
+    return messageContent.map((part) => {
+      if (part.type === "text") {
+        return part;
       }
-    }
-  
-    return profiles;
+      return {
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: "image/jpeg",
+          data: part.imageUrl?.url.split(",")[1],
+        },
+      };
+    });
   }
 
-  private async _fetchWithAwsAuthSigV4(apiMethod: BedrockCommon.Method, body: string): Promise<Response> {
-    let model = this.completionOptions.model;
-    if (apiMethod == BedrockCommon.Method.Completion && model.includes("claude-3")) {
-      model = "anthropic.claude-v2:1";
-    }
-    const path = `/model/${model}/${apiMethod}`
-    const opts = {
-      headers: {
-        accept: "application/vnd.amazon.eventstream",
-        "content-type": "application/json",
-        "x-amzn-bedrock-accept": "*/*",
-      },
-      path: path,
-      body: body,
-      service: "bedrock",
-      host: this.apiBase!.replace("https://", ""),
-      region: this.region,
-    };
-
-    let accessKeyId: string;
-    let secretAccessKey: string;
-    let sessionToken: string;
-
+  private async _getCredentials() {
     try {
-      const data = await readFile(
-        joinPath(process.env.HOME ?? os.homedir(), ".aws", "credentials"),
-        "utf8",
+      return await fromIni({
+        profile: Bedrock.PROFILE_NAME,
+      })();
+    } catch (e) {
+      console.warn(
+        `AWS profile with name ${Bedrock.PROFILE_NAME} not found in ~/.aws/credentials, using default profile`,
       );
-      const credentials = this._parseCredentialsFile(data);
-      accessKeyId = credentials.bedrock.accessKeyId;
-      secretAccessKey = credentials.bedrock.secretAccessKey;
-      sessionToken = credentials.bedrock.sessionToken || "";
-    } catch (err) {
-        console.error("Error reading AWS credentials", err);
-        return new Response("403");
+      return await fromIni()();
     }
-    return await this.fetch(new URL(`${this.apiBase}${path}`), {
-      method: "POST",
-      headers: aws4.sign(opts, { accessKeyId, secretAccessKey, sessionToken })
-        .headers,
-      body: body,
-    });
   }
 
   protected async *_streamComplete(
@@ -181,14 +97,10 @@ class Bedrock extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const data = await readFile(
-      joinPath(process.env.HOME ?? os.homedir(), ".aws", "credentials"),
-      "utf8",
-    );
-    const credentials = this._parseCredentialsFile(data);
-    const accessKeyId = credentials.bedrock.accessKeyId;
-    const secretAccessKey = credentials.bedrock.secretAccessKey;
-    const sessionToken = credentials.bedrock.sessionToken || "";
+    const credentials = await this._getCredentials();
+    const accessKeyId = credentials.accessKeyId;
+    const secretAccessKey = credentials.secretAccessKey;
+    const sessionToken = credentials.sessionToken || "";
     const client = new BedrockRuntimeClient({
       region: this.region,
       credentials: {
