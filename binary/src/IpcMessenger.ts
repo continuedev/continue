@@ -2,6 +2,7 @@ import { IProtocol } from "core/protocol/index.js";
 import { IMessenger, type Message } from "core/util/messenger";
 import { ChildProcessWithoutNullStreams } from "node:child_process";
 import * as fs from "node:fs";
+import net from "node:net";
 import { v4 as uuidv4 } from "uuid";
 
 class IPCMessengerBase<
@@ -189,7 +190,7 @@ export class CoreBinaryMessenger<
     super();
 
     this.subprocess.stdout.on("data", (data) => {
-      console.log("[info] Received data from core:", data.toString() + "\n");
+      // console.log("[info] Received data from core:", data.toString() + "\n");
       this._handleData(data);
     });
     this.subprocess.stdout.on("close", () => {
@@ -201,7 +202,55 @@ export class CoreBinaryMessenger<
   }
 
   _sendMsg(msg: Message) {
+    // console.log("[info] Sending message to core:", msg);
     const d = JSON.stringify(msg);
     this.subprocess.stdin.write(d + "\r\n");
+  }
+}
+
+export class CoreBinaryTcpMessenger<
+    ToProtocol extends IProtocol,
+    FromProtocol extends IProtocol,
+  >
+  extends IPCMessengerBase<ToProtocol, FromProtocol>
+  implements IMessenger<ToProtocol, FromProtocol>
+{
+  private port: number = 3000;
+  private socket: net.Socket | null = null;
+
+  typeListeners = new Map<keyof ToProtocol, ((message: Message) => any)[]>();
+  idListeners = new Map<string, (message: Message) => any>();
+
+  constructor() {
+    super();
+    const socket = net.createConnection(this.port, "localhost");
+
+    this.socket = socket;
+    socket.on("data", (data: Buffer) => {
+      // console.log("[info] Received data from core:", data.toString() + "\n");
+      this._handleData(data);
+    });
+
+    socket.on("end", () => {
+      console.log("Disconnected from server");
+    });
+
+    socket.on("error", (err: any) => {
+      console.error("Client error:", err);
+    });
+  }
+
+  close() {
+    this.socket?.end();
+  }
+
+  _sendMsg(msg: Message) {
+    if (this.socket) {
+      // console.log("[info] Sending message to core:", msg);
+      const d = JSON.stringify(msg);
+      this.socket.write(d + "\r\n");
+    } else {
+      console.error("Socket is not connected");
+    }
   }
 }

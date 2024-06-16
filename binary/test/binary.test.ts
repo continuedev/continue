@@ -1,10 +1,18 @@
 import { FromIdeProtocol, ToIdeProtocol } from "core/protocol/index.js";
 import FileSystemIde from "core/util/filesystem";
+import { IMessenger } from "core/util/messenger";
 import { ReverseMessageIde } from "core/util/reverseMessageIde";
 import fs from "fs";
-import { spawn } from "node:child_process";
+import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import path from "path";
-import { CoreBinaryMessenger } from "../src/IpcMessenger";
+import {
+  CoreBinaryMessenger,
+  CoreBinaryTcpMessenger,
+} from "../src/IpcMessenger";
+
+jest.setTimeout(100_000);
+
+const USE_TCP = false;
 
 function autodetectPlatformAndArch() {
   const platform = {
@@ -37,8 +45,13 @@ function autodetectPlatformAndArch() {
   return [platform, arch];
 }
 
+const CONTINUE_GLOBAL_DIR = path.join(__dirname, "..", ".continue");
+
 describe("Test Suite", () => {
-  it("should pass", async () => {
+  let messenger: IMessenger<ToIdeProtocol, FromIdeProtocol>;
+  let subprocess: ChildProcessWithoutNullStreams;
+
+  beforeAll(async () => {
     const [platform, arch] = autodetectPlatformAndArch();
     const binaryPath = path.join(
       __dirname,
@@ -48,22 +61,76 @@ describe("Test Suite", () => {
       `continue-binary${platform === "win32" ? ".exe" : ""}`,
     );
     expect(fs.existsSync(binaryPath)).toBe(true);
-    const subprocess = spawn(binaryPath);
-    const messenger = new CoreBinaryMessenger<ToIdeProtocol, FromIdeProtocol>(
-      subprocess,
-    );
+
+    if (USE_TCP) {
+      messenger = new CoreBinaryTcpMessenger<ToIdeProtocol, FromIdeProtocol>();
+    } else {
+      subprocess = spawn(binaryPath, {
+        env: { ...process.env, CONTINUE_GLOBAL_DIR },
+      });
+      messenger = new CoreBinaryMessenger<ToIdeProtocol, FromIdeProtocol>(
+        subprocess,
+      );
+    }
+
     const ide = new FileSystemIde();
     const reverseIde = new ReverseMessageIde(messenger.on.bind(messenger), ide);
 
-    // Wait 3 seconds and then close the subprocess
-    await new Promise((resolve) =>
-      setTimeout(() => {
-        subprocess.kill();
-        resolve(null);
-      }, 3000),
-    );
-    // Wait for the subprocess to exit
-    await new Promise((resolve) => subprocess.on("close", resolve));
+    // Wait for core to set itself up
     await new Promise((resolve) => setTimeout(resolve, 1000));
+  });
+
+  afterAll(async () => {
+    // Wait for the subprocess to exit
+    if (USE_TCP) {
+      (
+        messenger as CoreBinaryTcpMessenger<ToIdeProtocol, FromIdeProtocol>
+      ).close();
+    } else {
+      subprocess.kill();
+      await new Promise((resolve) => subprocess.on("close", resolve));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+  });
+
+  it("should respond to ping with pong", async () => {
+    const resp = await messenger.request("ping", "ping");
+    expect(resp).toBe("pong");
+  });
+
+  it("should create .continue directory at the specified location with expected files", async () => {
+    expect(fs.existsSync(CONTINUE_GLOBAL_DIR)).toBe(true);
+
+    // Many of the files are only created when trying to load the config
+    const config = await messenger.request(
+      "config/getBrowserSerialized",
+      undefined,
+    );
+
+    const expectedFiles = [
+      "config.json",
+      "config.ts",
+      "package.json",
+      "logs/core.log",
+      "index/autocompleteCache.sqlite",
+      "out/config.js",
+      "types/core/index.d.ts",
+    ];
+
+    for (const file of expectedFiles) {
+      const filePath = path.join(CONTINUE_GLOBAL_DIR, file);
+      expect(fs.existsSync(filePath)).toBe(true);
+    }
+  });
+
+  it("should properly edit config", async () => {
+    const config = await messenger.request(
+      "config/getBrowserSerialized",
+      undefined,
+    );
+    expect(config).toHaveProperty("models");
+    expect(config).toHaveProperty("embeddingsProvider");
+    expect(config).toHaveProperty("contextProviders");
+    expect(config).toHaveProperty("slashCommands");
   });
 });
