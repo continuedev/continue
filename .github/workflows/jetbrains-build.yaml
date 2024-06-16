@@ -176,10 +176,6 @@ jobs:
             platform: win32
             arch: x64
             npm_config_arch: x64
-          - os: windows-latest
-            platform: win32
-            arch: arm64
-            npm_config_arch: arm
           - os: ubuntu-latest
             platform: linux
             arch: x64
@@ -188,14 +184,6 @@ jobs:
             platform: linux
             arch: arm64
             npm_config_arch: arm64
-          - os: ubuntu-latest
-            platform: linux
-            arch: armhf
-            npm_config_arch: arm
-          - os: ubuntu-latest
-            platform: alpine
-            arch: x64
-            npm_config_arch: x64
           - os: macos-12 # should migrate this to the newer x64 version of macos-14
             platform: darwin
             arch: x64
