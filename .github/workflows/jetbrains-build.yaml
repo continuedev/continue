@@ -169,6 +169,7 @@ jobs:
           path: ./binary/bin/linux-x64/continue-binary
 
   test-binaries:
+    needs: build
     strategy:
       matrix:
         include:
