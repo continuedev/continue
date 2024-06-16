@@ -185,11 +185,11 @@ jobs:
           #   platform: linux
           #   arch: arm64
           #   npm_config_arch: arm64
-          - os: macos-12 # should migrate this to the newer x64 version of macos-14
+          - os: macos-latest
             platform: darwin
             arch: x64
             npm_config_arch: x64
-          - os: macos-12 # same here, especially
+          - os: macos-latest
             platform: darwin
             arch: arm64
             npm_config_arch: arm64
