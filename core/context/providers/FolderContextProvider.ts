@@ -5,7 +5,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../index.js";
-import { getBasename, getLastNPathParts } from "../../util/index.js";
+import { getBasename, groupByLastNPathParts, getUniqueFilePath } from "../../util/index.js";
 import { BaseContextProvider } from "../index.js";
 
 class FolderContextProvider extends BaseContextProvider {
@@ -29,11 +29,13 @@ class FolderContextProvider extends BaseContextProvider {
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const folders = await args.ide.listFolders();
+    const folderGroups = groupByLastNPathParts(folders, 2);
+
     return folders.map((folder) => {
       return {
         id: folder,
         title: getBasename(folder),
-        description: getLastNPathParts(folder, 2),
+        description: getUniqueFilePath(folder, folderGroups)
       };
     });
   }
