@@ -38,6 +38,7 @@ import { AutocompleteLanguageInfo } from "./languages.js";
 import {
   avoidPathLine,
   noTopLevelKeywordsMidline,
+  skipPrefixes,
   stopAtLines,
   stopAtRepeatingLines,
   stopAtSimilarLine,
@@ -407,6 +408,7 @@ export async function getTabCompletion(
     lineGenerator = stopAtLines(lineGenerator, fullStop);
     lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
     lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
+    lineGenerator = skipPrefixes(lineGenerator);
     lineGenerator = noTopLevelKeywordsMidline(
       lineGenerator,
       lang.topLevelKeywords,
