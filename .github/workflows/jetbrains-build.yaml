@@ -244,6 +244,12 @@ jobs:
           chmod +x esbuild
         if: ${{ matrix.platform }} != 'win32'
 
+      - name: Copy node_sqlite3.node to necessary location
+        run: |
+          cd ../../binary
+          mkdir build
+          cp ./bin/${{ matrix.platform }}-${{ matrix.arch }}/node_sqlite3.node ./build/node_sqlite3.node
+
       - name: Try to run the binary
         run: ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
 
