@@ -60,12 +60,6 @@ describe("Test Suite", () => {
       `${platform}-${arch}`,
       `continue-binary${platform === "win32" ? ".exe" : ""}`,
     );
-    console.log(
-      "BIN CONTENTS: ",
-      __dirname,
-      fs.readdirSync(path.join(__dirname, "..", "bin")),
-      fs.readdirSync(path.join(__dirname, "..", "bin", `${platform}-${arch}`)),
-    );
     expect(fs.existsSync(binaryPath)).toBe(true);
 
     if (USE_TCP) {

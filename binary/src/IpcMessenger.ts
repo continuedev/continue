@@ -155,7 +155,7 @@ export class IpcMessenger<
     super();
     console.log("Setup");
     process.stdin.on("data", (data) => {
-      console.log("[info] Received data: ", data.toString());
+      // console.log("[info] Received data: ", data.toString());
       this._handleData(data);
     });
     process.stdout.on("close", () => {
@@ -170,7 +170,7 @@ export class IpcMessenger<
     });
   }
   _sendMsg(msg: Message) {
-    console.log("[info] Sending message: ", msg);
+    // console.log("[info] Sending message: ", msg);
     const d = JSON.stringify(msg);
     process.stdout?.write(d + "\r\n");
   }
@@ -201,28 +201,6 @@ export class CoreBinaryMessenger<
     });
     this.subprocess.stdin.on("close", () => {
       console.log("[info] Continue core exited");
-    });
-    this.subprocess.stderr.on("data", (data) => {
-      console.error(`[error] Continue core error: ${data}`);
-    });
-    this.subprocess.on("error", (error) => {
-      console.error(`[error] Continue core error: ${error.message}`);
-    });
-    this.subprocess.on("exit", (code, signal) => {
-      console.log(
-        `[info] Continue core exited with code ${code} and signal ${signal}`,
-      );
-    });
-    this.subprocess.on("close", (code, signal) => {
-      console.log(
-        `[info] Continue core closed with code ${code} and signal ${signal}`,
-      );
-    });
-    this.subprocess.on("disconnect", () => {
-      console.log("[info] Continue core disconnected");
-    });
-    this.subprocess.on("message", (message) => {
-      console.log(`[info] Received message from Continue core: ${message}`);
     });
   }
 
