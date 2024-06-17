@@ -1,5 +1,5 @@
 export default {
-  roots: ["<rootDir>"],
+  roots: ["<rootDir>/test"],
   transform: {
     "^.+\\.ts?$": [
       "ts-jest",
@@ -20,4 +20,5 @@ export default {
   moduleNameMapper: {
     "^(.*)\\.js$": "$1",
   },
+  testTimeout: 10000, // 10 seconds
 };

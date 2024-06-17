@@ -412,7 +412,7 @@ jobs:
         id: tag
         run: |
           # See https://docs.github.com/en/get-started/using-git/dealing-with-special-characters-in-branch-and-tag-names
-          TAG=v$(grep -o '"version": "[^"]*' ../vscode/package.json | cut -d'"' -f4)-vscode
+          TAG=v${{ needs.build.outputs.version }}-jetbrains
           echo "$TAG"
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           git tag -a $TAG -m "Published version $TAG" ${GITHUB_SHA}
