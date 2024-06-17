@@ -375,6 +375,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           availableSlashCommandsRef,
           onClose,
           onOpen,
+          ideMessenger,
         ),
         renderText: (props) => {
           return props.node.attrs.label;

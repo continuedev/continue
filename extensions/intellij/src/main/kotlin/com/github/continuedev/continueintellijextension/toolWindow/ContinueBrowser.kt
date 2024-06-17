@@ -48,6 +48,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         "config/ideSettingsUpdate",
         "config/getBrowserSerialized",
         "config/deleteModel",
+        "config/newPromptFile",
         "config/reload",
         "context/getContextItems",
         "context/loadSubmenuItems",

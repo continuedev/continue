@@ -365,15 +365,12 @@ class VsCodeIde implements IDE {
       new vscode.Position(startLine, 0),
       new vscode.Position(endLine, 0),
     );
-    openEditorAndRevealRange(filepath, range).then(() => {
-      // TODO: Highlight lines
-      // this.ideUtils.highlightCode(
-      //   {
-      //     filepath,
-      //     range,
-      //   },
-      //   "#fff1"
-      // );
+    openEditorAndRevealRange(filepath, range).then((editor) => {
+      // Select the lines
+      editor.selection = new vscode.Selection(
+        new vscode.Position(startLine, 0),
+        new vscode.Position(endLine, 0),
+      );
     });
   }
 

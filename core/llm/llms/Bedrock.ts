@@ -35,7 +35,9 @@ class Bedrock extends BaseLLM {
 
   constructor(options: LLMOptions) {
     super(options);
-    this.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
+    if (!options.apiBase) {
+      this.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
+    }
   }
 
   protected async *_streamComplete(

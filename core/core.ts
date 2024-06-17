@@ -14,6 +14,7 @@ import {
   setupLocalMode,
   setupOptimizedExistingUserMode,
 } from "./config/onboarding.js";
+import { createNewPromptFile } from "./config/promptFile";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
 import { indexDocs } from "./indexing/docs/index.js";
@@ -189,6 +190,12 @@ export class Core {
     on("config/deleteModel", (msg) => {
       deleteModel(msg.data.title);
       this.configHandler.reloadConfig();
+    });
+    on("config/newPromptFile", async (msg) => {
+      createNewPromptFile(
+        this.ide,
+        (await this.config()).experimental?.promptPath,
+      );
     });
     on("config/reload", (msg) => {
       this.configHandler.reloadConfig();

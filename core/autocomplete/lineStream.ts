@@ -121,6 +121,22 @@ export async function* stopAtLines(
   }
 }
 
+const PREFIXES_TO_SKIP = ["<COMPLETION>"];
+export async function* skipPrefixes(lines: LineStream): LineStream {
+  let isFirstLine = true;
+  for await (const line of lines) {
+    if (isFirstLine) {
+      const match = PREFIXES_TO_SKIP.find((prefix) => line.startsWith(prefix));
+      if (match) {
+        yield line.slice(match.length);
+        continue;
+      }
+      isFirstLine = false;
+    }
+    yield line;
+  }
+}
+
 const LINES_TO_SKIP = ["</START EDITING HERE>"];
 
 export async function* skipLines(stream: LineStream): LineStream {
