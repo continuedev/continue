@@ -191,9 +191,9 @@ export class CoreBinaryMessenger<
 
   constructor(private readonly subprocess: ChildProcessWithoutNullStreams) {
     super();
-
+    console.log("Setup");
     this.subprocess.stdout.on("data", (data) => {
-      // console.log("[info] Received data from core:", data.toString() + "\n");
+      console.log("[info] Received data from core:", data.toString() + "\n");
       this._handleData(data);
     });
     this.subprocess.stdout.on("close", () => {
