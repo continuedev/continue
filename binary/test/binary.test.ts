@@ -10,7 +10,7 @@ import {
   CoreBinaryTcpMessenger,
 } from "../src/IpcMessenger";
 
-jest.setTimeout(100_000);
+// jest.setTimeout(100_000);
 
 const USE_TCP = false;
 
