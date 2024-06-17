@@ -3,12 +3,12 @@ import type {
   DiffLine,
   FileType,
   IdeInfo,
+  IdeSettings,
   IndexTag,
   Problem,
   Range,
   Thread,
 } from "..";
-import type { IdeSettings } from "./ideWebview";
 
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type

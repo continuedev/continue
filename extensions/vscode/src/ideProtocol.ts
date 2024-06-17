@@ -7,13 +7,13 @@ import type {
   FileType,
   IDE,
   IdeInfo,
+  IdeSettings,
   IndexTag,
   Problem,
   Thread,
 } from "core";
 import { Range } from "core";
 import { defaultIgnoreFile } from "core/indexing/ignore";
-import { IdeSettings } from "core/protocol/ideWebview";
 import {
   editConfigJson,
   getConfigJsonPath,
@@ -510,7 +510,7 @@ class VsCodeIde implements IDE {
       .map(([name, type]) => [path.join(dir, name), type]) as any;
   }
 
-  getIdeSettings(): IdeSettings {
+  getIdeSettingsSync(): IdeSettings {
     const settings = vscode.workspace.getConfiguration("continue");
     const remoteConfigServerUrl = settings.get<string | undefined>(
       "remoteConfigServerUrl",
@@ -525,6 +525,10 @@ class VsCodeIde implements IDE {
       userToken: settings.get<string>("userToken", ""),
     };
     return ideSettings;
+  }
+
+  async getIdeSettings(): Promise<IdeSettings> {
+    return this.getIdeSettingsSync();
   }
 }
 

@@ -402,6 +402,12 @@ export enum FileType {
   SymbolicLink = 64,
 }
 
+export interface IdeSettings {
+  remoteConfigServerUrl: string | undefined;
+  remoteConfigSyncPeriod: number;
+  userToken: string;
+}
+
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
   getIdeSettings(): Promise<IdeSettings>;

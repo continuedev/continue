@@ -27,29 +27,6 @@ export function removeQuotesAndEscapes(output: string): string {
   return output;
 }
 
-export function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
-  if (!(window as any)._fetch) {
-    throw new Error("Proxy fetch not initialized");
-  }
-
-  if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-    // Relative URL
-    const fullUrl = `${window.vscMediaUrl}/${url}`;
-    return (window as any)._fetch(fullUrl, init);
-  }
-
-  const proxyServerUrl =
-    (window as any).proxyServerUrl || "http://localhost:65433";
-
-  const headers = new Headers(init?.headers);
-  headers.append("x-continue-url", url);
-
-  return (window as any)._fetch(proxyServerUrl, {
-    ...init,
-    headers,
-  });
-}
-
 export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   const lines = s.split("\n");
   if (lines.length === 0 || (lines[0].trim() === "" && lines.length === 1)) {
@@ -96,6 +73,9 @@ export function getBasename(filepath: string): string {
 }
 
 export function getLastNPathParts(filepath: string, n: number): string {
+  if (n <= 0) {
+    return "";
+  }
   return filepath.split(SEP_REGEX).slice(-n).join("/");
 }
 

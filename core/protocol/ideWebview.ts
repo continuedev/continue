@@ -3,12 +3,6 @@ import type { RangeInFileWithContents } from "../commands/util";
 import { ToIdeFromWebviewOrCoreProtocol } from "./ide.js";
 import { ToWebviewFromIdeOrCoreProtocol } from "./webview.js";
 
-export interface IdeSettings {
-  remoteConfigServerUrl: string | undefined;
-  remoteConfigSyncPeriod: number;
-  userToken: string;
-}
-
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   onLoad: [
     undefined,

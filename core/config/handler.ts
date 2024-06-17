@@ -4,9 +4,9 @@ import {
   ContinueRcJson,
   IContextProvider,
   IDE,
+  IdeSettings,
   ILLM,
 } from "../index.js";
-import { IdeSettings } from "../protocol/ideWebview.js";
 import { Telemetry } from "../util/posthog.js";
 import { finalToBrowserConfig, loadFullConfigNode } from "./load.js";
 

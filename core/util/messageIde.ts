@@ -3,13 +3,13 @@ import type {
   FileType,
   IDE,
   IdeInfo,
+  IdeSettings,
   IndexTag,
   Problem,
   Range,
   Thread,
 } from "../index.js";
 import { ToIdeFromWebviewOrCoreProtocol } from "../protocol/ide.js";
-import { IdeSettings } from "../protocol/ideWebview.js";
 
 export class MessageIde implements IDE {
   constructor(

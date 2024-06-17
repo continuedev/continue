@@ -4,13 +4,13 @@ import {
   FileType,
   IDE,
   IdeInfo,
+  IdeSettings,
   IndexTag,
   Problem,
   Range,
   Thread,
 } from "../index.d.js";
 
-import { IdeSettings } from "../protocol/ideWebview.js";
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
@@ -82,7 +82,7 @@ class FileSystemIde implements IDE {
   }
 
   isTelemetryEnabled(): Promise<boolean> {
-    return Promise.resolve(false);
+    return Promise.resolve(true);
   }
 
   getUniqueId(): Promise<string> {
