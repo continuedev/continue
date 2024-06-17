@@ -403,6 +403,21 @@ jobs:
       - name: Fetch Sources
         uses: actions/checkout@v4
 
+      - name: Set up Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Tag the repository
+        id: tag
+        run: |
+          # See https://docs.github.com/en/get-started/using-git/dealing-with-special-characters-in-branch-and-tag-names
+          TAG=v$(grep -o '"version": "[^"]*' ../vscode/package.json | cut -d'"' -f4)-vscode
+          echo "$TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          git tag -a $TAG -m "Published version $TAG" ${GITHUB_SHA}
+          git push origin $TAG
+
       # Remove old release drafts by using the curl request for the available releases with a draft flag
       - name: Remove Old Release Drafts
         env:
@@ -417,10 +432,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "v${{ needs.build.outputs.version }}" \
+          gh release create "${{ steps.tag.outputs.tag }}" \
             --draft \
             --title "v${{ needs.build.outputs.version }}" \
             --notes "$(cat << 'EOM'
           ${{ needs.build.outputs.changelog }}
           EOM
           )"
+
+      # Download the Gradle build artifact
+      - name: Download Gradle build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.build.outputs.filename }}
+          path: ./artifacts
+
+      # Attach the Gradle build artifact to the release draft
+      - name: Attach Gradle build artifact to release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for artifact in ./artifacts/*; do
+            gh release upload "v${{ needs.build.outputs.version }}" "$artifact" --clobber
+          done
