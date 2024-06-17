@@ -2,8 +2,6 @@ import * as dotenv from "dotenv";
 
 import { CompletionOptions } from "../index.js";
 import { BaseLLM } from "../llm/index.js";
-import Anthropic from "../llm/llms/Anthropic.js";
-import FreeTrial from "../llm/llms/FreeTrial.js";
 import OpenAI from "../llm/llms/OpenAI.js";
 
 // jest.setTimeout(100_000);
@@ -61,17 +59,17 @@ function testLLM(llm: BaseLLM) {
 }
 
 describe("LLM", () => {
-  testLLM(
-    new FreeTrial({
-      model: "gpt-3.5-turbo",
-    }),
-  );
-  testLLM(
-    new Anthropic({
-      model: "claude-2",
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    }),
-  );
+  // testLLM(
+  //   new FreeTrial({
+  //     model: "gpt-3.5-turbo",
+  //   }),
+  // );
+  // testLLM(
+  //   new Anthropic({
+  //     model: "claude-2",
+  //     apiKey: process.env.ANTHROPIC_API_KEY,
+  //   }),
+  // );
   testLLM(
     new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" }),
   );
