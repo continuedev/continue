@@ -23,6 +23,7 @@ import {
 import { Editor } from "@tiptap/react";
 import {
   forwardRef,
+  useContext,
   useEffect,
   useImperativeHandle,
   useRef,
@@ -46,6 +47,7 @@ import FileIcon from "../FileIcon";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import { ComboBoxItem } from "./types";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 
 const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   file: FolderIcon,
@@ -218,13 +220,15 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
 
   const queryInputRef = useRef<HTMLTextAreaElement>(null);
 
+  const ideMessenger = useContext(IdeMessengerContext);
+
   useEffect(() => {
     if (queryInputRef.current) {
       queryInputRef.current.focus();
     }
   }, [querySubmenuItem]);
 
-  const selectItem = (index) => {
+  const selectItem = async (index) => {
     const item = allItems[index];
 
     if (item.type === "action" && item.action) {
@@ -249,6 +253,26 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
 
     if (item) {
       props.command({ ...item, itemType: item.type });
+    }
+
+    if (item.type === "docs") {
+      const config = await ideMessenger.request(
+        "config/getDocsSitesConfig",
+        undefined,
+      );
+      const siteConfig = config.find(({ startUrl }) => startUrl === item.id);
+
+      if (siteConfig) {
+        const { data: docIndexed } = await ideMessenger.request(
+          "docs/hasIndexed",
+          { id: siteConfig.startUrl },
+        );
+
+        if (!docIndexed) {
+          console.log("Indexing docs");
+          await ideMessenger.request("context/addDocs", siteConfig);
+        }
+      }
     }
   };
 

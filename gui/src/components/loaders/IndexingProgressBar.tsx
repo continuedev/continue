@@ -22,7 +22,6 @@ const ProgressBarWrapper = styled.div`
   height: 6px;
   border-radius: 6px;
   border: 0.5px solid ${lightGray};
-  margin-top: 6px;
 `;
 
 const ProgressBarFill = styled.div<{ completed: number; color?: string }>`
@@ -41,12 +40,25 @@ const GridDiv = styled.div`
   margin-left: 8px;
 `;
 
-const P = styled.p`
-  margin: 0;
-  margin-top: 2px;
+const FlexDiv = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+  margin-bottom: 3px;
+`;
+
+const IndexFeed = styled.div`
+  font-size: ${getFontSize() - 3.5}px;
+  color: ${lightGray};
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const IndexStatus = styled.div`
   font-size: ${getFontSize() - 2.5}px;
   color: ${lightGray};
-  text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -197,7 +209,7 @@ const IndexingProgressBar = ({
         </>
       ) : indexingState.status === "indexing" ? ( //progress bar
         <>
-          <GridDiv
+          <FlexDiv
             data-tooltip-id="usage_progress_bar"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
@@ -208,12 +220,13 @@ const IndexingProgressBar = ({
             <ProgressBarWrapper>
               <ProgressBarFill completed={fillPercentage} />
             </ProgressBarWrapper>
-            <P>
+            <IndexStatus>
               {hovered
                 ? "Click to pause"
                 : `Indexing (${Math.trunc(indexingState.progress * 100)}%)`}
-            </P>
-          </GridDiv>
+            </IndexStatus>
+          </FlexDiv>
+          <IndexFeed>{indexingState.desc}</IndexFeed>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="usage_progress_bar" place="top">

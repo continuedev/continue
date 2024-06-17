@@ -50,6 +50,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/getBrowserSerialized": [undefined, BrowserSerializedContinueConfig];
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, BrowserSerializedContinueConfig];
+  "config/getDocsSitesConfig": [undefined, SiteIndexingConfig[]];
+  "docs/hasIndexed": [{ id: string }, { data: boolean }];
   "context/getContextItems": [
     {
       name: string;

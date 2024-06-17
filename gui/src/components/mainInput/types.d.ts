@@ -6,7 +6,8 @@ export type ComboBoxItemType =
   | "file"
   | "query"
   | "folder"
-  | "action";
+  | "action"
+  | "docs";
 
 export interface ComboBoxItem {
   title: string;
