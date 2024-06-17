@@ -250,10 +250,10 @@ jobs:
           mkdir build
           cp ./bin/${{ matrix.platform }}-${{ matrix.arch }}/node_sqlite3.node ./build/node_sqlite3.node
 
-      - name: Try to run the binary
-        run: |
-          cd ../../binary
-          ./bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
+      # - name: Try to run the binary
+      #   run: |
+      #     cd ../../binary
+      #     ./bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
 
       # Run tests for binary
       - name: Run binary tests
