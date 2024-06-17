@@ -21,7 +21,7 @@ const GITHUB_PATHS_TO_TRAVERSE = ["/blob/", "/tree/"];
 async function getDefaultBranch(owner: string, repo: string): Promise<string> {
   const octokit = new Octokit({ auth: undefined });
 
-  const repoInfo = await octokit.repos.get({
+  const repoInfo = await octokit.rest.repos.get({
     owner,
     repo,
   });
