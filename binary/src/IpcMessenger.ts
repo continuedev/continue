@@ -202,6 +202,28 @@ export class CoreBinaryMessenger<
     this.subprocess.stdin.on("close", () => {
       console.log("[info] Continue core exited");
     });
+    this.subprocess.stderr.on("data", (data) => {
+      console.error(`[error] Continue core error: ${data}`);
+    });
+    this.subprocess.on("error", (error) => {
+      console.error(`[error] Continue core error: ${error.message}`);
+    });
+    this.subprocess.on("exit", (code, signal) => {
+      console.log(
+        `[info] Continue core exited with code ${code} and signal ${signal}`,
+      );
+    });
+    this.subprocess.on("close", (code, signal) => {
+      console.log(
+        `[info] Continue core closed with code ${code} and signal ${signal}`,
+      );
+    });
+    this.subprocess.on("disconnect", () => {
+      console.log("[info] Continue core disconnected");
+    });
+    this.subprocess.on("message", (message) => {
+      console.log(`[info] Received message from Continue core: ${message}`);
+    });
   }
 
   _sendMsg(msg: Message) {
