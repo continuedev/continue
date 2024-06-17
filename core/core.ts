@@ -196,6 +196,7 @@ export class Core {
         this.ide,
         (await this.config()).experimental?.promptPath,
       );
+      this.configHandler.reloadConfig();
     });
     on("config/reload", (msg) => {
       this.configHandler.reloadConfig();

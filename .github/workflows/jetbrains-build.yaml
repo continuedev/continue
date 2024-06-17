@@ -18,7 +18,7 @@ on:
   push:
     branches: [nate/test-test-test]
   # Trigger the workflow on any pull request
-  pull_request:
+  # pull_request:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -181,10 +181,10 @@ jobs:
             platform: linux
             arch: x64
             npm_config_arch: x64
-          - os: ubuntu-latest
-            platform: linux
-            arch: arm64
-            npm_config_arch: arm64
+          # - os: ubuntu-latest
+          #   platform: linux
+          #   arch: arm64
+          #   npm_config_arch: arm64
           - os: macos-12
             platform: darwin
             arch: x64
