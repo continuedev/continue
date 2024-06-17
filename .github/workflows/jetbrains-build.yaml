@@ -244,7 +244,7 @@ jobs:
 
       # Set execute permissions for the binary (non-Windows)
       - name: Set execute permissions
-        run: chmod +x ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
+        run: chmod +x ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
         if: ${{ matrix.platform }} != 'win32'
 
       # Run tests for binary
