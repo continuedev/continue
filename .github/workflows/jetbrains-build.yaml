@@ -307,7 +307,7 @@ jobs:
 
   # Run Qodana inspections and provide report
   inspectCode:
-    if: ${{ never() }}
+    if: false
     name: Inspect code
     needs: [build]
     runs-on: ubuntu-latest
