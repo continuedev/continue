@@ -205,7 +205,7 @@ export class CoreBinaryMessenger<
   }
 
   _sendMsg(msg: Message) {
-    // console.log("[info] Sending message to core:", msg);
+    console.log("[info] Sending message to core:", msg);
     const d = JSON.stringify(msg);
     this.subprocess.stdin.write(d + "\r\n");
   }
