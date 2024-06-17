@@ -236,16 +236,16 @@ jobs:
 
       # Set execute permissions for the binary (non-Windows)
       - name: Set execute permissions
-        run: chmod +x ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
+        run: |
+          cd ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}
+          chmod +x continue-binary
+          chmod +x node_sqlite3.node
+          chmod +x index.node
+          chmod +x esbuild
         if: ${{ matrix.platform }} != 'win32'
 
-      - name: Try to run the binary for 5 seconds and view output
-        run: |
-          if [ "${{ matrix.platform }}" != "win32" ]; then
-            timeout 5s ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
-          else
-            timeout /T 5 /NOBREAK ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
-          fi
+      - name: Try to run the binary
+        run: ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
 
       # Run tests for binary
       - name: Run binary tests
