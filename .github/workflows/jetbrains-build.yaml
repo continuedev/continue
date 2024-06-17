@@ -142,31 +142,31 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: continue-binary-darwin-arm64
-          path: ./binary/bin/darwin-arm64/continue-binary
+          path: ./binary/bin/darwin-arm64/
 
       - name: Upload artifact (darwin-x64)
         uses: actions/upload-artifact@v4
         with:
           name: continue-binary-darwin-x64
-          path: ./binary/bin/darwin-x64/continue-binary
+          path: ./binary/bin/darwin-x64/
 
       - name: Upload artifact (win32-x64)
         uses: actions/upload-artifact@v4
         with:
           name: continue-binary-win32-x64
-          path: ./binary/bin/win32-x64/continue-binary.exe
+          path: ./binary/bin/win32-x64/
 
       - name: Upload artifact (linux-arm64)
         uses: actions/upload-artifact@v4
         with:
           name: continue-binary-linux-arm64
-          path: ./binary/bin/linux-arm64/continue-binary
+          path: ./binary/bin/linux-arm64/
 
       - name: Upload artifact (linux-x64)
         uses: actions/upload-artifact@v4
         with:
           name: continue-binary-linux-x64
-          path: ./binary/bin/linux-x64/continue-binary
+          path: ./binary/bin/linux-x64/
 
   test-binaries:
     needs: build
@@ -228,19 +228,11 @@ jobs:
           npm ci
 
       # Download the binary artifact
-      - name: Download binary artifact (non-Windows)
+      - name: Download binary artifact
         uses: actions/download-artifact@v4
         with:
           name: continue-binary-${{ matrix.platform }}-${{ matrix.arch }}
-          path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
-        if: ${{ matrix.platform }} != 'win32'
-
-      - name: Download binary artifact (Windows)
-        uses: actions/download-artifact@v4
-        with:
-          name: continue-binary-${{ matrix.platform }}-${{ matrix.arch }}
-          path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary.exe
-        if: ${{ matrix.platform }} == 'win32'
+          path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/
 
       # Set execute permissions for the binary (non-Windows)
       - name: Set execute permissions
