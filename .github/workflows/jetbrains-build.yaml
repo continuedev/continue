@@ -228,27 +228,27 @@ jobs:
           npm ci
 
       # Download the binary artifact
-      - name: Download binary artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: continue-binary-${{ matrix.platform }}-${{ matrix.arch }}
-          path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/
+      # - name: Download binary artifact
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: continue-binary-${{ matrix.platform }}-${{ matrix.arch }}
+      #     path: ./binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/
 
-      # Set execute permissions for the binary (non-Windows)
-      - name: Set execute permissions
-        run: |
-          cd ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}
-          chmod +x continue-binary
-          chmod +x node_sqlite3.node
-          chmod +x index.node
-          chmod +x esbuild
-        if: ${{ matrix.platform }} != 'win32'
+      # # Set execute permissions for the binary (non-Windows)
+      # - name: Set execute permissions
+      #   run: |
+      #     cd ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}
+      #     chmod +x continue-binary
+      #     chmod +x node_sqlite3.node
+      #     chmod +x index.node
+      #     chmod +x esbuild
+      #   if: ${{ matrix.platform }} != 'win32'
 
-      - name: Copy node_sqlite3.node to necessary location
-        run: |
-          cd ../../binary
-          mkdir build
-          cp ./bin/${{ matrix.platform }}-${{ matrix.arch }}/node_sqlite3.node ./build/node_sqlite3.node
+      # - name: Copy node_sqlite3.node to necessary location
+      #   run: |
+      #     cd ../../binary
+      #     mkdir build
+      #     cp ./bin/${{ matrix.platform }}-${{ matrix.arch }}/node_sqlite3.node ./build/node_sqlite3.node
 
       # - name: Try to run the binary
       #   run: |
@@ -259,6 +259,7 @@ jobs:
       - name: Run binary tests
         run: |
           cd ../../binary
+          npm run build
           npm run test
 
       - name: Upload logs
