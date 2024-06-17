@@ -394,7 +394,7 @@ jobs:
   releaseDraft:
     name: Release draft
     if: github.event_name != 'pull_request'
-    needs: [build, test, test-binaries, inspectCode, verify]
+    needs: [build, test, test-binaries, verify]
     runs-on: ubuntu-latest
     permissions:
       contents: write
