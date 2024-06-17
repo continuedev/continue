@@ -434,7 +434,7 @@ jobs:
         run: |
           gh release create "${{ steps.tag.outputs.tag }}" \
             --draft \
-            --title "v${{ needs.build.outputs.version }}" \
+            --title "v${{ needs.build.outputs.version }}-jetbrains" \
             --notes "$(cat << 'EOM'
           ${{ needs.build.outputs.changelog }}
           EOM
@@ -451,7 +451,4 @@ jobs:
       - name: Attach Gradle build artifact to release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for artifact in ./artifacts/*; do
-            gh release upload "v${{ needs.build.outputs.version }}" "$artifact" --clobber
-          done
+        run: gh release upload "v${{ needs.build.outputs.version }}" ../../artifacts/continue-intellij-extension-0.0.51 --clobber
