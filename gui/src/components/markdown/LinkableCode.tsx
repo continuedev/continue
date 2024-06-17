@@ -107,27 +107,44 @@ function LinkableCode(props: any) {
 
         const [filepath, rest] =
           contextItemContentMatch.description.split(" (");
-        const [startLine, endLine] = rest.split(")")[0]?.split("-") || [
-          "0",
-          "0",
-        ];
-        const start = parseInt(startLine);
-        const end = parseInt(endLine);
 
         setIsLink(true);
-        setRif({
-          filepath,
-          range: {
-            start: {
-              line: start + line,
-              character: 0,
+
+        if (rest) {
+          const [startLine, endLine] = rest.split(")")[0]?.split("-") || [
+            "0",
+            "0",
+          ];
+          const start = parseInt(startLine);
+          const end = parseInt(endLine);
+          setRif({
+            filepath,
+            range: {
+              start: {
+                line: start + line,
+                character: 0,
+              },
+              end: {
+                line: start + line + 1,
+                character: 0,
+              },
             },
-            end: {
-              line: start + line + 1,
-              character: 0,
+          });
+        } else {
+          setRif({
+            filepath,
+            range: {
+              start: {
+                line: 0,
+                character: 0,
+              },
+              end: {
+                line: 0,
+                character: 0,
+              },
             },
-          },
-        });
+          });
+        }
 
         console.log("MATCH: ", content, contextItemContentMatch, line);
       }
