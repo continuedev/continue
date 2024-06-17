@@ -293,17 +293,20 @@ ${prompt}`;
 
         return resp;
       } catch (e: any) {
-        console.warn(
-          `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
-        );
-
-        if (
-          e.code === "ECONNREFUSED" &&
-          e.message.includes("http://127.0.0.1:11434")
-        ) {
-          throw new Error(
-            "Failed to connect to local Ollama instance. To start Ollama, first download it at https://ollama.ai.",
+        // Errors to ignore
+        if (!e.message.includes("/api/show")) {
+          console.warn(
+            `${e.message}\n\nCode: ${e.code}\nError number: ${e.errno}\nSyscall: ${e.erroredSysCall}\nType: ${e.type}\n\n${e.stack}`,
           );
+
+          if (
+            e.code === "ECONNREFUSED" &&
+            e.message.includes("http://127.0.0.1:11434")
+          ) {
+            throw new Error(
+              "Failed to connect to local Ollama instance. To start Ollama, first download it at https://ollama.ai.",
+            );
+          }
         }
         throw new Error(e.message);
       }
