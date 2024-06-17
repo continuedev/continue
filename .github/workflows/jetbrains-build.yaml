@@ -169,7 +169,7 @@ jobs:
           path: ./binary/bin/linux-x64/
 
   test-binaries:
-    needs: build
+    # needs: build
     strategy:
       matrix:
         include:

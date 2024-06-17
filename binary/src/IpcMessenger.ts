@@ -153,7 +153,9 @@ export class IpcMessenger<
 {
   constructor() {
     super();
+    console.log("Setup");
     process.stdin.on("data", (data) => {
+      console.log("[info] Received data: ", data.toString());
       this._handleData(data);
     });
     process.stdout.on("close", () => {
