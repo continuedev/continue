@@ -239,6 +239,14 @@ jobs:
         run: chmod +x ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
         if: ${{ matrix.platform }} != 'win32'
 
+      - name: Try to run the binary for 5 seconds and view output
+        run: |
+          if [ "${{ matrix.platform }}" != "win32" ]; then
+            timeout 5s ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
+          else
+            timeout /T 5 /NOBREAK ../../binary/bin/${{ matrix.platform }}-${{ matrix.arch }}/continue-binary
+          fi
+
       # Run tests for binary
       - name: Run binary tests
         run: |
