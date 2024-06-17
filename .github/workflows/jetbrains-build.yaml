@@ -253,6 +253,13 @@ jobs:
           cd ../../binary
           npm run test
 
+      - name: Upload logs
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: core-logs-${{ matrix.platform }}-${{ matrix.arch }}
+          path: binary/.continue/logs/core.log
+
   # Run tests and upload a code coverage report
   test:
     name: Test
