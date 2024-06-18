@@ -187,9 +187,7 @@ class Gemini extends BaseLLM {
           throw new Error(data.error.message);
         }
         // Check for existence of each level before accessing the final 'text' property
-        if (data && data.candidates && data.candidates.length > 0 && data.candidates[0].content &&
-            data.candidates[0].content.parts && data.candidates[0].content.parts.length > 0 &&
-            data.candidates[0].content.parts[0].text) {
+        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
           // Incrementally stream the content to make it smoother
           const content = data.candidates[0].content.parts[0].text;
           const words = content.split(/(\s+)/);
