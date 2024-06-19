@@ -145,8 +145,6 @@ function LinkableCode(props: any) {
             },
           });
         }
-
-        console.log("MATCH: ", content, contextItemContentMatch, line);
       }
     }
   }, [linkingDone, contextItems]);
