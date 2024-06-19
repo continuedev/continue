@@ -181,23 +181,28 @@ class Gemini extends BaseLLM {
           data = JSON.parse(part);
         } catch (e) {
           foundIncomplete = true;
-          continue;
+          continue; // yo!
         }
         if (data.error) {
           throw new Error(data.error.message);
         }
-
-        // Incrementally stream the content to make it smoother
-        const content = data.candidates[0].content.parts[0].text;
-        const words = content.split(/(\s+)/);
-        const delaySeconds = Math.min(4.0 / (words.length + 1), 0.1);
-        while (words.length > 0) {
-          const wordsToYield = Math.min(3, words.length);
-          yield {
-            role: "assistant",
-            content: words.splice(0, wordsToYield).join(""),
-          };
-          await delay(delaySeconds);
+        // Check for existence of each level before accessing the final 'text' property
+        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+          // Incrementally stream the content to make it smoother
+          const content = data.candidates[0].content.parts[0].text;
+          const words = content.split(/(\s+)/);
+          const delaySeconds = Math.min(4.0 / (words.length + 1), 0.1);
+          while (words.length > 0) {
+            const wordsToYield = Math.min(3, words.length);
+            yield {
+              role: "assistant",
+              content: words.splice(0, wordsToYield).join(""),
+            };
+            await delay(delaySeconds);
+          }
+        } else {
+          // Handle the case where the expected data structure is not found
+          console.warn('Unexpected response format:', data);
         }
       }
       if (foundIncomplete) {
