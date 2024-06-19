@@ -27,7 +27,7 @@ This uses Claude 3 Opus for chat, Codestral for autocomplete, and Voyage AI for 
   "tabAutocompleteModel": {
     "title": "Codestral",
     "provider": "mistral",
-    "model": "codestral:latest",
+    "model": "codestral-latest",
     "apiKey": "[CODESTRAL_API_KEY]"
   },
   "embeddingsProvider": {
