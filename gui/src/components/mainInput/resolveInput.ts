@@ -55,7 +55,7 @@ async function resolveEditorContent(
     } else if (p.type === "codeBlock") {
       if (!p.attrs.item.editing) {
         const text =
-          "```" + p.attrs.item.name + "\n" + p.attrs.item.content + "\n```";
+          "```" + p.attrs.item.description + "\n" + p.attrs.item.content + "\n```";
         if (parts[parts.length - 1]?.type === "text") {
           parts[parts.length - 1].text += "\n" + text;
         } else {
