@@ -6,7 +6,7 @@ import { Button, Input, SecondaryButton } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import { getLocalStorage } from "../../../util/localStorage";
-import { PROVIDER_INFO } from "../../../util/modelData";
+import { PROVIDER_INFO } from "../../../pages/modelConfig/modelProviders";
 import { ftl } from "../../dialogs/FTCDialog";
 import QuickSetupListBox from "./QuickSetupListBox";
 

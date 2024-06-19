@@ -10,8 +10,8 @@ import Toggle from "../components/modelSelection/Toggle";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { setDefaultModel } from "../redux/slices/stateSlice";
-import { MODEL_INFO, PROVIDER_INFO } from "../util/modelData";
-import { CustomModelButton } from "./modelconfig";
+import { MODEL_INFO, PROVIDER_INFO } from "./modelConfig/modelProviders";
+import { CustomModelButton } from "./modelConfig/ModelConfig";
 
 const IntroDiv = styled.div`
   padding: 8px 12px;
