@@ -2,6 +2,14 @@ import { streamLines } from "../../diff/util.js";
 import { SlashCommand } from "../../index.js";
 import { removeQuotesAndEscapes } from "../../util/index.js";
 
+function commandIsPotentiallyDangerous(command: string) {
+  return (
+    command.includes("rm -rf") ||
+    command.includes("sudo") ||
+    command.includes("cd / ")
+  );
+}
+
 const GenerateTerminalCommand: SlashCommand = {
   name: "cmd",
   description: "Generate a shell command",
@@ -35,8 +43,12 @@ Please write a shell command that will do what the user requested. Your output s
       break;
     }
 
-    await ide.runCommand(cmd);
     yield `Generated shell command: ${cmd}`;
+    if (commandIsPotentiallyDangerous(cmd)) {
+      yield "\n\nWarning: This command may be potentially dangerous. Please double-check before pasting it in your terminal.";
+    } else {
+      await ide.runCommand(cmd);
+    }
   },
 };
 
