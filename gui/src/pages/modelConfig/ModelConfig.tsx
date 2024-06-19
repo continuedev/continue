@@ -10,18 +10,15 @@ import {
   defaultBorderRadius,
   lightGray,
   vscBackground,
-} from "../components";
-import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
-import ModelCard from "../components/modelSelection/ModelCard";
-import { IdeMessengerContext } from "../context/IdeMessenger";
-import { useNavigationListener } from "../hooks/useNavigationListener";
-import { setDefaultModel } from "../redux/slices/stateSlice";
-import {
-  MODEL_PROVIDER_TAG_COLORS,
-  ModelInfo,
-  PROVIDER_INFO,
-  updatedObj,
-} from "../util/modelData";
+} from "../../components";
+import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
+import ModelCard from "../../components/modelSelection/ModelCard";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useNavigationListener } from "../../hooks/useNavigationListener";
+import { setDefaultModel } from "../../redux/slices/stateSlice";
+import { updatedObj } from "../../util";
+import ModelProviderTag from "../../components/modelSelection/ModelProviderTag";
+import { ModelInfo, PROVIDER_INFO } from "./modelProviders";
 
 const GridDiv = styled.div`
   display: grid;
@@ -60,7 +57,8 @@ function ModelConfig() {
   const formMethods = useForm();
   const { modelName } = useParams();
   const ideMessenger = useContext(IdeMessengerContext);
-
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [modelInfo, setModelInfo] = useState<ModelInfo | undefined>(undefined);
 
   useEffect(() => {
@@ -68,9 +66,6 @@ function ModelConfig() {
       setModelInfo(PROVIDER_INFO[modelName]);
     }
   }, [modelName]);
-
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const disableModelCards = useCallback(() => {
     return (
@@ -117,22 +112,11 @@ function ModelConfig() {
             )}
             <h2>{modelInfo?.title}</h2>
           </div>
-          {modelInfo?.tags?.map((tag, idx) => {
-            return (
-              <span
-                key={idx}
-                style={{
-                  backgroundColor: `${MODEL_PROVIDER_TAG_COLORS[tag]}55`,
-                  color: "white",
-                  padding: "2px 4px",
-                  borderRadius: defaultBorderRadius,
-                  marginRight: "4px",
-                }}
-              >
-                {tag}
-              </span>
-            );
-          })}
+
+          {modelInfo?.tags?.map((tag, i) => (
+            <ModelProviderTag key={i} tag={tag} />
+          ))}
+
           <StyledMarkdownPreview
             className="mt-2"
             source={modelInfo?.longDescription || modelInfo?.description}
@@ -149,12 +133,12 @@ function ModelConfig() {
                 .map((d, idx) => {
                   return (
                     <div key={idx}>
-                      <label htmlFor={d.key}>{d.key}</label>
+                      <label htmlFor={d.key}>{d.label}</label>
                       <Input
                         type={d.inputType}
                         id={d.key}
                         className="border-2 border-gray-200 rounded-md p-2 m-2"
-                        placeholder={d.key}
+                        placeholder={d.label}
                         defaultValue={d.defaultValue}
                         min={d.min}
                         max={d.max}

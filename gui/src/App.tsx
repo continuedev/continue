@@ -6,11 +6,10 @@ import ErrorPage from "./pages/error";
 import { default as Help, default as HelpPage } from "./pages/help";
 import History from "./pages/history";
 import MigrationPage from "./pages/migration";
-import ModelConfig from "./pages/modelconfig";
+import ModelConfig from "./pages/modelConfig";
 import Models from "./pages/models";
 import MonacoPage from "./pages/monaco";
 import SettingsPage from "./pages/settings";
-
 import { SubmenuContextProvidersContext } from "./context/SubmenuContextProviders";
 import { VscThemeContext } from "./context/VscTheme";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
