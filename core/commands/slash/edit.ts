@@ -241,13 +241,20 @@ const EditSlashCommand: SlashCommand = {
           part.text = part.text.replace("/edit", "").trimStart();
         }
       });
-    } else {
+    } else if (input?.startsWith("/edit")) {
       content = input.replace("/edit", "").trimStart();
+    } else if (input?.startsWith("/comment")) {
+      content = input.replace("/comment", "").trimStart();
     }
-    const userInput = stripImages(content).replace(
+    let userInput = stripImages(content).replace(
       `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,
       "",
     );
+    // if the above replace fails to find a match, the code will still be present
+    // in the userInput. Replace it with input if available.
+    if (userInput.includes("\`\`\`") && (input !== "" || !input)) {
+      userInput = input;
+    }
 
     const rif: RangeInFileWithContents =
       contextItemToRangeInFileWithContents(contextItemToEdit);
