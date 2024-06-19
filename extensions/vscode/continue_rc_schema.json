@@ -747,7 +747,9 @@
                   "chat-bison-001",
                   "gemini-pro",
                   "gemini-1.5-pro-latest",
-                  "gemini-1.5-flash-latest"
+                  "gemini-1.5-pro",
+                  "gemini-1.5-flash-latest",
+                  "gemini-1.5-flash"
                 ]
               }
             }
@@ -1217,7 +1219,9 @@
                       "chat-bison-001",
                       "gemini-pro",
                       "gemini-1.5-pro-latest",
+                      "gemini-1.5-pro",
                       "gemini-1.5-flash-latest",
+                      "gemini-1.5-flash",
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",
