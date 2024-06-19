@@ -20,6 +20,8 @@ import { setupRemoteConfigSync } from "../stubs/activation";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
+import { MultiMessenger } from "../../../../binary/src/MultiMessenger";
+import { TcpMessenger } from "../../../../binary/src/TcpMessenger";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
@@ -87,13 +89,18 @@ export class VsCodeExtension {
       ToCoreProtocol,
       FromCoreProtocol
     >();
+    const tcpMessenger = new TcpMessenger<ToCoreProtocol, FromCoreProtocol>();
+    const multiMessenger = new MultiMessenger<ToCoreProtocol, FromCoreProtocol>(
+      [inProcessMessenger, tcpMessenger],
+    );
+
     const vscodeMessenger = new VsCodeMessenger(
       inProcessMessenger,
       this.sidebar.webviewProtocol,
       this.ide,
       verticalDiffManagerPromise,
     );
-    this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
+    this.core = new Core(multiMessenger, this.ide, async (log: string) => {
       outputChannel.appendLine(
         "==========================================================================",
       );
