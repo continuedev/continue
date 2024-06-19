@@ -9,13 +9,9 @@ export async function* streamResponse(
     throw new Error("No response body returned.");
   }
 
-  const stream = response.body as any;
+  const stream = (ReadableStream as any).from(response.body);
 
-  const decoder = new TextDecoder("utf-8");
-
-  for await (const chunk of stream) {
-    yield decoder.decode(chunk, { stream: true, });
-  }
+  yield* stream.pipeThrough(new TextDecoderStream("utf-8"));
 }
 
 function parseDataLine(line: string): any {

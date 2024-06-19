@@ -2,33 +2,19 @@ import {
   BedrockRuntimeClient,
   InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
-import * as fs from "node:fs";
-import os from "node:os";
-import { join as joinPath } from "node:path";
-import { promisify } from "util";
+import { fromIni } from "@aws-sdk/credential-providers";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
+  MessageContent,
   ModelProvider,
 } from "../../index.js";
 import { stripImages } from "../countTokens.js";
 import { BaseLLM } from "../index.js";
 
-const aws4 = require("aws4");
-const readFile = promisify(fs.readFile);
-
-namespace BedrockCommon {
-  export enum Method {
-    Chat = "invoke-with-response-stream",
-    Completion = "invoke-with-response-stream",
-  }
-  export const Service: string = "bedrock";
-  export const AuthAlgo: string = "AWS4-HMAC-SHA256";
-  export const HashAlgo: string = "sha256";
-}
-
 class Bedrock extends BaseLLM {
+  private static PROFILE_NAME: string = "bedrock";
   static providerName: ModelProvider = "bedrock";
   static defaultOptions: Partial<LLMOptions> = {
     region: "us-east-1",
@@ -41,130 +27,6 @@ class Bedrock extends BaseLLM {
     if (!options.apiBase) {
       this.apiBase = `https://bedrock-runtime.${options.region}.amazonaws.com`;
     }
-  }
-
-  private _convertModelName(model: string): string {
-    return (
-      {
-        "claude-3-sonnet-20240229": "anthropic.claude-3-sonnet-20240229-v1:0",
-        "claude-3-haiku-20240307": "anthropic.claude-3-haiku-20240307-v1:0",
-        "claude-2": "anthropic.claude-v2:1",
-      }[model] ?? model
-    );
-  }
-
-  private _convertArgs(options: CompletionOptions) {
-    const finalOptions = {
-      top_k: options.topK,
-      top_p: options.topP,
-      temperature: options.temperature,
-      max_tokens: options.maxTokens ?? 4096,
-      stop_sequences: options.stop,
-    };
-
-    return finalOptions;
-  }
-
-  private _convertMessages(msgs: ChatMessage[]): any[] {
-    const messages = msgs
-      .filter((m) => m.role !== "system")
-      .map((message) => {
-        if (typeof message.content === "string") {
-          return message;
-        }
-        return {
-          ...message,
-          content: message.content.map((part) => {
-            if (part.type === "text") {
-              return part;
-            }
-            return {
-              type: "image",
-              source: {
-                type: "base64",
-                media_type: "image/jpeg",
-                data: part.imageUrl?.url.split(",")[1],
-              },
-            };
-          }),
-        };
-      });
-    return messages;
-  }
-
-  private _parseCredentialsFile(fileContents: string) {
-    const profiles: { [key: string]: any } = {};
-    const lines = fileContents.trim().split("\n");
-
-    let currentProfile: string | null = null;
-
-    for (const line of lines) {
-      const trimmedLine = line.trim();
-
-      if (trimmedLine.startsWith("[") && trimmedLine.endsWith("]")) {
-        currentProfile = trimmedLine.slice(1, -1);
-        profiles[currentProfile] = {};
-      } else if (currentProfile !== null && trimmedLine.includes("=")) {
-        const [key, value] = trimmedLine.split("=");
-        const trimmedKey = key.trim();
-        const trimmedValue = value.trim();
-
-        if (trimmedKey === "aws_access_key_id") {
-          profiles[currentProfile].accessKeyId = trimmedValue;
-        } else if (trimmedKey === "aws_secret_access_key") {
-          profiles[currentProfile].secretAccessKey = trimmedValue;
-        } else if (trimmedKey === "aws_session_token") {
-          profiles[currentProfile].sessionToken = trimmedValue;
-        }
-      }
-    }
-
-    return profiles;
-  }
-
-  private async _fetchWithAwsAuthSigV4(
-    apiMethod: BedrockCommon.Method,
-    body: string,
-    model: string,
-  ): Promise<Response> {
-    const path = `/model/${model}/${apiMethod}`;
-    const opts = {
-      headers: {
-        accept: "application/vnd.amazon.eventstream",
-        "content-type": "application/json",
-        "x-amzn-bedrock-accept": "*/*",
-      },
-      path: path,
-      body: body,
-      service: "bedrock",
-      host: new URL(this.apiBase!).host,
-      region: this.region,
-    };
-
-    let accessKeyId: string;
-    let secretAccessKey: string;
-    let sessionToken: string;
-
-    try {
-      const data = await readFile(
-        joinPath(process.env.HOME ?? os.homedir(), ".aws", "credentials"),
-        "utf8",
-      );
-      const credentialsFile = this._parseCredentialsFile(data);
-      const credentials = credentialsFile.bedrock ?? credentialsFile.default;
-      accessKeyId = credentials.accessKeyId;
-      secretAccessKey = credentials.secretAccessKey;
-      sessionToken = credentials.sessionToken || "";
-    } catch (err) {
-      console.error("Error reading AWS credentials", err);
-      return new Response("403");
-    }
-    return await this.fetch(new URL(`${this.apiBase}${path}`), {
-      method: "POST",
-      headers: aws4.sign(opts, { accessKeyId, secretAccessKey, sessionToken })
-        .headers,
-      body: body,
-    });
   }
 
   protected async *_streamComplete(
@@ -181,50 +43,171 @@ class Bedrock extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const data = await readFile(
-      joinPath(process.env.HOME ?? os.homedir(), ".aws", "credentials"),
-      "utf8",
-    );
-    const credentialsFile = this._parseCredentialsFile(data);
-    const credentials = credentialsFile.bedrock ?? credentialsFile.default;
-    const accessKeyId = credentials.accessKeyId;
-    const secretAccessKey = credentials.secretAccessKey;
-    const sessionToken = credentials.sessionToken || "";
+    const credentials = await this._getCredentials();
     const client = new BedrockRuntimeClient({
       region: this.region,
       credentials: {
-        accessKeyId: accessKeyId,
-        secretAccessKey: secretAccessKey,
-        sessionToken: sessionToken,
+        accessKeyId: credentials.accessKeyId,
+        secretAccessKey: credentials.secretAccessKey,
+        sessionToken: credentials.sessionToken || "",
       },
     });
-    const command = new InvokeModelWithResponseStreamCommand({
-      body: new TextEncoder().encode(
-        JSON.stringify({
-          anthropic_version: "bedrock-2023-05-31",
-          max_tokens: options.maxTokens,
-          system: this.systemMessage,
-          messages: this._convertMessages(messages),
-          temperature: options.temperature,
-          top_p: options.topP,
-          top_k: options.topK,
-          stop_sequences: options.stop,
-        }),
-      ),
-      contentType: "application/json",
-      modelId: options.model,
-    });
+    const toolkit = this._getToolkit(options.model);
+    const command = toolkit.generateCommand(messages, options);
     const response = await client.send(command);
     if (response.body) {
       for await (const value of response.body) {
-        const binaryChunk = value.chunk?.bytes;
-        const textChunk = new TextDecoder().decode(binaryChunk);
-        const chunk = JSON.parse(textChunk).delta?.text;
-        if (chunk) {
-          yield { role: "assistant", content: chunk };
+        const text = toolkit.unwrapResponseChunk(value);
+        if (text) {
+          yield { role: "assistant", content: text };
         }
       }
     }
+  }
+
+  private async _getCredentials() {
+    try {
+      return await fromIni({
+        profile: Bedrock.PROFILE_NAME,
+      })();
+    } catch (e) {
+      console.warn(
+        `AWS profile with name ${Bedrock.PROFILE_NAME} not found in ~/.aws/credentials, using default profile`,
+      );
+      return await fromIni()();
+    }
+  }
+
+  private _getToolkit(model: string): BedrockModelToolkit {
+    if (model.includes("claude-3")) {
+      return new AnthropicClaude3Toolkit(this);
+    } else if (model.includes("llama")) {
+      return new Llama3Toolkit(this);
+    } else {
+      throw new Error(
+        `Model ${model} is currently not supported in Continue for Bedrock`,
+      );
+    }
+  }
+}
+
+interface BedrockModelToolkit {
+  generateCommand(
+    messages: ChatMessage[],
+    options: CompletionOptions,
+  ): InvokeModelWithResponseStreamCommand;
+  unwrapResponseChunk(rawValue: any): string;
+}
+
+class AnthropicClaude3Toolkit implements BedrockModelToolkit {
+  constructor(private bedrock: Bedrock) {}
+  generateCommand(
+    messages: ChatMessage[],
+    options: CompletionOptions,
+  ): InvokeModelWithResponseStreamCommand {
+    const payload = {
+      anthropic_version: "bedrock-2023-05-31",
+      max_tokens: options.maxTokens,
+      system: this.bedrock.systemMessage,
+      messages: this._convertMessages(messages),
+      temperature: options.temperature,
+      top_p: options.topP,
+      top_k: options.topK,
+      stop_sequences: options.stop,
+    };
+    return new InvokeModelWithResponseStreamCommand({
+      body: new TextEncoder().encode(JSON.stringify(payload)),
+      contentType: "application/json",
+      modelId: options.model,
+    });
+  }
+
+  private _convertMessages(msgs: ChatMessage[]): any[] {
+    return msgs
+      .filter((m) => m.role !== "system")
+      .map((message) => this._convertMessage(message));
+  }
+
+  private _convertMessage(message: ChatMessage): any {
+    return {
+      role: message.role,
+      content: this._convertMessageContent(message.content),
+    };
+  }
+
+  private _convertMessageContent(messageContent: MessageContent): any {
+    if (typeof messageContent === "string") {
+      return messageContent;
+    }
+    return messageContent.map((part) => {
+      if (part.type === "text") {
+        return part;
+      }
+      return {
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: "image/jpeg",
+          data: part.imageUrl?.url.split(",")[1],
+        },
+      };
+    });
+  }
+  unwrapResponseChunk(rawValue: any): string {
+    const binaryChunk = rawValue.chunk?.bytes;
+    const textChunk = new TextDecoder().decode(binaryChunk);
+    const chunk = JSON.parse(textChunk).delta?.text;
+    return chunk;
+  }
+}
+
+class Llama3Toolkit implements BedrockModelToolkit {
+  constructor(private bedrock: Bedrock) {}
+  generateCommand(
+    messages: ChatMessage[],
+    options: CompletionOptions,
+  ): InvokeModelWithResponseStreamCommand {
+    let prompt = "<|begin_of_text|>";
+    if (this.bedrock.systemMessage) {
+      prompt += `<|start_header_id|>system<|end_header_id|>${this.bedrock.systemMessage}<|eot_id|>`;
+    }
+    for (const message of messages) {
+      let content = "";
+      if (typeof message.content === "string") {
+        content = message.content;
+      } else {
+        for (const part of message.content) {
+          if (part.type === "text") {
+            content += part.text || "";
+          } else {
+            console.warn("Skipping non-text message part", part);
+          }
+        }
+      }
+      if (content) {
+        prompt += `<|start_header_id|>${message.role}<|end_header_id|>${content}<|eot_id|>`;
+      }
+    }
+    prompt += "<|start_header_id|>assistant<|end_header_id|>";
+
+    const payload = {
+      prompt,
+      max_gen_len: options.maxTokens,
+      temperature: options.temperature,
+      top_p: options.topP,
+    };
+
+    return new InvokeModelWithResponseStreamCommand({
+      body: new TextEncoder().encode(JSON.stringify(payload)),
+      contentType: "application/json",
+      modelId: options.model,
+    });
+  }
+  unwrapResponseChunk(rawValue: any): string {
+    const binaryChunk = rawValue.chunk?.bytes;
+    const textChunk = new TextDecoder().decode(binaryChunk);
+    const chunk = JSON.parse(textChunk).generation;
+    return chunk;
   }
 }
 
