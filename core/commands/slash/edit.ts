@@ -250,7 +250,8 @@ const EditSlashCommand: SlashCommand = {
       `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,
       "",
     );
-
+    // if the above replace fails to find a match, the code will still be present
+    // in the userInput. Replace it with input if available.
     if (userInput.includes("\`\`\`") && (input !== "" || !input)) {
       userInput = input;
     }
