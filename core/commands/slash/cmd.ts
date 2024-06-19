@@ -14,6 +14,11 @@ const GenerateTerminalCommand: SlashCommand = {
   name: "cmd",
   description: "Generate a shell command",
   run: async function* ({ ide, llm, input }) {
+    if (input.trim() === "") {
+      yield "Please provide a description of the shell command you want to generate. For example, '/cmd List all files in the current directory'.";
+      return;
+    }
+
     const gen =
       llm.streamComplete(`The user has made a request to run a shell command. Their description of what it should do is:
 
