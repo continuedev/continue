@@ -12,7 +12,7 @@ import {
   RangeInFile,
 } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
-import { getBasename } from "core/util";
+import { getBasename, getRelativePath } from "core/util";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -591,12 +591,13 @@ function TipTapEditor(props: TipTapEditorProps) {
         const rif: RangeInFile & { contents: string } =
           data.rangeInFileWithContents;
         const basename = getBasename(rif.filepath);
+        const relativePath = getRelativePath(rif.filepath, await ideMessenger.ide.getWorkspaceDirs());
+        const rangeStr = `(${rif.range.start.line + 1}-${rif.range.end.line + 1})`;
         const item: ContextItemWithId = {
           content: rif.contents,
-          name: `${basename} (${rif.range.start.line + 1}-${
-            rif.range.end.line + 1
-          })`,
-          description: rif.filepath,
+          name: `${basename} ${rangeStr}`,
+          // Description is passed on to the LLM to give more context on file path
+          description: `${relativePath} ${rangeStr}`,
           id: {
             providerTitle: "code",
             itemId: rif.filepath,
