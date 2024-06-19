@@ -473,7 +473,7 @@ If you'd like to write a context provider in a language other than TypeScript, y
 
 Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI.
 
-### Exention API for VSCode
+### Extension API for VSCode
 
 Continue exposes an API for registering context providers from a 3rd party VSCode extension. This is useful if you have a VSCode extension that provides some additional context that you would like to use in Continue. To use this API, add the following to your `package.json`:
 
