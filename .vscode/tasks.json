@@ -154,6 +154,16 @@
       "options": {
         "cwd": "binary"
       }
+    },
+    {
+      "label": "docs:start",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "start"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "docs"
+      }
     }
   ]
 }
