@@ -772,6 +772,7 @@ interface ExperimentalConfig {
   promptPath?: string;
 }
 
+// config.json
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
@@ -799,6 +800,7 @@ export type ContinueRcJson = Partial<SerializedContinueConfig> & {
   mergeBehavior: ConfigMergeType;
 };
 
+// config.ts - give users simplified interfaces
 export interface Config {
   /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
   allowAnonymousTelemetry?: boolean;
@@ -842,6 +844,7 @@ export interface Config {
   experimental?: ExperimentalConfig;
 }
 
+// in the actual Continue source code
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
   models: ILLM[];

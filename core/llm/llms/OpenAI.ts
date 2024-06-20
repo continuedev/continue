@@ -96,6 +96,7 @@ class OpenAI extends BaseLLM {
           : url.port === "1337" ||
               url.host === "api.openai.com" ||
               url.host === "api.groq.com" ||
+              url.host === "api.deepseek.com" ||
               this.apiType === "azure"
             ? options.stop?.slice(0, 4)
             : options.stop,
