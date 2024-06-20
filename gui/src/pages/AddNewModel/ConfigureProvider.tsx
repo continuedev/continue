@@ -239,23 +239,6 @@ function ConfigureProvider() {
               />
             );
           })}
-
-          <div style={{ padding: "8px" }}>
-            <hr
-              style={{ color: lightGray, border: `1px solid ${lightGray}` }}
-            />
-            <p style={{ color: lightGray }}>
-              OR choose from other providers / models by editing config.json.
-            </p>
-            <CustomModelButton
-              disabled={false}
-              onClick={(e) => {
-                ideMessenger.post("openConfigJson", undefined);
-              }}
-            >
-              <h3 className="text-center my-2">Open config.json</h3>
-            </CustomModelButton>
-          </div>
         </GridDiv>
       </div>
     </FormProvider>

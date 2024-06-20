@@ -17,6 +17,7 @@ import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { providers } from "./configs/providers";
 import { CustomModelButton } from "./ConfigureProvider";
 import { ModelPackage, models } from "./configs/models";
+import { Link } from "react-router-dom";
 
 const IntroDiv = styled.div`
   padding: 8px 12px;
@@ -80,14 +81,6 @@ function AddNewModel() {
         <h3 className="text-lg font-bold m-2 inline-block">Add a new model</h3>
       </div>
       <br />
-      <Toggle
-        selected={providersSelected}
-        optionOne={"Start with a provider"}
-        optionTwo={"Select a specific model"}
-        onClick={() => {
-          setProvidersSelected((prev) => !prev);
-        }}
-      ></Toggle>
       <IntroDiv>
         To add a new model you can either:
         <ul>
@@ -97,96 +90,117 @@ function AddNewModel() {
           </li>
           <li>Select a specific model directly</li>
         </ul>
-        <a href="https://docs.continue.dev/model-setup/overview">
+        <Link to="https://docs.continue.dev/model-setup/overview">
           Visit our setup overview docs
-        </a>{" "}
+        </Link>{" "}
         to learn more.
       </IntroDiv>
-      {providersSelected ? (
-        <GridDiv>
-          <h2>Providers</h2>
 
-          {Object.entries(providers).map(([providerName, modelInfo]) => (
-            <ModelCard
-              title={modelInfo.title}
-              description={modelInfo.description}
-              tags={modelInfo.tags}
-              icon={modelInfo.icon}
-              refUrl={`https://docs.continue.dev/reference/Model%20Providers/${
-                modelInfo.refPage || modelInfo.provider.toLowerCase()
-              }`}
-              onClick={(e) => {
-                console.log(`/addModel/provider/${providerName}`);
-                navigate(`/addModel/provider/${providerName}`);
-              }}
-            />
-          ))}
-        </GridDiv>
-      ) : (
-        <GridDiv>
-          <h2>Models</h2>
+      <GridDiv>
+        <Toggle
+          selected={providersSelected}
+          optionOne={"Start with a provider"}
+          optionTwo={"Select a specific model"}
+          onClick={() => {
+            setProvidersSelected((prev) => !prev);
+          }}
+        ></Toggle>
+        {providersSelected ? (
+          <>
+            <div className="text-center">
+              <h2>Providers</h2>
+              <p>
+                Select a provider below, or configure your own in{" "}
+                <code>config.json</code>
+              </p>
+            </div>
 
-          {Object.entries(modelsByProvider).map(
-            ([providerTitle, modelConfigsByProviderTitle]) => (
-              <div>
-                <div className="-my-8 grid grid-cols-[auto_1fr] w-full items-center mb-2">
-                  <h3 className="">{providerTitle}</h3>
-                  <hr
-                    className="ml-2"
-                    style={{
-                      height: "0px",
-                      width: "calc(100% - 16px)",
-                      color: lightGray,
-                      border: `1px solid ${lightGray}`,
-                      borderRadius: "2px",
-                    }}
-                  ></hr>
-                </div>
+            {Object.entries(providers).map(([providerName, modelInfo]) => (
+              <ModelCard
+                title={modelInfo.title}
+                description={modelInfo.description}
+                tags={modelInfo.tags}
+                icon={modelInfo.icon}
+                refUrl={`https://docs.continue.dev/reference/Model%20Providers/${
+                  modelInfo.refPage || modelInfo.provider.toLowerCase()
+                }`}
+                onClick={(e) => {
+                  console.log(`/addModel/provider/${providerName}`);
+                  navigate(`/addModel/provider/${providerName}`);
+                }}
+              />
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="text-center">
+              <h2>Models</h2>
+              <p>
+                Select a model from the most popular options below, or configure
+                your own in <code>config.json</code>
+              </p>
+            </div>
 
-                {modelConfigsByProviderTitle.map((config) => (
-                  <div className="mb-8">
-                    <ModelCard
-                      title={config.title}
-                      description={config.description}
-                      tags={config.tags}
-                      icon={config.icon}
-                      dimensions={config.dimensions}
-                      providerOptions={config.providerOptions}
-                      onClick={(e, dimensionChoices, selectedProvider) => {
-                        const model = {
-                          ...config.params,
-                          ..._.merge(
-                            {},
-                            ...(config.dimensions?.map((dimension, i) => {
-                              if (!dimensionChoices?.[i]) return {};
-                              return {
-                                ...dimension.options[dimensionChoices[i]],
-                              };
-                            }) || []),
-                          ),
-                          provider: providers[selectedProvider].provider,
-                        };
-                        ideMessenger.post("config/addModel", { model });
-                        dispatch(
-                          setDefaultModel({ title: model.title, force: true }),
-                        );
-                        navigate("/");
+            {Object.entries(modelsByProvider).map(
+              ([providerTitle, modelConfigsByProviderTitle]) => (
+                <div>
+                  <div className="-my-8 grid grid-cols-[auto_1fr] w-full items-center mb-2">
+                    <h3 className="">{providerTitle}</h3>
+                    <hr
+                      className="ml-2"
+                      style={{
+                        height: "0px",
+                        width: "calc(100% - 16px)",
+                        color: lightGray,
+                        border: `1px solid ${lightGray}`,
+                        borderRadius: "2px",
                       }}
-                    />
+                    ></hr>
                   </div>
-                ))}
-              </div>
-            ),
-          )}
-        </GridDiv>
-      )}
 
-      <div style={{ padding: "8px" }}>
-        <hr style={{ color: lightGray, border: `1px solid ${lightGray}` }} />
-        <p style={{ color: lightGray }}>
-          OR choose from other providers / models by editing config.json.
-        </p>
+                  {modelConfigsByProviderTitle.map((config) => (
+                    <div className="mb-8">
+                      <ModelCard
+                        title={config.title}
+                        description={config.description}
+                        tags={config.tags}
+                        icon={config.icon}
+                        dimensions={config.dimensions}
+                        providerOptions={config.providerOptions}
+                        onClick={(e, dimensionChoices, selectedProvider) => {
+                          const model = {
+                            ...config.params,
+                            ..._.merge(
+                              {},
+                              ...(config.dimensions?.map((dimension, i) => {
+                                if (!dimensionChoices?.[i]) return {};
+                                return {
+                                  ...dimension.options[dimensionChoices[i]],
+                                };
+                              }) || []),
+                            ),
+                            provider: providers[selectedProvider].provider,
+                          };
+                          ideMessenger.post("config/addModel", { model });
+                          dispatch(
+                            setDefaultModel({
+                              title: model.title,
+                              force: true,
+                            }),
+                          );
+                          navigate("/");
+                        }}
+                      />
+                    </div>
+                  ))}
+                </div>
+              ),
+            )}
+          </>
+        )}
+
         <CustomModelButton
+          className="w-full"
           disabled={false}
           onClick={(e) => {
             ideMessenger.post("openConfigJson", undefined);
@@ -194,7 +208,7 @@ function AddNewModel() {
         >
           <h3 className="text-center my-2">Open config.json</h3>
         </CustomModelButton>
-      </div>
+      </GridDiv>
     </div>
   );
 }

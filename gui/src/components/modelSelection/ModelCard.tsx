@@ -9,14 +9,14 @@ import {
 } from "..";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import InfoHover from "../InfoHover";
-import ModelProviderTag, { ModelProviderTagVals } from "./ModelProviderTag";
+import ModelProviderTag, { ModelProviderTags } from "./ModelProviderTag";
 import { PackageDimension } from "../../pages/AddNewModel/configs/models";
 import { providers } from "../../pages/AddNewModel/configs/providers";
 
 interface ModelCardProps {
   title: string;
   description: string;
-  tags?: ModelProviderTagVals[];
+  tags?: ModelProviderTags[];
   refUrl?: string;
   icon?: string;
   onClick?: (

@@ -2,9 +2,9 @@ import { ModelProvider } from "core";
 import { ftl } from "../../../components/dialogs/FTCDialog";
 import type { ModelPackage } from "./models";
 import { HTMLInputTypeAttribute } from "react";
-import { ModelProviderTagVals } from "../../../components/modelSelection/ModelProviderTag";
+import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
 import { models } from "./models";
-import * as completionParamsInputsObj from "./completionParamsInputs";
+import { completionParamsInputs } from "./completionParamsInputs";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -27,7 +27,7 @@ export interface ProviderInfo {
   provider: ModelProvider;
   description: string;
   longDescription?: string;
-  tags?: ModelProviderTagVals[];
+  tags?: ModelProviderTags[];
   packages: ModelPackage[];
   params?: any;
   collectInputFor?: InputDescriptor[];
@@ -36,7 +36,7 @@ export interface ProviderInfo {
   downloadUrl?: string;
 }
 
-const completionParamsInputs = Object.values(completionParamsInputsObj);
+const completionParamsInputsConfigs = Object.values(completionParamsInputs);
 
 const openSourceModels = Object.values(models).filter(
   ({ isOpenSource }) => isOpenSource,
@@ -58,7 +58,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     longDescription:
       "Use gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.",
     icon: "openai.png",
-    tags: [ModelProviderTagVals.RequiresApiKey],
+    tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.gpt4o,
       models.gpt4turbo,
@@ -79,7 +79,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
         placeholder: "Enter your OpenAI API key",
         required: true,
       },
-      ...completionParamsInputs,
+      ...completionParamsInputsConfigs,
     ],
     apiKeyUrl: "https://platform.openai.com/account/api-keys",
   },
@@ -90,7 +90,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     description:
       "Anthropic builds state-of-the-art models with large context length and high recall",
     icon: "anthropic.png",
-    tags: [ModelProviderTagVals.RequiresApiKey],
+    tags: [ModelProviderTags.RequiresApiKey],
     longDescription:
       "To get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.",
     collectInputFor: [
@@ -101,9 +101,9 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
         placeholder: "Enter your Anthropic API key",
         required: true,
       },
-      ...completionParamsInputs,
+      ...completionParamsInputsConfigs,
       {
-        ...completionParamsInputsObj.contextLength,
+        ...completionParamsInputs.contextLength,
         defaultValue: 100000,
       },
     ],
@@ -115,13 +115,15 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     provider: "azure",
     description:
       "Azure OpenAI Service offers industry-leading coding and language AI models that you can fine-tune to your specific needs for a variety of use cases.",
-    longDescription:
-      "[Visit our documentation](https://docs.continue.dev/reference/Model%20Providers/azure) for information on obtaining an API key.",
+    longDescription: `[Visit our documentation](https://docs.continue.dev/reference/Model%20Providers/azure) for information on obtaining an API key.
+
+Select the \`GPT-4o\` model below to complete your provider configuration, but note that this will not affect the specific model you need to select when creating your Azure deployment.`,
     icon: "azure.png",
-    tags: [ModelProviderTagVals.RequiresApiKey],
+    tags: [ModelProviderTags.RequiresApiKey],
     refPage: "azure",
-    apiKeyUrl: "", // TODO: Find out from Nate
-    packages: [models.gpt4turbo, models.gpt4o, models.gpt35turbo],
+    apiKeyUrl:
+      "https://azure.microsoft.com/en-us/products/ai-services/openai-service",
+    packages: [models.gpt4o],
     params: {
       apiKey: "",
       engine: "",
@@ -152,7 +154,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
         required: true,
       },
       { ...apiBaseInput, required: true },
-      // ...completionParamsInputs, // TODO: Is this valid?
+      ...completionParamsInputsConfigs,
     ],
   },
   mistral: {
@@ -162,10 +164,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
       "The Mistral API provides seamless access to their models, including Codestral, Mistral 8x22B, Mistral Large, and more.",
     icon: "mistral.png",
     longDescription: `To get access to the Mistral API, obtain your API key from [here](https://console.mistral.ai/codestral) for Codestral or the [Mistral platform](https://docs.mistral.ai/) for all other models.`,
-    tags: [
-      ModelProviderTagVals.RequiresApiKey,
-      ModelProviderTagVals.OpenSource,
-    ],
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     params: {
       apiKey: "",
     },
@@ -177,7 +176,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
         placeholder: "Enter your Mistral API key",
         required: true,
       },
-      ...completionParamsInputs,
+      ...completionParamsInputsConfigs,
     ],
     packages: [
       models.codestral,
@@ -197,7 +196,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     longDescription:
       'To get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model="codellama:7b-instruct"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.',
     icon: "ollama.png",
-    tags: [ModelProviderTagVals.Local, ModelProviderTagVals.OpenSource],
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     packages: [
       {
         ...models.AUTODETECT,
@@ -209,7 +208,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
       ...openSourceModels,
     ],
     collectInputFor: [
-      ...completionParamsInputs,
+      ...completionParamsInputsConfigs,
       { ...apiBaseInput, defaultValue: "http://localhost:11434" },
     ],
     downloadUrl: "https://ollama.ai/",
@@ -221,7 +220,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     description:
       "Optimized for enterprise generative AI, search and discovery, and advanced retrieval.",
     icon: "cohere.png",
-    tags: [ModelProviderTagVals.RequiresApiKey],
+    tags: [ModelProviderTags.RequiresApiKey],
     longDescription:
       "To use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.",
     collectInputFor: [
@@ -232,7 +231,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
         placeholder: "Enter your Cohere API key",
         required: true,
       },
-      ...completionParamsInputs,
+      ...completionParamsInputsConfigs,
     ],
     packages: [models.commandR, models.commandRPlus],
   },
@@ -244,10 +243,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
       "Groq is the fastest LLM provider by a wide margin, using 'LPUs' to serve open-source models at blazing speed.",
     longDescription:
       "To get started with Groq, obtain an API key from their website [here](https://wow.groq.com/).",
-    tags: [
-      ModelProviderTagVals.RequiresApiKey,
-      ModelProviderTagVals.OpenSource,
-    ],
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     collectInputFor: [
       {
         inputType: "text",
@@ -281,10 +277,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
       "Use the TogetherAI API for extremely fast streaming of open-source models",
     icon: "together.png",
     longDescription: `Together is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset`,
-    tags: [
-      ModelProviderTagVals.RequiresApiKey,
-      ModelProviderTagVals.OpenSource,
-    ],
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     params: {
       apiKey: "",
     },
@@ -296,7 +289,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
         placeholder: "Enter your TogetherAI API key",
         required: true,
       },
-      ...completionParamsInputs,
+      ...completionParamsInputsConfigs,
     ],
     packages: [
       models.llama3Chat,
@@ -315,7 +308,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
       "Try out Google's state-of-the-art Gemini model from their API.",
     longDescription: `To get started with Google Gemini API, obtain your API key from [here](https://ai.google.dev/tutorials/workspace_auth_quickstart) and paste it below.`,
     icon: "gemini.png",
-    tags: [ModelProviderTagVals.RequiresApiKey],
+    tags: [ModelProviderTags.RequiresApiKey],
     collectInputFor: [
       {
         inputType: "text",
@@ -336,7 +329,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     longDescription:
       "LMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.",
     icon: "lmstudio.png",
-    tags: [ModelProviderTagVals.Local, ModelProviderTagVals.OpenSource],
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     params: {
       apiBase: "http://localhost:1234/v1/",
     },
@@ -350,7 +343,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
       },
       ...openSourceModels,
     ],
-    collectInputFor: [...completionParamsInputs],
+    collectInputFor: [...completionParamsInputsConfigs],
     downloadUrl: "https://lmstudio.ai/",
   },
   llamafile: {
@@ -360,9 +353,9 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     description:
       "llamafiles are a self-contained binary to run an open-source LLM",
     longDescription: `To get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile?tab=readme-ov-file#quickstart). Then run it with the following command:\n\n\`\`\`shell\nchmod +x ./llamafile\n./llamafile\n\`\`\``,
-    tags: [ModelProviderTagVals.Local, ModelProviderTagVals.OpenSource],
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     packages: openSourceModels,
-    collectInputFor: [...completionParamsInputs],
+    collectInputFor: [...completionParamsInputsConfigs],
     downloadUrl:
       "https://github.com/Mozilla-Ocho/llamafile?tab=readme-ov-file#quickstart",
   },
@@ -383,13 +376,10 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
         placeholder: "Enter your Replicate API key",
         required: true,
       },
-      ...completionParamsInputs,
+      ...completionParamsInputsConfigs,
     ],
     icon: "replicate.png",
-    tags: [
-      ModelProviderTagVals.RequiresApiKey,
-      ModelProviderTagVals.OpenSource,
-    ],
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
     packages: [
       models.llama3Chat,
       models.codeLlamaInstruct,
@@ -417,9 +407,9 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
 
 After it's up and running, you can start using Continue.`,
     icon: "llamacpp.png",
-    tags: [ModelProviderTagVals.Local, ModelProviderTagVals.OpenSource],
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     packages: openSourceModels,
-    collectInputFor: [...completionParamsInputs],
+    collectInputFor: [...completionParamsInputsConfigs],
     downloadUrl: "https://github.com/ggerganov/llama.cpp",
   },
   "openai-aiohttp": {
@@ -441,10 +431,10 @@ After it's up and running, you can start using Continue.`,
         ...apiBaseInput,
         defaultValue: "http://localhost:8000/v1/",
       },
-      ...completionParamsInputs,
+      ...completionParamsInputsConfigs,
     ],
     icon: "openai.png",
-    tags: [ModelProviderTagVals.Local, ModelProviderTagVals.OpenSource],
+    tags: [ModelProviderTags.Local, ModelProviderTags.OpenSource],
     packages: [
       {
         ...models.AUTODETECT,
@@ -464,7 +454,7 @@ After it's up and running, you can start using Continue.`,
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key",
     longDescription: `New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key. If you are ready to set up a model for long-term use or have used all ${ftl()} free uses, you can enter your API key or use a local model.`,
     icon: "openai.png",
-    tags: [ModelProviderTagVals.Free],
+    tags: [ModelProviderTags.Free],
     packages: [
       models.codellama70bTrial,
       { ...models.gpt4o, title: "GPT-4o (trial)" },
@@ -481,6 +471,6 @@ After it's up and running, you can start using Continue.`,
         },
       },
     ],
-    collectInputFor: [...completionParamsInputs],
+    collectInputFor: [...completionParamsInputsConfigs],
   },
 };
