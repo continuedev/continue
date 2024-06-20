@@ -290,6 +290,12 @@ const configs: SiteIndexingConfig[] = [
     rootUrl: "https://learn.microsoft.com/en-us/dotnet/csharp/",
     faviconUrl: "https://learn.microsoft.com/favicon.ico",
   },
+  {
+    title: "Godot",
+    startUrl: "https://docs.godotengine.org/en/latest/",
+    rootUrl: "https://docs.godotengine.org/en/latest/",
+    faviconUrl: "https://godotengine.org/favicon.ico",
+  },
 ];
 
 export default configs;
