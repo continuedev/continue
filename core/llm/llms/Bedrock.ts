@@ -84,7 +84,9 @@ class Bedrock extends BaseLLM {
     } else if (model.includes("llama")) {
       return new Llama3Toolkit(this);
     } else {
-      throw new Error(`Model ${model} is currently not supported in Continue for Bedrock`);
+      throw new Error(
+        `Model ${model} is currently not supported in Continue for Bedrock`,
+      );
     }
   }
 }

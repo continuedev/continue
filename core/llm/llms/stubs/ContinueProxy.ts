@@ -6,6 +6,10 @@ class ContinueProxy extends OpenAI {
   static defaultOptions: Partial<LLMOptions> = {
     apiBase: "http://localhost:3000/proxy/v1",
   };
+
+  supportsFim(): boolean {
+    return true;
+  }
 }
 
 export default ContinueProxy;
