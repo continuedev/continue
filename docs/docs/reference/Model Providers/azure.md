@@ -10,12 +10,17 @@ You need to apply for access to the Azure OpenAI service. Response times are typ
 
 ## Configuration
 
+You can configure Azure OpenAI service through the UI, or you can configure it manually in `config.json`.
+
 ```json title="~/.continue/config.json"
 "models": [{
     "title": "Azure OpenAI",
     "provider": "azure",
-    "model": "gpt-4",
-    "apiBase": "https://my-azure-openai-instance.openai.azure.com/",
+    "model": "<YOUR_MODEL>",
+    "apiBase": "<YOUR_DEPLOYMENT_BASE>",
+    "engine": "<YOUR_ENGINE>",
+    "apiVersion": "<YOUR_API_VERSION>",
+    "apiType": "azure",
     "apiKey": "<MY_API_KEY>"
 }]
 ```
