@@ -1,7 +1,7 @@
 import { Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import { Dispatch, Fragment, SetStateAction } from "react";
-import { DisplayInfo } from "../../../util/modelData";
+import { DisplayInfo } from "../../../pages/ConfigureNewModel/modelProviders";
 import {
   StyledListbox,
   StyledListboxButton,

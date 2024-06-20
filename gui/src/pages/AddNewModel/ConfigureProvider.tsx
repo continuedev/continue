@@ -10,18 +10,16 @@ import {
   defaultBorderRadius,
   lightGray,
   vscBackground,
-} from "../components";
-import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
-import ModelCard from "../components/modelSelection/ModelCard";
-import { IdeMessengerContext } from "../context/IdeMessenger";
-import { useNavigationListener } from "../hooks/useNavigationListener";
-import { setDefaultModel } from "../redux/slices/stateSlice";
-import {
-  MODEL_PROVIDER_TAG_COLORS,
-  ModelInfo,
-  PROVIDER_INFO,
-  updatedObj,
-} from "../util/modelData";
+} from "../../components";
+import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
+import ModelCard from "../../components/modelSelection/ModelCard";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useNavigationListener } from "../../hooks/useNavigationListener";
+import { setDefaultModel } from "../../redux/slices/stateSlice";
+import { updatedObj } from "../../util";
+import ModelProviderTag from "../../components/modelSelection/ModelProviderTag";
+import { providers } from "./configs/providers";
+import type { ProviderInfo } from "./configs/providers";
 
 const GridDiv = styled.div`
   display: grid;
@@ -55,22 +53,22 @@ export const CustomModelButton = styled.div<{ disabled: boolean }>`
   `}
 `;
 
-function ModelConfig() {
+function ConfigureProvider() {
   useNavigationListener();
   const formMethods = useForm();
-  const { modelName } = useParams();
+  const { providerName } = useParams();
   const ideMessenger = useContext(IdeMessengerContext);
-
-  const [modelInfo, setModelInfo] = useState<ModelInfo | undefined>(undefined);
-
-  useEffect(() => {
-    if (modelName) {
-      setModelInfo(PROVIDER_INFO[modelName]);
-    }
-  }, [modelName]);
-
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [modelInfo, setModelInfo] = useState<ProviderInfo | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    if (providerName) {
+      setModelInfo(providers[providerName]);
+    }
+  }, [providerName]);
 
   const disableModelCards = useCallback(() => {
     return (
@@ -98,11 +96,11 @@ function ModelConfig() {
           <ArrowLeftIcon
             width="1.2em"
             height="1.2em"
-            onClick={() => navigate("/models")}
+            onClick={() => navigate("/addModel")}
             className="inline-block ml-4 cursor-pointer"
           />
           <h3 className="text-lg font-bold m-2 inline-block">
-            Configure Model
+            Configure provider
           </h3>
         </div>
 
@@ -117,22 +115,11 @@ function ModelConfig() {
             )}
             <h2>{modelInfo?.title}</h2>
           </div>
-          {modelInfo?.tags?.map((tag, idx) => {
-            return (
-              <span
-                key={idx}
-                style={{
-                  backgroundColor: `${MODEL_PROVIDER_TAG_COLORS[tag]}55`,
-                  color: "white",
-                  padding: "2px 4px",
-                  borderRadius: defaultBorderRadius,
-                  marginRight: "4px",
-                }}
-              >
-                {tag}
-              </span>
-            );
-          })}
+
+          {modelInfo?.tags?.map((tag, i) => (
+            <ModelProviderTag key={i} tag={tag} />
+          ))}
+
           <StyledMarkdownPreview
             className="mt-2"
             source={modelInfo?.longDescription || modelInfo?.description}
@@ -146,26 +133,24 @@ function ModelConfig() {
 
               {modelInfo?.collectInputFor
                 ?.filter((d) => d.required)
-                .map((d, idx) => {
-                  return (
-                    <div key={idx}>
-                      <label htmlFor={d.key}>{d.key}</label>
-                      <Input
-                        type={d.inputType}
-                        id={d.key}
-                        className="border-2 border-gray-200 rounded-md p-2 m-2"
-                        placeholder={d.key}
-                        defaultValue={d.defaultValue}
-                        min={d.min}
-                        max={d.max}
-                        step={d.step}
-                        {...formMethods.register(d.key, {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                  );
-                })}
+                .map((d, idx) => (
+                  <div key={idx} className="mb-2">
+                    <label htmlFor={d.key}>{d.label}</label>
+                    <Input
+                      type={d.inputType}
+                      id={d.key}
+                      className="border-2 border-gray-200 rounded-md p-2 m-2"
+                      placeholder={d.label}
+                      defaultValue={d.defaultValue}
+                      min={d.min}
+                      max={d.max}
+                      step={d.step}
+                      {...formMethods.register(d.key, {
+                        required: true,
+                      })}
+                    />
+                  </div>
+                ))}
             </>
           )}
 
@@ -180,16 +165,12 @@ function ModelConfig() {
                 if (d.required) return null;
                 return (
                   <div key={idx}>
-                    <label htmlFor={d.key}>
-                      {d.key.split(".")[d.key.split(".").length - 1]}
-                    </label>
+                    <label htmlFor={d.key}>{d.label}</label>
                     <Input
                       type={d.inputType}
                       id={d.key}
                       className="border-2 border-gray-200 rounded-md p-2 m-2"
-                      placeholder={
-                        d.key.split(".")[d.key.split(".").length - 1]
-                      }
+                      placeholder={d.label}
                       defaultValue={d.defaultValue}
                       min={d.min}
                       max={d.max}
@@ -254,27 +235,10 @@ function ModelConfig() {
               />
             );
           })}
-
-          <div style={{ padding: "8px" }}>
-            <hr
-              style={{ color: lightGray, border: `1px solid ${lightGray}` }}
-            />
-            <p style={{ color: lightGray }}>
-              OR choose from other providers / models by editing config.json.
-            </p>
-            <CustomModelButton
-              disabled={false}
-              onClick={(e) => {
-                ideMessenger.post("openConfigJson", undefined);
-              }}
-            >
-              <h3 className="text-center my-2">Open config.json</h3>
-            </CustomModelButton>
-          </div>
         </GridDiv>
       </div>
     </FormProvider>
   );
 }
 
-export default ModelConfig;
+export default ConfigureProvider;
