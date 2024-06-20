@@ -165,16 +165,12 @@ function ConfigureProvider() {
                 if (d.required) return null;
                 return (
                   <div key={idx}>
-                    <label htmlFor={d.key}>
-                      {d.key.split(".")[d.key.split(".").length - 1]}
-                    </label>
+                    <label htmlFor={d.key}>{d.label}</label>
                     <Input
                       type={d.inputType}
                       id={d.key}
                       className="border-2 border-gray-200 rounded-md p-2 m-2"
-                      placeholder={
-                        d.key.split(".")[d.key.split(".").length - 1]
-                      }
+                      placeholder={d.label}
                       defaultValue={d.defaultValue}
                       min={d.min}
                       max={d.max}
