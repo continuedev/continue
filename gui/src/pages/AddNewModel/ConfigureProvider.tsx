@@ -18,7 +18,8 @@ import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { updatedObj } from "../../util";
 import ModelProviderTag from "../../components/modelSelection/ModelProviderTag";
-import { ModelInfo, PROVIDER_INFO } from "./modelProviders";
+import { providers } from "./configs/providers";
+import type { ProviderInfo } from "./configs/providers";
 
 const GridDiv = styled.div`
   display: grid;
@@ -52,20 +53,22 @@ export const CustomModelButton = styled.div<{ disabled: boolean }>`
   `}
 `;
 
-function ModelConfig() {
+function ConfigureProvider() {
   useNavigationListener();
   const formMethods = useForm();
-  const { modelName } = useParams();
+  const { providerName } = useParams();
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [modelInfo, setModelInfo] = useState<ModelInfo | undefined>(undefined);
+  const [modelInfo, setModelInfo] = useState<ProviderInfo | undefined>(
+    undefined,
+  );
 
   useEffect(() => {
-    if (modelName) {
-      setModelInfo(PROVIDER_INFO[modelName]);
+    if (providerName) {
+      setModelInfo(providers[providerName]);
     }
-  }, [modelName]);
+  }, [providerName]);
 
   const disableModelCards = useCallback(() => {
     return (
@@ -93,11 +96,11 @@ function ModelConfig() {
           <ArrowLeftIcon
             width="1.2em"
             height="1.2em"
-            onClick={() => navigate("/models")}
+            onClick={() => navigate("/addModel")}
             className="inline-block ml-4 cursor-pointer"
           />
           <h3 className="text-lg font-bold m-2 inline-block">
-            Configure Model
+            Configure provider
           </h3>
         </div>
 
@@ -130,26 +133,24 @@ function ModelConfig() {
 
               {modelInfo?.collectInputFor
                 ?.filter((d) => d.required)
-                .map((d, idx) => {
-                  return (
-                    <div key={idx}>
-                      <label htmlFor={d.key}>{d.label}</label>
-                      <Input
-                        type={d.inputType}
-                        id={d.key}
-                        className="border-2 border-gray-200 rounded-md p-2 m-2"
-                        placeholder={d.label}
-                        defaultValue={d.defaultValue}
-                        min={d.min}
-                        max={d.max}
-                        step={d.step}
-                        {...formMethods.register(d.key, {
-                          required: true,
-                        })}
-                      />
-                    </div>
-                  );
-                })}
+                .map((d, idx) => (
+                  <div key={idx} className="mb-2">
+                    <label htmlFor={d.key}>{d.label}</label>
+                    <Input
+                      type={d.inputType}
+                      id={d.key}
+                      className="border-2 border-gray-200 rounded-md p-2 m-2"
+                      placeholder={d.label}
+                      defaultValue={d.defaultValue}
+                      min={d.min}
+                      max={d.max}
+                      step={d.step}
+                      {...formMethods.register(d.key, {
+                        required: true,
+                      })}
+                    />
+                  </div>
+                ))}
             </>
           )}
 
@@ -261,4 +262,4 @@ function ModelConfig() {
   );
 }
 
-export default ModelConfig;
+export default ConfigureProvider;

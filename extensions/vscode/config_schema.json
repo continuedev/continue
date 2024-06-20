@@ -160,7 +160,8 @@
             "fireworks",
             "continue-proxy",
             "cloudflare",
-            "deepseek"
+            "deepseek",
+            "azure"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",

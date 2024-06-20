@@ -1,11 +1,27 @@
 import { ModelProvider } from "core";
-import { ftl } from "../../components/dialogs/FTCDialog";
-import type { ModelPackage, InputDescriptor } from "./modelPackages";
-import { ModelProviderTagVals } from "../../components/modelSelection/ModelProviderTag";
-import * as modelPackagesObj from "./modelPackages";
+import { ftl } from "../../../components/dialogs/FTCDialog";
+import type { ModelPackage } from "./models";
+import { HTMLInputTypeAttribute } from "react";
+import { ModelProviderTagVals } from "../../../components/modelSelection/ModelProviderTag";
+import { models } from "./models";
 import * as completionParamsInputsObj from "./completionParamsInputs";
 
-export interface ModelInfo {
+export interface InputDescriptor {
+  inputType: HTMLInputTypeAttribute;
+  key: string;
+  label: string;
+  placeholder?: string;
+  defaultValue?: string | number;
+  min?: number;
+  max?: number;
+  step?: number;
+  options?: string[];
+  required?: boolean;
+  description?: string;
+  [key: string]: any;
+}
+
+export interface ProviderInfo {
   title: string;
   icon?: string;
   provider: ModelProvider;
@@ -21,13 +37,12 @@ export interface ModelInfo {
 }
 
 const completionParamsInputs = Object.values(completionParamsInputsObj);
-const modelPackages = Object.values(modelPackagesObj);
 
-const openSourcePackages = modelPackages.filter(
+const openSourceModels = Object.values(models).filter(
   ({ isOpenSource }) => isOpenSource,
 );
 
-const apiBaseInput: InputDescriptor = {
+export const apiBaseInput: InputDescriptor = {
   inputType: "text",
   key: "apiBase",
   label: "API Base",
@@ -35,17 +50,7 @@ const apiBaseInput: InputDescriptor = {
   required: false,
 };
 
-export const MODEL_INFO: Array<ModelPackage | string> = [
-  "OpenAI",
-  "Anthropic",
-  "Mistral",
-  "Cohere",
-  "Gemini",
-  "Open Source",
-  ...modelPackages,
-];
-
-export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
+export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
   openai: {
     title: "OpenAI",
     provider: "openai",
@@ -55,13 +60,13 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     icon: "openai.png",
     tags: [ModelProviderTagVals.RequiresApiKey],
     packages: [
-      modelPackagesObj.gpt4o,
-      modelPackagesObj.gpt4turbo,
-      modelPackagesObj.gpt35turbo,
+      models.gpt4o,
+      models.gpt4turbo,
+      models.gpt35turbo,
       {
-        ...modelPackagesObj.AUTODETECT,
+        ...models.AUTODETECT,
         params: {
-          ...modelPackagesObj.AUTODETECT.params,
+          ...models.AUTODETECT.params,
           title: "OpenAI",
         },
       },
@@ -99,15 +104,56 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ...completionParamsInputs,
       {
         ...completionParamsInputsObj.contextLength,
-        defaultValue: 100_000,
+        defaultValue: 100000,
       },
     ],
-    packages: [
-      modelPackagesObj.claude3Opus,
-      modelPackagesObj.claude3Sonnet,
-      modelPackagesObj.claude3Haiku,
-    ],
+    packages: [models.claude3Opus, models.claude3Sonnet, models.claude3Haiku],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
+  },
+  azure: {
+    title: "Azure OpenAI",
+    provider: "azure",
+    description:
+      "Azure OpenAI Service offers industry-leading coding and language AI models that you can fine-tune to your specific needs for a variety of use cases.",
+    longDescription:
+      "[Visit our documentation](https://docs.continue.dev/reference/Model%20Providers/azure) for information on obtaining an API key.",
+    icon: "azure.png",
+    tags: [ModelProviderTagVals.RequiresApiKey],
+    refPage: "azure",
+    apiKeyUrl: "", // TODO: Find out from Nate
+    packages: [models.gpt4turbo, models.gpt4o, models.gpt35turbo],
+    params: {
+      apiKey: "",
+      engine: "",
+      apiBase: "",
+      apiVersion: "",
+      apiType: "azure",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your Azure OpenAI API key",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "engine",
+        label: "Engine",
+        placeholder: "Enter the engine name",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "apiVersion",
+        label: "Api Version",
+        placeholder: "Enter the API version",
+        required: true,
+      },
+      { ...apiBaseInput, required: true },
+      // ...completionParamsInputs, // TODO: Is this valid?
+    ],
   },
   mistral: {
     title: "Mistral API",
@@ -134,12 +180,12 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ...completionParamsInputs,
     ],
     packages: [
-      modelPackagesObj.codestral,
-      modelPackagesObj.mistralLarge,
-      modelPackagesObj.mistralSmall,
-      modelPackagesObj.mistral8x22b,
-      modelPackagesObj.mistral8x7b,
-      modelPackagesObj.mistral7b,
+      models.codestral,
+      models.mistralLarge,
+      models.mistralSmall,
+      models.mistral8x22b,
+      models.mistral8x7b,
+      models.mistral7b,
     ],
     apiKeyUrl: "https://console.mistral.ai/codestral",
   },
@@ -154,13 +200,13 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     tags: [ModelProviderTagVals.Local, ModelProviderTagVals.OpenSource],
     packages: [
       {
-        ...modelPackagesObj.AUTODETECT,
+        ...models.AUTODETECT,
         params: {
-          ...modelPackagesObj.AUTODETECT.params,
+          ...models.AUTODETECT.params,
           title: "Ollama",
         },
       },
-      ...openSourcePackages,
+      ...openSourceModels,
     ],
     collectInputFor: [
       ...completionParamsInputs,
@@ -188,7 +234,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
       ...completionParamsInputs,
     ],
-    packages: [modelPackagesObj.commandR, modelPackagesObj.commandRPlus],
+    packages: [models.commandR, models.commandRPlus],
   },
   groq: {
     title: "Groq",
@@ -212,14 +258,14 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       },
     ],
     packages: [
-      modelPackagesObj.llama370bChat,
-      modelPackagesObj.llama38bChat,
-      { ...modelPackagesObj.mixtralTrial, title: "Mixtral" },
-      modelPackagesObj.llama270bChat,
+      models.llama370bChat,
+      models.llama38bChat,
+      { ...models.mixtralTrial, title: "Mixtral" },
+      models.llama270bChat,
       {
-        ...modelPackagesObj.AUTODETECT,
+        ...models.AUTODETECT,
         params: {
-          ...modelPackagesObj.AUTODETECT.params,
+          ...models.AUTODETECT.params,
           title: "Groq",
         },
       },
@@ -253,9 +299,9 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ...completionParamsInputs,
     ],
     packages: [
-      modelPackagesObj.llama3Chat,
-      modelPackagesObj.codeLlamaInstruct,
-      modelPackagesObj.mistralOs,
+      models.llama3Chat,
+      models.codeLlamaInstruct,
+      models.mistralOs,
     ].map((p) => {
       p.params.contextLength = 4096;
       return p;
@@ -279,11 +325,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
         required: true,
       },
     ],
-    packages: [
-      modelPackagesObj.gemini15Pro,
-      modelPackagesObj.geminiPro,
-      modelPackagesObj.gemini15Flash,
-    ],
+    packages: [models.gemini15Pro, models.geminiPro, models.gemini15Flash],
     apiKeyUrl: "https://aistudio.google.com/app/apikey",
   },
   lmstudio: {
@@ -300,13 +342,13 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
     },
     packages: [
       {
-        ...modelPackagesObj.AUTODETECT,
+        ...models.AUTODETECT,
         params: {
-          ...modelPackagesObj.AUTODETECT.params,
+          ...models.AUTODETECT.params,
           title: "LM Studio",
         },
       },
-      ...openSourcePackages,
+      ...openSourceModels,
     ],
     collectInputFor: [...completionParamsInputs],
     downloadUrl: "https://lmstudio.ai/",
@@ -319,7 +361,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       "llamafiles are a self-contained binary to run an open-source LLM",
     longDescription: `To get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile?tab=readme-ov-file#quickstart). Then run it with the following command:\n\n\`\`\`shell\nchmod +x ./llamafile\n./llamafile\n\`\`\``,
     tags: [ModelProviderTagVals.Local, ModelProviderTagVals.OpenSource],
-    packages: openSourcePackages,
+    packages: openSourceModels,
     collectInputFor: [...completionParamsInputs],
     downloadUrl:
       "https://github.com/Mozilla-Ocho/llamafile?tab=readme-ov-file#quickstart",
@@ -349,14 +391,14 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
       ModelProviderTagVals.OpenSource,
     ],
     packages: [
-      modelPackagesObj.llama3Chat,
-      modelPackagesObj.codeLlamaInstruct,
-      modelPackagesObj.wizardCoder,
-      modelPackagesObj.mistralOs,
+      models.llama3Chat,
+      models.codeLlamaInstruct,
+      models.wizardCoder,
+      models.mistralOs,
     ],
     apiKeyUrl: "https://replicate.com/account/api-tokens",
   },
-  llamacpp: {
+  "llama.cpp": {
     title: "llama.cpp",
     provider: "llama.cpp",
     refPage: "llamacpp",
@@ -376,7 +418,7 @@ export const PROVIDER_INFO: { [key: string]: ModelInfo } = {
 After it's up and running, you can start using Continue.`,
     icon: "llamacpp.png",
     tags: [ModelProviderTagVals.Local, ModelProviderTagVals.OpenSource],
-    packages: openSourcePackages,
+    packages: openSourceModels,
     collectInputFor: [...completionParamsInputs],
     downloadUrl: "https://github.com/ggerganov/llama.cpp",
   },
@@ -405,16 +447,16 @@ After it's up and running, you can start using Continue.`,
     tags: [ModelProviderTagVals.Local, ModelProviderTagVals.OpenSource],
     packages: [
       {
-        ...modelPackagesObj.AUTODETECT,
+        ...models.AUTODETECT,
         params: {
-          ...modelPackagesObj.AUTODETECT.params,
+          ...models.AUTODETECT.params,
           title: "OpenAI",
         },
       },
-      ...openSourcePackages,
+      ...openSourceModels,
     ],
   },
-  freetrial: {
+  "free-trial": {
     title: "Continue limited free trial",
     provider: "free-trial",
     refPage: "freetrial",
@@ -424,17 +466,17 @@ After it's up and running, you can start using Continue.`,
     icon: "openai.png",
     tags: [ModelProviderTagVals.Free],
     packages: [
-      modelPackagesObj.codellama70bTrial,
-      { ...modelPackagesObj.gpt4o, title: "GPT-4o (trial)" },
-      { ...modelPackagesObj.gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
-      { ...modelPackagesObj.claude3Sonnet, title: "Claude 3 Sonnet (trial)" },
-      { ...modelPackagesObj.claude3Haiku, title: "Claude 3 Haiku (trial)" },
-      modelPackagesObj.mixtralTrial,
-      { ...modelPackagesObj.gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
+      models.codellama70bTrial,
+      { ...models.gpt4o, title: "GPT-4o (trial)" },
+      { ...models.gpt35turbo, title: "GPT-3.5-Turbo (trial)" },
+      { ...models.claude3Sonnet, title: "Claude 3 Sonnet (trial)" },
+      { ...models.claude3Haiku, title: "Claude 3 Haiku (trial)" },
+      models.mixtralTrial,
+      { ...models.gemini15Pro, title: "Gemini 1.5 Pro (trial)" },
       {
-        ...modelPackagesObj.AUTODETECT,
+        ...models.AUTODETECT,
         params: {
-          ...modelPackagesObj.AUTODETECT.params,
+          ...models.AUTODETECT.params,
           title: "Free Trial",
         },
       },

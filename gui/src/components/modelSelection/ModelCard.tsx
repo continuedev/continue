@@ -7,11 +7,11 @@ import {
   lightGray,
   vscFocusBorder,
 } from "..";
-import { PROVIDER_INFO } from "../../pages/modelConfig/modelProviders";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import InfoHover from "../InfoHover";
-import { PackageDimension } from "../../pages/modelconfig/modelPackages";
 import ModelProviderTag, { ModelProviderTagVals } from "./ModelProviderTag";
+import { PackageDimension } from "../../pages/AddNewModel/configs/models";
+import { providers } from "../../pages/AddNewModel/configs/providers";
 
 interface ModelCardProps {
   title: string;
@@ -201,7 +201,7 @@ function ModelCard(props: ModelCardProps) {
               </div>
               <div className="flex items-center flex-wrap justify-end rtl">
                 {props.providerOptions?.map((option, i) => {
-                  const info = PROVIDER_INFO[option];
+                  const info = providers[option];
                   if (!info) {
                     return null;
                   }
