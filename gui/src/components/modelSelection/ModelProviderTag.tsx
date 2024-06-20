@@ -1,24 +1,24 @@
 import { defaultBorderRadius } from "..";
 
-export enum ModelProviderTagVals {
+export enum ModelProviderTags {
   RequiresApiKey = "Requires API Key",
   Local = "Local",
   Free = "Free",
   OpenSource = "Open-Source",
 }
 
-export interface ModelProviderTagValsProps {
-  tag: ModelProviderTagVals;
+export interface ModelProviderTagProps {
+  tag: ModelProviderTags;
 }
 
 export const MODEL_PROVIDER_TAG_COLORS = {
-  [ModelProviderTagVals.RequiresApiKey]: "#FF0000",
-  [ModelProviderTagVals.Local]: "#00bb00",
-  [ModelProviderTagVals.OpenSource]: "#0033FF",
-  [ModelProviderTagVals.Free]: "#ffff00",
+  [ModelProviderTags.RequiresApiKey]: "#FF0000",
+  [ModelProviderTags.Local]: "#00bb00",
+  [ModelProviderTags.OpenSource]: "#0033FF",
+  [ModelProviderTags.Free]: "#ffff00",
 };
 
-export default function ModelProviderTag({ tag }: ModelProviderTagValsProps) {
+export default function ModelProviderTag({ tag }: ModelProviderTagProps) {
   return (
     <span
       style={{

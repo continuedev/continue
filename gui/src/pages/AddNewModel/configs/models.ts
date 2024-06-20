@@ -1,5 +1,5 @@
 import { ILLM, ModelName, ModelProvider } from "core";
-import { ModelProviderTagVals } from "../../../components/modelSelection/ModelProviderTag";
+import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
 import { InputDescriptor } from "./providers";
 
 // A dimension is like parameter count - 7b, 13b, 34b, etc.
@@ -16,7 +16,7 @@ export interface ModelPackage {
   collectInputFor?: InputDescriptor[];
   description: string;
   refUrl?: string;
-  tags?: ModelProviderTagVals[];
+  tags?: ModelProviderTags[];
   params: {
     model: ILLM["model"];
     templateMessages?: ILLM["templateMessages"];

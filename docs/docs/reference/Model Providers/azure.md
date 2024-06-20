@@ -15,7 +15,7 @@ You need to apply for access to the Azure OpenAI service. Response times are typ
     "title": "Azure OpenAI",
     "provider": "azure",
     "model": "gpt-4",
-     "apiBase": "https://my-azure-openai-instance.openai.azure.com/",
+    "apiBase": "https://my-azure-openai-instance.openai.azure.com/",
     "apiKey": "<MY_API_KEY>"
 }]
 ```
