@@ -6,8 +6,7 @@ import ErrorPage from "./pages/error";
 import { default as Help, default as HelpPage } from "./pages/help";
 import History from "./pages/history";
 import MigrationPage from "./pages/migration";
-import ModelConfig from "./pages/modelConfig";
-import Models from "./pages/models";
+import { ConfigureProvider, AddNewModel } from "./pages/AddNewModel";
 import MonacoPage from "./pages/monaco";
 import SettingsPage from "./pages/settings";
 import { SubmenuContextProvidersContext } from "./context/SubmenuContextProviders";
@@ -53,16 +52,16 @@ const router = createMemoryRouter([
         element: <SettingsPage />,
       },
       {
-        path: "/models",
-        element: <Models />,
+        path: "/addModel",
+        element: <AddNewModel />,
+      },
+      {
+        path: "/addModel/provider/:providerName",
+        element: <ConfigureProvider />,
       },
       {
         path: "/help",
         element: <HelpPage />,
-      },
-      {
-        path: "/modelconfig/:modelName",
-        element: <ModelConfig />,
       },
       {
         path: "/monaco",

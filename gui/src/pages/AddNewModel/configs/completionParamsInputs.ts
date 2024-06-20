@@ -1,4 +1,4 @@
-import { InputDescriptor } from "./modelPackages";
+import { InputDescriptor } from "./providers";
 
 export const contextLength: InputDescriptor = {
   inputType: "number",
