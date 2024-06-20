@@ -9,6 +9,7 @@ import { IpcIde } from "./IpcIde";
 import { IpcMessenger } from "./IpcMessenger";
 import { setupCoreLogging } from "./logging";
 import { TcpMessenger } from "./TcpMessenger";
+import { MultiMessenger } from "./MultiMessenger";
 
 const logFilePath = getCoreLogsPath();
 fs.appendFileSync(logFilePath, "[info] Starting Continue core...\n");
@@ -18,18 +19,17 @@ const program = new Command();
 program.action(async () => {
   try {
     let messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>;
-    if (process.env.CONTINUE_DEVELOPMENT === "true") {
-      messenger = new TcpMessenger<ToCoreProtocol, FromCoreProtocol>();
-      console.log("Waiting for connection");
-      await (
-        messenger as TcpMessenger<ToCoreProtocol, FromCoreProtocol>
-      ).awaitConnection();
-      console.log("Connected");
-    } else {
-      setupCoreLogging();
-      // await setupCa();
-      messenger = new IpcMessenger<ToCoreProtocol, FromCoreProtocol>();
-    }
+
+    const tcpMessenger = new TcpMessenger<ToCoreProtocol, FromCoreProtocol>();
+    const ipcMessenger = new IpcMessenger<ToCoreProtocol, FromCoreProtocol>();
+    
+    messenger = new MultiMessenger<ToCoreProtocol, FromCoreProtocol>([
+      ipcMessenger,
+      tcpMessenger,
+    ]);
+
+    setupCoreLogging();
+
     const ide = new IpcIde(messenger);
     const promptLogsPath = getPromptLogsPath();
     const core = new Core(messenger, ide, async (text) => {
