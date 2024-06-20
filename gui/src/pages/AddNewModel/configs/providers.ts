@@ -149,7 +149,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       {
         inputType: "text",
         key: "apiVersion",
-        label: "Api Version",
+        label: "API Version",
         placeholder: "Enter the API version",
         required: true,
       },
