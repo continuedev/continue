@@ -26,6 +26,8 @@ function useSetup(dispatch: Dispatch<any>) {
       "config/getBrowserSerialized",
       undefined,
     );
+
+    
     dispatch(setConfig(config));
     setConfigLoaded(true);
 
