@@ -4,12 +4,23 @@ import path from "node:path";
 import * as vscode from "vscode";
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
+import { WorkOsAuthProvider } from "../stubs/WorkOsAuthProvider";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
+  // context.subscriptions.push(new WorkOsAuthProvider(context));
+  // const session = await vscode.authentication.getSession("continue", [], {
+  //   createIfNone: true,
+  // });
+  // if (session) {
+  //   vscode.window.showInformationMessage(
+  //     `Welcome back ${session.account.label}`,
+  //   );
+  // }
+
   // Add necessary files
   getTsConfigPath();
 
