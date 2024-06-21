@@ -25,6 +25,7 @@ data class PendingCompletion (
 @Service(Service.Level.PROJECT)
 class AutocompleteService(private val project: Project) {
     var pendingCompletion: PendingCompletion? = null;
+    private val autocompleteLookupListener = project.service<AutocompleteLookupListener>()
 
     fun triggerCompletion(editor: Editor) {
         val settings =
@@ -79,6 +80,10 @@ class AutocompleteService(private val project: Project) {
     }
 
     private fun renderCompletion(editor: Editor, offset: Int, text: String) {
+        // Don't render completions when code completion dropdown is visible
+        if (!autocompleteLookupListener.isLookupEmpty()) {
+            return
+        }
         ApplicationManager.getApplication().invokeLater {
             WriteAction.run<Throwable> {
                 val properties = InlayProperties()
@@ -125,6 +130,19 @@ class AutocompleteService(private val project: Project) {
             cancelCompletion(pendingCompletion!!)
             pendingCompletion = null
         }
+        editor.inlayModel.getInlineElementsInRange(0, editor.document.textLength).forEach {
+            if (it.renderer is ContinueCustomElementRenderer) {
+                it.dispose()
+            }
+        }
+        editor.inlayModel.getBlockElementsInRange(0, editor.document.textLength).forEach {
+            if (it.renderer is ContinueMultilineCustomElementRenderer) {
+                it.dispose()
+            }
+        }
+    }
+
+    fun hideCompletions(editor: Editor) {
         editor.inlayModel.getInlineElementsInRange(0, editor.document.textLength).forEach {
             if (it.renderer is ContinueCustomElementRenderer) {
                 it.dispose()

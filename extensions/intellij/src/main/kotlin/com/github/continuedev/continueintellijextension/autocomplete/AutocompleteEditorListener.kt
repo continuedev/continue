@@ -42,7 +42,7 @@ class AutocompleteEditorListener: EditorFactoryListener {
     override fun editorCreated(event: EditorFactoryEvent) {
         val editor = event.editor
         val project = editor.project ?: return
-        val editorManager = project.let { FileEditorManager.getInstance(it) }
+        val editorManager = project.let { FileEditorManager.getInstance(it) } ?: return
         val completionProvider = project.service<AutocompleteService>()
 
         // Listen to changes to mouse position
