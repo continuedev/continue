@@ -47,7 +47,7 @@ export class VsCodeExtension {
     this.extensionContext = context;
     this.windowId = uuidv4();
 
-    const ideSettings = this.ide.getIdeSettings();
+    const ideSettings = this.ide.getIdeSettingsSync();
     const { remoteConfigServerUrl } = ideSettings;
 
     // Dependencies of core

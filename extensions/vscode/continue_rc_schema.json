@@ -1462,13 +1462,15 @@
                 "outline",
                 "postgres",
                 "code",
-                "system",
                 "currentFile",
-                "url"
+                "url",
+                "database",
+                "os"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
                 "Reference the contents of the terminal",
+                "Reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread",
                 "Reference the contents of all open or pinned files.",
                 "Enter a search phrase and include the Google search results as context",
                 "Reference the results of a ripgrep search in your codebase",
@@ -1478,16 +1480,15 @@
                 "Include important files from a folder in the prompt, as determined by similarity search",
                 "Reference GitHub issues from a repository",
                 "Retrieve important pages from a documentation website, as determined by similarity search",
-                "Index and retrieve the contents of any documentation site, using embeddings to find important snippets",
                 "Display a file tree of the current workspace",
+                "Include important highlighted sections from your code",
                 "Include a repo map showing important code objects",
-                "Displays important snippets of code from the currently open files",
-                "Displays definition lines from the currently open files",
                 "References Postgres table schema and sample rows",
                 "Reference specific functions and classes from throughout your codebase",
-                "Reference your operating system and cpu",
                 "Reference the contents of the currently active file",
-                "Reference the contents of a page at a URL"
+                "Reference the contents of a page at a URL",
+                "Reference table schemas",
+                "Operating system and CPU Information"
               ],
               "type": "string"
             },
@@ -1626,65 +1627,74 @@
             }
           },
           "then": {
-            "connections": {
-              "type": "array",
-              "description": "A list of database connections",
-              "items": {
-                "type": "object",
+            "properties": {
+              "params": {
                 "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "A unique name for this database connection"
-                  },
-                  "connection_type": {
-                    "type": "string",
-                    "description": "The type of database (e.g., 'postgres', 'mysql')",
-                    "enum": [
-                      "postgres",
-                      "mysql",
-                      "sqlite"
-                    ]
-                  },
-                  "connection": {
-                    "type": "object",
-                    "properties": {
-                      "user": {
-                        "type": "string",
-                        "description": "The database user name"
+                  "connections": {
+                    "type": "array",
+                    "description": "A list of database connections",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "A unique name for this database connection"
+                        },
+                        "connection_type": {
+                          "type": "string",
+                          "description": "The type of database (e.g., 'postgres', 'mysql')",
+                          "enum": [
+                            "postgres",
+                            "mysql",
+                            "sqlite"
+                          ]
+                        },
+                        "connection": {
+                          "type": "object",
+                          "properties": {
+                            "user": {
+                              "type": "string",
+                              "description": "The database user name"
+                            },
+                            "host": {
+                              "type": "string",
+                              "description": "The host address of the database server"
+                            },
+                            "database": {
+                              "type": "string",
+                              "description": "The name of the database to connect to"
+                            },
+                            "password": {
+                              "type": "string",
+                              "description": "The password for the database user"
+                            },
+                            "port": {
+                              "type": "integer",
+                              "description": "The port number to connect to at the host"
+                            },
+                            "filename": {
+                              "type": "string",
+                              "description": "File location for simple file DB's"
+                            }
+                          },
+                          "required": []
+                        }
                       },
-                      "host": {
-                        "type": "string",
-                        "description": "The host address of the database server"
-                      },
-                      "database": {
-                        "type": "string",
-                        "description": "The name of the database to connect to"
-                      },
-                      "password": {
-                        "type": "string",
-                        "description": "The password for the database user"
-                      },
-                      "port": {
-                        "type": "integer",
-                        "description": "The port number to connect to at the host"
-                      },
-                      "filename": {
-                        "type": "string",
-                        "description": "File location for simple file DB's"
-                      }
-                    },
-                    "required": []
+                      "required": [
+                        "name",
+                        "connection_type",
+                        "connection"
+                      ]
+                    }
                   }
                 },
                 "required": [
-                  "name",
-                  "type",
-                  "connection"
+                  "connections"
                 ]
               }
             },
             "required": [
-              "connections"
+              "params"
             ]
           }
         },

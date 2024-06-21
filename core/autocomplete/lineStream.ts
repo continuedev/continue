@@ -218,6 +218,8 @@ function isEnglishFirstLine(line: string) {
     line.startsWith("sure thing") ||
     line.startsWith("sure!") ||
     line.startsWith("to fill") ||
+    line.startsWith("certainly") ||
+    line.startsWith("of course") ||
     line.startsWith("the code should")
   ) {
     return true;

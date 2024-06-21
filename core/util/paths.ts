@@ -7,9 +7,13 @@ import { defaultConfig, defaultConfigJetBrains } from "../config/default.js";
 import Types from "../config/types.js";
 import { IdeType, SerializedContinueConfig } from "../index.js";
 
+dotenv.config();
+const CONTINUE_GLOBAL_DIR =
+  process.env.CONTINUE_GLOBAL_DIR ?? path.join(os.homedir(), ".continue");
+
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
-  const continuePath = path.join(os.homedir(), ".continue");
+  const continuePath = CONTINUE_GLOBAL_DIR;
   if (!fs.existsSync(continuePath)) {
     fs.mkdirSync(continuePath);
   }

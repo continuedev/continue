@@ -21,6 +21,7 @@ import {
   EmbeddingsProviderDescription,
   IContextProvider,
   IDE,
+  IdeSettings,
   IdeType,
   ModelDescription,
   Reranker,
@@ -34,7 +35,7 @@ import { BaseLLM } from "../llm/index.js";
 import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
-import { IdeSettings } from "../protocol/ideWebview.js";
+
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
 import mergeJson from "../util/merge.js";

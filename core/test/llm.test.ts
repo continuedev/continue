@@ -2,8 +2,9 @@ import * as dotenv from "dotenv";
 
 import { CompletionOptions } from "../index.js";
 import { BaseLLM } from "../llm/index.js";
+import OpenAI from "../llm/llms/OpenAI.js";
 
-jest.setTimeout(100_000);
+// jest.setTimeout(100_000);
 
 dotenv.config();
 
@@ -61,17 +62,17 @@ describe("LLM", () => {
   // testLLM(
   //   new FreeTrial({
   //     model: "gpt-3.5-turbo",
-  //   })
+  //   }),
   // );
   // testLLM(
   //   new Anthropic({
   //     model: "claude-2",
   //     apiKey: process.env.ANTHROPIC_API_KEY,
-  //   })
+  //   }),
   // );
-  // testLLM(
-  //   new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" })
-  // );
+  testLLM(
+    new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" }),
+  );
   // TODO: Fix Replicate
   // testLLM(
   //   new Replicate({

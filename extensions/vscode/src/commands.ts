@@ -403,9 +403,6 @@ const commandsMap: (
         input: text,
       });
     },
-    "continue.shareSession": () => {
-      sidebar.sendMainUserInput("/share");
-    },
     "continue.selectRange": (startLine: number, endLine: number) => {
       if (!vscode.window.activeTextEditor) {
         return;

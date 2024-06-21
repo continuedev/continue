@@ -3,7 +3,7 @@
   "version": "1.0.13",
   "description": "The Continue Core contains functionality that can be shared across web, VS Code, or Node.js server. It is written in TypeScript and contains much of the functionality that was previously inside of the legacy Continue Python Server.",
   "scripts": {
-    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest ./test",
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" jest",
     "build:npm": "tsc -p ./tsconfig.npm.json",
     "lint": "eslint . --ext ts",
     "lint:fix": "eslint . --ext ts --fix"
@@ -46,7 +46,7 @@
     "commander": "^12.0.0",
     "comment-json": "^4.2.3",
     "dbinfoz": "^0.1.4",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.4.5",
     "fastest-levenshtein": "^1.0.16",
     "follow-redirects": "^1.15.5",
     "handlebars": "^4.7.8",

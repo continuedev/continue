@@ -28,7 +28,13 @@ interface AutocompleteTemplate {
 const stableCodeFimTemplate: AutocompleteTemplate = {
   template: "<fim_prefix>{{{prefix}}}<fim_suffix>{{{suffix}}}<fim_middle>",
   completionOptions: {
-    stop: ["<fim_prefix>", "<fim_suffix>", "<fim_middle>", "<|endoftext|>"],
+    stop: [
+      "<fim_prefix>",
+      "<fim_suffix>",
+      "<fim_middle>",
+      "<|endoftext|>",
+      "<file_sep>",
+    ],
   },
 };
 
@@ -277,7 +283,8 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     lowerCaseModel.includes("starchat") ||
     lowerCaseModel.includes("octocoder") ||
     lowerCaseModel.includes("stable") ||
-    lowerCaseModel.includes("codeqwen")
+    lowerCaseModel.includes("codeqwen") ||
+    lowerCaseModel.includes("qwen")
   ) {
     return stableCodeFimTemplate;
   }
