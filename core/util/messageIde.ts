@@ -3,6 +3,7 @@ import type {
   FileType,
   IDE,
   IdeInfo,
+  IdeSettings,
   IndexTag,
   Problem,
   Range,
@@ -17,6 +18,9 @@ export class MessageIde implements IDE {
       data: ToIdeFromWebviewOrCoreProtocol[T][0],
     ) => Promise<ToIdeFromWebviewOrCoreProtocol[T][1]>,
   ) {}
+  getIdeSettings(): Promise<IdeSettings> {
+    return this.request("getIdeSettings", undefined);
+  }
   getGitHubAuthToken(): Promise<string | undefined> {
     return this.request("getGitHubAuthToken", undefined);
   }

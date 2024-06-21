@@ -90,6 +90,12 @@ jobs:
           cd core
           npm ci
 
+      # 2.25 Run core tests
+      - name: Run core tests
+        run: |
+          cd core
+          npm run test
+
       # 2.5. Pre package
       - name: Set var for environment info
         shell: pwsh

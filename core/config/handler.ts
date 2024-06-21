@@ -4,9 +4,9 @@ import {
   ContinueRcJson,
   IContextProvider,
   IDE,
+  IdeSettings,
   ILLM,
 } from "../index.js";
-import { IdeSettings } from "../protocol/ideWebview.js";
 import { Telemetry } from "../util/posthog.js";
 import { finalToBrowserConfig, loadFullConfigNode } from "./load.js";
 
@@ -72,11 +72,12 @@ export class ConfigHandler {
 
     const ideInfo = await this.ide.getIdeInfo();
     const uniqueId = await this.ide.getUniqueId();
+    const ideSettings = await this.ideSettingsPromise;
 
     const newConfig = await loadFullConfigNode(
       this.ide,
       workspaceConfigs,
-      await this.ideSettingsPromise,
+      ideSettings,
       ideInfo.ideType,
       uniqueId,
       this.writeLog,

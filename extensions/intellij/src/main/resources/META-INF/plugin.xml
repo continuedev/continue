@@ -19,6 +19,9 @@
         <projectService
                 id="DiffStreamService"
                 serviceImplementation="com.github.continuedev.continueintellijextension.editor.DiffStreamService"/>
+        <projectService
+                id="AutocompleteLookupListener"
+                serviceImplementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteLookupListener"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>

@@ -173,12 +173,6 @@
         "group": "Continue"
       },
       {
-        "command": "continue.shareSession",
-        "category": "Continue",
-        "title": "Share Session",
-        "group": "Continue"
-      },
-      {
         "command": "continue.selectFilesAsContext",
         "category": "Continue",
         "title": "Continue: Select Files as Context",

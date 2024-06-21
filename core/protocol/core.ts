@@ -4,6 +4,7 @@ import type {
   ContextItemWithId,
   ContextSubmenuItem,
   DiffLine,
+  IdeSettings,
   LLMFullCompletionOptions,
   MessageContent,
   ModelDescription,
@@ -14,7 +15,6 @@ import type {
   SiteIndexingConfig,
 } from "..";
 import type { AutocompleteInput } from "../autocomplete/completionProvider";
-import type { IdeSettings } from "./ideWebview";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
