@@ -46,6 +46,7 @@ class OpenAI extends BaseLLM {
   constructor(options: LLMOptions) {
     super(options);
     this.useLegacyCompletionsEndpoint = options.useLegacyCompletionsEndpoint;
+    this.apiVersion = options.apiVersion ?? "2023-07-01-preview";
   }
 
   static providerName: ModelProvider = "openai";

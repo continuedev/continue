@@ -557,7 +557,9 @@ type ModelProvider =
   | "fireworks"
   | "custom"
   | "cloudflare"
-  | "deepseek";
+  | "deepseek"
+  | "azure"
+  | "openai-aiohttp";
 
 export type ModelName =
   | "AUTODETECT"

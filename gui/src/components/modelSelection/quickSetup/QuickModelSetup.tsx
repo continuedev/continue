@@ -4,9 +4,9 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Button, Input, SecondaryButton } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import { getLocalStorage } from "../../../util/localStorage";
-import { PROVIDER_INFO } from "../../../util/modelData";
 import { ftl } from "../../dialogs/FTCDialog";
 import QuickSetupListBox from "./QuickSetupListBox";
 
@@ -16,9 +16,7 @@ interface QuickModelSetupProps {
 }
 
 function QuickModelSetup(props: QuickModelSetupProps) {
-  const [selectedProvider, setSelectedProvider] = useState(
-    PROVIDER_INFO["openai"],
-  );
+  const [selectedProvider, setSelectedProvider] = useState(providers["openai"]);
   const [selectedModel, setSelectedModel] = useState(
     selectedProvider.packages[0],
   );
@@ -67,7 +65,7 @@ function QuickModelSetup(props: QuickModelSetupProps) {
         <QuickSetupListBox
           selectedProvider={selectedProvider}
           setSelectedProvider={setSelectedProvider}
-          options={Object.entries(PROVIDER_INFO)
+          options={Object.entries(providers)
             .filter(([key]) => !["freetrial", "openai-aiohttp"].includes(key))
             .map(([, provider]) => provider)}
         ></QuickSetupListBox>
@@ -77,7 +75,7 @@ function QuickModelSetup(props: QuickModelSetupProps) {
           selectedProvider={selectedModel}
           setSelectedProvider={setSelectedModel}
           options={
-            Object.entries(PROVIDER_INFO).find(
+            Object.entries(providers).find(
               ([, provider]) => provider.title === selectedProvider.title,
             )?.[1].packages
           }

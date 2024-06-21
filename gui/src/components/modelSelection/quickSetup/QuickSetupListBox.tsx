@@ -1,13 +1,18 @@
 import { Transition } from "@headlessui/react";
 import { CheckIcon, ChevronUpDownIcon } from "@heroicons/react/24/outline";
 import { Dispatch, Fragment, SetStateAction } from "react";
-import { DisplayInfo } from "../../../util/modelData";
+
 import {
   StyledListbox,
   StyledListboxButton,
   StyledListboxOption,
   StyledListboxOptions,
 } from "./StyledListbox";
+
+interface DisplayInfo {
+  title: string;
+  icon?: string;
+}
 
 interface QuickSetupListBoxProps {
   selectedProvider: DisplayInfo;
