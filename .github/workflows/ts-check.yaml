@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - preview
+      - dev
 
 jobs:
   tsc-check:
