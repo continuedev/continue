@@ -6,8 +6,10 @@ import {
   IdeInfo,
   IdeSettings,
   IndexTag,
+  Location,
   Problem,
   Range,
+  RangeInFile,
   Thread,
 } from "../index.d.js";
 
@@ -21,6 +23,13 @@ class FileSystemIde implements IDE {
   }
   fileExists(filepath: string): Promise<boolean> {
     return Promise.resolve(fs.existsSync(filepath));
+  }
+
+  gotoDefinition(location: Location): Promise<RangeInFile[]> {
+    throw new Error("Method not implemented.");
+  }
+  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
+    throw new Error("Method not implemented.");
   }
 
   async getIdeSettings(): Promise<IdeSettings> {
