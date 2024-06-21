@@ -14,10 +14,11 @@ interface FileInfo {
 export class ImportDefinitionsService {
   static N = 10;
 
-  private cache = new PrecalculatedLruCache(
-    this._getFileInfo.bind(this),
-    ImportDefinitionsService.N,
-  );
+  private cache: PrecalculatedLruCache<FileInfo> =
+    new PrecalculatedLruCache<FileInfo>(
+      this._getFileInfo.bind(this),
+      ImportDefinitionsService.N,
+    );
 
   constructor(private readonly ide: IDE) {
     ide.onDidChangeActiveTextEditor((filepath) => {
