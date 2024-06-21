@@ -377,7 +377,12 @@ export class Core {
             const models = await new Ollama({ model: "" }).listModels();
             return models;
           } else {
-            return undefined;
+            if (msg.data.title === "Ollama") {
+              const models = await new Ollama({ model: "" }).listModels();
+              return models;
+            } else {
+              return undefined;
+            }
           }
         }
       } catch (e) {
