@@ -368,7 +368,13 @@ export class Core {
         return model.listModels();
       } else {
         if (msg.data.title === "Ollama") {
-          return new Ollama({ model: "" }).listModels();
+          try {
+            const models = await new Ollama({ model: "" }).listModels();
+            return models;
+          } catch (e) {
+            console.warn(`Error listing Ollama models: ${e}`);
+            return undefined;
+          }
         } else {
           return undefined;
         }
