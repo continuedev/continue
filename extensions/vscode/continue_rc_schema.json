@@ -279,10 +279,7 @@
         "apiType": {
           "title": "Api Type",
           "markdownDescription": "OpenAI API type, either `openai` or `azure`",
-          "enum": [
-            "openai",
-            "azure"
-          ]
+          "enum": ["openai", "azure"]
         },
         "apiVersion": {
           "title": "Api Version",
@@ -295,11 +292,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "title",
-        "provider",
-        "model"
-      ],
+      "required": ["title", "provider", "model"],
       "allOf": [
         {
           "if": {
@@ -309,9 +302,7 @@
               }
             },
             "not": {
-              "required": [
-                "provider"
-              ]
+              "required": ["provider"]
             }
           },
           "then": {
@@ -338,48 +329,33 @@
                 ]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
-            "required": [
-              "apiKey"
-            ]
+            "required": ["apiKey"]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "huggingface-tgi",
-                  "huggingface-inference-api"
-                ]
+                "enum": ["huggingface-tgi", "huggingface-inference-api"]
               }
             }
           },
           "then": {
-            "required": [
-              "apiBase"
-            ]
+            "required": ["apiBase"]
           },
-          "required": [
-            "provider"
-          ]
+          "required": ["provider"]
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -399,14 +375,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "cloudflare"
-                ]
+                "enum": ["cloudflare"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -464,14 +436,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -502,14 +470,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "replicate"
-                ]
+                "enum": ["replicate"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -539,14 +503,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "free-trial"
-                ]
+                "enum": ["free-trial"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -571,9 +531,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               },
               "apiType": {
                 "not": {
@@ -581,9 +539,7 @@
                 }
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -641,14 +597,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "anthropic"
-                ]
+                "enum": ["anthropic"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -676,22 +628,15 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "cohere"
-                ]
+                "enum": ["cohere"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "command-r",
-                  "command-r-plus"
-                ]
+                "enum": ["command-r", "command-r-plus"]
               }
             }
           }
@@ -700,14 +645,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "bedrock"
-                ]
+                "enum": ["bedrock"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -732,14 +673,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "gemini"
-                ]
+                "enum": ["gemini"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -760,14 +697,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "together"
-                ]
+                "enum": ["together"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -801,14 +734,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "deepinfra"
-                ]
+                "enum": ["deepinfra"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -831,9 +760,7 @@
                 ]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -879,14 +806,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "ollama"
-                ]
+                "enum": ["ollama"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -934,14 +857,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "mistral"
-                ]
+                "enum": ["mistral"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -962,22 +881,15 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "deepseek"
-                ]
+                "enum": ["deepseek"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "deepseek-chat",
-                  "deepseek-coder"
-                ]
+                "enum": ["deepseek-chat", "deepseek-coder"]
               }
             }
           }
@@ -986,14 +898,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "groq"
-                ]
+                "enum": ["groq"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1014,21 +922,15 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "fireworks"
-                ]
+                "enum": ["fireworks"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
               "model": {
-                "enum": [
-                  "starcoder-7b"
-                ]
+                "enum": ["starcoder-7b"]
               }
             }
           }
@@ -1040,30 +942,20 @@
                 "const": "azure"
               }
             },
-            "required": [
-              "apiType"
-            ]
+            "required": ["apiType"]
           },
           "then": {
-            "required": [
-              "engine",
-              "apiVersion",
-              "apiBase"
-            ]
+            "required": ["engine", "apiVersion", "apiBase"]
           }
         },
         {
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "openai"
-                ]
+                "enum": ["openai"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1080,9 +972,7 @@
                 "const": "llamafile"
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1096,14 +986,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "text-gen-webui"
-                ]
+                "enum": ["text-gen-webui"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1117,14 +1003,10 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": [
-                  "flowise"
-                ]
+                "enum": ["flowise"]
               }
             },
-            "required": [
-              "provider"
-            ]
+            "required": ["provider"]
           },
           "then": {
             "properties": {
@@ -1151,10 +1033,7 @@
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "key",
-                    "value"
-                  ]
+                  "required": ["key", "value"]
                 }
               },
               "additionalFlowiseConfiguration": {
@@ -1173,10 +1052,7 @@
                       "description": "Configuration Property value"
                     }
                   },
-                  "required": [
-                    "key",
-                    "value"
-                  ]
+                  "required": ["key", "value"]
                 }
               },
               "model": {
@@ -1268,9 +1144,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "default"
-      ]
+      "required": ["default"]
     },
     "SlashCommand": {
       "title": "SlashCommand",
@@ -1329,9 +1203,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "issue"
-                ]
+                "enum": ["issue"]
               }
             }
           },
@@ -1344,23 +1216,17 @@
                     "description": "Enter the URL of the GitHub repository for which you want to generate the issue."
                   }
                 },
-                "required": [
-                  "repositoryUrl"
-                ]
+                "required": ["repositoryUrl"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "edit"
-                ]
+                "enum": ["edit"]
               }
             }
           },
@@ -1385,9 +1251,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "share"
-                ]
+                "enum": ["share"]
               }
             }
           },
@@ -1405,10 +1269,7 @@
           }
         }
       ],
-      "required": [
-        "name",
-        "description"
-      ]
+      "required": ["name", "description"]
     },
     "CustomCommand": {
       "title": "CustomCommand",
@@ -1427,11 +1288,7 @@
           "type": "string"
         }
       },
-      "required": [
-        "name",
-        "prompt",
-        "description"
-      ]
+      "required": ["name", "prompt", "description"]
     },
     "ContextProviderWithParams": {
       "title": "ContextProviderWithParams",
@@ -1459,14 +1316,15 @@
                 "outline",
                 "postgres",
                 "code",
-                "system",
                 "currentFile",
                 "url",
-                "database"
+                "database",
+                "os"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
                 "Reference the contents of the terminal",
+                "Reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread",
                 "Reference the contents of all open or pinned files.",
                 "Enter a search phrase and include the Google search results as context",
                 "Reference the results of a ripgrep search in your codebase",
@@ -1476,17 +1334,15 @@
                 "Include important files from a folder in the prompt, as determined by similarity search",
                 "Reference GitHub issues from a repository",
                 "Retrieve important pages from a documentation website, as determined by similarity search",
-                "Index and retrieve the contents of any documentation site, using embeddings to find important snippets",
                 "Display a file tree of the current workspace",
+                "Include important highlighted sections from your code",
                 "Include a repo map showing important code objects",
-                "Displays important snippets of code from the currently open files",
-                "Displays definition lines from the currently open files",
                 "References Postgres table schema and sample rows",
                 "Reference specific functions and classes from throughout your codebase",
-                "Reference your operating system and cpu",
                 "Reference the contents of the currently active file",
                 "Reference the contents of a page at a URL",
-                "Reference table schemas"
+                "Reference table schemas",
+                "Operating system and CPU Information"
               ],
               "type": "string"
             },
@@ -1506,9 +1362,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "google"
-                ]
+                "enum": ["google"]
               }
             }
           },
@@ -1521,23 +1375,17 @@
                     "description": "Your API key for https://serper.dev in order to get Google search results"
                   }
                 },
-                "required": [
-                  "serperApiKey"
-                ]
+                "required": ["serperApiKey"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "open"
-                ]
+                "enum": ["open"]
               }
             }
           },
@@ -1559,9 +1407,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "issue"
-                ]
+                "enum": ["issue"]
               }
             }
           },
@@ -1590,37 +1436,24 @@
                         "type": {
                           "type": "string",
                           "description": "The type of issues to search for",
-                          "enum": [
-                            "open",
-                            "closed",
-                            "all"
-                          ]
+                          "enum": ["open", "closed", "all"]
                         }
                       },
-                      "required": [
-                        "owner",
-                        "repo"
-                      ]
+                      "required": ["owner", "repo"]
                     }
                   }
                 },
-                "required": [
-                  "repos"
-                ]
+                "required": ["repos"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "database"
-                ]
+                "enum": ["database"]
               }
             }
           },
@@ -1641,11 +1474,7 @@
                         "connection_type": {
                           "type": "string",
                           "description": "The type of database (e.g., 'postgres', 'mysql')",
-                          "enum": [
-                            "postgres",
-                            "mysql",
-                            "sqlite"
-                          ]
+                          "enum": ["postgres", "mysql", "sqlite"]
                         },
                         "connection": {
                           "type": "object",
@@ -1678,31 +1507,21 @@
                           "required": []
                         }
                       },
-                      "required": [
-                        "name",
-                        "connection_type",
-                        "connection"
-                      ]
+                      "required": ["name", "connection_type", "connection"]
                     }
                   }
                 },
-                "required": [
-                  "connections"
-                ]
+                "required": ["connections"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "gitlab-mr"
-                ]
+                "enum": ["gitlab-mr"]
               }
             }
           },
@@ -1723,23 +1542,17 @@
                     "description": "If you have code selected, filters out comments that aren't related to the selection."
                   }
                 },
-                "required": [
-                  "token"
-                ]
+                "required": ["token"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "jira"
-                ]
+                "enum": ["jira"]
               }
             }
           },
@@ -1785,24 +1598,17 @@
                     ]
                   }
                 },
-                "required": [
-                  "domain",
-                  "token"
-                ]
+                "required": ["domain", "token"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "http"
-                ]
+                "enum": ["http"]
               }
             }
           },
@@ -1815,24 +1621,17 @@
                     "description": "The HTTP endpoint of your context provider server."
                   }
                 },
-                "required": [
-                  "url"
-                ]
+                "required": ["url"]
               }
             },
-            "required": [
-              "params"
-            ]
+            "required": ["params"]
           }
         },
         {
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "codebase",
-                  "folder"
-                ]
+                "enum": ["codebase", "folder"]
               }
             }
           },
@@ -1867,9 +1666,7 @@
           "if": {
             "properties": {
               "name": {
-                "enum": [
-                  "postgres"
-                ]
+                "enum": ["postgres"]
               }
             }
           },
@@ -1921,19 +1718,11 @@
                 }
               }
             },
-            "required": [
-              "host",
-              "port",
-              "user",
-              "password",
-              "database"
-            ]
+            "required": ["host", "port", "user", "password", "database"]
           }
         }
       ],
-      "required": [
-        "name"
-      ]
+      "required": ["name"]
     },
     "SerializedContinueConfig": {
       "title": "config.json",
@@ -2085,46 +1874,32 @@
               "$ref": "#/definitions/RequestOptions"
             }
           },
-          "required": [
-            "provider"
-          ],
+          "required": ["provider"],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": [
-                      "cohere"
-                    ]
+                    "enum": ["cohere"]
                   }
                 },
-                "required": [
-                  "provider"
-                ]
+                "required": ["provider"]
               },
               "then": {
-                "required": [
-                  "apiKey"
-                ]
+                "required": ["apiKey"]
               }
             },
             {
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": [
-                      "gemini"
-                    ]
+                    "enum": ["gemini"]
                   }
                 },
-                "required": [
-                  "provider"
-                ]
+                "required": ["provider"]
               },
               "then": {
-                "required": [
-                  "apiKey"
-                ]
+                "required": ["apiKey"]
               }
             }
           ]
@@ -2135,33 +1910,22 @@
           "type": "object",
           "properties": {
             "name": {
-              "enum": [
-                "cohere",
-                "voyage",
-                "llm",
-                "free-trial"
-              ]
+              "enum": ["cohere", "voyage", "llm", "free-trial"]
             },
             "params": {
               "type": "object"
             }
           },
-          "required": [
-            "name"
-          ],
+          "required": ["name"],
           "allOf": [
             {
               "if": {
                 "properties": {
                   "name": {
-                    "enum": [
-                      "cohere"
-                    ]
+                    "enum": ["cohere"]
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               },
               "then": {
                 "properties": {
@@ -2183,9 +1947,7 @@
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "apiKey"
-                    ]
+                    "required": ["apiKey"]
                   }
                 }
               }
@@ -2194,14 +1956,10 @@
               "if": {
                 "properties": {
                   "name": {
-                    "enum": [
-                      "llm"
-                    ]
+                    "enum": ["llm"]
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               },
               "then": {
                 "properties": {
@@ -2212,9 +1970,7 @@
                         "type": "string"
                       }
                     },
-                    "required": [
-                      "modelTitle"
-                    ]
+                    "required": ["modelTitle"]
                   }
                 }
               }
@@ -2223,14 +1979,10 @@
               "if": {
                 "properties": {
                   "name": {
-                    "enum": [
-                      "voyage"
-                    ]
+                    "enum": ["voyage"]
                   }
                 },
-                "required": [
-                  "name"
-                ]
+                "required": ["name"]
               },
               "then": {
                 "properties": {
@@ -2241,14 +1993,10 @@
                         "type": "string"
                       },
                       "model": {
-                        "enum": [
-                          "rerank-lite-1"
-                        ]
+                        "enum": ["rerank-lite-1"]
                       }
                     },
-                    "required": [
-                      "apiKey"
-                    ]
+                    "required": ["apiKey"]
                   }
                 }
               }
@@ -2314,11 +2062,7 @@
               "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
             },
             "multilineCompletions": {
-              "enum": [
-                "always",
-                "never",
-                "auto"
-              ],
+              "enum": ["always", "never", "auto"],
               "description": "If set to true, Continue will only complete a single line at a time."
             },
             "useCache": {
@@ -2347,10 +2091,7 @@
           "type": "object",
           "properties": {
             "codeBlockToolbarPosition": {
-              "enum": [
-                "top",
-                "bottom"
-              ],
+              "enum": ["top", "bottom"],
               "default": "top",
               "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
             },
@@ -2367,9 +2108,7 @@
             "defaultContext": {
               "type": "array",
               "items": {
-                "enum": [
-                  "activeFile"
-                ]
+                "enum": ["activeFile"]
               }
             },
             "modelRoles": {
@@ -2412,10 +2151,7 @@
         },
         "mergeBehavior": {
           "type": "string",
-          "enum": [
-            "merge",
-            "overwrite"
-          ],
+          "enum": ["merge", "overwrite"],
           "default": "merge",
           "title": "Merge behavior",
           "markdownDescription": "If set to 'merge', .continuerc.json will be applied on top of config.json (arrays and objects are merged). If set to 'overwrite', then every top-level property of .continuerc.json will overwrite that property from config.json."

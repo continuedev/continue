@@ -288,6 +288,14 @@ Type `@locals` to reference the contents of the local variables with top n level
 }
 ```
 
+### Operating System
+
+Type `@os` to reference the architecture and platform of your current operating system.
+
+```json
+{ "name": "os" }
+```
+
 ### Requesting Context Providers
 
 Not seeing what you want? Create an issue [here](https://github.com/continuedev/continue/issues/new?assignees=TyDunn&labels=enhancement&projects=&template=feature-request-%F0%9F%92%AA.md&title=) to request a new ContextProvider.

@@ -1318,7 +1318,8 @@
                 "code",
                 "currentFile",
                 "url",
-                "database"
+                "database",
+                "os"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
@@ -1340,7 +1341,8 @@
                 "Reference specific functions and classes from throughout your codebase",
                 "Reference the contents of the currently active file",
                 "Reference the contents of a page at a URL",
-                "Reference table schemas"
+                "Reference table schemas",
+                "Operating system and CPU Information"
               ],
               "type": "string"
             },
