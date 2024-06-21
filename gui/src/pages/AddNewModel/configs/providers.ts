@@ -107,7 +107,12 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
         defaultValue: 100000,
       },
     ],
-    packages: [models.claude3Opus, models.claude3Sonnet, models.claude3Haiku],
+    packages: [
+      models.claude35Sonnet,
+      models.claude3Opus,
+      models.claude3Sonnet,
+      models.claude3Haiku,
+    ],
     apiKeyUrl: "https://console.anthropic.com/account/keys",
   },
   azure: {
