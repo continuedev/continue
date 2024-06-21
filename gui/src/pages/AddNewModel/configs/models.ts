@@ -1,4 +1,4 @@
-import { ILLM, ModelName, ModelProvider } from "core";
+import { ILLM, ModelProvider } from "core";
 import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
 import { InputDescriptor } from "./providers";
 
@@ -485,10 +485,24 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
+  claude35Sonnet: {
+    title: "Claude 3.5 Sonnet",
+    description:
+      "Anthropic's most intelligent model, but much less expensive than Claude 3 Opus",
+    params: {
+      model: "claude-3-5-sonnet-20240620",
+      contextLength: 200_000,
+      title: "Claude 3.5 Sonnet",
+      apiKey: "",
+    },
+    providerOptions: ["anthropic", "free-trial"],
+    icon: "anthropic.png",
+    isOpenSource: false,
+  },
   claude3Opus: {
     title: "Claude 3 Opus",
     description:
-      "Anthropic's most capable model, beating GPT-4 on many benchmarks",
+      "The most capable model in the Claude 3 series, beating GPT-4 on many benchmarks",
     params: {
       model: "claude-3-opus-20240229",
       contextLength: 200_000,
