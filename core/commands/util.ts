@@ -15,7 +15,7 @@ export function contextItemToRangeInFileWithContents(
   const lines = item.name.split("(")[1].split(")")[0].split("-");
 
   const rif: RangeInFileWithContents = {
-    filepath: item.description.split(" (")[0],
+    filepath: item.id.itemId,
     range: {
       start: {
         line: Number.parseInt(lines[0]),
