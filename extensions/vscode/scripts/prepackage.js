@@ -470,7 +470,7 @@ const exe = os === "win32" ? ".exe" : "";
   // Validate the all of the necessary files are present
   validateFilesPresent([
     // Queries used to create the index for @code context provider
-    "tree-sitter/code-snippet-queries/tree-sitter-c_sharp-tags.scm",
+    "tree-sitter/code-snippet-queries/c_sharp.scm",
 
     // Queries used for @outline and @highlights context providers
     "tag-qry/tree-sitter-c_sharp-tags.scm",

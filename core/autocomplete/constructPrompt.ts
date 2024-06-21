@@ -7,6 +7,7 @@ import {
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../llm/countTokens.js";
+import { ImportDefinitionsService } from "./ImportDefinitionsService.js";
 import { getAst, getTreePathAtCursor } from "./ast.js";
 import {
   AutocompleteLanguageInfo,
@@ -15,6 +16,7 @@ import {
 } from "./languages.js";
 import {
   fillPromptWithSnippets,
+  getSymbolsForSnippet,
   rankSnippets,
   removeRangeFromSnippets,
   type AutocompleteSnippet,
@@ -124,6 +126,7 @@ export async function constructAutocompletePrompt(
   recentlyEditedFiles: RangeInFileWithContents[],
   modelName: string,
   extraSnippets: AutocompleteSnippet[],
+  importDefinitionsService: ImportDefinitionsService,
 ): Promise<{
   prefix: string;
   suffix: string;
@@ -187,6 +190,29 @@ export async function constructAutocompletePrompt(
           });
         }
       }
+    }
+
+    // Use imports
+    if (options.useImports) {
+      const importSnippets = [];
+      const fileInfo = importDefinitionsService.get(filepath);
+      if (fileInfo) {
+        const { imports } = fileInfo;
+        // Look for imports of any symbols around the current range
+        const textAroundCursor =
+          fullPrefix.split("\n").slice(-5).join("\n") +
+          fullSuffix.split("\n").slice(0, 3).join("\n");
+        const symbols = Array.from(
+          getSymbolsForSnippet(textAroundCursor),
+        ).filter((symbol) => !language.topLevelKeywords.includes(symbol));
+        for (const symbol of symbols) {
+          const rifs = imports[symbol];
+          if (rifs) {
+            importSnippets.push(...rifs);
+          }
+        }
+      }
+      snippets.push(...importSnippets);
     }
 
     // Filter out empty snippets and ones that are already in the prefix/suffix
