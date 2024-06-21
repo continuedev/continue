@@ -13,13 +13,13 @@ import {
 } from "../../components";
 import StyledMarkdownPreview from "../../components/markdown/StyledMarkdownPreview";
 import ModelCard from "../../components/modelSelection/ModelCard";
+import ModelProviderTag from "../../components/modelSelection/ModelProviderTag";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { useNavigationListener } from "../../hooks/useNavigationListener";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { updatedObj } from "../../util";
-import ModelProviderTag from "../../components/modelSelection/ModelProviderTag";
-import { providers } from "./configs/providers";
 import type { ProviderInfo } from "./configs/providers";
+import { providers } from "./configs/providers";
 
 const GridDiv = styled.div`
   display: grid;
@@ -203,11 +203,12 @@ function ConfigureProvider() {
                   if (disableModelCards()) return;
                   let formParams: any = {};
                   for (const d of modelInfo.collectInputFor || []) {
+                    const val = formMethods.watch(d.key);
+                    if (val === "" || val === undefined || val === null) {
+                      continue;
+                    }
                     formParams = updatedObj(formParams, {
-                      [d.key]:
-                        d.inputType === "text"
-                          ? formMethods.watch(d.key)
-                          : parseFloat(formMethods.watch(d.key)),
+                      [d.key]: d.inputType === "text" ? val : parseFloat(val),
                     });
                   }
 
