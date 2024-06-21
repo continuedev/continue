@@ -4,9 +4,9 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { Button, Input, SecondaryButton } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
+import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { setDefaultModel } from "../../../redux/slices/stateSlice";
 import { getLocalStorage } from "../../../util/localStorage";
-import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { ftl } from "../../dialogs/FTCDialog";
 import QuickSetupListBox from "./QuickSetupListBox";
 
