@@ -1,3 +1,4 @@
+process.env.NODE_OPTIONS = "--experimental-vm-modules";
 export default {
   transform: {
     "\\.[jt]sx?$": ["ts-jest", { useESM: true }],
