@@ -224,12 +224,17 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     );
 
     // Copy to build directory for testing
-    const [platform, arch] = target.split("-");
-    if (platform === currentPlatform && arch === currentArch) {
-      fs.copyFileSync(
-        `${targetDir}/node_sqlite3.node`,
-        `build/node_sqlite3.node`,
-      );
+    try {
+      const [platform, arch] = target.split("-");
+      if (platform === currentPlatform && arch === currentArch) {
+        fs.copyFileSync(
+          `${targetDir}/node_sqlite3.node`,
+          `build/node_sqlite3.node`,
+        );
+      } 
+    } catch (error) {
+      console.log("[warn] Could not copy node_sqlite to build");
+      console.log(error)
     }
 
     fs.unlinkSync(`${targetDir}/build.tar.gz`);

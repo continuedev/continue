@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.143",
+  "version": "0.9.165",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -53,6 +53,15 @@
   "main": "./out/extension.js",
   "browser": "./out/extension.js",
   "contributes": {
+    "languages": [
+      {
+        "filenames": [
+          "config.json",
+          ".continuerc.json"
+        ],
+        "id": "jsonc"
+      }
+    ],
     "configuration": {
       "title": "Continue",
       "properties": {
@@ -161,12 +170,6 @@
         "command": "continue.toggleTabAutocompleteEnabled",
         "category": "Continue",
         "title": "Toggle Autocomplete Enabled",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.shareSession",
-        "category": "Continue",
-        "title": "Share Session",
         "group": "Continue"
       },
       {
@@ -479,6 +482,7 @@
     "quick-test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "prepackage": "node scripts/prepackage.js",
     "package": "node scripts/package.js",
+    "package-all": "node scripts/package-all.js",
     "package:pre-release": "node scripts/package.js --pre-release",
     "build:rust": "cargo-cp-artifact -ac sync sync.node -- cargo build --manifest-path ../../sync/Cargo.toml --message-format=json-render-diagnostics",
     "build-debug:rust": "npm run build:rust --",
@@ -545,6 +549,7 @@
     "posthog-node": "^3.6.3",
     "react-markdown": "^8.0.7",
     "react-redux": "^8.0.5",
+    "read-last-lines": "^1.8.0",
     "request": "^2.88.2",
     "socket.io-client": "^4.7.2",
     "strip-ansi": "^7.1.0",
@@ -553,6 +558,7 @@
     "uuid": "^9.0.1",
     "uuidv4": "^6.2.13",
     "vectordb": "^0.4.20",
+    "esbuild": "^0.17.19",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"

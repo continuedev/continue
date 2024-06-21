@@ -3,8 +3,8 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
 } from "../../index.js";
-import { BaseContextProvider } from "../index.js";
 import { splitPath } from "../../util/index.js";
+import { BaseContextProvider } from "../index.js";
 
 interface Directory {
   name: string;
@@ -32,6 +32,7 @@ class FileTreeContextProvider extends BaseContextProvider {
     displayTitle: "File Tree",
     description: "Attach a representation of the file tree",
     type: "normal",
+    renderInlineAs: "",
   };
 
   async getContextItems(

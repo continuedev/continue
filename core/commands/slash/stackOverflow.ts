@@ -1,7 +1,7 @@
+import { constants } from "../../deploy/constants.js";
 import { ChatMessageRole, FetchFunction, SlashCommand } from "../../index.js";
 import { pruneStringFromBottom, stripImages } from "../../llm/countTokens.js";
 
-const SERVER_URL = "https://proxy-server-l6vsfbzhba-uw.a.run.app";
 const PROMPT = (
   input: string,
 ) => `The above sources are excerpts from related StackOverflow questions. Use them to help answer the below question from our user. Provide links to the sources in markdown whenever possible:
@@ -14,7 +14,7 @@ async function getResults(q: string, fetch: FetchFunction): Promise<any> {
     q: `${q} site:stackoverflow.com`,
   });
 
-  const resp = await fetch(`${SERVER_URL}/search`, {
+  const resp = await fetch(new URL("/search", constants.a), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

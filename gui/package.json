@@ -52,6 +52,7 @@
     "rehype-katex": "^7.0.0",
     "rehype-wrap-all": "^1.1.0",
     "remark-math": "^6.0.0",
+    "reselect": "^5.1.1",
     "seti-file-icons": "^0.0.8",
     "socket.io-client": "^4.7.2",
     "styled-components": "^5.3.6",

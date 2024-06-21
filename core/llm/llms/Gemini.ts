@@ -17,6 +17,30 @@ class Gemini extends BaseLLM {
     apiBase: "https://generativelanguage.googleapis.com/v1beta/",
   };
 
+  // Function to convert completion options to Gemini format
+  private _convertArgs(options: CompletionOptions) {
+    const finalOptions: any = {}; // Initialize an empty object
+
+    // Map known options
+    if (options.topK) {
+      finalOptions.topK = options.topK;
+    }
+    if (options.topP) {
+      finalOptions.topP = options.topP;
+    }
+    if (options.temperature !== undefined && options.temperature !== null) {
+      finalOptions.temperature = options.temperature;
+    }
+    if (options.maxTokens) {
+      finalOptions.maxOutputTokens = options.maxTokens;
+    }
+    if (options.stop) {
+      finalOptions.stopSequences = options.stop.filter((x) => x.trim() !== "");
+    }
+
+    return { generationConfig: finalOptions }; // Wrap options under 'generationConfig'
+  }
+
   protected async *_streamComplete(
     prompt: string,
     options: CompletionOptions,
@@ -47,7 +71,18 @@ class Gemini extends BaseLLM {
     messages: ChatMessage[],
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
-    const convertedMsgs = this.removeSystemMessage(messages);
+    // Ensure this.apiBase is used if available, otherwise use default
+    const apiBase =
+      this.apiBase ||
+      Gemini.defaultOptions?.apiBase ||
+      "https://generativelanguage.googleapis.com/v1beta/"; // Determine if it's a v1 API call based on apiBase
+    const isV1API = apiBase.includes("/v1/");
+
+    // Conditionally apply removeSystemMessage
+    const convertedMsgs = isV1API
+      ? this.removeSystemMessage(messages)
+      : messages;
+
     if (options.model.includes("gemini")) {
       for await (const message of this.streamChatGemini(
         convertedMsgs,
@@ -86,8 +121,19 @@ class Gemini extends BaseLLM {
       `models/${options.model}:streamGenerateContent?key=${this.apiKey}`,
       this.apiBase,
     );
-    const body = {
-      contents: messages.map((msg) => {
+    // This feels hacky to repeat code from above function but was the quickest
+    // way to ensure system message re-formatting isn't done if user has specified v1
+    const apiBase =
+      this.apiBase ||
+      Gemini.defaultOptions?.apiBase ||
+      "https://generativelanguage.googleapis.com/v1beta/"; // Determine if it's a v1 API call based on apiBase
+    const isV1API = apiBase.includes("/v1/");
+
+    const contents = messages
+      .map((msg) => {
+        if (msg.role === "system" && !isV1API) {
+          return null; // Don't include system message in contents
+        }
         return {
           role: msg.role === "assistant" ? "model" : "user",
           parts:
@@ -95,7 +141,17 @@ class Gemini extends BaseLLM {
               ? [{ text: msg.content }]
               : msg.content.map(this._continuePartToGeminiPart),
         };
-      }),
+      })
+      .filter((c) => c !== null);
+
+    const body = {
+      ...this._convertArgs(options),
+      contents,
+      // if this.systemMessage is defined, reformat it for Gemini API
+      ...(this.systemMessage &&
+        !isV1API && {
+          systemInstruction: { parts: [{ text: this.systemMessage }] },
+        }),
     };
     const response = await this.fetch(apiURL, {
       method: "POST",
@@ -125,23 +181,28 @@ class Gemini extends BaseLLM {
           data = JSON.parse(part);
         } catch (e) {
           foundIncomplete = true;
-          continue;
+          continue; // yo!
         }
         if (data.error) {
           throw new Error(data.error.message);
         }
-
-        // Incrementally stream the content to make it smoother
-        const content = data.candidates[0].content.parts[0].text;
-        const words = content.split(/(\s+)/);
-        const delaySeconds = Math.min(4.0 / (words.length + 1), 0.1);
-        while (words.length > 0) {
-          const wordsToYield = Math.min(3, words.length);
-          yield {
-            role: "assistant",
-            content: words.splice(0, wordsToYield).join(""),
-          };
-          await delay(delaySeconds);
+        // Check for existence of each level before accessing the final 'text' property
+        if (data?.candidates?.[0]?.content?.parts?.[0]?.text) {
+          // Incrementally stream the content to make it smoother
+          const content = data.candidates[0].content.parts[0].text;
+          const words = content.split(/(\s+)/);
+          const delaySeconds = Math.min(4.0 / (words.length + 1), 0.1);
+          while (words.length > 0) {
+            const wordsToYield = Math.min(3, words.length);
+            yield {
+              role: "assistant",
+              content: words.splice(0, wordsToYield).join(""),
+            };
+            await delay(delaySeconds);
+          }
+        } else {
+          // Handle the case where the expected data structure is not found
+          console.warn('Unexpected response format:', data);
         }
       }
       if (foundIncomplete) {

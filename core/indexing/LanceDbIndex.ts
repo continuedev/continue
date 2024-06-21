@@ -79,13 +79,24 @@ export class LanceDbIndex implements CodebaseIndex {
       const content = contents[i];
       const chunks: Chunk[] = [];
 
+      let hasEmptyChunks = false;
+
       for await (const chunk of chunkDocument(
         items[i].path,
         content,
         LanceDbIndex.MAX_CHUNK_SIZE,
         items[i].cacheKey,
       )) {
+        if (chunk.content.length == 0) {
+          hasEmptyChunks = true;
+          break;
+        }
         chunks.push(chunk);
+      }
+
+      if (hasEmptyChunks) {
+        // File did not chunk properly, let's skip it.
+        continue;
       }
 
       if (chunks.length > 20) {

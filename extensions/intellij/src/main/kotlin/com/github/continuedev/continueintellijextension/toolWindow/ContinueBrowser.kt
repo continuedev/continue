@@ -48,6 +48,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         "config/ideSettingsUpdate",
         "config/getBrowserSerialized",
         "config/deleteModel",
+        "config/newPromptFile",
         "config/reload",
         "context/getContextItems",
         "context/loadSubmenuItems",
@@ -65,6 +66,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         "stats/getTokensPerModel",
         "index/setPaused",
         "index/forceReIndex",
+        "index/indexingProgressBarInitialized",
         "completeOnboarding",
         "addAutocompleteModel"
     )
@@ -150,6 +152,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
                 }
                 "showLines" -> {
                     val data = data.asJsonObject
+                    ide?.setFileOpen(data.get("filepath").asString)
                     ide?.highlightCode(RangeInFile(
                             data.get("filepath").asString,
                             Range(Position(

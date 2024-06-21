@@ -1,4 +1,6 @@
 import fs from "fs";
+import { open } from "sqlite";
+import sqlite3 from "sqlite3";
 import { DatabaseConnection } from "../indexing/refreshIndex.js";
 import { getDevDataSqlitePath } from "./paths.js";
 
@@ -72,8 +74,6 @@ export class DevDataSqliteDb {
       return DevDataSqliteDb.db;
     }
 
-    const { open } = require("sqlite");
-    const sqlite3 = require("sqlite3");
     DevDataSqliteDb.db = await open({
       filename: devDataSqlitePath,
       driver: sqlite3.Database,

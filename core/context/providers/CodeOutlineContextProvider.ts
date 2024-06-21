@@ -14,6 +14,7 @@ class CodeOutlineContextProvider extends BaseContextProvider {
     displayTitle: "Outline",
     description: "Definition lines only (from open files)",
     type: "normal",
+    renderInlineAs: "",
   };
 
   async getContextItems(

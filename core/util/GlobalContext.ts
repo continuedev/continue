@@ -1,9 +1,9 @@
 import fs from "node:fs";
-import { getGlobalContextFilePath } from "./paths";
-import { IndexingProgressUpdate } from "..";
+import { getGlobalContextFilePath } from "./paths.js";
 
 export type GlobalContextType = {
   indexingPaused: boolean;
+  selectedTabAutocompleteModel: string;
 };
 
 /**

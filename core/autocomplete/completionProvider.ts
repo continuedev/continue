@@ -38,6 +38,7 @@ import { AutocompleteLanguageInfo } from "./languages.js";
 import {
   avoidPathLine,
   noTopLevelKeywordsMidline,
+  skipPrefixes,
   stopAtLines,
   stopAtRepeatingLines,
   stopAtSimilarLine,
@@ -599,10 +600,16 @@ export class CompletionProvider {
         ...lang.topLevelKeywords.map((word) => `\n${word}`),
       ];
 
-      const multiline =
-        !input.selectedCompletionInfo && // Only ever single-line if using intellisense selected value
-        options.multilineCompletions !== "never" &&
-        (options.multilineCompletions === "always" || completeMultiline);
+      let langMultilineDecision = lang.useMultiline?.({ prefix, suffix });
+      let multiline: boolean = false;
+      if (langMultilineDecision) {
+        multiline = langMultilineDecision;
+      } else {
+        multiline =
+          !input.selectedCompletionInfo && // Only ever single-line if using intellisense selected value
+          options.multilineCompletions !== "never" &&
+          (options.multilineCompletions === "always" || completeMultiline);
+      }
 
       // Try to reuse pending requests if what the user typed matches start of completion
       const generator = this.generatorReuseManager.getGenerator(
@@ -645,14 +652,17 @@ export class CompletionProvider {
       );
       charGenerator = this.bracketMatchingService.stopOnUnmatchedClosingBracket(
         charGenerator,
+        prefix,
         suffix,
         filepath,
+        multiline,
       );
 
       let lineGenerator = streamLines(charGenerator);
       lineGenerator = stopAtLines(lineGenerator, fullStop);
       lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
       lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
+      lineGenerator = skipPrefixes(lineGenerator);
       lineGenerator = noTopLevelKeywordsMidline(
         lineGenerator,
         lang.topLevelKeywords,

@@ -1,3 +1,4 @@
+import { Mutex } from "async-mutex";
 import { open } from "sqlite";
 import sqlite3 from "sqlite3";
 import { DatabaseConnection } from "../indexing/refreshIndex.js";
@@ -5,6 +6,7 @@ import { getTabAutocompleteCacheSqlitePath } from "../util/paths.js";
 
 export class AutocompleteLruCache {
   private static capacity = 1000;
+  private mutex = new Mutex();
 
   db: DatabaseConnection;
 
@@ -55,33 +57,51 @@ export class AutocompleteLruCache {
   }
 
   async put(prefix: string, completion: string) {
-    const result = await this.db.get(
-      "SELECT key FROM cache WHERE key = ?",
-      prefix,
-    );
+    const release = await this.mutex.acquire();
+    try {
+      await this.db.run("BEGIN TRANSACTION");
 
-    if (result) {
-      await this.db.run(
-        "UPDATE cache SET value = ?, timestamp = ? WHERE key = ?",
-        completion,
-        Date.now(),
-        prefix,
-      );
-    } else {
-      const count = await this.db.get("SELECT COUNT(*) as count FROM cache");
-
-      if (count.count >= AutocompleteLruCache.capacity) {
-        await this.db.run(
-          "DELETE FROM cache WHERE key = (SELECT key FROM cache ORDER BY timestamp ASC LIMIT 1)",
+      try {
+        const result = await this.db.get(
+          "SELECT key FROM cache WHERE key = ?",
+          prefix,
         );
-      }
 
-      await this.db.run(
-        "INSERT INTO cache (key, value, timestamp) VALUES (?, ?, ?)",
-        prefix,
-        completion,
-        Date.now(),
-      );
+        if (result) {
+          await this.db.run(
+            "UPDATE cache SET value = ?, timestamp = ? WHERE key = ?",
+            completion,
+            Date.now(),
+            prefix,
+          );
+        } else {
+          const count = await this.db.get(
+            "SELECT COUNT(*) as count FROM cache",
+          );
+
+          if (count.count >= AutocompleteLruCache.capacity) {
+            await this.db.run(
+              "DELETE FROM cache WHERE key = (SELECT key FROM cache ORDER BY timestamp ASC LIMIT 1)",
+            );
+          }
+
+          await this.db.run(
+            "INSERT INTO cache (key, value, timestamp) VALUES (?, ?, ?)",
+            prefix,
+            completion,
+            Date.now(),
+          );
+        }
+
+        await this.db.run("COMMIT");
+      } catch (error) {
+        await this.db.run("ROLLBACK");
+        throw error;
+      }
+    } catch (e) {
+      console.error("Error creating transaction: ", e);
+    } finally {
+      release();
     }
   }
 }

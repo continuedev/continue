@@ -1,9 +1,10 @@
-import {
+import type {
   BrowserSerializedContinueConfig,
   ChatMessage,
   ContextItemWithId,
   ContextSubmenuItem,
   DiffLine,
+  IdeSettings,
   LLMFullCompletionOptions,
   MessageContent,
   ModelDescription,
@@ -13,8 +14,7 @@ import {
   SessionInfo,
   SiteIndexingConfig,
 } from "..";
-import { AutocompleteInput } from "../autocomplete/completionProvider";
-import { IdeSettings } from "./ideWebview";
+import type { AutocompleteInput } from "../autocomplete/completionProvider";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -27,8 +27,8 @@ export interface ListHistoryOptions {
 }
 
 export type ToCoreFromIdeOrWebviewProtocol = {
-  // New
   "update/modelChange": [string, void];
+  "update/selectTabAutocompleteModel": [string, void];
 
   // Special
   ping: [string, string];
@@ -45,6 +45,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     { model: SerializedContinueConfig["models"][number] },
     void,
   ];
+  "config/newPromptFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
   "config/getBrowserSerialized": [undefined, BrowserSerializedContinueConfig];
   "config/deleteModel": [{ title: string }, void];

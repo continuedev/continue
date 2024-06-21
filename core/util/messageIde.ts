@@ -3,6 +3,7 @@ import type {
   FileType,
   IDE,
   IdeInfo,
+  IdeSettings,
   IndexTag,
   Location,
   Problem,
@@ -27,11 +28,13 @@ export class MessageIde implements IDE {
   async gotoDefinition(location: Location): Promise<RangeInFile[]> {
     return this.request("gotoDefinition", { location });
   }
-
   onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
     this.on("didChangeActiveTextEditor", (data) => callback(data.filepath));
   }
 
+  getIdeSettings(): Promise<IdeSettings> {
+    return this.request("getIdeSettings", undefined);
+  }
   getGitHubAuthToken(): Promise<string | undefined> {
     return this.request("getGitHubAuthToken", undefined);
   }

@@ -28,12 +28,18 @@ interface AutocompleteTemplate {
 const stableCodeFimTemplate: AutocompleteTemplate = {
   template: "<fim_prefix>{{{prefix}}}<fim_suffix>{{{suffix}}}<fim_middle>",
   completionOptions: {
-    stop: ["<fim_prefix>", "<fim_suffix>", "<fim_middle>", "<|endoftext|>"],
+    stop: [
+      "<fim_prefix>",
+      "<fim_suffix>",
+      "<fim_middle>",
+      "<|endoftext|>",
+      "<file_sep>",
+    ],
   },
 };
 
 const codestralFimTemplate: AutocompleteTemplate = {
-  template: "<s>[SUFFIX]{{{suffix}}}[PREFIX]{{{prefix}}}",
+  template: "[SUFFIX]{{{suffix}}}[PREFIX]{{{prefix}}}",
   completionOptions: {
     stop: ["[PREFIX]", "[SUFFIX]"],
   },
@@ -238,11 +244,11 @@ function sum(tree: Tree<number>): number {
 
 ## EXAMPLE QUERY:
 
-The 4th {{FILL_HERE}} is Jupiter.
+The 5th {{FILL_HERE}} is Jupiter.
 
 ## CORRECT COMPLETION:
 
-<COMPLETION>the 4th planet after Mars</COMPLETION>
+<COMPLETION>planet from the Sun</COMPLETION>
 
 ## EXAMPLE QUERY:
 
@@ -277,7 +283,8 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
     lowerCaseModel.includes("starchat") ||
     lowerCaseModel.includes("octocoder") ||
     lowerCaseModel.includes("stable") ||
-    lowerCaseModel.includes("codeqwen")
+    lowerCaseModel.includes("codeqwen") ||
+    lowerCaseModel.includes("qwen")
   ) {
     return stableCodeFimTemplate;
   }

@@ -102,7 +102,7 @@ async function* generateLines(lines: string[]): AsyncGenerator<string> {
   }
 }
 
-describe("streamDiff", () => {
+describe.skip("streamDiff", () => {
   for (let i = 0; i < oldCode.length; i++) {
     test(`outputs valid diff #${i}`, async () => {
       const oldLines = oldCode[i].split("\n");

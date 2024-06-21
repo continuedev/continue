@@ -1,8 +1,9 @@
-import {
+import type {
   ContinueRcJson,
   DiffLine,
   FileType,
   IdeInfo,
+  IdeSettings,
   IndexTag,
   Location,
   Problem,
@@ -10,7 +11,6 @@ import {
   RangeInFile,
   Thread,
 } from "..";
-import { IdeSettings } from "./ideWebview";
 
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type

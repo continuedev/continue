@@ -67,6 +67,19 @@ function commonPrefixLength(a: string, b: string): number {
   return i;
 }
 
+export function lineIsRepeated(a: string, b: string): boolean {
+  if (a.length <= 4 || b.length <= 4) {
+    return false;
+  }
+
+  const aTrim = a.trim();
+  const bTrim = b.trim();
+  return (
+    commonPrefixLength(aTrim, bTrim) > 12 ||
+    distance(aTrim, bTrim) / bTrim.length < 0.1
+  );
+}
+
 export async function* stopAtSimilarLine(
   stream: LineStream,
   line: string,
@@ -85,12 +98,7 @@ export async function* stopAtSimilarLine(
       continue;
     }
 
-    let lineQualifies = nextLine.length > 4 && trimmedLine.length > 4;
-    if (
-      lineQualifies &&
-      (commonPrefixLength(nextLine.trim(), trimmedLine.trim()) > 12 ||
-        distance(nextLine.trim(), trimmedLine) / trimmedLine.length < 0.1)
-    ) {
+    if (lineIsRepeated(nextLine, trimmedLine)) {
       fullStop();
       break;
     }
@@ -108,6 +116,22 @@ export async function* stopAtLines(
     if (LINES_TO_STOP_AT.some((stopAt) => line.trim().includes(stopAt))) {
       fullStop();
       break;
+    }
+    yield line;
+  }
+}
+
+const PREFIXES_TO_SKIP = ["<COMPLETION>"];
+export async function* skipPrefixes(lines: LineStream): LineStream {
+  let isFirstLine = true;
+  for await (const line of lines) {
+    if (isFirstLine) {
+      const match = PREFIXES_TO_SKIP.find((prefix) => line.startsWith(prefix));
+      if (match) {
+        yield line.slice(match.length);
+        continue;
+      }
+      isFirstLine = false;
     }
     yield line;
   }
@@ -194,6 +218,8 @@ function isEnglishFirstLine(line: string) {
     line.startsWith("sure thing") ||
     line.startsWith("sure!") ||
     line.startsWith("to fill") ||
+    line.startsWith("certainly") ||
+    line.startsWith("of course") ||
     line.startsWith("the code should")
   ) {
     return true;

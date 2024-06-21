@@ -13,6 +13,7 @@ class LocalsProvider extends BaseContextProvider {
     displayTitle: "Locals",
     description: "Reference the contents of the local variables",
     type: "submenu",
+    renderInlineAs: "",
   };
 
   async getContextItems(

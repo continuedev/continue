@@ -1,7 +1,7 @@
 import {
   ToCoreFromWebviewProtocol,
   ToWebviewFromCoreProtocol,
-} from "./coreWebview";
+} from "./coreWebview.js";
 
 // Message types to pass through from webview to core
 export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
@@ -16,6 +16,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "devdata/log",
     "config/addOpenAiKey",
     "config/addModel",
+    "config/newPromptFile",
     "config/ideSettingsUpdate",
     "config/getBrowserSerialized",
     "config/deleteModel",
@@ -43,4 +44,4 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
 
 // Message types to pass through from core to webview
 export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
-  ["configUpdate", "getDefaultModelTitle", "indexProgress"];
+  ["configUpdate", "getDefaultModelTitle", "indexProgress", "addContextItem"];

@@ -1,17 +1,20 @@
 import Handlebars from "handlebars";
+import { v4 as uuidv4 } from "uuid";
 import {
   BaseCompletionOptions,
+  IdeSettings,
   ILLM,
   LLMOptions,
   ModelDescription,
 } from "../../index.js";
-import { IdeSettings } from "../../protocol/ideWebview.js";
 import { DEFAULT_MAX_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
 import Anthropic from "./Anthropic.js";
 import Bedrock from "./Bedrock.js";
+import Cloudflare from "./Cloudflare.js";
 import Cohere from "./Cohere.js";
 import DeepInfra from "./DeepInfra.js";
+import Deepseek from "./Deepseek.js";
 import Fireworks from "./Fireworks.js";
 import Flowise from "./Flowise.js";
 import FreeTrial from "./FreeTrial.js";
@@ -29,7 +32,6 @@ import Replicate from "./Replicate.js";
 import TextGenWebUI from "./TextGenWebUI.js";
 import Together from "./Together.js";
 import ContinueProxy from "./stubs/ContinueProxy.js";
-import Cloudflare from "./Cloudflare";
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -66,7 +68,19 @@ export async function renderTemplatedString(
   template: string,
   readFile: (filepath: string) => Promise<string>,
   inputData: any,
+  helpers?: [string, Handlebars.HelperDelegate][],
 ): Promise<string> {
+  const promises: { [key: string]: Promise<string> } = {};
+  if (helpers) {
+    for (const [name, helper] of helpers) {
+      Handlebars.registerHelper(name, (...args) => {
+        const id = uuidv4();
+        promises[id] = helper(...args);
+        return `__${id}__`;
+      });
+    }
+  }
+
   const [newTemplate, vars] = getHandlebarsVars(template);
   const data: any = { ...inputData };
   for (const key in vars) {
@@ -74,7 +88,13 @@ export async function renderTemplatedString(
     data[key] = fileContents || (inputData[vars[key]] ?? vars[key]);
   }
   const templateFn = Handlebars.compile(newTemplate);
-  const final = templateFn(data);
+  let final = templateFn(data);
+
+  await Promise.all(Object.values(promises));
+  for (const id in promises) {
+    final = final.replace(`__${id}__`, await promises[id]);
+  }
+
   return final;
 }
 
@@ -101,6 +121,7 @@ const LLMs = [
   Fireworks,
   ContinueProxy,
   Cloudflare,
+  Deepseek,
 ];
 
 export async function llmFromDescription(

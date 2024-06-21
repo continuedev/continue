@@ -11,7 +11,19 @@ import {
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
 import { stripImages } from "core/llm/countTokens";
+import { createSelector } from "reselect";
 import { v4 } from "uuid";
+import { RootState } from "../store";
+
+export const memoizedContextItemsSelector = createSelector(
+  [(state: RootState) => state.state.history],
+  (history) => {
+    return history.reduce<ContextItemWithId[]>((acc, item) => {
+      acc.push(...item.contextItems);
+      return acc;
+    }, []);
+  },
+);
 
 const TEST_CONTEXT_ITEMS: ContextItemWithId[] = [
   {

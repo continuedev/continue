@@ -120,15 +120,6 @@ export class IdeMessenger implements IIdeMessenger {
     this._postToIde(messageType, data, messageId);
   }
 
-  private _safeParseResponse(data: any) {
-    // This causes .json files to be parsed as objects instead of remaining strings
-    let responseData = data ?? null;
-    try {
-      responseData = JSON.parse(responseData);
-    } catch {}
-    return responseData;
-  }
-
   request<T extends keyof FromWebviewProtocol>(
     messageType: T,
     data: FromWebviewProtocol[T][0],
@@ -139,7 +130,7 @@ export class IdeMessenger implements IIdeMessenger {
       const handler = (event: any) => {
         if (event.data.messageId === messageId) {
           window.removeEventListener("message", handler);
-          resolve(this._safeParseResponse(event.data.data));
+          resolve(event.data.data);
         }
       };
       window.addEventListener("message", handler);
@@ -164,7 +155,8 @@ export class IdeMessenger implements IIdeMessenger {
 
     const handler = (event: { data: Message }) => {
       if (event.data.messageId === messageId) {
-        const responseData = this._safeParseResponse(event.data.data);
+        console.log("BB", typeof event.data.data);
+        const responseData = event.data.data;
         if (responseData.done) {
           window.removeEventListener("message", handler);
           done = true;

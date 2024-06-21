@@ -6,8 +6,11 @@ import * as vscode from "vscode";
 import { ContextMenuConfig, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
+import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
-import { getConfigJsonPath } from "core/util/paths";
+import { GlobalContext } from "core/util/GlobalContext";
+import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import readLastLines from "read-last-lines";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
@@ -141,6 +144,7 @@ const commandsMap: (
   configHandler: ConfigHandler,
   diffManager: DiffManager,
   verticalDiffManager: VerticalPerLineDiffManager,
+  continueServerClientPromise: Promise<ContinueServerClient>,
 ) => { [command: string]: (...args: any) => any } = (
   ide,
   extensionContext,
@@ -148,6 +152,7 @@ const commandsMap: (
   configHandler,
   diffManager,
   verticalDiffManager,
+  continueServerClientPromise,
 ) => {
   async function streamInlineEdit(
     promptName: keyof ContextMenuConfig,
@@ -398,9 +403,6 @@ const commandsMap: (
         input: text,
       });
     },
-    "continue.shareSession": () => {
-      sidebar.sendMainUserInput("/share");
-    },
     "continue.selectRange": (startLine: number, endLine: number) => {
       if (!vscode.window.activeTextEditor) {
         return;
@@ -532,6 +534,81 @@ const commandsMap: (
         vscode.ConfigurationTarget.Global,
       );
     },
+    "continue.openTabAutocompleteConfigMenu": async () => {
+      const config = vscode.workspace.getConfiguration("continue");
+      const enabled = config.get("enableTabAutocomplete");
+      const quickPick = vscode.window.createQuickPick();
+      const selected = new GlobalContext().get("selectedTabAutocompleteModel");
+      const autocompleteModelTitles = ((
+        await configHandler.loadConfig()
+      ).tabAutocompleteModels
+        ?.map((model) => model.title)
+        .filter((t) => t !== undefined) || []) as string[];
+      quickPick.items = [
+        {
+          label: enabled
+            ? "$(check) Disable autocomplete"
+            : "$(circle-slash) Enable autocomplete",
+        },
+        {
+          label: "$(gear) Configure autocomplete options",
+        },
+        {
+          label: "$(feedback) Give feedback",
+        },
+        {
+          kind: vscode.QuickPickItemKind.Separator,
+          label: "Switch model",
+        },
+        ...autocompleteModelTitles.map((title) => ({
+          label: title === selected ? `$(check) ${title}` : title,
+          description: title === selected ? "Currently selected" : undefined,
+        })),
+      ];
+      quickPick.onDidAccept(() => {
+        const selectedOption = quickPick.selectedItems[0].label;
+        if (selectedOption === "$(circle-slash) Enable autocomplete") {
+          config.update(
+            "enableTabAutocomplete",
+            true,
+            vscode.ConfigurationTarget.Global,
+          );
+        } else if (selectedOption === "$(check) Disable autocomplete") {
+          config.update(
+            "enableTabAutocomplete",
+            false,
+            vscode.ConfigurationTarget.Global,
+          );
+        } else if (
+          selectedOption === "$(gear) Configure autocomplete options"
+        ) {
+          ide.openFile(getConfigJsonPath());
+        } else if (autocompleteModelTitles.includes(selectedOption)) {
+          new GlobalContext().update(
+            "selectedTabAutocompleteModel",
+            selectedOption,
+          );
+          configHandler.reloadConfig();
+        } else if (selectedOption === "$(feedback) Give feedback") {
+          vscode.commands.executeCommand("continue.giveAutocompleteFeedback");
+        }
+        quickPick.dispose();
+      });
+      quickPick.show();
+    },
+    "continue.giveAutocompleteFeedback": async () => {
+      const feedback = await vscode.window.showInputBox({
+        prompt:
+          "Please share what went wrong with the last completion. The details of the completion as well as this message will be sent to the Continue team in order to improve.",
+      });
+      if (feedback) {
+        const client = await continueServerClientPromise;
+        const completionsPath = getDevDataFilePath("autocomplete");
+
+        const lastLines = await readLastLines.read(completionsPath, 2);
+        client.sendFeedback(feedback, lastLines);
+      }
+    },
   };
 };
 
@@ -543,6 +620,7 @@ export function registerAllCommands(
   configHandler: ConfigHandler,
   diffManager: DiffManager,
   verticalDiffManager: VerticalPerLineDiffManager,
+  continueServerClientPromise: Promise<ContinueServerClient>,
 ) {
   for (const [command, callback] of Object.entries(
     commandsMap(
@@ -552,6 +630,7 @@ export function registerAllCommands(
       configHandler,
       diffManager,
       verticalDiffManager,
+      continueServerClientPromise,
     ),
   )) {
     context.subscriptions.push(
