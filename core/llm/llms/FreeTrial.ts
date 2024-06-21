@@ -164,10 +164,10 @@ class FreeTrial extends BaseLLM {
   async listModels(): Promise<string[]> {
     return [
       "codestral-latest",
+      "claude-3-5-sonnet-20240620",
       "llama3-70b",
       "gpt-4o",
       "gpt-3.5-turbo",
-      "claude-3-sonnet-20240229",
       "claude-3-haiku-20240307",
       "gemini-1.5-pro-latest",
     ];

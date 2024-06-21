@@ -9,6 +9,7 @@ export class TcpMessenger<
 > implements IMessenger<ToProtocol, FromProtocol>
 {
   private port: number = 3000;
+  private host: string = "127.0.0.1";
   private socket: net.Socket | null = null;
 
   typeListeners = new Map<keyof ToProtocol, ((message: Message) => any)[]>();
@@ -35,7 +36,7 @@ export class TcpMessenger<
       });
     });
 
-    server.listen(this.port, () => {
+    server.listen(this.port, this.host, () => {
       console.log(`Server listening on port ${this.port}`);
     });
   }

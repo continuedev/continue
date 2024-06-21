@@ -46,6 +46,7 @@ class OpenAI extends BaseLLM {
   constructor(options: LLMOptions) {
     super(options);
     this.useLegacyCompletionsEndpoint = options.useLegacyCompletionsEndpoint;
+    this.apiVersion = options.apiVersion ?? "2023-07-01-preview";
   }
 
   static providerName: ModelProvider = "openai";
@@ -96,6 +97,7 @@ class OpenAI extends BaseLLM {
           : url.port === "1337" ||
               url.host === "api.openai.com" ||
               url.host === "api.groq.com" ||
+              url.host === "api.deepseek.com" ||
               this.apiType === "azure"
             ? options.stop?.slice(0, 4)
             : options.stop,

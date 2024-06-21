@@ -294,7 +294,7 @@ function ModelSelect(props: {}) {
           width="1.3em"
           height="1.3em"
           onClick={() => {
-            navigate("/models");
+            navigate("/addModel");
           }}
         />
       </GridDiv>

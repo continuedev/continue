@@ -11,10 +11,10 @@ import { streamSse } from "../stream.js";
 class Anthropic extends BaseLLM {
   static providerName: ModelProvider = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
-    model: "claude-3-opus-20240229",
+    model: "claude-3-5-sonnet-20240620",
     contextLength: 200_000,
     completionOptions: {
-      model: "claude-3-opus-20240229",
+      model: "claude-3-5-sonnet-20240620",
       maxTokens: 4096,
     },
     apiBase: "https://api.anthropic.com/v1/",
