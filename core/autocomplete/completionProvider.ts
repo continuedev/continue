@@ -1,4 +1,3 @@
-import Handlebars from "handlebars";
 import ignore from "ignore";
 import OpenAI from "openai";
 import path from "path";
