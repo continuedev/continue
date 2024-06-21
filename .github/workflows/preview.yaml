@@ -95,6 +95,8 @@ jobs:
         run: |
           cd core
           npm run test
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
       # 2.5. Pre package
       - name: Set var for environment info
