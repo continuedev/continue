@@ -182,7 +182,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
     init {
         if (useTcp) {
             try {
-                val socket = Socket("localhost", 3000)
+                val socket = Socket("127.0.0.1", 3000)
                 val writer = PrintWriter(socket.getOutputStream(), true)
                 this.writer = writer
                 val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
