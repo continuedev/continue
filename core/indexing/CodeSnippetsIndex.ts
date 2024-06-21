@@ -1,5 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
 import type {
   ChunkWithoutID,
   ContextItem,
@@ -10,9 +8,9 @@ import type {
 } from "../index.js";
 import { getBasename, getLastNPathParts } from "../util/index.js";
 import {
-  getLanguageForFile,
+  TSQueryType,
   getParserForFile,
-  supportedLanguages,
+  getQueryForFile,
 } from "../util/treeSitter.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
@@ -46,35 +44,16 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     )`);
   }
 
-  private getQuerySource(filepath: string) {
-    const fullLangName = supportedLanguages[filepath.split(".").pop() ?? ""];
-    const sourcePath = path.join(
-      __dirname,
-      "..",
-      "tree-sitter",
-      "code-snippet-queries",
-      `tree-sitter-${fullLangName}-tags.scm`,
-    );
-    if (!fs.existsSync(sourcePath)) {
-      return "";
-    }
-    return fs.readFileSync(sourcePath).toString();
-  }
-
   async getSnippetsInFile(
     filepath: string,
     contents: string,
   ): Promise<(ChunkWithoutID & { title: string })[]> {
-    const lang = await getLanguageForFile(filepath);
-    if (!lang) {
-      return [];
-    }
     const parser = await getParserForFile(filepath);
     if (!parser) {
       return [];
     }
     const ast = parser.parse(contents);
-    const query = lang?.query(this.getQuerySource(filepath));
+    const query = await getQueryForFile(filepath, TSQueryType.CodeSnippets);
     const matches = query?.matches(ast.rootNode);
 
     return (

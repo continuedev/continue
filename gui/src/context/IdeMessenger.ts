@@ -54,7 +54,7 @@ export class IdeMessenger implements IIdeMessenger {
   ide: IDE;
 
   constructor() {
-    this.ide = new MessageIde(this.request.bind(this));
+    this.ide = new MessageIde(this.request.bind(this), () => {});
   }
 
   private _postToIde(messageType: string, data: any, messageId?: string) {
