@@ -18,6 +18,11 @@ export class TcpMessenger<
   constructor() {
     const server = net.createServer((socket) => {
       this.socket = socket;
+
+      socket.on("connect", () => {
+        console.log("Connected to server");
+      });
+
       socket.on("data", (data: Buffer) => {
         this._handleData(data);
       });

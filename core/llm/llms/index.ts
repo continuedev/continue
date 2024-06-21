@@ -2,11 +2,11 @@ import Handlebars from "handlebars";
 import { v4 as uuidv4 } from "uuid";
 import {
   BaseCompletionOptions,
+  IdeSettings,
   ILLM,
   LLMOptions,
   ModelDescription,
 } from "../../index.js";
-import { IdeSettings } from "../../protocol/ideWebview.js";
 import { DEFAULT_MAX_TOKENS } from "../constants.js";
 import { BaseLLM } from "../index.js";
 import Anthropic from "./Anthropic.js";

@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.164",
+  "version": "0.9.165",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -170,12 +170,6 @@
         "command": "continue.toggleTabAutocompleteEnabled",
         "category": "Continue",
         "title": "Toggle Autocomplete Enabled",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.shareSession",
-        "category": "Continue",
-        "title": "Share Session",
         "group": "Continue"
       },
       {

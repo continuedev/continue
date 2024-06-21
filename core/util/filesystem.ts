@@ -4,15 +4,29 @@ import {
   FileType,
   IDE,
   IdeInfo,
+  IdeSettings,
   IndexTag,
   Problem,
   Range,
   Thread,
-} from "../index.js";
+} from "../index.d.js";
 
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
+  static workspaceDir = "/tmp/continue";
+
+  constructor() {
+    fs.mkdirSync(FileSystemIde.workspaceDir, { recursive: true });
+  }
+
+  async getIdeSettings(): Promise<IdeSettings> {
+    return {
+      remoteConfigServerUrl: undefined,
+      remoteConfigSyncPeriod: 60,
+      userToken: "",
+    };
+  }
   async getGitHubAuthToken(): Promise<string | undefined> {
     return undefined;
   }
@@ -68,7 +82,7 @@ class FileSystemIde implements IDE {
   }
 
   isTelemetryEnabled(): Promise<boolean> {
-    return Promise.resolve(false);
+    return Promise.resolve(true);
   }
 
   getUniqueId(): Promise<string> {
@@ -115,7 +129,7 @@ class FileSystemIde implements IDE {
     useGitIgnore?: boolean,
   ): Promise<string[]> {
     return new Promise((resolve, reject) => {
-      fs.readdir("/tmp/continue", (err, files) => {
+      fs.readdir(FileSystemIde.workspaceDir, (err, files) => {
         if (err) {
           reject(err);
         }
@@ -126,7 +140,7 @@ class FileSystemIde implements IDE {
 
   getWorkspaceDirs(): Promise<string[]> {
     return new Promise((resolve, reject) => {
-      fs.mkdtemp("/tmp/continue", (err, folder) => {
+      fs.mkdtemp(FileSystemIde.workspaceDir, (err, folder) => {
         if (err) {
           reject(err);
         }

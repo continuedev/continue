@@ -35,6 +35,7 @@ program.action(async () => {
     const core = new Core(messenger, ide, async (text) => {
       fs.appendFileSync(promptLogsPath, text + "\n\n");
     });
+    console.log("Core started");
   } catch (e) {
     fs.writeFileSync("./error.log", `${new Date().toISOString()} ${e}\n`);
     console.log("Error: ", e);

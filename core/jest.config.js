@@ -1,23 +1,12 @@
 export default {
-  roots: ["<rootDir>"],
   transform: {
-    "^.+\\.ts?$": [
-      "ts-jest",
-      {
-        useESM: true,
-      },
-    ],
-    "^.+\\.js$": [
-      "babel-jest",
-      {
-        presets: [["@babel/preset-env", { targets: { node: "current" } }]],
-      },
-    ],
+    "\\.[jt]sx?$": ["ts-jest", { useESM: true }],
   },
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  extensionsToTreatAsEsm: [".ts"],
-  // Remove or comment out the moduleNameMapper configuration
+
   moduleNameMapper: {
-    "^(.*)\\.js$": "$1",
+    "(.+)\\.js": "$1",
   },
+  extensionsToTreatAsEsm: [".ts"],
+  preset: "ts-jest/presets/default-esm",
+  testTimeout: 10000,
 };

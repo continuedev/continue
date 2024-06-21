@@ -90,6 +90,12 @@ jobs:
           cd core
           npm ci
 
+      # 2.25 Run core tests
+      - name: Run core tests
+        run: |
+          cd core
+          npm run test
+
       # 2.5. Pre package
       - name: Set var for environment info
         shell: pwsh
@@ -210,6 +216,7 @@ jobs:
 
       # 3. Publish the extension to Open VSX Registry
       - name: Publish (Open VSX Registry)
+        continue-on-error: true
         run: |
           cd extensions/vscode
           npx ovsx publish --pre-release -p ${{ secrets.VSX_REGISTRY_TOKEN }} --packagePath ../../alpine-x64/*.vsix ../../darwin-arm64/*.vsix ../../darwin-x64/*.vsix ../../linux-arm64/*.vsix ../../linux-armhf/*.vsix ../../linux-x64/*.vsix ../../win32-x64/*.vsix ../../win32-arm64/*.vsix
