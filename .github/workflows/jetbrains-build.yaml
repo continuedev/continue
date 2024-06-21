@@ -446,9 +446,3 @@ jobs:
         with:
           name: ${{ needs.build.outputs.filename }}
           path: ./artifacts
-
-      # Attach the Gradle build artifact to the release draft
-      - name: Attach Gradle build artifact to release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload "v${{ needs.build.outputs.version }}" ../../artifacts/continue-intellij-extension-0.0.51 --clobber
