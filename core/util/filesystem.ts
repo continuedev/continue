@@ -32,6 +32,13 @@ class FileSystemIde implements IDE {
     throw new Error("Method not implemented.");
   }
 
+  gotoDefinition(location: Location): Promise<RangeInFile[]> {
+    throw new Error("Method not implemented.");
+  }
+  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
+    throw new Error("Method not implemented.");
+  }
+
   async getIdeSettings(): Promise<IdeSettings> {
     return {
       remoteConfigServerUrl: undefined,
