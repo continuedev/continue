@@ -1,10 +1,10 @@
 import { ModelProvider } from "core";
-import { ftl } from "../../../components/dialogs/FTCDialog";
-import type { ModelPackage } from "./models";
 import { HTMLInputTypeAttribute } from "react";
+import { ftl } from "../../../components/dialogs/FTCDialog";
 import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
-import { models } from "./models";
 import { completionParamsInputs } from "./completionParamsInputs";
+import type { ModelPackage } from "./models";
+import { models } from "./models";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -146,14 +146,15 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
         placeholder: "Enter the engine name",
         required: true,
       },
+      { ...apiBaseInput, required: true },
       {
         inputType: "text",
         key: "apiVersion",
         label: "API Version",
         placeholder: "Enter the API version",
-        required: true,
+        required: false,
+        defaultValue: "2023-07-01-preview",
       },
-      { ...apiBaseInput, required: true },
       ...completionParamsInputsConfigs,
     ],
   },
