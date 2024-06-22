@@ -22,19 +22,22 @@ import {
 } from "../util/parameters.js";
 import { Telemetry } from "../util/posthog.js";
 import { getRangeInString } from "../util/ranges.js";
-import { ImportDefinitionsService } from "./ImportDefinitionsService.js";
-import { BracketMatchingService } from "./brackets.js";
 import AutocompleteLruCache from "./cache.js";
-import {
-  noFirstCharNewline,
-  onlyWhitespaceAfterEndOfLine,
-} from "./charStream.js";
 import {
   constructAutocompletePrompt,
   languageForFilepath,
 } from "./constructPrompt.js";
 import { isOnlyPunctuationAndWhitespace } from "./filter.js";
 import { AutocompleteLanguageInfo } from "./languages.js";
+import { postprocessCompletion } from "./postprocessing.js";
+import { AutocompleteSnippet } from "./ranking.js";
+import { RecentlyEditedRange } from "./recentlyEdited.js";
+import { BracketMatchingService } from "./services/BracketMatchingService.js";
+import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
+import {
+  noFirstCharNewline,
+  onlyWhitespaceAfterEndOfLine,
+} from "./streamTransforms/charStream.js";
 import {
   avoidPathLine,
   noTopLevelKeywordsMidline,
@@ -43,10 +46,7 @@ import {
   stopAtRepeatingLines,
   stopAtSimilarLine,
   streamWithNewLines,
-} from "./lineStream.js";
-import { postprocessCompletion } from "./postprocessing.js";
-import { AutocompleteSnippet } from "./ranking.js";
-import { RecentlyEditedRange } from "./recentlyEdited.js";
+} from "./streamTransforms/lineStream.js";
 import { getTemplateForModel } from "./templates.js";
 import { GeneratorReuseManager } from "./util.js";
 

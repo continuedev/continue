@@ -1,4 +1,4 @@
-import type { LineFilter } from "./lineStream";
+import type { LineFilter } from "./streamTransforms/lineStream";
 
 export interface AutocompleteLanguageInfo {
   topLevelKeywords: string[];

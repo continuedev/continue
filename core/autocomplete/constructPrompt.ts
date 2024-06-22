@@ -7,7 +7,6 @@ import {
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../llm/countTokens.js";
-import { ImportDefinitionsService } from "./ImportDefinitionsService.js";
 import { getAst, getTreePathAtCursor } from "./ast.js";
 import {
   AutocompleteLanguageInfo,
@@ -22,6 +21,7 @@ import {
   type AutocompleteSnippet,
 } from "./ranking.js";
 import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
+import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
 
 export function languageForFilepath(
   filepath: string,

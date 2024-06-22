@@ -5,7 +5,7 @@ import {
   fixCodeLlamaFirstLineIndentation,
   stopAtLines,
   streamWithNewLines,
-} from "../../autocomplete/lineStream.js";
+} from "../../autocomplete/streamTransforms/lineStream.js";
 import { streamLines } from "../../diff/util.js";
 import { ContextItemWithId, ILLM, SlashCommand } from "../../index.js";
 import { stripImages } from "../../llm/countTokens.js";
@@ -252,7 +252,7 @@ const EditSlashCommand: SlashCommand = {
     );
     // if the above replace fails to find a match, the code will still be present
     // in the userInput. Replace it with input if available.
-    if (userInput.includes("\`\`\`") && (input !== "" || !input)) {
+    if (userInput.includes("```") && (input !== "" || !input)) {
       userInput = input;
     }
 
