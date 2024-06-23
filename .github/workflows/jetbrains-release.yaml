@@ -84,6 +84,13 @@ jobs:
           cd ../../binary
           npm ci
 
+      # Run prepackage.js script
+      - name: Run prepackage script
+        run: |
+          cd ../../extensions/vscode
+          npm ci
+          npm run prepackage
+
       # Build binaries
       - name: Install core node_modules
         run: |
