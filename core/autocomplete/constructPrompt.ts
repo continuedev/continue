@@ -1,4 +1,3 @@
-import Parser from "web-tree-sitter";
 import { RangeInFileWithContents } from "../commands/util.js";
 import { TabAutocompleteOptions } from "../index.js";
 
@@ -7,7 +6,7 @@ import {
   pruneLinesFromBottom,
   pruneLinesFromTop,
 } from "../llm/countTokens.js";
-import { getAst, getTreePathAtCursor } from "./ast.js";
+import { AstPath, getAst, getTreePathAtCursor } from "./ast.js";
 import {
   AutocompleteLanguageInfo,
   LANGUAGES,
@@ -21,6 +20,7 @@ import {
   type AutocompleteSnippet,
 } from "./ranking.js";
 import { RecentlyEditedRange, findMatchingRange } from "./recentlyEdited.js";
+import { HierarchicalContextService } from "./services/HierarchicalContextService.js";
 import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
 
 export function languageForFilepath(
@@ -32,7 +32,7 @@ export function languageForFilepath(
 const BLOCK_TYPES = ["body", "statement_block"];
 
 function shouldCompleteMultilineAst(
-  treePath: Parser.SyntaxNode[],
+  treePath: AstPath,
   cursorLine: number,
 ): boolean {
   // If at the base of the file, do multiline
@@ -63,7 +63,7 @@ function isMidlineCompletion(prefix: string, suffix: string): boolean {
 }
 
 async function shouldCompleteMultiline(
-  filepath: string,
+  treePath: AstPath | undefined,
   fullPrefix: string,
   fullSuffix: string,
   language: AutocompleteLanguageInfo,
@@ -94,18 +94,6 @@ async function shouldCompleteMultiline(
   }
 
   // Use AST to determine whether to complete multiline
-  let treePath: Parser.SyntaxNode[] | undefined;
-  try {
-    const ast = await getAst(filepath, fullPrefix + fullSuffix);
-    if (!ast) {
-      return true;
-    }
-
-    treePath = await getTreePathAtCursor(ast, fullPrefix.length);
-  } catch (e) {
-    console.error("Failed to parse AST", e);
-  }
-
   let completeMultiline = false;
   if (treePath) {
     const cursorLine = fullPrefix.split("\n").length - 1;
@@ -127,6 +115,7 @@ export async function constructAutocompletePrompt(
   modelName: string,
   extraSnippets: AutocompleteSnippet[],
   importDefinitionsService: ImportDefinitionsService,
+  hierarchicalContextService: HierarchicalContextService,
 ): Promise<{
   prefix: string;
   suffix: string;
@@ -144,6 +133,17 @@ export async function constructAutocompletePrompt(
     options.maxSuffixPercentage * options.maxPromptTokens,
   );
   const suffix = pruneLinesFromBottom(fullSuffix, maxSuffixTokens, modelName);
+
+  // Calculate AST Path
+  let treePath: AstPath | undefined;
+  try {
+    const ast = await getAst(filepath, fullPrefix + fullSuffix);
+    if (ast) {
+      treePath = await getTreePathAtCursor(ast, fullPrefix.length);
+    }
+  } catch (e) {
+    console.error("Failed to parse AST", e);
+  }
 
   // Find external snippets
   let snippets: AutocompleteSnippet[] = [];
@@ -215,6 +215,14 @@ export async function constructAutocompletePrompt(
       snippets.push(...importSnippets);
     }
 
+    if (options.useHierarchicalContext && treePath) {
+      const ctx = await hierarchicalContextService.getContextForPath(
+        filepath,
+        treePath,
+      );
+      snippets.push(...ctx);
+    }
+
     // Filter out empty snippets and ones that are already in the prefix/suffix
     snippets = snippets
       .map((snippet) => ({ ...snippet }))
@@ -269,7 +277,7 @@ export async function constructAutocompletePrompt(
     suffix,
     useFim: true,
     completeMultiline: await shouldCompleteMultiline(
-      filepath,
+      treePath,
       fullPrefix,
       fullSuffix,
       language,

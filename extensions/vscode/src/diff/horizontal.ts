@@ -1,7 +1,7 @@
+import { devDataPath } from "core/util/paths";
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
-import { devDataPath } from "core/util/paths";
 import * as vscode from "vscode";
 import { getMetaKeyLabel, getPlatform } from "../util/util";
 import { uriFromFilePath } from "../util/vscode";

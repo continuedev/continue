@@ -33,6 +33,7 @@ import { postprocessCompletion } from "./postprocessing.js";
 import { AutocompleteSnippet } from "./ranking.js";
 import { RecentlyEditedRange } from "./recentlyEdited.js";
 import { BracketMatchingService } from "./services/BracketMatchingService.js";
+import { HierarchicalContextService } from "./services/HierarchicalContextService.js";
 import { ImportDefinitionsService } from "./services/ImportDefinitionsService.js";
 import {
   noFirstCharNewline,
@@ -154,9 +155,14 @@ export class CompletionProvider {
       this.onError.bind(this),
     );
     this.importDefinitionsService = new ImportDefinitionsService(this.ide);
+    this.hierarchicalContextService = new HierarchicalContextService(
+      this.importDefinitionsService,
+      this.ide,
+    );
   }
 
   private importDefinitionsService: ImportDefinitionsService;
+  private hierarchicalContextService: HierarchicalContextService;
   private generatorReuseManager: GeneratorReuseManager;
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
@@ -516,6 +522,7 @@ export class CompletionProvider {
         llm.model,
         extrasSnippets,
         this.importDefinitionsService,
+        this.hierarchicalContextService,
       );
 
     // If prefix is manually passed

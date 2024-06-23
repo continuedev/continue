@@ -120,6 +120,8 @@ export async function getLanguageForFile(
 export enum TSQueryType {
   CodeSnippets = "code-snippet-queries",
   Imports = "import-queries",
+  // Used in HierarchicalContextService.ts
+  FunctionDeclaration = "hierarchical-context-queries/function_declaration",
 }
 
 export async function getQueryForFile(

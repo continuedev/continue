@@ -2,6 +2,8 @@ import Parser from "web-tree-sitter";
 import { RangeInFileWithContents } from "../commands/util.js";
 import { getParserForFile } from "../util/treeSitter.js";
 
+export type AstPath = Parser.SyntaxNode[];
+
 export async function getAst(
   filepath: string,
   fileContents: string,
@@ -23,7 +25,7 @@ export async function getAst(
 export async function getTreePathAtCursor(
   ast: Parser.Tree,
   cursorIndex: number,
-): Promise<Parser.SyntaxNode[] | undefined> {
+): Promise<AstPath> {
   const path = [ast.rootNode];
   while (path[path.length - 1].childCount > 0) {
     let foundChild = false;

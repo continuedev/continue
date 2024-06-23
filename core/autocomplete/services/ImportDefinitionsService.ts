@@ -1,11 +1,11 @@
-import { IDE } from "..";
-import { RangeInFileWithContents } from "../commands/util";
-import { PrecalculatedLruCache } from "../util/LruCache";
+import { IDE } from "../..";
+import { RangeInFileWithContents } from "../../commands/util";
+import { PrecalculatedLruCache } from "../../util/LruCache";
 import {
   TSQueryType,
   getParserForFile,
   getQueryForFile,
-} from "../util/treeSitter";
+} from "../../util/treeSitter";
 
 interface FileInfo {
   imports: { [key: string]: RangeInFileWithContents[] };
