@@ -200,7 +200,7 @@ class DiffStreamHandler(
                 return@request
             }
 
-            val parsed = Gson().fromJson(response, Map::class.java)
+            val parsed = response as Map<*, *>
             val done = parsed["done"] as? Boolean
             if (done == true) {
                 onFinish()

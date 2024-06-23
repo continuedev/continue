@@ -12,6 +12,7 @@ class OpenFilesContextProvider extends BaseContextProvider {
     displayTitle: "Open Files",
     description: "Reference the current open files",
     type: "normal",
+    renderInlineAs: "",
   };
 
   async getContextItems(

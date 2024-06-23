@@ -42,18 +42,47 @@ export class BracketMatchingService {
 
   async *stopOnUnmatchedClosingBracket(
     stream: AsyncGenerator<string>,
+    prefix: string,
     suffix: string,
     filepath: string,
+    multiline: boolean, // Whether this is a multiline completion or not
   ): AsyncGenerator<string> {
-    // Add opening brackets from the previous response
     let stack: string[] = [];
-    if (this.lastCompletionFile === filepath) {
-      stack = [...this.openingBracketsFromLastCompletion];
+    if (multiline) {
+      // Add opening brackets from the previous response
+      if (this.lastCompletionFile === filepath) {
+        stack = [...this.openingBracketsFromLastCompletion];
+      } else {
+        this.lastCompletionFile = undefined;
+      }
     } else {
-      this.lastCompletionFile = undefined;
+      // If single line completion, then allow completing bracket pairs that are
+      // started on the current line but not finished on the current line
+      if (!multiline) {
+        const currentLine =
+          (prefix.split("\n").pop() ?? "") + (suffix.split("\n")[0] ?? "");
+        for (let i = 0; i < currentLine.length; i++) {
+          const char = currentLine[i];
+          if (Object.keys(BracketMatchingService.BRACKETS).includes(char)) {
+            // It's an opening bracket
+            stack.push(char);
+          } else if (
+            Object.values(BracketMatchingService.BRACKETS).includes(char)
+          ) {
+            // It's a closing bracket
+            if (
+              stack.length === 0 ||
+              BracketMatchingService.BRACKETS[stack.pop()!] !== char
+            ) {
+              break;
+            }
+          }
+        }
+      }
     }
 
     // Add corresponding open brackets from suffix to stack
+    // because we overwrite them and the diff is displayed, and this allows something to be edited after that
     for (let i = 0; i < suffix.length; i++) {
       if (suffix[i] === " ") continue;
       const openBracket = BracketMatchingService.BRACKETS_REVERSE[suffix[i]];

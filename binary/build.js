@@ -12,11 +12,14 @@ const {
 // Clean slate
 const bin = path.join(__dirname, "bin");
 const out = path.join(__dirname, "out");
+const build = path.join(__dirname, "build");
 rimrafSync(bin);
 rimrafSync(out);
+rimrafSync(build);
 rimrafSync(path.join(__dirname, "tmp"));
 fs.mkdirSync(bin);
 fs.mkdirSync(out);
+fs.mkdirSync(build);
 
 const esbuildOutputFile = "out/index.js";
 let targets = [
@@ -221,12 +224,17 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     );
 
     // Copy to build directory for testing
-    const [platform, arch] = target.split("-");
-    if (platform === currentPlatform && arch === currentArch) {
-      fs.copyFileSync(
-        `${targetDir}/node_sqlite3.node`,
-        `build/node_sqlite3.node`,
-      );
+    try {
+      const [platform, arch] = target.split("-");
+      if (platform === currentPlatform && arch === currentArch) {
+        fs.copyFileSync(
+          `${targetDir}/node_sqlite3.node`,
+          `build/node_sqlite3.node`,
+        );
+      }
+    } catch (error) {
+      console.log("[warn] Could not copy node_sqlite to build");
+      console.log(error);
     }
 
     fs.unlinkSync(`${targetDir}/build.tar.gz`);

@@ -3,12 +3,12 @@ import { Command } from "commander";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { IMessenger } from "core/util/messenger";
-import { getCoreLogsPath } from "core/util/paths";
+import { getCoreLogsPath, getPromptLogsPath } from "core/util/paths";
 import fs from "node:fs";
 import { IpcIde } from "./IpcIde";
 import { IpcMessenger } from "./IpcMessenger";
-import { TcpMessenger } from "./TcpMessenger";
 import { setupCoreLogging } from "./logging";
+import { TcpMessenger } from "./TcpMessenger";
 
 const logFilePath = getCoreLogsPath();
 fs.appendFileSync(logFilePath, "[info] Starting Continue core...\n");
@@ -17,7 +17,6 @@ const program = new Command();
 
 program.action(async () => {
   try {
-    setupCoreLogging();
     let messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>;
     if (process.env.CONTINUE_DEVELOPMENT === "true") {
       messenger = new TcpMessenger<ToCoreProtocol, FromCoreProtocol>();
@@ -27,10 +26,16 @@ program.action(async () => {
       ).awaitConnection();
       console.log("Connected");
     } else {
+      setupCoreLogging();
+      // await setupCa();
       messenger = new IpcMessenger<ToCoreProtocol, FromCoreProtocol>();
     }
     const ide = new IpcIde(messenger);
-    const core = new Core(messenger, ide);
+    const promptLogsPath = getPromptLogsPath();
+    const core = new Core(messenger, ide, async (text) => {
+      fs.appendFileSync(promptLogsPath, text + "\n\n");
+    });
+    console.log("Core started");
   } catch (e) {
     fs.writeFileSync("./error.log", `${new Date().toISOString()} ${e}\n`);
     console.log("Error: ", e);

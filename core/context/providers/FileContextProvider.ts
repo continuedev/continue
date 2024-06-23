@@ -5,7 +5,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../index.js";
-import { getBasename, getLastNPathParts } from "../../util/index.js";
+import { getBasename, groupByLastNPathParts, getUniqueFilePath } from "../../util/index.js";
 import { BaseContextProvider } from "../index.js";
 
 const MAX_SUBMENU_ITEMS = 10_000;
@@ -43,12 +43,14 @@ class FileContextProvider extends BaseContextProvider {
         return args.ide.listWorkspaceContents(dir);
       }),
     );
-    const files = results.flat().slice(-MAX_SUBMENU_ITEMS);
+    const files = results.flat().slice(-MAX_SUBMENU_ITEMS);    
+    const fileGroups = groupByLastNPathParts(files, 2);
+    
     return files.map((file) => {
       return {
         id: file,
         title: getBasename(file),
-        description: getLastNPathParts(file, 2),
+        description: getUniqueFilePath(file, fileGroups),
       };
     });
   }

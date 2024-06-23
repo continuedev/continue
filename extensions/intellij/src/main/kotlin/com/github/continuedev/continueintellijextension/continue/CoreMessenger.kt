@@ -21,13 +21,17 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
     private var reader: BufferedReader? = null
     private var process: Process? = null
     private val gson = Gson()
-    private val responseListeners = mutableMapOf<String, (String) -> Unit>()
+    private val responseListeners = mutableMapOf<String, (Any?) -> Unit>()
     private val ideProtocolClient = ideProtocolClient
     private val useTcp: Boolean = false
 
     private fun write(message: String) {
-        writer?.write(message + "\r\n")
-        writer?.flush()
+        try {
+            writer?.write(message + "\r\n")
+            writer?.flush()
+        } catch (e: Exception) {
+            println("Error writing to Continue core: $e")
+        }
     }
 
     private fun close() {
@@ -37,7 +41,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         println("Subprocess exited with code: $exitCode")
     }
 
-    fun request(messageType: String, data: Any?, messageId: String?, onResponse: (String) -> Unit) {
+    fun request(messageType: String, data: Any?, messageId: String?, onResponse: (Any?) -> Unit) {
         val id = messageId ?: uuid()
         val message = gson.toJson(mapOf(
                 "messageId" to id,
@@ -52,7 +56,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         val responseMap = gson.fromJson(json, Map::class.java)
         val messageId = responseMap["messageId"].toString()
         val messageType = responseMap["messageType"].toString()
-        val data = gson.toJson(responseMap["data"])
+        val data = responseMap["data"]
 
         // IDE listeners
         if (ideMessageTypes.contains(messageType)) {
@@ -88,8 +92,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         responseListeners[messageId]?.let { listener ->
             listener(data)
             if (generatorTypes.contains(messageType)) {
-                val parsedData = gson.fromJson(data, Map::class.java)
-                val done = parsedData["done"] as Boolean?
+                val done = (data as Map<String, Boolean?>)["done"]
                 if (done == true) {
                     responseListeners.remove(messageId)
                 } else {}
@@ -179,7 +182,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
     init {
         if (useTcp) {
             try {
-                val socket = Socket("localhost", 3000)
+                val socket = Socket("127.0.0.1", 3000)
                 val writer = PrintWriter(socket.getOutputStream(), true)
                 this.writer = writer
                 val reader = BufferedReader(InputStreamReader(socket.getInputStream()))

@@ -63,7 +63,7 @@ class HistoryManager {
       session.sessionId = sessionId;
       return session;
     } catch (e) {
-      console.log(`Error migrating session: ${e}`);
+      console.log(`Error loading session: ${e}`);
       return {
         history: [],
         title: "Failed to load session",
@@ -102,7 +102,6 @@ class HistoryManager {
         if (sessionInfo.sessionId === session.sessionId) {
           sessionInfo.title = session.title;
           sessionInfo.workspaceDirectory = session.workspaceDirectory;
-          sessionInfo.dateCreated = String(Date.now());
           found = true;
           break;
         }

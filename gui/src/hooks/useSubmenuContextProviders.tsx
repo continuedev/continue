@@ -1,5 +1,5 @@
 import { ContextSubmenuItem } from "core";
-import { deduplicateArray, getBasename, getLastNPathParts } from "core/util";
+import { deduplicateArray, getBasename, groupByLastNPathParts, getUniqueFilePath } from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
 import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
@@ -34,11 +34,13 @@ function useSubmenuContextProviders() {
 
   async function getOpenFileItems() {
     const openFiles = await ideMessenger.ide.getOpenFiles();
+    const openFileGroups = groupByLastNPathParts(openFiles, 2);
+
     return openFiles.map((file) => {
       return {
         id: file,
         title: getBasename(file),
-        description: getLastNPathParts(file, 2),
+        description: getUniqueFilePath(file, openFileGroups),
         providerTitle: "file",
       };
     });

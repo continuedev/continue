@@ -21,6 +21,7 @@ class Ollama extends BaseLLM {
     if (options.model === "AUTODETECT") {
       return;
     }
+
     this.fetch(this.getEndpoint("api/show"), {
       method: "POST",
       headers: {
@@ -69,7 +70,7 @@ class Ollama extends BaseLLM {
         }
       })
       .catch((e) => {
-        // console.warn(`Error calling Ollama /api/show endpoint: ${e}`);
+        // console.warn("Error calling the Ollama /api/show endpoint: ", e);
       });
   }
 

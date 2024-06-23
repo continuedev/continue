@@ -47,7 +47,7 @@ export class VsCodeExtension {
     this.extensionContext = context;
     this.windowId = uuidv4();
 
-    const ideSettings = this.ide.getIdeSettings();
+    const ideSettings = this.ide.getIdeSettingsSync();
     const { remoteConfigServerUrl } = ideSettings;
 
     // Dependencies of core
@@ -157,6 +157,7 @@ export class VsCodeExtension {
       this.configHandler,
       this.diffManager,
       this.verticalDiffManager,
+      this.core.continueServerClientPromise,
     );
 
     registerDebugTracker(this.sidebar.webviewProtocol, this.ide);
@@ -165,12 +166,14 @@ export class VsCodeExtension {
     // from outside the window are also caught
     fs.watchFile(getConfigJsonPath(), { interval: 1000 }, (stats) => {
       this.configHandler.reloadConfig();
-      this.tabAutocompleteModel.clearLlm();
     });
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
       this.configHandler.reloadConfig();
-      this.tabAutocompleteModel.clearLlm();
     });
+
+    this.configHandler.onConfigUpdate(
+      this.tabAutocompleteModel.clearLlm.bind(this.tabAutocompleteModel),
+    );
 
     vscode.workspace.onDidSaveTextDocument((event) => {
       // Listen for file changes in the workspace
@@ -181,7 +184,6 @@ export class VsCodeExtension {
         filepath.endsWith(".prompt")
       ) {
         this.configHandler.reloadConfig();
-        this.tabAutocompleteModel.clearLlm();
       } else if (
         filepath.endsWith(".continueignore") ||
         filepath.endsWith(".gitignore")

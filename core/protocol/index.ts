@@ -1,12 +1,12 @@
 import {
   ToCoreFromWebviewProtocol,
   ToWebviewFromCoreProtocol,
-} from "./coreWebview";
-import { ToCoreFromIdeProtocol, ToIdeFromCoreProtocol } from "./ideCore";
+} from "./coreWebview.js";
+import { ToCoreFromIdeProtocol, ToIdeFromCoreProtocol } from "./ideCore.js";
 import {
   ToIdeFromWebviewProtocol,
   ToWebviewFromIdeProtocol,
-} from "./ideWebview";
+} from "./ideWebview.js";
 
 export type IProtocol = Record<string, [any, any]>;
 

@@ -43,6 +43,7 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import FileIcon from "../FileIcon";
+import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import { ComboBoxItem } from "./types";
 
@@ -85,16 +86,36 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
         ? props.item.id
         : props.item.type;
 
-  const Icon = ICONS_FOR_DROPDOWN[provider];
   const iconClass = `${props.className} flex-shrink-0`;
+
+  let fallbackIcon;
+  const Icon = ICONS_FOR_DROPDOWN[provider];
   if (!Icon) {
-    return props.item.type === "contextProvider" ? (
-      <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
-    ) : (
-      <CubeIcon className={iconClass} height="1.2em" width="1.2em" />
-    );
+    fallbackIcon =
+      props.item.type === "contextProvider" ? (
+        <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
+      ) : (
+        <CubeIcon className={iconClass} height="1.2em" width="1.2em" />
+      );
+  } else {
+    fallbackIcon = <Icon className={iconClass} height="1.2em" width="1.2em" />;
   }
-  return <Icon className={iconClass} height="1.2em" width="1.2em" />;
+
+  if (false && props.item.iconUrl) {
+    try {
+      return (
+        <SafeImg
+          className="flex-shrink-0 pr-2"
+          src={props.item.iconUrl}
+          height="18em"
+          width="18em"
+          fallback={fallbackIcon}
+        />
+      );
+    } catch (e) {}
+  }
+
+  return fallbackIcon;
 }
 
 const ItemsDiv = styled.div`

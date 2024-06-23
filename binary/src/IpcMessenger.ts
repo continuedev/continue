@@ -1,42 +1,21 @@
-import { IProtocol } from "core/protocol";
+import { IProtocol } from "core/protocol/index.js";
 import { IMessenger, type Message } from "core/util/messenger";
+import { ChildProcessWithoutNullStreams } from "node:child_process";
 import * as fs from "node:fs";
+import net from "node:net";
 import { v4 as uuidv4 } from "uuid";
 
-export class IpcMessenger<
+class IPCMessengerBase<
   ToProtocol extends IProtocol,
   FromProtocol extends IProtocol,
 > implements IMessenger<ToProtocol, FromProtocol>
 {
+  _sendMsg(message: Message) {
+    throw new Error("Not implemented");
+  }
+
   typeListeners = new Map<keyof ToProtocol, ((message: Message) => any)[]>();
   idListeners = new Map<string, (message: Message) => any>();
-
-  constructor() {
-    process.stdin.on("data", (data) => {
-      this._handleData(data);
-    });
-    process.stdout.on("close", () => {
-      fs.writeFileSync("./error.log", `${new Date().toISOString()}\n`);
-      console.log("[info] Exiting Continue core...");
-      process.exit(1);
-    });
-    process.stdin.on("close", () => {
-      fs.writeFileSync("./error.log", `${new Date().toISOString()}\n`);
-      console.log("[info] Exiting Continue core...");
-      process.exit(1);
-    });
-  }
-
-  private _onErrorHandlers: ((error: Error) => void)[] = [];
-
-  onError(handler: (error: Error) => void) {
-    this._onErrorHandlers.push(handler);
-  }
-
-  mock(data: any) {
-    const d = JSON.stringify(data);
-    this._handleData(Buffer.from(d));
-  }
 
   private _handleLine(line: string) {
     try {
@@ -83,7 +62,7 @@ export class IpcMessenger<
   }
 
   private _unfinishedLine: string | undefined = undefined;
-  private _handleData(data: Buffer) {
+  protected _handleData(data: Buffer) {
     const d = data.toString();
     const lines = d.split(/\r\n/).filter((line) => line.trim() !== "");
     if (lines.length === 0) {
@@ -100,41 +79,10 @@ export class IpcMessenger<
     lines.forEach((line) => this._handleLine(line));
   }
 
-  send<T extends keyof FromProtocol>(
-    messageType: T,
-    data: FromProtocol[T][0],
-    messageId?: string,
-  ): string {
-    messageId = messageId ?? uuidv4();
-    const msg: Message = {
-      messageType: messageType as string,
-      data,
-      messageId,
-    };
-    // process.send?.(data);
-    process.stdout?.write(JSON.stringify(msg) + "\r\n");
-    return messageId;
-  }
+  private _onErrorHandlers: ((error: Error) => void)[] = [];
 
-  on<T extends keyof ToProtocol>(
-    messageType: T,
-    handler: (message: Message<ToProtocol[T][0]>) => ToProtocol[T][1],
-  ): void {
-    if (!this.typeListeners.has(messageType)) {
-      this.typeListeners.set(messageType, []);
-    }
-    this.typeListeners.get(messageType)?.push(handler);
-  }
-
-  invoke<T extends keyof ToProtocol>(
-    messageType: T,
-    data: ToProtocol[T][0],
-  ): ToProtocol[T][1] {
-    return this.typeListeners.get(messageType)?.[0]?.({
-      messageId: uuidv4(),
-      messageType: messageType as string,
-      data,
-    });
+  onError(handler: (error: Error) => void) {
+    this._onErrorHandlers.push(handler);
   }
 
   request<T extends keyof FromProtocol>(
@@ -150,5 +98,162 @@ export class IpcMessenger<
       this.idListeners.set(messageId, handler);
       this.send(messageType, data, messageId);
     });
+  }
+
+  mock(data: any) {
+    const d = JSON.stringify(data);
+    this._handleData(Buffer.from(d));
+  }
+
+  send<T extends keyof FromProtocol>(
+    messageType: T,
+    data: FromProtocol[T][0],
+    messageId?: string,
+  ): string {
+    messageId = messageId ?? uuidv4();
+    const msg: Message = {
+      messageType: messageType as string,
+      data,
+      messageId,
+    };
+    this._sendMsg(msg);
+    return messageId;
+  }
+
+  invoke<T extends keyof ToProtocol>(
+    messageType: T,
+    data: ToProtocol[T][0],
+  ): ToProtocol[T][1] {
+    return this.typeListeners.get(messageType)?.[0]?.({
+      messageId: uuidv4(),
+      messageType: messageType as string,
+      data,
+    });
+  }
+
+  on<T extends keyof ToProtocol>(
+    messageType: T,
+    handler: (
+      message: Message<ToProtocol[T][0]>,
+    ) => Promise<ToProtocol[T][1]> | ToProtocol[T][1],
+  ): void {
+    if (!this.typeListeners.has(messageType)) {
+      this.typeListeners.set(messageType, []);
+    }
+    this.typeListeners.get(messageType)?.push(handler);
+  }
+}
+
+export class IpcMessenger<
+    ToProtocol extends IProtocol,
+    FromProtocol extends IProtocol,
+  >
+  extends IPCMessengerBase<ToProtocol, FromProtocol>
+  implements IMessenger<ToProtocol, FromProtocol>
+{
+  constructor() {
+    super();
+    console.log("Setup");
+    process.stdin.on("data", (data) => {
+      // console.log("[info] Received data: ", data.toString());
+      this._handleData(data);
+    });
+    process.stdout.on("close", () => {
+      fs.writeFileSync("./error.log", `${new Date().toISOString()}\n`);
+      console.log("[info] Exiting Continue core...");
+      process.exit(1);
+    });
+    process.stdin.on("close", () => {
+      fs.writeFileSync("./error.log", `${new Date().toISOString()}\n`);
+      console.log("[info] Exiting Continue core...");
+      process.exit(1);
+    });
+  }
+  _sendMsg(msg: Message) {
+    // console.log("[info] Sending message: ", msg);
+    const d = JSON.stringify(msg);
+    process.stdout?.write(d + "\r\n");
+  }
+}
+
+export class CoreBinaryMessenger<
+    ToProtocol extends IProtocol,
+    FromProtocol extends IProtocol,
+  >
+  extends IPCMessengerBase<ToProtocol, FromProtocol>
+  implements IMessenger<ToProtocol, FromProtocol>
+{
+  private errorHandler: (error: Error) => void = () => {};
+  private messageHandlers: Map<
+    keyof ToProtocol,
+    (message: Message<any>) => Promise<any> | any
+  > = new Map();
+
+  constructor(private readonly subprocess: ChildProcessWithoutNullStreams) {
+    super();
+    console.log("Setup");
+    this.subprocess.stdout.on("data", (data) => {
+      console.log("[info] Received data from core:", data.toString() + "\n");
+      this._handleData(data);
+    });
+    this.subprocess.stdout.on("close", () => {
+      console.log("[info] Continue core exited");
+    });
+    this.subprocess.stdin.on("close", () => {
+      console.log("[info] Continue core exited");
+    });
+  }
+
+  _sendMsg(msg: Message) {
+    console.log("[info] Sending message to core:", msg);
+    const d = JSON.stringify(msg);
+    this.subprocess.stdin.write(d + "\r\n");
+  }
+}
+
+export class CoreBinaryTcpMessenger<
+    ToProtocol extends IProtocol,
+    FromProtocol extends IProtocol,
+  >
+  extends IPCMessengerBase<ToProtocol, FromProtocol>
+  implements IMessenger<ToProtocol, FromProtocol>
+{
+  private port: number = 3000;
+  private socket: net.Socket | null = null;
+
+  typeListeners = new Map<keyof ToProtocol, ((message: Message) => any)[]>();
+  idListeners = new Map<string, (message: Message) => any>();
+
+  constructor() {
+    super();
+    const socket = net.createConnection(this.port, "localhost");
+
+    this.socket = socket;
+    socket.on("data", (data: Buffer) => {
+      // console.log("[info] Received data from core:", data.toString() + "\n");
+      this._handleData(data);
+    });
+
+    socket.on("end", () => {
+      console.log("Disconnected from server");
+    });
+
+    socket.on("error", (err: any) => {
+      console.error("Client error:", err);
+    });
+  }
+
+  close() {
+    this.socket?.end();
+  }
+
+  _sendMsg(msg: Message) {
+    if (this.socket) {
+      // console.log("[info] Sending message to core:", msg);
+      const d = JSON.stringify(msg);
+      this.socket.write(d + "\r\n");
+    } else {
+      console.error("Socket is not connected");
+    }
   }
 }

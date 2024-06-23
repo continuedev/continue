@@ -1,14 +1,13 @@
-module.exports = {
-  roots: ["<rootDir>"],
+process.env.NODE_OPTIONS = "--experimental-vm-modules";
+export default {
   transform: {
-    "^.+\\.ts?$": [
-      "ts-jest",
-      {
-        useESM: true,
-      },
-    ],
+    "\\.[jt]sx?$": ["ts-jest", { useESM: true }],
   },
-  // testRegex: ".+\\.test\\.ts$",
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+
+  moduleNameMapper: {
+    "(.+)\\.js": "$1",
+  },
   extensionsToTreatAsEsm: [".ts"],
+  preset: "ts-jest/presets/default-esm",
+  testTimeout: 10000,
 };

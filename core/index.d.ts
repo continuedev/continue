@@ -160,6 +160,15 @@ export interface ContextSubmenuItem {
   id: string;
   title: string;
   description: string;
+  iconUrl?: string;
+}
+
+export interface SiteIndexingConfig {
+  startUrl: string;
+  rootUrl: string;
+  title: string;
+  maxDepth?: number;
+  faviconUrl?: string;
 }
 
 export interface SiteIndexingConfig {
@@ -400,8 +409,15 @@ export enum FileType {
   SymbolicLink = 64,
 }
 
+export interface IdeSettings {
+  remoteConfigServerUrl: string | undefined;
+  remoteConfigSyncPeriod: number;
+  userToken: string;
+}
+
 export interface IDE {
   getIdeInfo(): Promise<IdeInfo>;
+  getIdeSettings(): Promise<IdeSettings>;
   getDiff(): Promise<string>;
   isTelemetryEnabled(): Promise<boolean>;
   getUniqueId(): Promise<string>;
@@ -554,7 +570,10 @@ type ModelProvider =
   | "continue-proxy"
   | "fireworks"
   | "custom"
-  | "cloudflare";
+  | "cloudflare"
+  | "deepseek"
+  | "azure"
+  | "openai-aiohttp";
 
 export type ModelName =
   | "AUTODETECT"
@@ -600,18 +619,21 @@ export type ModelName =
   | "deepseek-33b"
   | "neural-chat-7b"
   // Anthropic
-  | "claude-2"
+  | "claude-3-5-sonnet-20240620"
   | "claude-3-opus-20240229"
   | "claude-3-sonnet-20240229"
   | "claude-3-haiku-20240307"
   | "claude-2.1"
+  | "claude-2"
   // Cohere
   | "command-r"
   | "command-r-plus"
   // Gemini
   | "gemini-pro"
   | "gemini-1.5-pro-latest"
+  | "gemini-1.5-pro"
   | "gemini-1.5-flash-latest"
+  | "gemini-1.5-flash"
   // Mistral
   | "mistral-tiny"
   | "mistral-small"
@@ -767,6 +789,7 @@ interface ExperimentalConfig {
   promptPath?: string;
 }
 
+// config.json
 export interface SerializedContinueConfig {
   env?: string[];
   allowAnonymousTelemetry?: boolean;
@@ -781,7 +804,7 @@ export interface SerializedContinueConfig {
   disableSessionTitles?: boolean;
   userToken?: string;
   embeddingsProvider?: EmbeddingsProviderDescription;
-  tabAutocompleteModel?: ModelDescription;
+  tabAutocompleteModel?: ModelDescription | ModelDescription[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
@@ -794,6 +817,7 @@ export type ContinueRcJson = Partial<SerializedContinueConfig> & {
   mergeBehavior: ConfigMergeType;
 };
 
+// config.ts - give users simplified interfaces
 export interface Config {
   /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
   allowAnonymousTelemetry?: boolean;
@@ -823,7 +847,10 @@ export interface Config {
   /** The provider used to calculate embeddings. If left empty, Continue will use transformers.js to calculate the embeddings with all-MiniLM-L6-v2 */
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
-  tabAutocompleteModel?: CustomLLM | ModelDescription;
+  tabAutocompleteModel?:
+    | CustomLLM
+    | ModelDescription
+    | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */
@@ -834,6 +861,7 @@ export interface Config {
   experimental?: ExperimentalConfig;
 }
 
+// in the actual Continue source code
 export interface ContinueConfig {
   allowAnonymousTelemetry?: boolean;
   models: ILLM[];
@@ -846,7 +874,7 @@ export interface ContinueConfig {
   disableIndexing?: boolean;
   userToken?: string;
   embeddingsProvider: EmbeddingsProvider;
-  tabAutocompleteModel?: ILLM;
+  tabAutocompleteModels?: ILLM[];
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   ui?: ContinueUIConfig;
   reranker?: Reranker;

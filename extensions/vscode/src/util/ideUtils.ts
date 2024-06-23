@@ -230,7 +230,7 @@ export class VsCodeIdeUtils {
     return vscode.window.tabGroups.all
       .map((group) => {
         return group.tabs.map((tab) => {
-          return (tab.input as any).uri;
+          return (tab.input as any)?.uri;
         });
       })
       .flat()

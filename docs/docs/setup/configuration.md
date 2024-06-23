@@ -27,25 +27,6 @@ In `config.json`, you'll find the `models` property, a list of the models that y
 
 Just by specifying the `model` and `provider` properties, we will automatically detect prompt templates and other important information, but if you're looking to do something beyond this basic setup, we'll explain a few other options below.
 
-## Azure OpenAI Service
-
-If you'd like to use OpenAI models but are concerned about privacy, you can use the Azure OpenAI service, which is GDPR and HIPAA compliant. After applying for access [here](https://azure.microsoft.com/en-us/products/ai-services/openai-service), you will typically hear back within only a few days. Once you have access, set up a model in `config.json` like so:
-
-```json
-"models": [{
-    "title": "Azure OpenAI",
-    "provider": "openai",
-    "model": "gpt-4",
-    "apiBase": "https://my-azure-openai-instance.openai.azure.com/",
-    "engine": "my-azure-openai-deployment",
-    "apiVersion": "2023-07-01-preview",
-    "apiType": "azure",
-    "apiKey": "<MY_API_KEY>"
-}]
-```
-
-The easiest way to find this information is from the chat playground in the Azure OpenAI portal. Under the "Chat Session" section, click "View Code" to see each of these parameters.
-
 ## Self-hosting an open-source model
 
 For many cases, either Continue will have a built-in provider or the API you use will be OpenAI-compatible, in which case you can use the "openai" provider and change the "baseUrl" to point to the server.
@@ -92,7 +73,7 @@ If you need to send custom headers for authentication, you may use the `requestO
 
 ## Customizing the Chat Template
 
-Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like `"[INST] How do I write bubble sort in Rust? [/INST]"`. Continue will automatically attempt to detect the correct prompt format based on the `model`value that you provide, but if you are receiving nonsense responses, you can use the`template`property to explicitly set the format that you expect. The options are:`["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "openchat", "neural-chat", "none"]`.
+Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like `"[INST] How do I write bubble sort in Rust? [/INST]"`. Continue will automatically attempt to detect the correct prompt format based on the `model`value that you provide, but if you are receiving nonsense responses, you can use the `template` property to explicitly set the format that you expect. The options are: `["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "openchat", "neural-chat", "none"]`.
 
 If you want to create an entirely new chat template, this can be done in [config.ts](../customization/code-config.md) by defining a function and adding it to the `templateMessages` property of your `LLM`. Here is an example of `templateMessages` for the Alpaca/Vicuna format:
 
@@ -170,6 +151,7 @@ export function modifyConfig(config: Config): Config {
     streamCompletion: async function* (
       prompt: string,
       options: CompletionOptions,
+      fetch,
     ) {
       // Make the API call here
 

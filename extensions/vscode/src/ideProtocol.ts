@@ -7,13 +7,13 @@ import type {
   FileType,
   IDE,
   IdeInfo,
+  IdeSettings,
   IndexTag,
   Problem,
   Thread,
 } from "core";
 import { Range } from "core";
 import { defaultIgnoreFile } from "core/indexing/ignore";
-import { IdeSettings } from "core/protocol/ideWebview";
 import {
   editConfigJson,
   getConfigJsonPath,
@@ -83,10 +83,17 @@ class VsCodeIde implements IDE {
 
               // Remove free trial models
               editConfigJson((config) => {
-                const tabAutocompleteModel =
+                let tabAutocompleteModel = undefined;
+                if (Array.isArray(config.tabAutocompleteModel)) {
+                  tabAutocompleteModel = config.tabAutocompleteModel.filter(
+                    (model) => model.provider !== "free-trial",
+                  );
+                } else if (
                   config.tabAutocompleteModel?.provider === "free-trial"
-                    ? undefined
-                    : config.tabAutocompleteModel;
+                ) {
+                  tabAutocompleteModel = undefined;
+                }
+
                 return {
                   ...config,
                   models: config.models.filter(
@@ -358,15 +365,12 @@ class VsCodeIde implements IDE {
       new vscode.Position(startLine, 0),
       new vscode.Position(endLine, 0),
     );
-    openEditorAndRevealRange(filepath, range).then(() => {
-      // TODO: Highlight lines
-      // this.ideUtils.highlightCode(
-      //   {
-      //     filepath,
-      //     range,
-      //   },
-      //   "#fff1"
-      // );
+    openEditorAndRevealRange(filepath, range).then((editor) => {
+      // Select the lines
+      editor.selection = new vscode.Selection(
+        new vscode.Position(startLine, 0),
+        new vscode.Position(endLine, 0),
+      );
     });
   }
 
@@ -506,7 +510,7 @@ class VsCodeIde implements IDE {
       .map(([name, type]) => [path.join(dir, name), type]) as any;
   }
 
-  getIdeSettings(): IdeSettings {
+  getIdeSettingsSync(): IdeSettings {
     const settings = vscode.workspace.getConfiguration("continue");
     const remoteConfigServerUrl = settings.get<string | undefined>(
       "remoteConfigServerUrl",
@@ -521,6 +525,10 @@ class VsCodeIde implements IDE {
       userToken: settings.get<string>("userToken", ""),
     };
     return ideSettings;
+  }
+
+  async getIdeSettings(): Promise<IdeSettings> {
+    return this.getIdeSettingsSync();
   }
 }
 

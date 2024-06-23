@@ -1,3 +1,4 @@
+import * as JSONC from "comment-json";
 import dotenv from "dotenv";
 import * as fs from "fs";
 import * as os from "os";
@@ -6,9 +7,13 @@ import { defaultConfig, defaultConfigJetBrains } from "../config/default.js";
 import Types from "../config/types.js";
 import { IdeType, SerializedContinueConfig } from "../index.js";
 
+dotenv.config();
+const CONTINUE_GLOBAL_DIR =
+  process.env.CONTINUE_GLOBAL_DIR ?? path.join(os.homedir(), ".continue");
+
 export function getContinueGlobalPath(): string {
   // This is ~/.continue on mac/linux
-  const continuePath = path.join(os.homedir(), ".continue");
+  const continuePath = CONTINUE_GLOBAL_DIR;
   if (!fs.existsSync(continuePath)) {
     fs.mkdirSync(continuePath);
   }
@@ -152,12 +157,16 @@ export function getDevDataFilePath(fileName: string): string {
 
 export function editConfigJson(
   callback: (config: SerializedContinueConfig) => SerializedContinueConfig,
-) {
+): void {
   const config = fs.readFileSync(getConfigJsonPath(), "utf8");
-  let configJson = JSON.parse(config);
-  configJson = callback(configJson);
-  fs.writeFileSync(getConfigJsonPath(), JSON.stringify(configJson, null, 2));
-  return configJson;
+  let configJson = JSONC.parse(config);
+  // Check if it's an object
+  if (typeof configJson === "object" && configJson !== null) {
+    configJson = callback(configJson as any) as any;
+    fs.writeFileSync(getConfigJsonPath(), JSONC.stringify(configJson, null, 2));
+  } else {
+    console.warn("config.json is not a valid object");
+  }
 }
 
 function getMigrationsFolderPath(): string {
@@ -236,8 +245,20 @@ export function getContinueDotEnv(): { [key: string]: string } {
   return {};
 }
 
+export function getLogsDirPath(): string {
+  const logsPath = path.join(getContinueGlobalPath(), "logs");
+  if (!fs.existsSync(logsPath)) {
+    fs.mkdirSync(logsPath);
+  }
+  return logsPath;
+}
+
 export function getCoreLogsPath(): string {
-  return path.join(getContinueGlobalPath(), "core.log");
+  return path.join(getLogsDirPath(), "core.log");
+}
+
+export function getPromptLogsPath(): string {
+  return path.join(getLogsDirPath(), "prompt.log");
 }
 
 export function getGlobalPromptsPath(): string {

@@ -1,13 +1,7 @@
-import type { ContextItemWithId, ContextSubmenuItem } from "..";
+import type { ContextSubmenuItem } from "..";
 import type { RangeInFileWithContents } from "../commands/util";
-import { ToIdeFromWebviewOrCoreProtocol } from "./ide";
-import { ToWebviewFromIdeOrCoreProtocol } from "./webview";
-
-export interface IdeSettings {
-  remoteConfigServerUrl: string | undefined;
-  remoteConfigSyncPeriod: number;
-  userToken: string;
-}
+import { ToIdeFromWebviewOrCoreProtocol } from "./ide.js";
+import { ToWebviewFromIdeOrCoreProtocol } from "./webview.js";
 
 export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
   onLoad: [
@@ -38,13 +32,6 @@ export type ToIdeFromWebviewProtocol = ToIdeFromWebviewOrCoreProtocol & {
 export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   setInactive: [undefined, void];
   submitMessage: [{ message: any }, void]; // any -> JSONContent from TipTap
-  addContextItem: [
-    {
-      historyIndex: number;
-      item: ContextItemWithId;
-    },
-    void,
-  ];
   updateSubmenuItems: [
     { provider: string; submenuItems: ContextSubmenuItem[] },
     void,

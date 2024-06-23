@@ -46,6 +46,7 @@ class OpenAI extends BaseLLM {
   constructor(options: LLMOptions) {
     super(options);
     this.useLegacyCompletionsEndpoint = options.useLegacyCompletionsEndpoint;
+    this.apiVersion = options.apiVersion ?? "2023-07-01-preview";
   }
 
   static providerName: ModelProvider = "openai";
@@ -96,6 +97,7 @@ class OpenAI extends BaseLLM {
           : url.port === "1337" ||
               url.host === "api.openai.com" ||
               url.host === "api.groq.com" ||
+              url.host === "api.deepseek.com" ||
               this.apiType === "azure"
             ? options.stop?.slice(0, 4)
             : options.stop,
@@ -223,6 +225,38 @@ class OpenAI extends BaseLLM {
       if (value.choices?.[0]?.delta?.content) {
         yield value.choices[0].delta;
       }
+    }
+  }
+
+  async *_streamFim(
+    prefix: string,
+    suffix: string,
+    options: CompletionOptions,
+  ): AsyncGenerator<string> {
+    const endpoint = new URL("fim/completions", this.apiBase);
+    const resp = await this.fetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify({
+        model: options.model,
+        prompt: prefix,
+        suffix,
+        max_tokens: options.maxTokens,
+        temperature: options.temperature,
+        top_p: options.topP,
+        frequency_penalty: options.frequencyPenalty,
+        presence_penalty: options.presencePenalty,
+        stop: options.stop,
+        stream: true,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "x-api-key": this.apiKey ?? "",
+        Authorization: `Bearer ${this.apiKey}`,
+      },
+    });
+    for await (const chunk of streamSse(resp)) {
+      yield chunk.choices[0].delta.content;
     }
   }
 

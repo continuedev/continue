@@ -1,7 +1,3 @@
-import {
-    ContextProviderExtras,
-  } from "../index.js";
-
 export function removeQuotesAndEscapes(output: string): string {
   output = output.trim();
 
@@ -29,29 +25,6 @@ export function removeQuotesAndEscapes(output: string): string {
   }
 
   return output;
-}
-
-export function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
-  if (!(window as any)._fetch) {
-    throw new Error("Proxy fetch not initialized");
-  }
-
-  if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-    // Relative URL
-    const fullUrl = `${window.vscMediaUrl}/${url}`;
-    return (window as any)._fetch(fullUrl, init);
-  }
-
-  const proxyServerUrl =
-    (window as any).proxyServerUrl || "http://localhost:65433";
-
-  const headers = new Headers(init?.headers);
-  headers.append("x-continue-url", url);
-
-  return (window as any)._fetch(proxyServerUrl, {
-    ...init,
-    headers,
-  });
 }
 
 export function dedentAndGetCommonWhitespace(s: string): [string, string] {
@@ -100,24 +73,50 @@ export function getBasename(filepath: string): string {
 }
 
 export function getLastNPathParts(filepath: string, n: number): string {
+  if (n <= 0) {
+    return "";
+  }
   return filepath.split(SEP_REGEX).slice(-n).join("/");
 }
 
-export function getRelativePath(
-  filepath: string,
-  workspaceDirs: string[],
+export function groupByLastNPathParts(
+  filepaths: string[],
+  n: number,
+): Record<string, string[]> {
+  return filepaths.reduce(
+    (groups, item) => {
+      const lastNParts = getLastNPathParts(item, n);
+      if (!groups[lastNParts]) {
+        groups[lastNParts] = [];
+      }
+      groups[lastNParts].push(item);
+      return groups;
+    },
+    {} as Record<string, string[]>,
+  );
+}
+
+export function getUniqueFilePath(
+  item: string,
+  itemGroups: Record<string, string[]>,
 ): string {
-  for (const workspaceDir of workspaceDirs) {
-    const filepathParts = splitPath(filepath);
-    const workspaceDirParts = splitPath(workspaceDir);
-    if (
-      filepathParts.slice(0, workspaceDirParts.length).join("/") ===
-      workspaceDirParts.join("/")
+  const lastTwoParts = getLastNPathParts(item, 2);
+  const group = itemGroups[lastTwoParts];
+
+  let n = 2;
+  if (group.length > 1) {
+    while (
+      group.some(
+        (otherItem) =>
+          otherItem !== item &&
+          getLastNPathParts(otherItem, n) === getLastNPathParts(item, n),
+      )
     ) {
-      return filepathParts.slice(workspaceDirParts.length).join("/");
+      n++;
     }
   }
-  return splitPath(filepath).pop() ?? ""; // If the file is not in any of the workspaces, return the plain filename
+
+  return getLastNPathParts(item, n);
 }
 
 export function shortestRelativePaths(paths: string[]): string[] {
@@ -169,6 +168,23 @@ export function splitPath(path: string, withRoot?: string): string[] {
     parts = parts.slice(rootParts.length - 1);
   }
   return parts;
+}
+
+export function getRelativePath(
+  filepath: string,
+  workspaceDirs: string[],
+): string {
+  for (const workspaceDir of workspaceDirs) {
+    const filepathParts = splitPath(filepath);
+    const workspaceDirParts = splitPath(workspaceDir);
+    if (
+      filepathParts.slice(0, workspaceDirParts.length).join("/") ===
+      workspaceDirParts.join("/")
+    ) {
+      return filepathParts.slice(workspaceDirParts.length).join("/");
+    }
+  }
+  return splitPath(filepath).pop() ?? ""; // If the file is not in any of the workspaces, return the plain filename
 }
 
 export function getMarkdownLanguageTagForFile(filepath: string): string {

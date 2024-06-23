@@ -40,7 +40,7 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static maxGroupSize: number = 4;
 
   constructor() {
-    super({ model: "all-MiniLM-L2-v6" }, () => Promise.resolve(null));
+    super({ model: "all-MiniLM-L6-v2" }, () => Promise.resolve(null));
   }
 
   async embed(chunks: string[]) {

@@ -17,6 +17,11 @@ class TerminalContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
+    if ((await extras.ide.getIdeInfo()).ideType === "jetbrains") {
+      throw new Error(
+        "The terminal context provider is not currently supported in JetBrains IDEs",
+      );
+    }
     const content = await extras.ide.getTerminalContents();
     return [
       {
