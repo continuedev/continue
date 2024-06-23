@@ -21,7 +21,11 @@ export class HierarchicalContextService {
     return `${node.startIndex}`;
   }
 
-  private static TYPES_TO_USE = new Set(["program", "function_declaration"]);
+  private static TYPES_TO_USE = new Set([
+    "program",
+    "function_declaration",
+    "method_definition",
+  ]);
 
   /**
    * Key comes from hash of parent key and node type and node id.
@@ -53,6 +57,9 @@ export class HierarchicalContextService {
           filepath,
           TSQueryType.FunctionDeclaration,
         );
+        break;
+      case "method_definition":
+        query = await getQueryForFile(filepath, TSQueryType.MethodDefinition);
         break;
       default:
         break;

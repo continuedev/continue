@@ -122,6 +122,7 @@ export enum TSQueryType {
   Imports = "import-queries",
   // Used in HierarchicalContextService.ts
   FunctionDeclaration = "hierarchical-context-queries/function_declaration",
+  MethodDefinition = "hierarchical-context-queries/method_definition",
 }
 
 export async function getQueryForFile(
