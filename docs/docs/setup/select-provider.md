@@ -1,6 +1,6 @@
 ---
-title: Select a provider
-description: Swap out different LLM providers
+title: Select providers
+description: Configure LLM providers
 keywords: [openai, anthropic, gemini, ollama, ggml]
 ---
 
@@ -40,7 +40,8 @@ You can deploy a model in your [AWS](https://github.com/continuedev/deploy-os-co
 ## SaaS
 
 You can access both open-source and commercial LLMs via:
-* [OpenRouter](../reference/Model%20Providers/openrouter.md)
+
+- [OpenRouter](../reference/Model%20Providers/openrouter.md)
 
 ### Open-source models
 
@@ -60,8 +61,9 @@ You can run open-source LLMs with cloud services like:
 You can use commercial LLMs via APIs using:
 
 - [Anthrophic API](../reference/Model%20Providers/anthropicllm.md)
+- [OpenAI API](../reference/Model%20Providers/openai.md)
+- [Azure OpenAI Service](../reference/Model%20Providers/openai.md)
 - [Google Gemini API](../reference/Model%20Providers/geminiapi.md)
-- [OpenAI free trial](../reference/Model%20Providers/freetrial.md)
 - [Mistral API](../reference/Model%20Providers/mistral.md)
 - [Voyage AI API](../walkthroughs/codebase-embeddings.md#openai)
 - [Cohere API](../reference/Model%20Providers/cohere.md)

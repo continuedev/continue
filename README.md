@@ -8,7 +8,7 @@
 
 <div align="center">
 
-**[Continue](https://docs.continue.dev) keeps developers in flow. Our open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions enable you to easily create your own modular AI software development system that you can improve.**
+**[Continue](https://docs.continue.dev) is the leading open-source AI code assistant. You can connect any models and any context to build custom autocomplete and chat experiences inside [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 
 </div>
 
@@ -68,45 +68,13 @@ JetBrains: `@docs` (MacOS) / `@docs` (Windows)
 
 </div>
 
-## Task and tab autocomplete
-
-### Answer coding questions
-
-Highlight + select sections of code and ask Continue for another perspective
-
-- “what does this forRoot() static function do in nestjs?”
-- “why is the first left join in this query necessary here?”
-- “how do I run a performance benchmark on this rust binary?”
-
-### Edit in natural language
-
-Highlight + select a section of code and instruct Continue to refactor it
-
-- “/edit rewrite this to return a flattened list from a 3x3 matrix”
-- “/edit refactor these into an angular flex layout on one line"
-- “/edit define a type here for a list of lists of dictionaries”
-
-### Generate files from scratch
-
-Open a blank file and let Continue start new Python scripts, React components, etc.
-
-- “/edit get me started with a basic supabase edge function”
-- “/edit implement a c++ shortest path algo in a concise way”
-- “/edit create a docker compose file with php and mysql server"
-
-### And much more!
-
-- Try out [experimental support for local tab autocomplete](https://docs.continue.dev/walkthroughs/tab-autocomplete) in VS Code
-- Use [built-in context providers](https://docs.continue.dev/customization/context-providers#built-in-context-providers) or create your own [custom context providers](https://docs.continue.dev/customization/context-providers#building-your-own-context-provider)
-- Use [built-in slash commands](https://arc.net/l/quote/zbhwfjmp) or create your own [custom slash commands](https://docs.continue.dev/customization/slash-commands#custom-slash-commands)
-
 ## Getting Started
 
 ### Download for [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)
 
 You can try out Continue with our free trial models before configuring your setup.
 
-Once you're ready to use your own API key or a different model / provider, press the `+` button in the bottom left to add a new model to your `config.json`. Learn more about the models and providers [here](https://docs.continue.dev/model-setup/overview).
+Learn more about the models and providers [here](https://continue.dev/docs/setup/overview).
 
 ## Contributing
 
