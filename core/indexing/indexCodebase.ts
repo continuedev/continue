@@ -56,11 +56,11 @@ export class CodebaseIndexer {
       yield {
         progress: 0,
         desc: "Nothing to index",
-        status: "disabled",     
+        status: "disabled",
       };
       return;
     }
-    
+
     const config = await this.configHandler.loadConfig();
     if (config.disableIndexing) {
       yield {
@@ -160,16 +160,28 @@ export class CodebaseIndexer {
             desc: "Completed indexing " + codebaseIndex.artifactId,
             status: "indexing",
           };
-        } catch (e) {
-          yield {
-            progress: 0, 
-            desc: `${e}`,
-            status: "failed"
+        } catch (e: any) {
+          let errMsg = `${e}`;
+
+          const errorRegex =
+            /Invalid argument error: Values length (\d+) is less than the length \((\d+)\) multiplied by the value size \(\d+\)/;
+          const match = e.message.match(errorRegex);
+
+          if (match) {
+            const [_, valuesLength, expectedLength] = match;
+            errMsg = `Generated embedding had length ${valuesLength} but was expected to be ${expectedLength}. This may be solved by deleting ~/.continue/index and refreshing the window to re-index.`;
           }
+
+          yield {
+            progress: 0,
+            desc: errMsg,
+            status: "failed",
+          };
+
           console.warn(
             `Error updating the ${codebaseIndex.artifactId} index: ${e}`,
           );
-          return
+          return;
         }
       }
 

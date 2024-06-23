@@ -286,11 +286,17 @@ export class LanceDbIndex implements CodebaseIndex {
         };
       });
 
-      if (needToCreateTable && lanceRows.length > 0) {
-        table = await db.createTable(tableName, lanceRows);
-        needToCreateTable = false;
-      } else if (lanceRows.length > 0) {
-        await table?.add(lanceRows);
+      if (lanceRows.length > 0) {
+        if (needToCreateTable) {
+          table = await db.createTable(tableName, lanceRows);
+          needToCreateTable = false;
+        } else if (!table) {
+          table = await db.openTable(tableName);
+          needToCreateTable = false;
+          await table.add(lanceRows);
+        } else {
+          await table?.add(lanceRows);
+        }
       }
 
       markComplete([{ path, cacheKey }], IndexResultType.AddTag);
