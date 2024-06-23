@@ -79,18 +79,27 @@ export function getLastNPathParts(filepath: string, n: number): string {
   return filepath.split(SEP_REGEX).slice(-n).join("/");
 }
 
-export function groupByLastNPathParts(filepaths: string[], n: number): Record<string, string[]> {
-  return filepaths.reduce((groups, item) => {
-    const lastNParts = getLastNPathParts(item, n);
-    if (!groups[lastNParts]) {
-      groups[lastNParts] = [];
-    }
-    groups[lastNParts].push(item);
-    return groups;
-  }, {} as Record<string, string[]>);
+export function groupByLastNPathParts(
+  filepaths: string[],
+  n: number,
+): Record<string, string[]> {
+  return filepaths.reduce(
+    (groups, item) => {
+      const lastNParts = getLastNPathParts(item, n);
+      if (!groups[lastNParts]) {
+        groups[lastNParts] = [];
+      }
+      groups[lastNParts].push(item);
+      return groups;
+    },
+    {} as Record<string, string[]>,
+  );
 }
 
-export function getUniqueFilePath(item: string, itemGroups: Record<string, string[]>): string {
+export function getUniqueFilePath(
+  item: string,
+  itemGroups: Record<string, string[]>,
+): string {
   const lastTwoParts = getLastNPathParts(item, 2);
   const group = itemGroups[lastTwoParts];
 
@@ -100,13 +109,13 @@ export function getUniqueFilePath(item: string, itemGroups: Record<string, strin
       group.some(
         (otherItem) =>
           otherItem !== item &&
-          getLastNPathParts(otherItem, n) === getLastNPathParts(item, n)
+          getLastNPathParts(otherItem, n) === getLastNPathParts(item, n),
       )
     ) {
       n++;
     }
   }
-  
+
   return getLastNPathParts(item, n);
 }
 

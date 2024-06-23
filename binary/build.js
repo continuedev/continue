@@ -231,10 +231,10 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
           `${targetDir}/node_sqlite3.node`,
           `build/node_sqlite3.node`,
         );
-      } 
+      }
     } catch (error) {
       console.log("[warn] Could not copy node_sqlite to build");
-      console.log(error)
+      console.log(error);
     }
 
     fs.unlinkSync(`${targetDir}/build.tar.gz`);

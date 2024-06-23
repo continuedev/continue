@@ -8,7 +8,7 @@
 
 <div align="center">
 
-**[Continue](https://docs.continue.dev) enables you to create your own AI code assistant inside your IDE. Keep your developers in flow with open-source [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension) extensions that can be connected to any model, any context, and anything else you need**
+**[Continue](https://docs.continue.dev) is the leading open-source AI code assistant. You can connect any models and any context to build custom autocomplete and chat experiences inside [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains](https://plugins.jetbrains.com/plugin/22707-continue-extension)**
 
 </div>
 

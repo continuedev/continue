@@ -156,18 +156,34 @@ If you're seeing a common pattern of mistake that might be helpful to report, pl
 
 To ensure that you receive multi-line completions, you can set `"multilineCompletions": "always"` in `tabAutocompleteOptions`. By default, it is `"auto"`. If you still find that you are only seeing single-line completions, this may be because some models tend to produce shorter completions when starting in the middle of a file. You can try temporarily moving text below your cursor out of your active file, or switching to a larger model.
 
-## How to turn off autocomplete
+## FAQs
 
-### VS Code
+### Can I configure a "trigger key" for autocomplete?
+
+Yes, in VS Code, if you don't want to be shown suggestions automatically you can:
+
+1. Set `"editor.inlineSuggest.enabled": false` in VS Code settings to disabe automatic suggestions
+2. Open "Keyboard Shortcuts" (cmd/ctrl+k, cmd/ctrl+s) and search for `editor.action.inlineSuggest.trigger`
+3. Click the "+" icon to add a new keybinding
+4. Press the key combination you want to use to trigger suggestions (e.g. `ctrl+space`)
+5. Now whenever you want to see a suggestion, you can press your key binding (e.g. `ctrl+space`) to trigger suggestions manually
+
+### Is there a shortcut to accept one line at a time?
+
+This is a built-in feature of VS Code, but it's just a bit hidden. See this great [StackOverflow answer](https://stackoverflow.com/questions/72228174/accept-line-by-line-from-autocompletion/78001122#78001122) for more details.
+
+### How to turn off autocomplete
+
+#### VS Code
 
 Click the "Continue" button in the status panel at the bottom right of the screen. The checkmark will become a "cancel" symbol and you will no longer see completions. You can click again to turn it back on.
 
 Alternatively, open VS Code settings, search for "Continue" and uncheck the box for "Enable Tab Autocomplete".
 
-### JetBrains
+#### JetBrains
 
 Open Settings -> Tools -> Continue and uncheck the box for "Enable Tab Autocomplete".
 
-### Feedback
+## Feedback
 
 If you're turning off autocomplete, we'd love to hear how we can improve! Please let us know in our [Discord](https://discord.gg/vapESyrFmJ) or file an issue on GitHub.
