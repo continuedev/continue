@@ -15,6 +15,7 @@ import { getLanceDbPath } from "../util/paths.js";
 import { chunkDocument } from "./chunk/chunk.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
+  CodebaseIndex,
   IndexResultType,
   PathAndCacheKey,
   RefreshIndexResults,

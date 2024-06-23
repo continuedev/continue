@@ -3,6 +3,7 @@ import {
   InvokeModelWithResponseStreamCommand,
 } from "@aws-sdk/client-bedrock-runtime";
 import { fromIni } from "@aws-sdk/credential-providers";
+import { BaseLLM } from "..";
 import {
   ChatMessage,
   CompletionOptions,
@@ -11,10 +12,6 @@ import {
   ModelProvider,
 } from "../..";
 import { stripImages } from "../countTokens";
-import {
-  BedrockRuntimeClient,
-  InvokeModelWithResponseStreamCommand,
-} from "@aws-sdk/client-bedrock-runtime";
 
 class Bedrock extends BaseLLM {
   private static PROFILE_NAME: string = "bedrock";

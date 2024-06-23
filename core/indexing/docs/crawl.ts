@@ -1,4 +1,3 @@
-import { URL } from "node:url";
 import { Octokit } from "@octokit/rest";
 import cheerio from "cheerio";
 import fetch from "node-fetch";
@@ -37,9 +36,8 @@ async function crawlGithubRepo(baseUrl: URL) {
 
   const [_, owner, repo] = baseUrl.pathname.split("/");
 
-  const branch = await getDefaultBranch(owner, repo)
-  console.log("Github repo detected. Crawling", branch, "branch")
-
+  const branch = await getDefaultBranch(owner, repo);
+  console.log("Github repo detected. Crawling", branch, "branch");
 
   const tree = await octokit.request(
     "GET /repos/{owner}/{repo}/git/trees/{tree_sha}",
@@ -140,16 +138,19 @@ export type PageData = {
   html: string;
 };
 
-export async function* crawlPage(url: URL, maxDepth: number = 3): AsyncGenerator<PageData> {
-  console.log("Starting crawl from: ", url, " - Max Depth: ", maxDepth)
+export async function* crawlPage(
+  url: URL,
+  maxDepth: number = 3,
+): AsyncGenerator<PageData> {
+  console.log("Starting crawl from: ", url, " - Max Depth: ", maxDepth);
   const { baseUrl, basePath } = splitUrl(url);
   let paths: { path: string; depth: number }[] = [{ path: basePath, depth: 0 }];
-  
+
   if (url.hostname === "github.com") {
     const githubLinks = await crawlGithubRepo(url);
-    const githubLinkObjects = githubLinks.map(link => ({
-        path: link,
-        depth: 0, 
+    const githubLinkObjects = githubLinks.map((link) => ({
+      path: link,
+      depth: 0,
     }));
     paths = [...paths, ...githubLinkObjects];
   }
@@ -158,37 +159,48 @@ export async function* crawlPage(url: URL, maxDepth: number = 3): AsyncGenerator
   while (index < paths.length) {
     const batch = paths.slice(index, index + 50);
 
-    try { 
-      const promises = batch.map(({ path, depth }) => getLinksFromUrl(baseUrl, path).then(links => ({ links, path, depth }))); // Adjust for depth tracking
-      
+    try {
+      const promises = batch.map(({ path, depth }) =>
+        getLinksFromUrl(baseUrl, path).then((links) => ({
+          links,
+          path,
+          depth,
+        })),
+      ); // Adjust for depth tracking
+
       const results = await Promise.all(promises);
-      for (const { links: { html, links: linksArray }, path, depth } of results) {
-        if (html !== "" && depth <= maxDepth) { // Check depth
+      for (const {
+        links: { html, links: linksArray },
+        path,
+        depth,
+      } of results) {
+        if (html !== "" && depth <= maxDepth) {
+          // Check depth
           yield {
             url: url.toString(),
             path,
             html,
           };
         }
-        
+
         // Ensure we only add links if within depth limit
         if (depth < maxDepth) {
           for (let link of linksArray) {
-            if (!paths.some(p => p.path === link)) {
+            if (!paths.some((p) => p.path === link)) {
               paths.push({ path: link, depth: depth + 1 }); // Increment depth for new paths
             }
           }
         }
       }
-    } catch(e){
+    } catch (e) {
       if (e instanceof TypeError) {
-        console.warn("Error while crawling page: ", e) // Likely an invalid url, continue with process
+        console.warn("Error while crawling page: ", e); // Likely an invalid url, continue with process
       } else {
-        console.error("Error while crawling page: ", e)
+        console.error("Error while crawling page: ", e);
       }
     }
 
     index += batch.length; // Proceed to next batch
   }
-  console.log("Crawl completed")
+  console.log("Crawl completed");
 }

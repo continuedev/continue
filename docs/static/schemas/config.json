@@ -157,6 +157,7 @@
             "deepinfra",
             "flowise",
             "groq",
+            "fireworks",
             "continue-proxy",
             "cloudflare",
             "deepseek",

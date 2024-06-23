@@ -67,7 +67,7 @@ export class Core {
     private readonly ide: IDE,
     private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
-    this.indexingState = { status:"loading", desc: 'loading', progress: 0 }
+    this.indexingState = { status: "loading", desc: "loading", progress: 0 };
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     this.configHandler = new ConfigHandler(
       this.ide,
@@ -217,8 +217,7 @@ export class Core {
       };
 
       for await (const _ of indexDocs(
-        msg.data.title,
-        new URL(msg.data.url),
+        siteIndexingConfig,
         new TransformersJsEmbeddingsProvider(),
       )) {
       }
@@ -540,7 +539,7 @@ export class Core {
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
       // If a non-default state has been stored, update the indexing display to that state
-      if (this.indexingState.status != 'loading') {
+      if (this.indexingState.status != "loading") {
         this.messenger.request("indexProgress", this.indexingState);
       }
     });
@@ -558,7 +557,7 @@ export class Core {
       this.indexingCancellationController.signal,
     )) {
       this.messenger.request("indexProgress", update);
-      this.indexingState = update
+      this.indexingState = update;
     }
   }
 }

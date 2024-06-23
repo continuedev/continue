@@ -61,7 +61,6 @@ function countTokens(
   } else {
     return encoding.encode(content ?? "", "all", []).length;
   }
-  return encoding.encode(content, "all", []).length;
 }
 
 function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {

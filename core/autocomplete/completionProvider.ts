@@ -2,7 +2,6 @@ import Handlebars from "handlebars";
 import ignore from "ignore";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { IDE, ILLM, Position, Range, TabAutocompleteOptions } from "../index.js";
 import { RangeInFileWithContents } from "../commands/util.js";
 import { ConfigHandler } from "../config/handler.js";
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
@@ -174,7 +173,9 @@ export async function getTabCompletion(
   }
 
   // Model
-  if (!llm) {return;}
+  if (!llm) {
+    return;
+  }
   if (llm instanceof OpenAI) {
     llm.useLegacyCompletionsEndpoint = true;
   } else if (

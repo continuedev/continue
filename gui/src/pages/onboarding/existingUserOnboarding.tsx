@@ -1,3 +1,4 @@
+import { TRIAL_FIM_MODEL } from "core/config/onboarding";
 import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";

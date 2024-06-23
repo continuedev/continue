@@ -1,6 +1,8 @@
 import { SerializedContinueConfig } from "../index.js";
 import { FREE_TRIAL_MODELS } from "./default.js";
 
+export const TRIAL_FIM_MODEL = "codestral-latest";
+
 export function setupApiKeysMode(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {

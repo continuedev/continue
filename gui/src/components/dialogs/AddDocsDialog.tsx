@@ -1,4 +1,4 @@
-import { SiteIndexingConfig } from "core";
+import { SiteIndexingConfig } from "core/index";
 import { usePostHog } from "posthog-js/react";
 import React, { useContext, useLayoutEffect } from "react";
 import { useDispatch } from "react-redux";
@@ -7,8 +7,6 @@ import { Button, Input } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { SubmenuContextProvidersContext } from "../../context/SubmenuContextProviders";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
-import { postToIde } from "../../util/ide";
-import { SiteIndexingConfig } from "core/index";
 
 const GridDiv = styled.div`
   display: grid;
@@ -18,7 +16,7 @@ const GridDiv = styled.div`
 `;
 
 function AddDocsDialog() {
-  const defaultMaxDepth = 3
+  const defaultMaxDepth = 3;
   const [docsUrl, setDocsUrl] = React.useState("");
   const [docsTitle, setDocsTitle] = React.useState("");
   const [urlValid, setUrlValid] = React.useState(false);
@@ -74,12 +72,11 @@ function AddDocsDialog() {
         value={maxDepth}
         onChange={(e) => {
           const value = e.target.value;
-          if (value == '') {
-            setMaxDepth("")
+          if (value == "") {
+            setMaxDepth("");
           } else if (!isNaN(+value) && Number(value) > 0) {
-            setMaxDepth(Number(value))
-          } 
-          
+            setMaxDepth(Number(value));
+          }
         }}
       />
       <Button
@@ -90,12 +87,12 @@ function AddDocsDialog() {
             startUrl: docsUrl,
             rootUrl: docsUrl,
             title: docsTitle,
-            maxDepth: typeof maxDepth === 'string' ? defaultMaxDepth : maxDepth, // Ensure maxDepth is a number
-          };          
-          postToIde("context/addDocs", siteIndexingConfig);
+            maxDepth: typeof maxDepth === "string" ? defaultMaxDepth : maxDepth, // Ensure maxDepth is a number
+          };
+          ideMessenger.post("context/addDocs", siteIndexingConfig);
           setDocsTitle("");
           setDocsUrl("");
-          setMaxDepth("")
+          setMaxDepth("");
           dispatch(setShowDialog(false));
           addItem("docs", {
             id: docsUrl,
