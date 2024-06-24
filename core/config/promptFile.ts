@@ -1,3 +1,4 @@
+import Handlebars from "handlebars";
 import path from "path";
 import * as YAML from "yaml";
 import type { IDE, SlashCommand } from "..";
