@@ -90,7 +90,7 @@ function ExistingUserOnboarding() {
   "embeddingsProvider": {
     "provider": "free-trial"
   },
-  // Voyage AI's rerank-lite-1
+  // Voyage AI's rerank-1
   "reranker": {
     "name": "free-trial"
   }
