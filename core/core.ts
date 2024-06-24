@@ -14,7 +14,7 @@ import {
   setupLocalMode,
   setupOptimizedExistingUserMode,
 } from "./config/onboarding.js";
-import { createNewPromptFile } from "./config/promptFile";
+import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
 import { indexDocs } from "./indexing/docs/index.js";
@@ -500,12 +500,12 @@ export class Core {
         mode === "local"
           ? setupLocalMode
           : mode === "freeTrial"
-            ? setupFreeTrialMode
-            : mode === "localAfterFreeTrial"
-              ? setupLocalAfterFreeTrial
-              : mode === "apiKeys"
-                ? setupApiKeysMode
-                : setupOptimizedExistingUserMode,
+          ? setupFreeTrialMode
+          : mode === "localAfterFreeTrial"
+          ? setupLocalAfterFreeTrial
+          : mode === "apiKeys"
+          ? setupApiKeysMode
+          : setupOptimizedExistingUserMode,
       );
       this.configHandler.reloadConfig();
     });
@@ -539,7 +539,7 @@ export class Core {
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
       // If a non-default state has been stored, update the indexing display to that state
-      if (this.indexingState.status != "loading") {
+      if (this.indexingState.status !== "loading") {
         this.messenger.request("indexProgress", this.indexingState);
       }
     });
