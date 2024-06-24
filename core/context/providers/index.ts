@@ -1,7 +1,6 @@
 import { ContextProviderName } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
 import CodeContextProvider from "./CodeContextProvider.js";
-// import CodeHighlightsContextProvider from "./CodeHighlightsContextProvider.js";
 import CodebaseContextProvider from "./CodebaseContextProvider.js";
 import CurrentFileContextProvider from "./CurrentFileContextProvider.js";
 import DatabaseContextProvider from "./DatabaseContextProvider.js";
@@ -23,6 +22,13 @@ import SearchContextProvider from "./SearchContextProvider.js";
 import TerminalContextProvider from "./TerminalContextProvider.js";
 import URLContextProvider from "./URLContextProvider.js";
 
+/**
+ * Note: We are currently omitting the following providers due to bugs:
+ * - `CodeOutlineContextProvider`
+ * - `CodeHighlightsContextProvider`
+ *
+ * See this issue for details: https://github.com/continuedev/continue/issues/1365
+ */
 const Providers: (typeof BaseContextProvider)[] = [
   DiffContextProvider,
   FileTreeContextProvider,
@@ -39,8 +45,6 @@ const Providers: (typeof BaseContextProvider)[] = [
   FolderContextProvider,
   DocsContextProvider,
   GitLabMergeRequestContextProvider,
-  // CodeHighlightsContextProvider,
-  // CodeOutlineContextProvider,
   JiraIssuesContextProvider,
   PostgresContextProvider,
   DatabaseContextProvider,
