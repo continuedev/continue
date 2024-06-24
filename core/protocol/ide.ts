@@ -27,6 +27,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getSearchResults: [{ query: string }, string];
   subprocess: [{ command: string }, [string, string]];
   saveFile: [{ filepath: string }, void];
+  fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];
   showDiff: [
     { filepath: string; newContents: string; stepIndex: number },

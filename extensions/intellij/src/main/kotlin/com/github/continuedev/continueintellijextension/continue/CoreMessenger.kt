@@ -123,6 +123,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "listFolders",
         "getContinueDir",
         "writeFile",
+        "fileExists",
         "showVirtualFile",
         "openFile",
         "runCommand",

@@ -40,6 +40,12 @@ class VsCodeIde implements IDE {
   ) {
     this.ideUtils = new VsCodeIdeUtils();
   }
+  async fileExists(filepath: string): Promise<boolean> {
+    return vscode.workspace.fs.stat(uriFromFilePath(filepath)).then(
+      () => true,
+      () => false,
+    );
+  }
 
   private authToken: string | undefined;
   private askedForAuth = false;

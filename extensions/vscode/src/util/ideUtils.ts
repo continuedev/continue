@@ -272,6 +272,16 @@ export class VsCodeIdeUtils {
         .map(([name, type]) => path.join(directory, name));
     }
 
+    try {
+      const stat = await vscode.workspace.fs.stat(uriFromFilePath(directory));
+      if (stat.type !== vscode.FileType.Directory) {
+        throw new Error(`${directory} is not a directory`);
+      }
+    } catch (e) {
+      console.warn(`Directory ${directory} does not exist.`);
+      return [];
+    }
+
     const allFiles: string[] = [];
     const gitRoot = await this.getGitRoot(directory);
     let onlyThisDirectory = undefined;

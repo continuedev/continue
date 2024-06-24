@@ -19,6 +19,9 @@ class FileSystemIde implements IDE {
   constructor() {
     fs.mkdirSync(FileSystemIde.workspaceDir, { recursive: true });
   }
+  fileExists(filepath: string): Promise<boolean> {
+    return Promise.resolve(fs.existsSync(filepath));
+  }
 
   async getIdeSettings(): Promise<IdeSettings> {
     return {

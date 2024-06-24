@@ -435,6 +435,7 @@ export interface IDE {
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
   getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
+  fileExists(filepath: string): Promise<boolean>;
   writeFile(path: string, contents: string): Promise<void>;
   showVirtualFile(title: string, contents: string): Promise<void>;
   getContinueDir(): Promise<string>;

@@ -136,6 +136,10 @@ export class ReverseMessageIde {
       return this.ide.writeFile(data.path, data.contents);
     });
 
+    this.on("fileExists", (data) => {
+      return this.ide.fileExists(data.filepath);
+    });
+
     this.on("showVirtualFile", (data) => {
       return this.ide.showVirtualFile(data.name, data.content);
     });
