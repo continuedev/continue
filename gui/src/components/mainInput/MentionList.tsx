@@ -242,6 +242,22 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
 
     if (item.contextProvider?.type === "query") {
+      // complete selected query in editor
+      const { tr } = props.editor.view.state;
+      const text = tr.doc.textBetween(0, tr.selection.from);
+      const lastAtIndex = text.lastIndexOf("@");
+      const position = tr.selection.from;
+
+      props.editor.view.dispatch(
+        tr
+          .replaceWith(
+            lastAtIndex,
+            position,
+            props.editor.view.state.schema.text(`@${item.title}`),
+          )
+          .scrollIntoView(),
+      );
+
       setSubMenuTitle(item.description);
       setQuerySubmenuItem(item);
       return;
