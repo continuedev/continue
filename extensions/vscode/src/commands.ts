@@ -269,6 +269,7 @@ const commandsMap: (
         title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
         prompt: `[${defaultModelTitle}]`,
         value: prompt,
+        ignoreFocusOut: true,
       };
       if (previousInput) {
         textInputOptions.value = previousInput + ", ";
@@ -598,6 +599,7 @@ const commandsMap: (
     },
     "continue.giveAutocompleteFeedback": async () => {
       const feedback = await vscode.window.showInputBox({
+        ignoreFocusOut: true,
         prompt:
           "Please share what went wrong with the last completion. The details of the completion as well as this message will be sent to the Continue team in order to improve.",
       });
