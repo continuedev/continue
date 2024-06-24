@@ -312,10 +312,15 @@ interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
+  renderInlineAs?: string;
+  type?: ContextProviderType;
   getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
+  loadSubmenuItems?: (
+    args: LoadSubmenuItemsArgs,
+  ) => Promise<ContextSubmenuItem[]>;
 }
 ```
 
@@ -455,6 +460,7 @@ Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.t
 - `displayTitle` (optional): The title displayed in the dropdown
 - `description` (optional): The longer description displayed in the dropdown when hovered
 - `type` (optional): The type of context provider. Options are "normal", "query", and "submenu". Defaults to "normal".
+- `renderInlineAs` (optional): The string that will be rendered inline at the top of the prompt. If no value is provided, the `displayTitle` will be used. An empty string can be provided to prevent rendering the default `displayTitle`.
 - `getContextItems`: A function that returns the documents to include in the prompt. It should return a list of `ContextItem`s, and is given access to the following arguments:
   - `extras.fullInput`: A string representing the user's full input to the text box. This can be used for example to generate an embedding to compare against a set of other embedded documents
   - `extras.embeddingsProvider`: The embeddings provider has an `embed` function that will convert text (such as `fullInput`) to an embedding
