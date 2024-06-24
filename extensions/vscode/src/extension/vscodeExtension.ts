@@ -164,9 +164,14 @@ export class VsCodeExtension {
 
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught
-    fs.watchFile(getConfigJsonPath(), { interval: 1000 }, (stats) => {
-      this.configHandler.reloadConfig();
+    fs.watchFile(getConfigJsonPath(), { interval: 1000 }, async (stats) => {
+      await this.configHandler.reloadConfig();
+
+      // Trigger a toast notification to provide UI feedback that config
+      // has been updated
+      vscode.window.showInformationMessage("Config updated");
     });
+
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
       this.configHandler.reloadConfig();
     });
@@ -246,6 +251,7 @@ export class VsCodeExtension {
 
   static continueVirtualDocumentScheme = "continue";
 
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
 
   registerCustomContextProvider(contextProvider: IContextProvider) {

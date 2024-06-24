@@ -40,14 +40,15 @@ export class ConfigHandler {
     this.updateListeners.push(listener);
   }
 
-  reloadConfig() {
+  async reloadConfig() {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
-    this.loadConfig().then(() => {
-      for (const listener of this.updateListeners) {
-        listener();
-      }
-    });
+
+    await this.loadConfig();
+
+    for (const listener of this.updateListeners) {
+      listener();
+    }
   }
 
   async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
