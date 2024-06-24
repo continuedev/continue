@@ -21,7 +21,7 @@ export class VoyageReranker implements Reranker {
       body: JSON.stringify({
         query,
         documents: chunks.map((chunk) => chunk.content),
-        model: this.params.model ?? "rerank-lite-1",
+        model: this.params.model ?? "rerank-1",
       }),
     });
     const data: any = await resp.json();
