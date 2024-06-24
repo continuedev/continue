@@ -202,7 +202,12 @@ assignee = currentUser() AND resolution = Unresolved order by updated DESC
 
 You can override this query by setting the `issueQuery` parameter.
 
-### Code Outline
+ <!-- 
+ Note: We are currently omitting the following providers due to bugs.
+ See this issue for details: https://github.com/continuedev/continue/issues/1365 
+ -->
+
+<!-- ### Code Outline
 
 Type '@outline' to reference the outline of all currently open files. The outline of a files consists of only the function and class definitions in the file. Supported file extensions are '.js', '.mjs', '.go', '.c', '.cc', '.cs', '.cpp', '.el', '.ex', '.elm', '.java', '.ml', '.php', '.ql', '.rb', '.rs', '.ts'
 
@@ -216,7 +221,7 @@ Type '@highlights' to reference the 'highlights' from all currently open files. 
 
 ```json
 { "name": "highlights" }
-```
+``` -->
 
 ### PostgreSQL
 
