@@ -171,6 +171,14 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig();
     });
 
+    // Trigger a toast notification to provide UI feedback that config
+    // has been refreshed
+    this.configHandler.onConfigUpdate(() =>
+      vscode.window.showInformationMessage(
+        "Updated config successfully applied",
+      ),
+    );
+
     this.configHandler.onConfigUpdate(
       this.tabAutocompleteModel.clearLlm.bind(this.tabAutocompleteModel),
     );
@@ -246,6 +254,7 @@ export class VsCodeExtension {
 
   static continueVirtualDocumentScheme = "continue";
 
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
 
   registerCustomContextProvider(contextProvider: IContextProvider) {
