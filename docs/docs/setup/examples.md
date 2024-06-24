@@ -4,7 +4,7 @@ If you're looking for a quick way to create the perfect Continue setup, we've wr
 
 ## I just want the best experience possible
 
-This uses Claude 3 Opus for chat, Codestral for autocomplete, and Voyage AI for embeddings and reranking.
+This uses Claude 3.5 Sonnet for chat, Codestral for autocomplete, and Voyage AI for embeddings and reranking.
 
 ### Pre-requisites
 
@@ -18,9 +18,9 @@ This uses Claude 3 Opus for chat, Codestral for autocomplete, and Voyage AI for 
 {
   "models": [
     {
-      "title": "Claude 3 Opus",
+      "title": "Claude 3.5 Sonnet",
       "provider": "anthropic",
-      "model": "claude-3-opus-20240229",
+      "model": "claude-3-5-sonnet-20240620",
       "apiKey": "[ANTHROPIC_API_KEY]"
     }
   ],
