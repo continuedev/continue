@@ -211,6 +211,61 @@ export function modifyConfig(config: Config): Config {
 }
 ```
 
+## Reranking providers
+
+A reranking model improves the accuracy of codebase retrieval by breaking it into two stages. Instead of only using similarity search to go from all possible snippets to the top 10-20, we can instead get the top 100+ from similarity search and then use a more expensive model, the "reranker", to more accurately decide the top 10-20.
+
+Because reranking requires 100+ simultaneous invocations of a model, there are not currently any local rerankers that Continue supports. However if you are able to use any of the below options, it is strongly recommended, as they are cheap but will drastically improve the quality of codebase retrieval.
+
+### Voyage AI
+
+Voyage AI offers the best reranking model for code with their rerank-lite-1 model. After obtaining an API key from [here](https://www.voyageai.com/), you can configure like this:
+
+```json title="~/.continue/config.json"
+{
+  "reranker": {
+    "name": "voyage",
+    "params": {
+      "model": "rerank-lite-1",
+      "apiKey": "<VOYAGE_API_KEY>"
+    }
+  }
+}
+```
+
+### Cohere
+
+See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rerank-2).
+
+```json title="~/.continue/config.json"
+{
+  "reranker": {
+    "name": "cohere",
+    "params": {
+      "model": "rerank-english-v3.0",
+      "apiKey": "<COHERE_API_KEY>"
+    }
+  }
+}
+```
+
+### LLM
+
+If you only have access to a single LLM, then you can use it as a reranker. This is discouraged unless truly necessary, because it will be much more expensive and still less accurate than any of the above models trained specifically for the task. Note that this will not work if you are using a local model, for example with Ollama, because too many parallel requests need to be made.
+
+```json title="~/.continue/config.json"
+{
+  "reranker": {
+    "name": "llm",
+    "params": {
+      "modelTitle": "My Model Title"
+    }
+  }
+}
+```
+
+The `"modelTitle"` field must match one of the models in your "models" array in config.json.
+
 ## Customizing which files are indexed
 
 Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.continueignore` file, which follows the exact same rules as `.gitignore`.
