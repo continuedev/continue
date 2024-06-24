@@ -125,22 +125,24 @@ Alternatively, you can enter your own API keys:
         )}
         <br />
         <div className="flex">
-          <StyledButton
-            disabled={selected < 0}
-            onClick={() => {
-              ideMessenger.post("completeOnboarding", {
-                mode: ["localExistingUser", "optimizedExistingUser"][
-                  selected
-                ] as any,
-              });
-              ideMessenger.post("openConfigJson", undefined);
-              setLocalStorage("onboardingComplete", true);
-              ideMessenger.post("index/forceReIndex", undefined);
-              navigate("/");
-            }}
-          >
-            Continue
-          </StyledButton>
+          <div className="ml-auto">
+            <StyledButton
+              disabled={selected < 0}
+              onClick={() => {
+                ideMessenger.post("completeOnboarding", {
+                  mode: ["localExistingUser", "optimizedExistingUser"][
+                    selected
+                  ] as any,
+                });
+                ideMessenger.post("openConfigJson", undefined);
+                setLocalStorage("onboardingComplete", true);
+                ideMessenger.post("index/forceReIndex", undefined);
+                navigate("/");
+              }}
+            >
+              Continue
+            </StyledButton>
+          </div>
         </div>
       </div>
     </TopDiv>

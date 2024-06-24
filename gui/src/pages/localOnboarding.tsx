@@ -284,14 +284,16 @@ function LocalOnboarding() {
       </div> */}
       <br></br>
       <div className="flex flex-col justify-end mt-8">
-        <StyledButton
-          disabled={false}
-          onClick={() => {
-            navigate("/");
-          }}
-        >
-          Continue
-        </StyledButton>
+        <div className="ml-auto">
+          <StyledButton
+            disabled={false}
+            onClick={() => {
+              navigate("/");
+            }}
+          >
+            Continue
+          </StyledButton>
+        </div>
       </div>
     </div>
   );

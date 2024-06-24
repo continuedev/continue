@@ -1,15 +1,22 @@
 import { useContext, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { greenButtonColor } from "../../components";
+import { greenButtonColor, lightGray } from "../../components";
+import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 import { ftl } from "../../components/dialogs/FTCDialog";
 import GitHubSignInButton from "../../components/modelSelection/quickSetup/GitHubSignInButton";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
 import { isJetBrains } from "../../util";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { Div, StyledButton } from "./components";
 
 function Onboarding() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [hovered0, setHovered0] = useState(false);
@@ -101,32 +108,54 @@ function Onboarding() {
       <br></br>
       <br />
       <div className="flex">
-        <StyledButton
-          blurColor={
-            selected === 0
-              ? "#be841b"
-              : selected === 1
-                ? greenButtonColor
-                : "#1b84be"
-          }
-          disabled={selected < 0}
-          onClick={() => {
-            ideMessenger.post("completeOnboarding", {
-              mode: ["apiKeys", "local"][selected] as any,
-            });
-            setLocalStorage("onboardingComplete", true);
-
-            if (selected === 1) {
-              navigate("/localOnboarding");
-            } else {
-              // Only needed when we switch from the default (local) embeddings provider
-              ideMessenger.post("index/forceReIndex", undefined);
-              navigate("/apiKeyOnboarding");
+        <div className="flex items-center gap-4 ml-auto">
+          <div
+            className="cursor-pointer"
+            style={{ color: lightGray }}
+            onClick={(e) => {
+              dispatch(setShowDialog(true));
+              dispatch(
+                setDialogMessage(
+                  <ConfirmationDialog
+                    text="Are you sure you want to skip onboarding? Unless you are an existing user or already have a config.json we don't recommend this."
+                    onConfirm={() => {
+                      setLocalStorage("onboardingComplete", true);
+                      navigate("/");
+                    }}
+                  />,
+                ),
+              );
+            }}
+          >
+            Skip
+          </div>
+          <StyledButton
+            blurColor={
+              selected === 0
+                ? "#be841b"
+                : selected === 1
+                  ? greenButtonColor
+                  : "#1b84be"
             }
-          }}
-        >
-          Continue
-        </StyledButton>
+            disabled={selected < 0}
+            onClick={() => {
+              ideMessenger.post("completeOnboarding", {
+                mode: ["apiKeys", "local"][selected] as any,
+              });
+              setLocalStorage("onboardingComplete", true);
+
+              if (selected === 1) {
+                navigate("/localOnboarding");
+              } else {
+                // Only needed when we switch from the default (local) embeddings provider
+                ideMessenger.post("index/forceReIndex", undefined);
+                navigate("/apiKeyOnboarding");
+              }
+            }}
+          >
+            Continue
+          </StyledButton>
+        </div>
       </div>
 
       {(!getLocalStorage("onboardingComplete") || isJetBrains()) && (
