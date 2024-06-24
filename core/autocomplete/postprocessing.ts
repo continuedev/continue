@@ -97,5 +97,10 @@ export function postprocessCompletion({
     completion = completion.slice(1);
   }
 
+  // Qwen often adds an extra space to the start
+  if (llm.model.toLowerCase().includes("qwen") && completion.startsWith(" ")) {
+    completion = completion.slice(1);
+  }
+
   return completion;
 }
