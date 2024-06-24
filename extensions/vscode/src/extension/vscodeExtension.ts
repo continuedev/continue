@@ -164,20 +164,17 @@ export class VsCodeExtension {
 
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught
-    fs.watchFile(getConfigJsonPath(), { interval: 1000 }, (stats) => {
-      this.configHandler.reloadConfig();
+    fs.watchFile(getConfigJsonPath(), { interval: 1000 }, async (stats) => {
+      await this.configHandler.reloadConfig();
+
+      // Trigger a toast notification to provide UI feedback that config
+      // has been updated
+      vscode.window.showInformationMessage("Config updated");
     });
+
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
       this.configHandler.reloadConfig();
     });
-
-    // Trigger a toast notification to provide UI feedback that config
-    // has been refreshed
-    this.configHandler.onConfigUpdate(() =>
-      vscode.window.showInformationMessage(
-        "Updated config successfully applied",
-      ),
-    );
 
     this.configHandler.onConfigUpdate(
       this.tabAutocompleteModel.clearLlm.bind(this.tabAutocompleteModel),
