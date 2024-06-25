@@ -12,7 +12,7 @@ type OllamaConnectionStatuses =
   | "downloading"
   | "verified";
 
-enum DefaultLocaLModels {
+enum DefaultLocalModels {
   Chat = "llama3",
   Autocomplete = "starcoder2:3b",
   Embeddings = "nomic-embed-text",
@@ -86,7 +86,7 @@ function LocalOnboarding() {
    * we send an empty request to load it
    */
   useEffect(() => {
-    if (!hasLoadedChatModel && isModelDownloaded(DefaultLocaLModels.Chat)) {
+    if (!hasLoadedChatModel && isModelDownloaded(DefaultLocalModels.Chat)) {
       ideMessenger.post("llm/complete", {
         completionOptions: {},
         prompt: "",
@@ -155,19 +155,19 @@ function LocalOnboarding() {
 
       <div>
         <CheckMarkHeader
-          isComplete={isModelDownloaded(DefaultLocaLModels.Chat)}
+          isComplete={isModelDownloaded(DefaultLocalModels.Chat)}
         >
           2. Download a model for chat
         </CheckMarkHeader>
-        {!isModelDownloaded(DefaultLocaLModels.Chat) && (
+        {!isModelDownloaded(DefaultLocalModels.Chat) && (
           <div className="pb-6">
             <p className="leading-relaxed">
-              We recommend using <code>{DefaultLocaLModels.Chat}</code>, the
+              We recommend using <code>{DefaultLocalModels.Chat}</code>, the
               latest open-source model trained by Meta.
             </p>
 
             <CopyToTerminalButton
-              command={`ollama run ${DefaultLocaLModels.Chat}`}
+              command={`ollama run ${DefaultLocalModels.Chat}`}
             ></CopyToTerminalButton>
           </div>
         )}
@@ -175,21 +175,21 @@ function LocalOnboarding() {
 
       <div>
         <CheckMarkHeader
-          isComplete={isModelDownloaded(DefaultLocaLModels.Autocomplete)}
+          isComplete={isModelDownloaded(DefaultLocalModels.Autocomplete)}
         >
           3. Download a model for tab autocomplete
         </CheckMarkHeader>
 
-        {!isModelDownloaded(DefaultLocaLModels.Autocomplete) && (
+        {!isModelDownloaded(DefaultLocalModels.Autocomplete) && (
           <div className="pb-6">
             <p className="leading-relaxed">
-              We recommend using <code>{DefaultLocaLModels.Autocomplete}</code>,
+              We recommend using <code>{DefaultLocalModels.Autocomplete}</code>,
               a state-of-the-art 3B parameter autocomplete model trained by
               Hugging Face.
             </p>
 
             <CopyToTerminalButton
-              command={`ollama run ${DefaultLocaLModels.Autocomplete}`}
+              command={`ollama run ${DefaultLocalModels.Autocomplete}`}
             ></CopyToTerminalButton>
           </div>
         )}
@@ -197,22 +197,22 @@ function LocalOnboarding() {
 
       <div>
         <CheckMarkHeader
-          isComplete={isModelDownloaded(DefaultLocaLModels.Embeddings)}
+          isComplete={isModelDownloaded(DefaultLocalModels.Embeddings)}
         >
           4. Download a model for embeddings
         </CheckMarkHeader>
 
-        {!isModelDownloaded(DefaultLocaLModels.Embeddings) && (
+        {!isModelDownloaded(DefaultLocalModels.Embeddings) && (
           <div className="pb-6">
             <p className="leading-relaxed">
-              We recommend using <code>{DefaultLocaLModels.Embeddings}</code>, a
+              We recommend using <code>{DefaultLocalModels.Embeddings}</code>, a
               8192 context-length that outperforms OpenAI <code>ada-002</code>{" "}
               and <code>text-embedding-3-small</code>
               on both short and long context tasks.
             </p>
 
             <CopyToTerminalButton
-              command={`ollama pull ${DefaultLocaLModels.Embeddings}`}
+              command={`ollama pull ${DefaultLocalModels.Embeddings}`}
             ></CopyToTerminalButton>
           </div>
         )}

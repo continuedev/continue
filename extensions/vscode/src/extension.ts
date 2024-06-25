@@ -9,9 +9,6 @@ import { getExtensionVersion } from "./util/util";
 import { cleanSlate } from "./util/cleanSlate";
 
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
-  // TODO: Remove after testing
-  // cleanSlate(context);
-
   const { activateExtension } = await import("./activation/activate");
   try {
     return activateExtension(context);
