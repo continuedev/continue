@@ -784,6 +784,7 @@ export interface TabAutocompleteOptions {
 export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
   fontSize?: number;
+  displayRawMarkdown?: boolean;
 }
 
 interface ContextMenuConfig {
