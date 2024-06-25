@@ -14,7 +14,7 @@ import { VscThemeContext } from "./context/VscTheme";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
 import GUI from "./pages/gui";
-import LocalOnboarding from "./pages/localOnboarding";
+import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
 import ApiKeyAutocompleteOnboarding from "./pages/onboarding/apiKeyAutocompleteOnboarding";
 import ApiKeyOnboarding from "./pages/onboarding/apiKeyOnboarding";
 import Onboarding from "./pages/onboarding/onboarding";

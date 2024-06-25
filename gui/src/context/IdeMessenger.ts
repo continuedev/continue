@@ -13,8 +13,6 @@ interface vscode {
 
 declare const vscode: any;
 
-type ToIdeOrCoreProtocol = FromWebviewProtocol;
-
 export interface IIdeMessenger {
   post<T extends keyof FromWebviewProtocol>(
     messageType: T,

@@ -2,6 +2,7 @@ import { SerializedContinueConfig } from "../index.js";
 import { FREE_TRIAL_MODELS } from "./default.js";
 
 export const TRIAL_FIM_MODEL = "codestral-latest";
+export const ONBOARDING_LOCAL_MODEL_TITLE = "Ollama";
 
 export function setupApiKeysMode(
   config: SerializedContinueConfig,
@@ -54,7 +55,7 @@ export function setupLocalMode(
         model: "llama3",
       },
       {
-        title: "Ollama",
+        title: ONBOARDING_LOCAL_MODEL_TITLE,
         provider: "ollama",
         model: "AUTODETECT",
       },
@@ -107,7 +108,7 @@ export function setupLocalAfterFreeTrial(
         model: "llama3",
       },
       {
-        title: "Ollama",
+        title: ONBOARDING_LOCAL_MODEL_TITLE,
         provider: "ollama",
         model: "AUTODETECT",
       },
