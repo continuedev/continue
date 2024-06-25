@@ -10,6 +10,7 @@ import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
 
 let resolveVsCodeExtension = (_: VsCodeExtension): void => {};
+
 export const vscodeExtensionPromise: Promise<VsCodeExtension> = new Promise(
   (resolve) => (resolveVsCodeExtension = resolve),
 );
@@ -32,6 +33,8 @@ export async function activateExtension(context: vscode.ExtensionContext) {
         path.join(getExtensionUri().fsPath, "media", "welcome.md"),
       ),
     );
+
+    vscode.commands.executeCommand("continue.focusContinueInput");
   });
 
   // Load Continue configuration
