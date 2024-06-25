@@ -1,4 +1,7 @@
+import { getContinueGlobalPath } from "core/util/paths";
 import { ExtensionContext } from "vscode";
+import fs from "fs";
+import { useEffect } from "react";
 /**
  * Clear all Continue-related artifacts to simulate a brand new user
  */
