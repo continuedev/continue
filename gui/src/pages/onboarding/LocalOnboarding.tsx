@@ -6,7 +6,6 @@ import { CopyToTerminalButton } from "./CopyToTerminalButton";
 import { CheckMarkHeader } from "./CheckMarkHeader";
 import { ONBOARDING_LOCAL_MODEL_TITLE } from "core/config/onboarding";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { lightGray, vscBackground } from "../../components";
 
 type OllamaConnectionStatuses =
   | "waiting_to_download"
@@ -42,13 +41,14 @@ function LocalOnboarding() {
   }
 
   function isModelDownloaded(model: string) {
-    if (!downloadedOllamaModels) {
-      return false;
-    }
+    return false;
+    // if (!downloadedOllamaModels) {
+    //   return false;
+    // }
 
-    return downloadedOllamaModels.some(
-      (ollamaModel) => ollamaModel.startsWith(model), // We use `startsWith` to ignore trailing tags like `:latest`
-    );
+    // return downloadedOllamaModels.some(
+    //   (ollamaModel) => ollamaModel.startsWith(model), // We use `startsWith` to ignore trailing tags like `:latest`
+    // );
   }
 
   function renderOllamaConnectionStatus(status: OllamaConnectionStatuses) {
@@ -119,7 +119,8 @@ function LocalOnboarding() {
     };
 
     // Immediately invoke to try to minimize jank if a user already has
-    // the models installed
+    // the models installed. A better fix would be to not load the onboarding
+    // steps until we've first checked if the user already has the models installed.
     fetchDownloadedModels();
 
     const interval = setInterval(

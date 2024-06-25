@@ -1,6 +1,6 @@
 import ReactDOM from "react-dom";
 import { useState, useContext } from "react";
-import { CheckIcon, PlayIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, CommandLineIcon } from "@heroicons/react/24/outline";
 import styled from "styled-components";
 import {
   StyledTooltip,
@@ -55,6 +55,21 @@ export function CopyToTerminalButton(props: { command: string }) {
             ideMessenger.post("copyText", { text: props.command });
           }}
         >
+          {clicked ? (
+            <CheckIcon
+              width="20px"
+              height="20px"
+              className="cursor-pointer hover:bg-white"
+              color="#0b0"
+            />
+          ) : (
+            <CommandLineIcon
+              width="20px"
+              height="20px"
+              className="cursor-pointer hover:bg-white"
+            />
+          )}
+
           <pre>
             <code
               style={{
@@ -65,20 +80,6 @@ export function CopyToTerminalButton(props: { command: string }) {
               {props.command}
             </code>
           </pre>
-          {clicked ? (
-            <CheckIcon
-              width="20px"
-              height="20px"
-              className="cursor-pointer hover:bg-white"
-              color="#0b0"
-            />
-          ) : (
-            <PlayIcon
-              width="20px"
-              height="20px"
-              className="cursor-pointer hover:bg-white"
-            />
-          )}
         </StyledDiv>
       </div>
       {tooltipPortalDiv &&
