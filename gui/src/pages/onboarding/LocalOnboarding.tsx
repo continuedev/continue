@@ -41,14 +41,13 @@ function LocalOnboarding() {
   }
 
   function isModelDownloaded(model: string) {
-    return false;
-    // if (!downloadedOllamaModels) {
-    //   return false;
-    // }
+    if (!downloadedOllamaModels) {
+      return false;
+    }
 
-    // return downloadedOllamaModels.some(
-    //   (ollamaModel) => ollamaModel.startsWith(model), // We use `startsWith` to ignore trailing tags like `:latest`
-    // );
+    return downloadedOllamaModels.some(
+      (ollamaModel) => ollamaModel.startsWith(model), // We use `startsWith` to ignore trailing tags like `:latest`
+    );
   }
 
   function renderOllamaConnectionStatus(status: OllamaConnectionStatuses) {
@@ -213,7 +212,7 @@ function LocalOnboarding() {
             </p>
 
             <CopyToTerminalButton
-              command={`ollama run ${DefaultLocaLModels.Embeddings}`}
+              command={`ollama pull ${DefaultLocaLModels.Embeddings}`}
             ></CopyToTerminalButton>
           </div>
         )}
