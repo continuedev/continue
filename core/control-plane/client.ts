@@ -1,0 +1,27 @@
+export interface AnalyticsConfig {
+  host: string;
+  apiKey: string;
+}
+
+export interface ControlPlaneSettings {
+  analytics?: AnalyticsConfig;
+}
+
+export class ControlPlaneClient {
+  private settings: ControlPlaneSettings | null = null;
+  private static URL = "";
+
+  constructor() {}
+
+  public async getSettings(): Promise<ControlPlaneSettings> {
+    return this.settings ?? (await this.fetchSettings());
+  }
+
+  private async fetchSettings(): Promise<ControlPlaneSettings> {
+    return {};
+    // const response = await fetch(ControlPlaneClient.URL);
+    // const settings = await response.json();
+    // this.settings = settings;
+    // return settings;
+  }
+}

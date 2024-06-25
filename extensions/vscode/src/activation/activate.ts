@@ -33,9 +33,13 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Load Continue configuration
   if (!context.globalState.get("hasBeenInstalled")) {
     context.globalState.update("hasBeenInstalled", true);
-    Telemetry.capture("install", {
-      extensionVersion: getExtensionVersion(),
-    });
+    Telemetry.capture(
+      "install",
+      {
+        extensionVersion: getExtensionVersion(),
+      },
+      true,
+    );
   }
 
   const api = new VsCodeContinueApi(vscodeExtension);

@@ -1,3 +1,5 @@
+import { ControlPlaneClient } from "../control-plane/client.js";
+import { TeamAnalytics } from "../control-plane/TeamAnalytics.js";
 import {
   BrowserSerializedContinueConfig,
   ContinueConfig,
@@ -19,6 +21,7 @@ export class ConfigHandler {
     private readonly ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
     private readonly writeLog: (text: string) => Promise<void>,
+    private readonly controlPlaneClient: ControlPlaneClient,
   ) {
     this.ide = ide;
     this.ideSettingsPromise = ideSettingsPromise;
@@ -95,6 +98,12 @@ export class ConfigHandler {
       // Setup telemetry only after (and if) we know it is enabled
       await Telemetry.setup(
         newConfig.allowAnonymousTelemetry ?? true,
+        await this.ide.getUniqueId(),
+        ideInfo.extensionVersion,
+      );
+      const controlPlaneSettings = await this.controlPlaneClient.getSettings();
+      await TeamAnalytics.setup(
+        controlPlaneSettings.analytics,
         await this.ide.getUniqueId(),
         ideInfo.extensionVersion,
       );

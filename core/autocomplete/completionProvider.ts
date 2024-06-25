@@ -200,13 +200,17 @@ export class CompletionProvider {
       const outcome = this._outcomes.get(completionId)!;
       outcome.accepted = true;
       logDevData("autocomplete", outcome);
-      Telemetry.capture("autocomplete", {
-        accepted: outcome.accepted,
-        modelName: outcome.modelName,
-        modelProvider: outcome.modelProvider,
-        time: outcome.time,
-        cacheHit: outcome.cacheHit,
-      });
+      Telemetry.capture(
+        "autocomplete",
+        {
+          accepted: outcome.accepted,
+          modelName: outcome.modelName,
+          modelProvider: outcome.modelProvider,
+          time: outcome.time,
+          cacheHit: outcome.cacheHit,
+        },
+        true,
+      );
       this._outcomes.delete(completionId);
 
       this.bracketMatchingService.handleAcceptedCompletion(
@@ -357,9 +361,13 @@ export class CompletionProvider {
       outcome.accepted = false;
       logDevData("autocomplete", outcome);
       const { prompt, completion, ...restOfOutcome } = outcome;
-      Telemetry.capture("autocomplete", {
-        ...restOfOutcome,
-      });
+      Telemetry.capture(
+        "autocomplete",
+        {
+          ...restOfOutcome,
+        },
+        true,
+      );
       this._logRejectionTimeouts.delete(completionId);
     }, COUNT_COMPLETION_REJECTED_AFTER);
     this._outcomes.set(completionId, outcome);

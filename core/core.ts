@@ -16,6 +16,7 @@ import {
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
+import { ControlPlaneClient } from "./control-plane/client";
 import { DocsService } from "./indexing/docs/DocsService";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase.js";
@@ -40,6 +41,7 @@ export class Core {
   indexingState: IndexingProgressUpdate;
   private globalContext = new GlobalContext();
   private docsService = DocsService.getInstance();
+  private controlPlaneClient = new ControlPlaneClient();
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -73,6 +75,7 @@ export class Core {
       this.ide,
       ideSettingsPromise,
       this.onWrite,
+      this.controlPlaneClient,
     );
     this.configHandler.onConfigUpdate(
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
@@ -267,9 +270,13 @@ export class Core {
             fetchwithRequestOptions(url, init, config.requestOptions),
         });
 
-        Telemetry.capture("useContextProvider", {
-          name: provider.description.title,
-        });
+        Telemetry.capture(
+          "useContextProvider",
+          {
+            name: provider.description.title,
+          },
+          true,
+        );
 
         return items.map((item) => ({
           ...item,
@@ -417,9 +424,13 @@ export class Core {
         throw new Error(`Unknown slash command ${slashCommandName}`);
       }
 
-      Telemetry.capture("useSlashCommand", {
-        name: slashCommandName,
-      });
+      Telemetry.capture(
+        "useSlashCommand",
+        {
+          name: slashCommandName,
+        },
+        true,
+      );
 
       const checkActiveInterval = setInterval(() => {
         if (abortedMessageIds.has(msg.messageId)) {

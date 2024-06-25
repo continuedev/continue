@@ -235,12 +235,16 @@ ${prompt}`;
   ) {
     let promptTokens = this.countTokens(prompt);
     let generatedTokens = this.countTokens(completion);
-    Telemetry.capture("tokens_generated", {
-      model: model,
-      provider: this.providerName,
-      promptTokens: promptTokens,
-      generatedTokens: generatedTokens,
-    });
+    Telemetry.capture(
+      "tokens_generated",
+      {
+        model: model,
+        provider: this.providerName,
+        promptTokens: promptTokens,
+        generatedTokens: generatedTokens,
+      },
+      true,
+    );
     DevDataSqliteDb.logTokensGenerated(
       model,
       this.providerName,
