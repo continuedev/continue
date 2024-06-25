@@ -99,11 +99,6 @@ function App() {
   const vscTheme = useVscTheme();
   const submenuContextProvidersMethods = useSubmenuContextProviders();
 
-  // TODO: Remove after testing
-  useEffect(() => {
-    localStorage.clear();
-  }, []);
-
   return (
     <VscThemeContext.Provider value={vscTheme}>
       <SubmenuContextProvidersContext.Provider
