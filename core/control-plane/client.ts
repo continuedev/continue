@@ -1,10 +1,22 @@
+import {
+  EmbeddingsProviderDescription,
+  ModelDescription,
+  RerankerDescription,
+} from "..";
+
 export interface AnalyticsConfig {
   host: string;
   apiKey: string;
 }
 
+export interface ControlPlaneModelDescription extends ModelDescription {}
+
 export interface ControlPlaneSettings {
   analytics?: AnalyticsConfig;
+  models?: ControlPlaneModelDescription[];
+  embeddingsProvider?: EmbeddingsProviderDescription;
+  tabAutocompleteModel?: ModelDescription | ModelDescription[];
+  reranker?: RerankerDescription;
 }
 
 export class ControlPlaneClient {

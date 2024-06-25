@@ -36,6 +36,8 @@ import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
 
+import { applySettingsToSerializedConfig } from "../control-plane/applyConfig.js";
+import { ControlPlaneClient } from "../control-plane/client.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
 import mergeJson from "../util/merge.js";
@@ -46,7 +48,6 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
-  migrate,
   readAllGlobalPromptFiles,
 } from "../util/paths.js";
 import {
@@ -107,19 +108,6 @@ function loadSerializedConfig(
   if (config.allowAnonymousTelemetry === undefined) {
     config.allowAnonymousTelemetry = true;
   }
-
-  migrate("codeContextProvider", () => {
-    const gpt = config.models.find(
-      (model) =>
-        model.model.startsWith("gpt-4") && model.provider === "free-trial",
-    );
-    if (gpt) {
-      gpt.systemMessage =
-        "You are an expert software developer. You give helpful and concise responses.";
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
 
   if (ideSettings.remoteConfigServerUrl) {
     try {
@@ -537,10 +525,24 @@ async function loadFullConfigNode(
   ideType: IdeType,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
+  controlPlaneClient: ControlPlaneClient,
 ): Promise<ContinueConfig> {
+  // Serialized config
   let serialized = loadSerializedConfig(workspaceConfigs, ideSettings, ideType);
+
+  // Load control plane config
+  const controlPlaneSettings = await controlPlaneClient.getSettings();
+  if (controlPlaneSettings) {
+    serialized = applySettingsToSerializedConfig(
+      serialized,
+      controlPlaneSettings,
+    );
+  }
+
+  // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(serialized, ide);
 
+  // Apply config.ts to modify intermediate config
   const configJsContents = await buildConfigTs();
   if (configJsContents) {
     try {
@@ -557,7 +559,7 @@ async function loadFullConfigNode(
     }
   }
 
-  // Remote config.js
+  // Apply remote config.js to modify intermediate config
   if (ideSettings.remoteConfigServerUrl) {
     try {
       const configJsPathForRemote = getConfigJsPathForRemote(
@@ -574,6 +576,7 @@ async function loadFullConfigNode(
     }
   }
 
+  // Convert to final config format
   const finalConfig = await intermediateToFinalConfig(
     intermediate,
     ide,

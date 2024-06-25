@@ -90,6 +90,7 @@ export class ConfigHandler {
         ideInfo.ideType,
         uniqueId,
         this.writeLog,
+        this.controlPlaneClient,
       );
       newConfig.allowAnonymousTelemetry =
         newConfig.allowAnonymousTelemetry &&
