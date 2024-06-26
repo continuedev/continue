@@ -31,20 +31,32 @@ export async function* indexDocs(
   };
 
   const articles: Article[] = [];
+  let processedPages = 0;
+  let maxKnownPages = 1;
 
   // Crawl pages and retrieve info as articles
   for await (const page of crawlPage(startUrl, siteIndexingConfig.maxDepth)) {
+    processedPages++;
     const article = pageToArticle(page);
     if (!article) {
       continue;
     }
     articles.push(article);
 
+    // Use a heuristic approach for progress calculation
+    const progress = Math.min(processedPages / maxKnownPages, 1);
+
     yield {
-      progress: 0,
+      progress, // Yield the heuristic progress
       desc: `Finding subpages (${page.path})`,
       status: "indexing",
     };
+
+    // Increase maxKnownPages to delay progress reaching 100% too soon
+    if (processedPages === maxKnownPages) {
+      maxKnownPages *= 2;
+    }
+
   }
 
   const chunks: Chunk[] = [];
@@ -52,10 +64,12 @@ export async function* indexDocs(
 
   // Create embeddings of retrieved articles
   console.log("Creating Embeddings for ", articles.length, " articles");
-  for (const article of articles) {
+  for (let i = 0; i < articles.length; i++) {
+    const article = articles[i];
+
     yield {
-      progress: Math.max(1, Math.floor(100 / (articles.length + 1))),
-      desc: `${article.subpath}`,
+      progress: i / articles.length,
+      desc: `Creating Embeddings: ${article.subpath}`,
       status: "indexing",
     };
 
@@ -76,6 +90,11 @@ export async function* indexDocs(
 
   // Add docs to databases
   console.log("Adding ", embeddings.length, " embeddings to db");
+  yield {
+    progress: 0.5,
+    desc: `Adding ${embeddings.length} embeddings to db`,
+    status: "indexing",
+  };
   await addDocs(siteIndexingConfig.title, startUrl, chunks, embeddings);
 
   yield {

@@ -21,6 +21,8 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/getBrowserSerialized",
     "config/deleteModel",
     "config/reload",
+    "config/getDocsSitesConfig",
+    "docs/hasIndexed",
     "context/getContextItems",
     "context/loadSubmenuItems",
     "context/addDocs",

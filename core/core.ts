@@ -14,7 +14,7 @@ import {
   setupLocalMode,
   setupOptimizedExistingUserMode,
 } from "./config/onboarding.js";
-import { createNewPromptFile } from "./config/promptFile";
+import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
 import { indexDocs } from "./indexing/docs/index.js";
@@ -31,6 +31,7 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson } from "./util/paths.js";
 import { Telemetry } from "./util/posthog.js";
 import { streamDiffLines } from "./util/verticalEdit.js";
+import { hasDoc } from "./indexing/docs/db.js";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -65,7 +66,7 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => {},
+    private readonly onWrite: (text: string) => Promise<void> = async () => { },
   ) {
     this.indexingState = { status: "loading", desc: "loading", progress: 0 };
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
@@ -125,7 +126,7 @@ export class Core {
       this.configHandler,
       ide,
       getLlm,
-      (e) => {},
+      (e) => { },
       (..._) => Promise.resolve([]),
     );
 
@@ -206,6 +207,26 @@ export class Core {
       this.configHandler.updateIdeSettings(msg.data);
     });
 
+    // Docs
+    on("config/getDocsSitesConfig", async () => {
+      const config = await this.config();
+      const provider = config.contextProviders?.find(
+        (provider) => provider.description.title === "docs",
+      );
+
+      if (provider) {
+        const mProvider: any = { ...provider };
+        const options: SiteIndexingConfig[] = mProvider?.options?.sites || [];
+
+        return options;
+      }
+
+      return [];
+    });
+    on("docs/hasIndexed", async (msg) => {
+      return { data: await hasDoc(msg.data.id) };
+    });
+
     // Context providers
     on("context/addDocs", async (msg) => {
       const siteIndexingConfig: SiteIndexingConfig = {
@@ -215,13 +236,13 @@ export class Core {
         maxDepth: msg.data.maxDepth,
         faviconUrl: new URL("/favicon.ico", msg.data.rootUrl).toString(),
       };
-
-      for await (const _ of indexDocs(
+      for await (const update of indexDocs(
         siteIndexingConfig,
         new TransformersJsEmbeddingsProvider(),
       )) {
+        this.messenger.request("indexProgress", update);
+        this.indexingState = update;
       }
-      this.ide.infoPopup(`🎉 Successfully indexed ${msg.data.title}`);
       this.messenger.send("refreshSubmenuItems", undefined);
     });
     on("context/loadSubmenuItems", async (msg) => {
@@ -453,7 +474,7 @@ export class Core {
         );
       return outcome ? [outcome.completion] : [];
     });
-    on("autocomplete/accept", async (msg) => {});
+    on("autocomplete/accept", async (msg) => { });
     on("autocomplete/cancel", async (msg) => {
       this.completionProvider.cancel();
     });
