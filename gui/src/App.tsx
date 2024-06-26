@@ -14,12 +14,12 @@ import { VscThemeContext } from "./context/VscTheme";
 import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
 import { useVscTheme } from "./hooks/useVscTheme";
 import GUI from "./pages/gui";
-import LocalOnboarding from "./pages/localOnboarding";
+import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
 import ApiKeyAutocompleteOnboarding from "./pages/onboarding/apiKeyAutocompleteOnboarding";
 import ApiKeyOnboarding from "./pages/onboarding/apiKeyOnboarding";
-import ExistingUserOnboarding from "./pages/onboarding/existingUserOnboarding";
 import Onboarding from "./pages/onboarding/onboarding";
 import Stats from "./pages/stats";
+import { useEffect } from "react";
 
 const router = createMemoryRouter([
   {
@@ -72,10 +72,6 @@ const router = createMemoryRouter([
         element: <Onboarding />,
       },
       {
-        path: "/existingUserOnboarding",
-        element: <ExistingUserOnboarding />,
-      },
-      {
         path: "/localOnboarding",
         element: <LocalOnboarding />,
       },
@@ -102,6 +98,10 @@ function App() {
 
   const vscTheme = useVscTheme();
   const submenuContextProvidersMethods = useSubmenuContextProviders();
+
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
 
   return (
     <VscThemeContext.Provider value={vscTheme}>

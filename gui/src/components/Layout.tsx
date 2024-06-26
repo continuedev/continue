@@ -91,8 +91,6 @@ const DropdownPortalDiv = styled.div`
 
 const HIDE_FOOTER_ON_PAGES = [
   "/onboarding",
-  "/existingUserOnboarding",
-  "/onboarding",
   "/localOnboarding",
   "/apiKeyOnboarding",
 ];
