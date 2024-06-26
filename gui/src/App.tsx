@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -97,6 +98,10 @@ function App() {
 
   const vscTheme = useVscTheme();
   const submenuContextProvidersMethods = useSubmenuContextProviders();
+
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
 
   return (
     <VscThemeContext.Provider value={vscTheme}>
