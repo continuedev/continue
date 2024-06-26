@@ -30,6 +30,7 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson } from "./util/paths.js";
 import { Telemetry } from "./util/posthog.js";
 import { streamDiffLines } from "./util/verticalEdit.js";
+import IndexingQueue from "./indexing/IndexingQueue.js";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -43,6 +44,7 @@ export class Core {
   private abortedMessageIds: Set<string> = new Set();
 
   private selectedModelTitle: string | undefined;
+  private indexingQueue: IndexingQueue;
 
   private async config() {
     return this.configHandler.loadConfig();
@@ -76,6 +78,7 @@ export class Core {
     this.configHandler.onConfigUpdate(
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
+    this.indexingQueue = new IndexingQueue();
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     const indexingPauseToken = new PauseToken(
@@ -533,7 +536,7 @@ export class Core {
     });
     on("index/forceReIndex", async (msg) => {
       const dirs = msg.data ? [msg.data] : await this.ide.getWorkspaceDirs();
-      this.refreshCodebaseIndex(dirs);
+      this.indexingQueue.enqueue(() => this.refreshCodebaseIndex(dirs));
     });
     on("index/setPaused", (msg) => {
       new GlobalContext().update("indexingPaused", msg.data);
@@ -559,7 +562,7 @@ export class Core {
       dirs,
       this.indexingCancellationController.signal,
     )) {
-      this.messenger.request("indexProgress", update);
+      this.messenger.request("indexProgress", { ...update, queueLength: this.indexingQueue.getQueueLength() });
       this.indexingState = update;
     }
   }

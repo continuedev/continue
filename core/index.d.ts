@@ -38,6 +38,8 @@ export interface IndexingProgressUpdate {
   progress: number;
   desc: string;
   status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";
+  queueLength?: number;
+  currentTask?: number;
 }
 
 export type PromptTemplate =
@@ -854,9 +856,9 @@ export interface Config {
   embeddingsProvider?: EmbeddingsProviderDescription | EmbeddingsProvider;
   /** The model that Continue will use for tab autocompletions. */
   tabAutocompleteModel?:
-    | CustomLLM
-    | ModelDescription
-    | (CustomLLM | ModelDescription)[];
+  | CustomLLM
+  | ModelDescription
+  | (CustomLLM | ModelDescription)[];
   /** Options for tab autocomplete */
   tabAutocompleteOptions?: Partial<TabAutocompleteOptions>;
   /** UI styles customization */

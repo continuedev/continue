@@ -211,7 +211,9 @@ const IndexingProgressBar = ({
             <P>
               {hovered
                 ? "Click to pause"
-                : `Indexing (${Math.trunc(indexingState.progress * 100)}%)`}
+                : `Indexing ${indexingState.currentTask || 1}/${
+                    indexingState.queueLength || 1
+                  } (${Math.trunc(indexingState.progress * 100)}%)`}
             </P>
           </GridDiv>
           {tooltipPortalDiv &&
