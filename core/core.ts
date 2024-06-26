@@ -12,7 +12,6 @@ import {
   setupFreeTrialMode,
   setupLocalAfterFreeTrial,
   setupLocalMode,
-  setupOptimizedExistingUserMode,
 } from "./config/onboarding.js";
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
@@ -493,7 +492,7 @@ export class Core {
       Telemetry.capture("onboardingSelection", {
         mode,
       });
-      if (mode === "custom" || mode === "localExistingUser") {
+      if (mode === "custom") {
         return;
       }
       editConfigJson(
@@ -505,7 +504,6 @@ export class Core {
           ? setupLocalAfterFreeTrial
           : mode === "apiKeys"
           ? setupApiKeysMode
-          : setupOptimizedExistingUserMode,
       );
       this.configHandler.reloadConfig();
     });

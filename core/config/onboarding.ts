@@ -24,25 +24,6 @@ export function setupApiKeysMode(
   };
 }
 
-export function setupOptimizedExistingUserMode(
-  config: SerializedContinueConfig,
-): SerializedContinueConfig {
-  return {
-    ...config,
-    tabAutocompleteModel: {
-      title: "Tab Autocomplete",
-      provider: "free-trial",
-      model: TRIAL_FIM_MODEL,
-    },
-    embeddingsProvider: {
-      provider: "free-trial",
-    },
-    reranker: {
-      name: "free-trial",
-    },
-  };
-}
-
 export function setupLocalMode(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {
