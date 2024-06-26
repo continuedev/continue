@@ -39,9 +39,9 @@ export class Core {
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
   indexingState: IndexingProgressUpdate;
+  controlPlaneClient: ControlPlaneClient;
   private globalContext = new GlobalContext();
   private docsService = DocsService.getInstance();
-  private controlPlaneClient = new ControlPlaneClient();
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -71,6 +71,10 @@ export class Core {
   ) {
     this.indexingState = { status: "loading", desc: "loading", progress: 0 };
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
+    const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
+      silent: true,
+    });
+    this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,

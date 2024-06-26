@@ -11,22 +11,15 @@ import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
 
 export async function activateExtension(context: vscode.ExtensionContext) {
-  // context.subscriptions.push(new WorkOsAuthProvider(context));
-  // const session = await vscode.authentication.getSession("continue", [], {
-  //   createIfNone: true,
-  // });
-  // if (session) {
-  //   vscode.window.showInformationMessage(
-  //     `Welcome back ${session.account.label}`,
-  //   );
-  // }
-
   // Add necessary files
   getTsConfigPath();
 
   // Register commands and providers
   registerQuickFixProvider();
   setupInlineTips(context);
+
+  // Register auth provider
+  context.subscriptions.push(new WorkOsAuthProvider(context));
 
   const vscodeExtension = new VsCodeExtension(context);
 

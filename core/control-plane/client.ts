@@ -4,6 +4,14 @@ import {
   RerankerDescription,
 } from "..";
 
+export interface ControlPlaneSessionInfo {
+  accessToken: string;
+  account: {
+    label: string;
+    id: string;
+  };
+}
+
 export interface AnalyticsConfig {
   host: string;
   apiKey: string;
@@ -23,7 +31,11 @@ export class ControlPlaneClient {
   private settings: ControlPlaneSettings | null = null;
   private static URL = "";
 
-  constructor() {}
+  constructor(
+    private readonly sessionInfoPromise: Promise<
+      ControlPlaneSessionInfo | undefined
+    >,
+  ) {}
 
   public async getSettings(): Promise<ControlPlaneSettings> {
     return this.settings ?? (await this.fetchSettings());

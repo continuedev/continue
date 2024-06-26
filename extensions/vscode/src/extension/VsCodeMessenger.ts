@@ -297,5 +297,22 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
       ide.getGitHubAuthToken(),
     );
+    this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
+      const session = await vscode.authentication.getSession(
+        "continue",
+        [],
+        msg.data.silent ? { silent: true } : { createIfNone: true },
+      );
+      if (!session) {
+        return undefined;
+      }
+      return {
+        accessToken: session.accessToken,
+        account: {
+          id: session.account.id,
+          label: session.account.label,
+        },
+      };
+    });
   }
 }
