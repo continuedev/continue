@@ -4,11 +4,11 @@ Prompt (`.prompt`) files are an easy way to build and share LLM prompts with oth
 
 ## How to create a prompt file
 
-Below is a quick example of setting up a prompt file to write unit tests:s
+Below is a quick example of setting up a prompt file to write unit tests using Jest.
 
-1. Create a folder called `.prompts` at the top level of your workspace
-2. Add a file called `test.prompt` to this folder
-3. Write the following contents to `test.prompt` and save
+1. Create a folder called `.prompts/` at the top level of your repository.
+2. Add a file called `test.prompt` to this folder. The name of this file will be the name of the slash command you will use to generate your prompt.
+3. Write the following contents to `test.prompt` and save.
 
 ```
 temperature: 0.5
@@ -64,13 +64,9 @@ To add a system message, start the body with `<system></system>` tags like in th
 The body also supports templating with [Handlebars syntax](https://handlebarsjs.com/guide/). The following variables are currently available:
 
 - `input`: The full text from the input box in the sidebar that is sent along with the slash command
-- `currentFile`: The currently open file in your IDE
+- `diff`: The current git diff in your workspace
 
-#### Context providers
-
-The body of a .prompt file also supports any [context provider](../customization/context-providers.md) that you have added to your config by referencing the name of the context provider.
-
-For example, if you wanted to include the contents of the terminal in your prompt, then you would use `{{{terminal}}}` in your prompt file. If you wanted to use the "url" context provider to include the contents of https://github.com/continuedev/continue, you would use `{{{url "https://github.com/continuedev/continue"}}}`, where the second part is the argument to the context provider, separated by a space.
+We plan to add support soon for templating with all [context providers](../customization/context-providers.md).
 
 ## Feedback
 
