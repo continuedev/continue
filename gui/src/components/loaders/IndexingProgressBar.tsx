@@ -41,15 +41,12 @@ const FlexDiv = styled.div`
 `;
 
 const StatusHeading = styled.div`
-  color: ${lightGray};
   font-size: ${getFontSize() - 2.4}px;
+  color: ${lightGray};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-
-  @media (max-width: 400px) {
-    display: none;
-  }
+  font-weight: 500;
 `;
 
 const StatusInfo = styled.div`
@@ -153,20 +150,12 @@ const IndexingProgressBar = ({
           <StatusHeading>Continue is initializing</StatusHeading>
         </FlexDiv>
       ) : indexingState.status === "done" ? (
-        <FlexDiv data-tooltip-id="indexingDone_dot">
+        <FlexDiv>
           <BlinkingDot color={STATUS_COLORS.DONE}></BlinkingDot>
           <div>
             <StatusHeading>Index up to date</StatusHeading>
+            <StatusInfo>Click to force re-indexing</StatusInfo>
           </div>
-          {tooltipPortalDiv &&
-            ReactDOM.createPortal(
-              <StyledTooltip id="indexingDone_dot" place="top">
-                Index up to date
-                <br />
-                Click to force re-indexing
-              </StyledTooltip>,
-              tooltipPortalDiv,
-            )}
         </FlexDiv>
       ) : indexingState.status === "disabled" ? (
         <FlexDiv>
@@ -205,9 +194,9 @@ const IndexingProgressBar = ({
                 <ProgressBarFill completed={fillPercentage} />
               </ProgressBarWrapper>
 
-              <StatusHeading
-                style={{ fontSize: `${getFontSize() - 3}px` }}
-              >{`${Math.trunc(indexingState.progress * 100)}%`}</StatusHeading>
+              <StatusHeading>{`Indexing (${Math.trunc(
+                indexingState.progress * 100,
+              )}%)`}</StatusHeading>
             </FlexDiv>
 
             <StatusInfo>

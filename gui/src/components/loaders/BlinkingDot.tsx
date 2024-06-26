@@ -1,6 +1,6 @@
 import styled, { css, keyframes } from "styled-components";
 
-const DEFAULT_DIAMETER = 6;
+const DEFAULT_DIAMETER = 8;
 
 const blink = keyframes`
   0%, 100% {
@@ -13,7 +13,7 @@ const blink = keyframes`
 `;
 
 const blinkAnimation = css`
-  animation: ${blink} 3s infinite;
+  animation: ${blink} 1s infinite;
 `;
 
 const BlinkingDot = styled.div<{
@@ -26,7 +26,7 @@ const BlinkingDot = styled.div<{
   width: ${(props) => props.diameter ?? DEFAULT_DIAMETER}px;
   height: ${(props) => props.diameter ?? DEFAULT_DIAMETER}px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.75);
+  border: 1px solid #fff;
   margin: 0 2px;
   ${(props) => (props.shouldBlink ?? false) && blinkAnimation};
 `;
