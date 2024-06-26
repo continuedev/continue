@@ -67,7 +67,8 @@ export function setupLocalMode(
       model: "starcoder2:3b",
     },
     embeddingsProvider: {
-      provider: "transformers.js",
+      provider: "ollama",
+      model: "nomic-embed-text",
     },
     reranker: undefined,
   };
