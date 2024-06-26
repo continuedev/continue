@@ -63,7 +63,7 @@ function SetupLocalOrKeyDialog() {
         <Button
           onClick={() => {
             dispatch(setShowDialog(false));
-            ideMessenger.request("completeOnboarding", {
+            ideMessenger.request("selectedOnboardingPathAndHistory", {
               mode: "localAfterFreeTrial",
             });
             navigate("/localOnboarding");

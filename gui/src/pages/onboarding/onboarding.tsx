@@ -111,9 +111,10 @@ function Onboarding() {
           }
           disabled={selected < 0}
           onClick={() => {
-            ideMessenger.post("completeOnboarding", {
+            ideMessenger.post("selectedOnboardingPathAndHistory", {
               mode: ["apiKeys", "local"][selected] as any,
             });
+
             setLocalStorage("onboardingComplete", true);
 
             if (selected === 1) {
@@ -139,7 +140,7 @@ function Onboarding() {
           <GitHubSignInButton
             onComplete={async (token) => {
               setLocalStorage("onboardingComplete", true);
-              await ideMessenger.request("completeOnboarding", {
+              await ideMessenger.request("selectedOnboardingPathAndHistory", {
                 mode: "freeTrial",
               });
               navigate("/");
