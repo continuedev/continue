@@ -10,6 +10,10 @@ import {
 } from "../../components";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 
+export type CopyToTerminalButtonProps = {
+  children: string;
+};
+
 const StyledDiv = styled.div<{ clicked: boolean }>`
   padding-left: 8px;
   padding-right: 8px;
@@ -30,10 +34,10 @@ const StyledDiv = styled.div<{ clicked: boolean }>`
   }
 `;
 
-export function CopyToTerminalButton(props: { command: string }) {
+export function CopyToTerminalButton(props: CopyToTerminalButtonProps) {
   const [clicked, setClicked] = useState(false);
 
-  const id = `info-hover-${encodeURIComponent(props.command)}`;
+  const id = `info-hover-${encodeURIComponent(props.children)}`;
   const tooltipPortalDiv = document.getElementById("tooltip-portal-div");
 
   const ideMessenger = useContext(IdeMessengerContext);
@@ -49,10 +53,10 @@ export function CopyToTerminalButton(props: { command: string }) {
           style={{ border: `0.5px solid ${lightGray}` }}
           className="grid-cols-2"
           onClick={() => {
-            ideMessenger.ide.runCommand(props.command);
+            ideMessenger.ide.runCommand(props.children);
             setClicked(true);
             setTimeout(() => setClicked(false), 2000);
-            ideMessenger.post("copyText", { text: props.command });
+            ideMessenger.post("copyText", { text: props.children });
           }}
         >
           {clicked ? (
@@ -77,7 +81,7 @@ export function CopyToTerminalButton(props: { command: string }) {
                 backgroundColor: "transparent",
               }}
             >
-              {props.command}
+              {props.children}
             </code>
           </pre>
         </StyledDiv>

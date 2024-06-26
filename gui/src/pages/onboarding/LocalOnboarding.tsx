@@ -138,7 +138,7 @@ function LocalOnboarding() {
         <ArrowLeftIcon
           width="1.2em"
           height="1.2em"
-          onClick={() => navigate("/onboarding")}
+          onClick={() => navigate(-1)}
           className="inline-block cursor-pointer"
         />
       </div>
@@ -166,9 +166,9 @@ function LocalOnboarding() {
               latest open-source model trained by Meta.
             </p>
 
-            <CopyToTerminalButton
-              command={`ollama run ${DefaultLocalModels.Chat}`}
-            ></CopyToTerminalButton>
+            <CopyToTerminalButton>
+              {` ollama run ${DefaultLocalModels.Chat}`}
+            </CopyToTerminalButton>
           </div>
         )}
       </div>
@@ -188,9 +188,9 @@ function LocalOnboarding() {
               Hugging Face.
             </p>
 
-            <CopyToTerminalButton
-              command={`ollama run ${DefaultLocalModels.Autocomplete}`}
-            ></CopyToTerminalButton>
+            <CopyToTerminalButton>
+              {`ollama run ${DefaultLocalModels.Autocomplete}`}
+            </CopyToTerminalButton>
           </div>
         )}
       </div>
@@ -211,9 +211,9 @@ function LocalOnboarding() {
               on both short and long context tasks.
             </p>
 
-            <CopyToTerminalButton
-              command={`ollama pull ${DefaultLocalModels.Embeddings}`}
-            ></CopyToTerminalButton>
+            <CopyToTerminalButton>
+              {`ollama pull ${DefaultLocalModels.Embeddings}`}
+            </CopyToTerminalButton>
           </div>
         )}
       </div>
