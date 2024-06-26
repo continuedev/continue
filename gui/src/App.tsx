@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -11,12 +12,11 @@ import ErrorPage from "./pages/error";
 import GUI from "./pages/gui";
 import { default as Help, default as HelpPage } from "./pages/help";
 import History from "./pages/history";
-import LocalOnboarding from "./pages/localOnboarding";
 import MigrationPage from "./pages/migration";
 import MonacoPage from "./pages/monaco";
 import ApiKeyAutocompleteOnboarding from "./pages/onboarding/apiKeyAutocompleteOnboarding";
 import ApiKeyOnboarding from "./pages/onboarding/apiKeyOnboarding";
-import ExistingUserOnboarding from "./pages/onboarding/existingUserOnboarding";
+import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
 import Onboarding from "./pages/onboarding/onboarding";
 import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
@@ -72,10 +72,6 @@ const router = createMemoryRouter([
         element: <Onboarding />,
       },
       {
-        path: "/existingUserOnboarding",
-        element: <ExistingUserOnboarding />,
-      },
-      {
         path: "/localOnboarding",
         element: <LocalOnboarding />,
       },
@@ -102,6 +98,10 @@ function App() {
 
   const vscTheme = useVscTheme();
   const submenuContextProvidersMethods = useSubmenuContextProviders();
+
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
 
   return (
     <VscThemeContext.Provider value={vscTheme}>
