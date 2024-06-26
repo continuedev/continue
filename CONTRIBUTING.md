@@ -51,8 +51,7 @@ Continue is quickly adding features, and we'd love to hear which are the most im
 Continue is continuously improving, but a feature isn't complete until it is reflected in the documentation! If you see something out-of-date or missing, you can help by clicking "Edit this page" at the bottom of any page on [docs.continue.dev](https://docs.continue.dev).
 
 ## 🧑‍💻 Contributing Code
-
-> Please make PRs to the `preview` branch. We use this to first test changes in a pre-release version of the extension.
+> Please make PRs to the `dev` branch. We use this to first test changes in a pre-release version of the extension.
 
 ### Environment Setup
 
@@ -70,9 +69,9 @@ nvm use
 
 2. Clone your forked repository to your local machine. Use: `git clone https://github.com/YOUR_USERNAME/continue.git`
 
-3. Navigate to the cloned directory and switch to the **preview** branch. Execute: `git checkout preview`, then create your feature/fix branch from there, like so: `git checkout -b 123-my-feature-branch`
+3. Navigate to the cloned directory and switch to the **dev** branch. Execute: `git checkout dev`, then create your feature/fix branch from there, like so: `git checkout -b 123-my-feature-branch`
 
-4. When you're ready to submit your changes, send your pull request specifically to the **preview** branch.
+4. When you're ready to submit your changes, send your pull request specifically to the **dev** branch.
 
 #### VS Code
 
