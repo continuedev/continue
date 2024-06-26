@@ -6,11 +6,8 @@ import { setupCa } from "core/util/ca";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 import { getExtensionVersion } from "./util/util";
-import { cleanSlate } from "./util/cleanSlate";
 
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
-  cleanSlate(context);
-
   const { activateExtension } = await import("./activation/activate");
   try {
     return activateExtension(context);
