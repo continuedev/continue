@@ -504,7 +504,12 @@ export class Core {
           ? setupLocalAfterFreeTrial
           : mode === "apiKeys"
           ? setupApiKeysMode
+          : (config) => {
+              console.warn(`Invalid mode: ${mode}`);
+              return config;
+            },
       );
+
       this.configHandler.reloadConfig();
     });
 
