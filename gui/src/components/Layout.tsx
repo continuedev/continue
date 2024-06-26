@@ -202,7 +202,7 @@ const Layout = () => {
   useWebviewListener(
     "setupLocalModel",
     async () => {
-      ideMessenger.post("selectedOnboardingPathAndHistory", {
+      ideMessenger.post("completeOnboarding", {
         mode: "localAfterFreeTrial",
       });
       navigate("/localOnboarding");

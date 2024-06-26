@@ -488,17 +488,14 @@ export class Core {
       streamDiffLinesGenerator(this.configHandler, this.abortedMessageIds, msg),
     );
 
-    on("selectedOnboardingPathAndHistory", (msg) => {
+    on("completeOnboarding", (msg) => {
       const mode = msg.data.mode;
-
       Telemetry.capture("onboardingSelection", {
         mode,
       });
-
       if (mode === "custom" || mode === "localExistingUser") {
         return;
       }
-
       editConfigJson(
         mode === "local"
           ? setupLocalMode
@@ -510,7 +507,6 @@ export class Core {
           ? setupApiKeysMode
           : setupOptimizedExistingUserMode,
       );
-
       this.configHandler.reloadConfig();
     });
 

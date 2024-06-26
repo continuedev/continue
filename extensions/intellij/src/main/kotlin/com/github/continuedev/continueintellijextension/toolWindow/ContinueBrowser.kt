@@ -67,7 +67,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         "index/setPaused",
         "index/forceReIndex",
         "index/indexingProgressBarInitialized",
-        "selectedOnboardingPathAndHistory",
+        "completeOnboarding",
         "addAutocompleteModel"
     )
 
