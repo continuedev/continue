@@ -1,6 +1,7 @@
 import {
   Cog6ToothIcon,
   QuestionMarkCircleIcon,
+  UserCircleIcon,
 } from "@heroicons/react/24/outline";
 import { IndexingProgressUpdate } from "core";
 import { useContext, useEffect, useState } from "react";
@@ -14,6 +15,7 @@ import {
   vscInputBackground,
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
+import { useAuth } from "../hooks/useAuth";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -22,7 +24,7 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
-import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
+import { getFontSize, isJetBrains, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
@@ -227,6 +229,8 @@ const Layout = () => {
     status: "loading",
   });
 
+  const { session, logout, login } = useAuth();
+
   return (
     <LayoutTopDiv>
       <div
@@ -267,6 +271,25 @@ const Layout = () => {
                   )}
                 <IndexingProgressBar indexingState={indexingState} />
               </div>
+              {isJetBrains() || (
+                <HeaderButtonWithText
+                  text={
+                    session?.account
+                      ? `Logged in as ${session.account.label}`
+                      : "Click to login to Continue"
+                  }
+                  onClick={() => {
+                    if (session.account) {
+                      logout();
+                    } else {
+                      login();
+                    }
+                  }}
+                >
+                  <UserCircleIcon width="1.4em" height="1.4em" />
+                </HeaderButtonWithText>
+              )}
+
               <HeaderButtonWithText
                 text="Help"
                 onClick={() => {
