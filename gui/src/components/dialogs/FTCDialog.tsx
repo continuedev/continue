@@ -6,6 +6,7 @@ import { Button, Input } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 
 const GridDiv = styled.div`
   display: grid;
@@ -13,11 +14,6 @@ const GridDiv = styled.div`
   grid-gap: 8px;
   align-items: center;
 `;
-
-export const ftl = () => {
-  // const ftc = parseInt(localStorage.getItem("ftc"));
-  return 50;
-};
 
 function FTCDialog() {
   const navigate = useNavigate();
@@ -29,9 +25,9 @@ function FTCDialog() {
     <div className="p-4">
       <h3>Free Trial Limit Reached</h3>
       <p>
-        You've reached the free trial limit of {ftl()} free inputs. To keep
-        using Continue, you can either use your own API key, or use a local LLM.
-        To read more about the options, see our{" "}
+        You've reached the free trial limit of {FREE_TRIAL_LIMIT_REQUESTS} free
+        inputs. To keep using Continue, you can either use your own API key, or
+        use a local LLM. To read more about the options, see our{" "}
         <a href="https://docs.continue.dev/setup/overview" target="_blank">
           documentation
         </a>

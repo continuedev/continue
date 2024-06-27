@@ -9,7 +9,6 @@ import { CompletionProvider } from "./autocomplete/completionProvider.js";
 import { ConfigHandler } from "./config/handler.js";
 import {
   setupApiKeysMode,
-  setupBestExperienceMode,
   setupFreeTrialMode,
   setupLocalAfterFreeTrial,
   setupLocalMode,
@@ -516,10 +515,6 @@ export class Core {
 
         case "apiKeys":
           editConfigJsonCallback = setupApiKeysMode;
-          break;
-
-        case "bestExperience":
-          editConfigJsonCallback = setupBestExperienceMode;
           break;
 
         default:

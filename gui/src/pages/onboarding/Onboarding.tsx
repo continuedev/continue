@@ -1,17 +1,18 @@
 import {
   CheckBadgeIcon,
+  GiftIcon,
   Cog6ToothIcon,
   ComputerDesktopIcon,
 } from "@heroicons/react/24/outline";
 import { ToCoreFromIdeOrWebviewProtocol } from "core/protocol/core";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ftl } from "../../components/dialogs/FTCDialog";
 import GitHubSignInButton from "../../components/modelSelection/quickSetup/GitHubSignInButton";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { isJetBrains } from "../../util";
-import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
+import { setLocalStorage } from "../../util/localStorage";
 import { Div, StyledButton } from "./components";
+import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../../util/freeTrial";
 
 type OnboardingMode =
   ToCoreFromIdeOrWebviewProtocol["completeOnboarding"][0]["mode"];
@@ -20,6 +21,7 @@ function Onboarding() {
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
 
+  const [hasSignedIntoGh, setHasSignedIntoGh] = useState(false);
   const [selectedOnboardingMode, setSlectedOnboardingMode] = useState<
     OnboardingMode | undefined
   >(undefined);
@@ -28,7 +30,7 @@ function Onboarding() {
     setLocalStorage("onboardingComplete", true);
   }, []);
 
-  function handleContinueClick() {
+  function onSubmit() {
     ideMessenger.post("completeOnboarding", {
       mode: selectedOnboardingMode,
     });
@@ -47,12 +49,12 @@ function Onboarding() {
         navigate("/localOnboarding");
         break;
 
-      case "bestExperience":
-        navigate("/bestExperienceOnboarding");
+      case "apiKeys":
+        navigate("/apiKeysOnboarding");
         break;
 
-      case "apiKeys":
-        navigate("/apiKeyOnboarding");
+      case "freeTrial":
+        navigate("/");
         break;
 
       default:
@@ -61,29 +63,57 @@ function Onboarding() {
   }
 
   return (
-    <div className="p-2 max-w-96  mx-auto">
+    <div className="max-w-96  mx-auto leading-normal">
       <div className="leading-relaxed">
-        {getLocalStorage("ftc") > ftl() ? (
-          <>
-            <h1 className="text-center">Free trial limit reached</h1>
-            <p className="text-center">
-              To keep using Continue, please select a configuration option below
-            </p>
-          </>
-        ) : (
-          <>
-            <h1 className="text-center">Welcome to Continue</h1>
-            <p className="text-center ">
-              Let's find the setup that works best for you. You can update your
-              configuration after onboarding by clicking the
-              <Cog6ToothIcon className="inline-block h-5 w-5 align-middle px-1" />
-              icon in the bottom-right corner of Continue.
-            </p>
-          </>
-        )}
+        <h1 className="text-center">Welcome to Continue</h1>
+        <p className="text-center ">
+          Let's find the setup that works best for you. You can update your
+          configuration after onboarding by clicking the
+          <Cog6ToothIcon className="inline-block h-5 w-5 align-middle px-1" />
+          icon in the bottom-right corner of Continue.
+        </p>
       </div>
 
-      <div className="flex flex-col gap-6 py-8">
+      <div className="flex flex-col gap-6 pb-8 pt-4">
+        {(!hasPassedFTL() || isJetBrains()) && (
+          <Div
+            selected={selectedOnboardingMode === "freeTrial"}
+            onClick={() => setSlectedOnboardingMode("freeTrial")}
+          >
+            <h3>
+              <GiftIcon
+                width="1.4em"
+                height="1.4em"
+                className="align-middle pr-2"
+              />
+              Free trial
+            </h3>
+            <p>
+              Start your free trial of {FREE_TRIAL_LIMIT_REQUESTS} requests by
+              signing into GitHub.
+            </p>
+
+            <ul className="pl-4 ">
+              <li>
+                <b>Chat:</b> Llama 3 with Ollama, LM Studio, etc.
+              </li>
+              <li>
+                <b>Embeddings:</b> Nomic Embed
+              </li>
+              <li>
+                <b>Autocomplete:</b> Starcoder2 3B
+              </li>
+            </ul>
+
+            {!hasSignedIntoGh && (
+              <div className="flex justify-end">
+                <GitHubSignInButton
+                  onComplete={() => setHasSignedIntoGh(true)}
+                ></GitHubSignInButton>
+              </div>
+            )}
+          </Div>
+        )}
         <Div
           selected={selectedOnboardingMode === "local"}
           onClick={() => setSlectedOnboardingMode("local")}
@@ -100,7 +130,7 @@ function Onboarding() {
             No code will leave your computer, but less powerful models are used.
           </p>
 
-          <ul className="pl-4 space-y-2">
+          <ul className="pl-4 ">
             <li>
               <b>Chat:</b> Llama 3 with Ollama, LM Studio, etc.
             </li>
@@ -114,8 +144,8 @@ function Onboarding() {
         </Div>
 
         <Div
-          selected={selectedOnboardingMode === "bestExperience"}
-          onClick={() => setSlectedOnboardingMode("bestExperience")}
+          selected={selectedOnboardingMode === "apiKeys"}
+          onClick={() => setSlectedOnboardingMode("apiKeys")}
         >
           <h3>
             <CheckBadgeIcon
@@ -123,41 +153,16 @@ function Onboarding() {
               height="1.4em"
               className="align-middle pr-2"
             />
-            Best possible experience
-          </h3>
-          <p>The most powerful models available.</p>
-
-          <ul className="pl-4 space-y-2">
-            <li>
-              <b>Chat:</b> Claude 3.5 Sonnet
-            </li>
-            <li>
-              <b>Embeddings:</b> Voyage Code 2
-            </li>
-            <li>
-              <b>Autocomplete:</b> Codestral
-            </li>
-          </ul>
-        </Div>
-
-        <Div
-          selected={selectedOnboardingMode === "apiKeys"}
-          onClick={() => setSlectedOnboardingMode("apiKeys")}
-        >
-          <h3>
-            <Cog6ToothIcon
-              width="1.4em"
-              height="1.4em"
-              className="align-middle pr-2"
-            />
-            Choose a chat model
+            Best experience
           </h3>
           <p>
-            Choose a chat model from OpenAI, Mistral, or any other provider.
+            Start with the most powerful models available, or customize your own
+            configuration.
           </p>
-          <ul className="pl-4 space-y-2">
+
+          <ul className="pl-4 ">
             <li>
-              <b>Chat:</b> Your choice
+              <b>Chat:</b> Claude 3.5 Sonnet
             </li>
             <li>
               <b>Embeddings:</b> Voyage Code 2
@@ -170,31 +175,10 @@ function Onboarding() {
       </div>
 
       <div className="flex">
-        <StyledButton
-          disabled={!selectedOnboardingMode}
-          onClick={handleContinueClick}
-        >
+        <StyledButton disabled={!selectedOnboardingMode} onClick={onSubmit}>
           Continue
         </StyledButton>
       </div>
-
-      {(getLocalStorage("ftc") < ftl() || isJetBrains()) && (
-        <>
-          <hr className="w-full my-12"></hr>
-
-          <p className="text-center">
-            OR sign in with GitHub to try 25 free requests
-          </p>
-          <GitHubSignInButton
-            onComplete={async (token) => {
-              await ideMessenger.request("completeOnboarding", {
-                mode: "freeTrial",
-              });
-              navigate("/");
-            }}
-          ></GitHubSignInButton>
-        </>
-      )}
     </div>
   );
 }

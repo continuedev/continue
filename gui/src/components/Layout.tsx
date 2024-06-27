@@ -26,11 +26,11 @@ import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
-import { ftl } from "./dialogs/FTCDialog";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import ModelSelect from "./modelSelection/ModelSelect";
 import PostHogPageView from "./PosthogPageView";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -92,7 +92,7 @@ const DropdownPortalDiv = styled.div`
 const HIDE_FOOTER_ON_PAGES = [
   "/onboarding",
   "/localOnboarding",
-  "/apiKeyOnboarding",
+  "/apiKeysOnboarding",
 ];
 
 const Layout = () => {
@@ -174,7 +174,7 @@ const Layout = () => {
   useWebviewListener(
     "addApiKey",
     async () => {
-      navigate("/apiKeyOnboarding");
+      navigate("/apiKeysOnboarding");
     },
     [navigate],
   );
@@ -262,7 +262,7 @@ const Layout = () => {
                   defaultModel?.provider === "free-trial" && (
                     <ProgressBar
                       completed={parseInt(localStorage.getItem("ftc") || "0")}
-                      total={ftl()}
+                      total={FREE_TRIAL_LIMIT_REQUESTS}
                     />
                   )}
                 <IndexingProgressBar indexingState={indexingState} />

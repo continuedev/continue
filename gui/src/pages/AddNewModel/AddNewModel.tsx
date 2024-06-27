@@ -103,7 +103,8 @@ function AddNewModel() {
           onClick={() => {
             setProvidersSelected((prev) => !prev);
           }}
-        ></Toggle>
+        />
+
         {providersSelected ? (
           <>
             <div className="text-center">

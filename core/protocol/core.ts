@@ -128,11 +128,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     {
       mode:
         | "local"
-        | "apiKeys"
         | "custom"
         | "freeTrial"
         | "localAfterFreeTrial"
-        | "bestExperience";
+        | "apiKeys";
     },
     void,
   ];

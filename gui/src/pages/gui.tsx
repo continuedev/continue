@@ -27,7 +27,6 @@ import {
   vscBackground,
   vscForeground,
 } from "../components";
-import { ftl } from "../components/dialogs/FTCDialog";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
@@ -55,6 +54,7 @@ import {
   isMetaEquivalentKeyPressed,
 } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -246,7 +246,7 @@ function GUI(props: GUIProps) {
         if (u) {
           setLocalStorage("ftc", u + 1);
 
-          if (u >= ftl()) {
+          if (u >= FREE_TRIAL_LIMIT_REQUESTS) {
             navigate("/onboarding");
             posthog?.capture("ftc_reached");
             return;

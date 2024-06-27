@@ -1,5 +1,4 @@
 import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button, Input, SecondaryButton, vscForeground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { isJetBrains } from "../../../util";
@@ -11,7 +10,6 @@ interface GitHubSignInButtonProps {
 
 function GitHubSignInButton(props: GitHubSignInButtonProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const navigate = useNavigate();
 
   const [jbGhAuthToken, setJbGhAuthToken] = useState("");
 
@@ -73,7 +71,7 @@ function GitHubSignInButton(props: GitHubSignInButtonProps) {
         }}
         className="grid grid-flow-col items-center gap-2"
       >
-        <svg viewBox="0 0 98 96" height={24} xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 98 96" height={16} xmlns="http://www.w3.org/2000/svg">
           <path
             fill-rule="evenodd"
             clip-rule="evenodd"

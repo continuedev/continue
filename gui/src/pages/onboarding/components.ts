@@ -24,8 +24,7 @@ export const Div = styled.div<{
   border: 1px solid ${lightGray};
   border-radius: ${defaultBorderRadius};
   transition: all 0.5s;
-  padding-left: 16px;
-  padding-right: 16px;
+  padding: 8px 16px;
 
   &:hover {
     ${(props) => (props.selected ? "" : `background-color: ${lightGray}22;`)}

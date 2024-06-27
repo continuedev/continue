@@ -16,10 +16,9 @@ import { useVscTheme } from "./hooks/useVscTheme";
 import GUI from "./pages/gui";
 import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
 import ApiKeyAutocompleteOnboarding from "./pages/onboarding/apiKeyAutocompleteOnboarding";
-import ApiKeyOnboarding from "./pages/onboarding/apiKeyOnboarding";
 import Onboarding from "./pages/onboarding/Onboarding";
 import Stats from "./pages/stats";
-import BestExperienceOnboarding from "./pages/onboarding/BestExperienceOnboarding";
+import ApiKeysOnboarding from "./pages/onboarding/ApiKeysOnboarding";
 
 const router = createMemoryRouter([
   {
@@ -80,12 +79,8 @@ const router = createMemoryRouter([
         element: <MigrationPage />,
       },
       {
-        path: "/bestExperienceOnboarding",
-        element: <BestExperienceOnboarding />,
-      },
-      {
-        path: "/apiKeyOnboarding",
-        element: <ApiKeyOnboarding />,
+        path: "/apiKeysOnboarding",
+        element: <ApiKeysOnboarding />,
       },
       {
         path: "/apiKeyAutocompleteOnboarding",
