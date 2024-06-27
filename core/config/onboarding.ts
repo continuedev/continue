@@ -8,6 +8,7 @@ export function setupBestExperienceMode(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {
   return {
+    ...config,
     models: config.models.filter((model) => model.provider !== "free-trial"),
     embeddingsProvider: {
       provider: "free-trial",

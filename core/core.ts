@@ -364,20 +364,20 @@ export class Core {
       const model =
         config.models.find((model) => model.title === msg.data.title) ??
         config.models.find((model) => model.title?.startsWith(msg.data.title));
-      if (model) {
-        return model.listModels();
-      } else {
-        if (msg.data.title === "Ollama") {
-          try {
+      try {
+        if (model) {
+          return model.listModels();
+        } else {
+          if (msg.data.title === "Ollama") {
             const models = await new Ollama({ model: "" }).listModels();
             return models;
-          } catch (e) {
-            console.warn(`Error listing Ollama models: ${e}`);
+          } else {
             return undefined;
           }
-        } else {
-          return undefined;
         }
+      } catch (e) {
+        console.warn(`Error listing Ollama models: ${e}`);
+        return undefined;
       }
     });
 
