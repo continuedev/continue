@@ -10,7 +10,6 @@ export const StyledButton = styled(Button)<{ blurColor?: string }>`
   background-color: transparent;
   color: ${vscForeground};
   border: 1px solid ${lightGray}cc;
-  cursor: pointer;
 
   &:hover {
     border: 1px solid ${lightGray};
