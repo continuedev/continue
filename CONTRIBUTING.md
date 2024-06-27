@@ -50,6 +50,29 @@ Continue is quickly adding features, and we'd love to hear which are the most im
 
 Continue is continuously improving, but a feature isn't complete until it is reflected in the documentation! If you see something out-of-date or missing, you can help by clicking "Edit this page" at the bottom of any page on [docs.continue.dev](https://docs.continue.dev).
 
+### Running the Documentation Server Locally
+
+You can run the documentation server locally using either of the following methods:
+
+#### Method 1: NPM Script
+
+1. Open your terminal and navigate to the root directory of the project.
+
+2. Run the following command to start the documentation server:
+   ```bash
+   npm run start --prefix docs
+   ```
+
+#### Method 2: VS Code Task
+
+1. Open VS Code in the root directory of the project.
+
+2. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task`.
+
+3. Look for the `docs:start` task and select it.
+
+This will start a local server and you can see the documentation rendered in your default browser, typically accessible at `http://localhost:3000`.
+
 ## 🧑‍💻 Contributing Code
 
 > Please make PRs to the `preview` branch. We use this to first test changes in a pre-release version of the extension.
