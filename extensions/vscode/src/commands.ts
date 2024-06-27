@@ -289,7 +289,12 @@ const commandsMap: (
 
       if (text.length > 0 || quickPickItems.length === 0) {
         sidebar.webviewProtocol.request("incrementFtc", undefined);
-        await verticalDiffManager.streamEdit(text, defaultModelTitle);
+        await verticalDiffManager.streamEdit(
+          text,
+          defaultModelTitle,
+          undefined,
+          previousInput,
+        );
       } else {
         // Pick context first
         const selectedProviders = await vscode.window.showQuickPick(
@@ -335,7 +340,12 @@ const commandsMap: (
             text;
 
           sidebar.webviewProtocol.request("incrementFtc", undefined);
-          await verticalDiffManager.streamEdit(text, defaultModelTitle);
+          await verticalDiffManager.streamEdit(
+            text,
+            defaultModelTitle,
+            undefined,
+            previousInput,
+          );
         }
       }
     },
