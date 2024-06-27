@@ -22,6 +22,7 @@ export default function ModelProviderTag({ tag }: ModelProviderTagProps) {
   return (
     <span
       style={{
+        fontSize: "0.9em",
         backgroundColor: `${MODEL_PROVIDER_TAG_COLORS[tag]}55`,
         color: "white",
         padding: "2px 4px",
