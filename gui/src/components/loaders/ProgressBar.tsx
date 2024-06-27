@@ -8,8 +8,8 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import { getFontSize } from "../../util";
-import { ftl } from "../dialogs/FTCDialog";
 import QuickModelSetup from "../modelSelection/quickSetup/QuickModelSetup";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 
 const ProgressBarWrapper = styled.div`
   width: 100px;
@@ -96,7 +96,7 @@ const ProgressBar = ({ completed, total }: ProgressBarProps) => {
       {tooltipPortalDiv &&
         ReactDOM.createPortal(
           <StyledTooltip id="usage_progress_bar" place="top">
-            {`Click to use your own API key or local LLM (required after ${ftl()} inputs)`}
+            {`Click to use your own API key or local LLM (required after ${FREE_TRIAL_LIMIT_REQUESTS} inputs)`}
           </StyledTooltip>,
           tooltipPortalDiv,
         )}
