@@ -24,10 +24,9 @@ const sidebars = {
       collapsed: true,
       items: [
         "setup/overview",
+        "setup/configuration",
         "setup/select-provider",
         "setup/select-model",
-        "setup/configuration",
-        "setup/examples",
       ],
     },
     {
