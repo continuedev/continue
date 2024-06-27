@@ -17,9 +17,9 @@ import GUI from "./pages/gui";
 import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
 import ApiKeyAutocompleteOnboarding from "./pages/onboarding/apiKeyAutocompleteOnboarding";
 import ApiKeyOnboarding from "./pages/onboarding/apiKeyOnboarding";
-import Onboarding from "./pages/onboarding/onboarding";
+import Onboarding from "./pages/onboarding/Onboarding";
 import Stats from "./pages/stats";
-import { useEffect } from "react";
+import BestExperienceOnboarding from "./pages/onboarding/BestExperienceOnboarding";
 
 const router = createMemoryRouter([
   {
@@ -78,6 +78,10 @@ const router = createMemoryRouter([
       {
         path: "/migration",
         element: <MigrationPage />,
+      },
+      {
+        path: "/bestExperienceOnboarding",
+        element: <BestExperienceOnboarding />,
       },
       {
         path: "/apiKeyOnboarding",

@@ -4,6 +4,20 @@ import { FREE_TRIAL_MODELS } from "./default.js";
 export const TRIAL_FIM_MODEL = "codestral-latest";
 export const ONBOARDING_LOCAL_MODEL_TITLE = "Ollama";
 
+export function setupBestExperienceMode(
+  config: SerializedContinueConfig,
+): SerializedContinueConfig {
+  return {
+    models: config.models.filter((model) => model.provider !== "free-trial"),
+    embeddingsProvider: {
+      provider: "free-trial",
+    },
+    reranker: {
+      name: "free-trial",
+    },
+  };
+}
+
 export function setupApiKeysMode(
   config: SerializedContinueConfig,
 ): SerializedContinueConfig {
