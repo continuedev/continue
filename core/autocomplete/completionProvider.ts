@@ -441,7 +441,8 @@ export class CompletionProvider {
     if (
       !shownGptClaudeWarning &&
       nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
-      !llm.model.includes("deepseek")
+      !llm.model.includes("deepseek") &&
+      !llm.model.includes("codestral")
     ) {
       shownGptClaudeWarning = true;
       throw new Error(
