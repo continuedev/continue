@@ -9,7 +9,8 @@ import {
 export const StyledButton = styled(Button)<{ blurColor?: string }>`
   background-color: transparent;
   color: ${vscForeground};
-  border: 0.5px solid ${lightGray};
+  border: 1px solid ${lightGray}cc;
+  cursor: pointer;
 
   &:hover {
     border: 1px solid ${lightGray};
@@ -27,7 +28,7 @@ export const Div = styled.div<{
   padding-right: 16px;
 
   &:hover {
-    background-color: ${lightGray}22;
+    ${(props) => (props.selected ? "" : `background-color: ${lightGray}22;`)}
     box-shadow: 0 0 4px 0px ${lightGray};
     cursor: pointer;
   }
@@ -35,7 +36,7 @@ export const Div = styled.div<{
   ${(props) =>
     props.selected &&
     `
-    background-color: ${lightGray}22;
+    background-color: ${lightGray}44;
     box-shadow: 0 0 4px 0px ${lightGray};
     `}
 `;
