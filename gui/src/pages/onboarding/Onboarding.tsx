@@ -1,3 +1,9 @@
+import {
+  CheckBadgeIcon,
+  Cog6ToothIcon,
+  ComputerDesktopIcon,
+} from "@heroicons/react/24/outline";
+import { ToCoreFromIdeOrWebviewProtocol } from "core/protocol/core";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ftl } from "../../components/dialogs/FTCDialog";
@@ -6,12 +12,6 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { isJetBrains } from "../../util";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { Div, StyledButton } from "./components";
-import {
-  ComputerDesktopIcon,
-  CheckBadgeIcon,
-  Cog6ToothIcon,
-} from "@heroicons/react/24/outline";
-import { ToCoreFromIdeOrWebviewProtocol } from "core/protocol/core";
 
 type OnboardingMode =
   ToCoreFromIdeOrWebviewProtocol["completeOnboarding"][0]["mode"];
@@ -163,7 +163,7 @@ function Onboarding() {
               <b>Embeddings:</b> Voyage Code 2
             </li>
             <li>
-              <b>Autocomplete:</b> Starcoder 7B via Fireworks AI
+              <b>Autocomplete:</b> Codestral
             </li>
           </ul>
         </Div>
@@ -178,7 +178,7 @@ function Onboarding() {
         </StyledButton>
       </div>
 
-      {(!getLocalStorage("onboardingComplete") || isJetBrains()) && (
+      {(getLocalStorage("ftc") < ftl() || isJetBrains()) && (
         <>
           <hr className="w-full my-12"></hr>
 
