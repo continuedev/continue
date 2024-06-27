@@ -1,7 +1,7 @@
 ---
 title: Codebase Retrieval
 description: Talk to your codebase
-keywords: [talk, embeddings, codebase, experimental]
+keywords: [talk, embeddings, reranker, codebase, experimental]
 ---
 
 # Codebase retrieval
@@ -213,9 +213,9 @@ export function modifyConfig(config: Config): Config {
 
 ## Reranking providers
 
-A reranking model improves the accuracy of codebase retrieval by breaking it into two stages. Instead of only using similarity search to go from all possible snippets to the top 10-20, we can instead get the top 100+ from similarity search and then use a more expensive model, the "reranker", to more accurately decide the top 10-20.
+The reranker plays a crucial role in refining the results retrieved from your codebase. It processes the initial set of results obtained through embeddings-based retrieval, improving their relevance and accuracy for your queries.
 
-Because reranking requires 100+ simultaneous invocations of a model, there are not currently any local rerankers that Continue supports. However if you are able to use any of the below options, it is strongly recommended, as they are cheap but will drastically improve the quality of codebase retrieval.
+Continue offers several reranking options: `cohere`, `voyage`, `llm`, and `free-trial`, which can be configured in `config.json`.
 
 ### Voyage AI
 
@@ -265,6 +265,18 @@ If you only have access to a single LLM, then you can use it as a reranker. This
 ```
 
 The `"modelTitle"` field must match one of the models in your "models" array in config.json.
+
+### Free Trial (Voyage AI)
+
+Continue offers a free trial of Voyage AI's reranking model.
+
+```json title="~/.continue/config.json"
+{
+  "reranker": {
+    "name": "free-trial"
+  }
+}
+```
 
 ## Customizing which files are indexed
 
