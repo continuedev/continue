@@ -209,7 +209,21 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
     this.editor.setDecorations(indexDecorationType, []);
   }
 
-  clear(accept: boolean) {
+  public getLineDeltaBeforeLine(line: number) {
+    //Returns the number of lines removed from a file when the diff currently active is closed 
+    let totalLineDelta = 0
+    for (const range of this.greenDecorationManager.getRanges().sort((a, b) => a.start.line - b.start.line)) {
+      if (range.start.line > line){
+        break
+      }
+
+      totalLineDelta -= range.end.line - range.start.line + 1
+    }
+
+    return totalLineDelta
+  }
+
+  async clear(accept: boolean) {
     vscode.commands.executeCommand(
       "setContext",
       "continue.streamingDiff",
@@ -225,7 +239,7 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
 
     this.editorToVerticalDiffCodeLens.delete(this.filepath);
 
-    this.editor.edit(
+    await this.editor.edit(
       (editBuilder) => {
         for (const range of rangesToDelete) {
           editBuilder.delete(
@@ -370,6 +384,11 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
     this.greenDecorationManager.shiftDownAfterLine(startLine, offset);
 
     // Shift the codelens objects
+    this.shiftCodeLensObjects(startLine, offset)
+  }
+
+  private shiftCodeLensObjects(startLine: number, offset: number){  
+    // Shift the codelens objects
     const blocks =
       this.editorToVerticalDiffCodeLens
         .get(this.filepath)
@@ -383,5 +402,20 @@ export class VerticalPerLineDiffHandler implements vscode.Disposable {
     this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
 
     this.refreshCodeLens();
+  }
+
+  public updateLineDelta(filepath: string, startLine: number, lineDelta: number) {
+    // Retrieve the diff blocks for the given file
+    const blocks = this.editorToVerticalDiffCodeLens.get(filepath);
+    if (!blocks) {
+      return;
+    }
+
+    //update decorations
+    this.redDecorationManager.shiftDownAfterLine(startLine, lineDelta);
+    this.greenDecorationManager.shiftDownAfterLine(startLine, lineDelta);
+
+    //update code lens
+    this.shiftCodeLensObjects(startLine, lineDelta)
   }
 }
