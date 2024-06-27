@@ -3,7 +3,6 @@ import {
   Button,
   defaultBorderRadius,
   lightGray,
-  vscButtonBackground,
   vscForeground,
 } from "../../components";
 
@@ -11,19 +10,15 @@ export const StyledButton = styled(Button)<{ blurColor?: string }>`
   margin-left: auto;
   background-color: transparent;
   color: ${vscForeground};
-  border: 0.5px solid ${lightGray};
+  border: 1px solid ${lightGray}cc;
 
   &:hover {
-    ${(props) =>
-      !props.disabled &&
-      `box-shadow: 0 0 4px 4px ${props.blurColor ?? vscButtonBackground};`}
+    border: 1px solid ${lightGray};
+    background-color: ${lightGray}22;
   }
 `;
 
 export const Div = styled.div<{
-  color: string;
-  disabled: boolean;
-  hovered: boolean;
   selected: boolean;
 }>`
   border: 1px solid ${lightGray};
@@ -32,22 +27,16 @@ export const Div = styled.div<{
   padding-left: 16px;
   padding-right: 16px;
 
-  ${(props) =>
-    props.disabled
-      ? `
-    opacity: 0.5;
-    `
-      : props.hovered || props.selected
-      ? `
-    border: 1px solid ${props.color};
-    background-color: ${props.color}22;
-    cursor: pointer;`
-      : ""}
+  &:hover {
+    ${(props) => (props.selected ? "" : `background-color: ${lightGray}22;`)}
+    box-shadow: 0 0 4px 0px ${lightGray};
+    cursor: pointer;
+  }
 
   ${(props) =>
-    props.selected
-      ? `
-    box-shadow: 0 0 4px 0px ${props.color};
+    props.selected &&
     `
-      : ""}
+    background-color: ${lightGray}44;
+    box-shadow: 0 0 4px 0px ${lightGray};
+    `}
 `;
