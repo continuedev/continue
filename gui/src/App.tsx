@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
@@ -16,6 +15,7 @@ import MigrationPage from "./pages/migration";
 import MonacoPage from "./pages/monaco";
 import ApiKeyAutocompleteOnboarding from "./pages/onboarding/apiKeyAutocompleteOnboarding";
 import ApiKeyOnboarding from "./pages/onboarding/apiKeyOnboarding";
+import BestExperienceOnboarding from "./pages/onboarding/BestExperienceOnboarding";
 import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
 import Onboarding from "./pages/onboarding/onboarding";
 import SettingsPage from "./pages/settings";
@@ -78,6 +78,10 @@ const router = createMemoryRouter([
       {
         path: "/migration",
         element: <MigrationPage />,
+      },
+      {
+        path: "/bestExperienceOnboarding",
+        element: <BestExperienceOnboarding />,
       },
       {
         path: "/apiKeyOnboarding",
