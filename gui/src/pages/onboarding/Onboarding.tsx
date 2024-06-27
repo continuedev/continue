@@ -171,7 +171,7 @@ function Onboarding() {
               <b>Embeddings:</b> Voyage Code 2
             </li>
             <li>
-              <b>Autocomplete:</b> Starcoder 7B via Fireworks AI
+              <b>Autocomplete:</b> Codestral
             </li>
           </ul>
         </Div>
@@ -208,7 +208,7 @@ function Onboarding() {
         </div>
       </div>
 
-      {(!getLocalStorage("onboardingComplete") || isJetBrains()) && (
+      {(getLocalStorage("ftc") < ftl() || isJetBrains()) && (
         <>
           <hr className="w-full my-12"></hr>
 
