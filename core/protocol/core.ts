@@ -131,7 +131,8 @@ export type ToCoreFromIdeOrWebviewProtocol = {
         | "apiKeys"
         | "custom"
         | "freeTrial"
-        | "localAfterFreeTrial";
+        | "localAfterFreeTrial"
+        | "bestExperience";
     },
     void,
   ];

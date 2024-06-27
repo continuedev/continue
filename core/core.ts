@@ -9,6 +9,7 @@ import { CompletionProvider } from "./autocomplete/completionProvider.js";
 import { ConfigHandler } from "./config/handler.js";
 import {
   setupApiKeysMode,
+  setupBestExperienceMode,
   setupFreeTrialMode,
   setupLocalAfterFreeTrial,
   setupLocalMode,
@@ -489,26 +490,44 @@ export class Core {
 
     on("completeOnboarding", (msg) => {
       const mode = msg.data.mode;
+
       Telemetry.capture("onboardingSelection", {
         mode,
       });
+
       if (mode === "custom") {
         return;
       }
-      editConfigJson(
-        mode === "local"
-          ? setupLocalMode
-          : mode === "freeTrial"
-          ? setupFreeTrialMode
-          : mode === "localAfterFreeTrial"
-          ? setupLocalAfterFreeTrial
-          : mode === "apiKeys"
-          ? setupApiKeysMode
-          : (config) => {
-              console.warn(`Invalid mode: ${mode}`);
-              return config;
-            },
-      );
+
+      let editConfigJsonCallback: Parameters<typeof editConfigJson>[0];
+
+      switch (mode) {
+        case "local":
+          editConfigJsonCallback = setupLocalMode;
+          break;
+
+        case "freeTrial":
+          editConfigJsonCallback = setupFreeTrialMode;
+          break;
+
+        case "localAfterFreeTrial":
+          editConfigJsonCallback = setupLocalAfterFreeTrial;
+          break;
+
+        case "apiKeys":
+          editConfigJsonCallback = setupApiKeysMode;
+          break;
+
+        case "bestExperience":
+          editConfigJsonCallback = setupBestExperienceMode;
+          break;
+
+        default:
+          console.error(`Invalid mode: ${mode}`);
+          editConfigJsonCallback = (config) => config;
+      }
+
+      editConfigJson(editConfigJsonCallback);
 
       this.configHandler.reloadConfig();
     });
