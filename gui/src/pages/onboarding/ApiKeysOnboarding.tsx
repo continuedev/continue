@@ -76,7 +76,7 @@ function ApiKeysOnboarding() {
         />
       </div>
 
-      <div className="pb-8 text-center">
+      <div className="pb-4 text-center">
         <h1>Model setup</h1>
         <p>
           Choose between our default configuration that includes the best models
@@ -95,33 +95,49 @@ function ApiKeysOnboarding() {
 
       {isBestToggle && (
         <form onSubmit={handleSubmit} className="pt-8">
-          <label className="block mb-8">
-            Mistral API Key
-            <Input
-              className="w-full"
-              placeholder="Enter your Mistral API Key"
-              value={mistralApiKey}
-              onChange={(e) => setMistralApiKey(e.target.value)}
-            />
-            <HelperText>
-              <a href={mistral.apiKeyUrl}>Click here</a> to create a Mistral API
-              key
-            </HelperText>
-          </label>
+          <div>
+            <h2>
+              Autocomplete model - <i>{codestral.title}</i>
+            </h2>
 
-          <label className="block mb-4">
-            Anthropic API Key
-            <Input
-              className="w-full"
-              placeholder="Enter your Anthropic API Key"
-              value={anthropicApiKey}
-              onChange={(e) => setAnthropicApiKey(e.target.value)}
-            />
-            <HelperText>
-              <a href={anthropic.apiKeyUrl}>Click here</a> to create an
-              Anthropic API key
-            </HelperText>
-          </label>
+            <p className="pb-6">{codestral.description}</p>
+
+            <label className="block pb-8">
+              Mistral API Key (<i>{codestral.title}</i>)
+              <Input
+                className="w-full"
+                placeholder="Enter your Mistral API Key"
+                value={mistralApiKey}
+                onChange={(e) => setMistralApiKey(e.target.value)}
+              />
+              <HelperText>
+                <a href={mistral.apiKeyUrl}>Click here</a> to create a Mistral
+                API key
+              </HelperText>
+            </label>
+          </div>
+
+          <div>
+            <h2>
+              Autocomplete model - <i>{claude35Sonnet.title}</i>
+            </h2>
+
+            <p className="pb-6">{claude35Sonnet.description}</p>
+
+            <label className="block pb-4">
+              Anthropic API Key
+              <Input
+                className="w-full"
+                placeholder="Enter your Anthropic API Key"
+                value={anthropicApiKey}
+                onChange={(e) => setAnthropicApiKey(e.target.value)}
+              />
+              <HelperText>
+                <a href={anthropic.apiKeyUrl}>Click here</a> to create an
+                Anthropic API key
+              </HelperText>
+            </label>
+          </div>
 
           <div className="flex flex-col justify-end">
             <StyledButton type="submit" disabled={!isFormComplete}>
