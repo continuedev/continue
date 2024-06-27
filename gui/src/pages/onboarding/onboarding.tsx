@@ -106,14 +106,15 @@ function Onboarding() {
             selected === 0
               ? "#be841b"
               : selected === 1
-                ? greenButtonColor
-                : "#1b84be"
+              ? greenButtonColor
+              : "#1b84be"
           }
           disabled={selected < 0}
           onClick={() => {
             ideMessenger.post("completeOnboarding", {
               mode: ["apiKeys", "local"][selected] as any,
             });
+
             setLocalStorage("onboardingComplete", true);
 
             if (selected === 1) {

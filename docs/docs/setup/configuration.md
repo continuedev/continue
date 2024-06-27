@@ -6,6 +6,80 @@ keywords: [configure, llm, provider]
 
 # Configuration
 
+Want a quick and easy setup for Continue? We've got you covered with some sample `config.json` files for different scenarios. Just copy and paste them into your `config.json` by clicking the gear icon at the bottom right of the Continue sidebar.
+
+## Best Overall Experience
+
+This setup uses Claude 3.5 Sonnet for chatting, Codestral for autocomplete, and Voyage AI for embeddings and reranking.
+
+**What You Need:**
+
+1. Get a Codestral API key from [Mistral AI's La Plateforme](https://console.mistral.ai/codestral)
+2. Get an Anthropic API key from [Anthropic Console](https://console.anthropic.com/account/keys)
+3. Replace `[CODESTRAL_API_KEY]` and `[ANTHROPIC_API_KEY]` with the keys you got from the above links.
+
+:::note
+This example uses a free trial for embeddings and reranking, forwarding requests via ContinueDev proxy. For direct service, get a Voyage AI API key and update the `provider` and `apiKey` fields. See the [config reference for Voyage AI](../walkthroughs//codebase-embeddings.md#voyage-ai) for details on how to set this up.
+:::
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "title": "Claude 3.5 Sonnet",
+      "provider": "anthropic",
+      "model": "claude-3-5-sonnet-20240620",
+      "apiKey": "[ANTHROPIC_API_KEY]"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Codestral",
+    "provider": "mistral",
+    "model": "codestral-latest",
+    "apiKey": "[CODESTRAL_API_KEY]"
+  },
+  "embeddingsProvider": {
+    "provider": "free-trial"
+  },
+  "reranker": {
+    "name": "free-trial"
+  }
+}
+```
+
+## Local and Offline Configuration
+
+This configuration leverages Ollama for all functionalities - chat, autocomplete, and embeddings - ensuring that no code is transmitted outside your machine.
+
+**What You Need:**
+
+1. Download Ollama from [Ollama's Official Site](https://ollama.ai)
+2. Pull the required models:
+   - For chat: `ollama pull llama3:8b`
+   - For autocomplete: `ollama pull starcoder2:3b`
+   - For embeddings: `ollama pull nomic-embed-text`
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "title": "Ollama",
+      "provider": "ollama",
+      "model": "AUTODETECT"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Starcoder 2 3b",
+    "provider": "ollama",
+    "model": "starcoder2:3b"
+  },
+  "embeddingsProvider": {
+    "provider": "ollama",
+    "model": "nomic-embed-text"
+  }
+}
+```
+
 ## Setting up chat models
 
 In `config.json`, you'll find the `models` property, a list of the models that you have saved to use with Continue:

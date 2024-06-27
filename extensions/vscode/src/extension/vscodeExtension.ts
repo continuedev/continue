@@ -166,10 +166,6 @@ export class VsCodeExtension {
     // from outside the window are also caught
     fs.watchFile(getConfigJsonPath(), { interval: 1000 }, async (stats) => {
       await this.configHandler.reloadConfig();
-
-      // Trigger a toast notification to provide UI feedback that config
-      // has been updated
-      vscode.window.showInformationMessage("Config updated");
     });
 
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
@@ -183,6 +179,12 @@ export class VsCodeExtension {
     vscode.workspace.onDidSaveTextDocument((event) => {
       // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
+
+      if (filepath === getConfigJsonPath()) {
+        // Trigger a toast notification to provide UI feedback that config
+        // has been updated
+        vscode.window.showInformationMessage("Config updated");
+      }
 
       if (
         filepath.endsWith(".continuerc.json") ||

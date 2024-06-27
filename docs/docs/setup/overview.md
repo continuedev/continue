@@ -8,7 +8,6 @@ You will need to decide which models and providers you use for [chat](select-mod
 
 Learn more:
 
+- [Configuration](configuration.md)
 - [Select providers](select-provider.md)
 - [Select models](select-model.md)
-- [Configuration](configuration.md)
-- [Example `config.json`s](examples.md)

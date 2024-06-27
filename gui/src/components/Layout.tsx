@@ -30,6 +30,7 @@ import { ftl } from "./dialogs/FTCDialog";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import ModelSelect from "./modelSelection/ModelSelect";
+import PostHogPageView from "./PosthogPageView";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -89,8 +90,6 @@ const DropdownPortalDiv = styled.div`
 // #endregion
 
 const HIDE_FOOTER_ON_PAGES = [
-  "/onboarding",
-  "/existingUserOnboarding",
   "/onboarding",
   "/localOnboarding",
   "/apiKeyOnboarding",
@@ -250,12 +249,15 @@ const Layout = () => {
         />
 
         <GridDiv>
+          <PostHogPageView />
           <Outlet />
           <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
           {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
             <Footer>
-              <div className="mr-auto flex gap-2 items-center">
-                <ModelSelect />
+              <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
+                <div className="flex-shrink-0">
+                  <ModelSelect />
+                </div>
                 {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
                   defaultModel?.provider === "free-trial" && (
                     <ProgressBar
