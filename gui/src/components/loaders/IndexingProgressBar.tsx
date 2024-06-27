@@ -46,6 +46,10 @@ const StatusHeading = styled.div`
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+
+  @media (max-width: 400px) {
+    display: none;
+  }
 `;
 
 const StatusInfo = styled.div`
@@ -151,9 +155,9 @@ const IndexingProgressBar = ({
       ) : indexingState.status === "done" ? (
         <FlexDiv data-tooltip-id="indexingDone_dot">
           <BlinkingDot color={STATUS_COLORS.DONE}></BlinkingDot>
-          {/* <div>
+          <div>
             <StatusHeading>Index up to date</StatusHeading>
-          </div> */}
+          </div>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
               <StyledTooltip id="indexingDone_dot" place="top">
