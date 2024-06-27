@@ -124,12 +124,25 @@ function ModelCard(props: ModelCardProps) {
               }
         }
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div
+          className="mb-2"
+          style={{
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
           {window.vscMediaUrl && props.icon && (
             <img
               src={`${window.vscMediaUrl}/logos/${props.icon}`}
+              width="24px"
               height="24px"
-              style={{ marginRight: "10px" }}
+              style={{
+                borderRadius: "2px",
+                padding: "4px",
+                marginRight: "10px",
+                backgroundColor: "darkgray",
+                objectFit: "contain",
+              }}
             />
           )}
           <h3>{props.title}</h3>
