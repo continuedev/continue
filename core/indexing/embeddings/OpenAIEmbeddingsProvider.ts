@@ -15,11 +15,13 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
 
   private _getEndpoint() {
     if (!this.options.apiBase) {
-      throw new Error("No API base URL provided. Please set the 'apiBase' option in config.json");
+      throw new Error(
+        "No API base URL provided. Please set the 'apiBase' option in config.json",
+      );
     }
 
-    this.options.apiBase = this.options.apiBase.endsWith("/") 
-      ? this.options.apiBase 
+    this.options.apiBase = this.options.apiBase.endsWith("/")
+      ? this.options.apiBase
       : `${this.options.apiBase}/`;
 
     if (this.options.apiType === "azure") {
@@ -28,7 +30,7 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
         this.options.apiBase,
       );
     }
-    return new URL("embedding", this.options.apiBase);
+    return new URL("embeddings", this.options.apiBase);
   }
 
   async embed(chunks: string[]) {
