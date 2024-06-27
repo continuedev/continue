@@ -97,6 +97,28 @@ function ApiKeysOnboarding() {
         <form onSubmit={handleSubmit} className="pt-8">
           <div>
             <h2>
+              Chat model - <i>{claude35Sonnet.title}</i>
+            </h2>
+
+            <p className="pb-6">{claude35Sonnet.description}</p>
+
+            <label className="block pb-4">
+              Anthropic API Key
+              <Input
+                className="w-full"
+                placeholder="Enter your Anthropic API Key"
+                value={anthropicApiKey}
+                onChange={(e) => setAnthropicApiKey(e.target.value)}
+              />
+              <HelperText>
+                <a href={anthropic.apiKeyUrl}>Click here</a> to create an
+                Anthropic API key
+              </HelperText>
+            </label>
+          </div>
+
+          <div>
+            <h2>
               Autocomplete model - <i>{codestral.title}</i>
             </h2>
 
@@ -113,28 +135,6 @@ function ApiKeysOnboarding() {
               <HelperText>
                 <a href={mistral.apiKeyUrl}>Click here</a> to create a Mistral
                 API key
-              </HelperText>
-            </label>
-          </div>
-
-          <div>
-            <h2>
-              Autocomplete model - <i>{claude35Sonnet.title}</i>
-            </h2>
-
-            <p className="pb-6">{claude35Sonnet.description}</p>
-
-            <label className="block pb-4">
-              Anthropic API Key
-              <Input
-                className="w-full"
-                placeholder="Enter your Anthropic API Key"
-                value={anthropicApiKey}
-                onChange={(e) => setAnthropicApiKey(e.target.value)}
-              />
-              <HelperText>
-                <a href={anthropic.apiKeyUrl}>Click here</a> to create an
-                Anthropic API key
               </HelperText>
             </label>
           </div>
