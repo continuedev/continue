@@ -83,8 +83,8 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
     props.item.type === "contextProvider"
       ? props.item.id
       : props.item.type === "slashCommand"
-        ? props.item.id
-        : props.item.type;
+      ? props.item.id
+      : props.item.type;
 
   const iconClass = `${props.className} flex-shrink-0`;
 
@@ -120,9 +120,7 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
 
 const ItemsDiv = styled.div`
   border-radius: ${defaultBorderRadius};
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.05),
-    0px 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0px 10px 20px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
   overflow-x: hidden;
   overflow-y: auto;
@@ -242,6 +240,15 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
 
     if (item.contextProvider?.type === "query") {
+      // update editor to complete context provider title
+      const { tr } = props.editor.view.state;
+      const text = tr.doc.textBetween(0, tr.selection.from);
+      const partialText = text.slice(text.lastIndexOf("@") + 1);
+      const remainingText = item.title.slice(partialText.length);
+      props.editor.view.dispatch(
+        tr.insertText(remainingText, tr.selection.from),
+      );
+
       setSubMenuTitle(item.description);
       setQuerySubmenuItem(item);
       return;

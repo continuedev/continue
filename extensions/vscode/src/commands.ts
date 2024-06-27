@@ -70,7 +70,9 @@ async function addHighlightedCodeToContext(
       // }
       return;
     }
-    const range = new vscode.Range(selection.start, selection.end);
+    // adjust starting position to include indentation
+    const start = new vscode.Position(selection.start.line, 0);
+    const range = new vscode.Range(start, selection.end);
     const contents = editor.document.getText(range);
     const rangeInFileWithContents = {
       filepath: editor.document.uri.fsPath,

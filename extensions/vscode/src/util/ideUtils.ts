@@ -19,6 +19,8 @@ import {
   uriFromFilePath,
 } from "./vscode";
 
+import _ from "lodash";
+
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);
 
@@ -495,7 +497,9 @@ export class VsCodeIdeUtils {
 
             const scope = scopeResponse.scopes[0];
 
-            return await this.retrieveSource(scope.source ? scope : stackFrame);
+            return await this.retrieveSource(
+              scope.source && !_.isEmpty(scope.source) ? scope : stackFrame,
+            );
           }),
       );
 
@@ -530,7 +534,7 @@ export class VsCodeIdeUtils {
       return await this.readRangeInFile(
         sourceContainer.source.path,
         new vscode.Range(
-          sourceContainer.line - 3,
+          Math.max(0, sourceContainer.line - 3),
           0,
           sourceContainer.line + 2,
           0,
