@@ -100,6 +100,7 @@ export const FUNCTION_DECLARATION_NODE_TYPEs = [
   "function_definition",
   "function_item",
   "function_declaration",
+  "method_declaration",
 ];
 
 function constructClassDefinitionChunk(
