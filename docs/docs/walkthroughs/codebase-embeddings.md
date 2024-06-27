@@ -1,7 +1,7 @@
 ---
 title: Codebase Retrieval
 description: Talk to your codebase
-keywords: [talk, embeddings, codebase, experimental]
+keywords: [talk, embeddings, reranker, codebase, experimental]
 ---
 
 # Codebase retrieval
@@ -208,6 +208,27 @@ export function modifyConfig(config: Config): Config {
   };
 
   return config;
+}
+```
+
+## Reranker
+
+The reranker plays a crucial role in refining the results retrieved from your codebase. It processes the initial set of results obtained through embeddings-based retrieval, improving their relevance and accuracy for your queries.
+
+### Configuration
+
+Continue offers several reranking options: `cohere`, `voyage`, `llm`, and `free-trial`.
+To set up a reranker, add the following to your `config.json`:
+
+```json
+{
+  "reranker": {
+    "name": "<reranker_name>", // cohere | voyage | llm | free-trial
+    "params": {
+      "apiKey": "<Your_API_Key>",
+      "apiBase": "<Your_API_Base>" // Optional: Configure a custom API endpoint
+    }
+  }
 }
 ```
 
