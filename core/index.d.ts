@@ -720,6 +720,9 @@ export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
+  engine?: string;
+  apiType?: string;
+  apiVersion?: string;
   requestOptions?: RequestOptions;
 }
 
