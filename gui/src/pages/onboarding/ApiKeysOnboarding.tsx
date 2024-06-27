@@ -33,31 +33,31 @@ function ApiKeysOnboarding() {
   const isFormComplete = !!mistralApiKey && !!anthropicApiKey;
 
   const { anthropic, mistral } = providers;
-  const { claude35Sonnet, codestral } = models;
+  const { claude35Sonnet: chatModel, codestral: autocompleteModel } = models;
 
   async function handleSubmit(e) {
     e.preventDefault();
 
-    const chatModel = {
-      model: claude35Sonnet.params.model,
+    const chatModelConfig = {
+      model: chatModel.params.model,
       provider: anthropic.provider,
       apiKey: anthropicApiKey,
-      title: claude35Sonnet.params.title,
+      title: chatModel.params.title,
     };
 
-    const autocompleteModel = {
-      title: codestral.params.title,
+    const autocompleteModelConfig = {
+      title: autocompleteModel.params.title,
       provider: mistral.provider,
-      model: codestral.params.model,
+      model: autocompleteModel.params.model,
       apiKey: mistralApiKey,
     };
 
-    ideMessenger.post("config/addModel", { model: chatModel });
+    ideMessenger.post("config/addModel", { model: chatModelConfig });
 
-    dispatch(setDefaultModel({ title: chatModel.title, force: true }));
+    dispatch(setDefaultModel({ title: chatModelConfig.title, force: true }));
 
     await ideMessenger.request("addAutocompleteModel", {
-      model: autocompleteModel,
+      model: autocompleteModelConfig,
     });
 
     ideMessenger.post("showTutorial", undefined);
@@ -97,10 +97,10 @@ function ApiKeysOnboarding() {
         <form onSubmit={handleSubmit} className="pt-8">
           <div>
             <h2>
-              Chat model - <i>{claude35Sonnet.title}</i>
+              Chat model - <i>{chatModel.title}</i>
             </h2>
 
-            <p className="pb-6">{claude35Sonnet.description}</p>
+            <p className="pb-6">{chatModel.description}</p>
 
             <label className="block pb-4">
               Anthropic API Key
@@ -119,13 +119,13 @@ function ApiKeysOnboarding() {
 
           <div>
             <h2>
-              Autocomplete model - <i>{codestral.title}</i>
+              Autocomplete model - <i>{autocompleteModel.title}</i>
             </h2>
 
-            <p className="pb-6">{codestral.description}</p>
+            <p className="pb-6">{autocompleteModel.description}</p>
 
             <label className="block pb-8">
-              Mistral API Key (<i>{codestral.title}</i>)
+              Mistral API Key (<i>{autocompleteModel.title}</i>)
               <Input
                 className="w-full"
                 placeholder="Enter your Mistral API Key"
