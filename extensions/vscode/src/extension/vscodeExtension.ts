@@ -87,12 +87,15 @@ export class VsCodeExtension {
       ToCoreProtocol,
       FromCoreProtocol
     >();
-    const vscodeMessenger = new VsCodeMessenger(
+
+    new VsCodeMessenger(
       inProcessMessenger,
       this.sidebar.webviewProtocol,
       this.ide,
       verticalDiffManagerPromise,
+      configHandlerPromise,
     );
+
     this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
       outputChannel.appendLine(
         "==========================================================================",

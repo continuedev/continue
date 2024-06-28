@@ -797,6 +797,7 @@ interface ContextMenuConfig {
 
 interface ModelRoles {
   inlineEdit?: string;
+  applyCodeBlock?: string;
 }
 
 interface ExperimentalConfig {
