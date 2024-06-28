@@ -153,7 +153,6 @@ export class IdeMessenger implements IIdeMessenger {
 
     const handler = (event: { data: Message }) => {
       if (event.data.messageId === messageId) {
-        console.log("BB", typeof event.data.data);
         const responseData = event.data.data;
         if (responseData.done) {
           window.removeEventListener("message", handler);

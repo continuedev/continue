@@ -182,6 +182,7 @@ export class VsCodeMessenger {
         return (await this.inProcessMessenger.externalRequest(
           messageType,
           msg.data,
+          msg.messageId,
         )) as TODO;
       });
     });

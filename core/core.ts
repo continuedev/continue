@@ -410,6 +410,13 @@ export class Core {
         name: slashCommandName,
       });
 
+      const checkActiveInterval = setInterval(() => {
+        if (abortedMessageIds.has(msg.messageId)) {
+          abortedMessageIds.delete(msg.messageId);
+          clearInterval(checkActiveInterval);
+        }
+      }, 100);
+
       for await (const content of slashCommand.run({
         input,
         history,
@@ -428,10 +435,15 @@ export class Core {
         fetch: (url, init) =>
           fetchwithRequestOptions(url, init, config.requestOptions),
       })) {
+        if (abortedMessageIds.has(msg.messageId)) {
+          abortedMessageIds.delete(msg.messageId);
+          break;
+        }
         if (content) {
           yield { content };
         }
       }
+      clearInterval(checkActiveInterval);
       yield { done: true, content: "" };
     }
     on("command/run", (msg) =>

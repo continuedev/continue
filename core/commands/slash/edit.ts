@@ -252,7 +252,7 @@ const EditSlashCommand: SlashCommand = {
     );
     // if the above replace fails to find a match, the code will still be present
     // in the userInput. Replace it with input if available.
-    if (userInput.includes("\`\`\`") && (input !== "" || !input)) {
+    if (userInput.includes("```") && (input !== "" || !input)) {
       userInput = input;
     }
 
