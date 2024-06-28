@@ -15,6 +15,7 @@ import {
 } from "./types.js";
 
 export class FullTextSearchCodebaseIndex implements CodebaseIndex {
+  relativeExpectedTime: number = 0.2;
   artifactId = "sqliteFts";
 
   private async _createTables(db: DatabaseConnection) {

@@ -31,6 +31,7 @@ interface LanceDbRow {
 }
 
 export class LanceDbIndex implements CodebaseIndex {
+  relativeExpectedTime: number = 13;
   get artifactId(): string {
     return `vectordb::${this.embeddingsProvider.id}`;
   }

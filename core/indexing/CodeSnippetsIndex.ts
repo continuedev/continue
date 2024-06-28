@@ -21,6 +21,7 @@ import {
 } from "./types.js";
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
+  relativeExpectedTime: number = 1;
   artifactId = "codeSnippets";
 
   constructor(private readonly ide: IDE) {}

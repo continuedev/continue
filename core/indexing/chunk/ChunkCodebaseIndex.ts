@@ -12,6 +12,7 @@ import {
 import { chunkDocument } from "./chunk.js";
 
 export class ChunkCodebaseIndex implements CodebaseIndex {
+  relativeExpectedTime: number = 1;
   static artifactId = "chunks";
   artifactId: string = ChunkCodebaseIndex.artifactId;
 
