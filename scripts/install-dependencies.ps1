@@ -6,14 +6,14 @@
 # Everything needs node and npm
 Write-Host "`nChecking for dependencies that may require manual installation...`n" -ForegroundColor White
 
-$cargo = (get-command cargo -ErrorAction SilentlyContinue)
-if ($null -eq $cargo) {
-    Write-Host "Not Found " -ForegroundColor Red -NoNewLine
-    Write-Host "cargo"
-} else {
-    Write-Host "Found " -ForegroundColor Green -NoNewLine
-    & cargo --version
-}
+# $cargo = (get-command cargo -ErrorAction SilentlyContinue)
+# if ($null -eq $cargo) {
+#     Write-Host "Not Found " -ForegroundColor Red -NoNewLine
+#     Write-Host "cargo"
+# } else {
+#     Write-Host "Found " -ForegroundColor Green -NoNewLine
+#     & cargo --version
+# }
 
 $node  = (get-command node -ErrorAction SilentlyContinue)
 if ($null -eq $node) {
@@ -25,13 +25,13 @@ if ($null -eq $node) {
     & node --version
 }
 
-if ($null -eq $cargo) {
-    Write-Host "`n...`n"
-    Write-Host "Cargo`n" -ForegroundColor  White
-    Write-Host "Doesn't appear to be installed or is not on your Path."
-    Write-Host "For how to install cargo see:" -NoNewline
-    Write-Host "https://doc.rust-lang.org/cargo/getting-started/installation.html" -ForegroundColor Green
-}
+# if ($null -eq $cargo) {
+#     Write-Host "`n...`n"
+#     Write-Host "Cargo`n" -ForegroundColor  White
+#     Write-Host "Doesn't appear to be installed or is not on your Path."
+#     Write-Host "For how to install cargo see:" -NoNewline
+#     Write-Host "https://doc.rust-lang.org/cargo/getting-started/installation.html" -ForegroundColor Green
+# }
 
 if ($null -eq $node) {
     Write-Host "`n...`n"
@@ -44,7 +44,7 @@ if ($null -eq $node) {
     Write-Host "https://nodejs.org/" -ForegroundColor Yellow
 }
 
-if (($null -eq $cargo) -or ($null -eq $node)) {
+if (($null -eq $node)) {
     return "`nSome dependencies that may require installation could not be found. Exiting"
 }
 
