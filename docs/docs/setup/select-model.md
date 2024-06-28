@@ -75,11 +75,10 @@ _You can also use other autocomplete models by adding them to your `config.json`
 
 ## Embeddings
 
-You likely want to use an embeddings model that is made to vectorize code.
+We recommend the following embeddings models, which are used for codebase retrieval as described [here](../walkthroughs/codebase-embeddings.md#embeddings-providers)
 
 ### Open-source models
 
-- `transformers.js`
 - `nomic-embed-text`
 
 ### Commercial models
