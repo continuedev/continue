@@ -12,7 +12,9 @@
         // To bundle the code the same way we do for publishing
         "vscode-extension:esbuild",
         // Start the React app that is used in the extension
-        "gui:dev"
+        "gui:dev",
+        // Start the docs site, without opening the browser
+        "docs:start"
       ],
       "group": {
         "kind": "build",
@@ -159,7 +161,7 @@
       "label": "docs:start",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "start"],
+      "args": ["run", "start", "--", "--no-open"],
       "problemMatcher": [],
       "options": {
         "cwd": "docs"

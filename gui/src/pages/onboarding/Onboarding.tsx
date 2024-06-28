@@ -93,7 +93,7 @@ function Onboarding() {
               signing into GitHub.
             </p>
 
-            <ul className="pl-4 ">
+            <ul className="pl-4 mb-0">
               <li>
                 <b>Chat:</b> Llama 3 with Ollama, LM Studio, etc.
               </li>
@@ -106,7 +106,7 @@ function Onboarding() {
             </ul>
 
             {!hasSignedIntoGh && (
-              <div className="flex justify-end">
+              <div className="flex justify-center py-3">
                 <GitHubSignInButton
                   onComplete={() => setHasSignedIntoGh(true)}
                 ></GitHubSignInButton>
