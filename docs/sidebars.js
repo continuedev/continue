@@ -67,6 +67,7 @@ const sidebars = {
         },
       ],
     },
+    "changelog",
   ],
 };
 
