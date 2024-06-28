@@ -8,7 +8,6 @@ import {
   vscBackground,
   vscFocusBorder,
   vscForeground,
-  vscInputBackground,
 } from "..";
 
 const ScreenCover = styled.div`
@@ -37,25 +36,6 @@ const Dialog = styled.div`
   margin: auto;
   word-wrap: break-word;
   // overflow: hidden;
-`;
-
-const TextArea = styled.textarea`
-  border: 1px solid #ccc;
-  border-radius: ${defaultBorderRadius};
-  padding: 8px;
-  outline: 1px solid black;
-  resize: none;
-  background-color: ${vscInputBackground};
-  color: ${vscForeground};
-
-  &:focus {
-    outline: 1px solid ${vscForeground};
-  }
-`;
-
-const P = styled.p`
-  color: ${vscForeground};
-  margin: 8px auto;
 `;
 
 const TextDialog = (props: {
