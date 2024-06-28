@@ -24,10 +24,9 @@ const sidebars = {
       collapsed: true,
       items: [
         "setup/overview",
+        "setup/configuration",
         "setup/select-provider",
         "setup/select-model",
-        "setup/configuration",
-        "setup/examples",
       ],
     },
     {
@@ -47,13 +46,10 @@ const sidebars = {
       collapsible: true,
       collapsed: true,
       items: [
-        // "walkthroughs/codellama",
         "walkthroughs/set-up-codestral",
-        "walkthroughs/running-continue-without-internet",
         "walkthroughs/codebase-embeddings",
         "walkthroughs/tab-autocomplete",
         "walkthroughs/prompt-files",
-        // "walkthroughs/config-file-migration",
       ],
     },
     "development-data",
@@ -71,6 +67,7 @@ const sidebars = {
         },
       ],
     },
+    "changelog",
   ],
 };
 

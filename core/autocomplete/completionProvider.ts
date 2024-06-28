@@ -1,5 +1,6 @@
 import Handlebars from "handlebars";
 import ignore from "ignore";
+import OpenAI from "openai";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { RangeInFileWithContents } from "../commands/util.js";
@@ -14,7 +15,6 @@ import {
   Range,
   TabAutocompleteOptions,
 } from "../index.js";
-import OpenAI from "../llm/llms/OpenAI.js";
 import { logDevData } from "../util/devdata.js";
 import { getBasename, getLastNPathParts } from "../util/index.js";
 import {
@@ -23,6 +23,7 @@ import {
 } from "../util/parameters.js";
 import { Telemetry } from "../util/posthog.js";
 import { getRangeInString } from "../util/ranges.js";
+import { ImportDefinitionsService } from "./ImportDefinitionsService.js";
 import { BracketMatchingService } from "./brackets.js";
 import AutocompleteLruCache from "./cache.js";
 import {
@@ -138,342 +139,6 @@ export type GetLspDefinitionsFunction = (
   lang: AutocompleteLanguageInfo,
 ) => Promise<AutocompleteSnippet[]>;
 
-export async function getTabCompletion(
-  token: AbortSignal,
-  options: TabAutocompleteOptions,
-  llm: ILLM,
-  ide: IDE,
-  generatorReuseManager: GeneratorReuseManager,
-  input: AutocompleteInput,
-  getDefinitionsFromLsp: GetLspDefinitionsFunction,
-  bracketMatchingService: BracketMatchingService,
-): Promise<AutocompleteOutcome | undefined> {
-  const startTime = Date.now();
-
-  const {
-    filepath,
-    pos,
-    recentlyEditedFiles,
-    recentlyEditedRanges,
-    clipboardText,
-    manuallyPassFileContents,
-    manuallyPassPrefix,
-  } = input;
-  const fileContents =
-    manuallyPassFileContents ?? (await ide.readFile(filepath));
-  const fileLines = fileContents.split("\n");
-
-  // Filter
-  const lang = languageForFilepath(filepath);
-  const line = fileLines[pos.line] ?? "";
-  for (const endOfLine of lang.endOfLine) {
-    if (line.endsWith(endOfLine) && pos.character >= line.length) {
-      return undefined;
-    }
-  }
-
-  // Model
-  if (!llm) {
-    return;
-  }
-  if (llm instanceof OpenAI) {
-    llm.useLegacyCompletionsEndpoint = true;
-  } else if (
-    llm.providerName === "free-trial" &&
-    llm.model !== TRIAL_FIM_MODEL
-  ) {
-    llm.model = TRIAL_FIM_MODEL;
-  }
-
-  if (
-    !shownGptClaudeWarning &&
-    nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
-    !llm.model.includes("deepseek")
-  ) {
-    shownGptClaudeWarning = true;
-    throw new Error(
-      `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/walkthroughs/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
-    );
-  }
-
-  // Prompt
-  let fullPrefix =
-    getRangeInString(fileContents, {
-      start: { line: 0, character: 0 },
-      end: input.selectedCompletionInfo?.range.start ?? pos,
-    }) + (input.selectedCompletionInfo?.text ?? "");
-
-  if (input.injectDetails) {
-    const lines = fullPrefix.split("\n");
-    fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
-      lang.singleLineComment
-    } ${input.injectDetails.split("\n").join(`\n${lang.singleLineComment} `)}\n${
-      lines[lines.length - 1]
-    }`;
-  }
-
-  const fullSuffix = getRangeInString(fileContents, {
-    start: pos,
-    end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
-  });
-
-  // First non-whitespace line below the cursor
-  let lineBelowCursor = "";
-  let i = 1;
-  while (
-    lineBelowCursor.trim() === "" &&
-    pos.line + i <= fileLines.length - 1
-  ) {
-    lineBelowCursor = fileLines[Math.min(pos.line + i, fileLines.length - 1)];
-    i++;
-  }
-
-  let extrasSnippets = options.useOtherFiles
-    ? ((await Promise.race([
-        getDefinitionsFromLsp(
-          filepath,
-          fullPrefix + fullSuffix,
-          fullPrefix.length,
-          ide,
-          lang,
-        ),
-        new Promise((resolve) => {
-          setTimeout(() => resolve([]), 100);
-        }),
-      ])) as AutocompleteSnippet[])
-    : [];
-
-  const workspaceDirs = await ide.getWorkspaceDirs();
-  if (options.onlyMyCode) {
-    extrasSnippets = extrasSnippets.filter((snippet) => {
-      return workspaceDirs.some((dir) => snippet.filepath.startsWith(dir));
-    });
-  }
-
-  let { prefix, suffix, completeMultiline, snippets } =
-    await constructAutocompletePrompt(
-      filepath,
-      pos.line,
-      fullPrefix,
-      fullSuffix,
-      clipboardText,
-      lang,
-      options,
-      recentlyEditedRanges,
-      recentlyEditedFiles,
-      llm.model,
-      extrasSnippets,
-    );
-
-  // If prefix is manually passed
-  if (manuallyPassPrefix) {
-    prefix = manuallyPassPrefix;
-    suffix = "";
-  }
-
-  // Template prompt
-  const {
-    template,
-    completionOptions,
-    compilePrefixSuffix = undefined,
-  } = options.template
-    ? { template: options.template, completionOptions: {} }
-    : getTemplateForModel(llm.model);
-
-  let prompt: string;
-  const filename = getBasename(filepath);
-  const reponame = getBasename(workspaceDirs[0] ?? "myproject");
-
-  // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
-  // into either the 2nd template to generate a raw string, or to pass prefix, suffix to a FIM endpoint
-  if (compilePrefixSuffix) {
-    [prefix, suffix] = compilePrefixSuffix(
-      prefix,
-      suffix,
-      filepath,
-      reponame,
-      snippets,
-    );
-  }
-
-  if (typeof template === "string") {
-    const compiledTemplate = Handlebars.compile(template);
-
-    // Format snippets as comments and prepend to prefix
-    const formattedSnippets = snippets
-      .map((snippet) =>
-        formatExternalSnippet(snippet.filepath, snippet.contents, lang),
-      )
-      .join("\n");
-    if (formattedSnippets.length > 0) {
-      prefix = `${formattedSnippets}\n\n${prefix}`;
-    } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
-      // If it's an empty file, include the file name as a comment
-      prefix = `${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n${prefix}`;
-    }
-
-    prompt = compiledTemplate({
-      prefix,
-      suffix,
-      filename,
-      reponame,
-    });
-  } else {
-    // Let the template function format snippets
-    prompt = template(prefix, suffix, filepath, reponame, snippets);
-  }
-
-  // Completion
-  let completion = "";
-
-  const cache = await autocompleteCache;
-  const cachedCompletion = options.useCache
-    ? await cache.get(prefix)
-    : undefined;
-  let cacheHit = false;
-  if (cachedCompletion) {
-    // Cache
-    cacheHit = true;
-    completion = cachedCompletion;
-  } else {
-    const stop = [
-      ...(completionOptions?.stop || []),
-      ...multilineStops,
-      ...commonStops,
-      ...(llm.model.toLowerCase().includes("starcoder2")
-        ? STARCODER2_T_ARTIFACTS
-        : []),
-      ...(lang.stopWords ?? []),
-      ...lang.topLevelKeywords.map((word) => `\n${word}`),
-    ];
-
-    let langMultilineDecision = lang.useMultiline?.({ prefix, suffix });
-    let multiline: boolean = false;
-    if (langMultilineDecision) {
-      multiline = langMultilineDecision;
-    } else {
-      multiline =
-        !input.selectedCompletionInfo && // Only ever single-line if using intellisense selected value
-        options.multilineCompletions !== "never" &&
-        (options.multilineCompletions === "always" || completeMultiline);
-    }
-
-    // Try to reuse pending requests if what the user typed matches start of completion
-    const generator = generatorReuseManager.getGenerator(
-      prefix,
-      () =>
-        llm.supportsFim()
-          ? llm.streamFim(prefix, suffix, {
-              ...completionOptions,
-              stop,
-            })
-          : llm.streamComplete(prompt, {
-              ...completionOptions,
-              raw: true,
-              stop,
-            }),
-      multiline,
-    );
-
-    // Full stop means to stop the LLM's generation, instead of just truncating the displayed completion
-    const fullStop = () => generatorReuseManager.currentGenerator?.cancel();
-
-    // LLM
-    let cancelled = false;
-    const generatorWithCancellation = async function* () {
-      for await (const update of generator) {
-        if (token.aborted) {
-          cancelled = true;
-          return;
-        }
-        yield update;
-      }
-    };
-    let charGenerator = generatorWithCancellation();
-    charGenerator = noFirstCharNewline(charGenerator);
-    charGenerator = onlyWhitespaceAfterEndOfLine(
-      charGenerator,
-      lang.endOfLine,
-      fullStop,
-    );
-    charGenerator = bracketMatchingService.stopOnUnmatchedClosingBracket(
-      charGenerator,
-      prefix,
-      suffix,
-      filepath,
-      multiline,
-    );
-
-    let lineGenerator = streamLines(charGenerator);
-    lineGenerator = stopAtLines(lineGenerator, fullStop);
-    lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
-    lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
-    lineGenerator = skipPrefixes(lineGenerator);
-    lineGenerator = noTopLevelKeywordsMidline(
-      lineGenerator,
-      lang.topLevelKeywords,
-      fullStop,
-    );
-
-    for (const lineFilter of lang.lineFilters ?? []) {
-      lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
-    }
-
-    lineGenerator = streamWithNewLines(lineGenerator);
-
-    const finalGenerator = stopAtSimilarLine(
-      lineGenerator,
-      lineBelowCursor,
-      fullStop,
-    );
-
-    try {
-      for await (const update of finalGenerator) {
-        completion += update;
-      }
-    } catch (e: any) {
-      if (ERRORS_TO_IGNORE.some((err) => e.includes(err))) {
-        return undefined;
-      }
-      throw e;
-    }
-
-    if (cancelled) {
-      return undefined;
-    }
-
-    const processedCompletion = postprocessCompletion({
-      completion,
-      prefix,
-      suffix,
-      llm,
-    });
-
-    if (!processedCompletion) {
-      return undefined;
-    }
-    completion = processedCompletion;
-  }
-
-  const time = Date.now() - startTime;
-  return {
-    time,
-    completion,
-    prefix,
-    suffix,
-    prompt,
-    modelProvider: llm.providerName,
-    modelName: llm.model,
-    completionOptions,
-    cacheHit,
-    filepath: input.filepath,
-    completionId: input.completionId,
-    gitRepo: await ide.getRepoName(input.filepath),
-    uniqueId: await ide.getUniqueId(),
-    ...options,
-  };
-}
-
 export class CompletionProvider {
   private static debounceTimeout: NodeJS.Timeout | undefined = undefined;
   private static debouncing = false;
@@ -489,12 +154,15 @@ export class CompletionProvider {
     this.generatorReuseManager = new GeneratorReuseManager(
       this.onError.bind(this),
     );
+    this.importDefinitionsService = new ImportDefinitionsService(this.ide);
   }
 
+  private importDefinitionsService: ImportDefinitionsService;
   private generatorReuseManager: GeneratorReuseManager;
   private autocompleteCache = AutocompleteLruCache.get();
   public errorsShown: Set<string> = new Set();
   private bracketMatchingService = new BracketMatchingService();
+  // private nearbyDefinitionsService = new NearbyDefinitionsService();
 
   private onError(e: any) {
     console.warn("Error generating autocompletion: ", e);
@@ -654,16 +322,7 @@ export class CompletionProvider {
         options.maxPromptTokens = 500;
       }
 
-      const outcome = await getTabCompletion(
-        token,
-        options,
-        llm,
-        this.ide,
-        this.generatorReuseManager,
-        input,
-        this.getDefinitionsFromLsp,
-        this.bracketMatchingService,
-      );
+      const outcome = await this.getTabCompletion(token, options, llm, input);
 
       if (!outcome?.completion) {
         return undefined;
@@ -733,6 +392,341 @@ export class CompletionProvider {
     this._lastDisplayedCompletion = {
       id: completionId,
       displayedAt: now,
+    };
+  }
+
+  async getTabCompletion(
+    token: AbortSignal,
+    options: TabAutocompleteOptions,
+    llm: ILLM,
+    input: AutocompleteInput,
+  ): Promise<AutocompleteOutcome | undefined> {
+    const startTime = Date.now();
+
+    const {
+      filepath,
+      pos,
+      recentlyEditedFiles,
+      recentlyEditedRanges,
+      clipboardText,
+      manuallyPassFileContents,
+      manuallyPassPrefix,
+    } = input;
+    const fileContents =
+      manuallyPassFileContents ?? (await this.ide.readFile(filepath));
+    const fileLines = fileContents.split("\n");
+
+    // Filter
+    const lang = languageForFilepath(filepath);
+    const line = fileLines[pos.line] ?? "";
+    for (const endOfLine of lang.endOfLine) {
+      if (line.endsWith(endOfLine) && pos.character >= line.length) {
+        return undefined;
+      }
+    }
+
+    // Model
+    if (!llm) {
+      return;
+    }
+    if (llm instanceof OpenAI) {
+      llm.useLegacyCompletionsEndpoint = true;
+    } else if (
+      llm.providerName === "free-trial" &&
+      llm.model !== TRIAL_FIM_MODEL
+    ) {
+      llm.model = TRIAL_FIM_MODEL;
+    }
+
+    if (
+      !shownGptClaudeWarning &&
+      nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
+      !llm.model.includes("deepseek") &&
+      !llm.model.includes("codestral")
+    ) {
+      shownGptClaudeWarning = true;
+      throw new Error(
+        `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/walkthroughs/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
+      );
+    }
+
+    // Prompt
+    let fullPrefix =
+      getRangeInString(fileContents, {
+        start: { line: 0, character: 0 },
+        end: input.selectedCompletionInfo?.range.start ?? pos,
+      }) + (input.selectedCompletionInfo?.text ?? "");
+
+    if (input.injectDetails) {
+      const lines = fullPrefix.split("\n");
+      fullPrefix = `${lines.slice(0, -1).join("\n")}\n${
+        lang.singleLineComment
+      } ${input.injectDetails.split("\n").join(`\n${lang.singleLineComment} `)}\n${
+        lines[lines.length - 1]
+      }`;
+    }
+
+    const fullSuffix = getRangeInString(fileContents, {
+      start: pos,
+      end: { line: fileLines.length - 1, character: Number.MAX_SAFE_INTEGER },
+    });
+
+    // First non-whitespace line below the cursor
+    let lineBelowCursor = "";
+    let i = 1;
+    while (
+      lineBelowCursor.trim() === "" &&
+      pos.line + i <= fileLines.length - 1
+    ) {
+      lineBelowCursor = fileLines[Math.min(pos.line + i, fileLines.length - 1)];
+      i++;
+    }
+
+    let extrasSnippets = options.useOtherFiles
+      ? ((await Promise.race([
+          this.getDefinitionsFromLsp(
+            filepath,
+            fullPrefix + fullSuffix,
+            fullPrefix.length,
+            this.ide,
+            lang,
+          ),
+          new Promise((resolve) => {
+            setTimeout(() => resolve([]), 100);
+          }),
+        ])) as AutocompleteSnippet[])
+      : [];
+
+    const workspaceDirs = await this.ide.getWorkspaceDirs();
+    if (options.onlyMyCode) {
+      extrasSnippets = extrasSnippets.filter((snippet) => {
+        return workspaceDirs.some((dir) => snippet.filepath.startsWith(dir));
+      });
+    }
+
+    let { prefix, suffix, completeMultiline, snippets } =
+      await constructAutocompletePrompt(
+        filepath,
+        pos.line,
+        fullPrefix,
+        fullSuffix,
+        clipboardText,
+        lang,
+        options,
+        recentlyEditedRanges,
+        recentlyEditedFiles,
+        llm.model,
+        extrasSnippets,
+        this.importDefinitionsService,
+      );
+
+    // If prefix is manually passed
+    if (manuallyPassPrefix) {
+      prefix = manuallyPassPrefix;
+      suffix = "";
+    }
+
+    // Template prompt
+    const {
+      template,
+      completionOptions,
+      compilePrefixSuffix = undefined,
+    } = options.template
+      ? { template: options.template, completionOptions: {} }
+      : getTemplateForModel(llm.model);
+
+    let prompt: string;
+    const filename = getBasename(filepath);
+    const reponame = getBasename(workspaceDirs[0] ?? "myproject");
+
+    // Some models have prompts that need two passes. This lets us pass the compiled prefix/suffix
+    // into either the 2nd template to generate a raw string, or to pass prefix, suffix to a FIM endpoint
+    if (compilePrefixSuffix) {
+      [prefix, suffix] = compilePrefixSuffix(
+        prefix,
+        suffix,
+        filepath,
+        reponame,
+        snippets,
+      );
+    }
+
+    if (typeof template === "string") {
+      const compiledTemplate = Handlebars.compile(template);
+
+      // Format snippets as comments and prepend to prefix
+      const formattedSnippets = snippets
+        .map((snippet) =>
+          formatExternalSnippet(snippet.filepath, snippet.contents, lang),
+        )
+        .join("\n");
+      if (formattedSnippets.length > 0) {
+        prefix = `${formattedSnippets}\n\n${prefix}`;
+      } else if (prefix.trim().length === 0 && suffix.trim().length === 0) {
+        // If it's an empty file, include the file name as a comment
+        prefix = `${lang.singleLineComment} ${getLastNPathParts(filepath, 2)}\n${prefix}`;
+      }
+
+      prompt = compiledTemplate({
+        prefix,
+        suffix,
+        filename,
+        reponame,
+      });
+    } else {
+      // Let the template function format snippets
+      prompt = template(prefix, suffix, filepath, reponame, snippets);
+    }
+
+    // Completion
+    let completion = "";
+
+    const cache = await autocompleteCache;
+    const cachedCompletion = options.useCache
+      ? await cache.get(prefix)
+      : undefined;
+    let cacheHit = false;
+    if (cachedCompletion) {
+      // Cache
+      cacheHit = true;
+      completion = cachedCompletion;
+    } else {
+      const stop = [
+        ...(completionOptions?.stop || []),
+        ...multilineStops,
+        ...commonStops,
+        ...(llm.model.toLowerCase().includes("starcoder2")
+          ? STARCODER2_T_ARTIFACTS
+          : []),
+        ...(lang.stopWords ?? []),
+        ...lang.topLevelKeywords.map((word) => `\n${word}`),
+      ];
+
+      let langMultilineDecision = lang.useMultiline?.({ prefix, suffix });
+      let multiline: boolean = false;
+      if (langMultilineDecision) {
+        multiline = langMultilineDecision;
+      } else {
+        multiline =
+          !input.selectedCompletionInfo && // Only ever single-line if using intellisense selected value
+          options.multilineCompletions !== "never" &&
+          (options.multilineCompletions === "always" || completeMultiline);
+      }
+
+      // Try to reuse pending requests if what the user typed matches start of completion
+      const generator = this.generatorReuseManager.getGenerator(
+        prefix,
+        () =>
+          llm.supportsFim()
+            ? llm.streamFim(prefix, suffix, {
+                ...completionOptions,
+                stop,
+              })
+            : llm.streamComplete(prompt, {
+                ...completionOptions,
+                raw: true,
+                stop,
+              }),
+        multiline,
+      );
+
+      // Full stop means to stop the LLM's generation, instead of just truncating the displayed completion
+      const fullStop = () =>
+        this.generatorReuseManager.currentGenerator?.cancel();
+
+      // LLM
+      let cancelled = false;
+      const generatorWithCancellation = async function* () {
+        for await (const update of generator) {
+          if (token.aborted) {
+            cancelled = true;
+            return;
+          }
+          yield update;
+        }
+      };
+      let charGenerator = generatorWithCancellation();
+      charGenerator = noFirstCharNewline(charGenerator);
+      charGenerator = onlyWhitespaceAfterEndOfLine(
+        charGenerator,
+        lang.endOfLine,
+        fullStop,
+      );
+      charGenerator = this.bracketMatchingService.stopOnUnmatchedClosingBracket(
+        charGenerator,
+        prefix,
+        suffix,
+        filepath,
+        multiline,
+      );
+
+      let lineGenerator = streamLines(charGenerator);
+      lineGenerator = stopAtLines(lineGenerator, fullStop);
+      lineGenerator = stopAtRepeatingLines(lineGenerator, fullStop);
+      lineGenerator = avoidPathLine(lineGenerator, lang.singleLineComment);
+      lineGenerator = skipPrefixes(lineGenerator);
+      lineGenerator = noTopLevelKeywordsMidline(
+        lineGenerator,
+        lang.topLevelKeywords,
+        fullStop,
+      );
+
+      for (const lineFilter of lang.lineFilters ?? []) {
+        lineGenerator = lineFilter({ lines: lineGenerator, fullStop });
+      }
+
+      lineGenerator = streamWithNewLines(lineGenerator);
+
+      const finalGenerator = stopAtSimilarLine(
+        lineGenerator,
+        lineBelowCursor,
+        fullStop,
+      );
+
+      try {
+        for await (const update of finalGenerator) {
+          completion += update;
+        }
+      } catch (e: any) {
+        if (ERRORS_TO_IGNORE.some((err) => e.includes(err))) {
+          return undefined;
+        }
+        throw e;
+      }
+
+      if (cancelled) {
+        return undefined;
+      }
+
+      const processedCompletion = postprocessCompletion({
+        completion,
+        prefix,
+        suffix,
+        llm,
+      });
+
+      if (!processedCompletion) {
+        return undefined;
+      }
+      completion = processedCompletion;
+    }
+
+    const time = Date.now() - startTime;
+    return {
+      time,
+      completion,
+      prefix,
+      suffix,
+      prompt,
+      modelProvider: llm.providerName,
+      modelName: llm.model,
+      completionOptions,
+      cacheHit,
+      filepath: input.filepath,
+      completionId: input.completionId,
+      gitRepo: await this.ide.getRepoName(input.filepath),
+      uniqueId: await this.ide.getUniqueId(),
+      ...options,
     };
   }
 }

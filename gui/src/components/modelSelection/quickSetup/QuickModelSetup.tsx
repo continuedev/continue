@@ -1,14 +1,15 @@
 import { useContext, useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import { Button, Input, SecondaryButton } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { providers } from "../../../pages/AddNewModel/configs/providers";
 import { setDefaultModel } from "../../../redux/slices/stateSlice";
-import { getLocalStorage } from "../../../util/localStorage";
-import { ftl } from "../../dialogs/FTCDialog";
 import QuickSetupListBox from "./QuickSetupListBox";
+import {
+  FREE_TRIAL_LIMIT_REQUESTS,
+  hasPassedFTL,
+} from "../../../util/freeTrial";
 
 interface QuickModelSetupProps {
   onDone: () => void;
@@ -21,7 +22,6 @@ function QuickModelSetup(props: QuickModelSetupProps) {
     selectedProvider.packages[0],
   );
   const formMethods = useForm();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -34,17 +34,11 @@ function QuickModelSetup(props: QuickModelSetupProps) {
   return (
     <FormProvider {...formMethods}>
       <div className="p-4">
-        {/* <h1>
-          {getLocalStorage("ftc") > ftl()
-            ? "Set up your own model"
-            : "Add a new model"}
-        </h1> */}
-
-        {!props.hideFreeTrialLimitMessage && getLocalStorage("ftc") > ftl() && (
+        {!props.hideFreeTrialLimitMessage && hasPassedFTL() && (
           <p className="text-sm text-gray-500">
-            You've reached the free trial limit of {ftl()} free inputs. To keep
-            using Continue, you can either use your own API key, or use a local
-            LLM. To read more about the options, see our{" "}
+            You've reached the free trial limit of {FREE_TRIAL_LIMIT_REQUESTS}{" "}
+            free inputs. To keep using Continue, you can either use your own API
+            key, or use a local LLM. To read more about the options, see our{" "}
             <a
               href="https://docs.continue.dev/setup/overview"
               target="_blank"

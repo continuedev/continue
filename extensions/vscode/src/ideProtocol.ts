@@ -9,7 +9,9 @@ import type {
   IdeInfo,
   IdeSettings,
   IndexTag,
+  Location,
   Problem,
+  RangeInFile,
   Thread,
 } from "core";
 import { Range } from "core";
@@ -20,6 +22,7 @@ import {
   getContinueGlobalPath,
 } from "core/util/paths";
 import * as vscode from "vscode";
+import { executeGotoProvider } from "./autocomplete/lsp";
 import { DiffManager } from "./diff/horizontal";
 import { Repository } from "./otherExtensions/git";
 import { VsCodeIdeUtils } from "./util/ideUtils";
@@ -45,6 +48,25 @@ class VsCodeIde implements IDE {
       () => true,
       () => false,
     );
+  }
+
+  async gotoDefinition(location: Location): Promise<RangeInFile[]> {
+    const result = await executeGotoProvider({
+      uri: location.filepath,
+      line: location.position.line,
+      character: location.position.character,
+      name: "vscode.executeDefinitionProvider",
+    });
+
+    return result;
+  }
+
+  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
+    vscode.window.onDidChangeActiveTextEditor((editor) => {
+      if (editor) {
+        callback(editor.document.uri.fsPath);
+      }
+    });
   }
 
   private authToken: string | undefined;

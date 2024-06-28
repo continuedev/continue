@@ -32,8 +32,8 @@ _You can also use other open-source chat models by adding them to your `config.j
 
 #### Claude 3 from Anthropic
 
-- Unlimited budget: `claude-3-opus-20240229`
-- Limited budget: `claude-3-sonnet-20240229`
+- Unlimited budget: `claude-3-5-sonnet-20240620`
+- Limited budget: `claude-3-5-sonnet-20240620`
 
 #### GPT-4o from OpenAI
 
@@ -75,11 +75,10 @@ _You can also use other autocomplete models by adding them to your `config.json`
 
 ## Embeddings
 
-You likely want to use an embeddings model that is made to vectorize code.
+We recommend the following embeddings models, which are used for codebase retrieval as described [here](../walkthroughs/codebase-embeddings.md#embeddings-providers)
 
 ### Open-source models
 
-- `transformers.js`
 - `nomic-embed-text`
 
 ### Commercial models

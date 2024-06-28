@@ -2,21 +2,33 @@
 
 ## Table of Contents
 
+- [Contributing to Continue](#contributing-to-continue)
+  - [Table of Contents](#table-of-contents)
 - [❤️ Ways to Contribute](#️-ways-to-contribute)
   - [👋 Continue Contribution Ideas](#-continue-contribution-ideas)
   - [🐛 Report Bugs](#-report-bugs)
   - [✨ Suggest Enhancements](#-suggest-enhancements)
   - [📖 Updating / Improving Documentation](#-updating--improving-documentation)
+    - [Running the Documentation Server Locally](#running-the-documentation-server-locally)
+      - [Method 1: NPM Script](#method-1-npm-script)
+      - [Method 2: VS Code Task](#method-2-vs-code-task)
   - [🧑‍💻 Contributing Code](#-contributing-code)
     - [Environment Setup](#environment-setup)
+      - [Pre-requisites](#pre-requisites)
+      - [Fork the Continue Repository with All Branches](#fork-the-continue-repository-with-all-branches)
+      - [VS Code](#vs-code)
+        - [Debugging](#debugging)
+      - [JetBrains](#jetbrains)
+        - [Debugging](#debugging-1)
+    - [Formatting](#formatting)
     - [Writing Slash Commands](#writing-slash-commands)
     - [Writing Context Providers](#writing-context-providers)
     - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
     - [Adding Pre-indexed Documentation](#adding-pre-indexed-documentation)
-- [📐 Continue Architecture](#-continue-architecture)
-  - [Continue VS Code Extension](#continue-vs-code-extension)
-  - [Continue JetBrains Extension](#continue-jetbrains-extension)
+  - [📐 Continue Architecture](#-continue-architecture)
+    - [Continue VS Code Extension](#continue-vs-code-extension)
+    - [Continue JetBrains Extension](#continue-jetbrains-extension)
 
 # ❤️ Ways to Contribute
 
@@ -50,9 +62,32 @@ Continue is quickly adding features, and we'd love to hear which are the most im
 
 Continue is continuously improving, but a feature isn't complete until it is reflected in the documentation! If you see something out-of-date or missing, you can help by clicking "Edit this page" at the bottom of any page on [docs.continue.dev](https://docs.continue.dev).
 
+### Running the Documentation Server Locally
+
+You can run the documentation server locally using either of the following methods:
+
+#### Method 1: NPM Script
+
+1. Open your terminal and navigate to the root directory of the project.
+
+2. Run the following command to start the documentation server:
+   ```bash
+   npm run start --prefix docs
+   ```
+
+#### Method 2: VS Code Task
+
+1. Open VS Code in the root directory of the project.
+
+2. Open the VS Code command pallet (`cmd/ctrl+shift+p`) and select `Tasks: Run Task`.
+
+3. Look for the `docs:start` task and select it.
+
+This will start a local server and you can see the documentation rendered in your default browser, typically accessible at `http://localhost:3000`.
+
 ## 🧑‍💻 Contributing Code
 
-> Please make PRs to the `preview` branch. We use this to first test changes in a pre-release version of the extension.
+> Please make PRs to the `dev` branch. We use this to first test changes in a pre-release version of the extension.
 
 ### Environment Setup
 
@@ -70,9 +105,9 @@ nvm use
 
 2. Clone your forked repository to your local machine. Use: `git clone https://github.com/YOUR_USERNAME/continue.git`
 
-3. Navigate to the cloned directory and switch to the **preview** branch. Execute: `git checkout preview`, then create your feature/fix branch from there, like so: `git checkout -b 123-my-feature-branch`
+3. Navigate to the cloned directory and switch to the **dev** branch. Execute: `git checkout dev`, then create your feature/fix branch from there, like so: `git checkout -b 123-my-feature-branch`
 
-4. When you're ready to submit your changes, send your pull request specifically to the **preview** branch.
+4. When you're ready to submit your changes, send your pull request specifically to the **dev** branch.
 
 #### VS Code
 

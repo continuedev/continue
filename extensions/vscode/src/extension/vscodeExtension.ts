@@ -93,12 +93,15 @@ export class VsCodeExtension {
       ToCoreProtocol,
       FromCoreProtocol
     >();
-    const vscodeMessenger = new VsCodeMessenger(
+
+    new VsCodeMessenger(
       inProcessMessenger,
       this.sidebar.webviewProtocol,
       this.ide,
       verticalDiffManagerPromise,
+      configHandlerPromise,
     );
+
     this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
       outputChannel.appendLine(
         "==========================================================================",
@@ -178,9 +181,10 @@ export class VsCodeExtension {
 
     // Listen for file saving - use global file watcher so that changes
     // from outside the window are also caught
-    fs.watchFile(getConfigJsonPath(), { interval: 1000 }, (stats) => {
-      this.configHandler.reloadConfig();
+    fs.watchFile(getConfigJsonPath(), { interval: 1000 }, async (stats) => {
+      await this.configHandler.reloadConfig();
     });
+
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
       this.configHandler.reloadConfig();
     });
@@ -192,6 +196,24 @@ export class VsCodeExtension {
     vscode.workspace.onDidSaveTextDocument((event) => {
       // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
+
+      if (filepath === getConfigJsonPath()) {
+        // Trigger a toast notification to provide UI feedback that config
+        // has been updated
+        const showToast = context.globalState.get<boolean>(
+          "showConfigUpdateToast",
+          true,
+        );
+        if (showToast) {
+          vscode.window
+            .showInformationMessage("Config updated", "Don't show again")
+            .then((selection) => {
+              if (selection === "Don't show again") {
+                context.globalState.update("showConfigUpdateToast", false);
+              }
+            });
+        }
+      }
 
       if (
         filepath.endsWith(".continuerc.json") ||
@@ -260,6 +282,7 @@ export class VsCodeExtension {
 
   static continueVirtualDocumentScheme = "continue";
 
+  // eslint-disable-next-line @typescript-eslint/naming-convention
   private PREVIOUS_BRANCH_FOR_WORKSPACE_DIR: { [dir: string]: string } = {};
 
   registerCustomContextProvider(contextProvider: IContextProvider) {

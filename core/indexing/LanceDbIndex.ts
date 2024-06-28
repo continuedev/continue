@@ -31,6 +31,7 @@ interface LanceDbRow {
 }
 
 export class LanceDbIndex implements CodebaseIndex {
+  relativeExpectedTime: number = 13;
   get artifactId(): string {
     return `vectordb::${this.embeddingsProvider.id}`;
   }
@@ -243,6 +244,9 @@ export class LanceDbIndex implements CodebaseIndex {
       }
     }
 
+    const progressReservedForTagging = 0.1;
+    let accumulatedProgress = 0;
+
     let computedRows: LanceDbRow[] = [];
     for await (const update of this.computeChunks(results.compute)) {
       if (Array.isArray(update)) {
@@ -261,7 +265,12 @@ export class LanceDbIndex implements CodebaseIndex {
           data.contents,
         );
 
-        yield { progress, desc, status: "indexing" };
+        accumulatedProgress = progress * (1 - progressReservedForTagging);
+        yield {
+          progress: accumulatedProgress,
+          desc,
+          status: "indexing",
+        };
       } else {
         await addComputedLanceDbRows(update, computedRows);
         computedRows = [];
@@ -300,13 +309,27 @@ export class LanceDbIndex implements CodebaseIndex {
       }
 
       markComplete([{ path, cacheKey }], IndexResultType.AddTag);
+      accumulatedProgress += 1 / results.addTag.length / 3;
+      yield {
+        progress: accumulatedProgress,
+        desc: `Indexing ${path}`,
+        status: "indexing",
+      };
     }
 
     // Delete or remove tag - remove from lance table)
     if (!needToCreateTable) {
-      for (const { path, cacheKey } of [...results.removeTag, ...results.del]) {
+      const toDel = [...results.removeTag, ...results.del];
+      for (const { path, cacheKey } of toDel) {
         // This is where the aforementioned lowercase conversion problem shows
         await table?.delete(`cachekey = '${cacheKey}' AND path = '${path}'`);
+
+        accumulatedProgress += 1 / toDel.length / 3;
+        yield {
+          progress: accumulatedProgress,
+          desc: `Deleting ${path}`,
+          status: "indexing",
+        };
       }
     }
     markComplete(results.removeTag, IndexResultType.RemoveTag);
@@ -318,6 +341,12 @@ export class LanceDbIndex implements CodebaseIndex {
         cacheKey,
         path,
       );
+      accumulatedProgress += 1 / results.del.length / 3;
+      yield {
+        progress: accumulatedProgress,
+        desc: `Deleting ${path}`,
+        status: "indexing",
+      };
     }
 
     markComplete(results.del, IndexResultType.Delete);

@@ -1,5 +1,4 @@
 import { useContext, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button, Input, SecondaryButton, vscForeground } from "../..";
 import { IdeMessengerContext } from "../../../context/IdeMessenger";
 import { isJetBrains } from "../../../util";
@@ -11,7 +10,6 @@ interface GitHubSignInButtonProps {
 
 function GitHubSignInButton(props: GitHubSignInButtonProps) {
   const ideMessenger = useContext(IdeMessengerContext);
-  const navigate = useNavigate();
 
   const [jbGhAuthToken, setJbGhAuthToken] = useState("");
 

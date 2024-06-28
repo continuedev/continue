@@ -32,7 +32,9 @@ function gotoInputKey(input: GotoInput) {
 const MAX_CACHE_SIZE = 50;
 const gotoCache = new Map<string, RangeInFile[]>();
 
-async function executeGotoProvider(input: GotoInput): Promise<RangeInFile[]> {
+export async function executeGotoProvider(
+  input: GotoInput,
+): Promise<RangeInFile[]> {
   const cacheKey = gotoInputKey(input);
   const cached = gotoCache.get(cacheKey);
   if (cached) {

@@ -24,6 +24,9 @@ import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { Battery } from "./util/battery";
 import { getPlatform } from "./util/util";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { Telemetry } from "core/util/posthog";
+
+let fullScreenPanel: vscode.WebviewPanel | undefined;
 
 function getFullScreenTab() {
   const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
@@ -222,8 +225,13 @@ const commandsMap: (
       }
     },
     "continue.focusContinueInput": async () => {
-      if (!getFullScreenTab()) {
+      const fullScreenTab = getFullScreenTab();
+      if (!fullScreenTab) {
+        // focus sidebar
         vscode.commands.executeCommand("continue.continueGUIView.focus");
+      } else {
+        // focus fullscreen
+        fullScreenPanel?.reveal();
       }
       sidebar.webviewProtocol?.request("focusContinueInput", undefined);
       await addHighlightedCodeToContext(false, sidebar.webviewProtocol);
@@ -468,24 +476,14 @@ const commandsMap: (
         return;
       }
 
-      if (fullScreenTab) {
+      if (fullScreenTab && fullScreenPanel) {
         //Full screen open, but not focused - focus it
-        // Focus the tab
-        const openOptions = {
-          preserveFocus: true,
-          preview: fullScreenTab.isPreview,
-          viewColumn: fullScreenTab.group.viewColumn,
-        };
-
-        vscode.commands.executeCommand(
-          "vscode.open",
-          (fullScreenTab.input as any).uri,
-          openOptions,
-        );
+        fullScreenPanel.reveal();
         return;
       }
 
       //Full screen not open - open it
+      Telemetry.capture("openFullScreen", {});
 
       // Close the sidebar.webviews
       // vscode.commands.executeCommand("workbench.action.closeSidebar");
@@ -497,7 +495,11 @@ const commandsMap: (
         "continue.continueGUIView",
         "Continue",
         vscode.ViewColumn.One,
+        {
+          retainContextWhenHidden: true,
+        },
       );
+      fullScreenPanel = panel;
 
       //Add content to the panel
       panel.webview.html = sidebar.getSidebarContent(

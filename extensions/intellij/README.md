@@ -1,6 +1,6 @@
 <!-- Plugin description -->
 
-![readme](../../media/readme.png)
+![readme](media/readme.png)
 
 <h1 align="center">Continue</h1>
 
@@ -14,25 +14,25 @@
 
 ## Easily understand code sections
 
-![understand](../../docs/static/img/understand.gif)
+![understand](docs/static/img/understand.gif)
 
 `cmd+J` (MacOS) / `ctrl+J` (Windows)
 
 ## Tab to autocomplete code suggestions
 
-![autocomplete](../../docs/static/img/autocomplete.gif)
+![autocomplete](docs/static/img/autocomplete.gif)
 
 `tab` (MacOS) / `tab` (Windows)
 
 ## Refactor functions where you are coding
 
-![inline](../../docs/static/img/inline.gif)
+![inline](docs/static/img/inline.gif)
 
 `cmd+I` (MacOS) / `ctrl+I` (Windows)
 
 ## Quickly use documentation as context
 
-![docs](../../docs/static/img/docs.gif)
+![docs](docs/static/img/docs.gif)
 
 `@docs` (MacOS) / `@docs` (Windows)
 

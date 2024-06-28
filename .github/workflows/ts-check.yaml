@@ -72,19 +72,19 @@ jobs:
       - name: tsc core
         run: |
           cd core
-          npx tsc
+          npx tsc --noEmit
 
       - name: tsc extensions/vscode
         run: |
           cd extensions/vscode
-          npx tsc
+          npx tsc --noEmit
 
       - name: tsc binary
         run: |
           cd binary
-          npx tsc
+          npx tsc --noEmit
 
       - name: tsc gui
         run: |
           cd gui
-          npx tsc
+          npx tsc --noEmit
