@@ -7,11 +7,11 @@ import {
   lightGray,
   vscFocusBorder,
 } from "..";
+import { PackageDimension } from "../../pages/AddNewModel/configs/models";
+import { providers } from "../../pages/AddNewModel/configs/providers";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import InfoHover from "../InfoHover";
 import ModelProviderTag, { ModelProviderTags } from "./ModelProviderTag";
-import { PackageDimension } from "../../pages/AddNewModel/configs/models";
-import { providers } from "../../pages/AddNewModel/configs/providers";
 
 interface ModelCardProps {
   title: string;
@@ -42,11 +42,11 @@ const Div = styled.div<{ color: string; disabled: boolean; hovered: boolean }>`
     opacity: 0.5;
     `
       : props.hovered
-      ? `
+        ? `
     border: 1px solid ${props.color};
     background-color: ${props.color}22;
     cursor: pointer;`
-      : ""}
+        : ""}
 `;
 
 const DimensionsDiv = styled.div`
@@ -140,7 +140,6 @@ function ModelCard(props: ModelCardProps) {
                 borderRadius: "2px",
                 padding: "4px",
                 marginRight: "10px",
-                backgroundColor: "darkgray",
                 objectFit: "contain",
               }}
             />
@@ -148,9 +147,7 @@ function ModelCard(props: ModelCardProps) {
           <h3>{props.title}</h3>
         </div>
 
-        {props.tags?.map((tag, i) => (
-          <ModelProviderTag key={i} tag={tag} />
-        ))}
+        {props.tags?.map((tag, i) => <ModelProviderTag key={i} tag={tag} />)}
 
         <p>{props.description}</p>
 

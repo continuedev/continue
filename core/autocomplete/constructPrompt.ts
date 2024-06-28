@@ -207,7 +207,7 @@ export async function constructAutocompletePrompt(
         ).filter((symbol) => !language.topLevelKeywords.includes(symbol));
         for (const symbol of symbols) {
           const rifs = imports[symbol];
-          if (rifs) {
+          if (Array.isArray(rifs)) {
             importSnippets.push(...rifs);
           }
         }
