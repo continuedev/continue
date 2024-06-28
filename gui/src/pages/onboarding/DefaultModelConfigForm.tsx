@@ -1,13 +1,13 @@
-import { useState, useContext } from "react";
-import { Input, lightGray } from "../../components";
-import { providers } from "../AddNewModel/configs/providers";
-import styled from "styled-components";
-import { StyledButton } from "./components";
-import { models } from "../AddNewModel/configs/models";
-import { setDefaultModel } from "../../redux/slices/stateSlice";
+import { useContext, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
+import { Input, lightGray } from "../../components";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { setDefaultModel } from "../../redux/slices/stateSlice";
+import { models } from "../AddNewModel/configs/models";
+import { providers } from "../AddNewModel/configs/providers";
+import { StyledButton } from "./components";
 
 const HelperText = styled.p`
   font-size: 0.8rem;
@@ -77,8 +77,10 @@ function DefaultModelConfigForm() {
             onChange={(e) => setAnthropicApiKey(e.target.value)}
           />
           <HelperText>
-            <a href={anthropic.apiKeyUrl}>Click here</a> to create an Anthropic
-            API key
+            <a href={anthropic.apiKeyUrl} target="_blank">
+              Click here
+            </a>{" "}
+            to create an Anthropic API key
           </HelperText>
         </label>
       </div>
@@ -99,8 +101,10 @@ function DefaultModelConfigForm() {
             onChange={(e) => setMistralApiKey(e.target.value)}
           />
           <HelperText>
-            <a href={mistral.apiKeyUrl}>Click here</a> to create a Mistral API
-            key
+            <a href={mistral.apiKeyUrl} target="_blank">
+              Click here
+            </a>{" "}
+            to create a Mistral API key
           </HelperText>
         </label>
       </div>

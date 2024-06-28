@@ -89,7 +89,10 @@ function AddNewModel() {
           </li>
           <li>Select a specific model directly</li>
         </ul>
-        <Link to="https://docs.continue.dev/model-setup/overview">
+        <Link
+          target="_blank"
+          to="https://docs.continue.dev/model-setup/overview"
+        >
           Visit our setup overview docs
         </Link>{" "}
         to learn more.
