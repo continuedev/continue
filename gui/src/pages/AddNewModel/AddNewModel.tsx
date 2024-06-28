@@ -29,7 +29,7 @@ const IntroDiv = styled.div`
 const GridDiv = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  grid-gap: 2rem;
+  grid-gap: 1.25rem;
   justify-items: center;
   align-items: center;
 `;
