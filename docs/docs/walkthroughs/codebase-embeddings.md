@@ -113,8 +113,9 @@ Voyage AI offers the best embeddings for code with their voyage-code-2 model. Af
 
 OpenAI's [embeddings](https://platform.openai.com/docs/guides/embeddings) are high dimensional embeddings that give great performance on both text and code.
 
-Configuration for text-embedding-3-small Model. This is default.
-The text-embedding-3-small model offers an outstanding balance between performance and efficiency, suitable for a versatile range of applications.
+#### Configuration for the `text-embedding-3-small` model
+
+This is default. The `text-embedding-3-small` model offers an outstanding balance between performance and efficiency, suitable for a versatile range of applications.
 
 ```json title="~/.continue/config.json"
 {
@@ -127,8 +128,9 @@ The text-embedding-3-small model offers an outstanding balance between performan
 }
 ```
 
-Configuration for text-embedding-3-large Model
-For those requiring the highest level of embedding detail and precision, the text-embedding-3-large model is the better choice.
+#### Configuration for the `text-embedding-3-large` model
+
+For those requiring the highest level of embedding detail and precision, the `text-embedding-3-large` model is the better choice.
 
 ```json title="~/.continue/config.json"
 {
@@ -141,8 +143,9 @@ For those requiring the highest level of embedding detail and precision, the tex
 }
 ```
 
-Legacy Model Configuration
-For certain scenarios, you may still find the text-embedding-ada-002 model relevant. Below is the configuration example:
+#### Legacy Model Configuration
+
+For certain scenarios, you may still find the `text-embedding-ada-002` model relevant. Below is the configuration example:
 
 ```json title="~/.continue/config.json"
 {
