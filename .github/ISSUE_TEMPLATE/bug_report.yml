@@ -33,7 +33,7 @@ body:
         - OS:
         - Continue:
         - IDE:
-        - LLM Model:
+        - Model:
         - config.json:
           ```json
 
