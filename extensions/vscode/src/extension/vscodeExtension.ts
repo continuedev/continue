@@ -8,7 +8,11 @@ import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
-import { setupStatusBar } from "../autocomplete/statusBar";
+import {
+  StatusBarStatus,
+  monitorBatteryChanges,
+  setupStatusBar,
+} from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
 import { registerDebugTracker } from "../debug/debug";
 import { ContinueGUIWebviewViewProvider } from "../debugPanel";
@@ -17,6 +21,7 @@ import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
+import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
@@ -34,6 +39,7 @@ export class VsCodeExtension {
   private verticalDiffManager: VerticalPerLineDiffManager;
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
+  private battery: Battery;
 
   constructor(context: vscode.ExtensionContext) {
     let resolveWebviewProtocol: any = undefined;
@@ -136,7 +142,9 @@ export class VsCodeExtension {
     const enabled = config.get<boolean>("enableTabAutocomplete");
 
     // Register inline completion provider
-    setupStatusBar(enabled);
+    setupStatusBar(
+      enabled ? StatusBarStatus.Enabled : StatusBarStatus.Disabled,
+    );
     context.subscriptions.push(
       vscode.languages.registerInlineCompletionItemProvider(
         [{ pattern: "**" }],
@@ -148,6 +156,11 @@ export class VsCodeExtension {
       ),
     );
 
+    // Battery
+    this.battery = new Battery();
+    context.subscriptions.push(this.battery);
+    context.subscriptions.push(monitorBatteryChanges(this.battery));
+
     // Commands
     registerAllCommands(
       context,
@@ -158,6 +171,7 @@ export class VsCodeExtension {
       this.diffManager,
       this.verticalDiffManager,
       this.core.continueServerClientPromise,
+      this.battery,
     );
 
     registerDebugTracker(this.sidebar.webviewProtocol, this.ide);

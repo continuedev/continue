@@ -11,9 +11,15 @@ import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
 import readLastLines from "read-last-lines";
+import {
+  StatusBarStatus,
+  getStatusBarStatus,
+  setupStatusBar,
+} from "./autocomplete/statusBar";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { Battery } from "./util/battery";
 import { getPlatform } from "./util/util";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -147,6 +153,7 @@ const commandsMap: (
   diffManager: DiffManager,
   verticalDiffManager: VerticalPerLineDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
+  battery: Battery,
 ) => { [command: string]: (...args: any) => any } = (
   ide,
   extensionContext,
@@ -155,6 +162,7 @@ const commandsMap: (
   diffManager,
   verticalDiffManager,
   continueServerClientPromise,
+  battery,
 ) => {
   async function streamInlineEdit(
     promptName: keyof ContextMenuConfig,
@@ -541,11 +549,36 @@ const commandsMap: (
     "continue.toggleTabAutocompleteEnabled": () => {
       const config = vscode.workspace.getConfiguration("continue");
       const enabled = config.get("enableTabAutocomplete");
-      config.update(
-        "enableTabAutocomplete",
-        !enabled,
-        vscode.ConfigurationTarget.Global,
+      const pauseOnBattery = config.get<boolean>(
+        "pauseTabAutocompleteOnBattery",
       );
+      if (!pauseOnBattery || battery.isACConnected()) {
+        config.update(
+          "enableTabAutocomplete",
+          !enabled,
+          vscode.ConfigurationTarget.Global,
+        );
+      } else {
+        if (enabled) {
+          const paused = getStatusBarStatus() === StatusBarStatus.Paused;
+          if (paused) {
+            setupStatusBar(StatusBarStatus.Enabled);
+          } else {
+            config.update(
+              "enableTabAutocomplete",
+              false,
+              vscode.ConfigurationTarget.Global,
+            );
+          }
+        } else {
+          setupStatusBar(StatusBarStatus.Paused);
+          config.update(
+            "enableTabAutocomplete",
+            true,
+            vscode.ConfigurationTarget.Global,
+          );
+        }
+      }
     },
     "continue.openTabAutocompleteConfigMenu": async () => {
       const config = vscode.workspace.getConfiguration("continue");
@@ -635,6 +668,7 @@ export function registerAllCommands(
   diffManager: DiffManager,
   verticalDiffManager: VerticalPerLineDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
+  battery: Battery,
 ) {
   for (const [command, callback] of Object.entries(
     commandsMap(
@@ -645,6 +679,7 @@ export function registerAllCommands(
       diffManager,
       verticalDiffManager,
       continueServerClientPromise,
+      battery,
     ),
   )) {
     context.subscriptions.push(
