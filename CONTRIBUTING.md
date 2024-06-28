@@ -2,21 +2,33 @@
 
 ## Table of Contents
 
+- [Contributing to Continue](#contributing-to-continue)
+  - [Table of Contents](#table-of-contents)
 - [❤️ Ways to Contribute](#️-ways-to-contribute)
   - [👋 Continue Contribution Ideas](#-continue-contribution-ideas)
   - [🐛 Report Bugs](#-report-bugs)
   - [✨ Suggest Enhancements](#-suggest-enhancements)
   - [📖 Updating / Improving Documentation](#-updating--improving-documentation)
+    - [Running the Documentation Server Locally](#running-the-documentation-server-locally)
+      - [Method 1: NPM Script](#method-1-npm-script)
+      - [Method 2: VS Code Task](#method-2-vs-code-task)
   - [🧑‍💻 Contributing Code](#-contributing-code)
     - [Environment Setup](#environment-setup)
+      - [Pre-requisites](#pre-requisites)
+      - [Fork the Continue Repository with All Branches](#fork-the-continue-repository-with-all-branches)
+      - [VS Code](#vs-code)
+        - [Debugging](#debugging)
+      - [JetBrains](#jetbrains)
+        - [Debugging](#debugging-1)
+    - [Formatting](#formatting)
     - [Writing Slash Commands](#writing-slash-commands)
     - [Writing Context Providers](#writing-context-providers)
     - [Adding an LLM Provider](#adding-an-llm-provider)
     - [Adding Models](#adding-models)
     - [Adding Pre-indexed Documentation](#adding-pre-indexed-documentation)
-- [📐 Continue Architecture](#-continue-architecture)
-  - [Continue VS Code Extension](#continue-vs-code-extension)
-  - [Continue JetBrains Extension](#continue-jetbrains-extension)
+  - [📐 Continue Architecture](#-continue-architecture)
+    - [Continue VS Code Extension](#continue-vs-code-extension)
+    - [Continue JetBrains Extension](#continue-jetbrains-extension)
 
 # ❤️ Ways to Contribute
 
@@ -74,6 +86,7 @@ You can run the documentation server locally using either of the following metho
 This will start a local server and you can see the documentation rendered in your default browser, typically accessible at `http://localhost:3000`.
 
 ## 🧑‍💻 Contributing Code
+
 > Please make PRs to the `dev` branch. We use this to first test changes in a pre-release version of the extension.
 
 ### Environment Setup

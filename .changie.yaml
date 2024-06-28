@@ -36,4 +36,4 @@ projects:
 
   - label: docs
     key: docs
-    changelog: docs/CHANGELOG.md # for releasing documents independently
+    changelog: docs/CHANGELOG.md
