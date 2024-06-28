@@ -200,7 +200,19 @@ export class VsCodeExtension {
       if (filepath === getConfigJsonPath()) {
         // Trigger a toast notification to provide UI feedback that config
         // has been updated
-        vscode.window.showInformationMessage("Config updated");
+        const showToast = context.globalState.get<boolean>(
+          "showConfigUpdateToast",
+          true,
+        );
+        if (showToast) {
+          vscode.window
+            .showInformationMessage("Config updated", "Don't show again")
+            .then((selection) => {
+              if (selection === "Don't show again") {
+                context.globalState.update("showConfigUpdateToast", false);
+              }
+            });
+        }
       }
 
       if (

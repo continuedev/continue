@@ -2105,9 +2105,9 @@
               "type": "number"
             },
             "displayRawMarkdown": {
-              "type": "string",
+              "type": "boolean",
               "description": "If set to true, we will display the model output as raw markdown.",
-              "default": "false"
+              "default": false
             }
           }
         },
