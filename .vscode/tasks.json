@@ -161,7 +161,7 @@
       "label": "docs:start",
       "type": "shell",
       "command": "npm",
-      "args": ["run", "start", "--no-open"],
+      "args": ["run", "start", "--", "--no-open"],
       "problemMatcher": [],
       "options": {
         "cwd": "docs"
