@@ -12,6 +12,7 @@ type LocalStorageTypes = {
   extensionVersion: string;
   indexingState: IndexingProgressUpdate;
   signedInToGh: boolean;
+  newUserOnboardingInProgress: boolean;
 };
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(

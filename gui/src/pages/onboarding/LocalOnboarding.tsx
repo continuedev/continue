@@ -6,6 +6,7 @@ import { CopyToTerminalButton } from "./CopyToTerminalButton";
 import { CheckMarkHeader } from "./CheckMarkHeader";
 import { ONBOARDING_LOCAL_MODEL_TITLE } from "core/config/onboarding";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { useCaptureNewUserOnboardingCompleted } from "./utils";
 
 type OllamaConnectionStatuses =
   | "waiting_to_download"
@@ -34,9 +35,14 @@ function LocalOnboarding() {
 
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
 
+  const { captureNewUserOnboardingComplete } =
+    useCaptureNewUserOnboardingCompleted();
+
   const isOllamaConnected = ollamaConnectionStatus === "verified";
 
   function handleCompleteClick() {
+    captureNewUserOnboardingComplete && captureNewUserOnboardingComplete();
+
     navigate("/");
   }
 

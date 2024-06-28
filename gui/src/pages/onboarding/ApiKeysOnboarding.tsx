@@ -6,6 +6,7 @@ import QuickModelSetup from "../../components/modelSelection/quickSetup/QuickMod
 import { getLocalStorage } from "../../util/localStorage";
 import Toggle from "../../components/modelSelection/Toggle";
 import DefaultModelConfigForm from "./DefaultModelConfigForm";
+import { useCaptureNewUserOnboardingCompleted } from "./utils";
 
 function ApiKeysOnboarding() {
   const ideMessenger = useContext(IdeMessengerContext);
@@ -13,6 +14,9 @@ function ApiKeysOnboarding() {
 
   // Controls the toggle between default and custom model setup
   const [isBestToggle, setIsBestToggle] = useState(true);
+
+  const { captureNewUserOnboardingComplete } =
+    useCaptureNewUserOnboardingCompleted();
 
   return (
     <div className="p-8 overflow-y-scroll">
@@ -47,6 +51,9 @@ function ApiKeysOnboarding() {
       {!isBestToggle && (
         <QuickModelSetup
           onDone={() => {
+            captureNewUserOnboardingComplete &&
+              captureNewUserOnboardingComplete();
+
             ideMessenger.post("showTutorial", undefined);
 
             if (getLocalStorage("signedInToGh")) {

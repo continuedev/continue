@@ -13,6 +13,10 @@ import { isJetBrains } from "../../util";
 import { setLocalStorage } from "../../util/localStorage";
 import { Div, StyledButton } from "./components";
 import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../../util/freeTrial";
+import {
+  useCaptureNewUserOnboardingStarted,
+  useCaptureNewUserOnboardingCompleted,
+} from "./utils";
 
 type OnboardingMode =
   ToCoreFromIdeOrWebviewProtocol["completeOnboarding"][0]["mode"];
@@ -26,11 +30,19 @@ function Onboarding() {
     OnboardingMode | undefined
   >(undefined);
 
+  const { captureNewUserOnboardingStarted } =
+    useCaptureNewUserOnboardingStarted();
+
+  const { captureNewUserOnboardingComplete } =
+    useCaptureNewUserOnboardingCompleted();
+
   useEffect(() => {
-    setLocalStorage("onboardingComplete", true);
-  }, []);
+    captureNewUserOnboardingStarted && captureNewUserOnboardingStarted();
+  }, [captureNewUserOnboardingStarted]);
 
   function onSubmit() {
+    setLocalStorage("onboardingComplete", true);
+
     ideMessenger.post("completeOnboarding", {
       mode: selectedOnboardingMode,
     });
@@ -54,6 +66,7 @@ function Onboarding() {
         break;
 
       case "freeTrial":
+        captureNewUserOnboardingComplete && captureNewUserOnboardingComplete();
         navigate("/");
         break;
 

@@ -8,6 +8,7 @@ import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { models } from "../AddNewModel/configs/models";
 import { providers } from "../AddNewModel/configs/providers";
 import { StyledButton } from "./components";
+import { useCaptureNewUserOnboardingCompleted } from "./utils";
 
 const HelperText = styled.p`
   font-size: 0.8rem;
@@ -23,6 +24,9 @@ function DefaultModelConfigForm() {
 
   const [mistralApiKey, setMistralApiKey] = useState("");
   const [anthropicApiKey, setAnthropicApiKey] = useState("");
+
+  const { captureNewUserOnboardingComplete } =
+    useCaptureNewUserOnboardingCompleted();
 
   const isFormComplete = !!mistralApiKey && !!anthropicApiKey;
 
@@ -55,6 +59,8 @@ function DefaultModelConfigForm() {
     });
 
     ideMessenger.post("showTutorial", undefined);
+
+    captureNewUserOnboardingComplete && captureNewUserOnboardingComplete();
 
     navigate("/");
   }
