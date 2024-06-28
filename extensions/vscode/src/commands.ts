@@ -14,6 +14,8 @@ import readLastLines from "read-last-lines";
 import {
   StatusBarStatus,
   getStatusBarStatus,
+  getStatusBarStatusFromQuickPickItemLabel,
+  quickPickStatusText,
   setupStatusBar,
 } from "./autocomplete/statusBar";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
@@ -582,7 +584,6 @@ const commandsMap: (
     },
     "continue.openTabAutocompleteConfigMenu": async () => {
       const config = vscode.workspace.getConfiguration("continue");
-      const enabled = config.get("enableTabAutocomplete");
       const quickPick = vscode.window.createQuickPick();
       const selected = new GlobalContext().get("selectedTabAutocompleteModel");
       const autocompleteModelTitles = ((
@@ -590,11 +591,32 @@ const commandsMap: (
       ).tabAutocompleteModels
         ?.map((model) => model.title)
         .filter((t) => t !== undefined) || []) as string[];
+
+      // Toggle between Disabled, Paused, and Enabled
+      const pauseOnBattery =
+        config.get<boolean>("pauseTabAutocompleteOnBattery") &&
+        !battery.isACConnected();
+      const currentStatus = getStatusBarStatus();
+
+      let targetStatus: StatusBarStatus | undefined;
+      if (pauseOnBattery) {
+        // Cycle from Disabled -> Paused -> Enabled
+        targetStatus =
+          currentStatus === StatusBarStatus.Paused
+            ? StatusBarStatus.Enabled
+            : currentStatus === StatusBarStatus.Disabled
+              ? StatusBarStatus.Paused
+              : StatusBarStatus.Disabled;
+      } else {
+        // Toggle between Disabled and Enabled
+        targetStatus =
+          currentStatus === StatusBarStatus.Disabled
+            ? StatusBarStatus.Enabled
+            : StatusBarStatus.Disabled;
+      }
       quickPick.items = [
         {
-          label: enabled
-            ? "$(check) Disable autocomplete"
-            : "$(circle-slash) Enable autocomplete",
+          label: quickPickStatusText(targetStatus),
         },
         {
           label: "$(gear) Configure autocomplete options",
@@ -613,16 +635,14 @@ const commandsMap: (
       ];
       quickPick.onDidAccept(() => {
         const selectedOption = quickPick.selectedItems[0].label;
-        if (selectedOption === "$(circle-slash) Enable autocomplete") {
+        const targetStatus =
+          getStatusBarStatusFromQuickPickItemLabel(selectedOption);
+
+        if (targetStatus !== undefined) {
+          setupStatusBar(targetStatus);
           config.update(
             "enableTabAutocomplete",
-            true,
-            vscode.ConfigurationTarget.Global,
-          );
-        } else if (selectedOption === "$(check) Disable autocomplete") {
-          config.update(
-            "enableTabAutocomplete",
-            false,
+            targetStatus === StatusBarStatus.Enabled,
             vscode.ConfigurationTarget.Global,
           );
         } else if (

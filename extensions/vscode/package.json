@@ -83,7 +83,7 @@
         "continue.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
           "default": false,
-          "markdownDescription": "Pause the Continue's tab autocomplete feature, when you device is on battery."
+          "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
         },
         "continue.remoteConfigServerUrl": {
           "type": "string",

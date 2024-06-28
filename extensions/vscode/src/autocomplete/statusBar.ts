@@ -7,6 +7,33 @@ export enum StatusBarStatus {
   Paused,
 }
 
+export const quickPickStatusText = (status: StatusBarStatus | undefined) => {
+  switch (status) {
+    case undefined:
+    case StatusBarStatus.Disabled:
+      return "$(circle-slash) Disable autocomplete";
+    case StatusBarStatus.Enabled:
+      return "$(check) Enable autocomplete";
+    case StatusBarStatus.Paused:
+      return "$(debug-pause) Pause autocomplete";
+  }
+};
+
+export const getStatusBarStatusFromQuickPickItemLabel = (
+  label: string,
+): StatusBarStatus | undefined => {
+  switch (label) {
+    case "$(circle-slash) Disable autocomplete":
+      return StatusBarStatus.Disabled;
+    case "$(check) Enable autocomplete":
+      return StatusBarStatus.Enabled;
+    case "$(debug-pause) Pause autocomplete":
+      return StatusBarStatus.Paused;
+    default:
+      return undefined;
+  }
+};
+
 const statusBarItemText = (status: StatusBarStatus | undefined) => {
   switch (status) {
     case undefined:
