@@ -1,6 +1,6 @@
 import { SiteIndexingConfig } from "core";
 import { usePostHog } from "posthog-js/react";
-import React, { useContext, useLayoutEffect } from "react";
+import React, { useContext, useLayoutEffect, useRef, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Button, Input } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -13,15 +13,25 @@ function AddDocsDialog() {
   const posthog = usePostHog();
   const dispatch = useDispatch();
 
-  const [docsUrl, setDocsUrl] = React.useState("");
-  const [docsTitle, setDocsTitle] = React.useState("");
-  const [urlValid, setUrlValid] = React.useState(false);
-  const [maxDepth, setMaxDepth] = React.useState<number | string>("");
+  const ref = useRef<HTMLInputElement>(null);
+
+  const [docsUrl, setDocsUrl] = useState("");
+  const [docsTitle, setDocsTitle] = useState("");
+  const [urlValid, setUrlValid] = useState(false);
+  const [maxDepth, setMaxDepth] = useState<number | string>("");
 
   const ideMessenger = useContext(IdeMessengerContext);
   const { addItem } = useContext(SubmenuContextProvidersContext);
 
   const isFormValid = docsUrl && docsTitle && urlValid;
+
+  useLayoutEffect(() => {
+    setTimeout(() => {
+      if (ref.current) {
+        ref.current.focus();
+      }
+    }, 100);
+  }, [ref]);
 
   function onSubmit(e) {
     e.preventDefault();
@@ -70,10 +80,10 @@ function AddDocsDialog() {
         <label>
           URL
           <Input
-            autoFocus
             type="url"
             placeholder="URL"
             value={docsUrl}
+            ref={ref}
             onChange={(e) => {
               setDocsUrl(e.target.value);
               setUrlValid(e.target.validity.valid);
@@ -110,9 +120,11 @@ function AddDocsDialog() {
           />
         </label>
 
-        <Button disabled={!isFormValid} className="ml-auto" type="submit">
-          Done
-        </Button>
+        <div className="flex justify-end">
+          <Button disabled={!isFormValid} type="submit">
+            Submit
+          </Button>
+        </div>
       </form>
     </div>
   );
