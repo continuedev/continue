@@ -511,7 +511,8 @@ declare global {
     | "deepinfra"
     | "flowise"
     | "groq"
-    | "custom";
+    | "custom"
+    | "msty";
   
   export type ModelName =
     | "AUTODETECT"

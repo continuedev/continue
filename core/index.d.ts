@@ -574,7 +574,8 @@ type ModelProvider =
   | "cloudflare"
   | "deepseek"
   | "azure"
-  | "openai-aiohttp";
+  | "openai-aiohttp"
+  | "msty";
 
 export type ModelName =
   | "AUTODETECT"
