@@ -49,7 +49,7 @@ This example uses a free trial for embeddings and reranking, forwarding requests
 
 ## Local and Offline Configuration
 
-This configuration leverages Ollama for all functionalities - chat, autocomplete, and embeddings - ensuring that no code is transmitted outside your machine.
+This configuration leverages Ollama for all functionalities - chat, autocomplete, and embeddings - ensuring that no code is transmitted outside your machine, allowing Continue to be run even on an air-gapped computer.
 
 **What You Need:**
 
@@ -79,6 +79,11 @@ This configuration leverages Ollama for all functionalities - chat, autocomplete
   }
 }
 ```
+
+If you require a fully air-gapped setup, you may also want to:
+
+1. Manually download the latest .vsix file from the [Open VSX Registry](https://open-vsx.org/extension/Continue/continue) rather than the VS Code Marketplace and [install it to VS Code](https://code.visualstudio.com/docs/editor/extension-marketplace#_install-from-a-vsix).
+2. Open `~/.continue/config.json` and set `"allowAnonymousTelemetry": false`. This will stop Continue from attempting requests to PostHog for [anonymous telemetry](../telemetry.md).
 
 ## Setting up chat models
 
