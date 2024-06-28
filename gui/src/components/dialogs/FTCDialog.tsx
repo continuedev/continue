@@ -6,6 +6,7 @@ import { Button, Input } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { setShowDialog } from "../../redux/slices/uiStateSlice";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../../util/freeTrial";
 
 const GridDiv = styled.div`
   display: grid;
