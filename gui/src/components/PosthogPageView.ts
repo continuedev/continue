@@ -8,7 +8,7 @@ import { useSearchParams, useLocation } from "react-router-dom";
  */
 export default function PostHogPageView() {
   const { pathname } = useLocation();
-  const searchParams = useSearchParams();
+  const [searchParams] = useSearchParams();
   const posthog = usePostHog();
 
   // Track pageviews
