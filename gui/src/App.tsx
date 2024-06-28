@@ -14,10 +14,9 @@ import History from "./pages/history";
 import MigrationPage from "./pages/migration";
 import MonacoPage from "./pages/monaco";
 import ApiKeyAutocompleteOnboarding from "./pages/onboarding/apiKeyAutocompleteOnboarding";
-import ApiKeyOnboarding from "./pages/onboarding/apiKeyOnboarding";
-import BestExperienceOnboarding from "./pages/onboarding/BestExperienceOnboarding";
+import ApiKeysOnboarding from "./pages/onboarding/ApiKeysOnboarding";
 import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
-import Onboarding from "./pages/onboarding/onboarding";
+import Onboarding from "./pages/onboarding/Onboarding";
 import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
 
@@ -80,12 +79,8 @@ const router = createMemoryRouter([
         element: <MigrationPage />,
       },
       {
-        path: "/bestExperienceOnboarding",
-        element: <BestExperienceOnboarding />,
-      },
-      {
-        path: "/apiKeyOnboarding",
-        element: <ApiKeyOnboarding />,
+        path: "/apiKeysOnboarding",
+        element: <ApiKeysOnboarding />,
       },
       {
         path: "/apiKeyAutocompleteOnboarding",
