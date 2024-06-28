@@ -24,6 +24,7 @@ import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { Battery } from "./util/battery";
 import { getPlatform } from "./util/util";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { Telemetry } from "core/util/posthog";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -482,6 +483,7 @@ const commandsMap: (
       }
 
       //Full screen not open - open it
+      Telemetry.capture("openFullScreen", {});
 
       // Close the sidebar.webviews
       // vscode.commands.executeCommand("workbench.action.closeSidebar");
