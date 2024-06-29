@@ -8,6 +8,12 @@ export type ComboBoxItemType =
   | "folder"
   | "action";
 
+export interface ComboBoxSubAction {
+  label: string;
+  icon: string;
+  action: (item: ComboBoxItem) => void;
+}
+
 export interface ComboBoxItem {
   title: string;
   description: string;
@@ -19,4 +25,5 @@ export interface ComboBoxItem {
   label?: string;
   iconUrl?: string;
   action?: () => void;
+  subActions?: ComboBoxSubAction[];
 }

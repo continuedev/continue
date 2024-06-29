@@ -16,7 +16,7 @@ import {
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
-import { indexDocs } from "./indexing/docs/index.js";
+import { DocsService } from "./indexing/docs/DocsService";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase.js";
 import Ollama from "./llm/llms/Ollama.js";
@@ -39,6 +39,7 @@ export class Core {
   continueServerClientPromise: Promise<ContinueServerClient>;
   indexingState: IndexingProgressUpdate;
   private globalContext = new GlobalContext();
+  private docsService = DocsService.getInstance();
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -215,12 +216,17 @@ export class Core {
         faviconUrl: new URL("/favicon.ico", msg.data.rootUrl).toString(),
       };
 
-      for await (const _ of indexDocs(
+      for await (const _ of this.docsService.indexAndAdd(
         siteIndexingConfig,
         new TransformersJsEmbeddingsProvider(),
       )) {
       }
       this.ide.infoPopup(`Successfully indexed ${msg.data.title}`);
+      this.messenger.send("refreshSubmenuItems", undefined);
+    });
+    on("context/removeDocs", async (msg) => {
+      const baseUrl = msg.data.baseUrl;
+      await this.docsService.delete(baseUrl);
       this.messenger.send("refreshSubmenuItems", undefined);
     });
     on("context/loadSubmenuItems", async (msg) => {

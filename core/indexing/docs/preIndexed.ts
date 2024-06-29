@@ -1,5 +1,4 @@
 import { Chunk } from "../../index.js";
-import { addDocs } from "./db.js";
 
 const request = require("request");
 
@@ -38,22 +37,4 @@ export interface SiteIndexingResults {
   chunks: (Chunk & { embedding: number[] })[];
   url: string;
   title: string;
-}
-
-export async function downloadPreIndexedDocs(
-  embeddingsProviderId: string,
-  title: string,
-) {
-  const data = await downloadFromS3(
-    "continue-indexed-docs",
-    `${embeddingsProviderId}/${title}`,
-    "us-west-1",
-  );
-  const results = JSON.parse(data) as SiteIndexingResults;
-  await addDocs(
-    results.title,
-    new URL(results.url),
-    results.chunks,
-    results.chunks.map((c) => c.embedding),
-  );
 }

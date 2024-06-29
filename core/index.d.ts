@@ -161,6 +161,7 @@ export interface ContextSubmenuItem {
   title: string;
   description: string;
   iconUrl?: string;
+  metadata?: any;
 }
 
 export interface SiteIndexingConfig {
