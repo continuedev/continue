@@ -48,7 +48,10 @@ import { SlashCommand } from "./CommandsExtension";
 import InputToolbar from "./InputToolbar";
 import { Mention } from "./MentionExtension";
 import "./TipTapEditor.css";
-import { getCommandSuggestion, getMentionSuggestion } from "./getSuggestion";
+import {
+  getContextProviderDropdownOptions,
+  getSlashCommandDropdownOptions,
+} from "./getSuggestion";
 import { ComboBoxItem } from "./types";
 
 const InputBoxDiv = styled.div`
@@ -353,7 +356,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         HTMLAttributes: {
           class: "mention",
         },
-        suggestion: getMentionSuggestion(
+        suggestion: getContextProviderDropdownOptions(
           availableContextProvidersRef,
           getSubmenuContextItemsRef,
           enterSubmenu,
@@ -370,7 +373,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         HTMLAttributes: {
           class: "mention",
         },
-        suggestion: getCommandSuggestion(
+        suggestion: getSlashCommandDropdownOptions(
           availableSlashCommandsRef,
           onClose,
           onOpen,
@@ -590,7 +593,10 @@ function TipTapEditor(props: TipTapEditorProps) {
         const rif: RangeInFile & { contents: string } =
           data.rangeInFileWithContents;
         const basename = getBasename(rif.filepath);
-        const relativePath = getRelativePath(rif.filepath, await ideMessenger.ide.getWorkspaceDirs());
+        const relativePath = getRelativePath(
+          rif.filepath,
+          await ideMessenger.ide.getWorkspaceDirs(),
+        );
         const rangeStr = `(${rif.range.start.line + 1}-${rif.range.end.line + 1})`;
         const item: ContextItemWithId = {
           content: rif.contents,

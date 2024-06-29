@@ -6,6 +6,7 @@ import {
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
 } from "../../index.js";
+import { DocsService } from "../../indexing/docs/DocsService.js";
 import configs from "../../indexing/docs/preIndexedDocs.js";
 import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import { BaseContextProvider } from "../index.js";
@@ -19,6 +20,12 @@ class DocsContextProvider extends BaseContextProvider {
     description: "Type to search docs",
     type: "submenu",
   };
+  private docsService: DocsService;
+
+  constructor(options: any) {
+    super(options);
+    this.docsService = DocsService.getInstance();
+  }
 
   private async _getIconDataUrl(url: string): Promise<string | undefined> {
     try {
@@ -47,11 +54,10 @@ class DocsContextProvider extends BaseContextProvider {
       );
     }
 
-    const { retrieveDocs } = await import("../../indexing/docs/db.js");
     const embeddingsProvider = new TransformersJsEmbeddingsProvider();
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 
-    let chunks = await retrieveDocs(
+    let chunks = await this.docsService.retrieve(
       query,
       vector,
       this.options?.nRetrieve ?? DocsContextProvider.DEFAULT_N_RETRIEVE,
@@ -105,12 +111,14 @@ class DocsContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
-    const { listDocs } = await import("../../indexing/docs/db.js");
-    const docs = await listDocs();
+    const docs = await this.docsService.list();
     const submenuItems: ContextSubmenuItem[] = docs.map((doc) => ({
       title: doc.title,
       description: new URL(doc.baseUrl).hostname,
       id: doc.baseUrl,
+      metadata: {
+        preIndexed: !!configs.find((config) => config.title === doc.title),
+      },
     }));
 
     submenuItems.push(
@@ -123,18 +131,17 @@ class DocsContextProvider extends BaseContextProvider {
           title: config.title,
           description: new URL(config.startUrl).hostname,
           id: config.startUrl,
+          metadata: {
+            preIndexed: true,
+          },
           // iconUrl: config.faviconUrl,
         })),
     );
 
     // Sort submenuItems such that the objects with titles which don't occur in configs occur first, and alphabetized
     submenuItems.sort((a, b) => {
-      const aTitleInConfigs = !!configs.find(
-        (config) => config.title === a.title,
-      );
-      const bTitleInConfigs = !!configs.find(
-        (config) => config.title === b.title,
-      );
+      const aTitleInConfigs = a.metadata?.preIndexed;
+      const bTitleInConfigs = b.metadata?.preIndexed;
 
       // Primary criterion: Items not in configs come first
       if (!aTitleInConfigs && bTitleInConfigs) {

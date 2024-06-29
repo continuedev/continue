@@ -4,7 +4,7 @@ import { MutableRefObject } from "react";
 import tippy from "tippy.js";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 import MentionList from "./MentionList";
-import { ComboBoxItem, ComboBoxItemType } from "./types";
+import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "./types";
 
 function getSuggestion(
   items: (props: { query: string }) => Promise<ComboBoxItem[]>,
@@ -19,10 +19,16 @@ function getSuggestion(
       let component;
       let popup;
 
+      const onExit = () => {
+        popup?.[0]?.destroy();
+        component?.destroy();
+        onClose();
+      };
+
       return {
         onStart: (props) => {
           component = new ReactRenderer(MentionList, {
-            props: { ...props, enterSubmenu },
+            props: { ...props, enterSubmenu, onClose: onExit },
             editor: props.editor,
           });
 
@@ -67,17 +73,32 @@ function getSuggestion(
           return component.ref?.onKeyDown(props);
         },
 
-        onExit() {
-          popup?.[0]?.destroy();
-          component?.destroy();
-          onClose();
-        },
+        onExit,
       };
     },
   };
 }
 
-export function getMentionSuggestion(
+function getSubActionsForSubmenuItem(
+  item: ContextSubmenuItem & { providerTitle: string },
+  ideMessenger: IIdeMessenger,
+): ComboBoxSubAction[] | undefined {
+  if (item.providerTitle === "docs" && !item.metadata?.preIndexed) {
+    return [
+      {
+        label: "Open in new tab",
+        icon: "trash",
+        action: () => {
+          ideMessenger.request("context/removeDocs", { baseUrl: item.id });
+        },
+      },
+    ];
+  }
+
+  return undefined;
+}
+
+export function getContextProviderDropdownOptions(
   availableContextProvidersRef: MutableRefObject<ContextProviderDescription[]>,
   getSubmenuContextItemsRef: MutableRefObject<
     (
@@ -103,6 +124,7 @@ export function getMentionSuggestion(
           label: result.title,
           type: inSubmenu.current as ComboBoxItemType,
           query: result.id,
+          subActions: getSubActionsForSubmenuItem(result, ideMessenger),
         };
       });
     }
@@ -157,7 +179,7 @@ export function getMentionSuggestion(
   return getSuggestion(items, enterSubmenu, onClose, onOpen);
 }
 
-export function getCommandSuggestion(
+export function getSlashCommandDropdownOptions(
   availableSlashCommandsRef: MutableRefObject<ComboBoxItem[]>,
   onClose: () => void,
   onOpen: () => void,
