@@ -19,6 +19,10 @@ declare global {
       messageIde: string,
     ) => void;
   }
+
+  interface ReadableStream<R = any> {
+    [Symbol.asyncIterator](): AsyncIterableIterator<R>;
+  }
 }
 
 export interface ChunkWithoutID {

@@ -1,10 +1,23 @@
-async function* toAsyncIterable(nodeReadable: NodeJS.ReadableStream): AsyncGenerator<Uint8Array> {
-  for await (const chunk of nodeReadable) {
-    yield chunk as Uint8Array;
-  }
+function from<T>(source: ReadableStream<Uint8Array>): ReadableStream<T> {
+  return new ReadableStream({
+    async pull(controller) {
+      for await (const chunk of source) {
+        controller.enqueue(chunk as T);
+      }
+      controller.close();
+    },
+    cancel() {
+      // If the underlying stream is canceled, we should also cancel our stream
+      source.cancel();
+      // Close our stream to prevent further reads
+      this.cancel;
+    },
+  });
 }
 
-export async function* streamResponse(response: Response): AsyncGenerator<string> {
+export async function* streamResponse(
+  response: Response,
+): AsyncGenerator<string> {
   if (response.status !== 200) {
     throw new Error(await response.text());
   }
@@ -13,24 +26,14 @@ export async function* streamResponse(response: Response): AsyncGenerator<string
     throw new Error("No response body returned.");
   }
 
-  // Get the major version of Node.js
-  const nodeMajorVersion = parseInt(process.versions.node.split(".")[0], 10);
-
-  if (nodeMajorVersion >= 20) {
-    // Use the new API for Node 20 and above
-    const stream = (ReadableStream as any).from(response.body);
-    for await (const chunk of stream.pipeThrough(new TextDecoderStream("utf-8"))) {
-      yield chunk;
-    }
+  let stream;
+  if ("from" in ReadableStream) {
+    stream = (ReadableStream as any).from(response.body);
   } else {
-    // Fallback for Node versions below 20
-    // Streaming with this method doesn't work as version 20+ does
-    const decoder = new TextDecoder("utf-8");
-    const nodeStream = response.body as unknown as NodeJS.ReadableStream;
-    for await (const chunk of toAsyncIterable(nodeStream)) {
-      yield decoder.decode(chunk, { stream: true });
-    }
+    stream = from(response.body);
   }
+
+  yield* stream.pipeThrough(new TextDecoderStream("utf-8"));
 }
 
 function parseDataLine(line: string): any {
