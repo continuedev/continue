@@ -69,25 +69,6 @@ class VsCodeIde implements IDE {
     });
   }
 
-  async gotoDefinition(location: Location): Promise<RangeInFile[]> {
-    const result = await executeGotoProvider({
-      uri: location.filepath,
-      line: location.position.line,
-      character: location.position.character,
-      name: "vscode.executeDefinitionProvider",
-    });
-
-    return result;
-  }
-
-  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
-      if (editor) {
-        callback(editor.document.uri.fsPath);
-      }
-    });
-  }
-
   private authToken: string | undefined;
   private askedForAuth = false;
 
@@ -570,6 +551,10 @@ class VsCodeIde implements IDE {
         60,
       ),
       userToken: settings.get<string>("userToken", ""),
+      enableControlServerBeta: settings.get<boolean>(
+        "enableControlServerBeta",
+        false,
+      ),
     };
     return ideSettings;
   }

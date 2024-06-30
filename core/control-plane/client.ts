@@ -1,8 +1,5 @@
-import {
-  EmbeddingsProviderDescription,
-  ModelDescription,
-  RerankerDescription,
-} from "..";
+import { ModelDescription } from "..";
+import { ControlPlaneSettings } from "./schema";
 
 export interface ControlPlaneSessionInfo {
   accessToken: string;
@@ -12,23 +9,15 @@ export interface ControlPlaneSessionInfo {
   };
 }
 
-export interface AnalyticsConfig {
-  host: string;
-  apiKey: string;
+export interface ControlPlaneWorkspace {
+  id: string;
+  title: string;
+  settings: ControlPlaneSettings;
 }
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
 
-export interface ControlPlaneSettings {
-  analytics?: AnalyticsConfig;
-  models?: ControlPlaneModelDescription[];
-  embeddingsProvider?: EmbeddingsProviderDescription;
-  tabAutocompleteModel?: ModelDescription | ModelDescription[];
-  reranker?: RerankerDescription;
-}
-
 export class ControlPlaneClient {
-  private settings: ControlPlaneSettings | null = null;
   private static URL = "";
 
   constructor(
@@ -37,12 +26,24 @@ export class ControlPlaneClient {
     >,
   ) {}
 
-  public async getSettings(): Promise<ControlPlaneSettings> {
-    return this.settings ?? (await this.fetchSettings());
+  public async listWorkspaces(): Promise<ControlPlaneWorkspace[]> {
+    return [
+      {
+        id: "default",
+        title: "Default",
+        settings: {
+          models: [],
+        } as any,
+      },
+    ];
+    // const settings = await this.getSettings();
+    // return settings.workspaces;
   }
 
-  private async fetchSettings(): Promise<ControlPlaneSettings> {
-    return {};
+  async getSettingsForWorkspace(
+    workspaceId: string,
+  ): Promise<ControlPlaneSettings> {
+    return { models: [] } as any;
     // const response = await fetch(ControlPlaneClient.URL);
     // const settings = await response.json();
     // this.settings = settings;

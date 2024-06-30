@@ -212,6 +212,9 @@ export class Core {
     on("config/ideSettingsUpdate", (msg) => {
       this.configHandler.updateIdeSettings(msg.data);
     });
+    on("config/listProfiles", (msg) => {
+      return this.configHandler.listProfiles();
+    });
 
     // Context providers
     on("context/addDocs", async (msg) => {

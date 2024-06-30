@@ -28,13 +28,7 @@ class FileSystemIde implements IDE {
   gotoDefinition(location: Location): Promise<RangeInFile[]> {
     throw new Error("Method not implemented.");
   }
-  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
-    throw new Error("Method not implemented.");
-  }
 
-  gotoDefinition(location: Location): Promise<RangeInFile[]> {
-    throw new Error("Method not implemented.");
-  }
   onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
     throw new Error("Method not implemented.");
   }

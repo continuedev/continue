@@ -15,6 +15,7 @@ import type {
   SiteIndexingConfig,
 } from "..";
 import type { AutocompleteInput } from "../autocomplete/completionProvider";
+import { ProfileDescription } from "../config/handler";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -50,6 +51,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "config/getBrowserSerialized": [undefined, BrowserSerializedContinueConfig];
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, BrowserSerializedContinueConfig];
+  "config/listProfiles": [undefined, ProfileDescription[]];
   "context/getContextItems": [
     {
       name: string;

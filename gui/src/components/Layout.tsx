@@ -1,8 +1,4 @@
-import {
-  Cog6ToothIcon,
-  QuestionMarkCircleIcon,
-  UserCircleIcon,
-} from "@heroicons/react/24/outline";
+import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { IndexingProgressUpdate } from "core";
 import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -15,7 +11,6 @@ import {
   vscInputBackground,
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
-import { useAuth } from "../hooks/useAuth";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
@@ -24,15 +19,15 @@ import {
   setShowDialog,
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
-import { getFontSize, isJetBrains, isMetaEquivalentKeyPressed } from "../util";
+import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
+import HeaderButtonWithText from "./HeaderButtonWithText";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
-import ModelSelect from "./modelSelection/ModelSelect";
 import PostHogPageView from "./PosthogPageView";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
+import ProfileSwitcher from "./ProfileSwitcher";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -229,8 +224,6 @@ const Layout = () => {
     status: "loading",
   });
 
-  const { session, logout, login } = useAuth();
-
   return (
     <LayoutTopDiv>
       <div
@@ -259,9 +252,6 @@ const Layout = () => {
           {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
             <Footer>
               <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
-                <div className="flex-shrink-0">
-                  <ModelSelect />
-                </div>
                 {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
                   defaultModel?.provider === "free-trial" && (
                     <ProgressBar
@@ -270,26 +260,10 @@ const Layout = () => {
                     />
                   )}
                 <IndexingProgressBar indexingState={indexingState} />
+                <div className="flex-shrink-0">{/* <ModelSelect /> */}</div>
               </div>
-              {isJetBrains() || (
-                <HeaderButtonWithText
-                  text={
-                    session?.account
-                      ? `Logged in as ${session.account.label}`
-                      : "Click to login to Continue"
-                  }
-                  onClick={() => {
-                    if (session.account) {
-                      logout();
-                    } else {
-                      login();
-                    }
-                  }}
-                >
-                  <UserCircleIcon width="1.4em" height="1.4em" />
-                </HeaderButtonWithText>
-              )}
 
+              <ProfileSwitcher />
               <HeaderButtonWithText
                 text="Help"
                 onClick={() => {
@@ -301,15 +275,6 @@ const Layout = () => {
                 }}
               >
                 <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-              <HeaderButtonWithText
-                onClick={() => {
-                  // navigate("/settings");
-                  ideMessenger.post("openConfigJson", undefined);
-                }}
-                text="Configure Continue"
-              >
-                <Cog6ToothIcon width="1.4em" height="1.4em" />
               </HeaderButtonWithText>
             </Footer>
           )}

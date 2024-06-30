@@ -41,6 +41,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "index/indexingProgressBarInitialized",
     "completeOnboarding",
     "addAutocompleteModel",
+    "config/listProfiles",
   ];
 
 // Message types to pass through from core to webview

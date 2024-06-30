@@ -36,8 +36,6 @@ import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
 
-import { applySettingsToSerializedConfig } from "../control-plane/applyConfig.js";
-import { ControlPlaneClient } from "../control-plane/client.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
 import mergeJson from "../util/merge.js";
@@ -145,6 +143,7 @@ function loadSerializedConfig(
 async function serializedToIntermediateConfig(
   initial: SerializedContinueConfig,
   ide: IDE,
+  loadPromptFiles: boolean = true,
 ): Promise<Config> {
   const slashCommands: SlashCommand[] = [];
   for (const command of initial.slashCommands || []) {
@@ -160,25 +159,27 @@ async function serializedToIntermediateConfig(
   const workspaceDirs = await ide.getWorkspaceDirs();
   const promptFolder = initial.experimental?.promptPath;
 
-  let promptFiles: { path: string; content: string }[] = [];
-  promptFiles = (
-    await Promise.all(
-      workspaceDirs.map((dir) =>
-        getPromptFiles(
-          ide,
-          path.join(dir, promptFolder ?? DEFAULT_PROMPTS_FOLDER),
+  if (loadPromptFiles) {
+    let promptFiles: { path: string; content: string }[] = [];
+    promptFiles = (
+      await Promise.all(
+        workspaceDirs.map((dir) =>
+          getPromptFiles(
+            ide,
+            path.join(dir, promptFolder ?? DEFAULT_PROMPTS_FOLDER),
+          ),
         ),
-      ),
+      )
     )
-  )
-    .flat()
-    .filter(({ path }) => path.endsWith(".prompt"));
+      .flat()
+      .filter(({ path }) => path.endsWith(".prompt"));
 
-  // Also read from ~/.continue/.prompts
-  promptFiles.push(...readAllGlobalPromptFiles());
+    // Also read from ~/.continue/.prompts
+    promptFiles.push(...readAllGlobalPromptFiles());
 
-  for (const file of promptFiles) {
-    slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
+    for (const file of promptFiles) {
+      slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
+    }
   }
 
   const config: Config = {
@@ -209,9 +210,10 @@ async function intermediateToFinalConfig(
   ideSettings: IdeSettings,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
+  allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
   // Auto-detect models
-  const models: BaseLLM[] = [];
+  let models: BaseLLM[] = [];
   for (const desc of config.models) {
     if (isModelDescription(desc)) {
       const llm = await llmFromDescription(
@@ -292,15 +294,20 @@ async function intermediateToFinalConfig(
     };
   }
 
-  // Obtain auth token (only if free trial being used)
-  const freeTrialModels = models.filter(
-    (model) => model.providerName === "free-trial",
-  );
-  if (freeTrialModels.length > 0) {
-    const ghAuthToken = await ide.getGitHubAuthToken();
-    for (const model of freeTrialModels) {
-      (model as FreeTrial).setupGhAuthToken(ghAuthToken);
+  if (allowFreeTrial) {
+    // Obtain auth token (iff free trial being used)
+    const freeTrialModels = models.filter(
+      (model) => model.providerName === "free-trial",
+    );
+    if (freeTrialModels.length > 0) {
+      const ghAuthToken = await ide.getGitHubAuthToken();
+      for (const model of freeTrialModels) {
+        (model as FreeTrial).setupGhAuthToken(ghAuthToken);
+      }
     }
+  } else {
+    // Remove free trial models
+    models = models.filter((model) => model.providerName !== "free-trial");
   }
 
   // Tab autocomplete model
@@ -324,6 +331,10 @@ async function intermediateToFinalConfig(
             );
 
             if (llm?.providerName === "free-trial") {
+              if (!allowFreeTrial) {
+                // This shouldn't happen
+                throw new Error("Free trial cannot be used with control plane");
+              }
               const ghAuthToken = await ide.getGitHubAuthToken();
               (llm as FreeTrial).setupGhAuthToken(ghAuthToken);
             }
@@ -525,19 +536,9 @@ async function loadFullConfigNode(
   ideType: IdeType,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
-  controlPlaneClient: ControlPlaneClient,
 ): Promise<ContinueConfig> {
   // Serialized config
   let serialized = loadSerializedConfig(workspaceConfigs, ideSettings, ideType);
-
-  // Load control plane config
-  const controlPlaneSettings = await controlPlaneClient.getSettings();
-  if (controlPlaneSettings) {
-    serialized = applySettingsToSerializedConfig(
-      serialized,
-      controlPlaneSettings,
-    );
-  }
 
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(serialized, ide);

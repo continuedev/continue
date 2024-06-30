@@ -1,5 +1,5 @@
 import os from "node:os";
-import { AnalyticsConfig } from "./client.js";
+import { ControlPlaneAnalytics } from "./schema";
 
 export class TeamAnalytics {
   static client: any = undefined;
@@ -24,7 +24,7 @@ export class TeamAnalytics {
   }
 
   static async setup(
-    config: AnalyticsConfig | undefined,
+    config: ControlPlaneAnalytics,
     uniqueId: string,
     extensionVersion: string,
   ) {
@@ -32,13 +32,13 @@ export class TeamAnalytics {
     TeamAnalytics.os = os.platform();
     TeamAnalytics.extensionVersion = extensionVersion;
 
-    if (!config) {
+    if (!config || !config.clientKey || !config.url) {
       TeamAnalytics.client = undefined;
     } else {
       try {
         const { PostHog } = await import("posthog-node");
-        TeamAnalytics.client = new PostHog(config.apiKey, {
-          host: config.host,
+        TeamAnalytics.client = new PostHog(config.clientKey, {
+          host: config.url,
         });
       } catch (e) {
         console.error(`Failed to setup telemetry: ${e}`);

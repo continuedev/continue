@@ -101,6 +101,11 @@
           "type": "number",
           "default": 60,
           "description": "The period of time in minutes between automatic syncs."
+        },
+        "continue.enableControlServerBeta": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable the beta control server feature."
         }
       }
     },
