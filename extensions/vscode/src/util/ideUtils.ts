@@ -3,7 +3,7 @@ import { defaultIgnoreFile } from "core/indexing/ignore";
 import path from "node:path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
-import { VsCodeExtension } from "../extension/vscodeExtension";
+import { VsCodeExtension } from "../extension/VsCodeExtension";
 import { GitExtension, Repository } from "../otherExtensions/git";
 import {
   SuggestionRanges,
@@ -610,6 +610,8 @@ export class VsCodeIdeUtils {
 
   private _repoWasNone: boolean = false;
   private repoCache: Map<string, Repository> = new Map();
+  private static secondsToWaitForGitToLoad =
+    process.env.NODE_ENV === "test" ? 1 : 20;
   async getRepo(forDirectory: vscode.Uri): Promise<Repository | undefined> {
     const workspaceDirs = this.getWorkspaceDirectories();
     const parentDir = workspaceDirs.find((dir) =>
@@ -631,7 +633,7 @@ export class VsCodeIdeUtils {
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
       i++;
-      if (i >= 20) {
+      if (i >= VsCodeIdeUtils.secondsToWaitForGitToLoad) {
         this._repoWasNone = true;
         return undefined;
       }
