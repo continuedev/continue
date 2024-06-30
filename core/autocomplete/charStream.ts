@@ -39,3 +39,44 @@ export async function* noFirstCharNewline(stream: AsyncGenerator<string>) {
     yield char;
   }
 }
+
+export async function* stopAtStopTokens(
+  stream: AsyncGenerator<string>,
+  stopTokens: string[],
+): AsyncGenerator<string> {
+  if (stopTokens.length === 0) {
+    for await (const char of stream) {
+      yield char;
+    }
+    return;
+  }
+
+  const maxStopTokenLength = Math.max(
+    ...stopTokens.map((token) => token.length),
+  );
+  let buffer = "";
+
+  for await (const chunk of stream) {
+    buffer += chunk;
+
+    while (buffer.length >= maxStopTokenLength) {
+      let found = false;
+      for (const stopToken of stopTokens) {
+        if (buffer.startsWith(stopToken)) {
+          found = true;
+          return;
+        }
+      }
+
+      if (!found) {
+        yield buffer[0];
+        buffer = buffer.slice(1);
+      }
+    }
+  }
+
+  // Yield any remaining characters in the buffer
+  for (const char of buffer) {
+    yield char;
+  }
+}
