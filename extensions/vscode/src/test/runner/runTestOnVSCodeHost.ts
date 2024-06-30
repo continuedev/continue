@@ -1,4 +1,5 @@
 import { runTests } from "@vscode/test-electron";
+import { defaultConfig } from "core/config/default";
 import fs from "node:fs";
 import * as path from "node:path";
 
@@ -9,6 +10,15 @@ export const testWorkspacePath = path.resolve(
   "test",
   "fixtures",
   "test-workspace",
+);
+
+const continueGlobalDir = path.resolve(
+  __dirname,
+  "..",
+  "src",
+  "test",
+  "fixtures",
+  ".continue",
 );
 
 function setupTestWorkspace() {
@@ -38,9 +48,38 @@ function setupTestWorkspace() {
   );
 }
 
+function setupContinueGlobalDir() {
+  if (fs.existsSync(continueGlobalDir)) {
+    fs.rmSync(continueGlobalDir, { recursive: true });
+  }
+  fs.mkdirSync(continueGlobalDir, {
+    recursive: true,
+  });
+  fs.writeFileSync(
+    path.join(continueGlobalDir, "config.json"),
+    JSON.stringify({
+      ...defaultConfig,
+      models: [
+        {
+          title: "Test Model",
+          provider: "openai",
+          model: "gpt-3.5-turbo",
+          apiKey: "API_KEY",
+        },
+      ],
+    }),
+  );
+}
+
 function cleanupTestWorkspace() {
   if (fs.existsSync(testWorkspacePath)) {
     fs.rmSync(testWorkspacePath, { recursive: true });
+  }
+}
+
+function cleanupContinueGlobalDir() {
+  if (fs.existsSync(continueGlobalDir)) {
+    fs.rmSync(continueGlobalDir, { recursive: true });
   }
 }
 
@@ -62,9 +101,11 @@ async function main() {
 
     const extensionTestsEnv = {
       NODE_ENV: "test",
+      CONTINUE_GLOBAL_DIR: continueGlobalDir,
     };
 
     setupTestWorkspace();
+    setupContinueGlobalDir();
 
     // Download VS Code, unzip it and run the integration test
     await runTests({
@@ -78,6 +119,7 @@ async function main() {
     process.exit(1);
   } finally {
     cleanupTestWorkspace();
+    cleanupContinueGlobalDir();
   }
 }
 
