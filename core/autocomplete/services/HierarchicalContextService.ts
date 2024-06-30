@@ -61,6 +61,12 @@ export class HierarchicalContextService {
       case "method_definition":
         query = await getQueryForFile(filepath, TSQueryType.MethodDefinition);
         break;
+      case "function_definition":
+        query = await getQueryForFile(filepath, TSQueryType.FunctionDefinition);
+        break;
+      case "method_declaration":
+        query = await getQueryForFile(filepath, TSQueryType.MethodDeclaration);
+        break;
       default:
         break;
     }
