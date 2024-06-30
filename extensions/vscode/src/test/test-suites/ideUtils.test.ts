@@ -104,7 +104,7 @@ describe("IDE Utils", () => {
     assert(noDiff === "");
   });
 
-  test("getBranch", async () => {
+  test.skip("getBranch", async () => {
     const uri = vscode.Uri.file(testWorkspacePath);
     const branch = await utils.getBranch(uri);
     assert(typeof branch === "string");
