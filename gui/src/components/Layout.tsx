@@ -15,6 +15,7 @@ import {
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { shouldBeginOnboarding } from "../pages/onboarding/utils";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
@@ -212,9 +213,8 @@ const Layout = () => {
   );
 
   useEffect(() => {
-    const onboardingComplete = getLocalStorage("onboardingComplete");
     if (
-      !onboardingComplete &&
+      shouldBeginOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
       navigate("/onboarding");
