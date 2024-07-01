@@ -6,7 +6,7 @@ import { IProfileLoader } from "./IProfileLoader";
 export default class LocalProfileLoader implements IProfileLoader {
   static ID = "local";
   profileId = LocalProfileLoader.ID;
-  profileTitle = "Local Profile (config.json)";
+  profileTitle = "config.json";
 
   constructor(
     private ide: IDE,

@@ -151,7 +151,7 @@ export class ConfigHandler {
       workspaces.forEach((workspace) => {
         const profileLoader = new ControlPlaneProfileLoader(
           workspace.id,
-          workspace.title,
+          workspace.name,
           this.controlPlaneClient,
           ide,
           ideSettingsPromise,
