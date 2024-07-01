@@ -16,8 +16,6 @@ export default function PostHogPageView() {
     if (pathname && posthog) {
       let url = window.origin + pathname;
 
-      console.log({ url, pathname });
-
       if (searchParams.toString()) {
         url = url + `?${searchParams.toString()}`;
       }
