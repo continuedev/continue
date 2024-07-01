@@ -1,56 +1,45 @@
 import { usePostHog } from "posthog-js/react";
 import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-export function useCaptureNewUserOnboardingStarted() {
-  const posthog = usePostHog();
+// Note that there is no "NotStarted" status since the
+// local storage value is null until onboarding begins
+export type OnboardingStatus = "InProgress" | "Completed";
 
-  const [captureNewUserOnboardingStarted, setCaptureNewUserOnboardingStarted] =
-    useState<Function | undefined>(undefined);
+// If there is no value in local storage for "onboardingStatus",
+// it implies that the user has not begun or completed onboarding.
+export function shouldBeginOnboarding() {
+  const onboardingStatus = getLocalStorage("onboardingStatus");
 
-  useEffect(() => {
-    // This is a heuristic. Currently, in `gui/src/components/Layout.tsx`.
-    // we check this local storage key to determine if we should show the
-    // onboarding page to a new user.
-    const isExistingUser = getLocalStorage("onboardingComplete");
-
-    if (!isExistingUser) {
-      setCaptureNewUserOnboardingStarted(() => {
-        return () => {
-          debugger;
-          setLocalStorage("newUserOnboardingInProgress", true);
-          posthog.capture("newUserOnboardingStarted");
-        };
-      });
-    }
-  }, []);
-
-  return { captureNewUserOnboardingStarted };
+  return onboardingStatus === undefined;
 }
 
-export function useCaptureNewUserOnboardingCompleted() {
+// TODO: Comments about this both capturing telemetry,
+// and setting state vars
+export function useOnboarding() {
   const posthog = usePostHog();
+  const navigate = useNavigate();
 
-  const [
-    captureNewUserOnboardingComplete,
-    setCaptureNewUserOnboardingComplete,
-  ] = useState<Function | undefined>(undefined);
+  const onboardingStatus = getLocalStorage("onboardingStatus");
+
+  const completeOnboarding = () => {
+    if (onboardingStatus === "InProgress") {
+      setLocalStorage("onboardingStatus", "Completed");
+      posthog.capture("onboardingStatus", { onboardingStatus });
+    }
+
+    navigate("/");
+  };
 
   useEffect(() => {
-    const isNewUserOnboardingInProgress = getLocalStorage(
-      "newUserOnboardingInProgress",
-    );
-
-    if (isNewUserOnboardingInProgress) {
-      setCaptureNewUserOnboardingComplete(() => {
-        return () => {
-          debugger;
-          setLocalStorage("newUserOnboardingInProgress", false);
-          posthog.capture("newUserOnboardingCompleted");
-        };
-      });
+    if (shouldBeginOnboarding()) {
+      setLocalStorage("onboardingStatus", "InProgress");
+      posthog.capture("onboardingStatus", { onboardingStatus });
     }
   }, []);
 
-  return { captureNewUserOnboardingComplete };
+  return {
+    completeOnboarding,
+  };
 }

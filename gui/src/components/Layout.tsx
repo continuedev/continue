@@ -31,6 +31,7 @@ import ProgressBar from "./loaders/ProgressBar";
 import ModelSelect from "./modelSelection/ModelSelect";
 import PostHogPageView from "./PosthogPageView";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
+import { shouldBeginOnboarding } from "../pages/onboarding/utils";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -212,9 +213,8 @@ const Layout = () => {
   );
 
   useEffect(() => {
-    const onboardingComplete = getLocalStorage("onboardingComplete");
     if (
-      !onboardingComplete &&
+      shouldBeginOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
       navigate("/onboarding");

@@ -1,6 +1,5 @@
 import { useContext, useState } from "react";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { Input, lightGray } from "../../components";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -8,7 +7,7 @@ import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { models } from "../AddNewModel/configs/models";
 import { providers } from "../AddNewModel/configs/providers";
 import { StyledButton } from "./components";
-import { useCaptureNewUserOnboardingCompleted } from "./utils";
+import { useOnboarding } from "./utils";
 
 const HelperText = styled.p`
   font-size: 0.8rem;
@@ -17,7 +16,6 @@ const HelperText = styled.p`
 `;
 
 function DefaultModelConfigForm() {
-  const navigate = useNavigate();
   const dispatch = useDispatch();
 
   const ideMessenger = useContext(IdeMessengerContext);
@@ -25,8 +23,7 @@ function DefaultModelConfigForm() {
   const [mistralApiKey, setMistralApiKey] = useState("");
   const [anthropicApiKey, setAnthropicApiKey] = useState("");
 
-  const { captureNewUserOnboardingComplete } =
-    useCaptureNewUserOnboardingCompleted();
+  const { completeOnboarding } = useOnboarding();
 
   const isFormComplete = !!mistralApiKey && !!anthropicApiKey;
 
@@ -60,9 +57,7 @@ function DefaultModelConfigForm() {
 
     ideMessenger.post("showTutorial", undefined);
 
-    captureNewUserOnboardingComplete && captureNewUserOnboardingComplete();
-
-    navigate("/");
+    completeOnboarding();
   }
 
   return (
