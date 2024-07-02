@@ -190,6 +190,18 @@ const commandsMap: (
     },
     "continue.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
+      if (!fullScreenTab) {
+        // focus sidebar
+        vscode.commands.executeCommand("continue.continueGUIView.focus");
+      } else {
+        // focus fullscreen
+        fullScreenPanel?.reveal();
+      }
+      sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+      await addHighlightedCodeToContext(sidebar.webviewProtocol);
+    },
+    "continue.focusContinueInputWithoutClear": async () => {
+      const fullScreenTab = getFullScreenTab();
 
       const isContinueInputFocused = await sidebar.webviewProtocol.request(
         "isContinueInputFocused",
@@ -213,21 +225,13 @@ const commandsMap: (
           fullScreenPanel?.reveal();
         }
 
-        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
+        sidebar.webviewProtocol?.request(
+          "focusContinueInputWithoutClear",
+          undefined,
+        );
+
+        await addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
-    },
-    "continue.focusContinueInputWithoutClear": async () => {
-      if (!getFullScreenTab()) {
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      }
-      sidebar.webviewProtocol?.request(
-        "focusContinueInputWithoutClear",
-        undefined,
-      );
-      await addHighlightedCodeToContext(sidebar.webviewProtocol);
-    },
-    "continue.toggleAuxiliaryBar": () => {
-      vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
     },
     "continue.quickEdit": async (prompt?: string) => {
       const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;

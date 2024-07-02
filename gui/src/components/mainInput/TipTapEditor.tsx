@@ -151,8 +151,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
   const useActiveFile = useSelector(selectUseActiveFile);
 
-  const [inputFocused, setInputFocused] = useState(false);
-
   const { saveSession } = useHistory(dispatch);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
@@ -648,11 +646,13 @@ function TipTapEditor(props: TipTapEditorProps) {
     "isContinueInputFocused",
     async () => {
       console.log({
-        "props.isMainInput && inputFocused": props.isMainInput && inputFocused,
+        isMainInput: props.isMainInput,
+        isInputFocused: editorFocusedRef.current,
       });
-      return props.isMainInput && inputFocused;
+      return props.isMainInput && editorFocusedRef.current;
     },
-    [inputFocused, props.isMainInput],
+    [editorFocusedRef, props.isMainInput],
+    !props.isMainInput,
   );
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
@@ -737,22 +737,13 @@ function TipTapEditor(props: TipTapEditorProps) {
       <EditorContent
         spellCheck={false}
         editor={editor}
-        onFocus={() => {
-          setInputFocused(true);
-        }}
-        onBlur={() => {
-          // hack to stop from cancelling press of "Enter"
-          setTimeout(() => {
-            setInputFocused(false);
-          }, 100);
-        }}
         onClick={(event) => {
           event.stopPropagation();
         }}
       />
       <InputToolbar
         showNoContext={optionKeyHeld}
-        hidden={!(inputFocused || props.isMainInput)}
+        hidden={!(editorFocusedRef.current || props.isMainInput)}
         onAddContextItem={() => {
           if (editor.getText().endsWith("@")) {
           } else {
