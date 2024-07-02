@@ -18,8 +18,10 @@ export interface ControlPlaneWorkspace {
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
 
+export const CONTROL_PLANE_URL = "http://localhost:3001";
+
 export class ControlPlaneClient {
-  private static URL = "http://localhost:3001";
+  private static URL = CONTROL_PLANE_URL;
   private static ACCESS_TOKEN_VALID_FOR_MS = 1000 * 60 * 5; // 5 minutes
 
   private lastAccessTokenRefresh = 0;
@@ -54,18 +56,7 @@ export class ControlPlaneClient {
   }
 
   private async getAccessToken(): Promise<string | undefined> {
-    const tokens = (await this.sessionInfoPromise)?.accessToken;
-    const { access_token, refresh_token } = JSON.parse(tokens || "{}");
-
-    if (
-      this.lastAccessTokenRefresh +
-        ControlPlaneClient.ACCESS_TOKEN_VALID_FOR_MS -
-        10_000 <
-      Date.now()
-    ) {
-      return await this.refreshAccessToken(refresh_token);
-    }
-    return access_token;
+    return (await this.sessionInfoPromise)?.accessToken;
   }
 
   private async request(path: string, init: RequestInit): Promise<Response> {
@@ -91,24 +82,12 @@ export class ControlPlaneClient {
   }
 
   public async listWorkspaces(): Promise<ControlPlaneWorkspace[]> {
-    return [
-      {
-        id: "7",
-        name: "Personal Workspace",
-        settings: {} as any,
-      },
-      {
-        id: "8",
-        name: "Continue Team",
-        settings: {} as any,
-      },
-    ];
     const userId = await this.userId;
     if (!userId) {
       return [];
     }
 
-    const resp = await this.request(`/users/${userId}/workspaces`, {
+    const resp = await this.request(`/workspaces`, {
       method: "GET",
     });
     return (await resp.json()) as any;

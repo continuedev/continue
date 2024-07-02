@@ -27,7 +27,10 @@ class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
   }
 }
 
-import { ControlPlaneSessionInfo } from "core/control-plane/client";
+import {
+  CONTROL_PLANE_URL,
+  ControlPlaneSessionInfo,
+} from "core/control-plane/client";
 import crypto from "crypto";
 
 // Function to generate a random string of specified length
@@ -58,6 +61,12 @@ async function generateCodeChallenge(verifier: string) {
   return base64String;
 }
 
+interface ContinueAuthenticationSession extends AuthenticationSession {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
 export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   private _sessionChangeEmitter =
     new EventEmitter<AuthenticationProviderAuthenticationSessionsChangeEvent>();
@@ -68,7 +77,9 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     { promise: Promise<string>; cancel: EventEmitter<void> }
   >();
   private _uriHandler = new UriEventHandler();
-  private _sessions: AuthenticationSession[] = [];
+  private _sessions: ContinueAuthenticationSession[] = [];
+
+  private static EXPIRATION_TIME_MS = 1000 * 60 * 5; // 5 minutes
 
   constructor(private readonly context: ExtensionContext) {
     this._disposable = Disposable.from(
@@ -95,44 +106,66 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   async initialize() {
     let sessions = await this.context.secrets.get(SESSIONS_SECRET_KEY);
     this._sessions = sessions ? JSON.parse(sessions) : [];
-    // await this._refreshSessions();
+    await this._refreshSessions();
   }
 
-  // private async _refreshSessions(): Promise<void> {
-  //   if (!this._sessions.length) {
-  //     return;
-  //   }
-  //   for (const session of this._sessions) {
-  //     try {
-  //       const newSession = await this._refreshSession(session.refreshToken);
-  //       session.accessToken = newSession.access_token;
-  //       session.refreshToken = newSession.refresh_token;
-  //       session.expiresIn = newSession.expires_in;
-  //     } catch (e: any) {
-  //       if (e.message === "Network failure") {
-  //         setTimeout(() => this._refreshSessions(), 60 * 1000);
-  //         return;
-  //       }
-  //     }
-  //   }
-  //   await this.context.secrets.store(
-  //     secretStorageKey,
-  //     JSON.stringify(this._sessions),
-  //   );
-  //   this._onDidChangeSessions.fire({
-  //     added: [],
-  //     removed: [],
-  //     changed: this._sessions,
-  //   });
-  //   setTimeout(
-  //     () => this._refreshSessions(),
-  //     (this._sessions[0].expiresIn * 1000 * 2) / 3,
-  //   );
-  // }
+  private async _refreshSessions(): Promise<void> {
+    if (!this._sessions.length) {
+      return;
+    }
+    for (const session of this._sessions) {
+      try {
+        const newSession = await this._refreshSession(session.refreshToken);
+        session.accessToken = newSession.accessToken;
+        session.refreshToken = newSession.refreshToken;
+        session.expiresIn = newSession.expiresIn;
+      } catch (e: any) {
+        if (e.message === "Network failure") {
+          setTimeout(() => this._refreshSessions(), 60 * 1000);
+          return;
+        }
+      }
+    }
+    await this.context.secrets.store(
+      SESSIONS_SECRET_KEY,
+      JSON.stringify(this._sessions),
+    );
+    this._sessionChangeEmitter.fire({
+      added: [],
+      removed: [],
+      changed: this._sessions,
+    });
 
-  // private async _refreshSession(refreshToken: string): Promise<{accessToken: string, refreshToken: string}> {
-  //   const response = await fetch()
-  // }
+    if (this._sessions[0].expiresIn) {
+      setTimeout(
+        () => this._refreshSessions(),
+        (this._sessions[0].expiresIn * 1000 * 2) / 3,
+      );
+    }
+  }
+
+  private async _refreshSession(
+    refreshToken: string,
+  ): Promise<{ accessToken: string; refreshToken: string; expiresIn: number }> {
+    const response = await fetch(new URL("/auth/refresh", CONTROL_PLANE_URL), {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        refreshToken,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error("Network failure");
+    }
+    const data = (await response.json()) as any;
+    return {
+      accessToken: data.accessToken,
+      refreshToken: data.refreshToken,
+      expiresIn: WorkOsAuthProvider.EXPIRATION_TIME_MS,
+    };
+  }
 
   /**
    * Get the existing sessions
@@ -141,11 +174,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
    */
   public async getSessions(
     scopes?: string[],
-  ): Promise<readonly AuthenticationSession[]> {
+  ): Promise<readonly ContinueAuthenticationSession[]> {
     const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY);
 
     if (allSessions) {
-      return JSON.parse(allSessions) as AuthenticationSession[];
+      return JSON.parse(allSessions) as ContinueAuthenticationSession[];
     }
 
     return [];
@@ -156,7 +189,9 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
    * @param scopes
    * @returns
    */
-  public async createSession(scopes: string[]): Promise<AuthenticationSession> {
+  public async createSession(
+    scopes: string[],
+  ): Promise<ContinueAuthenticationSession> {
     try {
       const codeVerifier = generateRandomString(64);
       const codeChallenge = await generateCodeChallenge(codeVerifier);
@@ -168,9 +203,11 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
       const userInfo = (await this.getUserInfo(token, codeVerifier)) as any;
       const { user, access_token, refresh_token } = userInfo;
 
-      const session: AuthenticationSession = {
+      const session: ContinueAuthenticationSession = {
         id: uuidv4(),
-        accessToken: JSON.stringify({ access_token, refresh_token }),
+        accessToken: access_token,
+        refreshToken: refresh_token,
+        expiresIn: WorkOsAuthProvider.EXPIRATION_TIME_MS,
         account: {
           label: user.first_name + " " + user.last_name,
           id: user.email,
@@ -203,7 +240,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
   public async removeSession(sessionId: string): Promise<void> {
     const allSessions = await this.context.secrets.get(SESSIONS_SECRET_KEY);
     if (allSessions) {
-      let sessions = JSON.parse(allSessions) as AuthenticationSession[];
+      let sessions = JSON.parse(allSessions) as ContinueAuthenticationSession[];
       const sessionIdx = sessions.findIndex((s) => s.id === sessionId);
       const session = sessions[sessionIdx];
       sessions.splice(sessionIdx, 1);
