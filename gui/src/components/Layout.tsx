@@ -26,6 +26,7 @@ import TextDialog from "./dialogs";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
+import ModelSelect from "./modelSelection/ModelSelect";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
 
@@ -76,12 +77,20 @@ const GridDiv = styled.div`
   overflow-x: visible;
 `;
 
-const DropdownPortalDiv = styled.div`
+const ModelDropdownPortalDiv = styled.div`
   background-color: ${vscInputBackground};
   position: relative;
   margin-left: 8px;
   z-index: 200;
   font-size: ${getFontSize()};
+`;
+
+const ProfileDropdownPortalDiv = styled.div`
+  background-color: ${vscInputBackground};
+  position: relative;
+  margin-left: calc(100% - 190px);
+  z-index: 200;
+  font-size: ${getFontSize() - 2};
 `;
 
 // #endregion
@@ -248,9 +257,13 @@ const Layout = () => {
         <GridDiv>
           <PostHogPageView />
           <Outlet />
-          <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
+          <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
+          <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
           {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
             <Footer>
+              <div className="flex-shrink-0">
+                <ModelSelect />
+              </div>
               <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
                 {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
                   defaultModel?.provider === "free-trial" && (
@@ -260,7 +273,6 @@ const Layout = () => {
                     />
                   )}
                 <IndexingProgressBar indexingState={indexingState} />
-                <div className="flex-shrink-0">{/* <ModelSelect /> */}</div>
               </div>
 
               <ProfileSwitcher />

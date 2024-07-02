@@ -100,7 +100,7 @@ export class ConfigHandler {
   private readonly globalContext = new GlobalContext();
   private additionalContextProviders: IContextProvider[] = [];
   private profiles: ProfileLifecycleManager[];
-  private currentProfileId: string;
+  private selectedProfileId: string;
 
   // This will be the local profile
   private get fallbackProfile() {
@@ -109,13 +109,13 @@ export class ConfigHandler {
 
   get currentProfile() {
     return (
-      this.profiles.find((p) => p.profileId === this.currentProfileId) ??
+      this.profiles.find((p) => p.profileId === this.selectedProfileId) ??
       this.fallbackProfile
     );
   }
 
   get inactiveProfiles() {
-    return this.profiles.filter((p) => p.profileId !== this.currentProfileId);
+    return this.profiles.filter((p) => p.profileId !== this.selectedProfileId);
   }
 
   constructor(
@@ -135,7 +135,7 @@ export class ConfigHandler {
       writeLog,
     );
     this.profiles = [new ProfileLifecycleManager(localProfileLoader)];
-    this.currentProfileId = localProfileLoader.profileId;
+    this.selectedProfileId = localProfileLoader.profileId;
 
     // Always load local profile immediately in case control plane doesn't load
     try {
@@ -167,17 +167,23 @@ export class ConfigHandler {
         this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
       const selectedWorkspaceId = lastSelectedWorkspaceIds[workspaceId];
       if (selectedWorkspaceId) {
-        this.currentProfileId = selectedWorkspaceId;
+        this.selectedProfileId = selectedWorkspaceId;
         this.loadConfig();
       } else {
         // Otherwise we stick with local profile, and record choice
-        lastSelectedWorkspaceIds[workspaceId] = this.currentProfileId;
+        lastSelectedWorkspaceIds[workspaceId] = this.selectedProfileId;
         this.globalContext.update(
           "lastSelectedProfileForWorkspace",
           lastSelectedWorkspaceIds,
         );
       }
     });
+  }
+
+  async setSelectedProfile(profileId: string) {
+    this.selectedProfileId = profileId;
+    await this.loadConfig();
+    this.notifyListerners();
   }
 
   // A unique ID for the current workspace, built from folder names
@@ -198,15 +204,18 @@ export class ConfigHandler {
     this.updateListeners.push(listener);
   }
 
-  async reloadConfig() {
-    // TODO: this isn't right, there are two different senses in which you want to "reload"
-    const newConfig = await this.currentProfile.reloadConfig();
-    this.inactiveProfiles.forEach((profile) => profile.clearConfig());
-
+  private notifyListerners() {
     // Notify listeners that config changed
     for (const listener of this.updateListeners) {
       listener();
     }
+  }
+
+  async reloadConfig() {
+    // TODO: this isn't right, there are two different senses in which you want to "reload"
+    const newConfig = await this.currentProfile.reloadConfig();
+    this.inactiveProfiles.forEach((profile) => profile.clearConfig());
+    this.notifyListerners();
   }
 
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {

@@ -27,6 +27,7 @@ class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
   }
 }
 
+import { ControlPlaneSessionInfo } from "core/control-plane/client";
 import crypto from "crypto";
 
 // Function to generate a random string of specified length
@@ -67,6 +68,7 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     { promise: Promise<string>; cancel: EventEmitter<void> }
   >();
   private _uriHandler = new UriEventHandler();
+  private _sessions: AuthenticationSession[] = [];
 
   constructor(private readonly context: ExtensionContext) {
     this._disposable = Disposable.from(
@@ -89,6 +91,48 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     const name = this.context.extension.packageJSON.name;
     return `${env.uriScheme}://${publisher}.${name}`;
   }
+
+  async initialize() {
+    let sessions = await this.context.secrets.get(SESSIONS_SECRET_KEY);
+    this._sessions = sessions ? JSON.parse(sessions) : [];
+    // await this._refreshSessions();
+  }
+
+  // private async _refreshSessions(): Promise<void> {
+  //   if (!this._sessions.length) {
+  //     return;
+  //   }
+  //   for (const session of this._sessions) {
+  //     try {
+  //       const newSession = await this._refreshSession(session.refreshToken);
+  //       session.accessToken = newSession.access_token;
+  //       session.refreshToken = newSession.refresh_token;
+  //       session.expiresIn = newSession.expires_in;
+  //     } catch (e: any) {
+  //       if (e.message === "Network failure") {
+  //         setTimeout(() => this._refreshSessions(), 60 * 1000);
+  //         return;
+  //       }
+  //     }
+  //   }
+  //   await this.context.secrets.store(
+  //     secretStorageKey,
+  //     JSON.stringify(this._sessions),
+  //   );
+  //   this._onDidChangeSessions.fire({
+  //     added: [],
+  //     removed: [],
+  //     changed: this._sessions,
+  //   });
+  //   setTimeout(
+  //     () => this._refreshSessions(),
+  //     (this._sessions[0].expiresIn * 1000 * 2) / 3,
+  //   );
+  // }
+
+  // private async _refreshSession(refreshToken: string): Promise<{accessToken: string, refreshToken: string}> {
+  //   const response = await fetch()
+  // }
 
   /**
    * Get the existing sessions
@@ -121,11 +165,12 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
         throw new Error(`Continue login failure`);
       }
 
-      const { user } = (await this.getUserInfo(token, codeVerifier)) as any;
+      const userInfo = (await this.getUserInfo(token, codeVerifier)) as any;
+      const { user, access_token, refresh_token } = userInfo;
 
       const session: AuthenticationSession = {
         id: uuidv4(),
-        accessToken: token,
+        accessToken: JSON.stringify({ access_token, refresh_token }),
         account: {
           label: user.first_name + " " + user.last_name,
           id: user.email,
@@ -313,4 +358,24 @@ export class WorkOsAuthProvider implements AuthenticationProvider, Disposable {
     const data = JSON.parse(text);
     return data;
   }
+}
+
+export async function getControlPlaneSessionInfo(
+  silent: boolean,
+): Promise<ControlPlaneSessionInfo | undefined> {
+  const session = await authentication.getSession(
+    "continue",
+    [],
+    silent ? { silent: true } : { createIfNone: true },
+  );
+  if (!session) {
+    return undefined;
+  }
+  return {
+    accessToken: session.accessToken,
+    account: {
+      id: session.account.id,
+      label: session.account.label,
+    },
+  };
 }

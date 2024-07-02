@@ -46,7 +46,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         "config/addOpenAiKey",
         "config/addModel",
         "config/ideSettingsUpdate",
-        "config/getBrowserSerialized",
+        "config/getSerializedProfileInfo",
         "config/deleteModel",
         "config/newPromptFile",
         "config/reload",

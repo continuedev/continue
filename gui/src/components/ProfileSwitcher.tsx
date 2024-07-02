@@ -7,10 +7,11 @@ import {
 import { ProfileDescription } from "core/config/handler";
 import { Fragment, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
+  lightGray,
   vscBackground,
   vscForeground,
   vscInputBackground,
@@ -19,12 +20,12 @@ import {
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAuth } from "../hooks/useAuth";
-import { isJetBrains } from "../util";
+import { RootState } from "../redux/store";
+import { getFontSize, isJetBrains } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 
 const StyledListbox = styled(Listbox)`
   background-color: ${vscBackground};
-  padding: 0;
   min-width: 80px;
 `;
 
@@ -41,13 +42,16 @@ const StyledListboxButton = styled(Listbox.Button)`
   white-space: nowrap;
   overflow: hidden;
 
+  border: 0.5px solid ${lightGray};
+  border-radius: ${defaultBorderRadius};
+
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
 
   color: ${vscForeground};
 
-  padding: 4px 8px;
+  padding: 3px 6px;
 
   &:focus {
     outline: none;
@@ -56,6 +60,8 @@ const StyledListboxButton = styled(Listbox.Button)`
   &:hover {
     background-color: ${vscInputBackground};
   }
+
+  font-size: ${getFontSize() - 2}px;
 `;
 
 const StyledListboxOptions = styled(Listbox.Options)`
@@ -121,9 +127,11 @@ function ListBoxOption({
 function ProfileSwitcher(props: {}) {
   const ideMessenger = useContext(IdeMessengerContext);
   const { session, logout, login } = useAuth();
-
-  const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const [profiles, setProfiles] = useState<ProfileDescription[]>([]);
+
+  const selectedProfileId = useSelector(
+    (store: RootState) => store.state.selectedProfileId,
+  );
 
   const [controlServerBetaEnabled, setControlServerBetaEnabled] =
     useState(false);
@@ -138,18 +146,27 @@ function ProfileSwitcher(props: {}) {
     ideMessenger.request("config/listProfiles", undefined).then(setProfiles);
   }, []);
 
-  const topDiv = document.getElementById("model-select-top-div");
+  const topDiv = document.getElementById("profile-select-top-div");
+
+  function selectedProfile() {
+    return profiles.find((p) => p.id === selectedProfileId);
+  }
 
   return (
     <>
       {controlServerBetaEnabled && profiles.length > 0 && (
-        <StyledListbox value={"GPT-4"} onChange={(val: string) => {}}>
+        <StyledListbox
+          value={"GPT-4"}
+          onChange={(id: string) => {
+            ideMessenger.request("didChangeSelectedProfile", { id });
+          }}
+        >
           <div className="relative">
             <StyledListboxButton>
-              <div>{profiles[selectedIndex]?.title}</div>
+              <div>{selectedProfile()?.title}</div>
               <div className="pointer-events-none flex items-center">
                 <ChevronUpDownIcon
-                  className="h-5 w-5 text-gray-400"
+                  className="h-4 w-4 text-gray-400"
                   aria-hidden="true"
                 />
               </div>
@@ -165,14 +182,23 @@ function ProfileSwitcher(props: {}) {
                   <StyledListboxOptions>
                     {profiles.map((option, idx) => (
                       <ListBoxOption
-                        selected={idx === selectedIndex}
+                        selected={option.id === selectedProfileId}
                         option={option}
                         idx={idx}
                         key={idx}
                         showDelete={profiles.length > 1}
                       />
                     ))}
-                    {profiles.length === 0 && <i>No profiles found</i>}
+                    <div
+                      className="px-2 py-1"
+                      style={{ color: lightGray, fontSize: getFontSize() - 2 }}
+                    >
+                      {profiles.length === 0 ? (
+                        <i>No profiles found</i>
+                      ) : (
+                        "Select profile"
+                      )}
+                    </div>
                   </StyledListboxOptions>
                 </Transition>,
                 topDiv,
@@ -181,18 +207,22 @@ function ProfileSwitcher(props: {}) {
         </StyledListbox>
       )}
 
-      {/* Settings button only applies to local profile */}
-      {profiles[selectedIndex]?.id !== "local" || (
-        <HeaderButtonWithText
-          onClick={() => {
-            // navigate("/settings");
+      {/* Settings button (either opens config.json or /settings page in control plane) */}
+      <HeaderButtonWithText
+        onClick={() => {
+          if (selectedProfileId === "local") {
             ideMessenger.post("openConfigJson", undefined);
-          }}
-          text="Configure Continue"
-        >
-          <Cog6ToothIcon width="1.4em" height="1.4em" />
-        </HeaderButtonWithText>
-      )}
+          } else {
+            ideMessenger.post(
+              "openUrl",
+              `http://localhost:3000/workspaces/${selectedProfileId}/settings`,
+            );
+          }
+        }}
+        text="Configure Continue"
+      >
+        <Cog6ToothIcon width="1.4em" height="1.4em" />
+      </HeaderButtonWithText>
 
       {/* Only show login if beta explicitly enabled */}
       {!isJetBrains() && controlServerBetaEnabled && (

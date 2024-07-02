@@ -295,8 +295,11 @@ export class Core {
       }
     });
 
-    on("config/getBrowserSerialized", (msg) => {
-      return this.configHandler.getSerializedConfig();
+    on("config/getSerializedProfileInfo", async (msg) => {
+      return {
+        config: await this.configHandler.getSerializedConfig(),
+        profileId: this.configHandler.currentProfile.profileId,
+      };
     });
 
     async function* llmStreamChat(
@@ -600,6 +603,10 @@ export class Core {
       if (this.indexingState.status !== "loading") {
         this.messenger.request("indexProgress", this.indexingState);
       }
+    });
+
+    on("didChangeSelectedProfile", (msg) => {
+      this.configHandler.setSelectedProfile(msg.data.id);
     });
   }
 

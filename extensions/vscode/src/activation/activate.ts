@@ -20,7 +20,9 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   setupInlineTips(context);
 
   // Register auth provider
-  context.subscriptions.push(new WorkOsAuthProvider(context));
+  const workOsAuthProvider = new WorkOsAuthProvider(context);
+  await workOsAuthProvider.initialize();
+  context.subscriptions.push(workOsAuthProvider);
 
   const vscodeExtension = new VsCodeExtension(context);
 

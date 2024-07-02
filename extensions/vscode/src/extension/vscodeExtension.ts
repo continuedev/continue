@@ -21,6 +21,7 @@ import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
+import { getControlPlaneSessionInfo } from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -232,6 +233,13 @@ export class VsCodeExtension {
     vscode.authentication.onDidChangeSessions((e) => {
       if (e.provider.id === "github") {
         this.configHandler.reloadConfig();
+      } else if (e.provider.id === "continue") {
+        this.webviewProtocolPromise.then(async (webviewProtocol) => {
+          const sessionInfo = await getControlPlaneSessionInfo(true);
+          webviewProtocol.request("didChangeControlPlaneSessionInfo", {
+            sessionInfo,
+          });
+        });
       }
     });
 

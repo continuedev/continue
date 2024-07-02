@@ -85,3 +85,11 @@ export type ToIdeFromWebviewOrCoreProtocol = {
     ControlPlaneSessionInfo | undefined,
   ];
 };
+
+export type ToWebviewOrCoreFromIdeProtocol = {
+  didChangeActiveTextEditor: [{ filepath: string }, void];
+  didChangeControlPlaneSessionInfo: [
+    { sessionInfo: ControlPlaneSessionInfo | undefined },
+    void,
+  ];
+};

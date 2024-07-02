@@ -1,4 +1,9 @@
-import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
+import { ConfigHandler } from "core/config/handler";
+import {
+  FromCoreProtocol,
+  FromWebviewProtocol,
+  ToCoreProtocol,
+} from "core/protocol";
 import { ToWebviewFromCoreProtocol } from "core/protocol/coreWebview";
 import { ToIdeFromWebviewOrCoreProtocol } from "core/protocol/ide";
 import { ToIdeFromCoreProtocol } from "core/protocol/ideCore";
@@ -13,12 +18,9 @@ import * as path from "node:path";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
+import { getControlPlaneSessionInfo } from "../stubs/WorkOsAuthProvider";
 import { getExtensionUri } from "../util/vscode";
-import {
-  ToCoreOrIdeFromWebviewProtocol,
-  VsCodeWebviewProtocol,
-} from "../webviewProtocol";
-import { ConfigHandler } from "core/config/handler";
+import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 /**
  * A shared messenger class between Core and Webview
@@ -28,13 +30,11 @@ type TODO = any;
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
   ToWebviewFromCoreProtocol;
 export class VsCodeMessenger {
-  onWebview<T extends keyof ToCoreOrIdeFromWebviewProtocol>(
+  onWebview<T extends keyof FromWebviewProtocol>(
     messageType: T,
     handler: (
-      message: Message<ToCoreOrIdeFromWebviewProtocol[T][0]>,
-    ) =>
-      | Promise<ToCoreOrIdeFromWebviewProtocol[T][1]>
-      | ToCoreOrIdeFromWebviewProtocol[T][1],
+      message: Message<FromWebviewProtocol[T][0]>,
+    ) => Promise<FromWebviewProtocol[T][1]> | FromWebviewProtocol[T][1],
   ): void {
     this.webviewProtocol.on(messageType, handler);
   }
@@ -298,21 +298,7 @@ export class VsCodeMessenger {
       ide.getGitHubAuthToken(),
     );
     this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
-      const session = await vscode.authentication.getSession(
-        "continue",
-        [],
-        msg.data.silent ? { silent: true } : { createIfNone: true },
-      );
-      if (!session) {
-        return undefined;
-      }
-      return {
-        accessToken: session.accessToken,
-        account: {
-          id: session.account.id,
-          label: session.account.label,
-        },
-      };
+      return getControlPlaneSessionInfo(msg.data.silent);
     });
   }
 }

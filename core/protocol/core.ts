@@ -48,7 +48,10 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   ];
   "config/newPromptFile": [undefined, void];
   "config/ideSettingsUpdate": [IdeSettings, void];
-  "config/getBrowserSerialized": [undefined, BrowserSerializedContinueConfig];
+  "config/getSerializedProfileInfo": [
+    undefined,
+    { config: BrowserSerializedContinueConfig; profileId: string },
+  ];
   "config/deleteModel": [{ title: string }, void];
   "config/reload": [undefined, BrowserSerializedContinueConfig];
   "config/listProfiles": [undefined, ProfileDescription[]];
@@ -140,4 +143,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     void,
   ];
   addAutocompleteModel: [{ model: ModelDescription }, void];
+
+  "profiles/switch": [{ id: string }, undefined];
 };

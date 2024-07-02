@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
+import { useWebviewListener } from "./useWebviewListener";
 
 export function useAuth(): {
   session: ControlPlaneSessionInfo | undefined;
@@ -16,6 +17,10 @@ export function useAuth(): {
   const ideMessenger = useContext(IdeMessengerContext);
   const dispatch = useDispatch();
 
+  useWebviewListener("didChangeControlPlaneSessionInfo", async (data) => {
+    setSession(data.sessionInfo);
+  });
+
   useEffect(() => {
     ideMessenger
       .request("getControlPlaneSessionInfo", { silent: true })
@@ -23,6 +28,7 @@ export function useAuth(): {
   }, []);
 
   const login = () => {
+    console.log("login");
     ideMessenger
       .request("getControlPlaneSessionInfo", { silent: false })
       .then(setSession);
