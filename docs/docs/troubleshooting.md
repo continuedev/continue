@@ -27,7 +27,7 @@ To solve many problems, the first step is reading the logs to find the relevant 
 If you're getting a response from the LLM that doesn't seem to make sense, you can
 
 1. Open the "Output" panel (right next to the terminal)
-2. In the dropdown, select "Continue - LLM Prompts/Completions
+2. In the dropdown, select "Continue - LLM Prompts/Completions"
 3. View the exact prompts that were sent to the LLM and the completions recieved
 
 ### JetBrains
