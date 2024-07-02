@@ -15,6 +15,7 @@ import {
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { shouldBeginOnboarding } from "../pages/onboarding/utils";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
@@ -23,14 +24,14 @@ import {
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import HeaderButtonWithText from "./HeaderButtonWithText";
 import TextDialog from "./dialogs";
+import HeaderButtonWithText from "./HeaderButtonWithText";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
 import ModelSelect from "./modelSelection/ModelSelect";
 import PostHogPageView from "./PosthogPageView";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -212,9 +213,8 @@ const Layout = () => {
   );
 
   useEffect(() => {
-    const onboardingComplete = getLocalStorage("onboardingComplete");
     if (
-      !onboardingComplete &&
+      shouldBeginOnboarding() &&
       (location.pathname === "/" || location.pathname === "/index.html")
     ) {
       navigate("/onboarding");

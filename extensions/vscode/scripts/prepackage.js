@@ -427,6 +427,23 @@ const exe = os === "win32" ? ".exe" : "";
     );
   });
 
+  // Copied here as well for the VS Code test suite
+  await new Promise((resolve, reject) => {
+    ncp(
+      path.join(__dirname, "../../../core/node_modules/sqlite3/build"),
+      path.join(__dirname, "../out"),
+      { dereference: true },
+      (error) => {
+        if (error) {
+          console.warn("[error] Error copying sqlite3 files", error);
+          reject(error);
+        } else {
+          resolve();
+        }
+      },
+    );
+  });
+
   // Copy node_modules for pre-built binaries
   const NODE_MODULES_TO_COPY = [
     "esbuild",

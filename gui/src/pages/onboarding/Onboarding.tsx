@@ -5,14 +5,14 @@ import {
   ComputerDesktopIcon,
 } from "@heroicons/react/24/outline";
 import { ToCoreFromIdeOrWebviewProtocol } from "core/protocol/core";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import GitHubSignInButton from "../../components/modelSelection/quickSetup/GitHubSignInButton";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { isJetBrains } from "../../util";
-import { setLocalStorage } from "../../util/localStorage";
 import { Div, StyledButton } from "./components";
 import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../../util/freeTrial";
+import { useOnboarding } from "./utils";
 
 type OnboardingMode =
   ToCoreFromIdeOrWebviewProtocol["completeOnboarding"][0]["mode"];
@@ -26,9 +26,7 @@ function Onboarding() {
     OnboardingMode | undefined
   >(undefined);
 
-  useEffect(() => {
-    setLocalStorage("onboardingComplete", true);
-  }, []);
+  const { completeOnboarding } = useOnboarding();
 
   function onSubmit() {
     ideMessenger.post("completeOnboarding", {
@@ -54,7 +52,7 @@ function Onboarding() {
         break;
 
       case "freeTrial":
-        navigate("/");
+        completeOnboarding();
         break;
 
       default:

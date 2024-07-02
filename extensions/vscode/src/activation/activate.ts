@@ -2,18 +2,12 @@ import { getTsConfigPath, migrate } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import path from "node:path";
 import * as vscode from "vscode";
-import { VsCodeExtension } from "../extension/vscodeExtension";
+import { VsCodeExtension } from "../extension/VsCodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeContinueApi } from "./api";
 import { setupInlineTips } from "./inlineTips";
-
-let resolveVsCodeExtension = (_: VsCodeExtension): void => {};
-
-export const vscodeExtensionPromise: Promise<VsCodeExtension> = new Promise(
-  (resolve) => (resolveVsCodeExtension = resolve),
-);
 
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
@@ -24,7 +18,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   setupInlineTips(context);
 
   const vscodeExtension = new VsCodeExtension(context);
-  resolveVsCodeExtension(vscodeExtension);
 
   migrate("showWelcome_1", () => {
     vscode.commands.executeCommand(
@@ -51,5 +44,11 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   };
 
   // 'export' public api-surface
-  return continuePublicApi;
+  // or entire extension for testing
+  return process.env.NODE_ENV === "test"
+    ? {
+        ...continuePublicApi,
+        extension: vscodeExtension,
+      }
+    : continuePublicApi;
 }

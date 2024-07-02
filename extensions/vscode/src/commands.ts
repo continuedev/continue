@@ -10,6 +10,7 @@ import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import {
   StatusBarStatus,
@@ -24,7 +25,6 @@ import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { Battery } from "./util/battery";
 import { getPlatform } from "./util/util";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
-import { Telemetry } from "core/util/posthog";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 

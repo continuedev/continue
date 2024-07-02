@@ -6,6 +6,7 @@ import { CopyToTerminalButton } from "./CopyToTerminalButton";
 import { CheckMarkHeader } from "./CheckMarkHeader";
 import { ONBOARDING_LOCAL_MODEL_TITLE } from "core/config/onboarding";
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { useOnboarding } from "./utils";
 
 type OllamaConnectionStatuses =
   | "waiting_to_download"
@@ -34,11 +35,9 @@ function LocalOnboarding() {
 
   const [hasLoadedChatModel, setHasLoadedChatModel] = useState(false);
 
-  const isOllamaConnected = ollamaConnectionStatus === "verified";
+  const { completeOnboarding } = useOnboarding();
 
-  function handleCompleteClick() {
-    navigate("/");
-  }
+  const isOllamaConnected = ollamaConnectionStatus === "verified";
 
   function isModelDownloaded(model: string) {
     if (!downloadedOllamaModels) {
@@ -219,7 +218,7 @@ function LocalOnboarding() {
       </div>
 
       <div className="flex flex-col justify-end mt-4">
-        <StyledButton onClick={handleCompleteClick}>
+        <StyledButton onClick={completeOnboarding}>
           Complete onboarding
         </StyledButton>
       </div>

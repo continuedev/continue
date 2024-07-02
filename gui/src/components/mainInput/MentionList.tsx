@@ -43,6 +43,7 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import FileIcon from "../FileIcon";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import { ComboBoxItem } from "./types";
@@ -60,6 +61,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   folder: FolderIcon,
   docs: BookOpenIcon,
   issue: ExclamationCircleIcon,
+  trash: TrashIcon,
   "/edit": PaintBrushIcon,
   "/clear": TrashIcon,
   "/test": BeakerIcon,
@@ -83,8 +85,8 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
     props.item.type === "contextProvider"
       ? props.item.id
       : props.item.type === "slashCommand"
-      ? props.item.id
-      : props.item.type;
+        ? props.item.id
+        : props.item.type;
 
   const iconClass = `${props.className} flex-shrink-0`;
 
@@ -120,7 +122,9 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
 
 const ItemsDiv = styled.div`
   border-radius: ${defaultBorderRadius};
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0px 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0px 10px 20px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
   overflow-x: hidden;
   overflow-y: auto;
@@ -174,6 +178,7 @@ interface MentionListProps {
 
   editor: Editor;
   enterSubmenu?: (editor: Editor, providerId: string) => void;
+  onClose: () => void;
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
@@ -412,6 +417,22 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                           height="1.2em"
                         />
                       )}
+                    {item.subActions?.map((subAction) => {
+                      const Icon = ICONS_FOR_DROPDOWN[subAction.icon];
+                      return (
+                        <HeaderButtonWithText
+                          onClick={(e) => {
+                            subAction.action(item);
+                            e.stopPropagation();
+                            e.preventDefault();
+                            props.onClose();
+                          }}
+                          text={undefined}
+                        >
+                          <Icon width="1.2em" height="1.2em" />
+                        </HeaderButtonWithText>
+                      );
+                    })}
                   </span>
                 </span>
               </ItemDiv>

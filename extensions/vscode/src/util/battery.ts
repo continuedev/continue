@@ -9,6 +9,7 @@ export class Battery implements Disposable {
   private readonly onChangeLevelEmitter = new EventEmitter<number>();
   private acConnected: boolean = true;
   private level = 100;
+  private readonly batteryStatsPromise = si.battery();
 
   constructor() {
     this.updateTimeout = setInterval(() => this.update(), UPDATE_INTERVAL_MS);
@@ -21,7 +22,7 @@ export class Battery implements Disposable {
   }
 
   private async update() {
-    const stats = await si.battery();
+    const stats = await this.batteryStatsPromise;
     const level = stats.hasBattery ? stats.percent : 100;
     const isACConnected =
       !stats.hasBattery || stats.acConnected || level == 100;
