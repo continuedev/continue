@@ -327,7 +327,7 @@ export class LanceDbIndex implements CodebaseIndex {
         accumulatedProgress += 1 / toDel.length / 3;
         yield {
           progress: accumulatedProgress,
-          desc: `Deleting ${path}`,
+          desc: `Stashing ${path}`,
           status: "indexing",
         };
       }
@@ -344,7 +344,7 @@ export class LanceDbIndex implements CodebaseIndex {
       accumulatedProgress += 1 / results.del.length / 3;
       yield {
         progress: accumulatedProgress,
-        desc: `Deleting ${path}`,
+        desc: `Removing ${path}`,
         status: "indexing",
       };
     }
