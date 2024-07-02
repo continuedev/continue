@@ -645,10 +645,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   useWebviewListener(
     "isContinueInputFocused",
     async () => {
-      console.log({
-        isMainInput: props.isMainInput,
-        isInputFocused: editorFocusedRef.current,
-      });
       return props.isMainInput && editorFocusedRef.current;
     },
     [editorFocusedRef, props.isMainInput],
