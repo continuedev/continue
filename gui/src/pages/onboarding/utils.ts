@@ -1,7 +1,7 @@
 import { usePostHog } from "posthog-js/react";
-import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { getLocalStorage, setLocalStorage } from "../../util/localStorage";
 
 // Note that there is no "NotStarted" status since the
 // local storage value is null until onboarding begins
@@ -10,6 +10,13 @@ export type OnboardingStatus = "Started" | "Completed";
 // If there is no value in local storage for "onboardingStatus",
 // it implies that the user has not begun or completed onboarding.
 export function shouldBeginOnboarding() {
+  const onboardingCompleteLegacyValue =
+    localStorage.getItem("onboardingComplete");
+  if (onboardingCompleteLegacyValue === "true") {
+    setLocalStorage("onboardingStatus", "Completed");
+    localStorage.removeItem("onboardingComplete");
+    return false;
+  }
   const onboardingStatus = getLocalStorage("onboardingStatus");
 
   return onboardingStatus === undefined;
