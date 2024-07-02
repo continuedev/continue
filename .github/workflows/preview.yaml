@@ -108,13 +108,13 @@ jobs:
           cd extensions/vscode
           npm run prepackage -- --target ${{ env.target }}
 
-      # 4. Re-install esbuild (for cases that we force installed for another arch in prepackage.js)
+      # 3. Re-install esbuild (for cases that we force installed for another arch in prepackage.js)
       - name: Re-install esbuild
         run: |
           cd extensions/vscode
           npm install -f esbuild
 
-      # 3. Run tests for the extension
+      # 4. Run tests for the extension
       - name: Install Xvfb for Linux and run tests
         run: |
           sudo apt-get install -y xvfb # Install Xvfb
