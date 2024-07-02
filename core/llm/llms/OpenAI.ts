@@ -47,6 +47,10 @@ class OpenAI extends BaseLLM {
     super(options);
     this.useLegacyCompletionsEndpoint = options.useLegacyCompletionsEndpoint;
     this.apiVersion = options.apiVersion ?? "2023-07-01-preview";
+    // TODO what's the best way to check if this is a a "custom" deployment?
+    if (this.apiBase || this.apiType == "vllm") {
+      this._setupCompletionOptions();
+    }
   }
 
   static providerName: ModelProvider = "openai";
@@ -95,12 +99,12 @@ class OpenAI extends BaseLLM {
         this.maxStopWords !== undefined
           ? options.stop?.slice(0, this.maxStopWords)
           : url.port === "1337" ||
-              url.host === "api.openai.com" ||
-              url.host === "api.groq.com" ||
-              url.host === "api.deepseek.com" ||
-              this.apiType === "azure"
-            ? options.stop?.slice(0, 4)
-            : options.stop,
+            url.host === "api.openai.com" ||
+            url.host === "api.groq.com" ||
+            url.host === "api.deepseek.com" ||
+            this.apiType === "azure"
+          ? options.stop?.slice(0, 4)
+          : options.stop,
     };
 
     return finalOptions;
@@ -268,6 +272,25 @@ class OpenAI extends BaseLLM {
 
     const data = await response.json();
     return data.data.map((m: any) => m.id);
+  }
+
+  protected _setupCompletionOptions() {
+    this.fetch(this._getEndpoint("models"), {
+      method: "GET",
+      headers: this._getHeaders(),
+    }).then(async (response) => {
+      if (response.status !== 200) {
+        console.warn(
+          "Error calling OpenAI /models endpoint: ",
+          await response.text(),
+        );
+        return;
+      }
+      const json = await response.json();
+      const data = json.data;
+      this.model = data.id;
+      this.contextLength = Number.parseInt(data.max_model_len);
+    });
   }
 }
 
