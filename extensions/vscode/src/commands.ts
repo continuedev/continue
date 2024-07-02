@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -19,7 +20,7 @@ import {
   quickPickStatusText,
   setupStatusBar,
 } from "./autocomplete/statusBar";
-import { ContinueGUIWebviewViewProvider } from "./debugPanel";
+import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { Battery } from "./util/battery";
@@ -36,49 +37,12 @@ function getFullScreenTab() {
 }
 
 async function addHighlightedCodeToContext(
-  edit: boolean,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
   const editor = vscode.window.activeTextEditor;
   if (editor) {
     const selection = editor.selection;
     if (selection.isEmpty) {
-      // Capture highlighted terminal text
-      // const activeTerminal = vscode.window.activeTerminal;
-      // if (activeTerminal) {
-      //   // Copy selected text
-      //   const tempCopyBuffer = await vscode.env.clipboard.readText();
-      //   await vscode.commands.executeCommand(
-      //     "workbench.action.terminal.copySelection",
-      //   );
-      //   await vscode.commands.executeCommand(
-      //     "workbench.action.terminal.clearSelection",
-      //   );
-      //   const contents = (await vscode.env.clipboard.readText()).trim();
-      //   await vscode.env.clipboard.writeText(tempCopyBuffer);
-
-      //   // Add to context
-      //   const rangeInFileWithContents = {
-      //     filepath: activeTerminal.name,
-      //     contents,
-      //     range: {
-      //       start: {
-      //         line: 0,
-      //         character: 0,
-      //       },
-      //       end: {
-      //         line: contents.split("\n").length,
-      //         character: 0,
-      //       },
-      //     },
-      //   };
-
-      //   if (contents.trim() !== "") {
-      //     webviewProtocol?.request("highlightedCode", {
-      //       rangeInFileWithContents,
-      //     });
-      //   }
-      // }
       return;
     }
     // adjust starting position to include indentation
@@ -226,15 +190,31 @@ const commandsMap: (
     },
     "continue.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
-      if (!fullScreenTab) {
-        // focus sidebar
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
+
+      const isContinueInputFocused = await sidebar.webviewProtocol.request(
+        "isContinueInputFocused",
+        undefined,
+      );
+
+      if (isContinueInputFocused) {
+        // Handle closing the GUI only if we are focused on the input
+        if (fullScreenTab) {
+          fullScreenPanel?.dispose();
+        } else {
+          vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
+        }
       } else {
-        // focus fullscreen
-        fullScreenPanel?.reveal();
+        // Handle opening the GUI otherwise
+        if (!fullScreenTab) {
+          // focus sidebar
+          vscode.commands.executeCommand("continue.continueGUIView.focus");
+        } else {
+          // focus fullscreen
+          fullScreenPanel?.reveal();
+        }
+
+        sidebar.webviewProtocol?.request("focusContinueInput", undefined);
       }
-      sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-      await addHighlightedCodeToContext(false, sidebar.webviewProtocol);
     },
     "continue.focusContinueInputWithoutClear": async () => {
       if (!getFullScreenTab()) {
@@ -244,7 +224,7 @@ const commandsMap: (
         "focusContinueInputWithoutClear",
         undefined,
       );
-      await addHighlightedCodeToContext(true, sidebar.webviewProtocol);
+      await addHighlightedCodeToContext(sidebar.webviewProtocol);
     },
     "continue.toggleAuxiliaryBar": () => {
       vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
@@ -607,8 +587,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =

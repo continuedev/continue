@@ -51,4 +51,5 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "indexProgress",
     "addContextItem",
     "refreshSubmenuItems",
+    "isContinueInputFocused",
   ];

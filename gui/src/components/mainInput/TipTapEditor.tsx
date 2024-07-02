@@ -597,7 +597,9 @@ function TipTapEditor(props: TipTapEditorProps) {
           rif.filepath,
           await ideMessenger.ide.getWorkspaceDirs(),
         );
-        const rangeStr = `(${rif.range.start.line + 1}-${rif.range.end.line + 1})`;
+        const rangeStr = `(${rif.range.start.line + 1}-${
+          rif.range.end.line + 1
+        })`;
         const item: ContextItemWithId = {
           content: rif.contents,
           name: `${basename} ${rangeStr}`,
@@ -642,16 +644,16 @@ function TipTapEditor(props: TipTapEditorProps) {
     ],
   );
 
-  // On linux+jetbrains only was stealing focus
-  // useEffect(() => {
-  //   if (props.isMainInput && editor && document.hasFocus()) {
-  //     editor.commands.focus();
-  //     // setTimeout(() => {
-  //     //   // https://github.com/continuedev/continue/pull/881
-  //     //   editor.commands.blur();
-  //     // }, 0);
-  //   }
-  // }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
+  useWebviewListener(
+    "isContinueInputFocused",
+    async () => {
+      console.log({
+        "props.isMainInput && inputFocused": props.isMainInput && inputFocused,
+      });
+      return props.isMainInput && inputFocused;
+    },
+    [inputFocused, props.isMainInput],
+  );
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 

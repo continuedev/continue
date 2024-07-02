@@ -15,7 +15,7 @@ import {
 } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
 import { registerDebugTracker } from "../debug/debug";
-import { ContinueGUIWebviewViewProvider } from "../debugPanel";
+import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
 import { DiffManager } from "../diff/horizontal";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
