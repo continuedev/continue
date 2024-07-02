@@ -161,6 +161,7 @@ export interface ContextSubmenuItem {
   title: string;
   description: string;
   iconUrl?: string;
+  metadata?: any;
 }
 
 export interface SiteIndexingConfig {
@@ -206,6 +207,11 @@ export interface SessionInfo {
 export interface RangeInFile {
   filepath: string;
   range: Range;
+}
+
+export interface Location {
+  filepath: string;
+  position: Position;
 }
 
 export interface FileWithContents {
@@ -435,6 +441,7 @@ export interface IDE {
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
   getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
+  fileExists(filepath: string): Promise<boolean>;
   writeFile(path: string, contents: string): Promise<void>;
   showVirtualFile(title: string, contents: string): Promise<void>;
   getContinueDir(): Promise<string>;
@@ -469,6 +476,12 @@ export interface IDE {
   listDir(dir: string): Promise<[string, FileType][]>;
   getLastModified(files: string[]): Promise<{ [path: string]: number }>;
   getGitHubAuthToken(): Promise<string | undefined>;
+
+  // LSP
+  gotoDefinition(location: Location): Promise<RangeInFile[]>;
+
+  // Callbacks
+  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
 }
 
 // Slash Commands
@@ -573,7 +586,8 @@ type ModelProvider =
   | "cloudflare"
   | "deepseek"
   | "azure"
-  | "openai-aiohttp";
+  | "openai-aiohttp"
+  | "msty";
 
 export type ModelName =
   | "AUTODETECT"
@@ -719,6 +733,9 @@ export interface EmbedOptions {
   apiBase?: string;
   apiKey?: string;
   model?: string;
+  engine?: string;
+  apiType?: string;
+  apiVersion?: string;
   requestOptions?: RequestOptions;
 }
 
@@ -763,11 +780,13 @@ export interface TabAutocompleteOptions {
   useRecentlyEdited: boolean;
   recentLinePrefixMatchMinLength: number;
   disableInFiles?: string[];
+  useImports?: boolean;
 }
 
 export interface ContinueUIConfig {
   codeBlockToolbarPosition?: "top" | "bottom";
   fontSize?: number;
+  displayRawMarkdown?: boolean;
 }
 
 interface ContextMenuConfig {
@@ -780,6 +799,7 @@ interface ContextMenuConfig {
 
 interface ModelRoles {
   inlineEdit?: string;
+  applyCodeBlock?: string;
 }
 
 interface ExperimentalConfig {

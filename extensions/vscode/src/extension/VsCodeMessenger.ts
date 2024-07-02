@@ -18,6 +18,7 @@ import {
   ToCoreOrIdeFromWebviewProtocol,
   VsCodeWebviewProtocol,
 } from "../webviewProtocol";
+import { ConfigHandler } from "core/config/handler";
 
 /**
  * A shared messenger class between Core and Webview
@@ -69,6 +70,7 @@ export class VsCodeMessenger {
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: VsCodeIde,
     private readonly verticalDiffManagerPromise: Promise<VerticalPerLineDiffManager>,
+    private readonly configHandlerPromise: Promise<ConfigHandler>,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
@@ -116,9 +118,11 @@ export class VsCodeMessenger {
         msg.data.stepIndex,
       );
     });
+
     this.onWebview("applyToCurrentFile", async (msg) => {
       // Select the entire current file
       const editor = vscode.window.activeTextEditor;
+
       if (!editor) {
         vscode.window.showErrorMessage("No active editor to apply edits to");
         return;
@@ -134,11 +138,19 @@ export class VsCodeMessenger {
         editor.selection = new vscode.Selection(start, end);
       }
 
-      (await this.verticalDiffManagerPromise).streamEdit(
-        `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`,
-        await this.webviewProtocol.request("getDefaultModelTitle", undefined),
-      );
+      const verticalDiffManager = await this.verticalDiffManagerPromise;
+      const prompt = `The following code was suggested as an edit:\n\`\`\`\n${msg.data.text}\n\`\`\`\nPlease apply it to the previous code.`;
+
+      const configHandler = await configHandlerPromise;
+      const config = await configHandler.loadConfig();
+
+      const modelTitle =
+        config.experimental?.modelRoles?.applyCodeBlock ??
+        (await this.webviewProtocol.request("getDefaultModelTitle", undefined));
+
+      verticalDiffManager.streamEdit(prompt, modelTitle);
     });
+
     this.onWebview("showTutorial", async (msg) => {
       const tutorialPath = path.join(
         getExtensionUri().fsPath,
@@ -182,6 +194,7 @@ export class VsCodeMessenger {
         return (await this.inProcessMessenger.externalRequest(
           messageType,
           msg.data,
+          msg.messageId,
         )) as TODO;
       });
     });

@@ -329,6 +329,7 @@ export async function getComputeDeleteAddRemove(
 }
 
 export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
+  relativeExpectedTime: number = 1;
   private db: DatabaseConnection;
 
   constructor(db: DatabaseConnection) {

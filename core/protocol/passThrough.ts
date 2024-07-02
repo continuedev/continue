@@ -24,6 +24,7 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "context/getContextItems",
     "context/loadSubmenuItems",
     "context/addDocs",
+    "context/removeDocs",
     "autocomplete/complete",
     "autocomplete/cancel",
     "autocomplete/accept",
@@ -44,4 +45,10 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
 
 // Message types to pass through from core to webview
 export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
-  ["configUpdate", "getDefaultModelTitle", "indexProgress", "addContextItem"];
+  [
+    "configUpdate",
+    "getDefaultModelTitle",
+    "indexProgress",
+    "addContextItem",
+    "refreshSubmenuItems",
+  ];

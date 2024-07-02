@@ -5,8 +5,10 @@ import type {
   IdeInfo,
   IdeSettings,
   IndexTag,
+  Location,
   Problem,
   Range,
+  RangeInFile,
   Thread,
 } from "..";
 
@@ -27,6 +29,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getSearchResults: [{ query: string }, string];
   subprocess: [{ command: string }, [string, string]];
   saveFile: [{ filepath: string }, void];
+  fileExists: [{ filepath: string }, boolean];
   readFile: [{ filepath: string }, string];
   showDiff: [
     { filepath: string; newContents: string; stepIndex: number },
@@ -72,6 +75,8 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   getGitRootPath: [{ dir: string }, string | undefined];
   listDir: [{ dir: string }, [string, FileType][]];
   getLastModified: [{ files: string[] }, { [path: string]: number }];
+
+  gotoDefinition: [{ location: Location }, RangeInFile[]];
 
   getGitHubAuthToken: [undefined, string | undefined];
 };

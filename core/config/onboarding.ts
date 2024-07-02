@@ -2,6 +2,7 @@ import { SerializedContinueConfig } from "../index.js";
 import { FREE_TRIAL_MODELS } from "./default.js";
 
 export const TRIAL_FIM_MODEL = "codestral-latest";
+export const ONBOARDING_LOCAL_MODEL_TITLE = "Ollama";
 
 export function setupApiKeysMode(
   config: SerializedContinueConfig,
@@ -9,25 +10,6 @@ export function setupApiKeysMode(
   return {
     ...config,
     models: config.models.filter((model) => model.provider !== "free-trial"),
-    tabAutocompleteModel: {
-      title: "Tab Autocomplete",
-      provider: "free-trial",
-      model: TRIAL_FIM_MODEL,
-    },
-    embeddingsProvider: {
-      provider: "free-trial",
-    },
-    reranker: {
-      name: "free-trial",
-    },
-  };
-}
-
-export function setupOptimizedExistingUserMode(
-  config: SerializedContinueConfig,
-): SerializedContinueConfig {
-  return {
-    ...config,
     tabAutocompleteModel: {
       title: "Tab Autocomplete",
       provider: "free-trial",
@@ -54,7 +36,7 @@ export function setupLocalMode(
         model: "llama3",
       },
       {
-        title: "Ollama",
+        title: ONBOARDING_LOCAL_MODEL_TITLE,
         provider: "ollama",
         model: "AUTODETECT",
       },
@@ -66,7 +48,8 @@ export function setupLocalMode(
       model: "starcoder2:3b",
     },
     embeddingsProvider: {
-      provider: "transformers.js",
+      provider: "ollama",
+      model: "nomic-embed-text",
     },
     reranker: undefined,
   };
@@ -107,7 +90,7 @@ export function setupLocalAfterFreeTrial(
         model: "llama3",
       },
       {
-        title: "Ollama",
+        title: ONBOARDING_LOCAL_MODEL_TITLE,
         provider: "ollama",
         model: "AUTODETECT",
       },

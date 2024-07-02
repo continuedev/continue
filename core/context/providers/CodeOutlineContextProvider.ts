@@ -6,8 +6,6 @@ import {
 import { getBasename } from "../../util/index.js";
 import { BaseContextProvider } from "../index.js";
 
-// import { getOutlines } from "llm-code-highlighter/dist/index.continue";
-
 class CodeOutlineContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
     title: "outline",

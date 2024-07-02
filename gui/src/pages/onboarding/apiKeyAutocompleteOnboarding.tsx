@@ -13,6 +13,7 @@ import {
   StyledListboxOptions,
 } from "../../components/modelSelection/quickSetup/StyledListbox";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { useOnboarding } from "./utils";
 
 interface AutocompleteOption {
   provider: ModelProvider;
@@ -123,6 +124,8 @@ function ApiKeyAutocompleteOnboarding() {
 
   const [apiKeyValue, setApiKeyValue] = useState<string>("");
 
+  const { completeOnboarding } = useOnboarding();
+
   return (
     <div className="p-2 max-w-96 mt-16 mx-auto">
       <h1 className="text-center">Autocomplete Model</h1>
@@ -164,7 +167,8 @@ function ApiKeyAutocompleteOnboarding() {
                   model: TRIAL_FIM_MODEL,
                 },
               });
-              navigate("/");
+
+              completeOnboarding();
             }}
           ></GitHubSignInButton>
         </div>
@@ -199,7 +203,8 @@ function ApiKeyAutocompleteOnboarding() {
                   apiKey: apiKeyValue,
                 },
               });
-              navigate("/");
+
+              completeOnboarding();
             }}
           >
             Save

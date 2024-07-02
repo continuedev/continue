@@ -8,7 +8,7 @@ To setup Anthropic, obtain an API key from [here](https://www.anthropic.com/api)
     {
       "title": "Anthropic",
       "provider": "anthropic",
-      "model": "claude-3-opus-20240229",
+      "model": "claude-3-5-sonnet-20240620",
       "apiKey": "YOUR_API_KEY"
     }
   ]

@@ -28,6 +28,6 @@ keywords: [quickstart, start, install, vscode, jetbrains]
 
 ![jetbrains-quickstart](/img/jetbrains-quickstart.png)
 
-4. If you have any problems, see the [troubleshooting guide](./troubleshooting.md) or ask for help in [our Discord](https://discord.gg/NWtdYexhMs).
+4. If you have any problems, see the [troubleshooting guide](./troubleshooting.md) or ask for help in [our Discord](https://discord.com/invite/EfJEfdFnDQ).
 
 > Alternatively, you can install from disk after downloading from the [JetBrains Extension Marketplace](https://plugins.jetbrains.com/plugin/22707-continue-extension).

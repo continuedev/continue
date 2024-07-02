@@ -13,8 +13,6 @@ interface vscode {
 
 declare const vscode: any;
 
-type ToIdeOrCoreProtocol = FromWebviewProtocol;
-
 export interface IIdeMessenger {
   post<T extends keyof FromWebviewProtocol>(
     messageType: T,
@@ -54,7 +52,7 @@ export class IdeMessenger implements IIdeMessenger {
   ide: IDE;
 
   constructor() {
-    this.ide = new MessageIde(this.request.bind(this));
+    this.ide = new MessageIde(this.request.bind(this), () => {});
   }
 
   private _postToIde(messageType: string, data: any, messageId?: string) {
@@ -155,7 +153,6 @@ export class IdeMessenger implements IIdeMessenger {
 
     const handler = (event: { data: Message }) => {
       if (event.data.messageId === messageId) {
-        console.log("BB", typeof event.data.data);
         const responseData = event.data.data;
         if (responseData.done) {
           window.removeEventListener("message", handler);

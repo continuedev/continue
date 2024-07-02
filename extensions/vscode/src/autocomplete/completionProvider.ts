@@ -10,7 +10,7 @@ import * as vscode from "vscode";
 import type { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import { getDefinitionsFromLsp } from "./lsp";
 import { RecentlyEditedTracker } from "./recentlyEdited";
-import { setupStatusBar, stopStatusBarLoading } from "./statusBar";
+import { StatusBarStatus, setupStatusBar, stopStatusBarLoading, getStatusBarStatus } from "./statusBar";
 
 interface VsCodeCompletionInput {
   document: vscode.TextDocument;
@@ -73,10 +73,7 @@ export class ContinueCompletionProvider
     token: vscode.CancellationToken,
     //@ts-ignore
   ): ProviderResult<InlineCompletionItem[] | InlineCompletionList> {
-    const enableTabAutocomplete =
-      vscode.workspace
-        .getConfiguration("continue")
-        .get<boolean>("enableTabAutocomplete") || false;
+    const enableTabAutocomplete = getStatusBarStatus() === StatusBarStatus.Enabled;
     if (token.isCancellationRequested || !enableTabAutocomplete) {
       return null;
     }
@@ -195,7 +192,7 @@ export class ContinueCompletionProvider
         injectDetails,
       };
 
-      setupStatusBar(true, true);
+      setupStatusBar(undefined, true);
       const outcome =
         await this.completionProvider.provideInlineCompletionItems(
           input,

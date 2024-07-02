@@ -544,6 +544,11 @@ class IdeProtocolClient (
                         file.writeText(msg["contents"] as String)
                         respond(null);
                     }
+                    "fileExists" -> {
+                        val msg = data as Map<String, String>;
+                        val file = File(msg["filepath"])
+                        respond(file.exists())
+                    }
                     "getContinueDir" -> {
                         respond(getContinueGlobalPath())
                     }

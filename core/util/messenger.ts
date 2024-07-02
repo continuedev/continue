@@ -134,8 +134,9 @@ export class InProcessMessenger<
   externalRequest<T extends keyof ToProtocol>(
     messageType: T,
     data: ToProtocol[T][0],
+    _messageId?: string,
   ): Promise<ToProtocol[T][1]> {
-    const messageId = uuidv4();
+    const messageId = _messageId ?? uuidv4();
     const listener = this.myTypeListeners.get(messageType);
     if (!listener) {
       throw new Error(`No handler for message type "${String(messageType)}"`);
