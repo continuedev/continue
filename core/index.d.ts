@@ -64,6 +64,7 @@ export interface ILLM extends LLMOptions {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  authType?: string;
 
   engine?: string;
   apiVersion?: string;
@@ -321,6 +322,7 @@ export interface LLMOptions {
   engine?: string;
   apiVersion?: string;
   apiType?: string;
+  authType?: string;
 
   // GCP Options
   region?: string;
