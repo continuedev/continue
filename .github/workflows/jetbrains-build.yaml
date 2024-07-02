@@ -16,7 +16,7 @@ name: Build
 on:
   # Trigger the workflow on pushes to only the 'main' branch (this avoids duplicate checks being run e.g., for dependabot pull requests)
   push:
-    branches: [preview, main]
+    branches: [main]
   # Trigger the workflow on any pull request
   # pull_request:
 
