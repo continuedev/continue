@@ -6,6 +6,7 @@ import type { VerticalDiffCodeLens } from "../diff/verticalPerLine/manager";
 import { editorSuggestionsLocked, editorToSuggestions } from "../suggestions";
 import { getAltOrOption, getMetaKeyLabel, getPlatform } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
+import { ContinueConfig } from "core";
 
 class VerticalPerLineCodeLensProvider implements vscode.CodeLensProvider {
   private _eventEmitter: vscode.EventEmitter<void> =
@@ -355,27 +356,50 @@ class TutorialCodeLensProvider implements vscode.CodeLensProvider {
       );
     }
 
-    // Folding of the tutorial
-    // const regionLines = lines
-    //   .map((line, i) => [line, i])
-    //   .filter(([line, i]) => (line as string).startsWith("# region "))
-    //   .map(([line, i]) => i);
-    // for (const lineOfRegion of regionLines as number[]) {
-    //   const range = new vscode.Range(lineOfRegion, 0, lineOfRegion + 1, 0);
+    return codeLenses;
+  }
+}
 
-    //   const linesToFold = regionLines
-    //     .filter((i) => lineOfRegion !== i)
-    //     .flatMap((i) => {
-    //       return [i, (i as number) + 1];
-    //     });
-    //   codeLenses.push(
-    //     new vscode.CodeLens(range, {
-    //       title: `Begin Section`,
-    //       command: "continue.foldAndUnfold",
-    //       arguments: [linesToFold, [lineOfRegion, lineOfRegion + 1]],
-    //     }),
-    //   );
-    // }
+class QuickActionsLensProvider implements vscode.CodeLensProvider {
+  static quickActionSymbolKinds = [
+    vscode.SymbolKind.Function,
+    vscode.SymbolKind.Class,
+  ];
+
+  async provideCodeLenses(
+    document: vscode.TextDocument,
+  ): Promise<vscode.CodeLens[]> {
+    const symbols = await vscode.commands.executeCommand<
+      Array<vscode.DocumentSymbol | vscode.SymbolInformation>
+    >("vscode.executeDocumentSymbolProvider", document.uri);
+
+    const filteredSmybols = symbols?.filter((def) =>
+      QuickActionsLensProvider.quickActionSymbolKinds.includes(def.kind),
+    );
+
+    const explain: vscode.Command = {
+      command: "continue.explain",
+      title: "Continue: Explain",
+    };
+
+    const comment: vscode.Command = {
+      command: "continue.writeDocstringForCode",
+      title: "Comment",
+    };
+
+    const disable: vscode.Command = {
+      command: "continue.disableQuickActions",
+      title: "X",
+    };
+
+    let codeLenses = filteredSmybols.flatMap((def: any) => [
+      new vscode.CodeLens(def.range, {
+        ...explain,
+        arguments: [document.getText(def.range)],
+      }),
+      new vscode.CodeLens(def.range, comment),
+      new vscode.CodeLens(def.range, disable),
+    ]);
 
     return codeLenses;
   }
@@ -387,11 +411,13 @@ let diffsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let suggestionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let configPyCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let tutorialCodeLensDisposable: vscode.Disposable | undefined = undefined;
+let quickActionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 
 export function registerAllCodeLensProviders(
   context: vscode.ExtensionContext,
   diffManager: DiffManager,
   editorToVerticalDiffCodeLens: Map<string, VerticalDiffCodeLens[]>,
+  config: ContinueConfig,
 ) {
   if (verticalPerLineCodeLensProvider) {
     verticalPerLineCodeLensProvider.dispose();
@@ -407,6 +433,9 @@ export function registerAllCodeLensProviders(
   }
   if (tutorialCodeLensDisposable) {
     tutorialCodeLensDisposable.dispose();
+  }
+  if (quickActionsCodeLensDisposable) {
+    quickActionsCodeLensDisposable.dispose();
   }
 
   const verticalDiffCodeLens = new VerticalPerLineCodeLensProvider(
@@ -432,11 +461,21 @@ export function registerAllCodeLensProviders(
     "*",
     new TutorialCodeLensProvider(),
   );
+
+  if (!!config.experimental?.quickActions) {
+    quickActionsCodeLensDisposable = vscode.languages.registerCodeLensProvider(
+      "*",
+      new QuickActionsLensProvider(),
+    );
+
+    context.subscriptions.push(quickActionsCodeLensDisposable);
+  }
+
   context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);
   context.subscriptions.push(diffsCodeLensDisposable);
   context.subscriptions.push(configPyCodeLensDisposable);
   context.subscriptions.push(tutorialCodeLensDisposable);
 
-  return verticalDiffCodeLens;
+  return { verticalDiffCodeLens, quickActionsCodeLensDisposable };
 }

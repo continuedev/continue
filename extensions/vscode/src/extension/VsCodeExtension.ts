@@ -113,8 +113,43 @@ export class VsCodeExtension {
     });
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
-    this.configHandler.onConfigUpdate(() => {
+
+    this.configHandler.loadConfig().then((config) => {
+      // CodeLens
+      const { verticalDiffCodeLens, quickActionsCodeLensDisposable } =
+        registerAllCodeLensProviders(
+          context,
+          this.diffManager,
+          this.verticalDiffManager.filepathToCodeLens,
+          config,
+        );
+
+      if (!config.experimental?.quickActions) {
+        quickActionsCodeLensDisposable?.dispose();
+      }
+
+      this.verticalDiffManager.refreshCodeLens =
+        verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
+    });
+
+    this.configHandler.onConfigUpdate((newConfig) => {
       this.sidebar.webviewProtocol?.request("configUpdate", undefined);
+
+      // CodeLens
+      const { verticalDiffCodeLens, quickActionsCodeLensDisposable } =
+        registerAllCodeLensProviders(
+          context,
+          this.diffManager,
+          this.verticalDiffManager.filepathToCodeLens,
+          newConfig,
+        );
+
+      if (!newConfig.experimental?.quickActions) {
+        quickActionsCodeLensDisposable?.dispose();
+      }
+
+      this.verticalDiffManager.refreshCodeLens =
+        verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
     });
 
     this.configHandler.reloadConfig();
@@ -130,15 +165,6 @@ export class VsCodeExtension {
 
     // Indexing + pause token
     this.diffManager.webviewProtocol = this.sidebar.webviewProtocol;
-
-    // CodeLens
-    const verticalDiffCodeLens = registerAllCodeLensProviders(
-      context,
-      this.diffManager,
-      this.verticalDiffManager.filepathToCodeLens,
-    );
-    this.verticalDiffManager.refreshCodeLens =
-      verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
 
     // Tab autocomplete
     const config = vscode.workspace.getConfiguration("continue");

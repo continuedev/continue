@@ -802,11 +802,22 @@ interface ModelRoles {
   applyCodeBlock?: string;
 }
 
+interface QuickActionsCommandConfig {
+  // lan;
+}
+
+interface QuickActions {
+  firstAction?: QuickActionsCommandConfig;
+  secondAction?: QuickActionsCommandConfig;
+  thirdAction?: QuickActionsCommandConfig;
+}
+
 interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
   defaultContext?: "activeFile"[];
   promptPath?: string;
+  quickActions?: QuickActions;
 }
 
 // config.json

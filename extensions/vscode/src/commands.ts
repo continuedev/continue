@@ -9,7 +9,11 @@ import { ConfigHandler } from "core/config/handler";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import { GlobalContext } from "core/util/GlobalContext";
-import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import {
+  editConfigJson,
+  getConfigJsonPath,
+  getDevDataFilePath,
+} from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import {
@@ -223,6 +227,24 @@ const commandsMap: (
       if (!edit) {
         vscode.commands.executeCommand("continue.continueGUIView.focus");
       }
+    },
+    "continue.explain": async (code: string) => {
+      sidebar.webviewProtocol?.request("newSessionWithPrompt", {
+        prompt: `Explain the following code:\n\n ${code}`,
+      });
+
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+    },
+    "continue.disableQuickActions": async () => {
+      editConfigJson((config) => {
+        if (config.experimental?.quickActions) {
+          delete config.experimental.quickActions;
+        }
+
+        return config;
+      });
+
+      vscode.window.showInformationMessage("Disabled Quick Actions");
     },
     "continue.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
@@ -607,8 +629,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =
