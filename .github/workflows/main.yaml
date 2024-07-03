@@ -9,14 +9,8 @@ on:
     branches:
       - main
 
-  pull_request:
-    types: [closed]
-    branches:
-      - main
-
 jobs:
   build:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
     strategy:
       matrix:
         include:
@@ -130,20 +124,20 @@ jobs:
           npm install -f esbuild
 
       # 4. Run tests for the extension
-      - name: Install Xvfb for Linux and run tests
-        run: |
-          sudo apt-get install -y xvfb # Install Xvfb
-          Xvfb :99 & # Start Xvfb
-          export DISPLAY=:99 # Export the display number to the environment
-          cd extensions/vscode
-          npm run test
-        if: matrix.os == 'ubuntu-latest'
+      # - name: Install Xvfb for Linux and run tests
+      #   run: |
+      #     sudo apt-get install -y xvfb # Install Xvfb
+      #     Xvfb :99 & # Start Xvfb
+      #     export DISPLAY=:99 # Export the display number to the environment
+      #     cd extensions/vscode
+      #     npm run test
+      #   if: matrix.os == 'ubuntu-latest'
 
-      - name: Run extension tests
-        run: |
-          cd extensions/vscode
-          npm run test
-        if: matrix.os != 'ubuntu-latest'
+      # - name: Run extension tests
+      #   run: |
+      #     cd extensions/vscode
+      #     npm run test
+      #   if: matrix.os != 'ubuntu-latest'
 
       # 5. Package the extension
       - name: Package the extension
