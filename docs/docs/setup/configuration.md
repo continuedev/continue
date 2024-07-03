@@ -135,18 +135,23 @@ If you need to send custom headers for authentication, you may use the `requestO
 
 ```json title="~/.continue/config.json"
 {
-  "models": [
-    {
-      "title": "Ollama",
-      "provider": "ollama",
-      "model": "llama2-7b",
-      "requestOptions": {
-        "headers": {
-          "X-Auth-Token": "xxx"
-        }
+   "models": [
+      {
+         "title": "Ollama",
+         "provider": "ollama",
+         "model": "llama2-7b",
+         "requestOptions": {
+            "headers": {
+               "X-Auth-Token": "xxx"
+            },
+            "clientCertificate": {
+               "cert": "C:\temp\cert.pem",
+               "key": "C:\temp\cert.key",
+               "passphrase": "c0nt!nu3"
+            }
+         }
       }
-    }
-  ]
+   ]
 }
 ```
 
