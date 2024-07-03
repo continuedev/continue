@@ -149,7 +149,8 @@ export class CodebaseIndexer {
             progress =
               (completedDirs +
                 (completedRelativeExpectedTime +
-                  indexProgress * codebaseIndex.relativeExpectedTime) /
+                  Math.min(1.0, indexProgress) *
+                    codebaseIndex.relativeExpectedTime) /
                   totalRelativeExpectedTime) /
               workspaceDirs.length;
             yield {

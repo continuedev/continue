@@ -183,7 +183,7 @@ const IndexingProgressBar = ({
             }}
           ></BlinkingDot>
           <StatusHeading>
-            Click to resume indexing ({Math.trunc(indexingState.progress * 100)}
+            Indexing paused ({Math.trunc(indexingState.progress * 100)}
             %)
           </StatusHeading>
         </FlexDiv>
