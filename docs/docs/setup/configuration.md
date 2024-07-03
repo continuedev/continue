@@ -143,10 +143,26 @@ If you need to send custom headers for authentication, you may use the `requestO
          "requestOptions": {
             "headers": {
                "X-Auth-Token": "xxx"
-            },
+            }
+         }
+      }
+   ]
+}
+```
+
+Similarly if your model requires a Certificate for authentication, you may use the `requestOptions.clientCertificate` property like in the example below:
+
+```json title="~/.continue/config.json"
+{
+   "models": [
+      {
+         "title": "Ollama",
+         "provider": "ollama",
+         "model": "llama2-7b",
+         "requestOptions": {
             "clientCertificate": {
-               "cert": "C:\temp\cert.pem",
-               "key": "C:\temp\cert.key",
+               "cert": "C:\temp\ollama.pem",
+               "key": "C:\temp\ollama.key",
                "passphrase": "c0nt!nu3"
             }
          }
