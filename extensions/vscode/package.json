@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.8.41",
+  "version": "0.9.171",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -17,9 +17,9 @@
   "homepage": "https://continue.dev",
   "qna": "https://github.com/continuedev/continue/issues/new/choose",
   "license": "Apache-2.0",
-  "displayName": "Continue - Codestral, GPT-4o, and more",
+  "displayName": "Continue - Codestral, Claude, and more",
   "pricing": "Free",
-  "description": "Open-source autopilot - build your own AI software development system",
+  "description": "The leading open-source AI code assistant",
   "publisher": "Continue",
   "engines": {
     "vscode": "^1.70.0",
@@ -40,6 +40,8 @@
     "chatgpt",
     "github",
     "copilot",
+    "claude",
+    "sonnet",
     "mistral",
     "codestral",
     "codegpt",
@@ -79,6 +81,11 @@
           "type": "boolean",
           "default": true,
           "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://docs.continue.dev/walkthroughs/tab-autocomplete)"
+        },
+        "continue.pauseTabAutocompleteOnBattery": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
         },
         "continue.remoteConfigServerUrl": {
           "type": "string",
@@ -478,7 +485,7 @@
     "rebuild": "electron-rebuild -v 19.1.8 node-pty",
     "lint": "eslint src --ext ts",
     "build-test": "npm run esbuild && node esbuild.test.mjs",
-    "test": "npm run prepackage && npm run build-test && node ./out/runTestOnVSCodeHost.js",
+    "test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "quick-test": "npm run build-test && node ./out/runTestOnVSCodeHost.js",
     "prepackage": "node scripts/prepackage.js",
     "package": "node scripts/package.js",
@@ -553,6 +560,7 @@
     "request": "^2.88.2",
     "socket.io-client": "^4.7.2",
     "strip-ansi": "^7.1.0",
+    "systeminformation": "^5.22.10",
     "tailwindcss": "^3.3.2",
     "undici": "^6.2.0",
     "uuid": "^9.0.1",

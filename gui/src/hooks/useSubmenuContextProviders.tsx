@@ -1,5 +1,10 @@
 import { ContextSubmenuItem } from "core";
-import { deduplicateArray, getBasename, groupByLastNPathParts, getUniqueFilePath } from "core/util";
+import {
+  deduplicateArray,
+  getBasename,
+  getUniqueFilePath,
+  groupByLastNPathParts,
+} from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
 import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";

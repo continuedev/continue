@@ -26,6 +26,7 @@ import LMStudio from "./LMStudio.js";
 import LlamaCpp from "./LlamaCpp.js";
 import Llamafile from "./Llamafile.js";
 import Mistral from "./Mistral.js";
+import Msty from "./Msty.js";
 import Ollama from "./Ollama.js";
 import OpenAI from "./OpenAI.js";
 import Replicate from "./Replicate.js";
@@ -122,6 +123,7 @@ const LLMs = [
   ContinueProxy,
   Cloudflare,
   Deepseek,
+  Msty,
 ];
 
 export async function llmFromDescription(

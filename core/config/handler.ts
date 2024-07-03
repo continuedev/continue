@@ -40,14 +40,16 @@ export class ConfigHandler {
     this.updateListeners.push(listener);
   }
 
-  reloadConfig() {
+  async reloadConfig() {
     this.savedConfig = undefined;
     this.savedBrowserConfig = undefined;
-    this.loadConfig().then(() => {
-      for (const listener of this.updateListeners) {
-        listener();
-      }
-    });
+    this._pendingConfigPromise = undefined;
+
+    await this.loadConfig();
+
+    for (const listener of this.updateListeners) {
+      listener();
+    }
   }
 
   async getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
@@ -58,45 +60,56 @@ export class ConfigHandler {
     return this.savedBrowserConfig;
   }
 
+  private _pendingConfigPromise?: Promise<ContinueConfig>;
   async loadConfig(): Promise<ContinueConfig> {
     if (this.savedConfig) {
       return this.savedConfig;
+    } else if (this._pendingConfigPromise) {
+      return this._pendingConfigPromise;
     }
 
-    let workspaceConfigs: ContinueRcJson[] = [];
-    try {
-      workspaceConfigs = await this.ide.getWorkspaceConfigs();
-    } catch (e) {
-      console.warn("Failed to load workspace configs");
-    }
+    this._pendingConfigPromise = new Promise(async (resolve, reject) => {
+      let workspaceConfigs: ContinueRcJson[] = [];
+      try {
+        workspaceConfigs = await this.ide.getWorkspaceConfigs();
+      } catch (e) {
+        console.warn("Failed to load workspace configs");
+      }
 
-    const ideInfo = await this.ide.getIdeInfo();
-    const uniqueId = await this.ide.getUniqueId();
-    const ideSettings = await this.ideSettingsPromise;
+      const ideInfo = await this.ide.getIdeInfo();
+      const uniqueId = await this.ide.getUniqueId();
+      const ideSettings = await this.ideSettingsPromise;
 
-    const newConfig = await loadFullConfigNode(
-      this.ide,
-      workspaceConfigs,
-      ideSettings,
-      ideInfo.ideType,
-      uniqueId,
-      this.writeLog,
-    );
-    newConfig.allowAnonymousTelemetry =
-      newConfig.allowAnonymousTelemetry &&
-      (await this.ide.isTelemetryEnabled());
+      const newConfig = await loadFullConfigNode(
+        this.ide,
+        workspaceConfigs,
+        ideSettings,
+        ideInfo.ideType,
+        uniqueId,
+        this.writeLog,
+      );
+      newConfig.allowAnonymousTelemetry =
+        newConfig.allowAnonymousTelemetry &&
+        (await this.ide.isTelemetryEnabled());
 
-    // Setup telemetry only after (and if) we know it is enabled
-    await Telemetry.setup(
-      newConfig.allowAnonymousTelemetry ?? true,
-      await this.ide.getUniqueId(),
-      ideInfo.extensionVersion,
-    );
+      // Setup telemetry only after (and if) we know it is enabled
+      await Telemetry.setup(
+        newConfig.allowAnonymousTelemetry ?? true,
+        await this.ide.getUniqueId(),
+        ideInfo.extensionVersion,
+      );
 
-    (newConfig.contextProviders ?? []).push(...this.additionalContextProviders);
+      (newConfig.contextProviders ?? []).push(
+        ...this.additionalContextProviders,
+      );
 
-    this.savedConfig = newConfig;
-    return newConfig;
+      this.savedConfig = newConfig;
+      resolve(newConfig);
+    });
+
+    this.savedConfig = await this._pendingConfigPromise;
+    this._pendingConfigPromise = undefined;
+    return this.savedConfig;
   }
 
   async llmFromTitle(title?: string): Promise<ILLM> {

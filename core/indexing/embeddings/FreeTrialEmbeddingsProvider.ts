@@ -32,6 +32,9 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
     return (
       await Promise.all(
         batchedChunks.map(async (batch) => {
+          if (batch.length === 0) {
+            return [];
+          }
           const fetchWithBackoff = () =>
             withExponentialBackoff<Response>(async () =>
               this.fetch(new URL("embeddings", constants.a), {

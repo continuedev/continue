@@ -6,7 +6,7 @@ import {
   lightGray,
   vscForeground,
 } from "..";
-import { getPlatform } from "../../util";
+import { getPlatform, isJetBrains } from "../../util";
 
 const GridDiv = styled.div`
   display: grid;
@@ -209,19 +209,18 @@ function KeyboardShortcutsDialog() {
     <div className="p-2">
       <h3 className="my-3 mx-auto text-center">Keyboard Shortcuts</h3>
       <GridDiv>
-        {(localStorage.getItem("ide") === "jetbrains"
-          ? jetbrainsShortcuts
-          : vscodeShortcuts
-        ).map((shortcut, i) => {
-          return (
-            <KeyboardShortcut
-              key={i}
-              mac={shortcut.mac}
-              windows={shortcut.windows}
-              description={shortcut.description}
-            />
-          );
-        })}
+        {(isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts).map(
+          (shortcut, i) => {
+            return (
+              <KeyboardShortcut
+                key={i}
+                mac={shortcut.mac}
+                windows={shortcut.windows}
+                description={shortcut.description}
+              />
+            );
+          },
+        )}
       </GridDiv>
     </div>
   );

@@ -14,6 +14,7 @@ export type MarkCompleteCallback = (
 
 export interface CodebaseIndex {
   artifactId: string;
+  relativeExpectedTime: number;
   update(
     tag: IndexTag,
     results: RefreshIndexResults,

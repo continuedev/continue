@@ -21,15 +21,23 @@ body:
     attributes:
       label: Relevant environment info
       description: |
+        Feel free to omit any info that is not relevant to your issue.
+
         - **OS**: e.g. macOS 14.2.1
         - **Continue**: e.g. v0.9.4
         - **IDE**: e.g. VSCode 1.85.1
         - Include also your LLM Model if it is relevant to your issue
           - **Model**: e.g. Ollama v0.1.19
+        - The contents of your config.json file (e.g. `~/.continue/config.json` on macOS)
       value: |
         - OS:
         - Continue:
         - IDE:
+        - Model:
+        - config.json:
+          ```json
+
+          ```
       render: Markdown
     validations:
       required: false

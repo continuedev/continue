@@ -34,6 +34,8 @@ const stableCodeFimTemplate: AutocompleteTemplate = {
       "<fim_middle>",
       "<|endoftext|>",
       "<file_sep>",
+      "</fim_middle>",
+      "</code>",
     ],
   },
 };

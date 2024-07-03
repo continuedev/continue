@@ -10,12 +10,23 @@ import { ContinueServerClient } from "core/continueServer/stubs/client";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
+import {
+  StatusBarStatus,
+  getStatusBarStatus,
+  getStatusBarStatusFromQuickPickItemLabel,
+  quickPickStatusText,
+  setupStatusBar,
+} from "./autocomplete/statusBar";
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { Battery } from "./util/battery";
 import { getPlatform } from "./util/util";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+
+let fullScreenPanel: vscode.WebviewPanel | undefined;
 
 function getFullScreenTab() {
   const tabs = vscode.window.tabGroups.all.flatMap((tabGroup) => tabGroup.tabs);
@@ -70,7 +81,9 @@ async function addHighlightedCodeToContext(
       // }
       return;
     }
-    const range = new vscode.Range(selection.start, selection.end);
+    // adjust starting position to include indentation
+    const start = new vscode.Position(selection.start.line, 0);
+    const range = new vscode.Range(start, selection.end);
     const contents = editor.document.getText(range);
     const rangeInFileWithContents = {
       filepath: editor.document.uri.fsPath,
@@ -145,6 +158,7 @@ const commandsMap: (
   diffManager: DiffManager,
   verticalDiffManager: VerticalPerLineDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
+  battery: Battery,
 ) => { [command: string]: (...args: any) => any } = (
   ide,
   extensionContext,
@@ -153,6 +167,7 @@ const commandsMap: (
   diffManager,
   verticalDiffManager,
   continueServerClientPromise,
+  battery,
 ) => {
   async function streamInlineEdit(
     promptName: keyof ContextMenuConfig,
@@ -210,8 +225,13 @@ const commandsMap: (
       }
     },
     "continue.focusContinueInput": async () => {
-      if (!getFullScreenTab()) {
+      const fullScreenTab = getFullScreenTab();
+      if (!fullScreenTab) {
+        // focus sidebar
         vscode.commands.executeCommand("continue.continueGUIView.focus");
+      } else {
+        // focus fullscreen
+        fullScreenPanel?.reveal();
       }
       sidebar.webviewProtocol?.request("focusContinueInput", undefined);
       await addHighlightedCodeToContext(false, sidebar.webviewProtocol);
@@ -269,6 +289,7 @@ const commandsMap: (
         title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
         prompt: `[${defaultModelTitle}]`,
         value: prompt,
+        ignoreFocusOut: true,
       };
       if (previousInput) {
         textInputOptions.value = previousInput + ", ";
@@ -286,7 +307,12 @@ const commandsMap: (
 
       if (text.length > 0 || quickPickItems.length === 0) {
         sidebar.webviewProtocol.request("incrementFtc", undefined);
-        await verticalDiffManager.streamEdit(text, defaultModelTitle);
+        await verticalDiffManager.streamEdit(
+          text,
+          defaultModelTitle,
+          undefined,
+          previousInput,
+        );
       } else {
         // Pick context first
         const selectedProviders = await vscode.window.showQuickPick(
@@ -332,7 +358,12 @@ const commandsMap: (
             text;
 
           sidebar.webviewProtocol.request("incrementFtc", undefined);
-          await verticalDiffManager.streamEdit(text, defaultModelTitle);
+          await verticalDiffManager.streamEdit(
+            text,
+            defaultModelTitle,
+            undefined,
+            previousInput,
+          );
         }
       }
     },
@@ -445,24 +476,14 @@ const commandsMap: (
         return;
       }
 
-      if (fullScreenTab) {
+      if (fullScreenTab && fullScreenPanel) {
         //Full screen open, but not focused - focus it
-        // Focus the tab
-        const openOptions = {
-          preserveFocus: true,
-          preview: fullScreenTab.isPreview,
-          viewColumn: fullScreenTab.group.viewColumn,
-        };
-
-        vscode.commands.executeCommand(
-          "vscode.open",
-          (fullScreenTab.input as any).uri,
-          openOptions,
-        );
+        fullScreenPanel.reveal();
         return;
       }
 
       //Full screen not open - open it
+      Telemetry.capture("openFullScreen", {});
 
       // Close the sidebar.webviews
       // vscode.commands.executeCommand("workbench.action.closeSidebar");
@@ -474,7 +495,11 @@ const commandsMap: (
         "continue.continueGUIView",
         "Continue",
         vscode.ViewColumn.One,
+        {
+          retainContextWhenHidden: true,
+        },
       );
+      fullScreenPanel = panel;
 
       //Add content to the panel
       panel.webview.html = sidebar.getSidebarContent(
@@ -528,15 +553,39 @@ const commandsMap: (
     "continue.toggleTabAutocompleteEnabled": () => {
       const config = vscode.workspace.getConfiguration("continue");
       const enabled = config.get("enableTabAutocomplete");
-      config.update(
-        "enableTabAutocomplete",
-        !enabled,
-        vscode.ConfigurationTarget.Global,
+      const pauseOnBattery = config.get<boolean>(
+        "pauseTabAutocompleteOnBattery",
       );
+      if (!pauseOnBattery || battery.isACConnected()) {
+        config.update(
+          "enableTabAutocomplete",
+          !enabled,
+          vscode.ConfigurationTarget.Global,
+        );
+      } else {
+        if (enabled) {
+          const paused = getStatusBarStatus() === StatusBarStatus.Paused;
+          if (paused) {
+            setupStatusBar(StatusBarStatus.Enabled);
+          } else {
+            config.update(
+              "enableTabAutocomplete",
+              false,
+              vscode.ConfigurationTarget.Global,
+            );
+          }
+        } else {
+          setupStatusBar(StatusBarStatus.Paused);
+          config.update(
+            "enableTabAutocomplete",
+            true,
+            vscode.ConfigurationTarget.Global,
+          );
+        }
+      }
     },
     "continue.openTabAutocompleteConfigMenu": async () => {
       const config = vscode.workspace.getConfiguration("continue");
-      const enabled = config.get("enableTabAutocomplete");
       const quickPick = vscode.window.createQuickPick();
       const selected = new GlobalContext().get("selectedTabAutocompleteModel");
       const autocompleteModelTitles = ((
@@ -544,11 +593,32 @@ const commandsMap: (
       ).tabAutocompleteModels
         ?.map((model) => model.title)
         .filter((t) => t !== undefined) || []) as string[];
+
+      // Toggle between Disabled, Paused, and Enabled
+      const pauseOnBattery =
+        config.get<boolean>("pauseTabAutocompleteOnBattery") &&
+        !battery.isACConnected();
+      const currentStatus = getStatusBarStatus();
+
+      let targetStatus: StatusBarStatus | undefined;
+      if (pauseOnBattery) {
+        // Cycle from Disabled -> Paused -> Enabled
+        targetStatus =
+          currentStatus === StatusBarStatus.Paused
+            ? StatusBarStatus.Enabled
+            : currentStatus === StatusBarStatus.Disabled
+              ? StatusBarStatus.Paused
+              : StatusBarStatus.Disabled;
+      } else {
+        // Toggle between Disabled and Enabled
+        targetStatus =
+          currentStatus === StatusBarStatus.Disabled
+            ? StatusBarStatus.Enabled
+            : StatusBarStatus.Disabled;
+      }
       quickPick.items = [
         {
-          label: enabled
-            ? "$(check) Disable autocomplete"
-            : "$(circle-slash) Enable autocomplete",
+          label: quickPickStatusText(targetStatus),
         },
         {
           label: "$(gear) Configure autocomplete options",
@@ -567,16 +637,14 @@ const commandsMap: (
       ];
       quickPick.onDidAccept(() => {
         const selectedOption = quickPick.selectedItems[0].label;
-        if (selectedOption === "$(circle-slash) Enable autocomplete") {
+        const targetStatus =
+          getStatusBarStatusFromQuickPickItemLabel(selectedOption);
+
+        if (targetStatus !== undefined) {
+          setupStatusBar(targetStatus);
           config.update(
             "enableTabAutocomplete",
-            true,
-            vscode.ConfigurationTarget.Global,
-          );
-        } else if (selectedOption === "$(check) Disable autocomplete") {
-          config.update(
-            "enableTabAutocomplete",
-            false,
+            targetStatus === StatusBarStatus.Enabled,
             vscode.ConfigurationTarget.Global,
           );
         } else if (
@@ -598,6 +666,7 @@ const commandsMap: (
     },
     "continue.giveAutocompleteFeedback": async () => {
       const feedback = await vscode.window.showInputBox({
+        ignoreFocusOut: true,
         prompt:
           "Please share what went wrong with the last completion. The details of the completion as well as this message will be sent to the Continue team in order to improve.",
       });
@@ -621,6 +690,7 @@ export function registerAllCommands(
   diffManager: DiffManager,
   verticalDiffManager: VerticalPerLineDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
+  battery: Battery,
 ) {
   for (const [command, callback] of Object.entries(
     commandsMap(
@@ -631,6 +701,7 @@ export function registerAllCommands(
       diffManager,
       verticalDiffManager,
       continueServerClientPromise,
+      battery,
     ),
   )) {
     context.subscriptions.push(

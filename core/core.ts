@@ -12,12 +12,11 @@ import {
   setupFreeTrialMode,
   setupLocalAfterFreeTrial,
   setupLocalMode,
-  setupOptimizedExistingUserMode,
 } from "./config/onboarding.js";
-import { createNewPromptFile } from "./config/promptFile";
+import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
-import { indexDocs } from "./indexing/docs/index.js";
+import { DocsService } from "./indexing/docs/DocsService";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase.js";
 import Ollama from "./llm/llms/Ollama.js";
@@ -40,6 +39,10 @@ export class Core {
   continueServerClientPromise: Promise<ContinueServerClient>;
   indexingState: IndexingProgressUpdate;
   private globalContext = new GlobalContext();
+  private docsService = DocsService.getInstance();
+  private readonly indexingPauseToken = new PauseToken(
+    this.globalContext.get("indexingPaused") === true,
+  );
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -79,9 +82,6 @@ export class Core {
     );
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
-    const indexingPauseToken = new PauseToken(
-      this.globalContext.get("indexingPaused") === true,
-    );
     let codebaseIndexerResolve: (_: any) => void | undefined;
     this.codebaseIndexerPromise = new Promise(
       async (resolve) => (codebaseIndexerResolve = resolve),
@@ -103,7 +103,7 @@ export class Core {
         new CodebaseIndexer(
           this.configHandler,
           this.ide,
-          new PauseToken(false),
+          this.indexingPauseToken,
           continueServerClient,
         ),
       );
@@ -216,12 +216,17 @@ export class Core {
         faviconUrl: new URL("/favicon.ico", msg.data.rootUrl).toString(),
       };
 
-      for await (const _ of indexDocs(
+      for await (const _ of this.docsService.indexAndAdd(
         siteIndexingConfig,
         new TransformersJsEmbeddingsProvider(),
       )) {
       }
-      this.ide.infoPopup(`🎉 Successfully indexed ${msg.data.title}`);
+      this.ide.infoPopup(`Successfully indexed ${msg.data.title}`);
+      this.messenger.send("refreshSubmenuItems", undefined);
+    });
+    on("context/removeDocs", async (msg) => {
+      const baseUrl = msg.data.baseUrl;
+      await this.docsService.delete(baseUrl);
       this.messenger.send("refreshSubmenuItems", undefined);
     });
     on("context/loadSubmenuItems", async (msg) => {
@@ -364,20 +369,20 @@ export class Core {
       const model =
         config.models.find((model) => model.title === msg.data.title) ??
         config.models.find((model) => model.title?.startsWith(msg.data.title));
-      if (model) {
-        return model.listModels();
-      } else {
-        if (msg.data.title === "Ollama") {
-          try {
+      try {
+        if (model) {
+          return model.listModels();
+        } else {
+          if (msg.data.title === "Ollama") {
             const models = await new Ollama({ model: "" }).listModels();
             return models;
-          } catch (e) {
-            console.warn(`Error listing Ollama models: ${e}`);
+          } else {
             return undefined;
           }
-        } else {
-          return undefined;
         }
+      } catch (e) {
+        console.warn(`Error listing Ollama models: ${e}`);
+        return undefined;
       }
     });
 
@@ -411,6 +416,13 @@ export class Core {
         name: slashCommandName,
       });
 
+      const checkActiveInterval = setInterval(() => {
+        if (abortedMessageIds.has(msg.messageId)) {
+          abortedMessageIds.delete(msg.messageId);
+          clearInterval(checkActiveInterval);
+        }
+      }, 100);
+
       for await (const content of slashCommand.run({
         input,
         history,
@@ -429,10 +441,15 @@ export class Core {
         fetch: (url, init) =>
           fetchwithRequestOptions(url, init, config.requestOptions),
       })) {
+        if (abortedMessageIds.has(msg.messageId)) {
+          abortedMessageIds.delete(msg.messageId);
+          break;
+        }
         if (content) {
           yield { content };
         }
       }
+      clearInterval(checkActiveInterval);
       yield { done: true, content: "" };
     }
     on("command/run", (msg) =>
@@ -490,23 +507,41 @@ export class Core {
 
     on("completeOnboarding", (msg) => {
       const mode = msg.data.mode;
+
       Telemetry.capture("onboardingSelection", {
         mode,
       });
-      if (mode === "custom" || mode === "localExistingUser") {
+
+      if (mode === "custom") {
         return;
       }
-      editConfigJson(
-        mode === "local"
-          ? setupLocalMode
-          : mode === "freeTrial"
-            ? setupFreeTrialMode
-            : mode === "localAfterFreeTrial"
-              ? setupLocalAfterFreeTrial
-              : mode === "apiKeys"
-                ? setupApiKeysMode
-                : setupOptimizedExistingUserMode,
-      );
+
+      let editConfigJsonCallback: Parameters<typeof editConfigJson>[0];
+
+      switch (mode) {
+        case "local":
+          editConfigJsonCallback = setupLocalMode;
+          break;
+
+        case "freeTrial":
+          editConfigJsonCallback = setupFreeTrialMode;
+          break;
+
+        case "localAfterFreeTrial":
+          editConfigJsonCallback = setupLocalAfterFreeTrial;
+          break;
+
+        case "apiKeys":
+          editConfigJsonCallback = setupApiKeysMode;
+          break;
+
+        default:
+          console.error(`Invalid mode: ${mode}`);
+          editConfigJsonCallback = (config) => config;
+      }
+
+      editConfigJson(editConfigJsonCallback);
+
       this.configHandler.reloadConfig();
     });
 
@@ -534,12 +569,12 @@ export class Core {
     });
     on("index/setPaused", (msg) => {
       new GlobalContext().update("indexingPaused", msg.data);
-      indexingPauseToken.paused = msg.data;
+      this.indexingPauseToken.paused = msg.data;
     });
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
       // If a non-default state has been stored, update the indexing display to that state
-      if (this.indexingState.status != "loading") {
+      if (this.indexingState.status !== "loading") {
         this.messenger.request("indexProgress", this.indexingState);
       }
     });

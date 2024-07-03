@@ -3,7 +3,7 @@ import { defaultIgnoreFile } from "core/indexing/ignore";
 import path from "node:path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
-import { VsCodeExtension } from "../extension/vscodeExtension";
+import { VsCodeExtension } from "../extension/VsCodeExtension";
 import { GitExtension, Repository } from "../otherExtensions/git";
 import {
   SuggestionRanges,
@@ -18,6 +18,8 @@ import {
   openEditorAndRevealRange,
   uriFromFilePath,
 } from "./vscode";
+
+import _ from "lodash";
 
 const util = require("node:util");
 const asyncExec = util.promisify(require("node:child_process").exec);
@@ -257,6 +259,23 @@ export class VsCodeIdeUtils {
       });
   }
 
+  private _cachedPath: path.PlatformPath | undefined;
+  get path(): path.PlatformPath {
+    if (this._cachedPath) {
+      return this._cachedPath;
+    }
+
+    // Return "path" module for either windows or posix depending on sample workspace folder path format
+    const sampleWorkspaceFolder =
+      vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    const isWindows = sampleWorkspaceFolder
+      ? !sampleWorkspaceFolder.startsWith("/")
+      : false;
+
+    this._cachedPath = isWindows ? path.win32 : path.posix;
+    return this._cachedPath;
+  }
+
   async getDirectoryContents(
     directory: string,
     recursive: boolean,
@@ -269,14 +288,48 @@ export class VsCodeIdeUtils {
         .filter(([name, type]) => {
           type === vscode.FileType.File && !defaultIgnoreFile.ignores(name);
         })
-        .map(([name, type]) => path.join(directory, name));
+        .map(([name, type]) => this.path.join(directory, name));
+    }
+
+    // If not using gitignore, just read all contents recursively
+    if (!useGitIgnore) {
+      const dirQueue = [];
+      const allFiles: string[] = [];
+      dirQueue.push(directory);
+
+      while (dirQueue.length > 0) {
+        const currentDir = dirQueue.shift()!;
+        const files = await vscode.workspace.fs.readDirectory(
+          uriFromFilePath(currentDir),
+        );
+        for (const [name, type] of files) {
+          const filepath = this.path.join(currentDir, name);
+          if (type === vscode.FileType.Directory) {
+            dirQueue.push(filepath);
+          } else {
+            allFiles.push(filepath);
+          }
+        }
+      }
+
+      return allFiles;
+    }
+
+    try {
+      const stat = await vscode.workspace.fs.stat(uriFromFilePath(directory));
+      if (stat.type !== vscode.FileType.Directory) {
+        throw new Error(`${directory} is not a directory`);
+      }
+    } catch (e) {
+      console.warn(`Directory ${directory} does not exist.`);
+      return [];
     }
 
     const allFiles: string[] = [];
     const gitRoot = await this.getGitRoot(directory);
     let onlyThisDirectory = undefined;
     if (gitRoot) {
-      onlyThisDirectory = directory.slice(gitRoot.length).split(path.sep);
+      onlyThisDirectory = directory.slice(gitRoot.length).split(this.path.sep);
       if (onlyThisDirectory[0] === "") {
         onlyThisDirectory.shift();
       }
@@ -295,8 +348,8 @@ export class VsCodeIdeUtils {
 
   getAbsolutePath(filepath: string): string {
     const workspaceDirectories = this.getWorkspaceDirectories();
-    if (!path.isAbsolute(filepath) && workspaceDirectories.length === 1) {
-      return path.join(workspaceDirectories[0], filepath);
+    if (!this.path.isAbsolute(filepath) && workspaceDirectories.length === 1) {
+      return this.path.join(workspaceDirectories[0], filepath);
     } else {
       return filepath;
     }
@@ -485,7 +538,9 @@ export class VsCodeIdeUtils {
 
             const scope = scopeResponse.scopes[0];
 
-            return await this.retrieveSource(scope.source ? scope : stackFrame);
+            return await this.retrieveSource(
+              scope.source && !_.isEmpty(scope.source) ? scope : stackFrame,
+            );
           }),
       );
 
@@ -520,7 +575,7 @@ export class VsCodeIdeUtils {
       return await this.readRangeInFile(
         sourceContainer.source.path,
         new vscode.Range(
-          sourceContainer.line - 3,
+          Math.max(0, sourceContainer.line - 3),
           0,
           sourceContainer.line + 2,
           0,
@@ -555,6 +610,8 @@ export class VsCodeIdeUtils {
 
   private _repoWasNone: boolean = false;
   private repoCache: Map<string, Repository> = new Map();
+  private static secondsToWaitForGitToLoad =
+    process.env.NODE_ENV === "test" ? 1 : 20;
   async getRepo(forDirectory: vscode.Uri): Promise<Repository | undefined> {
     const workspaceDirs = this.getWorkspaceDirectories();
     const parentDir = workspaceDirs.find((dir) =>
@@ -576,7 +633,7 @@ export class VsCodeIdeUtils {
 
       await new Promise((resolve) => setTimeout(resolve, 1000));
       i++;
-      if (i >= 20) {
+      if (i >= VsCodeIdeUtils.secondsToWaitForGitToLoad) {
         this._repoWasNone = true;
         return undefined;
       }

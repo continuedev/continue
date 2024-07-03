@@ -1,10 +1,10 @@
 import { ModelProvider } from "core";
 import { HTMLInputTypeAttribute } from "react";
-import { ftl } from "../../../components/dialogs/FTCDialog";
 import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../../../util/freeTrial";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -458,7 +458,7 @@ After it's up and running, you can start using Continue.`,
     refPage: "freetrial",
     description:
       "New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key",
-    longDescription: `New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key. If you are ready to set up a model for long-term use or have used all ${ftl()} free uses, you can enter your API key or use a local model.`,
+    longDescription: `New users can try out Continue for free using a proxy server that securely makes calls to OpenAI, Anthropic, or Together using our API key. If you are ready to set up a model for long-term use or have used all ${FREE_TRIAL_LIMIT_REQUESTS} free uses, you can enter your API key or use a local model.`,
     icon: "openai.png",
     tags: [ModelProviderTags.Free],
     packages: [

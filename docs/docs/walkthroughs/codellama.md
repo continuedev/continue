@@ -1,12 +1,12 @@
 ---
 title: Using Code Llama with Continue
 description: How to use Code Llama with Continue
-keywords: [code llama, meta, togetherai, ollama, replciate, fastchat]
+keywords: [code llama, meta, togetherai, ollama, replciate, fastchat, msty]
 ---
 
 # Using Code Llama with Continue
 
-With Continue, you can use Code Llama as a drop-in replacement for GPT-4, either by running locally with Ollama or GGML or through Replicate.
+With Continue, you can use Code Llama as a drop-in replacement for GPT-4, either by running locally with Ollama, Msty, or GGML or through Replicate.
 
 If you haven't already installed Continue, you can do that [here](https://marketplace.visualstudio.com/items?itemName=Continue.continue). For more general information on customizing Continue, read [our customization docs](../customization/overview.md).
 
@@ -79,6 +79,24 @@ If you haven't already installed Continue, you can do that [here](https://market
       "provider": "openai",
       "model": "codellama-7b",
       "apiBase": "http://localhost:8000/v1/"
+    }
+  ]
+}
+```
+
+## Msty
+
+1. Download Msty [here](https://msty.app/) for your platform (Windows, Mac, or Linux)
+2. Open the app and click "Setup Local AI". Optionally, download any model you want with just a click of a button from the Text Module page.
+3. Change your Continue config file like this:
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "title": "Code Llama",
+      "provider": "msty",
+      "model": "codellama:7b"
     }
   ]
 }

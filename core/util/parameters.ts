@@ -19,6 +19,7 @@ export const DEFAULT_AUTOCOMPLETE_OPTS: TabAutocompleteOptions = {
   useRecentlyEdited: true,
   recentLinePrefixMatchMinLength: 7,
   disableInFiles: undefined,
+  useImports: true,
 };
 
 export const COUNT_COMPLETION_REJECTED_AFTER = 10_000;

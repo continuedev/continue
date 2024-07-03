@@ -4,11 +4,11 @@ Prompt (`.prompt`) files are an easy way to build and share LLM prompts with oth
 
 ## How to create a prompt file
 
-Below is a quick example of setting up a prompt file to write unit tests:s
+Below is a quick example of setting up a prompt file to write unit tests using Jest.
 
-1. Create a folder called `.prompts` at the top level of your workspace
-2. Add a file called `test.prompt` to this folder
-3. Write the following contents to `test.prompt` and save
+1. Create a folder called `.prompts/` at the top level of your workspace.
+2. Add a file called `test.prompt` to this folder. The name of this file will be the name of the slash command you will use to generate your prompt.
+3. Write the following contents to `test.prompt` and save.
 
 ```
 temperature: 0.5

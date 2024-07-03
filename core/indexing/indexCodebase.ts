@@ -52,41 +52,46 @@ export class CodebaseIndexer {
     workspaceDirs: string[],
     abortSignal: AbortSignal,
   ): AsyncGenerator<IndexingProgressUpdate> {
+    let progress = 0;
+
     if (workspaceDirs.length === 0) {
       yield {
-        progress: 0,
+        progress,
         desc: "Nothing to index",
-        status: "disabled",     
+        status: "disabled",
       };
       return;
     }
-    
+
     const config = await this.configHandler.loadConfig();
     if (config.disableIndexing) {
       yield {
-        progress: 0,
+        progress,
         desc: "Indexing is disabled in config.json",
         status: "disabled",
       };
       return;
     } else {
       yield {
-        progress: 0,
+        progress,
         desc: "Starting indexing",
         status: "loading",
       };
     }
 
     const indexesToBuild = await this.getIndexesToBuild();
-
     let completedDirs = 0;
+    const totalRelativeExpectedTime = indexesToBuild.reduce(
+      (sum, index) => sum + index.relativeExpectedTime,
+      0,
+    );
 
     // Wait until Git Extension has loaded to report progress
     // so we don't appear stuck at 0% while waiting
     await this.ide.getRepoName(workspaceDirs[0]);
 
     yield {
-      progress: 0,
+      progress,
       desc: "Starting indexing...",
       status: "loading",
     };
@@ -99,7 +104,7 @@ export class CodebaseIndexer {
       const stats = await this.ide.getLastModified(files);
       const branch = await this.ide.getBranch(directory);
       const repoName = await this.ide.getRepoName(directory);
-      let completedIndexes = 0;
+      let completedRelativeExpectedTime = 0;
 
       for (const codebaseIndex of indexesToBuild) {
         // TODO: IndexTag type should use repoName rather than directory
@@ -116,12 +121,10 @@ export class CodebaseIndexer {
         );
 
         try {
-          for await (let { progress, desc } of codebaseIndex.update(
-            tag,
-            results,
-            markComplete,
-            repoName,
-          )) {
+          for await (let {
+            progress: indexProgress,
+            desc,
+          } of codebaseIndex.update(tag, results, markComplete, repoName)) {
             // Handle pausing in this loop because it's the only one really taking time
             if (abortSignal.aborted) {
               yield {
@@ -134,7 +137,7 @@ export class CodebaseIndexer {
 
             if (this.pauseToken.paused) {
               yield {
-                progress: completedDirs / workspaceDirs.length,
+                progress,
                 desc: "Paused",
                 status: "paused",
               };
@@ -143,39 +146,58 @@ export class CodebaseIndexer {
               }
             }
 
+            progress =
+              (completedDirs +
+                (completedRelativeExpectedTime +
+                  Math.min(1.0, indexProgress) *
+                    codebaseIndex.relativeExpectedTime) /
+                  totalRelativeExpectedTime) /
+              workspaceDirs.length;
             yield {
-              progress:
-                (completedDirs +
-                  (completedIndexes + progress) / indexesToBuild.length) /
-                workspaceDirs.length,
+              progress,
               desc,
               status: "indexing",
             };
           }
-          completedIndexes++;
+
+          completedRelativeExpectedTime += codebaseIndex.relativeExpectedTime;
           yield {
             progress:
-              (completedDirs + completedIndexes / indexesToBuild.length) /
+              (completedDirs +
+                completedRelativeExpectedTime / totalRelativeExpectedTime) /
               workspaceDirs.length,
             desc: "Completed indexing " + codebaseIndex.artifactId,
             status: "indexing",
           };
-        } catch (e) {
-          yield {
-            progress: 0, 
-            desc: `${e}`,
-            status: "failed"
+        } catch (e: any) {
+          let errMsg = `${e}`;
+
+          const errorRegex =
+            /Invalid argument error: Values length (\d+) is less than the length \((\d+)\) multiplied by the value size \(\d+\)/;
+          const match = e.message.match(errorRegex);
+
+          if (match) {
+            const [_, valuesLength, expectedLength] = match;
+            errMsg = `Generated embedding had length ${valuesLength} but was expected to be ${expectedLength}. This may be solved by deleting ~/.continue/index and refreshing the window to re-index.`;
           }
+
+          yield {
+            progress: 0,
+            desc: errMsg,
+            status: "failed",
+          };
+
           console.warn(
             `Error updating the ${codebaseIndex.artifactId} index: ${e}`,
           );
-          return
+          return;
         }
       }
 
       completedDirs++;
+      progress = completedDirs / workspaceDirs.length;
       yield {
-        progress: completedDirs / workspaceDirs.length,
+        progress,
         desc: "Indexing Complete",
         status: "done",
       };

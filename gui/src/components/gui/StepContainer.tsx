@@ -16,6 +16,7 @@ import {
   vscInputBackground,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
 import HeaderButtonWithText from "../HeaderButtonWithText";
@@ -87,6 +88,8 @@ function StepContainer(props: StepContainerProps) {
 
   const [truncatedEarly, setTruncatedEarly] = useState(false);
 
+  const uiConfig = useUIConfig();
+
   useEffect(() => {
     if (!active) {
       const content = stripImages(props.item.message.content).trim();
@@ -121,10 +124,19 @@ function StepContainer(props: StepContainerProps) {
           isUserInput={isUserInput}
           fontSize={getFontSize()}
         >
-          <StyledMarkdownPreview
-            source={stripImages(props.item.message.content)}
-            showCodeBorder={true}
-          />
+          {uiConfig?.displayRawMarkdown ? (
+            <pre
+              className="whitespace-pre-wrap break-words p-4 max-w-full overflow-x-auto"
+              style={{ fontSize: getFontSize() - 2 }}
+            >
+              {stripImages(props.item.message.content)}
+            </pre>
+          ) : (
+            <StyledMarkdownPreview
+              source={stripImages(props.item.message.content)}
+              showCodeBorder={true}
+            />
+          )}
         </ContentDiv>
         <div className="h-2"></div>
         {(isHovered || typeof feedback !== "undefined") && !active && (

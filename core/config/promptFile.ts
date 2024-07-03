@@ -1,3 +1,4 @@
+import Handlebars from "handlebars";
 import path from "path";
 import * as YAML from "yaml";
 import type { IDE, SlashCommand } from "..";
@@ -12,6 +13,11 @@ export async function getPromptFiles(
   dir: string,
 ): Promise<{ path: string; content: string }[]> {
   try {
+    const exists = await ide.fileExists(dir);
+    if (!exists) {
+      return [];
+    }
+
     const paths = await ide.listWorkspaceContents(dir, false);
     const results = paths.map(async (path) => {
       const content = await ide.readFile(path);

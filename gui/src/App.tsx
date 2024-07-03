@@ -1,24 +1,23 @@
 import { useDispatch } from "react-redux";
 import { RouterProvider, createMemoryRouter } from "react-router-dom";
 import Layout from "./components/Layout";
+import { SubmenuContextProvidersContext } from "./context/SubmenuContextProviders";
+import { VscThemeContext } from "./context/VscTheme";
 import useSetup from "./hooks/useSetup";
+import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
+import { useVscTheme } from "./hooks/useVscTheme";
+import { AddNewModel, ConfigureProvider } from "./pages/AddNewModel";
 import ErrorPage from "./pages/error";
+import GUI from "./pages/gui";
 import { default as Help, default as HelpPage } from "./pages/help";
 import History from "./pages/history";
 import MigrationPage from "./pages/migration";
-import { ConfigureProvider, AddNewModel } from "./pages/AddNewModel";
 import MonacoPage from "./pages/monaco";
-import SettingsPage from "./pages/settings";
-import { SubmenuContextProvidersContext } from "./context/SubmenuContextProviders";
-import { VscThemeContext } from "./context/VscTheme";
-import useSubmenuContextProviders from "./hooks/useSubmenuContextProviders";
-import { useVscTheme } from "./hooks/useVscTheme";
-import GUI from "./pages/gui";
-import LocalOnboarding from "./pages/localOnboarding";
 import ApiKeyAutocompleteOnboarding from "./pages/onboarding/apiKeyAutocompleteOnboarding";
-import ApiKeyOnboarding from "./pages/onboarding/apiKeyOnboarding";
-import ExistingUserOnboarding from "./pages/onboarding/existingUserOnboarding";
-import Onboarding from "./pages/onboarding/onboarding";
+import ApiKeysOnboarding from "./pages/onboarding/ApiKeysOnboarding";
+import LocalOnboarding from "./pages/onboarding/LocalOnboarding";
+import Onboarding from "./pages/onboarding/Onboarding";
+import SettingsPage from "./pages/settings";
 import Stats from "./pages/stats";
 
 const router = createMemoryRouter([
@@ -72,10 +71,6 @@ const router = createMemoryRouter([
         element: <Onboarding />,
       },
       {
-        path: "/existingUserOnboarding",
-        element: <ExistingUserOnboarding />,
-      },
-      {
         path: "/localOnboarding",
         element: <LocalOnboarding />,
       },
@@ -84,8 +79,8 @@ const router = createMemoryRouter([
         element: <MigrationPage />,
       },
       {
-        path: "/apiKeyOnboarding",
-        element: <ApiKeyOnboarding />,
+        path: "/apiKeysOnboarding",
+        element: <ApiKeysOnboarding />,
       },
       {
         path: "/apiKeyAutocompleteOnboarding",

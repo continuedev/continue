@@ -1,7 +1,7 @@
 ---
 title: Codebase Retrieval
 description: Talk to your codebase
-keywords: [talk, embeddings, codebase, experimental]
+keywords: [talk, embeddings, reranker, codebase, experimental]
 ---
 
 # Codebase retrieval
@@ -113,8 +113,9 @@ Voyage AI offers the best embeddings for code with their voyage-code-2 model. Af
 
 OpenAI's [embeddings](https://platform.openai.com/docs/guides/embeddings) are high dimensional embeddings that give great performance on both text and code.
 
-Configuration for text-embedding-3-small Model. This is default.
-The text-embedding-3-small model offers an outstanding balance between performance and efficiency, suitable for a versatile range of applications.
+#### Configuration for the `text-embedding-3-small` model
+
+This is default. The `text-embedding-3-small` model offers an outstanding balance between performance and efficiency, suitable for a versatile range of applications.
 
 ```json title="~/.continue/config.json"
 {
@@ -127,8 +128,9 @@ The text-embedding-3-small model offers an outstanding balance between performan
 }
 ```
 
-Configuration for text-embedding-3-large Model
-For those requiring the highest level of embedding detail and precision, the text-embedding-3-large model is the better choice.
+#### Configuration for the `text-embedding-3-large` model
+
+For those requiring the highest level of embedding detail and precision, the `text-embedding-3-large` model is the better choice.
 
 ```json title="~/.continue/config.json"
 {
@@ -141,8 +143,9 @@ For those requiring the highest level of embedding detail and precision, the tex
 }
 ```
 
-Legacy Model Configuration
-For certain scenarios, you may still find the text-embedding-ada-002 model relevant. Below is the configuration example:
+#### Legacy Model Configuration
+
+For certain scenarios, you may still find the `text-embedding-ada-002` model relevant. Below is the configuration example:
 
 ```json title="~/.continue/config.json"
 {
@@ -208,6 +211,73 @@ export function modifyConfig(config: Config): Config {
   };
 
   return config;
+}
+```
+
+## Reranking providers
+
+The reranker plays a crucial role in refining the results retrieved from your codebase. It processes the initial set of results obtained through embeddings-based retrieval, improving their relevance and accuracy for your queries.
+
+Continue offers several reranking options: `cohere`, `voyage`, `llm`, and `free-trial`, which can be configured in `config.json`.
+
+### Voyage AI
+
+Voyage AI offers the best reranking model for code with their rerank-lite-1 model. After obtaining an API key from [here](https://www.voyageai.com/), you can configure like this:
+
+```json title="~/.continue/config.json"
+{
+  "reranker": {
+    "name": "voyage",
+    "params": {
+      "model": "rerank-lite-1",
+      "apiKey": "<VOYAGE_API_KEY>"
+    }
+  }
+}
+```
+
+### Cohere
+
+See Cohere's documentation for rerankers [here](https://docs.cohere.com/docs/rerank-2).
+
+```json title="~/.continue/config.json"
+{
+  "reranker": {
+    "name": "cohere",
+    "params": {
+      "model": "rerank-english-v3.0",
+      "apiKey": "<COHERE_API_KEY>"
+    }
+  }
+}
+```
+
+### LLM
+
+If you only have access to a single LLM, then you can use it as a reranker. This is discouraged unless truly necessary, because it will be much more expensive and still less accurate than any of the above models trained specifically for the task. Note that this will not work if you are using a local model, for example with Ollama, because too many parallel requests need to be made.
+
+```json title="~/.continue/config.json"
+{
+  "reranker": {
+    "name": "llm",
+    "params": {
+      "modelTitle": "My Model Title"
+    }
+  }
+}
+```
+
+The `"modelTitle"` field must match one of the models in your "models" array in config.json.
+
+### Free Trial (Voyage AI)
+
+Continue offers a free trial of Voyage AI's reranking model.
+
+```json title="~/.continue/config.json"
+{
+  "reranker": {
+    "name": "free-trial"
+  }
 }
 ```
 

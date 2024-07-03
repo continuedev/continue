@@ -202,7 +202,12 @@ assignee = currentUser() AND resolution = Unresolved order by updated DESC
 
 You can override this query by setting the `issueQuery` parameter.
 
-### Code Outline
+ <!-- 
+ Note: We are currently omitting the following providers due to bugs.
+ See this issue for details: https://github.com/continuedev/continue/issues/1365 
+ -->
+
+<!-- ### Code Outline
 
 Type '@outline' to reference the outline of all currently open files. The outline of a files consists of only the function and class definitions in the file. Supported file extensions are '.js', '.mjs', '.go', '.c', '.cc', '.cs', '.cpp', '.el', '.ex', '.elm', '.java', '.ml', '.php', '.ql', '.rb', '.rs', '.ts'
 
@@ -216,7 +221,7 @@ Type '@highlights' to reference the 'highlights' from all currently open files. 
 
 ```json
 { "name": "highlights" }
-```
+``` -->
 
 ### PostgreSQL
 
@@ -312,10 +317,15 @@ interface CustomContextProvider {
   title: string;
   displayTitle?: string;
   description?: string;
+  renderInlineAs?: string;
+  type?: ContextProviderType;
   getContextItems(
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]>;
+  loadSubmenuItems?: (
+    args: LoadSubmenuItemsArgs,
+  ) => Promise<ContextSubmenuItem[]>;
 }
 ```
 
@@ -455,6 +465,7 @@ Continue will use [esbuild](https://esbuild.github.io/) to bundle your `config.t
 - `displayTitle` (optional): The title displayed in the dropdown
 - `description` (optional): The longer description displayed in the dropdown when hovered
 - `type` (optional): The type of context provider. Options are "normal", "query", and "submenu". Defaults to "normal".
+- `renderInlineAs` (optional): The string that will be rendered inline at the top of the prompt. If no value is provided, the `displayTitle` will be used. An empty string can be provided to prevent rendering the default `displayTitle`.
 - `getContextItems`: A function that returns the documents to include in the prompt. It should return a list of `ContextItem`s, and is given access to the following arguments:
   - `extras.fullInput`: A string representing the user's full input to the text box. This can be used for example to generate an embedding to compare against a set of other embedded documents
   - `extras.embeddingsProvider`: The embeddings provider has an `embed` function that will convert text (such as `fullInput`) to an embedding
@@ -480,3 +491,68 @@ If you'd like to write a context provider in a language other than TypeScript, y
 ```
 
 Then, create a server that responds to requests as are made from [HttpContextProvider.ts](../../../core/context/providers/HttpContextProvider.ts). See the `hello` endpoint in [context_provider_server.py](../../../core/context/providers/context_provider_server.py) for an example that uses FastAPI.
+
+### Extension API for VSCode
+
+Continue exposes an API for registering context providers from a 3rd party VSCode extension. This is useful if you have a VSCode extension that provides some additional context that you would like to use in Continue. To use this API, add the following to your `package.json`:
+
+```json
+{
+  "extensionDependencies": [
+    "continue.continue"
+  ],
+}
+```
+
+Or copy `~/.continue/type/core/index.d.ts` to your extension repository.
+
+Then, you can use the `registerCustomContextProvider` function to register your context provider. Your custom context provider must implement the `IContextProvider` interface.
+Here is an example:
+
+```typescript
+import * as vscode from "vscode";
+
+class MyCustomProvider implements IContextProvider {
+
+  get description(): ContextProviderDescription {
+    return {
+      title: "custom",
+      displayTitle: "Custom",
+      description: "Custom description",
+      type: "normal",
+    };
+  }
+
+  async getContextItems(
+    query: string,
+    extras: ContextProviderExtras
+  ): Promise<ContextItem[]> {
+    return [
+      {
+        name: "Custom",
+        description: "Custom description",
+        content: "Custom content",
+      },
+    ];
+  }
+
+  async loadSubmenuItems(
+    args: LoadSubmenuItemsArgs
+  ): Promise<ContextSubmenuItem[]> {
+    return [];
+  }
+}
+
+// create an instance of your custom provider
+const customProvider = new MyCustomProvider();
+
+// get Continue extension using vscode API
+const continueExt = vscode.extensions.getExtension("continue.continue");
+
+// get the API from the extension
+const continueApi = continueExt?.exports;
+
+// register your custom provider
+continueApi?.registerCustomContextProvider(customProvider);
+
+```

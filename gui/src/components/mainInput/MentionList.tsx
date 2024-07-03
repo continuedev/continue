@@ -43,6 +43,7 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import FileIcon from "../FileIcon";
+import HeaderButtonWithText from "../HeaderButtonWithText";
 import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import { ComboBoxItem } from "./types";
@@ -60,6 +61,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   folder: FolderIcon,
   docs: BookOpenIcon,
   issue: ExclamationCircleIcon,
+  trash: TrashIcon,
   "/edit": PaintBrushIcon,
   "/clear": TrashIcon,
   "/test": BeakerIcon,
@@ -176,6 +178,7 @@ interface MentionListProps {
 
   editor: Editor;
   enterSubmenu?: (editor: Editor, providerId: string) => void;
+  onClose: () => void;
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
@@ -242,6 +245,15 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
 
     if (item.contextProvider?.type === "query") {
+      // update editor to complete context provider title
+      const { tr } = props.editor.view.state;
+      const text = tr.doc.textBetween(0, tr.selection.from);
+      const partialText = text.slice(text.lastIndexOf("@") + 1);
+      const remainingText = item.title.slice(partialText.length);
+      props.editor.view.dispatch(
+        tr.insertText(remainingText, tr.selection.from),
+      );
+
       setSubMenuTitle(item.description);
       setQuerySubmenuItem(item);
       return;
@@ -405,6 +417,22 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                           height="1.2em"
                         />
                       )}
+                    {item.subActions?.map((subAction) => {
+                      const Icon = ICONS_FOR_DROPDOWN[subAction.icon];
+                      return (
+                        <HeaderButtonWithText
+                          onClick={(e) => {
+                            subAction.action(item);
+                            e.stopPropagation();
+                            e.preventDefault();
+                            props.onClose();
+                          }}
+                          text={undefined}
+                        >
+                          <Icon width="1.2em" height="1.2em" />
+                        </HeaderButtonWithText>
+                      );
+                    })}
                   </span>
                 </span>
               </ItemDiv>

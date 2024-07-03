@@ -144,12 +144,12 @@ function loadSerializedConfig(
   // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
   config.contextProviders ??=
     ideType === "vscode"
-      ? defaultContextProvidersVsCode
-      : defaultContextProvidersJetBrains;
+      ? [...defaultContextProvidersVsCode]
+      : [...defaultContextProvidersJetBrains];
   config.slashCommands ??=
     ideType === "vscode"
-      ? defaultSlashCommandsVscode
-      : defaultSlashCommandsJetBrains;
+      ? [...defaultSlashCommandsVscode]
+      : [...defaultSlashCommandsJetBrains];
 
   return config;
 }
