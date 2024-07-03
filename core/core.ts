@@ -40,6 +40,9 @@ export class Core {
   indexingState: IndexingProgressUpdate;
   private globalContext = new GlobalContext();
   private docsService = DocsService.getInstance();
+  private readonly indexingPauseToken = new PauseToken(
+    this.globalContext.get("indexingPaused") === true,
+  );
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -79,9 +82,6 @@ export class Core {
     );
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
-    const indexingPauseToken = new PauseToken(
-      this.globalContext.get("indexingPaused") === true,
-    );
     let codebaseIndexerResolve: (_: any) => void | undefined;
     this.codebaseIndexerPromise = new Promise(
       async (resolve) => (codebaseIndexerResolve = resolve),
@@ -103,7 +103,7 @@ export class Core {
         new CodebaseIndexer(
           this.configHandler,
           this.ide,
-          new PauseToken(false),
+          this.indexingPauseToken,
           continueServerClient,
         ),
       );
@@ -569,7 +569,7 @@ export class Core {
     });
     on("index/setPaused", (msg) => {
       new GlobalContext().update("indexingPaused", msg.data);
-      indexingPauseToken.paused = msg.data;
+      this.indexingPauseToken.paused = msg.data;
     });
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
