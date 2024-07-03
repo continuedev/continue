@@ -94,6 +94,11 @@
           "default": false,
           "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
         },
+        "continue.pauseTabAutocompleteOnBattery": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
+        },
         "continue.remoteConfigServerUrl": {
           "type": "string",
           "default": null,

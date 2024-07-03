@@ -25,7 +25,6 @@ import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
-import { CONTINUE_WORKSPACE_KEY } from "../util/workspaceConfig";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
