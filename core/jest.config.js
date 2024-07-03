@@ -10,4 +10,5 @@ export default {
   extensionsToTreatAsEsm: [".ts"],
   preset: "ts-jest/presets/default-esm",
   testTimeout: 10000,
+  testEnvironment: "node",
 };
