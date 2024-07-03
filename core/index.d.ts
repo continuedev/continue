@@ -803,7 +803,7 @@ interface ModelRoles {
 }
 
 interface QuickActionsCommandConfig {
-  // lan;
+  prompt: string;
 }
 
 interface QuickActions {
