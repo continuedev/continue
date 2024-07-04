@@ -7,6 +7,7 @@ import { LanceDbIndex } from "./LanceDbIndex.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { CodebaseIndex } from "./types.js";
+import { walkDir } from "./walkDir.js";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -97,10 +98,7 @@ export class CodebaseIndexer {
     };
 
     for (const directory of workspaceDirs) {
-      // const scheme = vscode.workspace.workspaceFolders?.[0].uri.scheme;
-      // const files = await this.listWorkspaceContents(directory);
-
-      const files = await this.ide.listWorkspaceContents(directory);
+      const files = await walkDir(directory, this.ide);
       const stats = await this.ide.getLastModified(files);
       const branch = await this.ide.getBranch(directory);
       const repoName = await this.ide.getRepoName(directory);

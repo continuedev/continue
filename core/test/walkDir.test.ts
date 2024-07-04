@@ -19,22 +19,7 @@ function buildTestDir(paths: (string | string[])[]) {
 }
 
 async function walkTestDir(): Promise<string[] | undefined> {
-  const result = await new Promise<string[] | undefined>((resolve, reject) =>
-    walkDir(
-      {
-        path: TEST_DIR,
-        ignoreFiles: [".gitignore", ".continueignore"],
-      },
-      ide,
-      (err, result) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(result);
-      },
-    ),
-  );
-  return result;
+  return walkDir(TEST_DIR, ide);
 }
 
 async function expectPaths(toExist: string[], toNotExist: string[]) {

@@ -434,10 +434,6 @@ export interface IDE {
     stackDepth: number,
   ): Promise<string[]>;
   getAvailableThreads(): Promise<Thread[]>;
-  listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
   getWorkspaceConfigs(): Promise<ContinueRcJson[]>;

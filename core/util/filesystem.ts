@@ -136,20 +136,6 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
-  listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      fs.readdir(FileSystemIde.workspaceDir, (err, files) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(files);
-      });
-    });
-  }
-
   getWorkspaceDirs(): Promise<string[]> {
     return new Promise((resolve, reject) => {
       fs.mkdtemp(FileSystemIde.workspaceDir, (err, folder) => {

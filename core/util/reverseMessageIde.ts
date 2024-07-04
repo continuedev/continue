@@ -112,10 +112,6 @@ export class ReverseMessageIde {
       return this.ide.getTerminalContents();
     });
 
-    this.on("listWorkspaceContents", (data) => {
-      return this.ide.listWorkspaceContents(data.directory, data.useGitIgnore);
-    });
-
     this.on("getWorkspaceDirs", () => {
       return this.ide.getWorkspaceDirs();
     });

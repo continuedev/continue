@@ -11,6 +11,7 @@ interface WalkerOptions {
   includeEmpty?: boolean;
   follow?: boolean;
   exact?: boolean;
+  onlyDirs?: boolean;
 }
 
 type Entry = [string, FileType];
@@ -29,6 +30,7 @@ class Walker extends EventEmitter {
   entries: Entry[] | null;
   sawError: boolean;
   exact: boolean | undefined;
+  onlyDirs: boolean | undefined;
   constructor(
     opts: WalkerOptions = {},
     protected readonly ide: IDE,
@@ -47,6 +49,7 @@ class Walker extends EventEmitter {
     this.entries = null;
     this.sawError = false;
     this.exact = opts.exact;
+    this.onlyDirs = opts.onlyDirs;
   }
 
   sort(a: string, b: string): number {
@@ -189,7 +192,7 @@ class Walker extends EventEmitter {
     const abs = this.path + "/" + entry[0];
     const isSymbolicLink = this.entryIsSymlink(entry);
     if (!this.entryIsDirectory(entry)) {
-      if (file) {
+      if (file && !this.onlyDirs) {
         this.result.add(abs.slice(this.root.length + 1));
       }
       then();
@@ -217,6 +220,7 @@ class Walker extends EventEmitter {
       ignoreFiles: this.ignoreFiles,
       follow: this.follow,
       includeEmpty: this.includeEmpty,
+      onlyDirs: this.onlyDirs,
       ...opts,
     };
   }
@@ -283,7 +287,7 @@ interface WalkCallback {
   (err: Error | null, result?: string[]): void;
 }
 
-export async function walkDir(
+async function walkDirWithCallback(
   opts: WalkerOptions,
   ide: IDE,
   callback?: WalkCallback,
@@ -292,4 +296,35 @@ export async function walkDir(
     new Walker(opts, ide).on("done", resolve).on("error", reject).start();
   });
   return callback ? p.then((res) => callback(null, res), callback) : p;
+}
+
+export async function walkDir(
+  path: string,
+  ide: IDE,
+  options: WalkerOptions = {
+    ignoreFiles: [".gitignore", ".continueignore"],
+    onlyDirs: false,
+  },
+): Promise<string[]> {
+  return new Promise((resolve, reject) => {
+    walkDirWithCallback(
+      {
+        path,
+        ignoreFiles: options.ignoreFiles,
+        onlyDirs: options.onlyDirs,
+        follow: true,
+        includeEmpty: false,
+      },
+      ide,
+      (err, result) => {
+        if (err) {
+          reject(err);
+        } else {
+          const relativePaths = result || [];
+          const absolutePaths = relativePaths.map((p) => path + "/" + p);
+          resolve(absolutePaths);
+        }
+      },
+    );
+  });
 }

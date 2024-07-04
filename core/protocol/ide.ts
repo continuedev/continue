@@ -15,10 +15,6 @@ import type {
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
   getIdeInfo: [undefined, IdeInfo];
-  listWorkspaceContents: [
-    { directory?: string; useGitIgnore?: boolean },
-    string[],
-  ];
   getWorkspaceDirs: [undefined, string[]];
   listFolders: [undefined, string[]];
   writeFile: [{ path: string; contents: string }, void];
