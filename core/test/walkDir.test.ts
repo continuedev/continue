@@ -22,8 +22,8 @@ async function walkTestDir(
   options?: WalkerOptions,
 ): Promise<string[] | undefined> {
   return walkDir(TEST_DIR, ide, {
-    ...options,
     returnRelativePaths: true,
+    ...options,
   });
 }
 
@@ -219,4 +219,22 @@ describe("walkDir", () => {
       { onlyDirs: true, includeEmpty: true },
     );
   });
+
+  test("should return valid paths in absolute path mode", async () => {
+    const files = [
+      "a.txt",
+      "b/",
+      "b/c.txt"
+    ];
+    buildTestDir(files);
+    await expectPaths(
+      [path.join(TEST_DIR, "a.txt"),
+      path.join(TEST_DIR, "b"),
+      path.join(TEST_DIR, "b", "c.txt")],
+      [],
+      {
+        "returnRelativePaths": false
+      }
+    )
+  })
 });
