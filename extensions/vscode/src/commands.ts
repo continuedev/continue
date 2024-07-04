@@ -7,7 +7,6 @@ import { ContextMenuConfig, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/handler";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
-import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
@@ -22,8 +21,8 @@ import {
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { QuickEdit } from "./QuickEdit";
 import { Battery } from "./util/battery";
-import { getPlatform } from "./util/util";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
@@ -188,6 +187,14 @@ const commandsMap: (
       onlyOneInsertion,
     );
   }
+
+  const quickEdit = new QuickEdit(
+    verticalDiffManager,
+    configHandler,
+    sidebar.webviewProtocol,
+    ide,
+  );
+
   return {
     "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
       if (newFilepath instanceof vscode.Uri) {
@@ -249,123 +256,8 @@ const commandsMap: (
     "continue.toggleAuxiliaryBar": () => {
       vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
     },
-    "continue.quickEdit": async (prompt?: string) => {
-      const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
-
-      const editor = vscode.window.activeTextEditor;
-      const existingHandler = verticalDiffManager.getHandlerForFile(
-        editor?.document.uri.fsPath ?? "",
-      );
-      const previousInput = existingHandler?.input;
-
-      const config = await configHandler.loadConfig();
-      let defaultModelTitle =
-        config.experimental?.modelRoles?.inlineEdit ??
-        (await sidebar.webviewProtocol.request(
-          "getDefaultModelTitle",
-          undefined,
-        ));
-      if (!defaultModelTitle) {
-        defaultModelTitle = config.models[0]?.title!;
-      }
-      const quickPickItems =
-        config.contextProviders
-          ?.filter((provider) => provider.description.type === "normal")
-          .map((provider) => {
-            return {
-              label: provider.description.displayTitle,
-              description: provider.description.title,
-              detail: provider.description.description,
-            };
-          }) || [];
-
-      const addContextMsg = quickPickItems.length
-        ? " (or press enter to add context first)"
-        : "";
-      const textInputOptions: vscode.InputBoxOptions = {
-        placeHolder: selectionEmpty
-          ? `Type instructions to generate code${addContextMsg}`
-          : `Describe how to edit the highlighted code${addContextMsg}`,
-        title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
-        prompt: `[${defaultModelTitle}]`,
-        value: prompt,
-        ignoreFocusOut: true,
-      };
-      if (previousInput) {
-        textInputOptions.value = previousInput + ", ";
-        textInputOptions.valueSelection = [
-          textInputOptions.value.length,
-          textInputOptions.value.length,
-        ];
-      }
-
-      let text = await vscode.window.showInputBox(textInputOptions);
-
-      if (text === undefined) {
-        return;
-      }
-
-      if (text.length > 0 || quickPickItems.length === 0) {
-        sidebar.webviewProtocol.request("incrementFtc", undefined);
-        await verticalDiffManager.streamEdit(
-          text,
-          defaultModelTitle,
-          undefined,
-          previousInput,
-        );
-      } else {
-        // Pick context first
-        const selectedProviders = await vscode.window.showQuickPick(
-          quickPickItems,
-          {
-            title: "Add Context",
-            canPickMany: true,
-          },
-        );
-
-        let text = await vscode.window.showInputBox(textInputOptions);
-        if (text) {
-          const llm = await configHandler.llmFromTitle();
-          const config = await configHandler.loadConfig();
-          const context = (
-            await Promise.all(
-              selectedProviders?.map((providerTitle) => {
-                const provider = config.contextProviders?.find(
-                  (provider) =>
-                    provider.description.title === providerTitle.description,
-                );
-                if (!provider) {
-                  return [];
-                }
-
-                return provider.getContextItems("", {
-                  embeddingsProvider: config.embeddingsProvider,
-                  reranker: config.reranker,
-                  ide,
-                  llm,
-                  fullInput: text || "",
-                  selectedCode: [],
-                  fetch: (url, init) =>
-                    fetchwithRequestOptions(url, init, config.requestOptions),
-                });
-              }) || [],
-            )
-          ).flat();
-
-          text =
-            context.map((item) => item.content).join("\n\n") +
-            "\n\n---\n\n" +
-            text;
-
-          sidebar.webviewProtocol.request("incrementFtc", undefined);
-          await verticalDiffManager.streamEdit(
-            text,
-            defaultModelTitle,
-            undefined,
-            previousInput,
-          );
-        }
-      }
+    "continue.quickEdit": (injectedPrompt?: string) => {
+      quickEdit.run(injectedPrompt);
     },
     "continue.writeCommentsForCode": async () => {
       streamInlineEdit(
@@ -533,17 +425,6 @@ const commandsMap: (
         addEntireFileToContext(uri, false, sidebar.webviewProtocol);
       }
     },
-    "continue.updateAllReferences": (filepath: vscode.Uri) => {
-      // Get the cursor position in the editor
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        return;
-      }
-      const position = editor.selection.active;
-      sidebar.sendMainUserInput(
-        `/references ${filepath.fsPath} ${position.line} ${position.character}`,
-      );
-    },
     "continue.logAutocompleteOutcome": (
       completionId: string,
       completionProvider: CompletionProvider,
@@ -678,6 +559,8 @@ const commandsMap: (
         client.sendFeedback(feedback, lastLines);
       }
     },
+    "continue.quickEditHistoryUp": async () => {},
+    "continue.quickEditHistoryDown": async () => {},
   };
 };
 

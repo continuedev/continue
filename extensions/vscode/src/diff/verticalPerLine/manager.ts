@@ -196,7 +196,6 @@ export class VerticalPerLineDiffManager {
     const existingHandler = this.getHandlerForFile(filepath);
 
     if (existingHandler) {
-      let existingStartLine = existingHandler?.range.start.line;
       if (quickEdit) {
         // Previous diff was a quickEdit
         // Check if user has highlighted a range
