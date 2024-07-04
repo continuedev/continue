@@ -25,3 +25,6 @@ scripts
 server/exe/**
 !out/node_modules/**
 !node_modules/@vscode/ripgrep/bin/rg
+
+media/**/*.gif
+!media/sidebar.gif

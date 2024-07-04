@@ -1,5 +1,4 @@
 import type { FileEdit, RangeInFile, Thread } from "core";
-import { defaultIgnoreFile } from "core/indexing/ignore";
 import path from "node:path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
@@ -12,7 +11,6 @@ import {
   rejectSuggestionCommand,
   showSuggestion as showSuggestionInEditor,
 } from "../suggestions";
-import { traverseDirectory } from "./traverseDirectory";
 import {
   getUniqueId,
   openEditorAndRevealRange,
@@ -274,76 +272,6 @@ export class VsCodeIdeUtils {
 
     this._cachedPath = isWindows ? path.win32 : path.posix;
     return this._cachedPath;
-  }
-
-  async getDirectoryContents(
-    directory: string,
-    recursive: boolean,
-    useGitIgnore: boolean,
-  ): Promise<string[]> {
-    if (!recursive) {
-      return (
-        await vscode.workspace.fs.readDirectory(uriFromFilePath(directory))
-      )
-        .filter(([name, type]) => {
-          type === vscode.FileType.File && !defaultIgnoreFile.ignores(name);
-        })
-        .map(([name, type]) => this.path.join(directory, name));
-    }
-
-    // If not using gitignore, just read all contents recursively
-    if (!useGitIgnore) {
-      const dirQueue = [];
-      const allFiles: string[] = [];
-      dirQueue.push(directory);
-
-      while (dirQueue.length > 0) {
-        const currentDir = dirQueue.shift()!;
-        const files = await vscode.workspace.fs.readDirectory(
-          uriFromFilePath(currentDir),
-        );
-        for (const [name, type] of files) {
-          const filepath = this.path.join(currentDir, name);
-          if (type === vscode.FileType.Directory) {
-            dirQueue.push(filepath);
-          } else {
-            allFiles.push(filepath);
-          }
-        }
-      }
-
-      return allFiles;
-    }
-
-    try {
-      const stat = await vscode.workspace.fs.stat(uriFromFilePath(directory));
-      if (stat.type !== vscode.FileType.Directory) {
-        throw new Error(`${directory} is not a directory`);
-      }
-    } catch (e) {
-      console.warn(`Directory ${directory} does not exist.`);
-      return [];
-    }
-
-    const allFiles: string[] = [];
-    const gitRoot = await this.getGitRoot(directory);
-    let onlyThisDirectory = undefined;
-    if (gitRoot) {
-      onlyThisDirectory = directory.slice(gitRoot.length).split(this.path.sep);
-      if (onlyThisDirectory[0] === "") {
-        onlyThisDirectory.shift();
-      }
-    }
-    for await (const file of traverseDirectory(
-      gitRoot ?? directory,
-      [],
-      true,
-      gitRoot === directory ? undefined : onlyThisDirectory,
-      useGitIgnore,
-    )) {
-      allFiles.push(file);
-    }
-    return allFiles;
   }
 
   getAbsolutePath(filepath: string): string {

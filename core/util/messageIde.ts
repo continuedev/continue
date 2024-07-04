@@ -25,6 +25,9 @@ export class MessageIde implements IDE {
       callback: (data: FromIdeProtocol[T][0]) => FromIdeProtocol[T][1],
     ) => void,
   ) {}
+  pathSep(): Promise<string> {
+    return this.request("pathSep", undefined);
+  }
   fileExists(filepath: string): Promise<boolean> {
     return this.request("fileExists", { filepath });
   }
@@ -111,16 +114,6 @@ export class MessageIde implements IDE {
 
   async getTerminalContents() {
     return await this.request("getTerminalContents", undefined);
-  }
-
-  async listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]> {
-    return await this.request("listWorkspaceContents", {
-      directory,
-      useGitIgnore,
-    });
   }
 
   async getWorkspaceDirs(): Promise<string[]> {

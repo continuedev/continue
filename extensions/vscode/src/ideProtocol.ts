@@ -16,6 +16,7 @@ import type {
 } from "core";
 import { Range } from "core";
 import { defaultIgnoreFile } from "core/indexing/ignore";
+import { walkDir } from "core/indexing/walkDir";
 import {
   editConfigJson,
   getConfigJsonPath,
@@ -26,7 +27,6 @@ import { executeGotoProvider } from "./autocomplete/lsp";
 import { DiffManager } from "./diff/horizontal";
 import { Repository } from "./otherExtensions/git";
 import { VsCodeIdeUtils } from "./util/ideUtils";
-import { traverseDirectory } from "./util/traverseDirectory";
 import {
   getExtensionUri,
   openEditorAndRevealRange,
@@ -42,6 +42,9 @@ class VsCodeIde implements IDE {
     private readonly vscodeWebviewProtocolPromise: Promise<VsCodeWebviewProtocol>,
   ) {
     this.ideUtils = new VsCodeIdeUtils();
+  }
+  pathSep(): Promise<string> {
+    return Promise.resolve(this.ideUtils.path.sep);
   }
   async fileExists(filepath: string): Promise<boolean> {
     return vscode.workspace.fs.stat(uriFromFilePath(filepath)).then(
@@ -303,27 +306,6 @@ class VsCodeIde implements IDE {
     return await this.ideUtils.getAvailableThreads();
   }
 
-  async listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]> {
-    if (directory) {
-      return await this.ideUtils.getDirectoryContents(
-        directory,
-        true,
-        useGitIgnore ?? true,
-      );
-    }
-    const contents = await Promise.all(
-      this.ideUtils
-        .getWorkspaceDirectories()
-        .map((dir) =>
-          this.ideUtils.getDirectoryContents(dir, true, useGitIgnore ?? true),
-        ),
-    );
-    return contents.flat();
-  }
-
   async getWorkspaceConfigs() {
     const workspaceDirs =
       vscode.workspace.workspaceFolders?.map((folder) => folder.uri) || [];
@@ -347,15 +329,8 @@ class VsCodeIde implements IDE {
 
     const workspaceDirs = await this.getWorkspaceDirs();
     for (const directory of workspaceDirs) {
-      for await (const dir of traverseDirectory(
-        directory,
-        [],
-        false,
-        undefined,
-        true,
-      )) {
-        allDirs.push(dir);
-      }
+      const dirs = await walkDir(directory, this, { onlyDirs: true });
+      allDirs.push(...dirs);
     }
 
     return allDirs;
@@ -531,11 +506,11 @@ class VsCodeIde implements IDE {
 
   async listDir(dir: string): Promise<[string, FileType][]> {
     const files = await vscode.workspace.fs.readDirectory(uriFromFilePath(dir));
-    return files
-      .filter(([name, type]) => {
-        !(type === vscode.FileType.File && defaultIgnoreFile.ignores(name));
-      })
-      .map(([name, type]) => [path.join(dir, name), type]) as any;
+    const results = files.filter(
+      ([name, type]) =>
+        !(type === vscode.FileType.File && defaultIgnoreFile.ignores(name)),
+    ) as any;
+    return results;
   }
 
   getIdeSettingsSync(): IdeSettings {

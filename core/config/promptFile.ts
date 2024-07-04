@@ -2,6 +2,7 @@ import Handlebars from "handlebars";
 import path from "path";
 import * as YAML from "yaml";
 import type { IDE, SlashCommand } from "..";
+import { walkDir } from "../indexing/walkDir";
 import { stripImages } from "../llm/countTokens.js";
 import { renderTemplatedString } from "../llm/llms/index.js";
 import { getBasename } from "../util/index.js";
@@ -18,7 +19,7 @@ export async function getPromptFiles(
       return [];
     }
 
-    const paths = await ide.listWorkspaceContents(dir, false);
+    const paths = await walkDir(dir, ide, { ignoreFiles: [] });
     const results = paths.map(async (path) => {
       const content = await ide.readFile(path);
       return { path, content };

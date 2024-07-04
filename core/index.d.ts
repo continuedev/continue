@@ -434,10 +434,6 @@ export interface IDE {
     stackDepth: number,
   ): Promise<string[]>;
   getAvailableThreads(): Promise<Thread[]>;
-  listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
   getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
@@ -482,6 +478,7 @@ export interface IDE {
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
+  pathSep(): Promise<string>;
 }
 
 // Slash Commands
@@ -667,6 +664,13 @@ export interface RequestOptions {
   headers?: { [key: string]: string };
   extraBodyProperties?: { [key: string]: any };
   noProxy?: string[];
+  clientCertificate?: ClientCertificateOptions;
+}
+
+export interface ClientCertificateOptions {
+  cert: string;
+  key: string;
+  passphrase?: string;
 }
 
 export interface StepWithParams {
@@ -722,6 +726,7 @@ export interface ModelDescription {
 }
 
 export type EmbeddingsProviderName =
+  | "huggingface-tei"
   | "transformers.js"
   | "ollama"
   | "openai"

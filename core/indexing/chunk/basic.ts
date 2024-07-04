@@ -5,6 +5,10 @@ export function* basicChunker(
   contents: string,
   maxChunkSize: number,
 ): Generator<ChunkWithoutID> {
+  if (contents.trim().length === 0) {
+    return;
+  }
+
   let chunkContent = "";
   let chunkTokens = 0;
   let startLine = 0;

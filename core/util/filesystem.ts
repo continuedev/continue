@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import * as path from "node:path";
 import {
   ContinueRcJson,
   FileType,
@@ -20,6 +21,9 @@ class FileSystemIde implements IDE {
 
   constructor() {
     fs.mkdirSync(FileSystemIde.workspaceDir, { recursive: true });
+  }
+  pathSep(): Promise<string> {
+    return Promise.resolve(path.sep);
   }
   fileExists(filepath: string): Promise<boolean> {
     return Promise.resolve(fs.existsSync(filepath));
@@ -56,12 +60,12 @@ class FileSystemIde implements IDE {
     const all: [string, FileType][] = fs
       .readdirSync(dir, { withFileTypes: true })
       .map((dirent: any) => [
-        dirent.path,
+        dirent.name,
         dirent.isDirectory()
-          ? FileType.Directory
+          ? (2 as FileType.Directory)
           : dirent.isSymbolicLink()
-            ? FileType.SymbolicLink
-            : FileType.File,
+            ? (64 as FileType.SymbolicLink)
+            : (1 as FileType.File),
       ]);
     return Promise.resolve(all);
   }
@@ -134,20 +138,6 @@ class FileSystemIde implements IDE {
     endLine: number,
   ): Promise<void> {
     return Promise.resolve();
-  }
-
-  listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      fs.readdir(FileSystemIde.workspaceDir, (err, files) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(files);
-      });
-    });
   }
 
   getWorkspaceDirs(): Promise<string[]> {
