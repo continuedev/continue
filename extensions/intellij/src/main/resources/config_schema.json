@@ -68,6 +68,28 @@
         }
       }
     },
+    "ClientCertificateOptions": {
+      "title": "ClientCertificateOptions",
+      "type": "object",
+      "properties": {
+        "cert": {
+          "title": "Cert Path",
+          "description": "Path to the client certificate file",
+          "type": "string"
+        },
+        "key": {
+          "title": "Key Path",
+          "description": "Path to the client certificate key file",
+          "type": "string"
+        },
+        "passphrase": {
+          "title": "Passphrase",
+          "description": "Passphrase for the client certificate key file",
+          "type": "string"
+        }
+      },
+      "required": ["cert", "key"]
+    },
     "RequestOptions": {
       "title": "RequestOptions",
       "type": "object",
@@ -123,6 +145,11 @@
           "items": {
             "type": "string"
           }
+        },
+        "clientCertificate": {
+          "title": "Client Certificate",
+          "description": "Client certificate to use when making the HTTP request",
+          "$ref": "#/definitions/ClientCertificateOptions"
         }
       }
     },
