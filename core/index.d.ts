@@ -664,6 +664,13 @@ export interface RequestOptions {
   headers?: { [key: string]: string };
   extraBodyProperties?: { [key: string]: any };
   noProxy?: string[];
+  clientCertificate?: ClientCertificateOptions;
+}
+
+export interface ClientCertificateOptions {
+  cert: string;
+  key: string;
+  passphrase?: string;
 }
 
 export interface StepWithParams {
