@@ -3,7 +3,7 @@ import { Minimatch } from "minimatch";
 import path from "node:path";
 import { FileType, IDE } from "..";
 
-interface WalkerOptions {
+export interface WalkerOptions {
   isSymbolicLink?: boolean;
   path?: string;
   ignoreFiles?: string[];
@@ -12,6 +12,7 @@ interface WalkerOptions {
   follow?: boolean;
   exact?: boolean;
   onlyDirs?: boolean;
+  returnRelativePaths?: boolean;
 }
 
 type Entry = [string, FileType];
@@ -168,6 +169,10 @@ class Walker extends EventEmitter {
     } else {
       const then = () => {
         if (--entryCount === 0) {
+          // Otherwise in onlyDirs mode, nothing would be returned
+          if (this.onlyDirs && this.path !== this.root) {
+            this.result.add(this.path.slice(this.root.length + 1));
+          }
           this.emit("done", this.result);
         }
       };
@@ -298,14 +303,17 @@ async function walkDirWithCallback(
   return callback ? p.then((res) => callback(null, res), callback) : p;
 }
 
+const defaultOptions = {
+  ignoreFiles: [".gitignore", ".continueignore"],
+  onlyDirs: false,
+};
+
 export async function walkDir(
   path: string,
   ide: IDE,
-  options: WalkerOptions = {
-    ignoreFiles: [".gitignore", ".continueignore"],
-    onlyDirs: false,
-  },
+  _options?: WalkerOptions,
 ): Promise<string[]> {
+  const options = { ...defaultOptions, ..._options };
   return new Promise((resolve, reject) => {
     walkDirWithCallback(
       {
@@ -321,8 +329,11 @@ export async function walkDir(
           reject(err);
         } else {
           const relativePaths = result || [];
-          const absolutePaths = relativePaths.map((p) => path + "/" + p);
-          resolve(absolutePaths);
+          resolve(
+            options?.returnRelativePaths
+              ? relativePaths
+              : relativePaths.map((p) => path + "/" + p),
+          );
         }
       },
     );

@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { walkDir } from "../indexing/walkDir";
+import { walkDir, WalkerOptions } from "../indexing/walkDir";
 import FileSystemIde from "../util/filesystem";
 const ide = new FileSystemIde();
 
@@ -18,12 +18,21 @@ function buildTestDir(paths: (string | string[])[]) {
   }
 }
 
-async function walkTestDir(): Promise<string[] | undefined> {
-  return walkDir(TEST_DIR, ide);
+async function walkTestDir(
+  options?: WalkerOptions,
+): Promise<string[] | undefined> {
+  return walkDir(TEST_DIR, ide, {
+    ...options,
+    returnRelativePaths: true,
+  });
 }
 
-async function expectPaths(toExist: string[], toNotExist: string[]) {
-  const result = await walkTestDir();
+async function expectPaths(
+  toExist: string[],
+  toNotExist: string[],
+  options?: WalkerOptions,
+) {
+  const result = await walkTestDir(options);
 
   for (const p of toExist) {
     expect(result).toContain(p);
@@ -189,6 +198,25 @@ describe("walkDir", () => {
     await expectPaths(
       ["a.txt", "d.js", ".gitignore", ".continueignore"],
       ["b.py", "c.ts"],
+    );
+  });
+
+  test("should return dirs and only dirs in onlyDirs mode", async () => {
+    const files = [
+      "a.txt",
+      "b.py",
+      "c.ts",
+      "d/",
+      "d/e.txt",
+      "d/f.py",
+      "d/g/",
+      "d/g/h.ts",
+    ];
+    buildTestDir(files);
+    await expectPaths(
+      ["d", "d/g"],
+      ["a.txt", "b.py", "c.ts", "d/e.txt", "d/f.py", "d/g/h.ts"],
+      { onlyDirs: true, includeEmpty: true },
     );
   });
 });
