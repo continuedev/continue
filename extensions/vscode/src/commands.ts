@@ -21,7 +21,7 @@ import {
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
-import { QuickEdit } from "./QuickEdit";
+import { QuickEdit } from "./quickEdit/QuickEdit";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -188,11 +188,16 @@ const commandsMap: (
     );
   }
 
+  const historyUpEventEmitter = new vscode.EventEmitter<void>();
+  const historyDownEventEmitter = new vscode.EventEmitter<void>();
   const quickEdit = new QuickEdit(
     verticalDiffManager,
     configHandler,
     sidebar.webviewProtocol,
     ide,
+    extensionContext,
+    historyUpEventEmitter.event,
+    historyDownEventEmitter.event,
   );
 
   return {
@@ -559,8 +564,12 @@ const commandsMap: (
         client.sendFeedback(feedback, lastLines);
       }
     },
-    "continue.quickEditHistoryUp": async () => {},
-    "continue.quickEditHistoryDown": async () => {},
+    "continue.quickEditHistoryUp": async () => {
+      historyUpEventEmitter.fire();
+    },
+    "continue.quickEditHistoryDown": async () => {
+      historyDownEventEmitter.fire();
+    },
   };
 };
 

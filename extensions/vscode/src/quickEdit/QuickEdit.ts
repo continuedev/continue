@@ -2,9 +2,10 @@ import { IDE } from "core";
 import { ConfigHandler } from "core/config/handler";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import * as vscode from "vscode";
-import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
-import { getPlatform } from "./util/util";
-import { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
+import { getPlatform } from "../util/util";
+import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import InputBoxWithHistory from "./InputBoxWithHistory";
 
 interface QuickEditFlowStuff {
   defaultModelTitle: string;
@@ -19,6 +20,9 @@ export class QuickEdit {
     private readonly configHandler: ConfigHandler,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: IDE,
+    private readonly context: vscode.ExtensionContext,
+    private readonly historyUpEvent: vscode.Event<void>,
+    private readonly historyDownEvent: vscode.Event<void>,
   ) {}
 
   private async _getDefaultModelTitle(): Promise<string> {
@@ -92,9 +96,15 @@ export class QuickEdit {
   async _collectTextInput(
     stuff: QuickEditFlowStuff,
   ): Promise<string | undefined> {
-    return await vscode.window.showInputBox(
+    const inputBox = new InputBoxWithHistory(
+      this.context,
+      this.historyUpEvent,
+      this.historyDownEvent,
       await this._getTextInputOptions(stuff),
     );
+    const input = await inputBox.getInput();
+    inputBox.dispose();
+    return input;
   }
 
   private async _runWithContextItems(stuff: QuickEditFlowStuff) {
@@ -106,9 +116,7 @@ export class QuickEdit {
       },
     );
 
-    const input = await vscode.window.showInputBox(
-      await this._getTextInputOptions(stuff),
-    );
+    const input = await this._collectTextInput(stuff);
     if (input) {
       const inputWithContext = await this._addSelectedProvidersToInput(
         input,

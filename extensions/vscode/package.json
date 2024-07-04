@@ -230,6 +230,18 @@
         "category": "Continue",
         "title": "Fix Grammar / Spelling",
         "group": "Continue"
+      },
+      {
+        "command": "continue.quickEditHistoryUp",
+        "category": "Continue",
+        "title": "Quick Edit History Up",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.quickEditHistoryDown",
+        "category": "Continue",
+        "title": "Quick Edit History Down",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -258,6 +270,18 @@
         "mac": "cmd+z",
         "key": "ctrl+z",
         "when": "continue.diffVisible"
+      },
+      {
+        "command": "continue.quickEditHistoryUp",
+        "mac": "up",
+        "key": "up",
+        "when": "continue.quickEditFocused"
+      },
+      {
+        "command": "continue.quickEditHistoryDown",
+        "mac": "down",
+        "key": "down",
+        "when": "continue.quickEditFocused"
       },
       {
         "command": "continue.acceptVerticalDiffBlock",
