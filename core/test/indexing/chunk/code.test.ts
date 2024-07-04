@@ -47,7 +47,6 @@ describe("codeChunker", () => {
   });
 
   test("should split large python class into methods and class with truncated methods", async () => {
-    const extraLine = "    # This is a comment";
     const methodI = (i: number) =>
       `    def method${i}():\n        return "Hello, ${i}!"`;
 

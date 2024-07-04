@@ -1,0 +1,342 @@
+import { EventEmitter } from "events";
+import { Minimatch } from "minimatch";
+import fs from "node:fs";
+import path from "node:path";
+import { IDE } from "..";
+
+interface WalkerOptions {
+  isSymbolicLink?: boolean;
+  path?: string;
+  ignoreFiles?: string[];
+  parent?: Walker | null;
+  includeEmpty?: boolean;
+  follow?: boolean;
+  exact?: boolean;
+}
+
+interface WalkerSyncOptions extends WalkerOptions {}
+
+interface StatOptions {
+  entry: string;
+  file: boolean;
+  dir: boolean;
+}
+
+interface OnStatOptions extends StatOptions {
+  st: fs.Stats;
+  isSymbolicLink: boolean;
+}
+class Walker extends EventEmitter {
+  isSymbolicLink: boolean;
+  path: string;
+  basename: string;
+  ignoreFiles: string[];
+  ignoreRules: { [key: string]: Minimatch[] };
+  parent: Walker | null;
+  includeEmpty: boolean;
+  root: string;
+  follow: boolean;
+  result: Set<string>;
+  entries: string[] | null;
+  sawError: boolean;
+  exact: boolean | undefined;
+  constructor(
+    opts: WalkerOptions = {},
+    protected readonly ide: IDE,
+  ) {
+    super(opts as any);
+    this.isSymbolicLink = opts.isSymbolicLink || false;
+    this.path = opts.path || process.cwd();
+    this.basename = path.basename(this.path);
+    this.ignoreFiles = opts.ignoreFiles || [".ignore"];
+    this.ignoreRules = {};
+    this.parent = opts.parent || null;
+    this.includeEmpty = !!opts.includeEmpty;
+    this.root = this.parent ? this.parent.root : this.path;
+    this.follow = !!opts.follow;
+    this.result = this.parent ? this.parent.result : new Set();
+    this.entries = null;
+    this.sawError = false;
+    this.exact = opts.exact;
+  }
+
+  sort(a: string, b: string): number {
+    return a.localeCompare(b, "en");
+  }
+
+  emit(ev: string, data: any): boolean {
+    let ret = false;
+    if (!(this.sawError && ev === "error")) {
+      if (ev === "error") {
+        this.sawError = true;
+      } else if (ev === "done" && !this.parent) {
+        data = (Array.from(data) as any)
+          .map((e: string) => (/^@/.test(e) ? `./${e}` : e))
+          .sort(this.sort);
+        this.result = new Set(data);
+      }
+
+      if (ev === "error" && this.parent) {
+        ret = this.parent.emit("error", data);
+      } else {
+        ret = super.emit(ev, data);
+      }
+    }
+    return ret;
+  }
+
+  start(): this {
+    fs.readdir(this.path, (er, entries) =>
+      er ? this.emit("error", er) : this.onReaddir(entries),
+    );
+    return this;
+  }
+
+  isIgnoreFile(e: string): boolean {
+    return e !== "." && e !== ".." && this.ignoreFiles.indexOf(e) !== -1;
+  }
+
+  onReaddir(entries: string[]): void {
+    this.entries = entries;
+    if (entries.length === 0) {
+      if (this.includeEmpty) {
+        this.result.add(this.path.slice(this.root.length + 1));
+      }
+      this.emit("done", this.result);
+    } else {
+      const hasIg = this.entries.some((e) => this.isIgnoreFile(e));
+
+      if (hasIg) {
+        this.addIgnoreFiles();
+      } else {
+        this.filterEntries();
+      }
+    }
+  }
+
+  addIgnoreFiles(): void {
+    const newIg = this.entries!.filter((e) => this.isIgnoreFile(e));
+
+    let igCount = newIg.length;
+    const then = () => {
+      if (--igCount === 0) {
+        this.filterEntries();
+      }
+    };
+
+    newIg.forEach((e) => this.addIgnoreFile(e, then));
+  }
+
+  addIgnoreFile(file: string, then: () => void): void {
+    const ig = path.resolve(this.path, file);
+    fs.readFile(ig, "utf8", (er, data) =>
+      er ? this.emit("error", er) : this.onReadIgnoreFile(file, data, then),
+    );
+  }
+
+  onReadIgnoreFile(file: string, data: string, then: () => void): void {
+    const mmopt = {
+      matchBase: true,
+      dot: true,
+      flipNegate: true,
+      nocase: true,
+    };
+    const rules = data
+      .split(/\r?\n/)
+      .filter((line) => !/^#|^$/.test(line.trim()))
+      .map((rule) => {
+        return new Minimatch(rule.trim(), mmopt);
+      });
+
+    this.ignoreRules[file] = rules;
+
+    then();
+  }
+
+  filterEntries(): void {
+    const filtered = this.entries!.map((entry) => {
+      const passFile = this.filterEntry(entry);
+      const passDir = this.filterEntry(entry, true);
+      return passFile || passDir ? [entry, passFile, passDir] : false;
+    }).filter((e) => e) as [string, boolean, boolean][];
+    let entryCount = filtered.length;
+    if (entryCount === 0) {
+      this.emit("done", this.result);
+    } else {
+      const then = () => {
+        if (--entryCount === 0) {
+          this.emit("done", this.result);
+        }
+      };
+      filtered.forEach((filt) => {
+        const [entry, file, dir] = filt;
+        this.stat({ entry, file, dir }, then);
+      });
+    }
+  }
+
+  onstat(
+    { st, entry, file, dir, isSymbolicLink }: OnStatOptions,
+    then: () => void,
+  ): void {
+    const abs = this.path + "/" + entry;
+    if (!st.isDirectory()) {
+      if (file) {
+        this.result.add(abs.slice(this.root.length + 1));
+      }
+      then();
+    } else {
+      if (dir) {
+        this.walker(
+          entry,
+          { isSymbolicLink, exact: file || this.filterEntry(entry + "/") },
+          then,
+        );
+      } else {
+        then();
+      }
+    }
+  }
+
+  stat({ entry, file, dir }: StatOptions, then: () => void): void {
+    const abs = this.path + "/" + entry;
+    fs.lstat(abs, (lstatErr, lstatResult) => {
+      if (lstatErr) {
+        this.emit("error", lstatErr);
+      } else {
+        const isSymbolicLink = lstatResult.isSymbolicLink();
+        if (this.follow && isSymbolicLink) {
+          fs.stat(abs, (statErr, statResult) => {
+            if (statErr) {
+              this.emit("error", statErr);
+            } else {
+              this.onstat(
+                { st: statResult, entry, file, dir, isSymbolicLink },
+                then,
+              );
+            }
+          });
+        } else {
+          this.onstat(
+            { st: lstatResult, entry, file, dir, isSymbolicLink },
+            then,
+          );
+        }
+      }
+    });
+  }
+
+  walkerOpt(entry: string, opts: Partial<WalkerOptions>): WalkerOptions {
+    return {
+      path: this.path + "/" + entry,
+      parent: this,
+      ignoreFiles: this.ignoreFiles,
+      follow: this.follow,
+      includeEmpty: this.includeEmpty,
+      ...opts,
+    };
+  }
+
+  walker(entry: string, opts: Partial<WalkerOptions>, then: () => void): void {
+    new Walker(this.walkerOpt(entry, opts), this.ide).on("done", then).start();
+  }
+
+  filterEntry(
+    entry: string,
+    partial?: boolean,
+    entryBasename?: string,
+  ): boolean {
+    let included = true;
+
+    if (this.parent && this.parent.filterEntry) {
+      const parentEntry = this.basename + "/" + entry;
+      const parentBasename = entryBasename || entry;
+      included = this.parent.filterEntry(parentEntry, partial, parentBasename);
+      if (!included && !this.exact) {
+        return false;
+      }
+    }
+
+    this.ignoreFiles.forEach((f) => {
+      if (this.ignoreRules[f]) {
+        this.ignoreRules[f].forEach((rule) => {
+          if (rule.negate !== included) {
+            const isRelativeRule =
+              entryBasename &&
+              rule.globParts.some(
+                (part) => part.length <= (part.slice(-1)[0] ? 1 : 2),
+              );
+
+            const match =
+              rule.match("/" + entry) ||
+              rule.match(entry) ||
+              (!!partial &&
+                (rule.match("/" + entry + "/") ||
+                  rule.match(entry + "/") ||
+                  (rule.negate &&
+                    (rule.match("/" + entry, true) ||
+                      rule.match(entry, true))) ||
+                  (isRelativeRule &&
+                    (rule.match("/" + entryBasename + "/") ||
+                      rule.match(entryBasename + "/") ||
+                      (rule.negate &&
+                        (rule.match("/" + entryBasename, true) ||
+                          rule.match(entryBasename, true)))))));
+
+            if (match) {
+              included = rule.negate;
+            }
+          }
+        });
+      }
+    });
+
+    return included;
+  }
+}
+
+class WalkerSync extends Walker {
+  constructor(opts: WalkerSyncOptions = {}, ide: IDE) {
+    super(opts, ide);
+  }
+
+  start(): this {
+    this.onReaddir(fs.readdirSync(this.path));
+    return this;
+  }
+
+  addIgnoreFile(file: string, then: () => void): void {
+    const ig = path.resolve(this.path, file);
+    this.onReadIgnoreFile(file, fs.readFileSync(ig, "utf8"), then);
+  }
+  stat({ entry, file, dir }: StatOptions, then: () => void): void {
+    const abs = this.path + "/" + entry;
+    let st = fs.lstatSync(abs);
+    const isSymbolicLink = st.isSymbolicLink();
+    if (this.follow && isSymbolicLink) {
+      st = fs.statSync(abs);
+    }
+
+    this.onstat({ st, entry, file, dir, isSymbolicLink }, then);
+  }
+
+  walker(entry: string, opts: Partial<WalkerOptions>, then: () => void): void {
+    new WalkerSync(this.walkerOpt(entry, opts), this.ide).start();
+    then();
+  }
+}
+
+interface WalkCallback {
+  (err: Error | null, result?: string[]): void;
+}
+
+export async function walkDir(
+  opts: WalkerOptions,
+  ide: IDE,
+  callback?: WalkCallback,
+): Promise<string[] | void> {
+  const p = new Promise<string[]>((resolve, reject) => {
+    new Walker(opts, ide).on("done", resolve).on("error", reject).start();
+  });
+  return callback ? p.then((res) => callback(null, res), callback) : p;
+}
