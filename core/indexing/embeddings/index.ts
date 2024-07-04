@@ -2,6 +2,7 @@ import { EmbeddingsProviderName } from "../../index.js";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 import CohereEmbeddingsProvider from "./CohereEmbeddingsProvider.js";
 import FreeTrialEmbeddingsProvider from "./FreeTrialEmbeddingsProvider.js";
+import HuggingFaceTEIEmbeddingsProvider from "./HuggingFaceTEIEmbeddingsProvider.js";
 import OllamaEmbeddingsProvider from "./OllamaEmbeddingsProvider.js";
 import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider.js";
 import TransformersJsEmbeddingsProvider from "./TransformersJsEmbeddingsProvider.js";
@@ -22,5 +23,7 @@ export const allEmbeddingsProviders: Record<
   cohere: CohereEmbeddingsProvider,
   // eslint-disable-next-line @typescript-eslint/naming-convention
   "free-trial": FreeTrialEmbeddingsProvider,
+  // eslint-disable-next-line @typescript-eslint/naming-convention
+  "huggingface-tei": HuggingFaceTEIEmbeddingsProvider,
   gemini: GeminiEmbeddingsProvider,
 };

@@ -2097,6 +2097,7 @@
           "properties": {
             "provider": {
               "enum": [
+                "huggingface-tei",
                 "transformers.js",
                 "ollama",
                 "openai",

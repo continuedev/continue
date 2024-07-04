@@ -726,6 +726,7 @@ export interface ModelDescription {
 }
 
 export type EmbeddingsProviderName =
+  | "huggingface-tei"
   | "transformers.js"
   | "ollama"
   | "openai"

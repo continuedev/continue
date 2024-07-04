@@ -638,6 +638,7 @@ declare global {
   }
   
   export type EmbeddingsProviderName =
+    | "huggingface-tei"
     | "transformers.js"
     | "ollama"
     | "openai"
