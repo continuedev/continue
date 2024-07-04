@@ -333,7 +333,12 @@ export async function walkDir(
             resolve(relativePaths);
           } else {
             const pathSep = await ide.pathSep();
-            resolve(relativePaths.map((p) => path + pathSep + p));
+            if (pathSep === "/") {
+              resolve(relativePaths.map((p) => path + pathSep + p));
+            } else {
+              // Need to replace with windows path sep
+              resolve(relativePaths.map((p) => path + pathSep + p.split("/").join(pathSep)));
+            }
           }
         }
       },

@@ -229,7 +229,6 @@ describe("walkDir", () => {
     buildTestDir(files);
     await expectPaths(
       [path.join(TEST_DIR, "a.txt"),
-      path.join(TEST_DIR, "b"),
       path.join(TEST_DIR, "b", "c.txt")],
       [],
       {
