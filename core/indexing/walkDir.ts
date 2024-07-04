@@ -1,6 +1,5 @@
 import { EventEmitter } from "events";
 import { Minimatch } from "minimatch";
-import fs from "node:fs";
 import path from "node:path";
 import { FileType, IDE } from "..";
 
@@ -16,18 +15,6 @@ interface WalkerOptions {
 
 type Entry = [string, FileType];
 
-interface WalkerSyncOptions extends WalkerOptions {}
-
-interface StatOptions {
-  entry: string;
-  file: boolean;
-  dir: boolean;
-}
-
-interface OnStatOptions extends StatOptions {
-  st: fs.Stats;
-  isSymbolicLink: boolean;
-}
 class Walker extends EventEmitter {
   isSymbolicLink: boolean;
   path: string;
@@ -221,30 +208,6 @@ class Walker extends EventEmitter {
 
   stat(entry: Entry, file: boolean, dir: boolean, then: () => void): void {
     this.onstat(entry, file, dir, then);
-    // fs.lstat(abs, (lstatErr, lstatResult) => {
-    //   if (lstatErr) {
-    //     this.emit("error", lstatErr);
-    //   } else {
-    //     const isSymbolicLink = lstatResult.isSymbolicLink();
-    //     if (this.follow && isSymbolicLink) {
-    //       fs.stat(abs, (statErr, statResult) => {
-    //         if (statErr) {
-    //           this.emit("error", statErr);
-    //         } else {
-    //           this.onstat(
-    //             { st: statResult, entry, file, dir, isSymbolicLink },
-    //             then,
-    //           );
-    //         }
-    //       });
-    //     } else {
-    //       this.onstat(
-    //         { st: lstatResult, entry, file, dir, isSymbolicLink },
-    //         then,
-    //       );
-    //     }
-    //   }
-    // });
   }
 
   walkerOpt(entry: string, opts: Partial<WalkerOptions>): WalkerOptions {
