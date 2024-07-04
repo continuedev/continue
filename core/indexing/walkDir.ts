@@ -2,7 +2,7 @@ import { EventEmitter } from "events";
 import { Minimatch } from "minimatch";
 import fs from "node:fs";
 import path from "node:path";
-import { IDE } from "..";
+import { FileType, IDE } from "..";
 
 interface WalkerOptions {
   isSymbolicLink?: boolean;
@@ -13,6 +13,8 @@ interface WalkerOptions {
   follow?: boolean;
   exact?: boolean;
 }
+
+type Entry = [string, FileType];
 
 interface WalkerSyncOptions extends WalkerOptions {}
 
@@ -37,7 +39,7 @@ class Walker extends EventEmitter {
   root: string;
   follow: boolean;
   result: Set<string>;
-  entries: string[] | null;
+  entries: Entry[] | null;
   sawError: boolean;
   exact: boolean | undefined;
   constructor(
@@ -86,17 +88,23 @@ class Walker extends EventEmitter {
   }
 
   start(): this {
-    fs.readdir(this.path, (er, entries) =>
-      er ? this.emit("error", er) : this.onReaddir(entries),
-    );
+    this.ide
+      .listDir(this.path)
+      .then((entries) => {
+        this.onReaddir(entries);
+      })
+      .catch((err) => {
+        this.emit("error", err);
+      });
     return this;
   }
 
-  isIgnoreFile(e: string): boolean {
-    return e !== "." && e !== ".." && this.ignoreFiles.indexOf(e) !== -1;
+  isIgnoreFile(e: Entry): boolean {
+    const p = e[0];
+    return p !== "." && p !== ".." && this.ignoreFiles.indexOf(p) !== -1;
   }
 
-  onReaddir(entries: string[]): void {
+  onReaddir(entries: Entry[]): void {
     this.entries = entries;
     if (entries.length === 0) {
       if (this.includeEmpty) {
@@ -127,14 +135,19 @@ class Walker extends EventEmitter {
     newIg.forEach((e) => this.addIgnoreFile(e, then));
   }
 
-  addIgnoreFile(file: string, then: () => void): void {
-    const ig = path.resolve(this.path, file);
-    fs.readFile(ig, "utf8", (er, data) =>
-      er ? this.emit("error", er) : this.onReadIgnoreFile(file, data, then),
-    );
+  addIgnoreFile(file: Entry, then: () => void): void {
+    const ig = path.resolve(this.path, file[0]);
+    this.ide
+      .readFile(ig)
+      .then((data) => {
+        this.onReadIgnoreFile(file, data, then);
+      })
+      .catch((err) => {
+        this.emit("error", err);
+      });
   }
 
-  onReadIgnoreFile(file: string, data: string, then: () => void): void {
+  onReadIgnoreFile(file: Entry, data: string, then: () => void): void {
     const mmopt = {
       matchBase: true,
       dot: true,
@@ -148,17 +161,17 @@ class Walker extends EventEmitter {
         return new Minimatch(rule.trim(), mmopt);
       });
 
-    this.ignoreRules[file] = rules;
+    this.ignoreRules[file[0]] = rules;
 
     then();
   }
 
   filterEntries(): void {
     const filtered = this.entries!.map((entry) => {
-      const passFile = this.filterEntry(entry);
-      const passDir = this.filterEntry(entry, true);
+      const passFile = this.filterEntry(entry[0]);
+      const passDir = this.filterEntry(entry[0], true);
       return passFile || passDir ? [entry, passFile, passDir] : false;
-    }).filter((e) => e) as [string, boolean, boolean][];
+    }).filter((e) => e) as [Entry, boolean, boolean][];
     let entryCount = filtered.length;
     if (entryCount === 0) {
       this.emit("done", this.result);
@@ -170,17 +183,25 @@ class Walker extends EventEmitter {
       };
       filtered.forEach((filt) => {
         const [entry, file, dir] = filt;
-        this.stat({ entry, file, dir }, then);
+        this.stat(entry, file, dir, then);
       });
     }
   }
 
-  onstat(
-    { st, entry, file, dir, isSymbolicLink }: OnStatOptions,
-    then: () => void,
-  ): void {
-    const abs = this.path + "/" + entry;
-    if (!st.isDirectory()) {
+  entryIsDirectory(entry: Entry) {
+    const Directory = 2 as FileType.Directory;
+    return entry[1] === Directory;
+  }
+
+  entryIsSymlink(entry: Entry) {
+    const Directory = 64 as FileType.SymbolicLink;
+    return entry[1] === Directory;
+  }
+
+  onstat(entry: Entry, file: boolean, dir: boolean, then: () => void): void {
+    const abs = this.path + "/" + entry[0];
+    const isSymbolicLink = this.entryIsSymlink(entry);
+    if (!this.entryIsDirectory(entry)) {
       if (file) {
         this.result.add(abs.slice(this.root.length + 1));
       }
@@ -188,8 +209,8 @@ class Walker extends EventEmitter {
     } else {
       if (dir) {
         this.walker(
-          entry,
-          { isSymbolicLink, exact: file || this.filterEntry(entry + "/") },
+          entry[0],
+          { isSymbolicLink, exact: this.filterEntry(entry[0] + "/") },
           then,
         );
       } else {
@@ -198,32 +219,32 @@ class Walker extends EventEmitter {
     }
   }
 
-  stat({ entry, file, dir }: StatOptions, then: () => void): void {
-    const abs = this.path + "/" + entry;
-    fs.lstat(abs, (lstatErr, lstatResult) => {
-      if (lstatErr) {
-        this.emit("error", lstatErr);
-      } else {
-        const isSymbolicLink = lstatResult.isSymbolicLink();
-        if (this.follow && isSymbolicLink) {
-          fs.stat(abs, (statErr, statResult) => {
-            if (statErr) {
-              this.emit("error", statErr);
-            } else {
-              this.onstat(
-                { st: statResult, entry, file, dir, isSymbolicLink },
-                then,
-              );
-            }
-          });
-        } else {
-          this.onstat(
-            { st: lstatResult, entry, file, dir, isSymbolicLink },
-            then,
-          );
-        }
-      }
-    });
+  stat(entry: Entry, file: boolean, dir: boolean, then: () => void): void {
+    this.onstat(entry, file, dir, then);
+    // fs.lstat(abs, (lstatErr, lstatResult) => {
+    //   if (lstatErr) {
+    //     this.emit("error", lstatErr);
+    //   } else {
+    //     const isSymbolicLink = lstatResult.isSymbolicLink();
+    //     if (this.follow && isSymbolicLink) {
+    //       fs.stat(abs, (statErr, statResult) => {
+    //         if (statErr) {
+    //           this.emit("error", statErr);
+    //         } else {
+    //           this.onstat(
+    //             { st: statResult, entry, file, dir, isSymbolicLink },
+    //             then,
+    //           );
+    //         }
+    //       });
+    //     } else {
+    //       this.onstat(
+    //         { st: lstatResult, entry, file, dir, isSymbolicLink },
+    //         then,
+    //       );
+    //     }
+    //   }
+    // });
   }
 
   walkerOpt(entry: string, opts: Partial<WalkerOptions>): WalkerOptions {
@@ -292,37 +313,6 @@ class Walker extends EventEmitter {
     });
 
     return included;
-  }
-}
-
-class WalkerSync extends Walker {
-  constructor(opts: WalkerSyncOptions = {}, ide: IDE) {
-    super(opts, ide);
-  }
-
-  start(): this {
-    this.onReaddir(fs.readdirSync(this.path));
-    return this;
-  }
-
-  addIgnoreFile(file: string, then: () => void): void {
-    const ig = path.resolve(this.path, file);
-    this.onReadIgnoreFile(file, fs.readFileSync(ig, "utf8"), then);
-  }
-  stat({ entry, file, dir }: StatOptions, then: () => void): void {
-    const abs = this.path + "/" + entry;
-    let st = fs.lstatSync(abs);
-    const isSymbolicLink = st.isSymbolicLink();
-    if (this.follow && isSymbolicLink) {
-      st = fs.statSync(abs);
-    }
-
-    this.onstat({ st, entry, file, dir, isSymbolicLink }, then);
-  }
-
-  walker(entry: string, opts: Partial<WalkerOptions>, then: () => void): void {
-    new WalkerSync(this.walkerOpt(entry, opts), this.ide).start();
-    then();
   }
 }
 

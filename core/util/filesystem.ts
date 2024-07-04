@@ -56,12 +56,12 @@ class FileSystemIde implements IDE {
     const all: [string, FileType][] = fs
       .readdirSync(dir, { withFileTypes: true })
       .map((dirent: any) => [
-        dirent.path,
+        dirent.name,
         dirent.isDirectory()
-          ? FileType.Directory
+          ? (2 as FileType.Directory)
           : dirent.isSymbolicLink()
-            ? FileType.SymbolicLink
-            : FileType.File,
+            ? (64 as FileType.SymbolicLink)
+            : (1 as FileType.File),
       ]);
     return Promise.resolve(all);
   }

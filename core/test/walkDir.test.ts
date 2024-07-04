@@ -23,7 +23,7 @@ async function walkTestDir(): Promise<string[] | undefined> {
     walkDir(
       {
         path: TEST_DIR,
-        ignoreFiles: [".gitignore"],
+        ignoreFiles: [".gitignore", ".continueignore"],
       },
       ide,
       (err, result) => {
@@ -50,6 +50,9 @@ async function expectPaths(toExist: string[], toNotExist: string[]) {
 
 describe("walkDir", () => {
   beforeEach(() => {
+    if (fs.existsSync(TEST_DIR)) {
+      fs.rmSync(TEST_DIR, { recursive: true });
+    }
     fs.mkdirSync(TEST_DIR);
   });
 
@@ -185,6 +188,22 @@ describe("walkDir", () => {
     await expectPaths(
       ["important.log", "subdir/root_only.txt"],
       ["a.log", "root_only.txt", "subdir/b.log", "temp/c.txt"],
+    );
+  });
+
+  test("should listen to both .gitignore and .continueignore", async () => {
+    const files = [
+      [".gitignore", "*.py"],
+      [".continueignore", "*.ts"],
+      "a.txt",
+      "b.py",
+      "c.ts",
+      "d.js",
+    ];
+    buildTestDir(files);
+    await expectPaths(
+      ["a.txt", "d.js", ".gitignore", ".continueignore"],
+      ["b.py", "c.ts"],
     );
   });
 });
