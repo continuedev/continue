@@ -94,6 +94,9 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       }
     }
 
+    const progressReservedForTagging = 0.3;
+    let accumulatedProgress = 0;
+
     // Compute chunks for new files
     const contents = await Promise.all(
       results.compute.map(({ path }) => this.readFile(path)),
@@ -111,8 +114,10 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         handleChunk(chunk);
       }
 
+      accumulatedProgress =
+        (i / results.compute.length) * (1 - progressReservedForTagging);
       yield {
-        progress: i / results.compute.length,
+        progress: accumulatedProgress,
         desc: `Chunking ${getBasename(item.path)}`,
         status: "indexing",
       };
@@ -134,6 +139,12 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       }
 
       markComplete([item], IndexResultType.AddTag);
+      accumulatedProgress += 1 / results.addTag.length / 4;
+      yield {
+        progress: accumulatedProgress,
+        desc: `Chunking ${getBasename(item.path)}`,
+        status: "indexing",
+      };
     }
 
     // Remove tag
@@ -150,6 +161,12 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         [tagString, item.cacheKey, item.path],
       );
       markComplete([item], IndexResultType.RemoveTag);
+      accumulatedProgress += 1 / results.removeTag.length / 4;
+      yield {
+        progress: accumulatedProgress,
+        desc: `Removing ${getBasename(item.path)}`,
+        status: "indexing",
+      };
     }
 
     // Delete
@@ -164,6 +181,12 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       ]);
 
       markComplete([item], IndexResultType.Delete);
+      accumulatedProgress += 1 / results.del.length / 4;
+      yield {
+        progress: accumulatedProgress,
+        desc: `Removing ${getBasename(item.path)}`,
+        status: "indexing",
+      };
     }
   }
 }

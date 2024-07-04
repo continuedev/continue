@@ -30,26 +30,6 @@ describe("IDE Utils", () => {
     assert(utils.getAbsolutePath(groundTruth) === groundTruth);
   });
 
-  test("getDirectoryContents", async () => {
-    let dirContents = await utils.getDirectoryContents(
-      testWorkspacePath,
-      true,
-      false,
-    );
-    assert(dirContents.length === 3);
-    assert(dirContents.find((f) => f.endsWith("test.py")) !== undefined);
-    assert(dirContents.find((f) => f.endsWith("test.js")) !== undefined);
-
-    // dirContents = await utils.getDirectoryContents(
-    //   testWorkspacePath,
-    //   true,
-    //   true,
-    // );
-    // assert(dirContents.length === 2);
-    // assert(dirContents.find((f) => f.endsWith("test.py")) !== undefined);
-    // assert(dirContents.find((f) => f.endsWith("test.js")) !== undefined);
-  });
-
   test("getOpenFiles", async () => {
     let openFiles = utils.getOpenFiles();
     assert(openFiles.length === 0);

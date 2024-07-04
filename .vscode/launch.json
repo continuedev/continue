@@ -22,15 +22,21 @@
         "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/binary/.continue"
       }
     },
+
     {
+      "name": "Debug Jest Tests",
       "type": "node",
       "request": "launch",
-      "name": "Jest All",
-      "program": "${workspaceFolder}/core/node_modules/.bin/jest",
-      "args": ["--runInBand"],
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/core/node_modules/.bin/jest",
+        "${fileBasenameNoExtension}",
+        "--runInBand",
+        "--config",
+        "${workspaceRoot}/core/jest.config.js"
+      ],
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "type": "chrome",

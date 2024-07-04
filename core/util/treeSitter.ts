@@ -1,5 +1,5 @@
 import fs from "node:fs";
-import path from "node:path";
+import * as path from "node:path";
 import Parser, { Language } from "web-tree-sitter";
 
 export const supportedLanguages: { [key: string]: string } = {
@@ -106,7 +106,9 @@ export async function getLanguageForFile(
 
     const wasmPath = path.join(
       __dirname,
-      "tree-sitter-wasms",
+      ...(process.env.NODE_ENV === "test"
+        ? ["node_modules", "tree-sitter-wasms", "out"]
+        : ["tree-sitter-wasms"]),
       `tree-sitter-${supportedLanguages[extension]}.wasm`,
     );
     const language = await Parser.Language.load(wasmPath);
