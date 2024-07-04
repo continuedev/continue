@@ -187,5 +187,8 @@ export class ReverseMessageIde {
     this.on("getBranch", (data) => {
       return this.ide.getBranch(data.dir);
     });
+    this.on("pathSep", (data) => {
+      return this.ide.pathSep();
+    });
   }
 }

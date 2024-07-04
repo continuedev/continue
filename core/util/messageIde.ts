@@ -25,6 +25,9 @@ export class MessageIde implements IDE {
       callback: (data: FromIdeProtocol[T][0]) => FromIdeProtocol[T][1],
     ) => void,
   ) {}
+  pathSep(): Promise<string> {
+    return this.request("pathSep", undefined);
+  }
   fileExists(filepath: string): Promise<boolean> {
     return this.request("fileExists", { filepath });
   }

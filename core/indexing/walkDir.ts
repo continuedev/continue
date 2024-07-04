@@ -324,16 +324,17 @@ export async function walkDir(
         includeEmpty: false,
       },
       ide,
-      (err, result) => {
+      async (err, result) => {
         if (err) {
           reject(err);
         } else {
           const relativePaths = result || [];
-          resolve(
-            options?.returnRelativePaths
-              ? relativePaths
-              : relativePaths.map((p) => path + "/" + p),
-          );
+          if (options?.returnRelativePaths) {
+            resolve(relativePaths);
+          } else {
+            const pathSep = await ide.pathSep();
+            resolve(relativePaths.map((p) => path + pathSep + p));
+          }
         }
       },
     );
