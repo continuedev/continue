@@ -50,6 +50,7 @@ const sidebars = {
         "walkthroughs/codebase-embeddings",
         "walkthroughs/tab-autocomplete",
         "walkthroughs/prompt-files",
+        "walkthroughs/quick-actions",
       ],
     },
     "development-data",

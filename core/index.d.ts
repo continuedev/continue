@@ -802,14 +802,29 @@ interface ModelRoles {
   applyCodeBlock?: string;
 }
 
-interface QuickActionsCommandConfig {
-  prompt: string;
-}
+/**
+ * Represents the configuration for a quick action in the Code Lens.
+ * Quick actions are custom commands that can be added to function and class declarations.
+ */
+interface QuickActionConfig {
+  /**
+   * The title of the quick action that will display in the Code Lens.
+   */
+  title: string;
 
-interface QuickActions {
-  firstAction?: QuickActionsCommandConfig;
-  secondAction?: QuickActionsCommandConfig;
-  thirdAction?: QuickActionsCommandConfig;
+  /**
+   * The prompt that will be sent to the model when the quick action is invoked,
+   * with the function or class body concatenated.
+   */
+  prompt: string;
+
+  /**
+   * If `true`, the result of the quick action will be sent to the chat panel.
+   * If `false`, the streamed result will be inserted into the document.
+   *
+   * Defaults to `false`.
+   */
+  sendToChat: boolean;
 }
 
 interface ExperimentalConfig {
@@ -817,7 +832,12 @@ interface ExperimentalConfig {
   modelRoles?: ModelRoles;
   defaultContext?: "activeFile"[];
   promptPath?: string;
-  quickActions?: QuickActions;
+
+  /**
+   * Quick actions are a way to add custom commands to the Code Lens of
+   * function and class declarations.
+   */
+  quickActions?: QuickActionConfig[];
 }
 
 // config.json

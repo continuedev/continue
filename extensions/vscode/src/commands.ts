@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -173,25 +174,45 @@ const commandsMap: (
   continueServerClientPromise,
   battery,
 ) => {
+  /**
+   * Streams an inline edit to the vertical diff manager.
+   *
+   * This function retrieves the configuration, determines the appropriate model title,
+   * increments the FTC count, and then streams an edit to the
+   * vertical diff manager.
+   *
+   * @param  promptName - The key for the prompt in the context menu configuration.
+   * @param  fallbackPrompt - The prompt to use if the configured prompt is not available.
+   * @param  [onlyOneInsertion] - Optional. If true, only one insertion will be made.
+   * @param  [range] - Optional. The range to edit if provided.
+   * @returns
+   */
   async function streamInlineEdit(
     promptName: keyof ContextMenuConfig,
     fallbackPrompt: string,
     onlyOneInsertion?: boolean,
+    range?: vscode.Range,
   ) {
     const config = await configHandler.loadConfig();
+
     const modelTitle =
       config.experimental?.modelRoles?.inlineEdit ??
       (await sidebar.webviewProtocol.request(
         "getDefaultModelTitle",
         undefined,
       ));
+
     sidebar.webviewProtocol.request("incrementFtc", undefined);
+
     await verticalDiffManager.streamEdit(
       config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       modelTitle,
       onlyOneInsertion,
+      undefined,
+      range,
     );
   }
+
   return {
     "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
       if (newFilepath instanceof vscode.Uri) {
@@ -228,23 +249,40 @@ const commandsMap: (
         vscode.commands.executeCommand("continue.continueGUIView.focus");
       }
     },
-    "continue.explain": async (code: string) => {
-      sidebar.webviewProtocol?.request("newSessionWithPrompt", {
-        prompt: `Explain the following code:\n\n ${code}`,
-      });
+    "continue.quickActionComment": async (code: string) => {
+      Telemetry.capture("quickActionComment", {});
+      vscode.commands.executeCommand("continue.writeDocstringForCode", code);
+    },
+    "continue.quickActionExplain": async (code: string) => {
+      Telemetry.capture("quickActionExplain", {});
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
-    },
-    "continue.disableQuickActions": async () => {
-      editConfigJson((config) => {
-        if (config.experimental?.quickActions) {
-          delete config.experimental.quickActions;
-        }
 
-        return config;
+      sidebar.webviewProtocol?.request("userInput", {
+        input:
+          `Explain the following code in a few sentences without ` +
+          `going into detail on specific methods:\n\n ${code}`,
       });
+    },
+    "continue.customQuickActionSendToChat": async (
+      prompt: string,
+      code: string,
+    ) => {
+      Telemetry.capture("customQuickActionSendToChat", {});
 
-      vscode.window.showInformationMessage("Disabled Quick Actions");
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+
+      sidebar.webviewProtocol?.request("userInput", {
+        input: `${prompt}:\n\n ${code}`,
+      });
+    },
+    "continue.customQuickActionStreamInlineEdit": async (
+      prompt: string,
+      range: vscode.Range,
+    ) => {
+      Telemetry.capture("customQuickActionStreamInlineEdit", {});
+
+      streamInlineEdit("docstring", prompt, true, range);
     },
     "continue.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
@@ -395,11 +433,12 @@ const commandsMap: (
         "Write comments for this code. Do not change anything about the code itself.",
       );
     },
-    "continue.writeDocstringForCode": async () => {
+    "continue.writeDocstringForCode": async (range?: vscode.Range) => {
       streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
         true,
+        range,
       );
     },
     "continue.fixCode": async () => {
