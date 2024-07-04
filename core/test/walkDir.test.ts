@@ -168,20 +168,20 @@ describe("walkDir", () => {
 
   test("should handle complex patterns in .gitignore", async () => {
     const files = [
-      [".gitignore", "*.log\n!important.log\ntemp/\n/root_only.txt"],
-      "a.log",
-      "important.log",
+      [".gitignore", "*.what\n!important.what\ntemp/\n/root_only.txt"],
+      "a.what",
+      "important.what",
       "root_only.txt",
       "subdir/",
       "subdir/root_only.txt",
-      "subdir/b.log",
+      "subdir/b.what",
       "temp/",
       "temp/c.txt",
     ];
     buildTestDir(files);
     await expectPaths(
-      ["important.log", "subdir/root_only.txt"],
-      ["a.log", "root_only.txt", "subdir/b.log", "temp/c.txt"],
+      ["important.what", "subdir/root_only.txt"],
+      ["a.what", "root_only.txt", "subdir/b.what", "temp/c.txt"],
     );
   });
 
@@ -221,19 +221,39 @@ describe("walkDir", () => {
   });
 
   test("should return valid paths in absolute path mode", async () => {
+    const files = ["a.txt", "b/", "b/c.txt"];
+    buildTestDir(files);
+    await expectPaths(
+      [path.join(TEST_DIR, "a.txt"), path.join(TEST_DIR, "b", "c.txt")],
+      [],
+      {
+        returnRelativePaths: false,
+      },
+    );
+  });
+
+  test.skip("should walk continue repo", async () => {
+    const results = await walkDir(path.join(__dirname, "..", ".."), ide, {
+      ignoreFiles: [".gitignore", ".continueignore"],
+    });
+    console.log(results);
+  });
+
+  test.skip("should skip .git and node_modules folders", async () => {
     const files = [
       "a.txt",
-      "b/",
-      "b/c.txt"
+      ".git/",
+      ".git/config",
+      ".git/HEAD",
+      "node_modules/",
+      "node_modules/package/index.js",
+      "src/",
+      "src/index.ts",
     ];
     buildTestDir(files);
     await expectPaths(
-      [path.join(TEST_DIR, "a.txt"),
-      path.join(TEST_DIR, "b", "c.txt")],
-      [],
-      {
-        "returnRelativePaths": false
-      }
-    )
-  })
+      ["a.txt", "src/index.ts"],
+      [".git/config", ".git/HEAD", "node_modules/package/index.js"],
+    );
+  });
 });

@@ -15,7 +15,7 @@ import type {
   Thread,
 } from "core";
 import { Range } from "core";
-import { defaultIgnoreFile } from "core/indexing/ignore";
+import { defaultIgnoreDir, defaultIgnoreFile } from "core/indexing/ignore";
 import { walkDir } from "core/indexing/walkDir";
 import {
   editConfigJson,
@@ -508,7 +508,10 @@ class VsCodeIde implements IDE {
     const files = await vscode.workspace.fs.readDirectory(uriFromFilePath(dir));
     const results = files.filter(
       ([name, type]) =>
-        !(type === vscode.FileType.File && defaultIgnoreFile.ignores(name)),
+        !(
+          (type === vscode.FileType.File && defaultIgnoreFile.ignores(name)) ||
+          (type === vscode.FileType.Directory && defaultIgnoreDir.ignores(name))
+        ),
     ) as any;
     return results;
   }

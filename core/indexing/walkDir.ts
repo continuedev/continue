@@ -2,6 +2,7 @@ import { EventEmitter } from "events";
 import { Minimatch } from "minimatch";
 import path from "node:path";
 import { FileType, IDE } from "..";
+import { DEFAULT_IGNORE_DIRS, DEFAULT_IGNORE_FILETYPES } from "./ignore";
 
 export interface WalkerOptions {
   isSymbolicLink?: boolean;
@@ -13,6 +14,7 @@ export interface WalkerOptions {
   exact?: boolean;
   onlyDirs?: boolean;
   returnRelativePaths?: boolean;
+  additionalIgnoreRules?: string[];
 }
 
 type Entry = [string, FileType];
@@ -40,7 +42,7 @@ class Walker extends EventEmitter {
     this.isSymbolicLink = opts.isSymbolicLink || false;
     this.path = opts.path || process.cwd();
     this.basename = path.basename(this.path);
-    this.ignoreFiles = opts.ignoreFiles || [".ignore"];
+    this.ignoreFiles = [...(opts.ignoreFiles || [".ignore"]), ".defaultignore"];
     this.ignoreRules = {};
     this.parent = opts.parent || null;
     this.includeEmpty = !!opts.includeEmpty;
@@ -51,6 +53,10 @@ class Walker extends EventEmitter {
     this.sawError = false;
     this.exact = opts.exact;
     this.onlyDirs = opts.onlyDirs;
+
+    if (opts.additionalIgnoreRules) {
+      this.addIgnoreRules(opts.additionalIgnoreRules);
+    }
   }
 
   sort(a: string, b: string): number {
@@ -155,6 +161,22 @@ class Walker extends EventEmitter {
     this.ignoreRules[file[0]] = rules;
 
     then();
+  }
+
+  addIgnoreRules(rules: string[]) {
+    const mmopt = {
+      matchBase: true,
+      dot: true,
+      flipNegate: true,
+      nocase: true,
+    };
+    const minimatchRules = rules
+      .filter((line) => !/^#|^$/.test(line.trim()))
+      .map((rule) => {
+        return new Minimatch(rule.trim(), mmopt);
+      });
+
+    this.ignoreRules[".defaultignore"] = minimatchRules;
   }
 
   filterEntries(): void {
@@ -303,9 +325,10 @@ async function walkDirWithCallback(
   return callback ? p.then((res) => callback(null, res), callback) : p;
 }
 
-const defaultOptions = {
+const defaultOptions: WalkerOptions = {
   ignoreFiles: [".gitignore", ".continueignore"],
   onlyDirs: false,
+  additionalIgnoreRules: [...DEFAULT_IGNORE_DIRS, ...DEFAULT_IGNORE_FILETYPES],
 };
 
 export async function walkDir(
@@ -322,6 +345,7 @@ export async function walkDir(
         onlyDirs: options.onlyDirs,
         follow: true,
         includeEmpty: false,
+        additionalIgnoreRules: options.additionalIgnoreRules,
       },
       ide,
       async (err, result) => {
@@ -337,7 +361,11 @@ export async function walkDir(
               resolve(relativePaths.map((p) => path + pathSep + p));
             } else {
               // Need to replace with windows path sep
-              resolve(relativePaths.map((p) => path + pathSep + p.split("/").join(pathSep)));
+              resolve(
+                relativePaths.map(
+                  (p) => path + pathSep + p.split("/").join(pathSep),
+                ),
+              );
             }
           }
         }
