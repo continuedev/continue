@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import * as path from "node:path";
 import {
   ContinueRcJson,
   FileType,
@@ -20,6 +21,9 @@ class FileSystemIde implements IDE {
 
   constructor() {
     fs.mkdirSync(FileSystemIde.workspaceDir, { recursive: true });
+  }
+  pathSep(): Promise<string> {
+    return Promise.resolve(path.sep);
   }
   fileExists(filepath: string): Promise<boolean> {
     return Promise.resolve(fs.existsSync(filepath));

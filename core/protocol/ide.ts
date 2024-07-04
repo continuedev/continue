@@ -75,4 +75,5 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   gotoDefinition: [{ location: Location }, RangeInFile[]];
 
   getGitHubAuthToken: [undefined, string | undefined];
+  pathSep: [undefined, string];
 };
