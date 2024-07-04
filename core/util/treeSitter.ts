@@ -2,15 +2,6 @@ import fs from "node:fs";
 import * as path from "node:path";
 import Parser, { Language } from "web-tree-sitter";
 
-// undefined when imported as above in jest tests
-let ParserClass: typeof Parser;
-function getParserClass() {
-  if (!ParserClass) {
-    ParserClass = Parser ?? require("web-tree-sitter");
-  }
-  return ParserClass;
-}
-
 export const supportedLanguages: { [key: string]: string } = {
   cpp: "cpp",
   hpp: "cpp",
@@ -89,9 +80,8 @@ export const supportedLanguages: { [key: string]: string } = {
 
 export async function getParserForFile(filepath: string) {
   try {
-    const ParserClass = getParserClass();
-    await ParserClass.init();
-    const parser = new ParserClass();
+    await Parser.init();
+    const parser = new Parser();
 
     const language = await getLanguageForFile(filepath);
     parser.setLanguage(language);
@@ -107,8 +97,7 @@ export async function getLanguageForFile(
   filepath: string,
 ): Promise<Language | undefined> {
   try {
-    const ParserClass = getParserClass();
-    await ParserClass.init();
+    await Parser.init();
     const extension = path.extname(filepath).slice(1);
 
     if (!supportedLanguages[extension]) {
@@ -118,11 +107,11 @@ export async function getLanguageForFile(
     const wasmPath = path.join(
       __dirname,
       ...(process.env.NODE_ENV === "test"
-        ? ["..", "node_modules", "tree-sitter-wasms", "out"]
+        ? ["node_modules", "tree-sitter-wasms", "out"]
         : ["tree-sitter-wasms"]),
       `tree-sitter-${supportedLanguages[extension]}.wasm`,
     );
-    const language = await ParserClass.Language.load(wasmPath);
+    const language = await Parser.Language.load(wasmPath);
     return language;
   } catch (e) {
     console.error("Unable to load language for file", filepath, e);
