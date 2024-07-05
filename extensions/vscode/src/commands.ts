@@ -202,6 +202,8 @@ const commandsMap: (
 
   return {
     "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
+      Telemetry.capture("acceptDiff", {});
+
       if (newFilepath instanceof vscode.Uri) {
         newFilepath = newFilepath.fsPath;
       }
@@ -209,6 +211,8 @@ const commandsMap: (
       await diffManager.acceptDiff(newFilepath);
     },
     "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
+      Telemetry.capture("rejectDiff", {});
+
       if (newFilepath instanceof vscode.Uri) {
         newFilepath = newFilepath.fsPath;
       }
@@ -216,9 +220,11 @@ const commandsMap: (
       await diffManager.rejectDiff(newFilepath);
     },
     "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
+      Telemetry.capture("acceptVerticalDiffBlock", {});
       verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index);
     },
     "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number) => {
+      Telemetry.capture("rejectVerticalDiffBlock", {});
       verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index);
     },
     "continue.quickFix": async (
@@ -226,6 +232,8 @@ const commandsMap: (
       code: string,
       edit: boolean,
     ) => {
+      Telemetry.capture("quickFix", { edit });
+
       sidebar.webviewProtocol?.request("newSessionWithPrompt", {
         prompt: `${
           edit ? "/edit " : ""
@@ -262,15 +270,19 @@ const commandsMap: (
       vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
     },
     "continue.quickEdit": (injectedPrompt?: string) => {
+      Telemetry.capture("quickEdit", {});
       quickEdit.run(injectedPrompt);
     },
     "continue.writeCommentsForCode": async () => {
+      Telemetry.capture("writeCommentsForCode", {});
+
       streamInlineEdit(
         "comment",
         "Write comments for this code. Do not change anything about the code itself.",
       );
     },
     "continue.writeDocstringForCode": async () => {
+      Telemetry.capture("writeDocstringForCode", {});
       streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
@@ -278,21 +290,27 @@ const commandsMap: (
       );
     },
     "continue.fixCode": async () => {
+      Telemetry.capture("fixCode", {});
+
       streamInlineEdit(
         "fix",
         "Fix this code. If it is already 100% correct, simply rewrite the code.",
       );
     },
     "continue.optimizeCode": async () => {
+      Telemetry.capture("optimizeCode", {});
       streamInlineEdit("optimize", "Optimize this code");
     },
     "continue.fixGrammar": async () => {
+      Telemetry.capture("fixGrammar", {});
       streamInlineEdit(
         "fixGrammar",
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
       );
     },
     "continue.viewLogs": async () => {
+      Telemetry.capture("viewLogs", {});
+
       // Open ~/.continue/continue.log
       const logFile = path.join(os.homedir(), ".continue", "continue.log");
       // Make sure the file/directory exist
@@ -305,8 +323,12 @@ const commandsMap: (
       await vscode.window.showTextDocument(uri);
     },
     "continue.debugTerminal": async () => {
+      Telemetry.capture("debugTerminal", {});
+
       const terminalContents = await ide.getTerminalContents();
+
       vscode.commands.executeCommand("continue.continueGUIView.focus");
+
       sidebar.webviewProtocol?.request("userInput", {
         input: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents.trim()}`,
       });
@@ -319,10 +341,14 @@ const commandsMap: (
 
     // Commands without keyboard shortcuts
     "continue.addModel": () => {
+      Telemetry.capture("addModel", {});
+
       vscode.commands.executeCommand("continue.continueGUIView.focus");
       sidebar.webviewProtocol?.request("addModel", undefined);
     },
     "continue.openSettingsUI": () => {
+      Telemetry.capture("openSettingsUI", {});
+
       vscode.commands.executeCommand("continue.continueGUIView.focus");
       sidebar.webviewProtocol?.request("openSettings", undefined);
     },
@@ -354,6 +380,7 @@ const commandsMap: (
       });
     },
     "continue.sendToTerminal": (text: string) => {
+      Telemetry.capture("sendToTerminal", {});
       ide.runCommand(text);
     },
     "continue.newSession": () => {
@@ -437,6 +464,7 @@ const commandsMap: (
       completionProvider.accept(completionId);
     },
     "continue.toggleTabAutocompleteEnabled": () => {
+      Telemetry.capture("toggleTabAutocompleteEnabled", {});
       const config = vscode.workspace.getConfiguration("continue");
       const enabled = config.get("enableTabAutocomplete");
       const pauseOnBattery = config.get<boolean>(
@@ -471,6 +499,8 @@ const commandsMap: (
       }
     },
     "continue.openTabAutocompleteConfigMenu": async () => {
+      Telemetry.capture("openTabAutocompleteConfigMenu", {});
+
       const config = vscode.workspace.getConfiguration("continue");
       const quickPick = vscode.window.createQuickPick();
       const selected = new GlobalContext().get("selectedTabAutocompleteModel");
@@ -493,8 +523,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =
@@ -565,9 +595,11 @@ const commandsMap: (
       }
     },
     "continue.quickEditHistoryUp": async () => {
+      Telemetry.capture("quickEditHistoryUp", {});
       historyUpEventEmitter.fire();
     },
     "continue.quickEditHistoryDown": async () => {
+      Telemetry.capture("quickEditHistoryDown", {});
       historyDownEventEmitter.fire();
     },
   };
