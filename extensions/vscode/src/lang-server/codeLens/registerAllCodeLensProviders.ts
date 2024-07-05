@@ -51,6 +51,26 @@ function registerQuickActionsProvider(
   }
 }
 
+/**
+ * Registers all CodeLens providers for the Continue extension.
+ *
+ * This function disposes of any existing CodeLens providers and registers new ones for:
+ * - Vertical per-line diffs
+ * - Suggestions
+ * - Diff viewer
+ * - Config.py
+ * - Tutorial
+ * - Quick Actions
+ *
+ * It also sets up a subscription to VS Code Quick Actions settings changes.
+ *
+ * @param context - The VS Code extension context
+ * @param diffManager - The DiffManager instance for managing diffs
+ * @param editorToVerticalDiffCodeLens - A Map of editor IDs to VerticalDiffCodeLens arrays
+ * @param config - The Continue configuration object
+ *
+ * @returns An object containing the verticalDiffCodeLens provider
+ */
 export function registerAllCodeLensProviders(
   context: vscode.ExtensionContext,
   diffManager: DiffManager,
@@ -118,5 +138,5 @@ export function registerAllCodeLensProviders(
   context.subscriptions.push(configPyCodeLensDisposable);
   context.subscriptions.push(tutorialCodeLensDisposable);
 
-  return { verticalDiffCodeLens, quickActionsCodeLensDisposable };
+  return { verticalDiffCodeLens };
 }

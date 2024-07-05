@@ -54,6 +54,15 @@ export function quickActionsEnabledStatus() {
  * - Creating CodeLens objects for each command at the appropriate document ranges
  */
 export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
+  /**
+   * Symbol kinds for Quick Actions.
+   *
+   * Defines which code elements are eligible for Quick Actions:
+   * - Functions
+   * - Classes
+   *
+   * Used to filter symbols when providing Quick Actions.
+   */
   static quickActionSymbolKinds = [
     vscode.SymbolKind.Function,
     vscode.SymbolKind.Class,

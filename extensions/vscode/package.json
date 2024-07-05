@@ -144,12 +144,6 @@
         "group": "Continue"
       },
       {
-        "command": "continue.explain",
-        "category": "Continue",
-        "title": "Explain A Block of Code",
-        "group": "Continue"
-      },
-      {
         "command": "continue.toggleAuxiliaryBar",
         "category": "Continue",
         "title": "Toggle Right Sidebar",
@@ -342,9 +336,6 @@
       "commandPalette": [
         {
           "command": "continue.quickEdit"
-        },
-        {
-          "command": "continue.explain"
         },
         {
           "command": "continue.toggleAuxiliaryBar"
