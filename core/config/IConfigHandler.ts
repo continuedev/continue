@@ -8,7 +8,7 @@ import {
 
 export interface IConfigHandler {
   updateIdeSettings(ideSettings: IdeSettings): void;
-  onConfigUpdate(listener: () => void): void;
+  onConfigUpdate(listener: (newConfig: ContinueConfig) => void): void;
   reloadConfig(): Promise<void>;
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig>;
   loadConfig(): Promise<ContinueConfig>;

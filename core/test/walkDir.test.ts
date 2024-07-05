@@ -1,22 +1,13 @@
-import fs from "fs";
 import path from "path";
 import { walkDir, WalkerOptions } from "../indexing/walkDir";
 import FileSystemIde from "../util/filesystem";
-const ide = new FileSystemIde();
-
-const TEST_DIR = path.join(__dirname, "testDir");
-
-function buildTestDir(paths: (string | string[])[]) {
-  for (const p of paths) {
-    if (Array.isArray(p)) {
-      fs.writeFileSync(path.join(TEST_DIR, p[0]), p[1]);
-    } else if (p.endsWith("/")) {
-      fs.mkdirSync(path.join(TEST_DIR, p), { recursive: true });
-    } else {
-      fs.writeFileSync(path.join(TEST_DIR, p), "");
-    }
-  }
-}
+import {
+  addToTestDir,
+  setUpTestDir,
+  tearDownTestDir,
+  TEST_DIR,
+} from "./testUtils/testDir";
+const ide = new FileSystemIde(TEST_DIR);
 
 async function walkTestDir(
   options?: WalkerOptions,
@@ -44,14 +35,11 @@ async function expectPaths(
 
 describe("walkDir", () => {
   beforeEach(() => {
-    if (fs.existsSync(TEST_DIR)) {
-      fs.rmSync(TEST_DIR, { recursive: true });
-    }
-    fs.mkdirSync(TEST_DIR);
+    setUpTestDir();
   });
 
   afterEach(() => {
-    fs.rmSync(TEST_DIR, { recursive: true });
+    tearDownTestDir();
   });
 
   test("should return nothing for empty dir", async () => {
@@ -61,20 +49,20 @@ describe("walkDir", () => {
 
   test("should return all files in flat dir", async () => {
     const files = ["a.txt", "b.py", "c.ts"];
-    buildTestDir(files);
+    addToTestDir(files);
     const result = await walkTestDir();
     expect(result).toEqual(files);
   });
 
   test("should ignore ignored files in flat dir", async () => {
     const files = [[".gitignore", "*.py"], "a.txt", "c.ts", "b.py"];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(["a.txt", "c.ts", ".gitignore"], ["b.py"]);
   });
 
   test("should handle negation in flat folder", async () => {
     const files = [[".gitignore", "**/*\n!*.py"], "a.txt", "c.ts", "b.py"];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(["b.py"], [".gitignore", "a.txt", "c.ts"]);
   });
 
@@ -89,7 +77,7 @@ describe("walkDir", () => {
       "d/g/",
       "d/g/h.ts",
     ];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(
       files.filter((files) => !files.endsWith("/")),
       [],
@@ -108,7 +96,7 @@ describe("walkDir", () => {
       "d/g/h.ts",
       ["d/.gitignore", "*.py"],
     ];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(
       ["a.txt", "b.py", "c.ts", "d/e.txt", "d/g/h.ts", "d/.gitignore"],
       ["d/f.py"],
@@ -117,7 +105,7 @@ describe("walkDir", () => {
 
   test("should handle leading slash in gitignore", async () => {
     const files = [[".gitignore", "/no.txt"], "a.txt", "b.py", "no.txt"];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(["a.txt", "b.py"], ["no.txt"]);
   });
 
@@ -131,7 +119,7 @@ describe("walkDir", () => {
       "c/e.py",
       ["c/.gitignore", "*.py"],
     ];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(["a.py"], ["b.txt", "c/e.py", "c/d.txt"]);
   });
 
@@ -146,7 +134,7 @@ describe("walkDir", () => {
       "d/f.py",
       "d/g.ts",
     ];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(
       ["c.ts", "d/g.ts"],
       ["a.txt", "b.py", "d/e.txt", "d/f.py"],
@@ -162,7 +150,7 @@ describe("walkDir", () => {
       "ignored_dir/c/",
       "ignored_dir/c/d.py",
     ];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(["a.txt"], ["ignored_dir/b.txt", "ignored_dir/c/d.py"]);
   });
 
@@ -178,7 +166,7 @@ describe("walkDir", () => {
       "temp/",
       "temp/c.txt",
     ];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(
       ["important.what", "subdir/root_only.txt"],
       ["a.what", "root_only.txt", "subdir/b.what", "temp/c.txt"],
@@ -194,7 +182,7 @@ describe("walkDir", () => {
       "c.ts",
       "d.js",
     ];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(
       ["a.txt", "d.js", ".gitignore", ".continueignore"],
       ["b.py", "c.ts"],
@@ -212,7 +200,7 @@ describe("walkDir", () => {
       "d/g/",
       "d/g/h.ts",
     ];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(
       ["d", "d/g"],
       ["a.txt", "b.py", "c.ts", "d/e.txt", "d/f.py", "d/g/h.ts"],
@@ -222,7 +210,7 @@ describe("walkDir", () => {
 
   test("should return valid paths in absolute path mode", async () => {
     const files = ["a.txt", "b/", "b/c.txt"];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(
       [path.join(TEST_DIR, "a.txt"), path.join(TEST_DIR, "b", "c.txt")],
       [],
@@ -265,7 +253,7 @@ describe("walkDir", () => {
       "src/",
       "src/index.ts",
     ];
-    buildTestDir(files);
+    addToTestDir(files);
     await expectPaths(
       ["a.txt", "src/index.ts"],
       [
