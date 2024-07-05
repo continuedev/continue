@@ -9,6 +9,8 @@ interface TutorialCodeLensItems {
   commands: vscode.Command[];
 }
 
+const TUTORIAL_FILE_NAME = "continue_tutorial.py";
+
 const cmdCtrl = getPlatform() === "mac" ? "Cmd" : "Ctrl";
 
 const actions: TutorialCodeLensItems[] = [
@@ -81,6 +83,10 @@ const actions: TutorialCodeLensItems[] = [
   },
 ];
 
+export function isTutorialFile(uri: vscode.Uri) {
+  return uri.fsPath.endsWith(TUTORIAL_FILE_NAME);
+}
+
 export class TutorialCodeLensProvider implements vscode.CodeLensProvider {
   public provideCodeLenses(
     document: vscode.TextDocument,
@@ -88,7 +94,7 @@ export class TutorialCodeLensProvider implements vscode.CodeLensProvider {
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     const codeLenses: vscode.CodeLens[] = [];
 
-    if (!document.uri.fsPath.endsWith("continue_tutorial.py")) {
+    if (!isTutorialFile(document.uri)) {
       return codeLenses;
     }
 

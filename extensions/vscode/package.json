@@ -81,7 +81,7 @@
         },
         "continue.enableQuickActions": {
           "type": "boolean",
-          "default": false,
+          "default": true,
           "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/walkthroughs/quick-actions)"
         },
         "continue.enableTabAutocomplete": {

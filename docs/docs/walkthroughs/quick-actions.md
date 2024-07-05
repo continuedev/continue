@@ -1,8 +1,11 @@
 ---
+title: Quick Actions (experimental, VS Code only)
+description: Quick Actions automate repetitive tasks and streamline your development workflow
+keywords: [experimental, automate, configuration]
 toc_max_heading_level: 5
 ---
 
-# Quick Actions (experimental)
+# Quick Actions (experimental, VS Code only)
 
 Quick Actions automate repetitive tasks and streamline your development workflow. Configure custom actions to execute complex operations with a single click.
 
@@ -11,7 +14,7 @@ Quick Actions automate repetitive tasks and streamline your development workflow
 ## How It Works
 
 :::info[Note]
-Quick Actions are currently only available in VSCode.
+For the language of the file you have open, you must have the Language Server Protocol extension installed.
 :::
 
 Quick Actions use a CodeLens provider to add interactive elements above functions and classes in your code.

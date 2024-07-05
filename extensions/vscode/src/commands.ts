@@ -268,11 +268,17 @@ const commandsMap: (
         vscode.commands.executeCommand("continue.continueGUIView.focus");
       }
     },
-    "continue.defaultQuickActionDocstring": async (code: string) => {
+    "continue.defaultQuickActionDocstring": async (range: vscode.Range) => {
       Telemetry.capture("quickAction", {
         type: "defaultQuickActionDocstring",
       });
-      vscode.commands.executeCommand("continue.writeDocstringForCode", code);
+
+      streamInlineEdit(
+        "docstring",
+        "Write a docstring for this code. Do not change anything about the code itself.",
+        true,
+        range,
+      );
     },
     "continue.defaultQuickActionExplain": async (code: string) => {
       Telemetry.capture("quickAction", {
@@ -309,7 +315,7 @@ const commandsMap: (
         type: "customQuickActionStreamInlineEdit",
       });
 
-      streamInlineEdit("docstring", prompt, true, range);
+      streamInlineEdit("docstring", prompt, false, range);
     },
     "continue.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
@@ -348,14 +354,13 @@ const commandsMap: (
         "Write comments for this code. Do not change anything about the code itself.",
       );
     },
-    "continue.writeDocstringForCode": async (range?: vscode.Range) => {
+    "continue.writeDocstringForCode": async () => {
       Telemetry.capture("writeDocstringForCode", {});
 
       streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
         true,
-        range,
       );
     },
     "continue.fixCode": async () => {
