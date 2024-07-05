@@ -1,5 +1,5 @@
 import { IContextProvider } from "core";
-import { ConfigHandler } from "core/config/handler";
+import { IConfigHandler } from "core/config/IConfigHandler";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
@@ -29,7 +29,7 @@ import { VsCodeMessenger } from "./VsCodeMessenger";
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
 
-  private configHandler: ConfigHandler;
+  private configHandler: IConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
   private tabAutocompleteModel: TabAutocompleteModel;
@@ -64,7 +64,7 @@ export class VsCodeExtension {
       },
     );
     let resolveConfigHandler: any = undefined;
-    const configHandlerPromise = new Promise<ConfigHandler>((resolve) => {
+    const configHandlerPromise = new Promise<IConfigHandler>((resolve) => {
       resolveConfigHandler = resolve;
     });
     this.sidebar = new ContinueGUIWebviewViewProvider(
