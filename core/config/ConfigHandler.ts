@@ -36,8 +36,8 @@ export class ConfigHandler implements IConfigHandler {
     this.reloadConfig();
   }
 
-  private updateListeners: (() => void)[] = [];
-  onConfigUpdate(listener: () => void) {
+  private updateListeners: ((newConfig: ContinueConfig) => void)[] = [];
+  onConfigUpdate(listener: (newConfig: ContinueConfig) => void) {
     this.updateListeners.push(listener);
   }
 
@@ -46,10 +46,10 @@ export class ConfigHandler implements IConfigHandler {
     this.savedBrowserConfig = undefined;
     this._pendingConfigPromise = undefined;
 
-    await this.loadConfig();
+    const newConfig = await this.loadConfig();
 
     for (const listener of this.updateListeners) {
-      listener();
+      listener(newConfig);
     }
   }
 
