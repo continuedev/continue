@@ -12,8 +12,23 @@ defaults:
     working-directory: ./extensions/intellij
 
 jobs:
+  check_release_name:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.check.outputs.should_run }}
+    steps:
+      - id: check
+        run: |
+          if [[ "${{ github.event.release.name }}" == *-jetbrains ]]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+          else
+            echo "should_run=false" >> $GITHUB_OUTPUT
+          fi
+
   # Prepare and publish the plugin to JetBrains Marketplace repository
   release:
+    needs: check_release_name
+    if: needs.check_release_name.outputs.should_run == 'true'
     name: Publish Plugin
     runs-on: ubuntu-latest
     permissions:
