@@ -235,6 +235,12 @@ const commandsMap: (
   return {
     "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
       captureCommandTelemetry("acceptDiff");
+
+      if (newFilepath instanceof vscode.Uri) {
+        newFilepath = newFilepath.fsPath;
+      }
+      verticalDiffManager.clearForFilepath(newFilepath, true);
+      await diffManager.acceptDiff(newFilepath);
     },
     "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
       captureCommandTelemetry("rejectDiff");
