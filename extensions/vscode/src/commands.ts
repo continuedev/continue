@@ -260,12 +260,16 @@ const commandsMap: (
         vscode.commands.executeCommand("continue.continueGUIView.focus");
       }
     },
-    "continue.quickActionComment": async (code: string) => {
-      Telemetry.capture("quickActionComment", {});
+    "continue.defaultQuickActionDocstring": async (code: string) => {
+      Telemetry.capture("quickAction", {
+        type: "defaultQuickActionDocstring",
+      });
       vscode.commands.executeCommand("continue.writeDocstringForCode", code);
     },
-    "continue.quickActionExplain": async (code: string) => {
-      Telemetry.capture("quickActionExplain", {});
+    "continue.defaultQuickActionExplain": async (code: string) => {
+      Telemetry.capture("quickAction", {
+        type: "defaultQuickActionExplain",
+      });
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
 
@@ -279,7 +283,9 @@ const commandsMap: (
       prompt: string,
       code: string,
     ) => {
-      Telemetry.capture("customQuickActionSendToChat", {});
+      Telemetry.capture("quickAction", {
+        type: "customQuickActionSendToChat",
+      });
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
 
@@ -291,7 +297,9 @@ const commandsMap: (
       prompt: string,
       range: vscode.Range,
     ) => {
-      Telemetry.capture("customQuickActionStreamInlineEdit", {});
+      Telemetry.capture("quickAction", {
+        type: "customQuickActionStreamInlineEdit",
+      });
 
       streamInlineEdit("docstring", prompt, true, range);
     },

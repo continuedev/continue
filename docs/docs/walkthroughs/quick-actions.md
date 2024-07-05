@@ -6,26 +6,26 @@ toc_max_heading_level: 5
 
 Quick Actions automate repetitive tasks and streamline your development workflow. Configure custom actions to execute complex operations with a single click.
 
+![Quick actions example](/img/quick-actions-demo.gif)
+
+## How It Works
+
 :::info[Note]
 Quick Actions are currently only available in VSCode.
 :::
-
-## How It Works
 
 Quick Actions use a CodeLens provider to add interactive elements above functions and classes in your code.
 
 By default, Quick Actions include two predefined actions:
 
-1. Explain: This action provides an explanation of the selected code.
-2. Create Docstring Comment: This action generates a docstring comment for the selected function or class.
+1. `Explain`: This action provides a short explanation of the selected code.
+2. `Docstring`: This action generates a docstring comment and inserts it above the code.
 
-![Quick actions example](/img/quick-actions-example.png)
+## How to disable Quick Actions
 
-## How to enable Quick Actions
+Quick Actions are enabled by default _for pre-release versions of Contine_.
 
-Quick Actions are currently disabled by default.
-
-To enable Quick Actions, open the settings menu (⌘ + ,), search for "continue.enableQuickActions", and toggle the checkbox to activate.
+To disable Quick Actions, open the settings menu (`⌘ + ,`), search for `"continue.enableQuickActions"`, and toggle the checkbox to disable.
 
 ## Custom Quick Actions
 
@@ -46,13 +46,13 @@ A quick action that generates and inserts a unit test above the selected code.
     "quickActions": [
       {
         "title": "Unit test",
-        "prompt": "Write a unit test for this code",
+        "prompt": "Write a unit test for this code. Do not change anything about the code itself.",
       }
     ]
   }
 ```
 
-#### 2. Explain the code in more detail
+#### 2. Send code to chat panel to learn more about it
 
 The default "Explain" aims to provide a brief overview of the code. This quick action sends the prompt and the code to the chat to provides a more detailed explanation.
 
@@ -61,24 +61,23 @@ The default "Explain" aims to provide a brief overview of the code. This quick a
     "quickActions": [
       {
         "title": "Detailed explanation",
-        "prompt": "Explain the following code in detail, inlcuding all methods and properties",
+        "prompt": "Explain the following code in detail, inlcuding all methods and properties.",
         "sendToChat": true
       }
     ]
   }
 ```
 
-#### 3. Tell me a strory about this code
+#### 3. Create a Typescript interface
 
-A quick action that sends a prompt to the chat panel to tell a story about the selected code.
+A quick action that generates and inserts a Typescript interface above the selected code.
 
 ```json title=~/.continue/config.json
 "experimental": {
     "quickActions": [
       {
-        "title": "Storytime",
-        "prompt": "Tell me a story about this code",
-        "sendToChat": true
+        "title": "Create Interface",
+        "prompt": "Create a new Typescript interface for the following code.",
       }
     ]
   }

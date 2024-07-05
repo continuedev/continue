@@ -1,22 +1,37 @@
 import { ContinueConfig, ExperimentalConfig } from "core";
 import * as vscode from "vscode";
+import {
+  CONTINUE_WORKSPACE_KEY,
+  continueWorkspaceConfig,
+} from "../../../util/workspaceConfig";
+
+export const ENABLE_QUICK_ACTIONS_KEY = "enableQuickActions";
 
 export function getQuickActionsConfig(config: ContinueConfig) {
   return config.experimental?.quickActions;
 }
 
+export function subscribeToQuickActionsSettings(
+  disposable?: vscode.Disposable,
+) {
+  vscode.workspace.onDidChangeConfiguration((e) => {
+    const configKey = `${CONTINUE_WORKSPACE_KEY}.${ENABLE_QUICK_ACTIONS_KEY}`;
+
+    if (e.affectsConfiguration(configKey) && !quickActionsEnabledStatus()) {
+      debugger;
+      disposable?.dispose();
+    }
+  });
+}
+
 export function toggleQuickActions() {
   const curStatus = quickActionsEnabledStatus();
 
-  vscode.workspace
-    .getConfiguration("continue")
-    .update("enableQuickActions", curStatus);
+  continueWorkspaceConfig.update(ENABLE_QUICK_ACTIONS_KEY, curStatus);
 }
 
 export function quickActionsEnabledStatus() {
-  return vscode.workspace
-    .getConfiguration("continue")
-    .get<boolean>("enableQuickActions");
+  return continueWorkspaceConfig.get<boolean>(ENABLE_QUICK_ACTIONS_KEY);
 }
 
 export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
@@ -55,14 +70,14 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
 
   getDefaultCommands(code: string, range: vscode.Range): vscode.Command[] {
     const explain: vscode.Command = {
-      command: "continue.quickActionExplain",
+      command: "continue.defaultQuickActionExplain",
       title: "Explain",
       arguments: [code],
     };
 
     const comment: vscode.Command = {
-      command: "continue.quickActionComment",
-      title: "Comment",
+      command: "continue.defaultQuickActionDocstring",
+      title: "Docstring",
       arguments: [range],
     };
 

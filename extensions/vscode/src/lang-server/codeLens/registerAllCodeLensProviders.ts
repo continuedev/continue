@@ -6,7 +6,9 @@ import * as providers from "./providers";
 import {
   getQuickActionsConfig,
   quickActionsEnabledStatus,
+  subscribeToQuickActionsSettings,
 } from "./providers/QuickActionsCodeLensProvider";
+import { CONTINUE_WORKSPACE_KEY } from "../../util/workspaceConfig";
 
 export let verticalPerLineCodeLensProvider: vscode.Disposable | undefined =
   undefined;
@@ -17,6 +19,26 @@ let tutorialCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let quickActionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 
 const { registerCodeLensProvider } = vscode.languages;
+
+function registerQuickActionsProvider(
+  config: ContinueConfig,
+  context: vscode.ExtensionContext,
+) {
+  if (quickActionsCodeLensDisposable) {
+    quickActionsCodeLensDisposable.dispose();
+  }
+
+  if (quickActionsEnabledStatus()) {
+    const quickActionsConfig = getQuickActionsConfig(config);
+
+    quickActionsCodeLensDisposable = registerCodeLensProvider(
+      "*",
+      new providers.QuickActionsCodeLensProvider(quickActionsConfig),
+    );
+
+    context.subscriptions.push(quickActionsCodeLensDisposable);
+  }
+}
 
 export function registerAllCodeLensProviders(
   context: vscode.ExtensionContext,
@@ -42,10 +64,6 @@ export function registerAllCodeLensProviders(
 
   if (tutorialCodeLensDisposable) {
     tutorialCodeLensDisposable.dispose();
-  }
-
-  if (quickActionsCodeLensDisposable) {
-    quickActionsCodeLensDisposable.dispose();
   }
 
   const verticalDiffCodeLens = new providers.VerticalPerLineCodeLensProvider(
@@ -77,16 +95,7 @@ export function registerAllCodeLensProviders(
     new providers.TutorialCodeLensProvider(),
   );
 
-  if (quickActionsEnabledStatus()) {
-    const quickActionsConfig = getQuickActionsConfig(config);
-
-    quickActionsCodeLensDisposable = registerCodeLensProvider(
-      "*",
-      new providers.QuickActionsCodeLensProvider(quickActionsConfig),
-    );
-
-    context.subscriptions.push(quickActionsCodeLensDisposable);
-  }
+  registerQuickActionsProvider(config, context);
 
   context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);

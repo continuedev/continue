@@ -25,6 +25,7 @@ import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
+import { CONTINUE_WORKSPACE_KEY } from "../util/workspaceConfig";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
@@ -130,6 +131,17 @@ export class VsCodeExtension {
     this.diffManager.webviewProtocol = this.sidebar.webviewProtocol;
 
     this.configHandler.loadConfig().then((config) => {
+      vscode.workspace.onDidChangeConfiguration((e) => {
+        if (e.affectsConfiguration(CONTINUE_WORKSPACE_KEY)) {
+          registerAllCodeLensProviders(
+            context,
+            this.diffManager,
+            this.verticalDiffManager.filepathToCodeLens,
+            config,
+          );
+        }
+      });
+
       const { verticalDiffCodeLens } = registerAllCodeLensProviders(
         context,
         this.diffManager,
