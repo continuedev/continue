@@ -27,19 +27,25 @@ export class VerticalPerLineCodeLensProvider
   ): vscode.CodeLens[] | Thenable<vscode.CodeLens[]> {
     const filepath = document.uri.fsPath;
     const blocks = this.editorToVerticalDiffCodeLens.get(filepath);
+
     if (!blocks) {
       return [];
     }
 
     const codeLenses: vscode.CodeLens[] = [];
+
     for (let i = 0; i < blocks.length; i++) {
+      const isFirstBlockInMultiBlockDocument =
+        codeLenses.length === 0 && blocks.length > 1;
+
       const block = blocks[i];
       const start = new vscode.Position(block.start, 0);
       const range = new vscode.Range(
         start,
         start.translate(block.numGreen + block.numRed),
       );
-      if (codeLenses.length === 0) {
+
+      if (isFirstBlockInMultiBlockDocument) {
         codeLenses.push(
           new vscode.CodeLens(range, {
             title: `Accept All (${getMetaKeyLabel()}⇧↩)`,
@@ -53,6 +59,7 @@ export class VerticalPerLineCodeLensProvider
           }),
         );
       }
+
       codeLenses.push(
         new vscode.CodeLens(range, {
           title: `Accept${
@@ -73,6 +80,7 @@ export class VerticalPerLineCodeLensProvider
           arguments: [filepath, i],
         }),
       );
+
       if (codeLenses.length === 4) {
         codeLenses.push(
           new vscode.CodeLens(range, {
