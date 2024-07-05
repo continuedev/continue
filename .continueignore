@@ -1,4 +1,12 @@
-**/*.run.xml
-archive/**/*
-extensions/vscode/models/**/*
+\*_/_.run.xml
 docs/docs/languages
+.changes/
+.idea/
+.vscode/
+.archive/
+
+extensions/vscode/models/\*_/_
+extensions/vscode/builtin-themes/
+extensions/vscode/textmate-syntaxes/
+
+**/*.scm
