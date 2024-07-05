@@ -61,7 +61,7 @@ The default "Explain" aims to provide a brief overview of the code. This quick a
     "quickActions": [
       {
         "title": "Detailed explanation",
-        "prompt": "Explain the following code in detail, inlcuding all methods and properties.",
+        "prompt": "Explain the following code in detail, including all methods and properties.",
         "sendToChat": true
       }
     ]
