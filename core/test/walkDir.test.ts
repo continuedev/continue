@@ -232,20 +232,35 @@ describe("walkDir", () => {
     );
   });
 
-  test.skip("should walk continue repo", async () => {
+  test("should walk continue repo without getting any files of the default ignore types", async () => {
     const results = await walkDir(path.join(__dirname, "..", ".."), ide, {
       ignoreFiles: [".gitignore", ".continueignore"],
     });
-    console.log(results);
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.some((file) => file.includes("/node_modules/"))).toBe(false);
+    expect(results.some((file) => file.includes("/.git/"))).toBe(false);
+    expect(
+      results.some(
+        (file) =>
+          file.endsWith(".gitignore") ||
+          file.endsWith(".continueignore") ||
+          file.endsWith("package-lock.json"),
+      ),
+    ).toBe(false);
+    // At some point we will cross this number, but in case we leap past it suddenly I think we'd want to investigate why
+    expect(results.length).toBeLessThan(1500);
   });
 
-  test.skip("should skip .git and node_modules folders", async () => {
+  test("should skip .git and node_modules folders", async () => {
     const files = [
       "a.txt",
       ".git/",
       ".git/config",
       ".git/HEAD",
+      ".git/objects/",
+      ".git/objects/1234567890abcdef",
       "node_modules/",
+      "node_modules/package/",
       "node_modules/package/index.js",
       "src/",
       "src/index.ts",
@@ -253,7 +268,12 @@ describe("walkDir", () => {
     buildTestDir(files);
     await expectPaths(
       ["a.txt", "src/index.ts"],
-      [".git/config", ".git/HEAD", "node_modules/package/index.js"],
+      [
+        ".git/config",
+        ".git/HEAD",
+        "node_modules/package/index.js",
+        ".git/objects/1234567890abcdef",
+      ],
     );
   });
 });
