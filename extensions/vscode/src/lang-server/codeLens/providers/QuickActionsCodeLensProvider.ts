@@ -2,7 +2,7 @@ import { ContinueConfig, ExperimentalConfig } from "core";
 import * as vscode from "vscode";
 import {
   CONTINUE_WORKSPACE_KEY,
-  continueWorkspaceConfig,
+  getContinueWorkspaceConfig,
 } from "../../../util/workspaceConfig";
 
 export const ENABLE_QUICK_ACTIONS_KEY = "enableQuickActions";
@@ -11,15 +11,22 @@ export function getQuickActionsConfig(config: ContinueConfig) {
   return config.experimental?.quickActions;
 }
 
-export function subscribeToQuickActionsSettings(
-  disposable?: vscode.Disposable,
-) {
+/**
+ * Subscribes to changes in the VSCode Quick Actions settings.
+ *
+ * This function sets up a listener for configuration changes in VSCode.
+ * When a change occurs that affects the Quick Actions settings
+ * (specifically the 'enableQuickActions' setting under the Continue workspace),
+ * it triggers the provided listener function.
+ *
+ * @param listener - A function to be called when the Quick Actions settings change.
+ */
+export function subscribeToVSCodeQuickActionsSettings(listener: Function) {
   vscode.workspace.onDidChangeConfiguration((e) => {
     const configKey = `${CONTINUE_WORKSPACE_KEY}.${ENABLE_QUICK_ACTIONS_KEY}`;
 
-    if (e.affectsConfiguration(configKey) && !quickActionsEnabledStatus()) {
-      debugger;
-      disposable?.dispose();
+    if (e.affectsConfiguration(configKey)) {
+      listener();
     }
   });
 }
@@ -27,13 +34,25 @@ export function subscribeToQuickActionsSettings(
 export function toggleQuickActions() {
   const curStatus = quickActionsEnabledStatus();
 
-  continueWorkspaceConfig.update(ENABLE_QUICK_ACTIONS_KEY, curStatus);
+  getContinueWorkspaceConfig().update(ENABLE_QUICK_ACTIONS_KEY, curStatus);
 }
 
 export function quickActionsEnabledStatus() {
-  return continueWorkspaceConfig.get<boolean>(ENABLE_QUICK_ACTIONS_KEY);
+  return getContinueWorkspaceConfig().get<boolean>(ENABLE_QUICK_ACTIONS_KEY);
 }
 
+/**
+ * A CodeLensProvider for Quick Actions in VSCode.
+ *
+ * This class provides code lenses for Quick Actions, which can be either custom or default actions.
+ * It supports actions for functions and classes, and can be configured with custom quick action settings.
+ *
+ * The provider offers the following functionality:
+ * - Filtering symbols to only include functions and classes
+ * - Generating custom commands based on provided configurations
+ * - Providing default "Explain" and "Docstring" commands
+ * - Creating CodeLens objects for each command at the appropriate document ranges
+ */
 export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
   static quickActionSymbolKinds = [
     vscode.SymbolKind.Function,

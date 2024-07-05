@@ -6,9 +6,10 @@ import * as providers from "./providers";
 import {
   getQuickActionsConfig,
   quickActionsEnabledStatus,
-  subscribeToQuickActionsSettings,
+  subscribeToVSCodeQuickActionsSettings,
 } from "./providers/QuickActionsCodeLensProvider";
-import { CONTINUE_WORKSPACE_KEY } from "../../util/workspaceConfig";
+
+const { registerCodeLensProvider } = vscode.languages;
 
 export let verticalPerLineCodeLensProvider: vscode.Disposable | undefined =
   undefined;
@@ -18,8 +19,18 @@ let configPyCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let tutorialCodeLensDisposable: vscode.Disposable | undefined = undefined;
 let quickActionsCodeLensDisposable: vscode.Disposable | undefined = undefined;
 
-const { registerCodeLensProvider } = vscode.languages;
-
+/**
+ * Registers the Quick Actions CodeLens provider if Quick Actions are enabled.
+ *
+ * This function checks if Quick Actions are enabled in the VSCode workspace settings,
+ * and if so, it registers a new QuickActionsCodeLensProvider. If the user has custom
+ * actions defined in their config, it initiaizes the provider with these actions.
+ *
+ * If a previous provider was registered, it is disposed of before the new one is created.
+ *
+ * @param config - The Continue configuration object
+ * @param context - The VS Code extension context
+ */
 function registerQuickActionsProvider(
   config: ContinueConfig,
   context: vscode.ExtensionContext,
@@ -96,6 +107,10 @@ export function registerAllCodeLensProviders(
   );
 
   registerQuickActionsProvider(config, context);
+
+  subscribeToVSCodeQuickActionsSettings(() =>
+    registerQuickActionsProvider(config, context),
+  );
 
   context.subscriptions.push(verticalPerLineCodeLensProvider);
   context.subscriptions.push(suggestionsCodeLensDisposable);

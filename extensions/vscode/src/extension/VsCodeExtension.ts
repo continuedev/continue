@@ -131,17 +131,6 @@ export class VsCodeExtension {
     this.diffManager.webviewProtocol = this.sidebar.webviewProtocol;
 
     this.configHandler.loadConfig().then((config) => {
-      vscode.workspace.onDidChangeConfiguration((e) => {
-        if (e.affectsConfiguration(CONTINUE_WORKSPACE_KEY)) {
-          registerAllCodeLensProviders(
-            context,
-            this.diffManager,
-            this.verticalDiffManager.filepathToCodeLens,
-            config,
-          );
-        }
-      });
-
       const { verticalDiffCodeLens } = registerAllCodeLensProviders(
         context,
         this.diffManager,
