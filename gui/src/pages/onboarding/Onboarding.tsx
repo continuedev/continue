@@ -1,17 +1,24 @@
 import {
   CheckBadgeIcon,
-  GiftIcon,
   Cog6ToothIcon,
   ComputerDesktopIcon,
+  GiftIcon,
 } from "@heroicons/react/24/outline";
 import { ToCoreFromIdeOrWebviewProtocol } from "core/protocol/core";
 import { useContext, useState } from "react";
+import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { lightGray } from "../../components";
+import ConfirmationDialog from "../../components/dialogs/ConfirmationDialog";
 import GitHubSignInButton from "../../components/modelSelection/quickSetup/GitHubSignInButton";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import {
+  setDialogMessage,
+  setShowDialog,
+} from "../../redux/slices/uiStateSlice";
 import { isJetBrains } from "../../util";
-import { Div, StyledButton } from "./components";
 import { FREE_TRIAL_LIMIT_REQUESTS, hasPassedFTL } from "../../util/freeTrial";
+import { Div, StyledButton } from "./components";
 import { useOnboarding } from "./utils";
 
 type OnboardingMode =
@@ -19,6 +26,7 @@ type OnboardingMode =
 
 function Onboarding() {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const ideMessenger = useContext(IdeMessengerContext);
 
   const [hasSignedIntoGh, setHasSignedIntoGh] = useState(false);
@@ -173,9 +181,30 @@ function Onboarding() {
       </div>
 
       <div className="flex justify-end">
-        <StyledButton disabled={!selectedOnboardingMode} onClick={onSubmit}>
-          Continue
-        </StyledButton>
+        <div className="flex items-center gap-4 ml-auto">
+          <div
+            className="cursor-pointer"
+            style={{ color: lightGray }}
+            onClick={(e) => {
+              dispatch(setShowDialog(true));
+              dispatch(
+                setDialogMessage(
+                  <ConfirmationDialog
+                    text="Are you sure you want to skip onboarding? Unless you are an existing user or already have a config.json we don't recommend this."
+                    onConfirm={() => {
+                      completeOnboarding();
+                    }}
+                  />,
+                ),
+              );
+            }}
+          >
+            Skip
+          </div>
+          <StyledButton disabled={!selectedOnboardingMode} onClick={onSubmit}>
+            Continue
+          </StyledButton>
+        </div>
       </div>
     </div>
   );

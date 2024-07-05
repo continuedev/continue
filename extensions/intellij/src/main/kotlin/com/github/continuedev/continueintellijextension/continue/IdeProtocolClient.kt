@@ -308,10 +308,6 @@ class IdeProtocolClient (
                         respond(firstLine + "\n" + between + "\n" + lastLine)
                     }
 
-                    "listWorkspaceContents" -> {
-                        respond(listDirectoryContents(null))
-                    }
-
                     "getWorkspaceDirs" -> {
                         respond(workspaceDirectories())
                     }

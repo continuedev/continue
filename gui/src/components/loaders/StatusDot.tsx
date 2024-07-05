@@ -16,7 +16,7 @@ const blinkAnimation = css`
   animation: ${blink} 3s infinite;
 `;
 
-const BlinkingDot = styled.div<{
+const StatusDot = styled.div<{
   color: string;
   diameter?: number;
   shouldBlink?: boolean;
@@ -31,4 +31,4 @@ const BlinkingDot = styled.div<{
   ${(props) => (props.shouldBlink ?? false) && blinkAnimation};
 `;
 
-export default BlinkingDot;
+export default StatusDot;

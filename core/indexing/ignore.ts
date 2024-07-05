@@ -1,6 +1,6 @@
 import ignore from "ignore";
 
-const DEFAULT_IGNORE_FILETYPES = [
+export const DEFAULT_IGNORE_FILETYPES = [
   "*.DS_Store",
   "*-lock.json",
   "*.lock",
@@ -87,3 +87,6 @@ export const DEFAULT_IGNORE_DIRS = [
   "gems",
 ];
 export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
+
+export const DEFAULT_IGNORE =
+  DEFAULT_IGNORE_FILETYPES.join("\n") + "\n" + DEFAULT_IGNORE_DIRS.join("\n");

@@ -17,3 +17,4 @@ Write unit tests for the above selected code, following each of these instructio
 - Give the tests just as chat output, don't edit any file
 - Don't explain how to set up `jest`
 - Write a single code block, making sure to label with the language being used (e.g. "```typscript")
+- Do not under any circumstances mock any functions or modules

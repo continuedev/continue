@@ -113,7 +113,8 @@ class AnthropicClaude3Toolkit implements BedrockModelToolkit {
       temperature: options.temperature,
       top_p: options.topP,
       top_k: options.topK,
-      stop_sequences: options.stop,
+      // each stop sequence must contain non-whitespace
+      stop_sequences: options.stop?.filter((stop) => stop.trim() !== ""),
     };
     return new InvokeModelWithResponseStreamCommand({
       body: new TextEncoder().encode(JSON.stringify(payload)),

@@ -1,4 +1,8 @@
+import path from "path";
+import { fileURLToPath } from "url";
+
 process.env.NODE_OPTIONS = "--experimental-vm-modules";
+
 export default {
   transform: {
     "\\.[jt]sx?$": ["ts-jest", { useESM: true }],
@@ -10,4 +14,9 @@ export default {
   extensionsToTreatAsEsm: [".ts"],
   preset: "ts-jest/presets/default-esm",
   testTimeout: 10000,
+  testEnvironment: "node",
+  globals: {
+    __dirname: path.dirname(fileURLToPath(import.meta.url)),
+    __filename: path.resolve(fileURLToPath(import.meta.url)),
+  },
 };

@@ -60,6 +60,13 @@ For VS Code, All versions are hosted on the Open VSX Registry [here](https://ope
 
 You can find older versions of the JetBrains extension on their [marketplace](https://plugins.jetbrains.com/plugin/22707-continue), which will walk you through installing from disk.
 
+## Keyboard shortcuts not resolving
+
+If your keyboard shortcuts are not resolving, you may have other commands that are taking precedence over the Continue shortcuts. You can see if this is the case, and change your shortcut mappings, in the configuration of your IDE.
+
+- [VSCode keyboard shortcuts docs](https://code.visualstudio.com/docs/getstarted/keybindings)
+- [IntelliJ keyboard shortcut docs](https://www.jetbrains.com/help/idea/configuring-keyboard-and-mouse-shortcuts.html)
+
 # FAQs
 
 ## Networking Issues

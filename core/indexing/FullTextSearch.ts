@@ -59,7 +59,12 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
           [item.path, chunk.content],
         );
         await db.run(
-          "INSERT INTO fts_metadata (id, path, cacheKey, chunkId) VALUES (?, ?, ?, ?)",
+          `INSERT INTO fts_metadata (id, path, cacheKey, chunkId) 
+           VALUES (?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET
+           path = excluded.path,
+           cacheKey = excluded.cacheKey,
+           chunkId = excluded.chunkId`,
           [lastID, item.path, item.cacheKey, chunk.id],
         );
       }
