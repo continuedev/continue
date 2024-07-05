@@ -350,6 +350,7 @@ const commandsMap: (
     },
     "continue.writeDocstringForCode": async (range?: vscode.Range) => {
       Telemetry.capture("writeDocstringForCode", {});
+
       streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
