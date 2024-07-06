@@ -5,26 +5,71 @@ import BaseRetrievalPipeline from "./BaseRetrievalPipeline";
 
 export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   private async _retrieveInitial(): Promise<Chunk[]> {
-    const { input } = this.options;
+    const { input, nRetrieve } = this.options;
 
     // Get all retrieval results
     const retrievalResults: Chunk[] = [];
 
     // Full-text search
-    const ftsResults = await this.retrieveFts(
-      input,
-      this.options.nRetrieve / 2,
-    );
+    const ftsResults = await this.retrieveFts(input, nRetrieve / 2);
     retrievalResults.push(...ftsResults);
 
     // Embeddings
-    const embeddingResults = await this.retrieveEmbeddings(
-      input,
-      this.options.nRetrieve / 2,
+    const embeddingResults = await this.retrieveEmbeddings(input, nRetrieve);
+    retrievalResults.push(
+      ...embeddingResults.slice(0, nRetrieve - ftsResults.length),
     );
-    retrievalResults.push(...embeddingResults);
 
     const results: Chunk[] = deduplicateChunks(retrievalResults);
+    return results;
+  }
+
+  private async _rerank(input: string, chunks: Chunk[]): Promise<Chunk[]> {
+    if (!this.options.reranker) {
+      throw new Error("No reranker provided");
+    }
+
+    let scores: number[] = await this.options.reranker.rerank(input, chunks);
+
+    // Filter out low-scoring results
+    let results = chunks;
+    // let results = chunks.filter(
+    //   (_, i) => scores[i] >= RETRIEVAL_PARAMS.rerankThreshold,
+    // );
+    // scores = scores.filter(
+    //   (score) => score >= RETRIEVAL_PARAMS.rerankThreshold,
+    // );
+
+    results.sort(
+      (a, b) => scores[results.indexOf(a)] - scores[results.indexOf(b)],
+    );
+    results = results.slice(-this.options.nFinal);
+    return results;
+  }
+
+  private async _expandWithEmbeddings(chunks: Chunk[]): Promise<Chunk[]> {
+    const topResults = chunks.slice(
+      -RETRIEVAL_PARAMS.nResultsToExpandWithEmbeddings,
+    );
+
+    const expanded = await Promise.all(
+      topResults.map(async (chunk, i) => {
+        const results = await this.retrieveEmbeddings(
+          chunk.content,
+          RETRIEVAL_PARAMS.nEmbeddingsExpandTo,
+        );
+        return results;
+      }),
+    );
+    return expanded.flat();
+  }
+
+  private async _expandRankedResults(chunks: Chunk[]): Promise<Chunk[]> {
+    let results: Chunk[] = [];
+
+    const embeddingsResults = await this._expandWithEmbeddings(chunks);
+    results.push(...embeddingsResults);
+
     return results;
   }
 
@@ -32,27 +77,21 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     // Retrieve initial results
     let results = await this._retrieveInitial();
 
-    // Re-rank
-    const { reranker, input, nFinal } = this.options;
-    if (!reranker) {
-      console.warn("No reranker provided, returning results as is");
-      return results;
-    }
+    // Rerank
+    const { input } = this.options;
+    results = await this._rerank(input, results);
 
-    let scores: number[] = await reranker.rerank(input, results);
+    // // // Expand top reranked results
+    // const expanded = await this._expandRankedResults(results);
+    // results.push(...expanded);
 
-    // Filter out low-scoring results
-    results = results.filter(
-      (_, i) => scores[i] >= RETRIEVAL_PARAMS.rerankThreshold,
-    );
-    scores = scores.filter(
-      (score) => score >= RETRIEVAL_PARAMS.rerankThreshold,
-    );
+    // // De-duplicate
+    // results = deduplicateChunks(results);
 
-    results.sort(
-      (a, b) => scores[results.indexOf(a)] - scores[results.indexOf(b)],
-    );
-    results = results.slice(-nFinal);
+    // // Rerank again
+    // results = await this._rerank(input, results);
+
+    // TODO: stitch together results
 
     return results;
   }
