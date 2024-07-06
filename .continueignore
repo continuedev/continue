@@ -4,9 +4,4 @@ docs/docs/languages
 .idea/
 .vscode/
 .archive/
-
-extensions/vscode/models/\*_/_
-extensions/vscode/builtin-themes/
-extensions/vscode/textmate-syntaxes/
-
 **/*.scm

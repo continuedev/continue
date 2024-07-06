@@ -220,25 +220,6 @@ describe("walkDir", () => {
     );
   });
 
-  test("should walk continue repo without getting any files of the default ignore types", async () => {
-    const results = await walkDir(path.join(__dirname, "..", ".."), ide, {
-      ignoreFiles: [".gitignore", ".continueignore"],
-    });
-    expect(results.length).toBeGreaterThan(0);
-    expect(results.some((file) => file.includes("/node_modules/"))).toBe(false);
-    expect(results.some((file) => file.includes("/.git/"))).toBe(false);
-    expect(
-      results.some(
-        (file) =>
-          file.endsWith(".gitignore") ||
-          file.endsWith(".continueignore") ||
-          file.endsWith("package-lock.json"),
-      ),
-    ).toBe(false);
-    // At some point we will cross this number, but in case we leap past it suddenly I think we'd want to investigate why
-    expect(results.length).toBeLessThan(1500);
-  });
-
   test("should skip .git and node_modules folders", async () => {
     const files = [
       "a.txt",
@@ -263,5 +244,36 @@ describe("walkDir", () => {
         ".git/objects/1234567890abcdef",
       ],
     );
+  });
+
+  test("should walk continue repo without getting any files of the default ignore types", async () => {
+    const results = await walkDir(path.join(__dirname, "..", ".."), ide, {
+      ignoreFiles: [".gitignore", ".continueignore"],
+    });
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.some((file) => file.includes("/node_modules/"))).toBe(false);
+    expect(results.some((file) => file.includes("/.git/"))).toBe(false);
+    expect(
+      results.some(
+        (file) =>
+          file.endsWith(".gitignore") ||
+          file.endsWith(".continueignore") ||
+          file.endsWith("package-lock.json"),
+      ),
+    ).toBe(false);
+    // At some point we will cross this number, but in case we leap past it suddenly I think we'd want to investigate why
+    expect(results.length).toBeLessThan(1500);
+  });
+
+  test("should walk continue/extensions/vscode without getting any files in the .continueignore", async () => {
+    const vscodePath = path.join(__dirname, "..", "..", "extensions", "vscode");
+    const results = await walkDir(vscodePath, ide, {
+      ignoreFiles: [".gitignore", ".continueignore"],
+    });
+    expect(results.length).toBeGreaterThan(0);
+    expect(results.some((file) => file.includes("/textmate-syntaxes/"))).toBe(
+      false,
+    );
+    expect(results.some((file) => file.includes(".tmLanguage"))).toBe(false);
   });
 });
