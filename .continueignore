@@ -1,4 +1,4 @@
-\*_/_.run.xml
+**/*.run.xml
 docs/docs/languages
 .changes/
 .idea/
