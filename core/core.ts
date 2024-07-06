@@ -6,7 +6,8 @@ import type {
   SiteIndexingConfig,
 } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider.js";
-import { ConfigHandler } from "./config/handler.js";
+import { ConfigHandler } from "./config/ConfigHandler.js";
+import { IConfigHandler } from "./config/IConfigHandler";
 import {
   setupApiKeysMode,
   setupFreeTrialMode,
@@ -16,9 +17,9 @@ import {
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
+import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
 import { DocsService } from "./indexing/docs/DocsService";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
-import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase.js";
 import Ollama from "./llm/llms/Ollama.js";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext.js";
@@ -33,7 +34,7 @@ import { streamDiffLines } from "./util/verticalEdit.js";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
-  configHandler: ConfigHandler;
+  configHandler: IConfigHandler;
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
@@ -286,7 +287,7 @@ export class Core {
     });
 
     async function* llmStreamChat(
-      configHandler: ConfigHandler,
+      configHandler: IConfigHandler,
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
@@ -321,7 +322,7 @@ export class Core {
     );
 
     async function* llmStreamComplete(
-      configHandler: ConfigHandler,
+      configHandler: IConfigHandler,
       abortedMessageIds: Set<string>,
 
       msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
@@ -387,7 +388,7 @@ export class Core {
     });
 
     async function* runNodeJsSlashCommand(
-      configHandler: ConfigHandler,
+      configHandler: IConfigHandler,
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["command/run"][0]>,
       messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
@@ -476,7 +477,7 @@ export class Core {
     });
 
     async function* streamDiffLinesGenerator(
-      configHandler: ConfigHandler,
+      configHandler: IConfigHandler,
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
     ) {

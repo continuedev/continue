@@ -1,24 +1,14 @@
 import {
   BranchAndDir,
-  Chunk,
   ContextItem,
   ContextProviderExtras,
 } from "../../index.js";
-import { LanceDbIndex } from "../../indexing/LanceDbIndex.js";
 
-import { deduplicateArray, getRelativePath } from "../../util/index.js";
+import { getRelativePath } from "../../util/index.js";
 import { RETRIEVAL_PARAMS } from "../../util/parameters.js";
-import { retrieveFts } from "./fullTextSearch.js";
-
-function deduplicateChunks(chunks: Chunk[]): Chunk[] {
-  return deduplicateArray(chunks, (a, b) => {
-    return (
-      a.filepath === b.filepath &&
-      a.startLine === b.startLine &&
-      a.endLine === b.endLine
-    );
-  });
-}
+import { RetrievalPipelineOptions } from "./pipelines/BaseRetrievalPipeline.js";
+import NoRerankerRetrievalPipeline from "./pipelines/NoRerankerRetrievalPipeline.js";
+import RerankerRetrievalPipeline from "./pipelines/RerankerRetrievalPipeline.js";
 
 export async function retrieveContextItemsFromEmbeddings(
   extras: ContextProviderExtras,
@@ -66,80 +56,21 @@ export async function retrieveContextItemsFromEmbeddings(
     branch: branches[i],
   }));
 
-  // Get all retrieval results
-  const retrievalResults: Chunk[] = [];
-
-  // Source: Full-text search
-  const ftsResults = await retrieveFts(
-    extras.fullInput,
-    nRetrieve / 2,
-    tags,
-    filterDirectory,
-  );
-  retrievalResults.push(...ftsResults);
-
-  // Source: expansion with code graph
-  // consider doing this after reranking? Or just having a lower reranking threshold
-  // This is VS Code only until we use PSI for JetBrains or build our own general solution
-  // TODO: Need to pass in the expandSnippet function as a function argument
-  // because this import causes `tsc` to fail
-  // if ((await extras.ide.getIdeInfo()).ideType === "vscode") {
-  //   const { expandSnippet } = await import(
-  //     "../../../extensions/vscode/src/util/expandSnippet"
-  //   );
-  //   let expansionResults = (
-  //     await Promise.all(
-  //       extras.selectedCode.map(async (rif) => {
-  //         return expandSnippet(
-  //           rif.filepath,
-  //           rif.range.start.line,
-  //           rif.range.end.line,
-  //           extras.ide,
-  //         );
-  //       }),
-  //     )
-  //   ).flat() as Chunk[];
-  //   retrievalResults.push(...expansionResults);
-  // }
-
-  // Source: Open file exact match
-  // Source: Class/function name exact match
-
-  // Source: Embeddings
-  const lanceDbIndex = new LanceDbIndex(extras.embeddingsProvider, (path) =>
-    extras.ide.readFile(path),
-  );
-  const vecResults = await lanceDbIndex.retrieve(
-    extras.fullInput,
+  const pipelineType = useReranking
+    ? RerankerRetrievalPipeline
+    : NoRerankerRetrievalPipeline;
+  const pipelineOptions: RetrievalPipelineOptions = {
+    nFinal,
     nRetrieve,
     tags,
+    embeddingsProvider: extras.embeddingsProvider,
+    reranker: extras.reranker,
     filterDirectory,
-  );
-  retrievalResults.push(...vecResults);
-
-  // De-duplicate
-  let results: Chunk[] = deduplicateChunks(retrievalResults);
-
-  // Re-rank
-  if (useReranking && extras.reranker) {
-    let scores: number[] = await extras.reranker.rerank(
-      extras.fullInput,
-      results,
-    );
-
-    // Filter out low-scoring results
-    results = results.filter(
-      (_, i) => scores[i] >= RETRIEVAL_PARAMS.rerankThreshold,
-    );
-    scores = scores.filter(
-      (score) => score >= RETRIEVAL_PARAMS.rerankThreshold,
-    );
-
-    results.sort(
-      (a, b) => scores[results.indexOf(a)] - scores[results.indexOf(b)],
-    );
-    results = results.slice(-nFinal);
-  }
+    ide: extras.ide,
+    input: extras.fullInput,
+  };
+  const pipeline = new pipelineType(pipelineOptions);
+  const results = await pipeline.run();
 
   if (results.length === 0) {
     throw new Error(

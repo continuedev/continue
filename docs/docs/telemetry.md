@@ -21,7 +21,7 @@ All data is anonymous and cleaned of PII before being sent to PostHog.
 ## What we track
 
 - Whether you accept or reject suggestions (never including the code or the prompt)
-- The name of the model and slash command used
+- The name of the model and command used
 - The number of tokens generated
 - The name of your OS and IDE
 - Pageviews

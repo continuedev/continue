@@ -17,11 +17,7 @@ import {
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
-  static workspaceDir = "/tmp/continue";
-
-  constructor() {
-    fs.mkdirSync(FileSystemIde.workspaceDir, { recursive: true });
-  }
+  constructor(private readonly workspaceDir: string) {}
   pathSep(): Promise<string> {
     return Promise.resolve(path.sep);
   }
@@ -141,14 +137,7 @@ class FileSystemIde implements IDE {
   }
 
   getWorkspaceDirs(): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      fs.mkdtemp(FileSystemIde.workspaceDir, (err, folder) => {
-        if (err) {
-          reject(err);
-        }
-        resolve([folder]);
-      });
-    });
+    return Promise.resolve([this.workspaceDir]);
   }
 
   listFolders(): Promise<string[]> {

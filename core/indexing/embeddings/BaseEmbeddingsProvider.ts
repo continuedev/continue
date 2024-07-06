@@ -29,7 +29,7 @@ abstract class BaseEmbeddingsProvider implements IBaseEmbeddingsProvider {
       ...options,
     };
     this.fetch = fetch;
-    this.id = this.options.model || this.constructor.name;
+    this.id = `${this.constructor.name}::${this.options.model}`;
   }
 
   abstract embed(chunks: string[]): Promise<number[][]>;

@@ -9,7 +9,7 @@ const esbuildConfig = {
   external: ["vscode", "esbuild", "./xhr-sync-worker.js"],
   format: "cjs",
   platform: "node",
-  sourcemap: false,
+  sourcemap: flags.includes("--sourcemap"),
   loader: {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     ".node": "file",

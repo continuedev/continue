@@ -15,7 +15,7 @@ class FreeTrialEmbeddingsProvider extends BaseEmbeddingsProvider {
   constructor(options: EmbedOptions, fetch: FetchFunction) {
     super(options, fetch);
     this.options.model = FreeTrialEmbeddingsProvider.defaultOptions?.model;
-    this.id = this.options.model || this.constructor.name;
+    this.id = `${this.constructor.name}::${this.options.model}`;
   }
 
   async embed(chunks: string[]) {

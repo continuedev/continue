@@ -1,5 +1,9 @@
 import * as vscode from "vscode";
 import { Battery } from "../util/battery";
+import {
+  CONTINUE_WORKSPACE_KEY,
+  getContinueWorkspaceConfig,
+} from "../util/workspaceConfig";
 
 export enum StatusBarStatus {
   Disabled,
@@ -91,13 +95,18 @@ export function setupStatusBar(
   statusBarItem.command = "continue.openTabAutocompleteConfigMenu";
 
   statusBarItem.show();
-  if (status !== undefined) statusBarStatus = status;
+  if (status !== undefined) {
+    statusBarStatus = status;
+  }
 
   vscode.workspace.onDidChangeConfiguration((event) => {
-    if (event.affectsConfiguration("continue")) {
-      const config = vscode.workspace.getConfiguration("continue");
-      const enabled = config.get<boolean>("enableTabAutocomplete");
-      if (enabled && statusBarStatus === StatusBarStatus.Paused) return;
+    if (event.affectsConfiguration(CONTINUE_WORKSPACE_KEY)) {
+      const enabled = getContinueWorkspaceConfig().get<boolean>(
+        "enableTabAutocomplete",
+      );
+      if (enabled && statusBarStatus === StatusBarStatus.Paused) {
+        return;
+      }
       setupStatusBar(
         enabled ? StatusBarStatus.Enabled : StatusBarStatus.Disabled,
       );

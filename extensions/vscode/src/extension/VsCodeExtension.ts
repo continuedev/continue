@@ -1,5 +1,5 @@
 import { IContextProvider } from "core";
-import { ConfigHandler } from "core/config/handler";
+import { IConfigHandler } from "core/config/IConfigHandler";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
@@ -25,11 +25,12 @@ import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
+import { CONTINUE_WORKSPACE_KEY } from "../util/workspaceConfig";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
 
-  private configHandler: ConfigHandler;
+  private configHandler: IConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
   private tabAutocompleteModel: TabAutocompleteModel;
@@ -40,6 +41,7 @@ export class VsCodeExtension {
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
   private battery: Battery;
+  private quickActionsCodeLensDisposable?: vscode.Disposable;
 
   constructor(context: vscode.ExtensionContext) {
     let resolveWebviewProtocol: any = undefined;
@@ -64,7 +66,7 @@ export class VsCodeExtension {
       },
     );
     let resolveConfigHandler: any = undefined;
-    const configHandlerPromise = new Promise<ConfigHandler>((resolve) => {
+    const configHandlerPromise = new Promise<IConfigHandler>((resolve) => {
       resolveConfigHandler = resolve;
     });
     this.sidebar = new ContinueGUIWebviewViewProvider(
@@ -113,9 +115,6 @@ export class VsCodeExtension {
     });
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
-    this.configHandler.onConfigUpdate(() => {
-      this.sidebar.webviewProtocol?.request("configUpdate", undefined);
-    });
 
     this.configHandler.reloadConfig();
     this.verticalDiffManager = new VerticalPerLineDiffManager(
@@ -131,14 +130,30 @@ export class VsCodeExtension {
     // Indexing + pause token
     this.diffManager.webviewProtocol = this.sidebar.webviewProtocol;
 
-    // CodeLens
-    const verticalDiffCodeLens = registerAllCodeLensProviders(
-      context,
-      this.diffManager,
-      this.verticalDiffManager.filepathToCodeLens,
-    );
-    this.verticalDiffManager.refreshCodeLens =
-      verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
+    this.configHandler.loadConfig().then((config) => {
+      const { verticalDiffCodeLens } = registerAllCodeLensProviders(
+        context,
+        this.diffManager,
+        this.verticalDiffManager.filepathToCodeLens,
+        config,
+      );
+
+      this.verticalDiffManager.refreshCodeLens =
+        verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
+    });
+
+    this.configHandler.onConfigUpdate((newConfig) => {
+      this.sidebar.webviewProtocol?.request("configUpdate", undefined);
+
+      this.tabAutocompleteModel.clearLlm.bind(this.tabAutocompleteModel);
+
+      registerAllCodeLensProviders(
+        context,
+        this.diffManager,
+        this.verticalDiffManager.filepathToCodeLens,
+        newConfig,
+      );
+    });
 
     // Tab autocomplete
     const config = vscode.workspace.getConfiguration("continue");
@@ -188,10 +203,6 @@ export class VsCodeExtension {
     fs.watchFile(getConfigTsPath(), { interval: 1000 }, (stats) => {
       this.configHandler.reloadConfig();
     });
-
-    this.configHandler.onConfigUpdate(
-      this.tabAutocompleteModel.clearLlm.bind(this.tabAutocompleteModel),
-    );
 
     vscode.workspace.onDidSaveTextDocument((event) => {
       // Listen for file changes in the workspace
