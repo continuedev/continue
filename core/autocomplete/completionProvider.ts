@@ -4,7 +4,7 @@ import OpenAI from "openai";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { RangeInFileWithContents } from "../commands/util.js";
-import { ConfigHandler } from "../config/handler.js";
+import { IConfigHandler } from "../config/IConfigHandler.js";
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { streamLines } from "../diff/util.js";
 import {
@@ -145,7 +145,7 @@ export class CompletionProvider {
   private static lastUUID: string | undefined = undefined;
 
   constructor(
-    private readonly configHandler: ConfigHandler,
+    private readonly configHandler: IConfigHandler,
     private readonly ide: IDE,
     private readonly getLlm: () => Promise<ILLM | undefined>,
     private readonly _onError: (e: any) => void,

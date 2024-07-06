@@ -1,4 +1,4 @@
-import { ConfigHandler } from "core/config/handler";
+import { IConfigHandler } from "core/config/IConfigHandler";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { ToWebviewFromCoreProtocol } from "core/protocol/coreWebview";
 import { ToIdeFromWebviewOrCoreProtocol } from "core/protocol/ide";
@@ -70,7 +70,7 @@ export class VsCodeMessenger {
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: VsCodeIde,
     private readonly verticalDiffManagerPromise: Promise<VerticalPerLineDiffManager>,
-    private readonly configHandlerPromise: Promise<ConfigHandler>,
+    private readonly configHandlerPromise: Promise<IConfigHandler>,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {

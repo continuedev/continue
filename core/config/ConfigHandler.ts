@@ -8,9 +8,10 @@ import {
   ILLM,
 } from "../index.js";
 import { Telemetry } from "../util/posthog.js";
+import { IConfigHandler } from "./IConfigHandler.js";
 import { finalToBrowserConfig, loadFullConfigNode } from "./load.js";
 
-export class ConfigHandler {
+export class ConfigHandler implements IConfigHandler {
   private savedConfig: ContinueConfig | undefined;
   private savedBrowserConfig?: BrowserSerializedContinueConfig;
   private additionalContextProviders: IContextProvider[] = [];

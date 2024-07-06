@@ -19,4 +19,5 @@ export default {
     __dirname: path.dirname(fileURLToPath(import.meta.url)),
     __filename: path.resolve(fileURLToPath(import.meta.url)),
   },
+  globalSetup: "<rootDir>/jest.global-setup.ts",
 };

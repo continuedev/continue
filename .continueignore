@@ -1,4 +1,7 @@
-**/*.run.xml
-archive/**/*
-extensions/vscode/models/**/*
+\*_/_.run.xml
 docs/docs/languages
+.changes/
+.idea/
+.vscode/
+.archive/
+**/*.scm

@@ -90,6 +90,7 @@ export const DEFAULT_IGNORE_DIRS = [
   ".gradle",
   ".cache",
   "gems",
+  "vendor",
 ];
 export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
 
