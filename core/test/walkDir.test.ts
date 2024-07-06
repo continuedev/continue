@@ -57,7 +57,7 @@ describe("walkDir", () => {
   test("should ignore ignored files in flat dir", async () => {
     const files = [[".gitignore", "*.py"], "a.txt", "c.ts", "b.py"];
     addToTestDir(files);
-    await expectPaths(["a.txt", "c.ts", ".gitignore"], ["b.py"]);
+    await expectPaths(["a.txt", "c.ts"], ["b.py"]);
   });
 
   test("should handle negation in flat folder", async () => {
@@ -98,7 +98,7 @@ describe("walkDir", () => {
     ];
     addToTestDir(files);
     await expectPaths(
-      ["a.txt", "b.py", "c.ts", "d/e.txt", "d/g/h.ts", "d/.gitignore"],
+      ["a.txt", "b.py", "c.ts", "d/e.txt", "d/g/h.ts"],
       ["d/f.py"],
     );
   });
@@ -183,10 +183,7 @@ describe("walkDir", () => {
       "d.js",
     ];
     addToTestDir(files);
-    await expectPaths(
-      ["a.txt", "d.js", ".gitignore", ".continueignore"],
-      ["b.py", "c.ts"],
-    );
+    await expectPaths(["a.txt", "d.js"], ["b.py", "c.ts"]);
   });
 
   test("should return dirs and only dirs in onlyDirs mode", async () => {
