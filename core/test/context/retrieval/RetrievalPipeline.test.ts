@@ -4,6 +4,10 @@ function testRetrievalPipeline(pipeline: IRetrievalPipeline) {
   test("should successfully run");
 }
 
+describe.skip("RetrievalPipeline", () => {
+  test.todo("should successfully run");
+});
+
 // describe("Retrieval Pipelines", () => {
 //   const ide = new FileSystemIde();
 //   const options: RetrievalPipelineOptions;

@@ -244,7 +244,7 @@ describe("walkDir", () => {
   });
 
   test("should walk continue repo without getting any files of the default ignore types", async () => {
-    const results = await walkDir(path.join(__dirname, "..", ".."), ide, {
+    const results = await walkDir(path.join(__dirname, ".."), ide, {
       ignoreFiles: [".gitignore", ".continueignore"],
     });
     expect(results.length).toBeGreaterThan(0);
@@ -263,7 +263,7 @@ describe("walkDir", () => {
   });
 
   test("should walk continue/extensions/vscode without getting any files in the .continueignore", async () => {
-    const vscodePath = path.join(__dirname, "..", "..", "extensions", "vscode");
+    const vscodePath = path.join(__dirname, "..", "extensions", "vscode");
     const results = await walkDir(vscodePath, ide, {
       ignoreFiles: [".gitignore", ".continueignore"],
     });
