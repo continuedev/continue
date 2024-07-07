@@ -280,13 +280,13 @@
         "command": "continue.quickEditHistoryUp",
         "mac": "up",
         "key": "up",
-        "when": "continue.quickEditFocused"
+        "when": "continue.quickEditHistoryFocused"
       },
       {
         "command": "continue.quickEditHistoryDown",
         "mac": "down",
         "key": "down",
-        "when": "continue.quickEditFocused"
+        "when": "continue.quickEditHistoryFocused"
       },
       {
         "command": "continue.acceptVerticalDiffBlock",
