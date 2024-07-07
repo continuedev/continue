@@ -27,7 +27,6 @@ import TextDialog from "./dialogs";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
-import ModelSelect from "./modelSelection/ModelSelect";
 import PostHogPageView from "./PosthogPageView";
 import ProfileSwitcher from "./ProfileSwitcher";
 
@@ -261,9 +260,6 @@ const Layout = () => {
           <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
           {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
             <Footer>
-              <div className="flex-shrink-0">
-                <ModelSelect />
-              </div>
               <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
                 {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
                   defaultModel?.provider === "free-trial" && (
