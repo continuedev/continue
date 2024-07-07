@@ -27,7 +27,7 @@ To solve many problems, the first step is reading the logs to find the relevant 
 If you're getting a response from the LLM that doesn't seem to make sense, you can
 
 1. Open the "Output" panel (right next to the terminal)
-2. In the dropdown, select "Continue - LLM Prompts/Completions
+2. In the dropdown, select "Continue - LLM Prompts/Completions"
 3. View the exact prompts that were sent to the LLM and the completions recieved
 
 ### JetBrains
@@ -59,6 +59,13 @@ If you've tried everything, reported an error, know that a previous version was 
 For VS Code, All versions are hosted on the Open VSX Registry [here](https://open-vsx.org/extension/Continue/continue). Once you've downloaded the extension, which will be a .vsix file, you can install it manually by following the instructions [here](https://code.visualstudio.com/docs/editor/extension-gallery#_install-from-a-vsix).
 
 You can find older versions of the JetBrains extension on their [marketplace](https://plugins.jetbrains.com/plugin/22707-continue), which will walk you through installing from disk.
+
+## Keyboard shortcuts not resolving
+
+If your keyboard shortcuts are not resolving, you may have other commands that are taking precedence over the Continue shortcuts. You can see if this is the case, and change your shortcut mappings, in the configuration of your IDE.
+
+- [VSCode keyboard shortcuts docs](https://code.visualstudio.com/docs/getstarted/keybindings)
+- [IntelliJ keyboard shortcut docs](https://www.jetbrains.com/help/idea/configuring-keyboard-and-mouse-shortcuts.html)
 
 # FAQs
 

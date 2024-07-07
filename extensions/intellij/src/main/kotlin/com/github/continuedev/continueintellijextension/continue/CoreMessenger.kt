@@ -117,7 +117,6 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "getWorkspaceConfigs",
         "getDiff",
         "getTerminalContents",
-        "listWorkspaceContents",
         "getWorkspaceDirs",
         "showLines",
         "listFolders",

@@ -1,4 +1,4 @@
-import { ConfigHandler } from "core/config/handler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import {
   FromCoreProtocol,
   FromWebviewProtocol,
@@ -229,12 +229,6 @@ export class VsCodeMessenger {
       return ide.getTopLevelCallStackSources(
         msg.data.threadIndex,
         msg.data.stackDepth,
-      );
-    });
-    this.onWebviewOrCore("listWorkspaceContents", async (msg) => {
-      return ide.listWorkspaceContents(
-        msg.data.directory,
-        msg.data.useGitIgnore,
       );
     });
     this.onWebviewOrCore("getWorkspaceDirs", async (msg) => {

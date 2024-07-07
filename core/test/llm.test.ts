@@ -33,7 +33,6 @@ function testLLM(llm: BaseLLM) {
       }
 
       expect(total.length).toBeGreaterThan(0);
-      console.log(total);
       return;
     });
 
@@ -44,7 +43,6 @@ function testLLM(llm: BaseLLM) {
       }
 
       expect(total.length).toBeGreaterThan(0);
-      console.log(total);
       return;
     });
 
@@ -52,7 +50,6 @@ function testLLM(llm: BaseLLM) {
       const completion = await llm.complete("Hi");
 
       expect(completion.length).toBeGreaterThan(0);
-      console.log(completion);
       return;
     });
   });

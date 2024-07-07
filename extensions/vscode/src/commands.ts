@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/naming-convention */
 import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -5,11 +6,11 @@ import * as vscode from "vscode";
 
 import { ContextMenuConfig, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
-import { ConfigHandler } from "core/config/handler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
-import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
+import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import {
   StatusBarStatus,
@@ -21,10 +22,9 @@ import {
 import { ContinueGUIWebviewViewProvider } from "./debugPanel";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
+import { QuickEdit } from "./quickEdit/QuickEdit";
 import { Battery } from "./util/battery";
-import { getPlatform } from "./util/util";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
-import { Telemetry } from "core/util/posthog";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -33,6 +33,18 @@ function getFullScreenTab() {
   return tabs.find((tab) =>
     (tab.input as any)?.viewType?.endsWith("continue.continueGUIView"),
   );
+}
+
+type TelemetryCaptureParams = Parameters<typeof Telemetry.capture>;
+
+/**
+ * Helper method to add the `isCommandEvent` to all telemetry captures
+ */
+function captureCommandTelemetry(
+  commandName: TelemetryCaptureParams[0],
+  properties: TelemetryCaptureParams[1] = {},
+) {
+  Telemetry.capture(commandName, { isCommandEvent: true, ...properties });
 }
 
 async function addHighlightedCodeToContext(
@@ -169,27 +181,61 @@ const commandsMap: (
   continueServerClientPromise,
   battery,
 ) => {
+  /**
+   * Streams an inline edit to the vertical diff manager.
+   *
+   * This function retrieves the configuration, determines the appropriate model title,
+   * increments the FTC count, and then streams an edit to the
+   * vertical diff manager.
+   *
+   * @param  promptName - The key for the prompt in the context menu configuration.
+   * @param  fallbackPrompt - The prompt to use if the configured prompt is not available.
+   * @param  [onlyOneInsertion] - Optional. If true, only one insertion will be made.
+   * @param  [range] - Optional. The range to edit if provided.
+   * @returns
+   */
   async function streamInlineEdit(
     promptName: keyof ContextMenuConfig,
     fallbackPrompt: string,
     onlyOneInsertion?: boolean,
+    range?: vscode.Range,
   ) {
     const config = await configHandler.loadConfig();
+
     const modelTitle =
       config.experimental?.modelRoles?.inlineEdit ??
       (await sidebar.webviewProtocol.request(
         "getDefaultModelTitle",
         undefined,
       ));
+
     sidebar.webviewProtocol.request("incrementFtc", undefined);
+
     await verticalDiffManager.streamEdit(
       config.experimental?.contextMenuPrompts?.[promptName] ?? fallbackPrompt,
       modelTitle,
       onlyOneInsertion,
+      undefined,
+      range,
     );
   }
+
+  const historyUpEventEmitter = new vscode.EventEmitter<void>();
+  const historyDownEventEmitter = new vscode.EventEmitter<void>();
+  const quickEdit = new QuickEdit(
+    verticalDiffManager,
+    configHandler,
+    sidebar.webviewProtocol,
+    ide,
+    extensionContext,
+    historyUpEventEmitter.event,
+    historyDownEventEmitter.event,
+  );
+
   return {
     "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
+      captureCommandTelemetry("acceptDiff");
+
       if (newFilepath instanceof vscode.Uri) {
         newFilepath = newFilepath.fsPath;
       }
@@ -197,6 +243,8 @@ const commandsMap: (
       await diffManager.acceptDiff(newFilepath);
     },
     "continue.rejectDiff": async (newFilepath?: string | vscode.Uri) => {
+      captureCommandTelemetry("rejectDiff");
+
       if (newFilepath instanceof vscode.Uri) {
         newFilepath = newFilepath.fsPath;
       }
@@ -204,9 +252,11 @@ const commandsMap: (
       await diffManager.rejectDiff(newFilepath);
     },
     "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
+      captureCommandTelemetry("acceptVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index);
     },
     "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number) => {
+      captureCommandTelemetry("rejectVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index);
     },
     "continue.quickFix": async (
@@ -214,6 +264,10 @@ const commandsMap: (
       code: string,
       edit: boolean,
     ) => {
+      captureCommandTelemetry("rejectVerticalDiffBlock", {
+        edit,
+      });
+
       sidebar.webviewProtocol?.request("newSessionWithPrompt", {
         prompt: `${
           edit ? "/edit " : ""
@@ -223,6 +277,47 @@ const commandsMap: (
       if (!edit) {
         vscode.commands.executeCommand("continue.continueGUIView.focus");
       }
+    },
+    "continue.defaultQuickActionDocstring": async (range: vscode.Range) => {
+      captureCommandTelemetry("defaultQuickActionDocstring");
+
+      streamInlineEdit(
+        "docstring",
+        "Write a docstring for this code. Do not change anything about the code itself.",
+        true,
+        range,
+      );
+    },
+    "continue.defaultQuickActionExplain": async (code: string) => {
+      captureCommandTelemetry("defaultQuickActionExplain");
+
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+
+      sidebar.webviewProtocol?.request("userInput", {
+        input:
+          `Explain the following code in a few sentences without ` +
+          `going into detail on specific methods:\n\n ${code}`,
+      });
+    },
+    "continue.customQuickActionSendToChat": async (
+      prompt: string,
+      code: string,
+    ) => {
+      captureCommandTelemetry("customQuickActionSendToChat");
+
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
+
+      sidebar.webviewProtocol?.request("userInput", {
+        input: `${prompt}:\n\n ${code}`,
+      });
+    },
+    "continue.customQuickActionStreamInlineEdit": async (
+      prompt: string,
+      range: vscode.Range,
+    ) => {
+      captureCommandTelemetry("customQuickActionStreamInlineEdit");
+
+      streamInlineEdit("docstring", prompt, false, range);
     },
     "continue.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
@@ -249,131 +344,21 @@ const commandsMap: (
     "continue.toggleAuxiliaryBar": () => {
       vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
     },
-    "continue.quickEdit": async (prompt?: string) => {
-      const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
-
-      const editor = vscode.window.activeTextEditor;
-      const existingHandler = verticalDiffManager.getHandlerForFile(
-        editor?.document.uri.fsPath ?? "",
-      );
-      const previousInput = existingHandler?.input;
-
-      const config = await configHandler.loadConfig();
-      let defaultModelTitle =
-        config.experimental?.modelRoles?.inlineEdit ??
-        (await sidebar.webviewProtocol.request(
-          "getDefaultModelTitle",
-          undefined,
-        ));
-      if (!defaultModelTitle) {
-        defaultModelTitle = config.models[0]?.title!;
-      }
-      const quickPickItems =
-        config.contextProviders
-          ?.filter((provider) => provider.description.type === "normal")
-          .map((provider) => {
-            return {
-              label: provider.description.displayTitle,
-              description: provider.description.title,
-              detail: provider.description.description,
-            };
-          }) || [];
-
-      const addContextMsg = quickPickItems.length
-        ? " (or press enter to add context first)"
-        : "";
-      const textInputOptions: vscode.InputBoxOptions = {
-        placeHolder: selectionEmpty
-          ? `Type instructions to generate code${addContextMsg}`
-          : `Describe how to edit the highlighted code${addContextMsg}`,
-        title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
-        prompt: `[${defaultModelTitle}]`,
-        value: prompt,
-        ignoreFocusOut: true,
-      };
-      if (previousInput) {
-        textInputOptions.value = previousInput + ", ";
-        textInputOptions.valueSelection = [
-          textInputOptions.value.length,
-          textInputOptions.value.length,
-        ];
-      }
-
-      let text = await vscode.window.showInputBox(textInputOptions);
-
-      if (text === undefined) {
-        return;
-      }
-
-      if (text.length > 0 || quickPickItems.length === 0) {
-        sidebar.webviewProtocol.request("incrementFtc", undefined);
-        await verticalDiffManager.streamEdit(
-          text,
-          defaultModelTitle,
-          undefined,
-          previousInput,
-        );
-      } else {
-        // Pick context first
-        const selectedProviders = await vscode.window.showQuickPick(
-          quickPickItems,
-          {
-            title: "Add Context",
-            canPickMany: true,
-          },
-        );
-
-        let text = await vscode.window.showInputBox(textInputOptions);
-        if (text) {
-          const llm = await configHandler.llmFromTitle();
-          const config = await configHandler.loadConfig();
-          const context = (
-            await Promise.all(
-              selectedProviders?.map((providerTitle) => {
-                const provider = config.contextProviders?.find(
-                  (provider) =>
-                    provider.description.title === providerTitle.description,
-                );
-                if (!provider) {
-                  return [];
-                }
-
-                return provider.getContextItems("", {
-                  embeddingsProvider: config.embeddingsProvider,
-                  reranker: config.reranker,
-                  ide,
-                  llm,
-                  fullInput: text || "",
-                  selectedCode: [],
-                  fetch: (url, init) =>
-                    fetchwithRequestOptions(url, init, config.requestOptions),
-                });
-              }) || [],
-            )
-          ).flat();
-
-          text =
-            context.map((item) => item.content).join("\n\n") +
-            "\n\n---\n\n" +
-            text;
-
-          sidebar.webviewProtocol.request("incrementFtc", undefined);
-          await verticalDiffManager.streamEdit(
-            text,
-            defaultModelTitle,
-            undefined,
-            previousInput,
-          );
-        }
-      }
+    "continue.quickEdit": (injectedPrompt?: string) => {
+      captureCommandTelemetry("quickEdit");
+      quickEdit.run(injectedPrompt);
     },
     "continue.writeCommentsForCode": async () => {
+      captureCommandTelemetry("writeCommentsForCode");
+
       streamInlineEdit(
         "comment",
         "Write comments for this code. Do not change anything about the code itself.",
       );
     },
     "continue.writeDocstringForCode": async () => {
+      captureCommandTelemetry("writeDocstringForCode");
+
       streamInlineEdit(
         "docstring",
         "Write a docstring for this code. Do not change anything about the code itself.",
@@ -381,21 +366,27 @@ const commandsMap: (
       );
     },
     "continue.fixCode": async () => {
+      captureCommandTelemetry("fixCode");
+
       streamInlineEdit(
         "fix",
         "Fix this code. If it is already 100% correct, simply rewrite the code.",
       );
     },
     "continue.optimizeCode": async () => {
+      captureCommandTelemetry("optimizeCode");
       streamInlineEdit("optimize", "Optimize this code");
     },
     "continue.fixGrammar": async () => {
+      captureCommandTelemetry("fixGrammar");
       streamInlineEdit(
         "fixGrammar",
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
       );
     },
     "continue.viewLogs": async () => {
+      captureCommandTelemetry("viewLogs");
+
       // Open ~/.continue/continue.log
       const logFile = path.join(os.homedir(), ".continue", "continue.log");
       // Make sure the file/directory exist
@@ -408,8 +399,12 @@ const commandsMap: (
       await vscode.window.showTextDocument(uri);
     },
     "continue.debugTerminal": async () => {
+      captureCommandTelemetry("debugTerminal");
+
       const terminalContents = await ide.getTerminalContents();
+
       vscode.commands.executeCommand("continue.continueGUIView.focus");
+
       sidebar.webviewProtocol?.request("userInput", {
         input: `I got the following error, can you please help explain how to fix it?\n\n${terminalContents.trim()}`,
       });
@@ -422,6 +417,8 @@ const commandsMap: (
 
     // Commands without keyboard shortcuts
     "continue.addModel": () => {
+      captureCommandTelemetry("addModel");
+
       vscode.commands.executeCommand("continue.continueGUIView.focus");
       sidebar.webviewProtocol?.request("addModel", undefined);
     },
@@ -457,6 +454,7 @@ const commandsMap: (
       });
     },
     "continue.sendToTerminal": (text: string) => {
+      captureCommandTelemetry("sendToTerminal");
       ide.runCommand(text);
     },
     "continue.newSession": () => {
@@ -483,7 +481,7 @@ const commandsMap: (
       }
 
       //Full screen not open - open it
-      Telemetry.capture("openFullScreen", {});
+      captureCommandTelemetry("openFullScreen");
 
       // Close the sidebar.webviews
       // vscode.commands.executeCommand("workbench.action.closeSidebar");
@@ -533,17 +531,6 @@ const commandsMap: (
         addEntireFileToContext(uri, false, sidebar.webviewProtocol);
       }
     },
-    "continue.updateAllReferences": (filepath: vscode.Uri) => {
-      // Get the cursor position in the editor
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        return;
-      }
-      const position = editor.selection.active;
-      sidebar.sendMainUserInput(
-        `/references ${filepath.fsPath} ${position.line} ${position.character}`,
-      );
-    },
     "continue.logAutocompleteOutcome": (
       completionId: string,
       completionProvider: CompletionProvider,
@@ -551,6 +538,8 @@ const commandsMap: (
       completionProvider.accept(completionId);
     },
     "continue.toggleTabAutocompleteEnabled": () => {
+      captureCommandTelemetry("toggleTabAutocompleteEnabled");
+
       const config = vscode.workspace.getConfiguration("continue");
       const enabled = config.get("enableTabAutocomplete");
       const pauseOnBattery = config.get<boolean>(
@@ -585,6 +574,8 @@ const commandsMap: (
       }
     },
     "continue.openTabAutocompleteConfigMenu": async () => {
+      captureCommandTelemetry("openTabAutocompleteConfigMenu");
+
       const config = vscode.workspace.getConfiguration("continue");
       const quickPick = vscode.window.createQuickPick();
       const selected = new GlobalContext().get("selectedTabAutocompleteModel");
@@ -677,6 +668,14 @@ const commandsMap: (
         const lastLines = await readLastLines.read(completionsPath, 2);
         client.sendFeedback(feedback, lastLines);
       }
+    },
+    "continue.quickEditHistoryUp": async () => {
+      captureCommandTelemetry("quickEditHistoryUp");
+      historyUpEventEmitter.fire();
+    },
+    "continue.quickEditHistoryDown": async () => {
+      captureCommandTelemetry("quickEditHistoryDown");
+      historyDownEventEmitter.fire();
     },
   };
 };

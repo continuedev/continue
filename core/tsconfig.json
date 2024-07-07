@@ -5,7 +5,7 @@
     "lib": ["DOM", "DOM.Iterable", "ESNext", "ES2021"],
     "allowJs": true,
     "skipLibCheck": true,
-    "esModuleInterop": false,
+    "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,

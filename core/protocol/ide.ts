@@ -16,10 +16,6 @@ import { ControlPlaneSessionInfo } from "../control-plane/client";
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
   getIdeInfo: [undefined, IdeInfo];
-  listWorkspaceContents: [
-    { directory?: string; useGitIgnore?: boolean },
-    string[],
-  ];
   getWorkspaceDirs: [undefined, string[]];
   listFolders: [undefined, string[]];
   writeFile: [{ path: string; contents: string }, void];
@@ -84,6 +80,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
     { silent: boolean },
     ControlPlaneSessionInfo | undefined,
   ];
+  pathSep: [undefined, string];
 };
 
 export type ToWebviewOrCoreFromIdeProtocol = {

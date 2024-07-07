@@ -73,7 +73,11 @@ describe("Test Suite", () => {
       );
     }
 
-    const ide = new FileSystemIde();
+    const testDir = path.join(__dirname, "..", ".test");
+    if (!fs.existsSync(testDir)) {
+      fs.mkdirSync(testDir);
+    }
+    const ide = new FileSystemIde(testDir);
     const reverseIde = new ReverseMessageIde(messenger.on.bind(messenger), ide);
 
     // Wait for core to set itself up

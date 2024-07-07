@@ -47,6 +47,10 @@ class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
     return (
       await Promise.all(
         batchedChunks.map(async (batch) => {
+          if (batch.length === 0) {
+            return [];
+          }
+
           const fetchWithBackoff = () =>
             withExponentialBackoff<Response>(() =>
               this.fetch(this._getEndpoint(), {

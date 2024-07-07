@@ -5,6 +5,7 @@ import {
 } from "core/util/paths";
 import * as fs from "fs";
 import * as vscode from "vscode";
+import { CONTINUE_WORKSPACE_KEY } from "../util/workspaceConfig";
 
 export class RemoteConfigSync {
   private userToken: string | null;
@@ -28,7 +29,7 @@ export class RemoteConfigSync {
 
     // Listen for changes to VS Code settings, then trigger a refresh
     vscode.workspace.onDidChangeConfiguration(async (event) => {
-      if (event.affectsConfiguration("continue")) {
+      if (event.affectsConfiguration(CONTINUE_WORKSPACE_KEY)) {
         const { userToken, remoteConfigServerUrl, remoteConfigSyncPeriod } =
           await this.loadVsCodeSettings();
         if (
@@ -92,13 +93,12 @@ export class RemoteConfigSync {
     if (this.syncInterval !== undefined) {
       clearInterval(this.syncInterval);
     }
-    this.syncInterval = setInterval(
-      () => {
-        if (!this.userToken || !this.remoteConfigServerUrl) return;
-        this.sync(this.userToken, this.remoteConfigServerUrl);
-      },
-      this.remoteConfigSyncPeriod * 1000 * 60,
-    );
+    this.syncInterval = setInterval(() => {
+      if (!this.userToken || !this.remoteConfigServerUrl) {
+        return;
+      }
+      this.sync(this.userToken, this.remoteConfigServerUrl);
+    }, this.remoteConfigSyncPeriod * 1000 * 60);
   }
 
   async sync(userToken: string, remoteConfigServerUrl: string) {

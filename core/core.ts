@@ -6,7 +6,7 @@ import type {
   SiteIndexingConfig,
 } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider.js";
-import { ConfigHandler } from "./config/handler.js";
+import { ConfigHandler } from "./config/ConfigHandler.js";
 import {
   setupApiKeysMode,
   setupFreeTrialMode,
@@ -17,9 +17,9 @@ import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
 import { ControlPlaneClient } from "./control-plane/client";
+import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
 import { DocsService } from "./indexing/docs/DocsService";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
-import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase.js";
 import Ollama from "./llm/llms/Ollama.js";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext.js";
@@ -42,6 +42,9 @@ export class Core {
   controlPlaneClient: ControlPlaneClient;
   private globalContext = new GlobalContext();
   private docsService = DocsService.getInstance();
+  private readonly indexingPauseToken = new PauseToken(
+    this.globalContext.get("indexingPaused") === true,
+  );
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -86,9 +89,6 @@ export class Core {
     );
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
-    const indexingPauseToken = new PauseToken(
-      this.globalContext.get("indexingPaused") === true,
-    );
     let codebaseIndexerResolve: (_: any) => void | undefined;
     this.codebaseIndexerPromise = new Promise(
       async (resolve) => (codebaseIndexerResolve = resolve),
@@ -110,7 +110,7 @@ export class Core {
         new CodebaseIndexer(
           this.configHandler,
           this.ide,
-          new PauseToken(false),
+          this.indexingPauseToken,
           continueServerClient,
         ),
       );
@@ -394,12 +394,7 @@ export class Core {
             const models = await new Ollama({ model: "" }).listModels();
             return models;
           } else {
-            if (msg.data.title === "Ollama") {
-              const models = await new Ollama({ model: "" }).listModels();
-              return models;
-            } else {
-              return undefined;
-            }
+            return undefined;
           }
         }
       } catch (e) {
@@ -595,7 +590,7 @@ export class Core {
     });
     on("index/setPaused", (msg) => {
       new GlobalContext().update("indexingPaused", msg.data);
-      indexingPauseToken.paused = msg.data;
+      this.indexingPauseToken.paused = msg.data;
     });
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.

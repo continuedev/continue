@@ -68,6 +68,28 @@
         }
       }
     },
+    "ClientCertificateOptions": {
+      "title": "ClientCertificateOptions",
+      "type": "object",
+      "properties": {
+        "cert": {
+          "title": "Cert Path",
+          "description": "Path to the client certificate file",
+          "type": "string"
+        },
+        "key": {
+          "title": "Key Path",
+          "description": "Path to the client certificate key file",
+          "type": "string"
+        },
+        "passphrase": {
+          "title": "Passphrase",
+          "description": "Passphrase for the client certificate key file",
+          "type": "string"
+        }
+      },
+      "required": ["cert", "key"]
+    },
     "RequestOptions": {
       "title": "RequestOptions",
       "type": "object",
@@ -123,6 +145,11 @@
           "items": {
             "type": "string"
           }
+        },
+        "clientCertificate": {
+          "title": "Client Certificate",
+          "description": "Client certificate to use when making the HTTP request",
+          "$ref": "#/definitions/ClientCertificateOptions"
         }
       }
     },
@@ -1857,6 +1884,7 @@
           "properties": {
             "provider": {
               "enum": [
+                "huggingface-tei",
                 "transformers.js",
                 "ollama",
                 "openai",
@@ -2132,6 +2160,29 @@
             },
             "promptPath": {
               "type": "string"
+            },
+            "quickActions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The title of the quick action that will display in the Code Lens."
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "The prompt that will be sent to the model when the quick action is invoked, with the function or class body concatenated."
+                  },
+                  "sendToChat": {
+                    "type": "boolean",
+                    "description": "If true, the result of the quick action will be sent to the chat panel. If false, the streamed result will be inserted into the document.",
+                    "default": false
+                  }
+                },
+                "required": ["prompt", "title"]
+              },
+              "description": "Quick actions are a way to add custom commands to the Code Lens of function and class declarations."
             },
             "contextMenuPrompts": {
               "type": "object",

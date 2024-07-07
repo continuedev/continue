@@ -57,7 +57,10 @@ function collapseChildren(
   }
   code = code.slice(node.startIndex);
   let removedChild = false;
-  while (countTokens(code) > maxChunkSize && collapsedChildren.length > 0) {
+  while (
+    countTokens(code.trim()) > maxChunkSize &&
+    collapsedChildren.length > 0
+  ) {
     removedChild = true;
     // Remove children starting at the end - TODO: Add multiple chunks so no children are missing
     const childCode = collapsedChildren.pop()!;

@@ -26,6 +26,7 @@ class Ollama extends BaseLLM {
       method: "POST",
       headers: {
         Authorization: `Bearer ${this.apiKey}`,
+        "Content-Type": "application/json",
       },
       body: JSON.stringify({ name: this._getModel() }),
     })
