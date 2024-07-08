@@ -9,4 +9,8 @@
 
 ## Screenshots
 
-If your updates include visual changes, please share screenshots below.
+[ "For visual changes, include screenshots." ]
+
+## Testing
+
+[ For new or modified features, provide testing instructions. ]
