@@ -18,7 +18,9 @@ export interface ControlPlaneWorkspace {
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
 
-export const CONTROL_PLANE_URL = "http://localhost:3001";
+// export const CONTROL_PLANE_URL = "http://localhost:3001";
+export const CONTROL_PLANE_URL =
+  "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app";
 
 export class ControlPlaneClient {
   private static URL = CONTROL_PLANE_URL;
@@ -36,23 +38,6 @@ export class ControlPlaneClient {
     return this.sessionInfoPromise.then(
       (sessionInfo) => sessionInfo?.account.id,
     );
-  }
-
-  private async refreshAccessToken(refreshToken: string): Promise<string> {
-    const url = "https://api.workos.com/user_management/authenticate";
-    const resp = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        client_id: "client_01J0FW6XCPMJMQ3CG51RB4HBZQ",
-        client_secret: "sk_test_123",
-        grant_type: "refresh_token",
-        refresh_token: refreshToken,
-      }),
-    });
-    return "";
   }
 
   private async getAccessToken(): Promise<string | undefined> {

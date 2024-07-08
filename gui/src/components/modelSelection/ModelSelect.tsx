@@ -218,11 +218,12 @@ function ModelSelect(props: {}) {
               navigate("/addModel");
             }}
             value={"addModel" as any}
+            className="font-bold"
           >
             + Add Model
           </StyledListboxOption>
 
-          <i style={{ color: lightGray, padding: 4 }}>
+          <i style={{ color: lightGray, padding: "4px", marginTop: "4px" }}>
             {getMetaKeyLabel()}' to toggle
           </i>
         </StyledListboxOptions>
