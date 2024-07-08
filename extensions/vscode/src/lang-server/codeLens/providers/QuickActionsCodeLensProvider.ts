@@ -65,7 +65,6 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
   }
 
   getCustomCommands(
-    code: string,
     range: vscode.Range,
     quickActionConfigs: QuickActionConfig[],
   ): vscode.Command[] {
@@ -74,7 +73,7 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
         ? {
             title,
             command: "continue.customQuickActionSendToChat",
-            arguments: [prompt, code],
+            arguments: [prompt, range],
           }
         : {
             title,
@@ -84,11 +83,11 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
     });
   }
 
-  getDefaultCommands(code: string, range: vscode.Range): vscode.Command[] {
+  getDefaultCommands(range: vscode.Range): vscode.Command[] {
     const explain: vscode.Command = {
       command: "continue.defaultQuickActionExplain",
       title: "Explain",
-      arguments: [code],
+      arguments: [range],
     };
 
     const comment: vscode.Command = {
@@ -124,11 +123,9 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
     );
 
     return filteredSmybols.flatMap(({ range }) => {
-      const code = editor.document.getText(range);
-
       const commands: vscode.Command[] = !!this.customQuickActionsConfig
-        ? this.getCustomCommands(code, range, this.customQuickActionsConfig)
-        : this.getDefaultCommands(code, range);
+        ? this.getCustomCommands(range, this.customQuickActionsConfig)
+        : this.getDefaultCommands(range);
 
       return commands.map((command) => new vscode.CodeLens(range, command));
     });

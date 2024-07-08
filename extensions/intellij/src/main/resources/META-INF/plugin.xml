@@ -89,12 +89,7 @@
                 description="View Continue Server Logs">
             <!-- No shortcut defined -->
         </action>
-        <action id="continue.toggleAuxiliaryBar"
-                class="com.github.continuedev.continueintellijextension.actions.ToggleAuxiliaryBarAction"
-                text="Toggle Right Sidebar" description="Toggle Right Sidebar">
-            <keyboard-shortcut keymap="$default" first-keystroke="alt ctrl J"/>
-            <keyboard-shortcut keymap="Mac OS X" first-keystroke="alt meta J"/>
-        </action>
+       
         <action id="continue.focusContinueInputWithoutClear"
                 class="com.github.continuedev.continueintellijextension.actions.FocusContinueInputWithoutClearAction"
                 text="Add selected code to context"

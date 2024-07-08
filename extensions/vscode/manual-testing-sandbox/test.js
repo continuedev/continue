@@ -1,6 +1,6 @@
 class Calculator {
   constructor() {
-    this.result = 0;
+    this.result: string = 0;
   }
 
   add(number) {
