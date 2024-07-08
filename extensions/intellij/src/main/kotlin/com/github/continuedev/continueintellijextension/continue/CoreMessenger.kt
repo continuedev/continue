@@ -147,6 +147,7 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "applyToFile",
         "getGitHubAuthToken",
         "setGitHubAuthToken",
+        "pathSep"
     )
 
     private val PASS_THROUGH_TO_WEBVIEW = listOf<String>(
