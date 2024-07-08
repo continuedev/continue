@@ -144,12 +144,6 @@
         "group": "Continue"
       },
       {
-        "command": "continue.toggleAuxiliaryBar",
-        "category": "Continue",
-        "title": "Toggle Right Sidebar",
-        "group": "Continue"
-      },
-      {
         "command": "continue.focusContinueInput",
         "category": "Continue",
         "title": "Add Highlighted Code to Context",
@@ -304,11 +298,6 @@
         "key": "ctrl+i"
       },
       {
-        "command": "continue.toggleAuxiliaryBar",
-        "mac": "alt+cmd+l",
-        "key": "alt+ctrl+l"
-      },
-      {
         "command": "continue.debugTerminal",
         "mac": "cmd+shift+r",
         "key": "ctrl+shift+r"
@@ -336,9 +325,6 @@
       "commandPalette": [
         {
           "command": "continue.quickEdit"
-        },
-        {
-          "command": "continue.toggleAuxiliaryBar"
         },
         {
           "command": "continue.focusContinueInput"
