@@ -295,7 +295,7 @@ You can find all existing templates for /edit in [`core/llm/templates/edit.ts`](
 
 ## Defining a Custom LLM Provider
 
-If you are using an LLM API that isn't already [supported by Continue](./select-provider.md), and is not an OpenAI-compatible API, you'll need to define a `CustomLLM` object in `config.ts`. This object only requires one of (or both of) a `streamComplete` or `streamChat` function. Here is an example:
+If you are using an LLM API that isn't already [supported by Continue](./model-providers.md), and is not an OpenAI-compatible API, you'll need to define a `CustomLLM` object in `config.ts`. This object only requires one of (or both of) a `streamComplete` or `streamChat` function. Here is an example:
 
 ```typescript title="~/.continue/config.ts"
 export function modifyConfig(config: Config): Config {

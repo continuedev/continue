@@ -10,7 +10,7 @@ Continue can be deeply customized by editing `config.json` and `config.ts` on yo
 
 Currently, you can customize the following:
 
-- [Models](../setup/select-model.md) and [providers](../setup/select-provider.md)
+- [Models](../setup/select-model.md) and [Model Providers](../setup/model-providers.md)
 - [Context Providers](./context-providers.md)
 - [Slash Commands](./slash-commands.md)
 - [Other configuration options](../reference/config.mdx)
