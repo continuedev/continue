@@ -628,6 +628,9 @@ class IdeProtocolClient (
                         java.awt.Desktop.getDesktop().browse(java.net.URI(url))
                         respond(null)
                     }
+                    "pathSep" -> {
+                        respond(File.separator)
+                    }
                     else -> {
                         println("Unknown messageType: $messageType")
                     }
