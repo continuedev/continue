@@ -215,7 +215,7 @@ function ProfileSwitcher(props: {}) {
           } else {
             ideMessenger.post(
               "openUrl",
-              `http://localhost:3000/workspaces/${selectedProfileId}/settings`,
+              `http://app.continue.dev/workspaces/${selectedProfileId}/settings`,
             );
           }
         }}
