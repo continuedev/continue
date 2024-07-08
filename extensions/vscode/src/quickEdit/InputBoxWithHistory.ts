@@ -150,11 +150,11 @@ export default class InputBoxWithHistory implements vscode.Disposable {
     try {
       vscode.commands.executeCommand(
         "setContext",
-        "continue.quickEditFocused",
+        "continue.quickEditHistoryFocused",
         true,
       );
 
-      return new Promise((resolve, reject) => {
+      return await new Promise((resolve, reject) => {
         const completionDisposable = this.completionEventEmitter.event(
           (input) => {
             resolve(input);
