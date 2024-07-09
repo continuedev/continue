@@ -47,6 +47,40 @@ function captureCommandTelemetry(
   Telemetry.capture(commandName, { isCommandEvent: true, ...properties });
 }
 
+function addCodeToContextFromRange(
+  range: vscode.Range,
+  webviewProtocol: VsCodeWebviewProtocol,
+  prompt?: string,
+) {
+  const document = vscode.window.activeTextEditor?.document;
+
+  if (!document) {
+    return;
+  }
+
+  const rangeInFileWithContents = {
+    filepath: document.uri.fsPath,
+    contents: document.getText(range),
+    range: {
+      start: {
+        line: range.start.line,
+        character: range.start.character,
+      },
+      end: {
+        line: range.end.line,
+        character: range.end.character,
+      },
+    },
+  };
+
+  webviewProtocol?.request("highlightedCode", {
+    rangeInFileWithContents,
+    prompt,
+    // Assume `true` since range selection is currently only used for quick actions/fixes
+    shouldRun: true,
+  });
+}
+
 async function addHighlightedCodeToContext(
   edit: boolean,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
@@ -55,44 +89,9 @@ async function addHighlightedCodeToContext(
   if (editor) {
     const selection = editor.selection;
     if (selection.isEmpty) {
-      // Capture highlighted terminal text
-      // const activeTerminal = vscode.window.activeTerminal;
-      // if (activeTerminal) {
-      //   // Copy selected text
-      //   const tempCopyBuffer = await vscode.env.clipboard.readText();
-      //   await vscode.commands.executeCommand(
-      //     "workbench.action.terminal.copySelection",
-      //   );
-      //   await vscode.commands.executeCommand(
-      //     "workbench.action.terminal.clearSelection",
-      //   );
-      //   const contents = (await vscode.env.clipboard.readText()).trim();
-      //   await vscode.env.clipboard.writeText(tempCopyBuffer);
-
-      //   // Add to context
-      //   const rangeInFileWithContents = {
-      //     filepath: activeTerminal.name,
-      //     contents,
-      //     range: {
-      //       start: {
-      //         line: 0,
-      //         character: 0,
-      //       },
-      //       end: {
-      //         line: contents.split("\n").length,
-      //         character: 0,
-      //       },
-      //     },
-      //   };
-
-      //   if (contents.trim() !== "") {
-      //     webviewProtocol?.request("highlightedCode", {
-      //       rangeInFileWithContents,
-      //     });
-      //   }
-      // }
       return;
     }
+
     // adjust starting position to include indentation
     const start = new vscode.Position(selection.start.line, 0);
     const range = new vscode.Range(start, selection.end);
@@ -260,23 +259,16 @@ const commandsMap: (
       verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index);
     },
     "continue.quickFix": async (
-      message: string,
-      code: string,
-      edit: boolean,
+      range: vscode.Range,
+      diagnosticMessage: string,
     ) => {
-      captureCommandTelemetry("rejectVerticalDiffBlock", {
-        edit,
-      });
+      captureCommandTelemetry("quickFix");
 
-      sidebar.webviewProtocol?.request("newSessionWithPrompt", {
-        prompt: `${
-          edit ? "/edit " : ""
-        }${code}\n\nHow do I fix this problem in the above code?: ${message}`,
-      });
+      const prompt = `How do I fix the following problem in the above code?: ${diagnosticMessage}`;
 
-      if (!edit) {
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      }
+      addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
+
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
     },
     "continue.defaultQuickActionDocstring": async (range: vscode.Range) => {
       captureCommandTelemetry("defaultQuickActionDocstring");
@@ -288,28 +280,26 @@ const commandsMap: (
         range,
       );
     },
-    "continue.defaultQuickActionExplain": async (code: string) => {
+    "continue.defaultQuickActionExplain": async (range: vscode.Range) => {
       captureCommandTelemetry("defaultQuickActionExplain");
 
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
+      const prompt =
+        `Explain the above code in a few sentences without ` +
+        `going into detail on specific methods.`;
 
-      sidebar.webviewProtocol?.request("userInput", {
-        input:
-          `Explain the following code in a few sentences without ` +
-          `going into detail on specific methods:\n\n ${code}`,
-      });
+      addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
+
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
     },
     "continue.customQuickActionSendToChat": async (
       prompt: string,
-      code: string,
+      range: vscode.Range,
     ) => {
       captureCommandTelemetry("customQuickActionSendToChat");
 
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
+      addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
 
-      sidebar.webviewProtocol?.request("userInput", {
-        input: `${prompt}:\n\n ${code}`,
-      });
+      vscode.commands.executeCommand("continue.continueGUIView.focus");
     },
     "continue.customQuickActionStreamInlineEdit": async (
       prompt: string,
@@ -340,9 +330,6 @@ const commandsMap: (
         undefined,
       );
       await addHighlightedCodeToContext(true, sidebar.webviewProtocol);
-    },
-    "continue.toggleAuxiliaryBar": () => {
-      vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
     },
     "continue.quickEdit": (injectedPrompt?: string) => {
       captureCommandTelemetry("quickEdit");
@@ -598,8 +585,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-              ? StatusBarStatus.Paused
-              : StatusBarStatus.Disabled;
+            ? StatusBarStatus.Paused
+            : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =

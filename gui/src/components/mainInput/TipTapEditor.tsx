@@ -597,7 +597,9 @@ function TipTapEditor(props: TipTapEditorProps) {
           rif.filepath,
           await ideMessenger.ide.getWorkspaceDirs(),
         );
-        const rangeStr = `(${rif.range.start.line + 1}-${rif.range.end.line + 1})`;
+        const rangeStr = `(${rif.range.start.line + 1}-${
+          rif.range.end.line + 1
+        })`;
         const item: ContextItemWithId = {
           content: rif.contents,
           name: `${basename} ${rangeStr}`,
@@ -626,6 +628,16 @@ function TipTapEditor(props: TipTapEditorProps) {
             },
           })
           .run();
+
+        if (data.prompt) {
+          editor.commands.focus("end");
+          editor.commands.insertContent(data.prompt);
+        }
+
+        if (data.shouldRun) {
+          onEnterRef.current({ useCodebase: false, noContext: true });
+        }
+
         setTimeout(() => {
           editor.commands.blur();
           editor.commands.focus("end");
@@ -639,6 +651,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       historyLength,
       ignoreHighlightedCode,
       props.isMainInput,
+      onEnterRef.current,
     ],
   );
 
