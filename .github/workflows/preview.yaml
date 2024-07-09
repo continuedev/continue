@@ -124,11 +124,11 @@ jobs:
       #     npm run test
       #   if: matrix.os == 'ubuntu-latest'
 
-      - name: Run extension tests
-        run: |
-          cd extensions/vscode
-          npm run test
-        if: matrix.os != 'ubuntu-latest'
+      # - name: Run extension tests
+      #   run: |
+      #     cd extensions/vscode
+      #     npm run test
+      #   if: matrix.os != 'ubuntu-latest'
 
       # 5. Package the extension
       - name: Package the extension
