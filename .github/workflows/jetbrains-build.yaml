@@ -346,7 +346,7 @@ jobs:
 
       # Run Qodana inspections
       - name: Qodana - Code Inspection
-        uses: JetBrains/qodana-action@v2024.1.5
+        uses: JetBrains/qodana-action@v2024.1.8
         with:
           cache-default-branch-only: true
 
