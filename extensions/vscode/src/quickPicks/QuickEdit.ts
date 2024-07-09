@@ -15,6 +15,7 @@ interface QuickEditConfig {
 export class QuickEdit {
   private static historyKey = "quickEditHistory";
   private static maxHistoryLength = 50;
+  private contextProviderStr?: string;
 
   constructor(
     private readonly verticalDiffManager: VerticalPerLineDiffManager,
@@ -79,7 +80,6 @@ export class QuickEdit {
       .map((provider) => {
         return {
           label: provider.description.displayTitle,
-          description: provider.description.title,
           detail: provider.description.description,
         };
       });
@@ -107,44 +107,50 @@ export class QuickEdit {
     return context;
   }
 
-  private async _showContextProviderPicker(context: QuickEditConfig) {
-    const contextProviderItems = this._getContextProviderItems();
+  private async _showContextProviderPicker() {
+    const contextProviderItems = await this._getContextProviderItems();
 
-    const selectedProviders = await vscode.window.showQuickPick(
-      contextProviderItems,
-      {
-        title: "Context providers",
-        placeHolder: "Select a context provider to add to your prompt",
-        canPickMany: true,
-      },
-    );
+    const quickPick = vscode.window.createQuickPick();
 
-    let inputWithContext = "";
+    quickPick.items = contextProviderItems;
+    quickPick.title = "Context providers";
+    quickPick.placeholder = "Select a context provider to add to your prompt";
+    quickPick.canSelectMany = true;
+    quickPick.buttons = [vscode.QuickInputButtons.Back];
 
-    // if (selectedProviders) {
-    //   inputWithContext = await this._addSelectedProvidersToInput(
-    //     selectedProviders,
-    //     selectedProviders,
-    //   );
-    // }
+    quickPick.show();
 
-    return inputWithContext;
+    const val = await new Promise<string | undefined>((resolve, reject) => {
+      quickPick.onDidTriggerButton((item) => {
+        resolve(undefined);
+      });
+
+      quickPick.onDidAccept(async () => {
+        const selectedItems = Array.from(quickPick.selectedItems);
+        const context = await this._getContextProvidersString(selectedItems);
+        resolve(context);
+      });
+    });
+
+    quickPick.dispose();
+
+    return val;
   }
 
-  private async _addSelectedProvidersToInput(
-    input: string,
+  private async _getContextProvidersString(
     selectedProviders: vscode.QuickPickItem[] | undefined,
   ): Promise<string> {
     const llm = await this.configHandler.llmFromTitle();
     const config = await this.configHandler.loadConfig();
 
-    const context = (
+    const contextItems = (
       await Promise.all(
-        selectedProviders?.map((providerTitle) => {
+        selectedProviders?.map((selectedProvider) => {
           const provider = config.contextProviders?.find(
             (provider) =>
-              provider.description.title === providerTitle.description,
+              provider.description.displayTitle === selectedProvider.label,
           );
+
           if (!provider) {
             return [];
           }
@@ -154,7 +160,7 @@ export class QuickEdit {
             reranker: config.reranker,
             ide: this.ide,
             llm,
-            fullInput: input || "",
+            fullInput: "",
             selectedCode: [],
             fetch: (url, init) =>
               fetchwithRequestOptions(url, init, config.requestOptions),
@@ -164,18 +170,22 @@ export class QuickEdit {
     ).flat();
 
     return (
-      context.map((item) => item.content).join("\n\n") + "\n\n---\n\n" + input
+      contextItems.map((item) => item.content).join("\n\n") + "\n\n---\n\n"
     );
   }
 
   private async _streamEditWithInputAndContext(
-    input: string,
+    prompt: string,
     context: QuickEditConfig,
   ) {
+    if (this.contextProviderStr) {
+      prompt = `${this.contextProviderStr}${prompt}`;
+    }
+
     this.webviewProtocol.request("incrementFtc", undefined);
 
     await this.verticalDiffManager.streamEdit(
-      input,
+      prompt,
       context.defaultModelTitle,
       undefined,
       context.previousInput,
@@ -204,6 +214,7 @@ export class QuickEdit {
     this.context.globalState.update(QuickEdit.historyKey, history);
   }
 
+  // TODO: Add a back button using `createQuickPick`
   async _showHistoryPicker(): Promise<string | undefined> {
     const historyItems = this.context.globalState
       .get(QuickEdit.historyKey, [])
@@ -239,6 +250,7 @@ export class QuickEdit {
     };
 
     const quickPick = vscode.window.createQuickPick();
+
     quickPick.items = items;
     quickPick.placeholder = "Enter a prompt to edit your code (⏎ to submit)";
     quickPick.title = this._getQuickPickTitle();
@@ -278,7 +290,7 @@ export class QuickEdit {
     const context = await this._getQuickEditConfig(injectedPrompt);
     const quickPickItemOrInput = await this._showInitialQuickPick(context);
 
-    let prompt = undefined;
+    let prompt: string | undefined = undefined;
 
     switch (quickPickItemOrInput) {
       case "History":
@@ -294,11 +306,16 @@ export class QuickEdit {
           selection: quickPickItemOrInput,
         });
 
-        prompt = (await this._showContextProviderPicker(context)) ?? "";
+        this.contextProviderStr =
+          (await this._showContextProviderPicker()) ?? "";
+
+        // Recurse back to let the user write their prompt
+        this.run(injectedPrompt);
+
         break;
 
       default:
-        // Assume it was user input
+        // If it wasn't a label we can assume it was user input
         if (quickPickItemOrInput) {
           prompt = quickPickItemOrInput;
           this._appendToHistory(quickPickItemOrInput);

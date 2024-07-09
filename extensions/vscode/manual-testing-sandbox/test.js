@@ -8,6 +8,8 @@ class Calculator {
     return this;
   }
 
+  x: string = 5;
+
   subtract(number) {
     this.result -= number;
     return this;
