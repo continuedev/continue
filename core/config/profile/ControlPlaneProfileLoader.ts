@@ -51,7 +51,9 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
     const ideInfo = await this.ide.getIdeInfo();
     const settings =
       this.workspaceSettings ??
-      (await this.controlPlaneClient.getSettingsForWorkspace(this.profileId));
+      ((await this.controlPlaneClient.getSettingsForWorkspace(
+        this.profileId,
+      )) as any);
 
     // First construct a SerializedContinueConfig from the ControlPlaneSettings
     const serializedConfig: SerializedContinueConfig = {
