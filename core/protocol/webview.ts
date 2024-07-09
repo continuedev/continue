@@ -1,4 +1,5 @@
 import type { ContextItemWithId, IndexingProgressUpdate } from "..";
+import { ReviewResult } from "../review/review";
 
 export type ToWebviewFromIdeOrCoreProtocol = {
   configUpdate: [undefined, void];
@@ -12,4 +13,6 @@ export type ToWebviewFromIdeOrCoreProtocol = {
     },
     void,
   ];
+  "review/open": [undefined, void];
+  "review/update": [ReviewResult[], void];
 };

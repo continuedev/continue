@@ -16,6 +16,7 @@ import type {
 } from "..";
 import type { AutocompleteInput } from "../autocomplete/completionProvider";
 import { ProfileDescription } from "../config/ConfigHandler";
+import { ReviewResult } from "../review/review";
 
 export type ProtocolGeneratorType<T> = AsyncGenerator<{
   done?: boolean;
@@ -145,4 +146,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "profiles/switch": [{ id: string }, undefined];
+
+  "review/redoAll": [undefined, void];
+  "review/getResults": [undefined, ReviewResult[]];
 };
