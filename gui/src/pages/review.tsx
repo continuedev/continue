@@ -6,14 +6,14 @@ import {
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
 import { ReviewResult } from "core/review/review";
-import { getBasename } from "core/util";
-import { useEffect, useState } from "react";
+import { getLastNPathParts } from "core/util";
+import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { Button } from "../components";
 import StyledMarkdownPreview from "../components/markdown/StyledMarkdownPreview";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
 import { useWebviewListener } from "../hooks/useWebviewListener";
-import { ideRequest } from "../util/ide";
 
 const FileHeader = styled.div`
   display: flex;
@@ -61,7 +61,7 @@ function FileResult(props: FileHeaderProps) {
           <XCircleIcon width="1.2em" height="1.2em" color="red" />
         )}
 
-        {getBasename(props.result.filepath, 2)}
+        {getLastNPathParts(props.result.filepath, 2)}
       </FileHeader>
       {open && (
         <StyledMarkdownPreview
@@ -75,10 +75,11 @@ function FileResult(props: FileHeaderProps) {
 
 function Review() {
   useNavigationListener();
+  const ideMessenger = useContext(IdeMessengerContext);
   const [reviewResults, setReviewResults] = useState<ReviewResult[]>([]);
 
   useEffect(() => {
-    ideRequest("review/getResults", undefined).then((results) => {
+    ideMessenger.request("review/getResults", undefined).then((results) => {
       setReviewResults(results);
     });
   }, []);
@@ -105,7 +106,7 @@ function Review() {
       <h2>Code Review (experimental)</h2>
       <Button
         onClick={() => {
-          ideRequest("review/redoAll", undefined);
+          ideMessenger.request("review/redoAll", undefined);
         }}
       >
         Redo All
