@@ -111,8 +111,8 @@ export async function getLanguageForFile(
     }
     let language = nameToLanguage.get(languageName);
     if (!language) {
-        language = await loadLanguageForFileExt(extension);
-        nameToLanguage.set(languageName, language);
+      language = await loadLanguageForFileExt(extension);
+      nameToLanguage.set(languageName, language);
     }
     return language;
   } catch (e) {
@@ -152,7 +152,9 @@ export async function getQueryForFile(
   return query;
 }
 
-async function loadLanguageForFileExt(fileExtension: string): Promise<Language> {
+async function loadLanguageForFileExt(
+  fileExtension: string,
+): Promise<Language> {
   const wasmPath = path.join(
     __dirname,
     ...(process.env.NODE_ENV === "test"

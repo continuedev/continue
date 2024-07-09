@@ -1,10 +1,9 @@
-import Handlebars from "handlebars";
 import ignore from "ignore";
 import OpenAI from "openai";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import { RangeInFileWithContents } from "../commands/util.js";
-import { IConfigHandler } from "../config/IConfigHandler.js";
+import { ConfigHandler } from "../config/ConfigHandler.js";
 import { TRIAL_FIM_MODEL } from "../config/onboarding.js";
 import { streamLines } from "../diff/util.js";
 import {
@@ -145,7 +144,7 @@ export class CompletionProvider {
   private static lastUUID: string | undefined = undefined;
 
   constructor(
-    private readonly configHandler: IConfigHandler,
+    private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly getLlm: () => Promise<ILLM | undefined>,
     private readonly _onError: (e: any) => void,
@@ -201,13 +200,17 @@ export class CompletionProvider {
       const outcome = this._outcomes.get(completionId)!;
       outcome.accepted = true;
       logDevData("autocomplete", outcome);
-      Telemetry.capture("autocomplete", {
-        accepted: outcome.accepted,
-        modelName: outcome.modelName,
-        modelProvider: outcome.modelProvider,
-        time: outcome.time,
-        cacheHit: outcome.cacheHit,
-      });
+      Telemetry.capture(
+        "autocomplete",
+        {
+          accepted: outcome.accepted,
+          modelName: outcome.modelName,
+          modelProvider: outcome.modelProvider,
+          time: outcome.time,
+          cacheHit: outcome.cacheHit,
+        },
+        true,
+      );
       this._outcomes.delete(completionId);
 
       this.bracketMatchingService.handleAcceptedCompletion(
@@ -358,9 +361,13 @@ export class CompletionProvider {
       outcome.accepted = false;
       logDevData("autocomplete", outcome);
       const { prompt, completion, ...restOfOutcome } = outcome;
-      Telemetry.capture("autocomplete", {
-        ...restOfOutcome,
-      });
+      Telemetry.capture(
+        "autocomplete",
+        {
+          ...restOfOutcome,
+        },
+        true,
+      );
       this._logRejectionTimeouts.delete(completionId);
     }, COUNT_COMPLETION_REJECTED_AFTER);
     this._outcomes.set(completionId, outcome);

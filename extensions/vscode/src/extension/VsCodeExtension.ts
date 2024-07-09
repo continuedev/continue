@@ -1,5 +1,5 @@
 import { IContextProvider } from "core";
-import { IConfigHandler } from "core/config/IConfigHandler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
@@ -21,16 +21,16 @@ import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
+import { getControlPlaneSessionInfo } from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
-import { CONTINUE_WORKSPACE_KEY } from "../util/workspaceConfig";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
 
-  private configHandler: IConfigHandler;
+  private configHandler: ConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
   private tabAutocompleteModel: TabAutocompleteModel;
@@ -66,7 +66,7 @@ export class VsCodeExtension {
       },
     );
     let resolveConfigHandler: any = undefined;
-    const configHandlerPromise = new Promise<IConfigHandler>((resolve) => {
+    const configHandlerPromise = new Promise<ConfigHandler>((resolve) => {
       resolveConfigHandler = resolve;
     });
     this.sidebar = new ContinueGUIWebviewViewProvider(
@@ -243,6 +243,13 @@ export class VsCodeExtension {
     vscode.authentication.onDidChangeSessions((e) => {
       if (e.provider.id === "github") {
         this.configHandler.reloadConfig();
+      } else if (e.provider.id === "continue") {
+        this.webviewProtocolPromise.then(async (webviewProtocol) => {
+          const sessionInfo = await getControlPlaneSessionInfo(true);
+          webviewProtocol.request("didChangeControlPlaneSessionInfo", {
+            sessionInfo,
+          });
+        });
       }
     });
 

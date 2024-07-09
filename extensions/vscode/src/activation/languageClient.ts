@@ -65,7 +65,7 @@ function startPythonLanguageServer(context: ExtensionContext): LanguageClient {
       configurationSection: "pyls",
     },
   };
-  return new LanguageClient(command, serverOptions, clientOptions);
+  return new LanguageClient(command, serverOptions, clientOptions)
 }
 
 async function startPylance(context: ExtensionContext) {
@@ -112,3 +112,4 @@ async function startPylance(context: ExtensionContext) {
   );
   return client;
 }
+
