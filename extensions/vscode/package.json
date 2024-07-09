@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.177",
+  "version": "0.9.178",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -141,12 +141,6 @@
         "command": "continue.quickEdit",
         "category": "Continue",
         "title": "Generate Code",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.toggleAuxiliaryBar",
-        "category": "Continue",
-        "title": "Toggle Right Sidebar",
         "group": "Continue"
       },
       {
@@ -304,11 +298,6 @@
         "key": "ctrl+i"
       },
       {
-        "command": "continue.toggleAuxiliaryBar",
-        "mac": "alt+cmd+l",
-        "key": "alt+ctrl+l"
-      },
-      {
         "command": "continue.debugTerminal",
         "mac": "cmd+shift+r",
         "key": "ctrl+shift+r"
@@ -336,9 +325,6 @@
       "commandPalette": [
         {
           "command": "continue.quickEdit"
-        },
-        {
-          "command": "continue.toggleAuxiliaryBar"
         },
         {
           "command": "continue.focusContinueInput"

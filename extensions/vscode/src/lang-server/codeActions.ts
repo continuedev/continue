@@ -15,34 +15,29 @@ class ContinueQuickFixProvider implements vscode.CodeActionProvider {
       return [];
     }
 
-    const createQuickFix = (edit: boolean) => {
-      const diagnostic = context.diagnostics[0];
-      const quickFix = new vscode.CodeAction(
-        edit ? "Fix with Continue" : "Ask Continue",
-        vscode.CodeActionKind.QuickFix,
-      );
-      quickFix.isPreferred = false;
-      const surroundingRange = new vscode.Range(
-        Math.max(0, range.start.line - 3),
-        0,
-        Math.min(document.lineCount, range.end.line + 3),
-        0,
-      );
-      quickFix.command = {
-        command: "continue.quickFix",
-        title: "Continue Quick Fix",
-        arguments: [
-          diagnostic.message,
-          document.getText(surroundingRange),
-          edit,
-        ],
-      };
-      return quickFix;
+    const diagnostic = context.diagnostics[0];
+
+    const quickFix = new vscode.CodeAction(
+      "Ask Continue",
+      vscode.CodeActionKind.QuickFix,
+    );
+
+    quickFix.isPreferred = false;
+
+    const surroundingRange = new vscode.Range(
+      Math.max(0, range.start.line - 3),
+      0,
+      Math.min(document.lineCount, range.end.line + 3),
+      0,
+    );
+
+    quickFix.command = {
+      command: "continue.quickFix",
+      title: "Continue Quick Fix",
+      arguments: [surroundingRange, diagnostic.message],
     };
-    return [
-      // createQuickFix(true),
-      createQuickFix(false),
-    ];
+
+    return [quickFix];
   }
 }
 

@@ -57,16 +57,13 @@ class OpenAI extends BaseLLM {
   protected _convertMessage(message: ChatMessage) {
     if (typeof message.content === "string") {
       return message;
-    } else if (
+    } else if (!message.content.some((item) => item.type !== "text")) {
       // If no multi-media is in the message, just send as text
       // for compatibility with OpenAI "compatible" servers
       // that don't support multi-media format
-      message.content.length === 1 &&
-      message.content[0].type === "text"
-    ) {
       return {
         ...message,
-        content: message.content[0].text,
+        content: message.content.map((item) => item.text).join(""),
       };
     }
 

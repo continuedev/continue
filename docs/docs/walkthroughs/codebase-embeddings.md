@@ -294,7 +294,7 @@ Continue offers a free trial of Voyage AI's reranking model.
 }
 ```
 
-## Customizing which files are indexed
+## Ignore files during indexing
 
 Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.continueignore` file, which follows the exact same rules as `.gitignore`.
 
