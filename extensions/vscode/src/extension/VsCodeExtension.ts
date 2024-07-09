@@ -14,19 +14,19 @@ import {
   setupStatusBar,
 } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
-import { registerDebugTracker } from "../debug/debug";
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
+import { registerDebugTracker } from "../debug/debug";
 import { DiffManager } from "../diff/horizontal";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
 import { getControlPlaneSessionInfo } from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
-import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)

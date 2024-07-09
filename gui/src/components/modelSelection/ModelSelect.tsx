@@ -2,8 +2,8 @@ import { Listbox } from "@headlessui/react";
 import {
   ChevronDownIcon,
   CubeIcon,
-  TrashIcon,
   PlusIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
