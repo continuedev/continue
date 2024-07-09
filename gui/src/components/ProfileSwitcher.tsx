@@ -20,6 +20,7 @@ import {
 } from ".";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAuth } from "../hooks/useAuth";
+import { useWebviewListener } from "../hooks/useWebviewListener";
 import { RootState } from "../redux/store";
 import { getFontSize, isJetBrains } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
@@ -145,6 +146,14 @@ function ProfileSwitcher(props: {}) {
   useEffect(() => {
     ideMessenger.request("config/listProfiles", undefined).then(setProfiles);
   }, []);
+
+  useWebviewListener(
+    "didChangeAvailableProfiles",
+    async (data) => {
+      setProfiles(data.profiles);
+    },
+    [],
+  );
 
   const topDiv = document.getElementById("profile-select-top-div");
 

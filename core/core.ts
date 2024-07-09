@@ -87,6 +87,9 @@ export class Core {
     this.configHandler.onConfigUpdate(
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
+    this.configHandler.onDidChangeAvailableProfiles((profiles) =>
+      this.messenger.send("didChangeAvailableProfiles", { profiles }),
+    );
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
     let codebaseIndexerResolve: (_: any) => void | undefined;

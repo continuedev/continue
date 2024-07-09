@@ -161,6 +161,10 @@ export class ConfigHandler {
         this.profiles.push(new ProfileLifecycleManager(profileLoader));
       });
 
+      this.notifyProfileListeners(
+        this.profiles.map((profile) => profile.profileDescription),
+      );
+
       // Check the last selected workspace, and reload if it isn't local
       const workspaceId = await this.getWorkspaceId();
       const lastSelectedWorkspaceIds =
@@ -183,7 +187,7 @@ export class ConfigHandler {
   async setSelectedProfile(profileId: string) {
     this.selectedProfileId = profileId;
     const newConfig = await this.loadConfig();
-    this.notifyListerners(newConfig);
+    this.notifyConfigListerners(newConfig);
   }
 
   // A unique ID for the current workspace, built from folder names
@@ -198,7 +202,20 @@ export class ConfigHandler {
     this.reloadConfig();
   }
 
-  private notifyListerners(newConfig: ContinueConfig) {
+  private profilesListeners: ((profiles: ProfileDescription[]) => void)[] = [];
+  onDidChangeAvailableProfiles(
+    listener: (profiles: ProfileDescription[]) => void,
+  ) {
+    this.profilesListeners.push(listener);
+  }
+
+  private notifyProfileListeners(profiles: ProfileDescription[]) {
+    for (const listener of this.profilesListeners) {
+      listener(profiles);
+    }
+  }
+
+  private notifyConfigListerners(newConfig: ContinueConfig) {
     // Notify listeners that config changed
     for (const listener of this.updateListeners) {
       listener(newConfig);
@@ -214,7 +231,7 @@ export class ConfigHandler {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
     const newConfig = await this.currentProfile.reloadConfig();
     this.inactiveProfiles.forEach((profile) => profile.clearConfig());
-    this.notifyListerners(newConfig);
+    this.notifyConfigListerners(newConfig);
   }
 
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {
