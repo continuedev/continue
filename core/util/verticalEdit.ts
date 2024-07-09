@@ -60,10 +60,14 @@ export async function* streamDiffLines(
   language: string | undefined,
   onlyOneInsertion?: boolean,
 ): AsyncGenerator<DiffLine> {
-  Telemetry.capture("inlineEdit", {
-    model: llm.model,
-    provider: llm.providerName,
-  });
+  Telemetry.capture(
+    "inlineEdit",
+    {
+      model: llm.model,
+      provider: llm.providerName,
+    },
+    true,
+  );
 
   // Strip common indentation for the LLM, then add back after generation
   let oldLines =

@@ -7,7 +7,6 @@ import type {
 } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider.js";
 import { ConfigHandler } from "./config/ConfigHandler.js";
-import { IConfigHandler } from "./config/IConfigHandler";
 import {
   setupApiKeysMode,
   setupFreeTrialMode,
@@ -17,6 +16,7 @@ import {
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
+import { ControlPlaneClient } from "./control-plane/client";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
 import { DocsService } from "./indexing/docs/DocsService";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
@@ -34,11 +34,12 @@ import { streamDiffLines } from "./util/verticalEdit.js";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
-  configHandler: IConfigHandler;
+  configHandler: ConfigHandler;
   codebaseIndexerPromise: Promise<CodebaseIndexer>;
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
   indexingState: IndexingProgressUpdate;
+  controlPlaneClient: ControlPlaneClient;
   private globalContext = new GlobalContext();
   private docsService = DocsService.getInstance();
   private readonly indexingPauseToken = new PauseToken(
@@ -73,13 +74,21 @@ export class Core {
   ) {
     this.indexingState = { status: "loading", desc: "loading", progress: 0 };
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
+    const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
+      silent: true,
+    });
+    this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
       this.onWrite,
+      this.controlPlaneClient,
     );
     this.configHandler.onConfigUpdate(
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
+    );
+    this.configHandler.onDidChangeAvailableProfiles((profiles) =>
+      this.messenger.send("didChangeAvailableProfiles", { profiles }),
     );
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
@@ -206,6 +215,9 @@ export class Core {
     on("config/ideSettingsUpdate", (msg) => {
       this.configHandler.updateIdeSettings(msg.data);
     });
+    on("config/listProfiles", (msg) => {
+      return this.configHandler.listProfiles();
+    });
 
     // Context providers
     on("context/addDocs", async (msg) => {
@@ -268,9 +280,13 @@ export class Core {
             fetchwithRequestOptions(url, init, config.requestOptions),
         });
 
-        Telemetry.capture("useContextProvider", {
-          name: provider.description.title,
-        });
+        Telemetry.capture(
+          "useContextProvider",
+          {
+            name: provider.description.title,
+          },
+          true,
+        );
 
         return items.map((item) => ({
           ...item,
@@ -282,12 +298,15 @@ export class Core {
       }
     });
 
-    on("config/getBrowserSerialized", (msg) => {
-      return this.configHandler.getSerializedConfig();
+    on("config/getSerializedProfileInfo", async (msg) => {
+      return {
+        config: await this.configHandler.getSerializedConfig(),
+        profileId: this.configHandler.currentProfile.profileId,
+      };
     });
 
     async function* llmStreamChat(
-      configHandler: IConfigHandler,
+      configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["llm/streamChat"][0]>,
     ) {
@@ -322,7 +341,7 @@ export class Core {
     );
 
     async function* llmStreamComplete(
-      configHandler: IConfigHandler,
+      configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
 
       msg: Message<ToCoreProtocol["llm/streamComplete"][0]>,
@@ -388,7 +407,7 @@ export class Core {
     });
 
     async function* runNodeJsSlashCommand(
-      configHandler: IConfigHandler,
+      configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["command/run"][0]>,
       messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
@@ -413,9 +432,13 @@ export class Core {
         throw new Error(`Unknown slash command ${slashCommandName}`);
       }
 
-      Telemetry.capture("useSlashCommand", {
-        name: slashCommandName,
-      });
+      Telemetry.capture(
+        "useSlashCommand",
+        {
+          name: slashCommandName,
+        },
+        true,
+      );
 
       const checkActiveInterval = setInterval(() => {
         if (abortedMessageIds.has(msg.messageId)) {
@@ -477,7 +500,7 @@ export class Core {
     });
 
     async function* streamDiffLinesGenerator(
-      configHandler: IConfigHandler,
+      configHandler: ConfigHandler,
       abortedMessageIds: Set<string>,
       msg: Message<ToCoreProtocol["streamDiffLines"][0]>,
     ) {
@@ -578,6 +601,10 @@ export class Core {
       if (this.indexingState.status !== "loading") {
         this.messenger.request("indexProgress", this.indexingState);
       }
+    });
+
+    on("didChangeSelectedProfile", (msg) => {
+      this.configHandler.setSelectedProfile(msg.data.id);
     });
   }
 

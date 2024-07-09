@@ -20,6 +20,7 @@ import {
   editConfigJson,
   getConfigJsonPath,
   getContinueGlobalPath,
+  internalBetaPathExists,
 } from "core/util/paths";
 import * as vscode from "vscode";
 import { executeGotoProvider } from "./autocomplete/lsp";
@@ -520,6 +521,11 @@ class VsCodeIde implements IDE {
         60,
       ),
       userToken: settings.get<string>("userToken", ""),
+      enableControlServerBeta: internalBetaPathExists(),
+      // settings.get<boolean>(
+      //   "enableControlServerBeta",
+      //   false,
+      // ),
     };
     return ideSettings;
   }

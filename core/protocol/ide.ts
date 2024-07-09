@@ -11,6 +11,7 @@ import type {
   RangeInFile,
   Thread,
 } from "..";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
 
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
@@ -75,5 +76,17 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   gotoDefinition: [{ location: Location }, RangeInFile[]];
 
   getGitHubAuthToken: [undefined, string | undefined];
+  getControlPlaneSessionInfo: [
+    { silent: boolean },
+    ControlPlaneSessionInfo | undefined,
+  ];
   pathSep: [undefined, string];
+};
+
+export type ToWebviewOrCoreFromIdeProtocol = {
+  didChangeActiveTextEditor: [{ filepath: string }, void];
+  didChangeControlPlaneSessionInfo: [
+    { sessionInfo: ControlPlaneSessionInfo | undefined },
+    void,
+  ];
 };

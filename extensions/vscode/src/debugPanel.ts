@@ -1,5 +1,5 @@
 import type { FileEdit } from "core";
-import { IConfigHandler } from "core/config/IConfigHandler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import * as vscode from "vscode";
 import { getTheme } from "./util/getTheme";
 import { getExtensionVersion } from "./util/util";
@@ -46,7 +46,7 @@ export class ContinueGUIWebviewViewProvider
   }
 
   constructor(
-    private readonly configHandlerPromise: Promise<IConfigHandler>,
+    private readonly configHandlerPromise: Promise<ConfigHandler>,
     private readonly windowId: string,
     private readonly extensionContext: vscode.ExtensionContext,
   ) {

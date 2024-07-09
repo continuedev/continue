@@ -172,22 +172,7 @@ class ViewLogsAction : AnAction() {
     }
 }
 
-class ToggleAuxiliaryBarAction : AnAction() {
-    override fun actionPerformed(e: AnActionEvent) {
-        val project = e.project ?: return
-        val toolWindowManager = ToolWindowManager.getInstance(project)
-        val toolWindow = toolWindowManager.getToolWindow("Continue")
 
-        if (toolWindow != null) {
-            if (toolWindow.isVisible) {
-                toolWindow.component.transferFocus()
-                toolWindow.hide(null)
-            } else {
-                toolWindow.activate(null)
-            }
-        }
-    }
-}
 
 class FocusContinueInputWithoutClearAction : AnAction() {
     override fun actionPerformed(e: AnActionEvent) {

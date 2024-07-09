@@ -104,6 +104,7 @@ type State = {
   sessionId: string;
   defaultModelTitle: string;
   mainEditorContent?: JSONContent;
+  selectedProfileId: string;
 };
 
 const initialState: State = {
@@ -135,6 +136,7 @@ const initialState: State = {
   title: "New Session",
   sessionId: v4(),
   defaultModelTitle: "GPT-4",
+  selectedProfileId: "local",
 };
 
 export const stateSlice = createSlice({
@@ -468,6 +470,12 @@ export const stateSlice = createSlice({
         defaultModelTitle: payload.title,
       };
     },
+    setSelectedProfileId: (state, { payload }: PayloadAction<string>) => {
+      return {
+        ...state,
+        selectedProfileId: payload,
+      };
+    },
   },
 });
 
@@ -491,5 +499,6 @@ export const {
   setMessageAtIndex,
   clearLastResponse,
   consumeMainEditorContent,
+  setSelectedProfileId,
 } = stateSlice.actions;
 export default stateSlice.reducer;

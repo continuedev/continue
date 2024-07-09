@@ -1,5 +1,5 @@
 import { IDE } from "core";
-import { IConfigHandler } from "core/config/IConfigHandler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
@@ -17,7 +17,7 @@ interface QuickEditFlowStuff {
 export class QuickEdit {
   constructor(
     private readonly verticalDiffManager: VerticalPerLineDiffManager,
-    private readonly configHandler: IConfigHandler,
+    private readonly configHandler: ConfigHandler,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: IDE,
     private readonly context: vscode.ExtensionContext,

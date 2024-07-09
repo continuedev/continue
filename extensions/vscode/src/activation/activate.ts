@@ -4,6 +4,7 @@ import path from "node:path";
 import * as vscode from "vscode";
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
+import { WorkOsAuthProvider } from "../stubs/WorkOsAuthProvider";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeContinueApi } from "./api";
@@ -16,6 +17,11 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Register commands and providers
   registerQuickFixProvider();
   setupInlineTips(context);
+
+  // Register auth provider
+  const workOsAuthProvider = new WorkOsAuthProvider(context);
+  await workOsAuthProvider.initialize();
+  context.subscriptions.push(workOsAuthProvider);
 
   const vscodeExtension = new VsCodeExtension(context);
 
@@ -33,9 +39,13 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Load Continue configuration
   if (!context.globalState.get("hasBeenInstalled")) {
     context.globalState.update("hasBeenInstalled", true);
-    Telemetry.capture("install", {
-      extensionVersion: getExtensionVersion(),
-    });
+    Telemetry.capture(
+      "install",
+      {
+        extensionVersion: getExtensionVersion(),
+      },
+      true,
+    );
   }
 
   const api = new VsCodeContinueApi(vscodeExtension);

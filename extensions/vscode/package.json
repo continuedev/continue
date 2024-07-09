@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.177",
+  "version": "0.9.181",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -144,12 +144,6 @@
         "group": "Continue"
       },
       {
-        "command": "continue.toggleAuxiliaryBar",
-        "category": "Continue",
-        "title": "Toggle Right Sidebar",
-        "group": "Continue"
-      },
-      {
         "command": "continue.focusContinueInput",
         "category": "Continue",
         "title": "Add Highlighted Code to Context",
@@ -261,6 +255,11 @@
         "key": "ctrl+shift+l"
       },
       {
+        "command": "continue.toggleAuxiliaryBar",
+        "mac": "alt+cmd+l",
+        "key": "alt+ctrl+l"
+      },
+      {
         "command": "continue.acceptDiff",
         "mac": "shift+cmd+enter",
         "key": "shift+ctrl+enter"
@@ -304,11 +303,6 @@
         "key": "ctrl+i"
       },
       {
-        "command": "continue.toggleAuxiliaryBar",
-        "mac": "alt+cmd+l",
-        "key": "alt+ctrl+l"
-      },
-      {
         "command": "continue.debugTerminal",
         "mac": "cmd+shift+r",
         "key": "ctrl+shift+r"
@@ -336,9 +330,6 @@
       "commandPalette": [
         {
           "command": "continue.quickEdit"
-        },
-        {
-          "command": "continue.toggleAuxiliaryBar"
         },
         {
           "command": "continue.focusContinueInput"
@@ -568,6 +559,7 @@
     "cors": "^2.8.5",
     "dbinfoz": "^0.1.4",
     "downshift": "^7.6.0",
+    "esbuild": "^0.17.19",
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",
@@ -598,7 +590,6 @@
     "uuid": "^9.0.1",
     "uuidv4": "^6.2.13",
     "vectordb": "^0.4.20",
-    "esbuild": "^0.17.19",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"

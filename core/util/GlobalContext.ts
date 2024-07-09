@@ -4,6 +4,7 @@ import { getGlobalContextFilePath } from "./paths.js";
 export type GlobalContextType = {
   indexingPaused: boolean;
   selectedTabAutocompleteModel: string;
+  lastSelectedProfileForWorkspace: { [workspaceIdentifier: string]: string };
 };
 
 /**
