@@ -71,7 +71,7 @@ This setup uses Claude 3.5 Sonnet for chatting, Codestral for autocomplete, and 
     "apiKey": "[CODESTRAL_API_KEY]"
   },
   "embeddingsProvider": {
-    "provider": "openai",
+    "provider": "voyage",
     "model": "voyage-code-2",
     "apiBase": "https://api.voyageai.com/v1/",
     "apiKey": "[VOYAGE_AI_API_KEY]"
