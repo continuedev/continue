@@ -1,4 +1,4 @@
-import type { FileEdit, RangeInFile, Thread } from "core";
+import type { FileEdit, RangeInFile, Thread, Range } from "core";
 import path from "node:path";
 import * as vscode from "vscode";
 import { threadStopped } from "../debug/debug";
@@ -335,7 +335,7 @@ export class VsCodeIdeUtils {
 
   async readRangeInFile(
     filepath: string,
-    range: vscode.Range,
+    range: Range,
   ): Promise<string> {
     const contents = new TextDecoder().decode(
       await vscode.workspace.fs.readFile(vscode.Uri.file(filepath)),
