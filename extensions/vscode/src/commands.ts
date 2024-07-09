@@ -309,6 +309,9 @@ const commandsMap: (
 
       streamInlineEdit("docstring", prompt, false, range);
     },
+    "continue.toggleAuxiliaryBar": () => {
+      vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
+    },
     "continue.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
       if (!fullScreenTab) {
@@ -585,8 +588,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-            ? StatusBarStatus.Paused
-            : StatusBarStatus.Disabled;
+              ? StatusBarStatus.Paused
+              : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =

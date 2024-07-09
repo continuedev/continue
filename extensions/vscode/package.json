@@ -255,6 +255,11 @@
         "key": "ctrl+shift+l"
       },
       {
+        "command": "continue.toggleAuxiliaryBar",
+        "mac": "alt+cmd+l",
+        "key": "alt+ctrl+l"
+      },
+      {
         "command": "continue.acceptDiff",
         "mac": "shift+cmd+enter",
         "key": "shift+ctrl+enter"
