@@ -39,7 +39,7 @@ async function* streamDiffEvents(
   completionStream: AsyncGenerator<string>,
   oldCode: string,
 ): AsyncGenerator<DiffEvent> {
-  let remainingLines = oldCode.split("\n");
+  const remainingLines = oldCode.split("\n");
   let i = 0;
   let oldLine = remainingLines.shift();
   let newLine = "";

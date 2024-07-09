@@ -1,7 +1,7 @@
 import { PlayIcon, StopIcon } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Button } from "..";
+import { getFontSize } from "../../util";
 
 const StyledButton = styled(Button)<{
   color?: string | null;
@@ -43,30 +43,11 @@ function ContinueButton(props: {
   disabled: boolean;
   showStop: boolean;
 }) {
-  const [buttonColor, setButtonColor] = useState<string | null>(
-    localStorage.getItem("continueButtonColor")
-  );
-
-  useEffect(() => {
-    const handleStorageChange = (e: any) => {
-      if (e.key === "continueButtonColor") {
-        // Update your state or do whatever you need to do here
-        setButtonColor(e.newValue);
-      }
-    };
-
-    window.addEventListener("storage", handleStorageChange);
-
-    // Don't forget to cleanup the event listener
-    return () => window.removeEventListener("storage", handleStorageChange);
-  }, []);
-
   return (
     <StyledButton
       showStop={props.showStop}
-      color={buttonColor as any}
       hidden={props.hidden}
-      style={{ fontSize: "10px" }}
+      style={{ fontSize: `${getFontSize() - 4}px` }}
       className="m-auto"
       onClick={props.disabled ? undefined : props.onClick}
       isDisabled={props.disabled}

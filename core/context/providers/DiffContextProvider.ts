@@ -1,9 +1,9 @@
-import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class DiffContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -22,7 +22,10 @@ class DiffContextProvider extends BaseContextProvider {
     return [
       {
         description: "The current git diff",
-        content: `\`\`\`git diff\n${diff}\n\`\`\``,
+        content:
+          diff.trim() === ""
+            ? "Git shows no current changes."
+            : `\`\`\`git diff\n${diff}\n\`\`\``,
         name: "Git Diff",
       },
     ];

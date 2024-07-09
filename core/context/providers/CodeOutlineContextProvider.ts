@@ -1,12 +1,10 @@
-import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
-import { getBasename } from "../../util";
-
-// import { getOutlines } from "llm-code-highlighter/dist/index.continue";
+} from "../../index.js";
+import { getBasename } from "../../util/index.js";
+import { BaseContextProvider } from "../index.js";
 
 class CodeOutlineContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -14,6 +12,7 @@ class CodeOutlineContextProvider extends BaseContextProvider {
     displayTitle: "Outline",
     description: "Definition lines only (from open files)",
     type: "normal",
+    renderInlineAs: "",
   };
 
   async getContextItems(

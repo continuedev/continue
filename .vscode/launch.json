@@ -10,22 +10,33 @@
       "request": "launch",
       "name": "Core Binary",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/pkg/out/index.js",
-      "preLaunchTask": "pkg:esbuild",
-      "outFiles": ["${workspaceFolder}/pkg/out/**/*.js"],
+      "program": "${workspaceFolder}/binary/out/index.js",
+      // "preLaunchTask": "binary:esbuild",
+      "outFiles": ["${workspaceFolder}/binary/out/**/*.js"],
       "sourceMaps": true,
       "smartStep": true,
-      "internalConsoleOptions": "openOnSessionStart"
+      "internalConsoleOptions": "openOnSessionStart",
+      "cwd": "${workspaceFolder}/binary",
+      "env": {
+        "CONTINUE_DEVELOPMENT": "true",
+        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/binary/.continue"
+      }
     },
+
     {
+      "name": "Debug Jest Tests",
       "type": "node",
       "request": "launch",
-      "name": "Jest All",
-      "program": "${workspaceFolder}/core/node_modules/.bin/jest",
-      "args": ["--runInBand"],
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/core/node_modules/.bin/jest",
+        "${fileBasenameNoExtension}",
+        "--runInBand",
+        "--config",
+        "${workspaceRoot}/core/jest.config.js"
+      ],
       "console": "integratedTerminal",
-      "internalConsoleOptions": "neverOpen",
-      "disableOptimisticBPs": true
+      "internalConsoleOptions": "neverOpen"
     },
     {
       "type": "chrome",
@@ -49,10 +60,14 @@
       "args": [
         // Pass a directory to manually test in
         "${workspaceFolder}/extensions/vscode",
-        "${workspaceFolder}/extensions/vscode/manual-testing-sandbox/example.ts",
+        "${workspaceFolder}/extensions/vscode/manual-testing-sandbox/test.js",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode"
       ],
-      "outFiles": ["${workspaceFolder}/extensions/vscode/out/**/*.js"],
+      "pauseForSourceMap": false,
+      "outFiles": [
+        "${workspaceFolder}/extensions/vscode/out/extension.js",
+        "/Users/natesesti/.continue/config.ts"
+      ],
       "preLaunchTask": "vscode-extension:build"
     },
     // Has to be run after starting the server (separately or using the compound configuration)
@@ -66,18 +81,17 @@
         // Pass a directory to run tests in
         "${workspaceFolder}/extensions/vscode/manual-testing-sandbox",
         "--extensionDevelopmentPath=${workspaceFolder}/extensions/vscode",
-        "--extensionTestsPath=${workspaceFolder}/extensions/vscode/out/test-runner/mochaRunner"
+        "--extensionTestsPath=${workspaceFolder}/extensions/vscode/out/test/runner/mochaRunner"
       ],
       "outFiles": [
         // Allows setting breakpoints in test suites across the /src folder
-        "${workspaceFolder}/extensions/vscode/out/test-suites/**/*.js",
+        "${workspaceFolder}/extensions/vscode/out/test/test-suites/**/*.js",
         // Allows setting breakpoints in mocha test runner file
-        "${workspaceFolder}/extensions/vscode/out/test-runner/**/*.js"
+        "${workspaceFolder}/extensions/vscode/out/test/runner/**/*.js"
       ],
       "internalConsoleOptions": "openOnSessionStart",
       "preLaunchTask": "vscode-extension:tests:build",
       "env": {
-        "CONTINUE_SERVER_URL": "http://localhost:65432",
         // Avoid timing out when stopping on breakpoints during debugging in VSCode
         "MOCHA_TIMEOUT": "0"
       }

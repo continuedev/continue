@@ -1,5 +1,6 @@
 import { PhotoIcon as OutlinePhotoIcon } from "@heroicons/react/24/outline";
 import { PhotoIcon as SolidPhotoIcon } from "@heroicons/react/24/solid";
+import { InputModifiers } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { useRef, useState } from "react";
 import { useSelector } from "react-redux";
@@ -12,7 +13,15 @@ import {
   vscForeground,
   vscInputBackground,
 } from "..";
+import { selectUseActiveFile } from "../../redux/selectors";
 import { defaultModelSelector } from "../../redux/selectors/modelSelectors";
+import {
+  getAltKeyLabel,
+  getFontSize,
+  getMetaKeyLabel,
+  isMetaEquivalentKeyPressed,
+} from "../../util";
+import ModelSelect from "../modelSelection/ModelSelect";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
   position: absolute;
@@ -27,7 +36,7 @@ const StyledDiv = styled.div<{ hidden?: boolean }>`
 
   align-items: center;
   z-index: 50;
-  font-size: 10px;
+  font-size: ${getFontSize() - 4}px;
 
   cursor: text;
 
@@ -55,8 +64,7 @@ const EnterButton = styled.div<{ offFocus: boolean }>`
 `;
 
 interface InputToolbarProps {
-  onEnter?: () => void;
-  useCodebase?: () => void;
+  onEnter?: (modifiers: InputModifiers) => void;
   usingCodebase?: boolean;
   onAddContextItem?: () => void;
 
@@ -65,6 +73,7 @@ interface InputToolbarProps {
   onImageFileSelected?: (file: File) => void;
 
   hidden?: boolean;
+  showNoContext: boolean;
 }
 
 function InputToolbar(props: InputToolbarProps) {
@@ -72,10 +81,12 @@ function InputToolbar(props: InputToolbarProps) {
   const [fileSelectHovered, setFileSelectHovered] = useState(false);
 
   const defaultModel = useSelector(defaultModelSelector);
+  const useActiveFile = useSelector(selectUseActiveFile);
 
   return (
     <StyledDiv hidden={props.hidden} onClick={props.onClick} id="input-toolbar">
       <span className="cursor-pointer mr-auto flex items-center">
+        <ModelSelect />
         <span
           style={{
             color: lightGray,
@@ -88,7 +99,11 @@ function InputToolbar(props: InputToolbarProps) {
           + Add Context
         </span>
         {defaultModel &&
-          modelSupportsImages(defaultModel.provider, defaultModel.model) && (
+          modelSupportsImages(
+            defaultModel.provider,
+            defaultModel.model,
+            defaultModel.title,
+          ) && (
             <span
               className="ml-1.5 mt-0.5"
               onMouseLeave={() => setFileSelectHovered(false)}
@@ -127,19 +142,37 @@ function InputToolbar(props: InputToolbarProps) {
             </span>
           )}
       </span>
-      {/* <span
-        style={{
-          color: props.usingCodebase ? vscBadgeBackground : lightGray,
-          backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
-          borderRadius: defaultBorderRadius,
-          padding: "2px 4px",
-        }}
-        onClick={props.useCodebase}
-        className={"hover:underline cursor-pointer float-right"}
-      >
-        {getMetaKeyLabel()} ⏎ Use Codebase
-      </span> */}
-
+      {props.showNoContext ? (
+        <span
+          style={{
+            color: props.usingCodebase ? vscBadgeBackground : lightGray,
+            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
+            borderRadius: defaultBorderRadius,
+            padding: "2px 4px",
+          }}
+        >
+          {getAltKeyLabel()} ⏎{" "}
+          {useActiveFile ? "No context" : "Use active file"}
+        </span>
+      ) : (
+        <span
+          style={{
+            color: props.usingCodebase ? vscBadgeBackground : lightGray,
+            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
+            borderRadius: defaultBorderRadius,
+            padding: "2px 4px",
+          }}
+          onClick={(e) => {
+            props.onEnter({
+              useCodebase: true,
+              noContext: !useActiveFile,
+            });
+          }}
+          className={"hover:underline cursor-pointer float-right"}
+        >
+          {getMetaKeyLabel()} ⏎ Use codebase
+        </span>
+      )}
       <EnterButton
         offFocus={props.usingCodebase}
         // disabled={
@@ -147,7 +180,12 @@ function InputToolbar(props: InputToolbarProps) {
         //   (!(inputRef.current as any)?.value ||
         //     typeof client === "undefined")
         // }
-        onClick={props.onEnter}
+        onClick={(e) => {
+          props.onEnter({
+            useCodebase: isMetaEquivalentKeyPressed(e),
+            noContext: useActiveFile ? e.altKey : !e.altKey,
+          });
+        }}
       >
         ⏎ Enter
       </EnterButton>

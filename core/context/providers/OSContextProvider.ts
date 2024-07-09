@@ -1,19 +1,16 @@
-//os.platform()
-//os.arch()
-
-import { BaseContextProvider } from "..";
+import os from "os";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
-import os from "os";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class OSContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
-    title: "OS",
-    displayTitle: "OS",
-    description: "OS and CPU Information.",
+    title: "os",
+    displayTitle: "Operating System",
+    description: "Operating system and CPU Information.",
     type: "normal",
   };
 
@@ -25,9 +22,9 @@ class OSContextProvider extends BaseContextProvider {
     const platform = os.platform();
     return [
       {
-        description: "Your OS and CPU",
+        description: "Your operating system and CPU",
         content: `I am running ${platform} on ${cpu}.`,
-        name: "OS",
+        name: "os",
       },
     ];
   }

@@ -1,6 +1,7 @@
-import { BaseLLM } from "..";
-import { CompletionOptions, ModelProvider } from "../..";
-import { streamSse } from "../stream";
+import { stopAtStopTokens } from "../../autocomplete/charStream.js";
+import { CompletionOptions, ModelProvider } from "../../index.js";
+import { BaseLLM } from "../index.js";
+import { streamSse } from "../stream.js";
 
 class HuggingFaceInferenceAPI extends BaseLLM {
   static providerName: ModelProvider = "huggingface-inference-api";
@@ -37,13 +38,20 @@ class HuggingFaceInferenceAPI extends BaseLLM {
         parameters: this._convertArgs(options),
       }),
     });
-    for await (const chunk of streamSse(response)) {
-      let text = chunk?.token?.text ?? "";
-      if (text.endsWith("</s>")) {
-        yield text.slice(0, -5);
-      } else {
-        yield text;
+
+    async function* stream() {
+      for await (const chunk of streamSse(response)) {
+        const text = chunk?.token?.text ?? "";
+        if (text.endsWith("</s>")) {
+          yield text.slice(0, -5);
+        } else {
+          yield text;
+        }
       }
+    }
+
+    for await (const text of stopAtStopTokens(stream(), options.stop ?? [])) {
+      yield text;
     }
   }
 }

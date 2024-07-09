@@ -110,8 +110,8 @@
     {
       "label": "install-all-dependencies",
       "type": "shell",
-      "windows": { "command": "./install-dependencies.ps1" },
-      "command": "./install-dependencies.sh",
+      "windows": { "command": "./scripts/install-dependencies.ps1" },
+      "command": "./scripts/install-dependencies.sh",
       "problemMatcher": [] // Empty so users are not prompted to select progress reporting
     },
     //
@@ -142,17 +142,27 @@
           }
         }
       ]
-    },  
+    },
     //
     // esbuild for the core binary
     {
-      "label": "pkg:esbuild",
+      "label": "binary:esbuild",
       "type": "shell",
       "command": "npm",
       "args": ["run", "esbuild"],
       "problemMatcher": [],
       "options": {
-        "cwd": "pkg"
+        "cwd": "binary"
+      }
+    },
+    {
+      "label": "docs:start",
+      "type": "shell",
+      "command": "npm",
+      "args": ["run", "start", "--", "--no-open"],
+      "problemMatcher": [],
+      "options": {
+        "cwd": "docs"
       }
     }
   ]

@@ -6,12 +6,11 @@ import {
 } from "@heroicons/react/24/outline";
 import { ContextItemWithId } from "core";
 import { getMarkdownLanguageTagForFile } from "core/util";
-import React from "react";
+import React, { useContext } from "react";
 import styled from "styled-components";
 import { defaultBorderRadius, lightGray, vscEditorBackground } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { getFontSize } from "../../util";
-import { postToIde } from "../../util/ide";
-import { WebviewIde } from "../../util/webviewIde";
 import FileIcon from "../FileIcon";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import StyledMarkdownPreview from "./StyledMarkdownPreview";
@@ -62,6 +61,8 @@ const MAX_PREVIEW_HEIGHT = 300;
 const backticksRegex = /`{3,}/gm;
 
 function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const [collapsed, setCollapsed] = React.useState(true);
   const [hovered, setHovered] = React.useState(false);
 
@@ -89,7 +90,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         className="flex justify-between cursor-pointer"
         onClick={() => {
           if (props.item.id.providerTitle === "file") {
-            postToIde("showFile", {
+            ideMessenger.post("showFile", {
               filepath: props.item.description,
             });
           } else if (props.item.id.providerTitle === "code") {
@@ -97,13 +98,13 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
               .split("(")[1]
               .split(")")[0]
               .split("-");
-            new WebviewIde().showLines(
+            ideMessenger.ide.showLines(
               props.item.description,
               parseInt(lines[0]) - 1,
               parseInt(lines[1]) - 1,
             );
           } else {
-            postToIde("showVirtualFile", {
+            ideMessenger.post("showVirtualFile", {
               name: props.item.name,
               content: props.item.content,
             });
@@ -155,7 +156,7 @@ function CodeSnippetPreview(props: CodeSnippetPreviewProps) {
         <StyledMarkdownPreview
           source={`${fence}${getMarkdownLanguageTagForFile(
             props.item.description,
-          )}\n${props.item.content.trim()}\n${fence}`}
+          )}\n${props.item.content.trimEnd()}\n${fence}`}
           showCodeBorder={false}
         />
       </div>

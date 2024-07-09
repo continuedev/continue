@@ -1,11 +1,10 @@
-import {
-  ChatMessage,
+import type {
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
+} from "../../index.js";
 
-import OpenAI from "./OpenAI";
+import OpenAI from "./OpenAI.js";
 
 class Together extends OpenAI {
   static providerName: ModelProvider = "together";
@@ -18,6 +17,8 @@ class Together extends OpenAI {
     "codellama-13b": "togethercomputer/CodeLlama-13b-Instruct",
     "codellama-34b": "togethercomputer/CodeLlama-34b-Instruct",
     "codellama-70b": "codellama/CodeLlama-70b-Instruct-hf",
+    "llama3-8b": "meta-llama/Llama-3-8b-chat-hf",
+    "llama3-70b": "meta-llama/Llama-3-70b-chat-hf",
     "llama2-7b": "togethercomputer/llama-2-7b-chat",
     "llama2-13b": "togethercomputer/llama-2-13b-chat",
     "llama2-70b": "togethercomputer/llama-2-70b-chat",
@@ -27,14 +28,8 @@ class Together extends OpenAI {
     "wizardcoder-34b": "WizardLM/WizardCoder-Python-34B-V1.0",
   };
 
-  private _getModelName(model: string) {
+  protected _convertModelName(model: string) {
     return Together.MODEL_IDS[model] || this.model;
-  }
-
-  protected _convertArgs(options: any, messages: ChatMessage[]) {
-    const finalOptions = super._convertArgs(options, messages);
-    finalOptions.model = this._getModelName(options.model);
-    return finalOptions;
   }
 
   protected async *_streamComplete(

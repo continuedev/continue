@@ -1,12 +1,19 @@
-import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
-} from "../..";
-import { getBasename, getLastNPathParts } from "../../util";
+} from "../../index.js";
+import { walkDir } from "../../indexing/walkDir.js";
+import {
+  getBasename,
+  getUniqueFilePath,
+  groupByLastNPathParts,
+} from "../../util/index.js";
+import { BaseContextProvider } from "../index.js";
+
+const MAX_SUBMENU_ITEMS = 10_000;
 
 class FileContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -38,15 +45,17 @@ class FileContextProvider extends BaseContextProvider {
     const workspaceDirs = await args.ide.getWorkspaceDirs();
     const results = await Promise.all(
       workspaceDirs.map((dir) => {
-        return args.ide.listWorkspaceContents(dir);
+        return walkDir(dir, args.ide);
       }),
     );
-    const files = results.flat();
+    const files = results.flat().slice(-MAX_SUBMENU_ITEMS);
+    const fileGroups = groupByLastNPathParts(files, 2);
+
     return files.map((file) => {
       return {
         id: file,
         title: getBasename(file),
-        description: getLastNPathParts(file, 2),
+        description: getUniqueFilePath(file, fileGroups),
       };
     });
   }

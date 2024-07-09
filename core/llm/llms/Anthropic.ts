@@ -1,28 +1,24 @@
-import { BaseLLM } from "..";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
-import { streamSse } from "../stream";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
+import { BaseLLM } from "../index.js";
+import { streamSse } from "../stream.js";
 
 class Anthropic extends BaseLLM {
   static providerName: ModelProvider = "anthropic";
   static defaultOptions: Partial<LLMOptions> = {
-    model: "claude-3-opus-20240229",
+    model: "claude-3-5-sonnet-20240620",
     contextLength: 200_000,
     completionOptions: {
-      model: "claude-3-opus-20240229",
+      model: "claude-3-5-sonnet-20240620",
       maxTokens: 4096,
     },
     apiBase: "https://api.anthropic.com/v1/",
   };
-
-  constructor(options: LLMOptions) {
-    super(options);
-  }
 
   private _convertArgs(options: CompletionOptions) {
     const finalOptions = {
@@ -32,6 +28,7 @@ class Anthropic extends BaseLLM {
       max_tokens: options.maxTokens ?? 2048,
       model: options.model === "claude-2" ? "claude-2.1" : options.model,
       stop_sequences: options.stop?.filter((x) => x.trim() !== ""),
+      stream: options.stream ?? true,
     };
 
     return finalOptions;
@@ -43,25 +40,23 @@ class Anthropic extends BaseLLM {
       .map((message) => {
         if (typeof message.content === "string") {
           return message;
-        } else {
-          return {
-            ...message,
-            content: message.content.map((part) => {
-              if (part.type === "text") {
-                return part;
-              } else {
-                return {
-                  type: "image",
-                  source: {
-                    type: "base64",
-                    media_type: "image/jpeg",
-                    data: part.imageUrl?.url.split(",")[1],
-                  },
-                };
-              }
-            }),
-          };
         }
+        return {
+          ...message,
+          content: message.content.map((part) => {
+            if (part.type === "text") {
+              return part;
+            }
+            return {
+              type: "image",
+              source: {
+                type: "base64",
+                media_type: "image/jpeg",
+                data: part.imageUrl?.url.split(",")[1],
+              },
+            };
+          }),
+        };
       });
     return messages;
   }
@@ -92,9 +87,14 @@ class Anthropic extends BaseLLM {
         ...this._convertArgs(options),
         messages: this._convertMessages(messages),
         system: this.systemMessage,
-        stream: true,
       }),
     });
+
+    if (options.stream === false) {
+      const data = await response.json();
+      yield { role: "assistant", content: data.content[0].text };
+      return;
+    }
 
     for await (const value of streamSse(response)) {
       if (value.delta?.text) {

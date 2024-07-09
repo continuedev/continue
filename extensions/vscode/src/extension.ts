@@ -2,6 +2,7 @@
  * This is the entry point for the extension.
  */
 
+import { setupCa } from "core/util/ca";
 import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 import { getExtensionVersion } from "./util/util";
@@ -9,7 +10,7 @@ import { getExtensionVersion } from "./util/util";
 async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
   const { activateExtension } = await import("./activation/activate");
   try {
-    await activateExtension(context);
+    return activateExtension(context);
   } catch (e) {
     console.log("Error activating extension: ", e);
     vscode.window
@@ -30,13 +31,18 @@ async function dynamicImportAndActivate(context: vscode.ExtensionContext) {
 }
 
 export function activate(context: vscode.ExtensionContext) {
-  dynamicImportAndActivate(context);
+  setupCa();
+  return dynamicImportAndActivate(context);
 }
 
 export function deactivate() {
-  Telemetry.capture("deactivate", {
-    extensionVersion: getExtensionVersion(),
-  });
+  Telemetry.capture(
+    "deactivate",
+    {
+      extensionVersion: getExtensionVersion(),
+    },
+    true,
+  );
 
   Telemetry.shutdownPosthogClient();
 }

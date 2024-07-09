@@ -1,5 +1,5 @@
-import { LLMOptions, ModelProvider } from "../..";
-import OpenAI from "./OpenAI";
+import { LLMOptions, ModelProvider } from "../../index.js";
+import OpenAI from "./OpenAI.js";
 
 class LMStudio extends OpenAI {
   static providerName: ModelProvider = "lmstudio";

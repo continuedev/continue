@@ -4,11 +4,6 @@ import com.github.continuedev.continueintellijextension.`continue`.uuid
 import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
 import com.google.gson.Gson
-import com.intellij.codeInsight.AutoPopupController
-import com.intellij.codeInsight.lookup.LookupManager
-import com.intellij.codeInsight.lookup.impl.LookupImpl
-import com.intellij.openapi.actionSystem.ActionManager
-import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.WriteAction
 import com.intellij.openapi.application.invokeLater
@@ -30,6 +25,7 @@ data class PendingCompletion (
 @Service(Service.Level.PROJECT)
 class AutocompleteService(private val project: Project) {
     var pendingCompletion: PendingCompletion? = null;
+    private val autocompleteLookupListener = project.service<AutocompleteLookupListener>()
 
     fun triggerCompletion(editor: Editor) {
         val settings =
@@ -67,7 +63,7 @@ class AutocompleteService(private val project: Project) {
         val lineLength = lineEnd - lineStart
 
         project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/complete", input, null, ({ response ->
-            val completions = Gson().fromJson(response, List::class.java)
+            val completions = response as List<*>
             if (completions.isNotEmpty()) {
                 val completion = completions[0].toString()
 
@@ -84,6 +80,10 @@ class AutocompleteService(private val project: Project) {
     }
 
     private fun renderCompletion(editor: Editor, offset: Int, text: String) {
+        // Don't render completions when code completion dropdown is visible
+        if (!autocompleteLookupListener.isLookupEmpty()) {
+            return
+        }
         ApplicationManager.getApplication().invokeLater {
             WriteAction.run<Throwable> {
                 val properties = InlayProperties()
@@ -95,6 +95,13 @@ class AutocompleteService(private val project: Project) {
                 } else {
                     editor.inlayModel.addInlineElement(offset, properties, ContinueCustomElementRenderer(editor, text))
                 }
+
+//                val attributes = TextAttributes().apply {
+//                    backgroundColor = JBColor.GREEN
+//                }
+//                val key = TextAttributesKey.createTextAttributesKey("CONTINUE_AUTOCOMPLETE")
+//                key.let { editor.colorsScheme.setAttributes(it, attributes) }
+//                editor.markupModel.addLineHighlighter(key, editor.caretModel.logicalPosition.line, HighlighterLayer.LAST)
             }
         }
     }
@@ -123,6 +130,19 @@ class AutocompleteService(private val project: Project) {
             cancelCompletion(pendingCompletion!!)
             pendingCompletion = null
         }
+        editor.inlayModel.getInlineElementsInRange(0, editor.document.textLength).forEach {
+            if (it.renderer is ContinueCustomElementRenderer) {
+                it.dispose()
+            }
+        }
+        editor.inlayModel.getBlockElementsInRange(0, editor.document.textLength).forEach {
+            if (it.renderer is ContinueMultilineCustomElementRenderer) {
+                it.dispose()
+            }
+        }
+    }
+
+    fun hideCompletions(editor: Editor) {
         editor.inlayModel.getInlineElementsInRange(0, editor.document.textLength).forEach {
             if (it.renderer is ContinueCustomElementRenderer) {
                 it.dispose()

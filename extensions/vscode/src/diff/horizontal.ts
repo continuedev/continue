@@ -1,11 +1,11 @@
 import { devDataPath } from "core/util/paths";
-import * as fs from "fs";
-import * as os from "os";
-import * as path from "path";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import * as vscode from "vscode";
 import { getMetaKeyLabel, getPlatform } from "../util/util";
 import { uriFromFilePath } from "../util/vscode";
-import { VsCodeWebviewProtocol } from "../webviewProtocol";
+import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 interface DiffInfo {
   originalFilepath: string;
@@ -64,10 +64,13 @@ export class DiffManager {
   }
 
   private escapeFilepath(filepath: string): string {
-    return filepath.replace(/\//g, "_f_").replace(/\\/g, "_b_");
+    return filepath
+      .replace(/\//g, "_f_")
+      .replace(/\\/g, "_b_")
+      .replace(/:/g, "_c_");
   }
 
-  private remoteTmpDir: string = "/tmp/continue";
+  private remoteTmpDir = "/tmp/continue";
   private getNewFilepath(originalFilepath: string): string {
     if (vscode.env.remoteName) {
       // If we're in a remote, use the remote's temp directory
@@ -121,7 +124,7 @@ export class DiffManager {
     ) {
       vscode.window
         .showInformationMessage(
-          `Accept (${getMetaKeyLabel()}⇧↩) or reject (${getMetaKeyLabel()}⇧⌫) at the top of the file.`,
+          `Accept (${getMetaKeyLabel()}⇧⏎) or reject (${getMetaKeyLabel()}⇧⌫) at the top of the file.`,
           "Got it",
           "Don't show again",
         )
@@ -199,7 +202,7 @@ export class DiffManager {
     return newFilepath;
   }
 
-  cleanUpDiff(diffInfo: DiffInfo, hideEditor: boolean = true) {
+  cleanUpDiff(diffInfo: DiffInfo, hideEditor = true) {
     // Close the editor, remove the record, delete the file
     if (hideEditor && diffInfo.editor) {
       try {

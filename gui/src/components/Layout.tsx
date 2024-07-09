@@ -1,18 +1,18 @@
-import {
-  Cog6ToothIcon,
-  QuestionMarkCircleIcon,
-} from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
+import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
+import { IndexingProgressUpdate } from "core";
+import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
+  CustomScrollbarDiv,
   defaultBorderRadius,
-  vscBackground,
   vscForeground,
   vscInputBackground,
 } from ".";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useWebviewListener } from "../hooks/useWebviewListener";
+import { shouldBeginOnboarding } from "../pages/onboarding/utils";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   setBottomMessage,
@@ -21,36 +21,21 @@ import {
 } from "../redux/slices/uiStateSlice";
 import { RootState } from "../redux/store";
 import { getFontSize, isMetaEquivalentKeyPressed } from "../util";
-import { isJetBrains, postToIde } from "../util/ide";
-import HeaderButtonWithText from "./HeaderButtonWithText";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import TextDialog from "./dialogs";
+import HeaderButtonWithText from "./HeaderButtonWithText";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
-import ModelSelect from "./modelSelection/ModelSelect";
+import PostHogPageView from "./PosthogPageView";
+import ProfileSwitcher from "./ProfileSwitcher";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
 
-const LayoutTopDiv = styled.div`
+const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
   border-radius: ${defaultBorderRadius};
-  scrollbar-base-color: transparent;
-  scrollbar-width: thin;
-  background-color: ${vscBackground};
-
-  & * {
-    ::-webkit-scrollbar {
-      width: 4px;
-    }
-
-    ::-webkit-scrollbar:horizontal {
-      height: 4px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      border-radius: 2px;
-    }
-  }
 `;
 
 const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
@@ -92,7 +77,7 @@ const GridDiv = styled.div`
   overflow-x: visible;
 `;
 
-const DropdownPortalDiv = styled.div`
+const ModelDropdownPortalDiv = styled.div`
   background-color: ${vscInputBackground};
   position: relative;
   margin-left: 8px;
@@ -100,12 +85,28 @@ const DropdownPortalDiv = styled.div`
   font-size: ${getFontSize()};
 `;
 
+const ProfileDropdownPortalDiv = styled.div`
+  background-color: ${vscInputBackground};
+  position: relative;
+  margin-left: calc(100% - 190px);
+  z-index: 200;
+  font-size: ${getFontSize() - 2};
+`;
+
 // #endregion
+
+const HIDE_FOOTER_ON_PAGES = [
+  "/onboarding",
+  "/localOnboarding",
+  "/apiKeyOnboarding",
+];
 
 const Layout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const ideMessenger = useContext(IdeMessengerContext);
+
   const dialogMessage = useSelector(
     (state: RootState) => state.uiState.dialogMessage,
   );
@@ -156,7 +157,7 @@ const Layout = () => {
   );
 
   useWebviewListener("openSettings", async () => {
-    postToIde("openConfigJson", undefined);
+    ideMessenger.post("openConfigJson", undefined);
   });
 
   useWebviewListener(
@@ -186,12 +187,63 @@ const Layout = () => {
   );
 
   useWebviewListener("indexProgress", async (data) => {
-    setIndexingProgress(data.progress);
-    setIndexingTask(data.desc);
+    setIndexingState(data);
   });
 
-  const [indexingProgress, setIndexingProgress] = useState(1);
-  const [indexingTask, setIndexingTask] = useState("Indexing Codebase");
+  useWebviewListener(
+    "addApiKey",
+    async () => {
+      navigate("/apiKeyOnboarding");
+    },
+    [navigate],
+  );
+
+  useWebviewListener(
+    "openOnboarding",
+    async () => {
+      navigate("/onboarding");
+    },
+    [navigate],
+  );
+
+  useWebviewListener(
+    "incrementFtc",
+    async () => {
+      const u = getLocalStorage("ftc");
+      if (u) {
+        setLocalStorage("ftc", u + 1);
+      } else {
+        setLocalStorage("ftc", 1);
+      }
+    },
+    [],
+  );
+
+  useWebviewListener(
+    "setupLocalModel",
+    async () => {
+      ideMessenger.post("completeOnboarding", {
+        mode: "localAfterFreeTrial",
+      });
+      navigate("/localOnboarding");
+    },
+    [navigate],
+  );
+
+  useEffect(() => {
+    if (
+      shouldBeginOnboarding() &&
+      (location.pathname === "/" || location.pathname === "/index.html")
+    ) {
+      navigate("/onboarding");
+    }
+  }, [location]);
+
+  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
+    desc: "Loading indexing config",
+    progress: 0.0,
+    status: "loading",
+  });
 
   return (
     <LayoutTopDiv>
@@ -215,75 +267,38 @@ const Layout = () => {
         />
 
         <GridDiv>
+          <PostHogPageView />
           <Outlet />
-          <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
-          <Footer>
-            <div className="mr-auto flex gap-2 items-center">
-              {/* {localStorage.getItem("ide") === "jetbrains" ||
-                localStorage.getItem("hideFeature") === "true" || (
-                  <SparklesIcon
-                    className="cursor-pointer"
-                    onClick={() => {
-                      localStorage.setItem("hideFeature", "true");
-                    }}
-                    onMouseEnter={() => {
-                      dispatch(
-                        setBottomMessage(
-                          `🎁 New Feature: Use ${getMetaKeyLabel()}⇧R automatically debug errors in the terminal (you can click the sparkle icon to make it go away)`
-                        )
-                      );
-                    }}
-                    onMouseLeave={() => {
-                      dispatch(
-                        setBottomMessageCloseTimeout(
-                          setTimeout(() => {
-                            dispatch(setBottomMessage(undefined));
-                          }, 2000)
-                        )
-                      );
-                    }}
-                    width="1.3em"
-                    height="1.3em"
-                    color="yellow"
-                  />
-                )} */}
-              <ModelSelect />
-              {indexingProgress >= 1 && // Would take up too much space together with indexing progress
-                defaultModel?.provider === "free-trial" &&
-                (location.pathname === "/settings" ||
-                  parseInt(localStorage.getItem("ftc") || "0") >= 125) && (
-                  <ProgressBar
-                    completed={parseInt(localStorage.getItem("ftc") || "0")}
-                    total={250}
-                  />
-                )}
+          <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
+          <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
+          {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
+            <Footer>
+              <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
+                {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
+                  defaultModel?.provider === "free-trial" && (
+                    <ProgressBar
+                      completed={parseInt(localStorage.getItem("ftc") || "0")}
+                      total={FREE_TRIAL_LIMIT_REQUESTS}
+                    />
+                  )}
+                <IndexingProgressBar indexingState={indexingState} />
+              </div>
 
-              {isJetBrains() || (
-                <IndexingProgressBar
-                  currentlyIndexing={indexingTask}
-                  completed={indexingProgress * 100}
-                  total={100}
-                />
-              )}
-            </div>
-            <HeaderButtonWithText
-              text="Help"
-              onClick={() => {
-                navigate("/help");
-              }}
-            >
-              <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-            <HeaderButtonWithText
-              onClick={() => {
-                // navigate("/settings");
-                postToIde("openConfigJson", undefined);
-              }}
-              text="Config"
-            >
-              <Cog6ToothIcon width="1.4em" height="1.4em" />
-            </HeaderButtonWithText>
-          </Footer>
+              <ProfileSwitcher />
+              <HeaderButtonWithText
+                text="Help"
+                onClick={() => {
+                  if (location.pathname === "/help") {
+                    navigate("/");
+                  } else {
+                    navigate("/help");
+                  }
+                }}
+              >
+                <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
+              </HeaderButtonWithText>
+            </Footer>
+          )}
         </GridDiv>
 
         <BottomMessageDiv
@@ -301,7 +316,10 @@ const Layout = () => {
           {bottomMessage}
         </BottomMessageDiv>
       </div>
-      <div className="text-sm" id="tooltip-portal-div" />
+      <div
+        style={{ fontSize: `${getFontSize() - 4}px` }}
+        id="tooltip-portal-div"
+      />
     </LayoutTopDiv>
   );
 };

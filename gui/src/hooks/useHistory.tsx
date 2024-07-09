@@ -3,11 +3,13 @@ import { PersistedSessionInfo, SessionInfo } from "core";
 
 import { llmCanGenerateInParallel } from "core/llm/autodetect";
 import { stripImages } from "core/llm/countTokens";
+import { useContext } from "react";
 import { useSelector } from "react-redux";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import { newSession } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
-import { ideRequest } from "../util/ide";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 function truncateText(text: string, maxLength: number) {
   if (text.length > maxLength) {
@@ -20,11 +22,15 @@ function useHistory(dispatch: Dispatch) {
   const state = useSelector((state: RootState) => state.state);
   const defaultModel = useSelector(defaultModelSelector);
   const disableSessionTitles = useSelector(
-    (store: RootState) => store.state.config.disableSessionTitles
+    (store: RootState) => store.state.config.disableSessionTitles,
   );
+  const ideMessenger = useContext(IdeMessengerContext);
 
-  async function getHistory(): Promise<SessionInfo[]> {
-    return await ideRequest("history/list", undefined);
+  async function getHistory(
+    offset?: number,
+    limit?: number,
+  ): Promise<SessionInfo[]> {
+    return await ideMessenger.request("history/list", { offset, limit });
   }
 
   async function saveSession() {
@@ -34,13 +40,16 @@ function useHistory(dispatch: Dispatch) {
     dispatch(newSession());
     await new Promise((resolve) => setTimeout(resolve, 10));
 
-    let title = truncateText(
-      stripImages(stateCopy.history[0].message.content)
-        .split("\n")
-        .filter((l) => l.trim() !== "")
-        .slice(-1)[0] || "",
-      50
-    );
+    let title =
+      stateCopy.title === "New Session"
+        ? truncateText(
+            stripImages(stateCopy.history[0].message.content)
+              .split("\n")
+              .filter((l) => l.trim() !== "")
+              .slice(-1)[0] || "",
+            50,
+          )
+        : (await getSession(stateCopy.sessionId)).title; // to ensure titles are synced with updates from history page.
 
     if (
       false && // Causing maxTokens to be set to 20 for main requests sometimes, so disabling until resolved
@@ -72,18 +81,57 @@ function useHistory(dispatch: Dispatch) {
       sessionId: stateCopy.sessionId,
       workspaceDirectory: window.workspacePaths?.[0] || "",
     };
-    return await ideRequest("history/save", sessionInfo);
+    setLocalStorage("lastSessionId", stateCopy.sessionId);
+    return await ideMessenger.request("history/save", sessionInfo);
+  }
+
+  async function getSession(id: string): Promise<PersistedSessionInfo> {
+    const json: PersistedSessionInfo = await ideMessenger.request(
+      "history/load",
+      { id },
+    );
+    return json;
+  }
+
+  async function updateSession(sessionInfo: PersistedSessionInfo) {
+    return await ideMessenger.request("history/save", sessionInfo);
   }
 
   async function deleteSession(id: string) {
-    return await ideRequest("history/delete", { id });
+    return await ideMessenger.request("history/delete", { id });
   }
 
   async function loadSession(id: string): Promise<PersistedSessionInfo> {
-    return await ideRequest("history/load", { id });
+    setLocalStorage("lastSessionId", state.sessionId);
+    const json: PersistedSessionInfo = await ideMessenger.request(
+      "history/load",
+      { id },
+    );
+    dispatch(newSession(json));
+    return json;
   }
 
-  return { getHistory, saveSession, deleteSession, loadSession };
+  async function loadLastSession(): Promise<PersistedSessionInfo> {
+    const lastSessionId = getLocalStorage("lastSessionId");
+    if (lastSessionId) {
+      return await loadSession(lastSessionId);
+    }
+  }
+
+  function getLastSessionId(): string {
+    return getLocalStorage("lastSessionId");
+  }
+
+  return {
+    getHistory,
+    saveSession,
+    deleteSession,
+    loadSession,
+    loadLastSession,
+    getLastSessionId,
+    updateSession,
+    getSession,
+  };
 }
 
 export default useHistory;

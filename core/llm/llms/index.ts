@@ -1,32 +1,38 @@
 import Handlebars from "handlebars";
-import { BaseLLM } from "..";
+import { v4 as uuidv4 } from "uuid";
 import {
   BaseCompletionOptions,
+  IdeSettings,
   ILLM,
   LLMOptions,
   ModelDescription,
-} from "../..";
-import { DEFAULT_MAX_TOKENS } from "../constants";
-import Anthropic from "./Anthropic";
-import Bedrock from "./Bedrock";
-import DeepInfra from "./DeepInfra";
-import Flowise from "./Flowise";
-import FreeTrial from "./FreeTrial";
-import Gemini from "./Gemini";
-import GooglePalm from "./GooglePalm";
-import Groq from "./Groq";
-import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI";
-import HuggingFaceTGI from "./HuggingFaceTGI";
-import LMStudio from "./LMStudio";
-import LlamaCpp from "./LlamaCpp";
-import Llamafile from "./Llamafile";
-import Mistral from "./Mistral";
-import Ollama from "./Ollama";
-import OpenAI from "./OpenAI";
-import OpenAIFreeTrial from "./OpenAIFreeTrial";
-import Replicate from "./Replicate";
-import TextGenWebUI from "./TextGenWebUI";
-import Together from "./Together";
+} from "../../index.js";
+import { DEFAULT_MAX_TOKENS } from "../constants.js";
+import { BaseLLM } from "../index.js";
+import Anthropic from "./Anthropic.js";
+import Bedrock from "./Bedrock.js";
+import Cloudflare from "./Cloudflare.js";
+import Cohere from "./Cohere.js";
+import DeepInfra from "./DeepInfra.js";
+import Deepseek from "./Deepseek.js";
+import Fireworks from "./Fireworks.js";
+import Flowise from "./Flowise.js";
+import FreeTrial from "./FreeTrial.js";
+import Gemini from "./Gemini.js";
+import Groq from "./Groq.js";
+import HuggingFaceInferenceAPI from "./HuggingFaceInferenceAPI.js";
+import HuggingFaceTGI from "./HuggingFaceTGI.js";
+import LMStudio from "./LMStudio.js";
+import LlamaCpp from "./LlamaCpp.js";
+import Llamafile from "./Llamafile.js";
+import Mistral from "./Mistral.js";
+import Msty from "./Msty.js";
+import Ollama from "./Ollama.js";
+import OpenAI from "./OpenAI.js";
+import Replicate from "./Replicate.js";
+import TextGenWebUI from "./TextGenWebUI.js";
+import Together from "./Together.js";
+import ContinueProxy from "./stubs/ContinueProxy.js";
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -43,14 +49,14 @@ const getHandlebarsVars = (
 ): [string, { [key: string]: string }] => {
   const ast = Handlebars.parse(value);
 
-  let keysToFilepath: { [key: string]: string } = {};
+  const keysToFilepath: { [key: string]: string } = {};
   let keyIndex = 1;
-  for (let i in ast.body) {
+  for (const i in ast.body) {
     if (ast.body[i].type === "MustacheStatement") {
       const letter = convertToLetter(keyIndex);
       keysToFilepath[letter] = (ast.body[i] as any).path.original;
       value = value.replace(
-        new RegExp("{{\\s*" + (ast.body[i] as any).path.original + "\\s*}}"),
+        new RegExp(`{{\\s*${(ast.body[i] as any).path.original}\\s*}}`),
         `{{${letter}}}`,
       );
       keyIndex++;
@@ -59,26 +65,45 @@ const getHandlebarsVars = (
   return [value, keysToFilepath];
 };
 
-async function renderTemplatedString(
+export async function renderTemplatedString(
   template: string,
   readFile: (filepath: string) => Promise<string>,
+  inputData: any,
+  helpers?: [string, Handlebars.HelperDelegate][],
 ): Promise<string> {
-  const [newTemplate, vars] = getHandlebarsVars(template);
-  template = newTemplate;
-  let data: any = {};
-  for (let key in vars) {
-    let fileContents = await readFile(vars[key]);
-    data[key] = fileContents || vars[key];
+  const promises: { [key: string]: Promise<string> } = {};
+  if (helpers) {
+    for (const [name, helper] of helpers) {
+      Handlebars.registerHelper(name, (...args) => {
+        const id = uuidv4();
+        promises[id] = helper(...args);
+        return `__${id}__`;
+      });
+    }
   }
-  const templateFn = Handlebars.compile(template);
+
+  const [newTemplate, vars] = getHandlebarsVars(template);
+  const data: any = { ...inputData };
+  for (const key in vars) {
+    const fileContents = await readFile(vars[key]);
+    data[key] = fileContents || (inputData[vars[key]] ?? vars[key]);
+  }
+  const templateFn = Handlebars.compile(newTemplate);
   let final = templateFn(data);
+
+  await Promise.all(Object.values(promises));
+  for (const id in promises) {
+    final = final.replace(`__${id}__`, await promises[id]);
+  }
+
   return final;
 }
 
 const LLMs = [
   Anthropic,
+  Cohere,
   FreeTrial,
-  GooglePalm,
+  Gemini,
   Llamafile,
   Ollama,
   Replicate,
@@ -89,18 +114,24 @@ const LLMs = [
   LlamaCpp,
   OpenAI,
   LMStudio,
-  Gemini,
   Mistral,
   Bedrock,
   DeepInfra,
-  OpenAIFreeTrial,
   Flowise,
   Groq,
+  Fireworks,
+  ContinueProxy,
+  Cloudflare,
+  Deepseek,
+  Msty,
 ];
 
 export async function llmFromDescription(
   desc: ModelDescription,
   readFile: (filepath: string) => Promise<string>,
+  uniqueId: string,
+  ideSettings: IdeSettings,
+  writeLog: (log: string) => Promise<void>,
   completionOptions?: BaseCompletionOptions,
   systemMessage?: string,
 ): Promise<BaseLLM | undefined> {
@@ -117,10 +148,10 @@ export async function llmFromDescription(
 
   systemMessage = desc.systemMessage ?? systemMessage;
   if (systemMessage !== undefined) {
-    systemMessage = await renderTemplatedString(systemMessage, readFile);
+    systemMessage = await renderTemplatedString(systemMessage, readFile, {});
   }
 
-  const options: LLMOptions = {
+  let options: LLMOptions = {
     ...desc,
     completionOptions: {
       ...finalCompletionOptions,
@@ -131,7 +162,19 @@ export async function llmFromDescription(
         DEFAULT_MAX_TOKENS,
     },
     systemMessage,
+    writeLog,
+    uniqueId,
   };
+
+  if (desc.provider === "continue-proxy") {
+    options.apiKey = ideSettings.userToken;
+    if (ideSettings.remoteConfigServerUrl) {
+      options.apiBase = new URL(
+        "/proxy/v1",
+        ideSettings.remoteConfigServerUrl,
+      ).toString();
+    }
+  }
 
   return new cls(options);
 }

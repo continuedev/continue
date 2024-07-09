@@ -1,4 +1,4 @@
-import { ContextItemWithId } from "..";
+import { ContextItemWithId } from "../index.js";
 
 export interface RangeInFileWithContents {
   filepath: string;
@@ -15,14 +15,14 @@ export function contextItemToRangeInFileWithContents(
   const lines = item.name.split("(")[1].split(")")[0].split("-");
 
   const rif: RangeInFileWithContents = {
-    filepath: item.description.split(" (")[0],
+    filepath: item.id.itemId,
     range: {
       start: {
-        line: parseInt(lines[0]),
+        line: Number.parseInt(lines[0]),
         character: 0,
       },
       end: {
-        line: parseInt(lines[1]),
+        line: Number.parseInt(lines[1]),
         character: 0,
       },
     },

@@ -1,10 +1,14 @@
-import { ChunkWithoutID } from "../..";
-import { countTokens } from "../../llm/countTokens";
+import { ChunkWithoutID } from "../../index.js";
+import { countTokens } from "../../llm/countTokens.js";
 
 export function* basicChunker(
   contents: string,
   maxChunkSize: number,
 ): Generator<ChunkWithoutID> {
+  if (contents.trim().length === 0) {
+    return;
+  }
+
   let chunkContent = "";
   let chunkTokens = 0;
   let startLine = 0;
@@ -20,7 +24,7 @@ export function* basicChunker(
     }
 
     if (lineTokens < maxChunkSize) {
-      chunkContent += line + "\n";
+      chunkContent += `${line}\n`;
       chunkTokens += lineTokens + 1;
     }
 

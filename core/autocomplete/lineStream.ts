@@ -1,16 +1,23 @@
 import { distance } from "fastest-levenshtein";
-import { DiffLine } from "..";
-import { LineStream } from "../diff/util";
+import { LineStream } from "../diff/util.js";
+import { DiffLine } from "../index.js";
+
+export type LineFilter = (args: {
+  lines: LineStream;
+  fullStop: () => void;
+}) => LineStream;
 
 export async function* noTopLevelKeywordsMidline(
   lines: LineStream,
   topLevelKeywords: string[],
+  fullStop: () => void,
 ): LineStream {
   for await (const line of lines) {
     for (const keyword of topLevelKeywords) {
-      const indexOf = line.indexOf(keyword + " ");
+      const indexOf = line.indexOf(`${keyword} `);
       if (indexOf >= 0 && line.slice(indexOf - 1, indexOf).trim() !== "") {
         yield line.slice(0, indexOf);
+        fullStop();
         break;
       }
     }
@@ -26,7 +33,7 @@ export async function* avoidPathLine(
   // Sometimes the model with copy this pattern, which is unwanted
   for await (const line of stream) {
     // Also filter lines that are empty comments
-    if (line.startsWith(comment + " Path: ") || line.trim() === comment) {
+    if (line.startsWith(`${comment} Path: `) || line.trim() === comment) {
       continue;
     }
     yield line;
@@ -44,26 +51,55 @@ export async function* streamWithNewLines(stream: LineStream): LineStream {
   }
 }
 
-const brackets = ["(", "[", "{", "`", '"""'];
-const bracketsReverse = [")", "]", "}", "`", '"""'];
+const bracketEnding = [")", "]", "}", ";"];
+function isBracketEnding(line: string): boolean {
+  return line
+    .trim()
+    .split("")
+    .some((char) => bracketEnding.includes(char));
+}
+
+function commonPrefixLength(a: string, b: string): number {
+  let i = 0;
+  while (i < a.length && i < b.length && a[i] === b[i]) {
+    i++;
+  }
+  return i;
+}
+
+export function lineIsRepeated(a: string, b: string): boolean {
+  if (a.length <= 4 || b.length <= 4) {
+    return false;
+  }
+
+  const aTrim = a.trim();
+  const bTrim = b.trim();
+  return (
+    commonPrefixLength(aTrim, bTrim) > 12 ||
+    distance(aTrim, bTrim) / bTrim.length < 0.1
+  );
+}
 
 export async function* stopAtSimilarLine(
   stream: LineStream,
   line: string,
+  fullStop: () => void,
 ): AsyncGenerator<string> {
-  line = line.trim();
+  const trimmedLine = line.trim();
+  const lineIsBracketEnding = isBracketEnding(trimmedLine);
   for await (const nextLine of stream) {
-    if (
-      bracketsReverse.includes(nextLine.trim()) &&
-      bracketsReverse.includes(line.trim()) &&
-      line.trim() === nextLine.trim()
-    ) {
+    if (nextLine === line) {
+      fullStop();
+      break;
+    }
+
+    if (lineIsBracketEnding && trimmedLine.trim() === nextLine.trim()) {
+      yield nextLine;
       continue;
     }
 
-    const dist = distance(nextLine.trim(), line);
-    let lineQualifies = nextLine.length > 4 && line.length > 4;
-    if (lineQualifies && dist / line.length < 0.1) {
+    if (lineIsRepeated(nextLine, trimmedLine)) {
+      fullStop();
       break;
     }
     yield nextLine;
@@ -72,21 +108,55 @@ export async function* stopAtSimilarLine(
 
 const LINES_TO_STOP_AT = ["# End of file.", "<STOP EDITING HERE"];
 
-export async function* stopAtLines(stream: LineStream): LineStream {
+export async function* stopAtLines(
+  stream: LineStream,
+  fullStop: () => void,
+): LineStream {
   for await (const line of stream) {
     if (LINES_TO_STOP_AT.some((stopAt) => line.trim().includes(stopAt))) {
+      fullStop();
       break;
     }
     yield line;
   }
 }
 
+const PREFIXES_TO_SKIP = ["<COMPLETION>"];
+export async function* skipPrefixes(lines: LineStream): LineStream {
+  let isFirstLine = true;
+  for await (const line of lines) {
+    if (isFirstLine) {
+      const match = PREFIXES_TO_SKIP.find((prefix) => line.startsWith(prefix));
+      if (match) {
+        yield line.slice(match.length);
+        continue;
+      }
+      isFirstLine = false;
+    }
+    yield line;
+  }
+}
+
+const LINES_TO_SKIP = ["</START EDITING HERE>"];
+
+export async function* skipLines(stream: LineStream): LineStream {
+  for await (const line of stream) {
+    if (!LINES_TO_SKIP.some((skipAt) => line.startsWith(skipAt))) {
+      yield line;
+    }
+  }
+}
+
+const LINES_TO_REMOVE_BEFORE_START = [
+  "<COMPLETION>",
+  "[CODE]",
+  "<START EDITING HERE>",
+];
+
 function shouldRemoveLineBeforeStart(line: string): boolean {
   return (
     line.trimStart().startsWith("```") ||
-    line.trim() === "[CODE]" ||
-    line.trim() === "" ||
-    line.trim() === "<START EDITING HERE>"
+    LINES_TO_REMOVE_BEFORE_START.some((l) => line.trim() === l)
   );
 }
 
@@ -112,9 +182,8 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
     if (!seenValidLine) {
       if (shouldRemoveLineBeforeStart(line)) {
         continue;
-      } else {
-        seenValidLine = true;
       }
+      seenValidLine = true;
     }
 
     // Filter out ending ```
@@ -129,7 +198,7 @@ export async function* filterCodeBlockLines(rawLines: LineStream): LineStream {
       return;
     }
 
-    if (line === "```") {
+    if (line.startsWith("```")) {
       waitingToSeeIfLineIsLast = line;
     } else {
       yield line;
@@ -147,7 +216,11 @@ function isEnglishFirstLine(line: string) {
     line.startsWith("here's") ||
     line.startsWith("sure, here") ||
     line.startsWith("sure thing") ||
-    line.startsWith("sure!")
+    line.startsWith("sure!") ||
+    line.startsWith("to fill") ||
+    line.startsWith("certainly") ||
+    line.startsWith("of course") ||
+    line.startsWith("the code should")
   ) {
     return true;
   }
@@ -158,7 +231,7 @@ function isEnglishFirstLine(line: string) {
 export async function* filterEnglishLinesAtStart(lines: LineStream) {
   let i = 0;
   let wasEnglishFirstLine = false;
-  for await (let line of lines) {
+  for await (const line of lines) {
     if (i === 0 && line.trim() === "") {
       continue;
     }
@@ -189,7 +262,7 @@ function isEnglishPostExplanation(line: string): boolean {
 
 export async function* filterEnglishLinesAtEnd(lines: LineStream) {
   let finishedCodeBlock = false;
-  for await (let line of lines) {
+  for await (const line of lines) {
     if (line.trim() === "```") {
       finishedCodeBlock = true;
     }
@@ -202,7 +275,7 @@ export async function* filterEnglishLinesAtEnd(lines: LineStream) {
 
 export async function* fixCodeLlamaFirstLineIndentation(lines: LineStream) {
   let isFirstLine = true;
-  for await (let line of lines) {
+  for await (const line of lines) {
     if (isFirstLine && line.startsWith("  ")) {
       yield line.slice(2);
       isFirstLine = false;
@@ -222,8 +295,8 @@ export async function* filterLeadingAndTrailingNewLineInsertion(
 ): AsyncGenerator<DiffLine> {
   let isFirst = true;
   let buffer: DiffLine[] = [];
-  for await (let diffLine of diffLines) {
-    let isBlankLineInsertion =
+  for await (const diffLine of diffLines) {
+    const isBlankLineInsertion =
       diffLine.type === "new" && isUselessLine(diffLine.line);
     if (isFirst && isBlankLineInsertion) {
       isFirst = false;
@@ -246,7 +319,10 @@ export async function* filterLeadingAndTrailingNewLineInsertion(
   }
 }
 
-export async function* stopAtRepeatingLines(lines: LineStream): LineStream {
+export async function* stopAtRepeatingLines(
+  lines: LineStream,
+  fullStop: () => void,
+): LineStream {
   const repeatedLines: string[] = [];
   for await (const line of lines) {
     if (repeatedLines.length === 0) {
@@ -262,6 +338,7 @@ export async function* stopAtRepeatingLines(lines: LineStream): LineStream {
       }
     } else {
       yield repeatedLines[0];
+      fullStop();
       return;
     }
   }

@@ -1,14 +1,13 @@
 import { SyntaxNode } from "web-tree-sitter";
-import { ChunkWithoutID } from "../..";
-import { countTokens } from "../../llm/countTokens";
-import { getParserForFile } from "../../util/treeSitter";
+import { ChunkWithoutID } from "../../index.js";
+import { countTokens } from "../../llm/countTokens.js";
+import { getParserForFile } from "../../util/treeSitter.js";
 
 function collapsedReplacement(node: SyntaxNode): string {
   if (node.type === "statement_block") {
     return "{ ... }";
-  } else {
-    return "...";
   }
+  return "...";
 }
 
 function firstChild(
@@ -19,9 +18,8 @@ function firstChild(
     return (
       node.children.find((child) => grammarName.includes(child.type)) || null
     );
-  } else {
-    return node.children.find((child) => child.type === grammarName) || null;
   }
+  return node.children.find((child) => child.type === grammarName) || null;
 }
 
 function collapseChildren(
@@ -59,7 +57,10 @@ function collapseChildren(
   }
   code = code.slice(node.startIndex);
   let removedChild = false;
-  while (countTokens(code) > maxChunkSize && collapsedChildren.length > 0) {
+  while (
+    countTokens(code.trim()) > maxChunkSize &&
+    collapsedChildren.length > 0
+  ) {
     removedChild = true;
     // Remove children starting at the end - TODO: Add multiple chunks so no children are missing
     const childCode = collapsedChildren.pop()!;
@@ -96,6 +97,15 @@ function collapseChildren(
   return code;
 }
 
+export const FUNCTION_BLOCK_NODE_TYPES = ["block", "statement_block"];
+export const FUNCTION_DECLARATION_NODE_TYPEs = [
+  "method_definition",
+  "function_definition",
+  "function_item",
+  "function_declaration",
+  "method_declaration",
+];
+
 function constructClassDefinitionChunk(
   node: SyntaxNode,
   code: string,
@@ -105,8 +115,8 @@ function constructClassDefinitionChunk(
     node,
     code,
     ["block", "class_body", "declaration_list"],
-    ["method_definition", "function_definition", "function_item"],
-    ["block", "statement_block"],
+    FUNCTION_DECLARATION_NODE_TYPEs,
+    FUNCTION_BLOCK_NODE_TYPES,
     maxChunkSize,
   );
 }
@@ -130,12 +140,10 @@ function constructFunctionDefinitionChunk(
     // If inside a class, include the class header
     const classNode = node.parent.parent;
     const classBlock = node.parent;
-    return (
-      code.slice(classNode.startIndex, classBlock.startIndex) +
-      "...\n\n" +
-      " ".repeat(node.startPosition.column) + // ...
-      funcText
-    );
+    return `${code.slice(
+      classNode.startIndex,
+      classBlock.startIndex,
+    )}...\n\n${" ".repeat(node.startPosition.column)}${funcText}`;
   }
   return funcText;
 }
@@ -200,7 +208,7 @@ export async function* codeChunker(
     return;
   }
 
-  let parser = await getParserForFile(filepath);
+  const parser = await getParserForFile(filepath);
   if (parser === undefined) {
     console.warn(`Failed to load parser for file ${filepath}: `);
     return;

@@ -1,4 +1,4 @@
-import { DiffLine } from "core";
+import type { DiffLine } from "core";
 import * as vscode from "vscode";
 import {
   DecorationTypeRangeManager,
@@ -7,14 +7,14 @@ import {
   indexDecorationType,
   redDecorationType,
 } from "./decorations";
-import { VerticalDiffCodeLens } from "./manager";
+import type { VerticalDiffCodeLens } from "./manager";
 
-export class VerticalPerLineDiffHandler {
+export class VerticalPerLineDiffHandler implements vscode.Disposable {
   private editor: vscode.TextEditor;
   private startLine: number;
   private endLine: number;
   private currentLineIndex: number;
-  private cancelled: boolean = false;
+  private cancelled = false;
 
   public get range(): vscode.Range {
     const startLine = Math.min(this.startLine, this.endLine);
@@ -22,7 +22,7 @@ export class VerticalPerLineDiffHandler {
     return new vscode.Range(startLine, 0, endLine, Number.MAX_SAFE_INTEGER);
   }
 
-  private newLinesAdded: number = 0;
+  private newLinesAdded = 0;
 
   public input?: string;
 
@@ -56,7 +56,7 @@ export class VerticalPerLineDiffHandler {
       this.editor,
     );
 
-    vscode.window.onDidChangeActiveTextEditor((editor) => {
+    const disposable = vscode.window.onDidChangeActiveTextEditor((editor) => {
       // When we switch away and back to this editor, need to re-draw decorations
       if (editor?.document.uri.fsPath === this.filepath) {
         this.editor = editor;
@@ -69,6 +69,7 @@ export class VerticalPerLineDiffHandler {
         this.queueDiffLine(undefined);
       }
     });
+    this.disposables.push(disposable);
   }
 
   private get filepath() {
@@ -148,10 +149,10 @@ export class VerticalPerLineDiffHandler {
               lineCount,
               this.editor.document.lineAt(lineCount - 1).text.length,
             ),
-            "\n" + text,
+            `\n${text}`,
           );
         } else {
-          editBuilder.insert(new vscode.Position(index, 0), text + "\n");
+          editBuilder.insert(new vscode.Position(index, 0), `${text}\n`);
         }
       },
       {
@@ -167,7 +168,7 @@ export class VerticalPerLineDiffHandler {
     this.newLinesAdded++;
   }
 
-  private async deleteLinesAt(index: number, numLines: number = 1) {
+  private async deleteLinesAt(index: number, numLines = 1) {
     const startLine = new vscode.Position(index, 0);
     await this.editor.edit(
       (editBuilder) => {
@@ -208,7 +209,23 @@ export class VerticalPerLineDiffHandler {
     this.editor.setDecorations(indexDecorationType, []);
   }
 
-  clear(accept: boolean) {
+  public getLineDeltaBeforeLine(line: number) {
+    // Returns the number of lines removed from a file when the diff currently active is closed
+    let totalLineDelta = 0;
+    for (const range of this.greenDecorationManager
+      .getRanges()
+      .sort((a, b) => a.start.line - b.start.line)) {
+      if (range.start.line > line) {
+        break;
+      }
+
+      totalLineDelta -= range.end.line - range.start.line + 1;
+    }
+
+    return totalLineDelta;
+  }
+
+  async clear(accept: boolean) {
     vscode.commands.executeCommand(
       "setContext",
       "continue.streamingDiff",
@@ -224,7 +241,7 @@ export class VerticalPerLineDiffHandler {
 
     this.editorToVerticalDiffCodeLens.delete(this.filepath);
 
-    this.editor.edit(
+    await this.editor.edit(
       (editBuilder) => {
         for (const range of rangesToDelete) {
           editBuilder.delete(
@@ -243,6 +260,13 @@ export class VerticalPerLineDiffHandler {
 
     this.cancelled = true;
     this.refreshCodeLens();
+    this.dispose();
+  }
+
+  disposables: vscode.Disposable[] = [];
+
+  dispose() {
+    this.disposables.forEach((disposable) => disposable.dispose());
   }
 
   get isCancelled() {
@@ -305,7 +329,7 @@ export class VerticalPerLineDiffHandler {
       // As an indicator of loading
       this.updateIndexLineDecorations();
 
-      for await (let diffLine of diffLineGenerator) {
+      for await (const diffLine of diffLineGenerator) {
         if (this.isCancelled) {
           return;
         }
@@ -362,6 +386,11 @@ export class VerticalPerLineDiffHandler {
     this.greenDecorationManager.shiftDownAfterLine(startLine, offset);
 
     // Shift the codelens objects
+    this.shiftCodeLensObjects(startLine, offset);
+  }
+
+  private shiftCodeLensObjects(startLine: number, offset: number) {
+    // Shift the codelens objects
     const blocks =
       this.editorToVerticalDiffCodeLens
         .get(this.filepath)
@@ -375,5 +404,24 @@ export class VerticalPerLineDiffHandler {
     this.editorToVerticalDiffCodeLens.set(this.filepath, blocks);
 
     this.refreshCodeLens();
+  }
+
+  public updateLineDelta(
+    filepath: string,
+    startLine: number,
+    lineDelta: number,
+  ) {
+    // Retrieve the diff blocks for the given file
+    const blocks = this.editorToVerticalDiffCodeLens.get(filepath);
+    if (!blocks) {
+      return;
+    }
+
+    //update decorations
+    this.redDecorationManager.shiftDownAfterLine(startLine, lineDelta);
+    this.greenDecorationManager.shiftDownAfterLine(startLine, lineDelta);
+
+    //update code lens
+    this.shiftCodeLensObjects(startLine, lineDelta);
   }
 }

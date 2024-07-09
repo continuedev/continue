@@ -29,31 +29,8 @@ export function removeQuotesAndEscapes(output: string): string {
   return output;
 }
 
-export function proxyFetch(url: string, init?: RequestInit): Promise<Response> {
-  if (!(window as any)._fetch) {
-    throw new Error("Proxy fetch not initialized");
-  }
-
-  if (!(url.startsWith("http://") || url.startsWith("https://"))) {
-    // Relative URL
-    const fullUrl = `${window.vscMediaUrl}/${url}`;
-    return (window as any)._fetch(fullUrl, init);
-  }
-
-  const proxyServerUrl =
-    (window as any).proxyServerUrl || "http://localhost:65433";
-
-  const headers = new Headers(init?.headers);
-  headers.append("x-continue-url", url);
-
-  return (window as any)._fetch(proxyServerUrl, {
-    ...init,
-    headers,
-  });
-}
-
 export function dedentAndGetCommonWhitespace(s: string): [string, string] {
-  let lines = s.split("\n");
+  const lines = s.split("\n");
   if (lines.length === 0 || (lines[0].trim() === "" && lines.length === 1)) {
     return ["", ""];
   }
@@ -74,7 +51,7 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
     // Iterate through the leading whitespace characters of the current line
     for (let j = 0; j < lcp.length; j++) {
       // If it doesn't have the same whitespace as lcp, then update lcp
-      if (j >= lines[i].length || lcp[j] != lines[i][j]) {
+      if (j >= lines[i].length || lcp[j] !== lines[i][j]) {
         lcp = lcp.slice(0, j);
         if (lcp === "") {
           return [s, ""];
@@ -91,12 +68,125 @@ export function dedentAndGetCommonWhitespace(s: string): [string, string] {
   return [lines.map((x) => x.replace(lcp, "")).join("\n"), lcp];
 }
 
-export function getBasename(filepath: string, n: number = 1): string {
-  return filepath.split(/[\\/]/).pop() ?? "";
+const SEP_REGEX = /[\\/]/;
+
+export function getBasename(filepath: string): string {
+  return filepath.split(SEP_REGEX).pop() ?? "";
 }
 
 export function getLastNPathParts(filepath: string, n: number): string {
-  return filepath.split(/[\\/]/).slice(-n).join("/");
+  if (n <= 0) {
+    return "";
+  }
+  return filepath.split(SEP_REGEX).slice(-n).join("/");
+}
+
+export function groupByLastNPathParts(
+  filepaths: string[],
+  n: number,
+): Record<string, string[]> {
+  return filepaths.reduce(
+    (groups, item) => {
+      const lastNParts = getLastNPathParts(item, n);
+      if (!groups[lastNParts]) {
+        groups[lastNParts] = [];
+      }
+      groups[lastNParts].push(item);
+      return groups;
+    },
+    {} as Record<string, string[]>,
+  );
+}
+
+export function getUniqueFilePath(
+  item: string,
+  itemGroups: Record<string, string[]>,
+): string {
+  const lastTwoParts = getLastNPathParts(item, 2);
+  const group = itemGroups[lastTwoParts];
+
+  let n = 2;
+  if (group.length > 1) {
+    while (
+      group.some(
+        (otherItem) =>
+          otherItem !== item &&
+          getLastNPathParts(otherItem, n) === getLastNPathParts(item, n),
+      )
+    ) {
+      n++;
+    }
+  }
+
+  return getLastNPathParts(item, n);
+}
+
+export function shortestRelativePaths(paths: string[]): string[] {
+  if (paths.length === 0) return [];
+
+  const partsLengths = paths.map((x) => x.split(SEP_REGEX).length);
+  const currentRelativePaths = paths.map(getBasename);
+  const currentNumParts = paths.map(() => 1);
+  const isDuplicated = currentRelativePaths.map(
+    (x, i) =>
+      currentRelativePaths.filter((y, j) => y === x && paths[i] !== paths[j])
+        .length > 1,
+  );
+
+  while (isDuplicated.some(Boolean)) {
+    const firstDuplicatedPath = currentRelativePaths.find(
+      (x, i) => isDuplicated[i],
+    );
+    if (!firstDuplicatedPath) break;
+
+    currentRelativePaths.forEach((x, i) => {
+      if (x === firstDuplicatedPath) {
+        currentNumParts[i] += 1;
+        currentRelativePaths[i] = getLastNPathParts(
+          paths[i],
+          currentNumParts[i],
+        );
+      }
+    });
+
+    isDuplicated.forEach((x, i) => {
+      if (x) {
+        isDuplicated[i] =
+          // Once we've used up all the parts, we can't make it longer
+          currentNumParts[i] < partsLengths[i] &&
+          currentRelativePaths.filter((y) => y === currentRelativePaths[i])
+            .length > 1;
+      }
+    });
+  }
+
+  return currentRelativePaths;
+}
+
+export function splitPath(path: string, withRoot?: string): string[] {
+  let parts = path.includes("/") ? path.split("/") : path.split("\\");
+  if (withRoot !== undefined) {
+    const rootParts = splitPath(withRoot);
+    parts = parts.slice(rootParts.length - 1);
+  }
+  return parts;
+}
+
+export function getRelativePath(
+  filepath: string,
+  workspaceDirs: string[],
+): string {
+  for (const workspaceDir of workspaceDirs) {
+    const filepathParts = splitPath(filepath);
+    const workspaceDirParts = splitPath(workspaceDir);
+    if (
+      filepathParts.slice(0, workspaceDirParts.length).join("/") ===
+      workspaceDirParts.join("/")
+    ) {
+      return filepathParts.slice(workspaceDirParts.length).join("/");
+    }
+  }
+  return splitPath(filepath).pop() ?? ""; // If the file is not in any of the workspaces, return the plain filename
 }
 
 export function getMarkdownLanguageTagForFile(filepath: string): string {
@@ -152,13 +242,17 @@ export function getMarkdownLanguageTagForFile(filepath: string): string {
       return "latex";
     case "sql":
       return "sql";
+    case "ps1":
+      return "powershell";
     default:
-      return "";
+      return ext ?? "";
   }
 }
 
 export function copyOf(obj: any): any {
-  if (obj === null || obj === undefined) return obj;
+  if (obj === null || obj === undefined) {
+    return obj;
+  }
   return JSON.parse(JSON.stringify(obj));
 }
 
@@ -167,3 +261,20 @@ export function calculateHash(fileContents: string): string {
   hash.update(fileContents);
   return hash.digest("hex");
 }
+
+export function deduplicateArray<T>(
+  array: T[],
+  equal: (a: T, b: T) => boolean,
+): T[] {
+  const result: T[] = [];
+
+  for (const item of array) {
+    if (!result.some((existingItem) => equal(existingItem, item))) {
+      result.push(item);
+    }
+  }
+
+  return result;
+}
+
+export type TODO = any;

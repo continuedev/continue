@@ -6,7 +6,7 @@ import {
   lightGray,
   vscForeground,
 } from "..";
-import { getPlatform } from "../../util";
+import { getPlatform, isJetBrains } from "../../util";
 
 const GridDiv = styled.div`
   display: grid;
@@ -80,8 +80,8 @@ function KeyboardShortcut(props: KeyboardShortcutProps) {
         {props.description}
       </span>
       <div className="flex gap-2 float-right">
-        {shortcut.split(" ").map((key) => {
-          return <KeyDiv text={key}></KeyDiv>;
+        {shortcut.split(" ").map((key, i) => {
+          return <KeyDiv key={i} text={key}></KeyDiv>;
         })}
       </div>
     </div>
@@ -116,18 +116,18 @@ const vscodeShortcuts: KeyboardShortcutProps[] = [
   },
   {
     mac: "⌥ ⌘ Y",
-    windows: "⎇ ⌃ Y",
+    windows: "Alt ⌃ Y",
     description: "Accept Top Change in Diff",
   },
   {
     mac: "⌥ ⌘ N",
-    windows: "⎇ ⌃ N",
+    windows: "Alt ⌃ N",
     description: "Reject Top Change in Diff",
   },
   {
     mac: "⌥ ⌘ L",
-    windows: "⎇ ⌃ L",
-    description: "Toggle Auxiliary Bar",
+    windows: "Alt ⌃ L",
+    description: "Toggle Continue Sidebar",
   },
   {
     mac: "⌘ ⇧ R",
@@ -163,6 +163,16 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
     description: "Select Code",
   },
   {
+    mac: "⌘ I",
+    windows: "⌃ I",
+    description: "Edit highlighted code",
+  },
+  {
+    mac: "⌘ ⇧ I",
+    windows: "⌃ ⇧ I",
+    description: "Toggle inline edit focus",
+  },
+  {
     mac: "⌘ ⇧ ⏎",
     windows: "⌃ ⇧ ⏎",
     description: "Accept Diff",
@@ -174,12 +184,12 @@ const jetbrainsShortcuts: KeyboardShortcutProps[] = [
   },
   {
     mac: "⌥ ⇧ J",
-    windows: "⎇ ⇧ J",
+    windows: "Alt ⇧ J",
     description: "Quick Input",
   },
   {
     mac: "⌥ ⌘ J",
-    windows: "⎇ ⌃ J",
+    windows: "Alt ⌃ J",
     description: "Toggle Sidebar",
   },
   {
@@ -199,18 +209,18 @@ function KeyboardShortcutsDialog() {
     <div className="p-2">
       <h3 className="my-3 mx-auto text-center">Keyboard Shortcuts</h3>
       <GridDiv>
-        {(localStorage.getItem("ide") === "jetbrains"
-          ? jetbrainsShortcuts
-          : vscodeShortcuts
-        ).map((shortcut) => {
-          return (
-            <KeyboardShortcut
-              mac={shortcut.mac}
-              windows={shortcut.windows}
-              description={shortcut.description}
-            />
-          );
-        })}
+        {(isJetBrains() ? jetbrainsShortcuts : vscodeShortcuts).map(
+          (shortcut, i) => {
+            return (
+              <KeyboardShortcut
+                key={i}
+                mac={shortcut.mac}
+                windows={shortcut.windows}
+                description={shortcut.description}
+              />
+            );
+          },
+        )}
       </GridDiv>
     </div>
   );

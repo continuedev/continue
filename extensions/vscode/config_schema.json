@@ -6,6 +6,12 @@
       "title": "BaseCompletionOptions",
       "type": "object",
       "properties": {
+        "stream": {
+          "title": "Stream",
+          "description": "Whether to stream the LLM response. Currently only respected by the 'anthropic' provider. Otherwise will always stream.",
+          "type": "boolean",
+          "default": true
+        },
         "temperature": {
           "title": "Temperature",
           "description": "The temperature of the completion.",
@@ -62,6 +68,28 @@
         }
       }
     },
+    "ClientCertificateOptions": {
+      "title": "ClientCertificateOptions",
+      "type": "object",
+      "properties": {
+        "cert": {
+          "title": "Cert Path",
+          "description": "Path to the client certificate file",
+          "type": "string"
+        },
+        "key": {
+          "title": "Key Path",
+          "description": "Path to the client certificate key file",
+          "type": "string"
+        },
+        "passphrase": {
+          "title": "Passphrase",
+          "description": "Passphrase for the client certificate key file",
+          "type": "string"
+        }
+      },
+      "required": ["cert", "key"]
+    },
     "RequestOptions": {
       "title": "RequestOptions",
       "type": "object",
@@ -109,6 +137,19 @@
           "title": "Extra Body Properties",
           "description": "This object will be merged with the body when making the HTTP requests",
           "type": "object"
+        },
+        "noProxy": {
+          "title": "No Proxy",
+          "description": "A list of hostnames for which Continue should not use the proxy specified in requestOptions.proxy",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "clientCertificate": {
+          "title": "Client Certificate",
+          "description": "Client certificate to use when making the HTTP request",
+          "$ref": "#/definitions/ClientCertificateOptions"
         }
       }
     },
@@ -128,6 +169,7 @@
             "openai",
             "free-trial",
             "anthropic",
+            "cohere",
             "bedrock",
             "together",
             "ollama",
@@ -135,30 +177,41 @@
             "huggingface-inference-api",
             "llama.cpp",
             "replicate",
-            "google-palm",
+            "gemini",
             "lmstudio",
             "llamafile",
             "mistral",
             "deepinfra",
-            "flowise",
-            "groq"
+            "groq",
+            "fireworks",
+            "cloudflare",
+            "deepseek",
+            "azure",
+            "msty"
           ],
           "markdownEnumDescriptions": [
-            "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/openai)",
-            "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.py where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/freetrial)",
-            "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/anthropicllm)",
+            "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
+            "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.json where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/freetrial)",
+            "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/anthropicllm)",
+            "### Cohere\nTo use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/cohere)",
             "### Bedrock\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock/claude/)",
-            "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/togetherllm)",
-            "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.py (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/ollama)",
-            "### Huggingface TGI\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/huggingfacetgi)",
-            "### Huggingface Inference API\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/huggingfaceinferenceapi)",
-            "### Llama.cpp\nllama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:\n\n1. Clone the repository with `git clone https://github.com/ggerganov/llama.cpp`.\n2. `cd llama.cpp`\n3. Run `make` to build the server.\n4. Download the model you'd like to use and place it in the `llama.cpp/models` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))\n5. Run the llama.cpp server with the command below (replacing with the model you downloaded):\n\n```shell\n.\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf\n```\n\nAfter it's up and running, you can start using Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamacpp)",
-            "### Replicate\nReplicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/replicatellm)",
-            "### Google PALM\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/googlepalmapi)",
-            "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/lmstudio)",
-            "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/llamafile)",
+            "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/togetherllm)",
+            "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/ollama)",
+            "### Huggingface TGI\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/huggingfacetgi)",
+            "### Huggingface Inference API\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/huggingfaceinferenceapi)",
+            "### Llama.cpp\nllama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:\n\n1. Clone the repository with `git clone https://github.com/ggerganov/llama.cpp`.\n2. `cd llama.cpp`\n3. Run `make` to build the server.\n4. Download the model you'd like to use and place it in the `llama.cpp/models` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))\n5. Run the llama.cpp server with the command below (replacing with the model you downloaded):\n\n```shell\n.\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf\n```\n\nAfter it's up and running, you can start using Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/llamacpp)",
+            "### Replicate\nReplicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/replicatellm)",
+            "### Gemini API\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/geminiapi)",
+            "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/lmstudio)",
+            "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/llamafile)",
             "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
-            "### DeepInfra\n\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/deepinfra)"
+            "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
+            "### Groq\nGroq provides extremely fast inference of open-source language models. To get started, obtain an API key from [their console](https://console.groq.com/keys).",
+            "### Fireworks\nFireworks is a fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://fireworks.ai/api-keys).",
+            "### Cloudflare Workers AI\n\n[Reference](https://developers.cloudflare.com/workers-ai/)",
+            "### Deepseek\n Deepseek's API provides the best pricing for their state-of-the-art Deepseek Coder models. To get started, obtain an API key from [their console](https://platform.deepseek.com/api_keys)",
+            "### Azure OpenAI\n Azure OpenAI lets you securely run OpenAI's models on Azure. To get started, follow the steps [here](https://docs.continue.dev/reference/Model%20Providers/azure)",
+            "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)"
           ],
           "type": "string"
         },
@@ -169,7 +222,7 @@
         },
         "apiKey": {
           "title": "Api Key",
-          "description": "OpenAI, Anthropic, Together, or other API key",
+          "description": "OpenAI, Anthropic, Cohere, Together, or other API key",
           "type": "string"
         },
         "apiBase": {
@@ -201,13 +254,14 @@
             "neural-chat",
             "codellama-70b",
             "llava",
-            "gemma"
+            "gemma",
+            "llama3"
           ],
           "type": "string"
         },
         "promptTemplates": {
           "title": "Prompt Templates",
-          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://continue.dev/docs/model-setup/configuration#customizing-the-edit-prompt) for an example.",
+          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt) for an example.",
           "type": "object",
           "additionalProperties": {
             "type": "string"
@@ -297,10 +351,12 @@
                 "enum": [
                   "openai",
                   "anthropic",
-                  "google-palm",
+                  "cohere",
+                  "gemini",
                   "huggingface-inference-api",
                   "replicate",
-                  "together"
+                  "together",
+                  "cloudflare"
                 ]
               }
             },
@@ -350,6 +406,67 @@
           "if": {
             "properties": {
               "provider": {
+                "enum": ["cloudflare"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "accountId": {
+                "type": "string"
+              },
+              "aiGatewaySlug": {
+                "type": "string"
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "@cf/meta/llama-3-8b-instruct",
+                      "@hf/thebloke/deepseek-coder-6.7b-instruct-awq",
+                      "@cf/deepseek-ai/deepseek-math-7b-instruct",
+                      "@cf/thebloke/discolm-german-7b-v1-awq",
+                      "@cf/tiiuae/falcon-7b-instruct",
+                      "@cf/google/gemma-2b-it-lora",
+                      "@hf/google/gemma-7b-it",
+                      "@cf/google/gemma-7b-it-lora",
+                      "@hf/nousresearch/hermes-2-pro-mistral-7b",
+                      "@cf/meta/llama-2-7b-chat-fp16",
+                      "@cf/meta/llama-2-7b-chat-int8",
+                      "@cf/meta-llama/llama-2-7b-chat-hf-lora",
+                      "@hf/thebloke/llama-2-13b-chat-awq",
+                      "@hf/thebloke/llamaguard-7b-awq",
+                      "@cf/mistral/mistral-7b-instruct-v0.1",
+                      "@hf/mistral/mistral-7b-instruct-v0.2",
+                      "@cf/mistral/mistral-7b-instruct-v0.2-lora",
+                      "@hf/thebloke/neural-chat-7b-v3-1-awq",
+                      "@cf/openchat/openchat-3.5-0106",
+                      "@hf/thebloke/openhermes-2.5-mistral-7b-awq",
+                      "@cf/microsoft/phi-2",
+                      "@cf/qwen/qwen1.5-0.5b-chat",
+                      "@cf/qwen/qwen1.5-1.8b-chat",
+                      "@cf/qwen/qwen1.5-7b-chat-awq",
+                      "@cf/qwen/qwen1.5-14b-chat-awq",
+                      "@cf/defog/sqlcoder-7b-2",
+                      "@hf/nexusflow/starling-lm-7b-beta",
+                      "@cf/tinyllama/tinyllama-1.1b-chat-v1.0",
+                      "@hf/thebloke/zephyr-7b-beta-awq",
+                      "@hf/thebloke/deepseek-coder-6.7b-base-awq"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
                 "enum": ["openai"]
               }
             },
@@ -363,11 +480,12 @@
                     "enum": [
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
+                      "gpt-4o",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
                       "gpt-4-0125-preview",
-                      "gpt-4-turbo-preview",
+                      "gpt-4-turbo",
                       "AUTODETECT"
                     ]
                   },
@@ -394,6 +512,8 @@
                 "anyOf": [
                   {
                     "enum": [
+                      "llama3-8b",
+                      "llama3-70b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -423,15 +543,14 @@
             "properties": {
               "model": {
                 "enum": [
+                  "gpt-4o",
+                  "codestral-latest",
+                  "llama3-70b",
                   "gpt-3.5-turbo",
-                  "gpt-4",
                   "phind-codellama-34b",
                   "gemini-pro",
-                  "gpt-4-vision-preview",
-                  "codellama-70b",
                   "mistral-8x7b",
-                  "claude-3-opus-20240229",
-                  "claude-3-sonnet-20240229",
+                  "claude-3-5-sonnet-20240620",
                   "claude-3-haiku-20240307",
                   "AUTODETECT"
                 ]
@@ -461,10 +580,11 @@
                     "enum": [
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
+                      "gpt-4o",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
-                      "gpt-4-turbo-preview",
+                      "gpt-4-turbo",
                       "gpt-4-vision-preview",
                       "mistral-7b",
                       "mistral-8x7b",
@@ -474,6 +594,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -487,6 +609,7 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
+                      "starcoder2-3b",
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",
@@ -518,6 +641,7 @@
                     "enum": [
                       "claude-2",
                       "claude-instant-1",
+                      "claude-3-5-sonnet-20240620",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
                       "claude-3-haiku-20240307",
@@ -528,6 +652,23 @@
                     "type": "string"
                   }
                 ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["cohere"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["command-r", "command-r-plus"]
               }
             }
           }
@@ -564,7 +705,7 @@
           "if": {
             "properties": {
               "provider": {
-                "enum": ["google-palm"]
+                "enum": ["gemini"]
               }
             },
             "required": ["provider"]
@@ -572,7 +713,14 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["chat-bison-001", "gemini-pro"]
+                "enum": [
+                  "chat-bison-001",
+                  "gemini-pro",
+                  "gemini-1.5-pro-latest",
+                  "gemini-1.5-pro",
+                  "gemini-1.5-flash-latest",
+                  "gemini-1.5-flash"
+                ]
               }
             }
           }
@@ -596,6 +744,8 @@
                       "mistral-8x7b",
                       "llama2-7b",
                       "llama2-13b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -658,6 +808,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -670,7 +822,8 @@
                       "deepseek-1b",
                       "stable-code-3b",
                       "starcoder-1b",
-                      "starcoder-3b"
+                      "starcoder-3b",
+                      "starcoder2-3b"
                     ]
                   },
                   {
@@ -703,6 +856,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -717,6 +872,7 @@
                       "stable-code-3b",
                       "starcoder-1b",
                       "starcoder-3b",
+                      "starcoder2-3b",
                       "AUTODETECT"
                     ]
                   },
@@ -741,7 +897,31 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["mistral-tiny", "mistral-small", "mistral-medium"]
+                "enum": [
+                  "codestral-latest",
+                  "open-mistral-7b",
+                  "open-mixtral-8x7b",
+                  "open-mixtral-8x22b",
+                  "mistral-small-latest",
+                  "mistral-large-latest"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["deepseek"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["deepseek-chat", "deepseek-coder"]
               }
             }
           }
@@ -758,7 +938,31 @@
           "then": {
             "properties": {
               "model": {
-                "enum": ["llama2-70b", "mistral-8x7b", "gemma"]
+                "enum": [
+                  "llama2-70b",
+                  "mistral-8x7b",
+                  "gemma",
+                  "llama3-8b",
+                  "llama3-70b",
+                  "AUTODETECT"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["fireworks"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["starcoder-7b"]
               }
             }
           }
@@ -889,10 +1093,11 @@
                     "enum": [
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
+                      "gpt-4o",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
-                      "gpt-4-turbo-preview",
+                      "gpt-4-turbo",
                       "gpt-4-vision-preview",
                       "mistral-7b",
                       "mistral-8x7b",
@@ -902,6 +1107,8 @@
                       "codellama-13b",
                       "codellama-34b",
                       "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -912,19 +1119,27 @@
                       "deepseek-33b",
                       "claude-2",
                       "claude-instant-1",
+                      "claude-3-5-sonnet-20240620",
                       "claude-3-opus-20240229",
                       "claude-3-sonnet-20240229",
                       "claude-3-haiku-20240307",
                       "claude-2.1",
+                      "command-r",
+                      "command-r-plus",
                       "chat-bison-001",
                       "gemini-pro",
+                      "gemini-1.5-pro-latest",
+                      "gemini-1.5-pro",
+                      "gemini-1.5-flash-latest",
+                      "gemini-1.5-flash",
                       "mistral-tiny",
                       "mistral-small",
                       "mistral-medium",
                       "deepseek-1b",
                       "stable-code-3b",
                       "starcoder-1b",
-                      "starcoder-3b"
+                      "starcoder-3b",
+                      "starcoder2-3b"
                     ]
                   },
                   {
@@ -980,7 +1195,8 @@
                 "edit",
                 "comment",
                 "http",
-                "commit"
+                "commit",
+                "review"
               ],
               "type": "string",
               "markdownEnumDescriptions": [
@@ -991,7 +1207,8 @@
                 "Edit the highlighted code with given instructions",
                 "Add comments to the highlighted code",
                 "Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
-                "Generate a commit message for the current changes"
+                "Generate a commit message for the current changes",
+                "Review code and give feedback"
               ]
             },
             {
@@ -1062,6 +1279,27 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["share"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "outputDir": {
+                    "type": "string",
+                    "markdownDescription": "If outputDir is set to `.` or begins with `./` or `.\\`, file will be saved to the current workspace or a subdirectory thereof, respectively. `~` can similarly be used to specify the user's home directory."
+                  }
+                }
+              }
+            }
+          }
         }
       ],
       "required": ["name", "description"]
@@ -1111,11 +1349,15 @@
                 "outline",
                 "postgres",
                 "code",
-                "system"
+                "currentFile",
+                "url",
+                "database",
+                "os"
               ],
               "markdownEnumDescriptions": [
                 "Reference the contents of the current changes as given by `git diff`",
                 "Reference the contents of the terminal",
+                "Reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread",
                 "Reference the contents of all open or pinned files.",
                 "Enter a search phrase and include the Google search results as context",
                 "Reference the results of a ripgrep search in your codebase",
@@ -1125,14 +1367,15 @@
                 "Include important files from a folder in the prompt, as determined by similarity search",
                 "Reference GitHub issues from a repository",
                 "Retrieve important pages from a documentation website, as determined by similarity search",
-                "Index and retrieve the contents of any documentation site, using embeddings to find important snippets",
                 "Display a file tree of the current workspace",
+                "Include important highlighted sections from your code",
                 "Include a repo map showing important code objects",
-                "Displays important snippets of code from the currently open files",
-                "Displays definition lines from the currently open files",
                 "References Postgres table schema and sample rows",
                 "Reference specific functions and classes from throughout your codebase",
-                "Reference your operating system and cpu"
+                "Reference the contents of the currently active file",
+                "Reference the contents of a page at a URL",
+                "Reference table schemas",
+                "Operating system and CPU Information"
               ],
               "type": "string"
             },
@@ -1248,56 +1491,63 @@
             }
           },
           "then": {
-            "connections": {
-              "type": "array",
-              "description": "A list of database connections",
-              "items": {
-                "type": "object",
+            "properties": {
+              "params": {
                 "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "A unique name for this database connection"
-                  },
-                  "connection_type": {
-                    "type": "string",
-                    "description": "The type of database (e.g., 'postgres', 'mysql')",
-                    "enum": ["postgres", "mysql", "sqlite"]
-                  },
-                  "connection": {
-                    "type": "object",
-                    "properties": {
-                      "user": {
-                        "type": "string",
-                        "description": "The database user name"
+                  "connections": {
+                    "type": "array",
+                    "description": "A list of database connections",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "A unique name for this database connection"
+                        },
+                        "connection_type": {
+                          "type": "string",
+                          "description": "The type of database (e.g., 'postgres', 'mysql')",
+                          "enum": ["postgres", "mysql", "sqlite"]
+                        },
+                        "connection": {
+                          "type": "object",
+                          "properties": {
+                            "user": {
+                              "type": "string",
+                              "description": "The database user name"
+                            },
+                            "host": {
+                              "type": "string",
+                              "description": "The host address of the database server"
+                            },
+                            "database": {
+                              "type": "string",
+                              "description": "The name of the database to connect to"
+                            },
+                            "password": {
+                              "type": "string",
+                              "description": "The password for the database user"
+                            },
+                            "port": {
+                              "type": "integer",
+                              "description": "The port number to connect to at the host"
+                            },
+                            "filename": {
+                              "type": "string",
+                              "description": "File location for simple file DB's"
+                            }
+                          },
+                          "required": []
+                        }
                       },
-                      "host": {
-                        "type": "string",
-                        "description": "The host address of the database server"
-                      },
-                      "database": {
-                        "type": "string",
-                        "description": "The name of the database to connect to"
-                      },
-                      "password": {
-                        "type": "string",
-                        "description": "The password for the database user"
-                      },
-                      "port": {
-                        "type": "integer",
-                        "description": "The port number to connect to at the host"
-                      },
-                      "filename": {
-                        "type": "string",
-                        "description": "File location for simple file DB's"
-                      }
-                    },
-                    "required": []
+                      "required": ["name", "connection_type", "connection"]
+                    }
                   }
                 },
-                "required": ["name", "type", "connection"]
+                "required": ["connections"]
               }
             },
-            "required": ["connections"]
+            "required": ["params"]
           }
         },
         {
@@ -1362,9 +1612,26 @@
                   "apiVersion": {
                     "type": "integer",
                     "markdownDescription": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property."
+                  },
+                  "requestOptions": {
+                    "title": "Request Options",
+                    "description": "Options for the HTTPS request to Jira.",
+                    "default": {
+                      "timeout": 7200,
+                      "verifySsl": null,
+                      "caBundlePath": null,
+                      "proxy": null,
+                      "headers": null,
+                      "extraBodyProperties": null
+                    },
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/RequestOptions"
+                      }
+                    ]
                   }
                 },
-                "required": ["domain", "email", "token"]
+                "required": ["domain", "token"]
               }
             },
             "required": ["params"]
@@ -1496,13 +1763,13 @@
       "properties": {
         "allowAnonymousTelemetry": {
           "title": "Allow Anonymous Telemetry",
-          "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data. Learn more in [the docs](https://continue.dev/docs/telemetry).",
+          "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data. Learn more in [the docs](https://docs.continue.dev/telemetry).",
           "default": true,
           "type": "boolean"
         },
         "models": {
           "title": "Models",
-          "markdownDescription": "Learn about setting up models in [the documentation](https://continue.dev/docs/model-setup/overview).",
+          "markdownDescription": "Learn about setting up models in [the documentation](https://docs.continue.dev/model-setup/overview).",
           "default": [
             {
               "title": "GPT-4 (trial)",
@@ -1539,9 +1806,18 @@
             }
           ]
         },
+        "requestOptions": {
+          "title": "Request Options",
+          "description": "Default request options for all fetch requests from models and context providers. These will be overriden by any model-specific request options.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RequestOptions"
+            }
+          ]
+        },
         "slashCommands": {
           "title": "Slash Commands",
-          "markdownDescription": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the [documentation](https://continue.dev/docs/customization/slash-commands).",
+          "markdownDescription": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the [documentation](https://docs.continue.dev/customization/slash-commands).",
           "default": [],
           "type": "array",
           "items": {
@@ -1550,12 +1826,12 @@
         },
         "customCommands": {
           "title": "Custom Commands",
-          "markdownDescription": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt. Learn more in the [documentation](https://continue.dev/docs/customization/slash-commands#custom-commands-use-natural-language).",
+          "markdownDescription": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt. Learn more in the [documentation](https://docs.continue.dev/customization/slash-commands#custom-commands-use-natural-language).",
           "default": [
             {
               "name": "test",
-              "prompt": "Write a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
-              "description": "This is an example custom command. Use /config to edit it and create more"
+              "prompt": "{{{ input }}}\n\nWrite a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+              "description": "This is an example custom command. Open config.json to edit it and create more"
             }
           ],
           "type": "array",
@@ -1565,7 +1841,7 @@
         },
         "contextProviders": {
           "title": "Context Providers",
-          "markdownDescription": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in [the documentation](https://continue.dev/docs/customization/context-providers).",
+          "markdownDescription": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in [the documentation](https://docs.continue.dev/customization/context-providers).",
           "default": [],
           "type": "array",
           "items": {
@@ -1603,11 +1879,19 @@
         },
         "embeddingsProvider": {
           "title": "Embeddings Provider",
-          "markdownDescription": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options [here](https://continue.dev/docs/walkthroughs/codebase-embeddings#embeddings-providers).",
+          "markdownDescription": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options [here](https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers).",
           "type": "object",
           "properties": {
             "provider": {
-              "enum": ["transformers.js", "ollama", "openai"]
+              "enum": [
+                "huggingface-tei",
+                "transformers.js",
+                "ollama",
+                "openai",
+                "cohere",
+                "free-trial",
+                "gemini"
+              ]
             },
             "model": {
               "type": "string"
@@ -1617,6 +1901,11 @@
             },
             "apiBase": {
               "type": "string"
+            },
+            "requestOptions": {
+              "title": "Request Options",
+              "description": "Request options to be used in any fetch requests made by the embeddings provider",
+              "$ref": "#/definitions/RequestOptions"
             }
           },
           "required": ["provider"],
@@ -1625,32 +1914,159 @@
               "if": {
                 "properties": {
                   "provider": {
-                    "enum": ["ollama"]
+                    "enum": ["cohere"]
                   }
                 },
                 "required": ["provider"]
               },
               "then": {
-                "required": ["model"]
+                "required": ["apiKey"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["gemini"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "required": ["apiKey"]
+              }
+            }
+          ]
+        },
+        "reranker": {
+          "title": "Reranker",
+          "markdownDescription": "The reranker is responsible for selecting the final results when retrieving snippets from your codebase.",
+          "type": "object",
+          "properties": {
+            "name": {
+              "enum": ["cohere", "voyage", "llm", "free-trial"]
+            },
+            "params": {
+              "type": "object"
+            }
+          },
+          "required": ["name"],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["cohere"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "enum": [
+                          "rerank-english-v3.0",
+                          "rerank-multilingual-v3.0",
+                          "rerank-english-v2.0",
+                          "rerank-multilingual-v2.0"
+                        ]
+                      },
+                      "apiBase": {
+                        "type": "string"
+                      },
+                      "apiKey": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["apiKey"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["llm"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "modelTitle": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["modelTitle"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["voyage"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "apiKey": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "enum": ["rerank-lite-1", "rerank-1"]
+                      }
+                    },
+                    "required": ["apiKey"]
+                  }
+                }
               }
             }
           ]
         },
         "tabAutocompleteModel": {
           "title": "Tab Autocomplete Model",
-          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder:3b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder2:3b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
           "default": {
             "title": "Tab Autocomplete Model",
             "provider": "ollama",
             "model": "deepseek-coder:1.3b-base"
           },
-          "$ref": "#/definitions/ModelDescription"
+          "oneOf": [
+            {
+              "$ref": "#/definitions/ModelDescription"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ModelDescription"
+              }
+            }
+          ]
         },
         "tabAutocompleteOptions": {
           "title": "TabAutocompleteOptions",
           "type": "object",
-          "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://continue.dev/docs/walkthroughs/tab-autocomplete#configuration-options).",
+          "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://docs.continue.dev/walkthroughs/tab-autocomplete#configuration-options).",
           "properties": {
+            "disable": {
+              "type": "boolean",
+              "description": "Disable tab autocomplete. This can also be done from the IDE settings.",
+              "default": false
+            },
             "useCopyBuffer": {
               "type": "boolean",
               "description": "Determines whether the copy buffer will be considered when contructing the prompt."
@@ -1694,6 +2110,13 @@
             "useOtherFiles": {
               "type": "boolean",
               "description": "Defaults to true. If set to false, Continue will not attempt to include snippets from other files."
+            },
+            "disableInFiles": {
+              "description": "A list of files / glob patterns in which to disable tab autocomplete. For example, *.csv if you'd like to disable autocomplete in .csv files.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             }
           },
           "required": []
@@ -1719,6 +2142,86 @@
               "enum": ["top", "bottom"],
               "default": "top",
               "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
+            },
+            "fontSize": {
+              "type": "number"
+            },
+            "displayRawMarkdown": {
+              "type": "boolean",
+              "description": "If set to true, we will display the model output as raw markdown.",
+              "default": false
+            }
+          }
+        },
+        "experimental": {
+          "type": "object",
+          "title": "Experimental",
+          "description": "Experimental properties are subject to change.",
+          "properties": {
+            "defaultContext": {
+              "type": "array",
+              "items": {
+                "enum": ["activeFile"]
+              }
+            },
+            "modelRoles": {
+              "type": "object",
+              "properties": {
+                "inlineEdit": {
+                  "type": "string"
+                }
+              }
+            },
+            "promptPath": {
+              "type": "string"
+            },
+            "quickActions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The title of the quick action that will display in the Code Lens."
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "The prompt that will be sent to the model when the quick action is invoked, with the function or class body concatenated."
+                  },
+                  "sendToChat": {
+                    "type": "boolean",
+                    "description": "If true, the result of the quick action will be sent to the chat panel. If false, the streamed result will be inserted into the document.",
+                    "default": false
+                  }
+                },
+                "required": ["prompt", "title"]
+              },
+              "description": "Quick actions are a way to add custom commands to the Code Lens of function and class declarations."
+            },
+            "contextMenuPrompts": {
+              "type": "object",
+              "properties": {
+                "comment": {
+                  "type": "string",
+                  "default": "Write comments for this code. Do not change anything about the code itself."
+                },
+                "docstring": {
+                  "type": "string",
+                  "default": "Write a docstring for this code. Do not change anything about the code itself."
+                },
+                "fix": {
+                  "type": "string",
+                  "default": "Fix this code"
+                },
+                "optimize": {
+                  "type": "string",
+                  "default": "Optimize this code"
+                },
+                "fixGrammar": {
+                  "type": "string",
+                  "default": "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing."
+                }
+              }
             }
           }
         }

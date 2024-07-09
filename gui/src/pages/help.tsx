@@ -1,4 +1,5 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -9,8 +10,8 @@ import {
   vscForeground,
 } from "../components";
 import KeyboardShortcutsDialog from "../components/dialogs/KeyboardShortcuts";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
-import { postToIde } from "../util/ide";
 
 const ResourcesDiv = styled.div`
   margin: 4px;
@@ -55,6 +56,7 @@ const TutorialButton = styled(Button)`
 function HelpPage() {
   useNavigationListener();
   const navigate = useNavigate();
+  const ideMessenger = useContext(IdeMessengerContext);
 
   return (
     <div className="overflow-y-scroll overflow-x-hidden">
@@ -74,7 +76,8 @@ function HelpPage() {
         <h3 className="text-lg font-bold m-2 inline-block">Help Center</h3>
         <TutorialButton
           onClick={() => {
-            postToIde("showTutorial", undefined);
+            ideMessenger.post("showTutorial", undefined);
+            navigate("/onboarding");
           }}
         >
           Open tutorial
@@ -111,7 +114,7 @@ function HelpPage() {
         </IconDiv>
         <IconDiv backgroundColor={"#1bbe84a8"}>
           <a
-            href="https://continue.dev/docs/how-to-use-continue"
+            href="https://docs.continue.dev/how-to-use-continue"
             target="_blank"
           >
             <svg

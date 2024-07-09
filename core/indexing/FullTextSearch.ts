@@ -1,14 +1,23 @@
-import { Chunk, IndexTag, IndexingProgressUpdate } from "..";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
 import {
-  CodebaseIndex,
+  BranchAndDir,
+  Chunk,
+  IndexTag,
+  IndexingProgressUpdate,
+} from "../index.js";
+import { getBasename } from "../util/index.js";
+import { RETRIEVAL_PARAMS } from "../util/parameters.js";
+import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
+import {
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
-} from "./types";
+  type CodebaseIndex,
+} from "./types.js";
 
 export class FullTextSearchCodebaseIndex implements CodebaseIndex {
-  artifactId: string = "sqliteFts";
+  relativeExpectedTime: number = 0.2;
+  artifactId = "sqliteFts";
 
   private async _createTables(db: DatabaseConnection) {
     await db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(
@@ -41,24 +50,30 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
 
       // Insert chunks
       const chunks = await db.all(
-        `SELECT * FROM chunks WHERE path = ? AND cacheKey = ?`,
+        "SELECT * FROM chunks WHERE path = ? AND cacheKey = ?",
         [item.path, item.cacheKey],
       );
 
-      for (let chunk of chunks) {
+      for (const chunk of chunks) {
         const { lastID } = await db.run(
-          `INSERT INTO fts (path, content) VALUES (?, ?)`,
+          "INSERT INTO fts (path, content) VALUES (?, ?)",
           [item.path, chunk.content],
         );
         await db.run(
-          `INSERT INTO fts_metadata (id, path, cacheKey, chunkId) VALUES (?, ?, ?, ?)`,
+          `INSERT INTO fts_metadata (id, path, cacheKey, chunkId) 
+           VALUES (?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET
+           path = excluded.path,
+           cacheKey = excluded.cacheKey,
+           chunkId = excluded.chunkId`,
           [lastID, item.path, item.cacheKey, chunk.id],
         );
       }
 
       yield {
         progress: i / results.compute.length,
-        desc: `Indexing ${item.path}`,
+        desc: `Indexing ${getBasename(item.path)}`,
+        status: "indexing",
       };
       markComplete([item], IndexResultType.Compute);
     }
@@ -76,24 +91,29 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     // Delete
     for (const item of results.del) {
       const { lastID } = await db.run(
-        `DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?`,
+        "DELETE FROM fts_metadata WHERE path = ? AND cacheKey = ?",
         [item.path, item.cacheKey],
       );
-      await db.run(`DELETE FROM fts WHERE rowid = ?`, [lastID]);
+      await db.run("DELETE FROM fts WHERE rowid = ?", [lastID]);
 
       markComplete([item], IndexResultType.Delete);
     }
   }
 
   async retrieve(
-    tags: IndexTag[],
+    tags: BranchAndDir[],
     text: string,
     n: number,
     directory: string | undefined,
     filterPaths: string[] | undefined,
+    bm25Threshold: number = RETRIEVAL_PARAMS.bm25Threshold,
   ): Promise<Chunk[]> {
     const db = await SqliteDb.get();
-    const tagStrings = tags.map(tagToString);
+
+    // Notice that the "chunks" artifactId is used because of linking between tables
+    const tagStrings = tags.map((tag) => {
+      return tagToString({ ...tag, artifactId: ChunkCodebaseIndex.artifactId });
+    });
 
     const query = `SELECT fts_metadata.chunkId, fts_metadata.path, fts.content, rank
     FROM fts
@@ -111,11 +131,13 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     ORDER BY rank
     LIMIT ?`;
 
-    const results = await db.all(query, [
+    let results = await db.all(query, [
       ...tagStrings,
       ...(filterPaths || []),
-      n,
+      Math.ceil(n),
     ]);
+
+    results = results.filter((result) => result.rank <= bm25Threshold);
 
     const chunks = await db.all(
       `SELECT * FROM chunks WHERE id IN (${results.map(() => "?").join(",")})`,

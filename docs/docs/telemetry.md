@@ -8,18 +8,23 @@ keywords: [telemetry, anonymous, usage info, opt out]
 
 ## Overview
 
-Continue collects and reports **anonymous** usage information. This data is essential to understanding how we should improve the product. You can opt out of it at any time. We use [Posthog](https://posthog.com/), an open source platform for product analytics, to collect and store the data. You can review the code [here](https://github.com/continuedev/continue/blob/main/gui/src/hooks/CustomPostHogProvider.tsx).
+Continue collects and reports **anonymous** usage information.
+
+This data is essential to understanding how we should improve the product. You can opt out of it at any time.
+
+We use [Posthog](https://posthog.com/), an open source platform for product analytics, to collect and store the data. You can review the code [here](https://github.com/continuedev/continue/blob/main/gui/src/hooks/CustomPostHogProvider.tsx), or review our official policy [here](https://continue.dev/privacy).
+
+## Tracking policy
+
+All data is anonymous and cleaned of PII before being sent to PostHog.
 
 ## What we track
 
-We track
-
-- whether you accept or reject suggestions (not the code itself)
-- the name of slash commands that are run
-- the name of your OS and IDE
-- the name of the default model you configured
-
-All data is anonymous and cleaned of PII before being sent to PostHog.
+- Whether you accept or reject suggestions (never including the code or the prompt)
+- The name of the model and command used
+- The number of tokens generated
+- The name of your OS and IDE
+- Pageviews
 
 ## How to opt out
 

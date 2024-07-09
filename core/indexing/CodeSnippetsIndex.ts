@@ -1,28 +1,27 @@
-import fs from "fs";
-import path from "path";
-import {
+import type {
   ChunkWithoutID,
   ContextItem,
   ContextSubmenuItem,
   IDE,
   IndexTag,
   IndexingProgressUpdate,
-} from "..";
-import { getBasename } from "../util";
+} from "../index.js";
+import { getBasename, getLastNPathParts } from "../util/index.js";
 import {
-  getLanguageForFile,
+  TSQueryType,
   getParserForFile,
-  supportedLanguages,
-} from "../util/treeSitter";
-import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex";
+  getQueryForFile,
+} from "../util/treeSitter.js";
+import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
-  CodebaseIndex,
   IndexResultType,
   MarkCompleteCallback,
   RefreshIndexResults,
-} from "./types";
+  type CodebaseIndex,
+} from "./types.js";
 
 export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
+  relativeExpectedTime: number = 1;
   artifactId = "codeSnippets";
 
   constructor(private readonly ide: IDE) {}
@@ -46,35 +45,16 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     )`);
   }
 
-  private getQuerySource(filepath: string) {
-    const fullLangName = supportedLanguages[filepath.split(".").pop() ?? ""];
-    const sourcePath = path.join(
-      __dirname,
-      "..",
-      "tree-sitter",
-      "code-snippet-queries",
-      `tree-sitter-${fullLangName}-tags.scm`,
-    );
-    if (!fs.existsSync(sourcePath)) {
-      return "";
-    }
-    return fs.readFileSync(sourcePath).toString();
-  }
-
   async getSnippetsInFile(
     filepath: string,
     contents: string,
   ): Promise<(ChunkWithoutID & { title: string })[]> {
-    const lang = await getLanguageForFile(filepath);
-    if (!lang) {
-      return [];
-    }
     const parser = await getParserForFile(filepath);
     if (!parser) {
       return [];
     }
     const ast = parser.parse(contents);
-    const query = lang?.query(this.getQuerySource(filepath));
+    const query = await getQueryForFile(filepath, TSQueryType.CodeSnippets);
     const matches = query?.matches(ast.rootNode);
 
     return (
@@ -104,15 +84,21 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
     for (let i = 0; i < results.compute.length; i++) {
       const compute = results.compute[i];
-      const snippets = await this.getSnippetsInFile(
-        compute.path,
-        await this.ide.readFile(compute.path),
-      );
+
+      let snippets: (ChunkWithoutID & { title: string })[] = [];
+      try {
+        snippets = await this.getSnippetsInFile(
+          compute.path,
+          await this.ide.readFile(compute.path),
+        );
+      } catch (e) {
+        // If can't parse, assume malformatted code
+      }
 
       // Add snippets to sqlite
       for (const snippet of snippets) {
         const { lastID } = await db.run(
-          `INSERT INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)`,
+          "INSERT INTO code_snippets (path, cacheKey, content, title, startLine, endLine) VALUES (?, ?, ?, ?, ?, ?)",
           [
             compute.path,
             compute.cacheKey,
@@ -124,14 +110,15 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
         );
 
         await db.run(
-          `INSERT INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)`,
+          "INSERT INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)",
           [lastID, tagString],
         );
       }
 
       yield {
-        desc: `Indexing ${compute.path}`,
+        desc: `Indexing ${getBasename(compute.path)}`,
         progress: i / results.compute.length,
+        status: "indexing",
       };
       markComplete([compute], IndexResultType.Compute);
     }
@@ -139,10 +126,10 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
     for (let i = 0; i < results.del.length; i++) {
       const del = results.del[i];
       const deleted = await db.run(
-        `DELETE FROM code_snippets WHERE path = ? AND cacheKey = ?`,
+        "DELETE FROM code_snippets WHERE path = ? AND cacheKey = ?",
         [del.path, del.cacheKey],
       );
-      await db.run(`DELETE FROM code_snippets_tags WHERE snippetId = ?`, [
+      await db.run("DELETE FROM code_snippets_tags WHERE snippetId = ?", [
         deleted.lastID,
       ]);
       markComplete([del], IndexResultType.Delete);
@@ -150,13 +137,13 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
     for (let i = 0; i < results.addTag.length; i++) {
       const snippetsWithPath = await db.all(
-        `SELECT * FROM code_snippets WHERE cacheKey = ?`,
+        "SELECT * FROM code_snippets WHERE cacheKey = ?",
         [results.addTag[i].cacheKey],
       );
 
       for (const snippet of snippetsWithPath) {
         await db.run(
-          `INSERT INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)`,
+          "INSERT INTO code_snippets_tags (snippetId, tag) VALUES (?, ?)",
           [snippet.id, tagString],
         );
       }
@@ -183,11 +170,11 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
   static async getForId(id: number): Promise<ContextItem> {
     const db = await SqliteDb.get();
-    const row = await db.get(`SELECT * FROM code_snippets WHERE id = ?`, [id]);
+    const row = await db.get("SELECT * FROM code_snippets WHERE id = ?", [id]);
 
     return {
       name: row.title,
-      description: getBasename(row.path, 2),
+      description: getLastNPathParts(row.path, 2),
       content: `\`\`\`${getBasename(row.path)}\n${row.content}\n\`\`\``,
     };
   }
@@ -207,7 +194,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
 
       return rows.map((row) => ({
         title: row.title,
-        description: getBasename(row.path, 2),
+        description: getLastNPathParts(row.path, 2),
         id: row.id.toString(),
       }));
     } catch (e) {

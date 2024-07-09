@@ -1,16 +1,55 @@
 # Tab Autocomplete (beta)
 
-Continue now provides support for tab autocomplete in [the VS Code extension](https://marketplace.visualstudio.com/items?itemName=Continue.continue). We will be greatly improving the experience over the next few releases, and it is always helpful to hear feedback. If you have any problems or suggestions, please let us know in our [Discord](https://discord.gg/vapESyrFmJ).
+Continue now provides support for tab autocomplete in [VS Code](https://marketplace.visualstudio.com/items?itemName=Continue.continue) and [JetBrains IDEs](https://plugins.jetbrains.com/plugin/22707-continue/edit). We will be greatly improving the experience over the next few releases, and it is always helpful to hear feedback. If you have any problems or suggestions, please let us know in our [Discord](https://discord.gg/vapESyrFmJ).
+
+## Setting up with Codestral (recommended)
+
+If you want to have the best autocomplete experience, we recommend using Codestral, which is available through the [Mistral API](https://console.mistral.ai/). To do this, obtain an API key and add it to your `config.json`:
+
+```json
+{
+  "tabAutocompleteModel": {
+    "title": "Codestral",
+    "provider": "mistral",
+    "model": "codestral-latest",
+    "apiKey": "YOUR_API_KEY"
+  }
+}
+```
 
 ## Setting up with Ollama (default)
 
 We recommend setting up tab-autocomplete with a local Ollama instance. To do this, first download the latest version of Ollama from [here](https://ollama.ai). Then, run the following command to download our recommended model:
 
 ```bash
-ollama run starcoder:3b
+ollama run starcoder2:3b
 ```
 
 Once it has been downloaded, you should begin to see completions in VS Code.
+
+## Setting up with LM Studio
+
+You can also set up tab-autocomplete with a local LM Studio instance by following these steps:
+
+1. Download the latest version of LM Studio from [here](https://lmstudio.ai/)
+2. Download a model (e.g. search for `second-state/StarCoder2-3B-GGUF` and choose one of the options there)
+3. Go to the server section (button is on the left), select your model from the dropdown at the top, and click "Start Server"
+4. Go to the "My Models" section (button is on the left), find your selected model, and copy the name the path (example: `second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf`); this will be used as the "model" attribute in Continue
+5. Go to Continue and modify the configurations for a [custom model](#setting-up-a-custom-model)
+6. Set the "provider" to `lmstudio` and the "model" to the path copied earlier
+
+Example:
+
+```json title=~/.continue/config.json
+{
+  "tabAutocompleteModel": {
+      "title": "Starcoder2 3b",
+      "model": "second-state/StarCoder2-3B-GGUF/starcoder2-3b-Q8_0.gguf",
+      "provider": "lmstudio",
+  },
+  ...
+}
+```
 
 ## Setting up a custom model
 
@@ -21,18 +60,18 @@ All of the configuration options available for chat models are available to use 
     "tabAutocompleteModel": {
         "title": "Tab Autocomplete Model",
         "provider": "ollama",
-        "model": "starcoder:3b",
+        "model": "starcoder2:3b",
         "apiBase": "https://<my endpoint>"
     },
     ...
 }
 ```
 
-If you aren't yet familiar with the available options, you can learn more in our [overview](../model-setup/overview.md).
+If you aren't yet familiar with the available options, you can learn more in our [overview](../setup/overview.md).
 
 ### What model should I use?
 
-If you are running the model locally, we recommend `starcoder:3b`.
+If you are running the model locally, we recommend `starcoder2:3b`.
 
 If you find it to be too slow, you should try `deepseek-coder:1.3b-base`.
 
@@ -46,20 +85,24 @@ The following can be configured in `config.json`:
 
 ### `tabAutocompleteModel`
 
-This is just another object like the ones in the `"models"` array of `config.json`. You can choose and configure any model you would like, but we strongly suggest using a small model made for tab-autocomplete, such as `deepseek-1b`, `starcoder-1b`, or `starcoder-3b`.
+This is just another object like the ones in the `"models"` array of `config.json`. You can choose and configure any model you would like, but we strongly suggest using a small model made for tab-autocomplete, such as `deepseek-1b`, `starcoder-1b`, or `starcoder2-3b`.
 
 ### `tabAutocompleteOptions`
 
-This object allows you to customize the behavior of tab-autocomplete. The available options are:
+This object allows you to customize the behavior of tab-autocomplete. The available options are shown below, and you can find their default values [here](https://github.com/continuedev/continue/blob/fbeb2e4fe15d4b434a30a136f74b672485c852d9/core/util/parameters.ts).
 
+- `disable`: Disable autocomplete (can also be done from IDE settings)
+- `template`: An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables. (String)
 - `useCopyBuffer`: Determines whether the copy buffer will be considered when constructing the prompt. (Boolean)
 - `useSuffix`: Determines whether to use the file suffix in the prompt. (Boolean)
 - `maxPromptTokens`: The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context. (Number)
-- `debounceDelay`: The delay in milliseconds before triggering autocomplete after a keystroke. (Number)
-- `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number)
 - `prefixPercentage`: The percentage of the input that should be dedicated to the prefix. (Number)
-- `template`: An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables. (String)
+- `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number)
+- `debounceDelay`: The delay in milliseconds before triggering autocomplete after a keystroke. (Number)
 - `multilineCompletions`: Whether to enable multiline completions ("always", "never", or "auto"). Defaults to "auto".
+- `useCache`: Whether to cache and reuse completions when the prompt is the same as a previous one. May be useful to disable for testing purposes.
+- `useOtherFiles`: Whether to include context from files outside of the current one. Turning this off should be expected to reduce the accuracy of completions, but might be good for testing.
+- `disableInFiles`: A list of glob patterns for files in which you want to disable tab autocomplete.
 
 ### Full example
 
@@ -68,7 +111,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
   "tabAutocompleteModel": {
     "title": "Tab Autocomplete Model",
     "provider": "ollama",
-    "model": "starcoder:3b",
+    "model": "starcoder2:3b",
     "apiBase": "https://<my endpoint>"
   },
   "tabAutocompleteOptions": {
@@ -89,12 +132,12 @@ Perhaps surprisingly, the answer is no. The models that we suggest for autocompl
 
 Follow these steps to ensure that everything is set up correctly:
 
-1. Make sure you have the "Enable Tab Autocomplete" setting checked (in VS Code, you can toggle by clicking the "Continue" button in the status bar).
+1. Make sure you have the "Enable Tab Autocomplete" setting checked (in VS Code, you can toggle by clicking the "Continue" button in the status bar, and in JetBrains by going to Settings -> Tools -> Continue).
 2. Make sure you have downloaded Ollama.
-3. Run `ollama run starcoder:3b` to verify that the model is downloaded.
+3. Run `ollama run starcoder2:3b` to verify that the model is downloaded.
 4. Make sure that any other completion providers are disabled (e.g. Copilot), as they may interfere.
-5. Make sure that you aren't also using another Ollama model for chat. This will cause Ollama to constantly load and unload the models from memory, resulting in slow responses (or none at all) for both.
-6. Check the output of the logs to find any potential errors (cmd/ctrl+shift+p -> "Toggle Developer Tools" -> "Console" tab in VS Code, ~/.continue/core.log in JetBrains).
+5. Check the output of the logs to find any potential errors (cmd/ctrl+shift+p -> "Toggle Developer Tools" -> "Console" tab in VS Code, ~/.continue/core.log in JetBrains).
+6. Check VS Code settings to make sure that `"editor.inlineSuggest.enabled"` is set to `true` (use cmd/ctrl+, then search for this and check the box)
 7. If you are still having issues, please let us know in our [Discord](https://discord.gg/vapESyrFmJ) and we'll help as soon as possible.
 
 ### Completions are slow
@@ -109,18 +152,38 @@ We are working on this! Right now Continue uses the Language Server Protocol to 
 
 If you're seeing a common pattern of mistake that might be helpful to report, please share in Discord. We will do our best to fix it as soon as possible.
 
-## How to turn off autocomplete
+### Completions are only ever single-line
 
-### VS Code
+To ensure that you receive multi-line completions, you can set `"multilineCompletions": "always"` in `tabAutocompleteOptions`. By default, it is `"auto"`. If you still find that you are only seeing single-line completions, this may be because some models tend to produce shorter completions when starting in the middle of a file. You can try temporarily moving text below your cursor out of your active file, or switching to a larger model.
+
+## FAQs
+
+### Can I configure a "trigger key" for autocomplete?
+
+Yes, in VS Code, if you don't want to be shown suggestions automatically you can:
+
+1. Set `"editor.inlineSuggest.enabled": false` in VS Code settings to disabe automatic suggestions
+2. Open "Keyboard Shortcuts" (cmd/ctrl+k, cmd/ctrl+s) and search for `editor.action.inlineSuggest.trigger`
+3. Click the "+" icon to add a new keybinding
+4. Press the key combination you want to use to trigger suggestions (e.g. `ctrl+space`)
+5. Now whenever you want to see a suggestion, you can press your key binding (e.g. `ctrl+space`) to trigger suggestions manually
+
+### Is there a shortcut to accept one line at a time?
+
+This is a built-in feature of VS Code, but it's just a bit hidden. See this great [StackOverflow answer](https://stackoverflow.com/questions/72228174/accept-line-by-line-from-autocompletion/78001122#78001122) for more details.
+
+### How to turn off autocomplete
+
+#### VS Code
 
 Click the "Continue" button in the status panel at the bottom right of the screen. The checkmark will become a "cancel" symbol and you will no longer see completions. You can click again to turn it back on.
 
 Alternatively, open VS Code settings, search for "Continue" and uncheck the box for "Enable Tab Autocomplete".
 
-### JetBrains
+#### JetBrains
 
 Open Settings -> Tools -> Continue and uncheck the box for "Enable Tab Autocomplete".
 
-### Feedback
+## Feedback
 
 If you're turning off autocomplete, we'd love to hear how we can improve! Please let us know in our [Discord](https://discord.gg/vapESyrFmJ) or file an issue on GitHub.

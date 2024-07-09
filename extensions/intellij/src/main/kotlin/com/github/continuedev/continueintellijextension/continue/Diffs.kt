@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.`continue`
 
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.github.continuedev.continueintellijextension.utils.getAltKeyLabel
 import com.intellij.diff.DiffContentFactory
 import com.intellij.diff.DiffManager
 import com.intellij.diff.DiffRequestPanel
@@ -36,7 +37,7 @@ fun getDiffDirectory(): File {
     return diffDir
 }
 fun escapeFilepath(filepath: String): String {
-    return filepath.replace("/", "_f_").replace("\\", "_b_")
+    return filepath.replace("/", "_f_").replace("\\", "_b_").replace(":", "_c_")
 }
 
 interface DiffInfo {
@@ -174,11 +175,10 @@ class DiffManager(private val project: Project): DumbAware {
 
                             override fun createActions(): Array<Action> {
                                 val okAction = getOKAction()
-                                val cmdCtrl = if (System.getProperty("os.name").toLowerCase().contains("mac")) "⌘" else "⌃"
-                                okAction.putValue(Action.NAME, "Accept ($cmdCtrl ⇧ ⏎)")
+                                okAction.putValue(Action.NAME, "Accept (${getAltKeyLabel()} ⇧ Y)")
 
                                 val cancelAction = getCancelAction()
-                                cancelAction.putValue(Action.NAME, "Reject ($cmdCtrl ⇧ ⌫)")
+                                cancelAction.putValue(Action.NAME, "Reject (${getAltKeyLabel()} ⇧ N)")
 
                                 return arrayOf(okAction, cancelAction)
                             }

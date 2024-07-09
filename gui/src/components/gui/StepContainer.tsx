@@ -6,7 +6,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/countTokens";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -15,9 +15,10 @@ import {
   vscBackground,
   vscInputBackground,
 } from "..";
+import { IdeMessengerContext } from "../../context/IdeMessenger";
+import useUIConfig from "../../hooks/useUIConfig";
 import { RootState } from "../../redux/store";
 import { getFontSize } from "../../util";
-import { postToIde } from "../../util/ide";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import { CopyButton } from "../markdown/CopyButton";
 import StyledMarkdownPreview from "../markdown/StyledMarkdownPreview";
@@ -67,22 +68,27 @@ function StepContainer(props: StepContainerProps) {
   const [isHovered, setIsHovered] = useState(false);
   const isUserInput = props.item.message.role === "user";
   const active = useSelector((store: RootState) => store.state.active);
+  const ideMessenger = useContext(IdeMessengerContext);
 
   const [feedback, setFeedback] = useState<boolean | undefined>(undefined);
+
+  const sessionId = useSelector((store: RootState) => store.state.sessionId);
 
   const sendFeedback = (feedback: boolean) => {
     setFeedback(feedback);
     if (props.item.promptLogs?.length) {
-      for (const [prompt, completion] of props.item.promptLogs) {
-        postToIde("devdata/log", {
+      for (const promptLog of props.item.promptLogs) {
+        ideMessenger.post("devdata/log", {
           tableName: "chat",
-          data: { prompt, completion, feedback },
+          data: { ...promptLog, feedback, sessionId },
         });
       }
     }
   };
 
   const [truncatedEarly, setTruncatedEarly] = useState(false);
+
+  const uiConfig = useUIConfig();
 
   useEffect(() => {
     if (!active) {
@@ -97,6 +103,8 @@ function StepContainer(props: StepContainerProps) {
         )
       ) {
         setTruncatedEarly(true);
+      } else {
+        setTruncatedEarly(false);
       }
     }
   }, [props.item.message.content, active]);
@@ -116,10 +124,19 @@ function StepContainer(props: StepContainerProps) {
           isUserInput={isUserInput}
           fontSize={getFontSize()}
         >
-          <StyledMarkdownPreview
-            source={stripImages(props.item.message.content)}
-            showCodeBorder={true}
-          />
+          {uiConfig?.displayRawMarkdown ? (
+            <pre
+              className="whitespace-pre-wrap break-words p-4 max-w-full overflow-x-auto"
+              style={{ fontSize: getFontSize() - 2 }}
+            >
+              {stripImages(props.item.message.content)}
+            </pre>
+          ) : (
+            <StyledMarkdownPreview
+              source={stripImages(props.item.message.content)}
+              showCodeBorder={true}
+            />
+          )}
         </ContentDiv>
         <div className="h-2"></div>
         {(isHovered || typeof feedback !== "undefined") && !active && (

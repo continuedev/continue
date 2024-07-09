@@ -144,12 +144,26 @@ codeql
 
 # IntelliJ Plugin 
 **/**/.gradle
-**/**/.idea
 **/**/.qodana
 **/**/build
+
+**/.idea/**/*
+!**/.idea/.name
+!**/.idea/compiler.xml
+!**/.idea/gradle.xml
+!**/.idea/kotlinc.xml
+!**/.idea/misc.xml
+!**/.idea/vcs.xml
+!**/.idea/jarRepositories.xml
+core/.idea
 
 continue_server.build
 continue_server.dist
 
 Icon
 Icon?
+
+.continue
+
+# Sandbox env default file
+extensions/vscode/manual-testing-sandbox/example.ts

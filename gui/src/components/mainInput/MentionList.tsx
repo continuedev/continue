@@ -4,10 +4,10 @@ import {
   AtSymbolIcon,
   BeakerIcon,
   BookOpenIcon,
-  ChevronDoubleRightIcon,
   CodeBracketIcon,
   Cog6ToothIcon,
   CommandLineIcon,
+  CubeIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   FolderIcon,
@@ -43,6 +43,8 @@ import {
   setShowDialog,
 } from "../../redux/slices/uiStateSlice";
 import FileIcon from "../FileIcon";
+import HeaderButtonWithText from "../HeaderButtonWithText";
+import SafeImg from "../SafeImg";
 import AddDocsDialog from "../dialogs/AddDocsDialog";
 import { ComboBoxItem } from "./types";
 
@@ -59,6 +61,7 @@ const ICONS_FOR_DROPDOWN: { [key: string]: any } = {
   folder: FolderIcon,
   docs: BookOpenIcon,
   issue: ExclamationCircleIcon,
+  trash: TrashIcon,
   "/edit": PaintBrushIcon,
   "/clear": TrashIcon,
   "/test": BeakerIcon,
@@ -82,23 +85,39 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
     props.item.type === "contextProvider"
       ? props.item.id
       : props.item.type === "slashCommand"
-      ? props.item.id
-      : props.item.type;
+        ? props.item.id
+        : props.item.type;
 
-  const Icon = ICONS_FOR_DROPDOWN[provider];
   const iconClass = `${props.className} flex-shrink-0`;
+
+  let fallbackIcon;
+  const Icon = ICONS_FOR_DROPDOWN[provider];
   if (!Icon) {
-    return props.item.type === "contextProvider" ? (
-      <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
-    ) : (
-      <ChevronDoubleRightIcon
-        className={iconClass}
-        height="1.2em"
-        width="1.2em"
-      />
-    );
+    fallbackIcon =
+      props.item.type === "contextProvider" ? (
+        <AtSymbolIcon className={iconClass} height="1.2em" width="1.2em" />
+      ) : (
+        <CubeIcon className={iconClass} height="1.2em" width="1.2em" />
+      );
+  } else {
+    fallbackIcon = <Icon className={iconClass} height="1.2em" width="1.2em" />;
   }
-  return <Icon className={iconClass} height="1.2em" width="1.2em" />;
+
+  if (false && props.item.iconUrl) {
+    try {
+      return (
+        <SafeImg
+          className="flex-shrink-0 pr-2"
+          src={props.item.iconUrl}
+          height="18em"
+          width="18em"
+          fallback={fallbackIcon}
+        />
+      );
+    } catch (e) {}
+  }
+
+  return fallbackIcon;
 }
 
 const ItemsDiv = styled.div`
@@ -107,7 +126,9 @@ const ItemsDiv = styled.div`
     0 0 0 1px rgba(0, 0, 0, 0.05),
     0px 10px 20px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: 330px;
   padding: 0.2rem;
   position: relative;
 
@@ -157,6 +178,7 @@ interface MentionListProps {
 
   editor: Editor;
   enterSubmenu?: (editor: Editor, providerId: string) => void;
+  onClose: () => void;
 }
 
 const MentionList = forwardRef((props: MentionListProps, ref) => {
@@ -223,6 +245,15 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
 
     if (item.contextProvider?.type === "query") {
+      // update editor to complete context provider title
+      const { tr } = props.editor.view.state;
+      const text = tr.doc.textBetween(0, tr.selection.from);
+      const partialText = text.slice(text.lastIndexOf("@") + 1);
+      const remainingText = item.title.slice(partialText.length);
+      props.editor.view.dispatch(
+        tr.insertText(remainingText, tr.selection.from),
+      );
+
       setSubMenuTitle(item.description);
       setQuerySubmenuItem(item);
       return;
@@ -233,12 +264,30 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     }
   };
 
+  const totalItems = allItems.length;
+
+  const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
   const upHandler = () => {
-    setSelectedIndex((selectedIndex + allItems.length - 1) % allItems.length);
+    setSelectedIndex((prevIndex) => {
+      const newIndex = prevIndex - 1 >= 0 ? prevIndex - 1 : 0;
+      itemRefs.current[newIndex]?.scrollIntoView({
+        behavior: "instant" as ScrollBehavior,
+        block: "nearest",
+      });
+      return newIndex;
+    });
   };
 
   const downHandler = () => {
-    setSelectedIndex((selectedIndex + 1) % allItems.length);
+    setSelectedIndex((prevIndex) => {
+      const newIndex = prevIndex + 1 < totalItems ? prevIndex + 1 : prevIndex;
+      itemRefs.current[newIndex]?.scrollIntoView({
+        behavior: "instant" as ScrollBehavior,
+        block: "nearest",
+      });
+      return newIndex;
+    });
   };
 
   const enterHandler = () => {
@@ -287,8 +336,12 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
     return ["file", "code"].includes(item.type);
   };
 
+  useEffect(() => {
+    itemRefs.current = itemRefs.current.slice(0, allItems.length);
+  }, [allItems]);
+
   return (
-    <ItemsDiv>
+    <ItemsDiv className="items-container">
       {querySubmenuItem ? (
         <QueryInput
           rows={1}
@@ -315,10 +368,12 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
       ) : (
         <>
           {subMenuTitle && <ItemDiv className="mb-2">{subMenuTitle}</ItemDiv>}
+          {/* <CustomScrollbarDiv className="overflow-y-scroll max-h-96"> */}
           {allItems.length ? (
             allItems.map((item, index) => (
               <ItemDiv
                 as="button"
+                ref={(el) => (itemRefs.current[index] = el)}
                 className={`item ${
                   index === selectedIndex ? "is-selected" : ""
                 }`}
@@ -340,7 +395,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                         <DropdownIcon item={item} className="mr-2" />
                       </>
                     )}
-                    {item.title}
+                    <span title={item.id}>{item.title}</span>
                     {"  "}
                   </div>
                   <span
@@ -362,6 +417,22 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
                           height="1.2em"
                         />
                       )}
+                    {item.subActions?.map((subAction) => {
+                      const Icon = ICONS_FOR_DROPDOWN[subAction.icon];
+                      return (
+                        <HeaderButtonWithText
+                          onClick={(e) => {
+                            subAction.action(item);
+                            e.stopPropagation();
+                            e.preventDefault();
+                            props.onClose();
+                          }}
+                          text={undefined}
+                        >
+                          <Icon width="1.2em" height="1.2em" />
+                        </HeaderButtonWithText>
+                      );
+                    })}
                   </span>
                 </span>
               </ItemDiv>
@@ -369,6 +440,7 @@ const MentionList = forwardRef((props: MentionListProps, ref) => {
           ) : (
             <ItemDiv className="item">No results</ItemDiv>
           )}
+          {/* </CustomScrollbarDiv> */}
         </>
       )}
     </ItemsDiv>

@@ -1,17 +1,23 @@
 import { ContextSubmenuItem } from "core";
-import { getBasename, getLastNPathParts } from "core/util";
+import {
+  deduplicateArray,
+  getBasename,
+  getUniqueFilePath,
+  groupByLastNPathParts,
+} from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
-import { ideRequest } from "../util/ide";
-import { WebviewIde } from "../util/webviewIde";
 import { useWebviewListener } from "./useWebviewListener";
 
 const MINISEARCH_OPTIONS = {
   prefix: true,
   fuzzy: 2,
 };
+
+const MAX_LENGTH = 70;
 
 function useSubmenuContextProviders() {
   // TODO: Refresh periodically
@@ -24,18 +30,22 @@ function useSubmenuContextProviders() {
   }>({});
 
   const contextProviderDescriptions = useSelector(
-    selectContextProviderDescriptions
+    selectContextProviderDescriptions,
   );
 
   const [loaded, setLoaded] = useState(false);
 
+  const ideMessenger = useContext(IdeMessengerContext);
+
   async function getOpenFileItems() {
-    const openFiles = await new WebviewIde().getOpenFiles();
+    const openFiles = await ideMessenger.ide.getOpenFiles();
+    const openFileGroups = groupByLastNPathParts(openFiles, 2);
+
     return openFiles.map((file) => {
       return {
         id: file,
         title: getBasename(file),
-        description: getLastNPathParts(file, 2),
+        description: getUniqueFilePath(file, openFileGroups),
         providerTitle: "file",
       };
     });
@@ -57,11 +67,17 @@ function useSubmenuContextProviders() {
 
     if (data.provider === "file") {
       const openFiles = await getOpenFileItems();
-      setFallbackResults((prev) => ({ ...prev, file: openFiles }));
+      setFallbackResults((prev) => ({
+        ...prev,
+        file: [
+          ...openFiles,
+          ...data.submenuItems.slice(0, MAX_LENGTH - openFiles.length),
+        ],
+      }));
     } else {
       setFallbackResults((prev) => ({
         ...prev,
-        [data.provider]: data.submenuItems.slice(0, 6),
+        [data.provider]: data.submenuItems.slice(0, MAX_LENGTH),
       }));
     }
   });
@@ -77,7 +93,13 @@ function useSubmenuContextProviders() {
     // Refresh open files periodically
     const interval = setInterval(async () => {
       const openFiles = await getOpenFileItems();
-      setFallbackResults((prev) => ({ ...prev, file: openFiles }));
+      setFallbackResults((prev) => ({
+        ...prev,
+        file: deduplicateArray(
+          [...openFiles, ...(Array.isArray(prev.file) ? prev.file : [])],
+          (a, b) => a.id === b.id,
+        ),
+      }));
     }, 2_000);
 
     return () => {
@@ -95,7 +117,7 @@ function useSubmenuContextProviders() {
         fields: ["title", "description"],
         storeFields: ["id", "title", "description"],
       });
-      const items = await ideRequest("context/loadSubmenuItems", {
+      const items = await ideMessenger.request("context/loadSubmenuItems", {
         title: description.title,
       });
       minisearch.addAll(items);
@@ -103,11 +125,17 @@ function useSubmenuContextProviders() {
 
       if (description.title === "file") {
         const openFiles = await getOpenFileItems();
-        setFallbackResults((prev) => ({ ...prev, file: openFiles }));
+        setFallbackResults((prev) => ({
+          ...prev,
+          file: [
+            ...openFiles,
+            ...items.slice(0, MAX_LENGTH - openFiles.length),
+          ],
+        }));
       } else {
         setFallbackResults((prev) => ({
           ...prev,
-          [description.title]: items.slice(0, 6),
+          [description.title]: items.slice(0, MAX_LENGTH),
         }));
       }
     });
@@ -115,14 +143,14 @@ function useSubmenuContextProviders() {
 
   function getSubmenuSearchResults(
     providerTitle: string | undefined,
-    query: string
+    query: string,
   ): SearchResult[] {
     if (providerTitle === undefined) {
       // Return search combined from all providers
       const results = Object.keys(minisearches).map((providerTitle) => {
         const results = minisearches[providerTitle].search(
           query,
-          MINISEARCH_OPTIONS
+          MINISEARCH_OPTIONS,
         );
         return results.map((result) => {
           return { ...result, providerTitle };
@@ -145,7 +173,7 @@ function useSubmenuContextProviders() {
   function getSubmenuContextItems(
     providerTitle: string | undefined,
     query: string,
-    limit: number = 10
+    limit: number = MAX_LENGTH,
   ): (ContextSubmenuItem & { providerTitle: string })[] {
     const results = getSubmenuSearchResults(providerTitle, query);
     if (results.length === 0) {

@@ -1,12 +1,12 @@
 import socketIOClient, { Socket } from "socket.io-client";
-import { BaseLLM } from "..";
 import {
   ChatMessage,
   CompletionOptions,
   LLMOptions,
   ModelProvider,
-} from "../..";
-import { stripImages } from "../countTokens";
+} from "../../index.js";
+import { stripImages } from "../countTokens.js";
+import { BaseLLM } from "../index.js";
 
 interface IFlowiseApiOptions {
   /** Sampling temperature to use */
@@ -67,7 +67,7 @@ class Flowise extends BaseLLM {
   };
 
   protected additionalFlowiseConfiguration: IFlowiseKeyValueProperty[] = [];
-  protected timeout: number = 5000;
+  protected timeout = 5000;
   protected additionalHeaders: IFlowiseKeyValueProperty[] = [];
 
   constructor(options: IFlowiseProviderLLMOptions) {
@@ -92,7 +92,7 @@ class Flowise extends BaseLLM {
     };
 
     if (this.apiKey) {
-      headers["Authorization"] = `Bearer ${this.apiKey}`;
+      headers.Authorization = `Bearer ${this.apiKey}`;
     }
 
     for (const additionalHeader of this.additionalHeaders) {

@@ -1,22 +1,46 @@
+import os from "node:os";
+import { TeamAnalytics } from "../control-plane/TeamAnalytics";
+
 export class Telemetry {
   // Set to undefined whenever telemetry is disabled
   static client: any = undefined;
-  static uniqueId: string = "NOT_UNIQUE";
+  static uniqueId = "NOT_UNIQUE";
+  static os: string | undefined = undefined;
+  static extensionVersion: string | undefined = undefined;
 
-  static async capture(event: string, properties: any) {
+  static async capture(
+    event: string,
+    properties: { [key: string]: any },
+    sendToTeam: boolean = false,
+  ) {
     Telemetry.client?.capture({
       distinctId: Telemetry.uniqueId,
       event,
-      properties,
+      properties: {
+        ...properties,
+        os: Telemetry.os,
+        extensionVersion: Telemetry.extensionVersion,
+      },
     });
+
+    if (sendToTeam) {
+      TeamAnalytics.capture(event, properties);
+    }
   }
 
   static shutdownPosthogClient() {
     Telemetry.client?.shutdown();
   }
 
-  static async setup(allow: boolean, uniqueId: string) {
+  static async setup(
+    allow: boolean,
+    uniqueId: string,
+    extensionVersion: string,
+  ) {
     Telemetry.uniqueId = uniqueId;
+    Telemetry.os = os.platform();
+    Telemetry.extensionVersion = extensionVersion;
+
     if (!allow) {
       Telemetry.client = undefined;
     } else {

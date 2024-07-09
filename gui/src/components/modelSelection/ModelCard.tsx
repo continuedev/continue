@@ -7,13 +7,27 @@ import {
   lightGray,
   vscFocusBorder,
 } from "..";
-import {
-  MODEL_PROVIDER_TAG_COLORS,
-  PROVIDER_INFO,
-  PackageDimension,
-} from "../../util/modelData";
+import { PackageDimension } from "../../pages/AddNewModel/configs/models";
+import { providers } from "../../pages/AddNewModel/configs/providers";
 import HeaderButtonWithText from "../HeaderButtonWithText";
 import InfoHover from "../InfoHover";
+import ModelProviderTag, { ModelProviderTags } from "./ModelProviderTag";
+
+interface ModelCardProps {
+  title: string;
+  description: string;
+  tags?: ModelProviderTags[];
+  refUrl?: string;
+  icon?: string;
+  onClick?: (
+    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
+    dimensionChoices?: string[],
+    selectedProvider?: string,
+  ) => void;
+  disabled?: boolean;
+  dimensions?: PackageDimension[];
+  providerOptions?: string[];
+}
 
 const Div = styled.div<{ color: string; disabled: boolean; hovered: boolean }>`
   border: 1px solid ${lightGray};
@@ -28,11 +42,11 @@ const Div = styled.div<{ color: string; disabled: boolean; hovered: boolean }>`
     opacity: 0.5;
     `
       : props.hovered
-      ? `
+        ? `
     border: 1px solid ${props.color};
     background-color: ${props.color}22;
     cursor: pointer;`
-      : ""}
+        : ""}
 `;
 
 const DimensionsDiv = styled.div`
@@ -71,31 +85,15 @@ const DimensionOptionDiv = styled.div<{ selected: boolean }>`
   }
 `;
 
-interface ModelCardProps {
-  title: string;
-  description: string;
-  tags?: string[];
-  refUrl?: string;
-  icon?: string;
-  onClick?: (
-    e: React.MouseEvent<HTMLDivElement, MouseEvent>,
-    dimensionChoices?: string[],
-    selectedProvider?: string
-  ) => void;
-  disabled?: boolean;
-  dimensions?: PackageDimension[];
-  providerOptions?: string[];
-}
-
 function ModelCard(props: ModelCardProps) {
   const [dimensionChoices, setDimensionChoices] = useState<string[]>(
-    props.dimensions?.map((d) => Object.keys(d.options)[0]) || []
+    props.dimensions?.map((d) => Object.keys(d.options)[0]) || [],
   );
 
   const [hovered, setHovered] = useState(false);
 
   const [selectedProvider, setSelectedProvider] = useState<string | undefined>(
-    undefined
+    undefined,
   );
 
   useEffect(() => {
@@ -126,31 +124,31 @@ function ModelCard(props: ModelCardProps) {
               }
         }
       >
-        <div style={{ display: "flex", alignItems: "center" }}>
+        <div
+          className="mb-2"
+          style={{
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
           {window.vscMediaUrl && props.icon && (
             <img
               src={`${window.vscMediaUrl}/logos/${props.icon}`}
+              width="24px"
               height="24px"
-              style={{ marginRight: "10px" }}
+              style={{
+                borderRadius: "2px",
+                padding: "4px",
+                marginRight: "10px",
+                objectFit: "contain",
+              }}
             />
           )}
           <h3>{props.title}</h3>
         </div>
-        {props.tags?.map((tag) => {
-          return (
-            <span
-              style={{
-                backgroundColor: `${MODEL_PROVIDER_TAG_COLORS[tag]}55`,
-                color: "white",
-                padding: "2px 4px",
-                borderRadius: defaultBorderRadius,
-                marginRight: "4px",
-              }}
-            >
-              {tag}
-            </span>
-          );
-        })}
+
+        {props.tags?.map((tag, i) => <ModelProviderTag key={i} tag={tag} />)}
+
         <p>{props.description}</p>
 
         {props.refUrl && (
@@ -213,7 +211,7 @@ function ModelCard(props: ModelCardProps) {
               </div>
               <div className="flex items-center flex-wrap justify-end rtl">
                 {props.providerOptions?.map((option, i) => {
-                  const info = PROVIDER_INFO[option];
+                  const info = providers[option];
                   if (!info) {
                     return null;
                   }

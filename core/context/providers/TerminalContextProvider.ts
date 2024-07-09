@@ -1,9 +1,9 @@
-import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class TerminalContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -17,6 +17,11 @@ class TerminalContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
+    if ((await extras.ide.getIdeInfo()).ideType === "jetbrains") {
+      throw new Error(
+        "The terminal context provider is not currently supported in JetBrains IDEs",
+      );
+    }
     const content = await extras.ide.getTerminalContents();
     return [
       {

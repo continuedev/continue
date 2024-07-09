@@ -1,8 +1,23 @@
-module.exports = {
-  roots: ["<rootDir>"],
+import path from "path";
+import { fileURLToPath } from "url";
+
+process.env.NODE_OPTIONS = "--experimental-vm-modules";
+
+export default {
   transform: {
-    "^.+\\.ts?$": "ts-jest",
+    "\\.[jt]sx?$": ["ts-jest", { useESM: true }],
   },
-  // testRegex: ".+\\.test\\.ts$",
-  moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+
+  moduleNameMapper: {
+    "(.+)\\.js": "$1",
+  },
+  extensionsToTreatAsEsm: [".ts"],
+  preset: "ts-jest/presets/default-esm",
+  testTimeout: 10000,
+  testEnvironment: "node",
+  globals: {
+    __dirname: path.dirname(fileURLToPath(import.meta.url)),
+    __filename: path.resolve(fileURLToPath(import.meta.url)),
+  },
+  globalSetup: "<rootDir>/jest.global-setup.ts",
 };

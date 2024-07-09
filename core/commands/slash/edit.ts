@@ -1,18 +1,22 @@
-import { ContextItemWithId, ILLM, SlashCommand } from "../..";
 import {
   filterCodeBlockLines,
   filterEnglishLinesAtEnd,
   filterEnglishLinesAtStart,
   fixCodeLlamaFirstLineIndentation,
+  stopAtLines,
   streamWithNewLines,
-} from "../../autocomplete/lineStream";
-import { streamLines } from "../../diff/util";
-import { stripImages } from "../../llm/countTokens";
-import { dedentAndGetCommonWhitespace } from "../../util";
+} from "../../autocomplete/lineStream.js";
+import { streamLines } from "../../diff/util.js";
+import { ContextItemWithId, ILLM, SlashCommand } from "../../index.js";
+import { stripImages } from "../../llm/countTokens.js";
 import {
-  RangeInFileWithContents,
+  dedentAndGetCommonWhitespace,
+  getMarkdownLanguageTagForFile,
+} from "../../util/index.js";
+import {
   contextItemToRangeInFileWithContents,
-} from "../util";
+  type RangeInFileWithContents,
+} from "../util.js";
 
 const PROMPT = `Take the file prefix and suffix into account, but only rewrite the code_to_edit as specified in the user_request. The code you write in modified_code_to_edit will replace the code between the code_to_edit tags. Do NOT preface your answer or write anything other than code. The </modified_code_to_edit> tag should be written to indicate the end of the modified code section. Do not ever use nested tags.
 
@@ -56,7 +60,7 @@ export async function getPromptParts(
   input: string,
   tokenLimit: number | undefined,
 ) {
-  let maxTokens = Math.floor(model.contextLength / 2);
+  const maxTokens = Math.floor(model.contextLength / 2);
 
   const TOKENS_TO_BE_CONSIDERED_LARGE_RANGE = tokenLimit ?? 1200;
   // if (model.countTokens(rif.contents) > TOKENS_TO_BE_CONSIDERED_LARGE_RANGE) {
@@ -71,9 +75,9 @@ export async function getPromptParts(
     BUFFER_FOR_FUNCTIONS +
     maxTokens;
 
-  let fullFileContentsList = fullFileContents.split("\n");
-  let maxStartLine = rif.range.start.line;
-  let minEndLine = rif.range.end.line;
+  const fullFileContentsList = fullFileContents.split("\n");
+  const maxStartLine = rif.range.start.line;
+  const minEndLine = rif.range.end.line;
   let curStartLine = 0;
   let curEndLine = fullFileContentsList.length - 1;
 
@@ -130,7 +134,7 @@ export async function getPromptParts(
       rif.contents = rif.contents.substring(1);
     }
     while (rif.contents.endsWith("\n")) {
-      fileSuffix = "\n" + fileSuffix;
+      fileSuffix = `\n${fileSuffix}`;
       rif.contents = rif.contents.substring(0, rif.contents.length - 1);
     }
   }
@@ -143,7 +147,7 @@ function compilePrompt(
   fileSuffix: string,
   input: string,
 ): string {
-  if (contents.trim() == "") {
+  if (contents.trim() === "") {
     // Separate prompt for insertion at the cursor, the other tends to cause it to repeat whole file
     return `\
 <file_prefix>
@@ -161,7 +165,7 @@ Please output the code to be inserted at the cursor in order to fulfill the user
   }
 
   let prompt = PROMPT;
-  if (filePrefix.trim() != "") {
+  if (filePrefix.trim() !== "") {
     prompt += `
 <file_prefix>
 ${filePrefix}
@@ -172,7 +176,7 @@ ${filePrefix}
 ${contents}
 </code_to_edit>`;
 
-  if (fileSuffix.trim() != "") {
+  if (fileSuffix.trim() !== "") {
     prompt += `
 <file_suffix>
 ${fileSuffix}
@@ -196,7 +200,7 @@ function isEndLine(line: string) {
   );
 }
 
-function lineToBeIgnored(line: string, isFirstLine: boolean = false): boolean {
+function lineToBeIgnored(line: string, isFirstLine = false): boolean {
   return (
     line.includes("```") ||
     line.includes("<modified_code_to_edit>") ||
@@ -225,7 +229,7 @@ const EditSlashCommand: SlashCommand = {
     }
 
     if (!contextItemToEdit) {
-      yield "Select (highlight and press `cmd+shift+L` (MacOS) / `ctrl+shift+L` (Windows)) the code that you want to edit first";
+      yield "Please highlight the code you want to edit, then press `cmd/ctrl+shift+L` to add it to chat";
       return;
     }
 
@@ -233,21 +237,30 @@ const EditSlashCommand: SlashCommand = {
     let content = history[history.length - 1].content;
     if (typeof content !== "string") {
       content.forEach((part) => {
-        if (part.text && part.text.startsWith("/edit")) {
+        if (part.text?.startsWith("/edit")) {
           part.text = part.text.replace("/edit", "").trimStart();
         }
       });
+    } else if (input?.startsWith("/edit")) {
+      content = input.replace("/edit", "").trimStart();
+    } else if (input?.startsWith("/comment")) {
+      content = input.replace("/comment", "").trimStart();
     }
     let userInput = stripImages(content).replace(
       `\`\`\`${contextItemToEdit.name}\n${contextItemToEdit.content}\n\`\`\`\n`,
       "",
     );
+    // if the above replace fails to find a match, the code will still be present
+    // in the userInput. Replace it with input if available.
+    if (userInput.includes("```") && (input !== "" || !input)) {
+      userInput = input;
+    }
 
     const rif: RangeInFileWithContents =
       contextItemToRangeInFileWithContents(contextItemToEdit);
 
     await ide.saveFile(rif.filepath);
-    let fullFileContents = await ide.readFile(rif.filepath);
+    const fullFileContents = await ide.readFile(rif.filepath);
 
     let { filePrefix, contents, fileSuffix, maxTokens } = await getPromptParts(
       rif,
@@ -260,18 +273,18 @@ const EditSlashCommand: SlashCommand = {
       dedentAndGetCommonWhitespace(contents);
     contents = dedentedContents;
 
-    let prompt = compilePrompt(filePrefix, contents, fileSuffix, userInput);
-    let fullFileContentsLines = fullFileContents.split("\n");
-    let fullPrefixLines = fullFileContentsLines.slice(
+    const prompt = compilePrompt(filePrefix, contents, fileSuffix, userInput);
+    const fullFileContentsLines = fullFileContents.split("\n");
+    const fullPrefixLines = fullFileContentsLines.slice(
       0,
       Math.max(0, rif.range.start.line - 1),
     );
-    let fullSuffixLines = fullFileContentsLines.slice(rif.range.end.line);
+    const fullSuffixLines = fullFileContentsLines.slice(rif.range.end.line);
 
     let linesToDisplay: string[] = [];
 
-    async function sendDiffUpdate(lines: string[], final: boolean = false) {
-      let completion = lines.join("\n");
+    async function sendDiffUpdate(lines: string[], final = false) {
+      const completion = lines.join("\n");
 
       // Don't do this at the very end, just show the inserted code
       if (final) {
@@ -280,9 +293,9 @@ const EditSlashCommand: SlashCommand = {
 
       // Only recalculate at every new-line, because this is sort of expensive
       else if (completion.endsWith("\n")) {
-        let contentsLines = rif.contents.split("\n");
+        const contentsLines = rif.contents.split("\n");
         let rewrittenLines = 0;
-        for (let line of lines) {
+        for (const line of lines) {
           for (let i = rewrittenLines; i < contentsLines.length; i++) {
             if (
               //   difflib.SequenceMatcher(
@@ -300,22 +313,18 @@ const EditSlashCommand: SlashCommand = {
         linesToDisplay = contentsLines.slice(rewrittenLines);
       }
 
-      let newFileContents =
-        fullPrefixLines.join("\n") +
-        "\n" +
-        completion +
-        "\n" +
-        (linesToDisplay.length > 0 ? linesToDisplay.join("\n") + "\n" : "") +
-        fullSuffixLines.join("\n");
+      const newFileContents = `${fullPrefixLines.join("\n")}\n${completion}\n${
+        linesToDisplay.length > 0 ? `${linesToDisplay.join("\n")}\n` : ""
+      }${fullSuffixLines.join("\n")}`;
 
-      let stepIndex = history.length - 1;
+      const stepIndex = history.length - 1;
 
       await ide.showDiff(rif.filepath, newFileContents, stepIndex);
     }
 
     // Important state variables
     // -------------------------
-    let originalLines = rif.contents === "" ? [] : rif.contents.split("\n");
+    const originalLines = rif.contents === "" ? [] : rif.contents.split("\n");
     // In the actual file, taking into account block offset
     let currentLineInFile = rif.range.start.line;
     let currentBlockLines: string[] = [];
@@ -354,9 +363,9 @@ const EditSlashCommand: SlashCommand = {
 
       // In a block, and have already matched at least one line
       // Check if the next line matches, for each of the candidates
-      let matchesFound: any[] = [];
+      const matchesFound: any[] = [];
       let firstValidMatch: any = null;
-      for (let [
+      for (const [
         index_of_last_matched_line,
         num_lines_matched,
       ] of indicesOfLastMatchedLines) {
@@ -388,7 +397,7 @@ const EditSlashCommand: SlashCommand = {
 
         // We added some lines to the block that were matched (including maybe some blank lines)
         // So here we will strip all matching lines from the end of currentBlockLines
-        let linesStripped: string[] = [];
+        const linesStripped: string[] = [];
         let indexOfLastLineInBlock: number = firstValidMatch[0];
         while (
           currentBlockLines.length > 0 &&
@@ -412,9 +421,9 @@ const EditSlashCommand: SlashCommand = {
       }
 
       // Always look for new matching candidates
-      let newMatches: any[] = [];
+      const newMatches: any[] = [];
       for (let i = 0; i < originalLinesBelowPreviousBlocks.length; i++) {
-        let ogLine = originalLinesBelowPreviousBlocks[i];
+        const ogLine = originalLinesBelowPreviousBlocks[i];
         // TODO: It's a bit sus to be disqualifying empty lines.
         // What you ideally do is find ALL matches, and then throw them out as you check the following lines
         if (ogLine === line) {
@@ -436,17 +445,17 @@ const EditSlashCommand: SlashCommand = {
     messages[messages.length - 1] = { role: "user", content: prompt };
 
     let linesOfPrefixCopied = 0;
-    let lines = [];
-    let unfinishedLine: string = "";
+    const lines = [];
+    let unfinishedLine = "";
     let completionLinesCovered = 0;
     let repeatingFileSuffix = false;
-    let lineBelowHighlightedRange = fileSuffix.trim().split("\n")[0];
+    const lineBelowHighlightedRange = fileSuffix.trim().split("\n")[0];
 
     // Use custom templates defined by the model
     const template = llm.promptTemplates?.edit;
     let generator: AsyncGenerator<string>;
     if (template) {
-      let rendered = llm.renderPromptTemplate(
+      const rendered = llm.renderPromptTemplate(
         template,
         // typeof template === 'string' ? template : template.prompt,
         messages.slice(0, messages.length - 1),
@@ -455,6 +464,12 @@ const EditSlashCommand: SlashCommand = {
           userInput,
           filePrefix: filePrefix,
           fileSuffix: fileSuffix,
+
+          // Some built-in templates use these instead of the above
+          prefix: filePrefix,
+          suffix: fileSuffix,
+
+          language: getMarkdownLanguageTagForFile(rif.filepath),
           systemMessage: llm.systemMessage ?? "",
           // "contextItems": (await sdk.getContextItemChatMessages()).map(x => x.content || "").join("\n\n"),
         },
@@ -479,13 +494,14 @@ const EditSlashCommand: SlashCommand = {
       lineStream = filterEnglishLinesAtStart(lineStream);
 
       lineStream = filterEnglishLinesAtEnd(filterCodeBlockLines(lineStream));
+      lineStream = stopAtLines(lineStream, () => {});
 
       generator = streamWithNewLines(
         fixCodeLlamaFirstLineIndentation(lineStream),
       );
     } else {
       async function* gen() {
-        for await (let chunk of llm.streamChat(messages, {
+        for await (const chunk of llm.streamChat(messages, {
           temperature: 0.5, // TODO
           maxTokens: Math.min(
             maxTokens,
@@ -500,7 +516,7 @@ const EditSlashCommand: SlashCommand = {
       generator = gen();
     }
 
-    for await (let chunk of generator) {
+    for await (const chunk of generator) {
       // Stop early if it is repeating the fileSuffix or the step was deleted
       if (repeatingFileSuffix) {
         break;
@@ -510,7 +526,7 @@ const EditSlashCommand: SlashCommand = {
       yield undefined;
 
       // Accumulate lines
-      let chunkLines = chunk.split("\n");
+      const chunkLines = chunk.split("\n");
       chunkLines[0] = unfinishedLine + chunkLines[0];
       if (chunk.endsWith("\n")) {
         unfinishedLine = "";
@@ -530,11 +546,11 @@ const EditSlashCommand: SlashCommand = {
           break;
         }
         // Lines that should be ignored, like the <> tags
-        else if (lineToBeIgnored(chunkLines[i], completionLinesCovered === 0)) {
+        if (lineToBeIgnored(chunkLines[i], completionLinesCovered === 0)) {
           continue; // noice
         }
         // Check if we are currently just copying the prefix
-        else if (
+        if (
           (linesOfPrefixCopied > 0 || completionLinesCovered === 0) &&
           linesOfPrefixCopied < filePrefix.split("\n").length &&
           chunkLines[i] === fullPrefixLines[linesOfPrefixCopied]
@@ -545,7 +561,7 @@ const EditSlashCommand: SlashCommand = {
         }
         // Because really short lines might be expected to be repeated, this is only a !heuristic!
         // Stop when it starts copying the fileSuffix
-        else if (
+        if (
           chunkLines[i].trim() === lineBelowHighlightedRange.trim() &&
           chunkLines[i].trim().length > 4 &&
           !(

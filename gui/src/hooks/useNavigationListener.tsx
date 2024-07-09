@@ -1,9 +1,9 @@
-import { ReverseWebviewProtocol } from "core/web/webviewProtocol";
+import { ToWebviewProtocol } from "core/protocol/index";
 import { useLocation, useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import { useWebviewListener } from "./useWebviewListener";
 
-const openGUITypes: (keyof ReverseWebviewProtocol)[] = [
+const openGUITypes: (keyof ToWebviewProtocol)[] = [
   "highlightedCode",
   "newSessionWithPrompt",
   "focusContinueInput",

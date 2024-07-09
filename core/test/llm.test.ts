@@ -1,9 +1,10 @@
 import * as dotenv from "dotenv";
 
-import { CompletionOptions } from "..";
-import { BaseLLM } from "../llm";
+import { CompletionOptions } from "../index.js";
+import { BaseLLM } from "../llm/index.js";
+import OpenAI from "../llm/llms/OpenAI.js";
 
-jest.setTimeout(100_000);
+// jest.setTimeout(100_000);
 
 dotenv.config();
 
@@ -32,7 +33,6 @@ function testLLM(llm: BaseLLM) {
       }
 
       expect(total.length).toBeGreaterThan(0);
-      console.log(total);
       return;
     });
 
@@ -43,7 +43,6 @@ function testLLM(llm: BaseLLM) {
       }
 
       expect(total.length).toBeGreaterThan(0);
-      console.log(total);
       return;
     });
 
@@ -51,7 +50,6 @@ function testLLM(llm: BaseLLM) {
       const completion = await llm.complete("Hi");
 
       expect(completion.length).toBeGreaterThan(0);
-      console.log(completion);
       return;
     });
   });
@@ -61,17 +59,17 @@ describe("LLM", () => {
   // testLLM(
   //   new FreeTrial({
   //     model: "gpt-3.5-turbo",
-  //   })
+  //   }),
   // );
   // testLLM(
   //   new Anthropic({
   //     model: "claude-2",
   //     apiKey: process.env.ANTHROPIC_API_KEY,
-  //   })
+  //   }),
   // );
-  // testLLM(
-  //   new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" })
-  // );
+  testLLM(
+    new OpenAI({ apiKey: process.env.OPENAI_API_KEY, model: "gpt-3.5-turbo" }),
+  );
   // TODO: Fix Replicate
   // testLLM(
   //   new Replicate({
@@ -94,7 +92,7 @@ describe("LLM", () => {
   // testLLM(new HuggingFaceTGI({ model: "codellama-7b" }));
   // testLLM(new HuggingFaceInferenceAPI({ model: "codellama-7b" }));
   // testLLM(
-  //   new GooglePalm({
+  //   new Gemini({
   //     model: "gemini-pro",
   //     //   model: "chat-bison-001",
   //     apiKey: process.env.GOOGLE_PALM_API_KEY,

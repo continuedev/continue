@@ -1,31 +1,44 @@
-import { readFileSync, writeFileSync } from "fs";
-import { ModelDescription } from "..";
-import { editConfigJson, getConfigJsonPath } from "../util/paths";
+import { ModelDescription } from "../index.js";
+import { editConfigJson } from "../util/paths.js";
 
-export function addModel(model: ModelDescription) {
-  const config = readFileSync(getConfigJsonPath(), "utf8");
-  const configJson = JSON.parse(config);
-  configJson.models.push(model);
-  const newConfigString = JSON.stringify(
-    configJson,
+function stringify(obj: any, indentation?: number): string {
+  return JSON.stringify(
+    obj,
     (key, value) => {
       return value === null ? undefined : value;
     },
-    2,
+    indentation,
   );
-  writeFileSync(getConfigJsonPath(), newConfigString);
-  return newConfigString;
+}
+
+export function addModel(model: ModelDescription) {
+  editConfigJson((config) => {
+    if (config.models?.some((m: any) => stringify(m) === stringify(model))) {
+      return config;
+    }
+    if (config.models?.some((m: any) => m?.title === model.title)) {
+      model.title = `${model.title} (1)`;
+    }
+
+    config.models.push(model);
+    return config;
+  });
 }
 
 export function addOpenAIKey(key: string) {
   editConfigJson((config) => {
-    config.models = config.models.map((m: ModelDescription) => {
-      if (m.provider === "free-trial") {
-        m.apiKey = key;
-        m.provider = "openai";
-      }
-      return m;
-    });
+    config.models = config.models
+      .filter(
+        (model) =>
+          model.provider !== "free-trial" || model.model.startsWith("gpt"),
+      )
+      .map((m: ModelDescription) => {
+        if (m.provider === "free-trial") {
+          m.apiKey = key;
+          m.provider = "openai";
+        }
+        return m;
+      });
     return config;
   });
 }

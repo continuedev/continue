@@ -1,9 +1,9 @@
-import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class SearchContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -11,6 +11,7 @@ class SearchContextProvider extends BaseContextProvider {
     displayTitle: "Search",
     description: "Use ripgrep to exact search the workspace",
     type: "query",
+    renderInlineAs: "",
   };
 
   async getContextItems(

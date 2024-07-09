@@ -1,7 +1,16 @@
-import { BaseLLM } from "..";
-import { ChatMessage, CompletionOptions, CustomLLM } from "../..";
+import { BaseLLM } from "../index.js";
+import {
+  ChatMessage,
+  CompletionOptions,
+  CustomLLM,
+  ModelProvider,
+} from "../../index.js";
 
 class CustomLLMClass extends BaseLLM {
+  get providerName(): ModelProvider {
+    return "custom";
+  }
+
   private customStreamCompletion?: (
     prompt: string,
     options: CompletionOptions,

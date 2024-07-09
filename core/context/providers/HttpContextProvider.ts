@@ -1,9 +1,9 @@
-import { BaseContextProvider } from "..";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
-} from "../..";
+} from "../../index.js";
+import { BaseContextProvider } from "../index.js";
 
 class HttpContextProvider extends BaseContextProvider {
   static description: ContextProviderDescription = {
@@ -28,7 +28,7 @@ class HttpContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const response = await fetch(this.options.url, {
+    const response = await extras.fetch(new URL(this.options.url), {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -39,7 +39,7 @@ class HttpContextProvider extends BaseContextProvider {
       }),
     });
 
-    const json = await response.json();
+    const json: any = await response.json();
     return [
       {
         description: json.description || "HTTP Context Item",

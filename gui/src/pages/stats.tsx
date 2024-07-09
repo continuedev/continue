@@ -1,12 +1,12 @@
 import { ArrowLeftIcon } from "@heroicons/react/24/outline";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { table } from "table";
 import { lightGray, vscBackground, vscInputBackground } from "../components";
 import { CopyButton } from "../components/markdown/CopyButton";
+import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useNavigationListener } from "../hooks/useNavigationListener";
-import { ideRequest } from "../util/ide";
 
 const Th = styled.th`
   padding: 0.5rem;
@@ -36,21 +36,27 @@ function generateTable(data: unknown[][]) {
 function Stats() {
   useNavigationListener();
   const navigate = useNavigate();
+  const ideMessenger = useContext(IdeMessengerContext);
 
-  const [days, setDays] = useState<{ day: string; tokens: number }[]>([]);
+  const [days, setDays] = useState<
+    { day: string; promptTokens: number; generatedTokens: number }[]
+  >([]);
+  const [models, setModels] = useState<
+    { model: string; promptTokens: number; generatedTokens: number }[]
+  >([]);
 
   useEffect(() => {
-    ideRequest("stats/getTokensPerDay", undefined).then((days) => {
+    ideMessenger.request("stats/getTokensPerDay", undefined).then((days) => {
       setDays(days);
     });
   }, []);
 
-  const [models, setModels] = useState<{ model: string; tokens: number }[]>([]);
-
   useEffect(() => {
-    ideRequest("stats/getTokensPerModel", undefined).then((models) => {
-      setModels(models);
-    });
+    ideMessenger
+      .request("stats/getTokensPerModel", undefined)
+      .then((models) => {
+        setModels(models);
+      });
   }, []);
 
   return (
@@ -75,8 +81,12 @@ function Stats() {
         <h2 className="ml-2">Tokens per Day</h2>
         <CopyButton
           text={generateTable(
-            ([["Day", "Tokens"]] as any).concat(
-              days.map((day) => [day.day, day.tokens]),
+            ([["Day", "Generated Tokens", "Prompt Tokens"]] as any).concat(
+              days.map((day) => [
+                day.day,
+                day.generatedTokens,
+                day.promptTokens,
+              ]),
             ),
           )}
         />
@@ -85,14 +95,16 @@ function Stats() {
         <thead>
           <Tr>
             <Th>Day</Th>
-            <Th>Tokens</Th>
+            <Th>Generated Tokens</Th>
+            <Th>Prompt Tokens</Th>
           </Tr>
         </thead>
         <tbody>
           {days.map((day) => (
             <Tr key={day.day} className="">
               <Td>{day.day}</Td>
-              <Td>{day.tokens}</Td>
+              <Td>{day.generatedTokens}</Td>
+              <Td>{day.promptTokens}</Td>
             </Tr>
           ))}
         </tbody>
@@ -102,8 +114,12 @@ function Stats() {
         <h2 className="ml-2">Tokens per Model</h2>
         <CopyButton
           text={generateTable(
-            ([["Model", "Tokens"]] as any).concat(
-              models.map((model) => [model.model, model.tokens]),
+            ([["Model", "Generated Tokens", "Prompt Tokens"]] as any).concat(
+              models.map((model) => [
+                model.model,
+                model.generatedTokens,
+                model.promptTokens,
+              ]),
             ),
           )}
         />
@@ -112,14 +128,16 @@ function Stats() {
         <thead>
           <Tr>
             <Th>Model</Th>
-            <Th>Tokens</Th>
+            <Th>Generated Tokens</Th>
+            <Th>Prompt Tokens</Th>
           </Tr>
         </thead>
         <tbody>
           {models.map((model) => (
             <Tr key={model.model} className="">
               <Td>{model.model}</Td>
-              <Td>{model.tokens}</Td>
+              <Td>{model.generatedTokens}</Td>
+              <Td>{model.promptTokens}</Td>
             </Tr>
           ))}
         </tbody>

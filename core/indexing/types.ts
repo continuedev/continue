@@ -1,4 +1,4 @@
-import { IndexTag, IndexingProgressUpdate } from "..";
+import { IndexTag, IndexingProgressUpdate } from "../index.js";
 
 export enum IndexResultType {
   Compute = "compute",
@@ -14,6 +14,7 @@ export type MarkCompleteCallback = (
 
 export interface CodebaseIndex {
   artifactId: string;
+  relativeExpectedTime: number;
   update(
     tag: IndexTag,
     results: RefreshIndexResults,

@@ -19,14 +19,14 @@ const sidebars = {
     "how-to-use-continue",
     {
       type: "category",
-      label: "🌉 Model setup",
+      label: "🌉 Setup",
       collapsible: true,
       collapsed: true,
       items: [
-        "model-setup/overview",
-        "model-setup/select-provider",
-        "model-setup/select-model",
-        "model-setup/configuration",
+        "setup/overview",
+        "setup/configuration",
+        "setup/select-provider",
+        "setup/select-model",
       ],
     },
     {
@@ -46,11 +46,11 @@ const sidebars = {
       collapsible: true,
       collapsed: true,
       items: [
-        // "walkthroughs/codellama",
-        "walkthroughs/running-continue-without-internet",
+        "walkthroughs/set-up-codestral",
         "walkthroughs/codebase-embeddings",
         "walkthroughs/tab-autocomplete",
-        // "walkthroughs/config-file-migration",
+        "walkthroughs/prompt-files",
+        "walkthroughs/quick-actions",
       ],
     },
     "development-data",
@@ -68,6 +68,7 @@ const sidebars = {
         },
       ],
     },
+    "changelog",
   ],
 };
 

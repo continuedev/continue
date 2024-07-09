@@ -15,21 +15,29 @@ body:
           required: false
         - label: I'm not able to find an [open issue](https://github.com/continuedev/continue/issues?q=is%3Aopen+is%3Aissue) that reports the same bug
           required: false
-        - label: I've seen the [troubleshooting guide](https://continue.dev/docs/troubleshooting) on the Continue Docs
+        - label: I've seen the [troubleshooting guide](https://docs.continue.dev/troubleshooting) on the Continue Docs
           required: false
   - type: textarea
     attributes:
       label: Relevant environment info
       description: |
+        Feel free to omit any info that is not relevant to your issue.
+
         - **OS**: e.g. macOS 14.2.1
         - **Continue**: e.g. v0.9.4
         - **IDE**: e.g. VSCode 1.85.1
         - Include also your LLM Model if it is relevant to your issue
           - **Model**: e.g. Ollama v0.1.19
+        - The contents of your config.json file (e.g. `~/.continue/config.json` on macOS)
       value: |
         - OS:
         - Continue:
         - IDE:
+        - Model:
+        - config.json:
+          ```json
+
+          ```
       render: Markdown
     validations:
       required: false
@@ -58,5 +66,5 @@ body:
     attributes:
       label: Log output
       description: |
-        Please refer to the [troubleshooting guide](https://continue.dev/docs/troubleshooting) in the Continue Docs for instructions on obtaining the logs. Copy either the relevant lines or the last 100 lines or so.
+        Please refer to the [troubleshooting guide](https://docs.continue.dev/troubleshooting) in the Continue Docs for instructions on obtaining the logs. Copy either the relevant lines or the last 100 lines or so.
       render: Shell

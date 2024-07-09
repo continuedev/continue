@@ -1,5 +1,5 @@
-import { ChatMessage } from "../..";
-import { stripImages } from "../countTokens";
+import { ChatMessage } from "../../index.js";
+import { stripImages } from "../countTokens.js";
 
 function templateFactory(
   systemMessage: (msg: ChatMessage) => string,
@@ -166,7 +166,7 @@ function deepseekTemplateMessages(msgs: ChatMessage[]): string {
     prompt += msg.role === "user" ? "### Instruction:\n" : "### Response:\n";
 
     if (system && msg.role === "user" && i === msgs.length - 1) {
-      prompt += system + "\n";
+      prompt += `${system}\n`;
     }
 
     prompt += `${msg.content}`;
@@ -254,6 +254,14 @@ function codeLlama70bTemplateMessages(msgs: ChatMessage[]): string {
   return prompt;
 }
 
+const llama3TemplateMessages = templateFactory(
+  (msg: ChatMessage) =>
+    `<|begin_of_text|><|start_header_id|>${msg.role}<|end_header_id|>\n${msg.content}<|eot_id|>\n`,
+  "<|start_header_id|>user<|end_header_id|>\n",
+  "<|start_header_id|>assistant<|end_header_id|>\n",
+  "<|eot_id|>",
+);
+
 /**
  <start_of_turn>user
  What is Cramer's Rule?<end_of_turn>
@@ -273,6 +281,7 @@ export {
   deepseekTemplateMessages,
   gemmaTemplateMessage,
   llama2TemplateMessages,
+  llama3TemplateMessages,
   llavaTemplateMessages,
   neuralChatTemplateMessages,
   openchatTemplateMessages,

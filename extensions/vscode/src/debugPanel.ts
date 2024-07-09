@@ -1,8 +1,8 @@
-import { FileEdit, IDE } from "core";
-import { ConfigHandler } from "core/config/handler";
+import type { FileEdit } from "core";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import * as vscode from "vscode";
-import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { getTheme } from "./util/getTheme";
+import { getExtensionVersion } from "./util/util";
 import { getExtensionUri, getNonce, getUniqueId } from "./util/vscode";
 import { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -21,9 +21,6 @@ export class ContinueGUIWebviewViewProvider
     webviewView.webview.html = this.getSidebarContent(
       this.extensionContext,
       webviewView,
-      this.ide,
-      this.configHandler,
-      this.verticalDiffManager,
     );
   }
 
@@ -31,6 +28,14 @@ export class ContinueGUIWebviewViewProvider
 
   get webview() {
     return this._webview;
+  }
+
+  public resetWebviewProtocolWebview(): void {
+    if (this._webview) {
+      this.webviewProtocol.webview = this._webview;
+    } else {
+      console.warn("no webview found during reset");
+    }
   }
 
   sendMainUserInput(input: string) {
@@ -41,33 +46,29 @@ export class ContinueGUIWebviewViewProvider
   }
 
   constructor(
-    private readonly configHandler: ConfigHandler,
-    private readonly ide: IDE,
+    private readonly configHandlerPromise: Promise<ConfigHandler>,
     private readonly windowId: string,
     private readonly extensionContext: vscode.ExtensionContext,
-    private readonly verticalDiffManager: VerticalPerLineDiffManager,
   ) {
     this.webviewProtocol = new VsCodeWebviewProtocol(
-      ide,
-      configHandler,
-      verticalDiffManager,
+      (async () => {
+        const configHandler = await this.configHandlerPromise;
+        return configHandler.reloadConfig();
+      }).bind(this),
     );
   }
 
   getSidebarContent(
     context: vscode.ExtensionContext | undefined,
     panel: vscode.WebviewPanel | vscode.WebviewView,
-    ide: IDE,
-    configHandler: ConfigHandler,
-    verticalDiffManager: VerticalPerLineDiffManager,
     page: string | undefined = undefined,
     edits: FileEdit[] | undefined = undefined,
-    isFullScreen: boolean = false,
+    isFullScreen = false,
   ): string {
-    let extensionUri = getExtensionUri();
+    const extensionUri = getExtensionUri();
     let scriptUri: string;
     let styleMainUri: string;
-    let vscMediaUrl: string = panel.webview
+    const vscMediaUrl: string = panel.webview
       .asWebviewUri(vscode.Uri.joinPath(extensionUri, "gui"))
       .toString();
 
@@ -139,7 +140,8 @@ export class ContinueGUIWebviewViewProvider
 
         <script type="module" nonce="${nonce}" src="${scriptUri}"></script>
 
-        <script>localStorage.setItem("ide", "vscode")</script>
+        <script>localStorage.setItem("ide", '"vscode"')</script>
+        <script>localStorage.setItem("extensionVersion", '"${getExtensionVersion()}"')</script>
         <script>window.windowId = "${this.windowId}"</script>
         <script>window.vscMachineId = "${getUniqueId()}"</script>
         <script>window.vscMediaUrl = "${vscMediaUrl}"</script>

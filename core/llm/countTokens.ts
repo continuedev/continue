@@ -1,16 +1,29 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
-// @ts-ignore
-import llamaTokenizer from "llama-tokenizer-js";
-import { ChatMessage, MessageContent, MessagePart } from "..";
-import { autodetectTemplateType } from "./autodetect";
-import { TOKEN_BUFFER_FOR_SAFETY } from "./constants";
+import { ChatMessage, MessageContent, MessagePart } from "../index.js";
+import { autodetectTemplateType } from "./autodetect.js";
+import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
+import llamaTokenizer from "./llamaTokenizer.js";
 
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
 }
 
+class LlamaEncoding implements Encoding {
+  encode(
+    text: string,
+    allowedSpecial?: string[] | "all" | undefined,
+    disallowedSpecial?: string[] | "all" | undefined,
+  ): number[] {
+    return llamaTokenizer.encode(text);
+  }
+  decode(tokens: number[]): string {
+    return llamaTokenizer.decode(tokens);
+  }
+}
+
 let gptEncoding: Encoding | null = null;
+const llamaEncoding = new LlamaEncoding();
 
 function encodingForModel(modelName: string): Encoding {
   const modelType = autodetectTemplateType(modelName);
@@ -23,21 +36,20 @@ function encodingForModel(modelName: string): Encoding {
     return gptEncoding;
   }
 
-  return llamaTokenizer;
+  return llamaEncoding;
 }
 
 function countImageTokens(content: MessagePart): number {
   if (content.type === "imageUrl") {
     return 85;
-  } else {
-    throw new Error("Non-image content type");
   }
+  throw new Error("Non-image content type");
 }
 
 function countTokens(
   content: MessageContent,
   // defaults to llama2 because the tokenizer tends to produce more tokens
-  modelName: string = "llama2",
+  modelName = "llama2",
 ): number {
   const encoding = encodingForModel(modelName);
   if (Array.isArray(content)) {
@@ -47,7 +59,7 @@ function countTokens(
         : encoding.encode(part.text ?? "", "all", []).length;
     }, 0);
   } else {
-    return encoding.encode(content, "all", []).length;
+    return encoding.encode(content ?? "", "all", []).length;
   }
 }
 
@@ -59,7 +71,7 @@ function flattenMessages(msgs: ChatMessage[]): ChatMessage[] {
       flattened.length > 0 &&
       flattened[flattened.length - 1].role === msg.role
     ) {
-      flattened[flattened.length - 1].content += "\n\n" + (msg.content || "");
+      flattened[flattened.length - 1].content += `\n\n${msg.content || ""}`;
     } else {
       flattened.push(msg);
     }
@@ -73,9 +85,8 @@ export function stripImages(content: MessageContent): string {
       .filter((part) => part.type === "text")
       .map((part) => part.text)
       .join("\n");
-  } else {
-    return content;
   }
+  return content;
 }
 
 function countChatMessageTokens(
@@ -171,10 +182,9 @@ function pruneRawPromptFromBottom(
 
 function summarize(message: MessageContent): string {
   if (Array.isArray(message)) {
-    return stripImages(message).substring(0, 100) + "...";
-  } else {
-    return message.substring(0, 100) + "...";
+    return `${stripImages(message).substring(0, 100)}...`;
   }
+  return `${message.substring(0, 100)}...`;
 }
 
 function pruneChatHistory(
@@ -205,7 +215,7 @@ function pruneChatHistory(
   for (let i = 0; i < longerThanOneThird.length; i++) {
     // Prune line-by-line from the top
     const message = longerThanOneThird[i];
-    let content = stripImages(message.content);
+    const content = stripImages(message.content);
     const deltaNeeded = totalTokens - contextLength;
     const delta = Math.min(deltaNeeded, distanceFromThird[i]);
     message.content = pruneStringFromTop(
@@ -273,7 +283,7 @@ function pruneChatHistory(
 
 function compileChatMessages(
   modelName: string,
-  msgs: ChatMessage[] | undefined = undefined,
+  msgs: ChatMessage[] | undefined,
   contextLength: number,
   maxTokens: number,
   supportsImages: boolean,

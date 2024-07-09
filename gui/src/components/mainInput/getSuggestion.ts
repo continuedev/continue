@@ -2,15 +2,15 @@ import { Editor, ReactRenderer } from "@tiptap/react";
 import { ContextProviderDescription, ContextSubmenuItem } from "core";
 import { MutableRefObject } from "react";
 import tippy from "tippy.js";
-import { ideRequest } from "../../util/ide";
+import { IIdeMessenger } from "../../context/IdeMessenger";
 import MentionList from "./MentionList";
-import { ComboBoxItem, ComboBoxItemType } from "./types";
+import { ComboBoxItem, ComboBoxItemType, ComboBoxSubAction } from "./types";
 
 function getSuggestion(
   items: (props: { query: string }) => Promise<ComboBoxItem[]>,
   enterSubmenu: (editor: Editor, providerId: string) => void = (editor) => {},
   onClose: () => void = () => {},
-  onOpen: () => void = () => {}
+  onOpen: () => void = () => {},
 ) {
   return {
     items,
@@ -19,10 +19,16 @@ function getSuggestion(
       let component;
       let popup;
 
+      const onExit = () => {
+        popup?.[0]?.destroy();
+        component?.destroy();
+        onClose();
+      };
+
       return {
         onStart: (props) => {
           component = new ReactRenderer(MentionList, {
-            props: { ...props, enterSubmenu },
+            props: { ...props, enterSubmenu, onClose: onExit },
             editor: props.editor,
           });
 
@@ -67,34 +73,50 @@ function getSuggestion(
           return component.ref?.onKeyDown(props);
         },
 
-        onExit() {
-          popup?.[0]?.destroy();
-          component?.destroy();
-          onClose();
-        },
+        onExit,
       };
     },
   };
 }
 
-export function getMentionSuggestion(
+function getSubActionsForSubmenuItem(
+  item: ContextSubmenuItem & { providerTitle: string },
+  ideMessenger: IIdeMessenger,
+): ComboBoxSubAction[] | undefined {
+  if (item.providerTitle === "docs" && !item.metadata?.preIndexed) {
+    return [
+      {
+        label: "Open in new tab",
+        icon: "trash",
+        action: () => {
+          ideMessenger.request("context/removeDocs", { baseUrl: item.id });
+        },
+      },
+    ];
+  }
+
+  return undefined;
+}
+
+export function getContextProviderDropdownOptions(
   availableContextProvidersRef: MutableRefObject<ContextProviderDescription[]>,
   getSubmenuContextItemsRef: MutableRefObject<
     (
       providerTitle: string | undefined,
-      query: string
+      query: string,
     ) => (ContextSubmenuItem & { providerTitle: string })[]
   >,
   enterSubmenu: (editor: Editor, providerId: string) => void,
   onClose: () => void,
   onOpen: () => void,
-  inSubmenu: MutableRefObject<string | undefined>
+  inSubmenu: MutableRefObject<string | undefined>,
+  ideMessenger: IIdeMessenger,
 ) {
   const items = async ({ query }) => {
     if (inSubmenu.current) {
       const results = getSubmenuContextItemsRef.current(
         inSubmenu.current,
-        query
+        query,
       );
       return results.map((result) => {
         return {
@@ -102,6 +124,7 @@ export function getMentionSuggestion(
           label: result.title,
           type: inSubmenu.current as ComboBoxItemType,
           query: result.id,
+          subActions: getSubActionsForSubmenuItem(result, ideMessenger),
         };
       });
     }
@@ -111,7 +134,7 @@ export function getMentionSuggestion(
         ?.filter(
           (provider) =>
             provider.title.toLowerCase().startsWith(query.toLowerCase()) ||
-            provider.displayTitle.toLowerCase().startsWith(query.toLowerCase())
+            provider.displayTitle.toLowerCase().startsWith(query.toLowerCase()),
         )
         .map((provider) => ({
           name: provider.displayTitle,
@@ -142,9 +165,9 @@ export function getMentionSuggestion(
         title: "Add more context providers",
         type: "action",
         action: () => {
-          ideRequest(
+          ideMessenger.request(
             "openUrl",
-            "https://continue.dev/docs/customization/context-providers#built-in-context-providers"
+            "https://docs.continue.dev/customization/context-providers#built-in-context-providers",
           );
         },
         description: "",
@@ -156,14 +179,30 @@ export function getMentionSuggestion(
   return getSuggestion(items, enterSubmenu, onClose, onOpen);
 }
 
-export function getCommandSuggestion(
+export function getSlashCommandDropdownOptions(
   availableSlashCommandsRef: MutableRefObject<ComboBoxItem[]>,
   onClose: () => void,
-  onOpen: () => void
+  onOpen: () => void,
+  ideMessenger: IIdeMessenger,
 ) {
   const items = async ({ query }) => {
+    const options = [
+      ...availableSlashCommandsRef.current,
+      {
+        title: "Build a custom prompt",
+        description: "Build a custom prompt",
+        type: "action",
+        id: "createPromptFile",
+        label: "Create Prompt File",
+        action: () => {
+          console.log("I", ideMessenger.request);
+          ideMessenger.request("config/newPromptFile", undefined);
+        },
+        name: "Create Prompt File",
+      },
+    ];
     return (
-      availableSlashCommandsRef.current?.filter((slashCommand) => {
+      options.filter((slashCommand) => {
         const sc = slashCommand.title.substring(1).toLowerCase();
         const iv = query.toLowerCase();
         return sc.startsWith(iv);
@@ -174,7 +213,8 @@ export function getCommandSuggestion(
       id: provider.title,
       title: provider.title,
       label: provider.title,
-      type: "slashCommand" as ComboBoxItemType,
+      type: (provider.type ?? "slashCommand") as ComboBoxItemType,
+      action: provider.action,
     }));
   };
   return getSuggestion(items, undefined, onClose, onOpen);

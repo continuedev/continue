@@ -11,7 +11,7 @@ import {
   MarkCompleteCallback,
   PathAndCacheKey,
   RefreshIndexResults,
-} from "./types";
+} from "./types.js";
 
 export type DatabaseConnection = Database<sqlite3.Database>;
 
@@ -106,7 +106,7 @@ async function getAddRemoveForTag(
   const updateOldVersion: PathAndCacheKey[] = [];
   const remove: PathAndCacheKey[] = [];
 
-  for (let item of saved) {
+  for (const item of saved) {
     const { lastUpdated, ...pathAndCacheKey } = item;
 
     if (currentFiles[item.path] === undefined) {
@@ -157,7 +157,7 @@ async function getAddRemoveForTag(
       switch (resultType) {
         case AddRemoveResultType.Add:
           await db.run(
-            `INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)`,
+            "INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
             path,
             cacheKey,
             newLastUpdatedTimestamp,
@@ -207,22 +207,22 @@ async function getAddRemoveForTag(
     }
   }
 
-  for (let item of updateNewVersion) {
+  for (const item of updateNewVersion) {
     itemToAction[JSON.stringify(item)] = [
       item,
       AddRemoveResultType.UpdateNewVersion,
     ];
   }
-  for (let item of add) {
+  for (const item of add) {
     itemToAction[JSON.stringify(item)] = [item, AddRemoveResultType.Add];
   }
-  for (let item of updateOldVersion) {
+  for (const item of updateOldVersion) {
     itemToAction[JSON.stringify(item)] = [
       item,
       AddRemoveResultType.UpdateOldVersion,
     ];
   }
-  for (let item of remove) {
+  for (const item of remove) {
     itemToAction[JSON.stringify(item)] = [item, AddRemoveResultType.Remove];
   }
 
@@ -243,7 +243,7 @@ async function getTagsFromGlobalCache(
 ): Promise<IndexTag[]> {
   const db = await SqliteDb.get();
   const stmt = await db.prepare(
-    `SELECT dir, branch, artifactId FROM global_cache WHERE cacheKey = ? AND artifactId = ?`,
+    "SELECT dir, branch, artifactId FROM global_cache WHERE cacheKey = ? AND artifactId = ?",
   );
   const rows = await stmt.all(cacheKey, artifactId);
   return rows;
@@ -266,7 +266,7 @@ export async function getComputeDeleteAddRemove(
   const addTag: PathAndCacheKey[] = [];
   const removeTag: PathAndCacheKey[] = [];
 
-  for (let { path, cacheKey } of add) {
+  for (const { path, cacheKey } of add) {
     const existingTags = await getTagsFromGlobalCache(cacheKey, tag.artifactId);
     if (existingTags.length > 0) {
       addTag.push({ path, cacheKey });
@@ -275,7 +275,7 @@ export async function getComputeDeleteAddRemove(
     }
   }
 
-  for (let { path, cacheKey } of remove) {
+  for (const { path, cacheKey } of remove) {
     const existingTags = await getTagsFromGlobalCache(cacheKey, tag.artifactId);
     if (existingTags.length > 1) {
       removeTag.push({ path, cacheKey });
@@ -304,14 +304,14 @@ export async function getComputeDeleteAddRemove(
       markComplete(items, resultType);
 
       // Update the global cache
-      let results: any = {
+      const results: any = {
         compute: [],
         del: [],
         addTag: [],
         removeTag: [],
       };
       results[resultType] = items;
-      for await (let _ of globalCacheIndex.update(
+      for await (const _ of globalCacheIndex.update(
         tag,
         results,
         () => {},
@@ -323,12 +323,13 @@ export async function getComputeDeleteAddRemove(
 }
 
 export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
+  relativeExpectedTime: number = 1;
   private db: DatabaseConnection;
 
   constructor(db: DatabaseConnection) {
     this.db = db;
   }
-  artifactId: string = "globalCache";
+  artifactId = "globalCache";
 
   static async create(): Promise<GlobalCacheCodeBaseIndex> {
     return new GlobalCacheCodeBaseIndex(await SqliteDb.get());
@@ -350,7 +351,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
         return this.deleteOrRemoveTag(cacheKey, tag);
       }),
     ]);
-    yield { progress: 1, desc: "Done updating global cache" };
+    yield { progress: 1, desc: "Done updating global cache", status: "done" };
   }
 
   private async computeOrAddTag(

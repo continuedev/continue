@@ -1,5 +1,15 @@
+import * as JSONC from "comment-json";
 import * as fs from "fs";
 import path from "path";
+import {
+  slashCommandFromDescription,
+  slashFromCustomCommand,
+} from "../commands/index.js";
+import CustomContextProviderClass from "../context/providers/CustomContextProvider.js";
+import FileContextProvider from "../context/providers/FileContextProvider.js";
+import { contextProviderClassFromName } from "../context/providers/index.js";
+import { AllRerankers } from "../context/rerankers/index.js";
+import { LLMReranker } from "../context/rerankers/llm.js";
 import {
   BrowserSerializedContinueConfig,
   Config,
@@ -10,25 +20,25 @@ import {
   CustomLLM,
   EmbeddingsProviderDescription,
   IContextProvider,
+  IDE,
+  IdeSettings,
   IdeType,
   ModelDescription,
+  Reranker,
+  RerankerDescription,
   SerializedContinueConfig,
   SlashCommand,
-} from "..";
-import {
-  slashCommandFromDescription,
-  slashFromCustomCommand,
-} from "../commands";
-import { contextProviderClassFromName } from "../context/providers";
-import CustomContextProviderClass from "../context/providers/CustomContextProvider";
-import FileContextProvider from "../context/providers/FileContextProvider";
-import { AllEmbeddingsProviders } from "../indexing/embeddings";
-import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider";
-import { BaseLLM } from "../llm";
-import { llmFromDescription } from "../llm/llms";
-import CustomLLMClass from "../llm/llms/CustomLLM";
-import { copyOf } from "../util";
-import mergeJson from "../util/merge";
+} from "../index.js";
+import TransformersJsEmbeddingsProvider from "../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
+import { allEmbeddingsProviders } from "../indexing/embeddings/index.js";
+import { BaseLLM } from "../llm/index.js";
+import CustomLLMClass from "../llm/llms/CustomLLM.js";
+import FreeTrial from "../llm/llms/FreeTrial.js";
+import { llmFromDescription } from "../llm/llms/index.js";
+
+import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
+import { copyOf } from "../util/index.js";
+import mergeJson from "../util/merge.js";
 import {
   getConfigJsPath,
   getConfigJsPathForRemote,
@@ -36,13 +46,24 @@ import {
   getConfigJsonPathForRemote,
   getConfigTsPath,
   getContinueDotEnv,
-  migrate,
-} from "../util/paths";
+  readAllGlobalPromptFiles,
+} from "../util/paths.js";
+import {
+  defaultContextProvidersJetBrains,
+  defaultContextProvidersVsCode,
+  defaultSlashCommandsJetBrains,
+  defaultSlashCommandsVscode,
+} from "./default.js";
+import {
+  DEFAULT_PROMPTS_FOLDER,
+  getPromptFiles,
+  slashCommandFromPromptFile,
+} from "./promptFile.js";
 const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
-  let config = JSON.parse(content) as SerializedContinueConfig;
+  const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
   if (config.env && Array.isArray(config.env)) {
     const env = {
       ...process.env,
@@ -51,7 +72,7 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
 
     config.env.forEach((envVar) => {
       if (envVar in env) {
-        content = content.replaceAll(
+        content = (content as any).replaceAll(
           new RegExp(`"${envVar}"`, "g"),
           `"${env[envVar]}"`,
         );
@@ -59,7 +80,7 @@ function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
     });
   }
 
-  return JSON.parse(content);
+  return JSONC.parse(content) as unknown as SerializedContinueConfig;
 }
 
 const configMergeKeys = {
@@ -71,7 +92,7 @@ const configMergeKeys = {
 
 function loadSerializedConfig(
   workspaceConfigs: ContinueRcJson[],
-  remoteConfigServerUrl: URL | undefined,
+  ideSettings: IdeSettings,
   ideType: IdeType,
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath(ideType);
@@ -86,38 +107,10 @@ function loadSerializedConfig(
     config.allowAnonymousTelemetry = true;
   }
 
-  migrate("codeContextProvider", () => {
-    if (!config.contextProviders?.filter((cp) => cp.name === "code")?.length) {
-      config.contextProviders = [
-        ...(config.contextProviders || []),
-        {
-          name: "code",
-          params: {},
-        },
-      ];
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
-
-  migrate("docsContextProvider1", () => {
-    if (!config.contextProviders?.filter((cp) => cp.name === "docs")?.length) {
-      config.contextProviders = [
-        ...(config.contextProviders || []),
-        {
-          name: "docs",
-          params: {},
-        },
-      ];
-    }
-
-    fs.writeFileSync(configPath, JSON.stringify(config, undefined, 2), "utf8");
-  });
-
-  if (remoteConfigServerUrl) {
+  if (ideSettings.remoteConfigServerUrl) {
     try {
       const remoteConfigJson = resolveSerializedConfig(
-        getConfigJsonPathForRemote(remoteConfigServerUrl),
+        getConfigJsonPathForRemote(ideSettings.remoteConfigServerUrl),
       );
       config = mergeJson(config, remoteConfigJson, "merge", configMergeKeys);
     } catch (e) {
@@ -134,12 +127,24 @@ function loadSerializedConfig(
     );
   }
 
+  // Set defaults if undefined (this lets us keep config.json uncluttered for new users)
+  config.contextProviders ??=
+    ideType === "vscode"
+      ? [...defaultContextProvidersVsCode]
+      : [...defaultContextProvidersJetBrains];
+  config.slashCommands ??=
+    ideType === "vscode"
+      ? [...defaultSlashCommandsVscode]
+      : [...defaultSlashCommandsJetBrains];
+
   return config;
 }
 
-function serializedToIntermediateConfig(
+async function serializedToIntermediateConfig(
   initial: SerializedContinueConfig,
-): Config {
+  ide: IDE,
+  loadPromptFiles: boolean = true,
+): Promise<Config> {
   const slashCommands: SlashCommand[] = [];
   for (const command of initial.slashCommands || []) {
     const newCommand = slashCommandFromDescription(command);
@@ -149,6 +154,32 @@ function serializedToIntermediateConfig(
   }
   for (const command of initial.customCommands || []) {
     slashCommands.push(slashFromCustomCommand(command));
+  }
+
+  const workspaceDirs = await ide.getWorkspaceDirs();
+  const promptFolder = initial.experimental?.promptPath;
+
+  if (loadPromptFiles) {
+    let promptFiles: { path: string; content: string }[] = [];
+    promptFiles = (
+      await Promise.all(
+        workspaceDirs.map((dir) =>
+          getPromptFiles(
+            ide,
+            path.join(dir, promptFolder ?? DEFAULT_PROMPTS_FOLDER),
+          ),
+        ),
+      )
+    )
+      .flat()
+      .filter(({ path }) => path.endsWith(".prompt"));
+
+    // Also read from ~/.continue/.prompts
+    promptFiles.push(...readAllGlobalPromptFiles());
+
+    for (const file of promptFiles) {
+      slashCommands.push(slashCommandFromPromptFile(file.path, file.content));
+    }
   }
 
   const config: Config = {
@@ -175,18 +206,28 @@ function isContextProviderWithParams(
 /** Only difference between intermediate and final configs is the `models` array */
 async function intermediateToFinalConfig(
   config: Config,
-  readFile: (filepath: string) => Promise<string>,
+  ide: IDE,
+  ideSettings: IdeSettings,
+  uniqueId: string,
+  writeLog: (log: string) => Promise<void>,
+  allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
-  const models: BaseLLM[] = [];
+  // Auto-detect models
+  let models: BaseLLM[] = [];
   for (const desc of config.models) {
     if (isModelDescription(desc)) {
       const llm = await llmFromDescription(
         desc,
-        readFile,
+        ide.readFile.bind(ide),
+        uniqueId,
+        ideSettings,
+        writeLog,
         config.completionOptions,
         config.systemMessage,
       );
-      if (!llm) continue;
+      if (!llm) {
+        continue;
+      }
 
       if (llm.model === "AUTODETECT") {
         try {
@@ -197,9 +238,12 @@ async function intermediateToFinalConfig(
                 {
                   ...desc,
                   model: modelName,
-                  title: llm.title + " - " + modelName,
+                  title: `${llm.title} - ${modelName}`,
                 },
-                readFile,
+                ide.readFile.bind(ide),
+                uniqueId,
+                ideSettings,
+                writeLog,
                 copyOf(config.completionOptions),
                 config.systemMessage,
               );
@@ -217,7 +261,10 @@ async function intermediateToFinalConfig(
         models.push(llm);
       }
     } else {
-      const llm = new CustomLLMClass(desc);
+      const llm = new CustomLLMClass({
+        ...desc,
+        options: { ...desc.options, writeLog } as any,
+      });
       if (llm.model === "AUTODETECT") {
         try {
           const modelNames = await llm.listModels();
@@ -225,7 +272,7 @@ async function intermediateToFinalConfig(
             (modelName) =>
               new CustomLLMClass({
                 ...desc,
-                options: { ...desc.options, model: modelName },
+                options: { ...desc.options, model: modelName, writeLog },
               }),
           );
 
@@ -239,20 +286,68 @@ async function intermediateToFinalConfig(
     }
   }
 
-  let autocompleteLlm: BaseLLM | undefined = undefined;
-  if (config.tabAutocompleteModel) {
-    if (isModelDescription(config.tabAutocompleteModel)) {
-      autocompleteLlm = await llmFromDescription(
-        config.tabAutocompleteModel,
-        readFile,
-        config.completionOptions,
-        config.systemMessage,
-      );
-    } else {
-      autocompleteLlm = new CustomLLMClass(config.tabAutocompleteModel);
-    }
+  // Prepare models
+  for (const model of models) {
+    model.requestOptions = {
+      ...model.requestOptions,
+      ...config.requestOptions,
+    };
   }
 
+  if (allowFreeTrial) {
+    // Obtain auth token (iff free trial being used)
+    const freeTrialModels = models.filter(
+      (model) => model.providerName === "free-trial",
+    );
+    if (freeTrialModels.length > 0) {
+      const ghAuthToken = await ide.getGitHubAuthToken();
+      for (const model of freeTrialModels) {
+        (model as FreeTrial).setupGhAuthToken(ghAuthToken);
+      }
+    }
+  } else {
+    // Remove free trial models
+    models = models.filter((model) => model.providerName !== "free-trial");
+  }
+
+  // Tab autocomplete model
+  let tabAutocompleteModels: BaseLLM[] = [];
+  if (config.tabAutocompleteModel) {
+    tabAutocompleteModels = (
+      await Promise.all(
+        (Array.isArray(config.tabAutocompleteModel)
+          ? config.tabAutocompleteModel
+          : [config.tabAutocompleteModel]
+        ).map(async (desc) => {
+          if (isModelDescription(desc)) {
+            const llm = await llmFromDescription(
+              desc,
+              ide.readFile.bind(ide),
+              uniqueId,
+              ideSettings,
+              writeLog,
+              config.completionOptions,
+              config.systemMessage,
+            );
+
+            if (llm?.providerName === "free-trial") {
+              if (!allowFreeTrial) {
+                // This shouldn't happen
+                throw new Error("Free trial cannot be used with control plane");
+              }
+              const ghAuthToken = await ide.getGitHubAuthToken();
+              (llm as FreeTrial).setupGhAuthToken(ghAuthToken);
+            }
+            return llm;
+          } else {
+            return new CustomLLMClass(desc);
+          }
+        }),
+      )
+    ).filter((x) => x !== undefined) as BaseLLM[];
+  }
+
+  // Context providers
   const contextProviders: IContextProvider[] = [new FileContextProvider({})];
   for (const provider of config.contextProviders || []) {
     if (isContextProviderWithParams(provider)) {
@@ -267,17 +362,50 @@ async function intermediateToFinalConfig(
     }
   }
 
-  if (
-    (config.embeddingsProvider as EmbeddingsProviderDescription | undefined)
-      ?.provider
-  ) {
-    const { provider, ...options } =
-      config.embeddingsProvider as EmbeddingsProviderDescription;
-    config.embeddingsProvider = new AllEmbeddingsProviders[provider](options);
+  // Embeddings Provider
+  const embeddingsProviderDescription = config.embeddingsProvider as
+    | EmbeddingsProviderDescription
+    | undefined;
+  if (embeddingsProviderDescription?.provider) {
+    const { provider, ...options } = embeddingsProviderDescription;
+    const embeddingsProviderClass = allEmbeddingsProviders[provider];
+    if (embeddingsProviderClass) {
+      if (
+        embeddingsProviderClass.name === "_TransformersJsEmbeddingsProvider"
+      ) {
+        config.embeddingsProvider = new embeddingsProviderClass();
+      } else {
+        config.embeddingsProvider = new embeddingsProviderClass(
+          options,
+          (url: string | URL, init: any) =>
+            fetchwithRequestOptions(url, init, {
+              ...config.requestOptions,
+              ...options.requestOptions,
+            }),
+        );
+      }
+    }
   }
 
   if (!config.embeddingsProvider) {
     config.embeddingsProvider = new TransformersJsEmbeddingsProvider();
+  }
+
+  // Reranker
+  if (config.reranker && !(config.reranker as Reranker | undefined)?.rerank) {
+    const { name, params } = config.reranker as RerankerDescription;
+    const rerankerClass = AllRerankers[name];
+
+    if (name === "llm") {
+      const llm = models.find((model) => model.title === params?.modelTitle);
+      if (!llm) {
+        console.warn(`Unknown model ${params?.modelTitle}`);
+      } else {
+        config.reranker = new LLMReranker(llm);
+      }
+    } else if (rerankerClass) {
+      config.reranker = new rerankerClass(params);
+    }
   }
 
   return {
@@ -285,7 +413,8 @@ async function intermediateToFinalConfig(
     contextProviders,
     models,
     embeddingsProvider: config.embeddingsProvider as any,
-    tabAutocompleteModel: autocompleteLlm,
+    tabAutocompleteModels,
+    reranker: config.reranker as any,
   };
 }
 
@@ -305,14 +434,14 @@ function finalToBrowserConfig(
       completionOptions: m.completionOptions,
       systemMessage: m.systemMessage,
       requestOptions: m.requestOptions,
-      promptTemplates: m.promptTemplates,
+      promptTemplates: m.promptTemplates as any,
     })),
     systemMessage: final.systemMessage,
     completionOptions: final.completionOptions,
-    slashCommands: final.slashCommands?.map((m) => ({
-      name: m.name,
-      description: m.description,
-      options: m.params,
+    slashCommands: final.slashCommands?.map((s) => ({
+      name: s.name,
+      description: s.description,
+      params: s.params, //PZTODO: is this why params aren't referenced properly by slash commands?
     })),
     contextProviders: final.contextProviders?.map((c) => c.description),
     disableIndexing: final.disableIndexing,
@@ -320,6 +449,7 @@ function finalToBrowserConfig(
     userToken: final.userToken,
     embeddingsProvider: final.embeddingsProvider?.id,
     ui: final.ui,
+    experimental: final.experimental,
   };
 }
 
@@ -364,14 +494,13 @@ async function buildConfigTs() {
   try {
     if (process.env.IS_BINARY === "true") {
       execSync(
-        escapeSpacesInPath(path.dirname(process.execPath)) +
-          `/esbuild${
-            getTarget().startsWith("win32") ? ".exe" : ""
-          } ${escapeSpacesInPath(
-            getConfigTsPath(),
-          )} --bundle --outfile=${escapeSpacesInPath(
-            getConfigJsPath(),
-          )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`,
+        `${escapeSpacesInPath(path.dirname(process.execPath))}/esbuild${
+          getTarget().startsWith("win32") ? ".exe" : ""
+        } ${escapeSpacesInPath(
+          getConfigTsPath(),
+        )} --bundle --outfile=${escapeSpacesInPath(
+          getConfigJsPath(),
+        )} --platform=node --format=cjs --sourcemap --external:fetch --external:fs --external:path --external:os --external:child_process`,
       );
     } else {
       // Dynamic import esbuild so potentially disastrous errors can be caught
@@ -389,7 +518,7 @@ async function buildConfigTs() {
     }
   } catch (e) {
     console.log(
-      "Build error. Please check your ~/.continue/config.ts file: " + e,
+      `Build error. Please check your ~/.continue/config.ts file: ${e}`,
     );
     return undefined;
   }
@@ -401,18 +530,20 @@ async function buildConfigTs() {
 }
 
 async function loadFullConfigNode(
-  readFile: (filepath: string) => Promise<string>,
+  ide: IDE,
   workspaceConfigs: ContinueRcJson[],
-  remoteConfigServerUrl: URL | undefined,
+  ideSettings: IdeSettings,
   ideType: IdeType,
+  uniqueId: string,
+  writeLog: (log: string) => Promise<void>,
 ): Promise<ContinueConfig> {
-  let serialized = loadSerializedConfig(
-    workspaceConfigs,
-    remoteConfigServerUrl,
-    ideType,
-  );
-  let intermediate = serializedToIntermediateConfig(serialized);
+  // Serialized config
+  let serialized = loadSerializedConfig(workspaceConfigs, ideSettings, ideType);
 
+  // Convert serialized to intermediate config
+  let intermediate = await serializedToIntermediateConfig(serialized, ide);
+
+  // Apply config.ts to modify intermediate config
   const configJsContents = await buildConfigTs();
   if (configJsContents) {
     try {
@@ -429,11 +560,11 @@ async function loadFullConfigNode(
     }
   }
 
-  // Remote config.js
-  if (remoteConfigServerUrl) {
+  // Apply remote config.js to modify intermediate config
+  if (ideSettings.remoteConfigServerUrl) {
     try {
       const configJsPathForRemote = getConfigJsPathForRemote(
-        remoteConfigServerUrl,
+        ideSettings.remoteConfigServerUrl,
       );
       const module = await require(configJsPathForRemote);
       delete require.cache[require.resolve(configJsPathForRemote)];
@@ -446,7 +577,14 @@ async function loadFullConfigNode(
     }
   }
 
-  const finalConfig = await intermediateToFinalConfig(intermediate, readFile);
+  // Convert to final config format
+  const finalConfig = await intermediateToFinalConfig(
+    intermediate,
+    ide,
+    ideSettings,
+    uniqueId,
+    writeLog,
+  );
   return finalConfig;
 }
 

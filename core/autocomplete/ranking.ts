@@ -1,13 +1,13 @@
-import { Range } from "..";
-import { RangeInFileWithContents } from "../commands/util";
-import { countTokens } from "../llm/countTokens";
+import { RangeInFileWithContents } from "../commands/util.js";
+import { Range } from "../index.js";
+import { countTokens } from "../llm/countTokens.js";
 
 export type AutocompleteSnippet = RangeInFileWithContents & {
-  score: number;
+  score?: number;
 };
 
 const rx = /[\s.,\/#!$%\^&\*;:{}=\-_`~()\[\]]/g;
-function getSymbolsForSnippet(snippet: string): Set<string> {
+export function getSymbolsForSnippet(snippet: string): Set<string> {
   const symbols = snippet
     .split(rx)
     .map((s) => s.trim())
@@ -42,11 +42,12 @@ export function jaccardSimilarity(a: string, b: string): number {
  * Rank code snippets to be used in tab-autocomplete prompt. Returns a sorted version of the snippet array.
  */
 export function rankSnippets(
-  ranges: RangeInFileWithContents[],
+  ranges: AutocompleteSnippet[],
   windowAroundCursor: string,
-): AutocompleteSnippet[] {
-  const snippets = ranges.map((snippet) => ({
-    score: jaccardSimilarity(snippet.contents, windowAroundCursor),
+): Required<AutocompleteSnippet>[] {
+  const snippets: Required<AutocompleteSnippet>[] = ranges.map((snippet) => ({
+    score:
+      snippet.score ?? jaccardSimilarity(snippet.contents, windowAroundCursor),
     ...snippet,
   }));
   const uniqueSnippets = deduplicateSnippets(snippets);
@@ -57,10 +58,10 @@ export function rankSnippets(
  * Deduplicate code snippets by merging overlapping ranges into a single range.
  */
 export function deduplicateSnippets(
-  snippets: AutocompleteSnippet[],
-): AutocompleteSnippet[] {
+  snippets: Required<AutocompleteSnippet>[],
+): Required<AutocompleteSnippet>[] {
   // Group by file
-  const fileGroups: { [key: string]: AutocompleteSnippet[] } = {};
+  const fileGroups: { [key: string]: Required<AutocompleteSnippet>[] } = {};
   for (const snippet of snippets) {
     if (!fileGroups[snippet.filepath]) {
       fileGroups[snippet.filepath] = [];
@@ -77,8 +78,8 @@ export function deduplicateSnippets(
 }
 
 function mergeSnippetsByRange(
-  snippets: AutocompleteSnippet[],
-): AutocompleteSnippet[] {
+  snippets: Required<AutocompleteSnippet>[],
+): Required<AutocompleteSnippet>[] {
   if (snippets.length === 0) {
     return snippets;
   }
@@ -86,7 +87,7 @@ function mergeSnippetsByRange(
   const sorted = snippets.sort(
     (a, b) => a.range.start.line - b.range.start.line,
   );
-  const merged: AutocompleteSnippet[] = [];
+  const merged: Required<AutocompleteSnippet>[] = [];
 
   while (sorted.length > 0) {
     const next = sorted.shift()!;
@@ -114,19 +115,19 @@ function mergeOverlappingRangeContents(
 ): string {
   const firstLines = first.contents.split("\n");
   const numOverlapping = first.range.end.line - second.range.start.line;
-  return firstLines.slice(-numOverlapping).join("\n") + "\n" + second.contents;
+  return `${firstLines.slice(-numOverlapping).join("\n")}\n${second.contents}`;
 }
 
 /**
  * Fill the allowed space with snippets
  */
 export function fillPromptWithSnippets(
-  snippets: AutocompleteSnippet[],
+  snippets: Required<AutocompleteSnippet>[],
   maxSnippetTokens: number,
   modelName: string,
-): AutocompleteSnippet[] {
+): Required<AutocompleteSnippet>[] {
   let tokensRemaining = maxSnippetTokens;
-  const keptSnippets: AutocompleteSnippet[] = [];
+  const keptSnippets: Required<AutocompleteSnippet>[] = [];
   for (let i = 0; i < snippets.length; i++) {
     const snippet = snippets[i];
     const tokenCount = countTokens(snippet.contents, modelName);
@@ -134,7 +135,6 @@ export function fillPromptWithSnippets(
       tokensRemaining -= tokenCount;
       keptSnippets.push(snippet);
     } else {
-      continue;
     }
   }
 
@@ -146,18 +146,17 @@ function rangeIntersectionByLines(a: Range, b: Range): Range | null {
   const endLine = Math.min(a.end.line, b.end.line);
   if (startLine >= endLine) {
     return null;
-  } else {
-    return {
-      start: {
-        line: startLine,
-        character: 0,
-      },
-      end: {
-        line: endLine,
-        character: 0,
-      },
-    };
   }
+  return {
+    start: {
+      line: startLine,
+      character: 0,
+    },
+    end: {
+      line: endLine,
+      character: 0,
+    },
+  };
 }
 
 /**
@@ -170,7 +169,8 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
   ) {
     // / | | /
     return [];
-  } else if (
+  }
+  if (
     orig.start.line <= remove.start.line &&
     orig.end.line >= remove.end.line
   ) {
@@ -186,7 +186,8 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
         end: orig.end,
       },
     ];
-  } else if (
+  }
+  if (
     orig.start.line >= remove.start.line &&
     orig.end.line >= remove.end.line
   ) {
@@ -197,7 +198,8 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
         end: orig.end,
       },
     ];
-  } else if (
+  }
+  if (
     orig.start.line <= remove.start.line &&
     orig.end.line <= remove.end.line
   ) {
@@ -208,18 +210,17 @@ function rangeDifferenceByLines(orig: Range, remove: Range): Range[] {
         end: remove.start,
       },
     ];
-  } else {
-    return [orig];
   }
+  return [orig];
 }
 
 export function removeRangeFromSnippets(
-  snippets: AutocompleteSnippet[],
+  snippets: Required<AutocompleteSnippet>[],
   filepath: string,
   range: Range,
-): AutocompleteSnippet[] {
-  const finalSnippets: AutocompleteSnippet[] = [];
-  for (let snippet of snippets) {
+): Required<AutocompleteSnippet>[] {
+  const finalSnippets: Required<AutocompleteSnippet>[] = [];
+  for (const snippet of snippets) {
     if (snippet.filepath !== filepath) {
       finalSnippets.push(snippet);
       continue;

@@ -1,17 +1,77 @@
-import * as fs from "fs";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import {
   ContinueRcJson,
+  FileType,
   IDE,
   IdeInfo,
+  IdeSettings,
   IndexTag,
+  Location,
   Problem,
   Range,
+  RangeInFile,
   Thread,
-} from "..";
+} from "../index.d.js";
 
-import { getContinueGlobalPath } from "./paths";
+import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
+  constructor(private readonly workspaceDir: string) {}
+  pathSep(): Promise<string> {
+    return Promise.resolve(path.sep);
+  }
+  fileExists(filepath: string): Promise<boolean> {
+    return Promise.resolve(fs.existsSync(filepath));
+  }
+
+  gotoDefinition(location: Location): Promise<RangeInFile[]> {
+    throw new Error("Method not implemented.");
+  }
+  onDidChangeActiveTextEditor(callback: (filepath: string) => void): void {
+    throw new Error("Method not implemented.");
+  }
+
+  async getIdeSettings(): Promise<IdeSettings> {
+    return {
+      remoteConfigServerUrl: undefined,
+      remoteConfigSyncPeriod: 60,
+      userToken: "",
+      enableControlServerBeta: false,
+    };
+  }
+  async getGitHubAuthToken(): Promise<string | undefined> {
+    return undefined;
+  }
+  getLastModified(files: string[]): Promise<{ [path: string]: number }> {
+    return new Promise((resolve) => {
+      resolve({
+        [files[0]]: 1234567890,
+      });
+    });
+  }
+  getGitRootPath(dir: string): Promise<string | undefined> {
+    return Promise.resolve(dir);
+  }
+  async listDir(dir: string): Promise<[string, FileType][]> {
+    const all: [string, FileType][] = fs
+      .readdirSync(dir, { withFileTypes: true })
+      .map((dirent: any) => [
+        dirent.name,
+        dirent.isDirectory()
+          ? (2 as FileType.Directory)
+          : dirent.isSymbolicLink()
+            ? (64 as FileType.SymbolicLink)
+            : (1 as FileType.File),
+      ]);
+    return Promise.resolve(all);
+  }
+  infoPopup(message: string): Promise<void> {
+    return Promise.resolve();
+  }
+  errorPopup(message: string): Promise<void> {
+    return Promise.resolve();
+  }
   getRepoName(dir: string): Promise<string | undefined> {
     return Promise.resolve(undefined);
   }
@@ -26,6 +86,7 @@ class FileSystemIde implements IDE {
       name: "na",
       version: "0.1",
       remoteName: "na",
+      extensionVersion: "na",
     });
   }
 
@@ -33,12 +94,8 @@ class FileSystemIde implements IDE {
     return Promise.resolve("");
   }
 
-  getStats(directory: string): Promise<{ [path: string]: number }> {
-    return Promise.resolve({});
-  }
-
   isTelemetryEnabled(): Promise<boolean> {
-    return Promise.resolve(false);
+    return Promise.resolve(true);
   }
 
   getUniqueId(): Promise<string> {
@@ -80,26 +137,8 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
-  listWorkspaceContents(): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      fs.readdir("/tmp/continue", (err, files) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(files);
-      });
-    });
-  }
-
   getWorkspaceDirs(): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      fs.mkdtemp("/tmp/continue", (err, folder) => {
-        if (err) {
-          reject(err);
-        }
-        resolve([folder]);
-      });
-    });
+    return Promise.resolve([this.workspaceDir]);
   }
 
   listFolders(): Promise<string[]> {
@@ -162,6 +201,10 @@ class FileSystemIde implements IDE {
 
   getOpenFiles(): Promise<string[]> {
     return Promise.resolve([]);
+  }
+
+  getCurrentFile(): Promise<string | undefined> {
+    return Promise.resolve("");
   }
 
   getPinnedFiles(): Promise<string[]> {

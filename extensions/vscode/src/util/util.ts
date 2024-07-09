@@ -1,9 +1,13 @@
-const os = require("os");
+const os = require("node:os");
 import * as vscode from "vscode";
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
-  if (index === 0) return false;
-  if (str[index - 1] !== "\\") return false;
+  if (index === 0) {
+    return false;
+  }
+  if (str[index - 1] !== "\\") {
+    return false;
+  }
   return !charIsEscapedAtIndex(index - 1, str);
 }
 
@@ -51,9 +55,9 @@ export function convertSingleToDoubleQuoteJSON(json: string): string {
   return newJson;
 }
 
-export function debounced(delay: number, fn: Function) {
+export function debounced(delay: number, fn: (...args: any[]) => void) {
   let timerId: NodeJS.Timeout | null;
-  return function (...args: any[]) {
+  return (...args: any[]) => {
     if (timerId) {
       clearTimeout(timerId);
     }
@@ -83,7 +87,7 @@ export function getAltOrOption() {
   if (getPlatform() === "mac") {
     return "⌥";
   } else {
-    return "⎇";
+    return "Alt";
   }
 }
 
@@ -100,7 +104,20 @@ export function getMetaKeyLabel() {
   }
 }
 
-export function getExtensionVersion() {
+export function getMetaKeyName() {
+  const platform = getPlatform();
+  switch (platform) {
+    case "mac":
+      return "Cmd";
+    case "linux":
+    case "windows":
+      return "Ctrl";
+    default:
+      return "Ctrl";
+  }
+}
+
+export function getExtensionVersion(): string {
   const extension = vscode.extensions.getExtension("continue.continue");
-  return extension?.packageJSON.version || "";
+  return extension?.packageJSON.version || "0.1.0";
 }
