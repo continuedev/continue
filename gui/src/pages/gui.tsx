@@ -170,10 +170,13 @@ function GUI(props: GUIProps) {
   const state = useSelector((state: RootState) => state.state);
 
   const handleScroll = () => {
+    // Temporary fix to account for additional height when code blocks are added
+    const OFFSET_HERUISTIC = 300;
     if (!topGuiDivRef.current) return;
 
     const { scrollTop, scrollHeight, clientHeight } = topGuiDivRef.current;
-    const atBottom = scrollHeight - clientHeight <= scrollTop + 300; // get offset of input
+    const atBottom =
+      scrollHeight - clientHeight <= scrollTop + OFFSET_HERUISTIC;
 
     setIsAtBottom(atBottom);
   };
