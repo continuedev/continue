@@ -49,6 +49,8 @@ import { AutocompleteSnippet } from "./ranking.js";
 import { RecentlyEditedRange } from "./recentlyEdited.js";
 import { getTemplateForModel } from "./templates.js";
 import { GeneratorReuseManager } from "./util.js";
+// @prettier-ignore
+import Handlebars from "handlebars";
 
 export interface AutocompleteInput {
   completionId: string;
