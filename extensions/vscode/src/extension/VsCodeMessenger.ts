@@ -1,5 +1,9 @@
-import { IConfigHandler } from "core/config/IConfigHandler";
-import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
+import { ConfigHandler } from "core/config/ConfigHandler";
+import {
+  FromCoreProtocol,
+  FromWebviewProtocol,
+  ToCoreProtocol,
+} from "core/protocol";
 import { ToWebviewFromCoreProtocol } from "core/protocol/coreWebview";
 import { ToIdeFromWebviewOrCoreProtocol } from "core/protocol/ide";
 import { ToIdeFromCoreProtocol } from "core/protocol/ideCore";
@@ -14,11 +18,9 @@ import * as path from "node:path";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
+import { getControlPlaneSessionInfo } from "../stubs/WorkOsAuthProvider";
 import { getExtensionUri } from "../util/vscode";
-import {
-  ToCoreOrIdeFromWebviewProtocol,
-  VsCodeWebviewProtocol,
-} from "../webviewProtocol";
+import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 /**
  * A shared messenger class between Core and Webview
@@ -28,13 +30,11 @@ type TODO = any;
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
   ToWebviewFromCoreProtocol;
 export class VsCodeMessenger {
-  onWebview<T extends keyof ToCoreOrIdeFromWebviewProtocol>(
+  onWebview<T extends keyof FromWebviewProtocol>(
     messageType: T,
     handler: (
-      message: Message<ToCoreOrIdeFromWebviewProtocol[T][0]>,
-    ) =>
-      | Promise<ToCoreOrIdeFromWebviewProtocol[T][1]>
-      | ToCoreOrIdeFromWebviewProtocol[T][1],
+      message: Message<FromWebviewProtocol[T][0]>,
+    ) => Promise<FromWebviewProtocol[T][1]> | FromWebviewProtocol[T][1],
   ): void {
     this.webviewProtocol.on(messageType, handler);
   }
@@ -70,7 +70,7 @@ export class VsCodeMessenger {
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: VsCodeIde,
     private readonly verticalDiffManagerPromise: Promise<VerticalPerLineDiffManager>,
-    private readonly configHandlerPromise: Promise<IConfigHandler>,
+    private readonly configHandlerPromise: Promise<ConfigHandler>,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
@@ -291,5 +291,8 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
       ide.getGitHubAuthToken(),
     );
+    this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
+      return getControlPlaneSessionInfo(msg.data.silent);
+    });
   }
 }

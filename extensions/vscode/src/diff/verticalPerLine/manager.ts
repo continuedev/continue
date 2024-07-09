@@ -1,4 +1,4 @@
-import { IConfigHandler } from "core/config/IConfigHandler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import { pruneLinesFromBottom, pruneLinesFromTop } from "core/llm/countTokens";
 import { getMarkdownLanguageTagForFile } from "core/util";
 import { streamDiffLines } from "core/util/verticalEdit";
@@ -21,7 +21,7 @@ export class VerticalPerLineDiffManager {
 
   private userChangeListener: vscode.Disposable | undefined;
 
-  constructor(private readonly configHandler: IConfigHandler) {
+  constructor(private readonly configHandler: ConfigHandler) {
     this.userChangeListener = undefined;
   }
 

@@ -1,7 +1,4 @@
-import {
-  Cog6ToothIcon,
-  QuestionMarkCircleIcon,
-} from "@heroicons/react/24/outline";
+import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { IndexingProgressUpdate } from "core";
 import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -30,8 +27,8 @@ import TextDialog from "./dialogs";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 import IndexingProgressBar from "./loaders/IndexingProgressBar";
 import ProgressBar from "./loaders/ProgressBar";
-import ModelSelect from "./modelSelection/ModelSelect";
 import PostHogPageView from "./PosthogPageView";
+import ProfileSwitcher from "./ProfileSwitcher";
 
 // #region Styled Components
 const FOOTER_HEIGHT = "1.8em";
@@ -80,12 +77,20 @@ const GridDiv = styled.div`
   overflow-x: visible;
 `;
 
-const DropdownPortalDiv = styled.div`
+const ModelDropdownPortalDiv = styled.div`
   background-color: ${vscInputBackground};
   position: relative;
   margin-left: 8px;
   z-index: 200;
   font-size: ${getFontSize()};
+`;
+
+const ProfileDropdownPortalDiv = styled.div`
+  background-color: ${vscInputBackground};
+  position: relative;
+  margin-left: calc(100% - 190px);
+  z-index: 200;
+  font-size: ${getFontSize() - 2};
 `;
 
 // #endregion
@@ -251,13 +256,11 @@ const Layout = () => {
         <GridDiv>
           <PostHogPageView />
           <Outlet />
-          <DropdownPortalDiv id="model-select-top-div"></DropdownPortalDiv>
+          <ModelDropdownPortalDiv id="model-select-top-div"></ModelDropdownPortalDiv>
+          <ProfileDropdownPortalDiv id="profile-select-top-div"></ProfileDropdownPortalDiv>
           {HIDE_FOOTER_ON_PAGES.includes(location.pathname) || (
             <Footer>
               <div className="mr-auto flex flex-grow gap-2 items-center overflow-hidden">
-                <div className="flex-shrink-0">
-                  <ModelSelect />
-                </div>
                 {indexingState.status !== "indexing" && // Would take up too much space together with indexing progress
                   defaultModel?.provider === "free-trial" && (
                     <ProgressBar
@@ -267,6 +270,8 @@ const Layout = () => {
                   )}
                 <IndexingProgressBar indexingState={indexingState} />
               </div>
+
+              <ProfileSwitcher />
               <HeaderButtonWithText
                 text="Help"
                 onClick={() => {
@@ -278,15 +283,6 @@ const Layout = () => {
                 }}
               >
                 <QuestionMarkCircleIcon width="1.4em" height="1.4em" />
-              </HeaderButtonWithText>
-              <HeaderButtonWithText
-                onClick={() => {
-                  // navigate("/settings");
-                  ideMessenger.post("openConfigJson", undefined);
-                }}
-                text="Configure Continue"
-              >
-                <Cog6ToothIcon width="1.4em" height="1.4em" />
               </HeaderButtonWithText>
             </Footer>
           )}

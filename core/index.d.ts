@@ -419,6 +419,7 @@ export interface IdeSettings {
   remoteConfigServerUrl: string | undefined;
   remoteConfigSyncPeriod: number;
   userToken: string;
+  enableControlServerBeta: boolean;
 }
 
 export interface IDE {

@@ -154,7 +154,8 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
             "configUpdate",
             "getDefaultModelTitle",
             "indexProgress",
-            "refreshSubmenuItems"
+            "refreshSubmenuItems",
+            "didChangeAvailableProfiles"
     )
 
     private fun setPermissions(destination: String) {
