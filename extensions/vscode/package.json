@@ -229,18 +229,6 @@
         "category": "Continue",
         "title": "Fix Grammar / Spelling",
         "group": "Continue"
-      },
-      {
-        "command": "continue.quickEditHistoryUp",
-        "category": "Continue",
-        "title": "Quick Edit History Up",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.quickEditHistoryDown",
-        "category": "Continue",
-        "title": "Quick Edit History Down",
-        "group": "Continue"
       }
     ],
     "keybindings": [
