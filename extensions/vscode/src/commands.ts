@@ -25,6 +25,8 @@ import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { QuickEdit } from "./quickEdit/QuickEdit";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { getPlatform } from "./util/util";
+import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
