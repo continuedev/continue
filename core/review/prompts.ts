@@ -10,5 +10,14 @@ export const reviewSystemMessage = [
   "100% of the response is always in github markdown (without any other text or headings, and without escaping the markdown), suitable for copying into a github comment directly.",
 ].join("\n");
 
-export const reviewPrompt = `File: {{{filepath}}}
-Provide useful suggestions based on the lines in the following git diff:\`\`\`{{{diff}}}\`\`\``;
+export const reviewPrompt = `
+Please review the following code changes in the file {{filepath}}:
+
+{{diff}}
+
+Relevant definitions used by this code:
+
+{{definitions}}
+
+Please provide a concise code review, focusing on potential issues, improvements, and best practices.
+`;

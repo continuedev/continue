@@ -7,6 +7,7 @@ import { calculateHash } from "../util";
 import { getReviewResultsFilepath } from "../util/paths";
 import { getChangedFiles, getDiffPerFile } from "./parseDiff";
 import { reviewPrompt, reviewSystemMessage } from "./prompts";
+import { extractUniqueReferences } from "./parseDiff";
 
 const initialWait = 5_000;
 const maxWait = 60_000;
@@ -143,9 +144,21 @@ export class CodeReview {
     const contents = await this.ide.readFile(filepath);
     const fileHash = this._calculateHash(contents);
 
+    // Extract unique references (definitions) used by the changed code
+    const uniqueReferences = await extractUniqueReferences(diff);
+
+    // Prepare the definitions content
+    const definitionsContent = uniqueReferences
+      .map(
+        (ref) =>
+          `File: ${ref.filepath}\nRange: ${ref.range.start.line}-${ref.range.end.line}\n${ref.contents}`,
+      )
+      .join("\n\n");
+
     const prompt = Handlebars.compile(reviewPrompt)({
       filepath,
       diff,
+      definitions: definitionsContent,
     });
 
     try {
@@ -154,7 +167,7 @@ export class CodeReview {
         { role: "user", content: prompt },
       ]);
       const completion = stripImages(response.content);
-  
+
       return Promise.resolve({
         filepath,
         message: completion,
@@ -166,8 +179,8 @@ export class CodeReview {
         filepath,
         message: `Error while reviewing file: ${e}`,
         status: "error",
-        fileHash
-      })
+        fileHash,
+      });
     }
   }
 
@@ -176,9 +189,7 @@ export class CodeReview {
     const resultsPath = getReviewResultsFilepath();
     if (fs.existsSync(resultsPath)) {
       try {
-        const savedResults = JSON.parse(
-          fs.readFileSync(resultsPath, "utf8"),
-        );
+        const savedResults = JSON.parse(fs.readFileSync(resultsPath, "utf8"));
         this._currentResultsPerFile = savedResults;
       } catch (e) {
         console.error("Failed to parse saved results", e);
@@ -192,18 +203,20 @@ export class CodeReview {
           ...filesChanged.map((f) => path.join(repoRoot, f)),
         );
       }
-      await Promise.all(allChangedFiles.map(async (filepath) => {
-        // If the existing result is from the same file hash, don't repeat
-        const existingResult = this._currentResultsPerFile[filepath];
-        if (existingResult) {
-          const fileContents = await this.ide.readFile(filepath);
-          const newHash = this._calculateHash(fileContents);
-          if (newHash === existingResult.fileHash) {
-            return;
+      await Promise.all(
+        allChangedFiles.map(async (filepath) => {
+          // If the existing result is from the same file hash, don't repeat
+          const existingResult = this._currentResultsPerFile[filepath];
+          if (existingResult) {
+            const fileContents = await this.ide.readFile(filepath);
+            const newHash = this._calculateHash(fileContents);
+            if (newHash === existingResult.fileHash) {
+              return;
+            }
           }
-        }
-        this.runReview(filepath);
-      }));
+          this.runReview(filepath);
+        }),
+      );
 
       // Remove existing results if the file isn't changed anymore
       for (const filepath of Object.keys(this._currentResultsPerFile)) {
