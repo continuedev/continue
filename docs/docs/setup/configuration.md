@@ -267,7 +267,7 @@ function modifyConfig(config: Config): Config {
 }
 ```
 
-This exact function and a few other default implementations are available in [`continuedev.libs.llm.prompts.chat`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/prompts/chat.py).
+This exact function and a few other default implementations are available in [`core/llm/templates/chat.ts`](https://github.com/continuedev/continue/blob/main/core/llm/templates/edit.ts).
 
 ## Customizing the /edit Prompt
 
