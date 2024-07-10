@@ -12,17 +12,19 @@ function execCmdSync(cmd) {
 }
 
 function autodetectPlatformAndArch() {
-  platform = {
-    aix: "linux",
-    alpine: "linux",
-    darwin: "darwin",
-    freebsd: "linux",
-    linux: "linux",
-    openbsd: "linux",
-    sunos: "linux",
-    win32: "win32",
-  }[process.platform];
-  arch = {
+  const platform =
+    {
+      aix: "linux",
+      alpine: "linux",
+      darwin: "darwin",
+      freebsd: "linux",
+      linux: "linux",
+      openbsd: "linux",
+      sunos: "linux",
+      win32: "win32",
+    }[process.platform] ?? "linux";
+
+  let arch = {
     arm: "arm64",
     armhf: "arm64",
     arm64: "arm64",
@@ -37,6 +39,23 @@ function autodetectPlatformAndArch() {
     s390x: "x64",
     x64: "x64",
   }[process.arch];
+
+  // Additional check for ARM-based Macs
+  if (platform === "darwin" && process.arch === "x64") {
+    try {
+      const { execSync } = require("child_process");
+      const cpuType = execSync("sysctl -n machdep.cpu.brand_string").toString();
+      if (cpuType.includes("Apple M")) {
+        console.log("Detected ARM-based Mac");
+        arch = "arm64";
+      }
+    } catch (error) {
+      console.warn("Failed to detect Mac CPU type:", error);
+    }
+  }
+
+  console.log("process.arch:", process.arch);
+  console.log("Detected architecture:", arch);
   return [platform, arch];
 }
 
@@ -91,7 +110,9 @@ function validateFilesPresent(pathsToVerify) {
 
   if (missingFiles.length > 0 || emptyFiles.length > 0) {
     throw new Error(
-      `The following files were missing:\n- ${missingFiles.join("\n- ")}\n\nThe following files were empty:\n- ${emptyFiles.join("\n- ")}`,
+      `The following files were missing:\n- ${missingFiles.join(
+        "\n- ",
+      )}\n\nThe following files were empty:\n- ${emptyFiles.join("\n- ")}`,
     );
   } else {
     console.log("All paths exist");
