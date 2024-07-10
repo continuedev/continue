@@ -94,7 +94,7 @@ This object allows you to customize the behavior of tab-autocomplete. The availa
 - `disable`: Disable autocomplete (can also be done from IDE settings)
 - `template`: An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables. (String)
 - `useCopyBuffer`: Determines whether the copy buffer will be considered when constructing the prompt. (Boolean)
-- `useSuffix`: Determines whether to use the file suffix in the prompt. (Boolean)
+- `useFileSuffix`: Determines whether to use the file suffix in the prompt. (Boolean)
 - `maxPromptTokens`: The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context. (Number)
 - `prefixPercentage`: The percentage of the input that should be dedicated to the prefix. (Number)
 - `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number)

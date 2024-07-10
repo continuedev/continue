@@ -2071,7 +2071,7 @@
               "type": "boolean",
               "description": "Determines whether the copy buffer will be considered when contructing the prompt."
             },
-            "useSuffix": {
+            "useFileSuffix": {
               "type": "boolean",
               "description": "Determines whether to use the file suffix in the prompt."
             },
