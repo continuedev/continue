@@ -25,8 +25,6 @@ import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { QuickEdit } from "./quickEdit/QuickEdit";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
-import { getPlatform } from "./util/util";
-import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -358,123 +356,9 @@ const commandsMap: (
         await addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
-    "continue.quickEdit": async (prompt?: string) => {
-      const selectionEmpty = vscode.window.activeTextEditor?.selection.isEmpty;
-
-      const editor = vscode.window.activeTextEditor;
-      const existingHandler = verticalDiffManager.getHandlerForFile(
-        editor?.document.uri.fsPath ?? "",
-      );
-      const previousInput = existingHandler?.input;
-
-      const config = await configHandler.loadConfig();
-      let defaultModelTitle =
-        config.experimental?.modelRoles?.inlineEdit ??
-        (await sidebar.webviewProtocol.request(
-          "getDefaultModelTitle",
-          undefined,
-        ));
-      if (!defaultModelTitle) {
-        defaultModelTitle = config.models[0]?.title!;
-      }
-      const quickPickItems =
-        config.contextProviders
-          ?.filter((provider) => provider.description.type === "normal")
-          .map((provider) => {
-            return {
-              label: provider.description.displayTitle,
-              description: provider.description.title,
-              detail: provider.description.description,
-            };
-          }) || [];
-
-      const addContextMsg = quickPickItems.length
-        ? " (or press enter to add context first)"
-        : "";
-      const textInputOptions: vscode.InputBoxOptions = {
-        placeHolder: selectionEmpty
-          ? `Type instructions to generate code${addContextMsg}`
-          : `Describe how to edit the highlighted code${addContextMsg}`,
-        title: `${getPlatform() === "mac" ? "Cmd" : "Ctrl"}+I`,
-        prompt: `[${defaultModelTitle}]`,
-        value: prompt,
-        ignoreFocusOut: true,
-      };
-      if (previousInput) {
-        textInputOptions.value = previousInput + ", ";
-        textInputOptions.valueSelection = [
-          textInputOptions.value.length,
-          textInputOptions.value.length,
-        ];
-      }
-
-      let text = await vscode.window.showInputBox(textInputOptions);
-
-      if (text === undefined) {
-        return;
-      }
-
-      if (text.length > 0 || quickPickItems.length === 0) {
-        sidebar.webviewProtocol.request("incrementFtc", undefined);
-        await verticalDiffManager.streamEdit(
-          text,
-          defaultModelTitle,
-          undefined,
-          previousInput,
-        );
-      } else {
-        // Pick context first
-        const selectedProviders = await vscode.window.showQuickPick(
-          quickPickItems,
-          {
-            title: "Add Context",
-            canPickMany: true,
-          },
-        );
-
-        let text = await vscode.window.showInputBox(textInputOptions);
-        if (text) {
-          const llm = await configHandler.llmFromTitle();
-          const config = await configHandler.loadConfig();
-          const context = (
-            await Promise.all(
-              selectedProviders?.map((providerTitle) => {
-                const provider = config.contextProviders?.find(
-                  (provider) =>
-                    provider.description.title === providerTitle.description,
-                );
-                if (!provider) {
-                  return [];
-                }
-
-                return provider.getContextItems("", {
-                  embeddingsProvider: config.embeddingsProvider,
-                  reranker: config.reranker,
-                  ide,
-                  llm,
-                  fullInput: text || "",
-                  selectedCode: [],
-                  fetch: (url, init) =>
-                    fetchwithRequestOptions(url, init, config.requestOptions),
-                });
-              }) || [],
-            )
-          ).flat();
-
-          text =
-            context.map((item) => item.content).join("\n\n") +
-            "\n\n---\n\n" +
-            text;
-
-          sidebar.webviewProtocol.request("incrementFtc", undefined);
-          await verticalDiffManager.streamEdit(
-            text,
-            defaultModelTitle,
-            undefined,
-            previousInput,
-          );
-        }
-      }
+    "continue.quickEdit": async (injectedPrompt?: string) => {
+      captureCommandTelemetry("quickEdit");
+      quickEdit.run(injectedPrompt);
     },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
