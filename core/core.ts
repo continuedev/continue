@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import type {
+  ChatMessage,
   ContextItemId,
   IDE,
   IndexingProgressUpdate,
@@ -317,6 +318,7 @@ export class Core {
       );
       let next = await gen.next();
       while (!next.done) {
+        // This solves a tsc type error
         if (abortedMessageIds.has(msg.messageId)) {
           abortedMessageIds.delete(msg.messageId);
           next = await gen.return({
@@ -329,7 +331,7 @@ export class Core {
           });
           break;
         }
-        yield { content: next.value.content };
+        yield { content: (next.value as ChatMessage).content };
         next = await gen.next();
       }
 

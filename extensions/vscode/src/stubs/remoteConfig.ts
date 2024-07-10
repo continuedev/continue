@@ -12,7 +12,7 @@ export class RemoteConfigSync {
   private remoteConfigServerUrl: string | null;
   private remoteConfigSyncPeriod: number;
 
-  private syncInterval: NodeJS.Timer | undefined = undefined;
+  private syncInterval: NodeJS.Timeout | null = null;
 
   constructor(
     private triggerReloadConfig: () => void,
@@ -74,10 +74,11 @@ export class RemoteConfigSync {
     ) {
       return;
     }
-    if (!URL.canParse(this.remoteConfigServerUrl)) {
+    try {
+      new URL(this.remoteConfigServerUrl);
+    } catch (e) {
       vscode.window.showErrorMessage(
-        "The value set for 'remoteConfigServerUrl' is not valid: ",
-        this.remoteConfigServerUrl,
+        `The value set for 'remoteConfigServerUrl' is not valid: ${this.remoteConfigServerUrl}`,
       );
       return;
     }
@@ -90,7 +91,7 @@ export class RemoteConfigSync {
   }
 
   private setInterval() {
-    if (this.syncInterval !== undefined) {
+    if (this.syncInterval !== null) {
       clearInterval(this.syncInterval);
     }
     this.syncInterval = setInterval(() => {
