@@ -80,12 +80,15 @@ function Review() {
 
   useEffect(() => {
     ideMessenger.request("review/getResults", undefined).then((results) => {
+      console.log("results", results);
       setReviewResults(results);
     });
   }, []);
 
   useWebviewListener("review/update", async (updates) => {
+    console.log("updates", updates);
     setReviewResults((prevs) => {
+      console.log("prevs", prevs);
       const finalResults = [];
       for (const prev of prevs) {
         const updated = updates.find(

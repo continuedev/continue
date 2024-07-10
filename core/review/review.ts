@@ -145,7 +145,7 @@ export class CodeReview {
     const fileHash = this._calculateHash(contents);
 
     // Extract unique references (definitions) used by the changed code
-    const uniqueReferences = await extractUniqueReferences(diff);
+    const uniqueReferences = await extractUniqueReferences(diff, filepath);
 
     // Prepare the definitions content
     const definitionsContent = uniqueReferences
@@ -229,6 +229,7 @@ export class CodeReview {
   }
 
   public redoAll(): void {
+    console.log('redo all called in code review class');
     this._currentResultsPerFile = {};
     this._persistResults();
     this._refresh();

@@ -32,37 +32,57 @@ export function getChangedFiles(diff: string): string[] {
 }
 
 export async function extractUniqueReferences(
-  diff: string,
+  fileDiff: string,
+  filepath: string,
 ): Promise<RangeInFileWithContents[]> {
+  console.log("Extracting unique references...");
   const uniqueReferences = new Map<string, RangeInFileWithContents>();
   const ideUtils = new VsCodeIdeUtils();
-  const diffPerFile = getDiffPerFile(diff);
+  // TODO - Everything up to this point is working. This function should probably not take in a diff, 
+  // but take in the file and line info we calculated before calling this function
+  // We already have calculated the diff per file stuff we don't need to do it again here.
+  // const diffPerFile = getDiffPerFile(diff); 
+  // console.log("Diff per file:", diffPerFile);
 
-  for (const [filepath, fileDiff] of Object.entries(diffPerFile)) {
+  // for (const [filepath, diff] of Object.entries(diffPerFile)) {
+    console.log('Diff output for filepath:', filepath);
+    console.log('File diff:', fileDiff);
     const range = getDiffRange(fileDiff);
-    if (!range) continue;
+    console.log('Range:', range);
 
-    const rif: RangeInFile = { filepath, range };
-
+  // Handle the case where range is null
+   if (range === null) {
+    console.log('No valid range found in the diff. Skipping reference extraction.');
+    return []; // Return an empty array as no references can be extracted
+  }
+    
     for (let line = range.start.line; line <= range.end.line; line++) {
-      const definitions = await getDefinitionsForLine(filepath, line);
+      const references = await getReferencesForLine(filepath, line);
+      console.log(`References for line ${line}:`, references);
+      console.log('Type of references:', typeof references);
+      console.log('Is references an array?', Array.isArray(references));
+    
 
-      for (const definition of definitions) {
-        const { filepath: defFilepath, range: defRange } = definition;
-        const content = await ideUtils.readRangeInFile(defFilepath, defRange);
+      for (let i = 0; i < references.length; i++) {
+        const reference = references[i];
+        const { filepath: refFilepath, range: refRange } = reference;
+        const content = await ideUtils.readRangeInFile(refFilepath, refRange);
+        if (!content) continue; // Skip if no content could be read
+        console.log('Reference:', { filepath: refFilepath, range: refRange, content });
 
-        const key = `${defFilepath}:${defRange.start.line}:${defRange.start.character}-${defRange.end.line}:${defRange.end.character}`;
+        // Create a unique key for each reference
+        const key = `${refFilepath}:${refRange.start.line}:${refRange.start.character}-${refRange.end.line}:${refRange.end.character}`;
         if (!uniqueReferences.has(key)) {
           uniqueReferences.set(key, {
-            filepath: defFilepath,
-            range: defRange,
+            filepath: refFilepath,
+            range: refRange,
             contents: content,
           });
         }
       }
     }
-  }
 
+  // Convert the Map to an array and return
   return Array.from(uniqueReferences.values());
 }
 
@@ -92,15 +112,15 @@ function getDiffRange(fileDiff: string): Range | null {
   };
 }
 
-async function getDefinitionsForLine(
+async function getReferencesForLine(
   filepath: string,
   line: number,
 ): Promise<RangeInFile[]> {
-  const gotoInput = {
+  const referenceInput = {
     uri: filepath,
     line: line,
     character: 0,
-    name: "vscode.executeDefinitionProvider" as const,
+    name: "vscode.executeReferenceProvider" as const,
   };
-  return await executeGotoProvider(gotoInput);
+  return await executeGotoProvider(referenceInput);
 }
