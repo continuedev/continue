@@ -38,49 +38,48 @@ export async function extractUniqueReferences(
   console.log("Extracting unique references...");
   const uniqueReferences = new Map<string, RangeInFileWithContents>();
   const ideUtils = new VsCodeIdeUtils();
-  // TODO - Everything up to this point is working. This function should probably not take in a diff, 
-  // but take in the file and line info we calculated before calling this function
-  // We already have calculated the diff per file stuff we don't need to do it again here.
-  // const diffPerFile = getDiffPerFile(diff); 
-  // console.log("Diff per file:", diffPerFile);
 
-  // for (const [filepath, diff] of Object.entries(diffPerFile)) {
-    console.log('Diff output for filepath:', filepath);
-    console.log('File diff:', fileDiff);
-    const range = getDiffRange(fileDiff);
-    console.log('Range:', range);
+  console.log("Diff output for filepath:", filepath);
+  console.log("File diff:", fileDiff);
+  const range = getDiffRange(fileDiff);
+  console.log("Range:", range);
 
   // Handle the case where range is null
-   if (range === null) {
-    console.log('No valid range found in the diff. Skipping reference extraction.');
+  if (range === null) {
+    console.log(
+      "No valid range found in the diff. Skipping reference extraction.",
+    );
     return []; // Return an empty array as no references can be extracted
   }
-    
-    for (let line = range.start.line; line <= range.end.line; line++) {
-      const references = await getReferencesForLine(filepath, line);
-      console.log(`References for line ${line}:`, references);
-      console.log('Type of references:', typeof references);
-      console.log('Is references an array?', Array.isArray(references));
-    
 
-      for (let i = 0; i < references.length; i++) {
-        const reference = references[i];
-        const { filepath: refFilepath, range: refRange } = reference;
-        const content = await ideUtils.readRangeInFile(refFilepath, refRange);
-        if (!content) continue; // Skip if no content could be read
-        console.log('Reference:', { filepath: refFilepath, range: refRange, content });
+  for (let line = range.start.line; line <= range.end.line; line++) {
+    const references = await getReferencesForLine(filepath, line);
+    console.log(`References for line ${line}:`, references);
+    console.log("Type of references:", typeof references);
+    console.log("Is references an array?", Array.isArray(references));
 
-        // Create a unique key for each reference
-        const key = `${refFilepath}:${refRange.start.line}:${refRange.start.character}-${refRange.end.line}:${refRange.end.character}`;
-        if (!uniqueReferences.has(key)) {
-          uniqueReferences.set(key, {
-            filepath: refFilepath,
-            range: refRange,
-            contents: content,
-          });
-        }
+    for (let i = 0; i < references.length; i++) {
+      const reference = references[i];
+      const { filepath: refFilepath, range: refRange } = reference;
+      const content = await ideUtils.readRangeInFile(refFilepath, refRange);
+      if (!content) continue; // Skip if no content could be read
+      console.log("Reference:", {
+        filepath: refFilepath,
+        range: refRange,
+        content,
+      });
+
+      // Create a unique key for each reference
+      const key = `${refFilepath}:${refRange.start.line}:${refRange.start.character}-${refRange.end.line}:${refRange.end.character}`;
+      if (!uniqueReferences.has(key)) {
+        uniqueReferences.set(key, {
+          filepath: refFilepath,
+          range: refRange,
+          contents: content,
+        });
       }
     }
+  }
 
   // Convert the Map to an array and return
   return Array.from(uniqueReferences.values());
@@ -123,4 +122,56 @@ async function getReferencesForLine(
     name: "vscode.executeReferenceProvider" as const,
   };
   return await executeGotoProvider(referenceInput);
+}
+
+export async function padReferences(
+  references: RangeInFile[],
+  linesBefore: number = 5,
+  linesAfter: number = 15,
+): Promise<RangeInFileWithContents[]> {
+  const paddedReferences: RangeInFileWithContents[] = [];
+  const ideUtils = new VsCodeIdeUtils();
+
+  for (let i = 0; i < references.length; i++) {
+    const ref = references[i];
+    let paddedRange: Range;
+    let snippetContents: string | undefined;
+
+    // Try to find parent symbol
+    const parentSymbol = await ideUtils.getParentSymbol(
+      ref.filepath,
+      ref.range,
+    );
+
+    if (parentSymbol) {
+      // Use parent symbol range if found
+      paddedRange = {
+        start: { line: parentSymbol.range.start.line, character: 0 },
+        end: {
+          line: parentSymbol.range.end.line,
+          character: Number.MAX_SAFE_INTEGER,
+        },
+      };
+    } else {
+      // Fall back to simple padding if no parent symbol found
+      const startLine = Math.max(0, ref.range.start.line - linesBefore);
+      const endLine = ref.range.end.line + linesAfter;
+      paddedRange = {
+        start: { line: startLine, character: 0 },
+        end: { line: endLine, character: Number.MAX_SAFE_INTEGER },
+      };
+    }
+
+    snippetContents = await ideUtils.readRangeInFile(ref.filepath, paddedRange);
+
+    if (snippetContents) {
+      paddedReferences.push({
+        filepath: ref.filepath,
+        range: paddedRange,
+        contents: snippetContents,
+      });
+    }
+  }
+
+  return paddedReferences;
 }

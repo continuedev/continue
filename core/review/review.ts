@@ -5,10 +5,15 @@ import { CodeReviewOptions, IDE, ILLM } from "..";
 import { stripImages } from "../llm/countTokens";
 import { calculateHash } from "../util";
 import { getReviewResultsFilepath } from "../util/paths";
-import { getChangedFiles, getDiffPerFile } from "./parseDiff";
+import { getChangedFiles, getDiffPerFile, padReferences } from "./parseDiff";
 import { reviewPrompt, reviewSystemMessage } from "./prompts";
 import { extractUniqueReferences } from "./parseDiff";
 import { RangeInFileWithContents } from "../commands/util";
+import {
+  deduplicateSnippets,
+  fillPromptWithSnippets,
+} from "../autocomplete/ranking";
+import { RangeInFile } from "../index";
 
 const initialWait = 5_000;
 const maxWait = 60_000;
@@ -165,15 +170,34 @@ export class CodeReview {
     const fileHash = this._calculateHash(contents);
 
     // Extract unique references (definitions) used by the changed code
-    const uniqueReferences: RangeInFileWithContents[] =
-      await extractUniqueReferences(diff, filepath);
+    const uniqueReferences: RangeInFile[] = await extractUniqueReferences(
+      diff,
+      filepath,
+    );
 
     console.log("processing filepath: " + filepath);
-    // console.log("processing diff: ", diff);
     console.log("uniqueReferences", uniqueReferences);
 
+    const paddedReferences = await padReferences(uniqueReferences);
+
+    // Deduplicate and combine overlapping snippets
+    const deduplicatedSnippets = deduplicateSnippets(
+      paddedReferences.map((ref: RangeInFileWithContents) => ({
+        ...ref,
+        score: 1, // You may want to adjust this based on relevance
+      })),
+    );
+
+    // Limit the total number of tokens for the snippets
+    const maxSnippetTokens = 2000; // Adjust this value as needed
+    const finalSnippets = fillPromptWithSnippets(
+      deduplicatedSnippets,
+      maxSnippetTokens,
+      this.llm.model,
+    );
+
     // Prepare the definitions content
-    const prompt = this.reviewPrompt(filepath, uniqueReferences, diff);
+    const prompt = this.reviewPrompt(filepath, finalSnippets, diff);
     console.log("Final Prompt: ", prompt);
 
     try {

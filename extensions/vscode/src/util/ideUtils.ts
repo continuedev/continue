@@ -55,6 +55,44 @@ export class VsCodeIdeUtils {
     );
   }
 
+  async getParentSymbol(
+    filepath: string,
+    range: Range,
+  ): Promise<vscode.DocumentSymbol | undefined> {
+    const symbols = await this.documentSymbol(filepath);
+    return this.findParentSymbol(symbols, range);
+  }
+
+  private findParentSymbol(
+    symbols: vscode.DocumentSymbol[],
+    range: Range,
+  ): vscode.DocumentSymbol | undefined {
+    const vscodeRange = new vscode.Range(
+      range.start.line,
+      range.start.character,
+      range.end.line,
+      range.end.character,
+    );
+    for (const symbol of symbols) {
+      if (symbol.range.contains(vscodeRange)) {
+        if (
+          symbol.kind === vscode.SymbolKind.Class ||
+          symbol.kind === vscode.SymbolKind.Function ||
+          symbol.kind === vscode.SymbolKind.Method
+        ) {
+          return symbol;
+        }
+        if (symbol.children) {
+          const childResult = this.findParentSymbol(symbol.children, range);
+          if (childResult) {
+            return childResult;
+          }
+        }
+      }
+    }
+    return undefined;
+  }
+
   async foldingRanges(filepath: string): Promise<vscode.FoldingRange[]> {
     return await vscode.commands.executeCommand(
       "vscode.executeFoldingRangeProvider",
@@ -333,10 +371,7 @@ export class VsCodeIdeUtils {
     }
   }
 
-  async readRangeInFile(
-    filepath: string,
-    range: Range,
-  ): Promise<string> {
+  async readRangeInFile(filepath: string, range: Range): Promise<string> {
     const contents = new TextDecoder().decode(
       await vscode.workspace.fs.readFile(vscode.Uri.file(filepath)),
     );
