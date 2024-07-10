@@ -626,6 +626,16 @@ function TipTapEditor(props: TipTapEditorProps) {
             },
           })
           .run();
+
+        if (data.prompt) {
+          editor.commands.focus("end");
+          editor.commands.insertContent(data.prompt);
+        }
+
+        if (data.shouldRun) {
+          onEnterRef.current({ useCodebase: false, noContext: true });
+        }
+
         setTimeout(() => {
           editor.commands.blur();
           editor.commands.focus("end");
@@ -639,6 +649,7 @@ function TipTapEditor(props: TipTapEditorProps) {
       historyLength,
       ignoreHighlightedCode,
       props.isMainInput,
+      onEnterRef.current,
     ],
   );
 

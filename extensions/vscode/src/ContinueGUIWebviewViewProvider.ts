@@ -1,5 +1,5 @@
 import type { FileEdit } from "core";
-import type { ConfigHandler } from "core/config/handler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import * as vscode from "vscode";
 import { getTheme } from "./util/getTheme";
 import { getExtensionVersion } from "./util/util";

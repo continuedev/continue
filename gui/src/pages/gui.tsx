@@ -55,6 +55,7 @@ import {
 } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
+import { ChatScrollAnchor } from "../components/ChatScrollAnchor";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -148,74 +149,48 @@ interface GUIProps {
 }
 
 function GUI(props: GUIProps) {
-  // #region Hooks
   const posthog = usePostHog();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  // #endregion
-
-  // #region Selectors
   const sessionState = useSelector((state: RootState) => state.state);
 
   const defaultModel = useSelector(defaultModelSelector);
 
   const active = useSelector((state: RootState) => state.state.active);
 
-  // #endregion
-
-  // #region State
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
-  const [showLoading, setShowLoading] = useState(false);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setShowLoading(true);
-    }, 5000);
-  }, []);
-
-  // #endregion
 
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const topGuiDivRef = useRef<HTMLDivElement>(null);
 
-  // #region Effects
-  const [userScrolledAwayFromBottom, setUserScrolledAwayFromBottom] =
-    useState<boolean>(false);
+  const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
 
   const state = useSelector((state: RootState) => state.state);
 
+  const handleScroll = () => {
+    // Temporary fix to account for additional height when code blocks are added
+    const OFFSET_HERUISTIC = 300;
+    if (!topGuiDivRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = topGuiDivRef.current;
+    const atBottom =
+      scrollHeight - clientHeight <= scrollTop + OFFSET_HERUISTIC;
+
+    setIsAtBottom(atBottom);
+  };
+
   useEffect(() => {
-    const handleScroll = () => {
-      // Scroll only if user is within 200 pixels of the bottom of the window.
-      const edgeOffset = -25;
-      const scrollPosition = topGuiDivRef.current?.scrollTop || 0;
-      const scrollHeight = topGuiDivRef.current?.scrollHeight || 0;
-      const clientHeight = window.innerHeight || 0;
+    if (!active || !topGuiDivRef.current) return;
 
-      if (scrollPosition + clientHeight + edgeOffset >= scrollHeight) {
-        setUserScrolledAwayFromBottom(false);
-      } else {
-        setUserScrolledAwayFromBottom(true);
-      }
-    };
+    const scrollAreaElement = topGuiDivRef.current;
 
-    topGuiDivRef.current?.addEventListener("scroll", handleScroll);
+    scrollAreaElement.scrollTop =
+      scrollAreaElement.scrollHeight - scrollAreaElement.clientHeight;
 
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [topGuiDivRef.current]);
-
-  useLayoutEffect(() => {
-    if (userScrolledAwayFromBottom) return;
-
-    topGuiDivRef.current?.scrollTo({
-      top: topGuiDivRef.current?.scrollHeight,
-      behavior: "instant" as any,
-    });
-  }, [topGuiDivRef.current?.scrollHeight, sessionState.history]);
+    setIsAtBottom(true);
+  }, [active]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -365,7 +340,7 @@ function GUI(props: GUIProps) {
 
   return (
     <>
-      <TopGuiDiv ref={topGuiDivRef}>
+      <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
         <div className="max-w-3xl m-auto">
           <StepsDiv>
             {state.history.map((item, index: number) => {
@@ -463,7 +438,6 @@ function GUI(props: GUIProps) {
               );
             })}
           </StepsDiv>
-
           <ContinueInputBox
             onEnter={(editorContent, modifiers) => {
               sendInput(editorContent, modifiers);
@@ -499,6 +473,12 @@ function GUI(props: GUIProps) {
             </NewSessionButton>
           ) : null}
         </div>
+
+        <ChatScrollAnchor
+          scrollAreaRef={topGuiDivRef}
+          isAtBottom={isAtBottom}
+          trackVisibility={active}
+        />
       </TopGuiDiv>
       {active && (
         <StopButton

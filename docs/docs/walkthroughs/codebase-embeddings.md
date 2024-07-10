@@ -94,6 +94,19 @@ We also support other methods of generating embeddings, which can be configured 
 }
 ```
 
+### Text Embeddings Inference
+
+[Hugging Face Text Embeddings Inference](https://huggingface.co/docs/text-embeddings-inference/en/index) enables you to host your own embeddings endpoint. You can configure embeddings to use your endpoint as follows:
+
+```json title="~/.continue/config.json"
+{
+  "embeddingsProvider": {
+    "provider": "huggingface-tei",
+    "apiBase": "http://localhost:8080"
+  }
+}
+```
+
 ### Voyage AI
 
 Voyage AI offers the best embeddings for code with their voyage-code-2 model. After obtaining an API key from [here](https://www.voyageai.com/), you can configure like this:
@@ -281,7 +294,7 @@ Continue offers a free trial of Voyage AI's reranking model.
 }
 ```
 
-## Customizing which files are indexed
+## Ignore files during indexing
 
 Continue respects `.gitignore` files in order to determine which files should not be indexed. If you'd like to exclude additional files, you can add them to a `.continueignore` file, which follows the exact same rules as `.gitignore`.
 

@@ -117,7 +117,6 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "getWorkspaceConfigs",
         "getDiff",
         "getTerminalContents",
-        "listWorkspaceContents",
         "getWorkspaceDirs",
         "showLines",
         "listFolders",
@@ -148,13 +147,15 @@ class CoreMessenger(private val project: Project, esbuildPath: String, continueC
         "applyToFile",
         "getGitHubAuthToken",
         "setGitHubAuthToken",
+        "pathSep"
     )
 
     private val PASS_THROUGH_TO_WEBVIEW = listOf<String>(
             "configUpdate",
             "getDefaultModelTitle",
             "indexProgress",
-            "refreshSubmenuItems"
+            "refreshSubmenuItems",
+            "didChangeAvailableProfiles"
     )
 
     private fun setPermissions(destination: String) {

@@ -21,6 +21,7 @@ import {
   getMetaKeyLabel,
   isMetaEquivalentKeyPressed,
 } from "../../util";
+import ModelSelect from "../modelSelection/ModelSelect";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
   position: absolute;
@@ -85,6 +86,7 @@ function InputToolbar(props: InputToolbarProps) {
   return (
     <StyledDiv hidden={props.hidden} onClick={props.onClick} id="input-toolbar">
       <span className="cursor-pointer mr-auto flex items-center">
+        <ModelSelect />
         <span
           style={{
             color: lightGray,

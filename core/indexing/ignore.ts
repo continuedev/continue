@@ -1,6 +1,6 @@
 import ignore from "ignore";
 
-const DEFAULT_IGNORE_FILETYPES = [
+export const DEFAULT_IGNORE_FILETYPES = [
   "*.DS_Store",
   "*-lock.json",
   "*.lock",
@@ -60,6 +60,11 @@ const DEFAULT_IGNORE_FILETYPES = [
   "*.gcno",
   "go.sum",
   ".env",
+  ".gitignore",
+  ".gitkeep",
+  ".continueignore",
+  "config.json",
+  // "*.prompt", // can be incredibly confusing for the LLM to have another set of instructions injected into the prompt
 ];
 export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
 export const DEFAULT_IGNORE_DIRS = [
@@ -85,5 +90,9 @@ export const DEFAULT_IGNORE_DIRS = [
   ".gradle",
   ".cache",
   "gems",
+  "vendor",
 ];
 export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
+
+export const DEFAULT_IGNORE =
+  DEFAULT_IGNORE_FILETYPES.join("\n") + "\n" + DEFAULT_IGNORE_DIRS.join("\n");

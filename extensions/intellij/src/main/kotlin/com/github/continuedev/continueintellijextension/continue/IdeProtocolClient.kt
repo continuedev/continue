@@ -308,10 +308,6 @@ class IdeProtocolClient (
                         respond(firstLine + "\n" + between + "\n" + lastLine)
                     }
 
-                    "listWorkspaceContents" -> {
-                        respond(listDirectoryContents(null))
-                    }
-
                     "getWorkspaceDirs" -> {
                         respond(workspaceDirectories())
                     }
@@ -631,6 +627,9 @@ class IdeProtocolClient (
                         val url = data as String
                         java.awt.Desktop.getDesktop().browse(java.net.URI(url))
                         respond(null)
+                    }
+                    "pathSep" -> {
+                        respond(File.separator)
                     }
                     else -> {
                         println("Unknown messageType: $messageType")

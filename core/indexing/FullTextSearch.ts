@@ -4,6 +4,7 @@ import {
   IndexTag,
   IndexingProgressUpdate,
 } from "../index.js";
+import { getBasename } from "../util/index.js";
 import { RETRIEVAL_PARAMS } from "../util/parameters.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
@@ -59,14 +60,19 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
           [item.path, chunk.content],
         );
         await db.run(
-          "INSERT INTO fts_metadata (id, path, cacheKey, chunkId) VALUES (?, ?, ?, ?)",
+          `INSERT INTO fts_metadata (id, path, cacheKey, chunkId) 
+           VALUES (?, ?, ?, ?)
+           ON CONFLICT(id) DO UPDATE SET
+           path = excluded.path,
+           cacheKey = excluded.cacheKey,
+           chunkId = excluded.chunkId`,
           [lastID, item.path, item.cacheKey, chunk.id],
         );
       }
 
       yield {
         progress: i / results.compute.length,
-        desc: `Indexing ${item.path}`,
+        desc: `Indexing ${getBasename(item.path)}`,
         status: "indexing",
       };
       markComplete([item], IndexResultType.Compute);

@@ -60,11 +60,18 @@ For VS Code, All versions are hosted on the Open VSX Registry [here](https://ope
 
 You can find older versions of the JetBrains extension on their [marketplace](https://plugins.jetbrains.com/plugin/22707-continue), which will walk you through installing from disk.
 
-# FAQs
+## Keyboard shortcuts not resolving
 
-## Networking Issues
+If your keyboard shortcuts are not resolving, you may have other commands that are taking precedence over the Continue shortcuts. You can see if this is the case, and change your shortcut mappings, in the configuration of your IDE.
 
-### Configure Certificates
+- [VSCode keyboard shortcuts docs](https://code.visualstudio.com/docs/getstarted/keybindings)
+- [IntelliJ keyboard shortcut docs](https://www.jetbrains.com/help/idea/configuring-keyboard-and-mouse-shortcuts.html)
+
+## FAQs
+
+### Networking Issues
+
+#### Configure Certificates
 
 If you're seeing a `fetch failed` error and your network requires custom certificates, you will need to configure them in `config.json`. In each of the objects in the `"models"` array, add `requestOptions.caBundlePath` like this:
 
@@ -85,22 +92,22 @@ If you're seeing a `fetch failed` error and your network requires custom certifi
 
 You may also set `requestOptions.caBundlePath` to an array of paths to multiple certificates.
 
-### VS Code Proxy Settings
+#### VS Code Proxy Settings
 
 If you are using VS Code and require requests to be made through a proxy, you are likely already set up through VS Code's [Proxy Server Support](https://code.visualstudio.com/docs/setup/network#_proxy-server-support). To double-check that this is enabled, use cmd/ctrl+, to open settings and search for "Proxy Support". Unless it is set to "off", then VS Code is responsible for making the request to the proxy.
 
-### code-server
+#### code-server
 
 Continue can be used in [code-server](https://coder.com/), but if you are running across an error in the logs that includes "This is likely because the editor is not running in a secure context", please see [their documentation on securely exposing code-server](https://coder.com/docs/code-server/latest/guide#expose-code-server).
 
-## I installed Continue, but don't see the sidebar window
+### I installed Continue, but don't see the sidebar window
 
 By default the Continue window is on the left side of VS Code, but it can be dragged to right side as well, which we recommend in our tutorial. In the situation where you have previously installed Continue and moved it to the right side, it may still be there. You can reveal Continue either by using cmd/ctrl+L or by clicking the button in the top right of VS Code to open the right sidebar.
 
-## I'm getting a 404 error from OpenAI
+### I'm getting a 404 error from OpenAI
 
 If you have entered a valid API key and model, but are still getting a 404 error from OpenAI, this may be because you need to add credits to your billing account. You can do so from the [billing console](https://platform.openai.com/settings/organization/billing/overview). If you just want to check that this is in fact the cause of the error, you can try adding $1 to your account and checking whether the error persists.
 
-# Still having trouble?
+## Still having trouble?
 
 Create a GitHub issue [here](https://github.com/continuedev/continue/issues/new?assignees=&labels=bug&projects=&template=bug-report-%F0%9F%90%9B.md&title=), leaving the details of your problem, and we'll be able to more quickly help you out.

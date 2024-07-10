@@ -1,5 +1,5 @@
 import type { ILLM } from "core";
-import type { ConfigHandler } from "core/config/handler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import Ollama from "core/llm/llms/Ollama";
 import { GlobalContext } from "core/util/GlobalContext";
 import * as vscode from "vscode";

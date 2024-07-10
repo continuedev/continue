@@ -1,5 +1,5 @@
 import { IContextProvider } from "core";
-import { ConfigHandler } from "core/config/handler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
@@ -21,6 +21,7 @@ import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { setupRemoteConfigSync } from "../stubs/activation";
+import { getControlPlaneSessionInfo } from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -40,6 +41,7 @@ export class VsCodeExtension {
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
   private battery: Battery;
+  private quickActionsCodeLensDisposable?: vscode.Disposable;
 
   constructor(context: vscode.ExtensionContext) {
     let resolveWebviewProtocol: any = undefined;
@@ -113,9 +115,6 @@ export class VsCodeExtension {
     });
     this.configHandler = this.core.configHandler;
     resolveConfigHandler?.(this.configHandler);
-    this.configHandler.onConfigUpdate(() => {
-      this.sidebar.webviewProtocol?.request("configUpdate", undefined);
-    });
 
     this.configHandler.reloadConfig();
     this.verticalDiffManager = new VerticalPerLineDiffManager(
@@ -131,14 +130,30 @@ export class VsCodeExtension {
     // Indexing + pause token
     this.diffManager.webviewProtocol = this.sidebar.webviewProtocol;
 
-    // CodeLens
-    const verticalDiffCodeLens = registerAllCodeLensProviders(
-      context,
-      this.diffManager,
-      this.verticalDiffManager.filepathToCodeLens,
-    );
-    this.verticalDiffManager.refreshCodeLens =
-      verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
+    this.configHandler.loadConfig().then((config) => {
+      const { verticalDiffCodeLens } = registerAllCodeLensProviders(
+        context,
+        this.diffManager,
+        this.verticalDiffManager.filepathToCodeLens,
+        config,
+      );
+
+      this.verticalDiffManager.refreshCodeLens =
+        verticalDiffCodeLens.refresh.bind(verticalDiffCodeLens);
+    });
+
+    this.configHandler.onConfigUpdate((newConfig) => {
+      this.sidebar.webviewProtocol?.request("configUpdate", undefined);
+
+      this.tabAutocompleteModel.clearLlm.bind(this.tabAutocompleteModel);
+
+      registerAllCodeLensProviders(
+        context,
+        this.diffManager,
+        this.verticalDiffManager.filepathToCodeLens,
+        newConfig,
+      );
+    });
 
     // Tab autocomplete
     const config = vscode.workspace.getConfiguration("continue");
@@ -189,10 +204,6 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig();
     });
 
-    this.configHandler.onConfigUpdate(
-      this.tabAutocompleteModel.clearLlm.bind(this.tabAutocompleteModel),
-    );
-
     vscode.workspace.onDidSaveTextDocument((event) => {
       // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
@@ -232,6 +243,13 @@ export class VsCodeExtension {
     vscode.authentication.onDidChangeSessions((e) => {
       if (e.provider.id === "github") {
         this.configHandler.reloadConfig();
+      } else if (e.provider.id === "continue") {
+        this.webviewProtocolPromise.then(async (webviewProtocol) => {
+          const sessionInfo = await getControlPlaneSessionInfo(true);
+          webviewProtocol.request("didChangeControlPlaneSessionInfo", {
+            sessionInfo,
+          });
+        });
       }
     });
 

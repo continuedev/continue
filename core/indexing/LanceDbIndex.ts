@@ -11,7 +11,7 @@ import {
 } from "../index.js";
 import { MAX_CHUNK_SIZE } from "../llm/constants.js";
 import { getBasename } from "../util/index.js";
-import { getLanceDbPath } from "../util/paths.js";
+import { getLanceDbPath, migrate } from "../util/paths.js";
 import { chunkDocument } from "./chunk/chunk.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "./refreshIndex.js";
 import {
@@ -53,11 +53,25 @@ export class LanceDbIndex implements CodebaseIndex {
         uuid TEXT PRIMARY KEY,
         cacheKey TEXT NOT NULL,
         path TEXT NOT NULL,
+        artifact_id TEXT NOT NULL,
         vector TEXT NOT NULL,
         startLine INTEGER NOT NULL,
         endLine INTEGER NOT NULL,
         contents TEXT NOT NULL
     )`);
+
+    await new Promise((resolve) =>
+      migrate(
+        "lancedb_sqlite_artifact_id_column",
+        async () => {
+          await db.exec(
+            "ALTER TABLE lance_db_cache ADD COLUMN artifact_id TEXT NOT NULL DEFAULT 'UNDEFINED'",
+          );
+          resolve(undefined);
+        },
+        () => resolve(undefined),
+      ),
+    );
   }
 
   private async *computeChunks(
@@ -105,10 +119,20 @@ export class LanceDbIndex implements CodebaseIndex {
         continue;
       }
 
-      // Calculate embeddings
-      const embeddings = await this.embeddingsProvider.embed(
-        chunks.map((c) => c.content),
-      );
+      let embeddings: number[][];
+      try {
+        // Calculate embeddings
+        embeddings = await this.embeddingsProvider.embed(
+          chunks.map((c) => c.content),
+        );
+      } catch (e) {
+        // Rather than fail the entire indexing process, we'll just skip this file
+        // so that it may be picked up on the next indexing attempt
+        console.warn(
+          `Failed to generate embedding for ${chunks[0]?.filepath} with provider: ${this.embeddingsProvider.id}: ${e}`,
+        );
+        continue;
+      }
 
       if (embeddings.some((emb) => emb === undefined)) {
         throw new Error(
@@ -221,10 +245,11 @@ export class LanceDbIndex implements CodebaseIndex {
             rows.push(row);
 
             await sqlite.run(
-              "INSERT INTO lance_db_cache (uuid, cacheKey, path, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?)",
+              "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
               row.uuid,
               row.cachekey,
               row.path,
+              this.artifactId,
               JSON.stringify(row.vector),
               chunk.startLine,
               chunk.endLine,
@@ -255,10 +280,11 @@ export class LanceDbIndex implements CodebaseIndex {
 
         // Add the computed row to the cache
         await sqlite.run(
-          "INSERT INTO lance_db_cache (uuid, cacheKey, path, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?)",
+          "INSERT INTO lance_db_cache (uuid, cacheKey, path, artifact_id, vector, startLine, endLine, contents) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
           row.uuid,
           row.cachekey,
           row.path,
+          this.artifactId,
           JSON.stringify(row.vector),
           data.startLine,
           data.endLine,
@@ -280,9 +306,10 @@ export class LanceDbIndex implements CodebaseIndex {
     // Add tag - retrieve the computed info from lance sqlite cache
     for (const { path, cacheKey } of results.addTag) {
       const stmt = await sqlite.prepare(
-        "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
+        "SELECT * FROM lance_db_cache WHERE cacheKey = ? AND path = ? AND artifact_id = ?",
         cacheKey,
         path,
+        this.artifactId,
       );
       const cachedItems = await stmt.all();
 
@@ -312,7 +339,7 @@ export class LanceDbIndex implements CodebaseIndex {
       accumulatedProgress += 1 / results.addTag.length / 3;
       yield {
         progress: accumulatedProgress,
-        desc: `Indexing ${path}`,
+        desc: `Indexing ${getBasename(path)}`,
         status: "indexing",
       };
     }
@@ -327,7 +354,7 @@ export class LanceDbIndex implements CodebaseIndex {
         accumulatedProgress += 1 / toDel.length / 3;
         yield {
           progress: accumulatedProgress,
-          desc: `Stashing ${path}`,
+          desc: `Stashing ${getBasename(path)}`,
           status: "indexing",
         };
       }
@@ -337,14 +364,15 @@ export class LanceDbIndex implements CodebaseIndex {
     // Delete - also remove from sqlite cache
     for (const { path, cacheKey } of results.del) {
       await sqlite.run(
-        "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ?",
+        "DELETE FROM lance_db_cache WHERE cacheKey = ? AND path = ? AND artifact_id = ?",
         cacheKey,
         path,
+        this.artifactId,
       );
       accumulatedProgress += 1 / results.del.length / 3;
       yield {
         progress: accumulatedProgress,
-        desc: `Removing ${path}`,
+        desc: `Removing ${getBasename(path)}`,
         status: "indexing",
       };
     }

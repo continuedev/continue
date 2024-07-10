@@ -6,7 +6,7 @@ import type {
   SiteIndexingConfig,
 } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider.js";
-import { ConfigHandler } from "./config/handler.js";
+import { ConfigHandler } from "./config/ConfigHandler.js";
 import {
   setupApiKeysMode,
   setupFreeTrialMode,
@@ -16,9 +16,10 @@ import {
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
+import { ControlPlaneClient } from "./control-plane/client";
+import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
 import { DocsService } from "./indexing/docs/DocsService";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
-import { CodebaseIndexer, PauseToken } from "./indexing/indexCodebase.js";
 import Ollama from "./llm/llms/Ollama.js";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext.js";
@@ -38,8 +39,12 @@ export class Core {
   completionProvider: CompletionProvider;
   continueServerClientPromise: Promise<ContinueServerClient>;
   indexingState: IndexingProgressUpdate;
+  controlPlaneClient: ControlPlaneClient;
   private globalContext = new GlobalContext();
   private docsService = DocsService.getInstance();
+  private readonly indexingPauseToken = new PauseToken(
+    this.globalContext.get("indexingPaused") === true,
+  );
 
   private abortedMessageIds: Set<string> = new Set();
 
@@ -69,19 +74,24 @@ export class Core {
   ) {
     this.indexingState = { status: "loading", desc: "loading", progress: 0 };
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
+    const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
+      silent: true,
+    });
+    this.controlPlaneClient = new ControlPlaneClient(sessionInfoPromise);
     this.configHandler = new ConfigHandler(
       this.ide,
       ideSettingsPromise,
       this.onWrite,
+      this.controlPlaneClient,
     );
     this.configHandler.onConfigUpdate(
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
     );
+    this.configHandler.onDidChangeAvailableProfiles((profiles) =>
+      this.messenger.send("didChangeAvailableProfiles", { profiles }),
+    );
 
     // Codebase Indexer and ContinueServerClient depend on IdeSettings
-    const indexingPauseToken = new PauseToken(
-      this.globalContext.get("indexingPaused") === true,
-    );
     let codebaseIndexerResolve: (_: any) => void | undefined;
     this.codebaseIndexerPromise = new Promise(
       async (resolve) => (codebaseIndexerResolve = resolve),
@@ -103,7 +113,7 @@ export class Core {
         new CodebaseIndexer(
           this.configHandler,
           this.ide,
-          new PauseToken(false),
+          this.indexingPauseToken,
           continueServerClient,
         ),
       );
@@ -205,6 +215,9 @@ export class Core {
     on("config/ideSettingsUpdate", (msg) => {
       this.configHandler.updateIdeSettings(msg.data);
     });
+    on("config/listProfiles", (msg) => {
+      return this.configHandler.listProfiles();
+    });
 
     // Context providers
     on("context/addDocs", async (msg) => {
@@ -267,9 +280,13 @@ export class Core {
             fetchwithRequestOptions(url, init, config.requestOptions),
         });
 
-        Telemetry.capture("useContextProvider", {
-          name: provider.description.title,
-        });
+        Telemetry.capture(
+          "useContextProvider",
+          {
+            name: provider.description.title,
+          },
+          true,
+        );
 
         return items.map((item) => ({
           ...item,
@@ -281,8 +298,11 @@ export class Core {
       }
     });
 
-    on("config/getBrowserSerialized", (msg) => {
-      return this.configHandler.getSerializedConfig();
+    on("config/getSerializedProfileInfo", async (msg) => {
+      return {
+        config: await this.configHandler.getSerializedConfig(),
+        profileId: this.configHandler.currentProfile.profileId,
+      };
     });
 
     async function* llmStreamChat(
@@ -412,9 +432,13 @@ export class Core {
         throw new Error(`Unknown slash command ${slashCommandName}`);
       }
 
-      Telemetry.capture("useSlashCommand", {
-        name: slashCommandName,
-      });
+      Telemetry.capture(
+        "useSlashCommand",
+        {
+          name: slashCommandName,
+        },
+        true,
+      );
 
       const checkActiveInterval = setInterval(() => {
         if (abortedMessageIds.has(msg.messageId)) {
@@ -569,7 +593,7 @@ export class Core {
     });
     on("index/setPaused", (msg) => {
       new GlobalContext().update("indexingPaused", msg.data);
-      indexingPauseToken.paused = msg.data;
+      this.indexingPauseToken.paused = msg.data;
     });
     on("index/indexingProgressBarInitialized", async (msg) => {
       // Triggered when progress bar is initialized.
@@ -577,6 +601,10 @@ export class Core {
       if (this.indexingState.status !== "loading") {
         this.messenger.request("indexProgress", this.indexingState);
       }
+    });
+
+    on("didChangeSelectedProfile", (msg) => {
+      this.configHandler.setSelectedProfile(msg.data.id);
     });
   }
 

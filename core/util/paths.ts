@@ -177,12 +177,22 @@ function getMigrationsFolderPath(): string {
   return migrationsPath;
 }
 
-export function migrate(id: string, callback: () => void) {
+export function migrate(
+  id: string,
+  callback: () => void,
+  onAlreadyComplete?: () => void,
+) {
   const migrationsPath = getMigrationsFolderPath();
   const migrationPath = path.join(migrationsPath, id);
   if (!fs.existsSync(migrationPath)) {
-    fs.writeFileSync(migrationPath, "");
-    callback();
+    try {
+      callback();
+      fs.writeFileSync(migrationPath, "");
+    } catch (e) {
+      console.error(`Migration ${id} failed`, e);
+    }
+  } else if (onAlreadyComplete) {
+    onAlreadyComplete();
   }
 }
 
@@ -223,6 +233,11 @@ export function getPathToRemoteConfig(remoteConfigServerUrl: string): string {
     fs.mkdirSync(dir);
   }
   return dir;
+}
+
+export function internalBetaPathExists(): boolean {
+  const sPath = path.join(getContinueGlobalPath(), ".internal_beta");
+  return fs.existsSync(sPath);
 }
 
 export function getConfigJsonPathForRemote(

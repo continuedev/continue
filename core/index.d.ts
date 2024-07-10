@@ -419,6 +419,7 @@ export interface IdeSettings {
   remoteConfigServerUrl: string | undefined;
   remoteConfigSyncPeriod: number;
   userToken: string;
+  enableControlServerBeta: boolean;
 }
 
 export interface IDE {
@@ -434,10 +435,6 @@ export interface IDE {
     stackDepth: number,
   ): Promise<string[]>;
   getAvailableThreads(): Promise<Thread[]>;
-  listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
   getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
@@ -482,6 +479,7 @@ export interface IDE {
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
+  pathSep(): Promise<string>;
 }
 
 // Slash Commands
@@ -667,6 +665,13 @@ export interface RequestOptions {
   headers?: { [key: string]: string };
   extraBodyProperties?: { [key: string]: any };
   noProxy?: string[];
+  clientCertificate?: ClientCertificateOptions;
+}
+
+export interface ClientCertificateOptions {
+  cert: string;
+  key: string;
+  passphrase?: string;
 }
 
 export interface StepWithParams {
@@ -722,6 +727,7 @@ export interface ModelDescription {
 }
 
 export type EmbeddingsProviderName =
+  | "huggingface-tei"
   | "transformers.js"
   | "ollama"
   | "openai"
@@ -802,11 +808,42 @@ interface ModelRoles {
   applyCodeBlock?: string;
 }
 
+/**
+ * Represents the configuration for a quick action in the Code Lens.
+ * Quick actions are custom commands that can be added to function and class declarations.
+ */
+interface QuickActionConfig {
+  /**
+   * The title of the quick action that will display in the Code Lens.
+   */
+  title: string;
+
+  /**
+   * The prompt that will be sent to the model when the quick action is invoked,
+   * with the function or class body concatenated.
+   */
+  prompt: string;
+
+  /**
+   * If `true`, the result of the quick action will be sent to the chat panel.
+   * If `false`, the streamed result will be inserted into the document.
+   *
+   * Defaults to `false`.
+   */
+  sendToChat: boolean;
+}
+
 interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
   defaultContext?: "activeFile"[];
   promptPath?: string;
+
+  /**
+   * Quick actions are a way to add custom commands to the Code Lens of
+   * function and class declarations.
+   */
+  quickActions?: QuickActionConfig[];
 }
 
 // config.json

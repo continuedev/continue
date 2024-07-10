@@ -1,4 +1,9 @@
-import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
+import { ConfigHandler } from "core/config/ConfigHandler";
+import {
+  FromCoreProtocol,
+  FromWebviewProtocol,
+  ToCoreProtocol,
+} from "core/protocol";
 import { ToWebviewFromCoreProtocol } from "core/protocol/coreWebview";
 import { ToIdeFromWebviewOrCoreProtocol } from "core/protocol/ide";
 import { ToIdeFromCoreProtocol } from "core/protocol/ideCore";
@@ -13,12 +18,9 @@ import * as path from "node:path";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
+import { getControlPlaneSessionInfo } from "../stubs/WorkOsAuthProvider";
 import { getExtensionUri } from "../util/vscode";
-import {
-  ToCoreOrIdeFromWebviewProtocol,
-  VsCodeWebviewProtocol,
-} from "../webviewProtocol";
-import { ConfigHandler } from "core/config/handler";
+import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
 /**
  * A shared messenger class between Core and Webview
@@ -28,13 +30,11 @@ type TODO = any;
 type ToIdeOrWebviewFromCoreProtocol = ToIdeFromCoreProtocol &
   ToWebviewFromCoreProtocol;
 export class VsCodeMessenger {
-  onWebview<T extends keyof ToCoreOrIdeFromWebviewProtocol>(
+  onWebview<T extends keyof FromWebviewProtocol>(
     messageType: T,
     handler: (
-      message: Message<ToCoreOrIdeFromWebviewProtocol[T][0]>,
-    ) =>
-      | Promise<ToCoreOrIdeFromWebviewProtocol[T][1]>
-      | ToCoreOrIdeFromWebviewProtocol[T][1],
+      message: Message<FromWebviewProtocol[T][0]>,
+    ) => Promise<FromWebviewProtocol[T][1]> | FromWebviewProtocol[T][1],
   ): void {
     this.webviewProtocol.on(messageType, handler);
   }
@@ -231,12 +231,6 @@ export class VsCodeMessenger {
         msg.data.stackDepth,
       );
     });
-    this.onWebviewOrCore("listWorkspaceContents", async (msg) => {
-      return ide.listWorkspaceContents(
-        msg.data.directory,
-        msg.data.useGitIgnore,
-      );
-    });
     this.onWebviewOrCore("getWorkspaceDirs", async (msg) => {
       return ide.getWorkspaceDirs();
     });
@@ -297,5 +291,8 @@ export class VsCodeMessenger {
     this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
       ide.getGitHubAuthToken(),
     );
+    this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
+      return getControlPlaneSessionInfo(msg.data.silent);
+    });
   }
 }

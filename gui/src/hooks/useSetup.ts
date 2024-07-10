@@ -8,6 +8,7 @@ import {
   addContextItemsAtIndex,
   setConfig,
   setInactive,
+  setSelectedProfileId,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
@@ -22,11 +23,12 @@ function useSetup(dispatch: Dispatch<any>) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const loadConfig = async () => {
-    const config = await ideMessenger.request(
-      "config/getBrowserSerialized",
+    const { config, profileId } = await ideMessenger.request(
+      "config/getSerializedProfileInfo",
       undefined,
     );
     dispatch(setConfig(config));
+    dispatch(setSelectedProfileId(profileId));
     setConfigLoaded(true);
 
     // Perform any actions needed with the config
