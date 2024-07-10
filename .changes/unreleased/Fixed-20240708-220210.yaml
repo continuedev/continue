@@ -1,4 +1,0 @@
-project: extensions/intellij
-kind: Fixed
-body: Indexing fixes from VS Code versions merged into IntelliJ
-time: 2024-07-08T22:02:10.892219-07:00
