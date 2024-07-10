@@ -8,6 +8,7 @@ import { getReviewResultsFilepath } from "../util/paths";
 import { getChangedFiles, getDiffPerFile } from "./parseDiff";
 import { reviewPrompt, reviewSystemMessage } from "./prompts";
 import { extractUniqueReferences } from "./parseDiff";
+import { RangeInFileWithContents } from "../commands/util";
 
 const initialWait = 5_000;
 const maxWait = 60_000;
@@ -137,6 +138,25 @@ export class CodeReview {
     return this.reviewDiff(filepath, diff);
   }
 
+  private reviewPrompt(
+    filepath: string,
+    rifs: RangeInFileWithContents[],
+    diff: string,
+  ): string {
+    const definitionsContent = rifs
+      .map(
+        (ref) =>
+          `File: ${ref.filepath}\nRange: ${ref.range.start.line}-${ref.range.end.line}\n${ref.contents}`,
+      )
+      .join("\n\n");
+    const prompt = Handlebars.compile(reviewPrompt)({
+      filepath,
+      diff,
+      definitions: definitionsContent,
+    });
+    return prompt;
+  }
+
   private async reviewDiff(
     filepath: string,
     diff: string,
@@ -145,21 +165,16 @@ export class CodeReview {
     const fileHash = this._calculateHash(contents);
 
     // Extract unique references (definitions) used by the changed code
-    const uniqueReferences = await extractUniqueReferences(diff, filepath);
+    const uniqueReferences: RangeInFileWithContents[] =
+      await extractUniqueReferences(diff, filepath);
+
+    console.log("processing filepath: " + filepath);
+    // console.log("processing diff: ", diff);
+    console.log("uniqueReferences", uniqueReferences);
 
     // Prepare the definitions content
-    const definitionsContent = uniqueReferences
-      .map(
-        (ref) =>
-          `File: ${ref.filepath}\nRange: ${ref.range.start.line}-${ref.range.end.line}\n${ref.contents}`,
-      )
-      .join("\n\n");
-
-    const prompt = Handlebars.compile(reviewPrompt)({
-      filepath,
-      diff,
-      definitions: definitionsContent,
-    });
+    const prompt = this.reviewPrompt(filepath, uniqueReferences, diff);
+    console.log("Final Prompt: ", prompt);
 
     try {
       const response = await this.llm.chat([
@@ -229,7 +244,7 @@ export class CodeReview {
   }
 
   public redoAll(): void {
-    console.log('redo all called in code review class');
+    console.log("redo all called in code review class");
     this._currentResultsPerFile = {};
     this._persistResults();
     this._refresh();
