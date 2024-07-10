@@ -1,0 +1,2217 @@
+{
+  "title": "config.json",
+  "$ref": "#/definitions/SerializedContinueConfig",
+  "definitions": {
+    "BaseCompletionOptions": {
+      "title": "BaseCompletionOptions",
+      "type": "object",
+      "properties": {
+        "stream": {
+          "title": "Stream",
+          "description": "Whether to stream the LLM response. Currently only respected by the 'anthropic' provider. Otherwise will always stream.",
+          "type": "boolean",
+          "default": true
+        },
+        "temperature": {
+          "title": "Temperature",
+          "description": "The temperature of the completion.",
+          "type": "number"
+        },
+        "topP": {
+          "title": "Top P",
+          "description": "The topP of the completion.",
+          "type": "number"
+        },
+        "topK": {
+          "title": "Top K",
+          "description": "The topK of the completion.",
+          "type": "integer"
+        },
+        "presencePenalty": {
+          "title": "Presence Penalty",
+          "description": "The presence penalty Aof the completion.",
+          "type": "number"
+        },
+        "frequencePenalty": {
+          "title": "Frequency Penalty",
+          "description": "The frequency penalty of the completion.",
+          "type": "number"
+        },
+        "mirostat": {
+          "title": "Mirostat",
+          "description": "Enable Mirostat sampling, controlling perplexity during text generation (default: 0, 0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0). Only available for Ollama, LM Studio, and llama.cpp providers",
+          "type": "number"
+        },
+        "stop": {
+          "title": "Stop",
+          "description": "The stop tokens of the completion.",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "maxTokens": {
+          "title": "Max Tokens",
+          "description": "The maximum number of tokens to generate.",
+          "default": 600,
+          "type": "integer"
+        },
+        "numThreads": {
+          "title": "Number of threads",
+          "description": "The number of threads used in the generation process. Only available for Ollama (this is the num_thread parameter)",
+          "type": "integer"
+        },
+        "keepAlive": {
+          "title": "Ollama keep_alive",
+          "description": "The number of seconds after no requests are made to unload the model from memory. Defaults to 60*30 = 30min",
+          "type": "integer"
+        }
+      }
+    },
+    "ClientCertificateOptions": {
+      "title": "ClientCertificateOptions",
+      "type": "object",
+      "properties": {
+        "cert": {
+          "title": "Cert Path",
+          "description": "Path to the client certificate file",
+          "type": "string"
+        },
+        "key": {
+          "title": "Key Path",
+          "description": "Path to the client certificate key file",
+          "type": "string"
+        },
+        "passphrase": {
+          "title": "Passphrase",
+          "description": "Passphrase for the client certificate key file",
+          "type": "string"
+        }
+      },
+      "required": ["cert", "key"]
+    },
+    "RequestOptions": {
+      "title": "RequestOptions",
+      "type": "object",
+      "properties": {
+        "timeout": {
+          "title": "Timeout",
+          "description": "Set the timeout for each request to the LLM. If you are running a local LLM that takes a while to respond, you might want to set this to avoid timeouts.",
+          "default": 7200,
+          "type": "integer"
+        },
+        "verifySsl": {
+          "title": "Verify Ssl",
+          "description": "Whether to verify SSL certificates for requests.",
+          "type": "boolean"
+        },
+        "caBundlePath": {
+          "title": "Ca Bundle Path",
+          "description": "Path to a custom CA bundle to use when making the HTTP request",
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "proxy": {
+          "title": "Proxy",
+          "description": "Proxy URL to use when making the HTTP request",
+          "type": "string"
+        },
+        "headers": {
+          "title": "Headers",
+          "description": "Headers to use when making the HTTP request",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "extraBodyProperties": {
+          "title": "Extra Body Properties",
+          "description": "This object will be merged with the body when making the HTTP requests",
+          "type": "object"
+        },
+        "noProxy": {
+          "title": "No Proxy",
+          "description": "A list of hostnames for which Continue should not use the proxy specified in requestOptions.proxy",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "clientCertificate": {
+          "title": "Client Certificate",
+          "description": "Client certificate to use when making the HTTP request",
+          "$ref": "#/definitions/ClientCertificateOptions"
+        }
+      }
+    },
+    "ModelDescription": {
+      "title": "ModelDescription",
+      "type": "object",
+      "properties": {
+        "title": {
+          "title": "Title",
+          "description": "The title you wish to give your model.",
+          "type": "string"
+        },
+        "provider": {
+          "title": "Provider",
+          "description": "The provider of the model. This is used to determine the type of model, and how to interact with it.",
+          "enum": [
+            "openai",
+            "free-trial",
+            "anthropic",
+            "cohere",
+            "bedrock",
+            "together",
+            "ollama",
+            "huggingface-tgi",
+            "huggingface-inference-api",
+            "llama.cpp",
+            "replicate",
+            "gemini",
+            "lmstudio",
+            "llamafile",
+            "mistral",
+            "deepinfra",
+            "groq",
+            "fireworks",
+            "cloudflare",
+            "deepseek",
+            "azure",
+            "msty"
+          ],
+          "markdownEnumDescriptions": [
+            "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
+            "### Free Trial\nNew users can try out Continue for free using a proxy server that securely makes calls to OpenAI using our API key. If you are ready to use your own API key or have used all 250 free uses, you can enter your API key in config.json where it says `apiKey=\"\"` or select another model provider.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/freetrial)",
+            "### Anthropic\nTo get started with Anthropic models, you first need to sign up for the open beta [here](https://claude.ai/login) to obtain an API key.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/anthropicllm)",
+            "### Cohere\nTo use Cohere, visit the [Cohere dashboard](https://dashboard.cohere.com/api-keys) to create an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/cohere)",
+            "### Bedrock\nTo get started with Bedrock you need to sign up on AWS [here](https://aws.amazon.com/bedrock/claude/)",
+            "### Together\nTogether is a hosted service that provides extremely fast streaming of open-source language models. To get started with Together:\n1. Obtain an API key from [here](https://together.ai)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/togetherllm)",
+            "### Ollama\nTo get started with Ollama, follow these steps:\n1. Download from [ollama.ai](https://ollama.ai/) and open the application\n2. Open a terminal and run `ollama run <MODEL_NAME>`. Example model names are `codellama:7b-instruct` or `llama2:7b-text`. You can find the full list [here](https://ollama.ai/library).\n3. Make sure that the model name used in step 2 is the same as the one in config.json (e.g. `model=\"codellama:7b-instruct\"`)\n4. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/ollama)",
+            "### Huggingface TGI\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/huggingfacetgi)",
+            "### Huggingface Inference API\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/huggingfaceinferenceapi)",
+            "### Llama.cpp\nllama.cpp comes with a [built-in server](https://github.com/ggerganov/llama.cpp/tree/master/examples/server#llamacppexampleserver) that can be run from source. To do this:\n\n1. Clone the repository with `git clone https://github.com/ggerganov/llama.cpp`.\n2. `cd llama.cpp`\n3. Run `make` to build the server.\n4. Download the model you'd like to use and place it in the `llama.cpp/models` directory (the best place to find models is [The Bloke on HuggingFace](https://huggingface.co/TheBloke))\n5. Run the llama.cpp server with the command below (replacing with the model you downloaded):\n\n```shell\n.\\server.exe -c 4096 --host 0.0.0.0 -t 16 --mlock -m models/codellama-7b-instruct.Q8_0.gguf\n```\n\nAfter it's up and running, you can start using Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/llamacpp)",
+            "### Replicate\nReplicate is a hosted service that makes it easy to run ML models. To get started with Replicate:\n1. Obtain an API key from [here](https://replicate.com)\n2. Paste below\n3. Select a model preset\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/replicatellm)",
+            "### Gemini API\nTo get started with Google Makersuite, obtain your API key from [here](https://makersuite.google.com) and paste it below.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/geminiapi)",
+            "### LMStudio\nLMStudio provides a professional and well-designed GUI for exploring, configuring, and serving LLMs. It is available on both Mac and Windows. To get started:\n1. Download from [lmstudio.ai](https://lmstudio.ai/) and open the application\n2. Search for and download the desired model from the home screen of LMStudio.\n3. In the left-bar, click the '<->' icon to open the Local Inference Server and press 'Start Server'.\n4. Once your model is loaded and the server has started, you can begin using Continue.\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/lmstudio)",
+            "### Llamafile\nTo get started with llamafiles, find and download a binary on their [GitHub repo](https://github.com/Mozilla-Ocho/llamafile#binary-instructions). Then run it with the following command:\n\n```shell\nchmod +x ./llamafile\n./llamafile\n```\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/llamafile)",
+            "### Mistral API\n\nTo get access to the Mistral API, obtain your API key from the [Mistral platform](https://docs.mistral.ai/)",
+            "### DeepInfra\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/deepinfra)",
+            "### Groq\nGroq provides extremely fast inference of open-source language models. To get started, obtain an API key from [their console](https://console.groq.com/keys).",
+            "### Fireworks\nFireworks is a fast inference engine for open-source language models. To get started, obtain an API key from [their console](https://fireworks.ai/api-keys).",
+            "### Cloudflare Workers AI\n\n[Reference](https://developers.cloudflare.com/workers-ai/)",
+            "### Deepseek\n Deepseek's API provides the best pricing for their state-of-the-art Deepseek Coder models. To get started, obtain an API key from [their console](https://platform.deepseek.com/api_keys)",
+            "### Azure OpenAI\n Azure OpenAI lets you securely run OpenAI's models on Azure. To get started, follow the steps [here](https://docs.continue.dev/reference/Model%20Providers/azure)",
+            "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)"
+          ],
+          "type": "string"
+        },
+        "model": {
+          "title": "Model",
+          "description": "The name of the model. Used to autodetect prompt template.",
+          "type": "string"
+        },
+        "apiKey": {
+          "title": "Api Key",
+          "description": "OpenAI, Anthropic, Cohere, Together, or other API key",
+          "type": "string"
+        },
+        "apiBase": {
+          "title": "Api Base",
+          "description": "The base URL of the LLM API.",
+          "type": "string"
+        },
+        "contextLength": {
+          "title": "Context Length",
+          "description": "The maximum context length of the LLM in tokens, as counted by countTokens.",
+          "default": 2048,
+          "type": "integer"
+        },
+        "template": {
+          "title": "Template",
+          "description": "The chat template used to format messages. This is auto-detected for most models, but can be overridden here. Choose none if you are using vLLM or another server that automatically handles prompting.",
+          "enum": [
+            "llama2",
+            "alpaca",
+            "zephyr",
+            "phi2",
+            "phind",
+            "anthropic",
+            "chatml",
+            "none",
+            "deepseek",
+            "openchat",
+            "xwin-coder",
+            "neural-chat",
+            "codellama-70b",
+            "llava",
+            "gemma",
+            "llama3"
+          ],
+          "type": "string"
+        },
+        "promptTemplates": {
+          "title": "Prompt Templates",
+          "markdownDescription": "A mapping of prompt template name ('edit' is currently the only one used in Continue) to a string giving the prompt template. See [here](https://docs.continue.dev/model-setup/configuration#customizing-the-edit-prompt) for an example.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "completionOptions": {
+          "title": "Completion Options",
+          "description": "Options for the completion endpoint. Read more about the completion options in the documentation.",
+          "default": {
+            "temperature": null,
+            "topP": null,
+            "topK": null,
+            "presencePenalty": null,
+            "frequencyPenalty": null,
+            "stop": null,
+            "maxTokens": 600
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/BaseCompletionOptions"
+            }
+          ]
+        },
+        "systemMessage": {
+          "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
+          "type": "string"
+        },
+        "requestOptions": {
+          "title": "Request Options",
+          "description": "Options for the HTTP request to the LLM.",
+          "default": {
+            "timeout": 7200,
+            "verifySsl": null,
+            "caBundlePath": null,
+            "proxy": null,
+            "headers": null,
+            "extraBodyProperties": null
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/RequestOptions"
+            }
+          ]
+        },
+        "apiType": {
+          "title": "Api Type",
+          "markdownDescription": "OpenAI API type, either `openai` or `azure`",
+          "enum": ["openai", "azure"]
+        },
+        "apiVersion": {
+          "title": "Api Version",
+          "description": "Azure OpenAI API version (e.g. 2023-07-01-preview)",
+          "type": "string"
+        },
+        "engine": {
+          "title": "Engine",
+          "description": "Azure OpenAI engine",
+          "type": "string"
+        }
+      },
+      "required": ["title", "provider", "model"],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "type": "str"
+              }
+            },
+            "not": {
+              "required": ["provider"]
+            }
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "description": "Choose a provider first, then model options will be shown here."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "openai",
+                  "anthropic",
+                  "cohere",
+                  "gemini",
+                  "huggingface-inference-api",
+                  "replicate",
+                  "together",
+                  "cloudflare"
+                ]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "required": ["apiKey"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["huggingface-tgi", "huggingface-inference-api"]
+              }
+            }
+          },
+          "then": {
+            "required": ["apiBase"]
+          },
+          "required": ["provider"]
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["openai"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "engine": {
+                "type": "string"
+              },
+              "apiType": {
+                "type": "string"
+              },
+              "apiVersion": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["cloudflare"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "accountId": {
+                "type": "string"
+              },
+              "aiGatewaySlug": {
+                "type": "string"
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "@cf/meta/llama-3-8b-instruct",
+                      "@hf/thebloke/deepseek-coder-6.7b-instruct-awq",
+                      "@cf/deepseek-ai/deepseek-math-7b-instruct",
+                      "@cf/thebloke/discolm-german-7b-v1-awq",
+                      "@cf/tiiuae/falcon-7b-instruct",
+                      "@cf/google/gemma-2b-it-lora",
+                      "@hf/google/gemma-7b-it",
+                      "@cf/google/gemma-7b-it-lora",
+                      "@hf/nousresearch/hermes-2-pro-mistral-7b",
+                      "@cf/meta/llama-2-7b-chat-fp16",
+                      "@cf/meta/llama-2-7b-chat-int8",
+                      "@cf/meta-llama/llama-2-7b-chat-hf-lora",
+                      "@hf/thebloke/llama-2-13b-chat-awq",
+                      "@hf/thebloke/llamaguard-7b-awq",
+                      "@cf/mistral/mistral-7b-instruct-v0.1",
+                      "@hf/mistral/mistral-7b-instruct-v0.2",
+                      "@cf/mistral/mistral-7b-instruct-v0.2-lora",
+                      "@hf/thebloke/neural-chat-7b-v3-1-awq",
+                      "@cf/openchat/openchat-3.5-0106",
+                      "@hf/thebloke/openhermes-2.5-mistral-7b-awq",
+                      "@cf/microsoft/phi-2",
+                      "@cf/qwen/qwen1.5-0.5b-chat",
+                      "@cf/qwen/qwen1.5-1.8b-chat",
+                      "@cf/qwen/qwen1.5-7b-chat-awq",
+                      "@cf/qwen/qwen1.5-14b-chat-awq",
+                      "@cf/defog/sqlcoder-7b-2",
+                      "@hf/nexusflow/starling-lm-7b-beta",
+                      "@cf/tinyllama/tinyllama-1.1b-chat-v1.0",
+                      "@hf/thebloke/zephyr-7b-beta-awq",
+                      "@hf/thebloke/deepseek-coder-6.7b-base-awq"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["openai"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gpt-3.5-turbo",
+                      "gpt-3.5-turbo-16k",
+                      "gpt-4o",
+                      "gpt-4",
+                      "gpt-3.5-turbo-0613",
+                      "gpt-4-32k",
+                      "gpt-4-0125-preview",
+                      "gpt-4-turbo",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["replicate"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "llama3-8b",
+                      "llama3-70b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "llama2-7b",
+                      "llama2-13b"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "markdownDescription": "Select a pre-defined option, or find an exact model ID from Replicate [here](https://replicate.com/collections/streaming-language-models)."
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["free-trial"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "gpt-4o",
+                  "codestral-latest",
+                  "llama3-70b",
+                  "gpt-3.5-turbo",
+                  "phind-codellama-34b",
+                  "gemini-pro",
+                  "mistral-8x7b",
+                  "claude-3-5-sonnet-20240620",
+                  "claude-3-haiku-20240307",
+                  "AUTODETECT"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["openai"]
+              },
+              "apiType": {
+                "not": {
+                  "const": "azure"
+                }
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gpt-3.5-turbo",
+                      "gpt-3.5-turbo-16k",
+                      "gpt-4o",
+                      "gpt-4",
+                      "gpt-3.5-turbo-0613",
+                      "gpt-4-32k",
+                      "gpt-4-turbo",
+                      "gpt-4-vision-preview",
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b",
+                      "starcoder2-3b",
+                      "mistral-tiny",
+                      "mistral-small",
+                      "mistral-medium",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["anthropic"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "claude-2",
+                      "claude-instant-1",
+                      "claude-3-5-sonnet-20240620",
+                      "claude-3-opus-20240229",
+                      "claude-3-sonnet-20240229",
+                      "claude-3-haiku-20240307",
+                      "claude-2.1"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["cohere"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["command-r", "command-r-plus"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["bedrock"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "claude-3-sonnet-20240229",
+                      "claude-3-haiku-20240307",
+                      "claude-2"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["gemini"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "chat-bison-001",
+                  "gemini-pro",
+                  "gemini-1.5-pro-latest",
+                  "gemini-1.5-pro",
+                  "gemini-1.5-flash-latest",
+                  "gemini-1.5-flash"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["together"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "llama3-8b",
+                      "llama3-70b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "phind-codellama-34b"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "markdownDescription": "Select a pre-defined option, or find an exact model string from Together AI [here](https://docs.together.ai/docs/inference-models)."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["deepinfra"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "markdownDescription": "Find the model name you want to use from DeepInfra [here](https://deepinfra.com/models?type=text-generation)."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": [
+                  "huggingface-tgi",
+                  "huggingface-inference-api",
+                  "llama.cpp",
+                  "text-gen-webui",
+                  "llamafile"
+                ]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b",
+                      "starcoder2-3b"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["ollama"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "mistral-7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
+                      "phi-2",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "neural-chat-7b",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b",
+                      "starcoder2-3b",
+                      "AUTODETECT"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ],
+                "markdownDescription": "Select a pre-defined option, or find the exact model tag for an Ollama model [here](https://ollama.ai/library)."
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["mistral"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "codestral-latest",
+                  "open-mistral-7b",
+                  "open-mixtral-8x7b",
+                  "open-mixtral-8x22b",
+                  "mistral-small-latest",
+                  "mistral-large-latest"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["deepseek"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["deepseek-chat", "deepseek-coder"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["groq"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": [
+                  "llama2-70b",
+                  "mistral-8x7b",
+                  "gemma",
+                  "llama3-8b",
+                  "llama3-70b",
+                  "AUTODETECT"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["fireworks"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "model": {
+                "enum": ["starcoder-7b"]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "apiType": {
+                "const": "azure"
+              }
+            },
+            "required": ["apiType"]
+          },
+          "then": {
+            "required": ["engine", "apiVersion", "apiBase"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["openai"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "useLegacyCompletionsEndpoint": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "const": "llamafile"
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "llamafileCommand": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["text-gen-webui"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "streamingUrl": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["flowise"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "timeout": {
+                "title": "Timeout",
+                "description": "Set the timeout for each request to Flowise. If you are running a local version of Flowise it might takes a while to respond, you might want to set this to avoid timeouts.",
+                "default": 5000,
+                "type": "integer"
+              },
+              "additionalHeaders": {
+                "description": "A list of additional headers",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "title": "Key",
+                      "description": "Header key",
+                      "type": "string"
+                    },
+                    "value": {
+                      "title": "Value",
+                      "description": "Header value",
+                      "type": "string"
+                    }
+                  },
+                  "required": ["key", "value"]
+                }
+              },
+              "additionalFlowiseConfiguration": {
+                "description": "A list of additional properties to be sent along `overrideConfig`",
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "title": "Key",
+                      "description": "Configuration Property key",
+                      "type": "string"
+                    },
+                    "value": {
+                      "title": "Value",
+                      "description": "Configuration Property value"
+                    }
+                  },
+                  "required": ["key", "value"]
+                }
+              },
+              "model": {
+                "anyOf": [
+                  {
+                    "enum": [
+                      "gpt-3.5-turbo",
+                      "gpt-3.5-turbo-16k",
+                      "gpt-4o",
+                      "gpt-4",
+                      "gpt-3.5-turbo-0613",
+                      "gpt-4-32k",
+                      "gpt-4-turbo",
+                      "gpt-4-vision-preview",
+                      "mistral-7b",
+                      "mistral-8x7b",
+                      "llama2-7b",
+                      "llama2-13b",
+                      "codellama-7b",
+                      "codellama-13b",
+                      "codellama-34b",
+                      "codellama-70b",
+                      "llama3-8b",
+                      "llama3-70b",
+                      "phind-codellama-34b",
+                      "wizardcoder-7b",
+                      "wizardcoder-13b",
+                      "wizardcoder-34b",
+                      "zephyr-7b",
+                      "codeup-13b",
+                      "deepseek-7b",
+                      "deepseek-33b",
+                      "claude-2",
+                      "claude-instant-1",
+                      "claude-3-5-sonnet-20240620",
+                      "claude-3-opus-20240229",
+                      "claude-3-sonnet-20240229",
+                      "claude-3-haiku-20240307",
+                      "claude-2.1",
+                      "command-r",
+                      "command-r-plus",
+                      "chat-bison-001",
+                      "gemini-pro",
+                      "gemini-1.5-pro-latest",
+                      "gemini-1.5-pro",
+                      "gemini-1.5-flash-latest",
+                      "gemini-1.5-flash",
+                      "mistral-tiny",
+                      "mistral-small",
+                      "mistral-medium",
+                      "deepseek-1b",
+                      "stable-code-3b",
+                      "starcoder-1b",
+                      "starcoder-3b",
+                      "starcoder2-3b"
+                    ]
+                  },
+                  {
+                    "type": "string"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ModelRoles": {
+      "title": "ModelRoles",
+      "type": "object",
+      "properties": {
+        "default": {
+          "title": "Default",
+          "description": "The default model. If other model roles are not set, they will fall back to default.",
+          "type": "string"
+        },
+        "chat": {
+          "title": "Chat",
+          "description": "The model to use for chat. If not set, will fall back to default.",
+          "type": "string"
+        },
+        "edit": {
+          "title": "Edit",
+          "description": "The model to use for editing. If not set, will fall back to default.",
+          "type": "string"
+        },
+        "summarize": {
+          "title": "Summarize",
+          "description": "The model to use for summarization. If not set, will fall back to default.",
+          "type": "string"
+        }
+      },
+      "required": ["default"]
+    },
+    "SlashCommand": {
+      "title": "SlashCommand",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "anyOf": [
+            {
+              "enum": [
+                "issue",
+                "share",
+                "so",
+                "cmd",
+                "edit",
+                "comment",
+                "http",
+                "commit",
+                "review"
+              ],
+              "type": "string",
+              "markdownEnumDescriptions": [
+                "Generate a link to a drafted GitHub issue",
+                "Export the current chat session to markdown",
+                "Reference StackOverflow to answer the question",
+                "Generate a terminal command and paste it into the terminal",
+                "Edit the highlighted code with given instructions",
+                "Add comments to the highlighted code",
+                "Write a custom slash command at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
+                "Generate a commit message for the current changes",
+                "Review code and give feedback"
+              ]
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "step": {
+          "title": "Step",
+          "description": "This property is no longer required and has no effect. To use a built-in slash command, instead set the 'name' property to one of the pre-configured options.",
+          "type": "string"
+        },
+        "params": {
+          "title": "Params",
+          "default": {},
+          "type": "object"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["issue"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "repositoryUrl": {
+                    "type": "string",
+                    "description": "Enter the URL of the GitHub repository for which you want to generate the issue."
+                  }
+                },
+                "required": ["repositoryUrl"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["edit"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "recap": {
+                    "type": "boolean",
+                    "markdownDescription": "If recap is set to `true`, Continue will generate a summary of the changes after making the edit."
+                  },
+                  "tokenLimit": {
+                    "type": "integer",
+                    "markdownDescription": "By default, Continue doesn't let you edit extremely large ranges (beyond 1,200 tokens), because the LLM is unlikely to succeed. But if you would like to override this limit with the understanding of possible failure you may do so here."
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["share"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "outputDir": {
+                    "type": "string",
+                    "markdownDescription": "If outputDir is set to `.` or begins with `./` or `.\\`, file will be saved to the current workspace or a subdirectory thereof, respectively. `~` can similarly be used to specify the user's home directory."
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "required": ["name", "description"]
+    },
+    "CustomCommand": {
+      "title": "CustomCommand",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "prompt": {
+          "title": "Prompt",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        }
+      },
+      "required": ["name", "prompt", "description"]
+    },
+    "ContextProviderWithParams": {
+      "title": "ContextProviderWithParams",
+      "type": "object",
+      "properties": {
+        "name": {
+          "title": "Name",
+          "anyOf": [
+            {
+              "enum": [
+                "diff",
+                "terminal",
+                "locals",
+                "open",
+                "google",
+                "search",
+                "http",
+                "codebase",
+                "problems",
+                "folder",
+                "issue",
+                "docs",
+                "tree",
+                "highlights",
+                "outline",
+                "postgres",
+                "code",
+                "currentFile",
+                "url",
+                "database",
+                "os"
+              ],
+              "markdownEnumDescriptions": [
+                "Reference the contents of the current changes as given by `git diff`",
+                "Reference the contents of the terminal",
+                "Reference the contents of the local variables with top n level (defaulting to 3) of call stack for that thread",
+                "Reference the contents of all open or pinned files.",
+                "Enter a search phrase and include the Google search results as context",
+                "Reference the results of a ripgrep search in your codebase",
+                "Write a custom context provider at your own HTTP endpoint. Set 'url' in the params object for the endpoint you have setup.",
+                "Use embeddings to automatically find relevant files from throughout the codebase",
+                "Reference all linting errors and warnings in the currently open file",
+                "Include important files from a folder in the prompt, as determined by similarity search",
+                "Reference GitHub issues from a repository",
+                "Retrieve important pages from a documentation website, as determined by similarity search",
+                "Display a file tree of the current workspace",
+                "Include important highlighted sections from your code",
+                "Include a repo map showing important code objects",
+                "References Postgres table schema and sample rows",
+                "Reference specific functions and classes from throughout your codebase",
+                "Reference the contents of the currently active file",
+                "Reference the contents of a page at a URL",
+                "Reference table schemas",
+                "Operating system and CPU Information"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "string"
+            }
+          ]
+        },
+        "params": {
+          "title": "Params",
+          "default": {},
+          "type": "object"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["google"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "serperApiKey": {
+                    "type": "string",
+                    "description": "Your API key for https://serper.dev in order to get Google search results"
+                  }
+                },
+                "required": ["serperApiKey"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["open"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "onlyPinned": {
+                    "type": "boolean",
+                    "description": "If set to true, only 'pinned' files will be included.",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["issue"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "githubToken": {
+                    "type": "string",
+                    "description": "Your GitHub token to access the GitHub API. Required for private repositories."
+                  },
+                  "repos": {
+                    "type": "array",
+                    "description": "A list of repositories to search for issues",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "owner": {
+                          "type": "string",
+                          "description": "The owner of the repository"
+                        },
+                        "repo": {
+                          "type": "string",
+                          "description": "The name of the repository"
+                        },
+                        "type": {
+                          "type": "string",
+                          "description": "The type of issues to search for",
+                          "enum": ["open", "closed", "all"]
+                        }
+                      },
+                      "required": ["owner", "repo"]
+                    }
+                  }
+                },
+                "required": ["repos"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["database"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "connections": {
+                    "type": "array",
+                    "description": "A list of database connections",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string",
+                          "description": "A unique name for this database connection"
+                        },
+                        "connection_type": {
+                          "type": "string",
+                          "description": "The type of database (e.g., 'postgres', 'mysql')",
+                          "enum": ["postgres", "mysql", "sqlite"]
+                        },
+                        "connection": {
+                          "type": "object",
+                          "properties": {
+                            "user": {
+                              "type": "string",
+                              "description": "The database user name"
+                            },
+                            "host": {
+                              "type": "string",
+                              "description": "The host address of the database server"
+                            },
+                            "database": {
+                              "type": "string",
+                              "description": "The name of the database to connect to"
+                            },
+                            "password": {
+                              "type": "string",
+                              "description": "The password for the database user"
+                            },
+                            "port": {
+                              "type": "integer",
+                              "description": "The port number to connect to at the host"
+                            },
+                            "filename": {
+                              "type": "string",
+                              "description": "File location for simple file DB's"
+                            }
+                          },
+                          "required": []
+                        }
+                      },
+                      "required": ["name", "connection_type", "connection"]
+                    }
+                  }
+                },
+                "required": ["connections"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["gitlab-mr"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "description": "Your GitLab domain, will default to gitlab.com"
+                  },
+                  "token": {
+                    "type": "string",
+                    "description": "Your private access token."
+                  },
+                  "filterComments": {
+                    "type": "boolean",
+                    "description": "If you have code selected, filters out comments that aren't related to the selection."
+                  }
+                },
+                "required": ["token"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["jira"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "domain": {
+                    "type": "string",
+                    "description": "Your Jira domain, for example company.atlassian.net."
+                  },
+                  "email": {
+                    "type": "string",
+                    "description": "The email that you log into Jira with"
+                  },
+                  "token": {
+                    "type": "string",
+                    "description": "Your atlassian API token from https://id.atlassian.com/manage-profile/security/api-tokens"
+                  },
+                  "issueQuery": {
+                    "type": "string",
+                    "description": "Customize the query used to find Jira issues"
+                  },
+                  "apiVersion": {
+                    "type": "integer",
+                    "markdownDescription": "This context provider supports both Jira API version 2 and 3. It will use version 3 by default since that's what the cloud version uses, but if you have the datacenter version of Jira, you'll need to set the API Version to 2 using the `apiVersion` property."
+                  },
+                  "requestOptions": {
+                    "title": "Request Options",
+                    "description": "Options for the HTTPS request to Jira.",
+                    "default": {
+                      "timeout": 7200,
+                      "verifySsl": null,
+                      "caBundlePath": null,
+                      "proxy": null,
+                      "headers": null,
+                      "extraBodyProperties": null
+                    },
+                    "allOf": [
+                      {
+                        "$ref": "#/definitions/RequestOptions"
+                      }
+                    ]
+                  }
+                },
+                "required": ["domain", "token"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["http"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "description": "The HTTP endpoint of your context provider server."
+                  }
+                },
+                "required": ["url"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["codebase", "folder"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "nRetrieve": {
+                    "title": "N Retrieve",
+                    "description": "Number of results to initially retrieve from vector database",
+                    "default": 50,
+                    "type": "integer"
+                  },
+                  "nFinal": {
+                    "title": "N Final",
+                    "description": "Final number of results to use after re-ranking",
+                    "default": 10,
+                    "type": "integer"
+                  },
+                  "useReranking": {
+                    "title": "Use Reranking",
+                    "description": "Whether to use re-ranking, which will allow initial selection of nRetrieve results, then will use an LLM to select the top nFinal results. Disabling re-ranking will give faster, but less accurate, results.",
+                    "default": true,
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["postgres"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "host": {
+                    "title": "Host",
+                    "description": "Database host",
+                    "default": "localhost",
+                    "type": "string"
+                  },
+                  "port": {
+                    "title": "Port",
+                    "description": "Database port",
+                    "default": 5432,
+                    "type": "integer"
+                  },
+                  "user": {
+                    "title": "User",
+                    "description": "Database user",
+                    "default": "postgres",
+                    "type": "string"
+                  },
+                  "password": {
+                    "title": "Password",
+                    "description": "Database password",
+                    "type": "string"
+                  },
+                  "database": {
+                    "title": "Database",
+                    "description": "Database name",
+                    "default": "postgres",
+                    "type": "string"
+                  },
+                  "schema": {
+                    "title": "Schema",
+                    "description": "Database schema",
+                    "default": "public",
+                    "type": "string"
+                  },
+                  "sampleRows": {
+                    "title": "Sample Rows",
+                    "description": "Number of rows to sample from the database",
+                    "default": 3,
+                    "type": "integer"
+                  }
+                }
+              }
+            },
+            "required": ["host", "port", "user", "password", "database"]
+          }
+        }
+      ],
+      "required": ["name"]
+    },
+    "SerializedContinueConfig": {
+      "title": "config.json",
+      "type": "object",
+      "properties": {
+        "allowAnonymousTelemetry": {
+          "title": "Allow Anonymous Telemetry",
+          "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data. Learn more in [the docs](https://docs.continue.dev/telemetry).",
+          "default": true,
+          "type": "boolean"
+        },
+        "models": {
+          "title": "Models",
+          "markdownDescription": "Learn about setting up models in [the documentation](https://docs.continue.dev/model-setup/overview).",
+          "default": [
+            {
+              "title": "GPT-4 (trial)",
+              "provider": "free-trial",
+              "model": "gpt-4",
+              "apiKey": ""
+            }
+          ],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ModelDescription"
+          }
+        },
+        "systemMessage": {
+          "title": "System Message",
+          "description": "A system message that will always be followed by the LLM",
+          "type": "string"
+        },
+        "completionOptions": {
+          "title": "Completion Options",
+          "description": "Default options for completion. These will be overriden by any options set for a specific model.",
+          "default": {
+            "temperature": null,
+            "topP": null,
+            "topK": null,
+            "presencePenalty": null,
+            "frequencyPenalty": null,
+            "stop": null,
+            "maxTokens": 600
+          },
+          "allOf": [
+            {
+              "$ref": "#/definitions/BaseCompletionOptions"
+            }
+          ]
+        },
+        "requestOptions": {
+          "title": "Request Options",
+          "description": "Default request options for all fetch requests from models and context providers. These will be overriden by any model-specific request options.",
+          "allOf": [
+            {
+              "$ref": "#/definitions/RequestOptions"
+            }
+          ]
+        },
+        "slashCommands": {
+          "title": "Slash Commands",
+          "markdownDescription": "An array of slash commands that let you take custom actions from the sidebar. Learn more in the [documentation](https://docs.continue.dev/customization/slash-commands).",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SlashCommand"
+          }
+        },
+        "customCommands": {
+          "title": "Custom Commands",
+          "markdownDescription": "An array of custom commands that allow you to reuse prompts. Each has name, description, and prompt properties. When you enter /<name> in the text input, it will act as a shortcut to the prompt. Learn more in the [documentation](https://docs.continue.dev/customization/slash-commands#custom-commands-use-natural-language).",
+          "default": [
+            {
+              "name": "test",
+              "prompt": "{{{ input }}}\n\nWrite a comprehensive set of unit tests for the selected code. It should setup, run tests that check for correctness including important edge cases, and teardown. Ensure that the tests are complete and sophisticated. Give the tests just as chat output, don't edit any file.",
+              "description": "This is an example custom command. Open config.json to edit it and create more"
+            }
+          ],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/CustomCommand"
+          }
+        },
+        "contextProviders": {
+          "title": "Context Providers",
+          "markdownDescription": "A list of ContextProvider objects that can be used to provide context to the LLM by typing '@'. Read more about ContextProviders in [the documentation](https://docs.continue.dev/customization/context-providers).",
+          "default": [],
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ContextProviderWithParams"
+          }
+        },
+        "userToken": {
+          "title": "User Token",
+          "description": "An optional token to identify the user.",
+          "type": "string"
+        },
+        "dataServerUrl": {
+          "title": "Data Server Url",
+          "description": "The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
+          "default": "https://us-west1-autodebug.cloudfunctions.net",
+          "type": "string"
+        },
+        "disableSummaries": {
+          "title": "Disable Summaries",
+          "markdownDescription": "If set to `true`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
+          "default": false,
+          "type": "boolean"
+        },
+        "disableIndexing": {
+          "title": "Disable Indexing",
+          "markdownDescription": "If set to `true`, Continue will not index the codebase. This is mainly used for debugging purposes.",
+          "default": false,
+          "type": "boolean"
+        },
+        "disableSessionTitles": {
+          "title": "Disable Session Titles",
+          "markdownDescription": "If set to `true`, Continue will not make extra requests to the LLM to generate a summary title of each session.",
+          "default": false,
+          "type": "boolean"
+        },
+        "embeddingsProvider": {
+          "title": "Embeddings Provider",
+          "markdownDescription": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options [here](https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers).",
+          "type": "object",
+          "properties": {
+            "provider": {
+              "enum": [
+                "huggingface-tei",
+                "transformers.js",
+                "ollama",
+                "openai",
+                "cohere",
+                "free-trial",
+                "gemini"
+              ]
+            },
+            "model": {
+              "type": "string"
+            },
+            "apiKey": {
+              "type": "string"
+            },
+            "apiBase": {
+              "type": "string"
+            },
+            "requestOptions": {
+              "title": "Request Options",
+              "description": "Request options to be used in any fetch requests made by the embeddings provider",
+              "$ref": "#/definitions/RequestOptions"
+            }
+          },
+          "required": ["provider"],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["cohere"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "required": ["apiKey"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["gemini"]
+                  }
+                },
+                "required": ["provider"]
+              },
+              "then": {
+                "required": ["apiKey"]
+              }
+            }
+          ]
+        },
+        "reranker": {
+          "title": "Reranker",
+          "markdownDescription": "The reranker is responsible for selecting the final results when retrieving snippets from your codebase.",
+          "type": "object",
+          "properties": {
+            "name": {
+              "enum": ["cohere", "voyage", "llm", "free-trial"]
+            },
+            "params": {
+              "type": "object"
+            }
+          },
+          "required": ["name"],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["cohere"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "model": {
+                        "enum": [
+                          "rerank-english-v3.0",
+                          "rerank-multilingual-v3.0",
+                          "rerank-english-v2.0",
+                          "rerank-multilingual-v2.0"
+                        ]
+                      },
+                      "apiBase": {
+                        "type": "string"
+                      },
+                      "apiKey": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["apiKey"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["llm"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "modelTitle": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["modelTitle"]
+                  }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["voyage"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "apiKey": {
+                        "type": "string"
+                      },
+                      "model": {
+                        "enum": ["rerank-lite-1", "rerank-1"]
+                      }
+                    },
+                    "required": ["apiKey"]
+                  }
+                }
+              }
+            }
+          ]
+        },
+        "tabAutocompleteModel": {
+          "title": "Tab Autocomplete Model",
+          "markdownDescription": "The model used for tab autocompletion. If undefined, Continue will default to using starcoder2:3b on a local Ollama instance.\n\n*IMPORTANT*:\n\nIf you use a custom model, ensure that it is one trained for fill-in-the-middle completions. An instruct model is typically not well-suited to autocomplete and you may receive unsatisfactory completions.",
+          "default": {
+            "title": "Tab Autocomplete Model",
+            "provider": "ollama",
+            "model": "deepseek-coder:1.3b-base"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/definitions/ModelDescription"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/ModelDescription"
+              }
+            }
+          ]
+        },
+        "tabAutocompleteOptions": {
+          "title": "TabAutocompleteOptions",
+          "type": "object",
+          "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://docs.continue.dev/walkthroughs/tab-autocomplete#configuration-options).",
+          "properties": {
+            "disable": {
+              "type": "boolean",
+              "description": "Disable tab autocomplete. This can also be done from the IDE settings.",
+              "default": false
+            },
+            "useCopyBuffer": {
+              "type": "boolean",
+              "description": "Determines whether the copy buffer will be considered when contructing the prompt."
+            },
+            "useSuffix": {
+              "type": "boolean",
+              "description": "Determines whether to use the file suffix in the prompt."
+            },
+            "maxPromptTokens": {
+              "type": "number",
+              "description": "The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context."
+            },
+            "debounceDelay": {
+              "type": "number",
+              "description": "The delay in milliseconds before triggering autocomplete after a keystroke."
+            },
+            "maxSuffixPercentage": {
+              "type": "number",
+              "description": "The maximum percentage of the prompt that can be dedicated to the suffix."
+            },
+            "prefixPercentage": {
+              "type": "number",
+              "description": "The percentage of the input that should be dedicated to the prefix."
+            },
+            "template": {
+              "type": "string",
+              "description": "An optional template string to be used for autocomplete. It will be rendered with the Mustache templating language, and is passed the 'prefix' and 'suffix' variables."
+            },
+            "multilineCompletions": {
+              "enum": ["always", "never", "auto"],
+              "description": "If set to true, Continue will only complete a single line at a time."
+            },
+            "useCache": {
+              "type": "boolean",
+              "description": "Whether to cache completions"
+            },
+            "onlyMyCode": {
+              "type": "boolean",
+              "description": "If set to true, Continue will not include any snippets from go to definition unless they are within your repository"
+            },
+            "useOtherFiles": {
+              "type": "boolean",
+              "description": "Defaults to true. If set to false, Continue will not attempt to include snippets from other files."
+            },
+            "disableInFiles": {
+              "description": "A list of files / glob patterns in which to disable tab autocomplete. For example, *.csv if you'd like to disable autocomplete in .csv files.",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": []
+        },
+        "ui": {
+          "type": "object",
+          "properties": {
+            "codeBlockToolbarPosition": {
+              "enum": ["top", "bottom"],
+              "default": "top",
+              "description": "Whether to show the copy and apply code buttons at the top or bottom of code blocks in the sidebar."
+            },
+            "fontSize": {
+              "type": "number"
+            },
+            "displayRawMarkdown": {
+              "type": "boolean",
+              "description": "If set to true, we will display the model output as raw markdown.",
+              "default": false
+            }
+          }
+        },
+        "experimental": {
+          "type": "object",
+          "title": "Experimental",
+          "description": "Experimental properties are subject to change.",
+          "properties": {
+            "defaultContext": {
+              "type": "array",
+              "items": {
+                "enum": ["activeFile"]
+              }
+            },
+            "modelRoles": {
+              "type": "object",
+              "properties": {
+                "inlineEdit": {
+                  "type": "string"
+                }
+              }
+            },
+            "promptPath": {
+              "type": "string"
+            },
+            "quickActions": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "description": "The title of the quick action that will display in the Code Lens."
+                  },
+                  "prompt": {
+                    "type": "string",
+                    "description": "The prompt that will be sent to the model when the quick action is invoked, with the function or class body concatenated."
+                  },
+                  "sendToChat": {
+                    "type": "boolean",
+                    "description": "If true, the result of the quick action will be sent to the chat panel. If false, the streamed result will be inserted into the document.",
+                    "default": false
+                  }
+                },
+                "required": ["prompt", "title"]
+              },
+              "description": "Quick actions are a way to add custom commands to the Code Lens of function and class declarations."
+            },
+            "contextMenuPrompts": {
+              "type": "object",
+              "properties": {
+                "comment": {
+                  "type": "string",
+                  "default": "Write comments for this code. Do not change anything about the code itself."
+                },
+                "docstring": {
+                  "type": "string",
+                  "default": "Write a docstring for this code. Do not change anything about the code itself."
+                },
+                "fix": {
+                  "type": "string",
+                  "default": "Fix this code"
+                },
+                "optimize": {
+                  "type": "string",
+                  "default": "Optimize this code"
+                },
+                "fixGrammar": {
+                  "type": "string",
+                  "default": "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

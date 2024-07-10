@@ -1,5 +1,5 @@
 {
-  "name": "control-plane-types",
+  "name": "@continuedev/config-types",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
@@ -11,5 +11,8 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "typescript": "^5.5.2"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
   }
 }
