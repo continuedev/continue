@@ -229,6 +229,18 @@
         "category": "Continue",
         "title": "Fix Grammar / Spelling",
         "group": "Continue"
+      },
+      {
+        "command": "continue.docsIndex",
+        "category": "Continue",
+        "title": "Docs Index",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.docsReIndex",
+        "category": "Continue",
+        "title": "Docs Force Re-Index",
+        "group": "Continue"
       }
     ],
     "keybindings": [

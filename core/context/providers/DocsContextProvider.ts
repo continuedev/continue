@@ -5,6 +5,7 @@ import {
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
+  SiteIndexingConfig,
 } from "../../index.js";
 import { DocsService } from "../../indexing/docs/DocsService.js";
 import configs from "../../indexing/docs/preIndexedDocs.js";
@@ -108,40 +109,44 @@ class DocsContextProvider extends BaseContextProvider {
     ];
   }
 
-  async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs,
-  ): Promise<ContextSubmenuItem[]> {
-    const docs = await this.docsService.list();
-    const submenuItems: ContextSubmenuItem[] = docs.map((doc) => ({
+  // Get combined site configs from preIndexedDocs and options.sites.
+  private _getDocsSitesConfig(): SiteIndexingConfig[] {
+    return [...configs, ...(this.options?.sites || [])];
+  }
+
+  // Get indexed docs as ContextSubmenuItems from database.
+  private async _getIndexedDocsContextSubmenuItems(): Promise<ContextSubmenuItem[]> {
+    return (await this.docsService.list()).map((doc) => ({
       title: doc.title,
       description: new URL(doc.baseUrl).hostname,
       id: doc.baseUrl,
-      metadata: {
-        preIndexed: !!configs.find((config) => config.title === doc.title),
-      },
     }));
+  }
 
-    submenuItems.push(
-      ...configs
-        // After it's actually downloaded, we don't want to show twice
-        .filter(
-          (config) => !submenuItems.some((item) => item.id === config.startUrl),
-        )
-        .map((config) => ({
-          title: config.title,
-          description: new URL(config.startUrl).hostname,
-          id: config.startUrl,
-          metadata: {
-            preIndexed: true,
-          },
-          // iconUrl: config.faviconUrl,
-        })),
-    );
+  async loadSubmenuItems(
+    args: LoadSubmenuItemsArgs,
+  ): Promise<ContextSubmenuItem[]> {
+    const submenuItemsMap = new Map<string, ContextSubmenuItem>();
+
+    for (const item of await this._getIndexedDocsContextSubmenuItems()) {
+      submenuItemsMap.set(item.id, item);
+    }
+
+    for (const config of this._getDocsSitesConfig()) {
+      submenuItemsMap.set(config.startUrl, {
+        id: config.startUrl,
+        title: config.title,
+        description: new URL(config.startUrl).hostname,
+        metadata: { preIndexed: !!configs.find((cnf) => cnf.title === config.title), },
+      });
+    }
+
+    const submenuItems = Array.from(submenuItemsMap.values());
 
     // Sort submenuItems such that the objects with titles which don't occur in configs occur first, and alphabetized
     submenuItems.sort((a, b) => {
-      const aTitleInConfigs = a.metadata?.preIndexed;
-      const bTitleInConfigs = b.metadata?.preIndexed;
+      const aTitleInConfigs = a.metadata?.preIndexed ?? false;
+      const bTitleInConfigs = b.metadata?.preIndexed ?? false;
 
       // Primary criterion: Items not in configs come first
       if (!aTitleInConfigs && bTitleInConfigs) {
