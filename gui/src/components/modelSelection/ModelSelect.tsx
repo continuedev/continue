@@ -31,9 +31,9 @@ const StyledListboxButton = styled(Listbox.Button)`
   gap: 4px;
   border: none;
   cursor: pointer;
-  font-size: ${(props) => `${getFontSize() - 4}px`};
+  font-size: ${() => `${getFontSize() - 4}px`};
   background: transparent;
-  color: ${(props) => lightGray};
+  color: ${() => lightGray};
   &:focus {
     outline: none;
   }
@@ -51,7 +51,7 @@ const StyledListboxOptions = styled(Listbox.Options)`
   border: 0.5px solid ${lightGray};
   background-color: ${vscInputBackground};
 
-  max-height: 300px; // Add this line to set a max height
+  max-height: 300px;
   overflow-y: auto;
 `;
 
