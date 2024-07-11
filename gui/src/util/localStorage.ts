@@ -14,6 +14,7 @@ type LocalStorageTypes = {
   indexingState: IndexingProgressUpdate;
   signedInToGh: boolean;
   isOnboardingInProgress: boolean;
+  showTutorialCard: boolean;
 };
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(

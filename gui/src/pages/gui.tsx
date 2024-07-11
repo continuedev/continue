@@ -12,7 +12,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -56,6 +55,7 @@ import {
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { ChatScrollAnchor } from "../components/ChatScrollAnchor";
+import { TutorialCard } from "../components/mainInput/TutorialCard";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -144,11 +144,7 @@ function fallbackRender({ error, resetErrorBoundary }) {
   );
 }
 
-interface GUIProps {
-  firstObservation?: any;
-}
-
-function GUI(props: GUIProps) {
+function GUI() {
   const posthog = usePostHog();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -168,6 +164,16 @@ function GUI(props: GUIProps) {
   const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
 
   const state = useSelector((state: RootState) => state.state);
+
+  const [showTutorialCard, setShowTutorialCard] = useState<boolean>(
+    getLocalStorage("showTutorialCard"),
+  );
+
+  const onCloseTutorialCard = () => {
+    posthog.capture("closedTutorialCard");
+    setLocalStorage("showTutorialCard", false);
+    setShowTutorialCard(false);
+  };
 
   const handleScroll = () => {
     // Temporary fix to account for additional height when code blocks are added
@@ -461,17 +467,27 @@ function GUI(props: GUIProps) {
             >
               New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
             </NewSessionButton>
-          ) : getLastSessionId() ? (
-            <NewSessionButton
-              onClick={async () => {
-                loadLastSession();
-              }}
-              className="mr-auto flex items-center gap-1"
-            >
-              <ArrowLeftIcon width="11px" height="11px" />
-              Last Session
-            </NewSessionButton>
-          ) : null}
+          ) : (
+            <>
+              {getLastSessionId() ? (
+                <NewSessionButton
+                  onClick={async () => {
+                    loadLastSession();
+                  }}
+                  className="mr-auto flex items-center gap-1"
+                >
+                  <ArrowLeftIcon width="11px" height="11px" />
+                  Last Session
+                </NewSessionButton>
+              ) : null}
+
+              {!!showTutorialCard && (
+                <div className="flex justify-center w-full">
+                  <TutorialCard onClose={onCloseTutorialCard} />
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         <ChatScrollAnchor
