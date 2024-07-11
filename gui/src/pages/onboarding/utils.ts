@@ -44,6 +44,8 @@ export function useOnboarding() {
   useEffect(() => {
     if (shouldBeginOnboarding()) {
       setLocalStorage("onboardingStatus", "Started");
+
+      // TODO: Confirm this is getting fired by setting a timeout
       posthog.capture("Onboarding Step", { status: "Started" });
     }
   }, []);

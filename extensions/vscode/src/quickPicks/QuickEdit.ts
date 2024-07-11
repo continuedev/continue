@@ -1,53 +1,81 @@
-import { IDE } from "core";
-import { ConfigHandler } from "core/config/ConfigHandler";
+/* eslint-disable @typescript-eslint/naming-convention */
+import { ContinueConfig, IDE } from "core";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { Telemetry } from "core/util/posthog";
 
-interface QuickEditConfig {
-  defaultModelTitle: string;
-  previousInput?: string;
-  injectedPrompt?: string;
+enum QuickEditItemLabels {
+  History = "History",
+  ContextProviders = "Context providers",
+  Model = "Model",
+  Submit = "Submit",
 }
 
 export class QuickEdit {
   private static historyKey = "quickEditHistory";
   private static maxHistoryLength = 50;
+  private static maxFileResults = 25;
+
+  private previousInput?: string;
+
+  /**
+   * Used to store the current model title in case the user selects a
+   * different title.
+   */
+  private _curModelTitle?: string;
+
+  /**
+   * Handles situations where the user navigates to a different editor
+   * while interacting with the Quick Pick
+   */
+  private editorWhenOpened!: vscode.TextEditor;
+
+  /**
+   * Required to store the string content of a context provider
+   * while naviagting beween Quick Picks.
+   */
   private contextProviderStr?: string;
 
   constructor(
     private readonly verticalDiffManager: VerticalPerLineDiffManager,
-    private readonly configHandler: ConfigHandler,
+    private readonly config: ContinueConfig,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: IDE,
     private readonly context: vscode.ExtensionContext,
-  ) {}
+  ) {
+    this.intializeQuickEditState();
+  }
 
-  private async _getDefaultModelTitle(): Promise<string> {
-    const config = await this.configHandler.loadConfig();
+  private intializeQuickEditState() {
+    const editor = vscode.window.activeTextEditor!;
+
+    const existingHandler = this.verticalDiffManager.getHandlerForFile(
+      editor.document.uri.fsPath ?? "",
+    );
+
+    this.editorWhenOpened = editor;
+
+    this.previousInput = existingHandler?.input;
+  }
+
+  private async getCurModelTitle(): Promise<string> {
+    if (this._curModelTitle) {
+      return this._curModelTitle;
+    }
 
     let defaultModelTitle =
-      config.experimental?.modelRoles?.inlineEdit ??
+      this.config.experimental?.modelRoles?.inlineEdit ??
       (await this.webviewProtocol.request("getDefaultModelTitle", undefined));
 
     if (!defaultModelTitle) {
-      defaultModelTitle = config.models[0]?.title!;
+      defaultModelTitle = this.config.models[0]?.title!;
     }
+
     return defaultModelTitle;
   }
 
-  /**
-   * Gets the title for the quick pick menu based on the active text editor's selection.
-   *
-   * @returns The title for the quick pick menu, which includes the file name and line numbers if a selection is made.
-   *
-   * Examples:
-   * - If no text is selected: "Edit"
-   * - If multiple lines are selected: "Edit file.ts:10-12"
-   * - If a single line is selected: "Edit file.ts:10"
-   */
   _getQuickPickTitle = () => {
     const { activeTextEditor } = vscode.window;
     const uri = activeTextEditor?.document.uri;
@@ -68,8 +96,7 @@ export class QuickEdit {
   };
 
   private async _getContextProviderItems(): Promise<vscode.QuickPickItem[]> {
-    const contextProviders = (await this.configHandler.loadConfig())
-      .contextProviders;
+    const { contextProviders } = this.config;
 
     if (!contextProviders) {
       return [];
@@ -87,26 +114,6 @@ export class QuickEdit {
     return quickPickItems;
   }
 
-  private async _getQuickEditConfig(
-    injectedPrompt: string | undefined,
-  ): Promise<QuickEditConfig> {
-    const editor = vscode.window.activeTextEditor;
-
-    const existingHandler = this.verticalDiffManager.getHandlerForFile(
-      editor?.document.uri.fsPath ?? "",
-    );
-
-    const previousInput = existingHandler?.input;
-
-    const context: QuickEditConfig = {
-      defaultModelTitle: await this._getDefaultModelTitle(),
-      previousInput,
-      injectedPrompt,
-    };
-
-    return context;
-  }
-
   private async _showContextProviderPicker() {
     const contextProviderItems = await this._getContextProviderItems();
 
@@ -116,15 +123,10 @@ export class QuickEdit {
     quickPick.title = "Context providers";
     quickPick.placeholder = "Select a context provider to add to your prompt";
     quickPick.canSelectMany = true;
-    quickPick.buttons = [vscode.QuickInputButtons.Back];
 
     quickPick.show();
 
-    const val = await new Promise<string | undefined>((resolve, reject) => {
-      quickPick.onDidTriggerButton((item) => {
-        resolve(undefined);
-      });
-
+    const val = await new Promise<string>((resolve) => {
       quickPick.onDidAccept(async () => {
         const selectedItems = Array.from(quickPick.selectedItems);
         const context = await this._getContextProvidersString(selectedItems);
@@ -140,13 +142,10 @@ export class QuickEdit {
   private async _getContextProvidersString(
     selectedProviders: vscode.QuickPickItem[] | undefined,
   ): Promise<string> {
-    const llm = await this.configHandler.llmFromTitle();
-    const config = await this.configHandler.loadConfig();
-
     const contextItems = (
       await Promise.all(
         selectedProviders?.map((selectedProvider) => {
-          const provider = config.contextProviders?.find(
+          const provider = this.config.contextProviders?.find(
             (provider) =>
               provider.description.displayTitle === selectedProvider.label,
           );
@@ -156,14 +155,14 @@ export class QuickEdit {
           }
 
           return provider.getContextItems("", {
-            embeddingsProvider: config.embeddingsProvider,
-            reranker: config.reranker,
+            embeddingsProvider: this.config.embeddingsProvider,
+            reranker: this.config.reranker,
             ide: this.ide,
-            llm,
+            llm: this.config.models[0],
             fullInput: "",
             selectedCode: [],
             fetch: (url, init) =>
-              fetchwithRequestOptions(url, init, config.requestOptions),
+              fetchwithRequestOptions(url, init, this.config.requestOptions),
           });
         }) || [],
       )
@@ -174,10 +173,9 @@ export class QuickEdit {
     );
   }
 
-  private async _streamEditWithInputAndContext(
-    prompt: string,
-    context: QuickEditConfig,
-  ) {
+  private async _streamEditWithInputAndContext(prompt: string) {
+    const modelTitle = await this.getCurModelTitle();
+
     if (this.contextProviderStr) {
       prompt = `${this.contextProviderStr}${prompt}`;
     }
@@ -186,9 +184,9 @@ export class QuickEdit {
 
     await this.verticalDiffManager.streamEdit(
       prompt,
-      context.defaultModelTitle,
+      modelTitle,
       undefined,
-      context.previousInput,
+      this.previousInput,
     );
   }
 
@@ -214,9 +212,31 @@ export class QuickEdit {
     this.context.globalState.update(QuickEdit.historyKey, history);
   }
 
-  // TODO: Add a back button using `createQuickPick`
+  private async _showModelPicker() {
+    const curModelTitle = await this.getCurModelTitle();
+
+    const modelItems: vscode.QuickPickItem[] = this.config.models.map(
+      (model) => {
+        const isCurModel = curModelTitle === model.title;
+
+        return {
+          label: model.title
+            ? `${isCurModel ? "$(check)" : "     "} ${model.title}`
+            : "Model title not set",
+        };
+      },
+    );
+
+    const selectedItem = await vscode.window.showQuickPick(modelItems, {
+      title: "Models",
+      placeHolder: "Select a model",
+    });
+
+    return selectedItem?.label;
+  }
+
   async _showHistoryPicker(): Promise<string | undefined> {
-    const historyItems = this.context.globalState
+    const historyItems: vscode.QuickPickItem[] = this.context.globalState
       .get(QuickEdit.historyKey, [])
       .map((item) => ({ label: item }))
       .reverse();
@@ -230,21 +250,31 @@ export class QuickEdit {
   }
 
   async _showInitialQuickPick(
-    context: QuickEditConfig,
+    injectedPrompt?: string,
   ): Promise<string | undefined> {
-    const items = [
+    const modelTitle = await this.getCurModelTitle();
+
+    const items: vscode.QuickPickItem[] = [
       {
-        label: "History",
+        label: QuickEditItemLabels.History,
         detail: "$(history) Select previous prompts",
       },
       {
-        label: "Context providers",
-        detail: "$(terminal-new) Add context to your prompt",
+        label: QuickEditItemLabels.ContextProviders,
+        detail: "$(add) Add context to your prompt",
+      },
+      {
+        label: QuickEditItemLabels.Model,
+        detail: `$(chevron-down) ${modelTitle}`,
       },
     ];
 
+    /**
+     * Not included in `items` because we only show it once users
+     * begin to type in a prompt.
+     */
     const submitItem: vscode.QuickPickItem = {
-      label: "Submit",
+      label: QuickEditItemLabels.Submit,
       detail: "Submit your prompt",
       alwaysShow: true,
     };
@@ -255,17 +285,53 @@ export class QuickEdit {
     quickPick.placeholder = "Enter a prompt to edit your code (⏎ to submit)";
     quickPick.title = this._getQuickPickTitle();
     quickPick.ignoreFocusOut = true;
-    quickPick.value = context.injectedPrompt ?? "";
+    quickPick.value = injectedPrompt ?? "";
 
     quickPick.show();
 
     quickPick.onDidChangeValue(async (value) => {
-      if (value) {
-        if (!quickPick.items.includes(submitItem)) {
-          quickPick.items = [...quickPick.items, submitItem];
+      if (value !== "") {
+        switch (true) {
+          case value.endsWith("@"):
+            // Bring up current file as the default option for a new file search
+            const relativeFilename = vscode.workspace.asRelativePath(
+              this.editorWhenOpened.document.uri,
+            );
+
+            quickPick.items = [
+              { label: relativeFilename, description: "Current file" },
+            ];
+
+            break;
+
+          case value.includes("@"):
+            // Perform file search
+            const lastAtIndex = value.lastIndexOf("@");
+            const searchQuery = value.substring(lastAtIndex + 1);
+
+            const searchResults = await vscode.workspace.findFiles(
+              `**/${searchQuery}*`,
+              undefined,
+              QuickEdit.maxFileResults
+            );
+
+            if (searchResults.length > 0) {
+              quickPick.items = searchResults.map((result) => ({
+                label: vscode.workspace.asRelativePath(result),
+              }));
+            } else {
+              quickPick.items = [{ label: "No results found" }];
+            }
+            break;
+
+          default:
+            if (!quickPick.items.includes(submitItem)) {
+              quickPick.items = [submitItem];
+            }
+            break;
         }
       } else {
-        quickPick.items = quickPick.items.slice(0, -1);
+        quickPick.items = items;
       }
     });
 
@@ -279,39 +345,43 @@ export class QuickEdit {
       },
     );
 
-    if (!selectedItem || selectedItem.label === "Submit") {
+    if (!selectedItem || selectedItem.label === QuickEditItemLabels.Submit) {
       return quickPick.value;
     }
 
-    return selectedItem?.label;
+    return selectedItem.label;
   }
 
   async run(injectedPrompt?: string) {
-    const context = await this._getQuickEditConfig(injectedPrompt);
-    const quickPickItemOrInput = await this._showInitialQuickPick(context);
+    const quickPickItemOrInput = await this._showInitialQuickPick(
+      injectedPrompt,
+    );
+
+    Telemetry.capture("quickEditSelection", {
+      selection: quickPickItemOrInput,
+    });
 
     let prompt: string | undefined = undefined;
 
     switch (quickPickItemOrInput) {
-      case "History":
-        Telemetry.capture("quickEditSelection", {
-          selection: quickPickItemOrInput,
-        });
-
+      case QuickEditItemLabels.History:
         prompt = (await this._showHistoryPicker()) ?? "";
         break;
 
-      case "Context providers":
-        Telemetry.capture("quickEditSelection", {
-          selection: quickPickItemOrInput,
-        });
-
+      case QuickEditItemLabels.ContextProviders:
         this.contextProviderStr =
           (await this._showContextProviderPicker()) ?? "";
+        this.run(injectedPrompt); // Recurse back to let the user write their prompt
+        break;
 
-        // Recurse back to let the user write their prompt
-        this.run(injectedPrompt);
+      case QuickEditItemLabels.Model:
+        const selectedModelTitle = await this._showModelPicker();
 
+        if (selectedModelTitle) {
+          this._curModelTitle = selectedModelTitle;
+        }
+
+        this.run(injectedPrompt); // Recurse back to let the user write their prompt
         break;
 
       default:
@@ -323,7 +393,7 @@ export class QuickEdit {
     }
 
     if (prompt) {
-      await this._streamEditWithInputAndContext(prompt, context);
+      await this._streamEditWithInputAndContext(prompt);
     }
   }
 }

@@ -219,14 +219,6 @@ const commandsMap: (
     );
   }
 
-  const quickEdit = new QuickEdit(
-    verticalDiffManager,
-    configHandler,
-    sidebar.webviewProtocol,
-    ide,
-    extensionContext,
-  );
-
   return {
     "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
       captureCommandTelemetry("acceptDiff");
@@ -330,8 +322,20 @@ const commandsMap: (
       );
       await addHighlightedCodeToContext(true, sidebar.webviewProtocol);
     },
-    "continue.quickEdit": (injectedPrompt?: string) => {
+    "continue.quickEdit": async (injectedPrompt?: string) => {
+      // Verify the injected prompt is working
       captureCommandTelemetry("quickEdit");
+
+      const config = await configHandler.loadConfig();
+
+      const quickEdit = new QuickEdit(
+        verticalDiffManager,
+        config,
+        sidebar.webviewProtocol,
+        ide,
+        extensionContext,
+      );
+
       quickEdit.run(injectedPrompt);
     },
     "continue.writeCommentsForCode": async () => {
