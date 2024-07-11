@@ -6,17 +6,31 @@ import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { Telemetry } from "core/util/posthog";
 
-enum QuickEditItemLabels {
+// @ts-ignore - error finding typings
+import MiniSearch from "minisearch";
+import { walkDir } from "core/indexing/walkDir";
+
+enum QuickEditInitialItemLabels {
   History = "History",
   ContextProviders = "Context providers",
   Model = "Model",
   Submit = "Submit",
 }
 
+type FileMiniSearchResult = { filename: string };
+
 export class QuickEdit {
   private static historyKey = "quickEditHistory";
   private static maxHistoryLength = 50;
-  private static maxFileResults = 25;
+  private static maxFileSearchResults = 20;
+  private miniSearch = new MiniSearch<FileMiniSearchResult>({
+    fields: ["filename"],
+    storeFields: ["filename"],
+    searchOptions: {
+      prefix: true,
+      fuzzy: 2,
+    },
+  });
 
   private previousInput?: string;
 
@@ -48,15 +62,26 @@ export class QuickEdit {
     this.intializeQuickEditState();
   }
 
-  private intializeQuickEditState() {
+  private async intializeQuickEditState() {
     const editor = vscode.window.activeTextEditor!;
 
     const existingHandler = this.verticalDiffManager.getHandlerForFile(
       editor.document.uri.fsPath ?? "",
     );
 
-    this.editorWhenOpened = editor;
+    const workspaceDirs = await this.ide.getWorkspaceDirs();
+    const results = await Promise.all(
+      workspaceDirs.map((dir) => {
+        return walkDir(dir, this.ide);
+      }),
+    );
+    const filenames = results.flat().map((file) => ({
+      id: file,
+      filename: vscode.workspace.asRelativePath(file),
+    }));
 
+    this.miniSearch.addAll(filenames);
+    this.editorWhenOpened = editor;
     this.previousInput = existingHandler?.input;
   }
 
@@ -176,6 +201,18 @@ export class QuickEdit {
   private async _streamEditWithInputAndContext(prompt: string) {
     const modelTitle = await this.getCurModelTitle();
 
+    const fileReferences = prompt.match(/@[^\s]+/g) || [];
+
+    for (const fileRef of fileReferences) {
+      const filePath = fileRef.slice(1); // Remove the '@' symbol
+
+      const fileContent = await this.ide.readFile(filePath);
+      prompt = prompt.replace(
+        fileRef,
+        `\`\`\`${filePath}\n${fileContent}\n\`\`\`\n\n`,
+      );
+    }
+
     if (this.contextProviderStr) {
       prompt = `${this.contextProviderStr}${prompt}`;
     }
@@ -232,7 +269,15 @@ export class QuickEdit {
       placeHolder: "Select a model",
     });
 
-    return selectedItem?.label;
+    if (!selectedItem) {
+      return undefined;
+    }
+
+    const selectedModelTitle = this.config.models.find(
+      (model) => model.title && selectedItem.label.includes(model.title),
+    )?.title;
+
+    return selectedModelTitle;
   }
 
   async _showHistoryPicker(): Promise<string | undefined> {
@@ -254,102 +299,129 @@ export class QuickEdit {
   ): Promise<string | undefined> {
     const modelTitle = await this.getCurModelTitle();
 
-    const items: vscode.QuickPickItem[] = [
+    const initialItems: vscode.QuickPickItem[] = [
       {
-        label: QuickEditItemLabels.History,
+        label: QuickEditInitialItemLabels.History,
         detail: "$(history) Select previous prompts",
       },
       {
-        label: QuickEditItemLabels.ContextProviders,
+        label: QuickEditInitialItemLabels.ContextProviders,
         detail: "$(add) Add context to your prompt",
       },
       {
-        label: QuickEditItemLabels.Model,
+        label: QuickEditInitialItemLabels.Model,
         detail: `$(chevron-down) ${modelTitle}`,
       },
     ];
 
-    /**
-     * Not included in `items` because we only show it once users
-     * begin to type in a prompt.
-     */
     const submitItem: vscode.QuickPickItem = {
-      label: QuickEditItemLabels.Submit,
+      label: "Submit",
       detail: "Submit your prompt",
       alwaysShow: true,
     };
 
     const quickPick = vscode.window.createQuickPick();
 
-    quickPick.items = items;
-    quickPick.placeholder = "Enter a prompt to edit your code (⏎ to submit)";
+    quickPick.items = initialItems;
+    quickPick.placeholder =
+      "Enter a prompt to edit your code (@ to search files, ⏎ to submit)";
     quickPick.title = this._getQuickPickTitle();
     quickPick.ignoreFocusOut = true;
     quickPick.value = injectedPrompt ?? "";
 
     quickPick.show();
 
-    quickPick.onDidChangeValue(async (value) => {
+    quickPick.onDidChangeValue((value) => {
       if (value !== "") {
         switch (true) {
+          // Bring up current file as the default option for a new file search
           case value.endsWith("@"):
-            // Bring up current file as the default option for a new file search
             const relativeFilename = vscode.workspace.asRelativePath(
               this.editorWhenOpened.document.uri,
             );
 
             quickPick.items = [
-              { label: relativeFilename, description: "Current file" },
+              {
+                label: relativeFilename,
+                description: "Current file",
+                alwaysShow: true,
+              },
             ];
 
             break;
 
-          case value.includes("@"):
-            // Perform file search
+          // Matches '@' followed by non-space chars, excluding matches ending with a space
+          // This detects file search queries while allowing subsequent prompt text
+          case /@[^@\s]+(?!\s)$/.test(value):
             const lastAtIndex = value.lastIndexOf("@");
             const searchQuery = value.substring(lastAtIndex + 1);
 
-            const searchResults = await vscode.workspace.findFiles(
-              `**/${searchQuery}*`,
-              undefined,
-              QuickEdit.maxFileResults
-            );
+            const searchResults = this.miniSearch.search(
+              searchQuery,
+            ) as FileMiniSearchResult[];
 
             if (searchResults.length > 0) {
-              quickPick.items = searchResults.map((result) => ({
-                label: vscode.workspace.asRelativePath(result),
-              }));
+              quickPick.items = searchResults
+                .map(({ filename }) => ({
+                  label: filename,
+                  alwaysShow: true,
+                }))
+                .slice(0, QuickEdit.maxFileSearchResults);
             } else {
               quickPick.items = [{ label: "No results found" }];
             }
+
             break;
 
+          // The user does not have a file search in progress, so only show
+          // the submit option
           default:
-            if (!quickPick.items.includes(submitItem)) {
-              quickPick.items = [submitItem];
-            }
+            quickPick.items = [submitItem];
             break;
         }
       } else {
-        quickPick.items = items;
+        quickPick.items = initialItems;
       }
     });
 
-    const selectedItem = await new Promise<vscode.QuickPickItem | undefined>(
+    const selectedItemLabel = await new Promise<string | undefined>(
       (resolve) => {
         quickPick.onDidAccept(() => {
-          const selectedOption = quickPick.selectedItems[0];
-          resolve(selectedOption);
-          quickPick.dispose();
+          const { label } = quickPick.selectedItems[0];
+
+          // If not an initial item, it's a file selection. Allow continued prompt editing.
+          const isFileSelection = !Object.values(
+            QuickEditInitialItemLabels,
+          ).includes(label as QuickEditInitialItemLabels);
+
+          if (isFileSelection) {
+            // Replace the file search query with the selected file path
+            const curValue = quickPick.value;
+            const newValue =
+              curValue.substring(0, curValue.lastIndexOf("@") + 1) +
+              label +
+              " ";
+
+            quickPick.value = newValue;
+            quickPick.items = [submitItem];
+          } else {
+            // The user has selected one of the initial items, so we close the Quick Pick
+            resolve(label);
+            quickPick.dispose();
+          }
         });
       },
     );
 
-    if (!selectedItem || selectedItem.label === QuickEditItemLabels.Submit) {
+    const shouldSubmitPrompt =
+      !selectedItemLabel ||
+      selectedItemLabel === QuickEditInitialItemLabels.Submit;
+
+    if (shouldSubmitPrompt) {
       return quickPick.value;
     }
 
-    return selectedItem.label;
+    return selectedItemLabel;
   }
 
   async run(injectedPrompt?: string) {
@@ -364,24 +436,29 @@ export class QuickEdit {
     let prompt: string | undefined = undefined;
 
     switch (quickPickItemOrInput) {
-      case QuickEditItemLabels.History:
+      case QuickEditInitialItemLabels.History:
         prompt = (await this._showHistoryPicker()) ?? "";
         break;
 
-      case QuickEditItemLabels.ContextProviders:
+      case QuickEditInitialItemLabels.ContextProviders:
         this.contextProviderStr =
           (await this._showContextProviderPicker()) ?? "";
-        this.run(injectedPrompt); // Recurse back to let the user write their prompt
+
+        // Recurse back to let the user write their prompt
+        this.run(injectedPrompt);
+
         break;
 
-      case QuickEditItemLabels.Model:
+      case QuickEditInitialItemLabels.Model:
         const selectedModelTitle = await this._showModelPicker();
 
         if (selectedModelTitle) {
           this._curModelTitle = selectedModelTitle;
         }
 
-        this.run(injectedPrompt); // Recurse back to let the user write their prompt
+        // Recurse back to let the user write their prompt
+        this.run(injectedPrompt);
+
         break;
 
       default:
