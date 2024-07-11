@@ -1,0 +1,18 @@
+{
+  "name": "@continuedev/openai-adapters",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Nate Sesti and Ty Dunn",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@azure/openai": "^1.0.0-beta.12",
+    "@continuedev/config-types": "^1.0.2",
+    "@continuedev/fetch": "^1.0.0",
+    "node-fetch": "^3.3.2",
+    "openai": "^4.52.5"
+  }
+}
