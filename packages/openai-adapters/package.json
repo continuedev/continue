@@ -1,10 +1,12 @@
 {
   "name": "@continuedev/openai-adapters",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "",
-  "main": "src/index.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
   },
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
@@ -14,5 +16,8 @@
     "@continuedev/fetch": "^1.0.0",
     "node-fetch": "^3.3.2",
     "openai": "^4.52.5"
+  },
+  "devDependencies": {
+    "@types/follow-redirects": "^1.14.4"
   }
 }

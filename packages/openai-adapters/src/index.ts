@@ -18,13 +18,13 @@ export function constructLlmApi(config: ModelDescription): BaseLlmApi {
 }
 
 export {
-  ChatCompletion,
-  ChatCompletionChunk,
-  ChatCompletionCreateParams,
-  ChatCompletionCreateParamsNonStreaming,
-  ChatCompletionCreateParamsStreaming,
-  Completion,
-  CompletionCreateParams,
-  CompletionCreateParamsNonStreaming,
-  CompletionCreateParamsStreaming,
+  type ChatCompletion,
+  type ChatCompletionChunk,
+  type ChatCompletionCreateParams,
+  type ChatCompletionCreateParamsNonStreaming,
+  type ChatCompletionCreateParamsStreaming,
+  type Completion,
+  type CompletionCreateParams,
+  type CompletionCreateParamsNonStreaming,
+  type CompletionCreateParamsStreaming,
 } from "openai/resources";
