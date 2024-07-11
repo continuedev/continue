@@ -218,7 +218,7 @@ function ModelSelect() {
           </div>
         </StyledListboxButton>
         <StyledListboxOptions>
-          {[...options, ...options, ...options].map((option, idx) => (
+          {options.map((option, idx) => (
             <ModelOption
               option={option}
               idx={idx}
