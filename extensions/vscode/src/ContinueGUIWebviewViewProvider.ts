@@ -25,6 +25,11 @@ export class ContinueGUIWebviewViewProvider
   }
 
   private _webview?: vscode.Webview;
+  private _webviewView?: vscode.WebviewView;
+
+  get isVisible() {
+    return this._webviewView?.visible;
+  }
 
   get webview() {
     return this._webview;

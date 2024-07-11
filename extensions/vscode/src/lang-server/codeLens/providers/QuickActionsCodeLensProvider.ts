@@ -115,8 +115,12 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
     }
 
     const symbols = await vscode.commands.executeCommand<
-      Array<vscode.DocumentSymbol>
+      Array<vscode.DocumentSymbol> | undefined
     >("vscode.executeDocumentSymbolProvider", document.uri);
+
+    if (!symbols) {
+      return [];
+    }
 
     const filteredSmybols = symbols?.filter((def) =>
       QuickActionsCodeLensProvider.quickActionSymbolKinds.includes(def.kind),

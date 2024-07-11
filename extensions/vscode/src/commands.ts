@@ -19,7 +19,7 @@ import {
   quickPickStatusText,
   setupStatusBar,
 } from "./autocomplete/statusBar";
-import { ContinueGUIWebviewViewProvider } from "./debugPanel";
+import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { QuickEdit } from "./quickPicks/QuickEdit";
@@ -82,7 +82,6 @@ function addCodeToContextFromRange(
 }
 
 async function addHighlightedCodeToContext(
-  edit: boolean,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
   const editor = vscode.window.activeTextEditor;
@@ -310,17 +309,40 @@ const commandsMap: (
         fullScreenPanel?.reveal();
       }
       sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-      await addHighlightedCodeToContext(false, sidebar.webviewProtocol);
+      await addHighlightedCodeToContext(sidebar.webviewProtocol);
     },
     "continue.focusContinueInputWithoutClear": async () => {
-      if (!getFullScreenTab()) {
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      }
-      sidebar.webviewProtocol?.request(
-        "focusContinueInputWithoutClear",
+      const fullScreenTab = getFullScreenTab();
+
+      const isContinueInputFocused = await sidebar.webviewProtocol.request(
+        "isContinueInputFocused",
         undefined,
       );
-      await addHighlightedCodeToContext(true, sidebar.webviewProtocol);
+
+      if (isContinueInputFocused) {
+        // Handle closing the GUI only if we are focused on the input
+        if (fullScreenTab) {
+          fullScreenPanel?.dispose();
+        } else {
+          vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
+        }
+      } else {
+        // Handle opening the GUI otherwise
+        if (!fullScreenTab) {
+          // focus sidebar
+          vscode.commands.executeCommand("continue.continueGUIView.focus");
+        } else {
+          // focus fullscreen
+          fullScreenPanel?.reveal();
+        }
+
+        sidebar.webviewProtocol?.request(
+          "focusContinueInputWithoutClear",
+          undefined,
+        );
+
+        await addHighlightedCodeToContext(sidebar.webviewProtocol);
+      }
     },
     "continue.quickEdit": async (injectedPrompt?: string) => {
       // Verify the injected prompt is working
