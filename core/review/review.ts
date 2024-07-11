@@ -19,10 +19,33 @@ const initialWait = 5_000;
 const maxWait = 60_000;
 
 export interface ReviewResult {
-  status: "good" | "bad" | "pending" | "error";
   filepath: string;
-  message: string;
   fileHash: string;
+  status: "good" | "bad" | "pending" | "error";
+  reviewParts: ReviewPart[];
+  summary: string;
+}
+
+export interface ReviewPart {
+  comment: string;
+  category: ReviewCategory;
+}
+
+export enum ReviewCategory {
+  style = "🎨 Style",
+  codeSmell = "🦨 Code Smell",
+  complexity = "🧩 Complexity",
+  deadCode = "💀 Dead Code",
+  performance = "⚡ Performance",
+  security = "🔒 Security",
+  maintainability = "🔧 Maintainability",
+  errorHandling = "🚨 Error Handling",
+  duplication = "🐑 Duplication",
+  naming = "🏷️ Naming",
+  architecture = "🏗️ Architecture",
+  optimization = "🚀 Optimization",
+  readability = "📖 Readability",
+  typeSafety = "🛡️ Type Safety",
 }
 
 export class CodeReview {
@@ -53,11 +76,12 @@ export class CodeReview {
     // Show file as pending
     const prevResult = this._currentResultsPerFile[filepath];
     this._emitResult({
-      message: "Waiting to review...",
+      summary: "Waiting to review...",
       filepath,
       fileHash: "",
       ...(prevResult as ReviewResult | undefined),
       status: "pending",
+      reviewParts: prevResult?.reviewParts ?? [],
     });
 
     // Get wait time
@@ -112,8 +136,9 @@ export class CodeReview {
     this._emitResult({
       filepath,
       fileHash: "",
-      message: "Pending",
+      summary: "Pending",
       status: "pending",
+      reviewParts: [],
     });
     const reviewResult = await this.reviewFile(filepath);
     this._emitResult(reviewResult);
@@ -141,6 +166,12 @@ export class CodeReview {
     }
 
     return this.reviewDiff(filepath, diff);
+  }
+
+  private systemPrompt(): string {
+    const categories = Object.keys(ReviewCategory);
+    const template = Handlebars.compile(reviewSystemMessage);
+    return template({ categories });
   }
 
   private reviewPrompt(
@@ -197,30 +228,81 @@ export class CodeReview {
     );
 
     // Prepare the definitions content
+    const systemPrompt = this.systemPrompt();
     const prompt = this.reviewPrompt(filepath, finalSnippets, diff);
     console.log("Final Prompt: ", prompt);
 
     try {
       const response = await this.llm.chat([
-        { role: "system", content: reviewSystemMessage },
+        { role: "system", content: systemPrompt },
         { role: "user", content: prompt },
       ]);
       const completion = stripImages(response.content);
 
-      return Promise.resolve({
+      const review = this._parseReviewXML(completion);
+
+      const reviewResult: ReviewResult = {
         filepath,
-        message: completion,
-        status: "good",
+        status: review.status as "good" | "bad" | "error",
+        reviewParts: review.reviewParts,
+        summary: review.summary,
         fileHash,
-      });
+      };
+
+      return Promise.resolve(reviewResult);
     } catch (e) {
       return Promise.resolve({
         filepath,
-        message: `Error while reviewing file: ${e}`,
+        summary: `Error while reviewing file: ${e}`,
         status: "error",
         fileHash,
+        reviewParts: [],
       });
     }
+  }
+
+  private _parseReviewXML(xmlString: string): ReviewResult {
+    // Extract XML content
+    const xmlContent = xmlString.match(/<review>[\s\S]*<\/review>/);
+    const xmlToParse = xmlContent
+      ? xmlContent[0]
+      : `<review>${xmlString}</review>`;
+
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlToParse, "text/xml");
+
+    const review: ReviewResult = {
+      filepath: xmlDoc.querySelector("filepath")?.textContent ?? "",
+      fileHash: "",
+      status:
+        (xmlDoc.querySelector("status")?.textContent as
+          | "good"
+          | "bad"
+          | "pending"
+          | "error") ?? "error",
+      reviewParts: Array.from(xmlDoc.querySelectorAll("reviewPart")).map(
+        (part) => ({
+          category:
+            (part.querySelector("category")?.textContent as ReviewCategory) ??
+            ReviewCategory.codeSmell,
+          comment: part.querySelector("comment")?.textContent ?? "",
+        }),
+      ),
+      summary: xmlDoc.querySelector("summary")?.textContent ?? "",
+    };
+
+    // If no valid XML was found, set status to error
+    if (review.filepath === "" || review.summary === "") {
+      return {
+        filepath: "",
+        status: "error",
+        reviewParts: [],
+        summary: "Error: Invalid review format received from LLM.",
+        fileHash: "",
+      };
+    }
+
+    return review;
   }
 
   private _refresh() {

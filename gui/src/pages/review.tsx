@@ -5,7 +5,7 @@ import {
   ExclamationTriangleIcon,
 } from "@heroicons/react/24/outline";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/solid";
-import { ReviewResult } from "core/review/review";
+import { ReviewResult, ReviewCategory, ReviewPart } from "core/review/review";
 import { getLastNPathParts } from "core/util";
 import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
@@ -29,6 +29,15 @@ const FileHeader = styled.div`
   &:hover {
     background-color: #8883;
   }
+`;
+
+const ReviewSection = styled.div`
+  margin-left: 20px;
+  margin-bottom: 10px;
+`;
+
+const ReviewPartHeader = styled.h4`
+  margin-bottom: 5px;
 `;
 
 interface FileHeaderProps {
@@ -57,17 +66,37 @@ function FileResult(props: FileHeaderProps) {
             height="1.2em"
             color="orange"
           />
-        ) : (
+        ) : props.result.status === "bad" ? (
           <XCircleIcon width="1.2em" height="1.2em" color="red" />
-        )}
+        ) : null}
 
         {getLastNPathParts(props.result.filepath, 2)}
       </FileHeader>
       {open && (
-        <StyledMarkdownPreview
-          showCodeBorder={true}
-          source={props.result.message}
-        ></StyledMarkdownPreview>
+        <div>
+          {props.result.reviewParts.map((part, index) => (
+            <ReviewSection key={index}>
+              <ReviewPartHeader>
+                {
+                  ReviewCategory[
+                    part.category as unknown as keyof typeof ReviewCategory
+                  ]
+                }
+              </ReviewPartHeader>
+              <StyledMarkdownPreview
+                showCodeBorder={true}
+                source={part.comment}
+              />
+            </ReviewSection>
+          ))}
+          <ReviewSection>
+            <ReviewPartHeader>Summary</ReviewPartHeader>
+            <StyledMarkdownPreview
+              showCodeBorder={true}
+              source={props.result.summary}
+            />
+          </ReviewSection>
+        </div>
       )}
     </div>
   );
