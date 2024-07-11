@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const completionOptionsSchema = z.object({
+export const completionOptionsSchema = z.object({
   temperature: z.number().optional(),
   topP: z.number().optional(),
   topK: z.number().optional(),
@@ -16,7 +16,7 @@ const completionOptionsSchema = z.object({
   stream: z.boolean().optional(),
 });
 
-const requestOptionsSchema = z.object({
+export const requestOptionsSchema = z.object({
   timeout: z.number().optional(),
   verifySsl: z.boolean().optional(),
   caBundlePath: z.union([z.string(), z.array(z.string())]).optional(),
@@ -26,7 +26,7 @@ const requestOptionsSchema = z.object({
   noProxy: z.array(z.string()).optional(),
 });
 
-const modelDescriptionSchema = z.object({
+export const modelDescriptionSchema = z.object({
   title: z.string(),
   provider: z.enum([
     "openai",
@@ -82,7 +82,7 @@ const modelDescriptionSchema = z.object({
   promptTemplates: z.record(z.string()).optional(),
 });
 
-const embeddingsProviderSchema = z.object({
+export const embeddingsProviderSchema = z.object({
   provider: z.enum([
     "transformers.js",
     "ollama",
@@ -100,13 +100,13 @@ const embeddingsProviderSchema = z.object({
   requestOptions: requestOptionsSchema.optional(),
 });
 
-const uiOptionsSchema = z.object({
+export const uiOptionsSchema = z.object({
   codeBlockToolbarPosition: z.enum(["top", "bottom"]).optional(),
   fontSize: z.number().optional(),
   displayRawMarkdown: z.boolean().optional(),
 });
 
-const tabAutocompleteOptionsSchema = z.object({
+export const tabAutocompleteOptionsSchema = z.object({
   disable: z.boolean(),
   useCopyBuffer: z.boolean(),
   useSuffix: z.boolean(),
@@ -129,34 +129,34 @@ const tabAutocompleteOptionsSchema = z.object({
   useImports: z.boolean().optional(),
 });
 
-const slashCommandSchema = z.object({
+export const slashCommandSchema = z.object({
   name: z.string(),
   description: z.string(),
   params: z.record(z.any()).optional(),
 });
 
-const customCommandSchema = z.object({
+export const customCommandSchema = z.object({
   name: z.string(),
   description: z.string(),
   params: z.record(z.any()).optional(),
 });
 
-const contextProviderSchema = z.object({
+export const contextProviderSchema = z.object({
   name: z.string(),
   params: z.record(z.string(), z.any()),
 });
 
-const rerankerSchema = z.object({
+export const rerankerSchema = z.object({
   name: z.enum(["cohere", "voyage", "llm"]),
   params: z.record(z.any()).optional(),
 });
 
-const analyticsSchema = z.object({
+export const analyticsSchema = z.object({
   url: z.string().optional(),
   clientKey: z.string().optional(),
 });
 
-const devDataSchema = z.object({
+export const devDataSchema = z.object({
   url: z.string().optional(),
 });
 
