@@ -1,4 +1,4 @@
-import { ContinueConfig, ModelDescription } from "../index.js";
+import { ModelDescription } from "../index.js";
 import { editConfigJson } from "../util/paths.js";
 
 function stringify(obj: any, indentation?: number): string {

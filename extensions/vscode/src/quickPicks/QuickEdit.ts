@@ -316,7 +316,6 @@ export class QuickEdit {
 
     const submitItem: vscode.QuickPickItem = {
       label: "Submit",
-      detail: "Submit your prompt",
       alwaysShow: true,
     };
 
