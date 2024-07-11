@@ -17,6 +17,7 @@ interface ConfirmationDialogProps {
   onConfirm: () => void;
   onCancel?: () => void;
   text: string;
+  title?: string;
 }
 
 function ConfirmationDialog(props: ConfirmationDialogProps) {
@@ -24,7 +25,7 @@ function ConfirmationDialog(props: ConfirmationDialogProps) {
 
   return (
     <div className="p-4">
-      <h3>Confirmation</h3>
+      <h3>{props.title ?? "Confirmation"}</h3>
       <p>{props.text}</p>
 
       <GridDiv>
