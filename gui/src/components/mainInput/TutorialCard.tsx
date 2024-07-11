@@ -42,8 +42,8 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
             className="align-middle pr-3"
           />
           <span>
-            Press <code>{getMetaKeyLabel() + "I"}</code> to quickly edit code
-            from an open file
+            Highlight code and press <code>{getMetaKeyLabel() + "I"}</code> to
+            quickly make natural language edits
           </span>
         </li>
         <li className="flex items-start">
@@ -53,8 +53,8 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
             className="align-middle pr-3"
           />
           <span>
-            Highlight code and press <code>{getMetaKeyLabel() + "L"}</code> to
-            copy from an open file into chat
+            Highlight code and press <code>{getMetaKeyLabel() + "L"}</code> o
+            add it to the chat window
           </span>
         </li>
         <li className="flex items-start">
@@ -64,8 +64,7 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
             className="align-middle pr-3"
           />
           <span>
-            Click the gear icon in the bottom right to open your configuration
-            settings
+            Click the gear icon in the bottom right to configure Continue
           </span>
         </li>
         <li className="flex items-start">
