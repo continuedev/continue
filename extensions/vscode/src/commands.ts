@@ -22,7 +22,7 @@ import {
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
-import { QuickEdit } from "./quickPicks/QuickEdit";
+import { QuickEdit } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -218,14 +218,6 @@ const commandsMap: (
     );
   }
 
-  const quickEdit = new QuickEdit(
-    verticalDiffManager,
-    configHandler,
-    sidebar.webviewProtocol,
-    ide,
-    extensionContext,
-  );
-
   return {
     "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
       captureCommandTelemetry("acceptDiff");
@@ -352,9 +344,20 @@ const commandsMap: (
         await addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
-    "continue.quickEdit": async (injectedPrompt?: string) => {
+    "continue.quickEdit": async (initialPrompt?: string) => {
       captureCommandTelemetry("quickEdit");
-      quickEdit.run(injectedPrompt);
+
+      const config = await configHandler.loadConfig();
+
+      const quickEdit = new QuickEdit(
+        verticalDiffManager,
+        config,
+        sidebar.webviewProtocol,
+        ide,
+        extensionContext,
+      );
+
+      quickEdit.show(initialPrompt);
     },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");

@@ -41,7 +41,6 @@ export class VsCodeExtension {
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
   private battery: Battery;
-  private quickActionsCodeLensDisposable?: vscode.Disposable;
 
   constructor(context: vscode.ExtensionContext) {
     let resolveWebviewProtocol: any = undefined;
@@ -56,7 +55,6 @@ export class VsCodeExtension {
     this.windowId = uuidv4();
 
     const ideSettings = this.ide.getIdeSettingsSync();
-    const { remoteConfigServerUrl } = ideSettings;
 
     // Dependencies of core
     let resolveVerticalDiffManager: any = undefined;

@@ -560,6 +560,7 @@
     "https-proxy-agent": "^7.0.2",
     "ignore": "^5.3.0",
     "jsdom": "^24.0.0",
+    "minisearch": "^7.0.0",
     "monaco-editor": "^0.45.0",
     "monaco-vscode-textmate-theme-converter": "^0.1.7",
     "ncp": "^2.0.0",
