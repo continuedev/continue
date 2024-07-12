@@ -22,7 +22,7 @@ import {
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
-import { QuickEdit } from "./quickPicks/QuickEdit";
+import { QuickEdit } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
