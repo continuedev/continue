@@ -1,9 +1,10 @@
 {
   "name": "@continuedev/fetch",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
     "test": "jest",
     "build": "tsc"

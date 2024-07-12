@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "NodeNext",
     "useDefineForClassFields": true,
     "lib": ["DOM", "ESNext"],
     "allowJs": true,
@@ -10,7 +10,7 @@
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "Node",
+    "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmitOnError": false,
@@ -18,5 +18,6 @@
     "outDir": "dist",
     "declaration": true
     // "sourceMap": true
-  }
+  },
+  "include": ["src/**/*"]
 }

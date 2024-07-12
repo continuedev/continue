@@ -27,4 +27,4 @@ export {
   type CompletionCreateParams,
   type CompletionCreateParamsNonStreaming,
   type CompletionCreateParamsStreaming,
-} from "openai/resources";
+} from "openai/resources/index.mjs";

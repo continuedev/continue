@@ -6,7 +6,7 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
-} from "openai/resources";
+} from "openai/resources/index.mjs";
 
 export interface FimCreateParamsStreaming
   extends CompletionCreateParamsStreaming {

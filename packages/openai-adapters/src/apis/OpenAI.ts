@@ -1,7 +1,7 @@
-import { ModelDescription } from "@continuedev/config-types/src/index.js";
+import { ModelDescription } from "@continuedev/config-types";
 import { streamSse } from "@continuedev/fetch";
 import fetch from "node-fetch";
-import OpenAI from "openai";
+import { OpenAI } from "openai/index.mjs";
 import {
   ChatCompletion,
   ChatCompletionChunk,
@@ -10,7 +10,7 @@ import {
   Completion,
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
-} from "openai/resources";
+} from "openai/resources/index.mjs";
 import { BaseLlmApi, FimCreateParamsStreaming } from "./base.js";
 
 export class OpenAIApi implements BaseLlmApi {

@@ -53,6 +53,7 @@ export const modelDescriptionSchema = z.object({
     "bedrock",
     "cloudflare",
     "azure",
+    "continue-proxy",
   ]),
   model: z.string(),
   apiKey: z.string().optional(),
@@ -103,6 +104,7 @@ export const embeddingsProviderSchema = z.object({
     "cohere",
     "free-trial",
     "gemini",
+    "continue-proxy",
   ]),
   apiBase: z.string().optional(),
   apiKey: z.string().optional(),
@@ -168,7 +170,7 @@ export const contextProviderSchema = z.object({
 export type ContextProvider = z.infer<typeof contextProviderSchema>;
 
 export const rerankerSchema = z.object({
-  name: z.enum(["cohere", "voyage", "llm"]),
+  name: z.enum(["cohere", "voyage", "llm", "continue-proxy"]),
   params: z.record(z.any()).optional(),
 });
 export type Reranker = z.infer<typeof rerankerSchema>;
@@ -187,7 +189,7 @@ export type DevData = z.infer<typeof devDataSchema>;
 export const configJsonSchema = z.object({
   models: z.array(modelDescriptionSchema),
   tabAutocompleteModel: modelDescriptionSchema.optional(),
-  embeddingsModel: embeddingsProviderSchema.optional(),
+  embeddingsProvider: embeddingsProviderSchema.optional(),
   reranker: rerankerSchema.optional(),
   analytics: analyticsSchema,
   devData: devDataSchema,

@@ -118,7 +118,7 @@ export class AzureOpenAIApi implements BaseLlmApi {
           object: "chat.completion.chunk",
           model: this.config.model,
           created: event.created.getTime(),
-          choices: event.choices.map((choice) => ({
+          choices: event.choices.map((choice: any) => ({
             ...choice,
             logprobs: undefined,
             finish_reason: null,

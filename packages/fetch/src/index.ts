@@ -3,6 +3,6 @@ export {
   streamResponse,
   streamSse,
   toAsyncIterable,
-} from "./stream";
+} from "./stream.js";
 
-export { fetchwithRequestOptions } from "./fetch";
+export { fetchwithRequestOptions } from "./fetch.js";
