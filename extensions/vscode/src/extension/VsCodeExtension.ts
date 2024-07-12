@@ -26,6 +26,7 @@ import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
 import { VsCodeMessenger } from "./VsCodeMessenger";
+import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
@@ -53,8 +54,6 @@ export class VsCodeExtension {
     this.ide = new VsCodeIde(this.diffManager, this.webviewProtocolPromise);
     this.extensionContext = context;
     this.windowId = uuidv4();
-
-    const ideSettings = this.ide.getIdeSettingsSync();
 
     // Dependencies of core
     let resolveVerticalDiffManager: any = undefined;
@@ -177,6 +176,14 @@ export class VsCodeExtension {
     context.subscriptions.push(this.battery);
     context.subscriptions.push(monitorBatteryChanges(this.battery));
 
+    const quickEdit = new QuickEdit(
+      this.verticalDiffManager,
+      this.configHandler,
+      this.sidebar.webviewProtocol,
+      this.ide,
+      context,
+    );
+
     // Commands
     registerAllCommands(
       context,
@@ -188,6 +195,7 @@ export class VsCodeExtension {
       this.verticalDiffManager,
       this.core.continueServerClientPromise,
       this.battery,
+      quickEdit,
     );
 
     registerDebugTracker(this.sidebar.webviewProtocol, this.ide);
