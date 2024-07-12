@@ -24,13 +24,13 @@ import {
 import ModelSelect from "../modelSelection/ModelSelect";
 
 const StyledDiv = styled.div<{ hidden?: boolean }>`
-  position: absolute;
   display: flex;
-  gap: 4px;
-  right: 4px;
-  bottom: 4px;
-  width: calc(100% - 10px);
+  justify-content: space-between;
+  flex-wrap: wrap-reverse;
+  flex-direction: row-reverse;
+  gap: 1px;
   background-color: ${vscInputBackground};
+  padding-top: 4px;
 
   ${(props) => (props.hidden ? "display: none;" : "")}
 
@@ -85,7 +85,60 @@ function InputToolbar(props: InputToolbarProps) {
 
   return (
     <StyledDiv hidden={props.hidden} onClick={props.onClick} id="input-toolbar">
-      <span className="cursor-pointer mr-auto flex items-center">
+      <span className="flex items-center whitespace-nowrap">
+        {props.showNoContext ? (
+          <span
+            style={{
+              color: props.usingCodebase ? vscBadgeBackground : lightGray,
+              backgroundColor: props.usingCodebase
+                ? lightGray + "33"
+                : undefined,
+              borderRadius: defaultBorderRadius,
+              padding: "2px 4px",
+            }}
+          >
+            {getAltKeyLabel()} ⏎{" "}
+            {useActiveFile ? "No context" : "Use active file"}
+          </span>
+        ) : (
+          <span
+            style={{
+              color: props.usingCodebase ? vscBadgeBackground : lightGray,
+              backgroundColor: props.usingCodebase
+                ? lightGray + "33"
+                : undefined,
+              borderRadius: defaultBorderRadius,
+              padding: "2px 4px",
+            }}
+            onClick={(e) => {
+              props.onEnter({
+                useCodebase: true,
+                noContext: !useActiveFile,
+              });
+            }}
+            className={"hover:underline cursor-pointer float-right"}
+          >
+            {getMetaKeyLabel()} ⏎ Use codebase
+          </span>
+        )}
+        <EnterButton
+          offFocus={props.usingCodebase}
+          // disabled={
+          //   !active &&
+          //   (!(inputRef.current as any)?.value ||
+          //     typeof client === "undefined")
+          // }
+          onClick={(e) => {
+            props.onEnter({
+              useCodebase: isMetaEquivalentKeyPressed(e),
+              noContext: useActiveFile ? e.altKey : !e.altKey,
+            });
+          }}
+        >
+          ⏎ Enter
+        </EnterButton>
+      </span>
+      <span className="flex flex-wrap-reverse items-center whitespace-nowrap">
         <ModelSelect />
         <span
           style={{
@@ -142,53 +195,6 @@ function InputToolbar(props: InputToolbarProps) {
             </span>
           )}
       </span>
-      {props.showNoContext ? (
-        <span
-          style={{
-            color: props.usingCodebase ? vscBadgeBackground : lightGray,
-            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
-            borderRadius: defaultBorderRadius,
-            padding: "2px 4px",
-          }}
-        >
-          {getAltKeyLabel()} ⏎{" "}
-          {useActiveFile ? "No context" : "Use active file"}
-        </span>
-      ) : (
-        <span
-          style={{
-            color: props.usingCodebase ? vscBadgeBackground : lightGray,
-            backgroundColor: props.usingCodebase ? lightGray + "33" : undefined,
-            borderRadius: defaultBorderRadius,
-            padding: "2px 4px",
-          }}
-          onClick={(e) => {
-            props.onEnter({
-              useCodebase: true,
-              noContext: !useActiveFile,
-            });
-          }}
-          className={"hover:underline cursor-pointer float-right"}
-        >
-          {getMetaKeyLabel()} ⏎ Use codebase
-        </span>
-      )}
-      <EnterButton
-        offFocus={props.usingCodebase}
-        // disabled={
-        //   !active &&
-        //   (!(inputRef.current as any)?.value ||
-        //     typeof client === "undefined")
-        // }
-        onClick={(e) => {
-          props.onEnter({
-            useCodebase: isMetaEquivalentKeyPressed(e),
-            noContext: useActiveFile ? e.altKey : !e.altKey,
-          });
-        }}
-      >
-        ⏎ Enter
-      </EnterButton>
     </StyledDiv>
   );
 }
