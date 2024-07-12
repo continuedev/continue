@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.8.43",
+  "version": "0.9.181",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -228,18 +228,6 @@
         "command": "continue.fixGrammar",
         "category": "Continue",
         "title": "Fix Grammar / Spelling",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.quickEditHistoryUp",
-        "category": "Continue",
-        "title": "Quick Edit History Up",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.quickEditHistoryDown",
-        "category": "Continue",
-        "title": "Quick Edit History Down",
         "group": "Continue"
       }
     ],
@@ -559,6 +547,7 @@
     "cors": "^2.8.5",
     "dbinfoz": "^0.1.4",
     "downshift": "^7.6.0",
+    "esbuild": "^0.17.19",
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",
@@ -589,7 +578,6 @@
     "uuid": "^9.0.1",
     "uuidv4": "^6.2.13",
     "vectordb": "^0.4.20",
-    "esbuild": "^0.17.19",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"

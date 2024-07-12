@@ -419,6 +419,7 @@ export interface IdeSettings {
   remoteConfigServerUrl: string | undefined;
   remoteConfigSyncPeriod: number;
   userToken: string;
+  enableControlServerBeta: boolean;
 }
 
 export interface IDE {
@@ -768,7 +769,7 @@ export interface Reranker {
 export interface TabAutocompleteOptions {
   disable: boolean;
   useCopyBuffer: boolean;
-  useSuffix: boolean;
+  useFileSuffix: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
   maxSuffixPercentage: number;

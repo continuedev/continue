@@ -56,6 +56,7 @@ describe.skip("CodebaseIndexer", () => {
     ide,
     ideSettingsPromise,
     async (text) => {},
+    undefined as any, // TODO
   );
   const pauseToken = new PauseToken(false);
   const continueServerClient = new ContinueServerClient(undefined, undefined);

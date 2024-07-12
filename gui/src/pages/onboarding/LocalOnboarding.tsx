@@ -1,11 +1,11 @@
+import { ArrowLeftIcon } from "@heroicons/react/24/outline";
+import { ONBOARDING_LOCAL_MODEL_TITLE } from "core/config/onboarding";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
+import { CheckMarkHeader } from "./CheckMarkHeader";
 import { StyledButton } from "./components";
 import { CopyToTerminalButton } from "./CopyToTerminalButton";
-import { CheckMarkHeader } from "./CheckMarkHeader";
-import { ONBOARDING_LOCAL_MODEL_TITLE } from "core/config/onboarding";
-import { ArrowLeftIcon } from "@heroicons/react/24/outline";
 import { useOnboarding } from "./utils";
 
 type OllamaConnectionStatuses =

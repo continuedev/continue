@@ -12,7 +12,6 @@ import {
   useCallback,
   useContext,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -55,6 +54,8 @@ import {
 } from "../util";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
+import { ChatScrollAnchor } from "../components/ChatScrollAnchor";
+import { TutorialCard } from "../components/mainInput/TutorialCard";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -143,79 +144,59 @@ function fallbackRender({ error, resetErrorBoundary }) {
   );
 }
 
-interface GUIProps {
-  firstObservation?: any;
-}
-
-function GUI(props: GUIProps) {
-  // #region Hooks
+function GUI() {
   const posthog = usePostHog();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const ideMessenger = useContext(IdeMessengerContext);
 
-  // #endregion
-
-  // #region Selectors
   const sessionState = useSelector((state: RootState) => state.state);
 
   const defaultModel = useSelector(defaultModelSelector);
 
   const active = useSelector((state: RootState) => state.state.active);
 
-  // #endregion
-
-  // #region State
   const [stepsOpen, setStepsOpen] = useState<(boolean | undefined)[]>([]);
-  const [showLoading, setShowLoading] = useState(false);
-
-  useEffect(() => {
-    setTimeout(() => {
-      setShowLoading(true);
-    }, 5000);
-  }, []);
-
-  // #endregion
 
   const mainTextInputRef = useRef<HTMLInputElement>(null);
   const topGuiDivRef = useRef<HTMLDivElement>(null);
 
-  // #region Effects
-  const [userScrolledAwayFromBottom, setUserScrolledAwayFromBottom] =
-    useState<boolean>(false);
+  const [isAtBottom, setIsAtBottom] = useState<boolean>(false);
 
   const state = useSelector((state: RootState) => state.state);
 
+  const [showTutorialCard, setShowTutorialCard] = useState<boolean>(
+    getLocalStorage("showTutorialCard"),
+  );
+
+  const onCloseTutorialCard = () => {
+    posthog.capture("closedTutorialCard");
+    setLocalStorage("showTutorialCard", false);
+    setShowTutorialCard(false);
+  };
+
+  const handleScroll = () => {
+    // Temporary fix to account for additional height when code blocks are added
+    const OFFSET_HERUISTIC = 300;
+    if (!topGuiDivRef.current) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = topGuiDivRef.current;
+    const atBottom =
+      scrollHeight - clientHeight <= scrollTop + OFFSET_HERUISTIC;
+
+    setIsAtBottom(atBottom);
+  };
+
   useEffect(() => {
-    const handleScroll = () => {
-      // Scroll only if user is within 200 pixels of the bottom of the window.
-      const edgeOffset = -25;
-      const scrollPosition = topGuiDivRef.current?.scrollTop || 0;
-      const scrollHeight = topGuiDivRef.current?.scrollHeight || 0;
-      const clientHeight = window.innerHeight || 0;
+    if (!active || !topGuiDivRef.current) return;
 
-      if (scrollPosition + clientHeight + edgeOffset >= scrollHeight) {
-        setUserScrolledAwayFromBottom(false);
-      } else {
-        setUserScrolledAwayFromBottom(true);
-      }
-    };
+    const scrollAreaElement = topGuiDivRef.current;
 
-    topGuiDivRef.current?.addEventListener("scroll", handleScroll);
+    scrollAreaElement.scrollTop =
+      scrollAreaElement.scrollHeight - scrollAreaElement.clientHeight;
 
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [topGuiDivRef.current]);
-
-  useLayoutEffect(() => {
-    if (userScrolledAwayFromBottom) return;
-
-    topGuiDivRef.current?.scrollTo({
-      top: topGuiDivRef.current?.scrollHeight,
-      behavior: "instant" as any,
-    });
-  }, [topGuiDivRef.current?.scrollHeight, sessionState.history]);
+    setIsAtBottom(true);
+  }, [active]);
 
   useEffect(() => {
     // Cmd + Backspace to delete current step
@@ -365,7 +346,7 @@ function GUI(props: GUIProps) {
 
   return (
     <>
-      <TopGuiDiv ref={topGuiDivRef}>
+      <TopGuiDiv ref={topGuiDivRef} onScroll={handleScroll}>
         <div className="max-w-3xl m-auto">
           <StepsDiv>
             {state.history.map((item, index: number) => {
@@ -463,7 +444,6 @@ function GUI(props: GUIProps) {
               );
             })}
           </StepsDiv>
-
           <ContinueInputBox
             onEnter={(editorContent, modifiers) => {
               sendInput(editorContent, modifiers);
@@ -487,18 +467,34 @@ function GUI(props: GUIProps) {
             >
               New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
             </NewSessionButton>
-          ) : getLastSessionId() ? (
-            <NewSessionButton
-              onClick={async () => {
-                loadLastSession();
-              }}
-              className="mr-auto flex items-center gap-1"
-            >
-              <ArrowLeftIcon width="11px" height="11px" />
-              Last Session
-            </NewSessionButton>
-          ) : null}
+          ) : (
+            <>
+              {getLastSessionId() ? (
+                <NewSessionButton
+                  onClick={async () => {
+                    loadLastSession();
+                  }}
+                  className="mr-auto flex items-center gap-1"
+                >
+                  <ArrowLeftIcon width="11px" height="11px" />
+                  Last Session
+                </NewSessionButton>
+              ) : null}
+
+              {!!showTutorialCard && (
+                <div className="flex justify-center w-full">
+                  <TutorialCard onClose={onCloseTutorialCard} />
+                </div>
+              )}
+            </>
+          )}
         </div>
+
+        <ChatScrollAnchor
+          scrollAreaRef={topGuiDivRef}
+          isAtBottom={isAtBottom}
+          trackVisibility={active}
+        />
       </TopGuiDiv>
       {active && (
         <StopButton

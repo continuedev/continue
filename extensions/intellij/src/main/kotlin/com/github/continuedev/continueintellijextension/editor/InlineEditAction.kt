@@ -64,7 +64,7 @@ class InlineEditAction : AnAction(), DumbAware {
         // Get list of model titles
         val continuePluginService = project.service<ContinuePluginService>()
         val modelTitles = mutableListOf<String>()
-        continuePluginService.coreMessenger?.request("config/getBrowserSerialized", null, null) { response ->
+        continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
             val config = response as Map<String, Any>
             val models = config["models"] as List<Map<String, Any>>
             modelTitles.addAll(models.map { it["title"] as String })
