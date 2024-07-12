@@ -39,7 +39,7 @@ keywords: [codestral, mistral, model setup]
 
 5. If you run into any issues or have any questions, please join our Discord and post in the `#help` channel [here](https://discord.gg/EfJEfdFnDQ)
 
-## Trobleshooting
+## Troubleshooting
 
 ### Temporary workaround for JetBrains
 
