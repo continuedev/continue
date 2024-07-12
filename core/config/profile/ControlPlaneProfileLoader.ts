@@ -7,6 +7,7 @@ import {
 } from "../..";
 import { ControlPlaneClient } from "../../control-plane/client";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics";
+import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { Telemetry } from "../../util/posthog";
 import {
   defaultContextProvidersJetBrains,
@@ -56,12 +57,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       )) as any);
 
     // First construct a SerializedContinueConfig from the ControlPlaneSettings (TODO)
-    const serializedConfig: SerializedContinueConfig = {
-      models: settings.models,
-      tabAutocompleteModel: settings.tabAutocompleteModel,
-      embeddingsProvider: settings.embeddingsModel,
-      reranker: settings.reranker,
-    };
+    const serializedConfig: SerializedContinueConfig = settings;
 
     serializedConfig.contextProviders ??=
       ideInfo.ideType === "vscode"
@@ -93,6 +89,13 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       uniqueId,
       ideInfo.extensionVersion,
     );
+
+    finalConfig.models.forEach(async (model) => {
+      if (model.providerName === "continue-proxy") {
+        const accessToken = await this.controlPlaneClient.getAccessToken();
+        (model as ContinueProxy).workOsAccessToken = accessToken;
+      }
+    });
 
     return finalConfig;
   }

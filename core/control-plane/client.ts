@@ -40,7 +40,7 @@ export class ControlPlaneClient {
     );
   }
 
-  private async getAccessToken(): Promise<string | undefined> {
+  async getAccessToken(): Promise<string | undefined> {
     return (await this.sessionInfoPromise)?.accessToken;
   }
 
