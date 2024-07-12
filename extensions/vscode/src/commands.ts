@@ -344,8 +344,7 @@ const commandsMap: (
         await addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
-    "continue.quickEdit": async (injectedPrompt?: string) => {
-      // Verify the injected prompt is working
+    "continue.quickEdit": async (initialPrompt?: string) => {
       captureCommandTelemetry("quickEdit");
 
       const config = await configHandler.loadConfig();
@@ -358,7 +357,7 @@ const commandsMap: (
         extensionContext,
       );
 
-      quickEdit.run(injectedPrompt);
+      quickEdit.show(initialPrompt);
     },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");

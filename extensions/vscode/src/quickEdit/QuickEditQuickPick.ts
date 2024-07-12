@@ -339,12 +339,12 @@ export class QuickEdit {
   }
 
   /**
-   * Runs the quick edit process, allowing the user to select an initial item or enter a prompt.
+   * Shows the Quick Edit Quick Pick, allowing the user to select an initial item or enter a prompt.
    * Displays a quick pick for "History" or "ContextProviders" to set the prompt or context provider string.
    * Displays a quick pick for "Model" to set the current model title.
    * Appends the entered prompt to the history and streams the edit with input and context.
    */
-  async run(initialPrompt?: string) {
+  async show(initialPrompt?: string) {
     const selectedLabelOrInputVal = await this._getInitialQuickPickVal(
       initialPrompt,
     );
@@ -369,7 +369,7 @@ export class QuickEdit {
         this.contextProviderStr = contextProviderVal ?? "";
 
         // Recurse back to let the user write their prompt
-        this.run(initialPrompt);
+        this.show(initialPrompt);
 
         break;
 
@@ -385,7 +385,7 @@ export class QuickEdit {
         }
 
         // Recurse back to let the user write their prompt
-        this.run(initialPrompt);
+        this.show(initialPrompt);
 
         break;
 

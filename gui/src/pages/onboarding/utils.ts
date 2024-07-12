@@ -44,7 +44,6 @@ export function useOnboarding() {
   useEffect(() => {
     if (shouldBeginOnboarding()) {
       setLocalStorage("onboardingStatus", "Started");
-
       posthog.capture("Onboarding Step", { status: "Started" });
     }
   }, []);
