@@ -10,6 +10,11 @@ export function constructLlmApi(config: ModelDescription): BaseLlmApi {
   switch (config.provider) {
     case "openai":
       return new OpenAIApi(config);
+    case "mistral":
+      return new OpenAIApi({
+        ...config,
+        apiBase: "https://api.mistral.ai/v1/",
+      });
     case "azure":
       return new AzureOpenAIApi(config);
     default:

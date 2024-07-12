@@ -90,7 +90,10 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
       ideInfo.extensionVersion,
     );
 
-    finalConfig.models.forEach(async (model) => {
+    [
+      ...finalConfig.models,
+      ...(finalConfig.tabAutocompleteModels ?? []),
+    ].forEach(async (model) => {
       if (model.providerName === "continue-proxy") {
         const accessToken = await this.controlPlaneClient.getAccessToken();
         (model as ContinueProxy).workOsAccessToken = accessToken;
