@@ -1,6 +1,6 @@
+import { ConfigJson } from "@continuedev/config-types";
 import fetch, { RequestInit, Response } from "node-fetch";
 import { ModelDescription } from "..";
-import { ControlPlaneSettings } from "./schema";
 
 export interface ControlPlaneSessionInfo {
   accessToken: string;
@@ -13,7 +13,7 @@ export interface ControlPlaneSessionInfo {
 export interface ControlPlaneWorkspace {
   id: string;
   name: string;
-  settings: ControlPlaneSettings;
+  settings: ConfigJson;
 }
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
@@ -40,7 +40,7 @@ export class ControlPlaneClient {
     );
   }
 
-  private async getAccessToken(): Promise<string | undefined> {
+  async getAccessToken(): Promise<string | undefined> {
     return (await this.sessionInfoPromise)?.accessToken;
   }
 
@@ -78,9 +78,7 @@ export class ControlPlaneClient {
     return (await resp.json()) as any;
   }
 
-  async getSettingsForWorkspace(
-    workspaceId: string,
-  ): Promise<ControlPlaneSettings> {
+  async getSettingsForWorkspace(workspaceId: string): Promise<ConfigJson> {
     const userId = await this.userId;
     if (!userId) {
       throw new Error("No user id");

@@ -19,10 +19,10 @@ import {
   quickPickStatusText,
   setupStatusBar,
 } from "./autocomplete/statusBar";
-import { ContinueGUIWebviewViewProvider } from "./debugPanel";
+import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
-import { QuickEdit } from "./quickEdit/QuickEdit";
+import { QuickEdit } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
 
@@ -82,7 +82,6 @@ function addCodeToContextFromRange(
 }
 
 async function addHighlightedCodeToContext(
-  edit: boolean,
   webviewProtocol: VsCodeWebviewProtocol | undefined,
 ) {
   const editor = vscode.window.activeTextEditor;
@@ -170,6 +169,7 @@ const commandsMap: (
   verticalDiffManager: VerticalPerLineDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
+  quickEdit: QuickEdit,
 ) => { [command: string]: (...args: any) => any } = (
   ide,
   extensionContext,
@@ -179,6 +179,7 @@ const commandsMap: (
   verticalDiffManager,
   continueServerClientPromise,
   battery,
+  quickEdit,
 ) => {
   /**
    * Streams an inline edit to the vertical diff manager.
@@ -218,18 +219,6 @@ const commandsMap: (
       range,
     );
   }
-
-  const historyUpEventEmitter = new vscode.EventEmitter<void>();
-  const historyDownEventEmitter = new vscode.EventEmitter<void>();
-  const quickEdit = new QuickEdit(
-    verticalDiffManager,
-    configHandler,
-    sidebar.webviewProtocol,
-    ide,
-    extensionContext,
-    historyUpEventEmitter.event,
-    historyDownEventEmitter.event,
-  );
 
   return {
     "continue.acceptDiff": async (newFilepath?: string | vscode.Uri) => {
@@ -322,21 +311,44 @@ const commandsMap: (
         fullScreenPanel?.reveal();
       }
       sidebar.webviewProtocol?.request("focusContinueInput", undefined);
-      await addHighlightedCodeToContext(false, sidebar.webviewProtocol);
+      await addHighlightedCodeToContext(sidebar.webviewProtocol);
     },
     "continue.focusContinueInputWithoutClear": async () => {
-      if (!getFullScreenTab()) {
-        vscode.commands.executeCommand("continue.continueGUIView.focus");
-      }
-      sidebar.webviewProtocol?.request(
-        "focusContinueInputWithoutClear",
+      const fullScreenTab = getFullScreenTab();
+
+      const isContinueInputFocused = await sidebar.webviewProtocol.request(
+        "isContinueInputFocused",
         undefined,
       );
-      await addHighlightedCodeToContext(true, sidebar.webviewProtocol);
+
+      if (isContinueInputFocused) {
+        // Handle closing the GUI only if we are focused on the input
+        if (fullScreenTab) {
+          fullScreenPanel?.dispose();
+        } else {
+          vscode.commands.executeCommand("workbench.action.closeAuxiliaryBar");
+        }
+      } else {
+        // Handle opening the GUI otherwise
+        if (!fullScreenTab) {
+          // focus sidebar
+          vscode.commands.executeCommand("continue.continueGUIView.focus");
+        } else {
+          // focus fullscreen
+          fullScreenPanel?.reveal();
+        }
+
+        sidebar.webviewProtocol?.request(
+          "focusContinueInputWithoutClear",
+          undefined,
+        );
+
+        await addHighlightedCodeToContext(sidebar.webviewProtocol);
+      }
     },
-    "continue.quickEdit": (injectedPrompt?: string) => {
+    "continue.quickEdit": async (initialPrompt?: string) => {
       captureCommandTelemetry("quickEdit");
-      quickEdit.run(injectedPrompt);
+      quickEdit.show(initialPrompt);
     },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
@@ -659,14 +671,6 @@ const commandsMap: (
         client.sendFeedback(feedback, lastLines);
       }
     },
-    "continue.quickEditHistoryUp": async () => {
-      captureCommandTelemetry("quickEditHistoryUp");
-      historyUpEventEmitter.fire();
-    },
-    "continue.quickEditHistoryDown": async () => {
-      captureCommandTelemetry("quickEditHistoryDown");
-      historyDownEventEmitter.fire();
-    },
   };
 };
 
@@ -680,6 +684,7 @@ export function registerAllCommands(
   verticalDiffManager: VerticalPerLineDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
+  quickEdit: QuickEdit,
 ) {
   for (const [command, callback] of Object.entries(
     commandsMap(
@@ -691,6 +696,7 @@ export function registerAllCommands(
       verticalDiffManager,
       continueServerClientPromise,
       battery,
+      quickEdit,
     ),
   )) {
     context.subscriptions.push(

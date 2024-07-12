@@ -69,6 +69,7 @@ export const DEFAULT_IGNORE_FILETYPES = [
 export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
 export const DEFAULT_IGNORE_DIRS = [
   ".git",
+  ".svn",
   ".vscode",
   ".idea",
   ".vs",

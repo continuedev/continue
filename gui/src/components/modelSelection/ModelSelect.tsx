@@ -1,5 +1,10 @@
 import { Listbox } from "@headlessui/react";
-import { ChevronDownIcon, TrashIcon } from "@heroicons/react/24/outline";
+import {
+  ChevronDownIcon,
+  CubeIcon,
+  PlusIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
 import { useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
@@ -26,9 +31,9 @@ const StyledListboxButton = styled(Listbox.Button)`
   gap: 4px;
   border: none;
   cursor: pointer;
-  font-size: ${(props) => `${getFontSize() - 4}px`};
+  font-size: ${() => `${getFontSize() - 4}px`};
   background: transparent;
-  color: ${(props) => lightGray};
+  color: ${() => lightGray};
   &:focus {
     outline: none;
   }
@@ -45,15 +50,15 @@ const StyledListboxOptions = styled(Listbox.Options)`
   border-radius: ${defaultBorderRadius};
   border: 0.5px solid ${lightGray};
   background-color: ${vscInputBackground};
+
+  max-height: 300px;
+  overflow-y: auto;
 `;
 
 const StyledListboxOption = styled(Listbox.Option)`
   cursor: pointer;
   border-radius: ${defaultBorderRadius};
-  padding-left: 4px;
-  padding-right: 4px;
-  padding-top: 4px;
-  padding-bottom: 4px;
+  padding: 6px;
 
   &:hover {
     background: ${(props) => `${lightGray}33`};
@@ -61,15 +66,18 @@ const StyledListboxOption = styled(Listbox.Option)`
 `;
 
 const StyledTrashIcon = styled(TrashIcon)`
-  position: absolute;
-  padding: 4px;
-  right: 0;
-  background: ${vscInputBackground};
-  border-radius: ${defaultBorderRadius};
-
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-left: 8px;
   &:hover {
     color: red;
   }
+`;
+
+const Divider = styled.div`
+  height: 1px;
+  background-color: ${lightGray};
+  margin: 4px;
 `;
 
 function ModelOption({
@@ -86,6 +94,26 @@ function ModelOption({
   const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 
+  function onClickDelete(e) {
+    e.stopPropagation();
+    e.preventDefault();
+
+    dispatch(setShowDialog(true));
+    dispatch(
+      setDialogMessage(
+        <ConfirmationDialog
+          title={`Delete ${option.title}`}
+          text={`Are you sure you want to remove ${option.title} from your configuration?`}
+          onConfirm={() => {
+            ideMessenger.post("config/deleteModel", {
+              title: option.title,
+            });
+          }}
+        />,
+      ),
+    );
+  }
+
   return (
     <StyledListboxOption
       key={idx}
@@ -97,31 +125,19 @@ function ModelOption({
         setHovered(false);
       }}
     >
-      <div className="flex items-center justify-between gap-3 h-5 relative">
-        <span>{option.title}</span>
-        {hovered && showDelete && (
-          <StyledTrashIcon
-            width="1.2em"
-            height="1.2em"
-            onClick={(e) => {
-              dispatch(setShowDialog(true));
-              dispatch(
-                setDialogMessage(
-                  <ConfirmationDialog
-                    text={`Are you sure you want to delete this model? (${option.title})`}
-                    onConfirm={() => {
-                      ideMessenger.post("config/deleteModel", {
-                        title: option.title,
-                      });
-                    }}
-                  />,
-                ),
-              );
-              e.stopPropagation();
-              e.preventDefault();
-            }}
-          />
-        )}
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center pr-4">
+          <CubeIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+          <span>{option.title}</span>
+        </div>
+
+        <StyledTrashIcon
+          style={{ visibility: hovered && showDelete ? "visible" : "hidden" }}
+          className="ml-auto"
+          width="1.2em"
+          height="1.2em"
+          onClick={onClickDelete}
+        />
       </div>
     </StyledListboxOption>
   );
@@ -143,7 +159,7 @@ interface Option {
   title: string;
 }
 
-function ModelSelect(props: {}) {
+function ModelSelect() {
   const dispatch = useDispatch();
   const defaultModel = useSelector(defaultModelSelector);
   const allModels = useSelector(
@@ -210,6 +226,9 @@ function ModelSelect(props: {}) {
               showDelete={options.length > 1}
             />
           ))}
+
+          <Divider />
+
           <StyledListboxOption
             key={options.length}
             onClick={(e) => {
@@ -218,12 +237,23 @@ function ModelSelect(props: {}) {
               navigate("/addModel");
             }}
             value={"addModel" as any}
-            className="font-bold"
           >
-            + Add Model
+            <div className="flex items-center">
+              <PlusIcon className="w-4 h-4 mr-2" />
+              Add Model
+            </div>
           </StyledListboxOption>
 
-          <i style={{ color: lightGray, padding: "4px", marginTop: "4px" }}>
+          <Divider />
+
+          <i
+            style={{
+              color: lightGray,
+              padding: "4px",
+              marginTop: "4px",
+              display: "block",
+            }}
+          >
             {getMetaKeyLabel()}' to toggle
           </i>
         </StyledListboxOptions>

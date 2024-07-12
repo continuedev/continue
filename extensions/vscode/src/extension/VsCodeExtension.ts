@@ -14,12 +14,13 @@ import {
   setupStatusBar,
 } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
+import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
 import { registerDebugTracker } from "../debug/debug";
-import { ContinueGUIWebviewViewProvider } from "../debugPanel";
 import { DiffManager } from "../diff/horizontal";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
 import { getControlPlaneSessionInfo } from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
@@ -41,7 +42,6 @@ export class VsCodeExtension {
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
   private battery: Battery;
-  private quickActionsCodeLensDisposable?: vscode.Disposable;
 
   constructor(context: vscode.ExtensionContext) {
     let resolveWebviewProtocol: any = undefined;
@@ -54,9 +54,6 @@ export class VsCodeExtension {
     this.ide = new VsCodeIde(this.diffManager, this.webviewProtocolPromise);
     this.extensionContext = context;
     this.windowId = uuidv4();
-
-    const ideSettings = this.ide.getIdeSettingsSync();
-    const { remoteConfigServerUrl } = ideSettings;
 
     // Dependencies of core
     let resolveVerticalDiffManager: any = undefined;
@@ -179,6 +176,14 @@ export class VsCodeExtension {
     context.subscriptions.push(this.battery);
     context.subscriptions.push(monitorBatteryChanges(this.battery));
 
+    const quickEdit = new QuickEdit(
+      this.verticalDiffManager,
+      this.configHandler,
+      this.sidebar.webviewProtocol,
+      this.ide,
+      context,
+    );
+
     // Commands
     registerAllCommands(
       context,
@@ -190,6 +195,7 @@ export class VsCodeExtension {
       this.verticalDiffManager,
       this.core.continueServerClientPromise,
       this.battery,
+      quickEdit,
     );
 
     registerDebugTracker(this.sidebar.webviewProtocol, this.ide);

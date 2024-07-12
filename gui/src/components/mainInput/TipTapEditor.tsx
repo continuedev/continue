@@ -151,8 +151,6 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
   const useActiveFile = useSelector(selectUseActiveFile);
 
-  const [inputFocused, setInputFocused] = useState(false);
-
   const { saveSession } = useHistory(dispatch);
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
@@ -655,16 +653,14 @@ function TipTapEditor(props: TipTapEditorProps) {
     ],
   );
 
-  // On linux+jetbrains only was stealing focus
-  // useEffect(() => {
-  //   if (props.isMainInput && editor && document.hasFocus()) {
-  //     editor.commands.focus();
-  //     // setTimeout(() => {
-  //     //   // https://github.com/continuedev/continue/pull/881
-  //     //   editor.commands.blur();
-  //     // }, 0);
-  //   }
-  // }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
+  useWebviewListener(
+    "isContinueInputFocused",
+    async () => {
+      return props.isMainInput && editorFocusedRef.current;
+    },
+    [editorFocusedRef, props.isMainInput],
+    !props.isMainInput,
+  );
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 
@@ -748,22 +744,13 @@ function TipTapEditor(props: TipTapEditorProps) {
       <EditorContent
         spellCheck={false}
         editor={editor}
-        onFocus={() => {
-          setInputFocused(true);
-        }}
-        onBlur={() => {
-          // hack to stop from cancelling press of "Enter"
-          setTimeout(() => {
-            setInputFocused(false);
-          }, 100);
-        }}
         onClick={(event) => {
           event.stopPropagation();
         }}
       />
       <InputToolbar
         showNoContext={optionKeyHeld}
-        hidden={!(inputFocused || props.isMainInput)}
+        hidden={!(editorFocusedRef.current || props.isMainInput)}
         onAddContextItem={() => {
           if (editor.getText().endsWith("@")) {
           } else {
