@@ -169,6 +169,7 @@ const commandsMap: (
   verticalDiffManager: VerticalPerLineDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
+  quickEdit: QuickEdit,
 ) => { [command: string]: (...args: any) => any } = (
   ide,
   extensionContext,
@@ -178,6 +179,7 @@ const commandsMap: (
   verticalDiffManager,
   continueServerClientPromise,
   battery,
+  quickEdit,
 ) => {
   /**
    * Streams an inline edit to the vertical diff manager.
@@ -346,17 +348,6 @@ const commandsMap: (
     },
     "continue.quickEdit": async (initialPrompt?: string) => {
       captureCommandTelemetry("quickEdit");
-
-      const config = await configHandler.loadConfig();
-
-      const quickEdit = new QuickEdit(
-        verticalDiffManager,
-        config,
-        sidebar.webviewProtocol,
-        ide,
-        extensionContext,
-      );
-
       quickEdit.show(initialPrompt);
     },
     "continue.writeCommentsForCode": async () => {
@@ -693,6 +684,7 @@ export function registerAllCommands(
   verticalDiffManager: VerticalPerLineDiffManager,
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
+  quickEdit: QuickEdit,
 ) {
   for (const [command, callback] of Object.entries(
     commandsMap(
@@ -704,6 +696,7 @@ export function registerAllCommands(
       verticalDiffManager,
       continueServerClientPromise,
       battery,
+      quickEdit,
     ),
   )) {
     context.subscriptions.push(

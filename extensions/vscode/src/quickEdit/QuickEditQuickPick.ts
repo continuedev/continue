@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/naming-convention */
-import { ContinueConfig, IDE } from "core";
+import { IDE } from "core";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -11,6 +11,7 @@ import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 
 // @ts-ignore - error finding typings
 import MiniSearch from "minisearch";
+import { ConfigHandler } from "core/config/ConfigHandler";
 
 /**
  * Used to track what action to take after a user interacts
@@ -71,7 +72,7 @@ export class QuickEdit {
 
   constructor(
     private readonly verticalDiffManager: VerticalPerLineDiffManager,
-    private readonly config: ContinueConfig,
+    private readonly configHandler: ConfigHandler,
     private readonly webviewProtocol: VsCodeWebviewProtocol,
     private readonly ide: IDE,
     private readonly context: vscode.ExtensionContext,
@@ -108,16 +109,18 @@ export class QuickEdit {
    * Gets the model title the user has chosen, or their default model
    */
   private async _getCurModelTitle() {
+    const config = await this.configHandler.loadConfig();
+
     if (this._curModelTitle) {
       return this._curModelTitle;
     }
 
     let defaultModelTitle =
-      this.config.experimental?.modelRoles?.inlineEdit ??
+      config.experimental?.modelRoles?.inlineEdit ??
       (await this.webviewProtocol.request("getDefaultModelTitle", undefined));
 
     if (!defaultModelTitle) {
-      defaultModelTitle = this.config.models[0]?.title!;
+      defaultModelTitle = config.models[0]?.title!;
     }
 
     return defaultModelTitle;
@@ -345,6 +348,8 @@ export class QuickEdit {
    * Appends the entered prompt to the history and streams the edit with input and context.
    */
   async show(initialPrompt?: string) {
+    const config = await this.configHandler.loadConfig();
+
     const selectedLabelOrInputVal = await this._getInitialQuickPickVal(
       initialPrompt,
     );
@@ -363,7 +368,7 @@ export class QuickEdit {
 
       case QuickEditInitialItemLabels.ContextProviders:
         const contextProviderVal = await getContextProviderQuickPickVal(
-          this.config,
+          config,
           this.ide,
         );
         this.contextProviderStr = contextProviderVal ?? "";
@@ -375,9 +380,10 @@ export class QuickEdit {
 
       case QuickEditInitialItemLabels.Model:
         const curModelTitle = await this._getCurModelTitle();
+
         const selectedModelTitle = await getModelQuickPickVal(
           curModelTitle,
-          this.config,
+          config,
         );
 
         if (selectedModelTitle) {
