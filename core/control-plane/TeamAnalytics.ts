@@ -1,5 +1,5 @@
+import { Analytics } from "@continuedev/config-types";
 import os from "node:os";
-import { ControlPlaneAnalytics } from "./schema";
 
 export class TeamAnalytics {
   static client: any = undefined;
@@ -24,7 +24,7 @@ export class TeamAnalytics {
   }
 
   static async setup(
-    config: ControlPlaneAnalytics,
+    config: Analytics,
     uniqueId: string,
     extensionVersion: string,
   ) {

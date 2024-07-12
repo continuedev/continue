@@ -1,3 +1,4 @@
+import { ConfigJson } from "@continuedev/config-types";
 import {
   ContinueConfig,
   IDE,
@@ -5,7 +6,6 @@ import {
   SerializedContinueConfig,
 } from "../..";
 import { ControlPlaneClient } from "../../control-plane/client";
-import { ControlPlaneSettings } from "../../control-plane/schema";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics";
 import { Telemetry } from "../../util/posthog";
 import {
@@ -26,7 +26,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
   readonly profileId: string;
   profileTitle: string;
 
-  workspaceSettings: ControlPlaneSettings | undefined;
+  workspaceSettings: ConfigJson | undefined;
 
   constructor(
     private readonly workspaceId: string,
@@ -55,7 +55,7 @@ export default class ControlPlaneProfileLoader implements IProfileLoader {
         this.profileId,
       )) as any);
 
-    // First construct a SerializedContinueConfig from the ControlPlaneSettings
+    // First construct a SerializedContinueConfig from the ControlPlaneSettings (TODO)
     const serializedConfig: SerializedContinueConfig = {
       models: settings.models,
       tabAutocompleteModel: settings.tabAutocompleteModel,

@@ -1,15 +1,20 @@
 {
-  "name": "control-plane-types",
-  "version": "1.0.0",
+  "name": "@continuedev/config-types",
+  "version": "1.0.6",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc"
   },
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
   "devDependencies": {
     "typescript": "^5.5.2"
+  },
+  "dependencies": {
+    "zod": "^3.23.8"
   }
 }
