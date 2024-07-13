@@ -22,6 +22,8 @@
         <projectService
                 id="AutocompleteLookupListener"
                 serviceImplementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteLookupListener"/>
+        <statusBarWidgetFactory implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteSpinnerWidgetFactory"
+                                id="AutocompleteSpinnerWidget"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>

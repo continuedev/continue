@@ -14,6 +14,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.InlayProperties
 import com.intellij.openapi.fileEditor.FileDocumentManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.wm.WindowManager
 
 data class PendingCompletion (
     val editor: Editor,
@@ -26,6 +27,12 @@ data class PendingCompletion (
 class AutocompleteService(private val project: Project) {
     var pendingCompletion: PendingCompletion? = null;
     private val autocompleteLookupListener = project.service<AutocompleteLookupListener>()
+    private var widget: AutocompleteSpinnerWidget? = null
+
+    init {
+        val statusBar = WindowManager.getInstance().getStatusBar(project)
+        widget = statusBar.getWidget("AutocompleteSpinnerWidget") as? AutocompleteSpinnerWidget
+    }
 
     fun triggerCompletion(editor: Editor) {
         val settings =
@@ -42,6 +49,7 @@ class AutocompleteService(private val project: Project) {
         val completionId = uuid()
         val offset = editor.caretModel.primaryCaret.offset
         pendingCompletion = PendingCompletion(editor, offset, completionId, null)
+        widget?.setLoading(true)
 
         // Request a completion from the core
         val virtualFile = FileDocumentManager.getInstance().getFile(editor.document)
@@ -63,6 +71,8 @@ class AutocompleteService(private val project: Project) {
         val lineLength = lineEnd - lineStart
 
         project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/complete", input, null, ({ response ->
+            widget?.setLoading(false)
+
             val completions = response as List<*>
             if (completions.isNotEmpty()) {
                 val completion = completions[0].toString()
@@ -122,6 +132,7 @@ class AutocompleteService(private val project: Project) {
 
     private fun cancelCompletion(completion: PendingCompletion) {
         // Send cancellation message to core
+        widget?.setLoading(false)
         project.service<ContinuePluginService>().coreMessenger?.request("autocomplete/cancel", null,null, ({}))
     }
 

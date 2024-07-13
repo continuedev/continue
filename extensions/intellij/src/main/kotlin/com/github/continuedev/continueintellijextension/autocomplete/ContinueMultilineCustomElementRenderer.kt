@@ -58,7 +58,9 @@ class ContinueMultilineCustomElementRenderer (
                 FontInfo.getFontMetrics(font, FontInfo.getFontRenderContext(editor.contentComponent))
         val fontWidth =
                 font.createGlyphVector(metrics.fontRenderContext, text).visualBounds.width
-        val widthBeforeCaret = (editor as EditorImpl).getFontMetrics(Font.PLAIN).stringWidth(text.substring(0, currentColumn))
+        val widthBeforeCaret = (editor as EditorImpl).getFontMetrics(Font.PLAIN).stringWidth(
+            text.substring(0, minOf(currentColumn, text.length))
+        )
         return max(0, widthBeforeCaret - (editor as EditorImpl).scrollingModel.horizontalScrollOffset)
     }
 
