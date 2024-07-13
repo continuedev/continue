@@ -17,10 +17,10 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.WindowManager
 
 data class PendingCompletion (
-    val editor: Editor,
-    val offset: Int,
-    val completionId: String,
-    val text: String?
+        val editor: Editor,
+        var offset: Int,
+        val completionId: String,
+        var text: String?
 )
 
 @Service(Service.Level.PROJECT)
@@ -28,6 +28,10 @@ class AutocompleteService(private val project: Project) {
     var pendingCompletion: PendingCompletion? = null;
     private val autocompleteLookupListener = project.service<AutocompleteLookupListener>()
     private var widget: AutocompleteSpinnerWidget? = null
+
+    // To avoid triggering another completion on partial acceptance,
+    // we need to keep track of whether the last change was a partial accept
+    var lastChangeWasPartialAccept = false
 
     init {
         val statusBar = WindowManager.getInstance().getStatusBar(project)
@@ -77,7 +81,7 @@ class AutocompleteService(private val project: Project) {
             if (completions.isNotEmpty()) {
                 val completion = completions[0].toString()
 
-                if (completion.lines().size === 1 || column >= lineLength) {
+                if (completion.isNotEmpty() && (completion.lines().size === 1 || column >= lineLength)) {
                     // Do not render if completion is multi-line and caret is in middle of line
                     renderCompletion(editor, offset, completion)
                     pendingCompletion = pendingCompletion?.copy(text = completion)
@@ -90,6 +94,9 @@ class AutocompleteService(private val project: Project) {
     }
 
     private fun renderCompletion(editor: Editor, offset: Int, text: String) {
+        if (text.isEmpty()) {
+            return
+        }
         // Don't render completions when code completion dropdown is visible
         if (!autocompleteLookupListener.isLookupEmpty()) {
             return
@@ -128,6 +135,54 @@ class AutocompleteService(private val project: Project) {
         invokeLater {
             clearCompletions(editor)
         }
+    }
+
+    private fun splitKeepingDelimiters(input: String, delimiterPattern: String = "\\s+"): List<String> {
+    val initialSplit = input.split("(?<=$delimiterPattern)|(?=$delimiterPattern)".toRegex())
+                .filter { it.isNotEmpty() }
+
+    val result = mutableListOf<String>()
+    var currentDelimiter = ""
+
+    for (part in initialSplit) {
+        if (part.matches(delimiterPattern.toRegex())) {
+            currentDelimiter += part
+        } else {
+            if (currentDelimiter.isNotEmpty()) {
+                result.add(currentDelimiter)
+                currentDelimiter = ""
+    }
+            result.add(part)
+        }
+    }
+
+    if (currentDelimiter.isNotEmpty()) {
+        result.add(currentDelimiter)
+    }
+
+    return result
+}
+
+    fun partialAccept() {
+        val completion = pendingCompletion ?: return
+        val text = completion.text ?: return
+        val editor = completion.editor
+        val offset = completion.offset
+
+        lastChangeWasPartialAccept = true
+
+        // Split the text into words, keeping delimiters
+        val words = splitKeepingDelimiters(text)
+        println(words)
+        val word = words[0]
+        editor.document.insertString(offset, word)
+        editor.caretModel.moveToOffset(offset + word.length)
+
+        // Remove the completion and re-display it
+        hideCompletions(editor)
+        completion.text = text.substring(word.length)
+        completion.offset += word.length
+        renderCompletion(editor, completion.offset, completion.text!!)
     }
 
     private fun cancelCompletion(completion: PendingCompletion) {
