@@ -103,6 +103,9 @@ class AutocompleteService(private val project: Project) {
         }
         ApplicationManager.getApplication().invokeLater {
             WriteAction.run<Throwable> {
+                // Clear existing completions
+                hideCompletions(editor)
+
                 val properties = InlayProperties()
                 properties.relatesToPrecedingText(true)
                 properties.disableSoftWrapping(true)
