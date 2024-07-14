@@ -1,4 +1,4 @@
-import { getTsConfigPath, migrate } from "core/util/paths";
+import { getTsConfigPath, getContinueRcPath, migrate } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import path from "node:path";
 import * as vscode from "vscode";
@@ -13,6 +13,7 @@ import { setupInlineTips } from "./inlineTips";
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
   getTsConfigPath();
+  getContinueRcPath();
 
   // Register commands and providers
   registerQuickFixProvider();

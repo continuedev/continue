@@ -139,6 +139,24 @@ export function getTsConfigPath(): string {
   return tsConfigPath;
 }
 
+export function getContinueRcPath(): string {
+  // Disable indexing of the config folder to prevent infinite loops
+  const continuercPath = path.join(getContinueGlobalPath(), ".continuerc.json");
+  if (!fs.existsSync(continuercPath)) {
+    fs.writeFileSync(
+      continuercPath,
+      JSON.stringify(
+        {
+          disableIndexing: true,
+        },
+        null,
+        2,
+      ),
+    );
+  }
+  return continuercPath;
+}
+
 export function devDataPath(): string {
   const sPath = path.join(getContinueGlobalPath(), "dev_data");
   if (!fs.existsSync(sPath)) {
