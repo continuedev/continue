@@ -170,6 +170,10 @@ function ModelSelect() {
 
   const [options, setOptions] = useState<Option[]>([]);
 
+  const selectedProfileId = useSelector(
+    (store: RootState) => store.state.selectedProfileId,
+  );
+
   useEffect(() => {
     setOptions(
       allModels.map((model) => {
@@ -227,22 +231,26 @@ function ModelSelect() {
             />
           ))}
 
-          <Divider />
+          {selectedProfileId === "local" && (
+            <>
+              <Divider />
 
-          <StyledListboxOption
-            key={options.length}
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              navigate("/addModel");
-            }}
-            value={"addModel" as any}
-          >
-            <div className="flex items-center">
-              <PlusIcon className="w-4 h-4 mr-2" />
-              Add Model
-            </div>
-          </StyledListboxOption>
+              <StyledListboxOption
+                key={options.length}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  navigate("/addModel");
+                }}
+                value={"addModel" as any}
+              >
+                <div className="flex items-center">
+                  <PlusIcon className="w-4 h-4 mr-2" />
+                  Add Model
+                </div>
+              </StyledListboxOption>
+            </>
+          )}
 
           <Divider />
 

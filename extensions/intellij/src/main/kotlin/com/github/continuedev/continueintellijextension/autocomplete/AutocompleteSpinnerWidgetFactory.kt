@@ -1,6 +1,8 @@
 package com.github.continuedev.continueintellijextension.autocomplete
 
+import com.github.continuedev.continueintellijextension.services.ContinueExtensionSettings
 import com.intellij.openapi.Disposable
+import com.intellij.openapi.components.service
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.wm.StatusBar
@@ -46,7 +48,8 @@ class AutocompleteSpinnerWidget(project: Project): EditorBasedWidget(project), S
     }
 
     override fun getTooltipText(): String? {
-        return "Autocompleting..."
+        val enabled = service<ContinueExtensionSettings>().state.enableTabAutocomplete
+        return if (enabled) "Continue Autocomplete Enabled" else "Continue Autocomplete Disabled"
     }
 
     override fun getClickConsumer(): Consumer<MouseEvent>? {
