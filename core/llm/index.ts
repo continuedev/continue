@@ -1,3 +1,4 @@
+import { findLlmInfo } from "@continuedev/llm-info";
 import Handlebars from "handlebars";
 import {
   ChatMessage,
@@ -114,14 +115,17 @@ export abstract class BaseLLM implements ILLM {
       ..._options,
     };
 
+    this.model = options.model;
+    const llmInfo = findLlmInfo(this.model);
+
     const templateType =
       options.template ?? autodetectTemplateType(options.model);
 
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
-    this.model = options.model;
     this.systemMessage = options.systemMessage;
-    this.contextLength = options.contextLength ?? DEFAULT_CONTEXT_LENGTH;
+    this.contextLength =
+      options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",

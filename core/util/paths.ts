@@ -195,16 +195,17 @@ function getMigrationsFolderPath(): string {
   return migrationsPath;
 }
 
-export function migrate(
+export async function migrate(
   id: string,
-  callback: () => void,
+  callback: () => void | Promise<void>,
   onAlreadyComplete?: () => void,
 ) {
   const migrationsPath = getMigrationsFolderPath();
   const migrationPath = path.join(migrationsPath, id);
+
   if (!fs.existsSync(migrationPath)) {
     try {
-      callback();
+      await Promise.resolve(callback());
       fs.writeFileSync(migrationPath, "");
     } catch (e) {
       console.error(`Migration ${id} failed`, e);

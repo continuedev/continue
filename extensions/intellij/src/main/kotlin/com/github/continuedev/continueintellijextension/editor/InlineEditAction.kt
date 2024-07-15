@@ -66,7 +66,7 @@ class InlineEditAction : AnAction(), DumbAware {
         val modelTitles = mutableListOf<String>()
         continuePluginService.coreMessenger?.request("config/getSerializedProfileInfo", null, null) { response ->
             val config = response as Map<String, Any>
-            val models = config["models"] as List<Map<String, Any>>
+            val models = (config["config"] as Map<String, Any>)["models"] as List<Map<String, Any>>
             modelTitles.addAll(models.map { it["title"] as String })
         }
         val maxWaitTime = 200
