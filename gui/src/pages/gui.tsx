@@ -26,10 +26,12 @@ import {
   vscBackground,
   vscForeground,
 } from "../components";
+import { ChatScrollAnchor } from "../components/ChatScrollAnchor";
 import StepContainer from "../components/gui/StepContainer";
 import TimelineItem from "../components/gui/TimelineItem";
 import ContinueInputBox from "../components/mainInput/ContinueInputBox";
 import { defaultInputModifiers } from "../components/mainInput/inputModifiers";
+import { TutorialCard } from "../components/mainInput/TutorialCard";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import useChatHandler from "../hooks/useChatHandler";
 import useHistory from "../hooks/useHistory";
@@ -52,10 +54,8 @@ import {
   isJetBrains,
   isMetaEquivalentKeyPressed,
 } from "../util";
-import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
-import { ChatScrollAnchor } from "../components/ChatScrollAnchor";
-import { TutorialCard } from "../components/mainInput/TutorialCard";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;

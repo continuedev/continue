@@ -188,6 +188,13 @@ export class ConfigHandler {
     this.selectedProfileId = profileId;
     const newConfig = await this.loadConfig();
     this.notifyConfigListerners(newConfig);
+    const selectedProfiles =
+      this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
+    selectedProfiles[await this.getWorkspaceId()] = profileId;
+    this.globalContext.update(
+      "lastSelectedProfileForWorkspace",
+      selectedProfiles,
+    );
   }
 
   // A unique ID for the current workspace, built from folder names
