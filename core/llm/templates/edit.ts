@@ -95,7 +95,7 @@ ${otherData.codeToEdit}
 ${suffixTag}
 \`\`\`
 
-Please rewrite the entire code block above in order to satisfy the following request: "${otherData.userInput}".${suffixExplanation}`,
+Please rewrite the entire code block above in order to satisfy the following request: "${otherData.userInput}". You should rewrite the entire code block without leaving placeholders, even if the code is the same as before.${suffixExplanation}`,
       },
       {
         role: "assistant",
@@ -115,7 +115,7 @@ ${otherData.codeToEdit}
 ${suffixTag}
 \`\`\`
 
-Please rewrite the entire code block above, editing the portion below "${START_TAG}" in order to satisfy the following request: "${otherData.userInput}".${suffixExplanation}
+Please rewrite the entire code block above, editing the portion below "${START_TAG}" in order to satisfy the following request: "${otherData.userInput}". You should rewrite the entire code block without leaving placeholders, even if the code is the same as before.${suffixExplanation}
 `,
     },
     {
