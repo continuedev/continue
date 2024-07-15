@@ -16,6 +16,14 @@ As an example, say you are working on solving a new GitHub Issue. You type '@iss
 
 To use any of the built-in context providers, open `~/.continue/config.json` and add it to the `contextProviders` list.
 
+### Files
+
+Type '@file' to reference any file in your current workspace.
+
+```json
+{ "name": "file" }
+```
+
 ### Code
 
 Type '@code' to reference specific functions or classes from throughout your project.
@@ -498,9 +506,7 @@ Continue exposes an API for registering context providers from a 3rd party VSCod
 
 ```json
 {
-  "extensionDependencies": [
-    "continue.continue"
-  ],
+  "extensionDependencies": ["continue.continue"]
 }
 ```
 
@@ -513,7 +519,6 @@ Here is an example:
 import * as vscode from "vscode";
 
 class MyCustomProvider implements IContextProvider {
-
   get description(): ContextProviderDescription {
     return {
       title: "custom",
@@ -525,7 +530,7 @@ class MyCustomProvider implements IContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     return [
       {
@@ -537,7 +542,7 @@ class MyCustomProvider implements IContextProvider {
   }
 
   async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     return [];
   }
@@ -554,5 +559,4 @@ const continueApi = continueExt?.exports;
 
 // register your custom provider
 continueApi?.registerCustomContextProvider(customProvider);
-
 ```
