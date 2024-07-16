@@ -504,7 +504,7 @@ async function buildConfigTs() {
       );
     } else {
       // Dynamic import esbuild so potentially disastrous errors can be caught
-      const esbuild = require("esbuild");
+      const esbuild = await import("esbuild");
 
       await esbuild.build({
         entryPoints: [getConfigTsPath()],
@@ -529,6 +529,10 @@ async function buildConfigTs() {
   return fs.readFileSync(getConfigJsPath(), "utf8");
 }
 
+function getUncachedUrl(url: string): string {
+  return `${url}?t=${Date.now()}`;
+}
+
 async function loadFullConfigNode(
   ide: IDE,
   workspaceConfigs: ContinueRcJson[],
@@ -549,8 +553,7 @@ async function loadFullConfigNode(
     try {
       // Try config.ts first
       const configJsPath = getConfigJsPath();
-      const module = await require(configJsPath);
-      delete require.cache[require.resolve(configJsPath)];
+      const module = await import(getUncachedUrl(configJsPath));
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
       }
@@ -566,7 +569,7 @@ async function loadFullConfigNode(
       const configJsPathForRemote = getConfigJsPathForRemote(
         ideSettings.remoteConfigServerUrl,
       );
-      const module = await require(configJsPathForRemote);
+      const module = await import(configJsPathForRemote);
       delete require.cache[require.resolve(configJsPathForRemote)];
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
