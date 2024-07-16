@@ -1,7 +1,7 @@
-import { VoyageReranker } from "@continuedev/core/dist/context/rerankers/voyage.js";
+import { ConfigHandler } from "@continuedev/core/dist/config/ConfigHandler.js";
 import { IRetrievalPipeline } from "@continuedev/core/dist/context/retrieval/pipelines/BaseRetrievalPipeline.js";
 import RerankerRetrievalPipeline from "@continuedev/core/dist/context/retrieval/pipelines/RerankerRetrievalPipeline.js";
-import OpenAIEmbeddingsProvider from "@continuedev/core/dist/indexing/embeddings/OpenAIEmbeddingsProvider.js";
+import { ControlPlaneClient } from "@continuedev/core/dist/control-plane/client.js";
 import FileSystemIde from "@continuedev/core/dist/util/filesystem.js";
 import dotenv from "dotenv";
 import { accuracy } from "./metrics.js";
@@ -23,24 +23,33 @@ async function testStrategy(
 }
 
 async function main() {
-  const reranker = new VoyageReranker({
-    apiKey: process.env.VOYAGE_API_KEY || "",
-    model: "rerank-lite-1",
-  });
-  const embeddingsProvider = new OpenAIEmbeddingsProvider(
-    {
-      apiBase: "https://api.voyageai.com/v1",
-      apiKey: process.env.VOYAGE_API_KEY || "",
-      model: "voyage-code-2",
-    },
-    fetch,
+  const ide = new FileSystemIde("");
+  const configHandler = new ConfigHandler(
+    ide,
+    Promise.resolve({
+      remoteConfigSyncPeriod: 60,
+      userToken: "",
+      enableControlServerBeta: false,
+    }),
+    async () => {},
+    new ControlPlaneClient(
+      Promise.resolve({
+        accessToken: "",
+        account: {
+          id: "",
+          label: "",
+        },
+      }),
+    ),
   );
+  const config = await configHandler.loadConfig();
+
   const pipeline = new RerankerRetrievalPipeline({
-    embeddingsProvider,
-    reranker,
+    embeddingsProvider: config.embeddingsProvider,
+    reranker: config.reranker,
     nRetrieve: 50,
     nFinal: 20,
-    ide: new FileSystemIde(""),
+    ide,
   });
   const tests = testSet;
   await testStrategy(pipeline, tests);

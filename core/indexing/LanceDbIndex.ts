@@ -65,6 +65,7 @@ export class LanceDbIndex implements CodebaseIndex {
             await db.exec(
               "ALTER TABLE lance_db_cache ADD COLUMN artifact_id TEXT NOT NULL DEFAULT 'UNDEFINED'",
             );
+          } catch (e) {
           } finally {
             resolve(undefined);
           }

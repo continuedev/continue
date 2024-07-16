@@ -16,8 +16,8 @@ import { exec } from "child_process";
 import fs from "fs/promises";
 import path from "path";
 
-process.env.CONTINUE_GLOBAL_DIR = "./.continue.test";
-const REPOS_DIR = "./.repos";
+const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const REPOS_DIR = path.join(__dirname, "..", "repos");
 
 function dirForRepo(repo: string): string {
   // Extract the last part of the URL (repository name)
@@ -28,7 +28,7 @@ function dirForRepo(repo: string): string {
 
   // Replace special characters with dashes and convert to lowercase
   const escapedRepo = cleanRepo.replace(/[^a-zA-Z0-9-]/g, "-").toLowerCase();
-  return `${REPOS_DIR}/${escapedRepo}`;
+  return path.join(REPOS_DIR, escapedRepo);
 }
 
 function createCodebaseIndexer(ide: IDE): CodebaseIndexer {
