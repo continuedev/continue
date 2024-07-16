@@ -25,6 +25,7 @@ import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { Core } from "core/core";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -170,6 +171,7 @@ const commandsMap: (
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
+  core: Core,
 ) => { [command: string]: (...args: any) => any } = (
   ide,
   extensionContext,
@@ -180,6 +182,7 @@ const commandsMap: (
   continueServerClientPromise,
   battery,
   quickEdit,
+  core
 ) => {
   /**
    * Streams an inline edit to the vertical diff manager.
@@ -284,6 +287,12 @@ const commandsMap: (
     },
     "continue.toggleAuxiliaryBar": () => {
       vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
+    },
+    "continue.docsIndex": async () => {
+      core.invoke("context/indexDocs", {reIndex: false});
+    },
+    "continue.docsReIndex": async () => {
+      core.invoke("context/indexDocs", {reIndex: true});
     },
     "continue.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
@@ -669,6 +678,7 @@ export function registerAllCommands(
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
+  core: Core,
 ) {
   for (const [command, callback] of Object.entries(
     commandsMap(
@@ -681,6 +691,7 @@ export function registerAllCommands(
       continueServerClientPromise,
       battery,
       quickEdit,
+      core
     ),
   )) {
     context.subscriptions.push(
