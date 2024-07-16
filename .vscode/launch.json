@@ -95,6 +95,22 @@
         // Avoid timing out when stopping on breakpoints during debugging in VSCode
         "MOCHA_TIMEOUT": "0"
       }
+    },
+    {
+      "name": "[Core] Jest Test Debugger, Current Open File",
+      "type": "node",
+      "request": "launch",
+      "runtimeArgs": [
+        "--inspect-brk",
+        "${workspaceRoot}/core/node_modules/jest/bin/jest.js",
+        "--runInBand",
+        "--config",
+        "${workspaceRoot}/core/jest.config.js",
+        "${relativeFile}"
+      ],
+      "cwd": "${workspaceRoot}/core",
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
     }
   ]
 }
