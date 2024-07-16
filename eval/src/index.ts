@@ -9,6 +9,9 @@ import {
   PauseToken,
 } from "@continuedev/core/indexing/CodebaseIndexer.js";
 import FileSystemIde from "@continuedev/core/util/filesystem.js";
+import { exec } from "child_process";
+import fs from "fs/promises";
+import path from "path";
 
 process.env.CONTINUE_GLOBAL_DIR = "./.continue.test";
 const REPOS_DIR = "./.repos";
@@ -59,13 +62,50 @@ const onsole = {
   log: (...args: any[]) => {},
 };
 
-async function downloadOrUpdateRepo(repo: string): Promise<void> {}
+async function downloadOrUpdateRepo(repo: string): Promise<void> {
+  const repoDir = dirForRepo(repo);
+
+  try {
+    // Check if the directory already exists
+    await fs.access(repoDir);
+
+    // If it exists, perform a git pull
+    await new Promise<void>((resolve, reject) => {
+      exec("git pull", { cwd: repoDir }, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error updating repo: ${error.message}`);
+          reject(error);
+        } else {
+          console.log(`Updated repo: ${stdout}`);
+          resolve();
+        }
+      });
+    });
+  } catch (error) {
+    // If the directory doesn't exist, clone the repo
+    await fs.mkdir(path.dirname(repoDir), { recursive: true });
+    await new Promise<void>((resolve, reject) => {
+      exec(`git clone ${repo} ${repoDir}`, (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Error cloning repo: ${error.message}`);
+          reject(error);
+        } else {
+          console.log(`Cloned repo: ${stdout}`);
+          resolve();
+        }
+      });
+    });
+  }
+}
 
 async function retrieveInRepo(
   repo: string,
   query: string,
   strategy: RetrievalStrategy,
 ): Promise<Chunk[]> {
+  // Make sure repo is downloaded
+  await downloadOrUpdateRepo(repo);
+
   const workspaceDir = dirForRepo(repo);
 
   // Fixtures
