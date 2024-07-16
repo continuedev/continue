@@ -1,20 +1,18 @@
 {
   "name": "@continuedev/eval",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc"
+    "build": "tsc",
+    "eval": "node dist/index.js"
   },
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
   "devDependencies": {
     "typescript": "^5.5.2"
-  },
-  "dependencies": {
-    "@continuedev/core": "^1.0.13"
   }
 }

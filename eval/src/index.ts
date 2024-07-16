@@ -1,14 +1,14 @@
 import { Chunk, EmbeddingsProvider, IDE, Reranker } from "@continuedev/core";
-import { ConfigHandler } from "@continuedev/core/config/ConfigHandler.js";
-import { IRetrievalPipeline } from "@continuedev/core/context/retrieval/pipelines/BaseRetrievalPipeline.js";
-import RerankerRetrievalPipeline from "@continuedev/core/context/retrieval/pipelines/RerankerRetrievalPipeline.js";
-import { ContinueServerClient } from "@continuedev/core/continueServer/stubs/client.js";
-import { ControlPlaneClient } from "@continuedev/core/control-plane/client.js";
+import { ConfigHandler } from "@continuedev/core/dist/config/ConfigHandler.js";
+import { IRetrievalPipeline } from "@continuedev/core/dist/context/retrieval/pipelines/BaseRetrievalPipeline.js";
+import { ContinueServerClient } from "@continuedev/core/dist/continueServer/stubs/client.js";
+import { ControlPlaneClient } from "@continuedev/core/dist/control-plane/client.js";
 import {
   CodebaseIndexer,
   PauseToken,
-} from "@continuedev/core/indexing/CodebaseIndexer.js";
-import FileSystemIde from "@continuedev/core/util/filesystem.js";
+} from "@continuedev/core/dist/indexing/CodebaseIndexer.js";
+import FileSystemIde from "@continuedev/core/dist/util/filesystem.js";
+
 import { exec } from "child_process";
 import fs from "fs/promises";
 import path from "path";
@@ -152,5 +152,3 @@ function accuracy(results: Chunk[], expected: string[]): number {
   }
   return score / expected.length;
 }
-
-const r = new RerankerRetrievalPipeline();
