@@ -233,7 +233,7 @@ function ModelSelect() {
 
           {selectedProfileId === "local" && (
             <>
-              <Divider />
+              {options.length > 0 && <Divider />}
 
               <StyledListboxOption
                 key={options.length}

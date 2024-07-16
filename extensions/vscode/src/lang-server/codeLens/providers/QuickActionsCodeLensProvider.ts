@@ -6,6 +6,7 @@ import {
 } from "../../../util/workspaceConfig";
 import { isTutorialFile } from "./TutorialCodeLensProvider";
 import { Telemetry } from "core/util/posthog";
+import { QuickEditShowParams } from "../../../quickEdit/QuickEditQuickPick";
 
 export const ENABLE_QUICK_ACTIONS_KEY = "enableQuickActions";
 
@@ -83,20 +84,14 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
     });
   }
 
-  getDefaultCommands(range: vscode.Range): vscode.Command[] {
-    const explain: vscode.Command = {
-      command: "continue.defaultQuickActionExplain",
-      title: "Explain",
-      arguments: [range],
+  getDefaultCommand(range: vscode.Range): vscode.Command[] {
+    const quickEdit: vscode.Command = {
+      command: "continue.defaultQuickAction",
+      title: "Continue",
+      arguments: [{ range } as QuickEditShowParams],
     };
 
-    const comment: vscode.Command = {
-      command: "continue.defaultQuickActionDocstring",
-      title: "Docstring",
-      arguments: [range],
-    };
-
-    return [explain, comment];
+    return [quickEdit];
   }
 
   async provideCodeLenses(
@@ -129,7 +124,7 @@ export class QuickActionsCodeLensProvider implements vscode.CodeLensProvider {
     return filteredSmybols.flatMap(({ range }) => {
       const commands: vscode.Command[] = !!this.customQuickActionsConfig
         ? this.getCustomCommands(range, this.customQuickActionsConfig)
-        : this.getDefaultCommands(range);
+        : this.getDefaultCommand(range);
 
       return commands.map((command) => new vscode.CodeLens(range, command));
     });
