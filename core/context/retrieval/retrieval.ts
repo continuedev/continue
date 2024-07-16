@@ -5,7 +5,6 @@ import {
 } from "../../index.js";
 
 import { getRelativePath } from "../../util/index.js";
-import { RETRIEVAL_PARAMS } from "../../util/parameters.js";
 import { RetrievalPipelineOptions } from "./pipelines/BaseRetrievalPipeline.js";
 import NoRerankerRetrievalPipeline from "./pipelines/NoRerankerRetrievalPipeline.js";
 import RerankerRetrievalPipeline from "./pipelines/RerankerRetrievalPipeline.js";
@@ -29,12 +28,14 @@ export async function retrieveContextItemsFromEmbeddings(
     );
   }
 
-  const nFinal = options?.nFinal || RETRIEVAL_PARAMS.nFinal;
+  // Fill half of the context length, up to a max of 100 snippets
+  const contextLength = extras.llm.contextLength;
+  const tokensPerSnippet = 512;
+  const nFinal =
+    options?.nFinal ?? Math.min(50, contextLength / tokensPerSnippet / 2);
   const useReranking = extras.reranker !== undefined;
   const nRetrieve =
-    useReranking === false
-      ? nFinal
-      : options?.nRetrieve || RETRIEVAL_PARAMS.nRetrieve;
+    useReranking === false ? nFinal : options?.nRetrieve || 2 * nFinal;
 
   // Get tags to retrieve for
   const workspaceDirs = await extras.ide.getWorkspaceDirs();

@@ -899,6 +899,7 @@
               "model": {
                 "enum": [
                   "codestral-latest",
+                  "codestral-mamba-latest",
                   "open-mistral-7b",
                   "open-mixtral-8x7b",
                   "open-mixtral-8x22b",
