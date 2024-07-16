@@ -743,6 +743,7 @@ export interface EmbedOptions {
   apiType?: string;
   apiVersion?: string;
   requestOptions?: RequestOptions;
+  maxChunkSize?: number;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -751,6 +752,7 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 
 export interface EmbeddingsProvider {
   id: string;
+  maxChunkSize: number;
   embed(chunks: string[]): Promise<number[][]>;
 }
 
