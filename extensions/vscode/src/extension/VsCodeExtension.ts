@@ -196,6 +196,7 @@ export class VsCodeExtension {
       this.core.continueServerClientPromise,
       this.battery,
       quickEdit,
+      this.core
     );
 
     registerDebugTracker(this.sidebar.webviewProtocol, this.ide);

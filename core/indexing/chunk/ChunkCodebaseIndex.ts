@@ -1,6 +1,5 @@
 import { IContinueServerClient } from "../../continueServer/interface.js";
 import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
-import { MAX_CHUNK_SIZE } from "../../llm/constants.js";
 import { getBasename } from "../../util/index.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex.js";
 import {
@@ -19,6 +18,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   constructor(
     private readonly readFile: (filepath: string) => Promise<string>,
     private readonly continueServerClient: IContinueServerClient,
+    private readonly maxChunkSize: number
   ) {
     this.readFile = readFile;
   }
@@ -108,7 +108,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       for await (const chunk of chunkDocument(
         item.path,
         contents[i],
-        MAX_CHUNK_SIZE,
+        this.maxChunkSize,
         item.cacheKey,
       )) {
         handleChunk(chunk);

@@ -58,7 +58,7 @@ const InputBoxDiv = styled.div`
   resize: none;
 
   padding: 8px;
-  padding-bottom: 24px;
+  padding-bottom: 4px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
   margin: 0;
@@ -70,7 +70,6 @@ const InputBoxDiv = styled.div`
   border: 0.5px solid ${vscInputBorder};
   outline: none;
   font-size: ${getFontSize()}px;
-
   &:focus {
     outline: none;
 

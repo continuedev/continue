@@ -30,6 +30,7 @@ export class DocsService {
   private static instance: DocsService;
   private static DOCS_TABLE_NAME = "docs";
   private _sqliteTable: Database | undefined;
+  private docsIndexingQueue: Set<string> = new Set();
 
   public static getInstance(): DocsService {
     if (!DocsService.instance) {
@@ -204,10 +205,16 @@ export class DocsService {
   async *indexAndAdd(
     siteIndexingConfig: SiteIndexingConfig,
     embeddingsProvider: EmbeddingsProvider,
+    reIndex: boolean = false,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const startUrl = new URL(siteIndexingConfig.startUrl);
+    const startUrl = new URL(siteIndexingConfig.startUrl.toString());
 
-    if (await this.has(siteIndexingConfig.startUrl.toString())) {
+    if (this.docsIndexingQueue.has(startUrl.toString())) {
+      console.log("Already in queue");
+      return;
+    }
+
+    if (!reIndex && await this.has(startUrl.toString())) {
       yield {
         progress: 1,
         desc: "Already indexed",
@@ -216,6 +223,9 @@ export class DocsService {
       return;
     }
 
+    // Mark the site as currently being indexed
+    this.docsIndexingQueue.add(startUrl.toString());
+
     yield {
       progress: 0,
       desc: "Finding subpages",
@@ -223,20 +233,31 @@ export class DocsService {
     };
 
     const articles: Article[] = [];
+    let processedPages = 0;
+    let maxKnownPages = 1;
 
     // Crawl pages and retrieve info as articles
     for await (const page of crawlPage(startUrl, siteIndexingConfig.maxDepth)) {
+      processedPages++;
       const article = pageToArticle(page);
       if (!article) {
         continue;
       }
       articles.push(article);
 
+      // Use a heuristic approach for progress calculation
+      const progress = Math.min(processedPages / maxKnownPages, 1);
+
       yield {
-        progress: 0,
+        progress, // Yield the heuristic progress
         desc: `Finding subpages (${page.path})`,
         status: "indexing",
       };
+
+      // Increase maxKnownPages to delay progress reaching 100% too soon
+      if (processedPages === maxKnownPages) {
+        maxKnownPages *= 2;
+      }
     }
 
     const chunks: Chunk[] = [];
@@ -244,16 +265,17 @@ export class DocsService {
 
     // Create embeddings of retrieved articles
     console.log("Creating Embeddings for ", articles.length, " articles");
-    for (const article of articles) {
+    for (let i = 0; i < articles.length; i++) {
+      const article = articles[i];
       yield {
-        progress: Math.max(1, Math.floor(100 / (articles.length + 1))),
-        desc: `${article.subpath}`,
+        progress: i / articles.length,
+        desc: `Creating Embeddings: ${article.subpath}`,
         status: "indexing",
       };
 
       try {
         const subpathEmbeddings = await embeddingsProvider.embed(
-          chunkArticle(article).map((chunk) => {
+          chunkArticle(article, embeddingsProvider.maxChunkSize).map((chunk) => {
             chunks.push(chunk);
 
             return chunk.content;
@@ -268,7 +290,14 @@ export class DocsService {
 
     // Add docs to databases
     console.log("Adding ", embeddings.length, " embeddings to db");
+    yield {
+      progress: 0.5,
+      desc: `Adding ${embeddings.length} embeddings to db`,
+      status: "indexing",
+    };
+
     await this.add(siteIndexingConfig.title, startUrl, chunks, embeddings);
+    this.docsIndexingQueue.delete(startUrl.toString());
 
     yield {
       progress: 1,

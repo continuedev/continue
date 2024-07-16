@@ -22,9 +22,10 @@ import {
 import { ContinueGUIWebviewViewProvider } from "./ContinueGUIWebviewViewProvider";
 import { DiffManager } from "./diff/horizontal";
 import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
-import { QuickEdit } from "./quickEdit/QuickEditQuickPick";
+import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
+import { Core } from "core/core";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -170,6 +171,7 @@ const commandsMap: (
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
+  core: Core,
 ) => { [command: string]: (...args: any) => any } = (
   ide,
   extensionContext,
@@ -180,6 +182,7 @@ const commandsMap: (
   continueServerClientPromise,
   battery,
   quickEdit,
+  core
 ) => {
   /**
    * Streams an inline edit to the vertical diff manager.
@@ -259,26 +262,10 @@ const commandsMap: (
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
     },
-    "continue.defaultQuickActionDocstring": async (range: vscode.Range) => {
-      captureCommandTelemetry("defaultQuickActionDocstring");
-
-      streamInlineEdit(
-        "docstring",
-        "Write a docstring for this code. Do not change anything about the code itself.",
-        true,
-        range,
-      );
-    },
-    "continue.defaultQuickActionExplain": async (range: vscode.Range) => {
-      captureCommandTelemetry("defaultQuickActionExplain");
-
-      const prompt =
-        `Explain the above code in a few sentences without ` +
-        `going into detail on specific methods.`;
-
-      addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
-
-      vscode.commands.executeCommand("continue.continueGUIView.focus");
+    // Passthrough for telemetry purposes
+    "continue.defaultQuickAction": async (args: QuickEditShowParams) => {
+      captureCommandTelemetry("defaultQuickAction");
+      vscode.commands.executeCommand("continue.quickEdit", args);
     },
     "continue.customQuickActionSendToChat": async (
       prompt: string,
@@ -300,6 +287,12 @@ const commandsMap: (
     },
     "continue.toggleAuxiliaryBar": () => {
       vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
+    },
+    "continue.docsIndex": async () => {
+      core.invoke("context/indexDocs", {reIndex: false});
+    },
+    "continue.docsReIndex": async () => {
+      core.invoke("context/indexDocs", {reIndex: true});
     },
     "continue.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
@@ -346,9 +339,9 @@ const commandsMap: (
         await addHighlightedCodeToContext(sidebar.webviewProtocol);
       }
     },
-    "continue.quickEdit": async (initialPrompt?: string) => {
+    "continue.quickEdit": async (args: QuickEditShowParams) => {
       captureCommandTelemetry("quickEdit");
-      quickEdit.show(initialPrompt);
+      quickEdit.show(args);
     },
     "continue.writeCommentsForCode": async () => {
       captureCommandTelemetry("writeCommentsForCode");
@@ -685,6 +678,7 @@ export function registerAllCommands(
   continueServerClientPromise: Promise<ContinueServerClient>,
   battery: Battery,
   quickEdit: QuickEdit,
+  core: Core,
 ) {
   for (const [command, callback] of Object.entries(
     commandsMap(
@@ -697,6 +691,7 @@ export function registerAllCommands(
       continueServerClientPromise,
       battery,
       quickEdit,
+      core
     ),
   )) {
     context.subscriptions.push(

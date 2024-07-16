@@ -16,8 +16,8 @@ interface TutorialCardProps {
 const TutorialCardDiv = styled.div`
   border: 1px solid ${lightGray};
   border-radius: 0.125rem;
-  padding: 0.5rem;
-  margin: 1.5rem;
+  padding: 1rem 2.5rem 1rem 2rem;
+  margin: 1rem;
   max-width: 28rem;
   position: relative;
 `;
@@ -31,10 +31,10 @@ export function TutorialCard({ onClose }: TutorialCardProps) {
         role="button"
         aria-label="Close"
       >
-        <XMarkIcon width="1.4em" height="1.4em" />
+        <XMarkIcon width="1.2em" height="1.2em" />
       </div>
 
-      <ul className="text-gray-300 space-y-4">
+      <ul className="text-gray-300 space-y-4 pl-0">
         <li className="flex items-start">
           <PencilSquareIcon
             width="1.4em"

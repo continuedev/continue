@@ -242,6 +242,19 @@ export class Core {
       await this.docsService.delete(baseUrl);
       this.messenger.send("refreshSubmenuItems", undefined);
     });
+    on("context/indexDocs", async (msg) => {
+      const config = await this.config();
+      const provider: any = config.contextProviders?.find(
+        (provider) => provider.description.title === "docs",
+      );
+
+      const siteIndexingOptions: SiteIndexingConfig[] = provider ?
+        (mProvider => mProvider?.options?.sites || [])({ ...provider }) :
+        [];
+
+      await this.indexDocs(siteIndexingOptions, msg.data.reIndex);
+      this.ide.infoPopup("Docs indexing completed");
+    });
     on("context/loadSubmenuItems", async (msg) => {
       const config = await this.config();
       const items = config.contextProviders
@@ -621,6 +634,18 @@ export class Core {
     )) {
       this.messenger.request("indexProgress", update);
       this.indexingState = update;
+    }
+  }
+
+  private async indexDocs(sites: SiteIndexingConfig[], reIndex: boolean): Promise<void> {
+    for (const site of sites) {
+      for await (const update of this.docsService.indexAndAdd(site, new TransformersJsEmbeddingsProvider(), reIndex)) {
+        // Temporary disabled posting progress updates to the UI due to
+        // possible collision with code indexing progress updates.
+
+        // this.messenger.request("indexProgress", update);
+        // this.indexingState = update;
+      }
     }
   }
 }

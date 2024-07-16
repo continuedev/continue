@@ -1,17 +1,18 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { IDE } from "core";
+import { walkDir } from "core/indexing/walkDir";
+import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { Telemetry } from "core/util/posthog";
-import { walkDir } from "core/indexing/walkDir";
-import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
 import { getContextProviderQuickPickVal } from "./ContextProvidersQuickPick";
+import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
 import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 
 // @ts-ignore - error finding typings
-import MiniSearch from "minisearch";
 import { ConfigHandler } from "core/config/ConfigHandler";
+// @ts-ignore
+import MiniSearch from "minisearch";
 
 /**
  * Used to track what action to take after a user interacts
@@ -23,6 +24,15 @@ enum QuickEditInitialItemLabels {
   Model = "Model",
   Submit = "Submit",
 }
+
+export type QuickEditShowParams = {
+  initialPrompt?: string;
+  /**
+   * Used for Quick Actions where the user has not highlighted code.
+   * Instead the range comes from the document symbol.
+   */
+  range?: vscode.Range;
+};
 
 type FileMiniSearchResult = { filename: string };
 
@@ -42,6 +52,10 @@ export class QuickEdit {
   );
 
   private static maxFileSearchResults = 20;
+
+  private range?: vscode.Range;
+  private initialPrompt?: string;
+
   private miniSearch = new MiniSearch<FileMiniSearchResult>({
     fields: ["filename"],
     storeFields: ["filename"],
@@ -77,11 +91,15 @@ export class QuickEdit {
     private readonly ide: IDE,
     private readonly context: vscode.ExtensionContext,
   ) {
-    this.intializeQuickEditState();
+    this.initializeQuickEditState();
   }
 
-  private async intializeQuickEditState() {
-    const editor = vscode.window.activeTextEditor!;
+  private async initializeQuickEditState() {
+    const editor = vscode.window.activeTextEditor;
+
+    if (!editor) {
+      return;
+    }
 
     const existingHandler = this.verticalDiffManager.getHandlerForFile(
       editor.document.uri.fsPath ?? "",
@@ -141,10 +159,14 @@ export class QuickEdit {
     }
 
     const fileName = vscode.workspace.asRelativePath(uri, true);
-    const { start, end } = this.editorWhenOpened.selection;
-    const selectionEmpty = this.editorWhenOpened.selection.isEmpty;
 
-    return selectionEmpty
+    const { start, end } = !!this.range
+      ? this.range
+      : this.editorWhenOpened.selection;
+
+    const isSelectionEmpty = start.isEqual(end);
+
+    return isSelectionEmpty
       ? `Edit ${fileName}`
       : `Edit ${fileName}:${start.line}${
           end.line > start.line ? `-${end.line}` : ""
@@ -182,12 +204,11 @@ export class QuickEdit {
       modelTitle,
       undefined,
       this.previousInput,
+      this.range,
     );
   }
 
-  async _getInitialQuickPickVal(
-    injectedPrompt?: string,
-  ): Promise<string | undefined> {
+  async _getInitialQuickPickVal(): Promise<string | undefined> {
     const modelTitle = await this._getCurModelTitle();
 
     const initialItems: vscode.QuickPickItem[] = [
@@ -236,7 +257,7 @@ export class QuickEdit {
       "Enter a prompt to edit your code (@ to search files, ⏎ to submit)";
     quickPick.title = this._getQuickPickTitle();
     quickPick.ignoreFocusOut = true;
-    quickPick.value = injectedPrompt ?? "";
+    quickPick.value = this.initialPrompt ?? "";
 
     quickPick.show();
 
@@ -342,17 +363,34 @@ export class QuickEdit {
   }
 
   /**
+   * Reset the state of the quick pick
+   */
+  private clear() {
+    this.initialPrompt = undefined;
+    this.range = undefined;
+  }
+
+  /**
    * Shows the Quick Edit Quick Pick, allowing the user to select an initial item or enter a prompt.
    * Displays a quick pick for "History" or "ContextProviders" to set the prompt or context provider string.
    * Displays a quick pick for "Model" to set the current model title.
    * Appends the entered prompt to the history and streams the edit with input and context.
    */
-  async show(initialPrompt?: string) {
+  async show(args?: QuickEditShowParams) {
+    // Clean up state from previous quick picks, e.g. if a user pressed `esc`
+    this.clear();
+
     const config = await this.configHandler.loadConfig();
 
-    const selectedLabelOrInputVal = await this._getInitialQuickPickVal(
-      initialPrompt,
-    );
+    if (!!args?.initialPrompt) {
+      this.initialPrompt = args.initialPrompt;
+    }
+
+    if (!!args?.range) {
+      this.range = args.range;
+    }
+
+    const selectedLabelOrInputVal = await this._getInitialQuickPickVal();
 
     Telemetry.capture("quickEditSelection", {
       selection: selectedLabelOrInputVal,
@@ -374,7 +412,7 @@ export class QuickEdit {
         this.contextProviderStr = contextProviderVal ?? "";
 
         // Recurse back to let the user write their prompt
-        this.show(initialPrompt);
+        this.show(args);
 
         break;
 
@@ -391,7 +429,7 @@ export class QuickEdit {
         }
 
         // Recurse back to let the user write their prompt
-        this.show(initialPrompt);
+        this.show(args);
 
         break;
 

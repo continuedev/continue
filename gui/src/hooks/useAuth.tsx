@@ -4,6 +4,7 @@ import { useDispatch } from "react-redux";
 import ConfirmationDialog from "../components/dialogs/ConfirmationDialog";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { setDialogMessage, setShowDialog } from "../redux/slices/uiStateSlice";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import { useWebviewListener } from "./useWebviewListener";
 
 export function useAuth(): {
@@ -31,7 +32,27 @@ export function useAuth(): {
     console.log("login");
     ideMessenger
       .request("getControlPlaneSessionInfo", { silent: false })
-      .then(setSession);
+      .then((session) => {
+        setSession(session);
+
+        // If this is the first time the user has logged in, explain how profiles work
+        if (!getLocalStorage("shownProfilesIntroduction")) {
+          dispatch(setShowDialog(true));
+          dispatch(
+            setDialogMessage(
+              <ConfirmationDialog
+                text={
+                  "Welcome to Continue for teams! Using the toggle in the bottom right, you can switch between your local profile (defined by config.json) and team profiles (defined in the Continue for teams web app). Each profile defines a set of models, slash commands, context providers, and other settings to customize Continue."
+                }
+                hideCancelButton={true}
+                confirmText="Ok"
+                onConfirm={() => {}}
+              />,
+            ),
+          );
+          setLocalStorage("shownProfilesIntroduction", true);
+        }
+      });
   };
 
   const logout = () => {
@@ -39,6 +60,8 @@ export function useAuth(): {
     dispatch(
       setDialogMessage(
         <ConfirmationDialog
+          hideCancelButton={true}
+          confirmText="Ok"
           text={"Click the user icon in the bottom left of VS Code to log out."}
           onConfirm={() => {}}
         />,

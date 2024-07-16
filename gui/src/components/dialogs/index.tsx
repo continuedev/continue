@@ -4,9 +4,9 @@ import styled from "styled-components";
 import {
   VSC_BACKGROUND_VAR,
   defaultBorderRadius,
+  lightGray,
   parseColorForHex,
   vscBackground,
-  vscFocusBorder,
   vscForeground,
 } from "..";
 
@@ -32,7 +32,7 @@ const Dialog = styled.div`
   border-radius: ${defaultBorderRadius};
   display: flex;
   flex-direction: column;
-  border: 1px solid ${vscFocusBorder};
+  border: 1px solid ${lightGray};
   margin: auto;
   word-wrap: break-word;
   // overflow: hidden;

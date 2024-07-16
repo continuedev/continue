@@ -13,46 +13,69 @@ export async function* streamDiff(
   oldLines: string[],
   newLines: LineStream,
 ): AsyncGenerator<DiffLine> {
-  const mutatedOldLines = [...oldLines]; // be careful
-
   // If one indentation mistake is made, others are likely. So we are more permissive about matching
   let seenIndentationMistake = false;
 
   let newLineResult = await newLines.next();
+
   while (oldLines.length > 0 && !newLineResult.done) {
-    const [matchIndex, isPerfectMatch, newLine] = matchLine(
+    const { matchIndex, isPerfectMatch, newLine } = matchLine(
       newLineResult.value,
       oldLines,
       seenIndentationMistake,
     );
+
     if (!seenIndentationMistake && newLineResult.value !== newLine) {
       seenIndentationMistake = true;
     }
 
-    if (matchIndex < 0) {
-      // Insert new line
-      yield { type: "new", line: newLine };
+    let type: DiffLine["type"];
+
+    let isLineRemoval = false;
+    const isNewLine = matchIndex === -1;
+
+    if (isNewLine) {
+      type = "new";
     } else {
       // Insert all deleted lines before match
       for (let i = 0; i < matchIndex; i++) {
         yield { type: "old", line: oldLines.shift()! };
       }
 
-      if (isPerfectMatch) {
-        // Same
-        yield { type: "same", line: oldLines.shift()! };
-      } else {
-        // Delete old line and insert the new
-        yield { type: "old", line: oldLines.shift()! };
-        yield { type: "new", line: newLine };
-      }
+      type = isPerfectMatch ? "same" : "old";
     }
 
-    newLineResult = await newLines.next();
+    switch (type) {
+      case "new":
+        yield { type, line: newLine };
+        break;
+
+      case "same":
+        yield { type, line: oldLines.shift()! };
+        break;
+
+      case "old":
+        yield { type, line: oldLines.shift()! };
+
+        if (oldLines[0] !== newLine) {
+          yield { type: "new", line: newLine };
+        } else {
+          isLineRemoval = true;
+        }
+
+        break;
+
+      default:
+        console.error(`Error streaming diff, unrecognized diff type: ${type}`);
+    }
+
+    if (!isLineRemoval) {
+      newLineResult = await newLines.next();
+    }
   }
 
   // Once at the edge, only one choice
-  if (newLineResult.done === true && oldLines.length > 0) {
+  if (newLineResult.done && oldLines.length > 0) {
     for (const oldLine of oldLines) {
       yield { type: "old", line: oldLine };
     }

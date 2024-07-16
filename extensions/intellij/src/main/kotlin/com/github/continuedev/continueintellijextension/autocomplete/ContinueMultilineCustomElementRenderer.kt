@@ -7,9 +7,8 @@ import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.openapi.editor.impl.EditorImpl
 import com.intellij.openapi.editor.impl.FontInfo
 import com.intellij.openapi.editor.markup.TextAttributes
-import com.intellij.ui.Gray
 import com.intellij.ui.JBColor
-import java.awt.Color
+import com.intellij.util.ui.UIUtil
 import java.awt.Font
 import java.awt.Graphics
 import java.awt.Rectangle
@@ -39,7 +38,7 @@ class ContinueMultilineCustomElementRenderer (
     protected val font: Font
         get() {
             val editorFont = editor.colorsScheme.getFont(EditorFontType.PLAIN)
-            return editorFont.deriveFont(Font.PLAIN) ?: editorFont
+            return UIUtil.getFontWithFallbackIfNeeded(editorFont, text).deriveFont(editor.colorsScheme.editorFontSize)
         }
 
     private fun offsetY(): Int {
@@ -58,7 +57,9 @@ class ContinueMultilineCustomElementRenderer (
                 FontInfo.getFontMetrics(font, FontInfo.getFontRenderContext(editor.contentComponent))
         val fontWidth =
                 font.createGlyphVector(metrics.fontRenderContext, text).visualBounds.width
-        val widthBeforeCaret = (editor as EditorImpl).getFontMetrics(Font.PLAIN).stringWidth(text.substring(0, currentColumn))
+        val widthBeforeCaret = (editor as EditorImpl).getFontMetrics(Font.PLAIN).stringWidth(
+            text.substring(0, minOf(currentColumn, text.length))
+        )
         return max(0, widthBeforeCaret - (editor as EditorImpl).scrollingModel.horizontalScrollOffset)
     }
 
@@ -68,7 +69,7 @@ class ContinueMultilineCustomElementRenderer (
         var additionalYOffset = -editor.lineHeight;
         var isFirstLine = true
         for (line in text.lines()) {
-            g.drawString(line, if (isFirstLine) targetRegion.x + offsetX() else targetRegion.x, targetRegion.y + offsetY() + additionalYOffset)
+            g.drawString(line, if (isFirstLine) targetRegion.x + offsetX() else targetRegion.x, targetRegion.y + inlay.editor.ascent + additionalYOffset)
             additionalYOffset += editor.lineHeight
             isFirstLine = false
         }
