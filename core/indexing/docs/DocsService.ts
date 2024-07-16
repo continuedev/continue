@@ -253,7 +253,7 @@ export class DocsService {
 
       try {
         const subpathEmbeddings = await embeddingsProvider.embed(
-          chunkArticle(article).map((chunk) => {
+          chunkArticle(article, embeddingsProvider.maxChunkSize).map((chunk) => {
             chunks.push(chunk);
 
             return chunk.content;
