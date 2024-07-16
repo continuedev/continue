@@ -259,6 +259,11 @@ const commandsMap: (
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
     },
+    // Passthrough for telemetry purposes
+    "continue.defaultQuickAction": async (args: QuickEditShowParams) => {
+      captureCommandTelemetry("defaultQuickAction");
+      vscode.commands.executeCommand("continue.quickEdit", args);
+    },
     "continue.customQuickActionSendToChat": async (
       prompt: string,
       range: vscode.Range,
