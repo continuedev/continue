@@ -227,7 +227,7 @@ function ModelSelect() {
             />
           ))}
 
-          <Divider />
+          {options.length > 0 && <Divider />}
 
           <StyledListboxOption
             key={options.length}
