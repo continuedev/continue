@@ -9,19 +9,22 @@ import { LanceDbIndex } from "../../../indexing/LanceDbIndex.js";
 import { retrieveFts } from "../fullTextSearch.js";
 
 export interface RetrievalPipelineOptions {
-  ide: IDE;
   embeddingsProvider: EmbeddingsProvider;
   reranker: Reranker | undefined;
-
-  input: string;
   nRetrieve: number;
   nFinal: number;
+  ide: IDE;
+}
+
+export interface RetrievalPipelineRunArguments {
+  query: string;
   tags: BranchAndDir[];
   filterDirectory?: string;
+  // ide?: IDE;
 }
 
 export interface IRetrievalPipeline {
-  run(options: RetrievalPipelineOptions): Promise<Chunk[]>;
+  run(args: RetrievalPipelineRunArguments): Promise<Chunk[]>;
 }
 
 export default class BaseRetrievalPipeline implements IRetrievalPipeline {
@@ -32,28 +35,21 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     );
   }
 
-  protected async retrieveFts(input: string, n: number): Promise<Chunk[]> {
-    return retrieveFts(
-      input,
-      n,
-      this.options.tags,
-      this.options.filterDirectory,
-    );
+  protected async retrieveFts(
+    args: RetrievalPipelineRunArguments,
+    n: number,
+  ): Promise<Chunk[]> {
+    return retrieveFts(args, n);
   }
 
   protected async retrieveEmbeddings(
-    input: string,
+    args: RetrievalPipelineRunArguments,
     n: number,
   ): Promise<Chunk[]> {
-    return this.lanceDbIndex.retrieve(
-      input,
-      n,
-      this.options.tags,
-      this.options.filterDirectory,
-    );
+    return this.lanceDbIndex.retrieve(args, n);
   }
 
-  run(): Promise<Chunk[]> {
+  run(args: RetrievalPipelineRunArguments): Promise<Chunk[]> {
     throw new Error("Not implemented");
   }
 }

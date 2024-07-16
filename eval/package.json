@@ -14,5 +14,8 @@
   "license": "Apache-2.0",
   "devDependencies": {
     "typescript": "^5.5.2"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5"
   }
 }

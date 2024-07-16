@@ -1,21 +1,21 @@
 import { Chunk } from "../../../index.js";
 import { deduplicateChunks } from "../util.js";
-import BaseRetrievalPipeline from "./BaseRetrievalPipeline.js";
+import BaseRetrievalPipeline, {
+  RetrievalPipelineRunArguments,
+} from "./BaseRetrievalPipeline.js";
 
 export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
-  async run(): Promise<Chunk[]> {
-    const { input } = this.options;
-
+  async run(args: RetrievalPipelineRunArguments): Promise<Chunk[]> {
     // Get all retrieval results
     const retrievalResults: Chunk[] = [];
 
     // Full-text search
-    const ftsResults = await this.retrieveFts(input, this.options.nFinal / 2);
+    const ftsResults = await this.retrieveFts(args, this.options.nFinal / 2);
     retrievalResults.push(...ftsResults);
 
     // Embeddings
     const embeddingResults = await this.retrieveEmbeddings(
-      input,
+      args,
       this.options.nFinal / 2,
     );
     retrievalResults.push(...embeddingResults);

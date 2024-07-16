@@ -1,26 +1,25 @@
-import { BranchAndDir, Chunk } from "../../index.js";
+import { Chunk } from "../../index.js";
 import { FullTextSearchCodebaseIndex } from "../../indexing/FullTextSearch.js";
+import { RetrievalPipelineRunArguments } from "./pipelines/BaseRetrievalPipeline.js";
 
 export async function retrieveFts(
-  query: string,
+  args: RetrievalPipelineRunArguments,
   n: number,
-  tags: BranchAndDir[],
-  filterDirectory: string | undefined,
 ): Promise<Chunk[]> {
   const ftsIndex = new FullTextSearchCodebaseIndex();
 
   let ftsResults: Chunk[] = [];
   try {
-    if (query.trim() !== "") {
+    if (args.query.trim() !== "") {
       ftsResults = await ftsIndex.retrieve(
-        tags,
-        query
+        args.tags,
+        args.query
           .trim()
           .split(" ")
           .map((element) => `"${element}"`)
           .join(" OR "),
         n,
-        filterDirectory,
+        args.filterDirectory,
         undefined,
       );
     }

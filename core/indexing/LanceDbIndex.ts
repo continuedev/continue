@@ -1,9 +1,9 @@
 // NOTE: vectordb requirement must be listed in extensions/vscode to avoid error
 import { v4 as uuidv4 } from "uuid";
 import { Table } from "vectordb";
+import { RetrievalPipelineRunArguments } from "../context/retrieval/pipelines/BaseRetrievalPipeline.js";
 import { IContinueServerClient } from "../continueServer/interface.js";
 import {
-  BranchAndDir,
   Chunk,
   EmbeddingsProvider,
   IndexTag,
@@ -412,24 +412,22 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   async retrieve(
-    query: string,
+    args: RetrievalPipelineRunArguments,
     n: number,
-    tags: BranchAndDir[],
-    filterDirectory: string | undefined,
   ): Promise<Chunk[]> {
     const lancedb = await import("vectordb");
     if (!lancedb.connect) {
       throw new Error("LanceDB failed to load a native module");
     }
-    const [vector] = await this.embeddingsProvider.embed([query]);
+    const [vector] = await this.embeddingsProvider.embed([args.query]);
     const db = await lancedb.connect(getLanceDbPath());
 
     let allResults = [];
-    for (const tag of tags) {
+    for (const tag of args.tags) {
       const results = await this._retrieveForTag(
         { ...tag, artifactId: this.artifactId },
         n,
-        filterDirectory,
+        args.filterDirectory,
         vector,
         db,
       );

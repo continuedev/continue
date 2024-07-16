@@ -1,21 +1,24 @@
 import { Chunk } from "../../../index.js";
 import { RETRIEVAL_PARAMS } from "../../../util/parameters.js";
 import { deduplicateChunks } from "../util.js";
-import BaseRetrievalPipeline from "./BaseRetrievalPipeline.js";
+import BaseRetrievalPipeline, {
+  RetrievalPipelineRunArguments,
+} from "./BaseRetrievalPipeline.js";
 
 export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
-  private async _retrieveInitial(): Promise<Chunk[]> {
-    const { input, nRetrieve } = this.options;
-
+  private async _retrieveInitial(
+    args: RetrievalPipelineRunArguments,
+  ): Promise<Chunk[]> {
+    const { nRetrieve } = this.options;
     // Get all retrieval results
     const retrievalResults: Chunk[] = [];
 
     // Full-text search
-    const ftsResults = await this.retrieveFts(input, nRetrieve / 2);
+    const ftsResults = await this.retrieveFts(args, nRetrieve / 2);
     retrievalResults.push(...ftsResults);
 
     // Embeddings
-    const embeddingResults = await this.retrieveEmbeddings(input, nRetrieve);
+    const embeddingResults = await this.retrieveEmbeddings(args, nRetrieve);
     retrievalResults.push(
       ...embeddingResults.slice(0, nRetrieve - ftsResults.length),
     );
@@ -47,7 +50,10 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     return results;
   }
 
-  private async _expandWithEmbeddings(chunks: Chunk[]): Promise<Chunk[]> {
+  private async _expandWithEmbeddings(
+    args: RetrievalPipelineRunArguments,
+    chunks: Chunk[],
+  ): Promise<Chunk[]> {
     const topResults = chunks.slice(
       -RETRIEVAL_PARAMS.nResultsToExpandWithEmbeddings,
     );
@@ -55,7 +61,10 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     const expanded = await Promise.all(
       topResults.map(async (chunk, i) => {
         const results = await this.retrieveEmbeddings(
-          chunk.content,
+          {
+            ...args,
+            query: chunk.content,
+          },
           RETRIEVAL_PARAMS.nEmbeddingsExpandTo,
         );
         return results;
@@ -64,22 +73,24 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
     return expanded.flat();
   }
 
-  private async _expandRankedResults(chunks: Chunk[]): Promise<Chunk[]> {
+  private async _expandRankedResults(
+    args: RetrievalPipelineRunArguments,
+    chunks: Chunk[],
+  ): Promise<Chunk[]> {
     let results: Chunk[] = [];
 
-    const embeddingsResults = await this._expandWithEmbeddings(chunks);
+    const embeddingsResults = await this._expandWithEmbeddings(args, chunks);
     results.push(...embeddingsResults);
 
     return results;
   }
 
-  async run(): Promise<Chunk[]> {
+  async run(args: RetrievalPipelineRunArguments): Promise<Chunk[]> {
     // Retrieve initial results
-    let results = await this._retrieveInitial();
+    let results = await this._retrieveInitial(args);
 
     // Rerank
-    const { input } = this.options;
-    results = await this._rerank(input, results);
+    results = await this._rerank(args.query, results);
 
     // // // Expand top reranked results
     // const expanded = await this._expandRankedResults(results);

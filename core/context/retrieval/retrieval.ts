@@ -63,15 +63,16 @@ export async function retrieveContextItemsFromEmbeddings(
   const pipelineOptions: RetrievalPipelineOptions = {
     nFinal,
     nRetrieve,
-    tags,
     embeddingsProvider: extras.embeddingsProvider,
     reranker: extras.reranker,
-    filterDirectory,
     ide: extras.ide,
-    input: extras.fullInput,
   };
   const pipeline = new pipelineType(pipelineOptions);
-  const results = await pipeline.run();
+  const results = await pipeline.run({
+    tags,
+    filterDirectory,
+    query: extras.fullInput,
+  });
 
   if (results.length === 0) {
     throw new Error(
