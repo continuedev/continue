@@ -10,11 +10,6 @@ export function setupApiKeysMode(
   return {
     ...config,
     models: config.models.filter((model) => model.provider !== "free-trial"),
-    tabAutocompleteModel: {
-      title: "Tab Autocomplete",
-      provider: "free-trial",
-      model: TRIAL_FIM_MODEL,
-    },
     embeddingsProvider: {
       provider: "free-trial",
     },

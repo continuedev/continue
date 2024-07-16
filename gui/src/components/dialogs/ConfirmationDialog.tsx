@@ -11,6 +11,14 @@ const GridDiv = styled.div`
   grid-template-columns: 1fr 1fr;
   grid-gap: 8px;
   align-items: center;
+
+  > * {
+    grid-column: 2;
+  }
+
+  > :nth-last-child(2):first-child {
+    grid-column: 1;
+  }
 `;
 
 interface ConfirmationDialogProps {
@@ -18,6 +26,8 @@ interface ConfirmationDialogProps {
   onCancel?: () => void;
   text: string;
   title?: string;
+  hideCancelButton?: boolean;
+  confirmText?: string;
 }
 
 function ConfirmationDialog(props: ConfirmationDialogProps) {
@@ -29,15 +39,17 @@ function ConfirmationDialog(props: ConfirmationDialogProps) {
       <p>{props.text}</p>
 
       <GridDiv>
-        <SecondaryButton
-          onClick={() => {
-            props.onCancel?.();
-            dispatch(setShowDialog(false));
-            dispatch(setDialogMessage(undefined));
-          }}
-        >
-          Cancel
-        </SecondaryButton>
+        {!!props.hideCancelButton || (
+          <SecondaryButton
+            onClick={() => {
+              props.onCancel?.();
+              dispatch(setShowDialog(false));
+              dispatch(setDialogMessage(undefined));
+            }}
+          >
+            Cancel
+          </SecondaryButton>
+        )}
         <Button
           onClick={() => {
             props.onConfirm();
@@ -45,7 +57,7 @@ function ConfirmationDialog(props: ConfirmationDialogProps) {
             dispatch(setDialogMessage(undefined));
           }}
         >
-          Confirm
+          {props.confirmText ?? "Confirm"}
         </Button>
       </GridDiv>
     </div>

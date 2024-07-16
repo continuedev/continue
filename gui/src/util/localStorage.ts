@@ -15,6 +15,7 @@ type LocalStorageTypes = {
   signedInToGh: boolean;
   isOnboardingInProgress: boolean;
   showTutorialCard: boolean;
+  shownProfilesIntroduction: boolean;
 };
 
 export function getLocalStorage<T extends keyof LocalStorageTypes>(
