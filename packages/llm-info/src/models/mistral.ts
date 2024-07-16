@@ -58,6 +58,13 @@ export const MistralLlms: LlmInfo[] = [
     regex: /mistral-embed/i,
   },
   {
+    model: "codestral-mamba-latest",
+    displayName: "Codestral Mamba",
+    contextLength: 256_000,
+    description: "A Mamba 2 language model specialized in code generation.",
+    regex: /codestral-mamba/i,
+  },
+  {
     model: "codestral-latest",
     displayName: "Codestral",
     contextLength: 32768,

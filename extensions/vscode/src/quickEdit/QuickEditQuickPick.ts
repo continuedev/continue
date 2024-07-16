@@ -11,6 +11,7 @@ import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 
 // @ts-ignore - error finding typings
 import { ConfigHandler } from "core/config/ConfigHandler";
+// @ts-ignore
 import MiniSearch from "minisearch";
 
 /**

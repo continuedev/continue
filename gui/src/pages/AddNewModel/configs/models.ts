@@ -276,7 +276,19 @@ export const models: { [key: string]: ModelPackage } = {
     },
     icon: "mistral.png",
     providerOptions: ["mistral"],
-    isOpenSource: false,
+    isOpenSource: true,
+  },
+  codestralMamba: {
+    title: "Codestral Mamba",
+    description: "A Mamba 2 language model specialized in code generation.",
+    params: {
+      title: "Codestral Mamba",
+      model: "codestral-mamba-latest",
+      contextLength: 256_000,
+    },
+    icon: "mistral.png",
+    providerOptions: ["mistral"],
+    isOpenSource: true,
   },
   mistral7b: {
     title: "Mistral 7B",
