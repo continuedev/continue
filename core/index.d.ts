@@ -374,8 +374,10 @@ export type CustomLLM = RequireAtLeastOne<
 
 // IDE
 
+export type DiffLineType = "new" | "old" | "same";
+
 export interface DiffLine {
-  type: "new" | "old" | "same";
+  type: DiffLineType;
   line: string;
 }
 
