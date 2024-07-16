@@ -251,8 +251,8 @@
       },
       {
         "command": "continue.focusContinueInputWithoutClear",
-        "mac": "cmd+shift+l",
-        "key": "ctrl+shift+l"
+        "mac": "alt+shift+l",
+        "key": "alt+shift+l"
       },
       {
         "command": "continue.toggleAuxiliaryBar",
