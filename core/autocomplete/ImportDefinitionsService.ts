@@ -1,11 +1,11 @@
-import { IDE } from "..";
-import { RangeInFileWithContents } from "../commands/util";
-import { PrecalculatedLruCache } from "../util/LruCache";
+import { RangeInFileWithContents } from "../commands/util.js";
+import { IDE } from "../index.js";
+import { PrecalculatedLruCache } from "../util/LruCache.js";
 import {
   TSQueryType,
   getParserForFile,
   getQueryForFile,
-} from "../util/treeSitter";
+} from "../util/treeSitter.js";
 
 interface FileInfo {
   imports: { [key: string]: RangeInFileWithContents[] };

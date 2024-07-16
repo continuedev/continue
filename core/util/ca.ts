@@ -1,5 +1,4 @@
 import { globalAgent } from "https";
-import { systemCertsAsync } from "system-ca";
 
 export async function setupCa() {
   try {
@@ -13,6 +12,7 @@ export async function setupCa() {
         require("win-ca").inject("+");
         break;
       default:
+        const { systemCertsAsync } = require("system-ca");
         // https://www.npmjs.com/package/system-ca
         globalAgent.options.ca = await systemCertsAsync();
         break;

@@ -4,9 +4,9 @@ import {
   EmbeddingsProvider,
   IDE,
   Reranker,
-} from "../../..";
-import { LanceDbIndex } from "../../../indexing/LanceDbIndex";
-import { retrieveFts } from "../fullTextSearch";
+} from "../../../index.js";
+import { LanceDbIndex } from "../../../indexing/LanceDbIndex.js";
+import { retrieveFts } from "../fullTextSearch.js";
 
 export interface RetrievalPipelineOptions {
   ide: IDE;

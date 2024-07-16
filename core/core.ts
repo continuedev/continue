@@ -1,10 +1,4 @@
 import { v4 as uuidv4 } from "uuid";
-import type {
-  ContextItemId,
-  IDE,
-  IndexingProgressUpdate,
-  SiteIndexingConfig,
-} from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider.js";
 import { ConfigHandler } from "./config/ConfigHandler.js";
 import {
@@ -16,18 +10,24 @@ import {
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
-import { ControlPlaneClient } from "./control-plane/client";
+import { ControlPlaneClient } from "./control-plane/client.js";
+import type {
+  ContextItemId,
+  IDE,
+  IndexingProgressUpdate,
+  SiteIndexingConfig,
+} from "./index.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
-import { DocsService } from "./indexing/docs/DocsService";
+import { DocsService } from "./indexing/docs/DocsService.js";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import Ollama from "./llm/llms/Ollama.js";
-import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import type { FromCoreProtocol, ToCoreProtocol } from "./protocol/index.js";
 import { GlobalContext } from "./util/GlobalContext.js";
 import { logDevData } from "./util/devdata.js";
 import { DevDataSqliteDb } from "./util/devdataSqlite.js";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions.js";
 import historyManager from "./util/history.js";
-import type { IMessenger, Message } from "./util/messenger";
+import type { IMessenger, Message } from "./util/messenger.js";
 import { editConfigJson } from "./util/paths.js";
 import { Telemetry } from "./util/posthog.js";
 import { streamDiffLines } from "./util/verticalEdit.js";
@@ -248,9 +248,9 @@ export class Core {
         (provider) => provider.description.title === "docs",
       );
 
-      const siteIndexingOptions: SiteIndexingConfig[] = provider ?
-        (mProvider => mProvider?.options?.sites || [])({ ...provider }) :
-        [];
+      const siteIndexingOptions: SiteIndexingConfig[] = provider
+        ? ((mProvider) => mProvider?.options?.sites || [])({ ...provider })
+        : [];
 
       await this.indexDocs(siteIndexingOptions, msg.data.reIndex);
       this.ide.infoPopup("Docs indexing completed");
@@ -637,12 +637,18 @@ export class Core {
     }
   }
 
-  private async indexDocs(sites: SiteIndexingConfig[], reIndex: boolean): Promise<void> {
+  private async indexDocs(
+    sites: SiteIndexingConfig[],
+    reIndex: boolean,
+  ): Promise<void> {
     for (const site of sites) {
-      for await (const update of this.docsService.indexAndAdd(site, new TransformersJsEmbeddingsProvider(), reIndex)) {
+      for await (const update of this.docsService.indexAndAdd(
+        site,
+        new TransformersJsEmbeddingsProvider(),
+        reIndex,
+      )) {
         // Temporary disabled posting progress updates to the UI due to
         // possible collision with code indexing progress updates.
-
         // this.messenger.request("indexProgress", update);
         // this.indexingState = update;
       }

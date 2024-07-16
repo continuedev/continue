@@ -1,7 +1,7 @@
-import { Chunk } from "../../..";
-import { RETRIEVAL_PARAMS } from "../../../util/parameters";
-import { deduplicateChunks } from "../util";
-import BaseRetrievalPipeline from "./BaseRetrievalPipeline";
+import { Chunk } from "../../../index.js";
+import { RETRIEVAL_PARAMS } from "../../../util/parameters.js";
+import { deduplicateChunks } from "../util.js";
+import BaseRetrievalPipeline from "./BaseRetrievalPipeline.js";
 
 export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   private async _retrieveInitial(): Promise<Chunk[]> {

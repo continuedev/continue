@@ -1,25 +1,25 @@
 import { ConfigJson } from "@continuedev/config-types";
+import { ControlPlaneClient } from "../../control-plane/client.js";
+import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
 import {
   ContinueConfig,
   IDE,
   IdeSettings,
   SerializedContinueConfig,
-} from "../..";
-import { ControlPlaneClient } from "../../control-plane/client";
-import { TeamAnalytics } from "../../control-plane/TeamAnalytics";
-import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
-import { Telemetry } from "../../util/posthog";
+} from "../../index.js";
+import ContinueProxy from "../../llm/llms/stubs/ContinueProxy.js";
+import { Telemetry } from "../../util/posthog.js";
 import {
   defaultContextProvidersJetBrains,
   defaultContextProvidersVsCode,
   defaultSlashCommandsJetBrains,
   defaultSlashCommandsVscode,
-} from "../default";
+} from "../default.js";
 import {
   intermediateToFinalConfig,
   serializedToIntermediateConfig,
-} from "../load";
-import { IProfileLoader } from "./IProfileLoader";
+} from "../load.js";
+import { IProfileLoader } from "./IProfileLoader.js";
 
 export default class ControlPlaneProfileLoader implements IProfileLoader {
   private static RELOAD_INTERVAL = 1000 * 60 * 15; // every 15 minutes

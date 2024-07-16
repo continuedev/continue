@@ -1,8 +1,8 @@
 import { EventEmitter } from "events";
 import { Minimatch } from "minimatch";
 import path from "node:path";
-import { FileType, IDE } from "..";
-import { DEFAULT_IGNORE_DIRS, DEFAULT_IGNORE_FILETYPES } from "./ignore";
+import { FileType, IDE } from "../index.js";
+import { DEFAULT_IGNORE_DIRS, DEFAULT_IGNORE_FILETYPES } from "./ignore.js";
 
 export interface WalkerOptions {
   isSymbolicLink?: boolean;

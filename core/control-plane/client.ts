@@ -1,6 +1,6 @@
 import { ConfigJson } from "@continuedev/config-types";
 import fetch, { RequestInit, Response } from "node-fetch";
-import { ModelDescription } from "..";
+import { ModelDescription } from "../index.js";
 
 export interface ControlPlaneSessionInfo {
   accessToken: string;

@@ -1,12 +1,12 @@
 import path from "path";
-import { walkDir, WalkerOptions } from "../indexing/walkDir";
-import FileSystemIde from "../util/filesystem";
+import { walkDir, WalkerOptions } from "../indexing/walkDir.js";
+import FileSystemIde from "../util/filesystem.js";
 import {
   addToTestDir,
   setUpTestDir,
   tearDownTestDir,
   TEST_DIR,
-} from "./testUtils/testDir";
+} from "./testUtils/testDir.js";
 const ide = new FileSystemIde(TEST_DIR);
 
 async function walkTestDir(

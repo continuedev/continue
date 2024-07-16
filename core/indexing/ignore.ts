@@ -1,4 +1,5 @@
 import ignore from "ignore";
+const ignoreFunction = (ignore as any).default ?? ignore;
 
 export const DEFAULT_IGNORE_FILETYPES = [
   "*.DS_Store",
@@ -66,7 +67,7 @@ export const DEFAULT_IGNORE_FILETYPES = [
   "config.json",
   // "*.prompt", // can be incredibly confusing for the LLM to have another set of instructions injected into the prompt
 ];
-export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
+export const defaultIgnoreFile = ignoreFunction().add(DEFAULT_IGNORE_FILETYPES);
 export const DEFAULT_IGNORE_DIRS = [
   ".git",
   ".svn",
@@ -93,7 +94,7 @@ export const DEFAULT_IGNORE_DIRS = [
   "gems",
   "vendor",
 ];
-export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
+export const defaultIgnoreDir = ignoreFunction().add(DEFAULT_IGNORE_DIRS);
 
 export const DEFAULT_IGNORE =
   DEFAULT_IGNORE_FILETYPES.join("\n") + "\n" + DEFAULT_IGNORE_DIRS.join("\n");

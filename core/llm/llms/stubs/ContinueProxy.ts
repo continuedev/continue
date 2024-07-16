@@ -1,4 +1,4 @@
-import type { LLMOptions, ModelProvider } from "../../..";
+import type { LLMOptions, ModelProvider } from "../../../index.js";
 import OpenAI from "../OpenAI.js";
 
 class ContinueProxy extends OpenAI {

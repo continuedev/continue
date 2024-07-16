@@ -1,7 +1,12 @@
-import { ContinueConfig, ContinueRcJson, IDE, IdeSettings } from "../..";
-import { Telemetry } from "../../util/posthog";
-import { loadFullConfigNode } from "../load";
-import { IProfileLoader } from "./IProfileLoader";
+import {
+  ContinueConfig,
+  ContinueRcJson,
+  IDE,
+  IdeSettings,
+} from "../../index.js";
+import { Telemetry } from "../../util/posthog.js";
+import { loadFullConfigNode } from "../load.js";
+import { IProfileLoader } from "./IProfileLoader.js";
 
 export default class LocalProfileLoader implements IProfileLoader {
   static ID = "local";

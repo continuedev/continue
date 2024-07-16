@@ -49,6 +49,7 @@ import { AutocompleteSnippet } from "./ranking.js";
 import { RecentlyEditedRange } from "./recentlyEdited.js";
 import { getTemplateForModel } from "./templates.js";
 import { GeneratorReuseManager } from "./util.js";
+const ignoreFunction = (ignore as any).default ?? ignore;
 // @prettier-ignore
 import Handlebars from "handlebars";
 
@@ -265,7 +266,7 @@ export class CompletionProvider {
           filepath = getBasename(filepath);
         }
 
-        const pattern = ignore().add(options.disableInFiles);
+        const pattern = ignoreFunction().add(options.disableInFiles);
         if (pattern.ignores(filepath)) {
           return undefined;
         }
