@@ -1,8 +1,13 @@
-import { Chunk, EmbeddingsProvider, Reranker } from "@continuedev/core";
-import { ConfigHandler } from "@continuedev/core/config/ConfigHandler";
+import { Chunk, EmbeddingsProvider, IDE, Reranker } from "@continuedev/core";
+import { ConfigHandler } from "@continuedev/core/config/ConfigHandler.js";
 import { IRetrievalPipeline } from "@continuedev/core/context/retrieval/pipelines/BaseRetrievalPipeline.js";
 import RerankerRetrievalPipeline from "@continuedev/core/context/retrieval/pipelines/RerankerRetrievalPipeline.js";
-import { CodebaseIndexer } from "@continuedev/core/indexing/CodebaseIndexer.js";
+import { ContinueServerClient } from "@continuedev/core/continueServer/stubs/client.js";
+import { ControlPlaneClient } from "@continuedev/core/control-plane/client.js";
+import {
+  CodebaseIndexer,
+  PauseToken,
+} from "@continuedev/core/indexing/CodebaseIndexer.js";
 import FileSystemIde from "@continuedev/core/util/filesystem.js";
 
 process.env.CONTINUE_GLOBAL_DIR = "./.continue.test";
@@ -28,28 +33,57 @@ interface RetrievalStrategy {
   nFinal: number;
 }
 
-async function retrieveInRepo(
-  repo: string,
-  query: string,
-  strategy: RetrievalStrategy,
-): Promise<Chunk> {
-  const repoDir = dirForRepo(repo);
-
-  // Fixtures
-  const ide = new FileSystemIde(repoDir);
-  const configHandler = new ConfigHandler(repoDir);
+function createCodebaseIndexer(ide: IDE): CodebaseIndexer {
   const continueServerClient = new ContinueServerClient(undefined, undefined);
-
-  const { pipeline, embeddingsProvider, reranker, nFinal, nRetrieve } =
-    strategy;
-
-  // Make sure codebase indexes are updated
-  const codebaseIndexer = new CodebaseIndexer(
+  const configHandler = new ConfigHandler(
+    ide,
+    Promise.resolve({
+      remoteConfigServerUrl: undefined,
+      remoteConfigSyncPeriod: 60,
+      userToken: "",
+      enableControlServerBeta: false,
+    }),
+    async () => {},
+    new ControlPlaneClient(Promise.resolve(undefined)),
+  );
+  const pauseToken = new PauseToken(false);
+  return new CodebaseIndexer(
     configHandler,
     ide,
     pauseToken,
     continueServerClient,
   );
+}
+
+const onsole = {
+  log: (...args: any[]) => {},
+};
+
+async function downloadOrUpdateRepo(repo: string): Promise<void> {}
+
+async function retrieveInRepo(
+  repo: string,
+  query: string,
+  strategy: RetrievalStrategy,
+): Promise<Chunk[]> {
+  const workspaceDir = dirForRepo(repo);
+
+  // Fixtures
+  const ide = new FileSystemIde(workspaceDir);
+  const { pipeline, embeddingsProvider, reranker, nFinal, nRetrieve } =
+    strategy;
+
+  // Make sure codebase indexes are updated
+  const codebaseIndexer = createCodebaseIndexer(ide);
+  const abortController = new AbortController();
+  const abortSignal = abortController.signal;
+  for await (const update of codebaseIndexer.refresh(
+    await ide.getWorkspaceDirs(),
+    abortSignal,
+  )) {
+    onsole.log("update", update);
+  }
+  onsole.log("done updating indexes");
 
   // Run pipeline
   const results = await pipeline.run({
@@ -62,11 +96,21 @@ async function retrieveInRepo(
     tags: [
       {
         branch: "main",
-        directory: repoDir,
+        directory: workspaceDir,
       },
     ],
   });
   return results;
+}
+
+function accuracy(results: Chunk[], expected: string[]): number {
+  let score = 0;
+  for (const result of results) {
+    if (expected.includes(result.filepath)) {
+      score += 1;
+    }
+  }
+  return score / expected.length;
 }
 
 const r = new RerankerRetrievalPipeline();
