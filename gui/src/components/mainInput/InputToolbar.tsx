@@ -23,6 +23,9 @@ import {
 } from "../../util";
 import ModelSelect from "../modelSelection/ModelSelect";
 
+const paddingTop = 4;
+const height = 20;
+
 const StyledDiv = styled.div<{ hidden?: boolean }>`
   display: flex;
   justify-content: space-between;
@@ -30,7 +33,9 @@ const StyledDiv = styled.div<{ hidden?: boolean }>`
   flex-direction: row-reverse;
   gap: 1px;
   background-color: ${vscInputBackground};
-  padding-top: 4px;
+  padding-top: ${paddingTop}px;
+
+  height: ${height}px;
 
   ${(props) => (props.hidden ? "display: none;" : "")}
 
@@ -84,118 +89,127 @@ function InputToolbar(props: InputToolbarProps) {
   const useActiveFile = useSelector(selectUseActiveFile);
 
   return (
-    <StyledDiv hidden={props.hidden} onClick={props.onClick} id="input-toolbar">
-      <span className="flex items-center whitespace-nowrap">
-        {props.showNoContext ? (
-          <span
-            style={{
-              color: props.usingCodebase ? vscBadgeBackground : lightGray,
-              backgroundColor: props.usingCodebase
-                ? lightGray + "33"
-                : undefined,
-              borderRadius: defaultBorderRadius,
-              padding: "2px 4px",
-            }}
-          >
-            {getAltKeyLabel()} ⏎{" "}
-            {useActiveFile ? "No context" : "Use active file"}
-          </span>
-        ) : (
-          <span
-            style={{
-              color: props.usingCodebase ? vscBadgeBackground : lightGray,
-              backgroundColor: props.usingCodebase
-                ? lightGray + "33"
-                : undefined,
-              borderRadius: defaultBorderRadius,
-              padding: "2px 4px",
-            }}
-            onClick={(e) => {
-              props.onEnter({
-                useCodebase: true,
-                noContext: !useActiveFile,
-              });
-            }}
-            className={"hover:underline cursor-pointer float-right"}
-          >
-            {getMetaKeyLabel()} ⏎ Use codebase
-          </span>
-        )}
-        <EnterButton
-          offFocus={props.usingCodebase}
-          // disabled={
-          //   !active &&
-          //   (!(inputRef.current as any)?.value ||
-          //     typeof client === "undefined")
-          // }
-          onClick={(e) => {
-            props.onEnter({
-              useCodebase: isMetaEquivalentKeyPressed(e),
-              noContext: useActiveFile ? e.altKey : !e.altKey,
-            });
-          }}
-        >
-          ⏎ Enter
-        </EnterButton>
-      </span>
-      <span className="flex flex-wrap-reverse items-center whitespace-nowrap">
-        <ModelSelect />
-        <span
-          style={{
-            color: lightGray,
-          }}
-          onClick={(e) => {
-            props.onAddContextItem();
-          }}
-          className="hover:underline cursor-pointer"
-        >
-          + Add Context
-        </span>
-        {defaultModel &&
-          modelSupportsImages(
-            defaultModel.provider,
-            defaultModel.model,
-            defaultModel.title,
-          ) && (
+    <>
+      {props.hidden && (
+        <div style={{ height: `${height + paddingTop}px` }}></div>
+      )}
+      <StyledDiv
+        hidden={props.hidden}
+        onClick={props.onClick}
+        id="input-toolbar"
+      >
+        <span className="flex items-center whitespace-nowrap">
+          {props.showNoContext ? (
             <span
-              className="ml-1.5 mt-0.5"
-              onMouseLeave={() => setFileSelectHovered(false)}
-              onMouseEnter={() => setFileSelectHovered(true)}
+              style={{
+                color: props.usingCodebase ? vscBadgeBackground : lightGray,
+                backgroundColor: props.usingCodebase
+                  ? lightGray + "33"
+                  : undefined,
+                borderRadius: defaultBorderRadius,
+                padding: "2px 4px",
+              }}
             >
-              <input
-                type="file"
-                ref={fileInputRef}
-                style={{ display: "none" }}
-                accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
-                onChange={(e) => {
-                  for (const file of e.target.files) {
-                    props.onImageFileSelected(file);
-                  }
-                }}
-              />
-              {fileSelectHovered ? (
-                <SolidPhotoIcon
-                  width="1.4em"
-                  height="1.4em"
-                  color={lightGray}
-                  onClick={(e) => {
-                    fileInputRef.current?.click();
-                  }}
-                />
-              ) : (
-                <OutlinePhotoIcon
-                  width="1.4em"
-                  height="1.4em"
-                  color={lightGray}
-                  onClick={(e) => {
-                    fileInputRef.current?.click();
-                  }}
-                />
-              )}
+              {getAltKeyLabel()} ⏎{" "}
+              {useActiveFile ? "No context" : "Use active file"}
+            </span>
+          ) : (
+            <span
+              style={{
+                color: props.usingCodebase ? vscBadgeBackground : lightGray,
+                backgroundColor: props.usingCodebase
+                  ? lightGray + "33"
+                  : undefined,
+                borderRadius: defaultBorderRadius,
+                padding: "2px 4px",
+              }}
+              onClick={(e) => {
+                props.onEnter({
+                  useCodebase: true,
+                  noContext: !useActiveFile,
+                });
+              }}
+              className={"hover:underline cursor-pointer float-right"}
+            >
+              {getMetaKeyLabel()} ⏎ Use codebase
             </span>
           )}
-      </span>
-    </StyledDiv>
+          <EnterButton
+            offFocus={props.usingCodebase}
+            // disabled={
+            //   !active &&
+            //   (!(inputRef.current as any)?.value ||
+            //     typeof client === "undefined")
+            // }
+            onClick={(e) => {
+              props.onEnter({
+                useCodebase: isMetaEquivalentKeyPressed(e),
+                noContext: useActiveFile ? e.altKey : !e.altKey,
+              });
+            }}
+          >
+            ⏎ Enter
+          </EnterButton>
+        </span>
+        <span className="flex flex-wrap-reverse items-center whitespace-nowrap">
+          <ModelSelect />
+          <span
+            style={{
+              color: lightGray,
+            }}
+            onClick={(e) => {
+              props.onAddContextItem();
+            }}
+            className="hover:underline cursor-pointer"
+          >
+            + Add Context
+          </span>
+          {defaultModel &&
+            modelSupportsImages(
+              defaultModel.provider,
+              defaultModel.model,
+              defaultModel.title,
+            ) && (
+              <span
+                className="ml-1.5 mt-0.5"
+                onMouseLeave={() => setFileSelectHovered(false)}
+                onMouseEnter={() => setFileSelectHovered(true)}
+              >
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  accept=".jpg,.jpeg,.png,.gif,.svg,.webp"
+                  onChange={(e) => {
+                    for (const file of e.target.files) {
+                      props.onImageFileSelected(file);
+                    }
+                  }}
+                />
+                {fileSelectHovered ? (
+                  <SolidPhotoIcon
+                    width="1.4em"
+                    height="1.4em"
+                    color={lightGray}
+                    onClick={(e) => {
+                      fileInputRef.current?.click();
+                    }}
+                  />
+                ) : (
+                  <OutlinePhotoIcon
+                    width="1.4em"
+                    height="1.4em"
+                    color={lightGray}
+                    onClick={(e) => {
+                      fileInputRef.current?.click();
+                    }}
+                  />
+                )}
+              </span>
+            )}
+        </span>
+      </StyledDiv>
+    </>
   );
 }
 
