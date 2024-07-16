@@ -32,7 +32,7 @@ export async function retrieveContextItemsFromEmbeddings(
   const contextLength = extras.llm.contextLength;
   const tokensPerSnippet = 512;
   const nFinal =
-    options?.nFinal ?? Math.min(10, contextLength / tokensPerSnippet / 2);
+    options?.nFinal ?? Math.min(50, contextLength / tokensPerSnippet / 2);
   const useReranking = extras.reranker !== undefined;
   const nRetrieve =
     useReranking === false ? nFinal : options?.nRetrieve || 2 * nFinal;
