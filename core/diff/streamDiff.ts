@@ -48,12 +48,10 @@ export async function* streamDiff(
     switch (type) {
       case "new":
         yield { type, line: newLine };
-
         break;
 
       case "same":
         yield { type, line: oldLines.shift()! };
-
         break;
 
       case "old":
@@ -90,11 +88,3 @@ export async function* streamDiff(
     }
   }
 }
-
-const test = () => {
-  console.log("first");
-  console.log("second");
-  console.log("third");
-  // const oldLines = ["line 1", "line 2", "line 3"];
-  // const newLines = ["line 1", "modified line 2", "line 3"];
-};

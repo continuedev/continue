@@ -29,7 +29,6 @@ function linesMatch(lineA: string, lineB: string, linesBetween = 0): boolean {
 
   const d = distance(lineA, lineB);
 
-  // Why do we need this?
   return (
     // Should be more unlikely for lines to fuzzy match if they are further away
     (d / Math.max(lineA.length, lineB.length) < 0.5 - linesBetween * 0.05 ||
