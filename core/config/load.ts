@@ -36,6 +36,7 @@ import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
 
+import { execSync } from "child_process";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
 import mergeJson from "../util/merge.js";
@@ -59,7 +60,6 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
-const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");

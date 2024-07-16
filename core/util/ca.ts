@@ -5,14 +5,17 @@ export async function setupCa() {
     switch (process.platform) {
       case "darwin":
         // https://www.npmjs.com/package/mac-ca#usage
-        require("mac-ca").addToGlobalAgent();
+        const macCa = await import("mac-ca");
+        macCa.addToGlobalAgent();
         break;
       case "win32":
         // https://www.npmjs.com/package/win-ca#caveats
-        require("win-ca").inject("+");
+        const { inject } = await import("win-ca");
+        inject("+");
         break;
       default:
-        const { systemCertsAsync } = require("system-ca");
+        // @ts-ignore
+        const systemCertsAsync = await import("system-ca");
         // https://www.npmjs.com/package/system-ca
         globalAgent.options.ca = await systemCertsAsync();
         break;
