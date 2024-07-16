@@ -21,7 +21,7 @@ Quick Actions use a CodeLens provider to add interactive elements above function
 
 By default, Quick Actions include a single predefined action:
 
-1. `Continue`: This action allows you to perform a quick edit on the selected class or function.
+- `Continue`: This action allows you to perform a quick edit on the selected class or function.
 
 ## How to disable Quick Actions
 
