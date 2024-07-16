@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import { IDE } from "core";
+import { walkDir } from "core/indexing/walkDir";
+import { Telemetry } from "core/util/posthog";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
-import { Telemetry } from "core/util/posthog";
-import { walkDir } from "core/indexing/walkDir";
-import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
 import { getContextProviderQuickPickVal } from "./ContextProvidersQuickPick";
+import { appendToHistory, getHistoryQuickPickVal } from "./HistoryQuickPick";
 import { getModelQuickPickVal } from "./ModelSelectionQuickPick";
 
 // @ts-ignore - error finding typings
-import MiniSearch from "minisearch";
 import { ConfigHandler } from "core/config/ConfigHandler";
+import MiniSearch from "minisearch";
 
 /**
  * Used to track what action to take after a user interacts
@@ -77,11 +77,15 @@ export class QuickEdit {
     private readonly ide: IDE,
     private readonly context: vscode.ExtensionContext,
   ) {
-    this.intializeQuickEditState();
+    this.initializeQuickEditState();
   }
 
-  private async intializeQuickEditState() {
-    const editor = vscode.window.activeTextEditor!;
+  private async initializeQuickEditState() {
+    const editor = vscode.window.activeTextEditor;
+
+    if (!editor) {
+      return;
+    }
 
     const existingHandler = this.verticalDiffManager.getHandlerForFile(
       editor.document.uri.fsPath ?? "",
@@ -350,9 +354,8 @@ export class QuickEdit {
   async show(initialPrompt?: string) {
     const config = await this.configHandler.loadConfig();
 
-    const selectedLabelOrInputVal = await this._getInitialQuickPickVal(
-      initialPrompt,
-    );
+    const selectedLabelOrInputVal =
+      await this._getInitialQuickPickVal(initialPrompt);
 
     Telemetry.capture("quickEditSelection", {
       selection: selectedLabelOrInputVal,

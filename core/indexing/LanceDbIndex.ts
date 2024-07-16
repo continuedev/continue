@@ -64,10 +64,13 @@ export class LanceDbIndex implements CodebaseIndex {
       migrate(
         "lancedb_sqlite_artifact_id_column",
         async () => {
-          await db.exec(
-            "ALTER TABLE lance_db_cache ADD COLUMN artifact_id TEXT NOT NULL DEFAULT 'UNDEFINED'",
-          );
-          resolve(undefined);
+          try {
+            await db.exec(
+              "ALTER TABLE lance_db_cache ADD COLUMN artifact_id TEXT NOT NULL DEFAULT 'UNDEFINED'",
+            );
+          } finally {
+            resolve(undefined);
+          }
         },
         () => resolve(undefined),
       ),
