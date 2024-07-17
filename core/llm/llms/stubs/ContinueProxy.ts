@@ -18,6 +18,7 @@ class ContinueProxy extends OpenAI {
   static defaultOptions: Partial<LLMOptions> = {
     apiBase:
       "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/model-proxy/v1",
+    useLegacyCompletionsEndpoint: false,
   };
 
   supportsFim(): boolean {

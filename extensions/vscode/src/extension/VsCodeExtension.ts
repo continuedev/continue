@@ -142,7 +142,7 @@ export class VsCodeExtension {
     this.configHandler.onConfigUpdate((newConfig) => {
       this.sidebar.webviewProtocol?.request("configUpdate", undefined);
 
-      this.tabAutocompleteModel.clearLlm.bind(this.tabAutocompleteModel);
+      this.tabAutocompleteModel.clearLlm();
 
       registerAllCodeLensProviders(
         context,
@@ -196,7 +196,7 @@ export class VsCodeExtension {
       this.core.continueServerClientPromise,
       this.battery,
       quickEdit,
-      this.core
+      this.core,
     );
 
     registerDebugTracker(this.sidebar.webviewProtocol, this.ide);
