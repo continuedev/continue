@@ -9,9 +9,9 @@ import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
 import {
-  StatusBarStatus,
   monitorBatteryChanges,
   setupStatusBar,
+  StatusBarStatus,
 } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
 import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
@@ -22,7 +22,10 @@ import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
 import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
-import { getControlPlaneSessionInfo } from "../stubs/WorkOsAuthProvider";
+import {
+  getControlPlaneSessionInfo,
+  WorkOsAuthProvider,
+} from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -42,8 +45,14 @@ export class VsCodeExtension {
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
   private battery: Battery;
+  private workOsAuthProvider: WorkOsAuthProvider;
 
   constructor(context: vscode.ExtensionContext) {
+    // Register auth provider
+    this.workOsAuthProvider = new WorkOsAuthProvider(context);
+    this.workOsAuthProvider.initialize();
+    context.subscriptions.push(this.workOsAuthProvider);
+
     let resolveWebviewProtocol: any = undefined;
     this.webviewProtocolPromise = new Promise<VsCodeWebviewProtocol>(
       (resolve) => {
@@ -99,6 +108,7 @@ export class VsCodeExtension {
       this.ide,
       verticalDiffManagerPromise,
       configHandlerPromise,
+      this.workOsAuthProvider,
     );
 
     this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
