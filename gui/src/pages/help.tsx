@@ -119,7 +119,7 @@ function HelpPage() {
           </a>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 items-center">
+        <div className="grid grid-cols-3 gap-4 items-center w-full">
           <div className="col-span-2">
             <h3 className="my-0">Join the community!</h3>
             <p>
@@ -131,7 +131,7 @@ function HelpPage() {
             target="_blank"
             className="no-underline"
           >
-            <SecondaryButton className="grid grid-flow-col items-center gap-2">
+            <SecondaryButton className="grid grid-flow-col items-center gap-2 w-full">
               <svg
                 width="42px"
                 height="42px"
