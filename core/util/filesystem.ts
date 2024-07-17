@@ -196,7 +196,7 @@ class FileSystemIde implements IDE {
   }
 
   getBranch(dir: string): Promise<string> {
-    return Promise.resolve("");
+    return Promise.resolve("main");
   }
 
   getOpenFiles(): Promise<string[]> {

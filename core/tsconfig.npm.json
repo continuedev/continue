@@ -18,7 +18,8 @@
     "types": ["jest", "node"],
     "outDir": "dist",
     "declaration": true,
-    "declarationMap": true
+    "declarationMap": true,
+    "sourceMap": true
   },
   "include": ["./**/*.ts", "**/*.js", "./**/*.d.ts"],
   "exclude": ["test", "dist"]

@@ -22,7 +22,6 @@
         "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/binary/.continue"
       }
     },
-
     {
       "name": "Debug Jest Tests",
       "type": "node",
@@ -111,6 +110,26 @@
       "cwd": "${workspaceRoot}/core",
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Eval",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/eval/dist/index.js",
+      // "preLaunchTask": "binary:esbuild",
+      "outFiles": [
+        "${workspaceFolder}/eval/dist/**/*.js",
+        "${workspaceFolder}/core/dist/**/*.js"
+      ],
+      "sourceMaps": true,
+      "smartStep": true,
+      "internalConsoleOptions": "openOnSessionStart",
+      "cwd": "${workspaceFolder}/eval",
+      "env": {
+        "CONTINUE_DEVELOPMENT": "true",
+        "CONTINUE_GLOBAL_DIR": "${workspaceFolder}/eval/.continue"
+      }
     }
   ]
 }

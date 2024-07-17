@@ -72,7 +72,6 @@ async function downloadOrUpdateRepo(repo: string): Promise<void> {
           console.error(`Error updating repo: ${error.message}`);
           reject(error);
         } else {
-          console.log(`Updated repo: ${stdout}`);
           resolve();
         }
       });
@@ -86,7 +85,6 @@ async function downloadOrUpdateRepo(repo: string): Promise<void> {
           console.error(`Error cloning repo: ${error.message}`);
           reject(error);
         } else {
-          console.log(`Cloned repo\n${stdout}`);
           resolve();
         }
       });
@@ -124,7 +122,7 @@ export async function retrieveInRepo(
     query,
     tags: [
       {
-        branch: "main",
+        branch: "main", // This matches the value for FileSystemIde
         directory: workspaceDir,
       },
     ],
