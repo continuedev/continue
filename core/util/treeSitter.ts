@@ -1,6 +1,18 @@
 import fs from "node:fs";
 import * as path from "node:path";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 import Parser, { Language } from "web-tree-sitter";
+
+function getDirname(): string {
+  if (typeof __dirname !== "undefined") {
+    return __dirname;
+  }
+
+  // @ts-ignore
+  const __filename = fileURLToPath(import.meta.url);
+  return dirname(__filename);
+}
 
 export const supportedLanguages: { [key: string]: string } = {
   cpp: "cpp",
@@ -137,7 +149,7 @@ export async function getQueryForFile(
 
   const fullLangName = supportedLanguages[filepath.split(".").pop() ?? ""];
   const sourcePath = path.join(
-    __dirname,
+    getDirname(),
     "..",
     "tree-sitter",
     queryType,
@@ -156,7 +168,7 @@ async function loadLanguageForFileExt(
   fileExtension: string,
 ): Promise<Language> {
   const wasmPath = path.join(
-    __dirname,
+    getDirname(),
     ...(process.env.NODE_ENV === "test"
       ? ["node_modules", "tree-sitter-wasms", "out"]
       : ["tree-sitter-wasms"]),
