@@ -19,7 +19,7 @@ import path from "path";
 const __dirname = path.dirname(new URL(import.meta.url).pathname);
 const REPOS_DIR = path.join(__dirname, "..", "repos");
 
-function dirForRepo(repo: string): string {
+export function dirForRepo(repo: string): string {
   // Extract the last part of the URL (repository name)
   const repoName = repo.split("/").pop() || "";
 

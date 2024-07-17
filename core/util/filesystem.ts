@@ -43,12 +43,13 @@ class FileSystemIde implements IDE {
   async getGitHubAuthToken(): Promise<string | undefined> {
     return undefined;
   }
-  getLastModified(files: string[]): Promise<{ [path: string]: number }> {
-    return new Promise((resolve) => {
-      resolve({
-        [files[0]]: 1234567890,
-      });
-    });
+  async getLastModified(files: string[]): Promise<{ [path: string]: number }> {
+    const result: { [path: string]: number } = {};
+    for (const file of files) {
+      const stats = fs.statSync(file);
+      result[file] = stats.mtimeMs;
+    }
+    return result;
   }
   getGitRootPath(dir: string): Promise<string | undefined> {
     return Promise.resolve(dir);
