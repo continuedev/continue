@@ -71,7 +71,7 @@ export class QuickEdit {
    * Handles situations where the user navigates to a different editor
    * while interacting with the Quick Pick
    */
-  private editorWhenOpened!: vscode.TextEditor;
+  private editorWhenOpened?: vscode.TextEditor;
 
   /**
    * Required to store the string content of a context provider
@@ -91,20 +91,10 @@ export class QuickEdit {
     private readonly ide: IDE,
     private readonly context: vscode.ExtensionContext,
   ) {
-    this.initializeQuickEditState();
+    this.initializeFileSearchState();
   }
 
-  private async initializeQuickEditState() {
-    const editor = vscode.window.activeTextEditor;
-
-    if (!editor) {
-      return;
-    }
-
-    const existingHandler = this.verticalDiffManager.getHandlerForFile(
-      editor.document.uri.fsPath ?? "",
-    );
-
+  private async initializeFileSearchState() {
     const workspaceDirs = await this.ide.getWorkspaceDirs();
 
     const results = await Promise.all(
@@ -119,6 +109,22 @@ export class QuickEdit {
     }));
 
     this.miniSearch.addAll(filenames);
+  }
+
+  private setActiveEditorAndPrevInput() {
+    const editor = vscode.window.activeTextEditor;
+
+    if (!editor) {
+      this.editorWhenOpened = undefined;
+      this.previousInput = undefined;
+
+      return;
+    }
+
+    const existingHandler = this.verticalDiffManager.getHandlerForFile(
+      editor.document.uri.fsPath ?? "",
+    );
+
     this.editorWhenOpened = editor;
     this.previousInput = existingHandler?.input;
   }
@@ -152,11 +158,11 @@ export class QuickEdit {
    * // "Edit myFile.ts", "Edit myFile.ts:5-10", "Edit myFile.ts:15"
    */
   _getQuickPickTitle = () => {
-    const uri = this.editorWhenOpened.document.uri;
-
-    if (!uri) {
+    if (!this.editorWhenOpened || !this.editorWhenOpened.document.uri) {
       return "Edit";
     }
+
+    const { uri } = this.editorWhenOpened.document;
 
     const fileName = vscode.workspace.asRelativePath(uri, true);
 
@@ -240,13 +246,18 @@ export class QuickEdit {
      * Used to show the current file in the Quick Pick,
      * as soon as the user types the search character
      */
-    const currentFileItem: vscode.QuickPickItem = {
-      label: vscode.workspace.asRelativePath(
-        this.editorWhenOpened.document.uri,
-      ),
-      description: "Current file",
-      alwaysShow: true,
-    };
+    const currentFileItem: vscode.QuickPickItem = !!this.editorWhenOpened
+      ? {
+          label: vscode.workspace.asRelativePath(
+            this.editorWhenOpened.document.uri,
+          ),
+          description: "Current file",
+          alwaysShow: true,
+        }
+      : {
+          label: "No current file",
+          alwaysShow: true,
+        };
 
     const noResultsItem: vscode.QuickPickItem = { label: "No results found" };
 
@@ -379,6 +390,9 @@ export class QuickEdit {
   async show(args?: QuickEditShowParams) {
     // Clean up state from previous quick picks, e.g. if a user pressed `esc`
     this.clear();
+
+    // Set state that is unique to each quick pick instance
+    this.setActiveEditorAndPrevInput();
 
     const config = await this.configHandler.loadConfig();
 
