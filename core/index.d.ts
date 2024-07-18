@@ -35,6 +35,7 @@ export interface Chunk extends ChunkWithoutID {
 }
 
 export interface IndexingProgressUpdate {
+  jobId: string;
   progress: number;
   desc: string;
   status: "loading" | "indexing" | "done" | "failed" | "paused" | "disabled";

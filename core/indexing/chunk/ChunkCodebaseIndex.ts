@@ -43,6 +43,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   }
 
   async *update(
+    jobId: string,
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,
@@ -117,6 +118,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       accumulatedProgress =
         (i / results.compute.length) * (1 - progressReservedForTagging);
       yield {
+        jobId,
         progress: accumulatedProgress,
         desc: `Chunking ${getBasename(item.path)}`,
         status: "indexing",
@@ -141,6 +143,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       markComplete([item], IndexResultType.AddTag);
       accumulatedProgress += 1 / results.addTag.length / 4;
       yield {
+        jobId,
         progress: accumulatedProgress,
         desc: `Chunking ${getBasename(item.path)}`,
         status: "indexing",
@@ -163,6 +166,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       markComplete([item], IndexResultType.RemoveTag);
       accumulatedProgress += 1 / results.removeTag.length / 4;
       yield {
+        jobId,
         progress: accumulatedProgress,
         desc: `Removing ${getBasename(item.path)}`,
         status: "indexing",
@@ -183,6 +187,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       markComplete([item], IndexResultType.Delete);
       accumulatedProgress += 1 / results.del.length / 4;
       yield {
+        jobId,
         progress: accumulatedProgress,
         desc: `Removing ${getBasename(item.path)}`,
         status: "indexing",

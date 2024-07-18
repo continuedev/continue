@@ -72,7 +72,7 @@ export class Core {
     private readonly ide: IDE,
     private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
-    this.indexingState = { status: "loading", desc: "loading", progress: 0 };
+    this.indexingState = { jobId:"1", status: "loading", desc: "loading", progress: 0 };
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
       silent: true,
@@ -228,13 +228,13 @@ export class Core {
         maxDepth: msg.data.maxDepth,
         faviconUrl: new URL("/favicon.ico", msg.data.rootUrl).toString(),
       };
-
+      const jobId = uuidv4();
       for await (const _ of this.docsService.indexAndAdd(
+        jobId,
         siteIndexingConfig,
         new TransformersJsEmbeddingsProvider(),
       )) {
       }
-      this.ide.infoPopup(`Successfully indexed ${msg.data.title}`);
       this.messenger.send("refreshSubmenuItems", undefined);
     });
     on("context/removeDocs", async (msg) => {
@@ -253,7 +253,6 @@ export class Core {
         [];
 
       await this.indexDocs(siteIndexingOptions, msg.data.reIndex);
-      this.ide.infoPopup("Docs indexing completed");
     });
     on("context/loadSubmenuItems", async (msg) => {
       const config = await this.config();
@@ -628,7 +627,9 @@ export class Core {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
+    const jobId = uuidv4();
     for await (const update of (await this.codebaseIndexerPromise).refresh(
+      jobId,
       dirs,
       this.indexingCancellationController.signal,
     )) {
@@ -639,12 +640,10 @@ export class Core {
 
   private async indexDocs(sites: SiteIndexingConfig[], reIndex: boolean): Promise<void> {
     for (const site of sites) {
-      for await (const update of this.docsService.indexAndAdd(site, new TransformersJsEmbeddingsProvider(), reIndex)) {
-        // Temporary disabled posting progress updates to the UI due to
-        // possible collision with code indexing progress updates.
-
-        // this.messenger.request("indexProgress", update);
-        // this.indexingState = update;
+      const jobId = uuidv4();
+      for await (const update of this.docsService.indexAndAdd(jobId, site, new TransformersJsEmbeddingsProvider(), reIndex)) {
+        this.messenger.request("indexProgress", update);
+        this.indexingState = update;
       }
     }
   }

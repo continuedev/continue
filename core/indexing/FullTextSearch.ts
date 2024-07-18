@@ -37,6 +37,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   }
 
   async *update(
+    jobId: string,
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,
@@ -71,6 +72,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
       }
 
       yield {
+        jobId,
         progress: i / results.compute.length,
         desc: `Indexing ${getBasename(item.path)}`,
         status: "indexing",

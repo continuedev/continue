@@ -1,6 +1,6 @@
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { IndexingProgressUpdate } from "core";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -36,6 +36,17 @@ const FOOTER_HEIGHT = "1.8em";
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
   border-radius: ${defaultBorderRadius};
+  position: relative;
+
+  &::after {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 1px;
+    background-color: rgba(136, 136, 136, 0.3);
+    top: 0;
+    left: 0;
+  }
 `;
 
 const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
@@ -66,7 +77,8 @@ const Footer = styled.footer`
   height: ${FOOTER_HEIGHT};
   background-color: transparent;
   backdrop-filter: blur(12px);
-
+  border-top: 1px solid rgba(136, 136, 136, 0.3);
+  border-bottom: 1px solid rgba(136, 136, 136, 0.3);
   overflow: hidden;
 `;
 
@@ -173,8 +185,32 @@ const Layout = () => {
     [location, navigate],
   );
 
+  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
+    jobId: "1",
+    desc: "Loading indexing config",
+    progress: 0.0,
+    status: "loading",
+  });
+
+  const [indexingStates, setIndexingStates] = useState<
+    Map<string, IndexingProgressUpdate>
+  >(new Map());
+
+  const updateIndexingStates = useCallback((update: IndexingProgressUpdate) => {
+    setIndexingStates((prevState) => {
+      const newState = new Map(prevState);
+      if (update.progress === 100 || update.status === "done") {
+        newState.delete(update.jobId);
+      } else {
+        newState.set(update.jobId, update);
+      }
+      return newState;
+    });
+  }, []);
+
   useWebviewListener("indexProgress", async (data) => {
     setIndexingState(data);
+    updateIndexingStates(data);
   });
 
   useWebviewListener(
@@ -226,12 +262,6 @@ const Layout = () => {
     }
   }, [location]);
 
-  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
-    desc: "Loading indexing config",
-    progress: 0.0,
-    status: "loading",
-  });
-
   return (
     <LayoutTopDiv>
       <div
@@ -268,7 +298,10 @@ const Layout = () => {
                       total={FREE_TRIAL_LIMIT_REQUESTS}
                     />
                   )}
-                <IndexingProgressBar indexingState={indexingState} />
+                <IndexingProgressBar
+                  indexingStates={indexingStates}
+                  recentIndexingUpdate={indexingState}
+                />
               </div>
 
               <ProfileSwitcher />

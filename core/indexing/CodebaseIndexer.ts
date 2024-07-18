@@ -51,6 +51,7 @@ export class CodebaseIndexer {
   }
 
   async *refresh(
+    jobId: string,
     workspaceDirs: string[],
     abortSignal: AbortSignal,
   ): AsyncGenerator<IndexingProgressUpdate> {
@@ -58,6 +59,7 @@ export class CodebaseIndexer {
 
     if (workspaceDirs.length === 0) {
       yield {
+        jobId,
         progress,
         desc: "Nothing to index",
         status: "disabled",
@@ -68,6 +70,7 @@ export class CodebaseIndexer {
     const config = await this.configHandler.loadConfig();
     if (config.disableIndexing) {
       yield {
+        jobId,
         progress,
         desc: "Indexing is disabled in config.json",
         status: "disabled",
@@ -75,6 +78,7 @@ export class CodebaseIndexer {
       return;
     } else {
       yield {
+        jobId,
         progress,
         desc: "Starting indexing",
         status: "loading",
@@ -93,6 +97,7 @@ export class CodebaseIndexer {
     await this.ide.getRepoName(workspaceDirs[0]);
 
     yield {
+      jobId,
       progress,
       desc: "Starting indexing...",
       status: "loading",
@@ -113,6 +118,7 @@ export class CodebaseIndexer {
           artifactId: codebaseIndex.artifactId,
         };
         const [results, markComplete] = await getComputeDeleteAddRemove(
+          jobId,
           tag,
           { ...stats },
           (filepath) => this.ide.readFile(filepath),
@@ -123,10 +129,11 @@ export class CodebaseIndexer {
           for await (let {
             progress: indexProgress,
             desc,
-          } of codebaseIndex.update(tag, results, markComplete, repoName)) {
+          } of codebaseIndex.update(jobId, tag, results, markComplete, repoName)) {
             // Handle pausing in this loop because it's the only one really taking time
             if (abortSignal.aborted) {
               yield {
+                jobId,
                 progress: 1,
                 desc: "Indexing cancelled",
                 status: "disabled",
@@ -136,6 +143,7 @@ export class CodebaseIndexer {
 
             if (this.pauseToken.paused) {
               yield {
+                jobId,
                 progress,
                 desc: "Paused",
                 status: "paused",
@@ -153,6 +161,7 @@ export class CodebaseIndexer {
                   totalRelativeExpectedTime) /
               workspaceDirs.length;
             yield {
+              jobId,
               progress,
               desc,
               status: "indexing",
@@ -161,6 +170,7 @@ export class CodebaseIndexer {
 
           completedRelativeExpectedTime += codebaseIndex.relativeExpectedTime;
           yield {
+            jobId,
             progress:
               (completedDirs +
                 completedRelativeExpectedTime / totalRelativeExpectedTime) /
@@ -181,6 +191,7 @@ export class CodebaseIndexer {
           }
 
           yield {
+            jobId,
             progress: 0,
             desc: errMsg,
             status: "failed",
@@ -196,6 +207,7 @@ export class CodebaseIndexer {
       completedDirs++;
       progress = completedDirs / workspaceDirs.length;
       yield {
+        jobId,
         progress,
         desc: "Indexing Complete",
         status: "done",

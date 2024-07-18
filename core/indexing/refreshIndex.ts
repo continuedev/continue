@@ -256,6 +256,7 @@ function calculateHash(fileContents: string): string {
 }
 
 export async function getComputeDeleteAddRemove(
+  jobId: string,
   tag: IndexTag,
   currentFiles: LastModifiedMap,
   readFile: (path: string) => Promise<string>,
@@ -318,9 +319,10 @@ export async function getComputeDeleteAddRemove(
       };
       results[resultType] = items;
       for await (const _ of globalCacheIndex.update(
+        jobId,
         tag,
         results,
-        () => {},
+        () => { },
         repoName,
       )) {
       }
@@ -342,6 +344,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
   }
 
   async *update(
+    jobId: string,
     tag: IndexTag,
     results: RefreshIndexResults,
     _: MarkCompleteCallback,
@@ -357,7 +360,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
         return this.deleteOrRemoveTag(cacheKey, tag);
       }),
     ]);
-    yield { progress: 1, desc: "Done updating global cache", status: "done" };
+    yield { jobId, progress: 1, desc: "Done updating global cache", status: "done" };
   }
 
   private async computeOrAddTag(

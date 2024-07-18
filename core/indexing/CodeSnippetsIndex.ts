@@ -73,6 +73,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
   }
 
   async *update(
+    jobId: string,
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,
@@ -116,6 +117,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       }
 
       yield {
+        jobId,
         desc: `Indexing ${getBasename(compute.path)}`,
         progress: i / results.compute.length,
         status: "indexing",
