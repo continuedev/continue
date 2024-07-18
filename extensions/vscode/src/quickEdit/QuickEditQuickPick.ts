@@ -149,10 +149,6 @@ export class QuickEdit {
    * // "Edit myFile.ts", "Edit myFile.ts:5-10", "Edit myFile.ts:15"
    */
   _getQuickPickTitle = () => {
-    if (!this.editorWhenOpened || !this.editorWhenOpened.document.uri) {
-      return "Edit";
-    }
-
     const { uri } = this.editorWhenOpened.document;
 
     const fileName = vscode.workspace.asRelativePath(uri, true);
@@ -207,6 +203,7 @@ export class QuickEdit {
 
   async _getInitialQuickPickVal(): Promise<string | undefined> {
     const modelTitle = await this._getCurModelTitle();
+    const { uri } = this.editorWhenOpened.document;
 
     const initialItems: vscode.QuickPickItem[] = [
       {
@@ -237,18 +234,11 @@ export class QuickEdit {
      * Used to show the current file in the Quick Pick,
      * as soon as the user types the search character
      */
-    const currentFileItem: vscode.QuickPickItem = !!this.editorWhenOpened
-      ? {
-          label: vscode.workspace.asRelativePath(
-            this.editorWhenOpened.document.uri,
-          ),
-          description: "Current file",
-          alwaysShow: true,
-        }
-      : {
-          label: "No current file",
-          alwaysShow: true,
-        };
+    const currentFileItem: vscode.QuickPickItem = {
+      label: vscode.workspace.asRelativePath(uri),
+      description: "Current file",
+      alwaysShow: true,
+    };
 
     const noResultsItem: vscode.QuickPickItem = { label: "No results found" };
 
@@ -384,6 +374,7 @@ export class QuickEdit {
 
     const editor = vscode.window.activeTextEditor;
 
+    // We only allow users to interact with a quick edit if there is an open editor
     if (!editor) {
       return;
     }
