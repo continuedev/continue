@@ -266,6 +266,9 @@ export class VsCodeExtension {
           webviewProtocol.request("didChangeControlPlaneSessionInfo", {
             sessionInfo,
           });
+
+          // To make sure continue-proxy models and anything else requiring it get updated access token
+          this.configHandler.reloadConfig();
         });
       }
     });
