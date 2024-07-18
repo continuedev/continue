@@ -31,7 +31,6 @@ Please write a shell command that will do what the user requested. Your output s
     const lines = streamLines(gen);
     let cmd = "";
     for await (const line of lines) {
-      console.log(line);
       if (line.startsWith("```") && line.endsWith("```")) {
         cmd = line.split(" ").slice(1).join(" ").slice(0, -3);
         break;

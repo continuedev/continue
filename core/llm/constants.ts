@@ -24,6 +24,9 @@ const CONTEXT_LENGTH_FOR_MODEL: { [name: string]: number } = {
   "gpt-4-vision": GPT_4_CTX_LEN,
   "gpt-4-0125-preview": GPT_4_CTX_LEN,
   "gpt-4-1106-preview": GPT_4_CTX_LEN,
+  "granite-34b-code-instruct": 8192,
+  "granite-8b-code-instruct": 4096,
+  "granite-3b-code-instruct": 2048,
 };
 
 const TOKEN_BUFFER_FOR_SAFETY = 350;
