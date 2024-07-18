@@ -182,7 +182,7 @@ const commandsMap: (
   continueServerClientPromise,
   battery,
   quickEdit,
-  core
+  core,
 ) => {
   /**
    * Streams an inline edit to the vertical diff manager.
@@ -289,10 +289,10 @@ const commandsMap: (
       vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
     },
     "continue.docsIndex": async () => {
-      core.invoke("context/indexDocs", {reIndex: false});
+      core.invoke("context/indexDocs", { reIndex: false });
     },
     "continue.docsReIndex": async () => {
-      core.invoke("context/indexDocs", {reIndex: true});
+      core.invoke("context/indexDocs", { reIndex: true });
     },
     "continue.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
@@ -691,7 +691,7 @@ export function registerAllCommands(
       continueServerClientPromise,
       battery,
       quickEdit,
-      core
+      core,
     ),
   )) {
     context.subscriptions.push(

@@ -71,7 +71,7 @@ export class QuickEdit {
    * Handles situations where the user navigates to a different editor
    * while interacting with the Quick Pick
    */
-  private editorWhenOpened?: vscode.TextEditor;
+  private editorWhenOpened!: vscode.TextEditor;
 
   /**
    * Required to store the string content of a context provider
@@ -111,16 +111,7 @@ export class QuickEdit {
     this.miniSearch.addAll(filenames);
   }
 
-  private setActiveEditorAndPrevInput() {
-    const editor = vscode.window.activeTextEditor;
-
-    if (!editor) {
-      this.editorWhenOpened = undefined;
-      this.previousInput = undefined;
-
-      return;
-    }
-
+  private setActiveEditorAndPrevInput(editor: vscode.TextEditor) {
     const existingHandler = this.verticalDiffManager.getHandlerForFile(
       editor.document.uri.fsPath ?? "",
     );
@@ -391,8 +382,18 @@ export class QuickEdit {
     // Clean up state from previous quick picks, e.g. if a user pressed `esc`
     this.clear();
 
+    const editor = vscode.window.activeTextEditor;
+
+    if (!editor) {
+      return;
+    }
+
     // Set state that is unique to each quick pick instance
-    this.setActiveEditorAndPrevInput();
+    this.setActiveEditorAndPrevInput(editor);
+
+    if (!this.editorWhenOpened) {
+      return;
+    }
 
     const config = await this.configHandler.loadConfig();
 
