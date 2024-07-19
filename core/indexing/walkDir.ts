@@ -85,14 +85,10 @@ class Walker extends EventEmitter {
   async *start() {
     try {
       const entries = await this.ide.listDir(this.path);
-      console.log({ entries });
-      yield* this.onReadDir(entries);
-      // console.log({ entries, result: this.result });
 
-      // for (const file in this.result) {
-      //   console.log({ file });
-      //   yield file;
-      // }
+      for await (const result of this.onReadDir(entries)) {
+        yield result;
+      }
     } catch (err) {
       this.emit("error", err);
     }
@@ -116,45 +112,37 @@ class Walker extends EventEmitter {
       const hasIg = this.entries.some((e) => this.isIgnoreFile(e));
 
       if (hasIg) {
-        this.addIgnoreFiles();
-      } else {
-        yield* this.filterEntries();
+        await this.addIgnoreFiles();
       }
+
+      yield* this.filterEntries();
     }
   }
 
-  addIgnoreFiles(): void {
+  async addIgnoreFiles() {
     const newIg = this.entries!.filter((e) => this.isIgnoreFile(e));
-
-    let igCount = newIg.length;
-    const then = () => {
-      if (--igCount === 0) {
-        this.filterEntries();
-      }
-    };
-
-    newIg.forEach((e) => this.addIgnoreFile(e, then));
+    await Promise.all(newIg.map((e) => this.addIgnoreFile(e)));
   }
 
-  addIgnoreFile(file: Entry, then: () => void): void {
-    const ig = path.resolve(this.path, file[0]);
-    this.ide
-      .readFile(ig)
-      .then((data) => {
-        this.onReadIgnoreFile(file, data, then);
-      })
-      .catch((err) => {
-        this.emit("error", err);
-      });
+  async addIgnoreFile(fileEntry: Entry) {
+    const ig = path.resolve(this.path, fileEntry[0]);
+
+    try {
+      const file = await this.ide.readFile(ig);
+      this.onReadIgnoreFile(fileEntry, file);
+    } catch (err) {
+      this.emit("error", err);
+    }
   }
 
-  onReadIgnoreFile(file: Entry, data: string, then: () => void): void {
+  onReadIgnoreFile(file: Entry, data: string): void {
     const mmopt = {
       matchBase: true,
       dot: true,
       flipNegate: true,
       nocase: true,
     };
+
     const rules = data
       .split(/\r?\n/)
       .filter((line) => !/^#|^$/.test(line.trim()))
@@ -163,8 +151,6 @@ class Walker extends EventEmitter {
       });
 
     this.ignoreRules[file[0]] = rules;
-
-    then();
   }
 
   addIgnoreRules(rules: string[]) {
@@ -174,6 +160,7 @@ class Walker extends EventEmitter {
       flipNegate: true,
       nocase: true,
     };
+
     const minimatchRules = rules
       .filter((line) => !/^#|^$/.test(line.trim()))
       .map((rule) => {
@@ -230,6 +217,7 @@ class Walker extends EventEmitter {
         this.result.add(abs.slice(this.root.length + 1));
       }
       then();
+      yield this.result;
     } else {
       if (dir) {
         yield* this.walker(
@@ -239,6 +227,7 @@ class Walker extends EventEmitter {
         );
       } else {
         then();
+        yield this.result;
       }
     }
   }
@@ -336,7 +325,7 @@ export async function walkDir(
   ide: IDE,
   _options?: WalkerOptions,
 ): Promise<string[]> {
-  const entries: string[] = [];
+  let entries: string[] = [];
   const options = { ...defaultOptions, ..._options };
 
   const walker = new Walker(
@@ -352,9 +341,8 @@ export async function walkDir(
   );
 
   try {
-    for await (const entry of walker.start()) {
-      console.log({ entry });
-      entries.push(...entry);
+    for await (const walkedEntries of walker.start()) {
+      entries = [...walkedEntries];
     }
   } catch (err) {
     console.error(`Error walking directories: ${err}`);
