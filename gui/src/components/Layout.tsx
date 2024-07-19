@@ -36,6 +36,17 @@ const FOOTER_HEIGHT = "1.8em";
 const LayoutTopDiv = styled(CustomScrollbarDiv)`
   height: 100%;
   border-radius: ${defaultBorderRadius};
+  position: relative;
+
+  &::after {
+    position: absolute;
+    content: "";
+    width: 100%;
+    height: 1px;
+    background-color: rgba(136, 136, 136, 0.3);
+    top: 0;
+    left: 0;
+  }
 `;
 
 const BottomMessageDiv = styled.div<{ displayOnBottom: boolean }>`
@@ -66,7 +77,8 @@ const Footer = styled.footer`
   height: ${FOOTER_HEIGHT};
   background-color: transparent;
   backdrop-filter: blur(12px);
-
+  border-top: 1px solid rgba(136, 136, 136, 0.3);
+  border-bottom: 1px solid rgba(136, 136, 136, 0.3);
   overflow: hidden;
 `;
 
