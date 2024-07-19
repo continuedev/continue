@@ -264,7 +264,7 @@ describe("walkDir", () => {
   });
 
   test("should walk continue/extensions/vscode without getting any files in the .continueignore", async () => {
-    const vscodePath = path.join(__dirname, "..", "extensions", "vscode");
+    const vscodePath = path.join(__dirname, "../..", "extensions", "vscode");
     const results = await walkDir(vscodePath, ide, {
       ignoreFiles: [".gitignore", ".continueignore"],
     });
