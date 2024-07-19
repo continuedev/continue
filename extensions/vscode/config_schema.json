@@ -1955,7 +1955,7 @@
           "type": "object",
           "properties": {
             "name": {
-              "enum": ["cohere", "voyage", "llm", "free-trial"]
+              "enum": ["cohere", "voyage", "llm", "free-trial", "huggingface-tei"]
             },
             "params": {
               "type": "object"
@@ -2043,6 +2043,50 @@
                     },
                     "required": ["apiKey"]
                   }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["huggingface-tei"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "apiBase": {
+                        "type": "string",
+                        "default": "http://localhost:8080"
+                      },
+                      "truncate": {
+                        "type": "boolean",
+                        "description": "Wether to truncate long sequences to the maximum allowed context length.",
+                        "default": false
+                      },
+                      "truncation_direction": {
+                        "enum": ["Right","Left"],
+                        "markdownDescription": "Wether to truncate sequences from the `left` or `right`.",
+                        "default": "Right"
+                      }
+                    },
+                    "required": ["apiBase"]
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "truncate": {
+                      "const": true
+                    }
+                  }
+                },
+                "then": {
+                  "required": ["truncation_direction"]
                 }
               }
             }
