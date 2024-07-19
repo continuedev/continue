@@ -171,11 +171,17 @@ class Walker extends EventEmitter {
   }
 
   async *filterEntries() {
-    const filtered = this.entries!.map((entry) => {
-      const passFile = this.filterEntry(entry[0]);
-      const passDir = this.filterEntry(entry[0], true);
-      return passFile || passDir ? [entry, passFile, passDir] : false;
-    }).filter((e) => e) as [Entry, boolean, boolean][];
+    const filtered = (await Promise.all(
+      this.entries!.map(async (entry) => {
+        const passFile = await this.filterEntry(entry[0]);
+        const passDir = await this.filterEntry(entry[0], true);
+        return passFile || passDir ? [entry, passFile, passDir] : false;
+      }),
+    ).then((entries) => entries.filter((e) => e))) as [
+      Entry,
+      boolean,
+      boolean,
+    ][];
     let entryCount = filtered.length;
     if (entryCount === 0) {
       this.emit("done", this.result);
@@ -222,7 +228,7 @@ class Walker extends EventEmitter {
       if (dir) {
         yield* this.walker(
           entry[0],
-          { isSymbolicLink, exact: this.filterEntry(entry[0] + "/") },
+          { isSymbolicLink, exact: await this.filterEntry(entry[0] + "/") },
           then,
         );
       } else {
@@ -260,25 +266,29 @@ class Walker extends EventEmitter {
     yield* walker.start();
   }
 
-  filterEntry(
+  async filterEntry(
     entry: string,
     partial?: boolean,
     entryBasename?: string,
-  ): boolean {
+  ): Promise<boolean> {
     let included = true;
 
     if (this.parent && this.parent.filterEntry) {
       const parentEntry = this.basename + "/" + entry;
       const parentBasename = entryBasename || entry;
-      included = this.parent.filterEntry(parentEntry, partial, parentBasename);
+      included = await this.parent.filterEntry(
+        parentEntry,
+        partial,
+        parentBasename,
+      );
       if (!included && !this.exact) {
         return false;
       }
     }
 
-    this.ignoreFiles.forEach((f) => {
+    for (const f of this.ignoreFiles) {
       if (this.ignoreRules[f]) {
-        this.ignoreRules[f].forEach((rule) => {
+        for (const rule of this.ignoreRules[f]) {
           if (rule.negate !== included) {
             const isRelativeRule =
               entryBasename &&
@@ -306,9 +316,9 @@ class Walker extends EventEmitter {
               included = rule.negate;
             }
           }
-        });
+        }
       }
-    });
+    }
 
     return included;
   }
