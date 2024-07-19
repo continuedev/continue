@@ -296,6 +296,12 @@ export class DocsService {
       status: "indexing",
     };
 
+    // Clear old index if re-indexing.
+    if (reIndex) {
+      console.log("Deleting old embeddings");
+      await this.delete(startUrl.toString());
+    }
+
     await this.add(siteIndexingConfig.title, startUrl, chunks, embeddings);
     this.docsIndexingQueue.delete(startUrl.toString());
 
