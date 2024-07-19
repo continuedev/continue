@@ -82,14 +82,17 @@ class Walker extends EventEmitter {
     return ret;
   }
 
-  async *start(): AsyncGenerator<string, void, unknown> {
+  async *start() {
     try {
       const entries = await this.ide.listDir(this.path);
-      this.onReadDir(entries);
+      console.log({ entries });
+      yield* this.onReadDir(entries);
+      // console.log({ entries, result: this.result });
 
-      for (const file in this.result) {
-        yield file;
-      }
+      // for (const file in this.result) {
+      //   console.log({ file });
+      //   yield file;
+      // }
     } catch (err) {
       this.emit("error", err);
     }
@@ -100,7 +103,7 @@ class Walker extends EventEmitter {
     return p !== "." && p !== ".." && this.ignoreFiles.indexOf(p) !== -1;
   }
 
-  onReadDir(entries: Entry[]): void {
+  async *onReadDir(entries: Entry[]) {
     this.entries = entries;
 
     if (entries.length === 0) {
@@ -108,13 +111,14 @@ class Walker extends EventEmitter {
         this.result.add(this.path.slice(this.root.length + 1));
       }
       this.emit("done", this.result);
+      yield this.result;
     } else {
       const hasIg = this.entries.some((e) => this.isIgnoreFile(e));
 
       if (hasIg) {
         this.addIgnoreFiles();
       } else {
-        this.filterEntries();
+        yield* this.filterEntries();
       }
     }
   }
@@ -179,7 +183,7 @@ class Walker extends EventEmitter {
     this.ignoreRules[".defaultignore"] = minimatchRules;
   }
 
-  filterEntries(): void {
+  async *filterEntries() {
     const filtered = this.entries!.map((entry) => {
       const passFile = this.filterEntry(entry[0]);
       const passDir = this.filterEntry(entry[0], true);
@@ -188,6 +192,7 @@ class Walker extends EventEmitter {
     let entryCount = filtered.length;
     if (entryCount === 0) {
       this.emit("done", this.result);
+      yield this.result;
     } else {
       const then = () => {
         if (--entryCount === 0) {
@@ -198,10 +203,12 @@ class Walker extends EventEmitter {
           this.emit("done", this.result);
         }
       };
-      filtered.forEach((filt) => {
-        const [entry, file, dir] = filt;
-        this.stat(entry, file, dir, then);
-      });
+
+      for (const [entry, file, dir] of filtered) {
+        for await (const statResult of this.stat(entry, file, dir, then)) {
+          yield statResult;
+        }
+      }
     }
   }
 
@@ -215,7 +222,7 @@ class Walker extends EventEmitter {
     return entry[1] === Directory;
   }
 
-  onstat(entry: Entry, file: boolean, dir: boolean, then: () => void): void {
+  async *onstat(entry: Entry, file: boolean, dir: boolean, then: () => void) {
     const abs = this.path + "/" + entry[0];
     const isSymbolicLink = this.entryIsSymlink(entry);
     if (!this.entryIsDirectory(entry)) {
@@ -225,7 +232,7 @@ class Walker extends EventEmitter {
       then();
     } else {
       if (dir) {
-        this.walker(
+        yield* this.walker(
           entry[0],
           { isSymbolicLink, exact: this.filterEntry(entry[0] + "/") },
           then,
@@ -236,8 +243,13 @@ class Walker extends EventEmitter {
     }
   }
 
-  stat(entry: Entry, file: boolean, dir: boolean, then: () => void): void {
-    this.onstat(entry, file, dir, then);
+  async *stat(
+    entry: Entry,
+    file: boolean,
+    dir: boolean,
+    then: () => void,
+  ): any {
+    yield* this.onstat(entry, file, dir, then);
   }
 
   walkerOpt(entry: string, opts: Partial<WalkerOptions>): WalkerOptions {
@@ -252,12 +264,9 @@ class Walker extends EventEmitter {
     };
   }
 
-  async *walker(
-    entry: string,
-    opts: Partial<WalkerOptions>,
-    then: () => void,
-  ): AsyncGenerator<string, void, unknown> {
+  async *walker(entry: string, opts: Partial<WalkerOptions>, then: () => void) {
     const walker = new Walker(this.walkerOpt(entry, opts), this.ide);
+
     walker.on("done", then);
     yield* walker.start();
   }
@@ -316,35 +325,6 @@ class Walker extends EventEmitter {
   }
 }
 
-// async function* walkDirWrapper() {
-//   const options = { ...defaultOptions, ..._options };
-
-//   const walker = new Walker(
-//     {
-//       path,
-//       ignoreFiles: options.ignoreFiles,
-//       onlyDirs: options.onlyDirs,
-//       follow: true,
-//       includeEmpty: false,
-//       additionalIgnoreRules: options.additionalIgnoreRules,
-//     },
-//     ide,
-//   );
-
-//   const entries: string[] = [];
-//   let resolve: () => void;
-//   let promise = new Promise<void>((r) => (resolve = r));
-//   let done = false;
-
-//   walker.on("done", () => {});
-
-//   while (!done) {
-//     await promise;
-//     yield* results;
-//     results = [];
-//   }
-// }
-
 const defaultOptions: WalkerOptions = {
   ignoreFiles: [".gitignore", ".continueignore"],
   onlyDirs: false,
@@ -374,7 +354,7 @@ export async function walkDir(
   try {
     for await (const entry of walker.start()) {
       console.log({ entry });
-      entries.push(entry);
+      entries.push(...entry);
     }
   } catch (err) {
     console.error(`Error walking directories: ${err}`);
