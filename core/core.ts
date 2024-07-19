@@ -248,9 +248,9 @@ export class Core {
         (provider) => provider.description.title === "docs",
       );
 
-      const siteIndexingOptions: SiteIndexingConfig[] = provider ?
-        (mProvider => mProvider?.options?.sites || [])({ ...provider }) :
-        [];
+      const siteIndexingOptions: SiteIndexingConfig[] = provider
+        ? ((mProvider) => mProvider?.options?.sites || [])({ ...provider })
+        : [];
 
       await this.indexDocs(siteIndexingOptions, msg.data.reIndex);
       this.ide.infoPopup("Docs indexing completed");
@@ -619,6 +619,9 @@ export class Core {
     on("didChangeSelectedProfile", (msg) => {
       this.configHandler.setSelectedProfile(msg.data.id);
     });
+    on("didChangeControlPlaneSessionInfo", async (msg) => {
+      this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
+    });
   }
 
   private indexingCancellationController: AbortController | undefined;
@@ -637,12 +640,18 @@ export class Core {
     }
   }
 
-  private async indexDocs(sites: SiteIndexingConfig[], reIndex: boolean): Promise<void> {
+  private async indexDocs(
+    sites: SiteIndexingConfig[],
+    reIndex: boolean,
+  ): Promise<void> {
     for (const site of sites) {
-      for await (const update of this.docsService.indexAndAdd(site, new TransformersJsEmbeddingsProvider(), reIndex)) {
+      for await (const update of this.docsService.indexAndAdd(
+        site,
+        new TransformersJsEmbeddingsProvider(),
+        reIndex,
+      )) {
         // Temporary disabled posting progress updates to the UI due to
         // possible collision with code indexing progress updates.
-
         // this.messenger.request("indexProgress", update);
         // this.indexingState = update;
       }
