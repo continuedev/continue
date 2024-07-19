@@ -598,6 +598,7 @@ export type ModelName =
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
   | "gpt-4o"
+  | "gpt-4o-mini"
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"

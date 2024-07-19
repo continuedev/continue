@@ -484,6 +484,21 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "openai.png",
     isOpenSource: false,
   },
+  gpt4omini: {
+    title: "GPT-4o Mini",
+    description:
+      "A model at less than half the price of gpt-3.5-turbo, but near gpt-4 in capabilities.",
+    params: {
+      model: "gpt-4o-mini",
+      contextLength: 128_000,
+      title: "GPT-4o mini",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.",
+    },
+    providerOptions: ["openai"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
   gpt35turbo: {
     title: "GPT-3.5-Turbo",
     description:
