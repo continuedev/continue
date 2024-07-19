@@ -204,9 +204,9 @@ function ProfileSwitcher(props: {}) {
                         }}
                       >
                         {profiles.length === 0 ? (
-                          <i>No profiles found</i>
+                          <i>No workspaces found</i>
                         ) : (
-                          "Select profile"
+                          "Select workspace"
                         )}
                       </div>
                     </StyledListboxOptions>
