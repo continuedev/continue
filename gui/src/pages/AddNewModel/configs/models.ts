@@ -31,6 +31,45 @@ export interface ModelPackage {
 }
 
 export const models: { [key: string]: ModelPackage } = {
+  granite34bCodeInstruct: {
+    title: "Granite 34B Code Instruct",
+    description: "A highly capable code instruct model with 34 billion parameters by IBM",
+    params: {
+      title: "Granite 34B Code Instruct",
+      model: "granite-34b-code-instruct",
+      contextLength: 8192,
+      apiKey: "<API_KEY>",
+    },
+    icon: "ibm.png",
+    providerOptions: ["ibm"],
+    isOpenSource: true,
+  },
+  granite8bCodeInstruct: {
+    title: "Granite 8B Code Instruct",
+    description: "A highly capable code instruct model with 8 billion parameters by IBM",
+    params: {
+      title: "Granite 8B Code Instruct",
+      model: "granite-8b-code-instruct",
+      contextLength: 4096,
+      apiKey: "<API_KEY>",
+    },
+    icon: "ibm.png",
+    providerOptions: ["ibm"],
+    isOpenSource: true,
+  },
+  granite3bCodeInstruct: {
+    title: "Granite 3B Code Instruct",
+    description: "A highly capable code instruct model with 3 billion parameters by IBM",
+    params: {
+      title: "Granite 3B Code Instruct",
+      model: "granite-3b-code-instruct",
+      contextLength: 2048,
+      apiKey: "<API_KEY>",
+    },
+    icon: "ibm.png",
+    providerOptions: ["ibm"],
+    isOpenSource: true,
+  },
   llama31Chat: {
     title: "Llama3.1 Chat",
     description: "A model from Meta, fine-tuned for chat",

@@ -51,6 +51,30 @@ export const apiBaseInput: InputDescriptor = {
 };
 
 export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
+  ibm: {
+    title: "IBM API",
+    provider: "ibm",
+    description: "Access the Granite Code Instruct models in sizes 3b, 8b, and 34b.",
+    longDescription: `To get started with IBM API, obtain your API key from [here](https://bam.res.ibm.com/) and paste it below.`,
+    tags: [
+      ModelProviderTags.RequiresApiKey,
+      ModelProviderTags.OpenSource,
+    ],
+    params: {
+      apiKey: "",
+    },
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your BAM or watsonx.ai API key",
+        required: true,
+      },
+      ...completionParamsInputsConfigs,
+    ],
+    packages: [models.granite34bCodeInstruct, models.granite8bCodeInstruct, models.granite3bCodeInstruct],
+  },
   openai: {
     title: "OpenAI",
     provider: "openai",

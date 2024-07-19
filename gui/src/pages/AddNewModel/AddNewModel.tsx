@@ -38,6 +38,7 @@ const GridDiv = styled.div`
  * Used to display groupings in the Models tab
  */
 const modelsByProvider: Record<string, ModelPackage[]> = {
+  IBM: [models.granite34bCodeInstruct, models.granite8bCodeInstruct, models.granite3bCodeInstruct],
   "Open AI": [models.gpt4turbo, models.gpt4o, models.gpt35turbo],
   Anthropic: [models.claude3Opus, models.claude3Sonnet, models.claude3Haiku],
   Mistral: [
