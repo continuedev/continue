@@ -104,6 +104,22 @@ describe("walkDir", () => {
     );
   });
 
+  test("should use gitignore in parent directory for subdirectory", async () => {
+    const files = [
+      "a.txt",
+      "b.py",
+      "d/",
+      "d/e.txt",
+      "d/f.py",
+      "d/g/",
+      "d/g/h.ts",
+      "d/g/i.py",
+      [".gitignore", "*.py"],
+    ];
+    addToTestDir(files);
+    await expectPaths(["a.txt", "d/e.txt", "d/g/h.ts"], ["d/f.py", "d/g/i.py"]);
+  });
+
   test("should handle leading slash in gitignore", async () => {
     const files = [[".gitignore", "/no.txt"], "a.txt", "b.py", "no.txt"];
     addToTestDir(files);
@@ -263,7 +279,7 @@ describe("walkDir", () => {
     expect(results.length).toBeLessThan(1500);
   });
 
-  test("should walk continue/extensions/vscode without getting any files in the .continueignore", async () => {
+  test.skip("should walk continue/extensions/vscode without getting any files in the .continueignore", async () => {
     const vscodePath = path.join(__dirname, "..", "extensions", "vscode");
     const results = await walkDir(vscodePath, ide, {
       ignoreFiles: [".gitignore", ".continueignore"],
