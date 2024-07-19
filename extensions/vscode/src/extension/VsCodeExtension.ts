@@ -47,6 +47,25 @@ export class VsCodeExtension {
   private battery: Battery;
   private workOsAuthProvider: WorkOsAuthProvider;
 
+  private async updateSubmenuItemsAfterReindex() {
+    const contextProviders = (await this.configHandler.getSerializedConfig())
+      .contextProviders;
+    if (!contextProviders) {
+      return;
+    }
+
+    for (const provider of contextProviders) {
+      if (provider.type === "submenu") {
+        await this.sidebar.webviewProtocol.request("updateSubmenuItems", {
+          provider: provider.title,
+          submenuItems: this.core.invoke("context/loadSubmenuItems", {
+            title: provider.title,
+          }),
+        });
+      }
+    }
+  }
+
   constructor(context: vscode.ExtensionContext) {
     // Register auth provider
     this.workOsAuthProvider = new WorkOsAuthProvider(context);
@@ -221,8 +240,40 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig();
     });
 
+    vscode.workspace.onDidSaveTextDocument(async (document) => {
+      console.log("Saved doc");
+      console.log("Test");
+      console.log("Test2");
+      console.log("Test3");
+      console.log("Test4");
+      console.log("Test5");
+      console.log("Test6");
+      console.log("Test6");
+      console.log("Test6");
+      console.log("Test6");
+      console.log("Test7");
+      console.log("Test7");
+      console.log("Test7");
+      console.log("Test8");
+
+      const filepath = document.uri.fsPath;
+
+      // Check if the file is not a config file and is in the workspace
+      if (
+        !filepath.endsWith(".continuerc.json") &&
+        !filepath.endsWith(".prompt") &&
+        !filepath.endsWith(".continueignore") &&
+        !filepath.endsWith(".gitignore")
+      ) {
+        // Trigger reindex for this file
+        this.core.invoke("index/reIndexFile", filepath);
+        await this.updateSubmenuItemsAfterReindex();
+      }
+    });
+
     vscode.workspace.onDidSaveTextDocument((event) => {
       // Listen for file changes in the workspace
+      //
       const filepath = event.uri.fsPath;
 
       if (filepath === getConfigJsonPath()) {

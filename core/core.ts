@@ -16,9 +16,9 @@ import {
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
-import { ControlPlaneClient } from "./control-plane/client";
+import { ControlPlaneClient } from "./control-plane/client.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
-import { DocsService } from "./indexing/docs/DocsService";
+import { DocsService } from "./indexing/docs/DocsService.js";
 import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import Ollama from "./llm/llms/Ollama.js";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
@@ -267,6 +267,7 @@ export class Core {
       return items || [];
     });
     on("context/getContextItems", async (msg) => {
+      console.log("getContextItems called with query:", msg.data.query);
       const { name, query, fullInput, selectedCode } = msg.data;
       const config = await this.config();
       const llm = await this.getSelectedModel();
@@ -599,6 +600,9 @@ export class Core {
     on("stats/getTokensPerModel", async (msg) => {
       const rows = await DevDataSqliteDb.getTokensPerModel();
       return rows;
+    });
+    on("index/reIndexFile", async (msg) => {
+      await (await this.codebaseIndexerPromise).reIndexFile(msg.data);
     });
     on("index/forceReIndex", async (msg) => {
       const dirs = msg.data ? [msg.data] : await this.ide.getWorkspaceDirs();

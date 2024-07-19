@@ -8,6 +8,7 @@ import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { CodebaseIndex } from "./types.js";
 import { walkDir } from "./walkDir.js";
+import * as path from "node:path";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
@@ -49,6 +50,51 @@ export class CodebaseIndexer {
 
     return indexes;
   }
+
+  async reIndexFile(filepath: string): Promise<void> {
+    console.log(`Reindexing file: ${filepath}`);
+    
+    const stats = await this.ide.getLastModified([filepath]);
+    console.log(`Last modified stats: ${JSON.stringify(stats)}`);
+    
+    const branch = await this.ide.getBranch(path.dirname(filepath));
+    console.log(`Current branch: ${branch}`);
+    
+    const repoName = await this.ide.getRepoName(path.dirname(filepath));
+    console.log(`Repository name: ${repoName}`);
+  
+    const indexesToBuild = await this.getIndexesToBuild();
+    console.log(`Number of indexes to build: ${indexesToBuild.length}`);
+  
+    for (const codebaseIndex of indexesToBuild) {
+      console.log(`Updating index: ${codebaseIndex.artifactId}`);
+      
+      const tag: IndexTag = {
+        directory: path.dirname(filepath),
+        branch,
+        artifactId: codebaseIndex.artifactId,
+      };
+      console.log(`Index tag: ${JSON.stringify(tag)}`);
+  
+      console.log(`Computing changes for ${filepath}`);
+      const [results, markComplete] = await getComputeDeleteAddRemove(
+        tag,
+        stats,
+        (filepath) => this.ide.readFile(filepath),
+        repoName,
+      );
+      console.log(`Computed changes: ${JSON.stringify(results)}`);
+  
+      console.log(`Updating index ${codebaseIndex.artifactId} with changes`);
+      for await (const thing of codebaseIndex.update(tag, results, markComplete, repoName)) {
+        console.log("Progress update: ", thing);
+      };
+      console.log(`Finished updating ${codebaseIndex.artifactId}`);
+    }
+  
+    console.log(`Completed reindexing file: ${filepath}`);
+  }
+  
 
   async *refresh(
     workspaceDirs: string[],
