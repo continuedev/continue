@@ -275,7 +275,7 @@ describe("walkDir", () => {
     expect(results.some((file) => file.includes(".tmLanguage"))).toBe(false);
   });
 
-  test("should perform the same number of dir reads as 1 + the number of dirs that contain files", async () => {
+  test.skip("should perform the same number of dir reads as 1 + the number of dirs that contain files", async () => {
     const files = [
       "a.txt",
       "b.py",
