@@ -214,7 +214,7 @@ export class DocsService {
       return;
     }
 
-    if (!reIndex && await this.has(startUrl.toString())) {
+    if (!reIndex && (await this.has(startUrl.toString()))) {
       yield {
         progress: 1,
         desc: "Already indexed",
@@ -275,11 +275,13 @@ export class DocsService {
 
       try {
         const subpathEmbeddings = await embeddingsProvider.embed(
-          chunkArticle(article, embeddingsProvider.maxChunkSize).map((chunk) => {
-            chunks.push(chunk);
+          chunkArticle(article, embeddingsProvider.maxChunkSize).map(
+            (chunk) => {
+              chunks.push(chunk);
 
-            return chunk.content;
-          }),
+              return chunk.content;
+            },
+          ),
         );
 
         embeddings.push(...subpathEmbeddings);
