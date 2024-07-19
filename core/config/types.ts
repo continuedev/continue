@@ -606,7 +606,8 @@ declare global {
     | "sambanova"
     | "nvidia"
     | "nebius";
-
+    | "ibm";
+  
   export type ModelName =
     | "AUTODETECT"
     // OpenAI

@@ -92,6 +92,7 @@ const LLMs = [
   Nebius,
   VertexAI,
   xAI,
+  IBM
 ];
 
 export async function llmFromDescription(

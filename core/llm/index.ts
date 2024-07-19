@@ -44,6 +44,7 @@ import {
 import { stripImages } from "./images.js";
 import CompletionOptionsForModels from "./templates/options.js";
 
+
 export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;
   static defaultOptions: Partial<LLMOptions> | undefined = undefined;
@@ -158,12 +159,12 @@ export abstract class BaseLLM implements ILLM {
             )
           : DEFAULT_MAX_TOKENS),
     };
-    if (CompletionOptionsForModels[options.model as ModelName]) {
-      this.completionOptions = mergeJson(
-        this.completionOptions,
-        CompletionOptionsForModels[options.model as ModelName] ?? {},
-      );
-    }
+    // if (CompletionOptionsForModels[options.model as ModelName]) {
+    //   this.completionOptions = mergeJson(
+    //     this.completionOptions,
+    //     CompletionOptionsForModels[options.model as ModelName] ?? {},
+    //   );
+    // }
     this.requestOptions = options.requestOptions;
     this.promptTemplates = {
       ...autodetectPromptTemplates(options.model, templateType),
