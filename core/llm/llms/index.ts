@@ -27,6 +27,7 @@ import LlamaCpp from "./LlamaCpp.js";
 import Llamafile from "./Llamafile.js";
 import Mistral from "./Mistral.js";
 import Msty from "./Msty.js";
+import Azure from "./Azure.js";
 import Ollama from "./Ollama.js";
 import OpenAI from "./OpenAI.js";
 import Replicate from "./Replicate.js";
@@ -124,6 +125,7 @@ const LLMs = [
   Cloudflare,
   Deepseek,
   Msty,
+  Azure,
 ];
 
 export async function llmFromDescription(

@@ -1,12 +1,13 @@
 import path from "path";
-import { walkDir, WalkerOptions } from "../indexing/walkDir";
-import FileSystemIde from "../util/filesystem";
+import { walkDir, WalkerOptions } from "../indexing/walkDir.js";
+import FileSystemIde from "../util/filesystem.js";
 import {
   addToTestDir,
   setUpTestDir,
   tearDownTestDir,
   TEST_DIR,
-} from "./testUtils/testDir";
+} from "./testUtils/testDir.js";
+
 const ide = new FileSystemIde(TEST_DIR);
 
 async function walkTestDir(
@@ -272,5 +273,31 @@ describe("walkDir", () => {
       false,
     );
     expect(results.some((file) => file.includes(".tmLanguage"))).toBe(false);
+  });
+
+  test("should perform the same number of dir reads as 1 + the number of dirs that contain files", async () => {
+    const files = [
+      "a.txt",
+      "b.py",
+      "c.ts",
+      "d/",
+      "d/e.txt",
+      "d/f.py",
+      "d/g/",
+      "d/g/h.ts",
+      "d/g/i/",
+      "d/g/i/j.ts",
+    ];
+
+    const numDirs = files.filter((file) => !file.includes(".")).length;
+    const numDirsPlusTopLevelRead = numDirs + 1;
+
+    addToTestDir(files);
+
+    const mockListDir = jest.spyOn(ide, "listDir");
+
+    await walkTestDir();
+
+    expect(mockListDir).toHaveBeenCalledTimes(numDirsPlusTopLevelRead);
   });
 });

@@ -7,7 +7,7 @@ import {
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { Fragment, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -101,9 +101,6 @@ function ListBoxOption({
   showDelete?: boolean;
   selected: boolean;
 }) {
-  const ideMessenger = useContext(IdeMessengerContext);
-
-  const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 
   return (
