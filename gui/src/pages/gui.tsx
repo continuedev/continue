@@ -108,9 +108,9 @@ const StepsDiv = styled.div`
 const NewSessionButton = styled.div`
   width: fit-content;
   margin-right: auto;
-  margin-left: 8px;
-  margin-top: 4px;
-
+  margin-left: 6px;
+  margin-top: 2px;
+  margin-bottom: 8px;
   font-size: ${getFontSize() - 2}px;
 
   border-radius: ${defaultBorderRadius};
