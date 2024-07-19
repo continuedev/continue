@@ -62,6 +62,7 @@ class Walker extends EventEmitter {
 
   emit(ev: string, data: any): boolean {
     let ret = false;
+
     if (!(this.sawError && ev === "error")) {
       if (ev === "error") {
         this.sawError = true;
@@ -81,16 +82,17 @@ class Walker extends EventEmitter {
     return ret;
   }
 
-  start(): this {
-    this.ide
-      .listDir(this.path)
-      .then((entries) => {
-        this.onReaddir(entries);
-      })
-      .catch((err) => {
-        this.emit("error", err);
-      });
-    return this;
+  async *start(): AsyncGenerator<string, void, unknown> {
+    try {
+      const entries = await this.ide.listDir(this.path);
+      this.onReadDir(entries);
+
+      for (const file in this.result) {
+        yield file;
+      }
+    } catch (err) {
+      this.emit("error", err);
+    }
   }
 
   isIgnoreFile(e: Entry): boolean {
@@ -98,8 +100,9 @@ class Walker extends EventEmitter {
     return p !== "." && p !== ".." && this.ignoreFiles.indexOf(p) !== -1;
   }
 
-  onReaddir(entries: Entry[]): void {
+  onReadDir(entries: Entry[]): void {
     this.entries = entries;
+
     if (entries.length === 0) {
       if (this.includeEmpty) {
         this.result.add(this.path.slice(this.root.length + 1));
@@ -249,8 +252,14 @@ class Walker extends EventEmitter {
     };
   }
 
-  walker(entry: string, opts: Partial<WalkerOptions>, then: () => void): void {
-    new Walker(this.walkerOpt(entry, opts), this.ide).on("done", then).start();
+  async *walker(
+    entry: string,
+    opts: Partial<WalkerOptions>,
+    then: () => void,
+  ): AsyncGenerator<string, void, unknown> {
+    const walker = new Walker(this.walkerOpt(entry, opts), this.ide);
+    walker.on("done", then);
+    yield* walker.start();
   }
 
   filterEntry(
@@ -307,20 +316,34 @@ class Walker extends EventEmitter {
   }
 }
 
-interface WalkCallback {
-  (err: Error | null, result?: string[]): void;
-}
+// async function* walkDirWrapper() {
+//   const options = { ...defaultOptions, ..._options };
 
-async function walkDirWithCallback(
-  opts: WalkerOptions,
-  ide: IDE,
-  callback?: WalkCallback,
-): Promise<string[] | void> {
-  const p = new Promise<string[]>((resolve, reject) => {
-    new Walker(opts, ide).on("done", resolve).on("error", reject).start();
-  });
-  return callback ? p.then((res) => callback(null, res), callback) : p;
-}
+//   const walker = new Walker(
+//     {
+//       path,
+//       ignoreFiles: options.ignoreFiles,
+//       onlyDirs: options.onlyDirs,
+//       follow: true,
+//       includeEmpty: false,
+//       additionalIgnoreRules: options.additionalIgnoreRules,
+//     },
+//     ide,
+//   );
+
+//   const entries: string[] = [];
+//   let resolve: () => void;
+//   let promise = new Promise<void>((r) => (resolve = r));
+//   let done = false;
+
+//   walker.on("done", () => {});
+
+//   while (!done) {
+//     await promise;
+//     yield* results;
+//     results = [];
+//   }
+// }
 
 const defaultOptions: WalkerOptions = {
   ignoreFiles: [".gitignore", ".continueignore"],
@@ -333,40 +356,42 @@ export async function walkDir(
   ide: IDE,
   _options?: WalkerOptions,
 ): Promise<string[]> {
+  const entries: string[] = [];
   const options = { ...defaultOptions, ..._options };
-  return new Promise((resolve, reject) => {
-    walkDirWithCallback(
-      {
-        path,
-        ignoreFiles: options.ignoreFiles,
-        onlyDirs: options.onlyDirs,
-        follow: true,
-        includeEmpty: false,
-        additionalIgnoreRules: options.additionalIgnoreRules,
-      },
-      ide,
-      async (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          const relativePaths = result || [];
-          if (options?.returnRelativePaths) {
-            resolve(relativePaths);
-          } else {
-            const pathSep = await ide.pathSep();
-            if (pathSep === "/") {
-              resolve(relativePaths.map((p) => path + pathSep + p));
-            } else {
-              // Need to replace with windows path sep
-              resolve(
-                relativePaths.map(
-                  (p) => path + pathSep + p.split("/").join(pathSep),
-                ),
-              );
-            }
-          }
-        }
-      },
-    );
-  });
+
+  const walker = new Walker(
+    {
+      path,
+      ignoreFiles: options.ignoreFiles,
+      onlyDirs: options.onlyDirs,
+      follow: true,
+      includeEmpty: false,
+      additionalIgnoreRules: options.additionalIgnoreRules,
+    },
+    ide,
+  );
+
+  try {
+    for await (const entry of walker.start()) {
+      console.log({ entry });
+      entries.push(entry);
+    }
+  } catch (err) {
+    console.error(`Error walking directories: ${err}`);
+    throw err;
+  }
+
+  const relativePaths = entries || [];
+
+  if (options?.returnRelativePaths) {
+    return relativePaths;
+  }
+
+  const pathSep = await ide.pathSep();
+
+  if (pathSep === "/") {
+    return relativePaths.map((p) => path + pathSep + p);
+  }
+
+  return relativePaths.map((p) => path + pathSep + p.split("/").join(pathSep));
 }
