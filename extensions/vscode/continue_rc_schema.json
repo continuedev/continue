@@ -516,6 +516,7 @@
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
                       "gpt-4o",
+                      "gpt-4o-mini",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -628,6 +629,7 @@
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
                       "gpt-4o",
+                      "gpt-4o-mini",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -1222,6 +1224,7 @@
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
                       "gpt-4o",
+                      "gpt-4o-mini",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -2183,7 +2186,8 @@
                 "cohere",
                 "voyage",
                 "llm",
-                "free-trial"
+                "free-trial",
+                "huggingface-tei"
               ]
             },
             "params": {
@@ -2295,6 +2299,61 @@
                       "apiKey"
                     ]
                   }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": [
+                      "huggingface-tei"
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "apiBase": {
+                        "type": "string",
+                        "default": "http://localhost:8080"
+                      },
+                      "truncate": {
+                        "type": "boolean",
+                        "description": "Wether to truncate long sequences to the maximum allowed context length.",
+                        "default": false
+                      },
+                      "truncation_direction": {
+                        "enum": [
+                          "Right",
+                          "Left"
+                        ],
+                        "markdownDescription": "Wether to truncate sequences from the `left` or `right`.",
+                        "default": "Right"
+                      }
+                    },
+                    "required": [
+                      "apiBase"
+                    ]
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "truncate": {
+                      "const": true
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "truncation_direction"
+                  ]
                 }
               }
             }
