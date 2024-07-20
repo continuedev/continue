@@ -235,24 +235,7 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig();
     });
 
-    vscode.workspace.onDidSaveTextDocument(async (document) => {
-      const filepath = document.uri.fsPath;
-
-      // Check if the file is not a config file and is in the workspace
-      if (
-        !filepath.endsWith(".continuerc.json") &&
-        !filepath.endsWith(".prompt") &&
-        !filepath.endsWith(".continueignore") &&
-        !filepath.endsWith(".gitignore")
-      ) {
-        // Trigger reindex for this file
-        await (this.core.messenger as InProcessMessenger<ToCoreProtocol, FromCoreProtocol>)
-          .externalRequest("index/forceReIndex", undefined);
-        await this.updateSubmenuItemsAfterReindex();
-      }
-    });
-
-    vscode.workspace.onDidSaveTextDocument((event) => {
+    vscode.workspace.onDidSaveTextDocument(async (event) => {
       // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
 
@@ -285,6 +268,11 @@ export class VsCodeExtension {
       ) {
         // Update embeddings! (TODO)
       }
+
+      // Reindex the workspaces
+      await (this.core.messenger as InProcessMessenger<ToCoreProtocol, FromCoreProtocol>)
+        .externalRequest("index/forceReIndex", undefined);
+      await this.updateSubmenuItemsAfterReindex();
     });
 
     // When GitHub sign-in status changes, reload config
