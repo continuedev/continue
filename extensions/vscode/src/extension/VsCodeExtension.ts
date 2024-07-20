@@ -236,10 +236,6 @@ export class VsCodeExtension {
     });
 
     vscode.workspace.onDidSaveTextDocument(async (document) => {
-      console.log("Saved doc");
-      console.log("New Statement");
-      console.log("new statement");
-
       const filepath = document.uri.fsPath;
 
       // Check if the file is not a config file and is in the workspace
@@ -257,7 +253,6 @@ export class VsCodeExtension {
 
     vscode.workspace.onDidSaveTextDocument((event) => {
       // Listen for file changes in the workspace
-      //
       const filepath = event.uri.fsPath;
 
       if (filepath === getConfigJsonPath()) {
