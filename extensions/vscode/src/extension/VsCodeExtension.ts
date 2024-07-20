@@ -56,7 +56,7 @@ export class VsCodeExtension {
 
     for (const provider of contextProviders) {
       if (provider.type === "submenu") {
-        this.core.messenger.send("refreshSubmenuItems", undefined);
+        this.core.send("refreshSubmenuItems", undefined);
       }
     }
   }
