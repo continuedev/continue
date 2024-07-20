@@ -65,6 +65,13 @@ export class Core {
     return this.messenger.invoke(messageType, data);
   }
 
+  request<T extends keyof FromCoreProtocol>(
+    messageType: T,
+    data: FromCoreProtocol[T][0],
+  ): Promise<FromCoreProtocol[T][1]> {
+    return this.messenger.request(messageType, data);
+  }
+
   // TODO: It shouldn't actually need an IDE type, because this can happen
   // through the messenger (it does in the case of any non-VS Code IDEs already)
   constructor(
@@ -599,9 +606,6 @@ export class Core {
     on("stats/getTokensPerModel", async (msg) => {
       const rows = await DevDataSqliteDb.getTokensPerModel();
       return rows;
-    });
-    on("index/reIndexFile", async (msg) => {
-      await (await this.codebaseIndexerPromise).reIndexFile(msg.data);
     });
     on("index/forceReIndex", async (msg) => {
       const dirs = msg.data ? [msg.data] : await this.ide.getWorkspaceDirs();

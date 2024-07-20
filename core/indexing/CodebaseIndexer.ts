@@ -51,38 +51,6 @@ export class CodebaseIndexer {
     return indexes;
   }
 
-  async reIndexFile(filepath: string): Promise<void> {
-    const stats = await this.ide.getLastModified([filepath]);
-    const branch = await this.ide.getBranch(path.dirname(filepath));
-    const repoName = await this.ide.getRepoName(path.dirname(filepath));
-    const indexesToBuild = await this.getIndexesToBuild();
-
-    for (const codebaseIndex of indexesToBuild) {
-      const tag: IndexTag = {
-        directory: path.dirname(filepath),
-        branch,
-        artifactId: codebaseIndex.artifactId,
-      };
-
-      const [results, markComplete] = await getComputeDeleteAddRemove(
-        tag,
-        stats,
-        (filepath) => this.ide.readFile(filepath),
-        repoName,
-      );
-
-      for await (const update of codebaseIndex.update(
-        tag,
-        results,
-        markComplete,
-        repoName,
-      )) {
-      }
-    }
-
-    console.log(`Completed reindexing file: ${filepath}`);
-  }
-
   async *refresh(
     workspaceDirs: string[],
     abortSignal: AbortSignal,

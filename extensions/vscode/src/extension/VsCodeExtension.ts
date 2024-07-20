@@ -246,7 +246,8 @@ export class VsCodeExtension {
         !filepath.endsWith(".gitignore")
       ) {
         // Trigger reindex for this file
-        this.core.invoke("index/reIndexFile", filepath);
+        await (this.core.messenger as InProcessMessenger<ToCoreProtocol, FromCoreProtocol>)
+          .externalRequest("index/forceReIndex", undefined);
         await this.updateSubmenuItemsAfterReindex();
       }
     });
