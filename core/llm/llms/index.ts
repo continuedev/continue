@@ -8,6 +8,7 @@ import {
 import { renderTemplatedString } from "../../promptFiles/v1/renderTemplatedString";
 import { BaseLLM } from "../index";
 import IBM from "./IBM.js";
+import Ollama from "./Ollama.js";
 
 import Anthropic from "./Anthropic";
 import Asksage from "./Asksage";
@@ -51,6 +52,7 @@ import WatsonX from "./WatsonX";
 import xAI from "./xAI";
 
 const LLMs = [
+  IBM,
   Anthropic,
   Cohere,
   FreeTrial,
