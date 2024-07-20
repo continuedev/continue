@@ -266,10 +266,6 @@ class IdeProtocolClient(
                         respond(msg)
                     }
 
-                    "isTelemetryEnabled" -> {
-                        respond(true)
-                    }
-
                     "readRangeInFile" -> {
                         val fullContents = readFile((data as Map<String, String>)["filepath"] as String)
                         val range = data["range"] as Map<String, Any>

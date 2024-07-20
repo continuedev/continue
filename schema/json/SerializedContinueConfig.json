@@ -369,12 +369,7 @@
             "type": "string"
           }
         },
-        "allow_anonymous_telemetry": {
-          "title": "Allow Anonymous Telemetry",
-          "description": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to False, we will not collect any data.",
-          "default": true,
-          "type": "boolean"
-        },
+
         "models": {
           "title": "Models",
           "default": [

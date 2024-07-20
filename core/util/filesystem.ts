@@ -113,10 +113,6 @@ class FileSystemIde implements IDE {
     return Promise.resolve("");
   }
 
-  isTelemetryEnabled(): Promise<boolean> {
-    return Promise.resolve(true);
-  }
-
   getUniqueId(): Promise<string> {
     return Promise.resolve("NOT_UNIQUE");
   }

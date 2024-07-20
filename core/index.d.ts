@@ -1081,7 +1081,6 @@ interface AnalyticsConfig {
 // config.json
 export interface SerializedContinueConfig {
   env?: string[];
-  allowAnonymousTelemetry?: boolean;
   models: ModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
@@ -1110,8 +1109,6 @@ export type ContinueRcJson = Partial<SerializedContinueConfig> & {
 
 // config.ts - give users simplified interfaces
 export interface Config {
-  /** If set to true, Continue will collect anonymous usage data to improve the product. If set to false, we will collect nothing. Read here to learn more: https://docs.continue.dev/telemetry */
-  allowAnonymousTelemetry?: boolean;
   /** Each entry in this array will originally be a ModelDescription, the same object from your config.json, but you may add CustomLLMs.
    * A CustomLLM requires you only to define an AsyncGenerator that calls the LLM and yields string updates. You can choose to define either `streamCompletion` or `streamChat` (or both).
    * Continue will do the rest of the work to construct prompt templates, handle context items, prune context, etc.
@@ -1156,7 +1153,6 @@ export interface Config {
 
 // in the actual Continue source code
 export interface ContinueConfig {
-  allowAnonymousTelemetry?: boolean;
   models: ILLM[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;
@@ -1177,7 +1173,6 @@ export interface ContinueConfig {
 }
 
 export interface BrowserSerializedContinueConfig {
-  allowAnonymousTelemetry?: boolean;
   models: ModelDescription[];
   systemMessage?: string;
   completionOptions?: BaseCompletionOptions;

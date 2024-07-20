@@ -14,7 +14,6 @@ import { Core } from "core/core";
 import { walkDirAsync } from "core/indexing/walkDir";
 import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
-import { Telemetry } from "core/util/posthog";
 import readLastLines from "read-last-lines";
 import * as vscode from "vscode";
 
@@ -46,18 +45,6 @@ function getFullScreenTab() {
   return tabs.find((tab) =>
     (tab.input as any)?.viewType?.endsWith("continue.continueGUIView"),
   );
-}
-
-type TelemetryCaptureParams = Parameters<typeof Telemetry.capture>;
-
-/**
- * Helper method to add the `isCommandEvent` to all telemetry captures
- */
-function captureCommandTelemetry(
-  commandName: TelemetryCaptureParams[0],
-  properties: TelemetryCaptureParams[1] = {},
-) {
-  Telemetry.capture(commandName, { isCommandEvent: true, ...properties });
 }
 
 function addCodeToContextFromRange(
@@ -341,18 +328,15 @@ const commandsMap: (
       }
     },
     "continue.acceptVerticalDiffBlock": (filepath?: string, index?: number) => {
-      captureCommandTelemetry("acceptVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(true, filepath, index);
     },
     "continue.rejectVerticalDiffBlock": (filepath?: string, index?: number) => {
-      captureCommandTelemetry("rejectVerticalDiffBlock");
       verticalDiffManager.acceptRejectVerticalDiffBlock(false, filepath, index);
     },
     "continue.quickFix": async (
       range: vscode.Range,
       diagnosticMessage: string,
     ) => {
-      captureCommandTelemetry("quickFix");
 
       const prompt = `Please explain the cause of this error and how to solve it: ${diagnosticMessage}`;
 
@@ -369,7 +353,6 @@ const commandsMap: (
       prompt: string,
       range: vscode.Range,
     ) => {
-      captureCommandTelemetry("customQuickActionSendToChat");
 
       addCodeToContextFromRange(range, sidebar.webviewProtocol, prompt);
 
@@ -379,7 +362,6 @@ const commandsMap: (
       prompt: string,
       range: vscode.Range,
     ) => {
-      captureCommandTelemetry("customQuickActionStreamInlineEdit");
 
       streamInlineEdit("docstring", prompt, false, range);
     },
@@ -507,7 +489,6 @@ const commandsMap: (
       quickEdit.show(args);
     },
     "continue.writeCommentsForCode": async () => {
-      captureCommandTelemetry("writeCommentsForCode");
 
       streamInlineEdit(
         "comment",
@@ -515,7 +496,6 @@ const commandsMap: (
       );
     },
     "continue.writeDocstringForCode": async () => {
-      captureCommandTelemetry("writeDocstringForCode");
 
       streamInlineEdit(
         "docstring",
@@ -524,7 +504,6 @@ const commandsMap: (
       );
     },
     "continue.fixCode": async () => {
-      captureCommandTelemetry("fixCode");
 
       streamInlineEdit(
         "fix",
@@ -532,18 +511,15 @@ const commandsMap: (
       );
     },
     "continue.optimizeCode": async () => {
-      captureCommandTelemetry("optimizeCode");
       streamInlineEdit("optimize", "Optimize this code");
     },
     "continue.fixGrammar": async () => {
-      captureCommandTelemetry("fixGrammar");
       streamInlineEdit(
         "fixGrammar",
         "If there are any grammar or spelling mistakes in this writing, fix them. Do not make other large changes to the writing.",
       );
     },
     "continue.viewLogs": async () => {
-      captureCommandTelemetry("viewLogs");
 
       // Open ~/.continue/continue.log
       const logFile = path.join(os.homedir(), ".continue", "continue.log");
@@ -557,7 +533,6 @@ const commandsMap: (
       await vscode.window.showTextDocument(uri);
     },
     "continue.debugTerminal": async () => {
-      captureCommandTelemetry("debugTerminal");
 
       const terminalContents = await ide.getTerminalContents();
 
@@ -575,7 +550,6 @@ const commandsMap: (
 
     // Commands without keyboard shortcuts
     "continue.addModel": () => {
-      captureCommandTelemetry("addModel");
 
       vscode.commands.executeCommand("continue.continueGUIView.focus");
       sidebar.webviewProtocol?.request("addModel", undefined);
@@ -612,7 +586,6 @@ const commandsMap: (
       });
     },
     "continue.sendToTerminal": (text: string) => {
-      captureCommandTelemetry("sendToTerminal");
       ide.runCommand(text);
     },
     "continue.newSession": () => {
@@ -721,7 +694,6 @@ const commandsMap: (
       completionProvider.accept(completionId);
     },
     "continue.toggleTabAutocompleteEnabled": () => {
-      captureCommandTelemetry("toggleTabAutocompleteEnabled");
 
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const enabled = config.get("enableTabAutocomplete");
@@ -757,7 +729,6 @@ const commandsMap: (
       }
     },
     "continue.openTabAutocompleteConfigMenu": async () => {
-      captureCommandTelemetry("openTabAutocompleteConfigMenu");
 
       const config = vscode.workspace.getConfiguration(EXTENSION_NAME);
       const quickPick = vscode.window.createQuickPick();

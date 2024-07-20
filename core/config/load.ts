@@ -498,7 +498,6 @@ function finalToBrowserConfig(
   final: ContinueConfig,
 ): BrowserSerializedContinueConfig {
   return {
-    allowAnonymousTelemetry: final.allowAnonymousTelemetry,
     models: final.models.map((m) => ({
       provider: m.providerName,
       model: m.model,

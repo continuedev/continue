@@ -97,10 +97,6 @@ export class MessageIde implements IDE {
     return this.request("readRangeInFile", { filepath, range });
   }
 
-  isTelemetryEnabled(): Promise<boolean> {
-    return this.request("isTelemetryEnabled", undefined);
-  }
-
   getUniqueId(): Promise<string> {
     return this.request("getUniqueId", undefined);
   }
