@@ -609,7 +609,7 @@ export class Core {
     });
     on("index/forceReIndex", async (msg) => {
       const dirs = msg.data ? [msg.data] : await this.ide.getWorkspaceDirs();
-      this.refreshCodebaseIndex(dirs);
+      await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {
       new GlobalContext().update("indexingPaused", msg.data);
