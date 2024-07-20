@@ -98,6 +98,7 @@ async function getAddRemoveForTag(
   readFile: (path: string) => Promise<string>,
 ): Promise<[PathAndCacheKey[], PathAndCacheKey[], MarkCompleteCallback]> {
   const newLastUpdatedTimestamp = Date.now();
+  const files = { ...currentFiles };
 
   const saved = await getSavedItemsForTag(tag);
 
@@ -109,12 +110,12 @@ async function getAddRemoveForTag(
   for (const item of saved) {
     const { lastUpdated, ...pathAndCacheKey } = item;
 
-    if (currentFiles[item.path] === undefined) {
+    if (files[item.path] === undefined) {
       // Was indexed, but no longer exists. Remove
       remove.push(pathAndCacheKey);
     } else {
       // Exists in old and new, so determine whether it was updated
-      if (lastUpdated < currentFiles[item.path]) {
+      if (lastUpdated < files[item.path]) {
         // Change was made after last update
         updateNewVersion.push({
           path: pathAndCacheKey.path,
@@ -126,14 +127,14 @@ async function getAddRemoveForTag(
       }
 
       // Remove so we can check leftovers afterward
-      delete currentFiles[item.path];
+      delete files[item.path];
     }
   }
 
   // Any leftover in current files need to be added
   add.push(
     ...(await Promise.all(
-      Object.keys(currentFiles).map(async (path) => {
+      Object.keys(files).map(async (path) => {
         const fileContents = await readFile(path);
         return { path, cacheKey: calculateHash(fileContents) };
       }),
