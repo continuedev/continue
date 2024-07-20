@@ -151,7 +151,7 @@ function InputToolbar(props: InputToolbarProps) {
             ⏎ Enter
           </EnterButton>
         </span>
-        <span className="flex flex-wrap-reverse items-center whitespace-nowrap">
+        <span className="flex flex-wrap-reverse gap-1 items-center whitespace-nowrap">
           <ModelSelect />
           <span
             style={{
@@ -171,7 +171,7 @@ function InputToolbar(props: InputToolbarProps) {
               defaultModel.title,
             ) && (
               <span
-                className="ml-1.5 mt-0.5"
+                className="ml-1 mt-0.5"
                 onMouseLeave={() => setFileSelectHovered(false)}
                 onMouseEnter={() => setFileSelectHovered(true)}
               >

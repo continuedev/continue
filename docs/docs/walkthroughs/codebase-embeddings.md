@@ -231,7 +231,7 @@ export function modifyConfig(config: Config): Config {
 
 The reranker plays a crucial role in refining the results retrieved from your codebase. It processes the initial set of results obtained through embeddings-based retrieval, improving their relevance and accuracy for your queries.
 
-Continue offers several reranking options: `cohere`, `voyage`, `llm`, and `free-trial`, which can be configured in `config.json`.
+Continue offers several reranking options: `cohere`, `voyage`, `llm`, `hugginface-tei`, and `free-trial`, which can be configured in `config.json`.
 
 ### Voyage AI
 
@@ -281,6 +281,23 @@ If you only have access to a single LLM, then you can use it as a reranker. This
 ```
 
 The `"modelTitle"` field must match one of the models in your "models" array in config.json.
+
+### Text Embeddings Inference
+
+[Hugging Face Text Embeddings Inference](https://huggingface.co/docs/text-embeddings-inference/en/index) enables you to host your own [reranker endpoint](https://huggingface.github.io/text-embeddings-inference/#/Text%20Embeddings%20Inference/rerank). You can configure your reranker as follows:
+
+```json title="~/.continue/config.json"
+{
+  "reranker": {
+    "name": "huggingface-tei",
+    "params": {
+        "apiBase": "http://localhost:8080",
+        "truncate": true,
+        "truncation_direction": "Right"
+    }
+  },
+}
+```
 
 ### Free Trial (Voyage AI)
 

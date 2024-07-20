@@ -231,6 +231,12 @@
         "group": "Continue"
       },
       {
+        "command": "continue.codebaseForceReIndex",
+        "category": "Continue",
+        "title": "Codebase Force Re-Index",
+        "group": "Continue"
+      },
+      {
         "command": "continue.docsIndex",
         "category": "Continue",
         "title": "Docs Index",

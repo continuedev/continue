@@ -288,6 +288,9 @@ const commandsMap: (
     "continue.toggleAuxiliaryBar": () => {
       vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
     },
+    "continue.codebaseForceReIndex": async () => {
+      core.invoke("index/forceReIndex", undefined);
+    },
     "continue.docsIndex": async () => {
       core.invoke("context/indexDocs", { reIndex: false });
     },

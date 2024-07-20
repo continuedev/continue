@@ -20,6 +20,7 @@ const CONTEXT_LENGTH_FOR_MODEL: { [name: string]: number } = {
   "gpt-4-32k": GPT_4_CTX_LEN,
   "gpt-4-turbo-preview": GPT_4_CTX_LEN,
   "gpt-4o": GPT_4_CTX_LEN,
+  "gpt-4o-mini": GPT_4_CTX_LEN,
   "gpt-4-vision": GPT_4_CTX_LEN,
   "gpt-4-0125-preview": GPT_4_CTX_LEN,
   "gpt-4-1106-preview": GPT_4_CTX_LEN,
