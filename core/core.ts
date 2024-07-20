@@ -65,11 +65,12 @@ export class Core {
     return this.messenger.invoke(messageType, data);
   }
 
-  request<T extends keyof FromCoreProtocol>(
+  send<T extends keyof FromCoreProtocol>(
     messageType: T,
     data: FromCoreProtocol[T][0],
-  ): Promise<FromCoreProtocol[T][1]> {
-    return this.messenger.request(messageType, data);
+    messageId?: string,
+  ): string {
+    return this.messenger.send(messageType, data);
   }
 
   // TODO: It shouldn't actually need an IDE type, because this can happen
