@@ -65,7 +65,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
     },
     ContextItemWithId[],
   ];
-  "context/loadSubmenuItems": [{ title: string }, Promise<ContextSubmenuItem[]>];
+  "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
   "context/addDocs": [SiteIndexingConfig, void];
   "context/removeDocs": [{ baseUrl: string }, void];
