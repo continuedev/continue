@@ -267,7 +267,6 @@ export class Core {
       return items || [];
     });
     on("context/getContextItems", async (msg) => {
-      console.log("getContextItems called with query:", msg.data.query);
       const { name, query, fullInput, selectedCode } = msg.data;
       const config = await this.config();
       const llm = await this.getSelectedModel();
