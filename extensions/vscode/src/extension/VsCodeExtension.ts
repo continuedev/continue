@@ -50,18 +50,30 @@ export class VsCodeExtension {
   private async updateSubmenuItemsAfterReindex() {
     const contextProviders = (await this.configHandler.getSerializedConfig())
       .contextProviders;
-    if (!contextProviders) {
+    if (!contextProviders || !Array.isArray(contextProviders)) {
+      console.log("No context providers or invalid data:", contextProviders);
       return;
     }
 
+    console.log(`Total providers: ${contextProviders.length}`);
+
     for (const provider of contextProviders) {
+      console.log(
+        `Processing provider: ${provider.title}, type: ${provider.type}`,
+      );
+
       if (provider.type === "submenu") {
-        await this.sidebar.webviewProtocol.request("updateSubmenuItems", {
-          provider: provider.title,
-          submenuItems: this.core.invoke("context/loadSubmenuItems", {
-            title: provider.title,
-          }),
-        });
+        console.log(`Updating submenu for: ${provider.title}`);
+        try {
+          await this.webviewProtocolPromise.then(async (webviewProtocol) => {
+            await this.core.messenger.send("refreshSubmenuItems", undefined);
+          });
+          console.log(`Successfully updated submenu for: ${provider.title}`);
+        } catch (error) {
+          console.error(`Error updating submenu for ${provider.title}:`, error);
+        }
+      } else {
+        console.log(`Skipping non-submenu provider: ${provider.title}`);
       }
     }
   }
@@ -242,19 +254,9 @@ export class VsCodeExtension {
 
     vscode.workspace.onDidSaveTextDocument(async (document) => {
       console.log("Saved doc");
-      console.log("Test");
-      console.log("Test2");
-      console.log("Test3");
-      console.log("Test4");
-      console.log("Test5");
-      console.log("Test6");
-      console.log("Test6");
-      console.log("Test6");
-      console.log("Test6");
-      console.log("Test7");
-      console.log("Test7");
-      console.log("Test7");
-      console.log("Test8");
+      console.log("New Statement");
+      console.log("new statement")
+      
 
       const filepath = document.uri.fsPath;
 
