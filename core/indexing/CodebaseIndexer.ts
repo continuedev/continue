@@ -8,7 +8,6 @@ import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
 import { CodebaseIndex } from "./types.js";
 import { walkDir } from "./walkDir.js";
-import * as path from "node:path";
 
 export class PauseToken {
   constructor(private _paused: boolean) {}
