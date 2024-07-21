@@ -118,10 +118,11 @@ export class Core {
         ),
       );
 
-      // Reindex when the workspace settings change.
+      // Index on initialization
       this.ide
         .getWorkspaceDirs()
         .then((dirs) => {
+          // Respect pauseInitialCodebaseIndex user settings
           if (ideSettings.pauseInitialCodebaseIndex) {
             return;
           }
