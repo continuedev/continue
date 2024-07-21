@@ -143,18 +143,29 @@ async function getAddRemoveForTag(
   // Create the markComplete callback function
   const db = await SqliteDb.get();
   const itemToAction: {
-    [key: string]: [PathAndCacheKey, AddRemoveResultType];
-  } = {};
+    [key in AddRemoveResultType]: PathAndCacheKey[];
+  } = {
+    [AddRemoveResultType.Add]: [],
+    [AddRemoveResultType.Remove]: [],
+    [AddRemoveResultType.UpdateNewVersion]: [],
+    [AddRemoveResultType.UpdateOldVersion]: [],
+  };
 
-  async function markComplete(items: PathAndCacheKey[], _: IndexResultType) {
-    const actions = items.map(
-      (item) =>
-        itemToAction[
-          JSON.stringify({ path: item.path, cacheKey: item.cacheKey })
-        ],
-    );
-    for (const [{ path, cacheKey }, resultType] of actions) {
-      switch (resultType) {
+
+
+
+  async function markComplete(items: PathAndCacheKey[], resultType: IndexResultType) {
+    const addRemoveResultType = mapIndexResultTypeToAddRemoveResultType(resultType);
+
+    const actionItems = itemToAction[addRemoveResultType];
+    if (!actionItems) {
+      console.warn(`No action items found for result type: ${resultType}`);
+      return;
+    }
+
+    for (const item of items) {
+      const { path, cacheKey } = item;
+      switch (addRemoveResultType) {
         case AddRemoveResultType.Add:
           await db.run(
             "INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
@@ -208,22 +219,16 @@ async function getAddRemoveForTag(
   }
 
   for (const item of updateNewVersion) {
-    itemToAction[JSON.stringify(item)] = [
-      item,
-      AddRemoveResultType.UpdateNewVersion,
-    ];
+    itemToAction[AddRemoveResultType.UpdateNewVersion].push(item);
   }
   for (const item of add) {
-    itemToAction[JSON.stringify(item)] = [item, AddRemoveResultType.Add];
+    itemToAction[AddRemoveResultType.Add].push(item);
   }
   for (const item of updateOldVersion) {
-    itemToAction[JSON.stringify(item)] = [
-      item,
-      AddRemoveResultType.UpdateOldVersion,
-    ];
+    itemToAction[AddRemoveResultType.UpdateOldVersion].push(item);
   }
   for (const item of remove) {
-    itemToAction[JSON.stringify(item)] = [item, AddRemoveResultType.Remove];
+    itemToAction[AddRemoveResultType.Remove].push(item);
   }
 
   return [
@@ -253,6 +258,19 @@ function calculateHash(fileContents: string): string {
   const hash = crypto.createHash("sha256");
   hash.update(fileContents);
   return hash.digest("hex");
+}
+
+function mapIndexResultTypeToAddRemoveResultType(resultType: IndexResultType): AddRemoveResultType {
+  switch (resultType) {
+    case "compute":
+    case "addTag":
+      return AddRemoveResultType.Add;
+    case "del":
+    case "removeTag":
+      return AddRemoveResultType.Remove;
+    default:
+      throw new Error(`Unexpected result type: ${resultType}`);
+  }
 }
 
 export async function getComputeDeleteAddRemove(
@@ -350,11 +368,11 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     const add = [...results.compute, ...results.addTag];
     const remove = [...results.del, ...results.removeTag];
     await Promise.all([
-      ...add.map(({ cacheKey }) => {
-        return this.computeOrAddTag(cacheKey, tag);
-      }),
       ...remove.map(({ cacheKey }) => {
         return this.deleteOrRemoveTag(cacheKey, tag);
+      }),
+      ...add.map(({ cacheKey }) => {
+        return this.computeOrAddTag(cacheKey, tag);
       }),
     ]);
     yield { progress: 1, desc: "Done updating global cache", status: "done" };
