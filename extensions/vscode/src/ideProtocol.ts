@@ -522,6 +522,7 @@ class VsCodeIde implements IDE {
       ),
       userToken: settings.get<string>("userToken", ""),
       enableControlServerBeta: internalBetaPathExists(),
+      skipInitialSync: settings.get<boolean>("skipInitialSync", false),
       // settings.get<boolean>(
       //   "enableControlServerBeta",
       //   false,
