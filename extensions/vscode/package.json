@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.189",
+  "version": "0.9.186",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -233,6 +233,12 @@
         "command": "continue.fixGrammar",
         "category": "Continue",
         "title": "Fix Grammar / Spelling",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.codebaseForceReIndex",
+        "category": "Continue",
+        "title": "Codebase Force Re-Index",
         "group": "Continue"
       },
       {

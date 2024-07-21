@@ -481,6 +481,7 @@
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
                       "gpt-4o",
+                      "gpt-4o-mini",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -581,6 +582,7 @@
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
                       "gpt-4o",
+                      "gpt-4o-mini",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -1095,6 +1097,7 @@
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
                       "gpt-4o",
+                      "gpt-4o-mini",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -1392,6 +1395,46 @@
         }
       },
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": ["docs"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "sites": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string"
+                        },
+                        "startUrl": {
+                          "type": "string"
+                        },
+                        "rootUrl": {
+                          "type": "string"
+                        },
+                        "maxDepth": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": ["title", "startUrl"]
+                    }
+                  }
+                },
+                "required": ["sites"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
         {
           "if": {
             "properties": {
@@ -1952,7 +1995,13 @@
           "type": "object",
           "properties": {
             "name": {
-              "enum": ["cohere", "voyage", "llm", "free-trial"]
+              "enum": [
+                "cohere",
+                "voyage",
+                "llm",
+                "free-trial",
+                "huggingface-tei"
+              ]
             },
             "params": {
               "type": "object"
@@ -2040,6 +2089,50 @@
                     },
                     "required": ["apiKey"]
                   }
+                }
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": ["huggingface-tei"]
+                  }
+                },
+                "required": ["name"]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "apiBase": {
+                        "type": "string",
+                        "default": "http://localhost:8080"
+                      },
+                      "truncate": {
+                        "type": "boolean",
+                        "description": "Wether to truncate long sequences to the maximum allowed context length.",
+                        "default": false
+                      },
+                      "truncation_direction": {
+                        "enum": ["Right", "Left"],
+                        "markdownDescription": "Wether to truncate sequences from the `left` or `right`.",
+                        "default": "Right"
+                      }
+                    },
+                    "required": ["apiBase"]
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "truncate": {
+                      "const": true
+                    }
+                  }
+                },
+                "then": {
+                  "required": ["truncation_direction"]
                 }
               }
             }

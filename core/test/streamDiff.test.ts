@@ -1,7 +1,7 @@
 import { streamDiff } from "../diff/streamDiff.js";
 import { DiffLine, DiffLineType } from "../index.js";
 // @ts-ignore no typings available
-import { diff as myersDiff, changed } from "myers-diff";
+import { changed, diff as myersDiff } from "myers-diff";
 
 // "modification" is an extra type used to represent an "old" + "new" diff line
 type MyersDiffTypes = Extract<DiffLineType, "new" | "old"> | "modification";

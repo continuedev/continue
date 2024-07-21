@@ -56,11 +56,5 @@ const Providers: (typeof BaseContextProvider)[] = [
 export function contextProviderClassFromName(
   name: ContextProviderName,
 ): typeof BaseContextProvider | undefined {
-  const cls = Providers.find((cls) => cls.description.title === name);
-
-  if (!cls) {
-    return undefined;
-  }
-
-  return cls;
+  return Providers.find((cls) => cls.description.title === name);
 }

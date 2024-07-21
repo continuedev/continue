@@ -28,22 +28,6 @@ class DocsContextProvider extends BaseContextProvider {
     this.docsService = DocsService.getInstance();
   }
 
-  private async _getIconDataUrl(url: string): Promise<string | undefined> {
-    try {
-      const response = await fetch(url);
-      if (!response.headers.get("content-type")?.startsWith("image/")) {
-        console.log("Not an image: ", await response.text());
-        return undefined;
-      }
-      const buffer = await response.buffer();
-      const base64data = buffer.toString("base64");
-      return `data:${response.headers.get("content-type")};base64,${base64data}`;
-    } catch (e) {
-      console.log("E: ", e);
-      return undefined;
-    }
-  }
-
   async getContextItems(
     query: string,
     extras: ContextProviderExtras,
@@ -115,7 +99,9 @@ class DocsContextProvider extends BaseContextProvider {
   }
 
   // Get indexed docs as ContextSubmenuItems from database.
-  private async _getIndexedDocsContextSubmenuItems(): Promise<ContextSubmenuItem[]> {
+  private async _getIndexedDocsContextSubmenuItems(): Promise<
+    ContextSubmenuItem[]
+  > {
     return (await this.docsService.list()).map((doc) => ({
       title: doc.title,
       description: new URL(doc.baseUrl).hostname,
@@ -137,7 +123,9 @@ class DocsContextProvider extends BaseContextProvider {
         id: config.startUrl,
         title: config.title,
         description: new URL(config.startUrl).hostname,
-        metadata: { preIndexed: !!configs.find((cnf) => cnf.title === config.title), },
+        metadata: {
+          preIndexed: !!configs.find((cnf) => cnf.title === config.title),
+        },
       });
     }
 
@@ -158,15 +146,6 @@ class DocsContextProvider extends BaseContextProvider {
         return a.title.toString().localeCompare(b.title.toString());
       }
     });
-
-    // const icons = await Promise.all(
-    //   submenuItems.map(async (item) =>
-    //     item.iconUrl ? this._getIconDataUrl(item.iconUrl) : undefined,
-    //   ),
-    // );
-    // icons.forEach((icon, i) => {
-    //   submenuItems[i].iconUrl = icon;
-    // });
 
     return submenuItems;
   }
