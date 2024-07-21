@@ -122,8 +122,8 @@ export class Core {
       this.ide
         .getWorkspaceDirs()
         .then((dirs) => {
-          // Respect pauseInitialCodebaseIndex user settings
-          if (ideSettings.pauseInitialCodebaseIndex) {
+          // Respect pauseCodebaseIndexOnStart user settings
+          if (ideSettings.pauseCodebaseIndexOnStart) {
             return;
           }
 

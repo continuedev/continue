@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.188",
+  "version": "0.9.189",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -94,7 +94,7 @@
           "default": false,
           "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
         },
-        "continue.pauseInitialCodebaseIndex": {
+        "continue.pauseCodebaseIndexOnStart": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Pause Continue's codebase index on start."

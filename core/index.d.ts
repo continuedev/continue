@@ -422,7 +422,7 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
-  pauseInitialCodebaseIndex: boolean
+  pauseCodebaseIndexOnStart: boolean
 }
 
 export interface IDE {
