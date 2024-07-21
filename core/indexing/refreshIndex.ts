@@ -44,6 +44,36 @@ export class SqliteDb {
             artifactId STRING NOT NULL
         )`,
     );
+    // Delete duplicate rows from tag_catalog
+    await db.exec(`
+    DELETE FROM tag_catalog
+    WHERE id NOT IN (
+      SELECT MIN(id)
+      FROM tag_catalog
+      GROUP BY dir, branch, artifactId, path, cacheKey
+    )
+  `);
+
+    // Delete duplicate rows from global_cache
+    await db.exec(`
+    DELETE FROM global_cache
+    WHERE id NOT IN (
+      SELECT MIN(id)
+      FROM global_cache
+      GROUP BY cacheKey, dir, branch, artifactId
+    )
+  `);
+
+    // Add unique constraints if they don't exist
+    await db.exec(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_tag_catalog_unique 
+     ON tag_catalog(dir, branch, artifactId, path, cacheKey)`,
+    );
+
+    await db.exec(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_global_cache_unique 
+     ON global_cache(cacheKey, dir, branch, artifactId)`,
+    );
   }
 
   private static indexSqlitePath = getIndexSqlitePath();
@@ -90,13 +120,22 @@ enum AddRemoveResultType {
   Remove = "remove",
   UpdateNewVersion = "updateNewVersion",
   UpdateOldVersion = "updateOldVersion",
+  UpdateLastUpdated = "updateLastUpdated",
+  Compute = "compute"
 }
 
 async function getAddRemoveForTag(
   tag: IndexTag,
   currentFiles: LastModifiedMap,
   readFile: (path: string) => Promise<string>,
-): Promise<[PathAndCacheKey[], PathAndCacheKey[], MarkCompleteCallback]> {
+): Promise<
+  [
+    PathAndCacheKey[],
+    PathAndCacheKey[],
+    PathAndCacheKey[],
+    MarkCompleteCallback,
+  ]
+> {
   const newLastUpdatedTimestamp = Date.now();
 
   const saved = await getSavedItemsForTag(tag);
@@ -105,6 +144,7 @@ async function getAddRemoveForTag(
   const updateNewVersion: PathAndCacheKey[] = [];
   const updateOldVersion: PathAndCacheKey[] = [];
   const remove: PathAndCacheKey[] = [];
+  const updateLastUpdated: PathAndCacheKey[] = [];
 
   for (const item of saved) {
     const { lastUpdated, ...pathAndCacheKey } = item;
@@ -116,11 +156,16 @@ async function getAddRemoveForTag(
       // Exists in old and new, so determine whether it was updated
       if (lastUpdated < currentFiles[item.path]) {
         // Change was made after last update
-        updateNewVersion.push({
-          path: pathAndCacheKey.path,
-          cacheKey: calculateHash(await readFile(pathAndCacheKey.path)),
-        });
-        updateOldVersion.push(pathAndCacheKey);
+        const newHash = calculateHash(await readFile(pathAndCacheKey.path));
+        if (pathAndCacheKey.cacheKey !== newHash) {
+          updateNewVersion.push({
+            path: pathAndCacheKey.path,
+            cacheKey: newHash,
+          });
+          updateOldVersion.push(pathAndCacheKey);
+        } else {
+          updateLastUpdated.push(pathAndCacheKey);
+        }
       } else {
         // Already updated, do nothing
       }
@@ -149,13 +194,16 @@ async function getAddRemoveForTag(
     [AddRemoveResultType.Remove]: [],
     [AddRemoveResultType.UpdateNewVersion]: [],
     [AddRemoveResultType.UpdateOldVersion]: [],
+    [AddRemoveResultType.UpdateLastUpdated]: [],
+    [AddRemoveResultType.Compute]: [],
   };
 
-
-
-
-  async function markComplete(items: PathAndCacheKey[], resultType: IndexResultType) {
-    const addRemoveResultType = mapIndexResultTypeToAddRemoveResultType(resultType);
+  async function markComplete(
+    items: PathAndCacheKey[],
+    resultType: IndexResultType,
+  ) {
+    const addRemoveResultType =
+      mapIndexResultTypeToAddRemoveResultType(resultType);
 
     const actionItems = itemToAction[addRemoveResultType];
     if (!actionItems) {
@@ -166,6 +214,17 @@ async function getAddRemoveForTag(
     for (const item of items) {
       const { path, cacheKey } = item;
       switch (addRemoveResultType) {
+        case AddRemoveResultType.Compute:
+          await db.run(
+            "REPLACE INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
+            path,
+            cacheKey,
+            newLastUpdatedTimestamp,
+            tag.directory,
+            tag.branch,
+            tag.artifactId,
+          );
+          break;
         case AddRemoveResultType.Add:
           await db.run(
             "INSERT INTO tag_catalog (path, cacheKey, lastUpdated, dir, branch, artifactId) VALUES (?, ?, ?, ?, ?, ?)",
@@ -193,6 +252,7 @@ async function getAddRemoveForTag(
             tag.artifactId,
           );
           break;
+        case AddRemoveResultType.UpdateLastUpdated:
         case AddRemoveResultType.UpdateNewVersion:
           await db.run(
             `UPDATE tag_catalog SET
@@ -234,6 +294,7 @@ async function getAddRemoveForTag(
   return [
     [...add, ...updateNewVersion],
     [...remove, ...updateOldVersion],
+    updateLastUpdated,
     markComplete,
   ];
 }
@@ -260,9 +321,12 @@ function calculateHash(fileContents: string): string {
   return hash.digest("hex");
 }
 
-function mapIndexResultTypeToAddRemoveResultType(resultType: IndexResultType): AddRemoveResultType {
+function mapIndexResultTypeToAddRemoveResultType(
+  resultType: IndexResultType,
+): AddRemoveResultType {
   switch (resultType) {
     case "compute":
+      return AddRemoveResultType.Compute;
     case "addTag":
       return AddRemoveResultType.Add;
     case "del":
@@ -278,8 +342,8 @@ export async function getComputeDeleteAddRemove(
   currentFiles: LastModifiedMap,
   readFile: (path: string) => Promise<string>,
   repoName: string | undefined,
-): Promise<[RefreshIndexResults, MarkCompleteCallback]> {
-  const [add, remove, markComplete] = await getAddRemoveForTag(
+): Promise<[RefreshIndexResults, PathAndCacheKey[], MarkCompleteCallback]> {
+  const [add, remove, lastUpdated, markComplete] = await getAddRemoveForTag(
     tag,
     currentFiles,
     readFile,
@@ -323,6 +387,7 @@ export async function getComputeDeleteAddRemove(
 
   return [
     results,
+    lastUpdated,
     async (items, resultType) => {
       // Update tag catalog
       markComplete(items, resultType);

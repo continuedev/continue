@@ -122,20 +122,41 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         status: "indexing",
       };
       markComplete([item], IndexResultType.Compute);
+      // Insert chunks
+      for await (const chunk of chunkDocument(
+        item.path,
+        contents[i],
+        this.maxChunkSize,
+        item.cacheKey,
+      )) {
+        handleChunk(chunk);
+      }
+
+      accumulatedProgress =
+        (i / results.compute.length) * (1 - progressReservedForTagging);
+      yield {
+        progress: accumulatedProgress,
+        desc: `Chunking ${getBasename(item.path)}`,
+        status: "indexing",
+      };
+      markComplete([item], IndexResultType.Compute);
     }
 
     // Add tag
-    for (const item of results.addTag) {
-      const chunksWithPath = await db.all(
-        "SELECT * FROM chunks WHERE cacheKey = ?",
-        [item.cacheKey],
-      );
+    const addContents = await Promise.all(
+      results.addTag.map(({ path }) => this.readFile(path)),
+    );
+    for (let i = 0; i < results.addTag.length; i++) {
+      const item = results.addTag[i];
 
-      for (const chunk of chunksWithPath) {
-        await db.run("INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)", [
-          chunk.id,
-          tagString,
-        ]);
+      // Insert chunks
+      for await (const chunk of chunkDocument(
+        item.path,
+        addContents[i],
+        this.maxChunkSize,
+        item.cacheKey,
+      )) {
+        handleChunk(chunk);
       }
 
       markComplete([item], IndexResultType.AddTag);
