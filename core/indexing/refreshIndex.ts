@@ -325,6 +325,8 @@ function mapIndexResultTypeToAddRemoveResultType(
   resultType: IndexResultType,
 ): AddRemoveResultType {
   switch (resultType) {
+    case "updateLastUpdated":
+      return AddRemoveResultType.UpdateLastUpdated;
     case "compute":
       return AddRemoveResultType.Compute;
     case "addTag":
@@ -430,7 +432,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
     _: MarkCompleteCallback,
     repoName: string | undefined,
   ): AsyncGenerator<IndexingProgressUpdate> {
-    const add = [...results.compute, ...results.addTag];
+    const add = results.addTag;
     const remove = [...results.del, ...results.removeTag];
     await Promise.all([
       ...remove.map(({ cacheKey }) => {
