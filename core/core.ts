@@ -117,9 +117,17 @@ export class Core {
           continueServerClient,
         ),
       );
+
+      // Reindex when the workspace settings change.
       this.ide
         .getWorkspaceDirs()
-        .then((dirs) => this.refreshCodebaseIndex(dirs));
+        .then((dirs) => {
+          if (ideSettings.pauseInitialCodebaseIndex) {
+            return;
+          }
+
+          this.refreshCodebaseIndex(dirs);
+        });
     });
 
     const getLlm = async () => {
