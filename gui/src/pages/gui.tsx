@@ -41,6 +41,7 @@ import {
   clearLastResponse,
   newSession,
   setInactive,
+  deleteMessage,
 } from "../redux/slices/stateSlice";
 import {
   setDialogEntryOn,
@@ -435,7 +436,7 @@ function GUI() {
                               "*",
                             );
                           }}
-                          onDelete={() => {}}
+                          onDelete={() => {dispatch(deleteMessage(index))}}
                         />
                       </TimelineItem>
                     )}
