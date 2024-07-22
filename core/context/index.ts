@@ -6,6 +6,7 @@ import type {
   IContextProvider,
   LoadSubmenuItemsArgs,
 } from "../index.js";
+import { Telemetry } from "../util/posthog.js";
 export abstract class BaseContextProvider implements IContextProvider {
   options: { [key: string]: any };
 
@@ -17,6 +18,12 @@ export abstract class BaseContextProvider implements IContextProvider {
 
   get description(): ContextProviderDescription {
     return (this.constructor as any).description;
+  }
+
+  protected _logProviderName(): void {
+    Telemetry.capture("context_provider_invocation", {
+      providerName: this.constructor.name,
+    });
   }
 
   // Maybe just include the chat message in here. Should never have to go back to the context provider once you have the information.

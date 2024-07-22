@@ -1,15 +1,14 @@
-import fetch from "node-fetch";
 import {
   ContextItem,
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
   LoadSubmenuItemsArgs,
-  SiteIndexingConfig,
 } from "../../index.js";
 import { DocsService } from "../../indexing/docs/DocsService.js";
-import configs from "../../indexing/docs/preIndexedDocs.js";
+import preIndexedDocs from "../../indexing/docs/preIndexedDocs.js";
 import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
+import { Telemetry } from "../../util/posthog.js";
 import { BaseContextProvider } from "../index.js";
 
 class DocsContextProvider extends BaseContextProvider {
@@ -21,6 +20,7 @@ class DocsContextProvider extends BaseContextProvider {
     description: "Type to search docs",
     type: "submenu",
   };
+
   private docsService: DocsService;
 
   constructor(options: any) {
@@ -32,14 +32,20 @@ class DocsContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    // Not supported in JetBrains IDEs right now
-    if ((await extras.ide.getIdeInfo()).ideType === "jetbrains") {
-      throw new Error(
-        "The @docs context provider is not currently supported in JetBrains IDEs. We'll have an update soon!",
-      );
+    this._logProviderName();
+
+    const isPreIndexedDoc = !!preIndexedDocs[query];
+
+    if (isPreIndexedDoc) {
+      Telemetry.capture("docs_pre_indexed_doc_used", {
+        doc: query,
+      });
     }
 
-    const embeddingsProvider = new TransformersJsEmbeddingsProvider();
+    const embeddingsProvider = isPreIndexedDoc
+      ? new TransformersJsEmbeddingsProvider()
+      : extras.embeddingsProvider;
+
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 
     let chunks = await this.docsService.retrieve(
@@ -93,46 +99,11 @@ class DocsContextProvider extends BaseContextProvider {
     ];
   }
 
-  // Get combined site configs from preIndexedDocs and options.sites.
-  private _getDocsSitesConfig(): SiteIndexingConfig[] {
-    return [...configs, ...(this.options?.sites || [])];
-  }
-
-  // Get indexed docs as ContextSubmenuItems from database.
-  private async _getIndexedDocsContextSubmenuItems(): Promise<
-    ContextSubmenuItem[]
-  > {
-    return (await this.docsService.list()).map((doc) => ({
-      title: doc.title,
-      description: new URL(doc.baseUrl).hostname,
-      id: doc.baseUrl,
-    }));
-  }
-
-  async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs,
-  ): Promise<ContextSubmenuItem[]> {
-    const submenuItemsMap = new Map<string, ContextSubmenuItem>();
-
-    for (const item of await this._getIndexedDocsContextSubmenuItems()) {
-      submenuItemsMap.set(item.id, item);
-    }
-
-    for (const config of this._getDocsSitesConfig()) {
-      submenuItemsMap.set(config.startUrl, {
-        id: config.startUrl,
-        title: config.title,
-        description: new URL(config.startUrl).hostname,
-        metadata: {
-          preIndexed: !!configs.find((cnf) => cnf.title === config.title),
-        },
-      });
-    }
-
-    const submenuItems = Array.from(submenuItemsMap.values());
-
+  private _sortByPreIndexedDocs(
+    submenuItems: ContextSubmenuItem[],
+  ): ContextSubmenuItem[] {
     // Sort submenuItems such that the objects with titles which don't occur in configs occur first, and alphabetized
-    submenuItems.sort((a, b) => {
+    return submenuItems.sort((a, b) => {
       const aTitleInConfigs = a.metadata?.preIndexed ?? false;
       const bTitleInConfigs = b.metadata?.preIndexed ?? false;
 
@@ -146,6 +117,57 @@ class DocsContextProvider extends BaseContextProvider {
         return a.title.toString().localeCompare(b.title.toString());
       }
     });
+  }
+
+  /**
+   * Currently, we generate and host embeddings for pre-indexed docs using Transformers.js
+   * However, we don't ship Transformers.js with the JetBrains extension.
+   *
+   * This method has logic to avoid showing the pre-indexed docs to users to
+   * avoid this conflict.
+   */
+  async loadSubmenuItems(
+    args: LoadSubmenuItemsArgs,
+  ): Promise<ContextSubmenuItem[]> {
+    const ideInfo = await args.ide.getIdeInfo();
+    const isJetBrains = ideInfo.ideType !== "jetbrains";
+    const configSites = this.options?.sites || [];
+    const submenuItemsMap = new Map<string, ContextSubmenuItem>();
+
+    if (!isJetBrains) {
+      for (const { startUrl, title } of Object.values(preIndexedDocs)) {
+        submenuItemsMap.set(startUrl, {
+          title,
+          id: startUrl,
+          description: new URL(startUrl).hostname,
+          metadata: {
+            preIndexed: true,
+          },
+        });
+      }
+    }
+
+    for (const { title, baseUrl } of await this.docsService.list()) {
+      submenuItemsMap.set(baseUrl, {
+        title,
+        id: baseUrl,
+        description: new URL(baseUrl).hostname,
+      });
+    }
+
+    for (const { startUrl, title } of configSites) {
+      submenuItemsMap.set(startUrl, {
+        title,
+        id: startUrl,
+        description: new URL(startUrl).hostname,
+      });
+    }
+
+    const submenuItems = Array.from(submenuItemsMap.values());
+
+    if (!isJetBrains) {
+      return this._sortByPreIndexedDocs(submenuItems);
+    }
 
     return submenuItems;
   }
