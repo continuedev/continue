@@ -422,6 +422,7 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
+  pauseCodebaseIndexOnStart: boolean
   enableDebugLogs: boolean
 }
 

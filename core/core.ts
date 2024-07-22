@@ -142,9 +142,17 @@ export class Core {
         ),
       );
 
+      // Index on initialization
       this.ide
         .getWorkspaceDirs()
-        .then((dirs) => this.refreshCodebaseIndex(dirs));
+        .then((dirs) => {
+          // Respect pauseCodebaseIndexOnStart user settings
+          if (ideSettings.pauseCodebaseIndexOnStart) {
+            return;
+          }
+
+          this.refreshCodebaseIndex(dirs);
+        });
     });
 
     const getLlm = async () => {

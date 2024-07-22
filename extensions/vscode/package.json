@@ -94,6 +94,11 @@
           "default": false,
           "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
         },
+        "continue.pauseCodebaseIndexOnStart": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Pause Continue's codebase index on start."
+        },
         "continue.enableDebugLogs": {
           "type": "boolean",
           "default": false,
