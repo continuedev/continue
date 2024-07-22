@@ -90,7 +90,7 @@ class DocsContextProvider extends BaseContextProvider {
     const isJetBrainsAndPreIndexedDocsProvider =
       this.docsService.isJetBrainsAndPreIndexedDocsProvider(
         ideInfo,
-        extras.embeddingsProvider,
+        extras.embeddingsProvider.id,
       );
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
