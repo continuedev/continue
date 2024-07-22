@@ -94,6 +94,11 @@
           "default": false,
           "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
         },
+        "continue.enableDebugLogs": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable Continue Debug Logs in the Output panel."
+        },
         "continue.remoteConfigServerUrl": {
           "type": "string",
           "default": null,
