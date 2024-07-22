@@ -23,27 +23,19 @@ import {
 } from "../../util";
 import ModelSelect from "../modelSelection/ModelSelect";
 
-const paddingTop = 4;
-const height = 20;
-
-const StyledDiv = styled.div<{ hidden?: boolean }>`
+const StyledDiv = styled.div<{ isHidden: boolean }>`
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap-reverse;
   flex-direction: row-reverse;
   gap: 1px;
   background-color: ${vscInputBackground};
-  padding-top: ${paddingTop}px;
-
-  height: ${height}px;
-
-  ${(props) => (props.hidden ? "display: none;" : "")}
-
   align-items: center;
   z-index: 50;
   font-size: ${getFontSize() - 4}px;
-
-  cursor: text;
+  cursor: ${props => props.isHidden ? 'default' : 'text'};
+  opacity: ${props => props.isHidden ? 0 : 1};
+  pointer-events: ${props => props.isHidden ? 'none' : 'auto'};
 
   & > * {
     flex: 0 0 auto;
@@ -90,11 +82,8 @@ function InputToolbar(props: InputToolbarProps) {
 
   return (
     <>
-      {props.hidden && (
-        <div style={{ height: `${height + paddingTop}px` }}></div>
-      )}
       <StyledDiv
-        hidden={props.hidden}
+        isHidden={props.hidden}
         onClick={props.onClick}
         id="input-toolbar"
       >

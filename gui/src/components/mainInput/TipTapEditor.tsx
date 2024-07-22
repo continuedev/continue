@@ -81,7 +81,8 @@ const InputBoxDiv = styled.div`
     color: ${lightGray}cc;
   }
 
-  position: relative;
+  display: flex;
+  flex-direction: column;
 `;
 
 const HoverDiv = styled.div`
