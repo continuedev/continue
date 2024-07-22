@@ -25,7 +25,7 @@ const sidebars = {
       items: [
         "setup/overview",
         "setup/configuration",
-        "setup/select-provider",
+        "setup/model-providers",
         "setup/select-model",
       ],
     },
