@@ -147,7 +147,7 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
                     authService.startAuthFlow(project)
                 }
 
-                override fun handleUpdatedSessionInfo(sessionInfo: ControlPlaneSessionInfo) {
+                override fun handleUpdatedSessionInfo(sessionInfo: ControlPlaneSessionInfo?) {
                     val data = mapOf(
                             "sessionInfo" to sessionInfo
                     )

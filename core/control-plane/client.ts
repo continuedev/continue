@@ -72,10 +72,14 @@ export class ControlPlaneClient {
       return [];
     }
 
-    const resp = await this.request(`/workspaces`, {
-      method: "GET",
-    });
-    return (await resp.json()) as any;
+    try {
+      const resp = await this.request(`/workspaces`, {
+        method: "GET",
+      });
+      return (await resp.json()) as any;
+    } catch (e) {
+      return [];
+    }
   }
 
   async getSettingsForWorkspace(workspaceId: string): Promise<ConfigJson> {
