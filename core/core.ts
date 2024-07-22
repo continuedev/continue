@@ -76,7 +76,7 @@ export class Core {
   // TODO: It shouldn't actually need an IDE type, because this can happen
   // through the messenger (it does in the case of any non-VS Code IDEs already)
   constructor(
-    readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+    private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
     private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
@@ -644,7 +644,7 @@ export class Core {
       this.indexingState = update;
     }
 
-    this.messenger.send("refreshSubmenuItems", undefined)
+    this.messenger.send("refreshSubmenuItems", undefined);
   }
 
   private async indexDocs(sites: SiteIndexingConfig[], reIndex: boolean): Promise<void> {
