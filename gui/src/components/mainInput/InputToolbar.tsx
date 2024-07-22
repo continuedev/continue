@@ -136,11 +136,6 @@ function InputToolbar(props: InputToolbarProps) {
           )}
           <EnterButton
             offFocus={props.usingCodebase}
-            // disabled={
-            //   !active &&
-            //   (!(inputRef.current as any)?.value ||
-            //     typeof client === "undefined")
-            // }
             onClick={(e) => {
               props.onEnter({
                 useCodebase: isMetaEquivalentKeyPressed(e),
