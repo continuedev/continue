@@ -3,6 +3,7 @@ import {
   BarsArrowDownIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/countTokens";
@@ -206,6 +207,16 @@ function StepContainer(props: StepContainerProps) {
                 />
               </HeaderButtonWithText>
             )}
+            <HeaderButtonWithText text="Delete Message">
+              <TrashIcon
+                color={lightGray}
+                width="1.2em"
+                height="1.2em"
+                onClick={() => {
+                  props.onDelete();
+                }}
+              />
+            </HeaderButtonWithText>
           </div>
         )}
       </div>
