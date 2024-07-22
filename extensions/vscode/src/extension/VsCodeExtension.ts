@@ -221,7 +221,7 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig();
     });
 
-    vscode.workspace.onDidSaveTextDocument((event) => {
+    vscode.workspace.onDidSaveTextDocument(async (event) => {
       // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
 
@@ -254,6 +254,9 @@ export class VsCodeExtension {
       ) {
         // Update embeddings! (TODO)
       }
+
+      // Reindex the workspaces
+      this.core.invoke("index/forceReIndex", undefined);
     });
 
     // When GitHub sign-in status changes, reload config

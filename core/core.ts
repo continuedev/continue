@@ -66,6 +66,14 @@ export class Core {
     return this.messenger.invoke(messageType, data);
   }
 
+  send<T extends keyof FromCoreProtocol>(
+    messageType: T,
+    data: FromCoreProtocol[T][0],
+    messageId?: string,
+  ): string {
+    return this.messenger.send(messageType, data);
+  }
+
   // TODO: It shouldn't actually need an IDE type, because this can happen
   // through the messenger (it does in the case of any non-VS Code IDEs already)
   constructor(
@@ -615,7 +623,7 @@ export class Core {
     });
     on("index/forceReIndex", async (msg) => {
       const dirs = msg.data ? [msg.data] : await this.ide.getWorkspaceDirs();
-      this.refreshCodebaseIndex(dirs);
+      await this.refreshCodebaseIndex(dirs);
     });
     on("index/setPaused", (msg) => {
       new GlobalContext().update("indexingPaused", msg.data);
@@ -651,6 +659,8 @@ export class Core {
       this.messenger.request("indexProgress", update);
       this.indexingState = update;
     }
+
+    this.messenger.send("refreshSubmenuItems", undefined);
   }
 
   private async shouldReindexDocsOnNewEmbeddingsProvider(
