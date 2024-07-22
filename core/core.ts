@@ -145,9 +145,14 @@ export class Core {
       // Index on initialization
       this.ide
         .getWorkspaceDirs()
-        .then((dirs) => {
+        .then(async (dirs) => {
           // Respect pauseCodebaseIndexOnStart user settings
           if (ideSettings.pauseCodebaseIndexOnStart) {
+            await this.messenger.request("indexProgress", {
+              progress: 100,
+              desc: "Initial Indexing Skipped",
+              status: "paused",
+            });
             return;
           }
 
