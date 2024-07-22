@@ -84,14 +84,28 @@ class DocsContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    this._logProviderName();
-
     const ideInfo = await extras.ide.getIdeInfo();
     const isJetBrains = ideInfo.ideType === "jetbrains";
 
     const preIndexedDoc = preIndexedDocs[query];
 
     let embeddingsProvider: EmbeddingsProvider;
+
+    if (
+      this.docsService.isJetBrainsAndPreIndexedDocsProvider(
+        ideInfo,
+        extras.embeddingsProvider,
+      )
+    ) {
+      extras.ide.errorPopup(
+        `${DocsService.preIndexedDocsEmbeddingsProvider.id} is configured as ` +
+          "the embeddings provider, but it cannot be used with JetBrains. " +
+          "Please select a different embeddings provider to use the '@docs' " +
+          "context provider.",
+      );
+
+      return [];
+    }
 
     if (!!preIndexedDoc && !isJetBrains) {
       // Pre-indexed docs should be filtered out in `loadSubmenuItems`,

@@ -3,6 +3,7 @@ import sqlite3 from "sqlite3";
 import {
   Chunk,
   EmbeddingsProvider,
+  IdeInfo,
   IndexingProgressUpdate,
   SiteIndexingConfig,
 } from "../../index.js";
@@ -318,5 +319,16 @@ export class DocsService {
       desc: "Done",
       status: "done",
     };
+  }
+
+  public isJetBrainsAndPreIndexedDocsProvider(
+    ideInfo: IdeInfo,
+    embeddingsProvider: EmbeddingsProvider,
+  ): boolean {
+    const isJetBrains = ideInfo.ideType === "jetbrains";
+    const isPreIndexedDocsProvider =
+      embeddingsProvider === DocsService.preIndexedDocsEmbeddingsProvider;
+
+    return isJetBrains && isPreIndexedDocsProvider;
   }
 }

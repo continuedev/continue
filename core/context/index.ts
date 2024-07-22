@@ -20,12 +20,6 @@ export abstract class BaseContextProvider implements IContextProvider {
     return (this.constructor as any).description;
   }
 
-  protected _logProviderName(): void {
-    Telemetry.capture("context_provider_invocation", {
-      providerName: this.constructor.name,
-    });
-  }
-
   // Maybe just include the chat message in here. Should never have to go back to the context provider once you have the information.
   abstract getContextItems(
     query: string,

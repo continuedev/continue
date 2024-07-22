@@ -94,7 +94,9 @@ export class Core {
     );
 
     this.configHandler.onConfigUpdate(async ({ embeddingsProvider }) => {
-      if (await this.isNewEmbeddingsProvider(embeddingsProvider.id)) {
+      if (
+        await this.shouldReindexDocsOnNewEmbeddingsProvider(embeddingsProvider)
+      ) {
         await this.reindexDocsOnNewEmbeddingsProvider(embeddingsProvider);
       }
     });
@@ -646,6 +648,50 @@ export class Core {
     }
   }
 
+  private async shouldReindexDocsOnNewEmbeddingsProvider(
+    embeddingsProvider: EmbeddingsProvider,
+  ): Promise<boolean> {
+    const ideInfo = await this.ide.getIdeInfo();
+    const isJetBrainsAndPreIndexedDocsProvider =
+      this.docsService.isJetBrainsAndPreIndexedDocsProvider(
+        ideInfo,
+        embeddingsProvider,
+      );
+
+    if (isJetBrainsAndPreIndexedDocsProvider) {
+      this.ide.errorPopup(
+        `${DocsService.preIndexedDocsEmbeddingsProvider.id} cannot be used as an embeddings provider with JetBrains. Please select a different embeddings provider.`,
+      );
+
+      this.globalContext.update(
+        "curEmbeddingsProviderId",
+        embeddingsProvider.id,
+      );
+
+      return false;
+    }
+
+    let lastEmbeddingsProviderId = this.globalContext.get(
+      "curEmbeddingsProviderId",
+    );
+
+    if (!lastEmbeddingsProviderId) {
+      // If it's the first time we're setting the `curEmbeddingsProviderId`
+      // global state, we don't need to reindex docs
+      this.globalContext.update(
+        "curEmbeddingsProviderId",
+        embeddingsProvider.id,
+      );
+
+      return false;
+    }
+
+    const isNewEmbeddingsProvider =
+      lastEmbeddingsProviderId === embeddingsProvider.id;
+
+    return isNewEmbeddingsProvider;
+  }
+
   private async getEmbeddingsProviderAndIndexDoc(
     site: SiteIndexingConfig,
     reIndex: boolean = false,
@@ -665,27 +711,6 @@ export class Core {
     }
   }
 
-  private async isNewEmbeddingsProvider(
-    curEmbeddingsProviderId: EmbeddingsProvider["id"],
-  ): Promise<boolean> {
-    let lastEmbeddingsProviderId = this.globalContext.get(
-      "curEmbeddingsProviderId",
-    );
-
-    if (!lastEmbeddingsProviderId) {
-      // If it's the first time we're setting the `curEmbeddingsProviderId`
-      // global state, we don't need to reindex docs.
-      this.globalContext.update(
-        "curEmbeddingsProviderId",
-        curEmbeddingsProviderId,
-      );
-
-      return false;
-    }
-
-    return lastEmbeddingsProviderId === curEmbeddingsProviderId;
-  }
-
   private async reindexDocsOnNewEmbeddingsProvider(
     embeddingsProvider: EmbeddingsProvider,
   ) {
@@ -694,8 +719,6 @@ export class Core {
     const docs = await this.docsService.list();
 
     for (const { title, baseUrl } of docs) {
-      this.ide.infoPopup(`Reindexing "${title}"`);
-
       await this.docsService.delete(baseUrl);
 
       const generator = this.docsService.indexAndAdd(
@@ -704,8 +727,6 @@ export class Core {
       );
 
       while (!(await generator.next()).done) {}
-
-      this.ide.infoPopup(`Completed reindexing of "${title}"`);
     }
 
     // Important that this only is invoked after we have successfully
