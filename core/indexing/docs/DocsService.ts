@@ -325,9 +325,9 @@ export class DocsService {
     ideInfo: IdeInfo,
     embeddingsProvider: EmbeddingsProvider,
   ): boolean {
-    const isJetBrains = ideInfo.ideType === "jetbrains";
+    const isJetBrains = ideInfo.ideType !== "jetbrains";
     const isPreIndexedDocsProvider =
-      embeddingsProvider === DocsService.preIndexedDocsEmbeddingsProvider;
+      embeddingsProvider.id === DocsService.preIndexedDocsEmbeddingsProvider.id;
 
     return isJetBrains && isPreIndexedDocsProvider;
   }

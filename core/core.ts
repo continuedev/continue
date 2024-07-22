@@ -687,7 +687,7 @@ export class Core {
     }
 
     const isNewEmbeddingsProvider =
-      lastEmbeddingsProviderId === embeddingsProvider.id;
+      lastEmbeddingsProviderId !== embeddingsProvider.id;
 
     return isNewEmbeddingsProvider;
   }
@@ -714,9 +714,13 @@ export class Core {
   private async reindexDocsOnNewEmbeddingsProvider(
     embeddingsProvider: EmbeddingsProvider,
   ) {
-    this.ide.infoPopup("Reindexing docs with new embeddings provider");
-
     const docs = await this.docsService.list();
+
+    if (docs.length === 0) {
+      return;
+    }
+
+    this.ide.infoPopup("Reindexing docs with new embeddings provider");
 
     for (const { title, baseUrl } of docs) {
       await this.docsService.delete(baseUrl);
@@ -733,6 +737,8 @@ export class Core {
     // cleared and reindex the docs so that the table cannot end up in an
     // invalid state.
     this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
+
+    console.log(await this.docsService.list());
 
     this.ide.infoPopup("Completed reindexing of all docs");
   }
