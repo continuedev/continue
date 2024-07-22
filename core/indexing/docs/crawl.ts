@@ -145,7 +145,10 @@ export async function* crawlPage(
   url: URL,
   maxDepth: number = 3,
 ): AsyncGenerator<PageData> {
-  console.log("Starting crawl from: ", url, " - Max Depth: ", maxDepth);
+  console.log(
+    `Starting crawl from: ${url.toString()} - Max Depth: ${maxDepth}`,
+  );
+
   const { baseUrl, basePath } = splitUrl(url);
   let paths: { path: string; depth: number }[] = [{ path: basePath, depth: 0 }];
 

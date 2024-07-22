@@ -110,13 +110,13 @@ function useSubmenuContextProviders() {
   const getSubmenuSearchResults = useMemo(
     () =>
       (providerTitle: string | undefined, query: string): SearchResult[] => {
-        console.log(
+        console.debug(
           "Executing getSubmenuSearchResults. Provider:",
           providerTitle,
           "Query:",
           query,
         );
-        console.log("Current minisearches:", Object.keys(minisearches));
+        console.debug("Current minisearches:", Object.keys(minisearches));
         if (providerTitle === undefined) {
           // Return search combined from all providers
           const results = Object.keys(minisearches).map((providerTitle) => {
@@ -124,7 +124,7 @@ function useSubmenuContextProviders() {
               query,
               MINISEARCH_OPTIONS,
             );
-            console.log(`Search results for ${providerTitle}:`, results.length);
+            console.debug(`Search results for ${providerTitle}:`, results.length);
             return results.map((result) => {
               return { ...result, providerTitle };
             });
@@ -133,7 +133,7 @@ function useSubmenuContextProviders() {
           return results.flat().sort((a, b) => b.score - a.score);
         }
         if (!minisearches[providerTitle]) {
-          console.log(`No minisearch found for provider: ${providerTitle}`);
+          console.debug(`No minisearch found for provider: ${providerTitle}`);
           return [];
         }
 
@@ -142,7 +142,7 @@ function useSubmenuContextProviders() {
           .map((result) => {
             return { ...result, providerTitle };
           });
-        console.log(`Search results for ${providerTitle}:`, results.length);
+        console.debug(`Search results for ${providerTitle}:`, results.length);
 
         return results;
       },
@@ -156,7 +156,7 @@ function useSubmenuContextProviders() {
         query: string,
         limit: number = MAX_LENGTH,
       ): (ContextSubmenuItem & { providerTitle: string })[] => {
-        console.log(
+        console.debug(
           "Executing getSubmenuContextItems. Provider:",
           providerTitle,
           "Query:",
@@ -175,7 +175,7 @@ function useSubmenuContextProviders() {
                 providerTitle,
               };
             });
-          console.log("Using fallback results:", fallbackItems.length);
+          console.debug("Using fallback results:", fallbackItems.length);
           return fallbackItems;
         }
         const limitedResults = results.slice(0, limit).map((result) => {
