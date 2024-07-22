@@ -43,6 +43,22 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       snippetId INTEGER NOT NULL,
       FOREIGN KEY (snippetId) REFERENCES code_snippets (id)
     )`);
+
+    // Delete duplicate entries
+    await db.exec(`
+      DELETE FROM code_snippets_tags
+      WHERE id NOT IN (
+        SELECT MIN(id)
+        FROM code_snippets_tags
+        GROUP BY snippetId, tag
+      )
+    `);
+
+    // Add unique constraint if it doesn't exist
+    await db.exec(`
+      CREATE UNIQUE INDEX IF NOT EXISTS idx_snippetId_tag
+      ON code_snippets_tags (snippetId, tag)
+    `);
   }
 
   async getSnippetsInFile(

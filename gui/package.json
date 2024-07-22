@@ -31,7 +31,7 @@
     "dompurify": "^3.0.6",
     "downshift": "^7.6.0",
     "lodash": "^4.17.21",
-    "minisearch": "^6.3.0",
+    "minisearch": "^7.0.2",
     "onigasm": "^2.2.5",
     "posthog-js": "^1.130.1",
     "prismjs": "^1.29.0",

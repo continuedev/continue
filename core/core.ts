@@ -257,7 +257,7 @@ export class Core {
     });
     on("context/loadSubmenuItems", async (msg) => {
       const config = await this.config();
-      const items = config.contextProviders
+      const items = await config.contextProviders
         ?.find((provider) => provider.description.title === msg.data.title)
         ?.loadSubmenuItems({
           ide: this.ide,
