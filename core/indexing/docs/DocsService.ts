@@ -323,11 +323,11 @@ export class DocsService {
 
   public isJetBrainsAndPreIndexedDocsProvider(
     ideInfo: IdeInfo,
-    embeddingsProvider: EmbeddingsProvider,
+    embeddingsProviderId: EmbeddingsProvider["id"],
   ): boolean {
-    const isJetBrains = ideInfo.ideType !== "jetbrains";
+    const isJetBrains = ideInfo.ideType === "jetbrains";
     const isPreIndexedDocsProvider =
-      embeddingsProvider.id === DocsService.preIndexedDocsEmbeddingsProvider.id;
+      embeddingsProviderId === DocsService.preIndexedDocsEmbeddingsProvider.id;
 
     return isJetBrains && isPreIndexedDocsProvider;
   }

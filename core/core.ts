@@ -95,7 +95,9 @@ export class Core {
 
     this.configHandler.onConfigUpdate(async ({ embeddingsProvider }) => {
       if (
-        await this.shouldReindexDocsOnNewEmbeddingsProvider(embeddingsProvider)
+        await this.shouldReindexDocsOnNewEmbeddingsProvider(
+          embeddingsProvider.id,
+        )
       ) {
         await this.reindexDocsOnNewEmbeddingsProvider(embeddingsProvider);
       }
@@ -649,13 +651,13 @@ export class Core {
   }
 
   private async shouldReindexDocsOnNewEmbeddingsProvider(
-    embeddingsProvider: EmbeddingsProvider,
+    curEmbeddingsProviderId: EmbeddingsProvider["id"],
   ): Promise<boolean> {
     const ideInfo = await this.ide.getIdeInfo();
     const isJetBrainsAndPreIndexedDocsProvider =
       this.docsService.isJetBrainsAndPreIndexedDocsProvider(
         ideInfo,
-        embeddingsProvider,
+        curEmbeddingsProviderId,
       );
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
@@ -665,13 +667,13 @@ export class Core {
 
       this.globalContext.update(
         "curEmbeddingsProviderId",
-        embeddingsProvider.id,
+        curEmbeddingsProviderId,
       );
 
       return false;
     }
 
-    let lastEmbeddingsProviderId = this.globalContext.get(
+    const lastEmbeddingsProviderId = this.globalContext.get(
       "curEmbeddingsProviderId",
     );
 
@@ -680,16 +682,13 @@ export class Core {
       // global state, we don't need to reindex docs
       this.globalContext.update(
         "curEmbeddingsProviderId",
-        embeddingsProvider.id,
+        curEmbeddingsProviderId,
       );
 
       return false;
     }
 
-    const isNewEmbeddingsProvider =
-      lastEmbeddingsProviderId !== embeddingsProvider.id;
-
-    return isNewEmbeddingsProvider;
+    return lastEmbeddingsProviderId !== curEmbeddingsProviderId;
   }
 
   private async getEmbeddingsProviderAndIndexDoc(
@@ -737,8 +736,6 @@ export class Core {
     // cleared and reindex the docs so that the table cannot end up in an
     // invalid state.
     this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
-
-    console.log(await this.docsService.list());
 
     this.ide.infoPopup("Completed reindexing of all docs");
   }

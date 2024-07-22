@@ -6,7 +6,7 @@ import type {
   IContextProvider,
   LoadSubmenuItemsArgs,
 } from "../index.js";
-import { Telemetry } from "../util/posthog.js";
+
 export abstract class BaseContextProvider implements IContextProvider {
   options: { [key: string]: any };
 

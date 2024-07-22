@@ -87,16 +87,13 @@ class DocsContextProvider extends BaseContextProvider {
     const ideInfo = await extras.ide.getIdeInfo();
     const isJetBrains = ideInfo.ideType === "jetbrains";
 
-    const preIndexedDoc = preIndexedDocs[query];
-
-    let embeddingsProvider: EmbeddingsProvider;
-
-    if (
+    const isJetBrainsAndPreIndexedDocsProvider =
       this.docsService.isJetBrainsAndPreIndexedDocsProvider(
         ideInfo,
         extras.embeddingsProvider,
-      )
-    ) {
+      );
+
+    if (isJetBrainsAndPreIndexedDocsProvider) {
       extras.ide.errorPopup(
         `${DocsService.preIndexedDocsEmbeddingsProvider.id} is configured as ` +
           "the embeddings provider, but it cannot be used with JetBrains. " +
@@ -106,6 +103,10 @@ class DocsContextProvider extends BaseContextProvider {
 
       return [];
     }
+
+    const preIndexedDoc = preIndexedDocs[query];
+
+    let embeddingsProvider: EmbeddingsProvider;
 
     if (!!preIndexedDoc && !isJetBrains) {
       // Pre-indexed docs should be filtered out in `loadSubmenuItems`,
@@ -172,7 +173,6 @@ class DocsContextProvider extends BaseContextProvider {
     if (!isJetBrains) {
       // Currently, we generate and host embeddings for pre-indexed docs using transformers.js.
       // However, we don't ship transformers.js with the JetBrains extension.
-      //
       // So, we only include pre-indexed docs in the submenu for non-JetBrains IDEs.
       for (const { startUrl, title } of Object.values(preIndexedDocs)) {
         submenuItemsMap.set(startUrl, {
