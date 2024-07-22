@@ -581,6 +581,7 @@ export class CompletionProvider {
         suffix,
         filename,
         reponame,
+        language: lang.name,
       });
     } else {
       // Let the template function format snippets

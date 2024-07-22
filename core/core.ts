@@ -632,6 +632,9 @@ export class Core {
     on("didChangeSelectedProfile", (msg) => {
       this.configHandler.setSelectedProfile(msg.data.id);
     });
+    on("didChangeControlPlaneSessionInfo", async (msg) => {
+      this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
+    });
   }
 
   private indexingCancellationController: AbortController | undefined;
