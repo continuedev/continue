@@ -1,26 +1,32 @@
 import { Analytics } from "@continuedev/config-types";
 import os from "node:os";
+import { IAnalyticsProvider } from "./analytics/IAnalyticsProvider";
+import PostHogAnalyticsProvider from "./analytics/PostHogAnalyticsProvider";
+
+function createAnalyticsProvider(
+  config: Analytics,
+): IAnalyticsProvider | undefined {
+  // @ts-ignore
+  switch (config.provider) {
+    case "posthog":
+      return new PostHogAnalyticsProvider();
+    default:
+      return undefined;
+  }
+}
 
 export class TeamAnalytics {
-  static client: any = undefined;
+  static provider: IAnalyticsProvider | undefined = undefined;
   static uniqueId = "NOT_UNIQUE";
   static os: string | undefined = undefined;
   static extensionVersion: string | undefined = undefined;
 
   static async capture(event: string, properties: { [key: string]: any }) {
-    TeamAnalytics.client?.capture({
-      distinctId: TeamAnalytics.uniqueId,
-      event,
-      properties: {
-        ...properties,
-        os: TeamAnalytics.os,
-        extensionVersion: TeamAnalytics.extensionVersion,
-      },
+    TeamAnalytics.provider?.capture(event, {
+      ...properties,
+      os: TeamAnalytics.os,
+      extensionVersion: TeamAnalytics.extensionVersion,
     });
-  }
-
-  static shutdownPosthogClient() {
-    TeamAnalytics.client?.shutdown();
   }
 
   static async setup(
@@ -32,17 +38,12 @@ export class TeamAnalytics {
     TeamAnalytics.os = os.platform();
     TeamAnalytics.extensionVersion = extensionVersion;
 
-    if (!config || !config.clientKey || !config.url) {
-      TeamAnalytics.client = undefined;
+    if (!config) {
+      await TeamAnalytics.provider?.shutdown();
+      TeamAnalytics.provider = undefined;
     } else {
-      try {
-        const { PostHog } = await import("posthog-node");
-        TeamAnalytics.client = new PostHog(config.clientKey, {
-          host: config.url,
-        });
-      } catch (e) {
-        console.error(`Failed to setup telemetry: ${e}`);
-      }
+      TeamAnalytics.provider = createAnalyticsProvider(config);
+      await TeamAnalytics.provider?.setup(config, uniqueId);
     }
   }
 }

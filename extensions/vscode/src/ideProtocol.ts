@@ -523,6 +523,7 @@ class VsCodeIde implements IDE {
       userToken: settings.get<string>("userToken", ""),
       enableControlServerBeta: internalBetaPathExists(),
       pauseCodebaseIndexOnStart: settings.get<boolean>("pauseCodebaseIndexOnStart", false),
+      enableDebugLogs: settings.get<boolean>("enableDebugLogs", false),
       // settings.get<boolean>(
       //   "enableControlServerBeta",
       //   false,

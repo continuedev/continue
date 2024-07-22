@@ -423,6 +423,7 @@ export interface IdeSettings {
   userToken: string;
   enableControlServerBeta: boolean;
   pauseCodebaseIndexOnStart: boolean
+  enableDebugLogs: boolean
 }
 
 export interface IDE {
@@ -760,7 +761,12 @@ export interface EmbeddingsProvider {
   embed(chunks: string[]): Promise<number[][]>;
 }
 
-export type RerankerName = "cohere" | "voyage" | "llm" | "free-trial" | "huggingface-tei";
+export type RerankerName =
+  | "cohere"
+  | "voyage"
+  | "llm"
+  | "free-trial"
+  | "huggingface-tei";
 
 export interface RerankerDescription {
   name: RerankerName;

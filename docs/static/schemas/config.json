@@ -1399,6 +1399,46 @@
           "if": {
             "properties": {
               "name": {
+                "enum": ["docs"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "sites": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string"
+                        },
+                        "startUrl": {
+                          "type": "string"
+                        },
+                        "rootUrl": {
+                          "type": "string"
+                        },
+                        "maxDepth": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": ["title", "startUrl"]
+                    }
+                  }
+                },
+                "required": ["sites"]
+              }
+            },
+            "required": ["params"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "name": {
                 "enum": ["google"]
               }
             }
@@ -1955,7 +1995,13 @@
           "type": "object",
           "properties": {
             "name": {
-              "enum": ["cohere", "voyage", "llm", "free-trial", "huggingface-tei"]
+              "enum": [
+                "cohere",
+                "voyage",
+                "llm",
+                "free-trial",
+                "huggingface-tei"
+              ]
             },
             "params": {
               "type": "object"
@@ -2070,7 +2116,7 @@
                         "default": false
                       },
                       "truncation_direction": {
-                        "enum": ["Right","Left"],
+                        "enum": ["Right", "Left"],
                         "markdownDescription": "Wether to truncate sequences from the `left` or `right`.",
                         "default": "Right"
                       }
