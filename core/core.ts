@@ -16,6 +16,7 @@ import {
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
+import { getAuthUrlForTokenPage } from "./control-plane/auth";
 import { ControlPlaneClient } from "./control-plane/client";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
 import { DocsService } from "./indexing/docs/DocsService";
@@ -621,6 +622,10 @@ export class Core {
     });
     on("didChangeControlPlaneSessionInfo", async (msg) => {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
+    });
+    on("auth/getAuthUrl", async (msg) => {
+      const url = await getAuthUrlForTokenPage();
+      return { url };
     });
   }
 
