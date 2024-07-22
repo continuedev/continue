@@ -3,12 +3,10 @@ import sqlite3 from "sqlite3";
 import {
   Chunk,
   EmbeddingsProvider,
-  IdeType,
   IndexingProgressUpdate,
   SiteIndexingConfig,
 } from "../../index.js";
 import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths.js";
-
 import { Article, chunkArticle, pageToArticle } from "./article.js";
 import { crawlPage } from "./crawl.js";
 import { downloadFromS3, SiteIndexingResults } from "./preIndexed.js";
@@ -31,6 +29,8 @@ interface LanceDbDocsRow {
 export class DocsService {
   private static instance: DocsService;
   private static DOCS_TABLE_NAME = "docs";
+  public static preIndexedDocsEmbeddingsProvider =
+    new TransformersJsEmbeddingsProvider();
   private _sqliteTable: Database | undefined;
   private docsIndexingQueue: Set<string> = new Set();
 
@@ -318,16 +318,5 @@ export class DocsService {
       desc: "Done",
       status: "done",
     };
-  }
-
-  getEmbeddingsProviderByIde(
-    ideType: IdeType,
-    embeddingsProvider: EmbeddingsProvider,
-  ): EmbeddingsProvider {
-    if (ideType === "vscode") {
-      return new TransformersJsEmbeddingsProvider();
-    }
-
-    return embeddingsProvider;
   }
 }

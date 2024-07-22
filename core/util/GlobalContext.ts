@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import { getGlobalContextFilePath } from "./paths.js";
+import { EmbeddingsProvider } from "../index.js";
 
 export type GlobalContextType = {
   indexingPaused: boolean;
@@ -11,7 +12,7 @@ export type GlobalContextType = {
    *
    * For VS Code users, it is unnecessary since we use transformers.js by default.
    */
-  curEmbeddingsProviderId: string;
+  curEmbeddingsProviderId: EmbeddingsProvider["id"];
 };
 
 /**

@@ -656,16 +656,8 @@ export class Core {
     site: SiteIndexingConfig,
     reIndex: boolean = false,
   ): Promise<void> {
-    const ideInfo = await this.ide.getIdeInfo();
-    const { ideType } = ideInfo;
-
     const config = await this.config();
-    const configEmbeddingsProvider = config.embeddingsProvider;
-
-    const embeddingsProvider = this.docsService.getEmbeddingsProviderByIde(
-      ideType,
-      configEmbeddingsProvider,
-    );
+    const { embeddingsProvider } = config;
 
     for await (const update of this.docsService.indexAndAdd(
       site,
