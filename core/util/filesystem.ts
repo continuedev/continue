@@ -38,6 +38,7 @@ class FileSystemIde implements IDE {
       remoteConfigSyncPeriod: 60,
       userToken: "",
       enableControlServerBeta: false,
+      enableDebugLogs: false,
     };
   }
   async getGitHubAuthToken(): Promise<string | undefined> {

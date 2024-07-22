@@ -59,7 +59,7 @@ const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`
   background-color: ${(props) =>
     props.isUserInput ? vscInputBackground : vscBackground};
   font-size: ${(props) => props.fontSize || getFontSize()}px;
-  border-radius: ${defaultBorderRadius};
+  // border-radius: ${defaultBorderRadius};
   overflow: hidden;
 `;
 
@@ -139,7 +139,6 @@ function StepContainer(props: StepContainerProps) {
             />
           )}
         </ContentDiv>
-        <div className="h-2"></div>
         {(isHovered || typeof feedback !== "undefined") && !active && (
           <div
             className="flex items-center gap-2 right-2 absolute -bottom-1"
