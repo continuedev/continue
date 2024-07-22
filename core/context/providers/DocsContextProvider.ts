@@ -30,7 +30,7 @@ class DocsContextProvider extends BaseContextProvider {
     this.docsService = DocsService.getInstance();
   }
 
-  private async rerankChunks(
+  private async _rerankChunks(
     chunks: Chunk[],
     reranker: NonNullable<ContextProviderExtras["reranker"]>,
     fullInput: ContextProviderExtras["fullInput"],
@@ -89,15 +89,15 @@ class DocsContextProvider extends BaseContextProvider {
     const ideInfo = await extras.ide.getIdeInfo();
     const isJetBrains = ideInfo.ideType === "jetbrains";
 
-    const isPreIndexedDoc = !!preIndexedDocs[query];
+    const preIndexedDoc = preIndexedDocs[query];
 
     let embeddingsProvider: EmbeddingsProvider;
 
-    if (isPreIndexedDoc && !isJetBrains) {
+    if (!!preIndexedDoc && !isJetBrains) {
       // Pre-indexed docs should be filtered out in `loadSubmenuItems`,
       // for JetBrains users, but we sanity check that here
       Telemetry.capture("docs_pre_indexed_doc_used", {
-        doc: query,
+        doc: preIndexedDoc["title"],
       });
 
       embeddingsProvider = DocsService.preIndexedDocsEmbeddingsProvider;
@@ -115,7 +115,7 @@ class DocsContextProvider extends BaseContextProvider {
     );
 
     if (extras.reranker) {
-      chunks = await this.rerankChunks(
+      chunks = await this._rerankChunks(
         chunks,
         extras.reranker,
         extras.fullInput,
@@ -156,7 +156,7 @@ class DocsContextProvider extends BaseContextProvider {
     const submenuItemsMap = new Map<string, ContextSubmenuItem>();
 
     if (!isJetBrains) {
-      // Currently, we generate and host embeddings for pre-indexed docs using transformers.js
+      // Currently, we generate and host embeddings for pre-indexed docs using transformers.js.
       // However, we don't ship transformers.js with the JetBrains extension.
       //
       // So, we only include pre-indexed docs in the submenu for non-JetBrains IDEs.

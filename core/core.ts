@@ -94,13 +94,7 @@ export class Core {
     );
 
     this.configHandler.onConfigUpdate(async ({ embeddingsProvider }) => {
-      const isJetBrainsIde = await this.isJetBrainsIde();
-
-      const isNewEmbeddingsProvider = await this.isNewEmbeddingsProvider(
-        embeddingsProvider.id,
-      );
-
-      if (isJetBrainsIde && isNewEmbeddingsProvider) {
+      if (await this.isNewEmbeddingsProvider(embeddingsProvider.id)) {
         await this.reindexDocsOnNewEmbeddingsProvider(embeddingsProvider);
       }
     });
@@ -671,11 +665,6 @@ export class Core {
     }
   }
 
-  private async isJetBrainsIde(): Promise<boolean> {
-    const ideInfo = await this.ide.getIdeInfo();
-    return ideInfo.ideType === "jetbrains";
-  }
-
   private async isNewEmbeddingsProvider(
     curEmbeddingsProviderId: EmbeddingsProvider["id"],
   ): Promise<boolean> {
@@ -684,8 +673,14 @@ export class Core {
     );
 
     if (!lastEmbeddingsProviderId) {
-      const config = await this.config();
-      lastEmbeddingsProviderId = config.embeddingsProvider.id;
+      // If it's the first time we're setting the `curEmbeddingsProviderId`
+      // global state, we don't need to reindex docs.
+      this.globalContext.update(
+        "curEmbeddingsProviderId",
+        curEmbeddingsProviderId,
+      );
+
+      return false;
     }
 
     return lastEmbeddingsProviderId === curEmbeddingsProviderId;
