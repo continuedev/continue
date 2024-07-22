@@ -41,6 +41,7 @@ function AddDocsDialog() {
       rootUrl: docsUrl,
       title: docsTitle,
       maxDepth: typeof maxDepth === "string" ? DEFAULT_MAX_DEPTH : maxDepth,
+      faviconUrl: new URL("/favicon.ico", docsUrl).toString(),
     };
 
     ideMessenger.post("context/addDocs", siteIndexingConfig);

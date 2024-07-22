@@ -6,6 +6,7 @@ import PostHogAnalyticsProvider from "./analytics/PostHogAnalyticsProvider";
 function createAnalyticsProvider(
   config: Analytics,
 ): IAnalyticsProvider | undefined {
+  // @ts-ignore
   switch (config.provider) {
     case "posthog":
       return new PostHogAnalyticsProvider();
