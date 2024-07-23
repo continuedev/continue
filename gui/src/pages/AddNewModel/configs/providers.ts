@@ -301,7 +301,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.llama3Chat,
+      models.llama31Chat,
       models.codeLlamaInstruct,
       models.mistralOs,
     ].map((p) => {
