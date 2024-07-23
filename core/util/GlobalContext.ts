@@ -1,9 +1,18 @@
 import fs from "node:fs";
 import { getGlobalContextFilePath } from "./paths.js";
+import { EmbeddingsProvider } from "../index.js";
 
 export type GlobalContextType = {
   indexingPaused: boolean;
   selectedTabAutocompleteModel: string;
+  lastSelectedProfileForWorkspace: { [workspaceIdentifier: string]: string };
+  /**
+   * This is needed to handle the case where a JetBrains user has created
+   * docs embeddings using one provider, and then updates to a new provider.
+   *
+   * For VS Code users, it is unnecessary since we use transformers.js by default.
+   */
+  curEmbeddingsProviderId: EmbeddingsProvider["id"];
 };
 
 /**

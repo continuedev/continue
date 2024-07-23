@@ -116,7 +116,7 @@ export class CodeSnippetsCodebaseIndex implements CodebaseIndex {
       }
 
       yield {
-        desc: `Indexing ${compute.path}`,
+        desc: `Indexing ${getBasename(compute.path)}`,
         progress: i / results.compute.length,
         status: "indexing",
       };

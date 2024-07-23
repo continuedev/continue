@@ -2,8 +2,12 @@ const os = require("node:os");
 import * as vscode from "vscode";
 
 function charIsEscapedAtIndex(index: number, str: string): boolean {
-  if (index === 0) return false;
-  if (str[index - 1] !== "\\") return false;
+  if (index === 0) {
+    return false;
+  }
+  if (str[index - 1] !== "\\") {
+    return false;
+  }
   return !charIsEscapedAtIndex(index - 1, str);
 }
 

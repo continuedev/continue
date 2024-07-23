@@ -8,19 +8,51 @@ keywords: [configure, llm, provider]
 
 Want a quick and easy setup for Continue? We've got you covered with some sample `config.json` files for different scenarios. Just copy and paste them into your `config.json` by clicking the gear icon at the bottom right of the Continue sidebar.
 
-## Best Overall Experience
+## Quick Setup Options
+
+You can use Continue in different ways. Here are some quick setups for common uses:
+
+- [Free Trial](#free-trial) - Try Continue without any additional setup.
+- [Best Overall Experience](#best-overall-experience) - Utilize the hand picked models for the best experience.
+- [Local and Offline](#local-and-offline-configuration) - Use local models for offline use with better privacy.
+
+### Free Trial
+
+The `free-trial` lets new users try out Continue with GPT-4o, Llama3, Claude 3.5, and other models using a ContinueDev proxy server that securely makes API calls to these services.
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "title": "GPT-4o (trial)",
+      "provider": "free-trial",
+      "model": "gpt-4o"
+    }
+  ],
+  "tabAutocompleteModel": {
+    "title": "Codestral (trial)",
+    "provider": "free-trial",
+    "model": "AUTODETECT"
+  },
+  "embeddingsProvider": {
+    "provider": "free-trial"
+  },
+  "reranker": {
+    "name": "free-trial"
+  }
+}
+```
+
+### Best Overall Experience
 
 This setup uses Claude 3.5 Sonnet for chatting, Codestral for autocomplete, and Voyage AI for embeddings and reranking.
 
 **What You Need:**
 
-1. Get a Codestral API key from [Mistral AI's La Plateforme](https://console.mistral.ai/codestral)
-2. Get an Anthropic API key from [Anthropic Console](https://console.anthropic.com/account/keys)
-3. Replace `[CODESTRAL_API_KEY]` and `[ANTHROPIC_API_KEY]` with the keys you got from the above links.
-
-:::note
-This example uses a free trial for embeddings and reranking, forwarding requests via ContinueDev proxy. For direct service, get a Voyage AI API key and update the `provider` and `apiKey` fields. See the [config reference for Voyage AI](../walkthroughs//codebase-embeddings.md#voyage-ai) for details on how to set this up.
-:::
+1. Get an Anthropic API key from [Anthropic Console](https://console.anthropic.com/account/keys)
+2. Get a Codestral API key from [Mistral AI's La Plateforme](https://console.mistral.ai/codestral)
+3. Get an Voyage AI API key from [Voyage AI Dashboard](https://dash.voyageai.com/)
+4. Replace `[CODESTRAL_API_KEY]`, `[ANTHROPIC_API_KEY]`, and `[VOYAGE_API_KEY]` with the keys you got from the above links.
 
 ```json title="~/.continue/config.json"
 {
@@ -39,15 +71,21 @@ This example uses a free trial for embeddings and reranking, forwarding requests
     "apiKey": "[CODESTRAL_API_KEY]"
   },
   "embeddingsProvider": {
-    "provider": "free-trial"
+    "provider": "openai",
+    "model": "voyage-code-2",
+    "apiBase": "https://api.voyageai.com/v1/",
+    "apiKey": "[VOYAGE_AI_API_KEY]"
   },
   "reranker": {
-    "name": "free-trial"
+    "name": "voyage",
+    "params": {
+      "apiKey": "[VOYAGE_AI_API_KEY]"
+    }
   }
 }
 ```
 
-## Local and Offline Configuration
+### Local and Offline Configuration
 
 This configuration leverages Ollama for all functionalities - chat, autocomplete, and embeddings - ensuring that no code is transmitted outside your machine, allowing Continue to be run even on an air-gapped computer.
 
@@ -150,6 +188,45 @@ If you need to send custom headers for authentication, you may use the `requestO
 }
 ```
 
+Similarly if your model requires a Certificate for authentication, you may use the `requestOptions.clientCertificate` property like in the example below:
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "title": "Ollama",
+      "provider": "ollama",
+      "model": "llama2-7b",
+      "requestOptions": {
+        "clientCertificate": {
+          "cert": "C:\tempollama.pem",
+          "key": "C:\tempollama.key",
+          "passphrase": "c0nt!nu3"
+        }
+      }
+    }
+  ]
+}
+```
+
+## Context Length
+
+Continue by default knows the context length for common models. For example, it will automatically assume 200k tokens for Claude 3. For Ollama, the context length is determined automatically by asking Ollama. If neither of these are sufficient, you can manually specify the context length by using hte `"contextLength"` property in your model in config.json.
+
+```json title="~/.continue/config.json"
+{
+  "models": [
+    {
+      "title": "My Custom Model",
+      "provider": "openai",
+      "model": "my-model",
+      "contextLength": 8192,
+      "apiBase": "http://localhost:8000/v1"
+    }
+  ]
+}
+```
+
 ## Customizing the Chat Template
 
 Most open-source models expect a specific chat format, for example llama2 and codellama expect the input to look like `"[INST] How do I write bubble sort in Rust? [/INST]"`. Continue will automatically attempt to detect the correct prompt format based on the `model`value that you provide, but if you are receiving nonsense responses, you can use the `template` property to explicitly set the format that you expect. The options are: `["llama2", "alpaca", "zephyr", "phind", "anthropic", "chatml", "openchat", "neural-chat", "none"]`.
@@ -190,7 +267,7 @@ function modifyConfig(config: Config): Config {
 }
 ```
 
-This exact function and a few other default implementations are available in [`continuedev.libs.llm.prompts.chat`](https://github.com/continuedev/continue/blob/main/server/continuedev/libs/llm/prompts/chat.py).
+This exact function and a few other default implementations are available in [`core/llm/templates/chat.ts`](https://github.com/continuedev/continue/blob/main/core/llm/templates/chat.ts).
 
 ## Customizing the /edit Prompt
 
@@ -218,7 +295,7 @@ You can find all existing templates for /edit in [`core/llm/templates/edit.ts`](
 
 ## Defining a Custom LLM Provider
 
-If you are using an LLM API that isn't already [supported by Continue](./select-provider.md), and is not an OpenAI-compatible API, you'll need to define a `CustomLLM` object in `config.ts`. This object only requires one of (or both of) a `streamComplete` or `streamChat` function. Here is an example:
+If you are using an LLM API that isn't already [supported by Continue](./model-providers.md), and is not an OpenAI-compatible API, you'll need to define a `CustomLLM` object in `config.ts`. This object only requires one of (or both of) a `streamComplete` or `streamChat` function. Here is an example:
 
 ```typescript title="~/.continue/config.ts"
 export function modifyConfig(config: Config): Config {

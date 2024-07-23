@@ -16,7 +16,7 @@ const IGNORE_PATHS_ENDING_IN = [
   "changelog.html",
 ];
 
-const GITHUB_PATHS_TO_TRAVERSE = ["/blob/", "/tree/"];
+const markdownRegex = new RegExp(/\.(md|mdx)$/);
 
 async function getDefaultBranch(owner: string, repo: string): Promise<string> {
   const octokit = new Octokit({ auth: undefined });
@@ -53,7 +53,10 @@ async function crawlGithubRepo(baseUrl: URL) {
   );
 
   const paths = tree.data.tree
-    .filter((file: any) => file.type === "blob" && file.path?.endsWith(".md"))
+    .filter(
+      (file: any) =>
+        file.type === "blob" && markdownRegex.test(file.path ?? ""),
+    )
     .map((file: any) => baseUrl.pathname + "/tree/main/" + file.path);
 
   return paths;
@@ -142,7 +145,10 @@ export async function* crawlPage(
   url: URL,
   maxDepth: number = 3,
 ): AsyncGenerator<PageData> {
-  console.log("Starting crawl from: ", url, " - Max Depth: ", maxDepth);
+  console.log(
+    `Starting crawl from: ${url.toString()} - Max Depth: ${maxDepth}`,
+  );
+
   const { baseUrl, basePath } = splitUrl(url);
   let paths: { path: string; depth: number }[] = [{ path: basePath, depth: 0 }];
 

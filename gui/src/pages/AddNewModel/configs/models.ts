@@ -276,7 +276,19 @@ export const models: { [key: string]: ModelPackage } = {
     },
     icon: "mistral.png",
     providerOptions: ["mistral"],
-    isOpenSource: false,
+    isOpenSource: true,
+  },
+  codestralMamba: {
+    title: "Codestral Mamba",
+    description: "A Mamba 2 language model specialized in code generation.",
+    params: {
+      title: "Codestral Mamba",
+      model: "codestral-mamba-latest",
+      contextLength: 256_000,
+    },
+    icon: "mistral.png",
+    providerOptions: ["mistral"],
+    isOpenSource: true,
   },
   mistral7b: {
     title: "Mistral 7B",
@@ -469,6 +481,21 @@ export const models: { [key: string]: ModelPackage } = {
         "You are an expert software developer. You give helpful and concise responses.",
     },
     providerOptions: ["openai", "free-trial"],
+    icon: "openai.png",
+    isOpenSource: false,
+  },
+  gpt4omini: {
+    title: "GPT-4o Mini",
+    description:
+      "A model at less than half the price of gpt-3.5-turbo, but near gpt-4 in capabilities.",
+    params: {
+      model: "gpt-4o-mini",
+      contextLength: 128_000,
+      title: "GPT-4o mini",
+      systemMessage:
+        "You are an expert software developer. You give helpful and concise responses.",
+    },
+    providerOptions: ["openai"],
     icon: "openai.png",
     isOpenSource: false,
   },

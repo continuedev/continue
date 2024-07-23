@@ -1,4 +1,4 @@
-import { getTsConfigPath, migrate } from "core/util/paths";
+import { getContinueRcPath, getTsConfigPath, migrate } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import path from "node:path";
 import * as vscode from "vscode";
@@ -12,6 +12,7 @@ import { setupInlineTips } from "./inlineTips";
 export async function activateExtension(context: vscode.ExtensionContext) {
   // Add necessary files
   getTsConfigPath();
+  getContinueRcPath();
 
   // Register commands and providers
   registerQuickFixProvider();
@@ -33,9 +34,13 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Load Continue configuration
   if (!context.globalState.get("hasBeenInstalled")) {
     context.globalState.update("hasBeenInstalled", true);
-    Telemetry.capture("install", {
-      extensionVersion: getExtensionVersion(),
-    });
+    Telemetry.capture(
+      "install",
+      {
+        extensionVersion: getExtensionVersion(),
+      },
+      true,
+    );
   }
 
   const api = new VsCodeContinueApi(vscodeExtension);

@@ -36,6 +36,7 @@ const CHAT_ONLY_MODELS = [
   "gpt-4-vision",
   "gpt-4-0125-preview",
   "gpt-4-1106-preview",
+  "gpt-4o-mini",
 ];
 
 class OpenAI extends BaseLLM {
@@ -61,6 +62,14 @@ class OpenAI extends BaseLLM {
   protected _convertMessage(message: ChatMessage) {
     if (typeof message.content === "string") {
       return message;
+    } else if (!message.content.some((item) => item.type !== "text")) {
+      // If no multi-media is in the message, just send as text
+      // for compatibility with OpenAI "compatible" servers
+      // that don't support multi-media format
+      return {
+        ...message,
+        content: message.content.map((item) => item.text).join(""),
+      };
     }
 
     const parts = message.content.map((part) => {

@@ -25,7 +25,7 @@ const sidebars = {
       items: [
         "setup/overview",
         "setup/configuration",
-        "setup/select-provider",
+        "setup/model-providers",
         "setup/select-model",
       ],
     },
@@ -50,6 +50,7 @@ const sidebars = {
         "walkthroughs/codebase-embeddings",
         "walkthroughs/tab-autocomplete",
         "walkthroughs/prompt-files",
+        "walkthroughs/quick-actions",
       ],
     },
     "development-data",

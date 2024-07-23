@@ -1,4 +1,5 @@
 import * as fs from "node:fs";
+import * as path from "node:path";
 import {
   ContinueRcJson,
   FileType,
@@ -16,10 +17,9 @@ import {
 import { getContinueGlobalPath } from "./paths.js";
 
 class FileSystemIde implements IDE {
-  static workspaceDir = "/tmp/continue";
-
-  constructor() {
-    fs.mkdirSync(FileSystemIde.workspaceDir, { recursive: true });
+  constructor(private readonly workspaceDir: string) {}
+  pathSep(): Promise<string> {
+    return Promise.resolve(path.sep);
   }
   fileExists(filepath: string): Promise<boolean> {
     return Promise.resolve(fs.existsSync(filepath));
@@ -37,6 +37,9 @@ class FileSystemIde implements IDE {
       remoteConfigServerUrl: undefined,
       remoteConfigSyncPeriod: 60,
       userToken: "",
+      enableControlServerBeta: false,
+      pauseCodebaseIndexOnStart: false,
+      enableDebugLogs: false,
     };
   }
   async getGitHubAuthToken(): Promise<string | undefined> {
@@ -56,12 +59,12 @@ class FileSystemIde implements IDE {
     const all: [string, FileType][] = fs
       .readdirSync(dir, { withFileTypes: true })
       .map((dirent: any) => [
-        dirent.path,
+        dirent.name,
         dirent.isDirectory()
-          ? FileType.Directory
+          ? (2 as FileType.Directory)
           : dirent.isSymbolicLink()
-            ? FileType.SymbolicLink
-            : FileType.File,
+          ? (64 as FileType.SymbolicLink)
+          : (1 as FileType.File),
       ]);
     return Promise.resolve(all);
   }
@@ -136,29 +139,8 @@ class FileSystemIde implements IDE {
     return Promise.resolve();
   }
 
-  listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      fs.readdir(FileSystemIde.workspaceDir, (err, files) => {
-        if (err) {
-          reject(err);
-        }
-        resolve(files);
-      });
-    });
-  }
-
   getWorkspaceDirs(): Promise<string[]> {
-    return new Promise((resolve, reject) => {
-      fs.mkdtemp(FileSystemIde.workspaceDir, (err, folder) => {
-        if (err) {
-          reject(err);
-        }
-        resolve([folder]);
-      });
-    });
+    return Promise.resolve([this.workspaceDir]);
   }
 
   listFolders(): Promise<string[]> {

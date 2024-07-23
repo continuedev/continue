@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.169",
+  "version": "0.9.187",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -31,6 +31,8 @@
     "theme": "dark"
   },
   "categories": [
+    "AI",
+    "Chat",
     "Programming Languages",
     "Education",
     "Machine Learning",
@@ -77,15 +79,30 @@
           "default": true,
           "description": "Show inline suggestion to use the Continue keyboard shortcuts (e.g. \"Cmd/Ctrl L to select code, Cmd/Ctrl I to edit\")."
         },
+        "continue.enableQuickActions": {
+          "type": "boolean",
+          "default": true,
+          "markdownDescription": "Enable the experimental Quick Actions feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Quick Actions (experimental)](https://docs.continue.dev/walkthroughs/quick-actions)"
+        },
         "continue.enableTabAutocomplete": {
           "type": "boolean",
           "default": true,
-          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete](https://docs.continue.dev/walkthroughs/tab-autocomplete)"
+          "markdownDescription": "Enable Continue's tab autocomplete feature. Read our walkthrough to learn about configuration and how to share feedback: [continue.dev › Walkthrough: Tab Autocomplete (beta)](https://docs.continue.dev/walkthroughs/tab-autocomplete)"
         },
         "continue.pauseTabAutocompleteOnBattery": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Pause Continue's tab autocomplete feature when your battery is low."
+        },
+        "continue.pauseCodebaseIndexOnStart": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Pause Continue's codebase index on start."
+        },
+        "continue.enableDebugLogs": {
+          "type": "boolean",
+          "default": false,
+          "markdownDescription": "Enable Continue Debug Logs in the Output panel."
         },
         "continue.remoteConfigServerUrl": {
           "type": "string",
@@ -134,12 +151,6 @@
         "command": "continue.quickEdit",
         "category": "Continue",
         "title": "Generate Code",
-        "group": "Continue"
-      },
-      {
-        "command": "continue.toggleAuxiliaryBar",
-        "category": "Continue",
-        "title": "Toggle Right Sidebar",
         "group": "Continue"
       },
       {
@@ -228,6 +239,24 @@
         "category": "Continue",
         "title": "Fix Grammar / Spelling",
         "group": "Continue"
+      },
+      {
+        "command": "continue.codebaseForceReIndex",
+        "category": "Continue",
+        "title": "Codebase Force Re-Index",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.docsIndex",
+        "category": "Continue",
+        "title": "Docs Index",
+        "group": "Continue"
+      },
+      {
+        "command": "continue.docsReIndex",
+        "category": "Continue",
+        "title": "Docs Force Re-Index",
+        "group": "Continue"
       }
     ],
     "keybindings": [
@@ -240,6 +269,11 @@
         "command": "continue.focusContinueInputWithoutClear",
         "mac": "cmd+shift+l",
         "key": "ctrl+shift+l"
+      },
+      {
+        "command": "continue.toggleAuxiliaryBar",
+        "mac": "alt+cmd+l",
+        "key": "alt+ctrl+l"
       },
       {
         "command": "continue.acceptDiff",
@@ -258,6 +292,18 @@
         "when": "continue.diffVisible"
       },
       {
+        "command": "continue.quickEditHistoryUp",
+        "mac": "up",
+        "key": "up",
+        "when": "continue.quickEditHistoryFocused"
+      },
+      {
+        "command": "continue.quickEditHistoryDown",
+        "mac": "down",
+        "key": "down",
+        "when": "continue.quickEditHistoryFocused"
+      },
+      {
         "command": "continue.acceptVerticalDiffBlock",
         "mac": "alt+cmd+y",
         "key": "alt+ctrl+y"
@@ -273,11 +319,6 @@
         "key": "ctrl+i"
       },
       {
-        "command": "continue.toggleAuxiliaryBar",
-        "mac": "alt+cmd+l",
-        "key": "alt+ctrl+l"
-      },
-      {
         "command": "continue.debugTerminal",
         "mac": "cmd+shift+r",
         "key": "ctrl+shift+r"
@@ -291,7 +332,8 @@
       {
         "command": "continue.toggleTabAutocompleteEnabled",
         "mac": "cmd+k cmd+a",
-        "key": "ctrl+k ctrl+a"
+        "key": "ctrl+k ctrl+a",
+        "when": "!terminalFocus"
       }
     ],
     "submenus": [
@@ -304,9 +346,6 @@
       "commandPalette": [
         {
           "command": "continue.quickEdit"
-        },
-        {
-          "command": "continue.toggleAuxiliaryBar"
         },
         {
           "command": "continue.focusContinueInput"
@@ -536,6 +575,7 @@
     "cors": "^2.8.5",
     "dbinfoz": "^0.1.4",
     "downshift": "^7.6.0",
+    "esbuild": "^0.17.19",
     "express": "^4.18.2",
     "fkill": "^8.1.0",
     "follow-redirects": "^1.15.4",
@@ -548,6 +588,7 @@
     "https-proxy-agent": "^7.0.2",
     "ignore": "^5.3.0",
     "jsdom": "^24.0.0",
+    "minisearch": "^7.0.0",
     "monaco-editor": "^0.45.0",
     "monaco-vscode-textmate-theme-converter": "^0.1.7",
     "ncp": "^2.0.0",
@@ -566,7 +607,6 @@
     "uuid": "^9.0.1",
     "uuidv4": "^6.2.13",
     "vectordb": "^0.4.20",
-    "esbuild": "^0.17.19",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
     "yarn": "^1.22.21"

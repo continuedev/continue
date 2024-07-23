@@ -11,14 +11,11 @@ import type {
   RangeInFile,
   Thread,
 } from "..";
+import { ControlPlaneSessionInfo } from "../control-plane/client";
 
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
   getIdeInfo: [undefined, IdeInfo];
-  listWorkspaceContents: [
-    { directory?: string; useGitIgnore?: boolean },
-    string[],
-  ];
   getWorkspaceDirs: [undefined, string[]];
   listFolders: [undefined, string[]];
   writeFile: [{ path: string; contents: string }, void];
@@ -79,4 +76,18 @@ export type ToIdeFromWebviewOrCoreProtocol = {
   gotoDefinition: [{ location: Location }, RangeInFile[]];
 
   getGitHubAuthToken: [undefined, string | undefined];
+  getControlPlaneSessionInfo: [
+    { silent: boolean },
+    ControlPlaneSessionInfo | undefined,
+  ];
+  logoutOfControlPlane: [undefined, void];
+  pathSep: [undefined, string];
+};
+
+export type ToWebviewOrCoreFromIdeProtocol = {
+  didChangeActiveTextEditor: [{ filepath: string }, void];
+  didChangeControlPlaneSessionInfo: [
+    { sessionInfo: ControlPlaneSessionInfo | undefined },
+    void,
+  ];
 };

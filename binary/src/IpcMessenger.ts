@@ -170,8 +170,8 @@ export class IpcMessenger<
     });
   }
   _sendMsg(msg: Message) {
-    // console.log("[info] Sending message: ", msg);
     const d = JSON.stringify(msg);
+    // console.log("[info] Sending message: ", d);
     process.stdout?.write(d + "\r\n");
   }
 }

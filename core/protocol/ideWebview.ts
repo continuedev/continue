@@ -41,7 +41,14 @@ export type ToWebviewFromIdeProtocol = ToWebviewFromIdeOrCoreProtocol & {
   focusContinueInput: [undefined, void];
   focusContinueInputWithoutClear: [undefined, void];
   focusContinueInputWithNewSession: [undefined, void];
-  highlightedCode: [{ rangeInFileWithContents: RangeInFileWithContents }, void];
+  highlightedCode: [
+    {
+      rangeInFileWithContents: RangeInFileWithContents;
+      prompt?: string;
+      shouldRun?: boolean;
+    },
+    void,
+  ];
   addModel: [undefined, void];
   openSettings: [undefined, void];
   viewHistory: [undefined, void];

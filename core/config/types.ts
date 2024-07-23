@@ -385,7 +385,6 @@ declare global {
       stackDepth: number,
     ): Promise<string[]>;
     getAvailableThreads(): Promise<Thread[]>;
-    listWorkspaceContents(directory?: string, useGitIgnore?: boolean): Promise<string[]>;
     listFolders(): Promise<string[]>;
     getWorkspaceDirs(): Promise<string[]>;
     getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
@@ -524,6 +523,7 @@ declare global {
     | "gpt-4-32k"
     | "gpt-4-turbo"
     | "gpt-4o"
+    | "gpt-4o-mini"
     | "gpt-4-turbo-preview"
     | "gpt-4-vision-preview"
     // Mistral
@@ -639,6 +639,7 @@ declare global {
   }
   
   export type EmbeddingsProviderName =
+    | "huggingface-tei"
     | "transformers.js"
     | "ollama"
     | "openai"
@@ -676,7 +677,7 @@ declare global {
   export interface TabAutocompleteOptions {
     disable: boolean;
     useCopyBuffer: boolean;
-    useSuffix: boolean;
+    useFileSuffix: boolean;
     maxPromptTokens: number;
     debounceDelay: number;
     maxSuffixPercentage: number;

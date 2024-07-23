@@ -10,6 +10,7 @@ export type OnboardingStatus = "Started" | "Completed";
 // If there is no value in local storage for "onboardingStatus",
 // it implies that the user has not begun or completed onboarding.
 export function shouldBeginOnboarding() {
+  // We used to use "onboardingComplete", but switched to "onboardingStatus"
   const onboardingCompleteLegacyValue =
     localStorage.getItem("onboardingComplete");
   if (onboardingCompleteLegacyValue === "true") {
@@ -34,6 +35,7 @@ export function useOnboarding() {
 
     if (onboardingStatus === "Started") {
       setLocalStorage("onboardingStatus", "Completed");
+      setLocalStorage("showTutorialCard", true);
       posthog.capture("Onboarding Step", { status: "Completed" });
     }
 

@@ -1,5 +1,4 @@
 import { Chunk, ChunkWithoutID } from "../../index.js";
-import { MAX_CHUNK_SIZE } from "../../llm/constants.js";
 import { countTokens } from "../../llm/countTokens.js";
 import { supportedLanguages } from "../../util/treeSitter.js";
 import { basicChunker } from "./basic.js";
@@ -43,7 +42,7 @@ export async function* chunkDocument(
     contents,
     maxChunkSize,
   )) {
-    if (countTokens(chunkWithoutId.content) > MAX_CHUNK_SIZE) {
+    if (countTokens(chunkWithoutId.content) > maxChunkSize) {
       console.warn(
         `Chunk with more than ${maxChunkSize} tokens constructed: `,
         filepath,

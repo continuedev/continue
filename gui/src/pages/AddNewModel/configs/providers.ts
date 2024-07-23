@@ -1,10 +1,10 @@
 import { ModelProvider } from "core";
 import { HTMLInputTypeAttribute } from "react";
 import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../../../util/freeTrial";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../../../util/freeTrial";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -61,6 +61,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.gpt4o,
+      models.gpt4omini,
       models.gpt4turbo,
       models.gpt35turbo,
       {
@@ -186,6 +187,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     packages: [
       models.codestral,
+      models.codestralMamba,
       models.mistralLarge,
       models.mistralSmall,
       models.mistral8x22b,

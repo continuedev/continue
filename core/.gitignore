@@ -3,3 +3,4 @@ target
 **/.DS_Store
 npm-debug.log*
 .env
+.continue-test

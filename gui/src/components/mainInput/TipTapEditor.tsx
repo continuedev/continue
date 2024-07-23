@@ -53,12 +53,13 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
+import { usePostHog } from "posthog-js/react";
 
 const InputBoxDiv = styled.div`
   resize: none;
 
   padding: 8px;
-  padding-bottom: 24px;
+  padding-bottom: 4px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
   margin: 0;
@@ -70,7 +71,6 @@ const InputBoxDiv = styled.div`
   border: 0.5px solid ${vscInputBorder};
   outline: none;
   font-size: ${getFontSize()}px;
-
   &:focus {
     outline: none;
 
@@ -81,7 +81,8 @@ const InputBoxDiv = styled.div`
     color: ${lightGray}cc;
   }
 
-  position: relative;
+  display: flex;
+  flex-direction: column;
 `;
 
 const HoverDiv = styled.div`
@@ -151,9 +152,9 @@ function TipTapEditor(props: TipTapEditorProps) {
   );
   const useActiveFile = useSelector(selectUseActiveFile);
 
-  const [inputFocused, setInputFocused] = useState(false);
-
   const { saveSession } = useHistory(dispatch);
+
+  const posthog = usePostHog();
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
@@ -288,10 +289,13 @@ function TipTapEditor(props: TipTapEditorProps) {
               return true;
             },
             "Alt-Enter": () => {
+              posthog.capture("gui_use_active_file_enter");
+
               onEnterRef.current({
                 useCodebase: false,
                 noContext: useActiveFile,
               });
+
               return true;
             },
             "Cmd-Backspace": () => {
@@ -597,7 +601,9 @@ function TipTapEditor(props: TipTapEditorProps) {
           rif.filepath,
           await ideMessenger.ide.getWorkspaceDirs(),
         );
-        const rangeStr = `(${rif.range.start.line + 1}-${rif.range.end.line + 1})`;
+        const rangeStr = `(${rif.range.start.line + 1}-${
+          rif.range.end.line + 1
+        })`;
         const item: ContextItemWithId = {
           content: rif.contents,
           name: `${basename} ${rangeStr}`,
@@ -626,6 +632,16 @@ function TipTapEditor(props: TipTapEditorProps) {
             },
           })
           .run();
+
+        if (data.prompt) {
+          editor.commands.focus("end");
+          editor.commands.insertContent(data.prompt);
+        }
+
+        if (data.shouldRun) {
+          onEnterRef.current({ useCodebase: false, noContext: true });
+        }
+
         setTimeout(() => {
           editor.commands.blur();
           editor.commands.focus("end");
@@ -639,19 +655,18 @@ function TipTapEditor(props: TipTapEditorProps) {
       historyLength,
       ignoreHighlightedCode,
       props.isMainInput,
+      onEnterRef.current,
     ],
   );
 
-  // On linux+jetbrains only was stealing focus
-  // useEffect(() => {
-  //   if (props.isMainInput && editor && document.hasFocus()) {
-  //     editor.commands.focus();
-  //     // setTimeout(() => {
-  //     //   // https://github.com/continuedev/continue/pull/881
-  //     //   editor.commands.blur();
-  //     // }, 0);
-  //   }
-  // }, [editor, props.isMainInput, historyLength, ignoreHighlightedCode]);
+  useWebviewListener(
+    "isContinueInputFocused",
+    async () => {
+      return props.isMainInput && editorFocusedRef.current;
+    },
+    [editorFocusedRef, props.isMainInput],
+    !props.isMainInput,
+  );
 
   const [showDragOverMsg, setShowDragOverMsg] = useState(false);
 
@@ -735,22 +750,13 @@ function TipTapEditor(props: TipTapEditorProps) {
       <EditorContent
         spellCheck={false}
         editor={editor}
-        onFocus={() => {
-          setInputFocused(true);
-        }}
-        onBlur={() => {
-          // hack to stop from cancelling press of "Enter"
-          setTimeout(() => {
-            setInputFocused(false);
-          }, 100);
-        }}
         onClick={(event) => {
           event.stopPropagation();
         }}
       />
       <InputToolbar
         showNoContext={optionKeyHeld}
-        hidden={!(inputFocused || props.isMainInput)}
+        hidden={!(editorFocusedRef.current || props.isMainInput)}
         onAddContextItem={() => {
           if (editor.getText().endsWith("@")) {
           } else {

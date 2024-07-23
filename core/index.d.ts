@@ -374,8 +374,10 @@ export type CustomLLM = RequireAtLeastOne<
 
 // IDE
 
+export type DiffLineType = "new" | "old" | "same";
+
 export interface DiffLine {
-  type: "new" | "old" | "same";
+  type: DiffLineType;
   line: string;
 }
 
@@ -419,6 +421,9 @@ export interface IdeSettings {
   remoteConfigServerUrl: string | undefined;
   remoteConfigSyncPeriod: number;
   userToken: string;
+  enableControlServerBeta: boolean;
+  pauseCodebaseIndexOnStart: boolean
+  enableDebugLogs: boolean
 }
 
 export interface IDE {
@@ -434,10 +439,6 @@ export interface IDE {
     stackDepth: number,
   ): Promise<string[]>;
   getAvailableThreads(): Promise<Thread[]>;
-  listWorkspaceContents(
-    directory?: string,
-    useGitIgnore?: boolean,
-  ): Promise<string[]>;
   listFolders(): Promise<string[]>;
   getWorkspaceDirs(): Promise<string[]>;
   getWorkspaceConfigs(): Promise<ContinueRcJson[]>;
@@ -482,6 +483,7 @@ export interface IDE {
 
   // Callbacks
   onDidChangeActiveTextEditor(callback: (filepath: string) => void): void;
+  pathSep(): Promise<string>;
 }
 
 // Slash Commands
@@ -598,6 +600,7 @@ export type ModelName =
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
   | "gpt-4o"
+  | "gpt-4o-mini"
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
@@ -667,6 +670,13 @@ export interface RequestOptions {
   headers?: { [key: string]: string };
   extraBodyProperties?: { [key: string]: any };
   noProxy?: string[];
+  clientCertificate?: ClientCertificateOptions;
+}
+
+export interface ClientCertificateOptions {
+  cert: string;
+  key: string;
+  passphrase?: string;
 }
 
 export interface StepWithParams {
@@ -722,6 +732,7 @@ export interface ModelDescription {
 }
 
 export type EmbeddingsProviderName =
+  | "huggingface-tei"
   | "transformers.js"
   | "ollama"
   | "openai"
@@ -737,6 +748,7 @@ export interface EmbedOptions {
   apiType?: string;
   apiVersion?: string;
   requestOptions?: RequestOptions;
+  maxChunkSize?: number;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -745,10 +757,16 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 
 export interface EmbeddingsProvider {
   id: string;
+  maxChunkSize: number;
   embed(chunks: string[]): Promise<number[][]>;
 }
 
-export type RerankerName = "cohere" | "voyage" | "llm" | "free-trial";
+export type RerankerName =
+  | "cohere"
+  | "voyage"
+  | "llm"
+  | "free-trial"
+  | "huggingface-tei";
 
 export interface RerankerDescription {
   name: RerankerName;
@@ -763,7 +781,7 @@ export interface Reranker {
 export interface TabAutocompleteOptions {
   disable: boolean;
   useCopyBuffer: boolean;
-  useSuffix: boolean;
+  useFileSuffix: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
   maxSuffixPercentage: number;
@@ -802,11 +820,42 @@ interface ModelRoles {
   applyCodeBlock?: string;
 }
 
+/**
+ * Represents the configuration for a quick action in the Code Lens.
+ * Quick actions are custom commands that can be added to function and class declarations.
+ */
+interface QuickActionConfig {
+  /**
+   * The title of the quick action that will display in the Code Lens.
+   */
+  title: string;
+
+  /**
+   * The prompt that will be sent to the model when the quick action is invoked,
+   * with the function or class body concatenated.
+   */
+  prompt: string;
+
+  /**
+   * If `true`, the result of the quick action will be sent to the chat panel.
+   * If `false`, the streamed result will be inserted into the document.
+   *
+   * Defaults to `false`.
+   */
+  sendToChat: boolean;
+}
+
 interface ExperimentalConfig {
   contextMenuPrompts?: ContextMenuConfig;
   modelRoles?: ModelRoles;
   defaultContext?: "activeFile"[];
   promptPath?: string;
+
+  /**
+   * Quick actions are a way to add custom commands to the Code Lens of
+   * function and class declarations.
+   */
+  quickActions?: QuickActionConfig[];
 }
 
 // config.json

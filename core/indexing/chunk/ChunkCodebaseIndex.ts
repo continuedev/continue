@@ -1,6 +1,5 @@
 import { IContinueServerClient } from "../../continueServer/interface.js";
 import { Chunk, IndexTag, IndexingProgressUpdate } from "../../index.js";
-import { MAX_CHUNK_SIZE } from "../../llm/constants.js";
 import { getBasename } from "../../util/index.js";
 import { DatabaseConnection, SqliteDb, tagToString } from "../refreshIndex.js";
 import {
@@ -19,6 +18,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   constructor(
     private readonly readFile: (filepath: string) => Promise<string>,
     private readonly continueServerClient: IContinueServerClient,
+    private readonly maxChunkSize: number
   ) {
     this.readFile = readFile;
   }
@@ -94,6 +94,9 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       }
     }
 
+    const progressReservedForTagging = 0.3;
+    let accumulatedProgress = 0;
+
     // Compute chunks for new files
     const contents = await Promise.all(
       results.compute.map(({ path }) => this.readFile(path)),
@@ -105,14 +108,34 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       for await (const chunk of chunkDocument(
         item.path,
         contents[i],
-        MAX_CHUNK_SIZE,
+        this.maxChunkSize,
         item.cacheKey,
       )) {
         handleChunk(chunk);
       }
 
+      accumulatedProgress =
+        (i / results.compute.length) * (1 - progressReservedForTagging);
       yield {
-        progress: i / results.compute.length,
+        progress: accumulatedProgress,
+        desc: `Chunking ${getBasename(item.path)}`,
+        status: "indexing",
+      };
+      markComplete([item], IndexResultType.Compute);
+      // Insert chunks
+      for await (const chunk of chunkDocument(
+        item.path,
+        contents[i],
+        this.maxChunkSize,
+        item.cacheKey,
+      )) {
+        handleChunk(chunk);
+      }
+
+      accumulatedProgress =
+        (i / results.compute.length) * (1 - progressReservedForTagging);
+      yield {
+        progress: accumulatedProgress,
         desc: `Chunking ${getBasename(item.path)}`,
         status: "indexing",
       };
@@ -120,20 +143,29 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
     }
 
     // Add tag
-    for (const item of results.addTag) {
-      const chunksWithPath = await db.all(
-        "SELECT * FROM chunks WHERE cacheKey = ?",
-        [item.cacheKey],
-      );
+    const addContents = await Promise.all(
+      results.addTag.map(({ path }) => this.readFile(path)),
+    );
+    for (let i = 0; i < results.addTag.length; i++) {
+      const item = results.addTag[i];
 
-      for (const chunk of chunksWithPath) {
-        await db.run("INSERT INTO chunk_tags (chunkId, tag) VALUES (?, ?)", [
-          chunk.id,
-          tagString,
-        ]);
+      // Insert chunks
+      for await (const chunk of chunkDocument(
+        item.path,
+        addContents[i],
+        this.maxChunkSize,
+        item.cacheKey,
+      )) {
+        handleChunk(chunk);
       }
 
       markComplete([item], IndexResultType.AddTag);
+      accumulatedProgress += 1 / results.addTag.length / 4;
+      yield {
+        progress: accumulatedProgress,
+        desc: `Chunking ${getBasename(item.path)}`,
+        status: "indexing",
+      };
     }
 
     // Remove tag
@@ -150,6 +182,12 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         [tagString, item.cacheKey, item.path],
       );
       markComplete([item], IndexResultType.RemoveTag);
+      accumulatedProgress += 1 / results.removeTag.length / 4;
+      yield {
+        progress: accumulatedProgress,
+        desc: `Removing ${getBasename(item.path)}`,
+        status: "indexing",
+      };
     }
 
     // Delete
@@ -164,6 +202,12 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       ]);
 
       markComplete([item], IndexResultType.Delete);
+      accumulatedProgress += 1 / results.del.length / 4;
+      yield {
+        progress: accumulatedProgress,
+        desc: `Removing ${getBasename(item.path)}`,
+        status: "indexing",
+      };
     }
   }
 }

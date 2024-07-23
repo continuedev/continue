@@ -16,7 +16,7 @@ name: Build
 on:
   # Trigger the workflow on pushes to only the 'main' branch (this avoids duplicate checks being run e.g., for dependabot pull requests)
   push:
-    branches: [main]
+    branches: [main, preview]
   # Trigger the workflow on any pull request
   # pull_request:
 
@@ -97,6 +97,12 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
 
+      - name: Cache gui node_modules
+        uses: actions/cache@v3
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
+
       # npm install core
       - name: Install core node_modules
         run: |
@@ -108,6 +114,18 @@ jobs:
         run: |
           cd ../../binary
           npm ci
+
+      # npm install gui
+      - name: Install gui node_modules
+        run: |
+          cd ../../gui
+          npm ci
+
+      # build gui
+      - name: Build gui
+        run: |
+          cd ../../gui
+          npm run build
 
       # Run prepackage.js script
       - name: Run prepackage script
@@ -134,11 +152,11 @@ jobs:
         id: artifact
         shell: bash
         run: |
-          cd ${{ github.workspace }}/extensions/intellij/build/distributions
+          cd ../../extensions/intellij/build/distributions
           FILENAME=`ls *.zip`
           unzip "$FILENAME" -d content
 
-          echo "filename=${FILENAME:0:-4}" >> $GITHUB_OUTPUT
+          echo "filename=${FILENAME%.????}" >> $GITHUB_OUTPUT
 
       # Store already-built plugin as an artifact for downloading
       - name: Upload artifact

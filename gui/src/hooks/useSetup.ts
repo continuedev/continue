@@ -8,13 +8,15 @@ import {
   addContextItemsAtIndex,
   setConfig,
   setInactive,
+  setSelectedProfileId,
 } from "../redux/slices/stateSlice";
 import { RootState } from "../redux/store";
 
 import { isJetBrains } from "../util";
-import { setLocalStorage } from "../util/localStorage";
+import { getLocalStorage, setLocalStorage } from "../util/localStorage";
 import useChatHandler from "./useChatHandler";
 import { useWebviewListener } from "./useWebviewListener";
+import { debounce } from "lodash";
 
 function useSetup(dispatch: Dispatch<any>) {
   const [configLoaded, setConfigLoaded] = useState<boolean>(false);
@@ -22,12 +24,14 @@ function useSetup(dispatch: Dispatch<any>) {
   const ideMessenger = useContext(IdeMessengerContext);
 
   const loadConfig = async () => {
-    const config = await ideMessenger.request(
-      "config/getBrowserSerialized",
+    const { config, profileId } = await ideMessenger.request(
+      "config/getSerializedProfileInfo",
       undefined,
     );
     dispatch(setConfig(config));
+    dispatch(setSelectedProfileId(profileId));
     setConfigLoaded(true);
+    setLocalStorage("disableIndexing", config.disableIndexing || false);
 
     // Perform any actions needed with the config
     if (config.ui?.fontSize) {
@@ -84,8 +88,16 @@ function useSetup(dispatch: Dispatch<any>) {
     });
   });
 
+  const debouncedIndexDocs = debounce(() => {
+    ideMessenger.request("context/indexDocs", { reIndex: false });
+  }, 1000);
+
   useWebviewListener("configUpdate", async () => {
-    loadConfig();
+    await loadConfig();
+
+    if (!isJetBrains && !getLocalStorage("disableIndexing")) {
+      debouncedIndexDocs();
+    }
   });
 
   useWebviewListener("submitMessage", async (data) => {
