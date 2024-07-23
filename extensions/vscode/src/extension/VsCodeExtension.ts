@@ -221,7 +221,7 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig();
     });
 
-    vscode.workspace.onDidSaveTextDocument((event) => {
+    vscode.workspace.onDidSaveTextDocument(async (event) => {
       // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
 
@@ -254,15 +254,18 @@ export class VsCodeExtension {
       ) {
         // Update embeddings! (TODO)
       }
+
+      // Reindex the workspaces
+      this.core.invoke("index/forceReIndex", undefined);
     });
 
     // When GitHub sign-in status changes, reload config
-    vscode.authentication.onDidChangeSessions((e) => {
+    vscode.authentication.onDidChangeSessions(async (e) => {
       if (e.provider.id === "github") {
         this.configHandler.reloadConfig();
       } else if (e.provider.id === "continue") {
+        const sessionInfo = await getControlPlaneSessionInfo(true);
         this.webviewProtocolPromise.then(async (webviewProtocol) => {
-          const sessionInfo = await getControlPlaneSessionInfo(true);
           webviewProtocol.request("didChangeControlPlaneSessionInfo", {
             sessionInfo,
           });
@@ -270,6 +273,7 @@ export class VsCodeExtension {
           // To make sure continue-proxy models and anything else requiring it get updated access token
           this.configHandler.reloadConfig();
         });
+        this.core.invoke("didChangeControlPlaneSessionInfo", { sessionInfo });
       }
     });
 

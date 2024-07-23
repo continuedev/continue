@@ -185,6 +185,10 @@ const config = {
             from: "/model-setup/configuration",
             to: "/setup/configuration",
           },
+          {
+            from: "/setup/select-provider",
+            to: "/setup/model-providers",
+          },
         ],
       },
     ],

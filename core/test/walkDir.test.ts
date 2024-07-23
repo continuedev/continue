@@ -104,10 +104,39 @@ describe("walkDir", () => {
     );
   });
 
+  test("should use gitignore in parent directory for subdirectory", async () => {
+    const files = [
+      "a.txt",
+      "b.py",
+      "d/",
+      "d/e.txt",
+      "d/f.py",
+      "d/g/",
+      "d/g/h.ts",
+      "d/g/i.py",
+      [".gitignore", "*.py"],
+    ];
+    addToTestDir(files);
+    await expectPaths(["a.txt", "d/e.txt", "d/g/h.ts"], ["d/f.py", "d/g/i.py"]);
+  });
+
   test("should handle leading slash in gitignore", async () => {
     const files = [[".gitignore", "/no.txt"], "a.txt", "b.py", "no.txt"];
     addToTestDir(files);
     await expectPaths(["a.txt", "b.py"], ["no.txt"]);
+  });
+
+  test("should not ignore leading slash when in subfolder", async () => {
+    const files = [
+      [".gitignore", "/no.txt"],
+      "a.txt",
+      "b.py",
+      "no.txt",
+      "sub/",
+      "sub/no.txt",
+    ];
+    addToTestDir(files);
+    await expectPaths(["a.txt", "b.py", "sub/no.txt"], ["no.txt"]);
   });
 
   test("should handle multiple .gitignore files in nested structure", async () => {
@@ -202,7 +231,7 @@ describe("walkDir", () => {
     await expectPaths(
       ["d", "d/g"],
       ["a.txt", "b.py", "c.ts", "d/e.txt", "d/f.py", "d/g/h.ts"],
-      { onlyDirs: true, includeEmpty: true },
+      { onlyDirs: true },
     );
   });
 

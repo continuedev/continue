@@ -176,6 +176,15 @@ export const rerankerSchema = z.object({
 export type Reranker = z.infer<typeof rerankerSchema>;
 
 export const analyticsSchema = z.object({
+  provider: z.enum([
+    "posthog",
+    "amplitude",
+    "segment",
+    "elastic",
+    "mixpanel",
+    "splunk",
+    "datadog",
+  ]),
   url: z.string().optional(),
   clientKey: z.string().optional(),
 });
