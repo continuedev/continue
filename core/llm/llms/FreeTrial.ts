@@ -165,6 +165,7 @@ class FreeTrial extends BaseLLM {
     return [
       "codestral-latest",
       "claude-3-5-sonnet-20240620",
+      "llama3-405b",
       "llama3-70b",
       "gpt-4o",
       "gpt-3.5-turbo",

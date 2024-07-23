@@ -554,6 +554,7 @@
                     "enum": [
                       "llama3-8b",
                       "llama3-70b",
+                      "llama3-405b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -590,6 +591,7 @@
                   "gpt-4o",
                   "codestral-latest",
                   "llama3-70b",
+                  "llama3-405b",
                   "gpt-3.5-turbo",
                   "phind-codellama-34b",
                   "gemini-pro",
@@ -645,6 +647,7 @@
                       "codellama-70b",
                       "llama3-8b",
                       "llama3-70b",
+                      "llama3-405b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -818,6 +821,7 @@
                       "llama2-13b",
                       "llama3-8b",
                       "llama3-70b",
+                      "llama3-405b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -888,6 +892,7 @@
                       "codellama-70b",
                       "llama3-8b",
                       "llama3-70b",
+                      "llama3-405b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -940,6 +945,7 @@
                       "codellama-70b",
                       "llama3-8b",
                       "llama3-70b",
+                      "llama3-405b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -1042,6 +1048,7 @@
                   "gemma",
                   "llama3-8b",
                   "llama3-70b",
+                  "llama3-405b",
                   "AUTODETECT"
                 ]
               }
@@ -1240,6 +1247,7 @@
                       "codellama-70b",
                       "llama3-8b",
                       "llama3-70b",
+                      "llama3-405b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",

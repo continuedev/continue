@@ -90,6 +90,19 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["free-trial"],
     isOpenSource: false,
   },
+  llama3405bTrial: {
+    title: "Llama3 405b (Free Trial)",
+    description: "The latest Llama model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3-405b",
+      model: "llama3-405b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    providerOptions: ["free-trial"],
+    isOpenSource: false,
+  },
   mixtralTrial: {
     title: "Mixtral (Free Trial)",
     description:
@@ -124,6 +137,19 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "Llama3-70b",
       model: "llama3-70b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    providerOptions: ["groq"],
+    isOpenSource: false,
+  },
+  llama3405bChat: {
+    title: "Llama3 405b Chat",
+    description: "The latest Llama model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3-405b",
+      model: "llama3-405b",
       contextLength: 8192,
     },
     icon: "meta.png",
@@ -166,6 +192,10 @@ export const models: { [key: string]: ModelPackage } = {
             model: "llama3-70b",
             title: "Llama3-70b",
           },
+          "405b": {
+            model: "llama3-405b",
+            title: "Llama3-405b",
+          },
         },
       },
     ],
@@ -176,6 +206,39 @@ export const models: { [key: string]: ModelPackage } = {
       "llama.cpp",
       "replicate",
     ],
+    isOpenSource: true,
+  },
+  deepseek: {
+    title: "DeepSeek-Coder",
+    description:
+      "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
+    params: {
+      title: "DeepSeek-7b",
+      model: "deepseek-7b",
+      contextLength: 4096,
+    },
+    icon: "deepseek.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "1b": {
+            model: "deepseek-1b",
+            title: "DeepSeek-1b",
+          },
+          "7b": {
+            model: "deepseek-7b",
+            title: "DeepSeek-7b",
+          },
+          "33b": {
+            model: "deepseek-33b",
+            title: "DeepSeek-33b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["ollama", "lmstudio", "llama.cpp"],
     isOpenSource: true,
   },
   wizardCoder: {
@@ -394,39 +457,6 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "gemini.png",
     providerOptions: ["gemini"],
     isOpenSource: false,
-  },
-  deepseek: {
-    title: "DeepSeek-Coder",
-    description:
-      "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
-    params: {
-      title: "DeepSeek-7b",
-      model: "deepseek-7b",
-      contextLength: 4096,
-    },
-    icon: "deepseek.png",
-    dimensions: [
-      {
-        name: "Parameter Count",
-        description: "The number of parameters in the model",
-        options: {
-          "1b": {
-            model: "deepseek-1b",
-            title: "DeepSeek-1b",
-          },
-          "7b": {
-            model: "deepseek-7b",
-            title: "DeepSeek-7b",
-          },
-          "33b": {
-            model: "deepseek-33b",
-            title: "DeepSeek-33b",
-          },
-        },
-      },
-    ],
-    providerOptions: ["ollama", "lmstudio", "llama.cpp"],
-    isOpenSource: true,
   },
   commandR: {
     title: "Command R",
