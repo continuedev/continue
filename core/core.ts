@@ -143,21 +143,19 @@ export class Core {
       );
 
       // Index on initialization
-      this.ide
-        .getWorkspaceDirs()
-        .then(async (dirs) => {
-          // Respect pauseCodebaseIndexOnStart user settings
-          if (ideSettings.pauseCodebaseIndexOnStart) {
-            await this.messenger.request("indexProgress", {
-              progress: 100,
-              desc: "Initial Indexing Skipped",
-              status: "paused",
-            });
-            return;
-          }
+      this.ide.getWorkspaceDirs().then(async (dirs) => {
+        // Respect pauseCodebaseIndexOnStart user settings
+        if (ideSettings.pauseCodebaseIndexOnStart) {
+          await this.messenger.request("indexProgress", {
+            progress: 100,
+            desc: "Initial Indexing Skipped",
+            status: "paused",
+          });
+          return;
+        }
 
-          this.refreshCodebaseIndex(dirs);
-        });
+        this.refreshCodebaseIndex(dirs);
+      });
     });
 
     const getLlm = async () => {
@@ -280,8 +278,12 @@ export class Core {
         return;
       }
 
-      const siteIndexingOptions: SiteIndexingConfig[] = ((mProvider) =>
-        mProvider?.options?.sites || [])({ ...provider });
+      const siteIndexingOptions: SiteIndexingConfig[] = ((mProvider) => [
+        ...new Set([
+          ...(mProvider?.options?.sites || []),
+          ...(config.docs || []),
+        ]),
+      ])({ ...provider });
 
       for (const site of siteIndexingOptions) {
         await this.getEmbeddingsProviderAndIndexDoc(site, msg.data.reIndex);
@@ -294,6 +296,7 @@ export class Core {
       const items = config.contextProviders
         ?.find((provider) => provider.description.title === msg.data.title)
         ?.loadSubmenuItems({
+          config,
           ide: this.ide,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),

@@ -167,7 +167,9 @@ class DocsContextProvider extends BaseContextProvider {
   ): Promise<ContextSubmenuItem[]> {
     const ideInfo = await args.ide.getIdeInfo();
     const isJetBrains = ideInfo.ideType === "jetbrains";
-    const configSites = this.options?.sites || [];
+    const configSites = [
+      ...new Set([...(this.options?.sites || []), ...(args.config.docs || [])]),
+    ];
     const submenuItemsMap = new Map<string, ContextSubmenuItem>();
 
     if (!isJetBrains) {
