@@ -99,7 +99,7 @@ async function resolveEditorContent(
   let contextItemsText = "";
   let contextItems: ContextItemWithId[] = [];
   for (const item of contextItemAttrs) {
-  const data = {
+    const data = {
       name: item.itemType === "contextProvider" ? item.id : item.itemType,
       query: item.query,
       fullInput: stripImages(parts),
