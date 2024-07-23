@@ -109,11 +109,8 @@ const IndexingProgressBar = ({
   }, [paused]);
 
   function getIndexingErrMsg(msg: string): string {
-    if (
-      isJetBrains() &&
-      embeddingsProvider === TransformersJsEmbeddingsProvider.model
-    ) {
-      return "The 'transformers.js' embeddingsProvider is currently unsupported in JetBrains. To enable codebase indexing, you can use any of the other providers described in the docs: https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers";
+    if (isJetBrains() && embeddingsProvider === "all-MiniLM-L6-v2") {
+      return "The 'transformers.js' embeddingsProvider is currently unsupported in JetBrains. To enable codebase indexing, you can use any of the other providers described in the docs: https://docs.continue.dev/features/codebase-embeddings#embeddings-providers";
     }
     return msg;
   }
