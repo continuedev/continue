@@ -143,21 +143,19 @@ export class Core {
       );
 
       // Index on initialization
-      this.ide
-        .getWorkspaceDirs()
-        .then(async (dirs) => {
-          // Respect pauseCodebaseIndexOnStart user settings
-          if (ideSettings.pauseCodebaseIndexOnStart) {
-            await this.messenger.request("indexProgress", {
-              progress: 100,
-              desc: "Initial Indexing Skipped",
-              status: "paused",
-            });
-            return;
-          }
+      this.ide.getWorkspaceDirs().then(async (dirs) => {
+        // Respect pauseCodebaseIndexOnStart user settings
+        if (ideSettings.pauseCodebaseIndexOnStart) {
+          await this.messenger.request("indexProgress", {
+            progress: 100,
+            desc: "Initial Indexing Skipped",
+            status: "paused",
+          });
+          return;
+        }
 
-          this.refreshCodebaseIndex(dirs);
-        });
+        this.refreshCodebaseIndex(dirs);
+      });
     });
 
     const getLlm = async () => {
@@ -294,6 +292,7 @@ export class Core {
       const items = config.contextProviders
         ?.find((provider) => provider.description.title === msg.data.title)
         ?.loadSubmenuItems({
+          config,
           ide: this.ide,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),

@@ -137,6 +137,7 @@ export interface ContextProviderExtras {
 }
 
 export interface LoadSubmenuItemsArgs {
+  config: ContinueConfig;
   ide: IDE;
   fetch: FetchFunction;
 }
@@ -422,8 +423,8 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
-  pauseCodebaseIndexOnStart: boolean
-  enableDebugLogs: boolean
+  pauseCodebaseIndexOnStart: boolean;
+  enableDebugLogs: boolean;
 }
 
 export interface IDE {
@@ -948,6 +949,7 @@ export interface ContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: Reranker;
   experimental?: ExperimentalConfig;
+  docs?: SiteIndexingConfig[];
 }
 
 export interface BrowserSerializedContinueConfig {
