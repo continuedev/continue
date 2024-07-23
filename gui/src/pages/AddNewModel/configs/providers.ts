@@ -262,8 +262,9 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
     ],
     packages: [
-      models.llama370bChat,
-      models.llama38bChat,
+      models.llama31405bChat,
+      models.llama3170bChat,
+      models.llama318bChat,
       { ...models.mixtralTrial, title: "Mixtral" },
       models.llama270bChat,
       {
@@ -300,7 +301,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.llama3Chat,
+      models.llama31Chat,
       models.codeLlamaInstruct,
       models.mistralOs,
     ].map((p) => {
@@ -464,7 +465,8 @@ After it's up and running, you can start using Continue.`,
     icon: "openai.png",
     tags: [ModelProviderTags.Free],
     packages: [
-      models.codellama70bTrial,
+      models.llama31405bTrial,
+      models.llama3170bTrial,
       { ...models.claude35Sonnet, title: "Claude 3.5 Sonnet (trial)" },
       { ...models.gpt4o, title: "GPT-4o (trial)" },
       { ...models.gpt35turbo, title: "GPT-3.5-Turbo (trial)" },

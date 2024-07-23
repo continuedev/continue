@@ -155,11 +155,6 @@ const deepseekFimTemplate: AutocompleteTemplate = {
   },
 };
 
-const deepseekFimTemplateWrongPipeChar: AutocompleteTemplate = {
-  template: "<|fim▁begin|>{{{prefix}}}<|fim▁hole|>{{{suffix}}}<|fim▁end|>",
-  completionOptions: { stop: ["<|fim▁begin|>", "<|fim▁hole|>", "<|fim▁end|>"] },
-};
-
 const gptAutocompleteTemplate: AutocompleteTemplate = {
   template: `\`\`\`
 {{{prefix}}}[BLANK]{{{suffix}}}

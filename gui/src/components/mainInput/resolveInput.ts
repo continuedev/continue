@@ -7,7 +7,6 @@ import {
   RangeInFile,
 } from "core";
 import { stripImages } from "core/llm/countTokens";
-import { getBasename, getRelativePath } from "core/util";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 
 interface MentionAttrs {
@@ -99,7 +98,7 @@ async function resolveEditorContent(
   let contextItemsText = "";
   let contextItems: ContextItemWithId[] = [];
   for (const item of contextItemAttrs) {
-  const data = {
+    const data = {
       name: item.itemType === "contextProvider" ? item.id : item.itemType,
       query: item.query,
       fullInput: stripImages(parts),
