@@ -14,6 +14,9 @@ class Groq extends OpenAI {
     gemma: "gemma-7b-it",
     "llama3-8b": "llama3-8b-8192",
     "llama3-70b": "llama3-70b-8192",
+    "llama3.1-8b": "llama-3.1-8b-instant",
+    "llama3.1-70b": "llama-3.1-70b-versatile",
+    "llama3.1-405b": "llama-3.1-405b-reasoning",
   };
   protected _convertModelName(model: string): string {
     return Groq.modelConversion[model] ?? model;
