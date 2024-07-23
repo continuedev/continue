@@ -66,7 +66,7 @@ You can use commercial LLMs via APIs using:
 - [Azure OpenAI Service](../reference/Model%20Providers/openai.md)
 - [Google Gemini API](../reference/Model%20Providers/geminiapi.md)
 - [Mistral API](../reference/Model%20Providers/mistral.md)
-- [Voyage AI API](../walkthroughs/codebase-embeddings.md#openai)
+- [Voyage AI API](../features/codebase-embeddings.md#openai)
 - [Cohere API](../reference/Model%20Providers/cohere.md)
 
 **In addition to selecting providers, you will need to figure out [what models to use](./select-model.md).**

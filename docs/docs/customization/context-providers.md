@@ -60,7 +60,7 @@ Type '@open' to reference the contents of all of your open files. Set `onlyPinne
 
 ### Codebase Retrieval
 
-Type '@codebase' to automatically retrieve the most relevant snippets from your codebase. Read more about indexing and retrieval [here](../walkthroughs/codebase-embeddings.md).
+Type '@codebase' to automatically retrieve the most relevant snippets from your codebase. Read more about indexing and retrieval [here](../features/codebase-embeddings.md).
 
 ```json
 { "name": "codebase" }
@@ -498,9 +498,7 @@ Continue exposes an API for registering context providers from a 3rd party VSCod
 
 ```json
 {
-  "extensionDependencies": [
-    "continue.continue"
-  ],
+  "extensionDependencies": ["continue.continue"]
 }
 ```
 
@@ -513,7 +511,6 @@ Here is an example:
 import * as vscode from "vscode";
 
 class MyCustomProvider implements IContextProvider {
-
   get description(): ContextProviderDescription {
     return {
       title: "custom",
@@ -525,7 +522,7 @@ class MyCustomProvider implements IContextProvider {
 
   async getContextItems(
     query: string,
-    extras: ContextProviderExtras
+    extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     return [
       {
@@ -537,7 +534,7 @@ class MyCustomProvider implements IContextProvider {
   }
 
   async loadSubmenuItems(
-    args: LoadSubmenuItemsArgs
+    args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     return [];
   }
@@ -554,5 +551,4 @@ const continueApi = continueExt?.exports;
 
 // register your custom provider
 continueApi?.registerCustomContextProvider(customProvider);
-
 ```
