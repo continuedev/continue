@@ -374,7 +374,7 @@ export const models: { [key: string]: ModelPackage } = {
     params: {
       title: "Gemini 1.5 Pro",
       model: "gemini-1.5-pro-latest",
-      contextLength: 1_000_000,
+      contextLength: 2_000_000,
       apiKey: "<API_KEY>",
     },
     icon: "gemini.png",
