@@ -220,12 +220,12 @@ export async function walkDir(
   for await (const e of dfsWalker.walk()) {
     relativePaths.push(e);
   }
-  if (options?.returnRelativePaths) {
-    return relativePaths;
-  }
+
   const pathSep = await ide.pathSep();
+  const prefix = options.returnRelativePaths ? "" : (path + pathSep);
+  
   if (pathSep === "/") {
-    return relativePaths.map((p) => path + pathSep + p);
+    return relativePaths.map((p) => prefix + p);
   }
-  return relativePaths.map((p) => path + pathSep + p.split("/").join(pathSep));
+  return relativePaths.map((p) => prefix + p.split("/").join(pathSep));
 }
