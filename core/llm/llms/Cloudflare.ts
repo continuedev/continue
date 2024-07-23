@@ -38,7 +38,6 @@ export default class Cloudflare extends BaseLLM {
     });
 
     for await (const value of streamSse(resp)) {
-      console.log(value);
       if (value.choices?.[0]?.delta?.content) {
         yield value.choices[0].delta;
       }
