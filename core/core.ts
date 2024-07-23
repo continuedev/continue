@@ -278,8 +278,12 @@ export class Core {
         return;
       }
 
-      const siteIndexingOptions: SiteIndexingConfig[] = ((mProvider) =>
-        mProvider?.options?.sites || [])({ ...provider });
+      const siteIndexingOptions: SiteIndexingConfig[] = ((mProvider) => [
+        ...new Set([
+          ...(mProvider?.options?.sites || []),
+          ...(config.docs || []),
+        ]),
+      ])({ ...provider });
 
       for (const site of siteIndexingOptions) {
         await this.getEmbeddingsProviderAndIndexDoc(site, msg.data.reIndex);
