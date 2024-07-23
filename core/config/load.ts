@@ -59,6 +59,8 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
+import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
+
 const { execSync } = require("child_process");
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
@@ -347,8 +349,15 @@ async function intermediateToFinalConfig(
     ).filter((x) => x !== undefined) as BaseLLM[];
   }
 
+  // These context providers are always included, regardless of what, if anything,
+  // the user has configured in config.json
+  const DEFAULT_CONTEXT_PROVIDERS = [
+    new FileContextProvider({}),
+    new CodebaseContextProvider({}),
+  ];
+
   // Context providers
-  const contextProviders: IContextProvider[] = [new FileContextProvider({})];
+  const contextProviders: IContextProvider[] = DEFAULT_CONTEXT_PROVIDERS;
   for (const provider of config.contextProviders || []) {
     if (isContextProviderWithParams(provider)) {
       const cls = contextProviderClassFromName(provider.name) as any;
