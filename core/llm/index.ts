@@ -54,7 +54,7 @@ export abstract class BaseLLM implements ILLM {
   }
 
   supportsImages(): boolean {
-    return modelSupportsImages(this.providerName, this.model, this.title, this.capability); // todo TA
+    return modelSupportsImages(this.providerName, this.model, this.title, this.capability);
   }
 
   supportsCompletions(): boolean {
