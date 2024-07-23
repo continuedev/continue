@@ -1,7 +1,6 @@
 import { ContextProviderName } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
 import CodeContextProvider from "./CodeContextProvider.js";
-import CodebaseContextProvider from "./CodebaseContextProvider.js";
 import CurrentFileContextProvider from "./CurrentFileContextProvider.js";
 import DatabaseContextProvider from "./DatabaseContextProvider.js";
 import DiffContextProvider from "./DiffContextProvider.js";
@@ -40,7 +39,6 @@ const Providers: (typeof BaseContextProvider)[] = [
   HttpContextProvider,
   SearchContextProvider,
   OSContextProvider,
-  CodebaseContextProvider,
   ProblemsContextProvider,
   FolderContextProvider,
   DocsContextProvider,

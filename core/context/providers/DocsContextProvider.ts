@@ -157,7 +157,10 @@ class DocsContextProvider extends BaseContextProvider {
         name: "Instructions",
         description: "Instructions",
         content:
-          "Use the above documentation to answer the following question. You should not reference anything outside of what is shown, unless it is a commonly known concept. Reference URLs whenever possible using markdown formatting. If there isn't enough information to answer the question, suggest where the user might look to learn more.",
+          "Use the above documentation to answer the following question. You should not reference " +
+          "anything outside of what is shown, unless it is a commonly known concept. Reference URLs " +
+          "whenever possible using markdown formatting. If there isn't enough information to answer " +
+          "the question, suggest where the user might look to learn more.",
       },
     ];
   }
