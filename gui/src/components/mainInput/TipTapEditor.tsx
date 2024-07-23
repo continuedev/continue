@@ -732,6 +732,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             defaultModel.provider,
             defaultModel.model,
             defaultModel.title,
+            defaultModel.capability
           )
         ) {
           return;
@@ -780,6 +781,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           defaultModel.provider,
           defaultModel.model,
           defaultModel.title,
+          defaultModel.capability
         ) && (
           <>
             <HoverDiv></HoverDiv>
