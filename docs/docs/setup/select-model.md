@@ -75,7 +75,7 @@ _You can also use other autocomplete models by adding them to your `config.json`
 
 ## Embeddings
 
-We recommend the following embeddings models, which are used for codebase retrieval as described [here](../walkthroughs/codebase-embeddings.md#embeddings-providers)
+We recommend the following embeddings models, which are used for codebase retrieval as described [here](../features/codebase-embeddings.md#embeddings-providers)
 
 ### Open-source models
 
