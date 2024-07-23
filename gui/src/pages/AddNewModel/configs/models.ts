@@ -76,7 +76,7 @@ export const models: { [key: string]: ModelPackage } = {
     ],
     isOpenSource: true,
   },
-  codellama70bTrial: {
+  llama3170bTrial: {
     title: "Codellama 70b (Free Trial)",
     description:
       "The best code model from Meta, fine-tuned for code generation and conversation",
@@ -90,13 +90,13 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["free-trial"],
     isOpenSource: false,
   },
-  llama3405bTrial: {
-    title: "Llama3 405b (Free Trial)",
+  llama31405bTrial: {
+    title: "Llama3.1 405b (Free Trial)",
     description: "The latest Llama model from Meta, fine-tuned for chat",
     refUrl: "",
     params: {
-      title: "Llama3-405b",
-      model: "llama3-405b",
+      title: "Llama3.1-405b",
+      model: "llama3.1-405b",
       contextLength: 8192,
     },
     icon: "meta.png",
@@ -143,13 +143,39 @@ export const models: { [key: string]: ModelPackage } = {
     providerOptions: ["groq"],
     isOpenSource: false,
   },
-  llama3405bChat: {
-    title: "Llama3 405b Chat",
+  llama318bChat: {
+    title: "Llama3.1 8b Chat",
     description: "The latest Llama model from Meta, fine-tuned for chat",
     refUrl: "",
     params: {
-      title: "Llama3-405b",
-      model: "llama3-405b",
+      title: "Llama3.1-8b",
+      model: "llama3.1-8b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    providerOptions: ["groq"],
+    isOpenSource: false,
+  },
+  llama3170bChat: {
+    title: "Llama3.1 70b Chat",
+    description: "The latest Llama model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.1-70b",
+      model: "llama3.1-70b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    providerOptions: ["groq"],
+    isOpenSource: false,
+  },
+  llama31405bChat: {
+    title: "Llama3.1 405b Chat",
+    description: "The latest Llama model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.1-405b",
+      model: "llama3.1-405b",
       contextLength: 8192,
     },
     icon: "meta.png",
@@ -168,6 +194,45 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "meta.png",
     providerOptions: ["groq"],
     isOpenSource: false,
+  },
+  llama31Chat: {
+    title: "Llama3.1 Chat",
+    description: "The latest model from Meta, fine-tuned for chat",
+    refUrl: "",
+    params: {
+      title: "Llama3.1-8b",
+      model: "llama3.1-8b",
+      contextLength: 8192,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "8b": {
+            model: "llama3.1-8b",
+            title: "Llama3.1-8b",
+          },
+          "70b": {
+            model: "llama3.1-70b",
+            title: "Llama3.1-70b",
+          },
+          "405b": {
+            model: "llama3.1-405b",
+            title: "Llama3.1-405b",
+          },
+        },
+      },
+    ],
+    providerOptions: [
+      "ollama",
+      "lmstudio",
+      "together",
+      "llama.cpp",
+      "replicate",
+    ],
+    isOpenSource: true,
   },
   llama3Chat: {
     title: "Llama3 Chat",
@@ -191,10 +256,6 @@ export const models: { [key: string]: ModelPackage } = {
           "70b": {
             model: "llama3-70b",
             title: "Llama3-70b",
-          },
-          "405b": {
-            model: "llama3-405b",
-            title: "Llama3-405b",
           },
         },
       },
