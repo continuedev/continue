@@ -126,6 +126,12 @@ describe("walkDir", () => {
     await expectPaths(["a.txt", "b.py"], ["no.txt"]);
   });
 
+  test("should not ignore leading slash when in subfolder", async () => {
+    const files = [[".gitignore", "/no.txt"], "a.txt", "b.py", "no.txt", "sub/", "sub/no.txt"];
+    addToTestDir(files);
+    await expectPaths(["a.txt", "b.py", "sub/no.txt"], ["no.txt"]);
+  });
+
   test("should handle multiple .gitignore files in nested structure", async () => {
     const files = [
       [".gitignore", "*.txt"],
@@ -218,7 +224,7 @@ describe("walkDir", () => {
     await expectPaths(
       ["d", "d/g"],
       ["a.txt", "b.py", "c.ts", "d/e.txt", "d/f.py", "d/g/h.ts"],
-      { onlyDirs: true, includeEmpty: true },
+      { onlyDirs: true },
     );
   });
 
