@@ -7,7 +7,6 @@ import {
   RangeInFile,
 } from "core";
 import { stripImages } from "core/llm/countTokens";
-import { getBasename, getRelativePath } from "core/util";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 
 interface MentionAttrs {
