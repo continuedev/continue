@@ -3,7 +3,6 @@ import {
   ChatBubbleOvalLeftIcon,
   CodeBracketSquareIcon,
   ExclamationTriangleIcon,
-  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { JSONContent } from "@tiptap/react";
 import { InputModifiers } from "core";
@@ -40,9 +39,9 @@ import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   clearLastResponse,
+  deleteMessage,
   newSession,
   setInactive,
-  deleteMessage,
 } from "../redux/slices/stateSlice";
 import {
   setDialogEntryOn,
@@ -58,7 +57,6 @@ import {
 } from "../util";
 import { FREE_TRIAL_LIMIT_REQUESTS } from "../util/freeTrial";
 import { getLocalStorage, setLocalStorage } from "../util/localStorage";
-import Logo from "../components/Logo";
 
 const TopGuiDiv = styled.div`
   overflow-y: scroll;
@@ -142,9 +140,11 @@ const ThreadHead = styled.div`
   margin: 18px 6px 0 6px;
 `;
 
+const THREAD_AVATAR_SIZE = 15;
+
 const ThreadAvatar = styled.div`
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background-color: rgba(248, 248, 248, 0.75);
   color: #000;
@@ -399,47 +399,22 @@ function GUI() {
                     }}
                   >
                     {item.message.role === "user" ? (
-                      <div className="thread-message">
-                        <ThreadHead>
-                          <ThreadAvatar>
-                            <Logo height={19} width={19} />
-                          </ThreadAvatar>
-                          <div>
-                            <ThreadUserTitle>Continue</ThreadUserTitle>
-                            <ThreadUserName>User</ThreadUserName>
-                          </div>
-                        </ThreadHead>
-                        <ContinueInputBox
-                          onEnter={async (editorState, modifiers) => {
-                            streamResponse(
-                              editorState,
-                              modifiers,
-                              ideMessenger,
-                              index,
-                            );
-                          }}
-                          isLastUserInput={isLastUserInput(index)}
-                          isMainInput={false}
-                          editorState={item.editorState}
-                          contextItems={item.contextItems}
-                        ></ContinueInputBox>
-                      </div>
+                      <ContinueInputBox
+                        onEnter={async (editorState, modifiers) => {
+                          streamResponse(
+                            editorState,
+                            modifiers,
+                            ideMessenger,
+                            index,
+                          );
+                        }}
+                        isLastUserInput={isLastUserInput(index)}
+                        isMainInput={false}
+                        editorState={item.editorState}
+                        contextItems={item.contextItems}
+                      ></ContinueInputBox>
                     ) : (
                       <div className="thread-message">
-                        <ThreadHead>
-                          <ThreadAvatar>
-                            <SparklesIcon height={20} width={20} />
-                          </ThreadAvatar>
-                          <div>
-                            <ThreadUserTitle>
-                              {item.message.role}
-                            </ThreadUserTitle>
-                            <ThreadUserName>
-                              {item.promptLogs?.[0]?.completionOptions?.model ??
-                                "Agent"}
-                            </ThreadUserName>
-                          </div>
-                        </ThreadHead>
                         <TimelineItem
                           item={item}
                           iconElement={
@@ -504,7 +479,13 @@ function GUI() {
                                 "*",
                               );
                             }}
-                            onDelete={() => {dispatch(deleteMessage(index))}}
+                            onDelete={() => {
+                              dispatch(deleteMessage(index));
+                            }}
+                            subtext={
+                              item.promptLogs?.[0]?.completionOptions?.model ??
+                              ""
+                            }
                           />
                         </TimelineItem>
                       </div>
