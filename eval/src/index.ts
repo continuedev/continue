@@ -35,7 +35,14 @@ async function testStrategy(
       path.join(dirForRepo(test.repo), file),
     );
 
-    console.log(chalk.green(`expectedFiles files: ${expectedFiles}`));
+    console.log("\n");
+
+    console.log(chalk.green("Expected files: "));
+    for (const expectedFile of expectedFiles) {
+      console.log(chalk.white(`    - ${expectedFile}`));
+    }
+
+    console.log("\n");
 
     const acc = accuracy(results, expectedFiles);
     console.log(chalk.green(`Accuracy: ${acc}`));
