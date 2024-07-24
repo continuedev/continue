@@ -98,7 +98,7 @@ const ContextItemsPeek = (props: ContextItemsPeekProps) => {
             style={{ color: lightGray }}
           ></ChevronDownIcon>
         )}
-        Context Used
+        <span className="ms-1">Context Used</span>
       </div>
       {open && (
         <div

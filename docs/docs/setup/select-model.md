@@ -87,4 +87,4 @@ We recommend the following embeddings models, which are used for codebase retrie
 
 _You can also use other embeddings models by adding them to your `config.json`._
 
-**In addition to selecting models, you will need to figure out [what providers to use](./select-provider.md).**
+**In addition to selecting models, you will need to figure out [what model providers to use](./model-providers.md).**

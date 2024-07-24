@@ -80,6 +80,7 @@ export type ToIdeFromWebviewOrCoreProtocol = {
     { silent: boolean },
     ControlPlaneSessionInfo | undefined,
   ];
+  logoutOfControlPlane: [undefined, void];
   pathSep: [undefined, string];
 };
 

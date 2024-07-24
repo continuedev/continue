@@ -147,4 +147,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "profiles/switch": [{ id: string }, undefined];
+
+  "auth/getAuthUrl": [undefined, { url: string }];
 };

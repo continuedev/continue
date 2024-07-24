@@ -8,6 +8,7 @@ import { ContextMenuConfig, IDE } from "core";
 import { CompletionProvider } from "core/autocomplete/completionProvider";
 import { ConfigHandler } from "core/config/ConfigHandler";
 import { ContinueServerClient } from "core/continueServer/stubs/client";
+import { Core } from "core/core";
 import { GlobalContext } from "core/util/GlobalContext";
 import { getConfigJsonPath, getDevDataFilePath } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
@@ -25,7 +26,6 @@ import { VerticalPerLineDiffManager } from "./diff/verticalPerLine/manager";
 import { QuickEdit, QuickEditShowParams } from "./quickEdit/QuickEditQuickPick";
 import { Battery } from "./util/battery";
 import type { VsCodeWebviewProtocol } from "./webviewProtocol";
-import { Core } from "core/core";
 
 let fullScreenPanel: vscode.WebviewPanel | undefined;
 
@@ -182,7 +182,7 @@ const commandsMap: (
   continueServerClientPromise,
   battery,
   quickEdit,
-  core
+  core,
 ) => {
   /**
    * Streams an inline edit to the vertical diff manager.
@@ -288,11 +288,14 @@ const commandsMap: (
     "continue.toggleAuxiliaryBar": () => {
       vscode.commands.executeCommand("workbench.action.toggleAuxiliaryBar");
     },
+    "continue.codebaseForceReIndex": async () => {
+      core.invoke("index/forceReIndex", undefined);
+    },
     "continue.docsIndex": async () => {
-      core.invoke("context/indexDocs", {reIndex: false});
+      core.invoke("context/indexDocs", { reIndex: false });
     },
     "continue.docsReIndex": async () => {
-      core.invoke("context/indexDocs", {reIndex: true});
+      core.invoke("context/indexDocs", { reIndex: true });
     },
     "continue.focusContinueInput": async () => {
       const fullScreenTab = getFullScreenTab();
@@ -573,12 +576,18 @@ const commandsMap: (
 
       const config = vscode.workspace.getConfiguration("continue");
       const quickPick = vscode.window.createQuickPick();
-      const selected = new GlobalContext().get("selectedTabAutocompleteModel");
-      const autocompleteModelTitles = ((
-        await configHandler.loadConfig()
-      ).tabAutocompleteModels
-        ?.map((model) => model.title)
-        .filter((t) => t !== undefined) || []) as string[];
+      const autocompleteModels =
+        (await configHandler.loadConfig())?.tabAutocompleteModels ?? [];
+      const autocompleteModelTitles = autocompleteModels
+        .map((model) => model.title)
+        .filter((t) => t !== undefined) as string[];
+      let selected = new GlobalContext().get("selectedTabAutocompleteModel");
+      if (
+        !selected ||
+        !autocompleteModelTitles.some((title) => title === selected)
+      ) {
+        selected = autocompleteModelTitles[0];
+      }
 
       // Toggle between Disabled, Paused, and Enabled
       const pauseOnBattery =
@@ -593,8 +602,8 @@ const commandsMap: (
           currentStatus === StatusBarStatus.Paused
             ? StatusBarStatus.Enabled
             : currentStatus === StatusBarStatus.Disabled
-            ? StatusBarStatus.Paused
-            : StatusBarStatus.Disabled;
+              ? StatusBarStatus.Paused
+              : StatusBarStatus.Disabled;
       } else {
         // Toggle between Disabled and Enabled
         targetStatus =
@@ -691,7 +700,7 @@ export function registerAllCommands(
       continueServerClientPromise,
       battery,
       quickEdit,
-      core
+      core,
     ),
   )) {
     context.subscriptions.push(

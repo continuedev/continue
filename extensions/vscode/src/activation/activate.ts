@@ -1,10 +1,9 @@
-import { getTsConfigPath, getContinueRcPath, migrate } from "core/util/paths";
+import { getContinueRcPath, getTsConfigPath, migrate } from "core/util/paths";
 import { Telemetry } from "core/util/posthog";
 import path from "node:path";
 import * as vscode from "vscode";
 import { VsCodeExtension } from "../extension/VsCodeExtension";
 import registerQuickFixProvider from "../lang-server/codeActions";
-import { WorkOsAuthProvider } from "../stubs/WorkOsAuthProvider";
 import { getExtensionVersion } from "../util/util";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeContinueApi } from "./api";
@@ -18,11 +17,6 @@ export async function activateExtension(context: vscode.ExtensionContext) {
   // Register commands and providers
   registerQuickFixProvider();
   setupInlineTips(context);
-
-  // Register auth provider
-  const workOsAuthProvider = new WorkOsAuthProvider(context);
-  await workOsAuthProvider.initialize();
-  context.subscriptions.push(workOsAuthProvider);
 
   const vscodeExtension = new VsCodeExtension(context);
 

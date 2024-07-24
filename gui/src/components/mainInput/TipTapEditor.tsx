@@ -53,6 +53,7 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
+import { usePostHog } from "posthog-js/react";
 
 const InputBoxDiv = styled.div`
   resize: none;
@@ -80,7 +81,8 @@ const InputBoxDiv = styled.div`
     color: ${lightGray}cc;
   }
 
-  position: relative;
+  display: flex;
+  flex-direction: column;
 `;
 
 const HoverDiv = styled.div`
@@ -151,6 +153,8 @@ function TipTapEditor(props: TipTapEditorProps) {
   const useActiveFile = useSelector(selectUseActiveFile);
 
   const { saveSession } = useHistory(dispatch);
+
+  const posthog = usePostHog();
 
   const inSubmenuRef = useRef<string | undefined>(undefined);
   const inDropdownRef = useRef(false);
@@ -285,10 +289,13 @@ function TipTapEditor(props: TipTapEditorProps) {
               return true;
             },
             "Alt-Enter": () => {
+              posthog.capture("gui_use_active_file_enter");
+
               onEnterRef.current({
                 useCodebase: false,
                 noContext: useActiveFile,
               });
+
               return true;
             },
             "Cmd-Backspace": () => {

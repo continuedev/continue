@@ -152,11 +152,11 @@ jobs:
         id: artifact
         shell: bash
         run: |
-          cd ${{ github.workspace }}/extensions/intellij/build/distributions
+          cd ../../extensions/intellij/build/distributions
           FILENAME=`ls *.zip`
           unzip "$FILENAME" -d content
 
-          echo "filename=${FILENAME:0:-4}" >> $GITHUB_OUTPUT
+          echo "filename=${FILENAME%.????}" >> $GITHUB_OUTPUT
 
       # Store already-built plugin as an artifact for downloading
       - name: Upload artifact

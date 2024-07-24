@@ -6,6 +6,7 @@ import type {
   IContextProvider,
   LoadSubmenuItemsArgs,
 } from "../index.js";
+
 export abstract class BaseContextProvider implements IContextProvider {
   options: { [key: string]: any };
 

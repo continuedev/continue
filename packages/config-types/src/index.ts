@@ -176,6 +176,15 @@ export const rerankerSchema = z.object({
 export type Reranker = z.infer<typeof rerankerSchema>;
 
 export const analyticsSchema = z.object({
+  provider: z.enum([
+    "posthog",
+    "amplitude",
+    "segment",
+    "elastic",
+    "mixpanel",
+    "splunk",
+    "datadog",
+  ]),
   url: z.string().optional(),
   clientKey: z.string().optional(),
 });
@@ -185,6 +194,14 @@ export const devDataSchema = z.object({
   url: z.string().optional(),
 });
 export type DevData = z.infer<typeof devDataSchema>;
+
+export const siteIndexingConfigSchema = z.object({
+  startUrl: z.string(),
+  rootUrl: z.string(),
+  title: z.string(),
+  maxDepth: z.string().optional(),
+  faviconUrl: z.string().optional(),
+});
 
 export const configJsonSchema = z.object({
   models: z.array(modelDescriptionSchema),
@@ -203,5 +220,6 @@ export const configJsonSchema = z.object({
   disableIndexing: z.boolean().optional(),
   tabAutocompleteOptions: tabAutocompleteOptionsSchema.optional(),
   ui: uiOptionsSchema.optional(),
+  docs: z.array(siteIndexingConfigSchema).optional(),
 });
 export type ConfigJson = z.infer<typeof configJsonSchema>;

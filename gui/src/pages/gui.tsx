@@ -39,6 +39,7 @@ import { useWebviewListener } from "../hooks/useWebviewListener";
 import { defaultModelSelector } from "../redux/selectors/modelSelectors";
 import {
   clearLastResponse,
+  deleteMessage,
   newSession,
   setInactive,
 } from "../redux/slices/stateSlice";
@@ -103,14 +104,21 @@ const StepsDiv = styled.div`
   //   z-index: 0;
   //   bottom: 12px;
   // }
+
+  .thread-message {
+    margin: 16px 8px 0 8px;
+  }
+  .thread-message:not(:first-child) {
+    border-top: 1px solid ${lightGray}22;
+  }
 `;
 
 const NewSessionButton = styled.div`
   width: fit-content;
   margin-right: auto;
-  margin-left: 8px;
-  margin-top: 4px;
-
+  margin-left: 6px;
+  margin-top: 2px;
+  margin-bottom: 8px;
   font-size: ${getFontSize() - 2}px;
 
   border-radius: ${defaultBorderRadius};
@@ -123,6 +131,38 @@ const NewSessionButton = styled.div`
   }
 
   cursor: pointer;
+`;
+
+const ThreadHead = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 18px 6px 0 6px;
+`;
+
+const THREAD_AVATAR_SIZE = 15;
+
+const ThreadAvatar = styled.div`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background-color: rgba(248, 248, 248, 0.75);
+  color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(136, 136, 136, 0.3);
+`;
+
+const ThreadUserTitle = styled.div`
+  text-transform: capitalize;
+  font-weight: 500;
+  margin-bottom: 2px;
+`;
+
+const ThreadUserName = styled.div`
+  font-size: ${getFontSize() - 3}px;
+  color: ${lightGray};
 `;
 
 function fallbackRender({ error, resetErrorBoundary }) {
@@ -374,70 +414,81 @@ function GUI() {
                         contextItems={item.contextItems}
                       ></ContinueInputBox>
                     ) : (
-                      <TimelineItem
-                        item={item}
-                        iconElement={
-                          false ? (
-                            <CodeBracketSquareIcon width="16px" height="16px" />
-                          ) : false ? (
-                            <ExclamationTriangleIcon
-                              width="16px"
-                              height="16px"
-                              color="red"
-                            />
-                          ) : (
-                            <ChatBubbleOvalLeftIcon
-                              width="16px"
-                              height="16px"
-                            />
-                          )
-                        }
-                        open={
-                          typeof stepsOpen[index] === "undefined"
-                            ? false
-                              ? false
-                              : true
-                            : stepsOpen[index]!
-                        }
-                        onToggle={() => {}}
-                      >
-                        <StepContainer
-                          index={index}
-                          isLast={index === sessionState.history.length - 1}
-                          isFirst={index === 0}
+                      <div className="thread-message">
+                        <TimelineItem
+                          item={item}
+                          iconElement={
+                            false ? (
+                              <CodeBracketSquareIcon
+                                width="16px"
+                                height="16px"
+                              />
+                            ) : false ? (
+                              <ExclamationTriangleIcon
+                                width="16px"
+                                height="16px"
+                                color="red"
+                              />
+                            ) : (
+                              <ChatBubbleOvalLeftIcon
+                                width="16px"
+                                height="16px"
+                              />
+                            )
+                          }
                           open={
                             typeof stepsOpen[index] === "undefined"
-                              ? true
+                              ? false
+                                ? false
+                                : true
                               : stepsOpen[index]!
                           }
-                          key={index}
-                          onUserInput={(input: string) => {}}
-                          item={item}
-                          onReverse={() => {}}
-                          onRetry={() => {
-                            streamResponse(
-                              state.history[index - 1].editorState,
-                              state.history[index - 1].modifiers ??
-                                defaultInputModifiers,
-                              ideMessenger,
-                              index - 1,
-                            );
-                          }}
-                          onContinueGeneration={() => {
-                            window.postMessage(
-                              {
-                                messageType: "userInput",
-                                data: {
-                                  input:
-                                    "Continue your response exactly where you left off:",
+                          onToggle={() => {}}
+                        >
+                          <StepContainer
+                            index={index}
+                            isLast={index === sessionState.history.length - 1}
+                            isFirst={index === 0}
+                            open={
+                              typeof stepsOpen[index] === "undefined"
+                                ? true
+                                : stepsOpen[index]!
+                            }
+                            key={index}
+                            onUserInput={(input: string) => {}}
+                            item={item}
+                            onReverse={() => {}}
+                            onRetry={() => {
+                              streamResponse(
+                                state.history[index - 1].editorState,
+                                state.history[index - 1].modifiers ??
+                                  defaultInputModifiers,
+                                ideMessenger,
+                                index - 1,
+                              );
+                            }}
+                            onContinueGeneration={() => {
+                              window.postMessage(
+                                {
+                                  messageType: "userInput",
+                                  data: {
+                                    input:
+                                      "Continue your response exactly where you left off:",
+                                  },
                                 },
-                              },
-                              "*",
-                            );
-                          }}
-                          onDelete={() => {}}
-                        />
-                      </TimelineItem>
+                                "*",
+                              );
+                            }}
+                            onDelete={() => {
+                              dispatch(deleteMessage(index));
+                            }}
+                            subtext={
+                              item.promptLogs?.[0]?.completionOptions?.model ??
+                              ""
+                            }
+                          />
+                        </TimelineItem>
+                      </div>
                     )}
                   </ErrorBoundary>
                 </Fragment>
