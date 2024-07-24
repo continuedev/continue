@@ -167,10 +167,19 @@ export async function getQueryForFile(
 async function loadLanguageForFileExt(
   fileExtension: string,
 ): Promise<Language> {
+  const dirname = getDirname();
+
+  // When linking this module, we are running from `dist/util` directory
+  const dirPathIfRunningAsLinkedModule = "dist/util";
+
+  const pathToNodeModules = dirname.endsWith(dirPathIfRunningAsLinkedModule)
+    ? "../../node_modules"
+    : "node_modules";
+
   const wasmPath = path.join(
     getDirname(),
     ...(process.env.NODE_ENV === "test"
-      ? ["node_modules", "tree-sitter-wasms", "out"]
+      ? [pathToNodeModules, "tree-sitter-wasms", "out"]
       : ["tree-sitter-wasms"]),
     `tree-sitter-${supportedLanguages[fileExtension]}.wasm`,
   );

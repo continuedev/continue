@@ -6,8 +6,29 @@ const boltonsRepo = "https://github.com/sestinj/boltons";
 const trayracerRepo = "https://github.com/sestinj/trayracer";
 const continueRepo = "https://github.com/continuedev/continue";
 
+export const filepathTestSet: TestSetItem[] = [
+  // This is a valid test because the contents of our Prettier files
+  // do not actually mention the keyword "prettier", they are just
+  // JSON config.
+  {
+    repo: continueRepo,
+    query: "Where is our prettier config?",
+    groundTruthFiles: [".prettierrc", ".prettierignore"],
+  },
+];
+
 // Need a way to specify specific snippets within files
-export const testSet: TestSetItem[] = [
+export const rerankerTestSet: TestSetItem[] = [
+  {
+    repo: amplifiedDevRepo,
+    query: "Where can I find our supporters?",
+    groundTruthFiles: ["supporters.md"],
+  },
+  {
+    repo: amplifiedDevRepo,
+    query: "Where can I find our supporters?",
+    groundTruthFiles: ["supporters.md"],
+  },
   /** https://github.com/continuedev/amplified.dev */
   {
     repo: amplifiedDevRepo,

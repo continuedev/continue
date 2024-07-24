@@ -1,11 +1,16 @@
 import {
   BranchAndDir,
+  Chunk,
   ContextItem,
   ContextProviderExtras,
 } from "../../index.js";
+import { FullTextSearchCodebaseIndex } from "../../indexing/FullTextSearch.js";
 
 import { getRelativePath } from "../../util/index.js";
-import { RetrievalPipelineOptions } from "./pipelines/BaseRetrievalPipeline.js";
+import {
+  RetrievalPipelineOptions,
+  RetrievalPipelineRunArguments,
+} from "./pipelines/BaseRetrievalPipeline.js";
 import NoRerankerRetrievalPipeline from "./pipelines/NoRerankerRetrievalPipeline.js";
 import RerankerRetrievalPipeline from "./pipelines/RerankerRetrievalPipeline.js";
 
@@ -82,7 +87,9 @@ export async function retrieveContextItemsFromEmbeddings(
 
   return [
     ...results.map((r) => {
-      const name = `${getRelativePath(r.filepath, workspaceDirs)} (${r.startLine}-${r.endLine})`;
+      const name = `${getRelativePath(r.filepath, workspaceDirs)} (${
+        r.startLine
+      }-${r.endLine})`;
       const description = `${r.filepath} (${r.startLine}-${r.endLine})`;
       return {
         name,

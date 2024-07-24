@@ -8,16 +8,18 @@
   "scripts": {
     "test": "jest",
     "build": "tsc",
-    "eval": "node dist/index.js"
+    "watch": "tsc --watch",
+    "eval": "export NODE_ENV=test && node dist/index.js"
   },
   "author": "Nate Sesti and Ty Dunn",
   "license": "Apache-2.0",
   "devDependencies": {
+    "@types/node": "^20.14.12",
     "typescript": "^5.5.2"
   },
   "dependencies": {
+    "@continuedev/core": "file:../core",
     "chalk": "^5.3.0",
-    "dotenv": "^16.4.5",
-    "@continuedev/core": "file:../core"
+    "dotenv": "^16.4.5"
   }
 }
