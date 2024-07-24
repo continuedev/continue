@@ -1,5 +1,8 @@
 import { ConfigHandler } from "@continuedev/core/dist/config/ConfigHandler.js";
-import { IRetrievalPipeline } from "@continuedev/core/dist/context/retrieval/pipelines/BaseRetrievalPipeline.js";
+import {
+  IRetrievalPipeline,
+  RetrievalPipelineOptions,
+} from "@continuedev/core/dist/context/retrieval/pipelines/BaseRetrievalPipeline.js";
 import RerankerRetrievalPipeline from "@continuedev/core/dist/context/retrieval/pipelines/RerankerRetrievalPipeline.js";
 import FilepathRetrievalPipeline from "@continuedev/core/dist/context/retrieval/pipelines/FilepathRetrievalPipeline.js";
 import { ControlPlaneClient } from "@continuedev/core/dist/control-plane/client.js";
@@ -39,27 +42,13 @@ async function testStrategy(
   }
 }
 
-async function runRerankerTest(config: ContinueConfig, ide: FileSystemIde) {
-  const pipeline = new RerankerRetrievalPipeline({
-    embeddingsProvider: config.embeddingsProvider,
-    reranker: config.reranker,
-    nRetrieve: 50,
-    nFinal: 20,
-    ide,
-  });
-
+async function runRerankerTest(opts: RetrievalPipelineOptions) {
+  const pipeline = new RerankerRetrievalPipeline(opts);
   await testStrategy(pipeline, rerankerTestSet);
 }
 
-async function runFilepathTest(config: ContinueConfig, ide: FileSystemIde) {
-  const pipeline = new FilepathRetrievalPipeline({
-    embeddingsProvider: config.embeddingsProvider,
-    reranker: config.reranker,
-    nRetrieve: 50,
-    nFinal: 20,
-    ide,
-  });
-
+async function runFilepathTest(opts: RetrievalPipelineOptions) {
+  const pipeline = new FilepathRetrievalPipeline(opts);
   await testStrategy(pipeline, filepathTestSet);
 }
 
@@ -88,8 +77,16 @@ async function main() {
 
   const config = await configHandler.loadConfig();
 
-  await runRerankerTest(config, ide);
-  await runFilepathTest(config, ide);
+  const opts = {
+    ide,
+    embeddingsProvider: config.embeddingsProvider,
+    reranker: config.reranker,
+    nRetrieve: 50,
+    nFinal: 20,
+  };
+
+  await runRerankerTest(opts);
+  await runFilepathTest(opts);
 }
 
 main();

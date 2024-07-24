@@ -176,7 +176,7 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     );
   }
 
-  private async retrieveInternal(config: RetrieveConfig): Promise<Chunk[]> {
+  private async _retrieve(config: RetrieveConfig): Promise<Chunk[]> {
     const db = await SqliteDb.get();
 
     const query = this.buildQuery(config);
@@ -226,8 +226,8 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     };
 
     const [pathResults, contentResults] = await Promise.all([
-      this.retrieveInternal(pathConfig),
-      this.retrieveInternal(contentConfig),
+      this._retrieve(pathConfig),
+      this._retrieve(contentConfig),
     ]);
 
     return [...pathResults, ...contentResults];

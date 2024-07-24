@@ -19,16 +19,6 @@ export const filepathTestSet: TestSetItem[] = [
 
 // Need a way to specify specific snippets within files
 export const rerankerTestSet: TestSetItem[] = [
-  {
-    repo: amplifiedDevRepo,
-    query: "Where can I find our supporters?",
-    groundTruthFiles: ["supporters.md"],
-  },
-  {
-    repo: amplifiedDevRepo,
-    query: "Where can I find our supporters?",
-    groundTruthFiles: ["supporters.md"],
-  },
   /** https://github.com/continuedev/amplified.dev */
   {
     repo: amplifiedDevRepo,
