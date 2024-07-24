@@ -13,7 +13,6 @@ export const filepathTestSet: TestSetItem[] = [
     groundTruthFiles: [".prettierrc", ".prettierignore"],
   },
   // The below tests are not passing with our current FTS logic
-  //
   // {
   //   repo: continueRepo,
   //   query: "Show me all of our .rs files",
