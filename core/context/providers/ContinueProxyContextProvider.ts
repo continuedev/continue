@@ -36,7 +36,7 @@ class ContinueProxyContextProvider extends BaseContextProvider {
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
     const response = await args.fetch(
-      new URL("/proxy/context/list", CONTROL_PLANE_URL),
+      new URL(`/proxy/context/${this.options.id}/list`, CONTROL_PLANE_URL),
       {
         method: "GET",
         headers: {
@@ -46,7 +46,7 @@ class ContinueProxyContextProvider extends BaseContextProvider {
       },
     );
     const data = await response.json();
-    return data;
+    return data.items;
   }
 
   async getContextItems(
@@ -54,7 +54,7 @@ class ContinueProxyContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const response = await extras.fetch(
-      new URL("/context/retrieve", CONTROL_PLANE_URL),
+      new URL(`/proxy/context/${this.options.id}/retrieve`, CONTROL_PLANE_URL),
       {
         method: "POST",
         headers: {
