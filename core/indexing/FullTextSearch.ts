@@ -15,14 +15,39 @@ import {
   type CodebaseIndex,
 } from "./types.js";
 
+export interface RetrieveConfig {
+  tags: BranchAndDir[];
+  text: string;
+  n: number;
+  matchOn: keyof FTSColumns;
+  directory?: string;
+  filterPaths?: string[];
+  bm25Threshold?: number;
+}
+
+export type RetrieveConfigWithOptionalMatchOn = Omit<
+  RetrieveConfig,
+  "matchOn"
+> & { matchOn?: keyof FTSColumns };
+
+export interface FTSColumns {
+  path: "path";
+  content: "content";
+}
+
 export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   relativeExpectedTime: number = 0.2;
   artifactId = "sqliteFts";
 
+  ftsColumns: FTSColumns = {
+    path: "path",
+    content: "content",
+  };
+
   private async _createTables(db: DatabaseConnection) {
     await db.exec(`CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(
-        path,
-        content,
+        ${this.ftsColumns.path},
+        ${this.ftsColumns.content},
         tokenize = 'trigram'
     )`);
 
@@ -100,59 +125,121 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
     }
   }
 
-  async retrieve(
-    tags: BranchAndDir[],
-    text: string,
-    n: number,
-    directory: string | undefined,
-    filterPaths: string[] | undefined,
-    bm25Threshold: number = RETRIEVAL_PARAMS.bm25Threshold,
-  ): Promise<Chunk[]> {
-    const db = await SqliteDb.get();
+  private buildBaseQuery(): string {
+    return `
+      SELECT fts_metadata.chunkId, fts_metadata.path, fts.content, rank
+      FROM fts
+      JOIN fts_metadata ON fts.rowid = fts_metadata.id
+      JOIN chunk_tags ON fts_metadata.chunkId = chunk_tags.chunkId
+    `;
+  }
 
-    // Notice that the "chunks" artifactId is used because of linking between tables
-    const tagStrings = tags.map((tag) => {
-      return tagToString({ ...tag, artifactId: ChunkCodebaseIndex.artifactId });
-    });
+  private buildWhereClause(matchOn: RetrieveConfig["matchOn"]): string {
+    return `WHERE fts.${matchOn} MATCH ?`;
+  }
 
-    const query = `SELECT fts_metadata.chunkId, fts_metadata.path, fts.content, rank
-    FROM fts
-    JOIN fts_metadata ON fts.rowid = fts_metadata.id
-    JOIN chunk_tags ON fts_metadata.chunkId = chunk_tags.chunkId
-    WHERE fts MATCH '${text.replace(
-      /\?/g,
-      "",
-    )}' AND chunk_tags.tag IN (${tagStrings.map(() => "?").join(",")})
-      ${
-        filterPaths
-          ? `AND fts_metadata.path IN (${filterPaths.map(() => "?").join(",")})`
-          : ""
-      }
-    ORDER BY rank
-    LIMIT ?`;
+  private buildTagFilter(tags: BranchAndDir[]): string {
+    const tagStrings = this.convertTags(tags);
 
-    let results = await db.all(query, [
+    return `AND chunk_tags.tag IN (${tagStrings.map(() => "?").join(",")})`;
+  }
+
+  private buildPathFilter(filterPaths: string[] | undefined): string {
+    if (!filterPaths || filterPaths.length === 0) {
+      return "";
+    }
+    return `AND fts_metadata.path IN (${filterPaths.map(() => "?").join(",")})`;
+  }
+
+  private buildQuery(config: RetrieveConfig): string {
+    return `
+      ${this.buildBaseQuery()}
+      ${this.buildWhereClause(config.matchOn)}
+      ${this.buildTagFilter(config.tags)}
+      ${this.buildPathFilter(config.filterPaths)}
+      ORDER BY rank
+      LIMIT ?
+    `;
+  }
+
+  private getQueryParameters(config: RetrieveConfig) {
+    const { text, tags, filterPaths, n } = config;
+    const tagStrings = this.convertTags(tags);
+
+    return [
+      text.replace(/\?/g, ""),
       ...tagStrings,
       ...(filterPaths || []),
       Math.ceil(n),
-    ]);
+    ];
+  }
 
-    results = results.filter((result) => result.rank <= bm25Threshold);
+  private convertTags(tags: BranchAndDir[]): string[] {
+    // Notice that the "chunks" artifactId is used because of linking between tables
+    return tags.map((tag) =>
+      tagToString({ ...tag, artifactId: ChunkCodebaseIndex.artifactId }),
+    );
+  }
+
+  private async _retrieve(config: RetrieveConfig): Promise<Chunk[]> {
+    const db = await SqliteDb.get();
+
+    const query = this.buildQuery(config);
+    const parameters = this.getQueryParameters(config);
+
+    let results = await db.all(query, parameters);
+
+    results = results.filter(
+      (result) =>
+        result.rank <= (config.bm25Threshold ?? RETRIEVAL_PARAMS.bm25Threshold),
+    );
 
     const chunks = await db.all(
       `SELECT * FROM chunks WHERE id IN (${results.map(() => "?").join(",")})`,
       results.map((result) => result.chunkId),
     );
 
-    return chunks.map((chunk) => {
-      return {
-        filepath: chunk.path,
-        index: chunk.index,
-        startLine: chunk.startLine,
-        endLine: chunk.endLine,
-        content: chunk.content,
-        digest: chunk.cacheKey,
-      };
-    });
+    return chunks.map((chunk) => ({
+      filepath: chunk.path,
+      index: chunk.index,
+      startLine: chunk.startLine,
+      endLine: chunk.endLine,
+      content: chunk.content,
+      digest: chunk.cacheKey,
+    }));
+  }
+
+  /**
+   * Performs FTS search over both the content and path in the index.
+   */
+  async retrieve(config: RetrieveConfigWithOptionalMatchOn): Promise<Chunk[]> {
+    if (config.matchOn) {
+      // If `matchOn` is specified, only retrieve results for that particular column.
+      return this._retrieve({ ...config, matchOn: config.matchOn });
+    }
+
+    // We give more weight to the content FTS search than the path FTS search
+    const totalN = config.n;
+    const pathN = Math.ceil(totalN * 0.25);
+    const contentN = totalN - pathN;
+
+    const pathConfig: RetrieveConfig = {
+      ...config,
+      n: pathN,
+      matchOn: this.ftsColumns.path,
+    };
+
+    const contentConfig: RetrieveConfig = {
+      ...config,
+      n: contentN,
+      matchOn: this.ftsColumns.content,
+    };
+
+    const [pathResults, contentResults] = await Promise.all([
+      this._retrieve(pathConfig),
+      this._retrieve(contentConfig),
+    ]);
+
+    return [...pathResults, ...contentResults];
   }
 }

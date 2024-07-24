@@ -1,3 +1,9 @@
-# @continuedev/llm-info
+# Eval
 
-A lightweight package providing information about various Large Language Models (LLMs).
+## Setup
+
+Create a `.env` with the following config, replacing `/path/to/continue` with the path to your local `continue` repo:
+
+```env
+CONTINUE_GLOBAL_DIR=/path/to/continue/continue/eval/.continue
+```

@@ -38,6 +38,8 @@ function linesMatch(lineA: string, lineB: string, linesBetween = 0): boolean {
 }
 
 /**
+ * Used to find a match for a new line in an array of old lines.
+ *
  * Return the index of the first match and whether it is a perfect match
  * Also return a version of the line with correct indentation if needs fixing
  */

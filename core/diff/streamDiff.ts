@@ -1,11 +1,11 @@
-import { DiffLine } from "../index.js";
+import { DiffLine, DiffLineType } from "../index.js";
 import { LineStream, matchLine } from "./util.js";
 
 /**
  * https://blog.jcoglan.com/2017/02/12/the-myers-diff-algorithm-part-1/
  * Invariants:
  * - new + same = newLines.length
- * - old + same = oldLines.length
+ * - old + same = oldLinesCopy.length
  * ^ (above two guarantee that all lines get represented)
  * - Lines are always output in order, at least among old and new separately
  */
@@ -13,15 +13,17 @@ export async function* streamDiff(
   oldLines: string[],
   newLines: LineStream,
 ): AsyncGenerator<DiffLine> {
+  const oldLinesCopy = [...oldLines];
+
   // If one indentation mistake is made, others are likely. So we are more permissive about matching
   let seenIndentationMistake = false;
 
   let newLineResult = await newLines.next();
 
-  while (oldLines.length > 0 && !newLineResult.done) {
+  while (oldLinesCopy.length > 0 && !newLineResult.done) {
     const { matchIndex, isPerfectMatch, newLine } = matchLine(
       newLineResult.value,
-      oldLines,
+      oldLinesCopy,
       seenIndentationMistake,
     );
 
@@ -29,7 +31,7 @@ export async function* streamDiff(
       seenIndentationMistake = true;
     }
 
-    let type: DiffLine["type"];
+    let type: DiffLineType;
 
     let isLineRemoval = false;
     const isNewLine = matchIndex === -1;
@@ -39,7 +41,7 @@ export async function* streamDiff(
     } else {
       // Insert all deleted lines before match
       for (let i = 0; i < matchIndex; i++) {
-        yield { type: "old", line: oldLines.shift()! };
+        yield { type: "old", line: oldLinesCopy.shift()! };
       }
 
       type = isPerfectMatch ? "same" : "old";
@@ -51,13 +53,13 @@ export async function* streamDiff(
         break;
 
       case "same":
-        yield { type, line: oldLines.shift()! };
+        yield { type, line: oldLinesCopy.shift()! };
         break;
 
       case "old":
-        yield { type, line: oldLines.shift()! };
+        yield { type, line: oldLinesCopy.shift()! };
 
-        if (oldLines[0] !== newLine) {
+        if (oldLinesCopy[0] !== newLine) {
           yield { type: "new", line: newLine };
         } else {
           isLineRemoval = true;
@@ -75,13 +77,13 @@ export async function* streamDiff(
   }
 
   // Once at the edge, only one choice
-  if (newLineResult.done && oldLines.length > 0) {
-    for (const oldLine of oldLines) {
+  if (newLineResult.done && oldLinesCopy.length > 0) {
+    for (const oldLine of oldLinesCopy) {
       yield { type: "old", line: oldLine };
     }
   }
 
-  if (!newLineResult.done && oldLines.length === 0) {
+  if (!newLineResult.done && oldLinesCopy.length === 0) {
     yield { type: "new", line: newLineResult.value };
     for await (const newLine of newLines) {
       yield { type: "new", line: newLine };

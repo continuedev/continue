@@ -6,8 +6,35 @@ const boltonsRepo = "https://github.com/sestinj/boltons";
 const trayracerRepo = "https://github.com/sestinj/trayracer";
 const continueRepo = "https://github.com/continuedev/continue";
 
+export const filepathTestSet: TestSetItem[] = [
+  {
+    repo: continueRepo,
+    query: "Where is our prettier config?",
+    groundTruthFiles: [".prettierrc", ".prettierignore"],
+  },
+  // The below tests are not passing with our current FTS logic
+  // {
+  //   repo: continueRepo,
+  //   query: "Show me all of our .rs files",
+  //   groundTruthFiles: [
+  //     "sync/src/sync_db.rs",
+  //     "extensions/vscode/manual-testing-sandbox/test.rs",
+  //   ],
+  // },
+  // {
+  //   repo: continueRepo,
+  //   query: "Where is our perteir config?",
+  //   groundTruthFiles: [".prettierrc", ".prettierignore"],
+  // },
+  // {
+  //   repo: continueRepo,
+  //   query: "Tell me about the package.json in core",
+  //   groundTruthFiles: ["core/package.json"],
+  // },
+];
+
 // Need a way to specify specific snippets within files
-export const testSet: TestSetItem[] = [
+export const rerankerTestSet: TestSetItem[] = [
   /** https://github.com/continuedev/amplified.dev */
   {
     repo: amplifiedDevRepo,

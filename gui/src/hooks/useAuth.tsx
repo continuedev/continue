@@ -60,10 +60,11 @@ export function useAuth(): {
     dispatch(
       setDialogMessage(
         <ConfirmationDialog
-          hideCancelButton={true}
-          confirmText="Ok"
-          text={"Click the user icon in the bottom left of VS Code to log out."}
-          onConfirm={() => {}}
+          confirmText="Yes, log out"
+          text={"Are you sure you want to log out of Continue?"}
+          onConfirm={() => {
+            ideMessenger.request("logoutOfControlPlane", undefined);
+          }}
         />,
       ),
     );

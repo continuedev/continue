@@ -17,7 +17,9 @@ export async function setupCa() {
         // @ts-ignore
         const systemCertsAsync = await import("system-ca");
         // https://www.npmjs.com/package/system-ca
-        globalAgent.options.ca = await systemCertsAsync();
+
+        // Error: This expression is not callable
+        // globalAgent.options.ca = await systemCertsAsync();
         break;
     }
   } catch (e) {

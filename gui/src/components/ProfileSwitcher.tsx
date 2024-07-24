@@ -7,7 +7,7 @@ import {
 import { ProfileDescription } from "core/config/ConfigHandler";
 import { Fragment, useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
-import { useDispatch, useSelector } from "react-redux";
+import { useSelector } from "react-redux";
 import styled from "styled-components";
 import {
   defaultBorderRadius,
@@ -22,7 +22,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAuth } from "../hooks/useAuth";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { RootState } from "../redux/store";
-import { getFontSize, isJetBrains } from "../util";
+import { getFontSize } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 
 const StyledListbox = styled(Listbox)`
@@ -101,9 +101,6 @@ function ListBoxOption({
   showDelete?: boolean;
   selected: boolean;
 }) {
-  const ideMessenger = useContext(IdeMessengerContext);
-
-  const dispatch = useDispatch();
   const [hovered, setHovered] = useState(false);
 
   return (
@@ -163,58 +160,62 @@ function ProfileSwitcher(props: {}) {
 
   return (
     <>
-      {controlServerBetaEnabled && profiles.length > 0 && (
-        <StyledListbox
-          value={"GPT-4"}
-          onChange={(id: string) => {
-            ideMessenger.request("didChangeSelectedProfile", { id });
-          }}
-        >
-          <div className="relative">
-            <StyledListboxButton>
-              <div>{selectedProfile()?.title}</div>
-              <div className="pointer-events-none flex items-center">
-                <ChevronUpDownIcon
-                  className="h-4 w-4 text-gray-400"
-                  aria-hidden="true"
-                />
-              </div>
-            </StyledListboxButton>
-            {topDiv &&
-              ReactDOM.createPortal(
-                <Transition
-                  as={Fragment}
-                  leave="transition ease-in duration-100"
-                  leaveFrom="opacity-100"
-                  leaveTo="opacity-0"
-                >
-                  <StyledListboxOptions>
-                    {profiles.map((option, idx) => (
-                      <ListBoxOption
-                        selected={option.id === selectedProfileId}
-                        option={option}
-                        idx={idx}
-                        key={idx}
-                        showDelete={profiles.length > 1}
-                      />
-                    ))}
-                    <div
-                      className="px-2 py-1"
-                      style={{ color: lightGray, fontSize: getFontSize() - 2 }}
-                    >
-                      {profiles.length === 0 ? (
-                        <i>No profiles found</i>
-                      ) : (
-                        "Select profile"
-                      )}
-                    </div>
-                  </StyledListboxOptions>
-                </Transition>,
-                topDiv,
-              )}
-          </div>
-        </StyledListbox>
-      )}
+      {controlServerBetaEnabled &&
+        profiles.some((profile) => profile.id !== "local") && (
+          <StyledListbox
+            value={"GPT-4"}
+            onChange={(id: string) => {
+              ideMessenger.request("didChangeSelectedProfile", { id });
+            }}
+          >
+            <div className="relative">
+              <StyledListboxButton>
+                <div>{selectedProfile()?.title}</div>
+                <div className="pointer-events-none flex items-center">
+                  <ChevronUpDownIcon
+                    className="h-4 w-4 text-gray-400"
+                    aria-hidden="true"
+                  />
+                </div>
+              </StyledListboxButton>
+              {topDiv &&
+                ReactDOM.createPortal(
+                  <Transition
+                    as={Fragment}
+                    leave="transition ease-in duration-100"
+                    leaveFrom="opacity-100"
+                    leaveTo="opacity-0"
+                  >
+                    <StyledListboxOptions>
+                      {profiles.map((option, idx) => (
+                        <ListBoxOption
+                          selected={option.id === selectedProfileId}
+                          option={option}
+                          idx={idx}
+                          key={idx}
+                          showDelete={profiles.length > 1}
+                        />
+                      ))}
+                      <div
+                        className="px-2 py-1"
+                        style={{
+                          color: lightGray,
+                          fontSize: getFontSize() - 2,
+                        }}
+                      >
+                        {profiles.length === 0 ? (
+                          <i>No workspaces found</i>
+                        ) : (
+                          "Select workspace"
+                        )}
+                      </div>
+                    </StyledListboxOptions>
+                  </Transition>,
+                  topDiv,
+                )}
+            </div>
+          </StyledListbox>
+        )}
 
       {/* Settings button (either opens config.json or /settings page in control plane) */}
       <HeaderButtonWithText
@@ -234,7 +235,7 @@ function ProfileSwitcher(props: {}) {
       </HeaderButtonWithText>
 
       {/* Only show login if beta explicitly enabled */}
-      {!isJetBrains() && controlServerBetaEnabled && (
+      {controlServerBetaEnabled && (
         <HeaderButtonWithText
           text={
             session?.account
@@ -242,7 +243,7 @@ function ProfileSwitcher(props: {}) {
               : "Click to login to Continue"
           }
           onClick={() => {
-            if (session.account) {
+            if (session?.account) {
               logout();
             } else {
               login();

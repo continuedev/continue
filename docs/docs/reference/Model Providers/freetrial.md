@@ -69,7 +69,7 @@ Groq provides lightning fast inference for open-source LLMs like Llama3, up to t
 
 ### ⏩ Other options
 
-The above were only a few examples, but Continue can be used with any LLM or provider. You can find [a full list of providers here](../../setup/select-provider.md).
+The above were only a few examples, but Continue can be used with any LLM or provider. You can find [a full list of model providers here](../../setup/model-providers.md).
 
 ## Sign in
 

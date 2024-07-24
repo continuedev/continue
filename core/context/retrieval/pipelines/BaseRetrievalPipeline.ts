@@ -5,8 +5,11 @@ import {
   IDE,
   Reranker,
 } from "../../../index.js";
+import {
+  FullTextSearchCodebaseIndex,
+  RetrieveConfig,
+} from "../../../indexing/FullTextSearch.js";
 import { LanceDbIndex } from "../../../indexing/LanceDbIndex.js";
-import { retrieveFts } from "../fullTextSearch.js";
 
 export interface RetrievalPipelineOptions {
   embeddingsProvider: EmbeddingsProvider;
@@ -20,7 +23,6 @@ export interface RetrievalPipelineRunArguments {
   query: string;
   tags: BranchAndDir[];
   filterDirectory?: string;
-  // ide?: IDE;
 }
 
 export interface IRetrievalPipeline {
@@ -38,8 +40,32 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
   protected async retrieveFts(
     args: RetrievalPipelineRunArguments,
     n: number,
+    matchOn?: RetrieveConfig["matchOn"],
   ): Promise<Chunk[]> {
-    return retrieveFts(args, n);
+    try {
+      const ftsIndex = new FullTextSearchCodebaseIndex();
+
+      if (args.query.trim() === "") {
+        return [];
+      }
+
+      const text = args.query
+        .trim()
+        .split(" ")
+        .map((element) => `"${element}"`)
+        .join(" OR ");
+
+      return await ftsIndex.retrieve({
+        text,
+        n,
+        matchOn,
+        tags: args.tags,
+        directory: args.filterDirectory,
+      });
+    } catch (e) {
+      console.warn("Error retrieving from FTS:", e);
+      return [];
+    }
   }
 
   protected async retrieveEmbeddings(

@@ -18,7 +18,10 @@ import * as path from "node:path";
 import * as vscode from "vscode";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
-import { getControlPlaneSessionInfo } from "../stubs/WorkOsAuthProvider";
+import {
+  getControlPlaneSessionInfo,
+  WorkOsAuthProvider,
+} from "../stubs/WorkOsAuthProvider";
 import { getExtensionUri } from "../util/vscode";
 import { VsCodeWebviewProtocol } from "../webviewProtocol";
 
@@ -71,6 +74,7 @@ export class VsCodeMessenger {
     private readonly ide: VsCodeIde,
     private readonly verticalDiffManagerPromise: Promise<VerticalPerLineDiffManager>,
     private readonly configHandlerPromise: Promise<ConfigHandler>,
+    private readonly workOsAuthProvider: WorkOsAuthProvider,
   ) {
     /** WEBVIEW ONLY LISTENERS **/
     this.onWebview("showFile", (msg) => {
@@ -293,6 +297,12 @@ export class VsCodeMessenger {
     );
     this.onWebviewOrCore("getControlPlaneSessionInfo", async (msg) => {
       return getControlPlaneSessionInfo(msg.data.silent);
+    });
+    this.onWebviewOrCore("logoutOfControlPlane", async (msg) => {
+      const sessions = await this.workOsAuthProvider.getSessions();
+      await Promise.all(
+        sessions.map((session) => workOsAuthProvider.removeSession(session.id)),
+      );
     });
   }
 }
