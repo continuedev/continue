@@ -61,8 +61,7 @@ import {
   slashCommandFromPromptFile,
 } from "./promptFile.js";
 import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
-
-const { execSync } = require("child_process");
+import { execSync } from "child_process";
 
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
@@ -361,13 +360,20 @@ async function intermediateToFinalConfig(
     new CodebaseContextProvider({}),
   ];
 
+  const DEFAULT_CONTEXT_PROVIDERS_NAMES = DEFAULT_CONTEXT_PROVIDERS.map(
+    ({ description: { title } }) => title,
+  );
+
   // Context providers
   const contextProviders: IContextProvider[] = DEFAULT_CONTEXT_PROVIDERS;
   for (const provider of config.contextProviders || []) {
     if (isContextProviderWithParams(provider)) {
       const cls = contextProviderClassFromName(provider.name) as any;
       if (!cls) {
-        console.warn(`Unknown context provider ${provider.name}`);
+        if (!DEFAULT_CONTEXT_PROVIDERS_NAMES.includes(provider.name)) {
+          console.warn(`Unknown context provider ${provider.name}`);
+        }
+
         continue;
       }
       const instance: IContextProvider = new cls(provider.params);

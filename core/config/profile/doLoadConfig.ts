@@ -3,12 +3,12 @@ import {
   IDE,
   IdeSettings,
   SerializedContinueConfig,
-} from "../..";
-import { ControlPlaneClient } from "../../control-plane/client";
-import { TeamAnalytics } from "../../control-plane/TeamAnalytics";
-import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
-import { Telemetry } from "../../util/posthog";
-import { loadFullConfigNode } from "../load";
+} from "../../index.js";
+import { ControlPlaneClient } from "../../control-plane/client.js";
+import { TeamAnalytics } from "../../control-plane/TeamAnalytics.js";
+import ContinueProxy from "../../llm/llms/stubs/ContinueProxy.js";
+import { Telemetry } from "../../util/posthog.js";
+import { loadFullConfigNode } from "../load.js";
 
 export default async function doLoadConfig(
   ide: IDE,

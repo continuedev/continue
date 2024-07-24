@@ -25,18 +25,19 @@ async function testStrategy(
     const results = await retrieveInRepo(test.repo, test.query, pipeline);
 
     console.log(chalk.cyan(`\nResults for ${test.repo}:`));
-    console.log(chalk.yellow(`Query: ${test.query}`));
+    console.log(chalk.yellow(`Query: "${test.query}"`));
     console.log(chalk.green("Retrieved files:"));
     for (const result of results) {
-      console.log(chalk.white(`- ${result.filepath}`));
+      console.log(chalk.white(`    - ${result.filepath}`));
     }
 
-    const acc = accuracy(
-      results,
-      test.groundTruthFiles.map((file) =>
-        path.join(dirForRepo(test.repo), file),
-      ),
+    const expectedFiles = test.groundTruthFiles.map((file) =>
+      path.join(dirForRepo(test.repo), file),
     );
+
+    console.log(chalk.green(`expectedFiles files: ${expectedFiles}`));
+
+    const acc = accuracy(results, expectedFiles);
     console.log(chalk.green(`Accuracy: ${acc}`));
   }
 }

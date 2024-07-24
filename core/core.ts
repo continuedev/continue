@@ -5,7 +5,7 @@ import type {
   IDE,
   IndexingProgressUpdate,
   SiteIndexingConfig,
-} from ".";
+} from "./index.js";
 import { CompletionProvider } from "./autocomplete/completionProvider.js";
 import { ConfigHandler } from "./config/ConfigHandler.js";
 import {
@@ -17,8 +17,7 @@ import {
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
-import { getAuthUrlForTokenPage } from "./control-plane/auth";
-import { ControlPlaneClient } from "./control-plane/client";
+import { ControlPlaneClient } from "./control-plane/client.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
 import { DocsService } from "./indexing/docs/DocsService.js";
 import Ollama from "./llm/llms/Ollama.js";
@@ -32,6 +31,7 @@ import type { IMessenger, Message } from "./util/messenger.js";
 import { editConfigJson } from "./util/paths.js";
 import { Telemetry } from "./util/posthog.js";
 import { streamDiffLines } from "./util/verticalEdit.js";
+import { getAuthUrlForTokenPage } from "./control-plane/auth/index.js";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -143,7 +143,7 @@ export class Core {
       );
 
       // Index on initialization
-      this.ide.getWorkspaceDirs().then(async (dirs) => {
+      this.ide.getWorkspaceDirs().then(async (dirs: any) => {
         // Respect pauseCodebaseIndexOnStart user settings
         if (ideSettings.pauseCodebaseIndexOnStart) {
           await this.messenger.request("indexProgress", {

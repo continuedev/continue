@@ -1,7 +1,7 @@
 import { Analytics } from "@continuedev/config-types";
 import os from "node:os";
-import { IAnalyticsProvider } from "./analytics/IAnalyticsProvider";
-import PostHogAnalyticsProvider from "./analytics/PostHogAnalyticsProvider";
+import { IAnalyticsProvider } from "./analytics/IAnalyticsProvider.js";
+import PostHogAnalyticsProvider from "./analytics/PostHogAnalyticsProvider.js";
 
 function createAnalyticsProvider(
   config: Analytics,
