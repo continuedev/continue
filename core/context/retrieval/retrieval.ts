@@ -24,7 +24,10 @@ export async function retrieveContextItemsFromEmbeddings(
     (await extras.ide.getIdeInfo()).ideType === "jetbrains"
   ) {
     throw new Error(
-      "The transformers.js context provider is not currently supported in JetBrains. For now, you can use Ollama to set up local embeddings, or use our 'free-trial' embeddings provider. See here to learn more: https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
+      "The transformers.js context provider is not currently supported in JetBrains. " +
+        "For now, you can use Ollama to set up local embeddings, or use our 'free-trial' " +
+        "embeddings provider. See here to learn more: " +
+        "https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
     );
   }
 
@@ -81,7 +84,9 @@ export async function retrieveContextItemsFromEmbeddings(
 
   return [
     ...results.map((r) => {
-      const name = `${getRelativePath(r.filepath, workspaceDirs)} (${r.startLine}-${r.endLine})`;
+      const name = `${getRelativePath(r.filepath, workspaceDirs)} (${
+        r.startLine
+      }-${r.endLine})`;
       const description = `${r.filepath} (${r.startLine}-${r.endLine})`;
       return {
         name,

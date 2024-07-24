@@ -124,7 +124,10 @@ function useSubmenuContextProviders() {
               query,
               MINISEARCH_OPTIONS,
             );
-            console.debug(`Search results for ${providerTitle}:`, results.length);
+            console.debug(
+              `Search results for ${providerTitle}:`,
+              results.length,
+            );
             return results.map((result) => {
               return { ...result, providerTitle };
             });

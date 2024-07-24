@@ -41,7 +41,6 @@ const Providers: (typeof BaseContextProvider)[] = [
   HttpContextProvider,
   SearchContextProvider,
   OSContextProvider,
-  CodebaseContextProvider,
   ProblemsContextProvider,
   FolderContextProvider,
   DocsContextProvider,
