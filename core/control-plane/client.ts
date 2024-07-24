@@ -18,9 +18,9 @@ export interface ControlPlaneWorkspace {
 
 export interface ControlPlaneModelDescription extends ModelDescription {}
 
-export const CONTROL_PLANE_URL = "http://localhost:3001";
-// export const CONTROL_PLANE_URL =
-//   "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app";
+// export const CONTROL_PLANE_URL = "http://localhost:3001";
+export const CONTROL_PLANE_URL =
+  "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app";
 
 export class ControlPlaneClient {
   private static URL = CONTROL_PLANE_URL;
