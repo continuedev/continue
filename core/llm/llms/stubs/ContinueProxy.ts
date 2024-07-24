@@ -21,6 +21,10 @@ class ContinueProxy extends OpenAI {
     useLegacyCompletionsEndpoint: false,
   };
 
+  supportsCompletions(): boolean {
+    return false;
+  }
+
   supportsFim(): boolean {
     return true;
   }

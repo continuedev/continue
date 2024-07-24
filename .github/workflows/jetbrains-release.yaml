@@ -87,6 +87,12 @@ jobs:
           path: binary/node_modules
           key: ${{ runner.os }}-node-${{ hashFiles('binary/package-lock.json') }}
 
+      - name: Cache gui node_modules
+        uses: actions/cache@v3
+        with:
+          path: gui/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('gui/package-lock.json') }}
+
       # npm install core
       - name: Install core node_modules
         run: |
@@ -98,6 +104,18 @@ jobs:
         run: |
           cd ../../binary
           npm ci
+
+      # npm install gui
+      - name: Install gui node_modules
+        run: |
+          cd ../../gui
+          npm ci
+
+      # build gui
+      - name: Build gui
+        run: |
+          cd ../../gui
+          npm run build
 
       # Run prepackage.js script
       - name: Run prepackage script
@@ -120,6 +138,12 @@ jobs:
         run: |
           ./gradlew patchChangelog --release-note="$CHANGELOG"
 
+      # Upload artifact as a release asset
+      - name: Upload Release Asset
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
+
       # Publish the plugin to JetBrains Marketplace
       - name: Publish Plugin
         env:
@@ -128,12 +152,6 @@ jobs:
           PRIVATE_KEY: ${{ secrets.JETBRAINS_PRIVATE_KEY }}
           PRIVATE_KEY_PASSWORD: ${{ secrets.JETBRAINS_PRIVATE_KEY_PASSWORD }}
         run: ./gradlew publishPlugin
-
-      # Upload artifact as a release asset
-      - name: Upload Release Asset
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release upload ${{ github.event.release.tag_name }} ./build/distributions/*
 
       # Create a pull request
       - name: Create Pull Request

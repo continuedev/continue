@@ -1,5 +1,8 @@
 package com.github.continuedev.continueintellijextension.activities
 
+import com.github.continuedev.continueintellijextension.auth.AuthListener
+import com.github.continuedev.continueintellijextension.auth.ContinueAuthService
+import com.github.continuedev.continueintellijextension.auth.ControlPlaneSessionInfo
 import com.github.continuedev.continueintellijextension.constants.getContinueGlobalPath
 import com.github.continuedev.continueintellijextension.`continue`.*
 import com.github.continuedev.continueintellijextension.listeners.ContinuePluginSelectionListener
@@ -25,6 +28,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 import javax.swing.*
 import com.intellij.ide.plugins.PluginManager
+import com.intellij.openapi.components.service
 import com.intellij.openapi.extensions.PluginId
 
 fun showTutorial(project: Project) {
@@ -123,6 +127,32 @@ class ContinuePluginStartupActivity : StartupActivity, Disposable, DumbAware {
             connection.subscribe(SettingsListener.TOPIC, object : SettingsListener {
                 override fun settingsUpdated(settings: ContinueExtensionSettings.ContinueState) {
                     continuePluginService.coreMessenger?.request("config/ideSettingsUpdate", settings, null) { _ -> }
+                }
+            })
+
+            // Listen for clicking settings button to start the auth flow
+            val authService = service<ContinueAuthService>()
+            val initialSessionInfo = authService.loadControlPlaneSessionInfo()
+
+            if (initialSessionInfo != null) {
+                val data = mapOf(
+                        "sessionInfo" to initialSessionInfo
+                )
+                continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", data, null) { _ -> }
+                continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", data)
+            }
+
+            connection.subscribe(AuthListener.TOPIC, object : AuthListener {
+                override fun startAuthFlow() {
+                    authService.startAuthFlow(project)
+                }
+
+                override fun handleUpdatedSessionInfo(sessionInfo: ControlPlaneSessionInfo?) {
+                    val data = mapOf(
+                            "sessionInfo" to sessionInfo
+                    )
+                    continuePluginService.coreMessenger?.request("didChangeControlPlaneSessionInfo", data, null) { _ -> }
+                    continuePluginService.sendToWebview("didChangeControlPlaneSessionInfo", data)
                 }
             })
 

@@ -69,6 +69,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "autocomplete/complete": [AutocompleteInput, string[]];
   "context/addDocs": [SiteIndexingConfig, void];
   "context/removeDocs": [{ baseUrl: string }, void];
+  "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];
   "command/run": [
@@ -146,4 +147,6 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   addAutocompleteModel: [{ model: ModelDescription }, void];
 
   "profiles/switch": [{ id: string }, undefined];
+
+  "auth/getAuthUrl": [undefined, { url: string }];
 };

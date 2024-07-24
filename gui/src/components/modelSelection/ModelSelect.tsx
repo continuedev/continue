@@ -28,10 +28,10 @@ import ConfirmationDialog from "../dialogs/ConfirmationDialog";
 const StyledListboxButton = styled(Listbox.Button)`
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
   border: none;
   cursor: pointer;
-  font-size: ${() => `${getFontSize() - 4}px`};
+  font-size: ${() => `${getFontSize() - 3}px`};
   background: transparent;
   color: ${() => lightGray};
   &:focus {
@@ -212,13 +212,13 @@ function ModelSelect() {
       }}
     >
       <div className="relative">
-        <StyledListboxButton className="h-[18px] overflow-hidden">
+        <StyledListboxButton
+          className="h-[18px] overflow-hidden"
+          style={{ padding: 0 }}
+        >
           <div>{modelSelectTitle(defaultModel) || "Select model"}</div>
           <div className="pointer-events-none flex items-center">
-            <ChevronDownIcon
-              className="h-2.5 w-2.5 text-gray-400"
-              aria-hidden="true"
-            />
+            <ChevronDownIcon className="h-2.5 w-2.5" aria-hidden="true" />
           </div>
         </StyledListboxButton>
         <StyledListboxOptions>
@@ -233,7 +233,7 @@ function ModelSelect() {
 
           {selectedProfileId === "local" && (
             <>
-              <Divider />
+              {options.length > 0 && <Divider />}
 
               <StyledListboxOption
                 key={options.length}

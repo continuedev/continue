@@ -66,6 +66,7 @@
   "devDependencies": {
     "@swc/cli": "^0.3.12",
     "@swc/core": "^1.5.25",
+    "@types/lodash": "^4.17.6",
     "@types/node": "^20.5.6",
     "@types/node-fetch": "^2.6.4",
     "@types/react": "^18.0.27",

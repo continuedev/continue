@@ -137,6 +137,7 @@ export interface ContextProviderExtras {
 }
 
 export interface LoadSubmenuItemsArgs {
+  config: ContinueConfig;
   ide: IDE;
   fetch: FetchFunction;
 }
@@ -374,8 +375,10 @@ export type CustomLLM = RequireAtLeastOne<
 
 // IDE
 
+export type DiffLineType = "new" | "old" | "same";
+
 export interface DiffLine {
-  type: "new" | "old" | "same";
+  type: DiffLineType;
   line: string;
 }
 
@@ -420,6 +423,8 @@ export interface IdeSettings {
   remoteConfigSyncPeriod: number;
   userToken: string;
   enableControlServerBeta: boolean;
+  pauseCodebaseIndexOnStart: boolean;
+  enableDebugLogs: boolean;
 }
 
 export interface IDE {
@@ -596,6 +601,7 @@ export type ModelName =
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
   | "gpt-4o"
+  | "gpt-4o-mini"
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
@@ -743,6 +749,7 @@ export interface EmbedOptions {
   apiType?: string;
   apiVersion?: string;
   requestOptions?: RequestOptions;
+  maxChunkSize?: number;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -751,10 +758,16 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 
 export interface EmbeddingsProvider {
   id: string;
+  maxChunkSize: number;
   embed(chunks: string[]): Promise<number[][]>;
 }
 
-export type RerankerName = "cohere" | "voyage" | "llm" | "free-trial";
+export type RerankerName =
+  | "cohere"
+  | "voyage"
+  | "llm"
+  | "free-trial"
+  | "huggingface-tei";
 
 export interface RerankerDescription {
   name: RerankerName;
@@ -946,6 +959,7 @@ export interface ContinueConfig {
   reranker?: Reranker;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
 }
 
 export interface BrowserSerializedContinueConfig {

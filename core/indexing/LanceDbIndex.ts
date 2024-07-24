@@ -9,7 +9,6 @@ import {
   IndexTag,
   IndexingProgressUpdate,
 } from "../index.js";
-import { MAX_CHUNK_SIZE } from "../llm/constants.js";
 import { getBasename } from "../util/index.js";
 import { getLanceDbPath, migrate } from "../util/paths.js";
 import { chunkDocument } from "./chunk/chunk.js";
@@ -35,8 +34,6 @@ export class LanceDbIndex implements CodebaseIndex {
   get artifactId(): string {
     return `vectordb::${this.embeddingsProvider.id}`;
   }
-
-  static MAX_CHUNK_SIZE = MAX_CHUNK_SIZE;
 
   constructor(
     private readonly embeddingsProvider: EmbeddingsProvider,
@@ -64,10 +61,13 @@ export class LanceDbIndex implements CodebaseIndex {
       migrate(
         "lancedb_sqlite_artifact_id_column",
         async () => {
-          await db.exec(
-            "ALTER TABLE lance_db_cache ADD COLUMN artifact_id TEXT NOT NULL DEFAULT 'UNDEFINED'",
-          );
-          resolve(undefined);
+          try {
+            await db.exec(
+              "ALTER TABLE lance_db_cache ADD COLUMN artifact_id TEXT NOT NULL DEFAULT 'UNDEFINED'",
+            );
+          } finally {
+            resolve(undefined);
+          }
         },
         () => resolve(undefined),
       ),
@@ -99,7 +99,7 @@ export class LanceDbIndex implements CodebaseIndex {
       for await (const chunk of chunkDocument(
         items[i].path,
         content,
-        LanceDbIndex.MAX_CHUNK_SIZE,
+        this.embeddingsProvider.maxChunkSize,
         items[i].cacheKey,
       )) {
         if (chunk.content.length == 0) {
