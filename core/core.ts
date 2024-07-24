@@ -17,10 +17,10 @@ import {
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
-import { ControlPlaneClient } from "./control-plane/client.js";
+import { getAuthUrlForTokenPage } from "./control-plane/auth";
+import { ControlPlaneClient } from "./control-plane/client";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
 import { DocsService } from "./indexing/docs/DocsService.js";
-import TransformersJsEmbeddingsProvider from "./indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import Ollama from "./llm/llms/Ollama.js";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext.js";
@@ -143,21 +143,19 @@ export class Core {
       );
 
       // Index on initialization
-      this.ide
-        .getWorkspaceDirs()
-        .then(async (dirs) => {
-          // Respect pauseCodebaseIndexOnStart user settings
-          if (ideSettings.pauseCodebaseIndexOnStart) {
-            await this.messenger.request("indexProgress", {
-              progress: 100,
-              desc: "Initial Indexing Skipped",
-              status: "paused",
-            });
-            return;
-          }
+      this.ide.getWorkspaceDirs().then(async (dirs) => {
+        // Respect pauseCodebaseIndexOnStart user settings
+        if (ideSettings.pauseCodebaseIndexOnStart) {
+          await this.messenger.request("indexProgress", {
+            progress: 100,
+            desc: "Initial Indexing Skipped",
+            status: "paused",
+          });
+          return;
+        }
 
-          this.refreshCodebaseIndex(dirs);
-        });
+        this.refreshCodebaseIndex(dirs);
+      });
     });
 
     const getLlm = async () => {
@@ -280,8 +278,12 @@ export class Core {
         return;
       }
 
-      const siteIndexingOptions: SiteIndexingConfig[] = ((mProvider) =>
-        mProvider?.options?.sites || [])({ ...provider });
+      const siteIndexingOptions: SiteIndexingConfig[] = ((mProvider) => [
+        ...new Set([
+          ...(mProvider?.options?.sites || []),
+          ...(config.docs || []),
+        ]),
+      ])({ ...provider });
 
       for (const site of siteIndexingOptions) {
         await this.getEmbeddingsProviderAndIndexDoc(site, msg.data.reIndex);
@@ -294,6 +296,7 @@ export class Core {
       const items = config.contextProviders
         ?.find((provider) => provider.description.title === msg.data.title)
         ?.loadSubmenuItems({
+          config,
           ide: this.ide,
           fetch: (url, init) =>
             fetchwithRequestOptions(url, init, config.requestOptions),
@@ -655,6 +658,10 @@ export class Core {
     });
     on("didChangeControlPlaneSessionInfo", async (msg) => {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
+    });
+    on("auth/getAuthUrl", async (msg) => {
+      const url = await getAuthUrlForTokenPage();
+      return { url };
     });
   }
 

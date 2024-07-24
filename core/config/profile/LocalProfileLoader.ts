@@ -1,6 +1,6 @@
-import { ContinueConfig, ContinueRcJson, IDE, IdeSettings } from "../..";
-import { Telemetry } from "../../util/posthog";
-import { loadFullConfigNode } from "../load";
+import { ContinueConfig, IDE, IdeSettings } from "../..";
+import { ControlPlaneClient } from "../../control-plane/client";
+import doLoadConfig from "./doLoadConfig";
 import { IProfileLoader } from "./IProfileLoader";
 
 export default class LocalProfileLoader implements IProfileLoader {
@@ -11,42 +11,18 @@ export default class LocalProfileLoader implements IProfileLoader {
   constructor(
     private ide: IDE,
     private ideSettingsPromise: Promise<IdeSettings>,
-    // private controlPlaneClient: ControlPlaneClient,
+    private controlPlaneClient: ControlPlaneClient,
     private writeLog: (message: string) => Promise<void>,
   ) {}
 
   async doLoadConfig(): Promise<ContinueConfig> {
-    let workspaceConfigs: ContinueRcJson[] = [];
-    try {
-      workspaceConfigs = await this.ide.getWorkspaceConfigs();
-    } catch (e) {
-      console.warn("Failed to load workspace configs");
-    }
-
-    const ideInfo = await this.ide.getIdeInfo();
-    const uniqueId = await this.ide.getUniqueId();
-    const ideSettings = await this.ideSettingsPromise;
-
-    const newConfig = await loadFullConfigNode(
+    return doLoadConfig(
       this.ide,
-      workspaceConfigs,
-      ideSettings,
-      ideInfo.ideType,
-      uniqueId,
+      this.ideSettingsPromise,
+      this.controlPlaneClient,
       this.writeLog,
+      undefined,
     );
-    newConfig.allowAnonymousTelemetry =
-      newConfig.allowAnonymousTelemetry &&
-      (await this.ide.isTelemetryEnabled());
-
-    // Setup telemetry only after (and if) we know it is enabled
-    await Telemetry.setup(
-      newConfig.allowAnonymousTelemetry ?? true,
-      await this.ide.getUniqueId(),
-      ideInfo.extensionVersion,
-    );
-
-    return newConfig;
   }
 
   setIsActive(isActive: boolean): void {}

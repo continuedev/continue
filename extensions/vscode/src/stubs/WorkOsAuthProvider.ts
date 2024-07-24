@@ -18,7 +18,8 @@ import { PromiseAdapter, promiseFromEvent } from "./promiseUtils";
 
 export const AUTH_TYPE = "continue";
 const AUTH_NAME = "Continue";
-const CLIENT_ID = "client_01J0FW6XN8N2XJAECF7NE0Y65J";
+const CLIENT_ID = "client_01J0FW6XN8N2XJAECF7NE0Y65J"; // Production
+// const CLIENT_ID = "client_01J0FW6XCPMJMQ3CG51RB4HBZQ"; // Staging
 const SESSIONS_SECRET_KEY = `${AUTH_TYPE}.sessions`;
 
 class UriEventHandler extends EventEmitter<Uri> implements UriHandler {
