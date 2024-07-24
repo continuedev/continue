@@ -7,14 +7,22 @@ const trayracerRepo = "https://github.com/sestinj/trayracer";
 const continueRepo = "https://github.com/continuedev/continue";
 
 export const filepathTestSet: TestSetItem[] = [
-  // This is a valid test because the contents of our Prettier files
-  // do not actually mention the keyword "prettier", they are just
-  // JSON config.
   {
     repo: continueRepo,
     query: "Where is our prettier config?",
     groundTruthFiles: [".prettierrc", ".prettierignore"],
   },
+  {
+    repo: continueRepo,
+    query: "Tell me about the package.json in core",
+    groundTruthFiles: ["core/package.json"],
+  },
+
+  // /my/path/to/test.ts test
+  // slight misspellings
+  // codelens
+
+  // "show me all .rs files"
 ];
 
 // Need a way to specify specific snippets within files

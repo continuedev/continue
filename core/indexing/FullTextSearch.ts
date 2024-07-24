@@ -25,6 +25,11 @@ export interface RetrieveConfig {
   bm25Threshold?: number;
 }
 
+export type RetrieveConfigWithOptionalMatchOn = Omit<
+  RetrieveConfig,
+  "matchOn"
+> & { matchOn?: keyof FTSColumns };
+
 export interface FTSColumns {
   path: "path";
   content: "content";
@@ -207,7 +212,12 @@ export class FullTextSearchCodebaseIndex implements CodebaseIndex {
   /**
    * Performs FTS search over both the content and path in the index.
    */
-  async retrieve(config: Omit<RetrieveConfig, "matchOn">): Promise<Chunk[]> {
+  async retrieve(config: RetrieveConfigWithOptionalMatchOn): Promise<Chunk[]> {
+    if (config.matchOn) {
+      // If `matchOn` is specified, only retrieve results for that particular column.
+      return this._retrieve({ ...config, matchOn: config.matchOn });
+    }
+
     // We give more weight to the content FTS search than the path FTS search
     const totalN = config.n;
     const pathN = Math.ceil(totalN * 0.25);

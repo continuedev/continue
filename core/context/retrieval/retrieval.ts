@@ -65,6 +65,7 @@ export async function retrieveContextItemsFromEmbeddings(
   const pipelineType = useReranking
     ? RerankerRetrievalPipeline
     : NoRerankerRetrievalPipeline;
+
   const pipelineOptions: RetrievalPipelineOptions = {
     nFinal,
     nRetrieve,

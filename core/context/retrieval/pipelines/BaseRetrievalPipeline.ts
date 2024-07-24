@@ -23,7 +23,6 @@ export interface RetrievalPipelineRunArguments {
   query: string;
   tags: BranchAndDir[];
   filterDirectory?: string;
-  // ide?: IDE;
 }
 
 export interface IRetrievalPipeline {
@@ -41,6 +40,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
   protected async retrieveFts(
     args: RetrievalPipelineRunArguments,
     n: number,
+    matchOn?: RetrieveConfig["matchOn"],
   ): Promise<Chunk[]> {
     try {
       const ftsIndex = new FullTextSearchCodebaseIndex();
@@ -58,6 +58,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
       return await ftsIndex.retrieve({
         text,
         n,
+        matchOn,
         tags: args.tags,
         directory: args.filterDirectory,
       });
