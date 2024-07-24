@@ -6,7 +6,7 @@ import { FullTextSearchCodebaseIndex } from "./FullTextSearch.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
-import { CodebaseIndex } from "./types.js";
+import { CodebaseIndex, IndexResultType } from "./types.js";
 import { walkDir } from "./walkDir.js";
 
 export class PauseToken {
@@ -112,7 +112,7 @@ export class CodebaseIndexer {
           branch,
           artifactId: codebaseIndex.artifactId,
         };
-        const [results, markComplete] = await getComputeDeleteAddRemove(
+        const [results, lastUpdated, markComplete] = await getComputeDeleteAddRemove(
           tag,
           { ...stats },
           (filepath) => this.ide.readFile(filepath),
@@ -158,6 +158,10 @@ export class CodebaseIndexer {
               status: "indexing",
             };
           }
+
+          lastUpdated.forEach((lastUpdated, path) => {
+            markComplete([lastUpdated], IndexResultType.UpdateLastUpdated);
+          });
 
           completedRelativeExpectedTime += codebaseIndex.relativeExpectedTime;
           yield {
