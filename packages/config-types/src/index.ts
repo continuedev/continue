@@ -195,6 +195,14 @@ export const devDataSchema = z.object({
 });
 export type DevData = z.infer<typeof devDataSchema>;
 
+export const siteIndexingConfigSchema = z.object({
+  startUrl: z.string(),
+  rootUrl: z.string(),
+  title: z.string(),
+  maxDepth: z.string().optional(),
+  faviconUrl: z.string().optional(),
+});
+
 export const configJsonSchema = z.object({
   models: z.array(modelDescriptionSchema),
   tabAutocompleteModel: modelDescriptionSchema.optional(),
@@ -212,5 +220,6 @@ export const configJsonSchema = z.object({
   disableIndexing: z.boolean().optional(),
   tabAutocompleteOptions: tabAutocompleteOptionsSchema.optional(),
   ui: uiOptionsSchema.optional(),
+  docs: z.array(siteIndexingConfigSchema).optional(),
 });
 export type ConfigJson = z.infer<typeof configJsonSchema>;
