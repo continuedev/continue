@@ -1,12 +1,29 @@
 ---
-title: Select providers
-description: Configure LLM providers
-keywords: [openai, anthropic, gemini, ollama, ggml]
+title: Model Providers
+description: Configure and integrate various LLM (Large Language Model) providers for chat, autocomplete, and embedding models, whether self-hosted, remote, or via SaaS.
+keywords:
+  [
+    large language models,
+    LLM providers,
+    open-source LLM,
+    commercial LLM,
+    self-hosted LLM,
+    remote LLM,
+    SaaS LLM,
+    AI model configuration,
+    AI providers,
+    OpenAI,
+    Anthropic,
+    Gemini,
+    Ollama,
+    HuggingFace,
+    AWS Bedrock,
+  ]
 ---
 
-# Select providers
+# Model Providers
 
-Continue makes it easy to use different providers for serving your chat, autocomplete, and embeddings models.
+Configure and integrate various LLM (Large Language Model) providers for chat, autocomplete, and embedding models, whether self-hosted, remote, or via SaaS.
 
 To select the ones you want to use, add them to your `config.json`.
 

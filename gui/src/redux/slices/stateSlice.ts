@@ -244,6 +244,23 @@ export const stateSlice = createSlice({
       // state.contextItems = [];
       state.active = true;
     },
+    deleteMessage: (state, action: PayloadAction<number>) => {
+      const index = action.payload + 1;
+
+      if (index >= 0 && index < state.history.length) {
+        // Delete the current message
+        state.history.splice(index, 1);
+
+        // If the next message is an assistant message, delete it too
+        if (
+          index < state.history.length &&
+          state.history[index].message.role === "assistant"
+        ) {
+          state.history.splice(index, 1);
+        }
+      }
+    },
+
     initNewActiveMessage: (
       state,
       {
@@ -500,5 +517,6 @@ export const {
   clearLastResponse,
   consumeMainEditorContent,
   setSelectedProfileId,
+  deleteMessage,
 } = stateSlice.actions;
 export default stateSlice.reducer;

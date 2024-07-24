@@ -3,15 +3,16 @@ import sqlite3 from "sqlite3";
 import {
   Chunk,
   EmbeddingsProvider,
+  IdeInfo,
   IndexingProgressUpdate,
   SiteIndexingConfig,
 } from "../../index.js";
 import { getDocsSqlitePath, getLanceDbPath } from "../../util/paths.js";
-
 import { Article, chunkArticle, pageToArticle } from "./article.js";
 import { crawlPage } from "./crawl.js";
 import { downloadFromS3, SiteIndexingResults } from "./preIndexed.js";
-import { default as configs } from "./preIndexedDocs.js";
+import preIndexedDocs from "./preIndexedDocs.js";
+import TransformersJsEmbeddingsProvider from "../embeddings/TransformersJsEmbeddingsProvider.js";
 
 // Purposefully lowercase because lancedb converts
 interface LanceDbDocsRow {
@@ -29,6 +30,8 @@ interface LanceDbDocsRow {
 export class DocsService {
   private static instance: DocsService;
   private static DOCS_TABLE_NAME = "docs";
+  public static preIndexedDocsEmbeddingsProvider =
+    new TransformersJsEmbeddingsProvider();
   private _sqliteTable: Database | undefined;
   private docsIndexingQueue: Set<string> = new Set();
 
@@ -70,32 +73,35 @@ export class DocsService {
     nested = false,
   ): Promise<Chunk[]> {
     const lance = await this.getLanceDb();
-    const db = await this.getSqliteTable();
+    const tableNames = await lance.tableNames();
+    const preIndexedDoc = preIndexedDocs[baseUrl];
+    const isPreIndexedDoc = !!preIndexedDoc;
+    let shouldDownloadPreIndexedDoc =
+      !tableNames.includes(DocsService.DOCS_TABLE_NAME) && isPreIndexedDoc;
 
-    const downloadDocs = async () => {
-      const config = configs.find((config) => config.startUrl === baseUrl);
-      if (config) {
-        await this.downloadPreIndexedDocs(embeddingsProviderId, config.title);
-        return await this.retrieve(
-          baseUrl,
-          vector,
-          nRetrieve,
-          embeddingsProviderId,
-          true,
-        );
-      }
-      return undefined;
+    const downloadAndRetrievePreIndexedDoc = async (
+      preIndexedDoc: SiteIndexingConfig,
+    ) => {
+      await this.downloadAndAddPreIndexedDocs(
+        embeddingsProviderId,
+        preIndexedDoc.title,
+      );
+
+      return await this.retrieve(
+        baseUrl,
+        vector,
+        nRetrieve,
+        embeddingsProviderId,
+        true,
+      );
     };
 
-    const tableNames = await lance.tableNames();
-    if (!tableNames.includes(DocsService.DOCS_TABLE_NAME)) {
-      const downloaded = await downloadDocs();
-      if (downloaded) {
-        return downloaded;
-      }
+    if (shouldDownloadPreIndexedDoc) {
+      return await downloadAndRetrievePreIndexedDoc(preIndexedDoc!);
     }
 
     const table = await lance.openTable(DocsService.DOCS_TABLE_NAME);
+
     let docs: LanceDbDocsRow[] = await table
       .search(vector)
       .limit(nRetrieve)
@@ -104,11 +110,11 @@ export class DocsService {
 
     docs = docs.filter((doc) => doc.baseurl === baseUrl);
 
-    if ((!docs || docs.length === 0) && !nested) {
-      const downloaded = await downloadDocs();
-      if (downloaded) {
-        return downloaded;
-      }
+    shouldDownloadPreIndexedDoc =
+      (!docs || docs.length === 0) && !nested && isPreIndexedDoc;
+
+    if (shouldDownloadPreIndexedDoc) {
+      return await downloadAndRetrievePreIndexedDoc(preIndexedDoc!);
     }
 
     return docs.map((doc) => ({
@@ -184,7 +190,7 @@ export class DocsService {
     return !!doc;
   }
 
-  private async downloadPreIndexedDocs(
+  private async downloadAndAddPreIndexedDocs(
     embeddingsProviderId: string,
     title: string,
   ) {
@@ -264,7 +270,8 @@ export class DocsService {
     const embeddings: number[][] = [];
 
     // Create embeddings of retrieved articles
-    console.log("Creating Embeddings for ", articles.length, " articles");
+    console.log(`Creating embeddings for ${articles.length} articles`);
+
     for (let i = 0; i < articles.length; i++) {
       const article = articles[i];
       yield {
@@ -312,5 +319,16 @@ export class DocsService {
       desc: "Done",
       status: "done",
     };
+  }
+
+  public isJetBrainsAndPreIndexedDocsProvider(
+    ideInfo: IdeInfo,
+    embeddingsProviderId: EmbeddingsProvider["id"],
+  ): boolean {
+    const isJetBrains = ideInfo.ideType === "jetbrains";
+    const isPreIndexedDocsProvider =
+      embeddingsProviderId === DocsService.preIndexedDocsEmbeddingsProvider.id;
+
+    return isJetBrains && isPreIndexedDocsProvider;
   }
 }
