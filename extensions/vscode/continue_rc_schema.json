@@ -2049,6 +2049,36 @@
       "title": "config.json",
       "type": "object",
       "properties": {
+        "docs": {
+          "title": "Docs",
+          "description": "A list of documentation sites to be indexed",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "The title of the documentation site"
+              },
+              "startUrl": {
+                "type": "string",
+                "description": "The starting URL for indexing the documentation"
+              },
+              "rootUrl": {
+                "type": "string",
+                "description": "The root URL of the documentation site"
+              },
+              "maxDepth": {
+                "type": "integer",
+                "description": "The maximum depth to crawl the documentation site"
+              }
+            },
+            "required": [
+              "title",
+              "startUrl"
+            ]
+          }
+        },
         "allowAnonymousTelemetry": {
           "title": "Allow Anonymous Telemetry",
           "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data. Learn more in [the docs](https://docs.continue.dev/telemetry).",

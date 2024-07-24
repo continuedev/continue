@@ -218,10 +218,7 @@ function ModelSelect() {
         >
           <div>{modelSelectTitle(defaultModel) || "Select model"}</div>
           <div className="pointer-events-none flex items-center">
-            <ChevronDownIcon
-              className="h-2.5 w-2.5"
-              aria-hidden="true"
-            />
+            <ChevronDownIcon className="h-2.5 w-2.5" aria-hidden="true" />
           </div>
         </StyledListboxButton>
         <StyledListboxOptions>

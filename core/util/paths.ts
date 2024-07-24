@@ -205,7 +205,7 @@ export async function migrate(
 
   if (!fs.existsSync(migrationPath)) {
     try {
-      await callback();
+      await Promise.resolve(callback());
       fs.writeFileSync(migrationPath, "");
     } catch (e) {
       console.warn(`Migration ${id} failed`, e);

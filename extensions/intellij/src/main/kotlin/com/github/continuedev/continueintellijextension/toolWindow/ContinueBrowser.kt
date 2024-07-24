@@ -68,7 +68,10 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         "index/forceReIndex",
         "index/indexingProgressBarInitialized",
         "completeOnboarding",
-        "addAutocompleteModel"
+        "addAutocompleteModel",
+        "config/listProfiles",
+        "profiles/switch",
+        "didChangeSelectedProfile",
     )
 
     private fun registerAppSchemeHandler() {

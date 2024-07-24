@@ -22,7 +22,7 @@ import { IdeMessengerContext } from "../context/IdeMessenger";
 import { useAuth } from "../hooks/useAuth";
 import { useWebviewListener } from "../hooks/useWebviewListener";
 import { RootState } from "../redux/store";
-import { getFontSize, isJetBrains } from "../util";
+import { getFontSize } from "../util";
 import HeaderButtonWithText from "./HeaderButtonWithText";
 
 const StyledListbox = styled(Listbox)`
@@ -235,7 +235,7 @@ function ProfileSwitcher(props: {}) {
       </HeaderButtonWithText>
 
       {/* Only show login if beta explicitly enabled */}
-      {!isJetBrains() && controlServerBetaEnabled && (
+      {controlServerBetaEnabled && (
         <HeaderButtonWithText
           text={
             session?.account
@@ -243,7 +243,7 @@ function ProfileSwitcher(props: {}) {
               : "Click to login to Continue"
           }
           onClick={() => {
-            if (session.account) {
+            if (session?.account) {
               logout();
             } else {
               login();

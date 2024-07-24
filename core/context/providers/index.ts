@@ -1,6 +1,8 @@
 import { ContextProviderName } from "../../index.js";
 import { BaseContextProvider } from "../index.js";
 import CodeContextProvider from "./CodeContextProvider.js";
+import CodebaseContextProvider from "./CodebaseContextProvider.js";
+import ContinueProxyContextProvider from "./ContinueProxyContextProvider.js";
 import CurrentFileContextProvider from "./CurrentFileContextProvider.js";
 import DatabaseContextProvider from "./DatabaseContextProvider.js";
 import DiffContextProvider from "./DiffContextProvider.js";
@@ -49,6 +51,7 @@ const Providers: (typeof BaseContextProvider)[] = [
   CodeContextProvider,
   CurrentFileContextProvider,
   URLContextProvider,
+  ContinueProxyContextProvider,
 ];
 
 export function contextProviderClassFromName(

@@ -177,6 +177,7 @@ export class ConfigHandler {
     const localProfileLoader = new LocalProfileLoader(
       ide,
       ideSettingsPromise,
+      controlPlaneClient,
       writeLog,
     );
     this.profiles = [new ProfileLifecycleManager(localProfileLoader)];

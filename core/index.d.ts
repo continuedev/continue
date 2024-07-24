@@ -859,6 +859,12 @@ interface ExperimentalConfig {
   quickActions?: QuickActionConfig[];
 }
 
+interface AnalyticsConfig {
+  type: string;
+  url?: string;
+  clientKey?: string;
+}
+
 // config.json
 export interface SerializedContinueConfig {
   env?: string[];
@@ -879,6 +885,7 @@ export interface SerializedContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -929,6 +936,8 @@ export interface Config {
   reranker?: RerankerDescription | Reranker;
   /** Experimental configuration */
   experimental?: ExperimentalConfig;
+  /** Analytics configuration */
+  analytics?: AnalyticsConfig;
 }
 
 // in the actual Continue source code
@@ -949,6 +958,7 @@ export interface ContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: Reranker;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
   docs?: SiteIndexingConfig[];
 }
 
@@ -967,4 +977,5 @@ export interface BrowserSerializedContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
 }

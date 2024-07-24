@@ -1,4 +1,5 @@
 import type { LLMOptions, ModelProvider } from "../../..";
+import { CONTROL_PLANE_URL } from "../../../control-plane/client";
 import OpenAI from "../OpenAI.js";
 
 class ContinueProxy extends OpenAI {
@@ -16,8 +17,7 @@ class ContinueProxy extends OpenAI {
   }
   static providerName: ModelProvider = "continue-proxy";
   static defaultOptions: Partial<LLMOptions> = {
-    apiBase:
-      "https://control-plane-api-service-i3dqylpbqa-uc.a.run.app/model-proxy/v1",
+    apiBase: new URL("/model-proxy/v1", CONTROL_PLANE_URL).toString(),
     useLegacyCompletionsEndpoint: false,
   };
 

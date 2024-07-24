@@ -36,6 +36,7 @@ import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
 
+import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
 import mergeJson from "../util/merge.js";
@@ -96,13 +97,16 @@ function loadSerializedConfig(
   workspaceConfigs: ContinueRcJson[],
   ideSettings: IdeSettings,
   ideType: IdeType,
+  overrideConfigJson: SerializedContinueConfig | undefined,
 ): SerializedContinueConfig {
   const configPath = getConfigJsonPath(ideType);
-  let config: SerializedContinueConfig;
-  try {
-    config = resolveSerializedConfig(configPath);
-  } catch (e) {
-    throw new Error(`Failed to parse config.json: ${e}`);
+  let config: SerializedContinueConfig = overrideConfigJson!;
+  if (!config) {
+    try {
+      config = resolveSerializedConfig(configPath);
+    } catch (e) {
+      throw new Error(`Failed to parse config.json: ${e}`);
+    }
   }
 
   if (config.allowAnonymousTelemetry === undefined) {
@@ -212,6 +216,7 @@ async function intermediateToFinalConfig(
   ideSettings: IdeSettings,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
+  workOsAccessToken: string | undefined,
   allowFreeTrial: boolean = true,
 ): Promise<ContinueConfig> {
   // Auto-detect models
@@ -365,7 +370,15 @@ async function intermediateToFinalConfig(
         console.warn(`Unknown context provider ${provider.name}`);
         continue;
       }
-      contextProviders.push(new cls(provider.params));
+      const instance: IContextProvider = new cls(provider.params);
+
+      // Handle continue-proxy
+      if (instance.description.title === "continue-proxy") {
+        (instance as ContinueProxyContextProvider).workOsAccessToken =
+          workOsAccessToken;
+      }
+
+      contextProviders.push(instance);
     } else {
       contextProviders.push(new CustomContextProviderClass(provider));
     }
@@ -545,9 +558,16 @@ async function loadFullConfigNode(
   ideType: IdeType,
   uniqueId: string,
   writeLog: (log: string) => Promise<void>,
+  workOsAccessToken: string | undefined,
+  overrideConfigJson: SerializedContinueConfig | undefined,
 ): Promise<ContinueConfig> {
   // Serialized config
-  let serialized = loadSerializedConfig(workspaceConfigs, ideSettings, ideType);
+  let serialized = loadSerializedConfig(
+    workspaceConfigs,
+    ideSettings,
+    ideType,
+    overrideConfigJson,
+  );
 
   // Convert serialized to intermediate config
   let intermediate = await serializedToIntermediateConfig(serialized, ide);
@@ -593,6 +613,7 @@ async function loadFullConfigNode(
     ideSettings,
     uniqueId,
     writeLog,
+    workOsAccessToken,
   );
   return finalConfig;
 }
