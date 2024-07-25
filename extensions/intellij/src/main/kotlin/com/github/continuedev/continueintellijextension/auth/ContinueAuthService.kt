@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.auth
 
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.google.gson.Gson
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.ide.util.PropertiesComponent
@@ -86,11 +87,9 @@ class ContinueAuthService {
     private suspend fun refreshToken(refreshToken: String) = withContext(Dispatchers.IO) {
         val client = OkHttpClient()
         val url = URL(CONTROL_PLANE_URL).toURI().resolve("/auth/refresh").toURL()
-        val jsonBody = JSONObject().apply {
-            put("refreshToken", refreshToken)
-        }
-
-        val requestBody = jsonBody.toString().toRequestBody("application/json".toMediaType())
+        val jsonBody = mapOf("refreshToken" to refreshToken)
+        val jsonString = Gson().toJson(jsonBody)
+        val requestBody = jsonString.toRequestBody("application/json".toMediaType())
 
         val request = Request.Builder()
             .url(url)
