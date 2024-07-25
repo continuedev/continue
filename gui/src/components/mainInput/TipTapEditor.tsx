@@ -5,6 +5,7 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
+import {Plugin} from "@tiptap/pm/state"
 import {
   ContextItemWithId,
   ContextProviderDescription,
@@ -259,7 +260,34 @@ function TipTapEditor(props: TipTapEditorProps) {
     extensions: [
       Document,
       History,
-      Image,
+      Image.extend({
+        addProseMirrorPlugins() {
+          const plugin = new Plugin({
+              props: {
+                handleDOMEvents: {
+                  paste(view, event) {
+                    const items = event.clipboardData.items;
+                    for (const item of items) {
+                      const file = item.getAsFile()
+                      file && 
+                      modelSupportsImages(defaultModel.provider, defaultModel.model, defaultModel.title, defaultModel.capability) &&
+                      handleImageFile(file).then((resp) => {
+                        if (!resp) return
+                        const [img, dataUrl] = resp
+                        const { schema } = view.state;
+                        const node = schema.nodes.image.create({ src: dataUrl });
+                        const tr = view.state.tr.insert(0, node);
+                        view.dispatch(tr);
+                      });
+                    }
+                    event.preventDefault();
+                  }
+                }
+              }
+            })
+          return [plugin]
+        }
+      }),
       Placeholder.configure({
         placeholder: () =>
           historyLengthRef.current === 0
