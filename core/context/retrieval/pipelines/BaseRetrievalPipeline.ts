@@ -61,7 +61,7 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
         filepath,
         fileContents,
         MAX_CHUNK_SIZE,
-        filepath, // TODO: Is this fine since we aren't storing this anywhere?
+        filepath,
       );
 
       for await (const chunk of fileChunks) {
