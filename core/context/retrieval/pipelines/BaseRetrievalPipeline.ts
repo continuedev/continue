@@ -56,13 +56,13 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     const chunks: Chunk[] = [];
 
     for (const filepath of recentlyEditedFilesSlice) {
-      const fileContents = await this.options.ide.readFile(filepath);
-      const fileChunks = chunkDocument(
+      const contents = await this.options.ide.readFile(filepath);
+      const fileChunks = chunkDocument({
         filepath,
-        fileContents,
-        MAX_CHUNK_SIZE,
-        filepath,
-      );
+        contents,
+        maxChunkSize: MAX_CHUNK_SIZE,
+        digest: filepath,
+      });
 
       for await (const chunk of fileChunks) {
         chunks.push(chunk);
