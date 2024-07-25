@@ -17,8 +17,7 @@ import {
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
-import { getAuthUrlForTokenPage } from "./control-plane/auth";
-import { ControlPlaneClient } from "./control-plane/client";
+import { ControlPlaneClient } from "./control-plane/client.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
 import { DocsService } from "./indexing/docs/DocsService.js";
 import Ollama from "./llm/llms/Ollama.js";
@@ -32,6 +31,8 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson } from "./util/paths.js";
 import { Telemetry } from "./util/posthog.js";
 import { streamDiffLines } from "./util/verticalEdit.js";
+import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache.js";
+import { getAuthUrlForTokenPage } from "./control-plane/auth/index.js";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -663,6 +664,10 @@ export class Core {
       const url = await getAuthUrlForTokenPage();
       return { url };
     });
+
+    on("didChangeActiveTextEditor", ({ data: { filepath } }) => {
+      recentlyEditedFilesCache.set(filepath, filepath);
+    });
   }
 
   private indexingCancellationController: AbortController | undefined;
@@ -694,10 +699,16 @@ export class Core {
       );
 
     if (isJetBrainsAndPreIndexedDocsProvider) {
-      this.ide.errorPopup(
-        `${DocsService.preIndexedDocsEmbeddingsProvider.id} cannot be used as an embeddings provider with JetBrains. Please select a different embeddings provider.`,
-      );
-
+      try {
+        this.ide.errorPopup(
+          "The 'transformers.js' embeddings provider currently cannot be used to index " +
+            "documentation in JetBrains. To enable documentation indexing, you can use " +
+            "any of the other providers described in the docs: " +
+            "https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
+        );
+      } catch (error) {
+        console.error("Failed to show error popup:", error);
+      }
       this.globalContext.update(
         "curEmbeddingsProviderId",
         curEmbeddingsProviderId,

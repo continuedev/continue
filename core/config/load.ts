@@ -361,13 +361,21 @@ async function intermediateToFinalConfig(
     new CodebaseContextProvider({}),
   ];
 
+  const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
+    ({ description: { title } }) => title,
+  );
+
   // Context providers
   const contextProviders: IContextProvider[] = DEFAULT_CONTEXT_PROVIDERS;
+
   for (const provider of config.contextProviders || []) {
     if (isContextProviderWithParams(provider)) {
       const cls = contextProviderClassFromName(provider.name) as any;
       if (!cls) {
-        console.warn(`Unknown context provider ${provider.name}`);
+        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(provider.name)) {
+          console.warn(`Unknown context provider ${provider.name}`);
+        }
+
         continue;
       }
       const instance: IContextProvider = new cls(provider.params);

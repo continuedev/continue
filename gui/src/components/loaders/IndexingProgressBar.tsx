@@ -8,6 +8,7 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { RootState } from "../../redux/store";
 import { getFontSize, isJetBrains } from "../../util";
 import StatusDot from "./StatusDot";
+import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 
 const STATUS_COLORS = {
   DISABLED: lightGray, // light gray
@@ -108,7 +109,10 @@ const IndexingProgressBar = ({
   }, [paused]);
 
   function getIndexingErrMsg(msg: string): string {
-    if (isJetBrains() && embeddingsProvider === "all-MiniLM-L6-v2") {
+    if (
+      isJetBrains() &&
+      embeddingsProvider === TransformersJsEmbeddingsProvider.model
+    ) {
       return "The 'transformers.js' embeddingsProvider is currently unsupported in JetBrains. To enable codebase indexing, you can use any of the other providers described in the docs: https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers";
     }
     return msg;

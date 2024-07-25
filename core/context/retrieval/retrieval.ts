@@ -3,11 +3,12 @@ import {
   ContextItem,
   ContextProviderExtras,
 } from "../../index.js";
-
+import TransformersJsEmbeddingsProvider from "../../indexing/embeddings/TransformersJsEmbeddingsProvider.js";
 import { getRelativePath } from "../../util/index.js";
 import { RetrievalPipelineOptions } from "./pipelines/BaseRetrievalPipeline.js";
 import NoRerankerRetrievalPipeline from "./pipelines/NoRerankerRetrievalPipeline.js";
 import RerankerRetrievalPipeline from "./pipelines/RerankerRetrievalPipeline.js";
+import { recentlyEditedFilesCache } from "./recentlyEditedFilesCache.js";
 
 export async function retrieveContextItemsFromEmbeddings(
   extras: ContextProviderExtras,
@@ -19,26 +20,19 @@ export async function retrieveContextItemsFromEmbeddings(
   }
 
   // transformers.js not supported in JetBrains IDEs right now
-  if (
-    extras.embeddingsProvider.id === "all-MiniLM-L6-v2" &&
-    (await extras.ide.getIdeInfo()).ideType === "jetbrains"
-  ) {
+
+  const isJetBrainsAndTransformersJs =
+    extras.embeddingsProvider.id === TransformersJsEmbeddingsProvider.model &&
+    (await extras.ide.getIdeInfo()).ideType === "jetbrains";
+
+  if (isJetBrainsAndTransformersJs) {
     throw new Error(
-      "The transformers.js context provider is not currently supported in JetBrains. " +
+      "The 'transformers.js' context provider is not currently supported in JetBrains. " +
         "For now, you can use Ollama to set up local embeddings, or use our 'free-trial' " +
         "embeddings provider. See here to learn more: " +
         "https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers",
     );
   }
-
-  // Fill half of the context length, up to a max of 100 snippets
-  const contextLength = extras.llm.contextLength;
-  const tokensPerSnippet = 512;
-  const nFinal =
-    options?.nFinal ?? Math.min(50, contextLength / tokensPerSnippet / 2);
-  const useReranking = extras.reranker !== undefined;
-  const nRetrieve =
-    useReranking === false ? nFinal : options?.nRetrieve || 2 * nFinal;
 
   // Get tags to retrieve for
   const workspaceDirs = await extras.ide.getWorkspaceDirs();
@@ -46,6 +40,14 @@ export async function retrieveContextItemsFromEmbeddings(
   if (workspaceDirs.length === 0) {
     throw new Error("No workspace directories found");
   }
+
+  // Fill half of the context length, up to a max of 100 snippets
+  const contextLength = extras.llm.contextLength;
+  const tokensPerSnippet = 512;
+  const nFinal =
+    options?.nFinal ?? Math.min(50, contextLength / tokensPerSnippet / 2);
+  const useReranking = !!extras.reranker;
+  const nRetrieve = useReranking ? options?.nRetrieve || 2 * nFinal : nFinal;
 
   const branches = (await Promise.race([
     Promise.all(workspaceDirs.map((dir) => extras.ide.getBranch(dir))),
@@ -55,6 +57,7 @@ export async function retrieveContextItemsFromEmbeddings(
       }, 500);
     }),
   ])) as string[];
+
   const tags: BranchAndDir[] = workspaceDirs.map((directory, i) => ({
     directory,
     branch: branches[i],
@@ -63,6 +66,7 @@ export async function retrieveContextItemsFromEmbeddings(
   const pipelineType = useReranking
     ? RerankerRetrievalPipeline
     : NoRerankerRetrievalPipeline;
+
   const pipelineOptions: RetrievalPipelineOptions = {
     nFinal,
     nRetrieve,
@@ -73,6 +77,7 @@ export async function retrieveContextItemsFromEmbeddings(
     ide: extras.ide,
     input: extras.fullInput,
   };
+
   const pipeline = new pipelineType(pipelineOptions);
   const results = await pipeline.run();
 

@@ -68,6 +68,7 @@
     "openai": "^4.20.1",
     "pg": "^8.11.3",
     "posthog-node": "^3.6.3",
+    "quick-lru": "^7.0.0",
     "replicate": "^0.26.0",
     "request": "^2.88.2",
     "socket.io-client": "^4.7.3",
@@ -77,7 +78,7 @@
     "tree-sitter-wasms": "^0.1.11",
     "uuid": "^9.0.1",
     "vectordb": "^0.4.20",
-    "web-tree-sitter": "^0.22.0",
+    "web-tree-sitter": "^0.21.0",
     "win-ca": "^3.5.1",
     "yaml": "^2.4.2",
     "zod": "^3.23.8"
