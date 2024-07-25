@@ -168,20 +168,20 @@ const codegeexFimTemplate: AutocompleteTemplate = {
       ...snippets.map((snippet) => snippet.filepath),
       filepath,
     ]);
-    const baseTemplate = `###PATH:${relativePaths[relativePaths.length - 1]}\n###LANGUAGE:\n###MODE:\n<｜code_suffix｜>${suffix}<｜code_prefix｜>${prefix}<｜code_middle｜>`;
+    const baseTemplate = `###PATH:${relativePaths[relativePaths.length - 1]}\n###LANGUAGE:\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
     if (snippets.length == 0)
     {
-      return baseTemplate;
+      return `<|user|>\n${baseTemplate}<|assistant|>\n`;
     }
     const references =
       `###REFERENCE:\n${snippets
       .map((snippet, i) => `###PATH:${relativePaths[i]}\n${snippet.contents}\n`)
       .join("###REFERENCE:\n")}`;
-    const prompt = `${references}\n${baseTemplate}`;
+    const prompt = `<|user|>\n${references}\n${baseTemplate}<|assistant|>\n`;
     return prompt;
   },
   completionOptions: {
-    stop: ["<｜code_suffix｜>", "<｜code_prefix｜>", "<｜code_middle｜>"],
+    stop: ["<|user|>", "<|code_suffix|>", "<|code_prefix|>", "<|code_middle|>", "<|assistant|>", "<|endoftext|>"],
   },
 };
 
