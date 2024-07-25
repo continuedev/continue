@@ -122,24 +122,6 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         status: "indexing",
       };
       markComplete([item], IndexResultType.Compute);
-      // Insert chunks
-      for await (const chunk of chunkDocument(
-        item.path,
-        contents[i],
-        this.maxChunkSize,
-        item.cacheKey,
-      )) {
-        handleChunk(chunk);
-      }
-
-      accumulatedProgress =
-        (i / results.compute.length) * (1 - progressReservedForTagging);
-      yield {
-        progress: accumulatedProgress,
-        desc: `Chunking ${getBasename(item.path)}`,
-        status: "indexing",
-      };
-      markComplete([item], IndexResultType.Compute);
     }
 
     // Add tag
