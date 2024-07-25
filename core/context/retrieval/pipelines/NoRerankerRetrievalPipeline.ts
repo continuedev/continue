@@ -22,7 +22,7 @@ export default class NoRerankerRetrievalPipeline extends BaseRetrievalPipeline {
     );
 
     const recentlyEditedFilesChunks =
-      await this.calculateAndRetrieveRecentlyEditedFiles(recentlyEditedNFinal);
+      await this.retrieveAndChunkRecentlyEditedFiles(recentlyEditedNFinal);
 
     retrievalResults.push(
       ...recentlyEditedFilesChunks,

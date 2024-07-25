@@ -4,12 +4,12 @@ import {
   EmbeddingsProvider,
   IDE,
   Reranker,
-} from "../../..";
-import { chunkDocument } from "../../../indexing/chunk/chunk";
-import { LanceDbIndex } from "../../../indexing/LanceDbIndex";
-import { MAX_CHUNK_SIZE } from "../../../llm/constants";
-import { retrieveFts } from "../fullTextSearch";
-import { recentlyEditedFilesCache } from "../recentlyEditedFilesCache";
+} from "../../../index.js";
+import { chunkDocument } from "../../../indexing/chunk/chunk.js";
+import { LanceDbIndex } from "../../../indexing/LanceDbIndex.js";
+import { MAX_CHUNK_SIZE } from "../../../llm/constants.js";
+import { retrieveFts } from "../fullTextSearch.js";
+import { recentlyEditedFilesCache } from "../recentlyEditedFilesCache.js";
 
 export interface RetrievalPipelineOptions {
   ide: IDE;
@@ -35,10 +35,10 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     );
   }
 
-  protected async calculateAndRetrieveRecentlyEditedFiles(
+  protected async retrieveAndChunkRecentlyEditedFiles(
     n: number,
   ): Promise<Chunk[]> {
-    const recentlyEditedFilesRetrieveSlice = Array.from(
+    const recentlyEditedFilesSlice = Array.from(
       recentlyEditedFilesCache.keys(),
     ).slice(0, n);
 
@@ -46,16 +46,16 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     // include additional open files. This is useful in the case where a user
     // has many tabs open and reloads their IDE. They now have 0 recently edited files,
     // but many open tabs that represent what they were working on prior to reload.
-    if (recentlyEditedFilesRetrieveSlice.length < n) {
+    if (recentlyEditedFilesSlice.length < n) {
       const openFiles = await this.options.ide.getOpenFiles();
-      recentlyEditedFilesRetrieveSlice.push(
-        ...openFiles.slice(0, n - recentlyEditedFilesRetrieveSlice.length),
+      recentlyEditedFilesSlice.push(
+        ...openFiles.slice(0, n - recentlyEditedFilesSlice.length),
       );
     }
 
     const chunks: Chunk[] = [];
 
-    for (const filepath of recentlyEditedFilesRetrieveSlice) {
+    for (const filepath of recentlyEditedFilesSlice) {
       const fileContents = await this.options.ide.readFile(filepath);
       const fileChunks = chunkDocument(
         filepath,
