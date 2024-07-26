@@ -81,4 +81,11 @@ export class OpenAIApi implements BaseLlmApi {
       }
     }
   }
+
+  async embed(
+    body: OpenAI.Embeddings.EmbeddingCreateParams,
+  ): Promise<OpenAI.Embeddings.CreateEmbeddingResponse> {
+    const response = await this.openai.embeddings.create(body);
+    return response;
+  }
 }

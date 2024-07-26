@@ -12,6 +12,8 @@ import {
   ChatCompletionChunk,
   ChatCompletionCreateParamsNonStreaming,
   ChatCompletionCreateParamsStreaming,
+  CreateEmbeddingResponse,
+  EmbeddingCreateParams,
 } from "openai/resources/index.js";
 import { BaseLlmApi, FimCreateParamsStreaming } from "./base.js";
 
@@ -216,5 +218,32 @@ export class AzureOpenAIApi implements BaseLlmApi {
     throw new Error(
       "Azure OpenAI does not support fill-in-the-middle (FIM) completions.",
     );
+  }
+
+  async embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse> {
+    const input = typeof body.input === "string" ? [body.input] : body.input;
+    const response = await this.client.getEmbeddings(
+      this.config.model,
+      input as any,
+      {
+        dimensions: body.dimensions,
+        model: body.model,
+      },
+    );
+
+    const output = {
+      data: response.data.map((item) => ({
+        ...item,
+        object: "embedding" as const,
+      })),
+      model: body.model,
+      object: "list" as const,
+      usage: {
+        prompt_tokens: response.usage.promptTokens,
+        total_tokens: response.usage.totalTokens,
+      },
+    };
+
+    return output;
   }
 }
