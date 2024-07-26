@@ -561,7 +561,7 @@ After it's up and running, you can start using Continue.`,
         placeholder: "Enter the model id",
         iswatsonxattribute: true,
       },
-      
+
       ...completionParamsInputsConfigs,
     ],
     icon: "WatsonX.png",
