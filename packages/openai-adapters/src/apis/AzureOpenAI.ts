@@ -15,7 +15,12 @@ import {
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
 } from "openai/resources/index.js";
-import { BaseLlmApi, FimCreateParamsStreaming } from "./base.js";
+import {
+  BaseLlmApi,
+  CreateRerankResponse,
+  FimCreateParamsStreaming,
+  RerankCreateParams,
+} from "./base.js";
 
 dotenv.config();
 
@@ -245,5 +250,9 @@ export class AzureOpenAIApi implements BaseLlmApi {
     };
 
     return output;
+  }
+
+  async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
+    throw new Error("Azure OpenAI does not support reranking.");
   }
 }

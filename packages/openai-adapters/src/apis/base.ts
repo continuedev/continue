@@ -15,6 +15,27 @@ export interface FimCreateParamsStreaming
   suffix: string;
 }
 
+export interface RerankCreateParams {
+  query: string;
+  documents: string[];
+  model: string;
+  top_k?: number;
+}
+
+export interface CreateRerankItem {
+  relevance_score: number;
+  index: number;
+}
+
+export interface CreateRerankResponse {
+  object: "list";
+  data: CreateRerankItem[];
+  model: string;
+  usage: {
+    total_tokens: number;
+  };
+}
+
 export interface BaseLlmApi {
   // Chat, no stream
   chatCompletionNonStream(
@@ -45,5 +66,5 @@ export interface BaseLlmApi {
   embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse>;
 
   // Reranking
-  // rerank(body: any): Promise<any>;
+  rerank(body: RerankCreateParams): Promise<CreateRerankResponse>;
 }

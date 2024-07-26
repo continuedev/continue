@@ -11,7 +11,12 @@ import {
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
 } from "openai/resources/index.mjs";
-import { BaseLlmApi, FimCreateParamsStreaming } from "./base.js";
+import {
+  BaseLlmApi,
+  CreateRerankResponse,
+  FimCreateParamsStreaming,
+  RerankCreateParams,
+} from "./base.js";
 
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
@@ -87,5 +92,21 @@ export class OpenAIApi implements BaseLlmApi {
   ): Promise<OpenAI.Embeddings.CreateEmbeddingResponse> {
     const response = await this.openai.embeddings.create(body);
     return response;
+  }
+
+  async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
+    const endpoint = new URL("rerank", this.config.apiBase);
+    const response = await fetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "x-api-key": this.config.apiKey ?? "",
+        Authorization: `Bearer ${this.config.apiKey}`,
+      },
+    });
+    const data = await response.json();
+    return data as any;
   }
 }
