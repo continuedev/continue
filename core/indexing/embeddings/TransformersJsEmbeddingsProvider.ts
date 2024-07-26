@@ -38,9 +38,12 @@ class EmbeddingsPipeline {
 
 export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static maxGroupSize: number = 4;
+  static model: string = "all-MiniLM-L6-v2";
 
   constructor() {
-    super({ model: "all-MiniLM-L6-v2" }, () => Promise.resolve(null));
+    super({ model: TransformersJsEmbeddingsProvider.model }, () =>
+      Promise.resolve(null),
+    );
   }
 
   async embed(chunks: string[]) {

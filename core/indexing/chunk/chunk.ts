@@ -4,6 +4,13 @@ import { supportedLanguages } from "../../util/treeSitter.js";
 import { basicChunker } from "./basic.js";
 import { codeChunker } from "./code.js";
 
+export type ChunkDocumentParam = {
+  filepath: string;
+  contents: string;
+  maxChunkSize: number;
+  digest: string;
+};
+
 async function* chunkDocumentWithoutId(
   filepath: string,
   contents: string,
@@ -30,12 +37,12 @@ async function* chunkDocumentWithoutId(
   yield* basicChunker(contents, maxChunkSize);
 }
 
-export async function* chunkDocument(
-  filepath: string,
-  contents: string,
-  maxChunkSize: number,
-  digest: string,
-): AsyncGenerator<Chunk> {
+export async function* chunkDocument({
+  filepath,
+  contents,
+  maxChunkSize,
+  digest,
+}: ChunkDocumentParam): AsyncGenerator<Chunk> {
   let index = 0;
   for await (const chunkWithoutId of chunkDocumentWithoutId(
     filepath,
