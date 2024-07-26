@@ -111,7 +111,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
         maxChunkSize: this.maxChunkSize,
         digest: item.cacheKey,
       })) {
-        handleChunk(chunk);
+        await handleChunk(chunk);
       }
 
       accumulatedProgress =

@@ -36,9 +36,9 @@ import {
   compileChatMessages,
   countTokens,
   pruneRawPromptFromTop,
-  stripImages,
 } from "./countTokens.js";
 import CompletionOptionsForModels from "./templates/options.js";
+import { stripImages } from "./images.js";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;
