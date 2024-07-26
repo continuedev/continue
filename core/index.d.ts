@@ -343,6 +343,14 @@ export interface LLMOptions {
   region?: string;
   projectId?: string;
   capabilities?: ModelCapability;
+
+  // WatsonX options
+  WatsonxUrl?: string;
+  WatsonxApiKey?: string;
+  WatsonxZenApiKeyBase64?:string// Required if using watsonx software with ZenApiKey auth
+  WatsonxUsername?:string;
+  WatsonxPassword?:string;
+  WatsonxProjectId?: string;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -594,7 +602,8 @@ type ModelProvider =
   | "deepseek"
   | "azure"
   | "openai-aiohttp"
-  | "msty";
+  | "msty"
+  | "WatsonX";
 
 export type ModelName =
   | "AUTODETECT"

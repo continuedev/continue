@@ -684,6 +684,74 @@ export const models: { [key: string]: ModelPackage } = {
     icon: "anthropic.png",
     isOpenSource: false,
   },
+  graniteChat: {
+    title: "WatsonX - Granite Chat",
+    description:
+       "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-13b-chat-v2",
+      contextLength: 20_000,
+      title: "Granite Chat",
+     },
+    providerOptions: ["WatsonX"],
+    icon: "",
+    isOpenSource: false,
+  },
+  graniteCode: {
+    title: "WatsonX - Granite Code",
+    description:
+       "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-13b-instruct-v2",
+      contextLength: 20_000,
+      title: "Granite Code",
+     },
+    providerOptions: ["WatsonX"],
+    icon: "WatsonX.png",
+    isOpenSource: false,
+  },
+  MistralLarge: {
+    title: "WatsonX - Mistral",
+    description:
+       "Mistral Large, the most advanced Large Language Model (LLM) developed by Mistral Al, is an exceptionally powerful model.",
+    params: {
+      model: "mistralai/mistral-large",
+      contextLength: 20_000,
+      title: "WatsonX - Mistral",
+     },
+    providerOptions: ["WatsonX"],
+    icon: "mistral.png",
+    isOpenSource: false,
+  },
+  MetaLlama3:{
+    title: "Meta-llama3",
+    description:
+      "Llama-3 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Meta-llama3-8b",
+      model: "meta-llama/llama-3-8b-chat",
+      contextLength: 20_000,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "8b": {
+            model: "meta-llama/llama-3-8b-chat",
+            title: "Meta-llama3-8b",
+          },
+          "70b": {
+            model: "meta-llama/llama-3-70b-chat",
+            title: "Meta-llama3-70b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["WatsonX"],
+    isOpenSource: false,
+  },
   AUTODETECT: {
     title: "Autodetect",
     description:

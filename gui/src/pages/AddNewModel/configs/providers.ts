@@ -504,4 +504,73 @@ After it's up and running, you can start using Continue.`,
     ],
     collectInputFor: [...completionParamsInputsConfigs],
   },
+  WatsonX: {
+    title: "WatsonX",
+    provider: "WatsonX",
+    refPage: "watsonX",
+    description:
+      "Explore foundation models from IBM and other third-parties depending on your use case.",
+    longDescription: `WatsonX`,
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "WatsonxUrl",
+        label: "WatsonX URL",
+        placeholder: "Enter your WatsonxUrl",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "WatsonxApiKey",
+        label: "WatsonX API Key",
+        placeholder: "Enter your API key",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "WatsonxProjectId",
+        label: "WatsonX Project Id",
+        placeholder: "Enter your project Id",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "WatsonxUsername",
+        label: "WatsonX username",
+        placeholder: "Enter your Username",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "WatsonxPassword",
+        label: "WatsonX Password",
+        placeholder: "Enter your password",
+        required: true,
+      },
+      {
+        inputType: "text",
+        key: "title",
+        label: "Model name",
+        placeholder: "Enter the Model name",
+        iswatsonxattribute: true,
+      },
+      {
+        inputType: "text",
+        key: "model",
+        label: "Model Id",
+        placeholder: "Enter the model id",
+        iswatsonxattribute: true,
+      },
+      
+      ...completionParamsInputsConfigs,
+    ],
+    icon: "WatsonX.png",
+    tags: [ModelProviderTags.RequiresApiKey],
+    packages: [
+      models.graniteCode,
+      models.graniteChat,
+      models.MistralLarge,
+      models.MetaLlama3
+    ],
+  },
 };

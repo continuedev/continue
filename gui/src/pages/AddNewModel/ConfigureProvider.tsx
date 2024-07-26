@@ -20,6 +20,7 @@ import { setDefaultModel } from "../../redux/slices/stateSlice";
 import { updatedObj } from "../../util";
 import type { ProviderInfo } from "./configs/providers";
 import { providers } from "./configs/providers";
+import ContinueButton from "../../components/mainInput/ContinueButton";
 
 const GridDiv = styled.div`
   display: grid;
@@ -64,11 +65,35 @@ function ConfigureProvider() {
     undefined,
   );
 
+  const [selectedModel, setSelectedModel] = useState({});
+
   useEffect(() => {
     if (providerName) {
       setModelInfo(providers[providerName]);
     }
   }, [providerName]);
+  useEffect(() => {
+    if (modelInfo) {
+      setSelectedModel(modelInfo);
+    }
+  }, [modelInfo]);
+  const handleContinue = () => {
+    if (!selectedModel) return;
+
+    let formParams: any = {};
+    for (const d of modelInfo.collectInputFor || []) {
+      const val = formMethods.watch(d.key);
+      if (val === "" || val === undefined || val === null) continue;
+      formParams = updatedObj(formParams, { [d.key]: d.inputType === "text" ? val : parseFloat(val) });
+    }
+    const model = {
+      ...formParams,
+      provider: modelInfo.provider,
+    };
+    ideMessenger.post("config/addModel", { model });
+    dispatch(setDefaultModel({ title: model.title, force: true }));
+    navigate("/");
+  };
 
   const disableModelCards = useCallback(() => {
     return (
@@ -162,6 +187,8 @@ function ConfigureProvider() {
               </summary>
 
               {modelInfo?.collectInputFor?.map((d, idx) => {
+                   // Check the attribute is only for Watson X 
+                   if(d.iswatsonxattribute) return null;
                 if (d.required) return null;
                 return (
                   <div key={idx}>
@@ -185,6 +212,42 @@ function ConfigureProvider() {
             </details>
           )}
 
+{(modelInfo?.collectInputFor?.filter((d) => d.iswatsonxattribute).length ||
+            0) > 0 && (
+            <details>
+              <summary className="mb-2 cursor-pointer">
+                <b>WatsonX (Select a model by model id)</b>
+              </summary>
+
+              {modelInfo?.collectInputFor?.map((d, idx) => {
+                // Check the attribute is only for Watson X 
+                if(d.iswatsonxattribute) 
+                return (
+                  <div key={idx}>
+                    <label htmlFor={d.key}>{d.label}</label>
+                    <Input
+                      type={d.inputType}
+                      id={d.key}
+                      className="border-2 border-gray-200 rounded-md p-2 m-2"
+                      placeholder={d.label}
+                      defaultValue={d.defaultValue}
+                      min={d.min}
+                      max={d.max}
+                      step={d.step}
+                      {...formMethods.register(d.key, {
+                        required: false,
+                      })}
+                    />
+                  </div>
+                );
+              })}
+            <ContinueButton onClick={handleContinue}
+              disabled={disableModelCards() || (
+                modelInfo?.collectInputFor
+                  ?.filter((d) => d.iswatsonxattribute)
+                  .some((d) => !formMethods.watch(d.key)))} showStop={false}></ContinueButton>
+            </details>
+          )}
           <h3 className="mb-2">Select a model preset</h3>
         </div>
         <GridDiv>
