@@ -10,7 +10,13 @@ async function embedOne(
   customFetch: FetchFunction,
 ) {
   const embedding = await withExponentialBackoff<number[]>(async () => {
-    const resp = await customFetch(new URL("api/embeddings", options.apiBase), {
+    let apiBase = options.apiBase!;
+
+    if (!apiBase.endsWith("/")) {
+      apiBase += "/";
+    }
+
+    const resp = await customFetch(new URL("api/embeddings", apiBase), {
       method: "POST",
       body: JSON.stringify({
         model: options.model,
