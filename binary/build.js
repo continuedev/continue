@@ -158,11 +158,18 @@ async function installNodeModuleInTempDirAndCopyToCurrent(packageName, toCopy) {
     );
   });
 
-  fs.copyFileSync(
-    path.join(__dirname, "../core/vendor/tree-sitter.wasm"),
-    path.join(__dirname, "out/tree-sitter.wasm"),
-  );
-  console.log("[info] Copied tree-sitter wasms");
+  const filesToCopy = [
+    "../core/vendor/tree-sitter.wasm",
+    "../core/llm/llamaTokenizerWorkerPool.mjs",
+    "../core/llm/llamaTokenizer.mjs",
+  ];
+  for (const f of filesToCopy) {
+    fs.copyFileSync(
+      path.join(__dirname, f),
+      path.join(__dirname, "out", path.basename(f)),
+    );
+    console.log(`[info] Copied ${path.basename(f)}`);
+  }
 
   console.log("[info] Cleaning up artifacts from previous builds...");
 

@@ -8,7 +8,7 @@ import {
 } from "../../autocomplete/lineStream.js";
 import { streamLines } from "../../diff/util.js";
 import { ContextItemWithId, ILLM, SlashCommand } from "../../index.js";
-import { stripImages } from "../../llm/countTokens.js";
+import { stripImages } from "../../llm/images.js";
 import {
   dedentAndGetCommonWhitespace,
   getMarkdownLanguageTagForFile,
