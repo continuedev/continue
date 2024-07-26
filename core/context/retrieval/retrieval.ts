@@ -8,7 +8,6 @@ import { getRelativePath } from "../../util/index.js";
 import { RetrievalPipelineOptions } from "./pipelines/BaseRetrievalPipeline.js";
 import NoRerankerRetrievalPipeline from "./pipelines/NoRerankerRetrievalPipeline.js";
 import RerankerRetrievalPipeline from "./pipelines/RerankerRetrievalPipeline.js";
-import { recentlyEditedFilesCache } from "./recentlyEditedFilesCache.js";
 
 export async function retrieveContextItemsFromEmbeddings(
   extras: ContextProviderExtras,
