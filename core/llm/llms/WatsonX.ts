@@ -20,9 +20,9 @@ class WatsonX extends BaseLLM {
     super(options);
   }
   async getBearerToken(): Promise<{ token: string, expiration: number }> {
-    if (this.WatsonxUrl != null && this.WatsonxUrl.includes("cloud.ibm.com")) {
+    if (this.watsonxUrl != null && this.watsonxUrl.includes("cloud.ibm.com")) {
       // watsonx SaaS
-      const wxToken = await (await fetch(`https://iam.cloud.ibm.com/identity/token?apikey=${this.WatsonxApiKey}&grant_type=urn:ibm:params:oauth:grant-type:apikey`, {
+      const wxToken = await (await fetch(`https://iam.cloud.ibm.com/identity/token?apikey=${this.watsonxApiKey}&grant_type=urn:ibm:params:oauth:grant-type:apikey`, {
         method: "POST",
         headers: {
           "Content-Type": "application/x-www-form-urlencoded",
@@ -35,27 +35,27 @@ class WatsonX extends BaseLLM {
       };
     } else {
       // watsonx Software
-      if (this.WatsonxZenApiKeyBase64 && this.WatsonxZenApiKeyBase64 !== "YOUR_WATSONX_ZENAPIKEY") {
+      if (this.watsonxZenApiKeyBase64 && this.watsonxZenApiKeyBase64 !== "YOUR_WATSONX_ZENAPIKEY") {
         // Using ZenApiKey auth
         return {
-          token: this.WatsonxZenApiKeyBase64,
+          token: this.watsonxZenApiKeyBase64,
           expiration: -1
         };
       } else {
         // Using username/password auth
 
-        const wxToken = await (await fetch(`${this.WatsonxUrl}/icp4d-api/v1/authorize`, {
+        const wxToken = await (await fetch(`${this.watsonxUrl}/icp4d-api/v1/authorize`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
             "Accept": "application/json"
           },
           body: JSON.stringify({
-            "username": this.WatsonxUsername,
-            "password": this.WatsonxPassword
+            "username": this.watsonxUsername,
+            "password": this.watsonxPassword
           })
         })).json();
-        const wxTokenExpiry = await (await fetch(`${this.WatsonxUrl}/usermgmt/v1/user/tokenExpiry`, {
+        const wxTokenExpiry = await (await fetch(`${this.watsonxUrl}/usermgmt/v1/user/tokenExpiry`, {
           method: "GET",
           headers: {
             "Accept": "application/json",
@@ -70,7 +70,7 @@ class WatsonX extends BaseLLM {
     }
   }
 
-  static providerName: ModelProvider = "WatsonX";
+  static providerName: ModelProvider = "watsonx";
 
   protected _convertMessage(message: ChatMessage) {
     if (typeof message.content === "string") {
@@ -155,7 +155,7 @@ class WatsonX extends BaseLLM {
     } else {
       console.log(`Reusing token (expires in ${(watsonxConfig.accessToken.expiration - now) / 60} mins)`);
     }
-    var streamResponse = await fetch(`${this.WatsonxUrl}/ml/v1/text/generation_stream?version=2023-05-29`, {
+    var streamResponse = await fetch(`${this.watsonxUrl}/ml/v1/text/generation_stream?version=2023-05-29`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -171,7 +171,7 @@ class WatsonX extends BaseLLM {
           "repetition_penalty": 1
         },
         "model_id": options.model,
-        "project_id": this.WatsonxProjectId
+        "project_id": this.watsonxProjectId
       })
     });
 

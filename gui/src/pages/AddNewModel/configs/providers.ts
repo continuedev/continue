@@ -19,6 +19,7 @@ export interface InputDescriptor {
   required?: boolean;
   description?: string;
   [key: string]: any;
+  isWatsonxAttribute?: boolean;
 }
 
 export interface ProviderInfo {
@@ -504,9 +505,9 @@ After it's up and running, you can start using Continue.`,
     ],
     collectInputFor: [...completionParamsInputsConfigs],
   },
-  WatsonX: {
+  watsonx: {
     title: "WatsonX",
-    provider: "WatsonX",
+    provider: "watsonx",
     refPage: "watsonX",
     description:
       "Explore foundation models from IBM and other third-parties depending on your use case.",
@@ -514,35 +515,35 @@ After it's up and running, you can start using Continue.`,
     collectInputFor: [
       {
         inputType: "text",
-        key: "WatsonxUrl",
+        key: "watsonxUrl",
         label: "WatsonX URL",
         placeholder: "Enter your WatsonxUrl",
         required: true,
       },
       {
         inputType: "text",
-        key: "WatsonxApiKey",
+        key: "watsonxApiKey",
         label: "WatsonX API Key",
         placeholder: "Enter your API key",
         required: true,
       },
       {
         inputType: "text",
-        key: "WatsonxProjectId",
+        key: "watsonxProjectId",
         label: "WatsonX Project Id",
         placeholder: "Enter your project Id",
         required: true,
       },
       {
         inputType: "text",
-        key: "WatsonxUsername",
+        key: "watsonxUsername",
         label: "WatsonX username",
         placeholder: "Enter your Username",
         required: true,
       },
       {
         inputType: "text",
-        key: "WatsonxPassword",
+        key: "wsatsonxPassword",
         label: "WatsonX Password",
         placeholder: "Enter your password",
         required: true,
@@ -552,14 +553,14 @@ After it's up and running, you can start using Continue.`,
         key: "title",
         label: "Model name",
         placeholder: "Enter the Model name",
-        iswatsonxattribute: true,
+        isWatsonxAttribute: true,
       },
       {
         inputType: "text",
         key: "model",
         label: "Model Id",
         placeholder: "Enter the model id",
-        iswatsonxattribute: true,
+        isWatsonxAttribute: true,
       },
 
       ...completionParamsInputsConfigs,
