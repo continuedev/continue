@@ -423,7 +423,6 @@
                 "anyOf": [
                   {
                     "enum": [
-                      "@cf/meta/llama-3.1-8b-instruct",
                       "@cf/meta/llama-3-8b-instruct",
                       "@hf/thebloke/deepseek-coder-6.7b-instruct-awq",
                       "@cf/deepseek-ai/deepseek-math-7b-instruct",
