@@ -28,6 +28,7 @@ import AutocompleteLruCache from "./cache.js";
 import {
   noFirstCharNewline,
   onlyWhitespaceAfterEndOfLine,
+  stopAtStopTokens,
 } from "./charStream.js";
 import {
   constructAutocompletePrompt,
@@ -662,6 +663,7 @@ export class CompletionProvider {
         lang.endOfLine,
         fullStop,
       );
+      charGenerator = stopAtStopTokens(charGenerator, stop);
       charGenerator = this.bracketMatchingService.stopOnUnmatchedClosingBracket(
         charGenerator,
         prefix,

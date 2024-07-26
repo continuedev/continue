@@ -1,0 +1,4 @@
+project: extensions/vscode
+kind: Changed
+body: Significant improvements to indexing performance
+time: 2024-07-26T15:34:58.457908-07:00

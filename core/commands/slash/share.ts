@@ -3,7 +3,7 @@ import { homedir } from "node:os";
 import path from "path";
 import { languageForFilepath } from "../../autocomplete/constructPrompt.js";
 import { SlashCommand } from "../../index.js";
-import { stripImages } from "../../llm/countTokens.js";
+import { stripImages } from "../../llm/images.js";
 
 // If useful elsewhere, helper funcs should move to core/util/index.ts or similar
 function getOffsetDatetime(date: Date): Date {

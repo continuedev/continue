@@ -241,11 +241,15 @@ const exe = os === "win32" ? ".exe" : "";
     );
   });
 
-  fs.copyFileSync(
-    path.join(__dirname, "../../../core/vendor/tree-sitter.wasm"),
-    path.join(__dirname, "../out/tree-sitter.wasm"),
-  );
-  console.log("[info] Copied tree-sitter wasms");
+  const filesToCopy = [
+    "../../../core/vendor/tree-sitter.wasm",
+    "../../../core/llm/llamaTokenizerWorkerPool.mjs",
+    "../../../core/llm/llamaTokenizer.mjs",
+  ];
+  for (const f of filesToCopy) {
+    fs.copyFileSync(path.join(__dirname, f), path.join(__dirname, "..", "out", path.basename(f)));
+    console.log(`[info] Copied ${path.basename(f)}`);
+  }
 
   // tree-sitter tag query files
   // ncp(
@@ -450,6 +454,7 @@ const exe = os === "win32" ? ".exe" : "";
     "@esbuild",
     "@lancedb",
     "@vscode/ripgrep",
+    "workerpool",
   ];
   fs.mkdirSync("out/node_modules", { recursive: true });
 

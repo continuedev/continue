@@ -155,6 +155,41 @@ const deepseekFimTemplate: AutocompleteTemplate = {
   },
 };
 
+// https://github.com/THUDM/CodeGeeX4/blob/main/guides/Infilling_guideline.md
+const codegeexFimTemplate: AutocompleteTemplate = {
+  template: (
+    prefix: string,
+    suffix: string,
+    filepath: string,
+    reponame: string,
+    snippets: AutocompleteSnippet[],
+  ): string => {
+    const relativePaths = shortestRelativePaths([
+      ...snippets.map((snippet) => snippet.filepath),
+      filepath,
+    ]);
+    const baseTemplate = `###PATH:${relativePaths[relativePaths.length - 1]}\n###LANGUAGE:\n###MODE:BLOCK\n<|code_suffix|>${suffix}<|code_prefix|>${prefix}<|code_middle|>`;
+    if (snippets.length == 0) {
+      return `<|user|>\n${baseTemplate}<|assistant|>\n`;
+    }
+    const references = `###REFERENCE:\n${snippets
+      .map((snippet, i) => `###PATH:${relativePaths[i]}\n${snippet.contents}\n`)
+      .join("###REFERENCE:\n")}`;
+    const prompt = `<|user|>\n${references}\n${baseTemplate}<|assistant|>\n`;
+    return prompt;
+  },
+  completionOptions: {
+    stop: [
+      "<|user|>",
+      "<|code_suffix|>",
+      "<|code_prefix|>",
+      "<|code_middle|>",
+      "<|assistant|>",
+      "<|endoftext|>",
+    ],
+  },
+};
+
 const gptAutocompleteTemplate: AutocompleteTemplate = {
   template: `\`\`\`
 {{{prefix}}}[BLANK]{{{suffix}}}
@@ -300,6 +335,10 @@ export function getTemplateForModel(model: string): AutocompleteTemplate {
 
   if (lowerCaseModel.includes("deepseek")) {
     return deepseekFimTemplate;
+  }
+
+  if (lowerCaseModel.includes("codegeex")) {
+    return codegeexFimTemplate;
   }
 
   if (

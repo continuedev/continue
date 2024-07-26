@@ -1,8 +1,15 @@
 import { Chunk, ChunkWithoutID } from "../../index.js";
-import { countTokens } from "../../llm/countTokens.js";
+import { countTokens, countTokensAsync } from "../../llm/countTokens.js";
 import { supportedLanguages } from "../../util/treeSitter.js";
 import { basicChunker } from "./basic.js";
 import { codeChunker } from "./code.js";
+
+export type ChunkDocumentParam = {
+  filepath: string;
+  contents: string;
+  maxChunkSize: number;
+  digest: string;
+};
 
 async function* chunkDocumentWithoutId(
   filepath: string,
@@ -30,32 +37,41 @@ async function* chunkDocumentWithoutId(
   yield* basicChunker(contents, maxChunkSize);
 }
 
-export async function* chunkDocument(
-  filepath: string,
-  contents: string,
-  maxChunkSize: number,
-  digest: string,
-): AsyncGenerator<Chunk> {
+export async function* chunkDocument({
+  filepath,
+  contents,
+  maxChunkSize,
+  digest,
+}: ChunkDocumentParam): AsyncGenerator<Chunk> {
   let index = 0;
+  const chunkPromises: Promise<Chunk | undefined>[] = [];
   for await (const chunkWithoutId of chunkDocumentWithoutId(
     filepath,
     contents,
     maxChunkSize,
   )) {
-    if (countTokens(chunkWithoutId.content) > maxChunkSize) {
-      console.warn(
-        `Chunk with more than ${maxChunkSize} tokens constructed: `,
+    chunkPromises.push(new Promise(async (resolve) => {
+      if (await countTokensAsync(chunkWithoutId.content) > maxChunkSize) {
+        console.warn(
+          `Chunk with more than ${maxChunkSize} tokens constructed: `,
+          filepath,
+          countTokens(chunkWithoutId.content),
+        );
+        return resolve(undefined);
+      }
+      resolve({
+        ...chunkWithoutId,
+        digest,
+        index,
         filepath,
-        countTokens(chunkWithoutId.content),
-      );
+      });
+    }));
+    index++;
+  }
+  for await (const chunk of chunkPromises) {
+    if (!chunk) {
       continue;
     }
-    yield {
-      ...chunkWithoutId,
-      digest,
-      index,
-      filepath,
-    };
-    index++;
+    yield chunk;
   }
 }

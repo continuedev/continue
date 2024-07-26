@@ -1,5 +1,5 @@
 import { ChatMessage, SlashCommand } from "../../index.js";
-import { stripImages } from "../../llm/countTokens.js";
+import { stripImages } from "../../llm/images.js";
 import { removeQuotesAndEscapes } from "../../util/index.js";
 
 const PROMPT = (

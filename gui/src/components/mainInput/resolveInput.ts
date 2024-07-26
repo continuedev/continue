@@ -6,7 +6,7 @@ import {
   MessagePart,
   RangeInFile,
 } from "core";
-import { stripImages } from "core/llm/countTokens";
+import { stripImages } from "core/llm/images";
 import { IIdeMessenger } from "../../context/IdeMessenger";
 
 interface MentionAttrs {
