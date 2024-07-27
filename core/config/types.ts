@@ -14,6 +14,7 @@ declare global {
   }
   
   export interface IndexingProgressUpdate {
+    id: string;
     progress: number;
     desc: string;
   }

@@ -28,6 +28,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   }
 
   async *update(
+    taskId: string,
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,
@@ -62,8 +63,9 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
 
     if (results.compute.length > 0) {
       yield {
-        desc: `Chunking ${results.compute.length} ${this.formatListPlurality("file", results.compute.length)}`,
+        id: taskId,
         status: "indexing",
+        desc: `Chunking ${results.compute.length} ${this.formatListPlurality("file", results.compute.length)}`,
         progress: accumulatedProgress,
       };
       const chunks = await this.computeChunks(results.compute);
@@ -84,6 +86,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       await markComplete([item], IndexResultType.AddTag);
       accumulatedProgress += 1 / results.addTag.length / 4;
       yield {
+        id: taskId,
         progress: accumulatedProgress,
         desc: `Adding ${getBasename(item.path)}`,
         status: "indexing",
@@ -106,6 +109,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       await markComplete([item], IndexResultType.RemoveTag);
       accumulatedProgress += 1 / results.removeTag.length / 4;
       yield {
+        id: taskId,
         progress: accumulatedProgress,
         desc: `Removing ${getBasename(item.path)}`,
         status: "indexing",
@@ -126,6 +130,7 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       await markComplete([item], IndexResultType.Delete);
       accumulatedProgress += 1 / results.del.length / 4;
       yield {
+        id: taskId,
         progress: accumulatedProgress,
         desc: `Removing ${getBasename(item.path)}`,
         status: "indexing",

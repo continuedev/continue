@@ -16,7 +16,7 @@ import { walkDirAsync } from "./walkDir.js";
 import * as fs from "fs/promises";
 
 export class PauseToken {
-  constructor(private _paused: boolean) {}
+  constructor(private _paused: boolean) { }
 
   set paused(value: boolean) {
     this._paused = value;
@@ -44,7 +44,7 @@ export class CodebaseIndexer {
     protected readonly ide: IDE,
     private readonly pauseToken: PauseToken,
     private readonly continueServerClient: IContinueServerClient,
-  ) {}
+  ) { }
 
   async clearIndexes() {
     const sqliteFilepath = getIndexSqlitePath();
@@ -87,7 +87,7 @@ export class CodebaseIndexer {
     return indexes;
   }
 
-  public async refreshFile(file: string): Promise<void> {
+  public async refreshFile(taskId: string, file: string): Promise<void> {
     if (this.pauseToken.paused) {
       // NOTE: by returning here, there is a chance that while paused a file is modified and
       // then after unpausing the file is not reindexed
@@ -109,6 +109,7 @@ export class CodebaseIndexer {
       };
       const [results, lastUpdated, markComplete] =
         await getComputeDeleteAddRemove(
+          taskId,
           tag,
           { ...stats },
           (filepath) => this.ide.readFile(filepath),
@@ -119,6 +120,7 @@ export class CodebaseIndexer {
       results.addTag = [];
       results.del = [];
       for await (const _ of index.update(
+        taskId,
         tag,
         results,
         markComplete,
@@ -129,6 +131,7 @@ export class CodebaseIndexer {
   }
 
   async *refresh(
+    taskId: string,
     workspaceDirs: string[],
     abortSignal: AbortSignal,
   ): AsyncGenerator<IndexingProgressUpdate> {
@@ -136,6 +139,7 @@ export class CodebaseIndexer {
 
     if (workspaceDirs.length === 0) {
       yield {
+        id: taskId,
         progress,
         desc: "Nothing to index",
         status: "disabled",
@@ -146,6 +150,7 @@ export class CodebaseIndexer {
     const config = await this.configHandler.loadConfig();
     if (config.disableIndexing) {
       yield {
+        id: taskId,
         progress,
         desc: "Indexing is disabled in config.json",
         status: "disabled",
@@ -153,6 +158,7 @@ export class CodebaseIndexer {
       return;
     } else {
       yield {
+        id: taskId,
         progress,
         desc: "Starting indexing",
         status: "loading",
@@ -166,6 +172,7 @@ export class CodebaseIndexer {
     await this.ide.getRepoName(workspaceDirs[0]);
 
     yield {
+      id: taskId,
       progress,
       desc: "Starting indexing...",
       status: "loading",
@@ -175,6 +182,7 @@ export class CodebaseIndexer {
     for (const directory of workspaceDirs) {
       const dirBasename = await this.basename(directory);
       yield {
+        id: taskId,
         progress,
         desc: `Discovering files in ${dirBasename}...`,
         status: "indexing",
@@ -184,6 +192,7 @@ export class CodebaseIndexer {
         workspaceFiles.push(p);
         if (abortSignal.aborted) {
           yield {
+            id: taskId,
             progress: 1,
             desc: "Indexing cancelled",
             status: "disabled",
@@ -191,7 +200,7 @@ export class CodebaseIndexer {
           return;
         }
         if (this.pauseToken.paused) {
-          yield* this.yieldUpdateAndPause();
+          yield* this.yieldUpdateAndPause(taskId);
         }
       }
 
@@ -201,6 +210,7 @@ export class CodebaseIndexer {
 
       try {
         for await (const updateDesc of this.indexFiles(
+          taskId,
           directory,
           workspaceFiles,
           branch,
@@ -209,6 +219,7 @@ export class CodebaseIndexer {
           // Handle pausing in this loop because it's the only one really taking time
           if (abortSignal.aborted) {
             yield {
+              id: taskId,
               progress: 1,
               desc: "Indexing cancelled",
               status: "disabled",
@@ -216,7 +227,7 @@ export class CodebaseIndexer {
             return;
           }
           if (this.pauseToken.paused) {
-            yield* this.yieldUpdateAndPause();
+            yield* this.yieldUpdateAndPause(taskId);
           }
           yield updateDesc;
           if (updateDesc.progress >= nextLogThreshold) {
@@ -230,11 +241,12 @@ export class CodebaseIndexer {
           }
         }
       } catch (err) {
-        yield this.handleErrorAndGetProgressUpdate(err);
+        yield this.handleErrorAndGetProgressUpdate(taskId, err);
         return;
       }
     }
     yield {
+      id: taskId,
       progress: 100,
       desc: "Indexing Complete",
       status: "done",
@@ -242,20 +254,22 @@ export class CodebaseIndexer {
   }
 
   private handleErrorAndGetProgressUpdate(
+    taskId: string,
     err: unknown,
   ): IndexingProgressUpdate {
     console.log("error when indexing: ", err);
     if (err instanceof Error) {
-      return this.errorToProgressUpdate(err);
+      return this.errorToProgressUpdate(taskId, err);
     }
     return {
+      id: taskId,
       progress: 0,
       desc: `Indexing failed: ${err}`,
       status: "failed",
     };
   }
 
-  private errorToProgressUpdate(err: Error): IndexingProgressUpdate {
+  private errorToProgressUpdate(taskId: string, err: Error): IndexingProgressUpdate {
     let errMsg: string = `${err}`;
     let shouldClearIndexes = false;
 
@@ -271,6 +285,7 @@ export class CodebaseIndexer {
     }
 
     return {
+      id: taskId,
       progress: 0,
       desc: errMsg,
       status: "failed",
@@ -292,8 +307,9 @@ export class CodebaseIndexer {
     );
   }
 
-  private async *yieldUpdateAndPause(): AsyncGenerator<IndexingProgressUpdate> {
+  private async *yieldUpdateAndPause(taskId: string): AsyncGenerator<IndexingProgressUpdate> {
     yield {
+      id: taskId,
       progress: 0,
       desc: "Indexing Paused",
       status: "paused",
@@ -334,6 +350,7 @@ export class CodebaseIndexer {
   }
 
   private async *indexFiles(
+    taskId: string,
     workspaceDir: string,
     workspaceFiles: string[],
     branch: string,
@@ -350,12 +367,14 @@ export class CodebaseIndexer {
         artifactId: codebaseIndex.artifactId,
       };
       yield {
+        id: taskId,
         progress: progress,
         desc: `Planning changes for ${codebaseIndex.artifactId} index...`,
         status: "indexing",
       };
       const [results, lastUpdated, markComplete] =
         await getComputeDeleteAddRemove(
+          taskId,
           tag,
           { ...stats },
           (filepath) => this.ide.readFile(filepath),
@@ -372,12 +391,14 @@ export class CodebaseIndexer {
         workspaceFiles.length,
       )) {
         for await (const { desc } of codebaseIndex.update(
+          taskId,
           tag,
           subResult,
           markComplete,
           repoName,
         )) {
           yield {
+            id: taskId,
             progress: progress,
             desc,
             status: "indexing",

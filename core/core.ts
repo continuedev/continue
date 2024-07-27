@@ -75,9 +75,9 @@ export class Core {
   constructor(
     private readonly messenger: IMessenger<ToCoreProtocol, FromCoreProtocol>,
     private readonly ide: IDE,
-    private readonly onWrite: (text: string) => Promise<void> = async () => {},
+    private readonly onWrite: (text: string) => Promise<void> = async () => { },
   ) {
-    this.indexingState = { status: "loading", desc: "loading", progress: 0 };
+    this.indexingState = { id: "1", status: "loading", desc: "loading", progress: 0 };
 
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
@@ -135,10 +135,12 @@ export class Core {
       );
 
       // Index on initialization
+      const taskId = uuidv4();
       this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
         if (ideSettings.pauseCodebaseIndexOnStart) {
           await this.messenger.request("indexProgress", {
+            id: taskId,
             progress: 100,
             desc: "Initial Indexing Skipped",
             status: "paused",
@@ -146,7 +148,7 @@ export class Core {
           return;
         }
 
-        this.refreshCodebaseIndex(dirs);
+        this.refreshCodebaseIndex(taskId, dirs);
       });
     });
 
@@ -163,7 +165,7 @@ export class Core {
       this.configHandler,
       ide,
       getLlm,
-      (e) => {},
+      (e) => { },
       (..._) => Promise.resolve([]),
     );
 
@@ -261,8 +263,8 @@ export class Core {
     // Context providers
     on("context/addDocs", async (msg) => {
       let hasFailed = false;
-
-      for await (const result of this.docsService.indexAndAdd(msg.data)) {
+      const taskId = uuidv4();
+      for await (const result of this.docsService.indexAndAdd(taskId, msg.data)) {
         if (result.status === "failed") {
           hasFailed = true;
           break;
@@ -545,7 +547,7 @@ export class Core {
         );
       return outcome ? [outcome.completion] : [];
     });
-    on("autocomplete/accept", async (msg) => {});
+    on("autocomplete/accept", async (msg) => { });
     on("autocomplete/cancel", async (msg) => {
       this.completionProvider.cancel();
     });
@@ -644,8 +646,9 @@ export class Core {
         await codebaseIndexer.clearIndexes();
       }
 
+      const taskId = uuidv4();
       const dirs = data?.dir ? [data.dir] : await this.ide.getWorkspaceDirs();
-      await this.refreshCodebaseIndex(dirs);
+      await this.refreshCodebaseIndex(taskId, dirs);
     });
     on("index/setPaused", (msg) => {
       new GlobalContext().update("indexingPaused", msg.data);
@@ -678,12 +681,13 @@ export class Core {
 
   private indexingCancellationController: AbortController | undefined;
 
-  private async refreshCodebaseIndex(dirs: string[]) {
+  private async refreshCodebaseIndex(taskId: string, dirs: string[]) {
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
     for await (const update of (await this.codebaseIndexerPromise).refresh(
+      taskId,
       dirs,
       this.indexingCancellationController.signal,
     )) {

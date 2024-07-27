@@ -35,6 +35,7 @@ export interface Chunk extends ChunkWithoutID {
 }
 
 export interface IndexingProgressUpdate {
+  id: string;
   progress: number;
   desc: string;
   shouldClearIndexes?: boolean;
