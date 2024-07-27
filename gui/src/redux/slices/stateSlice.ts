@@ -10,7 +10,7 @@ import {
   PromptLog,
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
-import { stripImages } from "core/llm/countTokens";
+import { stripImages } from "core/llm/images";
 import { createSelector } from "reselect";
 import { v4 } from "uuid";
 import { RootState } from "../store";

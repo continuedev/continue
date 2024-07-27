@@ -1,6 +1,7 @@
 import { constants } from "../../deploy/constants.js";
 import { ChatMessageRole, FetchFunction, SlashCommand } from "../../index.js";
-import { pruneStringFromBottom, stripImages } from "../../llm/countTokens.js";
+import { pruneStringFromBottom } from "../../llm/countTokens.js";
+import { stripImages } from "../../llm/images.js";
 
 const PROMPT = (
   input: string,

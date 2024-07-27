@@ -36,6 +36,7 @@ import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
 
+import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
@@ -60,7 +61,6 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
-import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
 
 const { execSync } = require("child_process");
 
@@ -361,13 +361,21 @@ async function intermediateToFinalConfig(
     new CodebaseContextProvider({}),
   ];
 
+  const DEFAULT_CONTEXT_PROVIDERS_TITLES = DEFAULT_CONTEXT_PROVIDERS.map(
+    ({ description: { title } }) => title,
+  );
+
   // Context providers
   const contextProviders: IContextProvider[] = DEFAULT_CONTEXT_PROVIDERS;
+
   for (const provider of config.contextProviders || []) {
     if (isContextProviderWithParams(provider)) {
       const cls = contextProviderClassFromName(provider.name) as any;
       if (!cls) {
-        console.warn(`Unknown context provider ${provider.name}`);
+        if (!DEFAULT_CONTEXT_PROVIDERS_TITLES.includes(provider.name)) {
+          console.warn(`Unknown context provider ${provider.name}`);
+        }
+
         continue;
       }
       const instance: IContextProvider = new cls(provider.params);

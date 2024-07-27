@@ -12,7 +12,7 @@ import {
   SlashCommandDescription,
 } from "core";
 import { constructMessages } from "core/llm/constructMessages";
-import { stripImages } from "core/llm/countTokens";
+import { stripImages } from "core/llm/images";
 import { getBasename, getRelativePath } from "core/util";
 import { usePostHog } from "posthog-js/react";
 import { useEffect, useRef } from "react";

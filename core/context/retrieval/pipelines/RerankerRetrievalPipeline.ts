@@ -1,27 +1,30 @@
-import { Chunk } from "../../..";
-import { RETRIEVAL_PARAMS } from "../../../util/parameters";
-import { deduplicateChunks } from "../util";
-import BaseRetrievalPipeline from "./BaseRetrievalPipeline";
+import { Chunk } from "../../../index.js";
+import { RETRIEVAL_PARAMS } from "../../../util/parameters.js";
+import { recentlyEditedFilesCache } from "../recentlyEditedFilesCache.js";
+import { deduplicateChunks } from "../util.js";
+import BaseRetrievalPipeline from "./BaseRetrievalPipeline.js";
 
 export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   private async _retrieveInitial(): Promise<Chunk[]> {
     const { input, nRetrieve } = this.options;
 
-    // Get all retrieval results
     const retrievalResults: Chunk[] = [];
 
-    // Full-text search
-    const ftsResults = await this.retrieveFts(input, nRetrieve / 2);
-    retrievalResults.push(...ftsResults);
+    const ftsChunks = await this.retrieveFts(input, nRetrieve);
+    const embeddingsChunks = await this.retrieveEmbeddings(input, nRetrieve);
+    const recentlyEditedFilesChunks =
+      await this.retrieveAndChunkRecentlyEditedFiles(nRetrieve);
 
-    // Embeddings
-    const embeddingResults = await this.retrieveEmbeddings(input, nRetrieve);
     retrievalResults.push(
-      ...embeddingResults.slice(0, nRetrieve - ftsResults.length),
+      ...recentlyEditedFilesChunks,
+      ...ftsChunks,
+      ...embeddingsChunks,
     );
 
-    const results: Chunk[] = deduplicateChunks(retrievalResults);
-    return results;
+    const deduplicatedRetrievalResults: Chunk[] =
+      deduplicateChunks(retrievalResults);
+
+    return deduplicatedRetrievalResults;
   }
 
   private async _rerank(input: string, chunks: Chunk[]): Promise<Chunk[]> {
@@ -74,12 +77,8 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
   }
 
   async run(): Promise<Chunk[]> {
-    // Retrieve initial results
-    let results = await this._retrieveInitial();
-
-    // Rerank
-    const { input } = this.options;
-    results = await this._rerank(input, results);
+    const intialResults = await this._retrieveInitial();
+    const rankedResults = await this._rerank(this.options.input, intialResults);
 
     // // // Expand top reranked results
     // const expanded = await this._expandRankedResults(results);
@@ -93,7 +92,7 @@ export default class RerankerRetrievalPipeline extends BaseRetrievalPipeline {
 
     // TODO: stitch together results
 
-    return results;
+    return rankedResults;
   }
 }
 

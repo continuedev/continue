@@ -20,8 +20,6 @@ const MINISEARCH_OPTIONS = {
 const MAX_LENGTH = 70;
 
 function useSubmenuContextProviders() {
-  // TODO: Refresh periodically
-
   const [minisearches, setMinisearches] = useState<{
     [id: string]: MiniSearch;
   }>({});
@@ -227,6 +225,12 @@ function useSubmenuContextProviders() {
       }
     });
   }, [contextProviderDescriptions, loaded]);
+
+  useWebviewListener("configUpdate", async () => {
+    // When config is updated (for example switching to a different workspace)
+    // we need to reload the context providers.
+    setLoaded(false);
+  });
 
   return {
     getSubmenuContextItems,

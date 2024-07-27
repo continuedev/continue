@@ -1,6 +1,7 @@
 package com.github.continuedev.continueintellijextension.auth
 
 import com.github.continuedev.continueintellijextension.services.ContinuePluginService
+import com.google.gson.Gson
 import com.intellij.credentialStore.Credentials
 import com.intellij.ide.passwordSafe.PasswordSafe
 import com.intellij.ide.util.PropertiesComponent
@@ -13,7 +14,6 @@ import java.awt.Desktop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import net.minidev.json.JSONObject
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -33,15 +33,19 @@ class ContinueAuthService {
 //        private const val CONTROL_PLANE_URL = "http://localhost:3001"
     }
 
+    init {
+        setupRefreshTokenInterval()
+    }
+
     fun startAuthFlow(project: Project) {
         // Open login page
         openSignInPage(project)
 
         // Open a dialog where the user should paste their sign-in token
-        com.intellij.openapi.application.ApplicationManager.getApplication().invokeLater {
+        ApplicationManager.getApplication().invokeLater {
             val dialog = ContinueAuthDialog() { token ->
                 // Store the token
-                handleNewRefreshToken(token)
+                updateRefreshToken(token)
             }
             dialog.show()
         }
@@ -55,7 +59,7 @@ class ContinueAuthService {
         setAccountLabel("")
     }
 
-    private fun handleNewRefreshToken(token: String) {
+    private fun updateRefreshToken(token: String) {
         // Launch a coroutine to call the suspend function
         kotlinx.coroutines.GlobalScope.launch {
             try {
@@ -83,14 +87,26 @@ class ContinueAuthService {
         }
     }
 
+    private fun setupRefreshTokenInterval() {
+        // Launch a coroutine to refresh the token every 30 minutes
+        kotlinx.coroutines.GlobalScope.launch {
+            while (true) {
+                val refreshToken = getRefreshToken()
+                if (refreshToken != null) {
+                    updateRefreshToken(refreshToken)
+                }
+
+                kotlinx.coroutines.delay(30 * 60 * 1000)
+            }
+        }
+    }
+
     private suspend fun refreshToken(refreshToken: String) = withContext(Dispatchers.IO) {
         val client = OkHttpClient()
         val url = URL(CONTROL_PLANE_URL).toURI().resolve("/auth/refresh").toURL()
-        val jsonBody = JSONObject().apply {
-            put("refreshToken", refreshToken)
-        }
-
-        val requestBody = jsonBody.toString().toRequestBody("application/json".toMediaType())
+        val jsonBody = mapOf("refreshToken" to refreshToken)
+        val jsonString = Gson().toJson(jsonBody)
+        val requestBody = jsonString.toRequestBody("application/json".toMediaType())
 
         val request = Request.Builder()
             .url(url)
@@ -101,7 +117,7 @@ class ContinueAuthService {
         val response = client.newCall(request).execute()
 
         val responseBody = response.body?.string()
-        val gson = com.google.gson.Gson()
+        val gson = Gson()
         val responseMap = gson.fromJson(responseBody, Map::class.java)
 
         responseMap

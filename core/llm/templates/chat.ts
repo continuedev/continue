@@ -1,5 +1,5 @@
 import { ChatMessage } from "../../index.js";
-import { stripImages } from "../countTokens.js";
+import { stripImages } from "../images.js";
 
 function templateFactory(
   systemMessage: (msg: ChatMessage) => string,

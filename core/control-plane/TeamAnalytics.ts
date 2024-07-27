@@ -1,6 +1,8 @@
 import { Analytics } from "@continuedev/config-types";
 import os from "node:os";
+import ContinueProxyAnalyticsProvider from "./analytics/ContinueProxyAnalyticsProvider";
 import { IAnalyticsProvider } from "./analytics/IAnalyticsProvider";
+import LogStashAnalyticsProvider from "./analytics/LogStashAnalyticsProvider";
 import PostHogAnalyticsProvider from "./analytics/PostHogAnalyticsProvider";
 
 function createAnalyticsProvider(
@@ -10,6 +12,10 @@ function createAnalyticsProvider(
   switch (config.provider) {
     case "posthog":
       return new PostHogAnalyticsProvider();
+    case "logstash":
+      return new LogStashAnalyticsProvider();
+    case "continue-proxy":
+      return new ContinueProxyAnalyticsProvider();
     default:
       return undefined;
   }
