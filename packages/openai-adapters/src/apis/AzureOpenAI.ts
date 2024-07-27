@@ -1,6 +1,5 @@
 import { AzureKeyCredential, OpenAIClient } from "@azure/openai";
 
-import { ModelDescription } from "@continuedev/config-types/src/index.js";
 import dotenv from "dotenv";
 import {
   Completion,
@@ -15,6 +14,7 @@ import {
   CreateEmbeddingResponse,
   EmbeddingCreateParams,
 } from "openai/resources/index.js";
+import { LlmApiConfig } from "../index.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -31,9 +31,9 @@ const MS_TOKEN = 30;
 
 export class AzureOpenAIApi implements BaseLlmApi {
   private client: OpenAIClient;
-  private config: ModelDescription;
+  private config: LlmApiConfig;
 
-  constructor(config: ModelDescription) {
+  constructor(config: LlmApiConfig) {
     this.config = config;
     let proxyOptions;
     const PROXY = HTTPS_PROXY ?? HTTP_PROXY;
@@ -78,14 +78,14 @@ export class AzureOpenAIApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsNonStreaming,
   ): Promise<ChatCompletion> {
     const completion = await this.client.getChatCompletions(
-      this.config.model,
+      body.model,
       body.messages,
       this._bodyToOptions(body),
     );
     return {
       ...completion,
       object: "chat.completion",
-      model: this.config.model,
+      model: body.model,
       created: completion.created.getTime(),
       usage: completion.usage
         ? {
@@ -109,7 +109,7 @@ export class AzureOpenAIApi implements BaseLlmApi {
     body: ChatCompletionCreateParamsStreaming,
   ): AsyncGenerator<ChatCompletionChunk> {
     const events = await this.client.streamChatCompletions(
-      this.config.model,
+      body.model,
       body.messages,
       this._bodyToOptions(body),
     );
@@ -123,7 +123,7 @@ export class AzureOpenAIApi implements BaseLlmApi {
         eventBuffer.push({
           ...event,
           object: "chat.completion.chunk",
-          model: this.config.model,
+          model: body.model,
           created: event.created.getTime(),
           choices: event.choices.map((choice: any) => ({
             ...choice,
@@ -227,14 +227,10 @@ export class AzureOpenAIApi implements BaseLlmApi {
 
   async embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse> {
     const input = typeof body.input === "string" ? [body.input] : body.input;
-    const response = await this.client.getEmbeddings(
-      this.config.model,
-      input as any,
-      {
-        dimensions: body.dimensions,
-        model: body.model,
-      },
-    );
+    const response = await this.client.getEmbeddings(body.model, input as any, {
+      dimensions: body.dimensions,
+      model: body.model,
+    });
 
     const output = {
       data: response.data.map((item) => ({

@@ -1,4 +1,3 @@
-import { ModelDescription } from "@continuedev/config-types";
 import { streamSse } from "@continuedev/fetch";
 import fetch from "node-fetch";
 import { OpenAI } from "openai/index.mjs";
@@ -11,6 +10,7 @@ import {
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
 } from "openai/resources/index.mjs";
+import { LlmApiConfig } from "../index.js";
 import {
   BaseLlmApi,
   CreateRerankResponse,
@@ -20,7 +20,7 @@ import {
 
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
-  constructor(protected config: ModelDescription) {
+  constructor(protected config: LlmApiConfig) {
     this.openai = new OpenAI({
       apiKey: config.apiKey,
       baseURL: config.apiBase,
