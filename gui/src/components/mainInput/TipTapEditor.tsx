@@ -481,16 +481,15 @@ function TipTapEditor(props: TipTapEditorProps) {
     const handleKeyDown = async (event: KeyboardEvent) => {
       if (!editor || !editorFocusedRef.current) return;
 
-      if ((event.metaKey || event.ctrlKey) && event.key === "x") {
+      if (event.metaKey && event.key === "x") {
         document.execCommand("cut");
         event.stopPropagation();
         event.preventDefault();
-      } else if ((event.metaKey || event.ctrlKey) && event.key === "v") {
+      } else if (event.metaKey && event.key === "v") {
+        document.execCommand("paste");
         event.stopPropagation();
         event.preventDefault();
-        const clipboardText = await navigator.clipboard.readText();
-        editor.commands.insertContent(clipboardText);
-      } else if ((event.metaKey || event.ctrlKey) && event.key === "c") {
+      } else if (event.metaKey && event.key === "c") {
         document.execCommand("copy");
         event.stopPropagation();
         event.preventDefault();
