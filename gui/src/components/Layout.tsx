@@ -239,6 +239,7 @@ const Layout = () => {
   }, [location]);
 
   const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
+    id: "1",
     desc: "Loading indexing config",
     progress: 0.0,
     status: "loading",

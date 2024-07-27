@@ -71,6 +71,7 @@ const IndexingProgressBar = ({
 }: ProgressBarProps) => {
   // If sidebar is opened before extension initiates, define a default indexingState
   const defaultIndexingState: IndexingProgressUpdate = {
+    id: "1",
     status: "loading",
     progress: 0,
     desc: "",

@@ -90,6 +90,7 @@ describe.skip("CodebaseIndexer", () => {
 
     const updates = [];
     for await (const update of codebaseIndexer.refresh(
+      "1", // passing default taskId
       [TEST_DIR],
       abortSignal,
     )) {
@@ -129,6 +130,7 @@ describe.skip("CodebaseIndexer", () => {
     const abortSignal = abortController.signal;
     const updates = [];
     for await (const update of codebaseIndexer.refresh(
+      "1", // passing default taskId
       [TEST_DIR],
       abortSignal,
     )) {
@@ -154,6 +156,7 @@ describe.skip("CodebaseIndexer", () => {
     const abortSignal = abortController.signal;
     const updates = [];
     for await (const update of codebaseIndexer.refresh(
+      "1", // passing default taskId
       [TEST_DIR],
       abortSignal,
     )) {

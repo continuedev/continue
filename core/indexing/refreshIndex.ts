@@ -341,6 +341,7 @@ function mapIndexResultTypeToAddRemoveResultType(
 }
 
 export async function getComputeDeleteAddRemove(
+  taskId: string,
   tag: IndexTag,
   currentFiles: LastModifiedMap,
   readFile: (path: string) => Promise<string>,
@@ -404,6 +405,7 @@ export async function getComputeDeleteAddRemove(
       };
       results[resultType] = items;
       for await (const _ of globalCacheIndex.update(
+        taskId,
         tag,
         results,
         () => {},
@@ -428,6 +430,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
   }
 
   async *update(
+    taskId: string,
     tag: IndexTag,
     results: RefreshIndexResults,
     _: MarkCompleteCallback,
@@ -443,7 +446,7 @@ export class GlobalCacheCodeBaseIndex implements CodebaseIndex {
         return this.computeOrAddTag(cacheKey, tag);
       }),
     ]);
-    yield { progress: 1, desc: "Done updating global cache", status: "done" };
+    yield { id: taskId, progress: 1, desc: "Done updating global cache", status: "done" };
   }
 
   private async computeOrAddTag(

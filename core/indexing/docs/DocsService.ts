@@ -209,6 +209,7 @@ export class DocsService {
   }
 
   async *indexAndAdd(
+    taskId: string,
     siteIndexingConfig: SiteIndexingConfig,
     embeddingsProvider: EmbeddingsProvider,
     reIndex: boolean = false,
@@ -222,6 +223,7 @@ export class DocsService {
 
     if (!reIndex && (await this.has(startUrl.toString()))) {
       yield {
+        id: taskId,
         progress: 1,
         desc: "Already indexed",
         status: "done",
@@ -233,6 +235,7 @@ export class DocsService {
     this.docsIndexingQueue.add(startUrl.toString());
 
     yield {
+      id: taskId,
       progress: 0,
       desc: "Finding subpages",
       status: "indexing",
@@ -255,6 +258,7 @@ export class DocsService {
       const progress = Math.min(processedPages / maxKnownPages, 1);
 
       yield {
+        id: taskId,
         progress, // Yield the heuristic progress
         desc: `Finding subpages (${page.path})`,
         status: "indexing",
@@ -275,6 +279,7 @@ export class DocsService {
     for (let i = 0; i < articles.length; i++) {
       const article = articles[i];
       yield {
+        id: taskId,
         progress: i / articles.length,
         desc: `Creating Embeddings: ${article.subpath}`,
         status: "indexing",
@@ -300,6 +305,7 @@ export class DocsService {
     // Add docs to databases
     console.log("Adding ", embeddings.length, " embeddings to db");
     yield {
+      id: taskId,
       progress: 0.5,
       desc: `Adding ${embeddings.length} embeddings to db`,
       status: "indexing",
@@ -315,6 +321,7 @@ export class DocsService {
     this.docsIndexingQueue.delete(startUrl.toString());
 
     yield {
+      id: taskId,
       progress: 1,
       desc: "Done",
       status: "done",
