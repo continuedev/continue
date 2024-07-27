@@ -288,8 +288,16 @@ export class Core {
         ]),
       ])({ ...provider });
 
-      for (const site of siteIndexingOptions) {
-        await this.getEmbeddingsProviderAndIndexDoc(site, msg.data.reIndex);
+      // Create an array of promises for each site's indexing process
+      const indexingPromises = siteIndexingOptions.map(site =>
+        this.getEmbeddingsProviderAndIndexDoc(site, msg.data.reIndex)
+      );
+
+      // Await for all promises to resolve
+      try {
+        await Promise.all(indexingPromises);
+      } catch (error: any) {
+        console.error(error.message);
       }
     });
     on("context/loadSubmenuItems", async (msg) => {
