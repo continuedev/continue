@@ -208,20 +208,22 @@ function TipTapEditor(props: TipTapEditorProps) {
   const active = useSelector((state: RootState) => state.state.active);
   const activeRef = useUpdatingRef(active);
 
-  const supportedImageTypes = [
-    "image/jpeg",
-    "image/jpg",
-    "image/png",
-    "image/gif",
-    "image/svg",
-    "image/webp",
-  ];
   async function handleImageFile(
     file: File,
   ): Promise<[HTMLImageElement, string] | undefined> {
     let filesize = file.size / 1024 / 1024; // filesize in MB
     // check image type and size
-    if (supportedImageTypes.includes(file.type) && filesize < 10) {
+    if (
+      [
+        "image/jpeg",
+        "image/jpg",
+        "image/png",
+        "image/gif",
+        "image/svg",
+        "image/webp",
+      ].includes(file.type) &&
+      filesize < 10
+    ) {
       // check dimensions
       let _URL = window.URL || window.webkitURL;
       let img = new window.Image();
@@ -252,7 +254,6 @@ function TipTapEditor(props: TipTapEditorProps) {
 
     if (
       pasteElement.kind !== "file" ||
-      !supportedImageTypes.includes(pasteElement.type) ||
       !defaultModel ||
       !modelSupportsImages(
         defaultModel.provider,
@@ -262,6 +263,7 @@ function TipTapEditor(props: TipTapEditorProps) {
     ) {
       return;
     }
+
     const file = pasteElement.getAsFile();
     handleImageFile(file).then(([_img, dataUrl]) => {
       const { schema } = editor.state;
