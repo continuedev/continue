@@ -105,13 +105,15 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       const item = results.compute[i];
 
       // Insert chunks
-      for await (const chunk of chunkDocument({
-        filepath: item.path,
-        contents: contents[i],
-        maxChunkSize: this.maxChunkSize,
-        digest: item.cacheKey,
-      })) {
-        handleChunk(chunk);
+      if (contents.length) {
+        for await (const chunk of chunkDocument({
+          filepath: item.path,
+          contents: contents[i],
+          maxChunkSize: this.maxChunkSize,
+          digest: item.cacheKey,
+        })) {
+          await handleChunk(chunk);
+        }
       }
 
       accumulatedProgress =
@@ -132,13 +134,15 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
       const item = results.addTag[i];
 
       // Insert chunks
-      for await (const chunk of chunkDocument({
-        filepath: item.path,
-        contents: contents[i],
-        maxChunkSize: this.maxChunkSize,
-        digest: item.cacheKey,
-      })) {
-        handleChunk(chunk);
+      if (contents.length) {
+        for await (const chunk of chunkDocument({
+          filepath: item.path,
+          contents: contents[i],
+          maxChunkSize: this.maxChunkSize,
+          digest: item.cacheKey,
+        })) {
+          handleChunk(chunk);
+        }
       }
 
       markComplete([item], IndexResultType.AddTag);

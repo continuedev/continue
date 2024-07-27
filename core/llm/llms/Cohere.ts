@@ -5,7 +5,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../countTokens.js";
+import { stripImages } from "../images.js";
 import { streamJSON } from "../stream.js";
 
 class Cohere extends BaseLLM {

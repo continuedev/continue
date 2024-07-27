@@ -16,8 +16,10 @@ import {
 } from "./config/onboarding.js";
 import { createNewPromptFile } from "./config/promptFile.js";
 import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
+import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
-import { ControlPlaneClient } from "./control-plane/client.js";
+import { getAuthUrlForTokenPage } from "./control-plane/auth/index.js";
+import { ControlPlaneClient } from "./control-plane/client";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
 import { DocsService } from "./indexing/docs/DocsService.js";
 import Ollama from "./llm/llms/Ollama.js";
@@ -31,8 +33,6 @@ import type { IMessenger, Message } from "./util/messenger";
 import { editConfigJson } from "./util/paths.js";
 import { Telemetry } from "./util/posthog.js";
 import { streamDiffLines } from "./util/verticalEdit.js";
-import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache.js";
-import { getAuthUrlForTokenPage } from "./control-plane/auth/index.js";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
