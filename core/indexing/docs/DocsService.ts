@@ -311,8 +311,8 @@ export class DocsService {
       status: "indexing",
     };
 
-    // Clear old index if re-indexing.
-    if (reIndex) {
+    // Clear old index if re-indexing the existing old docs.
+    if (reIndex && await this.has(startUrl.toString())) {
       console.log("Deleting old embeddings");
       await this.delete(startUrl.toString());
     }
