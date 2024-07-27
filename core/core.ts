@@ -291,8 +291,6 @@ export class Core {
       for (const site of siteIndexingOptions) {
         await this.getEmbeddingsProviderAndIndexDoc(site, msg.data.reIndex);
       }
-
-      this.ide.infoPopup("Docs indexing completed");
     });
     on("context/loadSubmenuItems", async (msg) => {
       const config = await this.config();
@@ -753,10 +751,8 @@ export class Core {
       embeddingsProvider,
       reIndex,
     )) {
-      // Temporary disabled posting progress updates to the UI due to
-      // possible collision with code indexing progress updates.
-      // this.messenger.request("indexProgress", update);
-      // this.indexingState = update;
+      this.messenger.request("indexProgress", update);
+      this.indexingState = update;
     }
   }
 
@@ -768,8 +764,6 @@ export class Core {
     if (docs.length === 0) {
       return;
     }
-
-    this.ide.infoPopup("Reindexing docs with new embeddings provider");
 
     for (const { title, baseUrl } of docs) {
       await this.docsService.delete(baseUrl);
@@ -788,7 +782,5 @@ export class Core {
     // cleared and reindex the docs so that the table cannot end up in an
     // invalid state.
     this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
-
-    this.ide.infoPopup("Completed reindexing of all docs");
   }
 }
