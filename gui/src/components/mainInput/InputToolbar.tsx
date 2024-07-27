@@ -153,7 +153,7 @@ function InputToolbar(props: InputToolbarProps) {
               defaultModel.provider,
               defaultModel.model,
               defaultModel.title,
-              defaultModel.capability
+              defaultModel.capabilities
             ) && (
               <span
                 className="ml-1 mt-0.5"

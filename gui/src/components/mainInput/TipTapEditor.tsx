@@ -270,7 +270,7 @@ function TipTapEditor(props: TipTapEditorProps) {
                     for (const item of items) {
                       const file = item.getAsFile()
                       file && 
-                      modelSupportsImages(defaultModel.provider, defaultModel.model, defaultModel.title, defaultModel.capability) &&
+                      modelSupportsImages(defaultModel.provider, defaultModel.model, defaultModel.title, defaultModel.capabilities) &&
                       handleImageFile(file).then((resp) => {
                         if (!resp) return
                         const [img, dataUrl] = resp
@@ -760,7 +760,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             defaultModel.provider,
             defaultModel.model,
             defaultModel.title,
-            defaultModel.capability
+            defaultModel.capabilities
           )
         ) {
           return;
@@ -809,7 +809,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           defaultModel.provider,
           defaultModel.model,
           defaultModel.title,
-          defaultModel.capability
+          defaultModel.capabilities
         ) && (
           <>
             <HoverDiv></HoverDiv>

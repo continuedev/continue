@@ -338,7 +338,7 @@ Continue cannot determine the capabilities of the model, whether it supports upl
       "model": "moonshot-kimi",
       "contextLength": 8192,
       "apiBase": "https://any-your-thrid-part-OpenAI-compatible-api-provider/v1",
-      "capability": {
+      "capabilities": {
         "uploadImage": true
       }
     }

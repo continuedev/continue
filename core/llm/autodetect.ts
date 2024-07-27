@@ -76,9 +76,9 @@ function modelSupportsImages(
   provider: ModelProvider,
   model: string,
   title: string | undefined,
-  capability: ModelCapability | undefined
+  capabilities: ModelCapability | undefined
 ): boolean {
-  if (capability?.uploadImage !== undefined) return capability.uploadImage
+  if (capabilities?.uploadImage !== undefined) return capabilities.uploadImage
   if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
     return false;
   }

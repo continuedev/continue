@@ -339,7 +339,7 @@ export interface LLMOptions {
   // GCP Options
   region?: string;
   projectId?: string;
-  capability?: ModelCapability
+  capabilities?: ModelCapability
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -735,7 +735,7 @@ export interface ModelDescription {
   systemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
-  capability?: ModelCapability
+  capabilities?: ModelCapability
 }
 
 export type EmbeddingsProviderName =
