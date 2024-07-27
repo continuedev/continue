@@ -1,6 +1,6 @@
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { IndexingProgressUpdate } from "core";
-import { useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -138,6 +138,17 @@ const Layout = () => {
 
   const timeline = useSelector((state: RootState) => state.state.history);
 
+  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
+    id: "1",
+    desc: "Loading indexing config",
+    progress: 0.0,
+    status: "loading",
+  });
+
+  const [indexingStates, setIndexingStates] = useState<
+    Map<string, IndexingProgressUpdate>
+  >(new Map());
+
   // #endregion
 
   useEffect(() => {
@@ -185,8 +196,21 @@ const Layout = () => {
     [location, navigate],
   );
 
+  const updateIndexingStates = useCallback((update: IndexingProgressUpdate) => {
+    setIndexingStates((prevState) => {
+      const newState = new Map(prevState);
+      if (update.progress === 100 || update.status === "done") {
+        newState.delete(update.id);
+      } else {
+        newState.set(update.id, update);
+      }
+      return newState;
+    });
+  }, []);
+
   useWebviewListener("indexProgress", async (data) => {
     setIndexingState(data);
+    updateIndexingStates(data);
   });
 
   useWebviewListener(
@@ -238,13 +262,6 @@ const Layout = () => {
     }
   }, [location]);
 
-  const [indexingState, setIndexingState] = useState<IndexingProgressUpdate>({
-    id: "1",
-    desc: "Loading indexing config",
-    progress: 0.0,
-    status: "loading",
-  });
-
   return (
     <LayoutTopDiv>
       <div
@@ -281,7 +298,10 @@ const Layout = () => {
                       total={FREE_TRIAL_LIMIT_REQUESTS}
                     />
                   )}
-                <IndexingProgressBar indexingState={indexingState} />
+                <IndexingProgressBar
+                  indexingStates={indexingStates}
+                  recentIndexingUpdate={indexingState}
+                />
               </div>
 
               <ProfileSwitcher />
