@@ -13,7 +13,7 @@ import {
 } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { getBasename, getRelativePath } from "core/util";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState, ClipboardEvent } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
 import {
@@ -208,22 +208,20 @@ function TipTapEditor(props: TipTapEditorProps) {
   const active = useSelector((state: RootState) => state.state.active);
   const activeRef = useUpdatingRef(active);
 
+  const supportedImageTypes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/gif",
+    "image/svg",
+    "image/webp",
+  ];
   async function handleImageFile(
     file: File,
   ): Promise<[HTMLImageElement, string] | undefined> {
     let filesize = file.size / 1024 / 1024; // filesize in MB
     // check image type and size
-    if (
-      [
-        "image/jpeg",
-        "image/jpg",
-        "image/png",
-        "image/gif",
-        "image/svg",
-        "image/webp",
-      ].includes(file.type) &&
-      filesize < 10
-    ) {
+    if (supportedImageTypes.includes(file.type) && filesize < 10) {
       // check dimensions
       let _URL = window.URL || window.webkitURL;
       let img = new window.Image();
@@ -247,6 +245,32 @@ function TipTapEditor(props: TipTapEditorProps) {
       });
     }
     return undefined;
+  }
+
+  function handlePaste(event: ClipboardEvent<HTMLDivElement>) {
+    const pasteElement = event.clipboardData.items[0];
+
+    if (
+      pasteElement.kind !== "file" ||
+      !supportedImageTypes.includes(pasteElement.type) ||
+      !defaultModel ||
+      !modelSupportsImages(
+        defaultModel.provider,
+        defaultModel.model,
+        defaultModel.title,
+      )
+    ) {
+      return;
+    }
+    const file = pasteElement.getAsFile();
+    handleImageFile(file).then(([_img, dataUrl]) => {
+      const { schema } = editor.state;
+      const node = schema.nodes.image.create({ src: dataUrl });
+      editor.commands.command(({ tr }) => {
+        tr.insert(0, node);
+        return true;
+      });
+    });
   }
 
   const mainEditorContent = useSelector(
@@ -746,6 +770,7 @@ function TipTapEditor(props: TipTapEditorProps) {
         });
         event.preventDefault();
       }}
+      onPaste={(event) => handlePaste(event)}
     >
       <EditorContent
         spellCheck={false}
