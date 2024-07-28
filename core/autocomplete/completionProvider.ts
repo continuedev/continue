@@ -536,6 +536,12 @@ export class CompletionProvider {
       suffix = "";
     }
 
+    const apiKeys = await this.configHandler.apiKeys();
+    apiKeys.forEach(key => {
+      prefix = prefix.replace(key, "SECRET");
+      suffix = suffix.replace(key, "SECRET");
+    });
+
     // Template prompt
     const {
       template,

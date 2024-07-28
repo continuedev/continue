@@ -285,6 +285,28 @@ export class ConfigHandler {
     return model;
   }
 
+  async apiKeys(): Promise<string[]> {
+    const apiKeys: string[] = [];
+
+    function traverse(current: any) {
+        if (current !== null && typeof current === "object") {
+            for (const key in current) {
+                if (key === "apiKey") {
+                    apiKeys.push(current[key]);
+                }
+                traverse(current[key]);
+            }
+        } else if (Array.isArray(current)) {
+            for (const item of current) {
+                traverse(item);
+            }
+        }
+    }
+
+    traverse(await this.loadConfig());
+    return Array.from(new Set(apiKeys));
+  };
+
   registerCustomContextProvider(contextProvider: IContextProvider) {
     this.additionalContextProviders.push(contextProvider);
     this.reloadConfig();
