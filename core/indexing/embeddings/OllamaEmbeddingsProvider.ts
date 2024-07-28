@@ -22,6 +22,9 @@ async function embedOne(
         model: options.model,
         prompt: chunk,
       }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     if (!resp.ok) {
