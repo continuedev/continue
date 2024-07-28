@@ -10,7 +10,7 @@ import {
   MessageContent,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../countTokens.js";
+import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
 
 class Bedrock extends BaseLLM {

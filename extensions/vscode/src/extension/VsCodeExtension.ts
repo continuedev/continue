@@ -320,6 +320,10 @@ export class VsCodeExtension {
         documentContentProvider,
       ),
     );
+
+    this.ide.onDidChangeActiveTextEditor((filepath) => {
+      this.core.invoke("didChangeActiveTextEditor", { filepath });
+    });
   }
 
   static continueVirtualDocumentScheme = "continue";

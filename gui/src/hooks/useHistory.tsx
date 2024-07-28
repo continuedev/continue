@@ -2,7 +2,7 @@ import { Dispatch } from "@reduxjs/toolkit";
 import { PersistedSessionInfo, SessionInfo } from "core";
 
 import { llmCanGenerateInParallel } from "core/llm/autodetect";
-import { stripImages } from "core/llm/countTokens";
+import { stripImages } from "core/llm/images";
 import { useContext } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";

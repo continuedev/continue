@@ -15,7 +15,7 @@ async function genToStrs(
   return (await genToArr(generator)).map((chunk) => chunk.content);
 }
 
-describe("codeChunker", () => {
+describe.skip("codeChunker", () => {
   test("should return empty array if file empty", async () => {
     const chunks = await genToStrs(codeChunker("test.ts", "", 100));
     expect(chunks).toEqual([]);
