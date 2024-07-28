@@ -52,6 +52,7 @@ import { getTemplateForModel } from "./templates.js";
 import { GeneratorReuseManager } from "./util.js";
 // @prettier-ignore
 import Handlebars from "handlebars";
+import { getContinueGlobalPath } from "../util/paths.js";
 
 export interface AutocompleteInput {
   completionId: string;
@@ -536,11 +537,15 @@ export class CompletionProvider {
       suffix = "";
     }
 
-    const apiKeys = await this.configHandler.apiKeys();
-    apiKeys.forEach(key => {
-      prefix = prefix.replace(key, "SECRET");
-      suffix = suffix.replace(key, "SECRET");
-    });
+    const relativePath = path.relative(getContinueGlobalPath(), filepath);
+    // Check if we're in the continue directory
+    if (!relativePath.startsWith("..") && !path.isAbsolute(relativePath)) {
+      const apiKeys = await this.configHandler.apiKeys();
+      apiKeys.forEach(key => {
+        prefix = prefix.replace(key, "SECRET");
+        suffix = suffix.replace(key, "SECRET");
+      });
+    }
 
     // Template prompt
     const {
