@@ -20,10 +20,16 @@ import {
 
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
+  apiBase: string = "https://api.openai.com/v1/";
+
   constructor(protected config: LlmApiConfig) {
+    this.apiBase = config.apiBase ?? this.apiBase;
+    if (!this.apiBase.endsWith("/")) {
+      this.apiBase += "/";
+    }
     this.openai = new OpenAI({
       apiKey: config.apiKey,
-      baseURL: config.apiBase,
+      baseURL: this.apiBase,
     });
   }
 
@@ -58,7 +64,7 @@ export class OpenAIApi implements BaseLlmApi {
   async *fimStream(
     body: FimCreateParamsStreaming,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    const endpoint = new URL("fim/completions", this.config.apiBase);
+    const endpoint = new URL("fim/completions", this.apiBase);
     const resp = await fetch(endpoint, {
       method: "POST",
       body: JSON.stringify({
@@ -95,7 +101,7 @@ export class OpenAIApi implements BaseLlmApi {
   }
 
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
-    const endpoint = new URL("rerank", this.config.apiBase);
+    const endpoint = new URL("rerank", this.apiBase);
     const response = await fetch(endpoint, {
       method: "POST",
       body: JSON.stringify(body),

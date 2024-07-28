@@ -22,7 +22,14 @@ import {
 
 // Cohere is OpenAI-compatible
 export class CohereApi implements BaseLlmApi {
-  constructor(protected config: LlmApiConfig) {}
+  apiBase: string = "https://api.cohere.com/v1";
+
+  constructor(protected config: LlmApiConfig) {
+    this.apiBase = config.apiBase ?? this.apiBase;
+    if (!this.apiBase.endsWith("/")) {
+      this.apiBase += "/";
+    }
+  }
 
   chatCompletionNonStream(
     body: ChatCompletionCreateParamsNonStreaming,
@@ -50,7 +57,7 @@ export class CohereApi implements BaseLlmApi {
     throw new Error("Method not implemented.");
   }
   async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
-    const endpoint = new URL("rerank", this.config.apiBase);
+    const endpoint = new URL("rerank", this.apiBase);
     const response = await fetch(endpoint, {
       method: "POST",
       body: JSON.stringify(body),
@@ -61,12 +68,22 @@ export class CohereApi implements BaseLlmApi {
         Authorization: `Bearer ${this.config.apiKey}`,
       },
     });
-    const data = await response.json();
-    return data as any;
+    const data = (await response.json()) as any;
+    return {
+      object: "list",
+      data: data.results.map((result: any) => ({
+        index: result.index,
+        relevance_score: result.relevance_score,
+      })),
+      model: body.model,
+      usage: {
+        total_tokens: 0,
+      },
+    };
   }
 
   async embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse> {
-    const url = new URL("/embed", this.config.apiBase);
+    const url = new URL("/embed", this.apiBase);
     const texts = typeof body.input === "string" ? [body.input] : body.input;
     const response = await fetch(url, {
       method: "POST",
