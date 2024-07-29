@@ -9,3 +9,6 @@ Here is the error that the user received:
 Here is the documentation for Jest that you will use to help 
 the user troubleshoot the error:
 {{{ docs "https://jestjs.io/docs/getting-started" }}}
+
+Now, let's analyze the error message and the documentation to find a solution.
+If there is a valid solution, explain it and provide working code.
