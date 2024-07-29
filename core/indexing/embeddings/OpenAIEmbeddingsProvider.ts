@@ -1,9 +1,10 @@
 import { Response } from "node-fetch";
-import { EmbedOptions } from "../../index.js";
+import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class OpenAIEmbeddingsProvider extends BaseEmbeddingsProvider {
+  static providerName: EmbeddingsProviderName = "openai";
   // https://platform.openai.com/docs/api-reference/embeddings/create is 2048
   // but Voyage is 128
   static maxBatchSize = 128;

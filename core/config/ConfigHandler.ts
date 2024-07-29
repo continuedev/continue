@@ -197,7 +197,7 @@ export class ConfigHandler {
   async setSelectedProfile(profileId: string) {
     this.selectedProfileId = profileId;
     const newConfig = await this.loadConfig();
-    this.notifyConfigListerners(newConfig);
+    this.notifyConfigListeners(newConfig);
     const selectedProfiles =
       this.globalContext.get("lastSelectedProfileForWorkspace") ?? {};
     selectedProfiles[await this.getWorkspaceId()] = profileId;
@@ -241,7 +241,7 @@ export class ConfigHandler {
     }
   }
 
-  private notifyConfigListerners(newConfig: ContinueConfig) {
+  private notifyConfigListeners(newConfig: ContinueConfig) {
     // Notify listeners that config changed
     for (const listener of this.updateListeners) {
       listener(newConfig);
@@ -257,7 +257,7 @@ export class ConfigHandler {
     // TODO: this isn't right, there are two different senses in which you want to "reload"
     const newConfig = await this.currentProfile.reloadConfig();
     this.inactiveProfiles.forEach((profile) => profile.clearConfig());
-    this.notifyConfigListerners(newConfig);
+    this.notifyConfigListeners(newConfig);
   }
 
   getSerializedConfig(): Promise<BrowserSerializedContinueConfig> {

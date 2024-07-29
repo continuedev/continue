@@ -3,7 +3,7 @@ import path from "path";
 import * as YAML from "yaml";
 import type { IDE, SlashCommand } from "..";
 import { walkDir } from "../indexing/walkDir.js";
-import { stripImages } from "../llm/countTokens.js";
+import { stripImages } from "../llm/images.js";
 import { renderTemplatedString } from "../llm/llms/index.js";
 import { getBasename } from "../util/index.js";
 

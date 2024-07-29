@@ -64,8 +64,8 @@
     "vscode-webview": "^1.0.1-beta.1"
   },
   "devDependencies": {
-    "@swc/cli": "^0.3.12",
-    "@swc/core": "^1.5.25",
+    "@swc/cli": "^0.3.14",
+    "@swc/core": "^1.7.2",
     "@types/lodash": "^4.17.6",
     "@types/node": "^20.5.6",
     "@types/node-fetch": "^2.6.4",
@@ -74,7 +74,7 @@
     "@types/react-router-dom": "^5.3.3",
     "@types/react-syntax-highlighter": "^15.5.7",
     "@types/styled-components": "^5.1.26",
-    "@vitejs/plugin-react-swc": "^3.0.0",
+    "@vitejs/plugin-react-swc": "^3.7.0",
     "autoprefixer": "^10.4.13",
     "postcss": "^8.4.21",
     "tailwindcss": "^3.2.7",

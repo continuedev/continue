@@ -36,6 +36,7 @@ import CustomLLMClass from "../llm/llms/CustomLLM.js";
 import FreeTrial from "../llm/llms/FreeTrial.js";
 import { llmFromDescription } from "../llm/llms/index.js";
 
+import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
 import ContinueProxyContextProvider from "../context/providers/ContinueProxyContextProvider.js";
 import { fetchwithRequestOptions } from "../util/fetchWithOptions.js";
 import { copyOf } from "../util/index.js";
@@ -60,7 +61,6 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
-import CodebaseContextProvider from "../context/providers/CodebaseContextProvider.js";
 
 const { execSync } = require("child_process");
 
