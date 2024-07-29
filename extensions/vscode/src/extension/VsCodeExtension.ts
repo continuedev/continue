@@ -259,6 +259,9 @@ export class VsCodeExtension {
         const indexer = await this.core.codebaseIndexerPromise;
         indexer.refreshFile(filepath);
       }
+
+      // Reindex the workspaces
+      this.core.invoke("index/forceReIndex", undefined);
     });
 
     // When GitHub sign-in status changes, reload config

@@ -1,6 +1,6 @@
 import { ContinueConfig, IDE } from "core";
-import { QuickPickItem, window } from "vscode";
 import { fetchwithRequestOptions } from "core/util/fetchWithOptions";
+import { QuickPickItem, window } from "vscode";
 
 export async function getContextProviderItems({
   contextProviders,

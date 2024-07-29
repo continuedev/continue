@@ -1,6 +1,6 @@
+import ignore, { Ignore } from "ignore";
 import path from "node:path";
 import { FileType, IDE } from "../index.d.js";
-import ignore, { Ignore } from "ignore";
 import {
   DEFAULT_IGNORE_DIRS,
   DEFAULT_IGNORE_FILETYPES,
@@ -104,17 +104,18 @@ class DFSWalker {
     if (ignoreFilesInDir.length === 0) {
       return parentIgnore;
     }
-    const patterns = ignoreFilesInDir.map(c => {
-      return c.split(/\r?\n/)
-        .map((l) => l.trim())
-        .filter((l) => !/^#|^$/.test(l));
-    }).flat();
+    const patterns = ignoreFilesInDir
+      .map((c) => {
+        return c
+          .split(/\r?\n/)
+          .map((l) => l.trim())
+          .filter((l) => !/^#|^$/.test(l));
+      })
+      .flat();
     return ignore().add(parentIgnore).add(patterns);
   }
 
-  private async loadIgnoreFiles(
-    entries: WalkableEntry[],
-  ): Promise<string[]> {
+  private async loadIgnoreFiles(entries: WalkableEntry[]): Promise<string[]> {
     const ignoreEntries = entries.filter((w) => this.isIgnoreFile(w.entry));
     const promises = ignoreEntries.map(async (w) => {
       return await this.ide.readFile(w.absPath);
@@ -127,10 +128,7 @@ class DFSWalker {
     return this.ignoreFileNames.has(p);
   }
 
-  private shouldInclude(
-    walkableEntry: WalkableEntry,
-    ignore: Ignore,
-  ) {
+  private shouldInclude(walkableEntry: WalkableEntry, ignore: Ignore) {
     if (this.entryIsSymlink(walkableEntry.entry)) {
       // If called from the root, a symlink either links to a real file in this repository,
       // and therefore will be walked OR it linksto something outside of the repository and
