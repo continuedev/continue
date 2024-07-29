@@ -72,7 +72,7 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: true,
   },
   deepseek: {
-    title: "DeepSeek-Coder",
+    title: "DeepSeek Coder",
     description:
       "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
     params: {
@@ -103,6 +103,31 @@ export const models: { [key: string]: ModelPackage } = {
     ],
     providerOptions: ["ollama", "lmstudio", "llama.cpp"],
     isOpenSource: true,
+  },
+  deepseekChatApi: {
+    title: "DeepSeek Chat",
+    description: "DeepSeek's best model for general chat use cases.",
+    params: {
+      title: "DeepSeek Chat",
+      model: "deepseek-chat",
+      contextLength: 128_000,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["deepseek"],
+    isOpenSource: false,
+  },
+  deepseekCoderApi: {
+    title: "DeepSeek Coder",
+    description:
+      "A model pre-trained on 2 trillion tokens including 80+ programming languages and a repo-level corpus.",
+    params: {
+      title: "DeepSeek Coder",
+      model: "deepseek-coder",
+      contextLength: 128_000,
+    },
+    icon: "deepseek.png",
+    providerOptions: ["deepseek"],
+    isOpenSource: false,
   },
   mistralOs: {
     title: "Mistral",
