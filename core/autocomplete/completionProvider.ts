@@ -456,7 +456,7 @@ export class CompletionProvider {
     ) {
       shownGptClaudeWarning = true;
       throw new Error(
-        `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/walkthroughs/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
+        `Warning: ${llm.model} is not trained for tab-autocomplete, and will result in low-quality suggestions. See the docs to learn more about why: https://docs.continue.dev/features/tab-autocomplete#i-want-better-completions-should-i-use-gpt-4`,
       );
     }
 

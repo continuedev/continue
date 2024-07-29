@@ -1972,7 +1972,7 @@
         },
         "embeddingsProvider": {
           "title": "Embeddings Provider",
-          "markdownDescription": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options [here](https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers).",
+          "markdownDescription": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options [here](https://docs.continue.dev/features/codebase-embeddings#embeddings-providers).",
           "type": "object",
           "properties": {
             "provider": {
@@ -2210,7 +2210,7 @@
         "tabAutocompleteOptions": {
           "title": "TabAutocompleteOptions",
           "type": "object",
-          "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://docs.continue.dev/walkthroughs/tab-autocomplete#configuration-options).",
+          "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://docs.continue.dev/features/tab-autocomplete#configuration-options).",
           "properties": {
             "disable": {
               "type": "boolean",
