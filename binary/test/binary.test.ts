@@ -107,7 +107,7 @@ describe("Test Suite", () => {
 
     // Many of the files are only created when trying to load the config
     const config = await messenger.request(
-      "config/getBrowserSerialized",
+      "config/getSerializedProfileInfo",
       undefined,
     );
 
@@ -128,8 +128,8 @@ describe("Test Suite", () => {
   });
 
   it("should properly edit config", async () => {
-    const config = await messenger.request(
-      "config/getBrowserSerialized",
+    const { config } = await messenger.request(
+      "config/getSerializedProfileInfo",
       undefined,
     );
     expect(config).toHaveProperty("models");

@@ -90,7 +90,7 @@ This is just another object like the ones in the `"models"` array of `config.jso
 This object allows you to customize the behavior of tab-autocomplete. The available options are:
 
 - `useCopyBuffer`: Determines whether the copy buffer will be considered when constructing the prompt. (Boolean)
-- `useSuffix`: Determines whether to use the file suffix in the prompt. (Boolean)
+- `useFileSuffix`: Determines whether to use the file suffix in the prompt. (Boolean)
 - `maxPromptTokens`: The maximum number of prompt tokens to use. A smaller number will yield faster completions, but less context. (Number)
 - `debounceDelay`: The delay in milliseconds before triggering autocomplete after a keystroke. (Number)
 - `maxSuffixPercentage`: The maximum percentage of the prompt that can be dedicated to the suffix. (Number)

@@ -1,4 +1,4 @@
-import { IConfigHandler } from "../config/IConfigHandler.js";
+import { ConfigHandler } from "../config/ConfigHandler.js";
 import { IContinueServerClient } from "../continueServer/interface.js";
 import { IDE, IndexTag, IndexingProgressUpdate } from "../index.js";
 import { CodeSnippetsCodebaseIndex } from "./CodeSnippetsIndex.js";
@@ -6,7 +6,7 @@ import { FullTextSearchCodebaseIndex } from "./FullTextSearch.js";
 import { LanceDbIndex } from "./LanceDbIndex.js";
 import { ChunkCodebaseIndex } from "./chunk/ChunkCodebaseIndex.js";
 import { getComputeDeleteAddRemove } from "./refreshIndex.js";
-import { CodebaseIndex } from "./types.js";
+import { CodebaseIndex, IndexResultType } from "./types.js";
 import { walkDir } from "./walkDir.js";
 
 export class PauseToken {
@@ -23,7 +23,7 @@ export class PauseToken {
 
 export class CodebaseIndexer {
   constructor(
-    private readonly configHandler: IConfigHandler,
+    private readonly configHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly pauseToken: PauseToken,
     private readonly continueServerClient: IContinueServerClient,
@@ -36,6 +36,7 @@ export class CodebaseIndexer {
       new ChunkCodebaseIndex(
         this.ide.readFile.bind(this.ide),
         this.continueServerClient,
+        config.embeddingsProvider.maxChunkSize,
       ), // Chunking must come first
       new LanceDbIndex(
         config.embeddingsProvider,
@@ -111,7 +112,7 @@ export class CodebaseIndexer {
           branch,
           artifactId: codebaseIndex.artifactId,
         };
-        const [results, markComplete] = await getComputeDeleteAddRemove(
+        const [results, lastUpdated, markComplete] = await getComputeDeleteAddRemove(
           tag,
           { ...stats },
           (filepath) => this.ide.readFile(filepath),
@@ -157,6 +158,10 @@ export class CodebaseIndexer {
               status: "indexing",
             };
           }
+
+          lastUpdated.forEach((lastUpdated, path) => {
+            markComplete([lastUpdated], IndexResultType.UpdateLastUpdated);
+          });
 
           completedRelativeExpectedTime += codebaseIndex.relativeExpectedTime;
           yield {

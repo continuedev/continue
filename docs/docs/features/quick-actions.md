@@ -1,13 +1,13 @@
 ---
 title: Quick Actions (experimental, VS Code only)
-description: Quick Actions automate repetitive tasks and streamline your development workflow
+description: Quick Actions streamline your development workflow by allowing quick edits on selected classes or functions
 keywords: [experimental, automate, configuration]
 toc_max_heading_level: 5
 ---
 
-# Quick Actions (experimental, VS Code only)
+## Quick Actions (experimental, VS Code only)
 
-Quick Actions automate repetitive tasks and streamline your development workflow. Configure custom actions to execute complex operations with a single click.
+Quick Actions streamline your development workflow by providing a tool to quickly select an entire class or function to perform a quick edit on. Configure custom actions to execute complex operations with a single click.
 
 ![Quick actions example](/img/quick-actions-demo.gif)
 
@@ -19,10 +19,9 @@ For the language of the file you have open, you must have the Language Server Pr
 
 Quick Actions use a CodeLens provider to add interactive elements above functions and classes in your code.
 
-By default, Quick Actions include two predefined actions:
+By default, Quick Actions include a single predefined action:
 
-1. `Explain`: This action provides a short explanation of the selected code.
-2. `Docstring`: This action generates a docstring comment and inserts it above the code.
+- `Continue`: This action allows you to perform a quick edit on the selected class or function.
 
 ## How to disable Quick Actions
 

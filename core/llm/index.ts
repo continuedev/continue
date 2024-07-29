@@ -1,3 +1,4 @@
+import { findLlmInfo } from "@continuedev/llm-info";
 import Handlebars from "handlebars";
 import {
   ChatMessage,
@@ -35,9 +36,9 @@ import {
   compileChatMessages,
   countTokens,
   pruneRawPromptFromTop,
-  stripImages,
 } from "./countTokens.js";
 import CompletionOptionsForModels from "./templates/options.js";
+import { stripImages } from "./images.js";
 
 export abstract class BaseLLM implements ILLM {
   static providerName: ModelProvider;
@@ -114,14 +115,17 @@ export abstract class BaseLLM implements ILLM {
       ..._options,
     };
 
+    this.model = options.model;
+    const llmInfo = findLlmInfo(this.model);
+
     const templateType =
       options.template ?? autodetectTemplateType(options.model);
 
     this.title = options.title;
     this.uniqueId = options.uniqueId ?? "None";
-    this.model = options.model;
     this.systemMessage = options.systemMessage;
-    this.contextLength = options.contextLength ?? DEFAULT_CONTEXT_LENGTH;
+    this.contextLength =
+      options.contextLength ?? llmInfo?.contextLength ?? DEFAULT_CONTEXT_LENGTH;
     this.completionOptions = {
       ...options.completionOptions,
       model: options.model || "gpt-4",
@@ -235,12 +239,16 @@ ${prompt}`;
   ) {
     let promptTokens = this.countTokens(prompt);
     let generatedTokens = this.countTokens(completion);
-    Telemetry.capture("tokens_generated", {
-      model: model,
-      provider: this.providerName,
-      promptTokens: promptTokens,
-      generatedTokens: generatedTokens,
-    });
+    Telemetry.capture(
+      "tokens_generated",
+      {
+        model: model,
+        provider: this.providerName,
+        promptTokens: promptTokens,
+        generatedTokens: generatedTokens,
+      },
+      true,
+    );
     DevDataSqliteDb.logTokensGenerated(
       model,
       this.providerName,

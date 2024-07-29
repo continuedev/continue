@@ -46,7 +46,7 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         "config/addOpenAiKey",
         "config/addModel",
         "config/ideSettingsUpdate",
-        "config/getBrowserSerialized",
+        "config/getSerializedProfileInfo",
         "config/deleteModel",
         "config/newPromptFile",
         "config/reload",
@@ -68,7 +68,10 @@ class ContinueBrowser(val project: Project, url: String, useOsr: Boolean = false
         "index/forceReIndex",
         "index/indexingProgressBarInitialized",
         "completeOnboarding",
-        "addAutocompleteModel"
+        "addAutocompleteModel",
+        "config/listProfiles",
+        "profiles/switch",
+        "didChangeSelectedProfile",
     )
 
     private fun registerAppSchemeHandler() {

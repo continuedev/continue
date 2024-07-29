@@ -10,7 +10,7 @@ import {
   PromptLog,
 } from "core";
 import { BrowserSerializedContinueConfig } from "core/config/load";
-import { stripImages } from "core/llm/countTokens";
+import { stripImages } from "core/llm/images";
 import { createSelector } from "reselect";
 import { v4 } from "uuid";
 import { RootState } from "../store";
@@ -104,6 +104,7 @@ type State = {
   sessionId: string;
   defaultModelTitle: string;
   mainEditorContent?: JSONContent;
+  selectedProfileId: string;
 };
 
 const initialState: State = {
@@ -135,6 +136,7 @@ const initialState: State = {
   title: "New Session",
   sessionId: v4(),
   defaultModelTitle: "GPT-4",
+  selectedProfileId: "local",
 };
 
 export const stateSlice = createSlice({
@@ -242,6 +244,23 @@ export const stateSlice = createSlice({
       // state.contextItems = [];
       state.active = true;
     },
+    deleteMessage: (state, action: PayloadAction<number>) => {
+      const index = action.payload + 1;
+
+      if (index >= 0 && index < state.history.length) {
+        // Delete the current message
+        state.history.splice(index, 1);
+
+        // If the next message is an assistant message, delete it too
+        if (
+          index < state.history.length &&
+          state.history[index].message.role === "assistant"
+        ) {
+          state.history.splice(index, 1);
+        }
+      }
+    },
+
     initNewActiveMessage: (
       state,
       {
@@ -468,6 +487,12 @@ export const stateSlice = createSlice({
         defaultModelTitle: payload.title,
       };
     },
+    setSelectedProfileId: (state, { payload }: PayloadAction<string>) => {
+      return {
+        ...state,
+        selectedProfileId: payload,
+      };
+    },
   },
 });
 
@@ -491,5 +516,7 @@ export const {
   setMessageAtIndex,
   clearLastResponse,
   consumeMainEditorContent,
+  setSelectedProfileId,
+  deleteMessage,
 } = stateSlice.actions;
 export default stateSlice.reducer;

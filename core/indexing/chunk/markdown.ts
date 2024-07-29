@@ -78,7 +78,7 @@ export async function* markdownChunker(
   if (hLevel > 4) {
     const header = findHeader(content.split("\n"));
 
-    for (const chunk of basicChunker(content, maxChunkSize)) {
+    for await (const chunk of basicChunker(content, maxChunkSize)) {
       yield {
         ...chunk,
         otherMetadata: {

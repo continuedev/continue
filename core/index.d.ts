@@ -137,6 +137,7 @@ export interface ContextProviderExtras {
 }
 
 export interface LoadSubmenuItemsArgs {
+  config: ContinueConfig;
   ide: IDE;
   fetch: FetchFunction;
 }
@@ -374,8 +375,10 @@ export type CustomLLM = RequireAtLeastOne<
 
 // IDE
 
+export type DiffLineType = "new" | "old" | "same";
+
 export interface DiffLine {
-  type: "new" | "old" | "same";
+  type: DiffLineType;
   line: string;
 }
 
@@ -419,6 +422,9 @@ export interface IdeSettings {
   remoteConfigServerUrl: string | undefined;
   remoteConfigSyncPeriod: number;
   userToken: string;
+  enableControlServerBeta: boolean;
+  pauseCodebaseIndexOnStart: boolean;
+  enableDebugLogs: boolean;
 }
 
 export interface IDE {
@@ -595,6 +601,7 @@ export type ModelName =
   | "gpt-3.5-turbo-0613"
   | "gpt-4-32k"
   | "gpt-4o"
+  | "gpt-4o-mini"
   | "gpt-4-turbo"
   | "gpt-4-turbo-preview"
   | "gpt-4-vision-preview"
@@ -732,7 +739,9 @@ export type EmbeddingsProviderName =
   | "openai"
   | "cohere"
   | "free-trial"
-  | "gemini";
+  | "gemini"
+  | "continue-proxy"
+  | "deepinfra";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -742,6 +751,7 @@ export interface EmbedOptions {
   apiType?: string;
   apiVersion?: string;
   requestOptions?: RequestOptions;
+  maxChunkSize?: number;
 }
 
 export interface EmbeddingsProviderDescription extends EmbedOptions {
@@ -750,10 +760,18 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 
 export interface EmbeddingsProvider {
   id: string;
+  providerName: EmbeddingsProviderName;
+  maxChunkSize: number;
   embed(chunks: string[]): Promise<number[][]>;
 }
 
-export type RerankerName = "cohere" | "voyage" | "llm" | "free-trial";
+export type RerankerName =
+  | "cohere"
+  | "voyage"
+  | "llm"
+  | "free-trial"
+  | "huggingface-tei"
+  | "continue-proxy";
 
 export interface RerankerDescription {
   name: RerankerName;
@@ -768,7 +786,7 @@ export interface Reranker {
 export interface TabAutocompleteOptions {
   disable: boolean;
   useCopyBuffer: boolean;
-  useSuffix: boolean;
+  useFileSuffix: boolean;
   maxPromptTokens: number;
   debounceDelay: number;
   maxSuffixPercentage: number;
@@ -845,6 +863,12 @@ interface ExperimentalConfig {
   quickActions?: QuickActionConfig[];
 }
 
+interface AnalyticsConfig {
+  type: string;
+  url?: string;
+  clientKey?: string;
+}
+
 // config.json
 export interface SerializedContinueConfig {
   env?: string[];
@@ -865,6 +889,7 @@ export interface SerializedContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
@@ -915,6 +940,8 @@ export interface Config {
   reranker?: RerankerDescription | Reranker;
   /** Experimental configuration */
   experimental?: ExperimentalConfig;
+  /** Analytics configuration */
+  analytics?: AnalyticsConfig;
 }
 
 // in the actual Continue source code
@@ -935,6 +962,8 @@ export interface ContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: Reranker;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
 }
 
 export interface BrowserSerializedContinueConfig {
@@ -952,4 +981,5 @@ export interface BrowserSerializedContinueConfig {
   ui?: ContinueUIConfig;
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
+  analytics?: AnalyticsConfig;
 }

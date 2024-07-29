@@ -22,6 +22,8 @@
         <projectService
                 id="AutocompleteLookupListener"
                 serviceImplementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteLookupListener"/>
+        <statusBarWidgetFactory implementation="com.github.continuedev.continueintellijextension.autocomplete.AutocompleteSpinnerWidgetFactory"
+                                id="AutocompleteSpinnerWidget"/>
     </extensions>
 
     <resource-bundle>messages.MyBundle</resource-bundle>
@@ -108,10 +110,6 @@
                 text="Start New Continue Session"
                 icon="AllIcons.General.Add"
                 description="Start New Continue Session">
-            <keyboard-shortcut keymap="$default"
-                               first-keystroke="alt ctrl N"/>
-            <keyboard-shortcut keymap="Mac OS X"
-                               first-keystroke="alt meta N"/>
         </action>
 
         <action id="continue.viewHistory"
@@ -146,6 +144,13 @@
                 class="com.github.continuedev.continueintellijextension.autocomplete.CancelAutocompleteAction"
                 text="Cancel Autocomplete Suggestion" description="Cancel Autocomplete Suggestion">
             <keyboard-shortcut keymap="$default" first-keystroke="ESCAPE"/>
+        </action>
+        <action id="com.github.continuedev.continueintellijextension.autocomplete.PartialAcceptAutocompleteAction"
+                class="com.github.continuedev.continueintellijextension.autocomplete.PartialAcceptAutocompleteAction"
+                text="Partial Accept Autocomplete Suggestion"
+                description="Partial Accept Autocomplete Suggestion">
+            <keyboard-shortcut first-keystroke="control alt RIGHT" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="alt meta RIGHT" keymap="Mac OS X"/>
         </action>
     </actions>
 

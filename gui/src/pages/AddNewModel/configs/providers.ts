@@ -1,10 +1,10 @@
 import { ModelProvider } from "core";
 import { HTMLInputTypeAttribute } from "react";
 import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
+import { FREE_TRIAL_LIMIT_REQUESTS } from "../../../util/freeTrial";
 import { completionParamsInputs } from "./completionParamsInputs";
 import type { ModelPackage } from "./models";
 import { models } from "./models";
-import { FREE_TRIAL_LIMIT_REQUESTS } from "../../../util/freeTrial";
 
 export interface InputDescriptor {
   inputType: HTMLInputTypeAttribute;
@@ -61,6 +61,7 @@ export const providers: Partial<Record<ModelProvider, ProviderInfo>> = {
     tags: [ModelProviderTags.RequiresApiKey],
     packages: [
       models.gpt4o,
+      models.gpt4omini,
       models.gpt4turbo,
       models.gpt35turbo,
       {
@@ -186,6 +187,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     packages: [
       models.codestral,
+      models.codestralMamba,
       models.mistralLarge,
       models.mistralSmall,
       models.mistral8x22b,
@@ -260,8 +262,9 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       },
     ],
     packages: [
-      models.llama370bChat,
-      models.llama38bChat,
+      models.llama31405bChat,
+      models.llama3170bChat,
+      models.llama318bChat,
       { ...models.mixtralTrial, title: "Mixtral" },
       models.llama270bChat,
       {
@@ -274,6 +277,27 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ,
     ],
     apiKeyUrl: "https://console.groq.com/keys",
+  },
+  deepseek: {
+    title: "DeepSeek",
+    provider: "deepseek",
+    icon: "deepseek.png",
+    description:
+      "DeepSeek provides cheap inference of its DeepSeek Coder v2 and other impressive open-source models.",
+    longDescription:
+      "To get started with DeepSeek, obtain an API key from their website [here](https://platform.deepseek.com/api_keys).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your DeepSeek API key",
+        required: true,
+      },
+    ],
+    packages: [models.deepseekCoderApi, models.deepseekChatApi],
+    apiKeyUrl: "https://platform.deepseek.com/api_keys",
   },
   together: {
     title: "TogetherAI",
@@ -298,7 +322,7 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
       ...completionParamsInputsConfigs,
     ],
     packages: [
-      models.llama3Chat,
+      models.llama31Chat,
       models.codeLlamaInstruct,
       models.mistralOs,
     ].map((p) => {
@@ -462,7 +486,8 @@ After it's up and running, you can start using Continue.`,
     icon: "openai.png",
     tags: [ModelProviderTags.Free],
     packages: [
-      models.codellama70bTrial,
+      models.llama31405bTrial,
+      models.llama3170bTrial,
       { ...models.claude35Sonnet, title: "Claude 3.5 Sonnet (trial)" },
       { ...models.gpt4o, title: "GPT-4o (trial)" },
       { ...models.gpt35turbo, title: "GPT-3.5-Turbo (trial)" },

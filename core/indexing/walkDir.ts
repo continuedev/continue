@@ -1,17 +1,15 @@
-import { EventEmitter } from "events";
 import { Minimatch } from "minimatch";
 import path from "node:path";
-import { FileType, IDE } from "..";
-import { DEFAULT_IGNORE_DIRS, DEFAULT_IGNORE_FILETYPES } from "./ignore";
+import { FileType, IDE } from "../index.d.js";
+import {
+  DEFAULT_IGNORE_DIRS,
+  DEFAULT_IGNORE_FILETYPES,
+  defaultIgnoreDir,
+  defaultIgnoreFile,
+} from "./ignore.js";
 
 export interface WalkerOptions {
-  isSymbolicLink?: boolean;
-  path?: string;
   ignoreFiles?: string[];
-  parent?: Walker | null;
-  includeEmpty?: boolean;
-  follow?: boolean;
-  exact?: boolean;
   onlyDirs?: boolean;
   returnRelativePaths?: boolean;
   additionalIgnoreRules?: string[];
@@ -19,315 +17,194 @@ export interface WalkerOptions {
 
 type Entry = [string, FileType];
 
-class Walker extends EventEmitter {
-  isSymbolicLink: boolean;
-  path: string;
-  basename: string;
-  ignoreFiles: string[];
-  ignoreRules: { [key: string]: Minimatch[] };
-  parent: Walker | null;
-  includeEmpty: boolean;
-  root: string;
-  follow: boolean;
-  result: Set<string>;
-  entries: Entry[] | null;
-  sawError: boolean;
-  exact: boolean | undefined;
-  onlyDirs: boolean | undefined;
+// helper struct used for the DFS walk
+type WalkableEntry = {
+  relPath: string;
+  absPath: string;
+  type: FileType;
+  entry: Entry;
+};
+
+// helper struct used for the DFS walk
+type WalkContext = {
+  walkableEntry: WalkableEntry;
+  ignoreFiles: IgnoreFile[];
+};
+
+class IgnoreFile {
+  private _rules: Minimatch[];
+
   constructor(
-    opts: WalkerOptions = {},
-    protected readonly ide: IDE,
+    public path: string,
+    public content: string,
   ) {
-    super(opts as any);
-    this.isSymbolicLink = opts.isSymbolicLink || false;
-    this.path = opts.path || process.cwd();
-    this.basename = path.basename(this.path);
-    this.ignoreFiles = [...(opts.ignoreFiles || [".ignore"]), ".defaultignore"];
-    this.ignoreRules = {};
-    this.parent = opts.parent || null;
-    this.includeEmpty = !!opts.includeEmpty;
-    this.root = this.parent ? this.parent.root : this.path;
-    this.follow = !!opts.follow;
-    this.result = this.parent ? this.parent.result : new Set();
-    this.entries = null;
-    this.sawError = false;
-    this.exact = opts.exact;
-    this.onlyDirs = opts.onlyDirs;
-
-    if (opts.additionalIgnoreRules) {
-      this.addIgnoreRules(opts.additionalIgnoreRules);
-    }
+    this.path = path;
+    this.content = content;
+    this._rules = this.contentToRules(content);
   }
 
-  sort(a: string, b: string): number {
-    return a.localeCompare(b, "en");
+  public get rules() {
+    return this._rules;
   }
 
-  emit(ev: string, data: any): boolean {
-    let ret = false;
-    if (!(this.sawError && ev === "error")) {
-      if (ev === "error") {
-        this.sawError = true;
-      } else if (ev === "done" && !this.parent) {
-        data = (Array.from(data) as any)
-          .map((e: string) => (/^@/.test(e) ? `./${e}` : e))
-          .sort(this.sort);
-        this.result = new Set(data);
-      }
-
-      if (ev === "error" && this.parent) {
-        ret = this.parent.emit("error", data);
-      } else {
-        ret = super.emit(ev, data);
-      }
-    }
-    return ret;
-  }
-
-  start(): this {
-    this.ide
-      .listDir(this.path)
-      .then((entries) => {
-        this.onReaddir(entries);
-      })
-      .catch((err) => {
-        this.emit("error", err);
-      });
-    return this;
-  }
-
-  isIgnoreFile(e: Entry): boolean {
-    const p = e[0];
-    return p !== "." && p !== ".." && this.ignoreFiles.indexOf(p) !== -1;
-  }
-
-  onReaddir(entries: Entry[]): void {
-    this.entries = entries;
-    if (entries.length === 0) {
-      if (this.includeEmpty) {
-        this.result.add(this.path.slice(this.root.length + 1));
-      }
-      this.emit("done", this.result);
-    } else {
-      const hasIg = this.entries.some((e) => this.isIgnoreFile(e));
-
-      if (hasIg) {
-        this.addIgnoreFiles();
-      } else {
-        this.filterEntries();
-      }
-    }
-  }
-
-  addIgnoreFiles(): void {
-    const newIg = this.entries!.filter((e) => this.isIgnoreFile(e));
-
-    let igCount = newIg.length;
-    const then = () => {
-      if (--igCount === 0) {
-        this.filterEntries();
-      }
-    };
-
-    newIg.forEach((e) => this.addIgnoreFile(e, then));
-  }
-
-  addIgnoreFile(file: Entry, then: () => void): void {
-    const ig = path.resolve(this.path, file[0]);
-    this.ide
-      .readFile(ig)
-      .then((data) => {
-        this.onReadIgnoreFile(file, data, then);
-      })
-      .catch((err) => {
-        this.emit("error", err);
-      });
-  }
-
-  onReadIgnoreFile(file: Entry, data: string, then: () => void): void {
-    const mmopt = {
+  private contentToRules(content: string): Minimatch[] {
+    const options = {
       matchBase: true,
       dot: true,
       flipNegate: true,
       nocase: true,
     };
-    const rules = data
+    return content
       .split(/\r?\n/)
-      .filter((line) => !/^#|^$/.test(line.trim()))
-      .map((rule) => {
-        return new Minimatch(rule.trim(), mmopt);
-      });
+      .map((l) => l.trim())
+      .filter((l) => !/^#|^$/.test(l))
+      .map((l) => new Minimatch(l, options));
+  }
+}
 
-    this.ignoreRules[file[0]] = rules;
+class DFSWalker {
+  private readonly path: string;
+  private readonly ide: IDE;
+  private readonly options: WalkerOptions;
+  private readonly ignoreFileNames: Set<string>;
 
-    then();
+  constructor(path: string, ide: IDE, options: WalkerOptions) {
+    this.path = path;
+    this.ide = ide;
+    this.options = options;
+    this.ignoreFileNames = new Set<string>(options.ignoreFiles);
   }
 
-  addIgnoreRules(rules: string[]) {
-    const mmopt = {
-      matchBase: true,
-      dot: true,
-      flipNegate: true,
-      nocase: true,
+  // walk is a depth-first search implementation
+  public async *walk(): AsyncGenerator<string> {
+    const root: WalkContext = {
+      walkableEntry: {
+        relPath: "",
+        absPath: this.path,
+        type: 2 as FileType.Directory,
+        entry: ["", 2 as FileType.Directory],
+      },
+      ignoreFiles: [],
     };
-    const minimatchRules = rules
-      .filter((line) => !/^#|^$/.test(line.trim()))
-      .map((rule) => {
-        return new Minimatch(rule.trim(), mmopt);
-      });
-
-    this.ignoreRules[".defaultignore"] = minimatchRules;
-  }
-
-  filterEntries(): void {
-    const filtered = this.entries!.map((entry) => {
-      const passFile = this.filterEntry(entry[0]);
-      const passDir = this.filterEntry(entry[0], true);
-      return passFile || passDir ? [entry, passFile, passDir] : false;
-    }).filter((e) => e) as [Entry, boolean, boolean][];
-    let entryCount = filtered.length;
-    if (entryCount === 0) {
-      this.emit("done", this.result);
-    } else {
-      const then = () => {
-        if (--entryCount === 0) {
-          // Otherwise in onlyDirs mode, nothing would be returned
-          if (this.onlyDirs && this.path !== this.root) {
-            this.result.add(this.path.slice(this.root.length + 1));
-          }
-          this.emit("done", this.result);
+    const stack = [root];
+    for (let cur = stack.pop(); cur; cur = stack.pop()) {
+      const walkableEntries = await this.listDirForWalking(cur.walkableEntry);
+      const ignoreFiles = await this.getIgnoreFilesToApplyInDir(
+        cur.ignoreFiles,
+        walkableEntries,
+      );
+      for (const w of walkableEntries) {
+        if (!this.shouldInclude(w, ignoreFiles)) {
+          continue;
         }
+        if (this.entryIsDirectory(w.entry)) {
+          stack.push({
+            walkableEntry: w,
+            ignoreFiles: ignoreFiles,
+          });
+          if (this.options.onlyDirs) {
+            // when onlyDirs is enabled the walker will only return directory names
+            yield w.relPath;
+          }
+        } else {
+          yield w.relPath;
+        }
+      }
+    }
+  }
+
+  private async listDirForWalking(
+    walkableEntry: WalkableEntry,
+  ): Promise<WalkableEntry[]> {
+    const entries = await this.ide.listDir(walkableEntry.absPath);
+    return entries.map((e) => {
+      return {
+        relPath: path.join(walkableEntry.relPath, e[0]),
+        absPath: path.join(walkableEntry.absPath, e[0]),
+        type: e[1],
+        entry: e,
       };
-      filtered.forEach((filt) => {
-        const [entry, file, dir] = filt;
-        this.stat(entry, file, dir, then);
-      });
+    });
+  }
+
+  private async getIgnoreFilesToApplyInDir(
+    parentIgnoreFiles: IgnoreFile[],
+    walkableEntries: WalkableEntry[],
+  ): Promise<IgnoreFile[]> {
+    const ignoreFilesInDir = await this.loadIgnoreFiles(walkableEntries);
+    if (ignoreFilesInDir.length === 0) {
+      return parentIgnoreFiles;
     }
+    return Array.prototype.concat(parentIgnoreFiles, ignoreFilesInDir);
   }
 
-  entryIsDirectory(entry: Entry) {
-    const Directory = 2 as FileType.Directory;
-    return entry[1] === Directory;
+  private async loadIgnoreFiles(
+    entries: WalkableEntry[],
+  ): Promise<IgnoreFile[]> {
+    const ignoreEntries = entries.filter((w) => this.isIgnoreFile(w.entry));
+    const promises = ignoreEntries.map(async (w) => {
+      const content = await this.ide.readFile(w.absPath);
+      return new IgnoreFile(w.relPath, content);
+    });
+    return Promise.all(promises);
   }
 
-  entryIsSymlink(entry: Entry) {
-    const Directory = 64 as FileType.SymbolicLink;
-    return entry[1] === Directory;
+  private isIgnoreFile(e: Entry): boolean {
+    const p = e[0];
+    return this.ignoreFileNames.has(p);
   }
 
-  onstat(entry: Entry, file: boolean, dir: boolean, then: () => void): void {
-    const abs = this.path + "/" + entry[0];
-    const isSymbolicLink = this.entryIsSymlink(entry);
-    if (!this.entryIsDirectory(entry)) {
-      if (file && !this.onlyDirs) {
-        this.result.add(abs.slice(this.root.length + 1));
-      }
-      then();
-    } else {
-      if (dir) {
-        this.walker(
-          entry[0],
-          { isSymbolicLink, exact: this.filterEntry(entry[0] + "/") },
-          then,
-        );
-      } else {
-        then();
-      }
+  private shouldInclude(
+    walkableEntry: WalkableEntry,
+    ignoreFiles: IgnoreFile[],
+  ) {
+    if (this.entryIsSymlink(walkableEntry.entry)) {
+      // If called from the root, a symlink either links to a real file in this repository,
+      // and therefore will be walked OR it linksto something outside of the repository and
+      // we do not want to index it
+      return false;
     }
-  }
-
-  stat(entry: Entry, file: boolean, dir: boolean, then: () => void): void {
-    this.onstat(entry, file, dir, then);
-  }
-
-  walkerOpt(entry: string, opts: Partial<WalkerOptions>): WalkerOptions {
-    return {
-      path: this.path + "/" + entry,
-      parent: this,
-      ignoreFiles: this.ignoreFiles,
-      follow: this.follow,
-      includeEmpty: this.includeEmpty,
-      onlyDirs: this.onlyDirs,
-      ...opts,
-    };
-  }
-
-  walker(entry: string, opts: Partial<WalkerOptions>, then: () => void): void {
-    new Walker(this.walkerOpt(entry, opts), this.ide).on("done", then).start();
-  }
-
-  filterEntry(
-    entry: string,
-    partial?: boolean,
-    entryBasename?: string,
-  ): boolean {
-    let included = true;
-
-    if (this.parent && this.parent.filterEntry) {
-      const parentEntry = this.basename + "/" + entry;
-      const parentBasename = entryBasename || entry;
-      included = this.parent.filterEntry(parentEntry, partial, parentBasename);
-      if (!included && !this.exact) {
+    let relPath = walkableEntry.relPath;
+    if (this.entryIsDirectory(walkableEntry.entry)) {
+      if (defaultIgnoreDir.ignores(walkableEntry.relPath)) {
         return false;
       }
-    }
-
-    this.ignoreFiles.forEach((f) => {
-      if (this.ignoreRules[f]) {
-        this.ignoreRules[f].forEach((rule) => {
-          if (rule.negate !== included) {
-            const isRelativeRule =
-              entryBasename &&
-              rule.globParts.some(
-                (part) => part.length <= (part.slice(-1)[0] ? 1 : 2),
-              );
-
-            const match =
-              rule.match("/" + entry) ||
-              rule.match(entry) ||
-              (!!partial &&
-                (rule.match("/" + entry + "/") ||
-                  rule.match(entry + "/") ||
-                  (rule.negate &&
-                    (rule.match("/" + entry, true) ||
-                      rule.match(entry, true))) ||
-                  (isRelativeRule &&
-                    (rule.match("/" + entryBasename + "/") ||
-                      rule.match(entryBasename + "/") ||
-                      (rule.negate &&
-                        (rule.match("/" + entryBasename, true) ||
-                          rule.match(entryBasename, true)))))));
-
-            if (match) {
-              included = rule.negate;
-            }
-          }
-        });
+      relPath = `${relPath}/`;
+    } else {
+      if (this.options.onlyDirs) {
+        return false;
       }
-    });
-
+      if (defaultIgnoreFile.ignores(walkableEntry.relPath)) {
+        return false;
+      }
+      relPath = `/${relPath}`;
+    }
+    let included = true;
+    for (const ignoreFile of ignoreFiles) {
+      for (const r of ignoreFile.rules) {
+        if (r.negate === included) {
+          // no need to test when the file is already NOT to be included unless this is a negate rule and vice versa
+          continue;
+        }
+        if (r.match(relPath)) {
+          included = r.negate;
+        }
+      }
+    }
     return included;
   }
-}
 
-interface WalkCallback {
-  (err: Error | null, result?: string[]): void;
-}
+  private entryIsDirectory(entry: Entry) {
+    return entry[1] === (2 as FileType.Directory);
+  }
 
-async function walkDirWithCallback(
-  opts: WalkerOptions,
-  ide: IDE,
-  callback?: WalkCallback,
-): Promise<string[] | void> {
-  const p = new Promise<string[]>((resolve, reject) => {
-    new Walker(opts, ide).on("done", resolve).on("error", reject).start();
-  });
-  return callback ? p.then((res) => callback(null, res), callback) : p;
+  private entryIsSymlink(entry: Entry) {
+    return entry[1] === (64 as FileType.SymbolicLink);
+  }
 }
 
 const defaultOptions: WalkerOptions = {
   ignoreFiles: [".gitignore", ".continueignore"],
-  onlyDirs: false,
   additionalIgnoreRules: [...DEFAULT_IGNORE_DIRS, ...DEFAULT_IGNORE_FILETYPES],
 };
 
@@ -336,40 +213,18 @@ export async function walkDir(
   ide: IDE,
   _options?: WalkerOptions,
 ): Promise<string[]> {
+  let entries: string[] = [];
   const options = { ...defaultOptions, ..._options };
-  return new Promise((resolve, reject) => {
-    walkDirWithCallback(
-      {
-        path,
-        ignoreFiles: options.ignoreFiles,
-        onlyDirs: options.onlyDirs,
-        follow: true,
-        includeEmpty: false,
-        additionalIgnoreRules: options.additionalIgnoreRules,
-      },
-      ide,
-      async (err, result) => {
-        if (err) {
-          reject(err);
-        } else {
-          const relativePaths = result || [];
-          if (options?.returnRelativePaths) {
-            resolve(relativePaths);
-          } else {
-            const pathSep = await ide.pathSep();
-            if (pathSep === "/") {
-              resolve(relativePaths.map((p) => path + pathSep + p));
-            } else {
-              // Need to replace with windows path sep
-              resolve(
-                relativePaths.map(
-                  (p) => path + pathSep + p.split("/").join(pathSep),
-                ),
-              );
-            }
-          }
-        }
-      },
-    );
-  });
+  const dfsWalker = new DFSWalker(path, ide, options);
+  let relativePaths: string[] = [];
+  for await (const e of dfsWalker.walk()) {
+    relativePaths.push(e);
+  }
+  const pathSep = await ide.pathSep();
+  const prefix = options.returnRelativePaths ? "" : path + pathSep;
+
+  if (pathSep === "/") {
+    return relativePaths.map((p) => prefix + p);
+  }
+  return relativePaths.map((p) => prefix + p.split("/").join(pathSep));
 }

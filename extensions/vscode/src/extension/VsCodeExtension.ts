@@ -1,5 +1,5 @@
 import { IContextProvider } from "core";
-import { IConfigHandler } from "core/config/IConfigHandler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import { Core } from "core/core";
 import { FromCoreProtocol, ToCoreProtocol } from "core/protocol";
 import { InProcessMessenger } from "core/util/messenger";
@@ -9,18 +9,23 @@ import { v4 as uuidv4 } from "uuid";
 import * as vscode from "vscode";
 import { ContinueCompletionProvider } from "../autocomplete/completionProvider";
 import {
-  StatusBarStatus,
   monitorBatteryChanges,
   setupStatusBar,
+  StatusBarStatus,
 } from "../autocomplete/statusBar";
 import { registerAllCommands } from "../commands";
+import { ContinueGUIWebviewViewProvider } from "../ContinueGUIWebviewViewProvider";
 import { registerDebugTracker } from "../debug/debug";
-import { ContinueGUIWebviewViewProvider } from "../debugPanel";
 import { DiffManager } from "../diff/horizontal";
 import { VerticalPerLineDiffManager } from "../diff/verticalPerLine/manager";
 import { VsCodeIde } from "../ideProtocol";
 import { registerAllCodeLensProviders } from "../lang-server/codeLens";
+import { QuickEdit } from "../quickEdit/QuickEditQuickPick";
 import { setupRemoteConfigSync } from "../stubs/activation";
+import {
+  getControlPlaneSessionInfo,
+  WorkOsAuthProvider,
+} from "../stubs/WorkOsAuthProvider";
 import { Battery } from "../util/battery";
 import { TabAutocompleteModel } from "../util/loadAutocompleteModel";
 import type { VsCodeWebviewProtocol } from "../webviewProtocol";
@@ -29,7 +34,7 @@ import { VsCodeMessenger } from "./VsCodeMessenger";
 export class VsCodeExtension {
   // Currently some of these are public so they can be used in testing (test/test-suites)
 
-  private configHandler: IConfigHandler;
+  private configHandler: ConfigHandler;
   private extensionContext: vscode.ExtensionContext;
   private ide: VsCodeIde;
   private tabAutocompleteModel: TabAutocompleteModel;
@@ -40,9 +45,14 @@ export class VsCodeExtension {
   webviewProtocolPromise: Promise<VsCodeWebviewProtocol>;
   private core: Core;
   private battery: Battery;
-  private quickActionsCodeLensDisposable?: vscode.Disposable;
+  private workOsAuthProvider: WorkOsAuthProvider;
 
   constructor(context: vscode.ExtensionContext) {
+    // Register auth provider
+    this.workOsAuthProvider = new WorkOsAuthProvider(context);
+    this.workOsAuthProvider.initialize();
+    context.subscriptions.push(this.workOsAuthProvider);
+
     let resolveWebviewProtocol: any = undefined;
     this.webviewProtocolPromise = new Promise<VsCodeWebviewProtocol>(
       (resolve) => {
@@ -54,9 +64,6 @@ export class VsCodeExtension {
     this.extensionContext = context;
     this.windowId = uuidv4();
 
-    const ideSettings = this.ide.getIdeSettingsSync();
-    const { remoteConfigServerUrl } = ideSettings;
-
     // Dependencies of core
     let resolveVerticalDiffManager: any = undefined;
     const verticalDiffManagerPromise = new Promise<VerticalPerLineDiffManager>(
@@ -65,7 +72,7 @@ export class VsCodeExtension {
       },
     );
     let resolveConfigHandler: any = undefined;
-    const configHandlerPromise = new Promise<IConfigHandler>((resolve) => {
+    const configHandlerPromise = new Promise<ConfigHandler>((resolve) => {
       resolveConfigHandler = resolve;
     });
     this.sidebar = new ContinueGUIWebviewViewProvider(
@@ -101,6 +108,7 @@ export class VsCodeExtension {
       this.ide,
       verticalDiffManagerPromise,
       configHandlerPromise,
+      this.workOsAuthProvider,
     );
 
     this.core = new Core(inProcessMessenger, this.ide, async (log: string) => {
@@ -144,7 +152,7 @@ export class VsCodeExtension {
     this.configHandler.onConfigUpdate((newConfig) => {
       this.sidebar.webviewProtocol?.request("configUpdate", undefined);
 
-      this.tabAutocompleteModel.clearLlm.bind(this.tabAutocompleteModel);
+      this.tabAutocompleteModel.clearLlm();
 
       registerAllCodeLensProviders(
         context,
@@ -178,6 +186,14 @@ export class VsCodeExtension {
     context.subscriptions.push(this.battery);
     context.subscriptions.push(monitorBatteryChanges(this.battery));
 
+    const quickEdit = new QuickEdit(
+      this.verticalDiffManager,
+      this.configHandler,
+      this.sidebar.webviewProtocol,
+      this.ide,
+      context,
+    );
+
     // Commands
     registerAllCommands(
       context,
@@ -189,6 +205,8 @@ export class VsCodeExtension {
       this.verticalDiffManager,
       this.core.continueServerClientPromise,
       this.battery,
+      quickEdit,
+      this.core,
     );
 
     registerDebugTracker(this.sidebar.webviewProtocol, this.ide);
@@ -203,7 +221,7 @@ export class VsCodeExtension {
       this.configHandler.reloadConfig();
     });
 
-    vscode.workspace.onDidSaveTextDocument((event) => {
+    vscode.workspace.onDidSaveTextDocument(async (event) => {
       // Listen for file changes in the workspace
       const filepath = event.uri.fsPath;
 
@@ -236,12 +254,26 @@ export class VsCodeExtension {
       ) {
         // Update embeddings! (TODO)
       }
+
+      // Reindex the workspaces
+      this.core.invoke("index/forceReIndex", undefined);
     });
 
     // When GitHub sign-in status changes, reload config
-    vscode.authentication.onDidChangeSessions((e) => {
+    vscode.authentication.onDidChangeSessions(async (e) => {
       if (e.provider.id === "github") {
         this.configHandler.reloadConfig();
+      } else if (e.provider.id === "continue") {
+        const sessionInfo = await getControlPlaneSessionInfo(true);
+        this.webviewProtocolPromise.then(async (webviewProtocol) => {
+          webviewProtocol.request("didChangeControlPlaneSessionInfo", {
+            sessionInfo,
+          });
+
+          // To make sure continue-proxy models and anything else requiring it get updated access token
+          this.configHandler.reloadConfig();
+        });
+        this.core.invoke("didChangeControlPlaneSessionInfo", { sessionInfo });
       }
     });
 
@@ -288,6 +320,10 @@ export class VsCodeExtension {
         documentContentProvider,
       ),
     );
+
+    this.ide.onDidChangeActiveTextEditor((filepath) => {
+      this.core.invoke("didChangeActiveTextEditor", { filepath });
+    });
   }
 
   static continueVirtualDocumentScheme = "continue";

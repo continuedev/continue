@@ -1,5 +1,5 @@
 import type { ILLM } from "core";
-import { IConfigHandler } from "core/config/IConfigHandler";
+import { ConfigHandler } from "core/config/ConfigHandler";
 import Ollama from "core/llm/llms/Ollama";
 import { GlobalContext } from "core/util/GlobalContext";
 import * as vscode from "vscode";
@@ -13,9 +13,9 @@ export class TabAutocompleteModel {
   private shownOllamaWarning = false;
   private shownDeepseekWarning = false;
 
-  private configHandler: IConfigHandler;
+  private configHandler: ConfigHandler;
 
-  constructor(configHandler: IConfigHandler) {
+  constructor(configHandler: ConfigHandler) {
     this.configHandler = configHandler;
   }
 

@@ -186,6 +186,10 @@ const config = {
             to: "/setup/configuration",
           },
           {
+            from: "/setup/select-provider",
+            to: "/setup/model-providers",
+          },
+          {
             from: "/walkthroughs/codebase-embeddings",
             to: "/features/codebase-embeddings",
           },

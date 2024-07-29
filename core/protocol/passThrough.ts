@@ -18,13 +18,14 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "config/addModel",
     "config/newPromptFile",
     "config/ideSettingsUpdate",
-    "config/getBrowserSerialized",
+    "config/getSerializedProfileInfo",
     "config/deleteModel",
     "config/reload",
     "context/getContextItems",
     "context/loadSubmenuItems",
     "context/addDocs",
     "context/removeDocs",
+    "context/indexDocs",
     "autocomplete/complete",
     "autocomplete/cancel",
     "autocomplete/accept",
@@ -41,6 +42,9 @@ export const WEBVIEW_TO_CORE_PASS_THROUGH: (keyof ToCoreFromWebviewProtocol)[] =
     "index/indexingProgressBarInitialized",
     "completeOnboarding",
     "addAutocompleteModel",
+    "config/listProfiles",
+    "profiles/switch",
+    "didChangeSelectedProfile",
   ];
 
 // Message types to pass through from core to webview
@@ -51,4 +55,6 @@ export const CORE_TO_WEBVIEW_PASS_THROUGH: (keyof ToWebviewFromCoreProtocol)[] =
     "indexProgress",
     "addContextItem",
     "refreshSubmenuItems",
+    "isContinueInputFocused",
+    "didChangeAvailableProfiles",
   ];

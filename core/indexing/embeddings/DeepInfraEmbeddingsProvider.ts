@@ -1,8 +1,9 @@
-import { EmbedOptions } from "../../index.js";
+import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
 import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
 import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 class DeepInfraEmbeddingsProvider extends BaseEmbeddingsProvider {
+  static providerName: EmbeddingsProviderName = "deepinfra";
   static defaultOptions: Partial<EmbedOptions> | undefined = {
     model: "sentence-transformers/all-MiniLM-L6-v2",
   };

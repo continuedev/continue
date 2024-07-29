@@ -4,7 +4,7 @@ import {
   LLMOptions,
   ModelProvider,
 } from "../../index.js";
-import { stripImages } from "../countTokens.js";
+import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
 import { streamResponse } from "../stream.js";
 
@@ -88,6 +88,9 @@ class Ollama extends BaseLLM {
         "codellama-70b": "codellama:70b",
         "llama3-8b": "llama3:8b",
         "llama3-70b": "llama3:70b",
+        "llama3.1-8b": "llama3.1:8b",
+        "llama3.1-70b": "llama3.1:70b",
+        "llama3.1-405b": "llama3.1:405b",
         "phi-2": "phi:2.7b",
         "phind-codellama-34b": "phind-codellama:34b-v2",
         "wizardcoder-7b": "wizardcoder:7b-python",

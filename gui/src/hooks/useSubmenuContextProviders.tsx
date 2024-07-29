@@ -6,7 +6,7 @@ import {
   groupByLastNPathParts,
 } from "core/util";
 import MiniSearch, { SearchResult } from "minisearch";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 import { IdeMessengerContext } from "../context/IdeMessenger";
 import { selectContextProviderDescriptions } from "../redux/selectors";
@@ -20,8 +20,6 @@ const MINISEARCH_OPTIONS = {
 const MAX_LENGTH = 70;
 
 function useSubmenuContextProviders() {
-  // TODO: Refresh periodically
-
   const [minisearches, setMinisearches] = useState<{
     [id: string]: MiniSearch;
   }>({});
@@ -107,6 +105,93 @@ function useSubmenuContextProviders() {
     };
   }, []);
 
+  const getSubmenuSearchResults = useMemo(
+    () =>
+      (providerTitle: string | undefined, query: string): SearchResult[] => {
+        console.debug(
+          "Executing getSubmenuSearchResults. Provider:",
+          providerTitle,
+          "Query:",
+          query,
+        );
+        console.debug("Current minisearches:", Object.keys(minisearches));
+        if (providerTitle === undefined) {
+          // Return search combined from all providers
+          const results = Object.keys(minisearches).map((providerTitle) => {
+            const results = minisearches[providerTitle].search(
+              query,
+              MINISEARCH_OPTIONS,
+            );
+            console.debug(
+              `Search results for ${providerTitle}:`,
+              results.length,
+            );
+            return results.map((result) => {
+              return { ...result, providerTitle };
+            });
+          });
+
+          return results.flat().sort((a, b) => b.score - a.score);
+        }
+        if (!minisearches[providerTitle]) {
+          console.debug(`No minisearch found for provider: ${providerTitle}`);
+          return [];
+        }
+
+        const results = minisearches[providerTitle]
+          .search(query, MINISEARCH_OPTIONS)
+          .map((result) => {
+            return { ...result, providerTitle };
+          });
+        console.debug(`Search results for ${providerTitle}:`, results.length);
+
+        return results;
+      },
+    [minisearches],
+  );
+
+  const getSubmenuContextItems = useMemo(
+    () =>
+      (
+        providerTitle: string | undefined,
+        query: string,
+        limit: number = MAX_LENGTH,
+      ): (ContextSubmenuItem & { providerTitle: string })[] => {
+        console.debug(
+          "Executing getSubmenuContextItems. Provider:",
+          providerTitle,
+          "Query:",
+          query,
+          "Limit:",
+          limit,
+        );
+
+        const results = getSubmenuSearchResults(providerTitle, query);
+        if (results.length === 0) {
+          const fallbackItems = (fallbackResults[providerTitle] ?? [])
+            .slice(0, limit)
+            .map((result) => {
+              return {
+                ...result,
+                providerTitle,
+              };
+            });
+          console.debug("Using fallback results:", fallbackItems.length);
+          return fallbackItems;
+        }
+        const limitedResults = results.slice(0, limit).map((result) => {
+          return {
+            id: result.id,
+            title: result.title,
+            description: result.description,
+            providerTitle: result.providerTitle,
+          };
+        });
+        return limitedResults;
+      },
+    [fallbackResults, getSubmenuSearchResults],
+  );
+
   useEffect(() => {
     if (contextProviderDescriptions.length === 0 || loaded) {
       return;
@@ -141,60 +226,11 @@ function useSubmenuContextProviders() {
     });
   }, [contextProviderDescriptions, loaded]);
 
-  function getSubmenuSearchResults(
-    providerTitle: string | undefined,
-    query: string,
-  ): SearchResult[] {
-    if (providerTitle === undefined) {
-      // Return search combined from all providers
-      const results = Object.keys(minisearches).map((providerTitle) => {
-        const results = minisearches[providerTitle].search(
-          query,
-          MINISEARCH_OPTIONS,
-        );
-        return results.map((result) => {
-          return { ...result, providerTitle };
-        });
-      });
-
-      return results.flat().sort((a, b) => b.score - a.score);
-    }
-    if (!minisearches[providerTitle]) {
-      return [];
-    }
-
-    return minisearches[providerTitle]
-      .search(query, MINISEARCH_OPTIONS)
-      .map((result) => {
-        return { ...result, providerTitle };
-      });
-  }
-
-  function getSubmenuContextItems(
-    providerTitle: string | undefined,
-    query: string,
-    limit: number = MAX_LENGTH,
-  ): (ContextSubmenuItem & { providerTitle: string })[] {
-    const results = getSubmenuSearchResults(providerTitle, query);
-    if (results.length === 0) {
-      return (fallbackResults[providerTitle] ?? [])
-        .slice(0, limit)
-        .map((result) => {
-          return {
-            ...result,
-            providerTitle,
-          };
-        });
-    }
-    return results.slice(0, limit).map((result) => {
-      return {
-        id: result.id,
-        title: result.title,
-        description: result.description,
-        providerTitle: result.providerTitle,
-      };
-    });
-  }
+  useWebviewListener("configUpdate", async () => {
+    // When config is updated (for example switching to a different workspace)
+    // we need to reload the context providers.
+    setLoaded(false);
+  });
 
   return {
     getSubmenuContextItems,

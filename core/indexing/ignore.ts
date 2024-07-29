@@ -64,11 +64,13 @@ export const DEFAULT_IGNORE_FILETYPES = [
   ".gitkeep",
   ".continueignore",
   "config.json",
+  ".csv",
   // "*.prompt", // can be incredibly confusing for the LLM to have another set of instructions injected into the prompt
 ];
 export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
 export const DEFAULT_IGNORE_DIRS = [
   ".git",
+  ".svn",
   ".vscode",
   ".idea",
   ".vs",

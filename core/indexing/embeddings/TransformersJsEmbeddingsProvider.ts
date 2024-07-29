@@ -1,4 +1,5 @@
 import path from "path";
+import { EmbeddingsProviderName } from "../../index.js";
 // @ts-ignore
 // prettier-ignore
 import { type PipelineType } from "../../vendor/modules/@xenova/transformers/src/transformers.js";
@@ -37,10 +38,14 @@ class EmbeddingsPipeline {
 }
 
 export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
+  static providerName: EmbeddingsProviderName = "transformers.js";
   static maxGroupSize: number = 4;
+  static model: string = "all-MiniLM-L6-v2";
 
   constructor() {
-    super({ model: "all-MiniLM-L6-v2" }, () => Promise.resolve(null));
+    super({ model: TransformersJsEmbeddingsProvider.model }, () =>
+      Promise.resolve(null),
+    );
   }
 
   async embed(chunks: string[]) {

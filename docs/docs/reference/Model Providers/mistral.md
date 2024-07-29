@@ -7,8 +7,8 @@ The [Mistral](https://mistral.ai) API provides hosted access to their models, in
   "models": [
     {
       "provider": "mistral",
-      "title": "Mistral Small",
-      "model": "mistral-small",
+      "title": "Codestral",
+      "model": "codestral-latest",
       "apiKey": "<API_KEY>"
     }
   ]

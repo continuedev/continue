@@ -516,6 +516,7 @@
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
                       "gpt-4o",
+                      "gpt-4o-mini",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -551,6 +552,9 @@
                 "anyOf": [
                   {
                     "enum": [
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b",
                       "llama3-8b",
                       "llama3-70b",
                       "codellama-7b",
@@ -588,7 +592,8 @@
                 "enum": [
                   "gpt-4o",
                   "codestral-latest",
-                  "llama3-70b",
+                  "llama3.1-70b",
+                  "llama3.1-405b",
                   "gpt-3.5-turbo",
                   "phind-codellama-34b",
                   "gemini-pro",
@@ -628,6 +633,7 @@
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
                       "gpt-4o",
+                      "gpt-4o-mini",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -643,6 +649,9 @@
                       "codellama-70b",
                       "llama3-8b",
                       "llama3-70b",
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -816,6 +825,9 @@
                       "llama2-13b",
                       "llama3-8b",
                       "llama3-70b",
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b",
                       "codellama-7b",
                       "codellama-13b",
                       "codellama-34b",
@@ -886,6 +898,9 @@
                       "codellama-70b",
                       "llama3-8b",
                       "llama3-70b",
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -938,6 +953,9 @@
                       "codellama-70b",
                       "llama3-8b",
                       "llama3-70b",
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b",
                       "phi-2",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
@@ -983,6 +1001,7 @@
               "model": {
                 "enum": [
                   "codestral-latest",
+                  "codestral-mamba-latest",
                   "open-mistral-7b",
                   "open-mixtral-8x7b",
                   "open-mixtral-8x22b",
@@ -1039,6 +1058,9 @@
                   "gemma",
                   "llama3-8b",
                   "llama3-70b",
+                  "llama3.1-8b",
+                  "llama3.1-70b",
+                  "llama3.1-405b",
                   "AUTODETECT"
                 ]
               }
@@ -1221,6 +1243,7 @@
                       "gpt-3.5-turbo",
                       "gpt-3.5-turbo-16k",
                       "gpt-4o",
+                      "gpt-4o-mini",
                       "gpt-4",
                       "gpt-3.5-turbo-0613",
                       "gpt-4-32k",
@@ -1236,6 +1259,9 @@
                       "codellama-70b",
                       "llama3-8b",
                       "llama3-70b",
+                      "llama3.1-8b",
+                      "llama3.1-70b",
+                      "llama3.1-405b",
                       "phind-codellama-34b",
                       "wizardcoder-7b",
                       "wizardcoder-13b",
@@ -1537,6 +1563,55 @@
         }
       },
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "name": {
+                "enum": [
+                  "docs"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "properties": {
+                  "sites": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "title": {
+                          "type": "string"
+                        },
+                        "startUrl": {
+                          "type": "string"
+                        },
+                        "rootUrl": {
+                          "type": "string"
+                        },
+                        "maxDepth": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "title",
+                        "startUrl"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "sites"
+                ]
+              }
+            },
+            "required": [
+              "params"
+            ]
+          }
+        },
         {
           "if": {
             "properties": {
@@ -1974,6 +2049,36 @@
       "title": "config.json",
       "type": "object",
       "properties": {
+        "docs": {
+          "title": "Docs",
+          "description": "A list of documentation sites to be indexed",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": {
+                "type": "string",
+                "description": "The title of the documentation site"
+              },
+              "startUrl": {
+                "type": "string",
+                "description": "The starting URL for indexing the documentation"
+              },
+              "rootUrl": {
+                "type": "string",
+                "description": "The root URL of the documentation site"
+              },
+              "maxDepth": {
+                "type": "integer",
+                "description": "The maximum depth to crawl the documentation site"
+              }
+            },
+            "required": [
+              "title",
+              "startUrl"
+            ]
+          }
+        },
         "allowAnonymousTelemetry": {
           "title": "Allow Anonymous Telemetry",
           "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data. Learn more in [the docs](https://docs.continue.dev/telemetry).",
@@ -2119,6 +2224,13 @@
               "title": "Request Options",
               "description": "Request options to be used in any fetch requests made by the embeddings provider",
               "$ref": "#/definitions/RequestOptions"
+            },
+            "maxChunkSize": {
+              "title": "Maximum Chunk Size",
+              "description": "The maximum number of tokens that each chunk of a document is allowed to have",
+              "type": "integer",
+              "minimum": 128,
+              "exclusiveMaximum": 2147483647
             }
           },
           "required": [
@@ -2175,7 +2287,8 @@
                 "cohere",
                 "voyage",
                 "llm",
-                "free-trial"
+                "free-trial",
+                "huggingface-tei"
               ]
             },
             "params": {
@@ -2289,6 +2402,61 @@
                   }
                 }
               }
+            },
+            {
+              "if": {
+                "properties": {
+                  "name": {
+                    "enum": [
+                      "huggingface-tei"
+                    ]
+                  }
+                },
+                "required": [
+                  "name"
+                ]
+              },
+              "then": {
+                "properties": {
+                  "params": {
+                    "type": "object",
+                    "properties": {
+                      "apiBase": {
+                        "type": "string",
+                        "default": "http://localhost:8080"
+                      },
+                      "truncate": {
+                        "type": "boolean",
+                        "description": "Wether to truncate long sequences to the maximum allowed context length.",
+                        "default": false
+                      },
+                      "truncation_direction": {
+                        "enum": [
+                          "Right",
+                          "Left"
+                        ],
+                        "markdownDescription": "Wether to truncate sequences from the `left` or `right`.",
+                        "default": "Right"
+                      }
+                    },
+                    "required": [
+                      "apiBase"
+                    ]
+                  }
+                },
+                "if": {
+                  "properties": {
+                    "truncate": {
+                      "const": true
+                    }
+                  }
+                },
+                "then": {
+                  "required": [
+                    "truncation_direction"
+                  ]
+                }
+              }
             }
           ]
         },
@@ -2326,7 +2494,7 @@
               "type": "boolean",
               "description": "Determines whether the copy buffer will be considered when contructing the prompt."
             },
-            "useSuffix": {
+            "useFileSuffix": {
               "type": "boolean",
               "description": "Determines whether to use the file suffix in the prompt."
             },

@@ -139,6 +139,24 @@ export function getTsConfigPath(): string {
   return tsConfigPath;
 }
 
+export function getContinueRcPath(): string {
+  // Disable indexing of the config folder to prevent infinite loops
+  const continuercPath = path.join(getContinueGlobalPath(), ".continuerc.json");
+  if (!fs.existsSync(continuercPath)) {
+    fs.writeFileSync(
+      continuercPath,
+      JSON.stringify(
+        {
+          disableIndexing: true,
+        },
+        null,
+        2,
+      ),
+    );
+  }
+  return continuercPath;
+}
+
 export function devDataPath(): string {
   const sPath = path.join(getContinueGlobalPath(), "dev_data");
   if (!fs.existsSync(sPath)) {
@@ -177,19 +195,20 @@ function getMigrationsFolderPath(): string {
   return migrationsPath;
 }
 
-export function migrate(
+export async function migrate(
   id: string,
-  callback: () => void,
+  callback: () => void | Promise<void>,
   onAlreadyComplete?: () => void,
 ) {
   const migrationsPath = getMigrationsFolderPath();
   const migrationPath = path.join(migrationsPath, id);
+
   if (!fs.existsSync(migrationPath)) {
     try {
-      callback();
+      await Promise.resolve(callback());
       fs.writeFileSync(migrationPath, "");
     } catch (e) {
-      console.error(`Migration ${id} failed`, e);
+      console.warn(`Migration ${id} failed`, e);
     }
   } else if (onAlreadyComplete) {
     onAlreadyComplete();
@@ -233,6 +252,11 @@ export function getPathToRemoteConfig(remoteConfigServerUrl: string): string {
     fs.mkdirSync(dir);
   }
   return dir;
+}
+
+export function internalBetaPathExists(): boolean {
+  const sPath = path.join(getContinueGlobalPath(), ".internal_beta");
+  return fs.existsSync(sPath);
 }
 
 export function getConfigJsonPathForRemote(

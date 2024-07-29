@@ -37,6 +37,9 @@ class FileSystemIde implements IDE {
       remoteConfigServerUrl: undefined,
       remoteConfigSyncPeriod: 60,
       userToken: "",
+      enableControlServerBeta: false,
+      pauseCodebaseIndexOnStart: false,
+      enableDebugLogs: false,
     };
   }
   async getGitHubAuthToken(): Promise<string | undefined> {
@@ -60,8 +63,8 @@ class FileSystemIde implements IDE {
         dirent.isDirectory()
           ? (2 as FileType.Directory)
           : dirent.isSymbolicLink()
-            ? (64 as FileType.SymbolicLink)
-            : (1 as FileType.File),
+          ? (64 as FileType.SymbolicLink)
+          : (1 as FileType.File),
       ]);
     return Promise.resolve(all);
   }
