@@ -168,6 +168,7 @@ const preIndexedDocs: Record<
     rootUrl: "https://code.visualstudio.com/api",
     faviconUrl: "https://code.visualstudio.com/favicon.ico",
   },
+
   "https://docs.continue.dev/intro": {
     title: "Continue",
     startUrl: "https://docs.continue.dev/intro",

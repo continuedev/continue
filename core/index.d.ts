@@ -127,6 +127,7 @@ export interface ContextProviderDescription {
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
 
 export interface ContextProviderExtras {
+  config: ContinueConfig;
   fullInput: string;
   embeddingsProvider: EmbeddingsProvider;
   reranker: Reranker | undefined;
@@ -886,6 +887,7 @@ export interface SerializedContinueConfig {
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";

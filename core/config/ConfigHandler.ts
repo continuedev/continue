@@ -105,6 +105,37 @@ export class ConfigHandler {
   private profiles: ProfileLifecycleManager[];
   private selectedProfileId: string;
 
+  constructor(
+    private readonly ide: IDE,
+    private ideSettingsPromise: Promise<IdeSettings>,
+    private readonly writeLog: (text: string) => Promise<void>,
+    private controlPlaneClient: ControlPlaneClient,
+  ) {
+    this.ide = ide;
+    this.ideSettingsPromise = ideSettingsPromise;
+    this.writeLog = writeLog;
+
+    // Set local profile as default
+    const localProfileLoader = new LocalProfileLoader(
+      ide,
+      ideSettingsPromise,
+      controlPlaneClient,
+      writeLog,
+    );
+    this.profiles = [new ProfileLifecycleManager(localProfileLoader)];
+    this.selectedProfileId = localProfileLoader.profileId;
+
+    // Always load local profile immediately in case control plane doesn't load
+    try {
+      this.loadConfig();
+    } catch (e) {
+      console.error("Failed to load config: ", e);
+    }
+
+    // Load control plane profiles
+    this.fetchControlPlaneProfiles();
+  }
+
   // This will be the local profile
   private get fallbackProfile() {
     return this.profiles[0];
@@ -161,37 +192,6 @@ export class ConfigHandler {
         );
       }
     });
-  }
-
-  constructor(
-    private readonly ide: IDE,
-    private ideSettingsPromise: Promise<IdeSettings>,
-    private readonly writeLog: (text: string) => Promise<void>,
-    private controlPlaneClient: ControlPlaneClient,
-  ) {
-    this.ide = ide;
-    this.ideSettingsPromise = ideSettingsPromise;
-    this.writeLog = writeLog;
-
-    // Set local profile as default
-    const localProfileLoader = new LocalProfileLoader(
-      ide,
-      ideSettingsPromise,
-      controlPlaneClient,
-      writeLog,
-    );
-    this.profiles = [new ProfileLifecycleManager(localProfileLoader)];
-    this.selectedProfileId = localProfileLoader.profileId;
-
-    // Always load local profile immediately in case control plane doesn't load
-    try {
-      this.loadConfig();
-    } catch (e) {
-      console.error("Failed to load config: ", e);
-    }
-
-    // Load control plane profiles
-    this.fetchControlPlaneProfiles();
   }
 
   async setSelectedProfile(profileId: string) {
