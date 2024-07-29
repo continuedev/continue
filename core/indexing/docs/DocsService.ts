@@ -540,6 +540,11 @@ export class DocsService {
     return lastEmbeddingsProviderId !== curEmbeddingsProviderId;
   }
 
+  /**
+   * Currently this deletes re-crawls + re-indexes all docs.
+   * A more optimal solution in the future will be to create
+   * a per-embeddings-provider table for docs.
+   */
   private async reindexDocsOnNewEmbeddingsProvider(
     embeddingsProvider: EmbeddingsProvider,
   ) {
@@ -551,13 +556,13 @@ export class DocsService {
 
     this.ide.infoPopup("Reindexing docs with new embeddings provider");
 
-    for (const { title, startUrl } of docs) {
-      await this.delete(startUrl);
+    for (const { title, baseUrl } of docs) {
+      await this.delete(baseUrl);
 
       const generator = this.indexAndAdd({
         title,
-        startUrl: startUrl,
-        rootUrl: startUrl,
+        startUrl: baseUrl,
+        rootUrl: baseUrl,
       });
 
       while (!(await generator.next()).done) {}
