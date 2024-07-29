@@ -68,7 +68,10 @@
         "${workspaceFolder}/extensions/vscode/out/extension.js",
         "/Users/natesesti/.continue/config.ts"
       ],
-      "preLaunchTask": "vscode-extension:build"
+      "preLaunchTask": "vscode-extension:build",
+      "env": {
+        "CONTROL_PLANE_ENV": "local"
+      }
     },
     // Has to be run after starting the server (separately or using the compound configuration)
     {
@@ -112,5 +115,24 @@
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"
     }
+    // {
+    //   "name": "[openai-adapters] Jest Test Debugger, Current Open File",
+    //   "type": "node",
+    //   "request": "launch",
+    //   "runtimeArgs": [
+    //     "--inspect-brk",
+    //     "${workspaceRoot}/packages/openai-adapters/node_modules/jest/bin/jest.js",
+    //     "--runInBand",
+    //     "--config",
+    //     "${workspaceRoot}/packages/openai-adapters/jest.config.mjs",
+    //     "${relativeFile}"
+    //   ],
+    //   "cwd": "${workspaceRoot}/packages/openai-adapters",
+    //   "console": "integratedTerminal",
+    //   "internalConsoleOptions": "neverOpen",
+    //   "env": {
+    //     "NODE_OPTIONS": "--experimental-vm-modules"
+    //   }
+    // }
   ]
 }
