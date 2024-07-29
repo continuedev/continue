@@ -1,8 +1,16 @@
-export {
+import {
   streamJSON,
   streamResponse,
   streamSse,
   toAsyncIterable,
 } from "./stream.js";
 
-export { fetchwithRequestOptions } from "./fetch.js";
+import { fetchwithRequestOptions } from "./fetch.js";
+
+export {
+  fetchwithRequestOptions,
+  streamJSON,
+  streamResponse,
+  streamSse,
+  toAsyncIterable,
+};

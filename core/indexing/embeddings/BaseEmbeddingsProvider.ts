@@ -1,6 +1,7 @@
 import {
   EmbedOptions,
   EmbeddingsProvider,
+  EmbeddingsProviderName,
   FetchFunction,
 } from "../../index.js";
 
@@ -16,6 +17,11 @@ export interface IBaseEmbeddingsProvider extends EmbeddingsProvider {
 abstract class BaseEmbeddingsProvider implements IBaseEmbeddingsProvider {
   static maxBatchSize: IBaseEmbeddingsProvider["maxBatchSize"];
   static defaultOptions: IBaseEmbeddingsProvider["defaultOptions"];
+
+  static providerName: EmbeddingsProviderName;
+  get providerName(): EmbeddingsProviderName {
+    return (this.constructor as typeof BaseEmbeddingsProvider).providerName;
+  }
 
   options: IBaseEmbeddingsProvider["options"];
   fetch: IBaseEmbeddingsProvider["fetch"];
@@ -38,6 +44,8 @@ abstract class BaseEmbeddingsProvider implements IBaseEmbeddingsProvider {
       this.id = `${this.constructor.name}::${this.options.model}`;
     }
   }
+  defaultOptions?: EmbedOptions | undefined;
+  maxBatchSize?: number | undefined;
 
   abstract embed(chunks: string[]): Promise<number[][]>;
 

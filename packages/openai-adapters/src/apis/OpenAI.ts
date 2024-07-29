@@ -1,4 +1,3 @@
-import { ModelDescription } from "@continuedev/config-types";
 import { streamSse } from "@continuedev/fetch";
 import fetch from "node-fetch";
 import { OpenAI } from "openai/index.mjs";
@@ -11,14 +10,26 @@ import {
   CompletionCreateParamsNonStreaming,
   CompletionCreateParamsStreaming,
 } from "openai/resources/index.mjs";
-import { BaseLlmApi, FimCreateParamsStreaming } from "./base.js";
+import { LlmApiConfig } from "../index.js";
+import {
+  BaseLlmApi,
+  CreateRerankResponse,
+  FimCreateParamsStreaming,
+  RerankCreateParams,
+} from "./base.js";
 
 export class OpenAIApi implements BaseLlmApi {
   openai: OpenAI;
-  constructor(protected config: ModelDescription) {
+  apiBase: string = "https://api.openai.com/v1/";
+
+  constructor(protected config: LlmApiConfig) {
+    this.apiBase = config.apiBase ?? this.apiBase;
+    if (!this.apiBase.endsWith("/")) {
+      this.apiBase += "/";
+    }
     this.openai = new OpenAI({
       apiKey: config.apiKey,
-      baseURL: config.apiBase,
+      baseURL: this.apiBase,
     });
   }
 
@@ -53,7 +64,7 @@ export class OpenAIApi implements BaseLlmApi {
   async *fimStream(
     body: FimCreateParamsStreaming,
   ): AsyncGenerator<ChatCompletionChunk, any, unknown> {
-    const endpoint = new URL("fim/completions", this.config.apiBase);
+    const endpoint = new URL("fim/completions", this.apiBase);
     const resp = await fetch(endpoint, {
       method: "POST",
       body: JSON.stringify({
@@ -80,5 +91,28 @@ export class OpenAIApi implements BaseLlmApi {
         yield chunk;
       }
     }
+  }
+
+  async embed(
+    body: OpenAI.Embeddings.EmbeddingCreateParams,
+  ): Promise<OpenAI.Embeddings.CreateEmbeddingResponse> {
+    const response = await this.openai.embeddings.create(body);
+    return response;
+  }
+
+  async rerank(body: RerankCreateParams): Promise<CreateRerankResponse> {
+    const endpoint = new URL("rerank", this.apiBase);
+    const response = await fetch(endpoint, {
+      method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "x-api-key": this.config.apiKey ?? "",
+        Authorization: `Bearer ${this.config.apiKey}`,
+      },
+    });
+    const data = await response.json();
+    return data as any;
   }
 }

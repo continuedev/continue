@@ -1,17 +1,17 @@
-import { Response } from "node-fetch";
-import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
-import BaseEmbeddingsProvider, {
-  IBaseEmbeddingsProvider,
-} from "./BaseEmbeddingsProvider.js";
 import {
   EmbedContentRequest,
   EmbedContentResponse,
 } from "@google/generative-ai";
+import { Response } from "node-fetch";
+import { EmbeddingsProviderName } from "../../index.js";
+import { withExponentialBackoff } from "../../util/withExponentialBackoff.js";
+import BaseEmbeddingsProvider from "./BaseEmbeddingsProvider.js";
 
 /**
  * [View the Gemini Text Embedding docs.](https://ai.google.dev/gemini-api/docs/models/gemini#text-embedding-and-embedding)
  */
 class GeminiEmbeddingsProvider extends BaseEmbeddingsProvider {
+  static providerName: EmbeddingsProviderName = "gemini";
   static maxBatchSize = 2048;
 
   static defaultOptions = {

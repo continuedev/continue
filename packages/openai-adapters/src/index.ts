@@ -1,12 +1,19 @@
-import { ModelDescription } from "@continuedev/config-types/src/index.js";
 import dotenv from "dotenv";
 import { AzureOpenAIApi } from "./apis/AzureOpenAI.js";
-import { OpenAIApi } from "./apis/OpenAI.js";
 import { BaseLlmApi } from "./apis/base.js";
+import { CohereApi } from "./apis/Cohere.js";
+import { OpenAIApi } from "./apis/OpenAI.js";
 
 dotenv.config();
 
-export function constructLlmApi(config: ModelDescription): BaseLlmApi {
+export interface LlmApiConfig {
+  provider: string;
+  model: string;
+  apiKey: string;
+  apiBase?: string;
+}
+
+export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
   switch (config.provider) {
     case "openai":
       return new OpenAIApi(config);
@@ -17,6 +24,15 @@ export function constructLlmApi(config: ModelDescription): BaseLlmApi {
       });
     case "azure":
       return new AzureOpenAIApi(config);
+    case "voyage":
+      return new OpenAIApi({
+        ...config,
+        apiBase: "https://api.voyageai.com/v1/",
+      });
+    case "cohere":
+      return new CohereApi({
+        ...config,
+      });
     default:
       throw new Error(`Unsupported LLM API format: ${config.provider}`);
   }
