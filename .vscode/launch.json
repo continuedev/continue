@@ -70,7 +70,7 @@
       ],
       "preLaunchTask": "vscode-extension:build",
       "env": {
-        "CONTROL_PLANE_ENV": "local"
+        // "CONTROL_PLANE_ENV": "local"
       }
     },
     // Has to be run after starting the server (separately or using the compound configuration)
