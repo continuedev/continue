@@ -739,7 +739,9 @@ export type EmbeddingsProviderName =
   | "openai"
   | "cohere"
   | "free-trial"
-  | "gemini";
+  | "gemini"
+  | "continue-proxy"
+  | "deepinfra";
 
 export interface EmbedOptions {
   apiBase?: string;
@@ -758,6 +760,7 @@ export interface EmbeddingsProviderDescription extends EmbedOptions {
 
 export interface EmbeddingsProvider {
   id: string;
+  providerName: EmbeddingsProviderName;
   maxChunkSize: number;
   embed(chunks: string[]): Promise<number[][]>;
 }
@@ -767,7 +770,8 @@ export type RerankerName =
   | "voyage"
   | "llm"
   | "free-trial"
-  | "huggingface-tei";
+  | "huggingface-tei"
+  | "continue-proxy";
 
 export interface RerankerDescription {
   name: RerankerName;

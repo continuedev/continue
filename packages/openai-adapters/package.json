@@ -1,12 +1,12 @@
 {
   "name": "@continuedev/openai-adapters",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "NODE_OPTIONS=\"$NODE_OPTIONS --experimental-vm-modules\" npx jest",
     "build": "tsc"
   },
   "author": "Nate Sesti and Ty Dunn",
@@ -19,6 +19,8 @@
     "openai": "^4.52.5"
   },
   "devDependencies": {
-    "@types/follow-redirects": "^1.14.4"
+    "@types/follow-redirects": "^1.14.4",
+    "ts-jest": "^29.2.3",
+    "ts-node": "^10.9.2"
   }
 }

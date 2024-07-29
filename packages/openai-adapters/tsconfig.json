@@ -14,7 +14,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmitOnError": false,
-    "types": ["node"],
+    "types": ["node", "jest"],
     "outDir": "dist",
     "declaration": true
     // "sourceMap": true
