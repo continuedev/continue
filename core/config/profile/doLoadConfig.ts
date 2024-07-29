@@ -4,8 +4,10 @@ import {
   IdeSettings,
   SerializedContinueConfig,
 } from "../..";
+import { ContinueProxyReranker } from "../../context/rerankers/ContinueProxyReranker";
 import { ControlPlaneClient } from "../../control-plane/client";
 import { TeamAnalytics } from "../../control-plane/TeamAnalytics";
+import ContinueProxyEmbeddingsProvider from "../../indexing/embeddings/ContinueProxyEmbeddingsProvider";
 import ContinueProxy from "../../llm/llms/stubs/ContinueProxy";
 import { Telemetry } from "../../util/posthog";
 import { loadFullConfigNode } from "../load";
@@ -64,6 +66,17 @@ export default async function doLoadConfig(
       }
     },
   );
+
+  if (newConfig.embeddingsProvider?.providerName === "continue-proxy") {
+    (
+      newConfig.embeddingsProvider as ContinueProxyEmbeddingsProvider
+    ).workOsAccessToken = workOsAccessToken;
+  }
+
+  if (newConfig.reranker?.name === "continue-proxy") {
+    (newConfig.reranker as ContinueProxyReranker).workOsAccessToken =
+      workOsAccessToken;
+  }
 
   return newConfig;
 }

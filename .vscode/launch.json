@@ -68,7 +68,10 @@
         "${workspaceFolder}/extensions/vscode/out/extension.js",
         "/Users/natesesti/.continue/config.ts"
       ],
-      "preLaunchTask": "vscode-extension:build"
+      "preLaunchTask": "vscode-extension:build",
+      "env": {
+        "CONTROL_PLANE_ENV": "local"
+      }
     },
     // Has to be run after starting the server (separately or using the compound configuration)
     {
