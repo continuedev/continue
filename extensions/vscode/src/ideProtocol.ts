@@ -523,7 +523,7 @@ class VsCodeIde implements IDE {
       ),
       userToken: settings.get<string>("userToken", ""),
       enableControlServerBeta: settings.get<boolean>(
-        "enableContinueForTeams",
+        "enableContinueForTeamsBeta",
         false,
       ),
       pauseCodebaseIndexOnStart: settings.get<boolean>(
