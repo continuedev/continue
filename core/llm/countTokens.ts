@@ -1,10 +1,14 @@
 import { Tiktoken, encodingForModel as _encodingForModel } from "js-tiktoken";
 import { ChatMessage, MessageContent, MessagePart } from "../index.js";
+import {
+  AsyncEncoder,
+  GPTAsyncEncoder,
+  LlamaAsyncEncoder,
+} from "./asyncEncoder.js";
 import { autodetectTemplateType } from "./autodetect.js";
 import { TOKEN_BUFFER_FOR_SAFETY } from "./constants.js";
-import llamaTokenizer from "./llamaTokenizer.js";
-import { AsyncEncoder, GPTAsyncEncoder, LlamaAsyncEncoder } from "./asyncEncoder.js";
 import { stripImages } from "./images.js";
+import llamaTokenizer from "./llamaTokenizer.js";
 interface Encoding {
   encode: Tiktoken["encode"];
   decode: Tiktoken["decode"];
@@ -30,7 +34,8 @@ function asyncEncoderForModel(modelName: string): AsyncEncoder {
   if (!modelType || modelType === "none") {
     return gptAsyncEncoder;
   }
-  return llamaAsyncEncoder;
+  // Temporary due to issues packaging the worker files
+  return process.env.IS_BINARY ? gptAsyncEncoder : llamaAsyncEncoder;
 }
 
 function encodingForModel(modelName: string): Encoding {
@@ -61,7 +66,7 @@ async function countTokensAsync(
 ): Promise<number> {
   const encoding = asyncEncoderForModel(modelName);
   if (Array.isArray(content)) {
-    const promises = content.map(async part => {
+    const promises = content.map(async (part) => {
       if (part.type === "imageUrl") {
         return countImageTokens(part);
       }

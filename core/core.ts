@@ -294,7 +294,7 @@ export class Core {
     });
     on("context/loadSubmenuItems", async (msg) => {
       const config = await this.config();
-      const items = config.contextProviders
+      const items = await config.contextProviders
         ?.find((provider) => provider.description.title === msg.data.title)
         ?.loadSubmenuItems({
           config,
@@ -656,6 +656,7 @@ export class Core {
 
     on("didChangeSelectedProfile", (msg) => {
       this.configHandler.setSelectedProfile(msg.data.id);
+      this.configHandler.reloadConfig();
     });
     on("didChangeControlPlaneSessionInfo", async (msg) => {
       this.configHandler.updateControlPlaneSessionInfo(msg.data.sessionInfo);
