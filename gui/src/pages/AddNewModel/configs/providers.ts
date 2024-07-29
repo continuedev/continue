@@ -278,6 +278,27 @@ Select the \`GPT-4o\` model below to complete your provider configuration, but n
     ],
     apiKeyUrl: "https://console.groq.com/keys",
   },
+  deepseek: {
+    title: "DeepSeek",
+    provider: "deepseek",
+    icon: "deepseek.png",
+    description:
+      "DeepSeek provides cheap inference of its DeepSeek Coder v2 and other impressive open-source models.",
+    longDescription:
+      "To get started with DeepSeek, obtain an API key from their website [here](https://platform.deepseek.com/api_keys).",
+    tags: [ModelProviderTags.RequiresApiKey, ModelProviderTags.OpenSource],
+    collectInputFor: [
+      {
+        inputType: "text",
+        key: "apiKey",
+        label: "API Key",
+        placeholder: "Enter your DeepSeek API key",
+        required: true,
+      },
+    ],
+    packages: [models.deepseekCoderApi, models.deepseekChatApi],
+    apiKeyUrl: "https://platform.deepseek.com/api_keys",
+  },
   together: {
     title: "TogetherAI",
     provider: "together",
