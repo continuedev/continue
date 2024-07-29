@@ -71,7 +71,7 @@ export class DocsService {
     private readonly ide: IDE,
   ) {
     if (config instanceof ConfigHandler) {
-      this.initConfigAndListener(config);
+      this.loadConfigAndInitListener(config);
     } else {
       this.config = config;
     }
@@ -118,29 +118,63 @@ export class DocsService {
     this.ide.infoPopup("Docs indexing completed");
   }
 
+  private async syncConfigAndSqlite(config: ContinueConfig) {
+    const sqliteDocs = await this.list();
+    const sqliteDocStartUrls = sqliteDocs.map((doc) => doc.baseUrl) || [];
+
+    const configDocs = config.docs || [];
+    const configDocStartUrls = config.docs?.map((doc) => doc.startUrl) || [];
+
+    const newDocs = configDocs.filter(
+      (doc) => !sqliteDocStartUrls.includes(doc.startUrl),
+    );
+    const deletedDocs = sqliteDocs.filter(
+      (doc) => !configDocStartUrls.includes(doc.baseUrl),
+    );
+
+    for (const doc of newDocs) {
+      console.log(`Indexing new doc: ${doc.startUrl}`);
+      const generator = this.indexAndAdd(doc);
+      while (!(await generator.next()).done) {}
+    }
+
+    for (const doc of deletedDocs) {
+      console.log(`Deleting doc: ${doc.baseUrl}`);
+      await this.delete(doc.baseUrl);
+    }
+  }
+
+  private async loadConfigAndInitListener(configHandler: ConfigHandler) {
+    this.config = await configHandler.loadConfig();
+
+    configHandler.onConfigUpdate(async (newConfig) => {
+      const oldConfig = this.config;
+
+      // Need to update class property for config at the beginning of this callback
+      // to ensure downstream methods have access to the latest config.
+      this.config = newConfig;
+
+      if (oldConfig.docs !== newConfig.docs) {
+        await this.syncConfigAndSqlite(newConfig);
+      }
+
+      const shouldReindex = await this.shouldReindexDocsOnNewEmbeddingsProvider(
+        newConfig.embeddingsProvider.id,
+      );
+
+      if (shouldReindex) {
+        await this.reindexDocsOnNewEmbeddingsProvider(
+          newConfig.embeddingsProvider,
+        );
+      }
+    });
+  }
+
   private hasDocsContextProvider() {
     return !!this.config.contextProviders?.some(
       (provider) =>
         provider.description.title === DocsContextProvider.description.title,
     );
-  }
-
-  private async initConfigAndListener(configHandler: ConfigHandler) {
-    this.config = await configHandler.loadConfig();
-
-    configHandler.onConfigUpdate(async (config) => {
-      this.config = config;
-
-      const shouldReindex = await this.shouldReindexDocsOnNewEmbeddingsProvider(
-        config.embeddingsProvider.id,
-      );
-
-      if (shouldReindex) {
-        await this.reindexDocsOnNewEmbeddingsProvider(
-          config.embeddingsProvider,
-        );
-      }
-    });
   }
 
   private async getOrCreateSqliteDb() {
@@ -300,10 +334,18 @@ export class DocsService {
   private addToConfig({ title, baseUrl }: AddParams) {
     const newDoc = { title, startUrl: baseUrl, rootUrl: baseUrl };
 
-    editConfigJson((config) => ({
-      ...config,
-      docs: [...(config.docs ?? []), newDoc],
-    }));
+    // Handles the case where a user has manually added the doc to config.json
+    // so it already exists in the file
+    const doesDocExist = this.config.docs?.some(
+      (doc) => doc.startUrl === newDoc.startUrl,
+    );
+
+    if (!doesDocExist) {
+      editConfigJson((config) => ({
+        ...config,
+        docs: [...(config.docs ?? []), newDoc],
+      }));
+    }
   }
 
   private async add(params: AddParams) {
@@ -498,6 +540,8 @@ export class DocsService {
       desc: "Done",
       status: "done",
     };
+
+    console.log(`Successfully indexed: ${siteIndexingConfig.startUrl}`);
   }
 
   private async shouldReindexDocsOnNewEmbeddingsProvider(
