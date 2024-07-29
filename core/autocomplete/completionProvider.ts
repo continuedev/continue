@@ -586,7 +586,7 @@ export class CompletionProvider {
       });
     } else {
       // Let the template function format snippets
-      prompt = template(prefix, suffix, filepath, reponame, snippets);
+      prompt = template(prefix, suffix, filepath, reponame, lang.name, snippets);
     }
 
     // Completion
