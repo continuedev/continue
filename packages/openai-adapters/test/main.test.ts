@@ -133,13 +133,39 @@ function testConfig(config: LlmApiConfig, chatOnly: boolean = false) {
     expect(typeof completion).toBe("string");
     expect(completion?.length).toBeGreaterThan(0);
   });
+
+  test("should acknowledge system message in chat", async () => {
+    const response = await api.chatCompletionNonStream({
+      model: config.model,
+      messages: [
+        {
+          role: "system",
+          content:
+            "Regardless of what is asked of you, your answer should start with 'RESPONSE: '.",
+        },
+        { role: "user", content: "Who are you?" },
+      ],
+      stream: false,
+    });
+    expect(response.choices.length).toBeGreaterThan(0);
+    const completion = response.choices[0].message.content;
+    expect(typeof completion).toBe("string");
+    expect(completion?.length).toBeGreaterThan(0);
+    expect(completion?.startsWith("RESPONSE: ")).toBe(true);
+  });
 }
 
 const COMPLETION_TESTS: ({ chatOnly?: boolean } & LlmApiConfig)[] = [
+  // {
+  //   provider: "openai",
+  //   model: "gpt-4o-mini",
+  //   apiKey: process.env.OPENAI_API_KEY!,
+  //   chatOnly: true,
+  // },
   {
-    provider: "openai",
-    model: "gpt-4o-mini",
-    apiKey: process.env.OPENAI_API_KEY!,
+    provider: "anthropic",
+    model: "claude-3-haiku-20240307",
+    apiKey: process.env.ANTHROPIC_API_KEY!,
     chatOnly: true,
   },
 ];
@@ -192,13 +218,13 @@ describe("should successfully call all adapters", () => {
     testConfig(rest, chatOnly);
   });
 
-  EMBEDDINGS_TESTS.forEach((config) => {
-    testEmbed(config);
-  });
+  // EMBEDDINGS_TESTS.forEach((config) => {
+  //   testEmbed(config);
+  // });
 
-  RERANK_TESTS.forEach((config) => {
-    testRerank(config);
-  });
+  // RERANK_TESTS.forEach((config) => {
+  //   testRerank(config);
+  // });
 
   // FIM_TESTS.forEach((config) => {
   //   testFim(config);

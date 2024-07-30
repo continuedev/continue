@@ -1,4 +1,5 @@
 import dotenv from "dotenv";
+import { AnthropicApi } from "./apis/Anthropic.js";
 import { AzureOpenAIApi } from "./apis/AzureOpenAI.js";
 import { BaseLlmApi } from "./apis/base.js";
 import { CohereApi } from "./apis/Cohere.js";
@@ -33,6 +34,8 @@ export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
       return new CohereApi({
         ...config,
       });
+    case "anthropic":
+      return new AnthropicApi(config);
     default:
       throw new Error(`Unsupported LLM API format: ${config.provider}`);
   }
