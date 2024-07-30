@@ -614,6 +614,7 @@
     "vectordb": "^0.4.20",
     "vscode-languageclient": "^8.0.2",
     "ws": "^8.13.0",
-    "yarn": "^1.22.21"
+    "yarn": "^1.22.21",
+    "@azure/identity": "^4.3.0"
   }
 }

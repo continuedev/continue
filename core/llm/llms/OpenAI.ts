@@ -7,6 +7,7 @@ import {
 import { stripImages } from "../images.js";
 import { BaseLLM } from "../index.js";
 import { streamSse } from "../stream.js";
+import { InteractiveBrowserCredential } from "@azure/identity";
 
 const NON_CHAT_MODELS = [
   "text-davinci-002",
@@ -116,12 +117,20 @@ class OpenAI extends BaseLLM {
     return finalOptions;
   }
 
-  protected _getHeaders() {
+  protected async _getHeaders() {
+    if(this.authType == "entra") {
+      var expired = (typeof this.apiKey === "undefined" ? true : Date.now() >= (JSON.parse(atob(this.apiKey.split('.')[1]))).exp * 1000);
+        if (expired) {
+          let ibc = new InteractiveBrowserCredential({});
+          this.apiKey = (await ibc.getToken("https://cognitiveservices.azure.com/.default")).token;
+        }
+    }
+    
     return {
       "Content-Type": "application/json",
       Authorization: `Bearer ${this.apiKey}`,
       "api-key": this.apiKey ?? "", // For Azure
-    };
+    }
   }
 
   protected async _complete(
@@ -179,7 +188,7 @@ class OpenAI extends BaseLLM {
 
     const response = await this.fetch(this._getEndpoint("completions"), {
       method: "POST",
-      headers: this._getHeaders(),
+      headers: await this._getHeaders(),
       body: JSON.stringify({
         ...args,
         stream: true,
@@ -227,7 +236,7 @@ class OpenAI extends BaseLLM {
     })) as any;
     const response = await this.fetch(this._getEndpoint("chat/completions"), {
       method: "POST",
-      headers: this._getHeaders(),
+      headers: await this._getHeaders(),
       body: JSON.stringify(body),
     });
 
@@ -273,7 +282,7 @@ class OpenAI extends BaseLLM {
   async listModels(): Promise<string[]> {
     const response = await this.fetch(this._getEndpoint("models"), {
       method: "GET",
-      headers: this._getHeaders(),
+      headers: await this._getHeaders(),
     });
 
     const data = await response.json();

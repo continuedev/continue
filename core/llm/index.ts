@@ -94,6 +94,7 @@ export abstract class BaseLLM implements ILLM {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  authType?: string;
 
   engine?: string;
   apiVersion?: string;
@@ -162,6 +163,7 @@ export abstract class BaseLLM implements ILLM {
     this.engine = options.engine;
     this.apiVersion = options.apiVersion;
     this.apiType = options.apiType;
+    this.authType = options.authType;
     this.region = options.region;
     this.projectId = options.projectId;
   }
