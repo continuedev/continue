@@ -15,7 +15,7 @@ import { ContinueServerClient } from "./continueServer/stubs/client.js";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index.js";
 import { ControlPlaneClient } from "./control-plane/client.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
-import { DocsService } from "./indexing/docs/DocsService.js";
+import DocsService from "./indexing/docs/DocsService.js";
 import Ollama from "./llm/llms/Ollama.js";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext.js";

@@ -58,7 +58,7 @@ export type AddParams = {
   favicon?: string;
 };
 
-export class DocsService {
+export default class DocsService {
   static lanceTableName = "docs";
   static sqlitebTableName = "docs";
   static preIndexedDocsEmbeddingsProvider =

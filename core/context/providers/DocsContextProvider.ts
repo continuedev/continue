@@ -7,7 +7,7 @@ import {
   EmbeddingsProvider,
   LoadSubmenuItemsArgs,
 } from "../../index.js";
-import { DocsService } from "../../indexing/docs/DocsService.js";
+import DocsService from "../../indexing/docs/DocsService.js";
 import preIndexedDocs from "../../indexing/docs/preIndexedDocs.js";
 import { Telemetry } from "../../util/posthog.js";
 import { BaseContextProvider } from "../index.js";
