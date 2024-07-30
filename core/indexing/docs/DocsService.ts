@@ -148,7 +148,8 @@ export class DocsService {
     reIndex: boolean = false,
   ): AsyncGenerator<IndexingProgressUpdate> {
     const { startUrl } = siteIndexingConfig;
-    const embeddingsProvider = await this.getEmbeddingsProvider();
+    const isPreIndexDoc = !!preIndexedDocs[startUrl];
+    const embeddingsProvider = await this.getEmbeddingsProvider(isPreIndexDoc);
 
     if (this.docsIndexingQueue.has(startUrl)) {
       console.log("Already in queue");
@@ -697,8 +698,6 @@ export class DocsService {
       return;
     }
 
-    this.ide.infoPopup("Reindexing docs with new embeddings provider");
-
     for (const doc of docs) {
       await this.delete(doc.startUrl);
 
@@ -711,7 +710,5 @@ export class DocsService {
     // cleared and reindex the docs so that the table cannot end up in an
     // invalid state.
     this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
-
-    this.ide.infoPopup("Completed reindexing of all docs");
   }
 }
