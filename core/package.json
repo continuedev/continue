@@ -9,7 +9,7 @@
     "lint:fix": "eslint . --ext ts --fix"
   },
   "type": "module",
-  "author": "Nate Sesti and Ty Dunn",
+  "author": "Continue Dev, Inc",
   "license": "Apache-2.0",
   "devDependencies": {
     "@babel/preset-env": "^7.24.7",

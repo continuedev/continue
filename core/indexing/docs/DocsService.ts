@@ -192,6 +192,7 @@ export class DocsService {
       if (!article) {
         continue;
       }
+
       articles.push(article);
 
       // Use a heuristic approach for progress calculation

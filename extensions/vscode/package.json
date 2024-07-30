@@ -1,6 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
+  "author": "Continue Dev, Inc",
   "version": "0.9.193",
   "repository": {
     "type": "git",
