@@ -21,7 +21,6 @@ import {
   RerankCreateParams,
 } from "./base.js";
 
-// Cohere is OpenAI-compatible
 export class CohereApi implements BaseLlmApi {
   apiBase: string = "https://api.cohere.com/v1";
 

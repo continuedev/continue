@@ -169,11 +169,17 @@ const COMPLETION_TESTS: ({ chatOnly?: boolean } & LlmApiConfig)[] = [
   //   chatOnly: true,
   // },
   {
-    provider: "cohere",
-    model: "command-r",
-    apiKey: process.env.COHERE_API_KEY!,
+    provider: "gemini",
+    model: "gemini-1.5-flash-latest",
+    apiKey: process.env.GEMINI_API_KEY!,
     chatOnly: true,
   },
+  // {
+  //   provider: "cohere",
+  //   model: "command-r",
+  //   apiKey: process.env.COHERE_API_KEY!,
+  //   chatOnly: true,
+  // },
 ];
 
 const FIM_TESTS: LlmApiConfig[] = [
