@@ -93,7 +93,11 @@ export class Core {
       this.controlPlaneClient,
     );
 
-    this.docsService = new DocsService(this.configHandler, this.ide);
+    this.docsService = new DocsService(
+      this.configHandler,
+      this.ide,
+      this.messenger,
+    );
 
     this.configHandler.onConfigUpdate(
       (() => this.messenger.send("configUpdate", undefined)).bind(this),
@@ -258,7 +262,6 @@ export class Core {
       while (!(await generator.next()).done) {}
 
       this.ide.infoPopup(`Successfully indexed ${msg.data.startUrl}`);
-      this.messenger.send("refreshSubmenuItems", undefined);
     });
 
     on("context/removeDocs", async (msg) => {

@@ -29,6 +29,8 @@ import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
 import { Telemetry } from "../../util/posthog.js";
 import { runSqliteMigrations, runLanceMigrations } from "./migrations.js";
+import { IMessenger } from "../../util/messenger.js";
+import { ToCoreProtocol, FromCoreProtocol } from "../../protocol/index.js";
 
 // Purposefully lowercase because lancedb converts
 export interface LanceDbDocsRow {
@@ -76,6 +78,7 @@ export class DocsService {
   constructor(
     configOrHandler: ConfigHandler | ContinueConfig,
     private readonly ide: IDE,
+    private readonly messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>,
   ) {
     this.init(configOrHandler);
   }
@@ -104,6 +107,10 @@ export class DocsService {
     await this.deleteFromLance(startUrl);
     await this.deleteFromSqlite(startUrl);
     this.deleteFromConfig(startUrl);
+
+    if (this.messenger) {
+      this.messenger.send("refreshSubmenuItems", undefined);
+    }
   }
 
   async has(startUrl: string): Promise<Promise<boolean>> {
@@ -148,8 +155,7 @@ export class DocsService {
     reIndex: boolean = false,
   ): AsyncGenerator<IndexingProgressUpdate> {
     const { startUrl } = siteIndexingConfig;
-    const isPreIndexDoc = !!preIndexedDocs[startUrl];
-    const embeddingsProvider = await this.getEmbeddingsProvider(isPreIndexDoc);
+    const embeddingsProvider = await this.getEmbeddingsProvider();
 
     if (this.docsIndexingQueue.has(startUrl)) {
       console.log("Already in queue");
@@ -272,6 +278,10 @@ export class DocsService {
     };
 
     console.log(`Successfully indexed: ${siteIndexingConfig.startUrl}`);
+
+    if (this.messenger) {
+      this.messenger.send("refreshSubmenuItems", undefined);
+    }
   }
 
   async retrieveEmbeddings(
@@ -280,7 +290,9 @@ export class DocsService {
     nRetrieve: number,
     isRetry: boolean = false,
   ): Promise<Chunk[]> {
-    const table = await this.getOrCreateLanceTable(vector);
+    const table = await this.getOrCreateLanceTable({
+      initializationVector: vector,
+    });
 
     const docs: LanceDbDocsRow[] = await table
       .search(vector)
@@ -460,8 +472,12 @@ export class DocsService {
     return tableName.replace(/:/g, "");
   }
 
-  private async getLanceTableNameFromEmbeddingsProvider() {
-    const embeddingsProvider = await this.getEmbeddingsProvider();
+  private async getLanceTableNameFromEmbeddingsProvider(
+    isPreIndexedDoc: boolean,
+  ) {
+    const embeddingsProvider = await this.getEmbeddingsProvider(
+      isPreIndexedDoc,
+    );
     const embeddingsProviderId = this.removeInvalidLanceTableNameChars(
       embeddingsProvider.id,
     );
@@ -470,11 +486,17 @@ export class DocsService {
     return tableName;
   }
 
-  private async getOrCreateLanceTable(initializationVector?: number[]) {
+  private async getOrCreateLanceTable({
+    initializationVector,
+    isPreIndexedDoc,
+  }: {
+    initializationVector?: number[];
+    isPreIndexedDoc?: boolean;
+  }) {
     const conn = await lancedb.connect(getLanceDbPath());
     const tableNames = await conn.tableNames();
     const tableNameFromEmbeddingsProvider =
-      await this.getLanceTableNameFromEmbeddingsProvider();
+      await this.getLanceTableNameFromEmbeddingsProvider(!!isPreIndexedDoc);
 
     if (!tableNames.includes(tableNameFromEmbeddingsProvider)) {
       if (initializationVector) {
@@ -519,7 +541,11 @@ export class DocsService {
     embeddings,
   }: AddParams) {
     const sampleVector = embeddings[0];
-    const table = await this.getOrCreateLanceTable(sampleVector);
+    const isPreIndexedDoc = !!preIndexedDocs[siteIndexingConfig.startUrl];
+    const table = await this.getOrCreateLanceTable({
+      isPreIndexedDoc,
+      initializationVector: sampleVector,
+    });
 
     const rows: LanceDbDocsRow[] = chunks.map((chunk, i) => ({
       vector: embeddings[i],
@@ -566,9 +592,10 @@ export class DocsService {
     await this.addToLance(params);
     await this.addToSqlite(params);
 
-    const isPreIndexDoc = !!preIndexedDocs[params.siteIndexingConfig.startUrl];
+    const isPreIndexedDoc =
+      !!preIndexedDocs[params.siteIndexingConfig.startUrl];
 
-    if (!isPreIndexDoc) {
+    if (!isPreIndexedDoc) {
       this.addToConfig(params);
     }
   }
@@ -606,13 +633,14 @@ export class DocsService {
 
     const siteEmbeddings = JSON.parse(data) as SiteIndexingResults;
     const startUrl = new URL(siteEmbeddings.url).toString();
+    const favicon = await this.fetchFavicon(preIndexedDocs[startUrl]);
 
     await this.add({
+      favicon,
       siteIndexingConfig: {
         startUrl,
         title: siteEmbeddings.title,
       },
-      favicon: preIndexedDocs[startUrl].faviconUrl,
       chunks: siteEmbeddings.chunks,
       embeddings: siteEmbeddings.chunks.map((c) => c.embedding),
     });
@@ -698,6 +726,10 @@ export class DocsService {
       return;
     }
 
+    console.log(
+      `Reindexing docs with new embeddings provider: ${embeddingsProvider.id}`,
+    );
+
     for (const doc of docs) {
       await this.delete(doc.startUrl);
 
@@ -710,5 +742,7 @@ export class DocsService {
     // cleared and reindex the docs so that the table cannot end up in an
     // invalid state.
     this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
+
+    console.log("Completed reindexing of all docs");
   }
 }
