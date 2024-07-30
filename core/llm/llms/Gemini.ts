@@ -202,7 +202,7 @@ class Gemini extends BaseLLM {
           }
         } else {
           // Handle the case where the expected data structure is not found
-          console.warn('Unexpected response format:', data);
+          console.warn("Unexpected response format:", data);
         }
       }
       if (foundIncomplete) {
