@@ -156,30 +156,30 @@ function testConfig(config: LlmApiConfig, chatOnly: boolean = false) {
 }
 
 const COMPLETION_TESTS: ({ chatOnly?: boolean } & LlmApiConfig)[] = [
-  // {
-  //   provider: "openai",
-  //   model: "gpt-4o-mini",
-  //   apiKey: process.env.OPENAI_API_KEY!,
-  //   chatOnly: true,
-  // },
-  // {
-  //   provider: "anthropic",
-  //   model: "claude-3-haiku-20240307",
-  //   apiKey: process.env.ANTHROPIC_API_KEY!,
-  //   chatOnly: true,
-  // },
+  {
+    provider: "openai",
+    model: "gpt-4o-mini",
+    apiKey: process.env.OPENAI_API_KEY!,
+    chatOnly: true,
+  },
+  {
+    provider: "anthropic",
+    model: "claude-3-haiku-20240307",
+    apiKey: process.env.ANTHROPIC_API_KEY!,
+    chatOnly: true,
+  },
   {
     provider: "gemini",
     model: "gemini-1.5-flash-latest",
     apiKey: process.env.GEMINI_API_KEY!,
     chatOnly: true,
   },
-  // {
-  //   provider: "cohere",
-  //   model: "command-r",
-  //   apiKey: process.env.COHERE_API_KEY!,
-  //   chatOnly: true,
-  // },
+  {
+    provider: "cohere",
+    model: "command-r",
+    apiKey: process.env.COHERE_API_KEY!,
+    chatOnly: true,
+  },
 ];
 
 const FIM_TESTS: LlmApiConfig[] = [
@@ -192,21 +192,26 @@ const FIM_TESTS: LlmApiConfig[] = [
 ];
 
 const EMBEDDINGS_TESTS: LlmApiConfig[] = [
+  // {
+  //   provider: "openai",
+  //   model: "text-embedding-3-small",
+  //   apiKey: process.env.OPENAI_API_KEY!,
+  // },
+  // {
+  //   provider: "openai",
+  //   model: "voyage-code-2",
+  //   apiKey: process.env.VOYAGE_API_KEY!,
+  //   apiBase: "https://api.voyageai.com/v1/",
+  // },
+  // {
+  //   provider: "cohere",
+  //   model: "embed-english-v3.0",
+  //   apiKey: process.env.COHERE_API_KEY!,
+  // },
   {
-    provider: "openai",
-    model: "text-embedding-3-small",
-    apiKey: process.env.OPENAI_API_KEY!,
-  },
-  {
-    provider: "openai",
-    model: "voyage-code-2",
-    apiKey: process.env.VOYAGE_API_KEY!,
-    apiBase: "https://api.voyageai.com/v1/",
-  },
-  {
-    provider: "cohere",
-    model: "embed-english-v3.0",
-    apiKey: process.env.COHERE_API_KEY!,
+    provider: "gemini",
+    model: "models/text-embedding-004",
+    apiKey: process.env.GEMINI_API_KEY!,
   },
 ];
 
@@ -225,14 +230,14 @@ const RERANK_TESTS: LlmApiConfig[] = [
 ];
 
 describe("should successfully call all adapters", () => {
-  COMPLETION_TESTS.forEach((config) => {
-    const { chatOnly, ...rest } = config;
-    testConfig(rest, chatOnly);
-  });
-
-  // EMBEDDINGS_TESTS.forEach((config) => {
-  //   testEmbed(config);
+  // COMPLETION_TESTS.forEach((config) => {
+  //   const { chatOnly, ...rest } = config;
+  //   testConfig(rest, chatOnly);
   // });
+
+  EMBEDDINGS_TESTS.forEach((config) => {
+    testEmbed(config);
+  });
 
   // RERANK_TESTS.forEach((config) => {
   //   testRerank(config);

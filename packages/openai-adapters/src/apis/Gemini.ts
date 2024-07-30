@@ -229,6 +229,42 @@ export class GeminiApi implements BaseLlmApi {
   }
 
   async embed(body: EmbeddingCreateParams): Promise<CreateEmbeddingResponse> {
-    throw new Error("Method not implemented.");
+    const inputs = Array.isArray(body.input) ? body.input : [body.input];
+    const response = await fetch(
+      new URL(`${body.model}:batchEmbedContents`, this.apiBase),
+      {
+        method: "POST",
+        body: JSON.stringify({
+          requests: inputs.map((input) => ({
+            model: body.model,
+            content: {
+              role: "user",
+              parts: [{ text: input }],
+            },
+          })),
+        }),
+        headers: {
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          "x-goog-api-key": this.config.apiKey,
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const data = (await response.json()) as any;
+    return {
+      object: "list",
+      model: body.model,
+      usage: {
+        total_tokens: 0,
+        prompt_tokens: 0,
+      },
+      data: data.embeddings.map((embedding: any, index: number) => ({
+        object: "embedding",
+        index,
+        embedding: embedding.values,
+      })),
+    };
   }
 }
