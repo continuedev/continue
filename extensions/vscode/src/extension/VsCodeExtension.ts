@@ -252,11 +252,13 @@ export class VsCodeExtension {
         filepath.endsWith(".continueignore") ||
         filepath.endsWith(".gitignore")
       ) {
-        // Update embeddings! (TODO)
+        // Reindex the workspaces
+        this.core.invoke("index/forceReIndex", undefined);
+      } else {
+        // Reindex the file
+        const indexer = await this.core.codebaseIndexerPromise;
+        indexer.refreshFile(filepath);
       }
-
-      // Reindex the workspaces
-      this.core.invoke("index/forceReIndex", undefined);
     });
 
     // When GitHub sign-in status changes, reload config
