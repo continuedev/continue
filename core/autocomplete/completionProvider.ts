@@ -250,8 +250,8 @@ export class CompletionProvider {
         ...config.tabAutocompleteOptions,
       };
 
-      // Check if we're in the continue config.json file
-      if (path.relative(getConfigJsonPath(), input.filepath) === "") {
+      // Check whether we're in the continue config.json file
+      if (input.filepath === getConfigJsonPath()) {
         return undefined;
       }
 
