@@ -180,6 +180,30 @@ const COMPLETION_TESTS: ({ chatOnly?: boolean } & LlmApiConfig)[] = [
     apiKey: process.env.COHERE_API_KEY!,
     chatOnly: true,
   },
+  {
+    provider: "fireworks",
+    model: "accounts/fireworks/models/llama-v3p1-8b-instruct",
+    apiKey: process.env.FIREWORKS_API_KEY!,
+    chatOnly: true,
+  },
+  {
+    provider: "groq",
+    model: "llama3-8b-8192",
+    apiKey: process.env.GROQ_API_KEY!,
+    chatOnly: true,
+  },
+  {
+    provider: "deepinfra",
+    model: "meta-llama/Meta-Llama-3.1-8B-Instruct",
+    apiKey: process.env.DEEP_INFRA_API_KEY!,
+    chatOnly: true,
+  },
+  {
+    provider: "together",
+    model: "meta-llama/Meta-Llama-3.1-8B-Instruct-Turbo",
+    apiKey: process.env.TOGETHER_API_KEY!,
+    chatOnly: true,
+  },
 ];
 
 const FIM_TESTS: LlmApiConfig[] = [
@@ -189,25 +213,30 @@ const FIM_TESTS: LlmApiConfig[] = [
     apiKey: process.env.MISTRAL_API_KEY!,
     apiBase: "https://api.mistral.ai/v1",
   },
+  {
+    provider: "deepseek",
+    model: "deepseek-coder",
+    apiKey: process.env.DEEPSEEK_API_KEY!,
+  },
 ];
 
 const EMBEDDINGS_TESTS: LlmApiConfig[] = [
-  // {
-  //   provider: "openai",
-  //   model: "text-embedding-3-small",
-  //   apiKey: process.env.OPENAI_API_KEY!,
-  // },
-  // {
-  //   provider: "openai",
-  //   model: "voyage-code-2",
-  //   apiKey: process.env.VOYAGE_API_KEY!,
-  //   apiBase: "https://api.voyageai.com/v1/",
-  // },
-  // {
-  //   provider: "cohere",
-  //   model: "embed-english-v3.0",
-  //   apiKey: process.env.COHERE_API_KEY!,
-  // },
+  {
+    provider: "openai",
+    model: "text-embedding-3-small",
+    apiKey: process.env.OPENAI_API_KEY!,
+  },
+  {
+    provider: "openai",
+    model: "voyage-code-2",
+    apiKey: process.env.VOYAGE_API_KEY!,
+    apiBase: "https://api.voyageai.com/v1/",
+  },
+  {
+    provider: "cohere",
+    model: "embed-english-v3.0",
+    apiKey: process.env.COHERE_API_KEY!,
+  },
   {
     provider: "gemini",
     model: "models/text-embedding-004",
@@ -216,17 +245,17 @@ const EMBEDDINGS_TESTS: LlmApiConfig[] = [
 ];
 
 const RERANK_TESTS: LlmApiConfig[] = [
-  // {
-  //   provider: "openai",
-  //   model: "rerank-lite-1",
-  //   apiKey: process.env.VOYAGE_API_KEY!,
-  //   apiBase: "https://api.voyageai.com/v1/",
-  // },
-  // {
-  //   provider: "cohere",
-  //   model: "rerank-english-v3.0",
-  //   apiKey: process.env.COHERE_API_KEY!,
-  // },
+  {
+    provider: "openai",
+    model: "rerank-lite-1",
+    apiKey: process.env.VOYAGE_API_KEY!,
+    apiBase: "https://api.voyageai.com/v1/",
+  },
+  {
+    provider: "cohere",
+    model: "rerank-english-v3.0",
+    apiKey: process.env.COHERE_API_KEY!,
+  },
   {
     provider: "jina",
     model: "jina-reranker-v2-base-multilingual",
@@ -235,20 +264,20 @@ const RERANK_TESTS: LlmApiConfig[] = [
 ];
 
 describe("should successfully call all adapters", () => {
-  // COMPLETION_TESTS.forEach((config) => {
-  //   const { chatOnly, ...rest } = config;
-  //   testConfig(rest, chatOnly);
-  // });
+  COMPLETION_TESTS.forEach((config) => {
+    const { chatOnly, ...rest } = config;
+    testConfig(rest, chatOnly);
+  });
 
-  // EMBEDDINGS_TESTS.forEach((config) => {
-  //   testEmbed(config);
-  // });
+  EMBEDDINGS_TESTS.forEach((config) => {
+    testEmbed(config);
+  });
 
   RERANK_TESTS.forEach((config) => {
     testRerank(config);
   });
 
-  // FIM_TESTS.forEach((config) => {
-  //   testFim(config);
-  // });
+  FIM_TESTS.forEach((config) => {
+    testFim(config);
+  });
 });
