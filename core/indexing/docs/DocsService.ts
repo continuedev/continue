@@ -186,7 +186,9 @@ export class DocsService {
       siteIndexingConfig.maxDepth,
     )) {
       processedPages++;
+
       const article = pageToArticle(page);
+
       if (!article) {
         continue;
       }
