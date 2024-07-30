@@ -7,6 +7,7 @@ import {
   ILLM,
   LLMFullCompletionOptions,
   LLMOptions,
+  ModelCapability,
   ModelName,
   ModelProvider,
   PromptLog,
@@ -53,7 +54,7 @@ export abstract class BaseLLM implements ILLM {
   }
 
   supportsImages(): boolean {
-    return modelSupportsImages(this.providerName, this.model, this.title);
+    return modelSupportsImages(this.providerName, this.model, this.title, this.capabilities);
   }
 
   supportsCompletions(): boolean {
@@ -94,6 +95,7 @@ export abstract class BaseLLM implements ILLM {
   llmRequestHook?: (model: string, prompt: string) => any;
   apiKey?: string;
   apiBase?: string;
+  capabilities?: ModelCapability
 
   engine?: string;
   apiVersion?: string;
@@ -158,6 +160,7 @@ export abstract class BaseLLM implements ILLM {
       this.apiBase = `${this.apiBase}/`;
     }
     this.accountId = options.accountId;
+    this.capabilities = options.capabilities;
 
     this.engine = options.engine;
     this.apiVersion = options.apiVersion;
