@@ -216,16 +216,21 @@ const EMBEDDINGS_TESTS: LlmApiConfig[] = [
 ];
 
 const RERANK_TESTS: LlmApiConfig[] = [
+  // {
+  //   provider: "openai",
+  //   model: "rerank-lite-1",
+  //   apiKey: process.env.VOYAGE_API_KEY!,
+  //   apiBase: "https://api.voyageai.com/v1/",
+  // },
+  // {
+  //   provider: "cohere",
+  //   model: "rerank-english-v3.0",
+  //   apiKey: process.env.COHERE_API_KEY!,
+  // },
   {
-    provider: "openai",
-    model: "rerank-lite-1",
-    apiKey: process.env.VOYAGE_API_KEY!,
-    apiBase: "https://api.voyageai.com/v1/",
-  },
-  {
-    provider: "cohere",
-    model: "rerank-english-v3.0",
-    apiKey: process.env.COHERE_API_KEY!,
+    provider: "jina",
+    model: "jina-reranker-v2-base-multilingual",
+    apiKey: process.env.JINA_API_KEY!,
   },
 ];
 
@@ -235,13 +240,13 @@ describe("should successfully call all adapters", () => {
   //   testConfig(rest, chatOnly);
   // });
 
-  EMBEDDINGS_TESTS.forEach((config) => {
-    testEmbed(config);
-  });
-
-  // RERANK_TESTS.forEach((config) => {
-  //   testRerank(config);
+  // EMBEDDINGS_TESTS.forEach((config) => {
+  //   testEmbed(config);
   // });
+
+  RERANK_TESTS.forEach((config) => {
+    testRerank(config);
+  });
 
   // FIM_TESTS.forEach((config) => {
   //   testFim(config);
