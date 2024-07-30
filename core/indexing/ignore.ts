@@ -67,7 +67,7 @@ export const DEFAULT_IGNORE_FILETYPES = [
   ".csv",
   // "*.prompt", // can be incredibly confusing for the LLM to have another set of instructions injected into the prompt
 ];
-export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
+export const defaultIgnoreFile = ignore.default().add(DEFAULT_IGNORE_FILETYPES);
 export const DEFAULT_IGNORE_DIRS = [
   ".git",
   ".svn",
@@ -94,7 +94,7 @@ export const DEFAULT_IGNORE_DIRS = [
   "gems",
   "vendor",
 ];
-export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
+export const defaultIgnoreDir = ignore.default().add(DEFAULT_IGNORE_DIRS);
 
 export const DEFAULT_IGNORE =
   DEFAULT_IGNORE_FILETYPES.join("\n") + "\n" + DEFAULT_IGNORE_DIRS.join("\n");

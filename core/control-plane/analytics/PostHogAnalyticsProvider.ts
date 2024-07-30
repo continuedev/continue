@@ -1,5 +1,5 @@
 import { Analytics } from "@continuedev/config-types";
-import { IAnalyticsProvider } from "./IAnalyticsProvider";
+import { IAnalyticsProvider } from "./IAnalyticsProvider.js";
 
 export default class PostHogAnalyticsProvider implements IAnalyticsProvider {
   client?: any;
