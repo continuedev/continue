@@ -124,13 +124,10 @@ export class DocsService {
       return;
     }
 
-    if (!this.config.docs || this.config.docs.length === 0) {
-      this.ide.infoPopup("No entries found under 'docs' in config.json");
-      return;
-    }
+    const docs = await this.list();
 
-    for (const site of this.config.docs) {
-      const generator = this.indexAndAdd(site, reIndex);
+    for (const doc of docs) {
+      const generator = this.indexAndAdd(doc, reIndex);
       while (!(await generator.next()).done) {}
     }
 
