@@ -3,7 +3,6 @@ import {
   ContinueConfig,
   EmbeddingsProvider,
   IDE,
-  IdeInfo,
   IndexingProgressUpdate,
   SiteIndexingConfig,
 } from "../../index.js";
@@ -23,16 +22,18 @@ import {
 import preIndexedDocs from "./preIndexedDocs.js";
 import TransformersJsEmbeddingsProvider from "../embeddings/TransformersJsEmbeddingsProvider.js";
 import { ConfigHandler } from "../../config/ConfigHandler.js";
-import lancedb, { type Table, Connection } from "vectordb";
+import lancedb, { Connection } from "vectordb";
 import { GlobalContext } from "../../util/GlobalContext.js";
 import DocsContextProvider from "../../context/providers/DocsContextProvider.js";
 import { open, type Database } from "sqlite";
 import sqlite3 from "sqlite3";
+import { Telemetry } from "../../util/posthog.js";
+import { runSqliteMigrations, runLanceMigrations } from "./migrations.js";
 
 // Purposefully lowercase because lancedb converts
-interface LanceDbDocsRow {
+export interface LanceDbDocsRow {
   title: string;
-  baseurl: string;
+  starturl: string;
   // Chunk
   content: string;
   path: string;
@@ -42,22 +43,28 @@ interface LanceDbDocsRow {
   [key: string]: any;
 }
 
-type AddParams = {
+export interface SqliteDocsRow {
   title: string;
-  baseUrl: string;
+  startUrl: string;
+  favicon: string;
+}
+
+export type AddParams = {
+  siteIndexingConfig: SiteIndexingConfig;
   chunks: Chunk[];
   embeddings: number[][];
+  favicon?: string;
 };
 
 export class DocsService {
-  public static preIndexedDocsEmbeddingsProvider =
+  static lanceTableName = "docs";
+  static sqlitebTableName = "docs";
+  static preIndexedDocsEmbeddingsProvider =
     new TransformersJsEmbeddingsProvider();
-
-  private static lanceTableName = "docs";
-  private static sqlitebTableName = "docs";
 
   private docsIndexingQueue = new Set<string>();
   private globalContext = new GlobalContext();
+  private lanceTableNamesSet = new Set<string>();
 
   private config!: ContinueConfig;
   private sqliteTable?: Database;
@@ -67,17 +74,13 @@ export class DocsService {
   // When instantiating the DocsService from core, we have access
   // to a ConfigHandler instance.
   constructor(
-    config: ConfigHandler | ContinueConfig,
+    configOrHandler: ConfigHandler | ContinueConfig,
     private readonly ide: IDE,
   ) {
-    if (config instanceof ConfigHandler) {
-      this.loadConfigAndInitListener(config);
-    } else {
-      this.config = config;
-    }
+    this.init(configOrHandler);
   }
 
-  public async isJetBrainsAndPreIndexedDocsProvider(): Promise<boolean> {
+  async isJetBrainsAndPreIndexedDocsProvider(): Promise<boolean> {
     const isJetBrains = await this.isJetBrains();
 
     const isPreIndexedDocsProvider =
@@ -92,12 +95,28 @@ export class DocsService {
    * However, we don't ship transformers.js with the JetBrains extension.
    * So, we only include pre-indexed docs in the submenu for non-JetBrains IDEs.
    */
-  public async canUsePreindexedDocs() {
+  async canUsePreindexedDocs() {
     const isJetBrains = await this.isJetBrains();
     return !isJetBrains;
   }
 
-  public async indexAllDocs(reIndex: boolean = false) {
+  async delete(startUrl: string) {
+    await this.deleteFromLance(startUrl);
+    await this.deleteFromSqlite(startUrl);
+    this.deleteFromConfig(startUrl);
+  }
+
+  async has(startUrl: string): Promise<Promise<boolean>> {
+    const db = await this.getOrCreateSqliteDb();
+    const title = await db.get(
+      `SELECT title FROM ${DocsService.sqlitebTableName} WHERE startUrl = ?`,
+      startUrl,
+    );
+
+    return !!title;
+  }
+
+  async indexAllDocs(reIndex: boolean = false) {
     if (!this.hasDocsContextProvider()) {
       this.ide.infoPopup(
         "No 'docs' provider configured under 'contextProviders' in config.json",
@@ -118,323 +137,28 @@ export class DocsService {
     this.ide.infoPopup("Docs indexing completed");
   }
 
-  private async syncConfigAndSqlite(config: ContinueConfig) {
-    const sqliteDocs = await this.list();
-    const sqliteDocStartUrls = sqliteDocs.map((doc) => doc.baseUrl) || [];
-
-    const configDocs = config.docs || [];
-    const configDocStartUrls = config.docs?.map((doc) => doc.startUrl) || [];
-
-    const newDocs = configDocs.filter(
-      (doc) => !sqliteDocStartUrls.includes(doc.startUrl),
-    );
-    const deletedDocs = sqliteDocs.filter(
-      (doc) => !configDocStartUrls.includes(doc.baseUrl),
-    );
-
-    for (const doc of newDocs) {
-      console.log(`Indexing new doc: ${doc.startUrl}`);
-      const generator = this.indexAndAdd(doc);
-      while (!(await generator.next()).done) {}
-    }
-
-    for (const doc of deletedDocs) {
-      console.log(`Deleting doc: ${doc.baseUrl}`);
-      await this.delete(doc.baseUrl);
-    }
-  }
-
-  private async loadConfigAndInitListener(configHandler: ConfigHandler) {
-    this.config = await configHandler.loadConfig();
-
-    configHandler.onConfigUpdate(async (newConfig) => {
-      const oldConfig = this.config;
-
-      // Need to update class property for config at the beginning of this callback
-      // to ensure downstream methods have access to the latest config.
-      this.config = newConfig;
-
-      if (oldConfig.docs !== newConfig.docs) {
-        await this.syncConfigAndSqlite(newConfig);
-      }
-
-      const shouldReindex = await this.shouldReindexDocsOnNewEmbeddingsProvider(
-        newConfig.embeddingsProvider.id,
-      );
-
-      if (shouldReindex) {
-        await this.reindexDocsOnNewEmbeddingsProvider(
-          newConfig.embeddingsProvider,
-        );
-      }
-    });
-  }
-
-  private hasDocsContextProvider() {
-    return !!this.config.contextProviders?.some(
-      (provider) =>
-        provider.description.title === DocsContextProvider.description.title,
-    );
-  }
-
-  private async getOrCreateSqliteDb() {
-    if (!this.sqliteTable) {
-      this.sqliteTable = await open({
-        filename: getDocsSqlitePath(),
-        driver: sqlite3.Database,
-      });
-
-      this.sqliteTable
-        .exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title STRING NOT NULL,
-            baseUrl STRING NOT NULL UNIQUE
-        )`);
-    }
-
-    return this.sqliteTable;
-  }
-
-  private async createLanceDocsTable(
-    connection: Connection,
-    initializationVector: number[],
-  ) {
-    const mockRowTitle = "mockRowTitle";
-    const mockRow: LanceDbDocsRow[] = [
-      {
-        title: mockRowTitle,
-        vector: initializationVector,
-        baseurl: "",
-        content: "",
-        path: "",
-        startline: 0,
-        endline: 0,
-      },
-    ];
-
-    const table = await connection.createTable(
-      DocsService.lanceTableName,
-      mockRow,
-    );
-
-    await table.delete(`title = '${mockRowTitle}'`);
-  }
-
-  private async getOrCreateLanceTable(initializationVector?: number[]) {
-    const connection = await lancedb.connect(getLanceDbPath());
-    const tableNames = await connection.tableNames();
-
-    if (!tableNames.includes(DocsService.lanceTableName)) {
-      if (initializationVector) {
-        await this.createLanceDocsTable(connection, initializationVector);
-      } else {
-        console.error(
-          "No existing Lance DB docs table was found and no initialization " +
-            "vector was passed to create one",
-        );
-      }
-    }
-
-    const table = await connection.openTable(DocsService.lanceTableName);
-
-    return table;
-  }
-
-  public async getEmbeddingsProvider(isPreIndexedDoc: boolean = false) {
-    const canUsePreindexedDocs = await this.canUsePreindexedDocs();
-
-    if (isPreIndexedDoc && !canUsePreindexedDocs) {
-      return DocsService.preIndexedDocsEmbeddingsProvider;
-    }
-
-    return this.config.embeddingsProvider;
-  }
-
-  private async isJetBrains() {
-    const ideInfo = await this.ide.getIdeInfo();
-    return ideInfo.ideType === "jetbrains";
-  }
-
-  private async hasIndexedDoc(baseUrl: string) {
-    const db = await this.getOrCreateSqliteDb();
-    const docs = await db.all(
-      `SELECT baseUrl FROM ${DocsService.sqlitebTableName} WHERE baseUrl = ?`,
-      baseUrl,
-    );
-
-    return docs.length > 0;
-  }
-
-  async retrieveEmbeddings(
-    baseUrl: string,
-    vector: number[],
-    nRetrieve: number,
-    isRetry: boolean = false,
-  ): Promise<Chunk[]> {
-    const table = await this.getOrCreateLanceTable(vector);
-
-    const docs: LanceDbDocsRow[] = await table
-      .search(vector)
-      .limit(nRetrieve)
-      .where(`baseurl = '${baseUrl}'`)
-      .execute();
-
-    const hasIndexedDoc = await this.hasIndexedDoc(baseUrl);
-
-    if (!hasIndexedDoc && docs.length === 0) {
-      const preIndexedDoc = preIndexedDocs[baseUrl];
-
-      if (isRetry || !preIndexedDoc) {
-        return [];
-      }
-
-      await this.fetchAndAddPreIndexedDocEmbeddings(preIndexedDoc.title);
-      return await this.retrieveEmbeddings(baseUrl, vector, nRetrieve, true);
-    }
-
-    return docs.map((doc) => ({
-      digest: doc.path,
-      filepath: doc.path,
-      startLine: doc.startline,
-      endLine: doc.endline,
-      index: 0,
-      content: doc.content,
-      otherMetadata: {
-        title: doc.title,
-      },
-    }));
-  }
-
-  private async addToLance({ chunks, baseUrl, title, embeddings }: AddParams) {
-    const sampleVector = embeddings[0];
-    const table = await this.getOrCreateLanceTable(sampleVector);
-
-    const rows: LanceDbDocsRow[] = chunks.map((chunk, i) => ({
-      vector: embeddings[i],
-      baseurl: baseUrl,
-      title: chunk.otherMetadata?.title || title,
-      content: chunk.content,
-      path: chunk.filepath,
-      startline: chunk.startLine,
-      endline: chunk.endLine,
-    }));
-
-    await table.add(rows);
-  }
-
-  private async addToSqlite({ title, baseUrl }: AddParams) {
-    const db = await this.getOrCreateSqliteDb();
-    await db.run(
-      `INSERT INTO ${DocsService.sqlitebTableName} (title, baseUrl) VALUES (?, ?)`,
-      title,
-      baseUrl,
-    );
-  }
-
-  private addToConfig({ title, baseUrl }: AddParams) {
-    const newDoc = { title, startUrl: baseUrl, rootUrl: baseUrl };
-
-    // Handles the case where a user has manually added the doc to config.json
-    // so it already exists in the file
-    const doesDocExist = this.config.docs?.some(
-      (doc) => doc.startUrl === newDoc.startUrl,
-    );
-
-    if (!doesDocExist) {
-      editConfigJson((config) => ({
-        ...config,
-        docs: [...(config.docs ?? []), newDoc],
-      }));
-    }
-  }
-
-  private async add(params: AddParams) {
-    await this.addToLance(params);
-    await this.addToSqlite(params);
-
-    if (!preIndexedDocs[params.baseUrl]) {
-      this.addToConfig(params);
-    }
-  }
-
   async list() {
     const db = await this.getOrCreateSqliteDb();
-    const docs = db.all(
-      `SELECT title, baseUrl FROM ${DocsService.sqlitebTableName}`,
+    const docs = await db.all<SqliteDocsRow[]>(
+      `SELECT title, startUrl, favicon FROM ${DocsService.sqlitebTableName}`,
     );
 
     return docs;
-  }
-
-  async deleteFromLance(startUrl: string) {
-    const lanceTable = await this.getOrCreateLanceTable();
-    await lanceTable.delete(`baseurl = '${startUrl}'`);
-  }
-
-  async deleteFromSqlite(startUrl: string) {
-    const db = await this.getOrCreateSqliteDb();
-    await db.run(
-      `DELETE FROM ${DocsService.sqlitebTableName} WHERE baseUrl = ?`,
-      startUrl,
-    );
-  }
-
-  deleteFromConfig(startUrl: string) {
-    editConfigJson((config) => ({
-      ...config,
-      docs: config.docs?.filter((doc) => doc.startUrl !== startUrl) || [],
-    }));
-  }
-
-  async delete(startUrl: string) {
-    await this.deleteFromLance(startUrl);
-    await this.deleteFromSqlite(startUrl);
-    this.deleteFromConfig(startUrl);
-  }
-
-  async has(startUrl: string): Promise<Promise<boolean>> {
-    const db = await this.getOrCreateSqliteDb();
-    const doc = await db.get(
-      `SELECT title FROM ${DocsService.sqlitebTableName} WHERE baseUrl = ?`,
-      startUrl,
-    );
-
-    return !!doc;
-  }
-
-  private async fetchAndAddPreIndexedDocEmbeddings(title: string) {
-    const embeddingsProvider = await this.getEmbeddingsProvider(true);
-
-    const data = await downloadFromS3(
-      S3Buckets.continueIndexedDocs,
-      getS3Filename(embeddingsProvider.id, title),
-    );
-
-    const siteEmbeddings = JSON.parse(data) as SiteIndexingResults;
-    const baseUrl = new URL(siteEmbeddings.url).toString();
-
-    await this.add({
-      baseUrl,
-      title: siteEmbeddings.title,
-      chunks: siteEmbeddings.chunks,
-      embeddings: siteEmbeddings.chunks.map((c) => c.embedding),
-    });
   }
 
   async *indexAndAdd(
     siteIndexingConfig: SiteIndexingConfig,
     reIndex: boolean = false,
   ): AsyncGenerator<IndexingProgressUpdate> {
+    const { startUrl } = siteIndexingConfig;
     const embeddingsProvider = await this.getEmbeddingsProvider();
-    const startUrl = new URL(siteIndexingConfig.startUrl.toString());
-    const startUrlStr = startUrl.toString();
 
-    if (this.docsIndexingQueue.has(startUrlStr)) {
+    if (this.docsIndexingQueue.has(startUrl)) {
       console.log("Already in queue");
       return;
     }
 
-    if (!reIndex && (await this.has(startUrlStr))) {
+    if (!reIndex && (await this.has(startUrl))) {
       yield {
         progress: 1,
         desc: "Already indexed",
@@ -444,7 +168,7 @@ export class DocsService {
     }
 
     // Mark the site as currently being indexed
-    this.docsIndexingQueue.add(startUrlStr);
+    this.docsIndexingQueue.add(startUrl);
 
     yield {
       progress: 0,
@@ -457,7 +181,10 @@ export class DocsService {
     let maxKnownPages = 1;
 
     // Crawl pages and retrieve info as articles
-    for await (const page of crawlPage(startUrl, siteIndexingConfig.maxDepth)) {
+    for await (const page of crawlPage(
+      new URL(startUrl),
+      siteIndexingConfig.maxDepth,
+    )) {
       processedPages++;
       const article = pageToArticle(page);
       if (!article) {
@@ -523,17 +250,19 @@ export class DocsService {
     // Clear old index if re-indexing.
     if (reIndex) {
       console.log("Deleting old embeddings");
-      await this.delete(startUrlStr);
+      await this.delete(startUrl);
     }
 
+    const favicon = await this.fetchFavicon(siteIndexingConfig);
+
     await this.add({
+      siteIndexingConfig,
       chunks,
       embeddings,
-      title: siteIndexingConfig.title,
-      baseUrl: startUrlStr,
+      favicon,
     });
 
-    this.docsIndexingQueue.delete(startUrlStr);
+    this.docsIndexingQueue.delete(startUrl);
 
     yield {
       progress: 1,
@@ -542,6 +271,374 @@ export class DocsService {
     };
 
     console.log(`Successfully indexed: ${siteIndexingConfig.startUrl}`);
+  }
+
+  async retrieveEmbeddings(
+    startUrl: string,
+    vector: number[],
+    nRetrieve: number,
+    isRetry: boolean = false,
+  ): Promise<Chunk[]> {
+    const table = await this.getOrCreateLanceTable(vector);
+
+    const docs: LanceDbDocsRow[] = await table
+      .search(vector)
+      .limit(nRetrieve)
+      .where(`starturl = '${startUrl}'`)
+      .execute();
+
+    const hasIndexedDoc = await this.hasIndexedDoc(startUrl);
+
+    if (!hasIndexedDoc && docs.length === 0) {
+      const preIndexedDoc = preIndexedDocs[startUrl];
+
+      if (isRetry || !preIndexedDoc) {
+        return [];
+      }
+
+      await this.fetchAndAddPreIndexedDocEmbeddings(preIndexedDoc.title);
+      return await this.retrieveEmbeddings(startUrl, vector, nRetrieve, true);
+    }
+
+    return docs.map((doc) => ({
+      digest: doc.path,
+      filepath: doc.path,
+      startLine: doc.startline,
+      endLine: doc.endline,
+      index: 0,
+      content: doc.content,
+      otherMetadata: {
+        title: doc.title,
+      },
+    }));
+  }
+
+  async getEmbeddingsProvider(isPreIndexedDoc: boolean = false) {
+    const canUsePreindexedDocs = await this.canUsePreindexedDocs();
+
+    if (isPreIndexedDoc && canUsePreindexedDocs) {
+      return DocsService.preIndexedDocsEmbeddingsProvider;
+    }
+
+    return this.config.embeddingsProvider;
+  }
+
+  async getFavicon(startUrl: string) {
+    const db = await this.getOrCreateSqliteDb();
+    const { favicon } = await db.get(
+      `SELECT favicon FROM ${DocsService.sqlitebTableName} WHERE startUrl = ?`,
+      startUrl,
+    );
+
+    return favicon;
+  }
+
+  private async init(configOrHandler: ContinueConfig | ConfigHandler) {
+    if (configOrHandler instanceof ConfigHandler) {
+      this.config = await configOrHandler.loadConfig();
+    } else {
+      this.config = configOrHandler;
+    }
+
+    const embeddingsProvider = await this.getEmbeddingsProvider();
+    const [mockVector] = await embeddingsProvider.embed(["mockVector"]);
+
+    const lance = await this.getOrCreateLanceTable(mockVector);
+    const sqlite = await this.getOrCreateSqliteDb();
+
+    await runLanceMigrations(lance);
+    await runSqliteMigrations(sqlite);
+
+    if (configOrHandler instanceof ConfigHandler) {
+      configOrHandler.onConfigUpdate(async (newConfig) => {
+        const oldConfig = this.config;
+
+        // Need to update class property for config at the beginning of this callback
+        // to ensure downstream methods have access to the latest config.
+        this.config = newConfig;
+
+        if (oldConfig.docs !== newConfig.docs) {
+          await this.syncConfigAndSqlite();
+        }
+
+        const shouldReindex =
+          await this.shouldReindexDocsOnNewEmbeddingsProvider(
+            newConfig.embeddingsProvider.id,
+          );
+
+        if (shouldReindex) {
+          await this.reindexDocsOnNewEmbeddingsProvider(
+            newConfig.embeddingsProvider,
+          );
+        }
+      });
+    }
+  }
+
+  private async syncConfigAndSqlite() {
+    const sqliteDocs = await this.list();
+    const sqliteDocStartUrls = sqliteDocs.map((doc) => doc.startUrl) || [];
+
+    const configDocs = this.config.docs || [];
+    const configDocStartUrls =
+      this.config.docs?.map((doc) => doc.startUrl) || [];
+
+    const newDocs = configDocs.filter(
+      (doc) => !sqliteDocStartUrls.includes(doc.startUrl),
+    );
+    const deletedDocs = sqliteDocs.filter(
+      (doc) =>
+        !configDocStartUrls.includes(doc.startUrl) &&
+        !preIndexedDocs[doc.startUrl],
+    );
+
+    for (const doc of newDocs) {
+      console.log(`Indexing new doc: ${doc.startUrl}`);
+      Telemetry.capture("add_docs_config", { url: doc.startUrl });
+
+      const generator = this.indexAndAdd(doc);
+      while (!(await generator.next()).done) {}
+    }
+
+    for (const doc of deletedDocs) {
+      console.log(`Deleting doc: ${doc.startUrl}`);
+      await this.delete(doc.startUrl);
+    }
+  }
+
+  private hasDocsContextProvider() {
+    return !!this.config.contextProviders?.some(
+      (provider) =>
+        provider.description.title === DocsContextProvider.description.title,
+    );
+  }
+
+  private async getOrCreateSqliteDb() {
+    if (!this.sqliteTable) {
+      this.sqliteTable = await open({
+        filename: getDocsSqlitePath(),
+        driver: sqlite3.Database,
+      });
+
+      this.sqliteTable
+        .exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title STRING NOT NULL,
+            startUrl STRING NOT NULL UNIQUE,
+            favicon STRING
+        )`);
+    }
+
+    return this.sqliteTable;
+  }
+
+  private async createLanceDocsTable(
+    connection: Connection,
+    initializationVector: number[],
+    tableName: string,
+  ) {
+    const mockRowTitle = "mockRowTitle";
+    const mockRow: LanceDbDocsRow[] = [
+      {
+        title: mockRowTitle,
+        vector: initializationVector,
+        starturl: "",
+        content: "",
+        path: "",
+        startline: 0,
+        endline: 0,
+      },
+    ];
+
+    const table = await connection.createTable(tableName, mockRow);
+
+    await table.delete(`title = '${mockRowTitle}'`);
+  }
+
+  private removeInvalidLanceTableNameChars(tableName: string) {
+    return tableName.replace(/:/g, "");
+  }
+
+  private async getLanceTableNameFromEmbeddingsProvider() {
+    const embeddingsProvider = await this.getEmbeddingsProvider();
+    const embeddingsProviderId = this.removeInvalidLanceTableNameChars(
+      embeddingsProvider.id,
+    );
+    const tableName = `${DocsService.lanceTableName}${embeddingsProviderId}`;
+
+    return tableName;
+  }
+
+  private async getOrCreateLanceTable(initializationVector?: number[]) {
+    const conn = await lancedb.connect(getLanceDbPath());
+    const tableNames = await conn.tableNames();
+    const tableNameFromEmbeddingsProvider =
+      await this.getLanceTableNameFromEmbeddingsProvider();
+
+    if (!tableNames.includes(tableNameFromEmbeddingsProvider)) {
+      if (initializationVector) {
+        await this.createLanceDocsTable(
+          conn,
+          initializationVector,
+          tableNameFromEmbeddingsProvider,
+        );
+      } else {
+        console.error(
+          "No existing Lance DB docs table was found and no initialization " +
+            "vector was passed to create one",
+        );
+      }
+    }
+
+    const table = await conn.openTable(tableNameFromEmbeddingsProvider);
+
+    this.lanceTableNamesSet.add(tableNameFromEmbeddingsProvider);
+
+    return table;
+  }
+
+  private async isJetBrains() {
+    const ideInfo = await this.ide.getIdeInfo();
+    return ideInfo.ideType === "jetbrains";
+  }
+
+  private async hasIndexedDoc(startUrl: string) {
+    const db = await this.getOrCreateSqliteDb();
+    const docs = await db.all(
+      `SELECT startUrl FROM ${DocsService.sqlitebTableName} WHERE startUrl = ?`,
+      startUrl,
+    );
+
+    return docs.length > 0;
+  }
+
+  private async addToLance({
+    chunks,
+    siteIndexingConfig,
+    embeddings,
+  }: AddParams) {
+    const sampleVector = embeddings[0];
+    const table = await this.getOrCreateLanceTable(sampleVector);
+
+    const rows: LanceDbDocsRow[] = chunks.map((chunk, i) => ({
+      vector: embeddings[i],
+      starturl: siteIndexingConfig.startUrl,
+      title: chunk.otherMetadata?.title || siteIndexingConfig.title,
+      content: chunk.content,
+      path: chunk.filepath,
+      startline: chunk.startLine,
+      endline: chunk.endLine,
+    }));
+
+    await table.add(rows);
+  }
+
+  private async addToSqlite({
+    siteIndexingConfig: { title, startUrl },
+    favicon,
+  }: AddParams) {
+    const db = await this.getOrCreateSqliteDb();
+    await db.run(
+      `INSERT INTO ${DocsService.sqlitebTableName} (title, startUrl, favicon) VALUES (?, ?, ?)`,
+      title,
+      startUrl,
+      favicon,
+    );
+  }
+
+  private addToConfig({ siteIndexingConfig }: AddParams) {
+    // Handles the case where a user has manually added the doc to config.json
+    // so it already exists in the file
+    const doesDocExist = this.config.docs?.some(
+      (doc) => doc.startUrl === siteIndexingConfig.startUrl,
+    );
+
+    if (!doesDocExist) {
+      editConfigJson((config) => ({
+        ...config,
+        docs: [...(config.docs ?? []), siteIndexingConfig],
+      }));
+    }
+  }
+
+  private async add(params: AddParams) {
+    await this.addToLance(params);
+    await this.addToSqlite(params);
+
+    const isPreIndexDoc = !!preIndexedDocs[params.siteIndexingConfig.startUrl];
+
+    if (!isPreIndexDoc) {
+      this.addToConfig(params);
+    }
+  }
+
+  private async deleteFromLance(startUrl: string) {
+    for (const tableName of this.lanceTableNamesSet) {
+      const conn = await lancedb.connect(getLanceDbPath());
+      const table = await conn.openTable(tableName);
+      await table.delete(`starturl = '${startUrl}'`);
+    }
+  }
+
+  private async deleteFromSqlite(startUrl: string) {
+    const db = await this.getOrCreateSqliteDb();
+    await db.run(
+      `DELETE FROM ${DocsService.sqlitebTableName} WHERE startUrl = ?`,
+      startUrl,
+    );
+  }
+
+  deleteFromConfig(startUrl: string) {
+    editConfigJson((config) => ({
+      ...config,
+      docs: config.docs?.filter((doc) => doc.startUrl !== startUrl) || [],
+    }));
+  }
+
+  private async fetchAndAddPreIndexedDocEmbeddings(title: string) {
+    const embeddingsProvider = await this.getEmbeddingsProvider(true);
+
+    const data = await downloadFromS3(
+      S3Buckets.continueIndexedDocs,
+      getS3Filename(embeddingsProvider.id, title),
+    );
+
+    const siteEmbeddings = JSON.parse(data) as SiteIndexingResults;
+    const startUrl = new URL(siteEmbeddings.url).toString();
+
+    await this.add({
+      siteIndexingConfig: {
+        startUrl,
+        title: siteEmbeddings.title,
+      },
+      favicon: preIndexedDocs[startUrl].faviconUrl,
+      chunks: siteEmbeddings.chunks,
+      embeddings: siteEmbeddings.chunks.map((c) => c.embedding),
+    });
+  }
+
+  private async fetchFavicon(siteIndexingConfig: SiteIndexingConfig) {
+    const faviconUrl =
+      siteIndexingConfig.faviconUrl ??
+      new URL("/favicon.ico", siteIndexingConfig.startUrl);
+
+    try {
+      const response = await fetch(faviconUrl);
+      const arrayBuffer = await response.arrayBuffer();
+      const base64 = btoa(
+        new Uint8Array(arrayBuffer).reduce(
+          (data, byte) => data + String.fromCharCode(byte),
+          "",
+        ),
+      );
+      const mimeType = response.headers.get("content-type") || "image/x-icon";
+
+      return `data:${mimeType};base64,${base64}`;
+    } catch {
+      console.error(`Failed to fetch favicon: ${faviconUrl}`);
+    }
+
+    return undefined;
   }
 
   private async shouldReindexDocsOnNewEmbeddingsProvider(
@@ -592,7 +689,9 @@ export class DocsService {
   private async reindexDocsOnNewEmbeddingsProvider(
     embeddingsProvider: EmbeddingsProvider,
   ) {
-    const docs = await this.list();
+    // We use config as our source of truth here since it contains additional information
+    // needed for re-crawling such as `faviconUrl` and `maxDepth`.
+    const { docs } = this.config;
 
     if (!docs || docs.length === 0) {
       return;
@@ -600,14 +699,10 @@ export class DocsService {
 
     this.ide.infoPopup("Reindexing docs with new embeddings provider");
 
-    for (const { title, baseUrl } of docs) {
-      await this.delete(baseUrl);
+    for (const doc of docs) {
+      await this.delete(doc.startUrl);
 
-      const generator = this.indexAndAdd({
-        title,
-        startUrl: baseUrl,
-        rootUrl: baseUrl,
-      });
+      const generator = this.indexAndAdd(doc);
 
       while (!(await generator.next()).done) {}
     }

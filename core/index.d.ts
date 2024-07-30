@@ -162,21 +162,21 @@ export interface ContextSubmenuItem {
   id: string;
   title: string;
   description: string;
-  iconUrl?: string;
+  icon?: string;
   metadata?: any;
 }
 
 export interface SiteIndexingConfig {
-  startUrl: string;
-  rootUrl: string;
   title: string;
+  startUrl: string;
+  rootUrl?: string;
   maxDepth?: number;
   faviconUrl?: string;
 }
 
 export interface SiteIndexingConfig {
   startUrl: string;
-  rootUrl: string;
+  rootUrl?: string;
   title: string;
   maxDepth?: number;
 }
@@ -270,6 +270,7 @@ export interface ContextItem {
   description: string;
   editing?: boolean;
   editable?: boolean;
+  icon?: string;
 }
 
 export interface ContextItemWithId {
@@ -279,6 +280,7 @@ export interface ContextItemWithId {
   id: ContextItemId;
   editing?: boolean;
   editable?: boolean;
+  icon?: string;
 }
 
 export interface InputModifiers {

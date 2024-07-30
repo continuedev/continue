@@ -68,7 +68,7 @@ export type ToCoreFromIdeOrWebviewProtocol = {
   "context/loadSubmenuItems": [{ title: string }, ContextSubmenuItem[]];
   "autocomplete/complete": [AutocompleteInput, string[]];
   "context/addDocs": [SiteIndexingConfig, void];
-  "context/removeDocs": [{ baseUrl: string }, void];
+  "context/removeDocs": [Pick<SiteIndexingConfig, "startUrl">, void];
   "context/indexDocs": [{ reIndex: boolean }, void];
   "autocomplete/cancel": [undefined, void];
   "autocomplete/accept": [{ completionId: string }, void];

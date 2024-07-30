@@ -1,11 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import type {
-  ContextItemId,
-  EmbeddingsProvider,
-  IDE,
-  IndexingProgressUpdate,
-  SiteIndexingConfig,
-} from ".";
+import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider.js";
 import { ConfigHandler } from "./config/ConfigHandler.js";
 import {
@@ -19,7 +13,7 @@ import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index.js";
-import { ControlPlaneClient } from "./control-plane/client";
+import { ControlPlaneClient } from "./control-plane/client.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
 import { DocsService } from "./indexing/docs/DocsService.js";
 import Ollama from "./llm/llms/Ollama.js";
@@ -263,12 +257,12 @@ export class Core {
 
       while (!(await generator.next()).done) {}
 
-      this.ide.infoPopup(`Successfully indexed ${msg.data.title}`);
+      this.ide.infoPopup(`Successfully indexed ${msg.data.startUrl}`);
       this.messenger.send("refreshSubmenuItems", undefined);
     });
 
     on("context/removeDocs", async (msg) => {
-      await this.docsService.delete(msg.data.baseUrl);
+      await this.docsService.delete(msg.data.startUrl);
       this.messenger.send("refreshSubmenuItems", undefined);
     });
 

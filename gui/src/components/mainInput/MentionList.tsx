@@ -85,8 +85,8 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
     props.item.type === "contextProvider"
       ? props.item.id
       : props.item.type === "slashCommand"
-        ? props.item.id
-        : props.item.type;
+      ? props.item.id
+      : props.item.type;
 
   const iconClass = `${props.className} flex-shrink-0`;
 
@@ -103,18 +103,16 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
     fallbackIcon = <Icon className={iconClass} height="1.2em" width="1.2em" />;
   }
 
-  if (false && props.item.iconUrl) {
-    try {
-      return (
-        <SafeImg
-          className="flex-shrink-0 pr-2"
-          src={props.item.iconUrl}
-          height="18em"
-          width="18em"
-          fallback={fallbackIcon}
-        />
-      );
-    } catch (e) {}
+  if (props.item.icon) {
+    return (
+      <SafeImg
+        className="flex-shrink-0 pr-2"
+        src={props.item.icon}
+        height="18em"
+        width="18em"
+        fallback={fallbackIcon}
+      />
+    );
   }
 
   return fallbackIcon;
@@ -122,9 +120,7 @@ function DropdownIcon(props: { className?: string; item: ComboBoxItem }) {
 
 const ItemsDiv = styled.div`
   border-radius: ${defaultBorderRadius};
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.05),
-    0px 10px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0px 10px 20px rgba(0, 0, 0, 0.1);
   font-size: 0.9rem;
   overflow-x: hidden;
   overflow-y: auto;

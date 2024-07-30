@@ -116,6 +116,8 @@ class DocsContextProvider extends BaseContextProvider {
       this.options?.nRetrieve ?? DocsContextProvider.nRetrieve,
     );
 
+    const favicon = await docsService.getFavicon(query);
+
     if (extras.reranker) {
       chunks = await this._rerankChunks(
         chunks,
@@ -127,6 +129,7 @@ class DocsContextProvider extends BaseContextProvider {
     return [
       ...chunks
         .map((chunk) => ({
+          icon: favicon,
           name: chunk.filepath.includes("/tree/main") // For display of GitHub files
             ? chunk.filepath
                 .split("/")
@@ -174,11 +177,12 @@ class DocsContextProvider extends BaseContextProvider {
       }
     }
 
-    for (const { baseUrl, title } of docs) {
-      submenuItemsMap.set(baseUrl, {
+    for (const { startUrl, title, favicon } of docs) {
+      submenuItemsMap.set(startUrl, {
         title,
-        id: baseUrl,
-        description: new URL(baseUrl).hostname,
+        id: startUrl,
+        description: new URL(startUrl).hostname,
+        icon: favicon,
       });
     }
 
