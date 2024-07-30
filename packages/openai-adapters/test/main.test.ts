@@ -162,10 +162,16 @@ const COMPLETION_TESTS: ({ chatOnly?: boolean } & LlmApiConfig)[] = [
   //   apiKey: process.env.OPENAI_API_KEY!,
   //   chatOnly: true,
   // },
+  // {
+  //   provider: "anthropic",
+  //   model: "claude-3-haiku-20240307",
+  //   apiKey: process.env.ANTHROPIC_API_KEY!,
+  //   chatOnly: true,
+  // },
   {
-    provider: "anthropic",
-    model: "claude-3-haiku-20240307",
-    apiKey: process.env.ANTHROPIC_API_KEY!,
+    provider: "cohere",
+    model: "command-r",
+    apiKey: process.env.COHERE_API_KEY!,
     chatOnly: true,
   },
 ];

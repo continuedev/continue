@@ -31,9 +31,7 @@ export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
         apiBase: "https://api.voyageai.com/v1/",
       });
     case "cohere":
-      return new CohereApi({
-        ...config,
-      });
+      return new CohereApi(config);
     case "anthropic":
       return new AnthropicApi(config);
     default:
