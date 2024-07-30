@@ -30,8 +30,8 @@
     "ts-jest": "^29.1.1"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-runtime": "^3.574.0",
-    "@aws-sdk/credential-providers": "^3.596.0",
+    "@aws-sdk/client-bedrock-runtime": "^3.620.1",
+    "@aws-sdk/credential-providers": "^3.620.1",
     "@continuedev/config-types": "^1.0.10",
     "@continuedev/llm-info": "^1.0.1",
     "@mozilla/readability": "^0.5.0",
