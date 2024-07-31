@@ -1,4 +1,4 @@
-import type { LineFilter } from "./lineStream";
+import type { LineFilter } from "./lineStream.js";
 
 export interface AutocompleteLanguageInfo {
   name: string;

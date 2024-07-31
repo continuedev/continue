@@ -1,4 +1,4 @@
-import { ChatMessage, LLMOptions, ModelProvider } from "../index";
+import { ChatMessage, LLMOptions, ModelProvider } from "../index.js";
 import { BaseLLM } from "../llm/index.js";
 
 class DummyLLM extends BaseLLM {

@@ -1,15 +1,13 @@
 import path from "path";
 import { fileURLToPath } from "url";
 
-process.env.NODE_OPTIONS = "--experimental-vm-modules";
-
 export default {
   transform: {
     "\\.[jt]sx?$": ["ts-jest", { useESM: true }],
   },
 
   moduleNameMapper: {
-    "(.+)\\.js": "$1",
+    "^(\\.{1,2}/.*)\\.js$": "$1",
   },
   extensionsToTreatAsEsm: [".ts"],
   preset: "ts-jest/presets/default-esm",
