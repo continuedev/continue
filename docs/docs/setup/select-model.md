@@ -49,7 +49,7 @@ _You can also use other commercial chat models by adding them to your `config.js
 
 ## Autocomplete
 
-You likely want to use a model that is 1-15B parameters for autocomplete.
+You likely want to use a model that is 1-15B parameters for autocomplete. You can read more about it [here](../features/tab-autocomplete.md#tab-autocomplete-beta)
 
 ### Commercial LLMs
 
