@@ -20,7 +20,8 @@ class PostgresContextProvider extends BaseContextProvider {
   static DEFAULT_SAMPLE_ROWS = 3;
 
   private async getPool() {
-    const pg = await require("pg");
+    const pg = await import("pg");
+
     return new pg.Pool({
       host: this.options.host,
       port: this.options.port,

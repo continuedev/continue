@@ -61,9 +61,7 @@ import {
   getPromptFiles,
   slashCommandFromPromptFile,
 } from "./promptFile.js";
-
-const { execSync } = require("child_process");
-
+import { execSync } from "child_process";
 function resolveSerializedConfig(filepath: string): SerializedContinueConfig {
   let content = fs.readFileSync(filepath, "utf8");
   const config = JSONC.parse(content) as unknown as SerializedContinueConfig;
@@ -535,7 +533,7 @@ async function buildConfigTs() {
       );
     } else {
       // Dynamic import esbuild so potentially disastrous errors can be caught
-      const esbuild = require("esbuild");
+      const esbuild = await import("esbuild");
 
       await esbuild.build({
         entryPoints: [getConfigTsPath()],
@@ -587,7 +585,7 @@ async function loadFullConfigNode(
     try {
       // Try config.ts first
       const configJsPath = getConfigJsPath();
-      const module = await require(configJsPath);
+      const module = await import(configJsPath);
       delete require.cache[require.resolve(configJsPath)];
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");
@@ -604,7 +602,7 @@ async function loadFullConfigNode(
       const configJsPathForRemote = getConfigJsPathForRemote(
         ideSettings.remoteConfigServerUrl,
       );
-      const module = await require(configJsPathForRemote);
+      const module = await import(configJsPathForRemote);
       delete require.cache[require.resolve(configJsPathForRemote)];
       if (!module.modifyConfig) {
         throw new Error("config.ts does not export a modifyConfig function.");

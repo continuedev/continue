@@ -1,6 +1,5 @@
 import { Chunk } from "../../index.js";
-
-const request = require("request");
+import request from "request";
 
 export async function downloadFromS3(
   bucket: string,

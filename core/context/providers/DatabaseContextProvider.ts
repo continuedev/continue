@@ -30,7 +30,7 @@ class DatabaseContextProvider extends BaseContextProvider {
 
     const [connectionName, table] = query.split(".");
 
-    const getDatabaseAdapter = await require("dbinfoz");
+    const { getDatabaseAdapter } = await import("dbinfoz");
 
     for (const connection of connections) {
       if (connection.name === connectionName) {
@@ -87,7 +87,7 @@ class DatabaseContextProvider extends BaseContextProvider {
       return contextItems;
     }
 
-    const getDatabaseAdapter = await require("dbinfoz");
+    const { getDatabaseAdapter } = await import("dbinfoz");
 
     for (const connection of connections) {
       const adapter = getDatabaseAdapter(

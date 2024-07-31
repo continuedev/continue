@@ -17,6 +17,9 @@ import {
   tearDownTestDir,
   TEST_DIR,
 } from "../testUtils/testDir.js";
+import { jest } from "@jest/globals";
+
+jest.useFakeTimers();
 
 const TEST_TS = `\
 function main() {
