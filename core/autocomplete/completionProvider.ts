@@ -266,6 +266,7 @@ export class CompletionProvider {
           filepath = getBasename(filepath);
         }
 
+        // @ts-ignore
         const pattern = ignore.default().add(options.disableInFiles);
         if (pattern.ignores(filepath)) {
           return undefined;

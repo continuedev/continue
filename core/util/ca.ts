@@ -7,12 +7,12 @@ export async function setupCa() {
     switch (process.platform) {
       case "darwin":
         // https://www.npmjs.com/package/mac-ca#usage
-        import macCa from "mac-ca";
+        const macCa = await import("mac-ca");
         macCa.addToGlobalAgent();
         break;
       case "win32":
         // https://www.npmjs.com/package/win-ca#caveats
-        import winCa from "win-ca";
+        const winCa = await import("win-ca");
         winCa.inject("+");
         break;
       default:
