@@ -321,6 +321,16 @@
           "title": "Engine",
           "description": "Azure OpenAI engine",
           "type": "string"
+        },
+        "capabilities": {
+          "type": "object",
+          "description": "We will attempt to automatically detect the capabilities of the model based on its title and provider, but this may not always be accurate. You can override the model's capabilities here.",
+          "properties": {
+            "uploadImage": {
+              "type": "boolean",
+              "description": "Indicates whether the model can upload images."
+            }
+          }
         }
       },
       "required": ["title", "provider", "model"],

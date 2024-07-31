@@ -1,4 +1,4 @@
-import { Chunk } from "../../index.js";
+import { Chunk } from "../../";
 import request from "request";
 
 export function getS3Filename(

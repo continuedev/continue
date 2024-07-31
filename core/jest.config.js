@@ -1,8 +1,6 @@
 import path from "path";
 import { fileURLToPath } from "url";
 
-process.env.NODE_OPTIONS = "--experimental-vm-modules";
-
 export default {
   transform: {
     "^.+\\.(ts|js)$": ["ts-jest", { useESM: true, isolatedModules: true }],

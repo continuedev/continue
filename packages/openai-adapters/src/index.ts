@@ -1,7 +1,11 @@
 import dotenv from "dotenv";
+import { AnthropicApi } from "./apis/Anthropic.js";
 import { AzureOpenAIApi } from "./apis/AzureOpenAI.js";
 import { BaseLlmApi } from "./apis/base.js";
 import { CohereApi } from "./apis/Cohere.js";
+import { DeepSeekApi } from "./apis/DeepSeek.js";
+import { GeminiApi } from "./apis/Gemini.js";
+import { JinaApi } from "./apis/Jina.js";
 import { OpenAIApi } from "./apis/OpenAI.js";
 
 dotenv.config();
@@ -30,8 +34,34 @@ export function constructLlmApi(config: LlmApiConfig): BaseLlmApi {
         apiBase: "https://api.voyageai.com/v1/",
       });
     case "cohere":
-      return new CohereApi({
+      return new CohereApi(config);
+    case "anthropic":
+      return new AnthropicApi(config);
+    case "gemini":
+      return new GeminiApi(config);
+    case "jina":
+      return new JinaApi(config);
+    case "deepinfra":
+      return new OpenAIApi({
         ...config,
+        apiBase: "https://api.deepinfra.com/v1/openai/",
+      });
+    case "deepseek":
+      return new DeepSeekApi(config);
+    case "groq":
+      return new OpenAIApi({
+        ...config,
+        apiBase: "https://api.groq.com/openai/v1/",
+      });
+    case "fireworks":
+      return new OpenAIApi({
+        ...config,
+        apiBase: "https://api.fireworks.ai/inference/v1",
+      });
+    case "together":
+      return new OpenAIApi({
+        ...config,
+        apiBase: "https://api.together.xyz/v1/",
       });
     default:
       throw new Error(`Unsupported LLM API format: ${config.provider}`);

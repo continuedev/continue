@@ -1,5 +1,5 @@
-import type { LLMOptions, ModelProvider } from "../../..";
-import { CONTROL_PLANE_URL } from "../../../control-plane/client";
+import { CONTROL_PLANE_URL } from "../../../control-plane/client.js";
+import type { LLMOptions, ModelProvider } from "../../../index.js";
 import OpenAI from "../OpenAI.js";
 
 class ContinueProxy extends OpenAI {
