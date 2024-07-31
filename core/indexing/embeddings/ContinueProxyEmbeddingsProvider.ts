@@ -1,6 +1,6 @@
-import { EmbeddingsProviderName, EmbedOptions } from "../..";
-import { CONTROL_PLANE_URL } from "../../control-plane/client";
-import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider";
+import { CONTROL_PLANE_URL } from "../../control-plane/client.js";
+import { EmbeddingsProviderName, EmbedOptions } from "../../index.js";
+import OpenAIEmbeddingsProvider from "./OpenAIEmbeddingsProvider.js";
 
 class ContinueProxyEmbeddingsProvider extends OpenAIEmbeddingsProvider {
   static providerName: EmbeddingsProviderName = "continue-proxy";

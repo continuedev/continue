@@ -266,7 +266,8 @@ export class CompletionProvider {
           filepath = getBasename(filepath);
         }
 
-        const pattern = ignore().add(options.disableInFiles);
+        // @ts-ignore
+        const pattern = ignore.default().add(options.disableInFiles);
         if (pattern.ignores(filepath)) {
           return undefined;
         }
@@ -586,7 +587,14 @@ export class CompletionProvider {
       });
     } else {
       // Let the template function format snippets
-      prompt = template(prefix, suffix, filepath, reponame, lang.name, snippets);
+      prompt = template(
+        prefix,
+        suffix,
+        filepath,
+        reponame,
+        lang.name,
+        snippets,
+      );
     }
 
     // Completion

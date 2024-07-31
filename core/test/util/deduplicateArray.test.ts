@@ -1,4 +1,4 @@
-import { deduplicateArray } from "../../util";
+import { deduplicateArray } from "../../util/index.js";
 
 describe("deduplicateArray", () => {
   it("should return an empty array when given an empty array", () => {

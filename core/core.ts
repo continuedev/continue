@@ -1,11 +1,4 @@
 import { v4 as uuidv4 } from "uuid";
-import type {
-  ContextItemId,
-  EmbeddingsProvider,
-  IDE,
-  IndexingProgressUpdate,
-  SiteIndexingConfig,
-} from ".";
 import { CompletionProvider } from "./autocomplete/completionProvider.js";
 import { ConfigHandler } from "./config/ConfigHandler.js";
 import {
@@ -19,17 +12,24 @@ import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
 import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache.js";
 import { ContinueServerClient } from "./continueServer/stubs/client.js";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index.js";
-import { ControlPlaneClient } from "./control-plane/client";
+import { ControlPlaneClient } from "./control-plane/client.js";
+import type {
+  ContextItemId,
+  EmbeddingsProvider,
+  IDE,
+  IndexingProgressUpdate,
+  SiteIndexingConfig,
+} from "./index.js";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
 import { DocsService } from "./indexing/docs/DocsService.js";
 import Ollama from "./llm/llms/Ollama.js";
-import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
+import type { FromCoreProtocol, ToCoreProtocol } from "./protocol/index.js";
 import { GlobalContext } from "./util/GlobalContext.js";
 import { logDevData } from "./util/devdata.js";
 import { DevDataSqliteDb } from "./util/devdataSqlite.js";
 import { fetchwithRequestOptions } from "./util/fetchWithOptions.js";
 import historyManager from "./util/history.js";
-import type { IMessenger, Message } from "./util/messenger";
+import type { IMessenger, Message } from "./util/messenger.js";
 import { editConfigJson } from "./util/paths.js";
 import { Telemetry } from "./util/posthog.js";
 import { streamDiffLines } from "./util/verticalEdit.js";
