@@ -1,6 +1,6 @@
-import { Minimatch } from "minimatch";
 import path from "node:path";
 import { FileType, IDE } from "../index.d.js";
+import ignore, { Ignore } from "ignore";
 import {
   DEFAULT_IGNORE_DIRS,
   DEFAULT_IGNORE_FILETYPES,
@@ -28,39 +28,8 @@ type WalkableEntry = {
 // helper struct used for the DFS walk
 type WalkContext = {
   walkableEntry: WalkableEntry;
-  ignoreFiles: IgnoreFile[];
+  ignore: Ignore;
 };
-
-class IgnoreFile {
-  private _rules: Minimatch[];
-
-  constructor(
-    public path: string,
-    public content: string,
-  ) {
-    this.path = path;
-    this.content = content;
-    this._rules = this.contentToRules(content);
-  }
-
-  public get rules() {
-    return this._rules;
-  }
-
-  private contentToRules(content: string): Minimatch[] {
-    const options = {
-      matchBase: true,
-      dot: true,
-      flipNegate: true,
-      nocase: true,
-    };
-    return content
-      .split(/\r?\n/)
-      .map((l) => l.trim())
-      .filter((l) => !/^#|^$/.test(l))
-      .map((l) => new Minimatch(l, options));
-  }
-}
 
 class DFSWalker {
   private readonly path: string;
@@ -84,23 +53,23 @@ class DFSWalker {
         type: 2 as FileType.Directory,
         entry: ["", 2 as FileType.Directory],
       },
-      ignoreFiles: [],
+      ignore: ignore().add(defaultIgnoreDir).add(defaultIgnoreFile),
     };
     const stack = [root];
     for (let cur = stack.pop(); cur; cur = stack.pop()) {
       const walkableEntries = await this.listDirForWalking(cur.walkableEntry);
-      const ignoreFiles = await this.getIgnoreFilesToApplyInDir(
-        cur.ignoreFiles,
+      const ignore = await this.getIgnoreToApplyInDir(
+        cur.ignore,
         walkableEntries,
       );
       for (const w of walkableEntries) {
-        if (!this.shouldInclude(w, ignoreFiles)) {
+        if (!this.shouldInclude(w, ignore)) {
           continue;
         }
         if (this.entryIsDirectory(w.entry)) {
           stack.push({
             walkableEntry: w,
-            ignoreFiles: ignoreFiles,
+            ignore: ignore,
           });
           if (this.options.onlyDirs) {
             // when onlyDirs is enabled the walker will only return directory names
@@ -127,24 +96,28 @@ class DFSWalker {
     });
   }
 
-  private async getIgnoreFilesToApplyInDir(
-    parentIgnoreFiles: IgnoreFile[],
+  private async getIgnoreToApplyInDir(
+    parentIgnore: Ignore,
     walkableEntries: WalkableEntry[],
-  ): Promise<IgnoreFile[]> {
+  ): Promise<Ignore> {
     const ignoreFilesInDir = await this.loadIgnoreFiles(walkableEntries);
     if (ignoreFilesInDir.length === 0) {
-      return parentIgnoreFiles;
+      return parentIgnore;
     }
-    return Array.prototype.concat(parentIgnoreFiles, ignoreFilesInDir);
+    const patterns = ignoreFilesInDir.map(c => {
+      return c.split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => !/^#|^$/.test(l));
+    }).flat();
+    return ignore().add(parentIgnore).add(patterns);
   }
 
   private async loadIgnoreFiles(
     entries: WalkableEntry[],
-  ): Promise<IgnoreFile[]> {
+  ): Promise<string[]> {
     const ignoreEntries = entries.filter((w) => this.isIgnoreFile(w.entry));
     const promises = ignoreEntries.map(async (w) => {
-      const content = await this.ide.readFile(w.absPath);
-      return new IgnoreFile(w.relPath, content);
+      return await this.ide.readFile(w.absPath);
     });
     return Promise.all(promises);
   }
@@ -156,7 +129,7 @@ class DFSWalker {
 
   private shouldInclude(
     walkableEntry: WalkableEntry,
-    ignoreFiles: IgnoreFile[],
+    ignore: Ignore,
   ) {
     if (this.entryIsSymlink(walkableEntry.entry)) {
       // If called from the root, a symlink either links to a real file in this repository,
@@ -166,32 +139,13 @@ class DFSWalker {
     }
     let relPath = walkableEntry.relPath;
     if (this.entryIsDirectory(walkableEntry.entry)) {
-      if (defaultIgnoreDir.ignores(walkableEntry.relPath)) {
-        return false;
-      }
       relPath = `${relPath}/`;
     } else {
       if (this.options.onlyDirs) {
         return false;
       }
-      if (defaultIgnoreFile.ignores(walkableEntry.relPath)) {
-        return false;
-      }
-      relPath = `/${relPath}`;
     }
-    let included = true;
-    for (const ignoreFile of ignoreFiles) {
-      for (const r of ignoreFile.rules) {
-        if (r.negate === included) {
-          // no need to test when the file is already NOT to be included unless this is a negate rule and vice versa
-          continue;
-        }
-        if (r.match(relPath)) {
-          included = r.negate;
-        }
-      }
-    }
-    return included;
+    return !ignore.ignores(relPath);
   }
 
   private entryIsDirectory(entry: Entry) {
