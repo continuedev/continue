@@ -1857,7 +1857,7 @@
         "allowAnonymousTelemetry": {
           "title": "Allow Anonymous Telemetry",
           "markdownDescription": "If this field is set to True, we will collect anonymous telemetry as described in the documentation page on telemetry. If set to `false`, we will not collect any data. Learn more in [the docs](https://docs.continue.dev/telemetry).",
-          "default": true,
+          "default": false,
           "type": "boolean"
         },
         "models": {

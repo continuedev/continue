@@ -41,6 +41,7 @@ export class Telemetry {
     Telemetry.os = os.platform();
     Telemetry.extensionVersion = extensionVersion;
 
+    /* Disable telemetry to protected tented code (we also set the default value to false)
     if (!allow) {
       Telemetry.client = undefined;
     } else {
@@ -58,5 +59,7 @@ export class Telemetry {
         console.error(`Failed to setup telemetry: ${e}`);
       }
     }
+    */
+    Telemetry.client = undefined;
   }
 }
