@@ -3,8 +3,8 @@ import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/Transform
 import { useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { useSelector } from "react-redux";
-import styled from "styled-components";
-import { StyledTooltip, lightGray, vscForeground } from "..";
+import styled, { keyframes } from "styled-components";
+import { StyledTooltip, lightGray, vscBackground } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { RootState } from "../../redux/store";
 import { getFontSize, isJetBrains } from "../../util";
@@ -21,17 +21,31 @@ const STATUS_COLORS = {
 
 const ProgressBarWrapper = styled.div`
   width: 100px;
-  height: 6px;
-  border-radius: 6px;
-  border: 0.5px solid ${lightGray};
+  height: 4px;
+  border-radius: 10px;
+  background-color: ${vscBackground};
+  // border: 1px solid rgba(0, 0, 0, 0.1);
+  border: 1px solid #999;
+  overflow: hidden;
 `;
 
-const ProgressBarFill = styled.div<{ completed: number; color?: string }>`
+const shine = keyframes`
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+`;
+
+const ProgressBarFill = styled.div<{ completed: number }>`
   height: 100%;
-  background-color: ${(props) => props.color || vscForeground};
-  border-radius: inherit;
-  transition: width 0.2s ease-in-out;
   width: ${(props) => props.completed}%;
+  border-radius: inherit;
+  background: linear-gradient(to right, #b0d4e3 0%, #4a90e2 50%, #b0d4e3 100%);
+  background-size: 200% auto;
+  animation: ${shine} 4s infinite linear;
+  transition: width 0.5s ease-in-out;
 `;
 
 const FlexDiv = styled.div`
@@ -63,14 +77,17 @@ const StatusInfo = styled.div`
 `;
 
 interface ProgressBarProps {
-  indexingState?: IndexingProgressUpdate;
+  indexingStates?: Map<string, IndexingProgressUpdate>;
+  recentIndexingUpdate?: IndexingProgressUpdate;
 }
 
 const IndexingProgressBar = ({
-  indexingState: indexingStateProp,
+  indexingStates: indexingStates,
+  recentIndexingUpdate: indexingStateProp,
 }: ProgressBarProps) => {
   // If sidebar is opened before extension initiates, define a default indexingState
   const defaultIndexingState: IndexingProgressUpdate = {
+    id: "1",
     status: "loading",
     progress: 0,
     desc: "",
@@ -79,6 +96,25 @@ const IndexingProgressBar = ({
 
   // If sidebar is opened after extension initializes, retrieve saved states.
   let initialized = false;
+
+  const [totalProgress, setTotalProgress] = useState(0);
+
+  useEffect(() => {
+    if (indexingStates) {
+      let totalProgress = 0;
+      let count = 0;
+
+      indexingStates.forEach((update) => {
+        totalProgress += update.progress;
+        count += 1;
+      });
+
+      const averageProgress = count > 0 ? totalProgress / count : 0;
+
+      setTotalProgress(Math.trunc(averageProgress * 100));
+    }
+  }, [indexingStates]);
+
   useEffect(() => {
     if (!initialized) {
       // Triggers retrieval for possible non-default states set prior to IndexingProgressBar initialization
@@ -86,11 +122,6 @@ const IndexingProgressBar = ({
       initialized = true;
     }
   }, []);
-
-  const fillPercentage = Math.min(
-    100,
-    Math.max(0, indexingState.progress * 100),
-  );
 
   const ideMessenger = useContext(IdeMessengerContext);
 
@@ -142,7 +173,7 @@ const IndexingProgressBar = ({
           </div>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
-              <StyledTooltip id="indexingFailed_dot" place="top">
+              <StyledTooltip id="indexingFailed_dot" place="top-start">
                 {getIndexingErrMsg(indexingState.desc)}
               </StyledTooltip>,
               tooltipPortalDiv,
@@ -161,7 +192,7 @@ const IndexingProgressBar = ({
           </div>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
-              <StyledTooltip id="indexingDone_dot" place="top">
+              <StyledTooltip id="indexingDone_dot" place="top-start">
                 Index up to date
                 <br />
                 Click to force re-indexing
@@ -174,7 +205,7 @@ const IndexingProgressBar = ({
           <StatusDot color={STATUS_COLORS.DISABLED}></StatusDot>
           {tooltipPortalDiv &&
             ReactDOM.createPortal(
-              <StyledTooltip id="indexingDisabled_dot" place="top">
+              <StyledTooltip id="indexingDisabled_dot" place="top-start">
                 {indexingState.desc}
               </StyledTooltip>,
               tooltipPortalDiv,
@@ -203,21 +234,64 @@ const IndexingProgressBar = ({
           }}
         >
           <StatusDot shouldBlink color={STATUS_COLORS.INDEXING}></StatusDot>
-          <div>
+          <div data-tooltip-id="indexingDetail">
             <FlexDiv>
               <ProgressBarWrapper>
-                <ProgressBarFill completed={fillPercentage} />
+                <ProgressBarFill completed={totalProgress} />
               </ProgressBarWrapper>
 
-              <StatusHeading
-                style={{ fontSize: `${getFontSize() - 3}px` }}
-              >{`${Math.trunc(indexingState.progress * 100)}%`}</StatusHeading>
+              <StatusHeading style={{ fontSize: `${getFontSize() - 3}px` }}>
+                {totalProgress}%{" "}
+                {indexingStates.size > 1 && `(${indexingStates.size})`}
+              </StatusHeading>
             </FlexDiv>
 
             <StatusInfo>
               {hovered ? "Click to pause" : indexingState.desc}
             </StatusInfo>
           </div>
+          {indexingStates.size > 1 &&
+            tooltipPortalDiv &&
+            ReactDOM.createPortal(
+              <StyledTooltip
+                id="indexingDetail"
+                place="top-start"
+                opacity={1.0}
+                style={{ textAlign: "left" }}
+              >
+                {Array.from(indexingStates.values()).map(
+                  (indexingUpdate, index) => (
+                    <div className="my-1" key={indexingUpdate.id}>
+                      <FlexDiv>
+                        <ProgressBarWrapper>
+                          <ProgressBarFill
+                            completed={indexingUpdate.progress * 100}
+                          />
+                        </ProgressBarWrapper>
+
+                        <StatusHeading
+                          style={{ fontSize: `${getFontSize() - 3}px` }}
+                        >
+                          {`${Math.trunc(indexingUpdate.progress * 100)}%`}
+                        </StatusHeading>
+                      </FlexDiv>
+
+                      <StatusInfo>{indexingUpdate.desc}</StatusInfo>
+
+                      {index < indexingStates.size - 1 && (
+                        <div
+                          style={{
+                            margin: "4px 0",
+                            borderTop: "1px solid rgba(136, 136, 136, 0.3)",
+                          }}
+                        />
+                      )}
+                    </div>
+                  ),
+                )}
+              </StyledTooltip>,
+              tooltipPortalDiv,
+            )}
         </FlexDiv>
       ) : null}
     </div>

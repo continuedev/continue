@@ -17,6 +17,7 @@ export interface CodebaseIndex {
   artifactId: string;
   relativeExpectedTime: number;
   update(
+    taskId: string,
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: MarkCompleteCallback,

@@ -190,7 +190,12 @@ const TooltipStyles = {
 };
 
 export function StyledTooltip(props) {
-  return <Tooltip {...props} style={TooltipStyles} />;
+  const combinedStyles = {
+    ...TooltipStyles,
+    ...props.style, // Merge any additional styles passed via props
+  };
+
+  return <Tooltip {...props} style={combinedStyles} />;
 }
 
 export const TextArea = styled.textarea`

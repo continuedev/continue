@@ -82,7 +82,7 @@ export class Core {
     private readonly ide: IDE,
     private readonly onWrite: (text: string) => Promise<void> = async () => {},
   ) {
-    this.indexingState = { status: "loading", desc: "loading", progress: 0 };
+    this.indexingState = { id: "1", status: "loading", desc: "loading", progress: 0 };
 
     const ideSettingsPromise = messenger.request("getIdeSettings", undefined);
     const sessionInfoPromise = messenger.request("getControlPlaneSessionInfo", {
@@ -144,10 +144,12 @@ export class Core {
       );
 
       // Index on initialization
+      const taskId = uuidv4();
       this.ide.getWorkspaceDirs().then(async (dirs) => {
         // Respect pauseCodebaseIndexOnStart user settings
         if (ideSettings.pauseCodebaseIndexOnStart) {
           await this.messenger.request("indexProgress", {
+            id: taskId,
             progress: 100,
             desc: "Initial Indexing Skipped",
             status: "paused",
@@ -155,7 +157,7 @@ export class Core {
           return;
         }
 
-        this.refreshCodebaseIndex(dirs);
+        this.refreshCodebaseIndex(taskId, dirs);
       });
     });
 
@@ -286,11 +288,17 @@ export class Core {
         ]),
       ])({ ...provider });
 
-      for (const site of siteIndexingOptions) {
-        await this.getEmbeddingsProviderAndIndexDoc(site, msg.data.reIndex);
-      }
+      // Create an array of promises for each site's indexing process
+      const indexingPromises = siteIndexingOptions.map(site =>
+        this.getEmbeddingsProviderAndIndexDoc(site, msg.data.reIndex)
+      );
 
-      this.ide.infoPopup("Docs indexing completed");
+      // Await for all promises to resolve
+      try {
+        await Promise.all(indexingPromises);
+      } catch (error: any) {
+        console.error(error.message);
+      }
     });
     on("context/loadSubmenuItems", async (msg) => {
       const config = await this.config();
@@ -640,7 +648,8 @@ export class Core {
     });
     on("index/forceReIndex", async (msg) => {
       const dirs = msg.data ? [msg.data] : await this.ide.getWorkspaceDirs();
-      await this.refreshCodebaseIndex(dirs);
+      const taskId = uuidv4();
+      await this.refreshCodebaseIndex(taskId, dirs);
     });
     on("index/setPaused", (msg) => {
       new GlobalContext().update("indexingPaused", msg.data);
@@ -673,12 +682,13 @@ export class Core {
 
   private indexingCancellationController: AbortController | undefined;
 
-  private async refreshCodebaseIndex(dirs: string[]) {
+  private async refreshCodebaseIndex(taskId: string, dirs: string[]) {
     if (this.indexingCancellationController) {
       this.indexingCancellationController.abort();
     }
     this.indexingCancellationController = new AbortController();
     for await (const update of (await this.codebaseIndexerPromise).refresh(
+      taskId,
       dirs,
       this.indexingCancellationController.signal,
     )) {
@@ -743,15 +753,15 @@ export class Core {
     const config = await this.config();
     const { embeddingsProvider } = config;
 
+    const taskId = uuidv4();
     for await (const update of this.docsService.indexAndAdd(
+      taskId,
       site,
       embeddingsProvider,
       reIndex,
     )) {
-      // Temporary disabled posting progress updates to the UI due to
-      // possible collision with code indexing progress updates.
-      // this.messenger.request("indexProgress", update);
-      // this.indexingState = update;
+      this.messenger.request("indexProgress", update);
+      this.indexingState = update;
     }
   }
 
@@ -764,12 +774,12 @@ export class Core {
       return;
     }
 
-    this.ide.infoPopup("Reindexing docs with new embeddings provider");
-
     for (const { title, baseUrl } of docs) {
       await this.docsService.delete(baseUrl);
+      const taskId = uuidv4();
 
       const generator = this.docsService.indexAndAdd(
+        taskId,
         { title, startUrl: baseUrl, rootUrl: baseUrl },
         embeddingsProvider,
       );
@@ -781,7 +791,5 @@ export class Core {
     // cleared and reindex the docs so that the table cannot end up in an
     // invalid state.
     this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
-
-    this.ide.infoPopup("Completed reindexing of all docs");
   }
 }

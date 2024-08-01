@@ -167,6 +167,7 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   async *update(
+    taskId: string,
     tag: IndexTag,
     results: RefreshIndexResults,
     markComplete: (
@@ -293,6 +294,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
         accumulatedProgress = progress * (1 - progressReservedForTagging);
         yield {
+          id: taskId,
           progress: accumulatedProgress,
           desc,
           status: "indexing",
@@ -338,6 +340,7 @@ export class LanceDbIndex implements CodebaseIndex {
       markComplete([{ path, cacheKey }], IndexResultType.AddTag);
       accumulatedProgress += 1 / results.addTag.length / 3;
       yield {
+        id: taskId,
         progress: accumulatedProgress,
         desc: `Indexing ${getBasename(path)}`,
         status: "indexing",
@@ -353,6 +356,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
         accumulatedProgress += 1 / toDel.length / 3;
         yield {
+          id: taskId,
           progress: accumulatedProgress,
           desc: `Stashing ${getBasename(path)}`,
           status: "indexing",
@@ -371,6 +375,7 @@ export class LanceDbIndex implements CodebaseIndex {
       );
       accumulatedProgress += 1 / results.del.length / 3;
       yield {
+        id: taskId,
         progress: accumulatedProgress,
         desc: `Removing ${getBasename(path)}`,
         status: "indexing",
@@ -379,6 +384,7 @@ export class LanceDbIndex implements CodebaseIndex {
 
     markComplete(results.del, IndexResultType.Delete);
     yield {
+      id: taskId,
       progress: 1,
       desc: "Completed Calculating Embeddings",
       status: "done",
