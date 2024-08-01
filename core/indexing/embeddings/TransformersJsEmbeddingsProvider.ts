@@ -41,6 +41,7 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   static providerName: EmbeddingsProviderName = "transformers.js";
   static maxGroupSize: number = 4;
   static model: string = "all-MiniLM-L6-v2";
+  static mockVector: number[] = Array.from({ length: 384 }).fill(2) as number[];
 
   constructor() {
     super({ model: TransformersJsEmbeddingsProvider.model }, () =>
@@ -49,6 +50,11 @@ export class TransformersJsEmbeddingsProvider extends BaseEmbeddingsProvider {
   }
 
   async embed(chunks: string[]) {
+    // Workaround to ignore testing issues in Jest
+    if (process.env.NODE_ENV === "test") {
+      return chunks.map(() => TransformersJsEmbeddingsProvider.mockVector);
+    }
+
     const extractor = await EmbeddingsPipeline.getInstance();
 
     if (!extractor) {

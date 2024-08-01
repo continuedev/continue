@@ -89,7 +89,7 @@ function getSubActionsForSubmenuItem(
         label: "Open in new tab",
         icon: "trash",
         action: () => {
-          ideMessenger.request("context/removeDocs", { baseUrl: item.id });
+          ideMessenger.request("context/removeDocs", { startUrl: item.id });
         },
       },
     ];
@@ -156,6 +156,7 @@ export function getContextProviderDropdownOptions(
           label: result.title,
           type: result.providerTitle as ComboBoxItemType,
           query: result.id,
+          icon: result.icon,
         };
       });
     } else if (
