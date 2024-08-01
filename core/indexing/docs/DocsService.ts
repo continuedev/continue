@@ -73,7 +73,7 @@ export default class DocsService {
   private lanceTableNamesSet = new Set<string>();
 
   private config!: ContinueConfig;
-  private sqliteTable?: Database;
+  private sqliteDb?: Database;
 
   // If we are instantiating a new DocsService from `getContextItems()`,
   // we have access to the direct config object.
@@ -467,24 +467,25 @@ export default class DocsService {
   }
 
   private async getOrCreateSqliteDb() {
-    if (!this.sqliteTable) {
-      this.sqliteTable = await open({
+    if (!this.sqliteDb) {
+      const db = await open({
         filename: getDocsSqlitePath(),
         driver: sqlite3.Database,
       });
 
-      await runSqliteMigrations(this.sqliteTable);
+      await runSqliteMigrations(db);
 
-      this.sqliteTable
-        .exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
+      db.exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title STRING NOT NULL,
             startUrl STRING NOT NULL UNIQUE,
             favicon STRING
         )`);
+
+      this.sqliteDb = db;
     }
 
-    return this.sqliteTable;
+    return this.sqliteDb;
   }
 
   private async createLanceDocsTable(
