@@ -356,6 +356,8 @@ export default class DocsService {
     const embeddingsProvider = await this.getEmbeddingsProvider();
     const [mockVector] = await embeddingsProvider.embed(["mockVector"]);
 
+    console.log({ mockVector });
+
     const lance = await this.getOrCreateLanceTable(mockVector);
     const sqlite = await this.getOrCreateSqliteDb();
 
@@ -506,7 +508,7 @@ export default class DocsService {
           tableNameFromEmbeddingsProvider,
         );
       } else {
-        console.error(
+        console.trace(
           "No existing Lance DB docs table was found and no initialization " +
             "vector was passed to create one",
         );

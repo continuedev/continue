@@ -1819,6 +1819,10 @@
               "maxDepth": {
                 "type": "integer",
                 "description": "The maximum depth to crawl the documentation site"
+              },
+              "favicon": {
+                "type": "string",
+                "description": "The URL path to a favicon for the site - by default, it will be `/favicon.ico` path from the Start URL"
               }
             },
             "required": ["title", "startUrl"]
