@@ -114,7 +114,7 @@ class DocsContextProvider extends BaseContextProvider {
 
     const [vector] = await embeddingsProvider.embed([extras.fullInput]);
 
-    let chunks = await docsService.retrieveEmbeddings(
+    let chunks = await docsService.retrieveChunks(
       query,
       vector,
       this.options?.nRetrieve ?? DocsContextProvider.nRetrieve,

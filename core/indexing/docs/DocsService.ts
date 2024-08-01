@@ -321,7 +321,7 @@ export default class DocsService {
     }
   }
 
-  async retrieveEmbeddings(
+  async retrieveChunks(
     startUrl: string,
     vector: number[],
     nRetrieve: number,
@@ -329,6 +329,7 @@ export default class DocsService {
   ): Promise<Chunk[]> {
     const table = await this.getOrCreateLanceTable({
       initializationVector: vector,
+      isPreIndexedDoc: !!preIndexedDocs[startUrl],
     });
 
     const docs: LanceDbDocsRow[] = await table
@@ -347,7 +348,7 @@ export default class DocsService {
       }
 
       await this.fetchAndAddPreIndexedDocEmbeddings(preIndexedDoc.title);
-      return await this.retrieveEmbeddings(startUrl, vector, nRetrieve, true);
+      return await this.retrieveChunks(startUrl, vector, nRetrieve, true);
     }
 
     return docs.map((doc) => ({

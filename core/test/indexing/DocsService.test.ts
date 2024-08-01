@@ -94,7 +94,7 @@ describe("DocsService Integration Tests", () => {
     // Lance DB check
     const embeddingsProvider = await docsService.getEmbeddingsProvider();
     const [mockVector] = await embeddingsProvider.embed(["test"]);
-    let retrievedChunks = await docsService.retrieveEmbeddings(
+    let retrievedChunks = await docsService.retrieveChunks(
       mockSiteConfig.startUrl,
       mockVector,
       5,
@@ -114,7 +114,7 @@ describe("DocsService Integration Tests", () => {
     );
 
     // LanceDB check
-    retrievedChunks = await docsService.retrieveEmbeddings(
+    retrievedChunks = await docsService.retrieveChunks(
       mockSiteConfig.startUrl,
       mockVector,
       5,
