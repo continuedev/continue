@@ -48,6 +48,4 @@ describe("crawlPage - GitHub repository", () => {
       false,
     );
   });
-
-  // Add more tests for edge cases and error handling
 });
