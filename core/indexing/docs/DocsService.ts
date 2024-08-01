@@ -64,6 +64,7 @@ export default class DocsService {
   static preIndexedDocsEmbeddingsProvider =
     new TransformersJsEmbeddingsProvider();
 
+  private static instance?: DocsService;
   public isInitialized: Promise<void>;
   public isSyncing: boolean = false;
 
@@ -79,11 +80,25 @@ export default class DocsService {
   // When instantiating the DocsService from core, we have access
   // to a ConfigHandler instance.
   constructor(
-    configOrHandler: ConfigHandler | ContinueConfig,
+    configOrHandler: ConfigHandler,
     private readonly ide: IDE,
     private readonly messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>,
   ) {
     this.isInitialized = this.init(configOrHandler);
+  }
+
+  static getSingleton() {
+    return DocsService.instance;
+  }
+
+  static createSingleton(
+    configOrHandler: ConfigHandler,
+    ide: IDE,
+    messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>,
+  ) {
+    const docsService = new DocsService(configOrHandler, ide, messenger);
+    DocsService.instance = docsService;
+    return docsService;
   }
 
   async isJetBrainsAndPreIndexedDocsProvider(): Promise<boolean> {
@@ -375,11 +390,11 @@ export default class DocsService {
    * subscribes to config updates, e.g. to trigger re-indexing
    * on a new embeddings provider.
    */
-  private async init(configOrHandler: ContinueConfig | ConfigHandler) {
-    if (configOrHandler instanceof ConfigHandler) {
-      this.config = await configOrHandler.loadConfig();
+  private async init(configHandler: ConfigHandler) {
+    if (configHandler instanceof ConfigHandler) {
+      this.config = await configHandler.loadConfig();
     } else {
-      this.config = configOrHandler;
+      this.config = configHandler;
     }
 
     const embeddingsProvider = await this.getEmbeddingsProvider();
@@ -395,30 +410,27 @@ export default class DocsService {
     await runLanceMigrations(lance);
     await runSqliteMigrations(sqlite);
 
-    if (configOrHandler instanceof ConfigHandler) {
-      configOrHandler.onConfigUpdate(async (newConfig) => {
-        const oldConfig = this.config;
+    configHandler.onConfigUpdate(async (newConfig) => {
+      const oldConfig = this.config;
 
-        // Need to update class property for config at the beginning of this callback
-        // to ensure downstream methods have access to the latest config.
-        this.config = newConfig;
+      // Need to update class property for config at the beginning of this callback
+      // to ensure downstream methods have access to the latest config.
+      this.config = newConfig;
 
-        if (oldConfig.docs !== newConfig.docs) {
-          await this.syncConfigAndSqlite();
-        }
+      if (oldConfig.docs !== newConfig.docs) {
+        await this.syncConfigAndSqlite();
+      }
 
-        const shouldReindex =
-          await this.shouldReindexDocsOnNewEmbeddingsProvider(
-            newConfig.embeddingsProvider.id,
-          );
+      const shouldReindex = await this.shouldReindexDocsOnNewEmbeddingsProvider(
+        newConfig.embeddingsProvider.id,
+      );
 
-        if (shouldReindex) {
-          await this.reindexDocsOnNewEmbeddingsProvider(
-            newConfig.embeddingsProvider,
-          );
-        }
-      });
-    }
+      if (shouldReindex) {
+        await this.reindexDocsOnNewEmbeddingsProvider(
+          newConfig.embeddingsProvider,
+        );
+      }
+    });
   }
 
   private async syncConfigAndSqlite() {
@@ -785,3 +797,5 @@ export default class DocsService {
     console.log("Completed reindexing of all docs");
   }
 }
+
+export const docsServiceSingleton = DocsService.getSingleton();

@@ -70,7 +70,7 @@ describe("DocsService Integration Tests", () => {
       ),
     );
 
-    docsService = new DocsService(configHandler, ide);
+    docsService = DocsService.createSingleton(configHandler, ide);
 
     await docsService.isInitialized;
   });

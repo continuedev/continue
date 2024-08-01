@@ -80,8 +80,12 @@ class DocsContextProvider extends BaseContextProvider {
     query: string,
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
-    const docsService = new DocsService(extras.config, extras.ide);
-    await docsService.isInitialized;
+    const docsService = DocsService.getSingleton();
+
+    if (!docsService) {
+      console.error(`${DocsService.name} has not been initialized`);
+      return [];
+    }
 
     const isJetBrainsAndPreIndexedDocsProvider =
       await docsService.isJetBrainsAndPreIndexedDocsProvider();
@@ -159,9 +163,12 @@ class DocsContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
-    console.log("loading submenus");
-    const docsService = new DocsService(args.config, args.ide);
-    await docsService.isInitialized;
+    const docsService = DocsService.getSingleton();
+
+    if (!docsService) {
+      console.error(`${DocsService.name} has not been initialized`);
+      return [];
+    }
 
     const docs = (await docsService.list()) ?? [];
     const canUsePreindexedDocs = await docsService.canUsePreindexedDocs();

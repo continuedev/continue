@@ -15,7 +15,7 @@ import { ContinueServerClient } from "./continueServer/stubs/client";
 import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { ControlPlaneClient } from "./control-plane/client";
 import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
-import DocsService from "./indexing/docs/DocsService";
+import DocsService, { docsServiceSingleton } from "./indexing/docs/DocsService";
 import Ollama from "./llm/llms/Ollama";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
 import { GlobalContext } from "./util/GlobalContext";
@@ -93,7 +93,7 @@ export class Core {
       this.controlPlaneClient,
     );
 
-    this.docsService = new DocsService(
+    this.docsService = DocsService.createSingleton(
       this.configHandler,
       this.ide,
       this.messenger,
@@ -272,8 +272,6 @@ export class Core {
         this.ide.infoPopup(`Successfully indexed ${msg.data.startUrl}`);
         this.messenger.send("refreshSubmenuItems", undefined);
       }
-
-      this.ide.infoPopup(`Successfully indexed ${msg.data.startUrl}`);
     });
 
     on("context/removeDocs", async (msg) => {
