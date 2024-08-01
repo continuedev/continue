@@ -18,7 +18,7 @@ The indexing process does the following:
 
 ## Existing `CodebaseIndex`es
 
-All indexes must be returned by `getIndexesToBuild` in [`indexCodebase.ts`](./indexCodebase.ts) if they are to be used.
+All indexes must be returned by `getIndexesToBuild` in [`CodebaseIndexer.ts`](./CodebaseIndexer.ts) if they are to be used.
 
 `CodeSnippetsCodebaseIndex`: uses tree-sitter queries to get a list of functions, classes, and other top-level code objects in each file
 `FullTextSearchCodebaseIndex`: creates a full-text search index using SQLite FTS5

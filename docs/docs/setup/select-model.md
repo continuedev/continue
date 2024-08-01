@@ -21,10 +21,10 @@ _We currently recommend the following open-source models:_
 - Unlimited GPU: `llama3-70b`
 - Limited GPU: `llama3-8B`
 
-#### DeepSeek Coder from DeepSeek
+#### DeepSeek Coder v2 from DeepSeek
 
-- Unlimited GPU: `deepseek-coder-33b`
-- Limited GPU: `deepseek-coder-6.7b`
+- Unlimited GPU: `deepseek-coder-v2:236b`
+- Limited GPU: `deepseek-coder-v2:16b`
 
 _You can also use other open-source chat models by adding them to your `config.json`._
 
@@ -61,10 +61,10 @@ Our current recommendation for autocomplete, if you are able to choose any model
 
 _We currently recommend the following open-source models:_
 
-#### DeepSeek Coder from DeepSeek
+#### DeepSeek Coder v2 from DeepSeek
 
-- Unlimited GPU: `deepseek-coder-6.7b`
-- Limited GPU: `deepseek-coder-1.3b`
+- Unlimited GPU: `deepseek-coder-v2:16b`
+- Limited GPU: `deepseek-coder:6.7b` or `deepseek-coder:1.3b`
 
 #### StarCoder 2 from Hugging Face
 
@@ -75,7 +75,7 @@ _You can also use other autocomplete models by adding them to your `config.json`
 
 ## Embeddings
 
-We recommend the following embeddings models, which are used for codebase retrieval as described [here](../walkthroughs/codebase-embeddings.md#embeddings-providers)
+We recommend the following embeddings models, which are used for codebase retrieval as described [here](../features/codebase-embeddings.md#embeddings-providers)
 
 ### Open-source models
 
