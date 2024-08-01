@@ -58,8 +58,17 @@ export function getAltKeyLabel(): string {
 export function getFontSize(): number {
   return getLocalStorage("fontSize") ?? (isJetBrains() ? 15 : 14);
 }
+
 export function isJetBrains() {
   return getLocalStorage("ide") === "jetbrains";
+}
+
+export function isWebEnvironment(): boolean {
+  return (
+    typeof window !== "undefined" &&
+    window.navigator &&
+    window.navigator.userAgent.indexOf("Electron") === -1
+  );
 }
 
 export function isPrerelease() {

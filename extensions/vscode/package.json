@@ -1,7 +1,7 @@
 {
   "name": "continue",
   "icon": "media/icon.png",
-  "version": "0.9.191",
+  "version": "0.9.192",
   "repository": {
     "type": "git",
     "url": "https://github.com/continuedev/continue"
@@ -74,7 +74,7 @@
           "default": true,
           "markdownDescription": "Continue collects anonymous usage data, cleaned of PII, to help us improve the product for our users. Read more  at [continue.dev › Telemetry](https://docs.continue.dev/telemetry)."
         },
-        "continue.enableContinueForTeamsBeta": {
+        "continue.enableContinueForTeams": {
           "type": "boolean",
           "default": false,
           "markdownDescription": "Enable Continue for teams beta features (requires window reload)"

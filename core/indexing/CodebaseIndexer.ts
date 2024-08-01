@@ -50,6 +50,40 @@ export class CodebaseIndexer {
     return indexes;
   }
 
+  public async refreshFile(file: string): Promise<void> {
+    if (this.pauseToken.paused) {
+      // NOTE: by returning here, there is a chance that while paused a file is modified and
+      // then after unpausing the file is not reindexed
+      return;
+    }
+    const workspaceDir = await this.getWorkspaceDir(file);
+    if (!workspaceDir) {
+      return;
+    }
+    const branch = await this.ide.getBranch(workspaceDir);
+    const repoName = await this.ide.getRepoName(workspaceDir);
+    const stats = await this.ide.getLastModified([file]);
+    const indexesToBuild = await this.getIndexesToBuild();
+    for (const codebaseIndex of indexesToBuild) {
+      const tag: IndexTag = {
+        directory: workspaceDir,
+        branch,
+        artifactId: codebaseIndex.artifactId,
+      };
+      const [results, lastUpdated, markComplete] = await getComputeDeleteAddRemove(
+        tag,
+        { ...stats },
+        (filepath) => this.ide.readFile(filepath),
+        repoName,
+      );
+      for await (const _ of codebaseIndex.update(tag, results, markComplete, repoName)) {
+        lastUpdated.forEach((lastUpdated, path) => {
+          markComplete([lastUpdated], IndexResultType.UpdateLastUpdated);
+        });
+      }
+    }
+  }
+
   async *refresh(
     workspaceDirs: string[],
     abortSignal: AbortSignal,
@@ -205,5 +239,15 @@ export class CodebaseIndexer {
         status: "done",
       };
     }
+  }
+
+  private async getWorkspaceDir(filepath: string): Promise<string | undefined> {
+    const workspaceDirs = await this.ide.getWorkspaceDirs();
+    for (const workspaceDir of workspaceDirs) {
+      if (filepath.startsWith(workspaceDir)) {
+        return workspaceDir;
+      }
+    }
+    return undefined;
   }
 }

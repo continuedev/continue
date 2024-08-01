@@ -1,4 +1,4 @@
-import { ModelProvider, TemplateType } from "../index.js";
+import { ModelCapability, ModelProvider, TemplateType } from "../index.js";
 import {
   anthropicTemplateMessages,
   chatmlTemplateMessages,
@@ -76,7 +76,9 @@ function modelSupportsImages(
   provider: ModelProvider,
   model: string,
   title: string | undefined,
+  capabilities: ModelCapability | undefined
 ): boolean {
+  if (capabilities?.uploadImage !== undefined) return capabilities.uploadImage
   if (!PROVIDER_SUPPORTS_IMAGES.includes(provider)) {
     return false;
   }

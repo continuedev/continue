@@ -5,6 +5,7 @@ import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
+import {Plugin} from "@tiptap/pm/state"
 import {
   ContextItemWithId,
   ContextProviderDescription,
@@ -42,6 +43,7 @@ import {
   getFontSize,
   isJetBrains,
   isMetaEquivalentKeyPressed,
+  isWebEnvironment,
 } from "../../util";
 import CodeBlockExtension from "./CodeBlockExtension";
 import { SlashCommand } from "./CommandsExtension";
@@ -259,7 +261,34 @@ function TipTapEditor(props: TipTapEditorProps) {
     extensions: [
       Document,
       History,
-      Image,
+      Image.extend({
+        addProseMirrorPlugins() {
+          const plugin = new Plugin({
+              props: {
+                handleDOMEvents: {
+                  paste(view, event) {
+                    const items = event.clipboardData.items;
+                    for (const item of items) {
+                      const file = item.getAsFile()
+                      file && 
+                      modelSupportsImages(defaultModel.provider, defaultModel.model, defaultModel.title, defaultModel.capabilities) &&
+                      handleImageFile(file).then((resp) => {
+                        if (!resp) return
+                        const [img, dataUrl] = resp
+                        const { schema } = view.state;
+                        const node = schema.nodes.image.create({ src: dataUrl });
+                        const tr = view.state.tr.insert(0, node);
+                        view.dispatch(tr);
+                      });
+                    }
+                    event.preventDefault();
+                  }
+                }
+              }
+            })
+          return [plugin]
+        }
+      }),
       Placeholder.configure({
         placeholder: () =>
           historyLengthRef.current === 0
@@ -440,6 +469,41 @@ function TipTapEditor(props: TipTapEditorProps) {
     if (isJetBrains()) {
       // This is only for VS Code .ipynb files
       return;
+    }
+
+    if (isWebEnvironment()) {
+      const handleKeyDown = async (event: KeyboardEvent) => {
+        if (!editor || !editorFocusedRef.current) return;
+        if ((event.metaKey || event.ctrlKey) && event.key === "x") {
+          // Cut
+          const selectedText = editor.state.doc.textBetween(
+            editor.state.selection.from,
+            editor.state.selection.to,
+          );
+          navigator.clipboard.writeText(selectedText);
+          editor.commands.deleteSelection();
+          event.preventDefault();
+        } else if ((event.metaKey || event.ctrlKey) && event.key === "c") {
+          // Copy
+          const selectedText = editor.state.doc.textBetween(
+            editor.state.selection.from,
+            editor.state.selection.to,
+          );
+          navigator.clipboard.writeText(selectedText);
+          event.preventDefault();
+        } else if ((event.metaKey || event.ctrlKey) && event.key === "v") {
+          // Paste
+          event.preventDefault(); // Prevent default paste behavior
+          const clipboardText = await navigator.clipboard.readText();
+          editor.commands.insertContent(clipboardText);
+        }
+      };
+
+      document.addEventListener("keydown", handleKeyDown);
+
+      return () => {
+        document.removeEventListener("keydown", handleKeyDown);
+      };
     }
 
     const handleKeyDown = async (event: KeyboardEvent) => {
@@ -732,6 +796,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             defaultModel.provider,
             defaultModel.model,
             defaultModel.title,
+            defaultModel.capabilities
           )
         ) {
           return;
@@ -780,6 +845,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           defaultModel.provider,
           defaultModel.model,
           defaultModel.title,
+          defaultModel.capabilities
         ) && (
           <>
             <HoverDiv></HoverDiv>

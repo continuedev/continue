@@ -1,3 +1,4 @@
+import { ControlPlaneSessionInfo } from "../control-plane/client.js";
 import type {
   ContinueRcJson,
   DiffLine,
@@ -10,8 +11,7 @@ import type {
   Range,
   RangeInFile,
   Thread,
-} from "..";
-import { ControlPlaneSessionInfo } from "../control-plane/client";
+} from "../index.js";
 
 export type ToIdeFromWebviewOrCoreProtocol = {
   // Methods from IDE type
