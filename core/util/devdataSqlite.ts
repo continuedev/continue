@@ -8,6 +8,8 @@ export class DevDataSqliteDb {
   static db: DatabaseConnection | null = null;
 
   private static async createTables(db: DatabaseConnection) {
+    await db.exec("PRAGMA journal_mode=WAL;");
+
     await db.exec(
       `CREATE TABLE IF NOT EXISTS tokens_generated (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
