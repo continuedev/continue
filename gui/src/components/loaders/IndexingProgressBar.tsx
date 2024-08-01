@@ -1,4 +1,5 @@
 import { IndexingProgressUpdate } from "core";
+import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 import { useContext, useEffect, useState } from "react";
 import ReactDOM from "react-dom";
 import { useSelector } from "react-redux";
@@ -8,7 +9,6 @@ import { IdeMessengerContext } from "../../context/IdeMessenger";
 import { RootState } from "../../redux/store";
 import { getFontSize, isJetBrains } from "../../util";
 import StatusDot from "./StatusDot";
-import TransformersJsEmbeddingsProvider from "core/indexing/embeddings/TransformersJsEmbeddingsProvider";
 
 const STATUS_COLORS = {
   DISABLED: lightGray, // light gray
