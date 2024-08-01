@@ -1,141 +1,183 @@
 /**
  * @jest-environment jsdom
  */
-
-import { TextEncoder, TextDecoder } from "util";
-(global as any).TextEncoder = TextEncoder;
-(global as any).TextDecoder = TextDecoder;
-
-import * as fs from "fs";
 import FileSystemIde from "../../util/filesystem.js";
-import { ContinueConfig } from "../../index.js";
+import { ContinueConfig, SiteIndexingConfig } from "../../index.js";
 import DocsService from "../../indexing/docs/DocsService.js";
-import { getConfigJsonPath } from "../../util/paths.js";
-
-// Mock dependencies
-// jest.mocked("../../util/getMetaUrl.ts");
+import { editConfigJson, getConfigJsonPath } from "../../util/paths.js";
+import { ConfigHandler } from "../../config/ConfigHandler.js";
+import { ControlPlaneClient } from "../../control-plane/client.js";
+import * as path from "path";
+import * as fs from "fs";
+import FreeTrialEmbeddingsProvider from "../../indexing/embeddings/FreeTrialEmbeddingsProvider.js";
+import preIndexedDocs from "../../indexing/docs/preIndexedDocs.js";
 
 describe("DocsService Integration Tests", () => {
   let ide: FileSystemIde;
-  let config: ContinueConfig;
+  let configHandler: ConfigHandler;
   let docsService: DocsService;
 
-  beforeAll(() => {
-    ide = new FileSystemIde(process.cwd());
-    config = JSON.parse(fs.readFileSync(getConfigJsonPath(), "utf8"));
-  });
+  const mockSiteConfig: SiteIndexingConfig = {
+    startUrl: "https://amplified.dev/",
+    title: "Test repo",
+    faviconUrl: "https://github.com/favicon.ico",
+  };
 
-  beforeEach(() => {
-    docsService = new DocsService(config, ide);
-  });
-
-  test.only("Indexing and retrieval of a new documentation site", async () => {
-    const siteConfig = {
-      startUrl: "https://github.com/continuedev/amplified.dev",
-      title: "Amplified Dev",
-    };
-
-    const indexGenerator = docsService.indexAndAdd(siteConfig);
-
-    for await (const update of indexGenerator) {
-      expect(update.status).toMatch(/indexing|done/);
+  async function clearConfigDir() {
+    const configFolder = path.dirname(getConfigJsonPath());
+    if (fs.existsSync(configFolder)) {
+      fs.rmSync(configFolder, { recursive: true, force: true });
     }
+  }
 
-    expect(await docsService.has(siteConfig.startUrl)).toBe(true);
+  /**
+   * We need to reload config explicitly to handle the scenario where the
+   * config file update listeners are not called before we attempt to
+   * use the new config
+   */
+  async function getReloadedConfig() {
+    await configHandler.reloadConfig();
+    const latestConfig = await configHandler.loadConfig();
 
-    const mockVector = [0.1, 0.2, 0.3];
-    const retrievedChunks = await docsService.retrieveEmbeddings(
-      siteConfig.startUrl,
+    return latestConfig;
+  }
+
+  beforeEach(async () => {
+    await clearConfigDir();
+
+    ide = new FileSystemIde(process.cwd());
+
+    configHandler = new ConfigHandler(
+      ide,
+      Promise.resolve({
+        remoteConfigSyncPeriod: 60,
+        userToken: "",
+        enableControlServerBeta: false,
+        pauseCodebaseIndexOnStart: false,
+        ideSettings: {} as any,
+        enableDebugLogs: false,
+        remoteConfigServerUrl: "",
+      }),
+      async () => {},
+      new ControlPlaneClient(
+        Promise.resolve({
+          accessToken: "",
+          account: {
+            id: "",
+            label: "",
+          },
+        }),
+      ),
+    );
+
+    docsService = new DocsService(configHandler, ide);
+
+    await docsService.isInitialized;
+  });
+
+  afterAll(async () => {
+    await clearConfigDir();
+  });
+
+  test("Indexing, retrieval, and deletion of a new documentation site", async () => {
+    const generator = docsService.indexAndAdd(mockSiteConfig);
+    while (!(await generator.next()).done) {}
+
+    let latestConfig = await getReloadedConfig();
+
+    // Sqlite check
+    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(true);
+
+    // config.json check
+    expect(latestConfig.docs).toContainEqual(mockSiteConfig);
+
+    // Lance DB check
+    const embeddingsProvider = await docsService.getEmbeddingsProvider();
+    const [mockVector] = await embeddingsProvider.embed(["test"]);
+    let retrievedChunks = await docsService.retrieveEmbeddings(
+      mockSiteConfig.startUrl,
       mockVector,
       5,
     );
 
     expect(retrievedChunks.length).toBeGreaterThan(0);
-    expect(retrievedChunks[0].otherMetadata?.title).toBe(siteConfig.title);
+
+    await docsService.delete(mockSiteConfig.startUrl);
+
+    // Sqlite check
+    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(false);
+
+    // config.json check
+    latestConfig = await getReloadedConfig();
+    expect(latestConfig.docs).not.toContainEqual(
+      expect.objectContaining(mockSiteConfig),
+    );
+
+    // LanceDB check
+    retrievedChunks = await docsService.retrieveEmbeddings(
+      mockSiteConfig.startUrl,
+      mockVector,
+      5,
+    );
+    expect(retrievedChunks.length).toBe(0);
   });
 
-  // test("2. Deleting a documentation site", async () => {
-  //   const siteConfig = {
-  //     startUrl: "https://example.com",
-  //     title: "Example Docs",
-  //   };
-  //   await docsService.indexAndAdd(siteConfig).next();
+  test("Reindexes when changing embeddings provider", async () => {
+    const originalEmbeddingsProvider =
+      await docsService.getEmbeddingsProvider();
 
-  //   await docsService.delete(siteConfig.startUrl);
+    // Change embeddings provider
+    editConfigJson((config) => ({
+      ...config,
+      embeddingsProvider: {
+        provider: FreeTrialEmbeddingsProvider.providerName,
+      },
+    }));
 
-  //   expect(await docsService.has(siteConfig.startUrl)).toBe(false);
-  //   expect(config.docs).not.toContainEqual(expect.objectContaining(siteConfig));
-  // });
+    await getReloadedConfig();
 
-  // test("3. Reindexing when changing the embeddings provider", async () => {
-  //   const siteConfigs = [
-  //     { startUrl: "https://example1.com", title: "Example Docs 1" },
-  //     { startUrl: "https://example2.com", title: "Example Docs 2" },
-  //   ];
+    const newEmbeddingsProvider = await docsService.getEmbeddingsProvider();
 
-  //   for (const siteConfig of siteConfigs) {
-  //     await docsService.indexAndAdd(siteConfig).next();
-  //   }
+    // Verify reindexing
+    const [originalVector] = await originalEmbeddingsProvider.embed(["test"]);
+    const [newMockVector] = await newEmbeddingsProvider.embed(["test"]);
 
-  //   // Change embeddings provider
-  //   const newConfig = {
-  //     ...config,
-  //     embeddingsProvider: {
-  //       id: "new-provider",
-  //       type: "openai",
-  //     } as EmbeddingsProvider,
-  //   };
-  //   docsService = new DocsService(newConfig, mockIde, mockMessenger);
+    expect(originalVector).not.toEqual(newMockVector);
+  });
 
-  //   // Verify reindexing
-  //   for (const siteConfig of siteConfigs) {
-  //     const retrievedChunks = await docsService.retrieveEmbeddings(
-  //       siteConfig.startUrl,
-  //       [0.1, 0.2, 0.3],
-  //       5,
-  //     );
-  //     expect(retrievedChunks.length).toBeGreaterThan(0);
-  //   }
-  // });
+  test("Handles pulling down and adding pre-indexed docs", async () => {
+    const preIndexedDoc = Object.values(preIndexedDocs)[0];
+    const generator = docsService.indexAndAdd(preIndexedDoc);
+    while (!(await generator.next()).done) {}
+  });
 
-  // test("4. Handling of pre-indexed documentation", async () => {
-  //   const preIndexedUrl = "https://preindexed.com";
-  //   const mockVector = [0.1, 0.2, 0.3];
+  test("Config synchronization with SQLite", async () => {
+    const generator = docsService.indexAndAdd(mockSiteConfig);
+    while (!(await generator.next()).done) {}
 
-  //   // First retrieval should trigger fetching and adding
-  //   const firstRetrieval = await docsService.retrieveEmbeddings(
-  //     preIndexedUrl,
-  //     mockVector,
-  //     5,
-  //   );
-  //   expect(firstRetrieval.length).toBeGreaterThan(0);
+    await getReloadedConfig();
 
-  //   // Second retrieval should work without fetching
-  //   const secondRetrieval = await docsService.retrieveEmbeddings(
-  //     preIndexedUrl,
-  //     mockVector,
-  //     5,
-  //   );
-  //   expect(secondRetrieval.length).toBeGreaterThan(0);
+    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(true);
 
-  //   expect(await docsService.has(preIndexedUrl)).toBe(true);
-  // });
+    editConfigJson((config) => {
+      const { docs, ...restConfig } = config;
+      return restConfig;
+    });
 
-  // test("6. Config synchronization with SQLite", async () => {
-  //   const newDoc = { startUrl: "https://newdoc.com", title: "New Doc" };
+    await getReloadedConfig();
 
-  //   // Add new doc to config
-  //   config.docs.push(newDoc);
-  //   docsService = new DocsService(config, mockIde, mockMessenger);
+    const startTime = Date.now();
+    const maxWaitTimeMs = 10_000;
 
-  //   // Verify it's indexed and added to SQLite
-  //   expect(await docsService.has(newDoc.startUrl)).toBe(true);
+    while (docsService.isSyncing) {
+      if (Date.now() - startTime > maxWaitTimeMs) {
+        throw new Error(
+          `Timeout: docsService.isSyncing did not complete within within ${maxWaitTimeMs}ms`,
+        );
+      }
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
 
-  //   // Remove doc from config
-  //   config.docs = config.docs.filter((doc) => doc.startUrl !== newDoc.startUrl);
-  //   docsService = new DocsService(config, mockIde, mockMessenger);
-
-  //   // Verify it's removed from SQLite and LanceDB
-  //   expect(await docsService.has(newDoc.startUrl)).toBe(false);
-  // });
+    expect(await docsService.has(mockSiteConfig.startUrl)).toBe(false);
+  });
 });

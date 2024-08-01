@@ -64,6 +64,9 @@ export default class DocsService {
   static preIndexedDocsEmbeddingsProvider =
     new TransformersJsEmbeddingsProvider();
 
+  public isInitialized: Promise<void>;
+  public isSyncing: boolean = false;
+
   private docsIndexingQueue = new Set<string>();
   private globalContext = new GlobalContext();
   private lanceTableNamesSet = new Set<string>();
@@ -80,7 +83,7 @@ export default class DocsService {
     private readonly ide: IDE,
     private readonly messenger?: IMessenger<ToCoreProtocol, FromCoreProtocol>,
   ) {
-    this.init(configOrHandler);
+    this.isInitialized = this.init(configOrHandler);
   }
 
   async isJetBrainsAndPreIndexedDocsProvider(): Promise<boolean> {
@@ -229,20 +232,39 @@ export default class DocsService {
       };
 
       try {
-        const subpathEmbeddings = await embeddingsProvider.embed(
-          chunkArticle(article, embeddingsProvider.maxChunkSize).map(
-            (chunk) => {
-              chunks.push(chunk);
+        const chunkedArticle = chunkArticle(
+          article,
+          embeddingsProvider.maxChunkSize,
+        );
 
-              return chunk.content;
-            },
-          ),
+        const chunkedArticleContents = chunkedArticle.map(
+          (chunk) => chunk.content,
+        );
+
+        chunks.push(...chunkedArticle);
+
+        const subpathEmbeddings = await embeddingsProvider.embed(
+          chunkedArticleContents,
         );
 
         embeddings.push(...subpathEmbeddings);
       } catch (e) {
         console.warn("Error chunking article: ", e);
       }
+    }
+
+    if (embeddings.length === 0) {
+      console.error(
+        `No embeddings were created for site: ${siteIndexingConfig.startUrl}\n Num chunks: ${chunks.length}`,
+      );
+
+      yield {
+        progress: 1,
+        desc: `No embeddings were created for site: ${siteIndexingConfig.startUrl}`,
+        status: "failed",
+      };
+
+      return;
     }
 
     // Add docs to databases
@@ -346,6 +368,13 @@ export default class DocsService {
     return favicon;
   }
 
+  /**
+   * A ConfigHandler is passed to the DocsService in `core` when
+   * we don't yet have access to the config object. This handler
+   * is used to set up a single instance of the DocsService that
+   * subscribes to config updates, e.g. to trigger re-indexing
+   * on a new embeddings provider.
+   */
   private async init(configOrHandler: ContinueConfig | ConfigHandler) {
     if (configOrHandler instanceof ConfigHandler) {
       this.config = await configOrHandler.loadConfig();
@@ -354,11 +383,13 @@ export default class DocsService {
     }
 
     const embeddingsProvider = await this.getEmbeddingsProvider();
-    const [mockVector] = await embeddingsProvider.embed(["mockVector"]);
+    const [mockVector] = await embeddingsProvider.embed([""]);
 
-    console.log({ mockVector });
+    this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
 
-    const lance = await this.getOrCreateLanceTable(mockVector);
+    const lance = await this.getOrCreateLanceTable({
+      initializationVector: mockVector,
+    });
     const sqlite = await this.getOrCreateSqliteDb();
 
     await runLanceMigrations(lance);
@@ -391,6 +422,8 @@ export default class DocsService {
   }
 
   private async syncConfigAndSqlite() {
+    this.isSyncing = true;
+
     const sqliteDocs = await this.list();
     const sqliteDocStartUrls = sqliteDocs.map((doc) => doc.startUrl) || [];
 
@@ -419,6 +452,8 @@ export default class DocsService {
       console.log(`Deleting doc: ${doc.startUrl}`);
       await this.delete(doc.startUrl);
     }
+
+    this.isSyncing = false;
   }
 
   private hasDocsContextProvider() {
@@ -465,6 +500,8 @@ export default class DocsService {
       },
     ];
 
+    console.log("creating new lance table");
+
     const table = await connection.createTable(tableName, mockRow);
 
     await table.delete(`title = '${mockRowTitle}'`);
@@ -492,7 +529,7 @@ export default class DocsService {
     initializationVector,
     isPreIndexedDoc,
   }: {
-    initializationVector?: number[];
+    initializationVector: number[];
     isPreIndexedDoc?: boolean;
   }) {
     const conn = await lancedb.connect(getLanceDbPath());

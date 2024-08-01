@@ -1,38 +1,32 @@
 import { v4 as uuidv4 } from "uuid";
-import type {
-  ContextItemId,
-  EmbeddingsProvider,
-  IDE,
-  IndexingProgressUpdate,
-  SiteIndexingConfig,
-} from ".";
-import { CompletionProvider } from "./autocomplete/completionProvider.js";
-import { ConfigHandler } from "./config/ConfigHandler.js";
+import type { ContextItemId, IDE, IndexingProgressUpdate } from ".";
+import { CompletionProvider } from "./autocomplete/completionProvider";
+import { ConfigHandler } from "./config/ConfigHandler";
 import {
   setupApiKeysMode,
   setupFreeTrialMode,
   setupLocalAfterFreeTrial,
   setupLocalMode,
-} from "./config/onboarding.js";
-import { createNewPromptFile } from "./config/promptFile.js";
-import { addModel, addOpenAIKey, deleteModel } from "./config/util.js";
-import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache.js";
-import { ContinueServerClient } from "./continueServer/stubs/client.js";
-import { getAuthUrlForTokenPage } from "./control-plane/auth/index.js";
+} from "./config/onboarding";
+import { createNewPromptFile } from "./config/promptFile";
+import { addModel, addOpenAIKey, deleteModel } from "./config/util";
+import { recentlyEditedFilesCache } from "./context/retrieval/recentlyEditedFilesCache";
+import { ContinueServerClient } from "./continueServer/stubs/client";
+import { getAuthUrlForTokenPage } from "./control-plane/auth/index";
 import { ControlPlaneClient } from "./control-plane/client";
-import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer.js";
-import DocsService from "./indexing/docs/DocsService.js";
-import Ollama from "./llm/llms/Ollama.js";
+import { CodebaseIndexer, PauseToken } from "./indexing/CodebaseIndexer";
+import DocsService from "./indexing/docs/DocsService";
+import Ollama from "./llm/llms/Ollama";
 import type { FromCoreProtocol, ToCoreProtocol } from "./protocol";
-import { GlobalContext } from "./util/GlobalContext.js";
-import { logDevData } from "./util/devdata.js";
-import { DevDataSqliteDb } from "./util/devdataSqlite.js";
-import { fetchwithRequestOptions } from "./util/fetchWithOptions.js";
-import historyManager from "./util/history.js";
+import { GlobalContext } from "./util/GlobalContext";
+import { logDevData } from "./util/devdata";
+import { DevDataSqliteDb } from "./util/devdataSqlite";
+import { fetchwithRequestOptions } from "./util/fetchWithOptions";
+import historyManager from "./util/history";
 import type { IMessenger, Message } from "./util/messenger";
-import { editConfigJson } from "./util/paths.js";
-import { Telemetry } from "./util/posthog.js";
-import { streamDiffLines } from "./util/verticalEdit.js";
+import { editConfigJson } from "./util/paths";
+import { Telemetry } from "./util/posthog";
+import { streamDiffLines } from "./util/verticalEdit";
 
 export class Core {
   // implements IMessenger<ToCoreProtocol, FromCoreProtocol>
@@ -263,9 +257,21 @@ export class Core {
 
     // Context providers
     on("context/addDocs", async (msg) => {
-      const generator = this.docsService.indexAndAdd(msg.data);
+      let hasFailed = false;
 
-      while (!(await generator.next()).done) {}
+      for await (const result of this.docsService.indexAndAdd(msg.data)) {
+        if (result.status === "failed") {
+          hasFailed = true;
+          break;
+        }
+      }
+
+      if (hasFailed) {
+        this.ide.infoPopup(`Failed to index ${msg.data.startUrl}`);
+      } else {
+        this.ide.infoPopup(`Successfully indexed ${msg.data.startUrl}`);
+        this.messenger.send("refreshSubmenuItems", undefined);
+      }
 
       this.ide.infoPopup(`Successfully indexed ${msg.data.startUrl}`);
     });

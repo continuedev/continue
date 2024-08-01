@@ -11,7 +11,7 @@ export async function runLanceMigrations(table: Table) {
         try {
           const schema = await table.schema;
 
-          if (schema.fields.some((field) => field.name === "baseurl")) {
+          if (schema.fields.some((field: any) => field.name === "baseurl")) {
             await table.alterColumns([{ path: "baseurl", rename: "starturl" }]);
           }
         } finally {

@@ -250,7 +250,6 @@ export class ConfigHandler {
 
   private updateListeners: ((newConfig: ContinueConfig) => void)[] = [];
   onConfigUpdate(listener: (newConfig: ContinueConfig) => void) {
-    console.log("onconfigupdate");
     this.updateListeners.push(listener);
   }
 

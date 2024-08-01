@@ -81,6 +81,7 @@ class DocsContextProvider extends BaseContextProvider {
     extras: ContextProviderExtras,
   ): Promise<ContextItem[]> {
     const docsService = new DocsService(extras.config, extras.ide);
+    await docsService.isInitialized;
 
     const isJetBrainsAndPreIndexedDocsProvider =
       await docsService.isJetBrainsAndPreIndexedDocsProvider();
@@ -158,7 +159,10 @@ class DocsContextProvider extends BaseContextProvider {
   async loadSubmenuItems(
     args: LoadSubmenuItemsArgs,
   ): Promise<ContextSubmenuItem[]> {
+    console.log("loading submenus");
     const docsService = new DocsService(args.config, args.ide);
+    await docsService.isInitialized;
+
     const docs = (await docsService.list()) ?? [];
     const canUsePreindexedDocs = await docsService.canUsePreindexedDocs();
 
