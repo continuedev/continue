@@ -17,8 +17,5 @@
     "**/binary": true,
     "**/core/vendor/**": true,
     "**/gui/dist": true
-  },
-  "jest.nodeEnv": {
-    "NODE_OPTIONS": "--experimental-vm-modules"
   }
 }

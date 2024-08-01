@@ -67,11 +67,6 @@ async function getLinksFromUrl(url: string, path: string) {
   const location = new URL(path, url);
   let response;
 
-  // curl -L \
-  // -H "Accept: application/vnd.github+json" \
-  // -H "X-GitHub-Api-Version: 2022-11-28" \
-  // https://api.github.com/repos/Patrick-Erichsen/test-github-repo-for-crawling/contents/docs-depth-1/docs-depth-1.md
-
   try {
     response = await fetch(location.toString());
   } catch (error: unknown) {

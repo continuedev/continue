@@ -4,13 +4,12 @@ import {
   ContextProviderDescription,
   ContextProviderExtras,
   ContextSubmenuItem,
-  EmbeddingsProvider,
   LoadSubmenuItemsArgs,
-} from "../../index.js";
-import DocsService from "../../indexing/docs/DocsService.js";
-import preIndexedDocs from "../../indexing/docs/preIndexedDocs.js";
-import { Telemetry } from "../../util/posthog.js";
-import { BaseContextProvider } from "../index.js";
+} from "../..";
+import DocsService from "../../indexing/docs/DocsService";
+import preIndexedDocs from "../../indexing/docs/preIndexedDocs";
+import { Telemetry } from "../../util/posthog";
+import { BaseContextProvider } from "../";
 
 class DocsContextProvider extends BaseContextProvider {
   static nRetrieve = 30;

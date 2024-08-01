@@ -398,17 +398,8 @@ export default class DocsService {
     }
 
     const embeddingsProvider = await this.getEmbeddingsProvider();
-    const [mockVector] = await embeddingsProvider.embed([""]);
 
     this.globalContext.update("curEmbeddingsProviderId", embeddingsProvider.id);
-
-    const lance = await this.getOrCreateLanceTable({
-      initializationVector: mockVector,
-    });
-    const sqlite = await this.getOrCreateSqliteDb();
-
-    await runLanceMigrations(lance);
-    await runSqliteMigrations(sqlite);
 
     configHandler.onConfigUpdate(async (newConfig) => {
       const oldConfig = this.config;
@@ -482,6 +473,8 @@ export default class DocsService {
         driver: sqlite3.Database,
       });
 
+      await runSqliteMigrations(this.sqliteTable);
+
       this.sqliteTable
         .exec(`CREATE TABLE IF NOT EXISTS ${DocsService.sqlitebTableName} (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -512,9 +505,9 @@ export default class DocsService {
       },
     ];
 
-    console.log("creating new lance table");
-
     const table = await connection.createTable(tableName, mockRow);
+
+    await runLanceMigrations(table);
 
     await table.delete(`title = '${mockRowTitle}'`);
   }
