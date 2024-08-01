@@ -14,7 +14,8 @@
     }
   },
   "search.exclude": {
-    "./binary": true,
-    "**/core/vendor/**": true
+    "**/binary": true,
+    "**/core/vendor/**": true,
+    "**/gui/dist": true
   }
 }

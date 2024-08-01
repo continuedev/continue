@@ -1578,55 +1578,6 @@
             "properties": {
               "name": {
                 "enum": [
-                  "docs"
-                ]
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "params": {
-                "properties": {
-                  "sites": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "title": {
-                          "type": "string"
-                        },
-                        "startUrl": {
-                          "type": "string"
-                        },
-                        "rootUrl": {
-                          "type": "string"
-                        },
-                        "maxDepth": {
-                          "type": "integer"
-                        }
-                      },
-                      "required": [
-                        "title",
-                        "startUrl"
-                      ]
-                    }
-                  }
-                },
-                "required": [
-                  "sites"
-                ]
-              }
-            },
-            "required": [
-              "params"
-            ]
-          }
-        },
-        {
-          "if": {
-            "properties": {
-              "name": {
-                "enum": [
                   "google"
                 ]
               }
@@ -2081,6 +2032,10 @@
               "maxDepth": {
                 "type": "integer",
                 "description": "The maximum depth to crawl the documentation site"
+              },
+              "favicon": {
+                "type": "string",
+                "description": "The URL path to a favicon for the site - by default, it will be `/favicon.ico` path from the Start URL"
               }
             },
             "required": [
