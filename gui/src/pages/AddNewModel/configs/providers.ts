@@ -19,6 +19,10 @@ export interface InputDescriptor {
   required?: boolean;
   description?: string;
   [key: string]: any;
+  // the following are used only for WatsonX provider
+  // these attributes are used to determine whether the input is used in Api Authentication or Credentials section
+  isWatsonxAuthenticatedByApiKey?: boolean;
+  isWatsonxAuthenticatedByCredentials?: boolean;
   isWatsonxAttribute?: boolean;
 }
 
@@ -511,14 +515,17 @@ After it's up and running, you can start using Continue.`,
     refPage: "watsonX",
     description:
       "Explore foundation models from IBM and other third-parties depending on your use case.",
-    longDescription: `WatsonX`,
+    longDescription: `Watsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.
+[Steps to setup WatsonX provider](watsonx.md) `,
     collectInputFor: [
       {
         inputType: "text",
         key: "watsonxUrl",
         label: "WatsonX URL",
-        placeholder: "Enter your WatsonxUrl",
+        placeholder: "Enter your WatsonX Url",
         required: true,
+        isWatsonxAuthenticatedByApiKey: true,
+        isWatsonxAuthenticatedByCredentials: true
       },
       {
         inputType: "text",
@@ -526,6 +533,7 @@ After it's up and running, you can start using Continue.`,
         label: "WatsonX API Key",
         placeholder: "Enter your API key",
         required: true,
+        isWatsonxAuthenticatedByApiKey: true
       },
       {
         inputType: "text",
@@ -533,6 +541,8 @@ After it's up and running, you can start using Continue.`,
         label: "WatsonX Project Id",
         placeholder: "Enter your project Id",
         required: true,
+        isWatsonxAuthenticatedByApiKey: true,
+        isWatsonxAuthenticatedByCredentials: true
       },
       {
         inputType: "text",
@@ -540,26 +550,28 @@ After it's up and running, you can start using Continue.`,
         label: "WatsonX username",
         placeholder: "Enter your Username",
         required: true,
+        isWatsonxAuthenticatedByCredentials: true
       },
       {
         inputType: "text",
-        key: "wsatsonxPassword",
+        key: "watsonxPassword",
         label: "WatsonX Password",
         placeholder: "Enter your password",
         required: true,
+        isWatsonxAuthenticatedByCredentials: true
       },
       {
         inputType: "text",
         key: "title",
         label: "Model name",
-        placeholder: "Enter the Model name",
+        placeholder: "Eg : Granite Chat",
         isWatsonxAttribute: true,
       },
       {
         inputType: "text",
         key: "model",
         label: "Model Id",
-        placeholder: "Enter the model id",
+        placeholder: "Eg : ibm/granite-13b-chat-v2",
         isWatsonxAttribute: true,
       },
 

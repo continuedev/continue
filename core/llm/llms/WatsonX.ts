@@ -150,10 +150,13 @@ class WatsonX extends BaseLLM {
     options: CompletionOptions,
   ): AsyncGenerator<ChatMessage> {
     var now = (new Date()).getTime() / 1000;
-    if (watsonxConfig.accessToken === undefined || now > watsonxConfig.accessToken.expiration) {
+    if (watsonxConfig.accessToken === undefined || now > watsonxConfig.accessToken.expiration || watsonxConfig.accessToken.token === undefined) {
       watsonxConfig.accessToken = await this.getBearerToken();
     } else {
       console.log(`Reusing token (expires in ${(watsonxConfig.accessToken.expiration - now) / 60} mins)`);
+    }
+    if (watsonxConfig.accessToken.token === undefined) {
+      throw new Error(`Something went wrong. Check your credentials, please.`);
     }
     var streamResponse = await fetch(`${this.watsonxUrl}/ml/v1/text/generation_stream?version=2023-05-29`, {
       method: "POST",
@@ -164,7 +167,7 @@ class WatsonX extends BaseLLM {
       body: JSON.stringify({
         "input": messages[messages.length - 1].content,
         "parameters": {
-          "decoding_method": "greedy",
+          "decoding_method": "greedykugi",
           "max_new_tokens": options.maxTokens ?? 1024,
           "min_new_tokens": 1,
           "stop_sequences": [],
@@ -176,7 +179,7 @@ class WatsonX extends BaseLLM {
     });
 
     if (!streamResponse.ok || streamResponse.body === null) {
-      console.error("No response received, reverting to fallback mode");
+      throw new Error("Something went wrong. No response received, check your connection");
     }
     else {
       const reader = streamResponse.body.getReader();

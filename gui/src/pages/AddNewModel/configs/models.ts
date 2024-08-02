@@ -1,4 +1,4 @@
-import { ILLM, ModelProvider } from "core";
+import { ChatMessage, ILLM, ModelProvider } from "core";
 import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
 import { InputDescriptor } from "./providers";
 
@@ -9,7 +9,6 @@ export interface PackageDimension {
   description: string;
   options: { [key: string]: { [key: string]: any } };
 }
-
 export interface ModelPackage {
   title: string;
   icon?: string;
@@ -705,6 +704,7 @@ export const models: { [key: string]: ModelPackage } = {
       model: "ibm/granite-13b-instruct-v2",
       contextLength: 20_000,
       title: "Granite Code",
+      systemMessage: `You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.`
     },
     providerOptions: ["watsonx"],
     icon: "WatsonX.png",
