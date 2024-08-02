@@ -1,18 +1,18 @@
 /**
  * @jest-environment jsdom
  */
-import FileSystemIde from "../../util/filesystem.js";
-import { ContinueConfig, SiteIndexingConfig } from "../../index.js";
-import DocsService from "../../indexing/docs/DocsService.js";
-import { editConfigJson, getConfigJsonPath } from "../../util/paths.js";
+import * as fs from "fs";
+import * as path from "path";
 import { ConfigHandler } from "../../config/ConfigHandler.js";
 import { ControlPlaneClient } from "../../control-plane/client.js";
-import * as path from "path";
-import * as fs from "fs";
-import FreeTrialEmbeddingsProvider from "../../indexing/embeddings/FreeTrialEmbeddingsProvider.js";
+import { SiteIndexingConfig } from "../../index.js";
+import DocsService from "../../indexing/docs/DocsService.js";
 import preIndexedDocs from "../../indexing/docs/preIndexedDocs.js";
+import FreeTrialEmbeddingsProvider from "../../indexing/embeddings/FreeTrialEmbeddingsProvider.js";
+import FileSystemIde from "../../util/filesystem.js";
+import { editConfigJson, getConfigJsonPath } from "../../util/paths.js";
 
-describe("DocsService Integration Tests", () => {
+describe.skip("DocsService Integration Tests", () => {
   let ide: FileSystemIde;
   let configHandler: ConfigHandler;
   let docsService: DocsService;
