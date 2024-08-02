@@ -12,7 +12,7 @@ import FreeTrialEmbeddingsProvider from "../../indexing/embeddings/FreeTrialEmbe
 import FileSystemIde from "../../util/filesystem.js";
 import { editConfigJson, getConfigJsonPath } from "../../util/paths.js";
 
-describe.skip("DocsService Integration Tests", () => {
+describe("DocsService Integration Tests", () => {
   let ide: FileSystemIde;
   let configHandler: ConfigHandler;
   let docsService: DocsService;
