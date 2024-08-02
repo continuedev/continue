@@ -39,6 +39,7 @@ export async function getContextProvidersString(
         }
 
         return provider.getContextItems("", {
+          config,
           ide,
           embeddingsProvider: config.embeddingsProvider,
           reranker: config.reranker,

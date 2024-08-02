@@ -187,7 +187,8 @@
             "cloudflare",
             "deepseek",
             "azure",
-            "msty"
+            "msty",
+            "watsonx"
           ],
           "markdownEnumDescriptions": [
             "### OpenAI\nUse gpt-4, gpt-3.5-turbo, or any other OpenAI model. See [here](https://openai.com/product#made-for-developers) to obtain an API key.\n\n> [Reference](https://docs.continue.dev/reference/Model%20Providers/openai)",
@@ -211,7 +212,8 @@
             "### Cloudflare Workers AI\n\n[Reference](https://developers.cloudflare.com/workers-ai/)",
             "### Deepseek\n Deepseek's API provides the best pricing for their state-of-the-art Deepseek Coder models. To get started, obtain an API key from [their console](https://platform.deepseek.com/api_keys)",
             "### Azure OpenAI\n Azure OpenAI lets you securely run OpenAI's models on Azure. To get started, follow the steps [here](https://docs.continue.dev/reference/Model%20Providers/azure)",
-            "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)"
+            "### Msty\nMsty is the simplest way to get started with online or local LLMs on all desktop platforms - Windows, Mac, and Linux. No fussing around, one-click and you are up and running. To get started, follow these steps:\n1. Download from [Msty.app](https://msty.app/), open the application, and click 'Setup Local AI'.\n2. Go to the Local AI Module page and download a model of your choice.\n3. Once the model has finished downloading, you can start asking questions through Continue.\n> [Reference](https://continue.dev/docs/reference/Model%20Providers/Msty)",
+            "### WatsonX\nWatsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks."
           ],
           "type": "string"
         },
@@ -1185,6 +1187,48 @@
               }
             }
           }
+        },
+        {
+          "if": {
+            "properties": {
+              "provider": {
+                "enum": ["watsonx"]
+              }
+            },
+            "required": ["provider"]
+          },
+          "then": {
+            "properties": {
+              "watsonxUrl": {
+                "type": "string"
+              },
+              "watsonxApiKey": {
+                "type": "string"
+              },
+              "watsonxZenApiKeyBase64": {
+                "type": "string"
+              },
+              "watsonxUsername": {
+                "type": "string"
+              },
+              "watsonxPassword": {
+                "type": "string"
+              },
+              "watsonxProjectId": {
+                "type": "string"
+              },
+              "model": {
+                "enum": [
+                  "ibm/granite-13b-chat-v2",
+                  "ibm/granite-13b-instruct-v2",
+                  "mistralai/mistral-large",
+                  "meta-llama/llama-3-8b-instruct",
+                  "meta-llama/llama-3-70b-instruct"
+                ]
+              }
+            },
+            "required": ["watsonxUrl", "watsonxProjectId"]
+          }
         }
       ]
     },
@@ -1427,46 +1471,6 @@
         }
       },
       "allOf": [
-        {
-          "if": {
-            "properties": {
-              "name": {
-                "enum": ["docs"]
-              }
-            }
-          },
-          "then": {
-            "properties": {
-              "params": {
-                "properties": {
-                  "sites": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "properties": {
-                        "title": {
-                          "type": "string"
-                        },
-                        "startUrl": {
-                          "type": "string"
-                        },
-                        "rootUrl": {
-                          "type": "string"
-                        },
-                        "maxDepth": {
-                          "type": "integer"
-                        }
-                      },
-                      "required": ["title", "startUrl"]
-                    }
-                  }
-                },
-                "required": ["sites"]
-              }
-            },
-            "required": ["params"]
-          }
-        },
         {
           "if": {
             "properties": {
@@ -1859,6 +1863,10 @@
               "maxDepth": {
                 "type": "integer",
                 "description": "The maximum depth to crawl the documentation site"
+              },
+              "favicon": {
+                "type": "string",
+                "description": "The URL path to a favicon for the site - by default, it will be `/favicon.ico` path from the Start URL"
               }
             },
             "required": ["title", "startUrl"]
@@ -1955,18 +1963,6 @@
           "title": "User Token",
           "description": "An optional token to identify the user.",
           "type": "string"
-        },
-        "dataServerUrl": {
-          "title": "Data Server Url",
-          "description": "The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
-          "default": "https://us-west1-autodebug.cloudfunctions.net",
-          "type": "string"
-        },
-        "disableSummaries": {
-          "title": "Disable Summaries",
-          "markdownDescription": "If set to `true`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
-          "default": false,
-          "type": "boolean"
         },
         "disableIndexing": {
           "title": "Disable Indexing",
@@ -2298,6 +2294,56 @@
               "default": false
             }
           }
+        },
+        "analytics": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": ["posthog", "logstash"],
+              "description": "The 3rd party analytics provider to use.",
+              "default": "posthog",
+              "markdownEnumDescriptions": [
+                "### Posthog\nTo use Posthog, set up an account, obtain your client key, and enter it in the client key field.",
+                "### Logstash\nContinue's Logstash integration uses the TCP input at the specified URL"
+              ]
+            },
+            "url": {
+              "type": "string",
+              "description": "The URL to which analytics will be sent"
+            },
+            "clientKey": {
+              "type": "string",
+              "description": "The client key to use for analytics"
+            }
+          },
+          "required": ["provider"],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["posthog"]
+                  }
+                }
+              },
+              "then": {
+                "required": ["clientKey"]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": ["logstash"]
+                  }
+                }
+              },
+              "then": {
+                "required": ["url"]
+              }
+            }
+          ]
         },
         "experimental": {
           "type": "object",

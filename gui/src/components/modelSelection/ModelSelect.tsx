@@ -31,9 +31,9 @@ const StyledListboxButton = styled(Listbox.Button)`
   gap: 2px;
   border: none;
   cursor: pointer;
-  font-size: ${() => `${getFontSize() - 3}px`};
+  font-size: ${getFontSize() - 2}px;
   background: transparent;
-  color: ${() => lightGray};
+  color: ${lightGray};
   &:focus {
     outline: none;
   }

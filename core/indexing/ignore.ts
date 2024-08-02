@@ -68,37 +68,35 @@ export const DEFAULT_IGNORE_FILETYPES = [
   // "*.prompt", // can be incredibly confusing for the LLM to have another set of instructions injected into the prompt
 ];
 
-// @ts-ignore
-export const defaultIgnoreFile = ignore.default().add(DEFAULT_IGNORE_FILETYPES);
+export const defaultIgnoreFile = ignore().add(DEFAULT_IGNORE_FILETYPES);
 export const DEFAULT_IGNORE_DIRS = [
-  ".git",
-  ".svn",
-  ".vscode",
-  ".idea",
-  ".vs",
-  "venv",
-  ".venv",
-  "env",
-  ".env",
-  "node_modules",
-  "dist",
-  "build",
-  "target",
-  "out",
-  "bin",
-  ".pytest_cache",
-  ".vscode-test",
-  ".continue",
-  "__pycache__",
-  "site-packages",
-  ".gradle",
-  ".cache",
-  "gems",
-  "vendor",
+  ".git/",
+  ".svn/",
+  ".vscode/",
+  ".idea/",
+  ".vs/",
+  "venv/",
+  ".venv/",
+  "env/",
+  ".env/",
+  "node_modules/",
+  "dist/",
+  "build/",
+  "target/",
+  "out/",
+  "bin/",
+  ".pytest_cache/",
+  ".vscode-test/",
+  ".continue/",
+  "__pycache__/",
+  "site-packages/",
+  ".gradle/",
+  ".cache/",
+  "gems/",
+  "vendor/",
 ];
 
-// @ts-ignore
-export const defaultIgnoreDir = ignore.default().add(DEFAULT_IGNORE_DIRS);
+export const defaultIgnoreDir = ignore().add(DEFAULT_IGNORE_DIRS);
 
 export const DEFAULT_IGNORE =
   DEFAULT_IGNORE_FILETYPES.join("\n") + "\n" + DEFAULT_IGNORE_DIRS.join("\n");

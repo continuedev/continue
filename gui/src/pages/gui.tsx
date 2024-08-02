@@ -87,6 +87,7 @@ const StopButton = styled.div`
 `;
 
 const StepsDiv = styled.div`
+  padding-bottom: 8px;
   position: relative;
   background-color: transparent;
 
@@ -510,26 +511,30 @@ function GUI() {
               <br />
             </>
           ) : state.history.length > 0 ? (
-            <NewSessionButton
-              onClick={() => {
-                saveSession();
-              }}
-              className="mr-auto"
-            >
-              New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
-            </NewSessionButton>
+            <div className="mt-2">
+              <NewSessionButton
+                onClick={() => {
+                  saveSession();
+                }}
+                className="mr-auto"
+              >
+                New Session ({getMetaKeyLabel()} {isJetBrains() ? "J" : "L"})
+              </NewSessionButton>{" "}
+            </div>
           ) : (
             <>
               {getLastSessionId() ? (
-                <NewSessionButton
-                  onClick={async () => {
-                    loadLastSession();
-                  }}
-                  className="mr-auto flex items-center gap-1"
-                >
-                  <ArrowLeftIcon width="11px" height="11px" />
-                  Last Session
-                </NewSessionButton>
+                <div className="mt-2">
+                  <NewSessionButton
+                    onClick={async () => {
+                      loadLastSession();
+                    }}
+                    className="mr-auto flex items-center gap-2"
+                  >
+                    <ArrowLeftIcon width="11px" height="11px" />
+                    Last Session
+                  </NewSessionButton>
+                </div>
               ) : null}
 
               {!!showTutorialCard && (
@@ -549,7 +554,7 @@ function GUI() {
       </TopGuiDiv>
       {active && (
         <StopButton
-          className="mt-auto"
+          className="mt-auto mb-4"
           onClick={() => {
             dispatch(setInactive());
             if (

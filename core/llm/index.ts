@@ -105,6 +105,16 @@ export abstract class BaseLLM implements ILLM {
   accountId?: string;
   aiGatewaySlug?: string;
 
+  // For WatsonX only.
+
+  watsonxUrl?: string;
+  watsonxApiKey?: string;
+  watsonxZenApiKeyBase64?:string = "YOUR_WATSONX_ZENAPIKEY" // Required if using watsonx software with ZenApiKey auth
+  watsonxUsername?:string;
+  watsonxPassword?:string;
+  watsonxProjectId?: string;
+
+
   private _llmOptions: LLMOptions;
 
   constructor(_options: LLMOptions) {
@@ -156,6 +166,13 @@ export abstract class BaseLLM implements ILLM {
     this.apiKey = options.apiKey;
     this.aiGatewaySlug = options.aiGatewaySlug;
     this.apiBase = options.apiBase;
+    // for watsonx only
+    this.watsonxUrl = options.watsonxUrl;
+    this.watsonxApiKey = options.watsonxApiKey;
+    this.watsonxProjectId = options.watsonxProjectId;
+    this.watsonxUsername = options.watsonxUsername;
+    this.watsonxPassword = options.watsonxPassword;
+
     if (this.apiBase && !this.apiBase.endsWith("/")) {
       this.apiBase = `${this.apiBase}/`;
     }
