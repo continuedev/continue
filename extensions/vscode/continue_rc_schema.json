@@ -2207,7 +2207,7 @@
         },
         "embeddingsProvider": {
           "title": "Embeddings Provider",
-          "markdownDescription": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options [here](https://docs.continue.dev/walkthroughs/codebase-embeddings#embeddings-providers).",
+          "markdownDescription": "The method that will be used to generate codebase embeddings. The default is transformers.js, which will run locally in the browser. Learn about the other options [here](https://docs.continue.dev/features/codebase-embeddings#embeddings-providers).",
           "type": "object",
           "properties": {
             "provider": {
@@ -2493,7 +2493,7 @@
         "tabAutocompleteOptions": {
           "title": "TabAutocompleteOptions",
           "type": "object",
-          "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://docs.continue.dev/walkthroughs/tab-autocomplete#configuration-options).",
+          "markdownDescription": "These options let you customize your tab-autocomplete experience. Read about all options in [the docs](https://docs.continue.dev/features/tab-autocomplete#configuration-options).",
           "properties": {
             "disable": {
               "type": "boolean",
@@ -2578,6 +2578,69 @@
               "default": false
             }
           }
+        },
+        "analytics": {
+          "type": "object",
+          "properties": {
+            "provider": {
+              "type": "string",
+              "enum": [
+                "posthog",
+                "logstash"
+              ],
+              "description": "The 3rd party analytics provider to use.",
+              "default": "posthog",
+              "markdownEnumDescriptions": [
+                "### Posthog\nTo use Posthog, set up an account, obtain your client key, and enter it in the client key field.",
+                "### Logstash\nContinue's Logstash integration uses the TCP input at the specified URL"
+              ]
+            },
+            "url": {
+              "type": "string",
+              "description": "The URL to which analytics will be sent"
+            },
+            "clientKey": {
+              "type": "string",
+              "description": "The client key to use for analytics"
+            }
+          },
+          "required": [
+            "provider"
+          ],
+          "allOf": [
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": [
+                      "posthog"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "clientKey"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "provider": {
+                    "enum": [
+                      "logstash"
+                    ]
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "url"
+                ]
+              }
+            }
+          ]
         },
         "experimental": {
           "type": "object",
