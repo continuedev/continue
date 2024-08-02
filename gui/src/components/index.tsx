@@ -39,8 +39,8 @@ export const VSC_THEME_COLOR_VARS = [
 ];
 
 export const defaultBorderRadius = "5px";
-export const lightGray = "#646464";
-export const greenButtonColor = "#1bbe84";
+export const lightGray = "#999998";
+export const greenButtonColor = "#189e72";
 
 export const vscInputBackground = `var(${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
 export const vscQuickInputBackground = `var(${VSC_QUICK_INPUT_BACKGROUND_VAR}, ${VSC_INPUT_BACKGROUND_VAR}, rgb(45 45 45))`;
@@ -57,6 +57,8 @@ export const vscInputBorderFocus = `var(${VSC_INPUT_BORDER_FOCUS_VAR}, ${lightGr
 export const vscBadgeBackground = `var(${VSC_BADGE_BACKGROUND_VAR}, #1bbe84)`;
 export const vscBadgeForeground = `var(${VSC_BADGE_FOREGROUND_VAR}, #fff)`;
 export const vscSidebarBorder = `var(${VSC_SIDEBAR_BORDER_VAR}, transparent)`;
+
+// cececd
 
 if (typeof document !== "undefined") {
   for (const colorVar of VSC_THEME_COLOR_VARS) {

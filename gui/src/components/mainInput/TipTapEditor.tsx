@@ -60,7 +60,7 @@ import { ComboBoxItem } from "./types";
 const InputBoxDiv = styled.div`
   resize: none;
 
-  padding: 8px;
+  padding: 12px;
   padding-bottom: 4px;
   font-family: inherit;
   border-radius: ${defaultBorderRadius};
