@@ -34,6 +34,7 @@ import Replicate from "./Replicate.js";
 import TextGenWebUI from "./TextGenWebUI.js";
 import Together from "./Together.js";
 import ContinueProxy from "./stubs/ContinueProxy.js";
+import WatsonX from "./WatsonX.js";
 
 function convertToLetter(num: number): string {
   let result = "";
@@ -126,6 +127,7 @@ const LLMs = [
   Deepseek,
   Msty,
   Azure,
+  WatsonX
 ];
 
 export async function llmFromDescription(

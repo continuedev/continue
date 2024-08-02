@@ -9,7 +9,6 @@ export interface PackageDimension {
   description: string;
   options: { [key: string]: { [key: string]: any } };
 }
-
 export interface ModelPackage {
   title: string;
   icon?: string;
@@ -682,6 +681,75 @@ export const models: { [key: string]: ModelPackage } = {
     },
     providerOptions: ["anthropic", "free-trial"],
     icon: "anthropic.png",
+    isOpenSource: false,
+  },
+  graniteChat: {
+    title: "WatsonX - Granite Chat",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-13b-chat-v2",
+      contextLength: 20_000,
+      title: "Granite Chat",
+    },
+    providerOptions: ["watsonx"],
+    icon: "",
+    isOpenSource: false,
+  },
+  graniteCode: {
+    title: "WatsonX - Granite Code",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "ibm/granite-13b-instruct-v2",
+      contextLength: 20_000,
+      title: "Granite Code",
+      systemMessage: `You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.`,
+    },
+    providerOptions: ["watsonx"],
+    icon: "WatsonX.png",
+    isOpenSource: false,
+  },
+  MistralLarge: {
+    title: "WatsonX - Mistral",
+    description:
+      "Mistral Large, the most advanced Large Language Model (LLM) developed by Mistral Al, is an exceptionally powerful model.",
+    params: {
+      model: "mistralai/mistral-large",
+      contextLength: 20_000,
+      title: "WatsonX - Mistral",
+    },
+    providerOptions: ["watsonx"],
+    icon: "mistral.png",
+    isOpenSource: false,
+  },
+  MetaLlama3: {
+    title: "Meta Llama 3",
+    description:
+      "Llama 3 is an auto-regressive language model that uses an optimized transformer architecture.",
+    params: {
+      title: "Meta-llama3-8b",
+      model: "meta-llama/llama-3-8b-instruct",
+      contextLength: 20_000,
+    },
+    icon: "meta.png",
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "8b": {
+            model: "meta-llama/llama-3-8b-instruct",
+            title: "Meta-llama3-8b",
+          },
+          "70b": {
+            model: "meta-llama/llama-3-70b-instruct",
+            title: "Meta-llama3-70b",
+          },
+        },
+      },
+    ],
+    providerOptions: ["watsonx"],
     isOpenSource: false,
   },
   AUTODETECT: {
