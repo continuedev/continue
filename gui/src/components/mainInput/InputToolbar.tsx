@@ -24,22 +24,33 @@ import {
 import ModelSelect from "../modelSelection/ModelSelect";
 
 const StyledDiv = styled.div<{ isHidden: boolean }>`
+  padding: 4px 0;
   display: flex;
   justify-content: space-between;
-  flex-wrap: wrap-reverse;
-  flex-direction: row-reverse;
   gap: 1px;
   background-color: ${vscInputBackground};
   align-items: center;
   z-index: 50;
-  font-size: ${getFontSize() - 4}px;
-  cursor: ${props => props.isHidden ? 'default' : 'text'};
-  opacity: ${props => props.isHidden ? 0 : 1};
-  pointer-events: ${props => props.isHidden ? 'none' : 'auto'};
+  font-size: ${getFontSize() - 2}px;
+  cursor: ${(props) => (props.isHidden ? "default" : "text")};
+  opacity: ${(props) => (props.isHidden ? 0 : 1)};
+  pointer-events: ${(props) => (props.isHidden ? "none" : "auto")};
 
   & > * {
     flex: 0 0 auto;
   }
+
+  /* Add a media query to hide the right-hand set of components */
+  @media (max-width: 400px) {
+    & > span:last-child {
+      display: none;
+    }
+  }
+`;
+
+const StyledSpan = styled.span`
+  font-size: ${() => `${getFontSize() - 2}px`};
+  color: ${lightGray};
 `;
 
 const EnterButton = styled.div<{ offFocus: boolean }>`
@@ -87,73 +98,22 @@ function InputToolbar(props: InputToolbarProps) {
         onClick={props.onClick}
         id="input-toolbar"
       >
-        <span className="flex items-center whitespace-nowrap">
-          {props.showNoContext ? (
-            <span
-              style={{
-                color: props.usingCodebase ? vscBadgeBackground : lightGray,
-                backgroundColor: props.usingCodebase
-                  ? lightGray + "33"
-                  : undefined,
-                borderRadius: defaultBorderRadius,
-                padding: "2px 4px",
-              }}
-            >
-              {getAltKeyLabel()} ⏎{" "}
-              {useActiveFile ? "No context" : "Use active file"}
-            </span>
-          ) : (
-            <span
-              style={{
-                color: props.usingCodebase ? vscBadgeBackground : lightGray,
-                backgroundColor: props.usingCodebase
-                  ? lightGray + "33"
-                  : undefined,
-                borderRadius: defaultBorderRadius,
-                padding: "2px 4px",
-              }}
-              onClick={(e) => {
-                props.onEnter({
-                  useCodebase: true,
-                  noContext: !useActiveFile,
-                });
-              }}
-              className={"hover:underline cursor-pointer float-right"}
-            >
-              {getMetaKeyLabel()} ⏎ Use codebase
-            </span>
-          )}
-          <EnterButton
-            offFocus={props.usingCodebase}
-            onClick={(e) => {
-              props.onEnter({
-                useCodebase: isMetaEquivalentKeyPressed(e),
-                noContext: useActiveFile ? e.altKey : !e.altKey,
-              });
-            }}
-          >
-            ⏎ Enter
-          </EnterButton>
-        </span>
-        <span className="flex flex-wrap-reverse gap-1 items-center whitespace-nowrap">
+        <span className="flex gap-2 items-center whitespace-nowrap">
           <ModelSelect />
-          <span
-            style={{
-              color: lightGray,
-            }}
+          <StyledSpan
             onClick={(e) => {
               props.onAddContextItem();
             }}
             className="hover:underline cursor-pointer"
           >
             + Add Context
-          </span>
+          </StyledSpan>
           {defaultModel &&
             modelSupportsImages(
               defaultModel.provider,
               defaultModel.model,
               defaultModel.title,
-              defaultModel.capabilities
+              defaultModel.capabilities,
             ) && (
               <span
                 className="ml-1 mt-0.5"
@@ -192,6 +152,55 @@ function InputToolbar(props: InputToolbarProps) {
                 )}
               </span>
             )}
+        </span>
+
+        <span className="flex items-center gap-2 whitespace-nowrap">
+          {props.showNoContext ? (
+            <span
+              style={{
+                color: props.usingCodebase ? vscBadgeBackground : lightGray,
+                backgroundColor: props.usingCodebase
+                  ? lightGray + "33"
+                  : undefined,
+                borderRadius: defaultBorderRadius,
+                padding: "2px 4px",
+              }}
+            >
+              {getAltKeyLabel()} ⏎{" "}
+              {useActiveFile ? "No context" : "Use active file"}
+            </span>
+          ) : (
+            <StyledSpan
+              style={{
+                color: props.usingCodebase ? vscBadgeBackground : lightGray,
+                backgroundColor: props.usingCodebase
+                  ? lightGray + "33"
+                  : undefined,
+                borderRadius: defaultBorderRadius,
+                padding: "2px 4px",
+              }}
+              onClick={(e) => {
+                props.onEnter({
+                  useCodebase: true,
+                  noContext: !useActiveFile,
+                });
+              }}
+              className={"hover:underline cursor-pointer float-right"}
+            >
+              {getMetaKeyLabel()} ⏎ Use codebase
+            </StyledSpan>
+          )}
+          <EnterButton
+            offFocus={props.usingCodebase}
+            onClick={(e) => {
+              props.onEnter({
+                useCodebase: isMetaEquivalentKeyPressed(e),
+                noContext: useActiveFile ? e.altKey : !e.altKey,
+              });
+            }}
+          >
+            ⏎ Enter
+          </EnterButton>
         </span>
       </StyledDiv>
     </>
