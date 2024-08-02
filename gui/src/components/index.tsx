@@ -245,6 +245,12 @@ export const Hr = styled.hr`
   border: 0.5px solid ${lightGray};
 `;
 
+export const HelperText = styled.p`
+  margin-top: 2.5px;
+  font-size: ${getFontSize() - 2}px;
+  color: ${lightGray};
+`;
+
 export const Input = styled.input`
   width: 100%;
   padding: 8px 12px;

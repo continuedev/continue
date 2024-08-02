@@ -549,7 +549,7 @@ function GUI() {
       </TopGuiDiv>
       {active && (
         <StopButton
-          className="mt-auto"
+          className="mt-auto mb-4"
           onClick={() => {
             dispatch(setInactive());
             if (

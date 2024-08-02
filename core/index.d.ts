@@ -127,6 +127,7 @@ export interface ContextProviderDescription {
 export type FetchFunction = (url: string | URL, init?: any) => Promise<any>;
 
 export interface ContextProviderExtras {
+  config: ContinueConfig;
   fullInput: string;
   embeddingsProvider: EmbeddingsProvider;
   reranker: Reranker | undefined;
@@ -161,21 +162,21 @@ export interface ContextSubmenuItem {
   id: string;
   title: string;
   description: string;
-  iconUrl?: string;
+  icon?: string;
   metadata?: any;
 }
 
 export interface SiteIndexingConfig {
-  startUrl: string;
-  rootUrl: string;
   title: string;
+  startUrl: string;
+  rootUrl?: string;
   maxDepth?: number;
   faviconUrl?: string;
 }
 
 export interface SiteIndexingConfig {
   startUrl: string;
-  rootUrl: string;
+  rootUrl?: string;
   title: string;
   maxDepth?: number;
 }
@@ -269,6 +270,7 @@ export interface ContextItem {
   description: string;
   editing?: boolean;
   editable?: boolean;
+  icon?: string;
 }
 
 export interface ContextItemWithId {
@@ -278,6 +280,7 @@ export interface ContextItemWithId {
   id: ContextItemId;
   editing?: boolean;
   editable?: boolean;
+  icon?: string;
 }
 
 export interface InputModifiers {
@@ -339,7 +342,7 @@ export interface LLMOptions {
   // GCP Options
   region?: string;
   projectId?: string;
-  capabilities?: ModelCapability
+  capabilities?: ModelCapability;
 }
 type RequireAtLeastOne<T, Keys extends keyof T = keyof T> = Pick<
   T,
@@ -735,7 +738,7 @@ export interface ModelDescription {
   systemMessage?: string;
   requestOptions?: RequestOptions;
   promptTemplates?: { [key: string]: string };
-  capabilities?: ModelCapability
+  capabilities?: ModelCapability;
 }
 
 export type EmbeddingsProviderName =
@@ -896,6 +899,7 @@ export interface SerializedContinueConfig {
   reranker?: RerankerDescription;
   experimental?: ExperimentalConfig;
   analytics?: AnalyticsConfig;
+  docs?: SiteIndexingConfig[];
 }
 
 export type ConfigMergeType = "merge" | "overwrite";
