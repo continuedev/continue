@@ -4,8 +4,8 @@ import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
+import { Plugin } from "@tiptap/pm/state";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
-import {Plugin} from "@tiptap/pm/state"
 import {
   ContextItemWithId,
   ContextProviderDescription,
@@ -14,6 +14,7 @@ import {
 } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { getBasename, getRelativePath } from "core/util";
+import { usePostHog } from "posthog-js/react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -55,7 +56,6 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
-import { usePostHog } from "posthog-js/react";
 
 const InputBoxDiv = styled.div`
   resize: none;
@@ -264,30 +264,36 @@ function TipTapEditor(props: TipTapEditorProps) {
       Image.extend({
         addProseMirrorPlugins() {
           const plugin = new Plugin({
-              props: {
-                handleDOMEvents: {
-                  paste(view, event) {
-                    const items = event.clipboardData.items;
-                    for (const item of items) {
-                      const file = item.getAsFile()
-                      file && 
-                      modelSupportsImages(defaultModel.provider, defaultModel.model, defaultModel.title, defaultModel.capabilities) &&
+            props: {
+              handleDOMEvents: {
+                paste(view, event) {
+                  const items = event.clipboardData.items;
+                  for (const item of items) {
+                    const file = item.getAsFile();
+                    file &&
+                      modelSupportsImages(
+                        defaultModel.provider,
+                        defaultModel.model,
+                        defaultModel.title,
+                        defaultModel.capabilities,
+                      ) &&
                       handleImageFile(file).then((resp) => {
-                        if (!resp) return
-                        const [img, dataUrl] = resp
+                        if (!resp) return;
+                        const [img, dataUrl] = resp;
                         const { schema } = view.state;
-                        const node = schema.nodes.image.create({ src: dataUrl });
+                        const node = schema.nodes.image.create({
+                          src: dataUrl,
+                        });
                         const tr = view.state.tr.insert(0, node);
                         view.dispatch(tr);
                       });
-                    }
-                    event.preventDefault();
                   }
-                }
-              }
-            })
-          return [plugin]
-        }
+                },
+              },
+            },
+          });
+          return [plugin];
+        },
       }),
       Placeholder.configure({
         placeholder: () =>
@@ -796,7 +802,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             defaultModel.provider,
             defaultModel.model,
             defaultModel.title,
-            defaultModel.capabilities
+            defaultModel.capabilities,
           )
         ) {
           return;
@@ -845,7 +851,7 @@ function TipTapEditor(props: TipTapEditorProps) {
           defaultModel.provider,
           defaultModel.model,
           defaultModel.title,
-          defaultModel.capabilities
+          defaultModel.capabilities,
         ) && (
           <>
             <HoverDiv></HoverDiv>
