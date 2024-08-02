@@ -729,7 +729,8 @@ export interface ModelDescription {
   completionOptions?: BaseCompletionOptions;
   systemMessage?: string;
   requestOptions?: RequestOptions;
-  promptTemplates?: { [key: string]: string };
+  engine?: string;
+  apiType?: string;
 }
 
 export type EmbeddingsProviderName =

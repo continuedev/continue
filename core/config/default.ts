@@ -91,7 +91,16 @@ export const defaultSlashCommandsJetBrains = [
 ];
 
 export const defaultConfig: SerializedContinueConfig = {
-  models: [],
+  models: [
+    {
+      title: "Microsoft Quantum Azure Open AI",
+      provider: "openai",
+      model: "gpt-4o",
+      apiBase: "https://quantum-ai.openai.azure.com/",
+      engine: "gpt-4o",
+      apiType: "azure"
+    }
+  ],
   customCommands: [
     {
       name: "test",

@@ -25,6 +25,7 @@
       "script": "esbuild-watch",
       "path": "extensions/vscode",
       "isBackground": true,
+      "dependsOn":["vscode-extension:continue-ui:build"],
       "problemMatcher": [
         {
           "pattern": [

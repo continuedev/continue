@@ -2090,10 +2090,12 @@
           "markdownDescription": "Learn about setting up models in [the documentation](https://docs.continue.dev/model-setup/overview).",
           "default": [
             {
-              "title": "GPT-4 (trial)",
-              "provider": "free-trial",
-              "model": "gpt-4",
-              "apiKey": ""
+              "title": "OpenAI-compatible server / API",
+              "provider": "openai",
+              "model": "gpt-4o",
+              "apiBase": "https://quantum-ai.openai.azure.com/",
+              "engine": "gpt-4o",
+              "apiType": "azure"
             }
           ],
           "type": "array",
