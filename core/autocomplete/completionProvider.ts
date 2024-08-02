@@ -52,6 +52,7 @@ import { getTemplateForModel } from "./templates.js";
 import { GeneratorReuseManager } from "./util.js";
 // @prettier-ignore
 import Handlebars from "handlebars";
+import { getConfigJsonPath } from "../util/paths.js";
 
 export interface AutocompleteInput {
   completionId: string;
@@ -248,6 +249,11 @@ export class CompletionProvider {
         ...DEFAULT_AUTOCOMPLETE_OPTS,
         ...config.tabAutocompleteOptions,
       };
+
+      // Check whether we're in the continue config.json file
+      if (input.filepath === getConfigJsonPath()) {
+        return undefined;
+      }
 
       // Check whether autocomplete is disabled for this file
       if (options.disableInFiles) {
