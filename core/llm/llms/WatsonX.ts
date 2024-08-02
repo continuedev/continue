@@ -167,7 +167,7 @@ class WatsonX extends BaseLLM {
       body: JSON.stringify({
         "input": messages[messages.length - 1].content,
         "parameters": {
-          "decoding_method": "greedykugi",
+          "decoding_method": "greedy",
           "max_new_tokens": options.maxTokens ?? 1024,
           "min_new_tokens": 1,
           "stop_sequences": [],

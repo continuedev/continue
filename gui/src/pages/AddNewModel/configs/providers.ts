@@ -515,8 +515,7 @@ After it's up and running, you can start using Continue.`,
     refPage: "watsonX",
     description:
       "Explore foundation models from IBM and other third-parties depending on your use case.",
-    longDescription: `Watsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.
-[Steps to setup WatsonX provider](watsonx.md) `,
+    longDescription: `Watsonx, developed by IBM, offers a variety of pre-trained AI foundation models that can be used for natural language processing (NLP), computer vision, and speech recognition tasks.`,
     collectInputFor: [
       {
         inputType: "text",
@@ -547,7 +546,7 @@ After it's up and running, you can start using Continue.`,
       {
         inputType: "text",
         key: "watsonxUsername",
-        label: "WatsonX username",
+        label: "WatsonX Username",
         placeholder: "Enter your Username",
         required: true,
         isWatsonxAuthenticatedByCredentials: true
