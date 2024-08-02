@@ -1,4 +1,4 @@
-import { ChatMessage, ILLM, ModelProvider } from "core";
+import { ILLM, ModelProvider } from "core";
 import { ModelProviderTags } from "../../../components/modelSelection/ModelProviderTag";
 import { InputDescriptor } from "./providers";
 
@@ -704,7 +704,7 @@ export const models: { [key: string]: ModelPackage } = {
       model: "ibm/granite-13b-instruct-v2",
       contextLength: 20_000,
       title: "Granite Code",
-      systemMessage: `You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.`
+      systemMessage: `You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.`,
     },
     providerOptions: ["watsonx"],
     icon: "WatsonX.png",
@@ -724,9 +724,9 @@ export const models: { [key: string]: ModelPackage } = {
     isOpenSource: false,
   },
   MetaLlama3: {
-    title: "Meta-llama3",
+    title: "Meta Llama 3",
     description:
-      "Llama-3 is an auto-regressive language model that uses an optimized transformer architecture.",
+      "Llama 3 is an auto-regressive language model that uses an optimized transformer architecture.",
     params: {
       title: "Meta-llama3-8b",
       model: "meta-llama/llama-3-8b-instruct",
