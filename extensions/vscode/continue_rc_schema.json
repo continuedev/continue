@@ -2187,12 +2187,6 @@
           "description": "An optional token to identify the user.",
           "type": "string"
         },
-        "disableSummaries": {
-          "title": "Disable Summaries",
-          "markdownDescription": "If set to `true`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
-          "default": false,
-          "type": "boolean"
-        },
         "disableIndexing": {
           "title": "Disable Indexing",
           "markdownDescription": "If set to `true`, Continue will not index the codebase. This is mainly used for debugging purposes.",
