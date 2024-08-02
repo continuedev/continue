@@ -1964,12 +1964,6 @@
           "description": "An optional token to identify the user.",
           "type": "string"
         },
-        "dataServerUrl": {
-          "title": "Data Server Url",
-          "description": "The URL of the server where development data is sent. No data is sent unless a valid user token is provided.",
-          "default": "https://us-west1-autodebug.cloudfunctions.net",
-          "type": "string"
-        },
         "disableSummaries": {
           "title": "Disable Summaries",
           "markdownDescription": "If set to `true`, Continue will not generate summaries for each Step. This can be useful if you want to save on compute.",
