@@ -12,6 +12,9 @@ export class VoyageReranker implements Reranker {
   ) {}
 
   async rerank(query: string, chunks: Chunk[]): Promise<number[]> {
+    if (!query) {
+      return [];
+    }
     const resp = await fetch("https://api.voyageai.com/v1/rerank", {
       method: "POST",
       headers: {
