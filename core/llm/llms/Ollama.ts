@@ -106,6 +106,10 @@ class Ollama extends BaseLLM {
         "starcoder-3b": "starcoder:3b",
         "starcoder2-3b": "starcoder2:3b",
         "stable-code-3b": "stable-code:3b",
+        "granite-code-3b": "granite-code:3b",
+        "granite-code-8b": "granite-code:8b",
+        "granite-code-20b": "granite-code:20b",
+        "granite-code-34b": "granite-code:34b",
       }[this.model] ?? this.model
     );
   }

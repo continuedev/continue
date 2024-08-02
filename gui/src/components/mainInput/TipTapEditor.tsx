@@ -4,6 +4,7 @@ import Image from "@tiptap/extension-image";
 import Paragraph from "@tiptap/extension-paragraph";
 import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
+import { Plugin } from "@tiptap/pm/state";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
 import { Plugin } from "@tiptap/pm/state";
 import {
@@ -14,6 +15,7 @@ import {
 } from "core";
 import { modelSupportsImages } from "core/llm/autodetect";
 import { getBasename, getRelativePath } from "core/util";
+import { usePostHog } from "posthog-js/react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import styled from "styled-components";
@@ -55,7 +57,6 @@ import {
   getSlashCommandDropdownOptions,
 } from "./getSuggestion";
 import { ComboBoxItem } from "./types";
-import { usePostHog } from "posthog-js/react";
 
 const InputBoxDiv = styled.div`
   resize: none;
@@ -288,7 +289,6 @@ function TipTapEditor(props: TipTapEditorProps) {
                         view.dispatch(tr);
                       });
                   }
-                  event.preventDefault();
                 },
               },
             },
