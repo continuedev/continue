@@ -206,7 +206,7 @@ class WatsonX extends BaseLLM {
                 generatedChunk += result.generated_text || "";
               });
             } catch (e) {
-              console.error(e);
+              throw e;
             }
           }
         });
