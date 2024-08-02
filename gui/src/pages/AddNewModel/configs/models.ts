@@ -361,6 +361,44 @@ export const models: { [key: string]: ModelPackage } = {
     ],
     isOpenSource: true,
   },
+  graniteCodeOpenSource: {
+    title: "Granite Code",
+    description:
+      "The Granite model series is a family of IBM-trained, dense decoder-only models, which are particularly well-suited for generative tasks.",
+    params: {
+      model: "granite-code",
+      contextLength: 20_000,
+      title: "Granite Code",
+      systemMessage: `You are Granite Chat, an AI language model developed by IBM. You are a cautious assistant. You carefully follow instructions. You are helpful and harmless and you follow ethical guidelines and promote positive behavior. You always respond to greetings (for example, hi, hello, g'day, morning, afternoon, evening, night, what's up, nice to meet you, sup, etc) with "Hello! I am Granite Chat, created by IBM. How can I help you today?". Please do not say anything else and do not start a conversation.`,
+    },
+    providerOptions: ["ollama", "lmstudio", "llama.cpp", "replicate"],
+    icon: "ibm.png",
+    isOpenSource: true,
+    dimensions: [
+      {
+        name: "Parameter Count",
+        description: "The number of parameters in the model",
+        options: {
+          "3b": {
+            model: "granite-code-3b",
+            title: "Granite Code 3B",
+          },
+          "8b": {
+            model: "granite-code-8b",
+            title: "Granite Code 8B",
+          },
+          "20b": {
+            model: "granite-code-20b",
+            title: "Granite Code 20B",
+          },
+          "34b": {
+            model: "granite-code-34b",
+            title: "Granite Code 34B",
+          },
+        },
+      },
+    ],
+  },
   wizardCoder: {
     title: "WizardCoder",
     description:
