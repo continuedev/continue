@@ -6,7 +6,6 @@ import Placeholder from "@tiptap/extension-placeholder";
 import Text from "@tiptap/extension-text";
 import { Plugin } from "@tiptap/pm/state";
 import { Editor, EditorContent, JSONContent, useEditor } from "@tiptap/react";
-import { Plugin } from "@tiptap/pm/state";
 import {
   ContextItemWithId,
   ContextProviderDescription,
