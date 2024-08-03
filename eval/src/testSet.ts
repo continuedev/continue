@@ -12,25 +12,34 @@ export const filepathTestSet: TestSetItem[] = [
     query: "Where is our prettier config?",
     groundTruthFiles: [".prettierrc", ".prettierignore"],
   },
-  // The below tests are not passing with our current FTS logic
-  // {
-  //   repo: continueRepo,
-  //   query: "Show me all of our .rs files",
-  //   groundTruthFiles: [
-  //     "sync/src/sync_db.rs",
-  //     "extensions/vscode/manual-testing-sandbox/test.rs",
-  //   ],
-  // },
-  // {
-  //   repo: continueRepo,
-  //   query: "Where is our perteir config?",
-  //   groundTruthFiles: [".prettierrc", ".prettierignore"],
-  // },
-  // {
-  //   repo: continueRepo,
-  //   query: "Tell me about the package.json in core",
-  //   groundTruthFiles: ["core/package.json"],
-  // },
+  {
+    repo: continueRepo,
+    query: "Where do we use codelens?",
+    groundTruthFiles: [
+      "extensions/vscode/src/lang-server/codeLens/providers/ConfigPyCodeLensProvider.ts",
+      "extensions/vscode/src/lang-server/codeLens/providers/DiffViewerCodeLensProvider.ts",
+      "extensions/vscode/src/lang-server/codeLens/providers/QuickActionsCodeLensProvider.ts",
+    ],
+  },
+  {
+    repo: continueRepo,
+    query: "Where is our pretier config?",
+    groundTruthFiles: [".prettierrc", ".prettierignore"],
+  },
+  {
+    repo: continueRepo,
+    query: "Tell me about the tsconfig in core",
+    groundTruthFiles: ["core/tsconfig.json"],
+  },
+  // This is failing, potential solution is to add a column for file extension
+  {
+    repo: continueRepo,
+    query: "Show me all of our .md files",
+    groundTruthFiles: [
+      "sync/src/sync_db.rs",
+      "extensions/vscode/manual-testing-sandbox/test.rs",
+    ],
+  },
 ];
 
 // Need a way to specify specific snippets within files

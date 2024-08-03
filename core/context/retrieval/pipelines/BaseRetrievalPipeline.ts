@@ -5,11 +5,10 @@ import {
   IDE,
   Reranker,
 } from "../../../index.js";
-import {
-  FullTextSearchCodebaseIndex,
-  RetrieveConfig,
-} from "../../../indexing/FullTextSearch.js";
+import { FullTextSearchCodebaseIndex } from "../../../indexing/FullTextSearch.js";
 import { LanceDbIndex } from "../../../indexing/LanceDbIndex.js";
+// @ts-ignore
+import nlp from "wink-nlp-utils";
 
 export interface RetrievalPipelineOptions {
   embeddingsProvider: EmbeddingsProvider;
@@ -30,6 +29,8 @@ export interface IRetrievalPipeline {
 }
 
 export default class BaseRetrievalPipeline implements IRetrievalPipeline {
+  private ftsIndex = new FullTextSearchCodebaseIndex();
+
   private lanceDbIndex: LanceDbIndex;
   constructor(protected readonly options: RetrievalPipelineOptions) {
     this.lanceDbIndex = new LanceDbIndex(options.embeddingsProvider, (path) =>
@@ -37,28 +38,40 @@ export default class BaseRetrievalPipeline implements IRetrievalPipeline {
     );
   }
 
+  private getCleanedTrigrams(
+    query: RetrievalPipelineRunArguments["query"],
+  ): string[] {
+    let text = nlp.string.removeExtraSpaces(query);
+    text = nlp.string.stem(text);
+
+    let tokens = nlp.string
+      .tokenize(text, true)
+      .filter((token: any) => token.tag === "word")
+      .map((token: any) => token.value);
+
+    tokens = nlp.tokens.removeWords(tokens);
+    tokens = nlp.tokens.setOfWords(tokens);
+
+    const cleanedTokens = [...tokens].join(" ");
+    const trigrams = nlp.string.ngram(cleanedTokens, 3);
+
+    return trigrams;
+  }
+
   protected async retrieveFts(
     args: RetrievalPipelineRunArguments,
     n: number,
-    matchOn?: RetrieveConfig["matchOn"],
   ): Promise<Chunk[]> {
     try {
-      const ftsIndex = new FullTextSearchCodebaseIndex();
-
       if (args.query.trim() === "") {
         return [];
       }
 
-      const text = args.query
-        .trim()
-        .split(" ")
-        .map((element) => `"${element}"`)
-        .join(" OR ");
+      const tokens = this.getCleanedTrigrams(args.query).join(" OR ");
 
-      return await ftsIndex.retrieve({
-        text,
+      return await this.ftsIndex.retrieve({
         n,
-        matchOn,
+        text: tokens,
         tags: args.tags,
         directory: args.filterDirectory,
       });

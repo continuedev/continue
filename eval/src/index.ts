@@ -3,7 +3,7 @@ import {
   IRetrievalPipeline,
   RetrievalPipelineOptions,
 } from "@continuedev/core/dist/context/retrieval/pipelines/BaseRetrievalPipeline.js";
-import FilepathOnlyFtsRetrievalPipeline from "./pipelines/FilepathOnlyFtsRetrievalPipeline.js";
+import FtsRetrievalPipeline from "./pipelines/FilepathOnlyFtsRetrievalPipeline.js";
 import RerankerRetrievalPipeline from "@continuedev/core/dist/context/retrieval/pipelines/RerankerRetrievalPipeline.js";
 import { ControlPlaneClient } from "@continuedev/core/dist/control-plane/client.js";
 import FileSystemIde from "@continuedev/core/dist/util/filesystem.js";
@@ -55,7 +55,7 @@ async function runRerankerTest(opts: RetrievalPipelineOptions) {
 }
 
 async function runFilepathTest(opts: RetrievalPipelineOptions) {
-  const pipeline = new FilepathOnlyFtsRetrievalPipeline(opts);
+  const pipeline = new FtsRetrievalPipeline(opts);
   await testStrategy(pipeline, filepathTestSet);
 }
 
