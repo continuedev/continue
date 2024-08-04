@@ -1,10 +1,10 @@
 import {
-  ArrowUturnLeftIcon,
   BarsArrowDownIcon,
   HandThumbDownIcon,
   HandThumbUpIcon,
   TrashIcon,
-  CubeIcon,
+  ArrowPathIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
 import { ChatHistoryItem } from "core";
 import { stripImages } from "core/llm/images";
@@ -15,7 +15,6 @@ import {
   defaultBorderRadius,
   lightGray,
   vscBackground,
-  vscButtonBackground,
   vscInputBackground,
 } from "..";
 import { IdeMessengerContext } from "../../context/IdeMessenger";
@@ -125,7 +124,7 @@ function StepContainer(props: StepContainerProps) {
         </ContentDiv>
         {(isHovered || typeof feedback !== "undefined") && !active && (
           <div
-            className="flex gap-1 absolute -bottom-2 right-0"
+            className="flex items-center gap-1 absolute -bottom-2 right-1"
             style={{
               zIndex: 200,
               color: lightGray,
@@ -133,18 +132,22 @@ function StepContainer(props: StepContainerProps) {
             }}
           >
             {props.subtext && (
-              <div className="flex items-center">
-                <CubeIcon className="w-3 h-4 mr-1 flex-shrink-0" />
-                {props.subtext}
+              <>
+                <div className="flex items-center">
+                  <SparklesIcon className="w-4 h-4 mr-1 flex-shrink-0"></SparklesIcon>
+                  {props.subtext}
+                </div>
                 <div
+                  className="mx-1"
                   style={{
-                    backgroundColor: vscButtonBackground,
-                    borderColor: vscButtonBackground,
+                    width: "1px",
+                    height: "18px",
+                    backgroundColor: lightGray,
                   }}
-                  className="w-px h-full ml-3 mr-1"
-                />
-              </div>
+                ></div>
+              </>
             )}
+
             {truncatedEarly && (
               <HeaderButtonWithText
                 text="Continue generation"
@@ -170,11 +173,7 @@ function StepContainer(props: StepContainerProps) {
                 props.onRetry();
               }}
             >
-              <ArrowUturnLeftIcon
-                color={lightGray}
-                width="1.2em"
-                height="1.2em"
-              />
+              <ArrowPathIcon color={lightGray} width="1.2em" height="1.2em" />
             </HeaderButtonWithText>
             {feedback === false || (
               <HeaderButtonWithText text="Helpful">
