@@ -1,4 +1,4 @@
-import ignore from "ignore";
+fimport ignore from "ignore";
 import OpenAI from "openai";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
@@ -459,7 +459,7 @@ export class CompletionProvider {
       !shownGptClaudeWarning &&
       nonAutocompleteModels.some((model) => llm.model.includes(model)) &&
       !llm.model.includes("deepseek") &&
-      !llm.model.includes("codestral")
+      !llm.model.includes("Codestral")
     ) {
       shownGptClaudeWarning = true;
       throw new Error(
