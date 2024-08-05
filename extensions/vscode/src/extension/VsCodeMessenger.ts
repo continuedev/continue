@@ -292,6 +292,9 @@ export class VsCodeMessenger {
           }
         });
     });
+    this.onWebviewOrCore("infoPopup", (msg) => {
+      vscode.window.showInformationMessage(msg.data.message);
+    });
     this.onWebviewOrCore("getGitHubAuthToken", (msg) =>
       ide.getGitHubAuthToken(),
     );

@@ -31,6 +31,12 @@ Write unit tests for the above selected code, following each of these instructio
 
 Now to use this prompt, you can highlight code and use cmd/ctrl+L to select it in the Continue sidebar. Then, type "/" to see the list of slash commands and choose the one called "test". Press enter and the LLM will respond given the instructions from your prompt file.
 
+## Examples library
+
+To assist you in getting started, we've curated a small library of `.prompt` files. You can access this collection here: <https://github.com/continuedev/prompt-file-examples>
+
+We encourage community contributions to this repository, so please consider opening up a pull request with your own prompts!
+
 ## Syntax
 
 > The current state of this format is experimental and subject to change
@@ -70,7 +76,7 @@ The body also supports templating with [Handlebars syntax](https://handlebarsjs.
 
 The body of a .prompt file also supports any [context provider](../customization/context-providers.md) that you have added to your config by referencing the name of the context provider.
 
-For example, if you wanted to include the contents of the terminal in your prompt, then you would use `{{{terminal}}}` in your prompt file. If you wanted to use the "url" context provider to include the contents of https://github.com/continuedev/continue, you would use `{{{url "https://github.com/continuedev/continue"}}}`, where the second part is the argument to the context provider, separated by a space.
+For example, if you wanted to include the contents of the terminal in your prompt, then you would use `{{{terminal}}}` in your prompt file. If you wanted to use the "url" context provider to include the contents of <https://github.com/continuedev/continue>, you would use `{{{url "https://github.com/continuedev/continue"}}}`, where the second part is the argument to the context provider, separated by a space.
 
 ## Feedback
 

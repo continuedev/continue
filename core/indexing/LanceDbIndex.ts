@@ -46,6 +46,8 @@ export class LanceDbIndex implements CodebaseIndex {
   }
 
   private async createSqliteCacheTable(db: DatabaseConnection) {
+    await db.exec("PRAGMA journal_mode=WAL;");
+
     await db.exec(`CREATE TABLE IF NOT EXISTS lance_db_cache (
         uuid TEXT PRIMARY KEY,
         cacheKey TEXT NOT NULL,

@@ -35,7 +35,7 @@ interface StepContainerProps {
   isFirst: boolean;
   isLast: boolean;
   index: number;
-  subtext?: string;
+  modelTitle?: string;
 }
 
 const ContentDiv = styled.div<{ isUserInput: boolean; fontSize?: number }>`

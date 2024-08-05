@@ -55,7 +55,7 @@ export class MessageIde implements IDE {
   }
 
   infoPopup(message: string): Promise<void> {
-    return this.request("errorPopup", { message });
+    return this.request("infoPopup", { message });
   }
 
   errorPopup(message: string): Promise<void> {
