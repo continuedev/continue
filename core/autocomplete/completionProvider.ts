@@ -1,4 +1,4 @@
-fimport ignore from "ignore";
+import ignore from "ignore";
 import OpenAI from "openai";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
