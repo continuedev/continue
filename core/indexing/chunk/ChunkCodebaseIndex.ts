@@ -24,6 +24,8 @@ export class ChunkCodebaseIndex implements CodebaseIndex {
   }
 
   private async _createTables(db: DatabaseConnection) {
+    await db.exec("PRAGMA journal_mode=WAL;");
+    
     await db.exec(`CREATE TABLE IF NOT EXISTS chunks (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       cacheKey TEXT NOT NULL,
