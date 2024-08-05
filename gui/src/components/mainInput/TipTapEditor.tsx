@@ -267,6 +267,7 @@ function TipTapEditor(props: TipTapEditorProps) {
             props: {
               handleDOMEvents: {
                 paste(view, event) {
+                  console.log("Pasting image");
                   const items = event.clipboardData.items;
                   for (const item of items) {
                     const file = item.getAsFile();
